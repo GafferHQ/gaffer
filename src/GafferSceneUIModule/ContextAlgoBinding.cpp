@@ -38,7 +38,6 @@
 
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "GafferScene/PathMatcher.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferSceneUI/ContextAlgo.h"
@@ -46,6 +45,7 @@
 #include "ContextAlgoBinding.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI::ContextAlgo;

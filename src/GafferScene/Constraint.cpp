@@ -48,7 +48,7 @@ IE_CORE_DEFINERUNTIMETYPED( Constraint );
 size_t Constraint::g_firstPlugIndex = 0;
 
 Constraint::Constraint( const std::string &name )
-	:	SceneElementProcessor( name, Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "target" ) );

@@ -68,8 +68,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		lightSet = l["out"].set( "__lights" )
 		self.assertEqual(
 			lightSet,
-			GafferScene.PathMatcherData(
-				GafferScene.PathMatcher( [ "/light" ] )
+			IECore.PathMatcherData(
+				IECore.PathMatcher( [ "/light" ] )
 			)
 		)
 
@@ -84,8 +84,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		lightSet = g["out"].set( "__lights" )
 		self.assertEqual(
 			lightSet,
-			GafferScene.PathMatcherData(
-				GafferScene.PathMatcher( [ "/group/light" ] )
+			IECore.PathMatcherData(
+				IECore.PathMatcher( [ "/group/light" ] )
 			)
 		)
 
@@ -135,8 +135,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		l["sets"].setValue( "A B")
 		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights" ] ) )
 
-		self.assertEqual( l["out"].set( "" ), GafferScene.PathMatcherData() )
-		self.assertEqual( l["out"].set( "nonexistent1" ), GafferScene.PathMatcherData() )
+		self.assertEqual( l["out"].set( "" ), IECore.PathMatcherData() )
+		self.assertEqual( l["out"].set( "nonexistent1" ), IECore.PathMatcherData() )
 		self.assertEqual( l["out"].setHash( "nonexistent1" ), l["out"].setHash( "nonexistent2" ) )
 		self.assertTrue( l["out"].set( "nonexistent1", _copy = False ).isSame( l["out"].set( "nonexistent2", _copy = False ) ) )
 

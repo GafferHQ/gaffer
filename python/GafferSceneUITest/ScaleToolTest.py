@@ -57,7 +57,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
 
 		with Gaffer.UndoScope( script ) :
 			tool.scale( imath.V3f( 2, 1, 1 ) )

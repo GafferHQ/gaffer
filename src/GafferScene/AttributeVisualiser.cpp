@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( AttributeVisualiser );
 size_t AttributeVisualiser::g_firstPlugIndex = 0;
 
 AttributeVisualiser::AttributeVisualiser( const std::string &name )
-	:	SceneElementProcessor( name, Filter::EveryMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

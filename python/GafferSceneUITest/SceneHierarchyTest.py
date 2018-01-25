@@ -48,7 +48,7 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		e = False
 		if "ui:scene:expandedPaths" in context :
 			expandePaths = GafferSceneUI.ContextAlgo.getExpandedPaths( context )
-			if expandePaths and ( expandePaths.match( path ) & GafferScene.Filter.Result.ExactMatch ) :
+			if expandePaths and ( expandePaths.match( path ) & IECore.PathMatcher.Result.ExactMatch ) :
 				e = True
 
 		self.assertEqual( e, expanded )
@@ -71,8 +71,8 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 
 		# Expand the root, and select /group.
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), GafferScene.PathMatcher( [ "/" ] ) )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( [ "/group" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/group" ] ) )
 
 		self.waitForIdle( 1000 )
 

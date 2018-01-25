@@ -84,40 +84,40 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		context = Gaffer.Context()
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( context, GafferScene.PathMatcher( [ "/" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( context, IECore.PathMatcher( [ "/" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/" ] ) )
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( context, GafferScene.PathMatcher( [ "/", "/A" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/", "/A" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( context, IECore.PathMatcher( [ "/", "/A" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/", "/A" ] ) )
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( context, GafferScene.PathMatcher( [ "/", "/A", "/A/C" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/", "/A", "/A/C" ] ) )
-
-		GafferSceneUI.ContextAlgo.clearExpansion( context )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher() )
-		GafferSceneUI.ContextAlgo.expand( context, GafferScene.PathMatcher( [ "/A/B", "/A/C" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/", "/A", "/A/B", "/A/C" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( context, IECore.PathMatcher( [ "/", "/A", "/A/C" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/", "/A", "/A/C" ] ) )
 
 		GafferSceneUI.ContextAlgo.clearExpansion( context )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher() )
-		GafferSceneUI.ContextAlgo.expand( context, GafferScene.PathMatcher( [ "/A/B", "/A/C" ] ), expandAncestors = False )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/A/B", "/A/C" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher() )
+		GafferSceneUI.ContextAlgo.expand( context, IECore.PathMatcher( [ "/A/B", "/A/C" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/", "/A", "/A/B", "/A/C" ] ) )
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( context, GafferScene.PathMatcher( [ "/" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/" ] ) )
-		newLeafs = GafferSceneUI.ContextAlgo.expandDescendants( context, GafferScene.PathMatcher( [ "/" ] ), A["out"] )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/", "/A", "/A/B", "/A/C" ] ) )
-		self.assertEqual( newLeafs, GafferScene.PathMatcher( [ "/A/B/D", "/A/B/E", "/A/C/G", "/A/C/F" ] ) )
+		GafferSceneUI.ContextAlgo.clearExpansion( context )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher() )
+		GafferSceneUI.ContextAlgo.expand( context, IECore.PathMatcher( [ "/A/B", "/A/C" ] ), expandAncestors = False )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/A/B", "/A/C" ] ) )
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( context, GafferScene.PathMatcher( [ "/" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/" ] ) )
-		newLeafs = GafferSceneUI.ContextAlgo.expandDescendants( context, GafferScene.PathMatcher( [ "/" ] ), A["out"], depth = 1 )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/", "/A" ] ) )
-		self.assertEqual( newLeafs, GafferScene.PathMatcher( [ "/A/B", "/A/C" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( context, IECore.PathMatcher( [ "/" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/" ] ) )
+		newLeafs = GafferSceneUI.ContextAlgo.expandDescendants( context, IECore.PathMatcher( [ "/" ] ), A["out"] )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/", "/A", "/A/B", "/A/C" ] ) )
+		self.assertEqual( newLeafs, IECore.PathMatcher( [ "/A/B/D", "/A/B/E", "/A/C/G", "/A/C/F" ] ) )
 
-		newLeafs = GafferSceneUI.ContextAlgo.expandDescendants( context, GafferScene.PathMatcher( [ "/A/C" ] ), A["out"], depth = 1 )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), GafferScene.PathMatcher( [ "/", "/A", "/A/C" ] ) )
-		self.assertEqual( newLeafs, GafferScene.PathMatcher( [ "/A/C/G", "/A/C/F" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( context, IECore.PathMatcher( [ "/" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/" ] ) )
+		newLeafs = GafferSceneUI.ContextAlgo.expandDescendants( context, IECore.PathMatcher( [ "/" ] ), A["out"], depth = 1 )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/", "/A" ] ) )
+		self.assertEqual( newLeafs, IECore.PathMatcher( [ "/A/B", "/A/C" ] ) )
+
+		newLeafs = GafferSceneUI.ContextAlgo.expandDescendants( context, IECore.PathMatcher( [ "/A/C" ] ), A["out"], depth = 1 )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( context ), IECore.PathMatcher( [ "/", "/A", "/A/C" ] ) )
+		self.assertEqual( newLeafs, IECore.PathMatcher( [ "/A/C/G", "/A/C/F" ] ) )
 
 	def testSelectedPaths( self ) :
 
@@ -160,17 +160,17 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		context = Gaffer.Context()
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( [ "/" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), GafferScene.PathMatcher( [ "/" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), IECore.PathMatcher( [ "/" ] ) )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( [ "/", "/A" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), GafferScene.PathMatcher( [ "/", "/A" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/", "/A" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), IECore.PathMatcher( [ "/", "/A" ] ) )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( [ "/", "/A", "/A/C" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), GafferScene.PathMatcher( [ "/", "/A", "/A/C" ] )  )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/", "/A", "/A/C" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), IECore.PathMatcher( [ "/", "/A", "/A/C" ] )  )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( [ "/A/C", "/A/B/D" ] ) )
-		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), GafferScene.PathMatcher( [ "/A/C", "/A/B/D" ] )  )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/A/C", "/A/B/D" ] ) )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), IECore.PathMatcher( [ "/A/C", "/A/B/D" ] )  )
 
 if __name__ == "__main__":
 	unittest.main()

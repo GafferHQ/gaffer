@@ -482,7 +482,7 @@ void Grid::hashSet( const IECore::InternedString &setName, const Gaffer::Context
 	h = outPlug()->setPlug()->defaultValue()->Object::hash();
 }
 
-GafferScene::ConstPathMatcherDataPtr Grid::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr Grid::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return outPlug()->setPlug()->defaultValue();
 }

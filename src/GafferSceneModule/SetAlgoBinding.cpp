@@ -39,9 +39,9 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferScene/SetAlgo.h"
-#include "GafferScene/PathMatcher.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace GafferScene;
 
 namespace

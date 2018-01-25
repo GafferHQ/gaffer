@@ -130,8 +130,8 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		cameraSet = c["out"].set( "__cameras" )
 		self.assertEqual(
 			cameraSet,
-			GafferScene.PathMatcherData(
-				GafferScene.PathMatcher( [ "/camera" ] )
+			IECore.PathMatcherData(
+				IECore.PathMatcher( [ "/camera" ] )
 			)
 		)
 
@@ -140,8 +140,8 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		cameraSet = c["out"].set( "__cameras" )
 		self.assertEqual(
 			cameraSet,
-			GafferScene.PathMatcherData(
-				GafferScene.PathMatcher( [ "/renderCam" ] )
+			IECore.PathMatcherData(
+				IECore.PathMatcher( [ "/renderCam" ] )
 			)
 		)
 

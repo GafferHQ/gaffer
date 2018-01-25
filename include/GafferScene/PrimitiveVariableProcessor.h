@@ -59,7 +59,7 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 
 	public :
 
-		PrimitiveVariableProcessor( const std::string &name=defaultName<PrimitiveVariableProcessor>(), Filter::Result filterDefault = Filter::EveryMatch );
+		PrimitiveVariableProcessor( const std::string &name=defaultName<PrimitiveVariableProcessor>(), IECore::PathMatcher::Result filterDefault = IECore::PathMatcher::EveryMatch );
 		~PrimitiveVariableProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneElementProcessor );

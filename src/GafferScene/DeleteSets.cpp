@@ -146,7 +146,7 @@ void DeleteSets::hashSet( const IECore::InternedString &setName, const Gaffer::C
 	}
 }
 
-GafferScene::ConstPathMatcherDataPtr DeleteSets::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr DeleteSets::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();

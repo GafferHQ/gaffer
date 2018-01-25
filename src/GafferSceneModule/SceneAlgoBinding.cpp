@@ -44,11 +44,11 @@
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcher.h"
 
 #include "SceneAlgoBinding.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace GafferScene;
 
 namespace

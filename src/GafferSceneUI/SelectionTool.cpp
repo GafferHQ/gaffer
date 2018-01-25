@@ -193,7 +193,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	ScenePlug::ScenePath objectUnderMouse;
 	sg->objectAt( event.line, objectUnderMouse );
 
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
+	PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
 
 	const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 	bool selectionChanged = false;
@@ -210,7 +210,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	}
 	else
 	{
-		const bool objectSelectedAlready = selection.match( objectUnderMouse ) & Filter::ExactMatch;
+		const bool objectSelectedAlready = selection.match( objectUnderMouse ) & PathMatcher::ExactMatch;
 
 		if( objectSelectedAlready )
 		{
@@ -255,7 +255,7 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 	else
 	{
 		const PathMatcher &selection = sg->getSelection()->readable();
-		if( selection.match( objectUnderMouse ) & Filter::ExactMatch )
+		if( selection.match( objectUnderMouse ) & PathMatcher::ExactMatch )
 		{
 			// drag the selection somewhere
 			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
@@ -289,7 +289,7 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 	dragOverlay()->setVisible( false );
 
 	SceneGadget *sg = sceneGadget();
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
+	PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
 
 	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), selection ) )
 	{

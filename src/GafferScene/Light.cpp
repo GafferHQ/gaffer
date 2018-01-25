@@ -36,12 +36,12 @@
 
 #include "IECore/NullObject.h"
 #include "IECore/MessageHandler.h"
+
 #include "IECoreScene/Shader.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Light.h"
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneNode.h"
 
 using namespace Gaffer;

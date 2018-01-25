@@ -38,7 +38,6 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SetFilter.h"
 #include "GafferScene/SetAlgo.h"
 
@@ -74,12 +73,12 @@ const Gaffer::StringPlug *SetFilter::setExpressionPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-PathMatcherDataPlug *SetFilter::expressionResultPlug()
+Gaffer::PathMatcherDataPlug *SetFilter::expressionResultPlug()
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }
 
-const PathMatcherDataPlug *SetFilter::expressionResultPlug() const
+const Gaffer::PathMatcherDataPlug *SetFilter::expressionResultPlug() const
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }
@@ -168,7 +167,7 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 {
 	if( !scene )
 	{
-		return NoMatch;
+		return IECore::PathMatcher::NoMatch;
 	}
 
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );

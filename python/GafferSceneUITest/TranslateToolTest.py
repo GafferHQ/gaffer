@@ -68,7 +68,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( tool.selection().transformPlug is None )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 		self.assertEqual( tool.selection().path, "/group/plane" )
 		self.assertEqual( tool.selection().context, view.getContext() )
 		self.assertTrue( tool.selection().upstreamScene.isSame( script["plane"]["out"] ) )
@@ -76,7 +76,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( tool.selection().transformPlug.isSame( script["plane"]["transform"] ) )
 		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group" ] ) )
 		self.assertEqual( tool.selection().path, "/group" )
 		self.assertEqual( tool.selection().context, view.getContext() )
 		self.assertTrue( tool.selection().upstreamScene.isSame( script["group"]["out"] ) )
@@ -109,7 +109,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["plane"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -129,7 +129,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["plane"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -170,7 +170,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -195,7 +195,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -220,7 +220,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -278,7 +278,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["plane"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -315,7 +315,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -343,7 +343,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["transform"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -374,7 +374,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["transform"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )

@@ -38,6 +38,8 @@
 
 #include "IECore/MessageHandler.h"
 
+#include "Gaffer/Node.h"
+
 #include "GafferScene/Capsule.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/RendererAlgo.h"

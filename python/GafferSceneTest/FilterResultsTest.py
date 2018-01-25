@@ -63,7 +63,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			n["out"].getValue().value,
-			GafferScene.PathMatcher( [
+			IECore.PathMatcher( [
 				"/group/sphere",
 				"/group/plane"
 			] )
@@ -73,7 +73,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			n["out"].getValue().value,
-			GafferScene.PathMatcher( [
+			IECore.PathMatcher( [
 				"/group/plane"
 			] )
 		)
@@ -91,13 +91,13 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		n["scene"].setInput( g["out"] )
 		n["filter"].setInput( f["out"] )
 
-		self.assertEqual( n["out"].getValue().value, GafferScene.PathMatcher() )
+		self.assertEqual( n["out"].getValue().value, IECore.PathMatcher() )
 
 		p["name"].setValue( "plain" )
 
 		self.assertEqual(
 			n["out"].getValue().value,
-			GafferScene.PathMatcher( [
+			IECore.PathMatcher( [
 				"/group/plain"
 			] )
 		)

@@ -352,9 +352,9 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 				prune["filter"].setInput( pathFilter["out"] )
 
 				outputSet = set( prune["out"].set( "set" ).value.paths() )
-				filterMatcher = GafferScene.PathMatcher( p )
+				filterMatcher = IECore.PathMatcher( p )
 				for inputSetPath in s :
-					if filterMatcher.match( inputSetPath ) & ( pathFilter.Result.ExactMatch | pathFilter.Result.AncestorMatch ) :
+					if filterMatcher.match( inputSetPath ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) :
 						self.assertTrue( inputSetPath not in outputSet )
 					else :
 						self.assertTrue( inputSetPath in outputSet )

@@ -40,7 +40,6 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/SubTree.h"
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneAlgo.h"
 
 using namespace std;
@@ -223,7 +222,7 @@ void SubTree::hashSet( const IECore::InternedString &setName, const Gaffer::Cont
 	includeRootPlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr SubTree::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr SubTree::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 	const PathMatcher &inputSet = inputSetData->readable();

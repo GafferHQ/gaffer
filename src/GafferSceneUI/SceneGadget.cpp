@@ -49,6 +49,8 @@
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/CurvesPrimitive.h"
 
+#include "Gaffer/Node.h"
+
 #include "GafferUI/ViewportGadget.h"
 
 #include "GafferSceneUI/SceneGadget.h"
@@ -57,6 +59,7 @@
 
 using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
@@ -293,14 +296,14 @@ class SceneGadget::SceneGraph
 		{
 			const unsigned m = check ? selection.match( path ) : 0;
 
-			m_selected = m & Filter::ExactMatch;
+			m_selected = m & PathMatcher::ExactMatch;
 
 			ScenePlug::ScenePath childPath = path;
 			childPath.push_back( IECore::InternedString() ); // space for the child name
 			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
 			{
 				childPath.back() = (*it)->m_name;
-				(*it)->applySelectionWalk( selection, childPath, m & Filter::DescendantMatch );
+				(*it)->applySelectionWalk( selection, childPath, m & PathMatcher::DescendantMatch );
 			}
 		}
 
@@ -489,7 +492,7 @@ class SceneGadget::UpdateTask : public tbb::task
 				m_sceneGraph->m_expanded = m_sceneGadget->m_minimumExpansionDepth >= m_scenePath.size();
 				if( !m_sceneGraph->m_expanded )
 				{
-					m_sceneGraph->m_expanded = m_sceneGadget->m_expandedPaths->readable().match( m_scenePath ) & Filter::ExactMatch;
+					m_sceneGraph->m_expanded = m_sceneGadget->m_expandedPaths->readable().match( m_scenePath ) & PathMatcher::ExactMatch;
 				}
 			}
 
@@ -679,14 +682,14 @@ const Gaffer::Context *SceneGadget::getContext() const
 	return m_context.get();
 }
 
-void SceneGadget::setExpandedPaths( GafferScene::ConstPathMatcherDataPtr expandedPaths )
+void SceneGadget::setExpandedPaths( IECore::ConstPathMatcherDataPtr expandedPaths )
 {
 	m_expandedPaths = expandedPaths;
 	m_dirtyFlags |= UpdateTask::ExpansionDirty;
 	requestRender();
 }
 
-const GafferScene::PathMatcherData *SceneGadget::getExpandedPaths() const
+const IECore::PathMatcherData *SceneGadget::getExpandedPaths() const
 {
 	return m_expandedPaths.get();
 }
@@ -733,7 +736,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 size_t SceneGadget::objectsAt(
 	const Imath::V3f &corner0InGadgetSpace,
 	const Imath::V3f &corner1InGadgetSpace,
-	GafferScene::PathMatcher &paths
+	IECore::PathMatcher &paths
 ) const
 {
 	updateSceneGraph();
@@ -757,7 +760,7 @@ size_t SceneGadget::objectsAt(
 	return result;
 }
 
-const GafferScene::PathMatcherData *SceneGadget::getSelection() const
+const IECore::PathMatcherData *SceneGadget::getSelection() const
 {
 	return m_selection.get();
 }

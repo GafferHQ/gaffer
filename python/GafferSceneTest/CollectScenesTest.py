@@ -109,14 +109,14 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			script["collect"]["out"].set( "spheres" ).value,
-			GafferScene.PathMatcher(
+			IECore.PathMatcher(
 				[ "/sphere/sphere", "/group/group/sphere" ]
 			)
 		)
 
 		self.assertEqual(
 			script["collect"]["out"].set( "cubes" ).value,
-			GafferScene.PathMatcher(
+			IECore.PathMatcher(
 				[ "/cube/cube", "/group/group/cube" ]
 			)
 		)

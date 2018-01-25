@@ -54,7 +54,7 @@ IE_CORE_DEFINERUNTIMETYPED( DeletePoints );
 
 size_t DeletePoints::g_firstPlugIndex = 0;
 
-DeletePoints::DeletePoints( const std::string &name ) : SceneElementProcessor( name, Filter::NoMatch )
+DeletePoints::DeletePoints( const std::string &name ) : SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

@@ -45,7 +45,6 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/SceneReader.h"
-#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
 using namespace Imath;
@@ -434,7 +433,7 @@ static void loadSetWalk( const SceneInterface *s, const InternedString &setName,
 	}
 }
 
-GafferScene::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	PathMatcherDataPtr result = new PathMatcherData;
 	ConstSceneInterfacePtr rootScene = scene( ScenePath() );

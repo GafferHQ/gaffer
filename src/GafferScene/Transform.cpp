@@ -47,7 +47,7 @@ IE_CORE_DEFINERUNTIMETYPED( Transform );
 size_t Transform::g_firstPlugIndex = 0;
 
 Transform::Transform( const std::string &name )
-	:	SceneElementProcessor( name, Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "space", Plug::In, Local, Local, ResetWorld ) );
@@ -207,7 +207,7 @@ Imath::M44f Transform::relativeParentTransform( const ScenePath &path, const Gaf
 	{
 		ancestorPath.pop_back();
 		sceneScope.set( ScenePlug::scenePathContextName, ancestorPath );
-		if( filterPlug()->getValue() & Filter::ExactMatch )
+		if( filterPlug()->getValue() & IECore::PathMatcher::ExactMatch )
 		{
 			matchingAncestorFound = true;
 			return result;
@@ -229,7 +229,7 @@ IECore::MurmurHash Transform::relativeParentTransformHash( const ScenePath &path
 	{
 		ancestorPath.pop_back();
 		sceneScope.set( ScenePlug::scenePathContextName, ancestorPath );
-		if( filterPlug()->getValue() & Filter::ExactMatch )
+		if( filterPlug()->getValue() & IECore::PathMatcher::ExactMatch )
 		{
 			result.append( true );
 			return result;

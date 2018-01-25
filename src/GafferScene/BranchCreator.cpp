@@ -41,7 +41,6 @@
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/BranchCreator.h"
 
 using namespace std;
@@ -143,13 +142,13 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		hashBranchBound( parentPath, branchPath, context, h );
 	}
-	else if( parentMatch == Filter::ExactMatch || parentMatch == Filter::DescendantMatch )
+	else if( parentMatch == IECore::PathMatcher::ExactMatch || parentMatch == IECore::PathMatcher::DescendantMatch )
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
 		inPlug()->boundPlug()->hash( h );
@@ -165,13 +164,13 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		return computeBranchBound( parentPath, branchPath, context );
 	}
-	else if( parentMatch == Filter::ExactMatch || parentMatch == Filter::DescendantMatch )
+	else if( parentMatch == IECore::PathMatcher::ExactMatch || parentMatch == IECore::PathMatcher::DescendantMatch )
 	{
 		Box3f result = inPlug()->boundPlug()->getValue();
 		result.extendBy( unionOfTransformedChildBounds( path, outPlug() ) );
@@ -187,9 +186,9 @@ void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context 
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		hashBranchTransform( parentPath, branchPath, context, h );
 	}
@@ -203,9 +202,9 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		return computeBranchTransform( parentPath, branchPath, context );
 	}
@@ -219,9 +218,9 @@ void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		hashBranchAttributes( parentPath, branchPath, context, h );
 	}
@@ -235,9 +234,9 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		return computeBranchAttributes( parentPath, branchPath, context );
 	}
@@ -251,9 +250,9 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		hashBranchObject( parentPath, branchPath, context, h );
 	}
@@ -267,9 +266,9 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		return computeBranchObject( parentPath, branchPath, context );
 	}
@@ -283,13 +282,13 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		hashBranchChildNames( parentPath, branchPath, context, h );
 	}
-	else if( parentMatch == Filter::ExactMatch )
+	else if( parentMatch == IECore::PathMatcher::ExactMatch )
 	{
 		h = mapping->member<InternedStringVectorData>( g_childNamesKey )->Object::hash();
 	}
@@ -303,13 +302,13 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
+	IECore::PathMatcher::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
-	if( parentMatch == Filter::AncestorMatch )
+	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
 		return computeBranchChildNames( parentPath, branchPath, context );
 	}
-	else if( parentMatch == Filter::ExactMatch )
+	else if( parentMatch == IECore::PathMatcher::ExactMatch )
 	{
 		return mapping->member<InternedStringVectorData>( g_childNamesKey );
 	}
@@ -407,7 +406,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 	h.append( branchSetHash );
 }
 
-GafferScene::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
 
@@ -518,7 +517,7 @@ void BranchCreator::hashBranchSet( const ScenePath &parentPath, const IECore::In
 {
 }
 
-GafferScene::ConstPathMatcherDataPtr BranchCreator::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+IECore::ConstPathMatcherDataPtr BranchCreator::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
 	// See comments in computeBranchSetNames.
 	return nullptr;
@@ -626,11 +625,11 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 	return result;
 }
 
-Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
+IECore::PathMatcher::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
 {
 	if( !mapping->readable().size() )
 	{
-		return Filter::NoMatch;
+		return IECore::PathMatcher::NoMatch;
 	}
 
 	const ScenePath &parent = mapping->member<InternedStringVectorData>( g_parentKey )->readable();
@@ -646,7 +645,7 @@ Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *
 	{
 		if( *parentIterator != *pathIterator )
 		{
-			return Filter::NoMatch;
+			return IECore::PathMatcher::NoMatch;
 		}
 	}
 
@@ -654,7 +653,7 @@ Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *
 	{
 		// path is ancestor of parent, or parent itself
 		parentPath = parent;
-		return parentIterator == parentIteratorEnd ? Filter::ExactMatch : Filter::DescendantMatch;
+		return parentIterator == parentIteratorEnd ? IECore::PathMatcher::ExactMatch : IECore::PathMatcher::DescendantMatch;
 	}
 
 	// path is descendant of parent
@@ -663,7 +662,7 @@ Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *
 	if( !branchName )
 	{
 		// descendant comes from the input, rather than being part of the generated branch
-		return Filter::NoMatch;
+		return IECore::PathMatcher::NoMatch;
 	}
 
 	// somewhere on the new branch
@@ -672,5 +671,5 @@ Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *
 	branchPath.push_back( branchName->readable() );
 	branchPath.insert( branchPath.end(), ++pathIterator, pathIteratorEnd );
 
-	return Filter::AncestorMatch;
+	return IECore::PathMatcher::AncestorMatch;
 }

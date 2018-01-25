@@ -284,7 +284,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		paths = []
 		node = self.__lightTweaksNode()
 		if node is not None :
-			pathMatcher = GafferScene.PathMatcher()
+			pathMatcher = IECore.PathMatcher()
 			with self.getContext() :
 				GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
 				paths = pathMatcher.paths()

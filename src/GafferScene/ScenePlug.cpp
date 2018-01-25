@@ -41,7 +41,7 @@
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcherData.h"
+#include "GafferScene/Filter.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
@@ -127,7 +127,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		new PathMatcherDataPlug(
 			"set",
 			direction,
-			new PathMatcherData(),
+			new IECore::PathMatcherData(),
 			childFlags
 		)
 	);
@@ -235,12 +235,12 @@ const Gaffer::InternedStringVectorDataPlug *ScenePlug::setNamesPlug() const
 	return getChild<InternedStringVectorDataPlug>( 6 );
 }
 
-PathMatcherDataPlug *ScenePlug::setPlug()
+Gaffer::PathMatcherDataPlug *ScenePlug::setPlug()
 {
 	return getChild<PathMatcherDataPlug>( 7 );
 }
 
-const PathMatcherDataPlug *ScenePlug::setPlug() const
+const Gaffer::PathMatcherDataPlug *ScenePlug::setPlug() const
 {
 	return getChild<PathMatcherDataPlug>( 7 );
 }
@@ -372,7 +372,7 @@ IECore::ConstInternedStringVectorDataPtr ScenePlug::setNames() const
 	return setNamesPlug()->getValue();
 }
 
-ConstPathMatcherDataPtr ScenePlug::set( const IECore::InternedString &setName ) const
+IECore::ConstPathMatcherDataPtr ScenePlug::set( const IECore::InternedString &setName ) const
 {
 	SetScope scope( Context::current(), setName );
 	return setPlug()->getValue();

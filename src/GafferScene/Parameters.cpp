@@ -49,7 +49,7 @@ IE_CORE_DEFINERUNTIMETYPED( Parameters );
 size_t Parameters::g_firstPlugIndex = 0;
 
 Parameters::Parameters( const std::string &name )
-	:	SceneElementProcessor( name, Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "parameters" ) );

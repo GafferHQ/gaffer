@@ -56,7 +56,6 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"
 
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/SetFilter.h"
@@ -1327,13 +1326,13 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		PathMatcher selection = ContextAlgo::getSelectedPaths( getContext() );
 		/// \todo Store selection as PathMatcherData within the context, so we don't need
 		/// to contruct a new one.
-		GafferScene::PathMatcherDataPtr sg = new GafferScene::PathMatcherData( selection );
+		PathMatcherDataPtr sg = new PathMatcherData( selection );
 		m_sceneGadget->setSelection( sg );
 		return;
 	}
 	else if( name.value() == "ui:scene:expandedPaths" )
 	{
-		const GafferScene::PathMatcherData *expandedPaths = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths" );
+		const PathMatcherData *expandedPaths = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths" );
 		m_sceneGadget->setExpandedPaths( expandedPaths );
 		return;
 	}
@@ -1377,7 +1376,7 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	return false;
 }
 
-void SceneView::frame( const GafferScene::PathMatcher &filter, const Imath::V3f &direction )
+void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 {
 	Imath::Box3f bound;
 
@@ -1399,7 +1398,7 @@ void SceneView::frame( const GafferScene::PathMatcher &filter, const Imath::V3f 
 
 void SceneView::expandSelection( size_t depth )
 {
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
+	PathMatcher &selection = const_cast<PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
 
 	Context::Scope scope( getContext() );
 	selection = ContextAlgo::expandDescendants( getContext(), selection, preprocessedInPlug<ScenePlug>(), depth - 1 );
@@ -1409,7 +1408,7 @@ void SceneView::expandSelection( size_t depth )
 
 void SceneView::collapseSelection()
 {
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
+	PathMatcher &selection = const_cast<PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
 
 	std::vector<string> toCollapse;
 	selection.paths( toCollapse );

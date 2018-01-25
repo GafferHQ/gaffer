@@ -54,7 +54,7 @@ class FilteredSceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 
 			def __init__( self, name = "ShaderAndAttributes" ) :
 
-				GafferScene.FilteredSceneProcessor.__init__( self, name, filterDefault = GafferScene.Filter.Result.NoMatch )
+				GafferScene.FilteredSceneProcessor.__init__( self, name, filterDefault = IECore.PathMatcher.Result.NoMatch )
 
 				self["__shader"] = GafferSceneTest.TestShader()
 				self["__shader"]["type"].setValue( "test:surface" )

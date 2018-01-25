@@ -195,7 +195,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 	}
 	else if( const GafferScene::Transform *transform = runTimeCast<const GafferScene::Transform>( node ) )
 	{
-		if( transform->filterPlug()->getValue() & Filter::ExactMatch )
+		if( transform->filterPlug()->getValue() & PathMatcher::ExactMatch )
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
 			ScenePlug::ScenePath spacePath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );

@@ -59,7 +59,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		] ) )
 
 		u = GafferScene.UnionFilter()
-		self.assertEqual( u["out"].getValue(), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( u["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
 
 		h1 = u["out"].hash()
 
@@ -83,14 +83,14 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( h2, h3 )
 
 		for path, result in [
-			( "/a", u.Result.DescendantMatch ),
-			( "/b", u.Result.NoMatch ),
-			( "/a/b", u.Result.DescendantMatch ),
-			( "/a/b/c", u.Result.DescendantMatch | u.Result.ExactMatch ),
-			( "/a/b/c/d", u.Result.AncestorMatch ),
-			( "/a/b/c/e", u.Result.AncestorMatch | u.Result.DescendantMatch ),
-			( "/a/b/c/e/f/g", u.Result.AncestorMatch | u.Result.ExactMatch ),
-			( "/a/b/c/e/f/g/h", u.Result.AncestorMatch ),
+			( "/a", IECore.PathMatcher.Result.DescendantMatch ),
+			( "/b", IECore.PathMatcher.Result.NoMatch ),
+			( "/a/b", IECore.PathMatcher.Result.DescendantMatch ),
+			( "/a/b/c", IECore.PathMatcher.Result.DescendantMatch | IECore.PathMatcher.Result.ExactMatch ),
+			( "/a/b/c/d", IECore.PathMatcher.Result.AncestorMatch ),
+			( "/a/b/c/e", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+			( "/a/b/c/e/f/g", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.ExactMatch ),
+			( "/a/b/c/e/f/g/h", IECore.PathMatcher.Result.AncestorMatch ),
 		] :
 			with Gaffer.Context() as c :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
@@ -234,17 +234,17 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
-			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.ExactMatch )
+			self.assertEqual( unionFilter["out"].getValue(), IECore.PathMatcher.Result.ExactMatch )
 			c["scene:path"] = IECore.InternedStringVectorData( [ "b" ] )
-			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.ExactMatch )
+			self.assertEqual( unionFilter["out"].getValue(), IECore.PathMatcher.Result.ExactMatch )
 
 		unionFilter["enabled"].setValue( False )
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
-			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.ExactMatch )
+			self.assertEqual( unionFilter["out"].getValue(), IECore.PathMatcher.Result.ExactMatch )
 			c["scene:path"] = IECore.InternedStringVectorData( [ "b" ] )
-			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.NoMatch )
+			self.assertEqual( unionFilter["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
 
 if __name__ == "__main__":
 	unittest.main()

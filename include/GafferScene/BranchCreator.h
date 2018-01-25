@@ -94,7 +94,7 @@ class BranchCreator : public SceneProcessor
 		IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 		IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 		IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const override;
-		GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 		/// @name Branch evaluation methods
 		/// These must be implemented by derived classes. The hashBranch*() methods must either :
@@ -127,7 +127,7 @@ class BranchCreator : public SceneProcessor
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 
 		virtual void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual GafferScene::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
+		virtual IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		//@}
 
 	private :
@@ -141,7 +141,7 @@ class BranchCreator : public SceneProcessor
 		IECore::ConstCompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
 
 		// Computes the relevant parent and branch paths for computing the result
-		// at the specified path. Returns a Filter::Result to describe where path is
+		// at the specified path. Returns a PathMatcher::Result to describe where path is
 		// relative to the parent, as follows :
 		//
 		// AncestorMatch
@@ -163,7 +163,7 @@ class BranchCreator : public SceneProcessor
 		//
 		// The path is a direct pass through from the input - neither
 		// parentPath nor branchPath will be filled in.
-		Filter::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+		IECore::PathMatcher::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 

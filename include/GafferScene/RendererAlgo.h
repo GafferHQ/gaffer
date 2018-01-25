@@ -47,7 +47,6 @@
 #include "IECoreScene/Camera.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcher.h"
 
 namespace IECoreScenePreview
 {
@@ -118,8 +117,8 @@ class RenderSets : boost::noncopyable
 		unsigned update( const ScenePlug *scene );
 		void clear();
 
-		const PathMatcher &camerasSet() const;
-		const PathMatcher &lightsSet() const;
+		const IECore::PathMatcher &camerasSet() const;
+		const IECore::PathMatcher &lightsSet() const;
 
 		IECore::ConstInternedStringVectorDataPtr setsAttribute( const std::vector<IECore::InternedString> &path ) const;
 
@@ -129,7 +128,7 @@ class RenderSets : boost::noncopyable
 		{
 			IECore::InternedString unprefixedName; // With "render:" stripped off
 			IECore::MurmurHash hash;
-			PathMatcher set;
+			IECore::PathMatcher set;
 		};
 
 		typedef boost::container::flat_map<IECore::InternedString, Set> Sets;

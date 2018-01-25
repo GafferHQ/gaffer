@@ -73,7 +73,7 @@ void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *cont
 
 unsigned UnionFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
-	unsigned result = NoMatch;
+	unsigned result = IECore::PathMatcher::NoMatch;
 	for( InputIntPlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		result |= (*it)->getValue();

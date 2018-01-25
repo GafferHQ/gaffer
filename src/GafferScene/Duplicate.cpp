@@ -375,7 +375,7 @@ void Duplicate::hashBranchSet( const ScenePath &parentPath, const IECore::Intern
 	childNamesPlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr Duplicate::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+IECore::ConstPathMatcherDataPtr Duplicate::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
 	const PathMatcher &inputSet = inputSetData->readable();

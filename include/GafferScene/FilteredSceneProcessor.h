@@ -52,7 +52,7 @@ class FilteredSceneProcessor : public SceneProcessor
 
 	public :
 
-		FilteredSceneProcessor( const std::string &name=defaultName<FilteredSceneProcessor>(), Filter::Result filterDefault = Filter::EveryMatch );
+		FilteredSceneProcessor( const std::string &name=defaultName<FilteredSceneProcessor>(), IECore::PathMatcher::Result filterDefault = IECore::PathMatcher::EveryMatch );
 		~FilteredSceneProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
@@ -73,7 +73,7 @@ class FilteredSceneProcessor : public SceneProcessor
 		/// cast to the appropriate result type, using a using a FilterPlug::SceneScope.
 		/// Note that if you need to make multiple queries, it is more efficient to
 		/// make your own SceneScope and then query the filter directly multiple times.
-		Filter::Result filterValue( const Gaffer::Context *context ) const;
+		IECore::PathMatcher::Result filterValue( const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;
 

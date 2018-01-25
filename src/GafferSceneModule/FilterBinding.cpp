@@ -69,22 +69,12 @@ ScenePlugPtr getInputScene( const Gaffer::Context *context )
 void GafferSceneModule::bindFilter()
 {
 
-	{
-		scope s = GafferBindings::DependencyNodeClass<Filter>()
-			.def( "setInputScene", &Filter::setInputScene )
-			.staticmethod( "setInputScene" )
-			.def( "getInputScene", &getInputScene )
-			.staticmethod( "getInputScene" )
-		;
-
-		enum_<Filter::Result>( "Result" )
-			.value( "NoMatch", Filter::NoMatch )
-			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "ExactMatch", Filter::ExactMatch )
-			.value( "AncestorMatch", Filter::AncestorMatch )
-			.value( "EveryMatch", Filter::EveryMatch )
-		;
-	}
+	GafferBindings::DependencyNodeClass<Filter>()
+		.def( "setInputScene", &Filter::setInputScene )
+		.staticmethod( "setInputScene" )
+		.def( "getInputScene", &getInputScene )
+		.staticmethod( "getInputScene" )
+	;
 
 	PlugClass<FilterPlug>()
 		.def( init<const std::string &, Plug::Direction, unsigned>(
@@ -99,9 +89,9 @@ void GafferSceneModule::bindFilter()
 				(
 					arg( "name" ) = Gaffer::GraphComponent::defaultName<FilterPlug>(),
 					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "defaultValue" ) = GafferScene::Filter::NoMatch,
-					arg( "minValue" ) = GafferScene::Filter::NoMatch,
-					arg( "maxValue" ) = GafferScene::Filter::EveryMatch,
+					arg( "defaultValue" ) = IECore::PathMatcher::NoMatch,
+					arg( "minValue" ) = IECore::PathMatcher::NoMatch,
+					arg( "maxValue" ) = IECore::PathMatcher::EveryMatch,
 					arg( "flags" ) = Gaffer::Plug::Default
 				)
 			)

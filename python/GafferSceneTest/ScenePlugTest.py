@@ -219,8 +219,8 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( isinstance( p["setNames"], Gaffer.InternedStringVectorDataPlug ) )
 		self.assertEqual( p["setNames"].defaultValue(), IECore.InternedStringVectorData() )
 
-		self.assertTrue( isinstance( p["set"], GafferScene.PathMatcherDataPlug ) )
-		self.assertEqual( p["set"].defaultValue(), GafferScene.PathMatcherData() )
+		self.assertTrue( isinstance( p["set"], Gaffer.PathMatcherDataPlug ) )
+		self.assertEqual( p["set"].defaultValue(), IECore.PathMatcherData() )
 
 	def testGlobalsAccessors( self ) :
 

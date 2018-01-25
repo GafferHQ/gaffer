@@ -99,7 +99,7 @@ struct LocationWriter
 		{
 			ConstPathMatcherDataPtr pathMatcher = IECore::runTimeCast<PathMatcherData>( it->second );
 
-			if( pathMatcher->readable().match( scenePath ) & Filter::ExactMatch )
+			if( pathMatcher->readable().match( scenePath ) & IECore::PathMatcher::ExactMatch )
 			{
 				locationSets.push_back( it->first );
 			}

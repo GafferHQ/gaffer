@@ -126,7 +126,7 @@ IE_CORE_DEFINERUNTIMETYPED( MeshToLevelSet );
 size_t MeshToLevelSet::g_firstPlugIndex = 0;
 
 MeshToLevelSet::MeshToLevelSet( const std::string &name )
-	:	SceneElementProcessor( name, GafferScene::Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

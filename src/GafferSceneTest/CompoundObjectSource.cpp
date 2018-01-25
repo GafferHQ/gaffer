@@ -217,7 +217,7 @@ void CompoundObjectSource::hashSet( const IECore::InternedString &setName, const
 	h.append( setName );
 }
 
-GafferScene::ConstPathMatcherDataPtr CompoundObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr CompoundObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	ConstCompoundObjectPtr compoundObject = inObject();
 

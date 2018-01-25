@@ -163,7 +163,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		paths = pathListing.getExpandedPaths()
-		paths = GafferScene.PathMatcher( [ "/" ] + [ str( path ) for path in paths ] )
+		paths = IECore.PathMatcher( [ "/" ] + [ str( path ) for path in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
 			ContextAlgo.setExpandedPaths( self.getContext(), paths )
 
@@ -172,7 +172,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		paths = pathListing.getSelectedPaths()
-		paths = GafferScene.PathMatcher( [ str(p) for p in paths ] )
+		paths = IECore.PathMatcher( [ str(p) for p in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
 			ContextAlgo.setSelectedPaths( self.getContext(), paths )
 

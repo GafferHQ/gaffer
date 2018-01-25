@@ -79,7 +79,7 @@ enum TypeId
 	OpenGLAttributesTypeId = 110534,
 	SceneWriterTypeId = 110535,
 	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537,
+	PathMatcherDataTypeId = 110537, // Obsolete - available for reuse
 	LightTypeId = 110538,
 	StandardAttributesTypeId = 110539,
 	OpenGLShaderTypeId = 110540,
@@ -124,7 +124,7 @@ enum TypeId
 	DeleteSetsTypeId = 110579,
 	ParametersTypeId = 110580,
 	SceneFilterPathFilterTypeId = 110581,
-	PathMatcherDataPlugTypeId = 110582,
+	PathMatcherDataPlugTypeId = 110582, // Obsolete - available for reuse
 	AttributeVisualiserTypeId = 110583,
 	SceneLoopTypeId = 110584,
 	RenderTypeId = 110585,

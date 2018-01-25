@@ -54,7 +54,6 @@ from CustomOptionsTest import CustomOptionsTest
 from DeleteOptionsTest import DeleteOptionsTest
 from CopyOptionsTest import CopyOptionsTest
 from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
 from PathFilterTest import PathFilterTest
 from ShaderAssignmentTest import ShaderAssignmentTest
 from CustomAttributesTest import CustomAttributesTest
@@ -66,7 +65,6 @@ from SubTreeTest import SubTreeTest
 from OpenGLAttributesTest import OpenGLAttributesTest
 from StandardOptionsTest import StandardOptionsTest
 from ScenePathTest import ScenePathTest
-from PathMatcherDataTest import PathMatcherDataTest
 from LightTest import LightTest
 from OpenGLShaderTest import OpenGLShaderTest
 from OpenGLRenderTest import OpenGLRenderTest

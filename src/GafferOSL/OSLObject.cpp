@@ -72,7 +72,7 @@ CompoundDataPtr prepareShadingPoints( const Primitive *primitive )
 };
 
 OSLObject::OSLObject( const std::string &name )
-	:	SceneElementProcessor( name, Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShaderPlug( "shader" ) );

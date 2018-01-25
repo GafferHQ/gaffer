@@ -344,7 +344,7 @@ IECore::ConstInternedStringVectorDataPtr SceneNode::computeSetNames( const Gaffe
 	throw IECore::NotImplementedException( string( typeName() ) + "::computeSetNames" );
 }
 
-GafferScene::ConstPathMatcherDataPtr SceneNode::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr SceneNode::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw IECore::NotImplementedException( string( typeName() ) + "::computeSet" );
 }

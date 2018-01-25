@@ -121,28 +121,28 @@ class SceneTestCase( GafferTest.TestCase ) :
 	def assertBuiltInSetsComplete( self, scenePlug ) :
 
 		setNames = scenePlug["setNames"].getValue()
-		lightSet = scenePlug.set( "__lights" ) if "__lights" in setNames else GafferScene.PathMatcherData()
-		cameraSet = scenePlug.set( "__cameras" ) if "__cameras" in setNames else GafferScene.PathMatcherData()
-		coordinateSystemSet = scenePlug.set( "__coordinateSystems" ) if "__coordinateSystems" in setNames else GafferScene.PathMatcherData()
+		lightSet = scenePlug.set( "__lights" ) if "__lights" in setNames else IECore.PathMatcherData()
+		cameraSet = scenePlug.set( "__cameras" ) if "__cameras" in setNames else IECore.PathMatcherData()
+		coordinateSystemSet = scenePlug.set( "__coordinateSystems" ) if "__coordinateSystems" in setNames else IECore.PathMatcherData()
 
 		def walkScene( scenePath ) :
 
 			object = scenePlug.object( scenePath, _copy = False )
 			if isinstance( object, IECoreScene.Camera ) :
 				self.assertTrue(
-					cameraSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
+					cameraSet.value.match( scenePath ) & IECore.PathMatcher.Result.ExactMatch,
 					scenePath + " in __cameras set"
 				)
 			elif isinstance( object, IECoreScene.CoordinateSystem ) :
 				self.assertTrue(
-					coordinateSystemSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
+					coordinateSystemSet.value.match( scenePath ) & IECore.PathMatcher.Result.ExactMatch,
 					scenePath + " in __coordinateSystems set"
 				 )
 
 			attributes = scenePlug.attributes( scenePath, _copy = False )
 			if any( [ n == "light" or n.endswith( ":light" ) for n in attributes.keys() ] ) :
 				self.assertTrue(
-					lightSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
+					lightSet.value.match( scenePath ) & IECore.PathMatcher.Result.ExactMatch,
 					scenePath + " in __lights set"
 				 )
 

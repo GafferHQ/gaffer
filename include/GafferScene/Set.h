@@ -90,15 +90,15 @@ class Set : public FilteredSceneProcessor
 		void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 
 		IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const override;
-		ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 	private :
 
-		PathMatcherDataPlug *filterResultsPlug();
-		const PathMatcherDataPlug *filterResultsPlug() const;
+		Gaffer::PathMatcherDataPlug *filterResultsPlug();
+		const Gaffer::PathMatcherDataPlug *filterResultsPlug() const;
 
-		PathMatcherDataPlug *pathMatcherPlug();
-		const PathMatcherDataPlug *pathMatcherPlug() const;
+		Gaffer::PathMatcherDataPlug *pathMatcherPlug();
+		const Gaffer::PathMatcherDataPlug *pathMatcherPlug() const;
 
 		static size_t g_firstPlugIndex;
 

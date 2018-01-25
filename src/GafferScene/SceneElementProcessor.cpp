@@ -49,7 +49,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneElementProcessor );
 
 size_t SceneElementProcessor::g_firstPlugIndex = 0;
 
-SceneElementProcessor::SceneElementProcessor( const std::string &name, Filter::Result filterDefault )
+SceneElementProcessor::SceneElementProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault )
 	:	FilteredSceneProcessor( name, filterDefault )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -156,13 +156,13 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 
 void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = Filter::NoMatch;
+	IECore::PathMatcher::Result match = IECore::PathMatcher::NoMatch;
 	if( processesTransform() )
 	{
 		match = filterValue( context );
 	}
 
-	if( match & Filter::ExactMatch )
+	if( match & IECore::PathMatcher::ExactMatch )
 	{
 		FilteredSceneProcessor::hashTransform( path, context, parent, h );
 		inPlug()->transformPlug()->hash( h );
@@ -177,7 +177,7 @@ void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::
 
 Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return computeProcessedTransform( path, context, inPlug()->transformPlug()->getValue() );
 	}
@@ -189,13 +189,13 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 
 void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = Filter::NoMatch;
+	IECore::PathMatcher::Result match = IECore::PathMatcher::NoMatch;
 	if( processesAttributes() )
 	{
 		match = filterValue( context );
 	}
 
-	if( match & Filter::ExactMatch )
+	if( match & IECore::PathMatcher::ExactMatch )
 	{
 		FilteredSceneProcessor::hashAttributes( path, context, parent, h );
 		inPlug()->attributesPlug()->hash( h );
@@ -210,7 +210,7 @@ void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer:
 
 IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return computeProcessedAttributes( path, context, inPlug()->attributesPlug()->getValue() );
 	}
@@ -222,13 +222,13 @@ IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const S
 
 void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = Filter::NoMatch;
+	IECore::PathMatcher::Result match = IECore::PathMatcher::NoMatch;
 	if( processesObject() )
 	{
 		match = filterValue( context );
 	}
 
-	if( match & Filter::ExactMatch )
+	if( match & IECore::PathMatcher::ExactMatch )
 	{
 		FilteredSceneProcessor::hashObject( path, context, parent, h );
 		inPlug()->objectPlug()->hash( h );
@@ -243,7 +243,7 @@ void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Con
 
 IECore::ConstObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return computeProcessedObject( path, context, inPlug()->objectPlug()->getValue() );
 	}
@@ -316,13 +316,13 @@ SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod( const Gaf
 
 	if( pBound || pTransform )
 	{
-		const Filter::Result f = filterValue( context );
-		if( pBound && (f & Filter::ExactMatch) )
+		const IECore::PathMatcher::Result f = filterValue( context );
+		if( pBound && (f & IECore::PathMatcher::ExactMatch) )
 		{
 			return Processed;
 		}
 
-		if( f & Filter::DescendantMatch )
+		if( f & IECore::PathMatcher::DescendantMatch )
 		{
 			return Union;
 		}

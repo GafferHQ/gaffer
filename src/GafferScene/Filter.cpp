@@ -128,7 +128,7 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == outPlug() )
 	{
-		unsigned match = NoMatch;
+		unsigned match = IECore::PathMatcher::NoMatch;
 		if( enabledPlug()->getValue() )
 		{
 			match = computeMatch( getInputScene( context ), context );
@@ -147,5 +147,5 @@ void Filter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, 
 
 unsigned Filter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
-	return NoMatch;
+	return IECore::PathMatcher::NoMatch;
 }

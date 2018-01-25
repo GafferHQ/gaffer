@@ -43,6 +43,7 @@
 #include "IECore/ObjectVector.h"
 #include "IECore/CompoundObject.h"
 #include "IECore/CompoundData.h"
+#include "IECore/PathMatcherData.h"
 
 #include "Gaffer/ValuePlug.h"
 
@@ -135,6 +136,7 @@ typedef TypedObjectPlug<IECore::M44fVectorData> M44fVectorDataPlug;
 typedef TypedObjectPlug<IECore::ObjectVector> ObjectVectorPlug;
 typedef TypedObjectPlug<IECore::CompoundObject> CompoundObjectPlug;
 typedef TypedObjectPlug<IECore::CompoundData> AtomicCompoundDataPlug;
+typedef TypedObjectPlug<IECore::PathMatcherData> PathMatcherDataPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
 IE_CORE_DECLAREPTR( BoolVectorDataPlug );
@@ -149,6 +151,7 @@ IE_CORE_DECLAREPTR( M44fVectorDataPlug );
 IE_CORE_DECLAREPTR( ObjectVectorPlug );
 IE_CORE_DECLAREPTR( CompoundObjectPlug );
 IE_CORE_DECLAREPTR( AtomicCompoundDataPlug );
+IE_CORE_DECLAREPTR( PathMatcherDataPlug );
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
@@ -253,6 +256,10 @@ typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, CompoundObjectPl
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveAtomicCompoundDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveInputAtomicCompoundDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveOutputAtomicCompoundDataPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, PathMatcherDataPlug>, PlugPredicate<> > RecursivePathMatcherDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, PathMatcherDataPlug>, PlugPredicate<> > RecursiveInputPathMatcherDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, PathMatcherDataPlug>, PlugPredicate<> > RecursiveOutputPathMatcherDataPlugIterator;
 
 } // namespace Gaffer
 

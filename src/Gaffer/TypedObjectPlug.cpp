@@ -54,6 +54,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::M44fVectorDataPlug, M4
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ObjectVectorPlug, ObjectVectorPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::CompoundObjectPlug, CompoundObjectPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::AtomicCompoundDataPlug, AtomicCompoundDataPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::PathMatcherDataPlug, PathMatcherDataPlugTypeId )
 
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
@@ -69,5 +70,6 @@ template class TypedObjectPlug<IECore::M44fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
 template class TypedObjectPlug<IECore::CompoundObject>;
 template class TypedObjectPlug<IECore::CompoundData>;
+template class TypedObjectPlug<IECore::PathMatcherData>;
 
 } // namespace Gaffer

@@ -43,6 +43,7 @@
 
 #include "GafferScene/ScenePath.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/Filter.h"
 #include "GafferScene/SceneFilterPathFilter.h"
 
 #include "ScenePathBinding.h"
