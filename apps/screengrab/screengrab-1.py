@@ -308,7 +308,7 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up the Viewers as requested.
 
-		pathsToFrame = GafferScene.PathMatcher( list( args["viewer"]["framedObjects"] ) )
+		pathsToFrame = IECore.PathMatcher( list( args["viewer"]["framedObjects"] ) )
 		for viewer in scriptWindow.getLayout().editors( GafferUI.Viewer ) :
 			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 				viewer.view()["minimumExpansionDepth"].setValue( args["viewer"]["minimumExpansionDepth"].value )
@@ -321,17 +321,17 @@ class screengrab( Gaffer.Application ) :
 
 		GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
 
-		pathsToExpand = GafferScene.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) )
+		pathsToExpand = IECore.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) )
 		GafferSceneUI.ContextAlgo.expand( script.context(), pathsToExpand )
 
-		pathsToFullyExpand = GafferScene.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) )
+		pathsToFullyExpand = IECore.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) )
 
 		with script.context() :
 			for node in script.selection() :
 				for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
 					GafferSceneUI.ContextAlgo.expandDescendants( script.context(), pathsToFullyExpand, scenePlug )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( args["scene"]["selectedPaths"] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( args["scene"]["selectedPaths"] ) )
 
 		# Add a delay.
 
