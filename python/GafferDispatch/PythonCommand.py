@@ -37,6 +37,7 @@
 import ast
 
 import IECore
+import imath
 
 import Gaffer
 import GafferDispatch
@@ -104,6 +105,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 		result = {
 			"IECore" : IECore,
 			"Gaffer" : Gaffer,
+			"imath" : imath,
 			"self" : self,
 			"context" : Gaffer.Context.current(),
 			"variables" : _VariablesDict(
