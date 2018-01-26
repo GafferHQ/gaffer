@@ -41,14 +41,6 @@
 
 #include "GafferScene/TypeIds.h"
 
-/// \todo Remove, and use IE_CORE_DECLAREEXTENSIONOBJECT directly.
-/// We need to update the dependencies project to at least 10.0.0-a13
-/// before we can do this.
-#ifndef IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT
-#define IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT IE_CORE_DECLAREEXTENSIONOBJECT
-#define IE_CORE_DEFINEABSTRACTOBJECTTYPEDESCRIPTION IE_CORE_DEFINEOBJECTTYPEDESCRIPTION
-#endif
-
 namespace IECoreScenePreview
 {
 
@@ -64,7 +56,7 @@ class Procedural : public IECoreScene::VisibleRenderable
 		Procedural();
 		~Procedural();
 
-		IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
 
 		/// Legacy inherited from IECore::VisibleRenderable.
 		/// Should not be implemented by derived classes.
