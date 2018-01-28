@@ -123,6 +123,25 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 
 };
 
+#ifndef GAFFER_EXPORTS
+
+extern template class TypedObjectPlug<IECore::Object>;
+extern template class TypedObjectPlug<IECore::BoolVectorData>;
+extern template class TypedObjectPlug<IECore::IntVectorData>;
+extern template class TypedObjectPlug<IECore::FloatVectorData>;
+extern template class TypedObjectPlug<IECore::StringVectorData>;
+extern template class TypedObjectPlug<IECore::InternedStringVectorData>;
+extern template class TypedObjectPlug<IECore::V2iVectorData>;
+extern template class TypedObjectPlug<IECore::V3fVectorData>;
+extern template class TypedObjectPlug<IECore::Color3fVectorData>;
+extern template class TypedObjectPlug<IECore::M44fVectorData>;
+extern template class TypedObjectPlug<IECore::ObjectVector>;
+extern template class TypedObjectPlug<IECore::CompoundObject>;
+extern template class TypedObjectPlug<IECore::CompoundData>;
+extern template class TypedObjectPlug<IECore::PathMatcherData>;
+
+#endif
+
 typedef TypedObjectPlug<IECore::Object> ObjectPlug;
 typedef TypedObjectPlug<IECore::BoolVectorData> BoolVectorDataPlug;
 typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
