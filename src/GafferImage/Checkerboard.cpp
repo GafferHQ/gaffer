@@ -35,12 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/Checkerboard.h"
+
 #include "OpenEXR/ImathFun.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Transform2DPlug.h"
 
-#include "GafferImage/Checkerboard.h"
 #include "GafferImage/ImageAlgo.h"
 
 using namespace std;
@@ -52,15 +54,16 @@ using namespace Gaffer;
 
 namespace
 {
-	float filteredStripes( float x, float period )
+	float filteredStripes( float x, float period, float filterWidth )
 	{
-		float x0 = (x - 0.5f) / period;
-		float x1 = (x + 0.5f) / period;
-		float floorX1 = floor( x1 );
+		float w = filterWidth / period * .5;
+		float x0 = x / period - w;
+		float x1 = x / period + w;
 		float floorX0 = floor( x0 );
-
-		return ( ( 0.5f * floorX1 + max( 0.f, x1 - floorX1 - 0.5f ) ) -
-			 ( 0.5f * floorX0 + max( 0.f, x0 - floorX0 - 0.5f ) ) ) * period;
+		float floorX1 = floor( x1 );
+		return ( ( .5f * floorX1 + max( 0.f, x1 - floorX1 - .5f ) ) -
+			( .5f * floorX0 + max( 0.f, x0 - floorX0 - .5f ) ) ) /
+			( w * 2 );
 	}
 
 }
@@ -258,6 +261,13 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 	const float valueB = colorPlugB()->getChild( channelIndex )->getValue();
 	const V2f size = sizePlug()->getValue();
 	const M33f transform = transformPlug()->matrix();
+	V2f baseA( 1, 0 );
+	V2f filterWidthA;
+	V2f baseB( 0, 1 );
+	V2f filterWidthB;
+	transform.inverse().multDirMatrix( baseA, filterWidthA );
+	transform.inverse().multDirMatrix( baseB, filterWidthB );
+	V2f filterWidth( fabs( filterWidthA.x ) + fabs( filterWidthB.x ), fabs( filterWidthA.y ) + fabs( filterWidthB.y ) );
 
 	FloatVectorDataPtr resultData = new FloatVectorData;
 	vector<float> &result = resultData->writable();
@@ -272,11 +282,11 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 		for( int x = 0; x < ImagePlug::tileSize(); ++x )
 		{
 			// screen space pixel coordinates
-			V2f p( tileOrigin.x + x + 0.5, tileOrigin.y + y + .5 );
+			V2f p( tileOrigin.x + x + .5f, tileOrigin.y + y + .5f );
 			p *= transform.inverse();
 
-			w0 = filteredStripes( p.x, size.x );
-			h0 = filteredStripes( p.y, size.y );
+			w0 = filteredStripes( p.x, size.x, fabs( filterWidth.x ) );
+			h0 = filteredStripes( p.y, size.y, fabs( filterWidth.y ) );
 
 			v = lerp<float>( w0, 1 - w0, h0 );
 			result.push_back( lerp<float>( valueA, valueB, v ) );

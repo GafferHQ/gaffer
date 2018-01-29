@@ -145,15 +145,30 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 		checkerboard = GafferImage.Checkerboard()
 		checkerboard["format"].setValue( GafferImage.Format( 128, 128 ) )
-		checkerboard["size"]["x"].setValue( 128 )
-		checkerboard["size"]["y"].setValue( 128 )
+		checkerboard["size"]["x"].setValue( 1 )
+		checkerboard["size"]["y"].setValue( 1 )
 		checkerboard["transform"]["rotate"].setValue( 45 )
+		checkerboard["transform"]["scale"]["x"].setValue( 200 )
+		checkerboard["transform"]["scale"]["y"].setValue( 10 )
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/GafferChecker.exr" )
 
 		self.assertImagesEqual( checkerboard["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
+	def testFilterWidth( self ) :
+
+		checkerboard = GafferImage.Checkerboard()
+		checkerboard["format"].setValue( GafferImage.Format( 128, 128 ) )
+		checkerboard["size"]["x"].setValue( 1 )
+		checkerboard["size"]["y"].setValue( 1 )
+		checkerboard["transform"]["scale"]["x"].setValue( 200 )
+		checkerboard["transform"]["scale"]["y"].setValue( 200 )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( checkerboard["out"] )
+		sampler["pixel"].setValue( imath.V2f( 101, 54 ) )
+		self.assertAlmostEqual( checkerboard["colorB"].getValue().r, sampler["color"].getValue().r, delta = 0.001 )
 
 if __name__ == "__main__":
 	unittest.main()
