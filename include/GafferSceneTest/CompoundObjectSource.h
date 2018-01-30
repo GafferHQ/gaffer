@@ -38,12 +38,12 @@
 #ifndef GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H
 #define GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H
 
-#include "IECore/CompoundObject.h"
+#include "GafferSceneTest/Export.h"
+#include "GafferSceneTest/TypeIds.h"
 
 #include "GafferScene/SceneNode.h"
 
-#include "GafferSceneTest/TypeIds.h"
-#include "GafferSceneTest/Export.h"
+#include "IECore/CompoundObject.h"
 
 namespace GafferSceneTest
 {

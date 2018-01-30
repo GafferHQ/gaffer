@@ -37,11 +37,11 @@
 #ifndef GAFFERSCENE_SCENEFILTERPATHFILTER_H
 #define GAFFERSCENE_SCENEFILTERPATHFILTER_H
 
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/Plug.h"
-
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/Export.h"
 
 namespace GafferScene
 {

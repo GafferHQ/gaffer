@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Dot.h"
-#include "Gaffer/SubGraph.h"
-#include "Gaffer/ArrayPlug.h"
-#include "Gaffer/ScriptNode.h"
-
 #include "GafferScene/FilterPlug.h"
+
 #include "GafferScene/Filter.h"
+
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Dot.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/SubGraph.h"
 
 using namespace IECore;
 using namespace Gaffer;

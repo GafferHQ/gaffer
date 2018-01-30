@@ -34,32 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <unordered_map>
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "tbb/concurrent_vector.h"
-#include "tbb/concurrent_unordered_map.h"
-
-#include "boost/format.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Writer.h"
-#include "IECore/CompoundParameter.h"
-
-#include "IECoreGL/GL.h"
-#include "IECoreGL/State.h"
-#include "IECoreGL/Renderable.h"
-#include "IECoreGL/OrthographicCamera.h"
 #include "IECoreGL/CachedConverter.h"
-#include "IECoreGL/ToGLCameraConverter.h"
-#include "IECoreGL/FrameBuffer.h"
 #include "IECoreGL/ColorTexture.h"
 #include "IECoreGL/DepthTexture.h"
 #include "IECoreGL/Exception.h"
+#include "IECoreGL/FrameBuffer.h"
+#include "IECoreGL/GL.h"
+#include "IECoreGL/OrthographicCamera.h"
+#include "IECoreGL/Renderable.h"
 #include "IECoreGL/ShaderStateComponent.h"
+#include "IECoreGL/State.h"
+#include "IECoreGL/ToGLCameraConverter.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "IECore/CompoundParameter.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/Writer.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/format.hpp"
+
+#include "tbb/concurrent_unordered_map.h"
+#include "tbb/concurrent_vector.h"
+
+#include <unordered_map>
 
 using namespace std;
 using namespace Imath;

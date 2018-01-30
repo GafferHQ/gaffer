@@ -35,21 +35,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/bind.hpp"
+#include "GafferScene/Shader.h"
+
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/Switch.h"
+#include "Gaffer/TypedPlug.h"
 
 #include "IECore/VectorTypedData.h"
 
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Switch.h"
-
-#include "GafferScene/Shader.h"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace Imath;
 using namespace GafferScene;

@@ -34,24 +34,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/spin_mutex.h"
-#include "tbb/task.h"
-#include "tbb/parallel_for.h"
+#include "GafferScene/SceneAlgo.h"
 
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/NullObject.h"
-#include "IECoreScene/MatrixMotionTransform.h"
-#include "IECoreScene/Camera.h"
-#include "IECoreScene/CoordinateSystem.h"
-#include "IECoreScene/ClippingPlane.h"
-#include "IECoreScene/VisibleRenderable.h"
+#include "GafferScene/Filter.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/ScenePlug.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/ClippingPlane.h"
+#include "IECoreScene/CoordinateSystem.h"
+#include "IECoreScene/MatrixMotionTransform.h"
+#include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/NullObject.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+
+#include "tbb/parallel_for.h"
+#include "tbb/spin_mutex.h"
+#include "tbb/task.h"
 
 using namespace std;
 using namespace Imath;

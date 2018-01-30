@@ -35,12 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/Camera.h"
-#include "IECoreScene/Transform.h"
+#include "GafferScene/Camera.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Camera.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Transform.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

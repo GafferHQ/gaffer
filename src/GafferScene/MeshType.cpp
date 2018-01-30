@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/MeshNormalsOp.h"
+#include "GafferScene/MeshType.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/MeshType.h"
+#include "IECoreScene/MeshNormalsOp.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 using namespace IECore;
 using namespace IECoreScene;

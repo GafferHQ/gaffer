@@ -35,9 +35,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/FilterResults.h"
-#include "GafferScene/ScenePlug.h"
+
 #include "GafferScene/Filter.h"
 #include "GafferScene/SceneAlgo.h"
+#include "GafferScene/ScenePlug.h"
 
 using namespace IECore;
 using namespace Gaffer;

@@ -37,11 +37,11 @@
 #ifndef GAFFERSCENETEST_TRAVERSESCENE_H
 #define GAFFERSCENETEST_TRAVERSESCENE_H
 
-#include "Gaffer/Context.h"
+#include "GafferSceneTest/Export.h"
 
 #include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneTest/Export.h"
+#include "Gaffer/Context.h"
 
 namespace GafferSceneTest
 {

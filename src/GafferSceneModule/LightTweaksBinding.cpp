@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
+#include "LightTweaksBinding.h"
 
 #include "GafferScene/LightTweaks.h"
 
-#include "LightTweaksBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

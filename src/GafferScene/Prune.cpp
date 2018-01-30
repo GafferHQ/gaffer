@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferScene/Prune.h"
+
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace IECore;

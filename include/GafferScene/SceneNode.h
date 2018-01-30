@@ -38,10 +38,10 @@
 #ifndef GAFFERSCENE_SCENENODE_H
 #define GAFFERSCENE_SCENENODE_H
 
-#include "Gaffer/ComputeNode.h"
-
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
+
+#include "Gaffer/ComputeNode.h"
 
 namespace GafferScene
 {

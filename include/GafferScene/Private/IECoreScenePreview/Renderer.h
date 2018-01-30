@@ -37,9 +37,10 @@
 #ifndef IECORESCENEPREVIEW_RENDERER_H
 #define IECORESCENEPREVIEW_RENDERER_H
 
-#include "IECore/CompoundObject.h"
-#include "IECoreScene/Display.h"
 #include "IECoreScene/Camera.h"
+#include "IECoreScene/Display.h"
+
+#include "IECore/CompoundObject.h"
 
 namespace IECoreScenePreview
 {

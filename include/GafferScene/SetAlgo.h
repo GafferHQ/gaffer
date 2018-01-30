@@ -37,11 +37,11 @@
 #ifndef GAFFER_SETEXPRESSION_H
 #define GAFFER_SETEXPRESSION_H
 
-#include "IECore/MurmurHash.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferScene/ScenePlug.h"
+#include "IECore/MurmurHash.h"
 
 namespace GafferScene
 {

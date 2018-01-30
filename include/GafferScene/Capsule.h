@@ -37,10 +37,10 @@
 #ifndef GAFFERSCENE_CAPSULE_H
 #define GAFFERSCENE_CAPSULE_H
 
-#include "Gaffer/Context.h"
-
-#include "GafferScene/ScenePlug.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "Gaffer/Context.h"
 
 namespace GafferScene
 {

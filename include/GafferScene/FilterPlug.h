@@ -37,11 +37,11 @@
 #ifndef GAFFERSCENE_FILTERPLUG_H
 #define GAFFERSCENE_FILTERPLUG_H
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/Context.h"
-
-#include "GafferScene/TypeIds.h"
 #include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace GafferScene
 {

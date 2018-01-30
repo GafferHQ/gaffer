@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "GafferScene/Encapsulate.h"
+
 #include "GafferScene/Capsule.h"
+
+#include "boost/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

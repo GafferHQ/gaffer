@@ -38,10 +38,10 @@
 #ifndef GAFFERSCENE_SCENEPATH_H
 #define GAFFERSCENE_SCENEPATH_H
 
-#include "Gaffer/Path.h"
-
-#include "GafferScene/TypeIds.h"
 #include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
+#include "Gaffer/Path.h"
 
 namespace Gaffer
 {

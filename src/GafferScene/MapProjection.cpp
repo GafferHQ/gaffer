@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenEXR/ImathFun.h"
-
-#include "IECore/AngleConversion.h"
-#include "IECoreScene/Primitive.h"
-#include "IECoreScene/Camera.h"
+#include "GafferScene/MapProjection.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/MapProjection.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Primitive.h"
+
+#include "IECore/AngleConversion.h"
+
+#include "OpenEXR/ImathFun.h"
 
 using namespace std;
 using namespace Imath;

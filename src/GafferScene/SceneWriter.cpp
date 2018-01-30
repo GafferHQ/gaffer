@@ -34,18 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/filesystem.hpp"
+#include "GafferScene/SceneWriter.h"
+
+#include "GafferScene/SceneAlgo.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/SceneInterface.h"
 
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/Context.h"
+#include "boost/filesystem.hpp"
 
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/SceneWriter.h"
-
-#include "tbb/mutex.h"
 #include "tbb/concurrent_unordered_map.h"
+#include "tbb/mutex.h"
 
 using namespace std;
 using namespace IECore;

@@ -37,9 +37,9 @@
 #ifndef GAFFER_FILTERSWITCH_H
 #define GAFFER_FILTERSWITCH_H
 
-#include "Gaffer/Switch.h"
-
 #include "GafferScene/FilterProcessor.h"
+
+#include "Gaffer/Switch.h"
 
 namespace GafferScene
 {

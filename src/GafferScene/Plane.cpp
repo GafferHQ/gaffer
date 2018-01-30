@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/MeshPrimitive.h"
-
 #include "GafferScene/Plane.h"
+
+#include "IECoreScene/MeshPrimitive.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

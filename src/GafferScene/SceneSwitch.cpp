@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Switch.inl"
-
 #include "GafferScene/SceneSwitch.h"
+
+#include "Gaffer/Switch.inl"
 
 namespace Gaffer
 {

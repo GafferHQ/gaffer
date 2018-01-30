@@ -37,9 +37,9 @@
 #ifndef IECORESCENEPREVIEW_PROCEDURAL_H
 #define IECORESCENEPREVIEW_PROCEDURAL_H
 
-#include "IECoreScene/VisibleRenderable.h"
-
 #include "GafferScene/TypeIds.h"
+
+#include "IECoreScene/VisibleRenderable.h"
 
 namespace IECoreScenePreview
 {

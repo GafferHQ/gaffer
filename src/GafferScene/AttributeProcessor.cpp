@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferScene/AttributeProcessor.h"
+
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferScene/AttributeProcessor.h"
 
 using namespace IECore;
 using namespace Gaffer;

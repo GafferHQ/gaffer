@@ -34,17 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
-#include "IECore/InternedString.h"
-#include "IECoreScene/SharedSceneInterfaces.h"
-#include "IECoreScene/SceneCache.h"
+#include "GafferScene/SceneReader.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/SceneReader.h"
+#include "IECoreScene/SceneCache.h"
+#include "IECoreScene/SharedSceneInterfaces.h"
+
+#include "IECore/InternedString.h"
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

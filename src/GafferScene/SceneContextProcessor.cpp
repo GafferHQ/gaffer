@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextProcessor.inl"
 #include "GafferScene/SceneContextProcessor.h"
+
+#include "Gaffer/ContextProcessor.inl"
 
 using namespace GafferScene;
 

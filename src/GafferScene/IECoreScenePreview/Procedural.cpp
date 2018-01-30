@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MessageHandler.h"
-
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+
+#include "IECore/MessageHandler.h"
 
 using namespace IECore;
 using namespace IECoreScene;

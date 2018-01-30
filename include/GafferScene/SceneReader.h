@@ -37,11 +37,11 @@
 #ifndef GAFFERSCENE_SCENEREADER_H
 #define GAFFERSCENE_SCENEREADER_H
 
-#include "tbb/enumerable_thread_specific.h"
+#include "GafferScene/SceneNode.h"
 
 #include "IECoreScene/SceneInterface.h"
 
-#include "GafferScene/SceneNode.h"
+#include "tbb/enumerable_thread_specific.h"
 
 namespace Gaffer
 {

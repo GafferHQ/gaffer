@@ -38,13 +38,13 @@
 #ifndef GAFFERSCENE_SCENEPLUG_H
 #define GAFFERSCENE_SCENEPLUG_H
 
-#include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/BoxPlug.h"
-#include "Gaffer/Context.h"
-
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
+
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace GafferScene
 {

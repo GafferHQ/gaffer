@@ -34,22 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
+#include "GafferScene/Render.h"
 
-#include "boost/filesystem.hpp"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneNode.h"
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/MonitorAlgo.h"
+#include "Gaffer/PerformanceMonitor.h"
 
 #include "IECore/ObjectPool.h"
 
-#include "Gaffer/PerformanceMonitor.h"
-#include "Gaffer/MonitorAlgo.h"
+#include "boost/filesystem.hpp"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-
-#include "GafferScene/Render.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/RendererAlgo.h"
-#include "GafferScene/SceneProcessor.h"
+#include <memory>
 
 using namespace IECore;
 using namespace IECoreScene;

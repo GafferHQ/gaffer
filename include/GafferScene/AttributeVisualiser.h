@@ -37,10 +37,10 @@
 #ifndef GAFFERSCENE_ATTRIBUTEVISUALISER_H
 #define GAFFERSCENE_ATTRIBUTEVISUALISER_H
 
-#include "Gaffer/SplinePlug.h"
-#include "Gaffer/NumericPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/SplinePlug.h"
 
 namespace Gaffer
 {

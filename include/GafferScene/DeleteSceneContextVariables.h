@@ -37,8 +37,9 @@
 #ifndef GAFFER_DELETESCENECONTEXTVARIABLES_H
 #define GAFFER_DELETESCENECONTEXTVARIABLES_H
 
-#include "Gaffer/DeleteContextVariables.h"
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/DeleteContextVariables.h"
 
 namespace GafferScene
 {

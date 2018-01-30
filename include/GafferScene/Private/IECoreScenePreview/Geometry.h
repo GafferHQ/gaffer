@@ -35,9 +35,9 @@
 #ifndef IECORE_GEOMETRY_H
 #define IECORE_GEOMETRY_H
 
-#include "IECoreScene/VisibleRenderable.h"
-
 #include "GafferScene/TypeIds.h"
+
+#include "IECoreScene/VisibleRenderable.h"
 
 namespace IECoreScenePreview
 {

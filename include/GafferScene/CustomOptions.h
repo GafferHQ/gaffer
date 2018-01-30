@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_CUSTOMOPTIONS_H
 #define GAFFERSCENE_CUSTOMOPTIONS_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferScene/Options.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {

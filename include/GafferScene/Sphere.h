@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_SPHERE_H
 #define GAFFERSCENE_SPHERE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferScene/ObjectSource.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferScene
 {

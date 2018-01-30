@@ -38,9 +38,9 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 #define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 
-#include "IECoreScene/Primitive.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "IECoreScene/Primitive.h"
 
 namespace Gaffer
 {

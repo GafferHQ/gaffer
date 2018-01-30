@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_EXTERNALPROCEDURAL_H
 #define GAFFERSCENE_EXTERNALPROCEDURAL_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/ObjectSource.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {

@@ -36,14 +36,14 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "OptionsBinding.h"
 
-#include "GafferScene/StandardOptions.h"
+#include "GafferScene/CopyOptions.h"
 #include "GafferScene/CustomOptions.h"
 #include "GafferScene/DeleteOptions.h"
-#include "GafferScene/CopyOptions.h"
+#include "GafferScene/StandardOptions.h"
 
-#include "OptionsBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace GafferScene;
 

@@ -38,9 +38,9 @@
 #ifndef GAFFERSCENE_FILTEREDSCENEPROCESSOR_H
 #define GAFFERSCENE_FILTEREDSCENEPROCESSOR_H
 
-#include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/FilterPlug.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {

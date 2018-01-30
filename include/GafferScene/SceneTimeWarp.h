@@ -37,8 +37,9 @@
 #ifndef GAFFER_SCENETIMEWARP_H
 #define GAFFER_SCENETIMEWARP_H
 
-#include "Gaffer/TimeWarp.h"
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/TimeWarp.h"
 
 namespace GafferScene
 {

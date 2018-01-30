@@ -35,11 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/MeshAlgo.h"
+#include "GafferScene/Seeds.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Seeds.h"
+#include "IECoreScene/MeshAlgo.h"
 
 using namespace std;
 using namespace Imath;

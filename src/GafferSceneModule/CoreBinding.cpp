@@ -36,15 +36,15 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
+#include "CoreBinding.h"
 
+#include "GafferScene/FilteredSceneProcessor.h"
+#include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcessor.h"
-#include "GafferScene/SceneElementProcessor.h"
-#include "GafferScene/FilteredSceneProcessor.h"
 
-#include "CoreBinding.h"
+#include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace IECore;

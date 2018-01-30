@@ -37,12 +37,12 @@
 #ifndef GAFFERSCENE_SHADERPLUG_H
 #define GAFFERSCENE_SHADERPLUG_H
 
-#include "IECore/CompoundObject.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/Export.h"
+#include "IECore/CompoundObject.h"
 
 namespace GafferScene
 {

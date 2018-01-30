@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferScene/SceneNode.h"
+
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace Imath;

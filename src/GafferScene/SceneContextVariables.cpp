@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextVariables.inl"
 #include "GafferScene/SceneContextVariables.h"
+
+#include "Gaffer/ContextVariables.inl"
 
 using namespace GafferScene;
 

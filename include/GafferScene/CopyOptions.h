@@ -39,6 +39,7 @@
 
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/ScenePlug.h"
+
 #include "Gaffer/StringPlug.h"
 
 namespace GafferScene

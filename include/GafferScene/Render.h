@@ -37,13 +37,13 @@
 #ifndef GAFFERSCENE_RENDER_H
 #define GAFFERSCENE_RENDER_H
 
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/NumericPlug.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
 
 #include "GafferDispatch/TaskNode.h"
 
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/Export.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {

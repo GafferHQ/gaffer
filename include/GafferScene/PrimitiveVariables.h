@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLES_H
 #define GAFFERSCENE_PRIMITIVEVARIABLES_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {

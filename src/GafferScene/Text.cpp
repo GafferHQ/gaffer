@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/LRUCache.h"
-#include "IECore/SearchPath.h"
-#include "IECoreScene/Font.h"
-#include "IECoreScene/MeshPrimitive.h"
+#include "GafferScene/Text.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Text.h"
+#include "IECoreScene/Font.h"
+#include "IECoreScene/MeshPrimitive.h"
+
+#include "IECore/LRUCache.h"
+#include "IECore/SearchPath.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

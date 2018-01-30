@@ -38,9 +38,9 @@
 #ifndef GAFFERSCENE_OBJECTSOURCE_H
 #define GAFFERSCENE_OBJECTSOURCE_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferScene/SceneNode.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {

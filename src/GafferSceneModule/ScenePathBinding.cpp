@@ -35,18 +35,20 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "ScenePathBinding.h"
+
+#include "GafferScene/Filter.h"
+#include "GafferScene/SceneFilterPathFilter.h"
+#include "GafferScene/ScenePath.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "GafferBindings/PathBinding.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/PathFilter.h"
-#include "GafferBindings/PathBinding.h"
 
-#include "GafferScene/ScenePath.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/SceneFilterPathFilter.h"
-
-#include "ScenePathBinding.h"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace IECorePython;

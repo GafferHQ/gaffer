@@ -34,23 +34,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/MessageHandler.h"
-
-#include "IECoreGL/Shader.h"
-#include "IECoreGL/ShaderLoader.h"
-#include "IECoreGL/IECoreGL.h"
-
-#include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/PlugAlgo.h"
+#include "GafferScene/OpenGLShader.h"
 
 #include "GafferImage/ImagePlug.h"
 
-#include "GafferScene/OpenGLShader.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/PlugAlgo.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedPlug.h"
+
+#include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/Shader.h"
+#include "IECoreGL/ShaderLoader.h"
+
+#include "IECore/MessageHandler.h"
+
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace std;
 using namespace IECore;

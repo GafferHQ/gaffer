@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferScene/Capsule.h"
 
-#include "IECore/MessageHandler.h"
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Node.h"
 
-#include "GafferScene/Capsule.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/RendererAlgo.h"
+#include "IECore/MessageHandler.h"
+
+#include "boost/bind.hpp"
 
 using namespace IECore;
 using namespace IECoreScene;

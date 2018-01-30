@@ -38,9 +38,9 @@
 #ifndef GAFFERSCENE_ATTRIBUTES_H
 #define GAFFERSCENE_ATTRIBUTES_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {

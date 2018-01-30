@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/CurvesPrimitive.h"
-#include "IECoreScene/Shader.h"
+#include "GafferScene/Grid.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Grid.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/Shader.h"
 
 using namespace std;
 using namespace Imath;

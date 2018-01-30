@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/Primitive.h"
-
 #include "GafferScene/PrimitiveVariables.h"
+
+#include "IECoreScene/Primitive.h"
 
 using namespace IECore;
 using namespace IECoreScene;

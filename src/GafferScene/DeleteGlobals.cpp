@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferScene/DeleteGlobals.h"
 
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/DeleteGlobals.h"
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace Gaffer;
 using namespace GafferScene;

@@ -37,10 +37,10 @@
 #ifndef GAFFERSCENE_SHADERSWITCH_H
 #define GAFFERSCENE_SHADERSWITCH_H
 
-#include "Gaffer/Switch.h"
-
-#include "GafferScene/TypeIds.h"
 #include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
+#include "Gaffer/Switch.h"
 
 namespace GafferScene
 {

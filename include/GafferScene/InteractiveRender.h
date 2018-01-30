@@ -37,11 +37,11 @@
 #ifndef GAFFERSCENE_INTERACTIVERENDER_H
 #define GAFFERSCENE_INTERACTIVERENDER_H
 
-#include "Gaffer/Node.h"
-
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/RendererAlgo.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "Gaffer/Node.h"
 
 namespace Gaffer
 {

@@ -36,14 +36,14 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GlobalsBinding.h"
 
-#include "GafferScene/Outputs.h"
 #include "GafferScene/DeleteOutputs.h"
 #include "GafferScene/DeleteSets.h"
+#include "GafferScene/Outputs.h"
 #include "GafferScene/Set.h"
 
-#include "GlobalsBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace std;
 using namespace boost::python;

@@ -37,8 +37,9 @@
 #ifndef GAFFER_SCENECONTEXTVARIABLES_H
 #define GAFFER_SCENECONTEXTVARIABLES_H
 
-#include "Gaffer/ContextVariables.h"
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/ContextVariables.h"
 
 namespace GafferScene
 {

@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferScene/StandardAttributes.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/StandardAttributes.h"
+#include "boost/bind.hpp"
 
 using namespace GafferScene;
 

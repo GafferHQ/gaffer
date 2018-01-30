@@ -40,6 +40,8 @@
 
 #include "GafferScene/SceneProcessor.h"
 
+#include "Gaffer/StringPlug.h"
+
 namespace GafferScene
 {
 

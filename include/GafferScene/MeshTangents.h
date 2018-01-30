@@ -38,6 +38,7 @@
 #define GAFFERSCENE_MESHTANGENTS_H
 
 #include "GafferScene/SceneElementProcessor.h"
+
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 

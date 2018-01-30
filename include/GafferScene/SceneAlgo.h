@@ -37,12 +37,16 @@
 #ifndef GAFFERSCENE_SCENEALGO_H
 #define GAFFERSCENE_SCENEALGO_H
 
-#include "OpenEXR/ImathVec.h"
+#include "GafferScene/Filter.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Filter.h"
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECore
 {

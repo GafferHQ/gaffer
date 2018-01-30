@@ -37,13 +37,13 @@
 #ifndef GAFFERSCENE_FILTER_H
 #define GAFFERSCENE_FILTER_H
 
-#include "IECore/PathMatcher.h"
+#include "GafferScene/FilterPlug.h"
+#include "GafferScene/TypeIds.h"
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/FilterPlug.h"
+#include "IECore/PathMatcher.h"
 
 namespace GafferScene
 {

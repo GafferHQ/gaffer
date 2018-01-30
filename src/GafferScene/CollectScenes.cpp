@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferScene/CollectScenes.h"
+
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/ArrayPlug.h"
-
-#include "GafferScene/CollectScenes.h"
 
 using namespace std;
 using namespace Imath;

@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_TRANSFORM_H
 #define GAFFERSCENE_TRANSFORM_H
 
-#include "Gaffer/TransformPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/TransformPlug.h"
 
 namespace GafferScene
 {

@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DeleteContextVariables.inl"
 #include "GafferScene/DeleteSceneContextVariables.h"
+
+#include "Gaffer/DeleteContextVariables.inl"
 
 using namespace GafferScene;
 

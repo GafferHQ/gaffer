@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_SETFILTER_H
 #define GAFFERSCENE_SETFILTER_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferScene/Filter.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {

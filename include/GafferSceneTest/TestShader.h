@@ -37,10 +37,10 @@
 #ifndef GAFFERSCENETEST_TESTSHADER_H
 #define GAFFERSCENETEST_TESTSHADER_H
 
-#include "GafferScene/Shader.h"
-
-#include "GafferSceneTest/TypeIds.h"
 #include "GafferSceneTest/Export.h"
+#include "GafferSceneTest/TypeIds.h"
+
+#include "GafferScene/Shader.h"
 
 namespace GafferSceneTest
 {

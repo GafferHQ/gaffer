@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_DUPLICATE_H
 #define GAFFERSCENE_DUPLICATE_H
 
-#include "Gaffer/TransformPlug.h"
-
 #include "GafferScene/BranchCreator.h"
+
+#include "Gaffer/TransformPlug.h"
 
 namespace GafferScene
 {

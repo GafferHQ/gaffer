@@ -34,15 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
-#include "boost/algorithm/string.hpp"
-
-#include "IECoreScene/CurvesPrimitive.h"
-#include "IECoreScene/CurvesAlgo.h"
+#include "GafferScene/DeleteCurves.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/DeleteCurves.h"
+#include "IECoreScene/CurvesAlgo.h"
+#include "IECoreScene/CurvesPrimitive.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/format.hpp"
 
 using namespace IECore;
 using namespace IECoreScene;

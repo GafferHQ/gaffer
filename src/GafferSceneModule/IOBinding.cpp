@@ -36,13 +36,14 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "IOBinding.h"
 
 #include "GafferScene/SceneReader.h"
 #include "GafferScene/SceneWriter.h"
 
-#include "IOBinding.h"
+#include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace GafferScene;
 

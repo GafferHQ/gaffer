@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferSceneTest/TestShader.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 using namespace IECore;
 using namespace Gaffer;

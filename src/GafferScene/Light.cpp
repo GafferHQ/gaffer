@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NullObject.h"
-#include "IECore/MessageHandler.h"
+#include "GafferScene/Light.h"
 
-#include "IECoreScene/Shader.h"
+#include "GafferScene/SceneNode.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Light.h"
-#include "GafferScene/SceneNode.h"
+#include "IECoreScene/Shader.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_PARENTCONSTRAINT_H
 #define GAFFERSCENE_PARENTCONSTRAINT_H
 
-#include "Gaffer/TransformPlug.h"
-
 #include "GafferScene/Constraint.h"
+
+#include "Gaffer/TransformPlug.h"
 
 namespace GafferScene
 {

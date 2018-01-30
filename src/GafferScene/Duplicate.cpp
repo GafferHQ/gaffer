@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferScene/Duplicate.h"
+
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferScene/Duplicate.h"
 
 using namespace std;
 using namespace IECore;

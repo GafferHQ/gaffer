@@ -37,16 +37,17 @@
 #ifndef GAFFERSCENE_RENDERERALGO_H
 #define GAFFERSCENE_RENDERERALGO_H
 
-#include <functional>
+#include "GafferScene/ScenePlug.h"
 
-#include "boost/container/flat_map.hpp"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/CompoundObject.h"
 #include "IECore/VectorTypedData.h"
-#include "IECoreScene/VisibleRenderable.h"
-#include "IECoreScene/Camera.h"
 
-#include "GafferScene/ScenePlug.h"
+#include "boost/container/flat_map.hpp"
+
+#include <functional>
 
 namespace IECoreScenePreview
 {

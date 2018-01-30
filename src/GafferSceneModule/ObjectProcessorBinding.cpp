@@ -36,19 +36,19 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "ObjectProcessorBinding.h"
 
-#include "GafferScene/DeletePoints.h"
-#include "GafferScene/DeleteFaces.h"
 #include "GafferScene/DeleteCurves.h"
+#include "GafferScene/DeleteFaces.h"
+#include "GafferScene/DeletePoints.h"
+#include "GafferScene/LightToCamera.h"
 #include "GafferScene/MeshTangents.h"
-#include "GafferScene/PointsType.h"
 #include "GafferScene/MeshToPoints.h"
 #include "GafferScene/MeshType.h"
-#include "GafferScene/LightToCamera.h"
 #include "GafferScene/Parameters.h"
+#include "GafferScene/PointsType.h"
 
-#include "ObjectProcessorBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

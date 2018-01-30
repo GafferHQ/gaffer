@@ -37,10 +37,11 @@
 #ifndef GAFFERSCENE_FILTERRESULTS_H
 #define GAFFERSCENE_FILTERRESULTS_H
 
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {

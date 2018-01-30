@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NullObject.h"
-
 #include "GafferScene/ObjectToScene.h"
+
+#include "IECore/NullObject.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

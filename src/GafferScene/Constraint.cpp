@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferScene/Constraint.h"
+
+#include "Gaffer/StringPlug.h"
 
 using namespace Imath;
 using namespace IECore;

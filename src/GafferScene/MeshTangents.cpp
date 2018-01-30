@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/MeshAlgo.h"
-
 #include "GafferScene/MeshTangents.h"
+
+#include "IECoreScene/MeshAlgo.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 using namespace IECore;
 using namespace IECoreScene;

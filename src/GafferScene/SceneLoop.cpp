@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Loop.inl"
-
 #include "GafferScene/SceneLoop.h"
+
+#include "Gaffer/Loop.inl"
 
 namespace Gaffer
 {

@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ArrayPlug.h"
-
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/ArrayPlug.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
