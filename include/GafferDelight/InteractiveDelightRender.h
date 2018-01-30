@@ -37,10 +37,10 @@
 #ifndef GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
 #define GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
 
-#include "GafferScene/InteractiveRender.h"
-
-#include "GafferDelight/TypeIds.h"
 #include "GafferDelight/Export.h"
+#include "GafferDelight/TypeIds.h"
+
+#include "GafferScene/InteractiveRender.h"
 
 namespace GafferDelight
 {

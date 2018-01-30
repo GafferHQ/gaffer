@@ -32,10 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/MessageHandler.h"
-
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
 
 using namespace std;
 using namespace Imath;

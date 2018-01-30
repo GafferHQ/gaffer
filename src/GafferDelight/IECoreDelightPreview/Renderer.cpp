@@ -34,28 +34,29 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <unordered_map>
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "nsi.h"
+#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
+#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
-#include "tbb/concurrent_hash_map.h"
+#include "Gaffer/StringAlgo.h"
+
+#include "IECoreScene/Shader.h"
+
+#include "IECore/LRUCache.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/SearchPath.h"
+#include "IECore/SimpleTypedData.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/MessageHandler.h"
-#include "IECore/ObjectVector.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/SearchPath.h"
-#include "IECore/LRUCache.h"
-#include "IECoreScene/Shader.h"
+#include "tbb/concurrent_hash_map.h"
 
-#include "Gaffer/StringAlgo.h"
+#include <unordered_map>
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
+#include <nsi.h>
 
 using namespace std;
 using namespace Imath;

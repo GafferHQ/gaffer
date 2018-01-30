@@ -32,13 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "nsi.h"
-
-#include "IECore/SimpleTypedData.h"
-#include "IECoreScene/Camera.h"
-
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+
+#include "IECoreScene/Camera.h"
+
+#include "IECore/SimpleTypedData.h"
+
+#include <nsi.h>
 
 using namespace std;
 using namespace Imath;

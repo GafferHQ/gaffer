@@ -32,12 +32,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "nsi.h"
+#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
+#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 #include "IECoreScene/PointsPrimitive.h"
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include <nsi.h>
 
 using namespace std;
 using namespace IECore;

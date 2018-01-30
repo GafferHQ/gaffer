@@ -32,12 +32,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "nsi.h"
+#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
+#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 #include "IECoreScene/SpherePrimitive.h"
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include <nsi.h>
 
 using namespace std;
 using namespace Imath;

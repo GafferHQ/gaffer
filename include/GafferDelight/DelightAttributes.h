@@ -37,10 +37,10 @@
 #ifndef GAFFERDELIGHT_DELIGHTATTRIBUTES_H
 #define GAFFERDELIGHT_DELIGHTATTRIBUTES_H
 
-#include "GafferScene/Attributes.h"
-
-#include "GafferDelight/TypeIds.h"
 #include "GafferDelight/Export.h"
+#include "GafferDelight/TypeIds.h"
+
+#include "GafferScene/Attributes.h"
 
 namespace GafferDelight
 {
