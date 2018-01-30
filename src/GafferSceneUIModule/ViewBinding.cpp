@@ -35,21 +35,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <string>
+#include "ViewBinding.h"
 
-#include "IECorePython/ExceptionAlgo.h"
+#include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUI/ShaderView.h"
 
-#include "Gaffer/Reference.h"
-#include "Gaffer/ScriptNode.h"
+#include "GafferScene/SceneProcessor.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
-#include "GafferScene/SceneProcessor.h"
-#include "GafferSceneUI/SceneView.h"
-#include "GafferSceneUI/ShaderView.h"
+#include "Gaffer/Reference.h"
+#include "Gaffer/ScriptNode.h"
 
-#include "ViewBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
+
+#include <string>
 
 using namespace std;
 using namespace boost::python;

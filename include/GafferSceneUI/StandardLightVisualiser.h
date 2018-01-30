@@ -38,8 +38,10 @@
 #define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 
 #include "GafferSceneUI/LightVisualiser.h"
-#include "IECore/SimpleTypedData.h"
+
 #include "IECoreGL/Group.h"
+
+#include "IECore/SimpleTypedData.h"
 
 
 namespace GafferSceneUI

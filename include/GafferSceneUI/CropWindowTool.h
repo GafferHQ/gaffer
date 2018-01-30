@@ -37,13 +37,15 @@
 #ifndef GAFFERSCENEUI_CROPWINDOWTOOL_H
 #define GAFFERSCENEUI_CROPWINDOWTOOL_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
-#include "GafferUI/Tool.h"
-#include "GafferUI/DragDropEvent.h"
-
-#include "GafferSceneUI/TypeIds.h"
 #include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/TypeIds.h"
+
+#include "GafferScene/ScenePlug.h"
+
+#include "GafferUI/DragDropEvent.h"
+#include "GafferUI/Tool.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferSceneUI
 {

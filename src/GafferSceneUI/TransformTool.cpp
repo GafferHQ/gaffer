@@ -34,29 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
+#include "GafferSceneUI/TransformTool.h"
 
-#include "boost/bind.hpp"
-#include "boost/unordered_map.hpp"
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferSceneUI/SceneView.h"
 
-#include "tbb/spin_mutex.h"
+#include "GafferScene/Group.h"
+#include "GafferScene/ObjectSource.h"
+#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/Transform.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/Process.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "OpenEXR/ImathMatrixAlgo.h"
 
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Monitor.h"
-#include "Gaffer/Process.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+#include "boost/unordered_map.hpp"
 
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/ObjectSource.h"
-#include "GafferScene/Group.h"
-#include "GafferScene/Transform.h"
+#include "tbb/spin_mutex.h"
 
-#include "GafferSceneUI/TransformTool.h"
-#include "GafferSceneUI/SceneView.h"
+#include <memory>
 
 using namespace std;
 using namespace Imath;

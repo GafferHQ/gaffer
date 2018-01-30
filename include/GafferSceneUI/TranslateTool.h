@@ -37,10 +37,10 @@
 #ifndef GAFFERSCENEUI_TRANSLATETOOL_H
 #define GAFFERSCENEUI_TRANSLATETOOL_H
 
-#include "Gaffer/NumericPlug.h"
-
-#include "GafferSceneUI/TypeIds.h"
 #include "GafferSceneUI/TransformTool.h"
+#include "GafferSceneUI/TypeIds.h"
+
+#include "Gaffer/NumericPlug.h"
 
 namespace GafferSceneUI
 {

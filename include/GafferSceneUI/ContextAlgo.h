@@ -37,9 +37,11 @@
 #ifndef GAFFERSCENEUI_CONTEXTALGO_H
 #define GAFFERSCENEUI_CONTEXTALGO_H
 
+#include "GafferSceneUI/Export.h"
+
 #include "IECore/PathMatcher.h"
 
-#include "GafferSceneUI/Export.h"
+#include "OpenEXR/ImathLimits.h"
 
 namespace Gaffer
 {
@@ -47,6 +49,13 @@ namespace Gaffer
 class Context;
 
 } // namespace Gaffer
+
+namespace GafferScene
+{
+
+class ScenePlug;
+
+} // namespace GafferScene
 
 namespace GafferSceneUI
 {

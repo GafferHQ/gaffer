@@ -37,13 +37,13 @@
 #ifndef GAFFERSCENEUI_TRANSFORMTOOL_H
 #define GAFFERSCENEUI_TRANSFORMTOOL_H
 
-#include "Gaffer/TransformPlug.h"
-#include "Gaffer/StringAlgo.h"
+#include "GafferSceneUI/SelectionTool.h"
+#include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneUI/TypeIds.h"
-#include "GafferSceneUI/SelectionTool.h"
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/TransformPlug.h"
 
 namespace GafferSceneUI
 {

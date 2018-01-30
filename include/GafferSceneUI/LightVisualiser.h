@@ -37,10 +37,11 @@
 #ifndef GAFFERSCENEUI_LIGHTVISUALISER_H
 #define GAFFERSCENEUI_LIGHTVISUALISER_H
 
-#include "IECore/ObjectVector.h"
+#include "GafferSceneUI/Export.h"
+
 #include "IECoreGL/Renderable.h"
 
-#include "GafferSceneUI/Export.h"
+#include "IECore/ObjectVector.h"
 
 namespace GafferSceneUI
 {

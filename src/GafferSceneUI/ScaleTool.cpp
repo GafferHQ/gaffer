@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferSceneUI/ScaleTool.h"
 
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/MetadataAlgo.h"
+#include "GafferSceneUI/SceneView.h"
 
 #include "GafferUI/ScaleHandle.h"
 
-#include "GafferSceneUI/ScaleTool.h"
-#include "GafferSceneUI/SceneView.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/UndoScope.h"
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

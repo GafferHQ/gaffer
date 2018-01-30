@@ -34,23 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferSceneUI/CropWindowTool.h"
+
+#include "GafferSceneUI/SceneView.h"
+
+#include "GafferScene/Options.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "GafferUI/Pointer.h"
+#include "GafferUI/Style.h"
+
+#include "Gaffer/BlockedConnection.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/UndoScope.h"
 
 #include "IECore/NullObject.h"
 
-#include "Gaffer/BlockedConnection.h"
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferUI/Style.h"
-#include "GafferUI/Pointer.h"
-
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Options.h"
-
-#include "GafferSceneUI/CropWindowTool.h"
-#include "GafferSceneUI/SceneView.h"
+#include "boost/bind.hpp"
 
 using namespace Imath;
 using namespace IECore;

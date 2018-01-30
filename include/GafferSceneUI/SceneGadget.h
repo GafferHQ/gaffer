@@ -37,16 +37,16 @@
 #ifndef GAFFERSCENEUI_SCENEGADGET_H
 #define GAFFERSCENEUI_SCENEGADGET_H
 
-#include "IECoreGL/State.h"
-
-#include "Gaffer/Context.h"
-
-#include "GafferUI/Gadget.h"
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneUI/TypeIds.h"
-#include "GafferSceneUI/Export.h"
+#include "GafferUI/Gadget.h"
+
+#include "Gaffer/Context.h"
+
+#include "IECoreGL/State.h"
 
 namespace GafferSceneUI
 {

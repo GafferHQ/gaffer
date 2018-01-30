@@ -38,16 +38,16 @@
 #ifndef GAFFERSCENEUI_SCENEVIEW_H
 #define GAFFERSCENEUI_SCENEVIEW_H
 
-#include <functional>
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/SceneGadget.h"
+#include "GafferSceneUI/TypeIds.h"
+
+#include "GafferScene/PathFilter.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "GafferUI/View.h"
 
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathFilter.h"
-
-#include "GafferSceneUI/TypeIds.h"
-#include "GafferSceneUI/SceneGadget.h"
-#include "GafferSceneUI/Export.h"
+#include <functional>
 
 namespace GafferScene
 {

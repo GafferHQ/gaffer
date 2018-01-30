@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferSceneUI/SelectionTool.h"
 
-#include "GafferUI/Style.h"
-#include "GafferUI/Pointer.h"
+#include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/SceneView.h"
 
 #include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
-#include "GafferSceneUI/SelectionTool.h"
-#include "GafferSceneUI/SceneView.h"
+#include "GafferUI/Pointer.h"
+#include "GafferUI/Style.h"
+
+#include "boost/bind.hpp"
 
 using namespace Imath;
 using namespace IECore;

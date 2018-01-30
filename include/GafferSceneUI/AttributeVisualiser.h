@@ -37,11 +37,11 @@
 #ifndef GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
 #define GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
 
+#include "GafferSceneUI/Export.h"
+
 #include "IECoreGL/Renderable.h"
 
 #include "IECore/CompoundObject.h"
-
-#include "GafferSceneUI/Export.h"
 
 namespace GafferSceneUI
 {

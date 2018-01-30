@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENEUI_ROTATETOOL_H
 #define GAFFERSCENEUI_ROTATETOOL_H
 
-#include "GafferUI/Style.h"
-
 #include "GafferSceneUI/TransformTool.h"
+
+#include "GafferUI/Style.h"
 
 namespace GafferSceneUI
 {

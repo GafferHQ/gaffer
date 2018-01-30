@@ -34,21 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/NodeBinding.h"
+#include "ToolBinding.h"
 
-#include "Gaffer/Context.h"
+#include "GafferSceneUI/CropWindowTool.h"
+#include "GafferSceneUI/RotateTool.h"
+#include "GafferSceneUI/ScaleTool.h"
+#include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUI/SelectionTool.h"
+#include "GafferSceneUI/TransformTool.h"
+#include "GafferSceneUI/TranslateTool.h"
 
 #include "GafferUI/Gadget.h"
 
-#include "GafferSceneUI/SceneView.h"
-#include "GafferSceneUI/SelectionTool.h"
-#include "GafferSceneUI/CropWindowTool.h"
-#include "GafferSceneUI/TransformTool.h"
-#include "GafferSceneUI/TranslateTool.h"
-#include "GafferSceneUI/RotateTool.h"
-#include "GafferSceneUI/ScaleTool.h"
+#include "GafferBindings/NodeBinding.h"
 
-#include "ToolBinding.h"
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace boost::python;

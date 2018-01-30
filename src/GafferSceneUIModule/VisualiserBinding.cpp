@@ -34,13 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/RefCountedBinding.h"
+#include "VisualiserBinding.h"
 
-#include "GafferSceneUI/ObjectVisualiser.h"
 #include "GafferSceneUI/LightVisualiser.h"
+#include "GafferSceneUI/ObjectVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
-#include "VisualiserBinding.h"
+#include "IECorePython/RefCountedBinding.h"
 
 using namespace GafferSceneUI;
 

@@ -37,15 +37,15 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "GafferSceneTest/CompoundObjectSource.h"
+#include "GafferSceneTest/ScenePlugTest.h"
+#include "GafferSceneTest/TestLight.h"
+#include "GafferSceneTest/TestShader.h"
+#include "GafferSceneTest/TraverseScene.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/TraverseScene.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TestLight.h"
-#include "GafferSceneTest/ScenePlugTest.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace GafferSceneTest;

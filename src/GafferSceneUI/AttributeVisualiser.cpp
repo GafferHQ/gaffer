@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferSceneUI/AttributeVisualiser.h"
+
 #include "IECoreGL/Group.h"
 #include "IECoreGL/State.h"
 
