@@ -37,16 +37,16 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/MurmurHash.h"
+#include "ParameterHandlerBinding.h"
+
+#include "GafferCortex/ParameterHandler.h"
+
+#include "Gaffer/Plug.h"
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 
-#include "Gaffer/Plug.h"
-
-#include "GafferCortex/ParameterHandler.h"
-
-#include "ParameterHandlerBinding.h"
+#include "IECore/MurmurHash.h"
 
 using namespace boost::python;
 using namespace GafferCortex;

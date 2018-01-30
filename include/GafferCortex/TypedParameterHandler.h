@@ -38,9 +38,11 @@
 #ifndef GAFFERCORTEX_TYPEDPARAMETERHANDLER_H
 #define GAFFERCORTEX_TYPEDPARAMETERHANDLER_H
 
+#include "GafferCortex/ParameterHandler.h"
+
 #include "Gaffer/PlugType.h"
 
-#include "GafferCortex/ParameterHandler.h"
+#include "IECore/TypedParameter.h"
 
 namespace GafferCortex
 {

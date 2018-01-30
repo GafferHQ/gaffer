@@ -35,18 +35,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferCortex/ParameterisedHolder.h"
+
+#include "GafferCortex/CompoundParameterHandler.h"
+
+#include "Gaffer/BlockedConnection.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/ParameterisedInterface.h"
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-
-#include "IECore/ParameterisedInterface.h"
-#include "IECore/MessageHandler.h"
-
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/BlockedConnection.h"
-
-#include "GafferCortex/ParameterisedHolder.h"
-#include "GafferCortex/CompoundParameterHandler.h"
 
 using namespace GafferCortex;
 

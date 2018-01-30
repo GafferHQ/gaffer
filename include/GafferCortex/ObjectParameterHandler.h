@@ -38,11 +38,11 @@
 #ifndef GAFFERCORTEX_OBJECTPARAMETERHANDLER_H
 #define GAFFERCORTEX_OBJECTPARAMETERHANDLER_H
 
-#include "IECore/ObjectParameter.h"
+#include "GafferCortex/ParameterHandler.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferCortex/ParameterHandler.h"
+#include "IECore/ObjectParameter.h"
 
 namespace GafferCortex
 {

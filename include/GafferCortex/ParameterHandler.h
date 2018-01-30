@@ -38,13 +38,13 @@
 #ifndef GAFFERCORTEX_PARAMETERHANDLER_H
 #define GAFFERCORTEX_PARAMETERHANDLER_H
 
-#include <functional>
-
-#include "IECore/Parameter.h"
+#include "GafferCortex/Export.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferCortex/Export.h"
+#include "IECore/Parameter.h"
+
+#include <functional>
 
 namespace GafferCortex
 {

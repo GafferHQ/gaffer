@@ -38,11 +38,12 @@
 #ifndef GAFFERCORTEX_PARAMETERISEDHOLDER_H
 #define GAFFERCORTEX_PARAMETERISEDHOLDER_H
 
-#include "Gaffer/ComputeNode.h"
+#include "GafferCortex/Export.h"
+#include "GafferCortex/TypeIds.h"
+
 #include "GafferDispatch/TaskNode.h"
 
-#include "GafferCortex/TypeIds.h"
-#include "GafferCortex/Export.h"
+#include "Gaffer/ComputeNode.h"
 
 namespace IECore
 {

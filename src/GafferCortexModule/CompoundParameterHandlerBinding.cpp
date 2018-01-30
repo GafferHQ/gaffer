@@ -36,14 +36,14 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RefCountedBinding.h"
-#include "IECorePython/ScopedGILLock.h"
-
-#include "Gaffer/GraphComponent.h"
+#include "CompoundParameterHandlerBinding.h"
 
 #include "GafferCortex/CompoundParameterHandler.h"
 
-#include "CompoundParameterHandlerBinding.h"
+#include "Gaffer/GraphComponent.h"
+
+#include "IECorePython/RefCountedBinding.h"
+#include "IECorePython/ScopedGILLock.h"
 
 using namespace boost::python;
 using namespace GafferCortex;

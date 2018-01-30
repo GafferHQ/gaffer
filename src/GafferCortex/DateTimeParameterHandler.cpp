@@ -34,11 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/date_time/posix_time/posix_time.hpp"
+#include "GafferCortex/DateTimeParameterHandler.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferCortex/DateTimeParameterHandler.h"
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "boost/date_time/posix_time/posix_time.hpp"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace GafferCortex;
 

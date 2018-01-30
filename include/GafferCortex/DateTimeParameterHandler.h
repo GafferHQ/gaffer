@@ -37,9 +37,9 @@
 #ifndef GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
 #define GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
 
-#include "IECore/DateTimeParameter.h"
-
 #include "GafferCortex/ParameterHandler.h"
+
+#include "IECore/DateTimeParameter.h"
 
 namespace Gaffer
 {

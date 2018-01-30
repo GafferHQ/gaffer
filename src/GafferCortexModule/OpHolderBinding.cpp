@@ -37,15 +37,16 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/Op.h"
+#include "OpHolderBinding.h"
+
+#include "ParameterisedHolderBinding.h"
+
+#include "GafferCortex/CompoundParameterHandler.h"
+#include "GafferCortex/OpHolder.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferCortex/OpHolder.h"
-#include "GafferCortex/CompoundParameterHandler.h"
-
-#include "ParameterisedHolderBinding.h"
-#include "OpHolderBinding.h"
+#include "IECore/Op.h"
 
 using namespace boost::python;
 using namespace Gaffer;

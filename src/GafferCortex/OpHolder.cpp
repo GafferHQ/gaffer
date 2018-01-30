@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Op.h"
-#include "IECore/MurmurHash.h"
+#include "GafferCortex/OpHolder.h"
+
+#include "GafferCortex/CompoundParameterHandler.h"
 
 #include "Gaffer/ValuePlug.h"
 
-#include "GafferCortex/OpHolder.h"
-#include "GafferCortex/CompoundParameterHandler.h"
+#include "IECore/MurmurHash.h"
+#include "IECore/Op.h"
 
 using namespace IECore;
 using namespace GafferCortex;

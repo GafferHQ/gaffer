@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CompoundObject.h"
-#include "IECore/SimpleTypedData.h"
+#include "GafferCortex/ParameterHandler.h"
 
 #include "Gaffer/GraphComponent.h"
-#include "Gaffer/ValuePlug.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ValuePlug.h"
 
-#include "GafferCortex/ParameterHandler.h"
+#include "IECore/CompoundObject.h"
+#include "IECore/SimpleTypedData.h"
 
 using namespace IECore;
 

@@ -38,9 +38,9 @@
 #ifndef GAFFERCORTEX_COMPOUNDPARAMETERHANDLER_H
 #define GAFFERCORTEX_COMPOUNDPARAMETERHANDLER_H
 
-#include "IECore/CompoundParameter.h"
-
 #include "GafferCortex/ParameterHandler.h"
+
+#include "IECore/CompoundParameter.h"
 
 namespace GafferCortex
 {

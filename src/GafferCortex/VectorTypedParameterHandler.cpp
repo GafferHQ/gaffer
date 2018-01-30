@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/VectorTypedParameter.h"
-
 #include "GafferCortex/VectorTypedParameterHandler.h"
+
+#include "IECore/VectorTypedParameter.h"
 
 using namespace GafferCortex;
 
