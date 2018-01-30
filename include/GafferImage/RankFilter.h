@@ -37,11 +37,11 @@
 #ifndef GAFFERIMAGE_RANKFILTER_H
 #define GAFFERIMAGE_RANKFILTER_H
 
+#include "GafferImage/ImageProcessor.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {

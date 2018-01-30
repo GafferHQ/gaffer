@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringAlgo.h"
-
 #include "GafferImage/ChannelDataProcessor.h"
+
+#include "Gaffer/StringAlgo.h"
 
 using namespace Gaffer;
 using namespace GafferImage;

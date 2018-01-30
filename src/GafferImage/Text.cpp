@@ -34,21 +34,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
+#include "GafferImage/Text.h"
 
-#include "ft2build.h"
-#include FT_FREETYPE_H
-
-#include "tbb/enumerable_thread_specific.h"
-
-#include "IECore/LRUCache.h"
-#include "IECore/SearchPath.h"
+#include "GafferImage/BufferAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Transform2DPlug.h"
 
-#include "GafferImage/Text.h"
-#include "GafferImage/BufferAlgo.h"
+#include "IECore/LRUCache.h"
+#include "IECore/SearchPath.h"
+
+#include "tbb/enumerable_thread_specific.h"
+
+#include "ft2build.h"
+
+#include FT_FREETYPE_H
+
+#include <memory>
 
 using namespace std;
 using namespace Imath;

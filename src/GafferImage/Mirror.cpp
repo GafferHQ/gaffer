@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferImage/Mirror.h"
+
 #include "GafferImage/Sampler.h"
+
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace Imath;

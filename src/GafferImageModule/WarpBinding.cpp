@@ -32,12 +32,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferImage/Warp.h"
-#include "GafferImage/VectorWarp.h"
-
 #include "WarpBinding.h"
+
+#include "GafferImage/VectorWarp.h"
+#include "GafferImage/Warp.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;

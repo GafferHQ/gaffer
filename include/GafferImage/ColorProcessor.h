@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_COLORPROCESSOR_H
 #define GAFFERIMAGE_COLORPROCESSOR_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {

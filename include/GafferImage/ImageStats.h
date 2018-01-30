@@ -37,11 +37,11 @@
 #ifndef GAFFERIMAGE_IMAGESTATS_H
 #define GAFFERIMAGE_IMAGESTATS_H
 
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/BoxPlug.h"
-
 #include "GafferImage/ImagePlug.h"
+
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ComputeNode.h"
 
 namespace GafferImage
 {

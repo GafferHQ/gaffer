@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_IMAGECONTEXTPROCESSOR_H
 #define GAFFERIMAGE_IMAGECONTEXTPROCESSOR_H
 
-#include "Gaffer/ContextProcessor.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/ContextProcessor.h"
 
 namespace GafferImage
 {

@@ -34,16 +34,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "TransformBinding.h"
 
-#include "GafferImage/Resize.h"
+#include "GafferImage/Crop.h"
 #include "GafferImage/ImageTransform.h"
-#include "GafferImage/Resample.h"
 #include "GafferImage/Mirror.h"
 #include "GafferImage/Offset.h"
-#include "GafferImage/Crop.h"
+#include "GafferImage/Resample.h"
+#include "GafferImage/Resize.h"
 
-#include "TransformBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;

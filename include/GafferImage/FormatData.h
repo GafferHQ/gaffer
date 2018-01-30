@@ -37,10 +37,10 @@
 #ifndef GAFFER_FORMATDATA_H
 #define GAFFER_FORMATDATA_H
 
-#include "IECore/TypedData.h"
-
-#include "GafferImage/TypeIds.h"
 #include "GafferImage/Format.h"
+#include "GafferImage/TypeIds.h"
+
+#include "IECore/TypedData.h"
 
 namespace IECore
 {

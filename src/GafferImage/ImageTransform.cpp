@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/AngleConversion.h"
+#include "GafferImage/ImageTransform.h"
+
+#include "GafferImage/ImagePlug.h"
+#include "GafferImage/Resample.h"
+#include "GafferImage/Sampler.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Transform2DPlug.h"
 
-#include "GafferImage/ImageTransform.h"
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/Sampler.h"
-#include "GafferImage/Resample.h"
+#include "IECore/AngleConversion.h"
 
 using namespace Imath;
 using namespace IECore;

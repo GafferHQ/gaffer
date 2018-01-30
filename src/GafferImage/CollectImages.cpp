@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/CollectImages.h"
+
+#include "GafferImage/BufferAlgo.h"
+#include "GafferImage/ImageAlgo.h"
+
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
-
-#include "GafferImage/CollectImages.h"
-#include "GafferImage/BufferAlgo.h"
-#include "GafferImage/ImageAlgo.h"
 
 using namespace std;
 using namespace Imath;

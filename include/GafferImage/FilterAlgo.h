@@ -38,8 +38,14 @@
 #define GAFFERIMAGE_FILTERALGO_H
 
 #include "GafferImage/Sampler.h"
-#include "OpenEXR/ImathVec.h"
+
+#include "IECore/Export.h"
+
 #include "OpenImageIO/filter.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace GafferImage
 {

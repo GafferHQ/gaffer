@@ -34,15 +34,15 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "FilterBinding.h"
 
 #include "GafferImage/Blur.h"
-#include "GafferImage/RankFilter.h"
-#include "GafferImage/Median.h"
-#include "GafferImage/Erode.h"
 #include "GafferImage/Dilate.h"
+#include "GafferImage/Erode.h"
+#include "GafferImage/Median.h"
+#include "GafferImage/RankFilter.h"
 
-#include "FilterBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

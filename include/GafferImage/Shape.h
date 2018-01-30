@@ -37,10 +37,10 @@
 #ifndef GAFFERIMAGE_SHAPE_H
 #define GAFFERIMAGE_SHAPE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/ImageSwitch.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {

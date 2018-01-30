@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/Shape.h"
+
+#include "GafferImage/Blur.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImageTransform.h"
+#include "GafferImage/Merge.h"
+
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Transform2DPlug.h"
-
-#include "GafferImage/Merge.h"
-#include "GafferImage/Shape.h"
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImage/Blur.h"
-#include "GafferImage/ImageTransform.h"
 
 using namespace std;
 using namespace Imath;

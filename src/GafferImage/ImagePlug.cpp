@@ -35,12 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferImage/ImagePlug.h"
+
+#include "GafferImage/BufferAlgo.h"
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
-#include "GafferImage/BufferAlgo.h"
+
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace tbb;

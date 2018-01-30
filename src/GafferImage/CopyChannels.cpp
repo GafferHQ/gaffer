@@ -34,12 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/CopyChannels.h"
+
+#include "GafferImage/BufferAlgo.h"
+
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
-
-#include "GafferImage/CopyChannels.h"
-#include "GafferImage/BufferAlgo.h"
 
 using namespace std;
 using namespace Imath;

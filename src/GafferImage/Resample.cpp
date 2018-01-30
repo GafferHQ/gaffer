@@ -34,17 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
+#include "GafferImage/Resample.h"
 
-#include "OpenImageIO/fmath.h"
-#include "OpenImageIO/filter.h"
+#include "GafferImage/FilterAlgo.h"
+#include "GafferImage/Sampler.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferImage/Resample.h"
-#include "GafferImage/Sampler.h"
-#include "GafferImage/FilterAlgo.h"
+#include "OpenImageIO/filter.h"
+#include "OpenImageIO/fmath.h"
+
+#include <iostream>
 
 using namespace Imath;
 using namespace IECore;

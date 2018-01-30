@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_TEXT_H
 #define GAFFERIMAGE_TEXT_H
 
-#include "Gaffer/BoxPlug.h"
-
 #include "GafferImage/Shape.h"
+
+#include "Gaffer/BoxPlug.h"
 
 namespace Gaffer
 {

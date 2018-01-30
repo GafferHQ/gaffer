@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MessageHandler.h"
-#include "IECore/NullObject.h"
+#include "GafferImage/Warp.h"
+
+#include "GafferImage/FilterAlgo.h"
+#include "GafferImage/Sampler.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferImage/Warp.h"
-#include "GafferImage/Sampler.h"
-#include "GafferImage/FilterAlgo.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
 
 using namespace std;
 using namespace boost;

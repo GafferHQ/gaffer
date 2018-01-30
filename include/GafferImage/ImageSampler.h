@@ -37,12 +37,12 @@
 #ifndef GAFFERIMAGE_IMAGESAMPLER_H
 #define GAFFERIMAGE_IMAGESAMPLER_H
 
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferImage/TypeIds.h"
 #include "GafferImage/Export.h"
+#include "GafferImage/TypeIds.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
 {

@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <set>
-
 #include "GafferImage/ImageAlgo.h"
+
+#include <set>
 
 using namespace std;
 using namespace GafferImage;

@@ -36,17 +36,17 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/Context.h"
-
-#include "GafferUIBindings/GadgetBinding.h"
-
-#include "GafferImage/ImagePlug.h"
+#include "ImageGadgetBinding.h"
 
 #include "GafferImageUI/ImageGadget.h"
 
-#include "ImageGadgetBinding.h"
+#include "GafferImage/ImagePlug.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "Gaffer/Context.h"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace IECorePython;

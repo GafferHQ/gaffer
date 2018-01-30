@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_BLUR_H
 #define GAFFERIMAGE_BLUR_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {

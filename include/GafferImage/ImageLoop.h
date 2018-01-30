@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_IMAGELOOP_H
 #define GAFFERIMAGE_IMAGELOOP_H
 
-#include "Gaffer/Loop.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/Loop.h"
 
 namespace GafferImage
 {

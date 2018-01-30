@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_SHUFFLE_H
 #define GAFFERIMAGE_SHUFFLE_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {

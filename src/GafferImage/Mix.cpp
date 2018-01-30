@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/BoxOps.h"
+#include "GafferImage/Mix.h"
+
+#include "GafferImage/ImageAlgo.h"
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 
-#include "GafferImage/Mix.h"
-#include "GafferImage/ImageAlgo.h"
+#include "IECore/BoxOps.h"
 
 using namespace std;
 using namespace Imath;

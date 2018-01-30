@@ -38,9 +38,9 @@
 #ifndef GAFFERIMAGE_CHANNELDATAPROCESSOR_H
 #define GAFFERIMAGE_CHANNELDATAPROCESSOR_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {

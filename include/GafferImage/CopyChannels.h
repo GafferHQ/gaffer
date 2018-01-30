@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_COPYCHANNELS_H
 #define GAFFERIMAGE_COPYCHANNELS_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {

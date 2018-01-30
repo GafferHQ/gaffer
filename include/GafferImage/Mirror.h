@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_MIRROR_H
 #define GAFFERIMAGE_MIRROR_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {

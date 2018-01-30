@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/Blur.h"
-#include "GafferImage/Resample.h"
+
 #include "GafferImage/FilterAlgo.h"
+#include "GafferImage/Resample.h"
+
+#include "Gaffer/StringPlug.h"
 
 using namespace Imath;
 using namespace Gaffer;

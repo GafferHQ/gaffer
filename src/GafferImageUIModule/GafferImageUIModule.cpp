@@ -37,8 +37,8 @@
 
 #include "boost/python.hpp"
 
-#include "ImageViewBinding.h"
 #include "ImageGadgetBinding.h"
+#include "ImageViewBinding.h"
 
 using namespace boost::python;
 

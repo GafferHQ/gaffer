@@ -37,10 +37,10 @@
 #ifndef GAFFERIMAGE_RESAMPLE_H
 #define GAFFERIMAGE_RESAMPLE_H
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {

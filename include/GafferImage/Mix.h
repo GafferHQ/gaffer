@@ -37,11 +37,11 @@
 #ifndef GAFFERIMAGE_MIX_H
 #define GAFFERIMAGE_MIX_H
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {

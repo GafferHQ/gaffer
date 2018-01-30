@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_IMAGECONTEXTVARIABLES_H
 #define GAFFERIMAGE_IMAGECONTEXTVARIABLES_H
 
-#include "Gaffer/ContextVariables.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/ContextVariables.h"
 
 namespace GafferImage
 {

@@ -34,9 +34,9 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/BufferAlgo.h"
-
 #include "BufferAlgoBinding.h"
+
+#include "GafferImage/BufferAlgo.h"
 
 using namespace boost::python;
 

@@ -38,10 +38,10 @@
 #ifndef GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H
 #define GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
 {

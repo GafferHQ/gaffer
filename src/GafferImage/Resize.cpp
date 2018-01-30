@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/Resize.h"
-#include "GafferImage/Sampler.h"
+
 #include "GafferImage/Resample.h"
+#include "GafferImage/Sampler.h"
+
+#include "Gaffer/StringPlug.h"
 
 using namespace Imath;
 using namespace Gaffer;

@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Switch.inl"
-#include "Gaffer/Context.h"
-
 #include "GafferImage/ImageSwitch.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Switch.inl"
 
 using namespace GafferImage;
 

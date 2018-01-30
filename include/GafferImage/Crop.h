@@ -38,8 +38,9 @@
 #ifndef GAFFERIMAGE_CROP_H
 #define GAFFERIMAGE_CROP_H
 
-#include "Gaffer/BoxPlug.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/BoxPlug.h"
 
 namespace GafferImage
 {

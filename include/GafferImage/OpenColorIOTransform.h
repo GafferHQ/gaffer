@@ -37,11 +37,11 @@
 #ifndef GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
 #define GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
 
-#include "OpenColorIO/OpenColorIO.h"
+#include "GafferImage/ColorProcessor.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 
-#include "GafferImage/ColorProcessor.h"
+#include "OpenColorIO/OpenColorIO.h"
 
 namespace GafferImage
 {

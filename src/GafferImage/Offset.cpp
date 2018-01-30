@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferImage/Offset.h"
+
 #include "GafferImage/BufferAlgo.h"
+
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace Imath;

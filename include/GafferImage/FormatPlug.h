@@ -37,10 +37,10 @@
 #ifndef GAFFERIMAGE_FORMATPLUG_H
 #define GAFFERIMAGE_FORMATPLUG_H
 
-#include "Gaffer/BoxPlug.h"
-
 #include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
+
+#include "Gaffer/BoxPlug.h"
 
 namespace Gaffer
 {

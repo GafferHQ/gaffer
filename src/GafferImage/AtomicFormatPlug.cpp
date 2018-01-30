@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
-#include "Gaffer/Process.h"
+#include "GafferImage/AtomicFormatPlug.h"
 
 #include "GafferImage/FormatData.h"
-#include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/FormatPlug.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Process.h"
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/TypedPlug.inl"
 
 using namespace Gaffer;
 using namespace GafferImage;

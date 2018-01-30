@@ -38,10 +38,10 @@
 #ifndef GAFFERSCENE_IMAGENODE_H
 #define GAFFERSCENE_IMAGENODE_H
 
-#include "Gaffer/ComputeNode.h"
-
-#include "GafferImage/ImagePlug.h"
 #include "GafferImage/Export.h"
+#include "GafferImage/ImagePlug.h"
+
+#include "Gaffer/ComputeNode.h"
 
 namespace GafferImage
 {

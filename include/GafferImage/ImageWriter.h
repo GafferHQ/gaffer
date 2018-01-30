@@ -37,13 +37,13 @@
 #ifndef GAFFERIMAGE_IMAGEWRITER_H
 #define GAFFERIMAGE_IMAGEWRITER_H
 
-#include <functional>
-
-#include "IECore/CompoundData.h"
+#include "GafferImage/TypeIds.h"
 
 #include "GafferDispatch/TaskNode.h"
 
-#include "GafferImage/TypeIds.h"
+#include "IECore/CompoundData.h"
+
+#include <functional>
 
 namespace Gaffer
 {

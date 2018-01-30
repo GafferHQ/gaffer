@@ -36,9 +36,10 @@
 
 
 #include "GafferImage/FilterAlgo.h"
-#include "IECore/Exception.h"
-#include "OpenImageIO/filter.h"
 
+#include "IECore/Exception.h"
+
+#include "OpenImageIO/filter.h"
 
 #include <climits>
 

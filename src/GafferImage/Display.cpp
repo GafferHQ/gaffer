@@ -35,25 +35,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
+#include "GafferImage/Display.h"
 
-#include "tbb/spin_mutex.h"
+#include "GafferImage/FormatPlug.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/DirtyPropagationScope.h"
+
+#include "IECoreImage/DisplayDriver.h"
+
+#include "IECore/BoxOps.h"
+#include "IECore/MessageHandler.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"
 
-#include "IECore/MessageHandler.h"
-#include "IECore/BoxOps.h"
+#include "tbb/spin_mutex.h"
 
-#include "IECoreImage/DisplayDriver.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/DirtyPropagationScope.h"
-
-#include "GafferImage/Display.h"
-#include "GafferImage/FormatPlug.h"
+#include <memory>
 
 using namespace std;
 using namespace Imath;

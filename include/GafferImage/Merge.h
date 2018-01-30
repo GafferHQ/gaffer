@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_MERGE_H
 #define GAFFERIMAGE_MERGE_H
 
-#include "Gaffer/NumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/NumericPlug.h"
 
 namespace GafferImage
 {

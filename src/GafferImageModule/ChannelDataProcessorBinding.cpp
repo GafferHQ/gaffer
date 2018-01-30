@@ -34,15 +34,15 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "ChannelDataProcessorBinding.h"
 
 #include "GafferImage/ChannelDataProcessor.h"
-#include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
+#include "GafferImage/Grade.h"
 #include "GafferImage/Premultiply.h"
 #include "GafferImage/Unpremultiply.h"
 
-#include "ChannelDataProcessorBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

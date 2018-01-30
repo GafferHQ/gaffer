@@ -38,15 +38,15 @@
 #ifndef GAFFER_IMAGEPLUG_H
 #define GAFFER_IMAGEPLUG_H
 
-#include "IECoreImage/ImagePrimitive.h"
-
-#include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/Context.h"
-
-#include "GafferImage/TypeIds.h"
 #include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/Export.h"
+#include "GafferImage/TypeIds.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/TypedPlug.h"
+
+#include "IECoreImage/ImagePrimitive.h"
 
 namespace GafferImage
 {

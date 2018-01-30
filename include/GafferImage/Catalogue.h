@@ -37,14 +37,14 @@
 #ifndef GAFFERIMAGE_CATALOGUE_H
 #define GAFFERIMAGE_CATALOGUE_H
 
-#include "IECoreImage/DisplayDriver.h"
-#include "IECoreImage/DisplayDriverServer.h"
-
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/NumericPlug.h"
-
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageSwitch.h"
+
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreImage/DisplayDriver.h"
+#include "IECoreImage/DisplayDriverServer.h"
 
 namespace GafferImage
 {

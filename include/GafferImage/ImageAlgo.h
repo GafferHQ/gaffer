@@ -37,10 +37,15 @@
 #ifndef GAFFERIMAGE_IMAGEALGO_H
 #define GAFFERIMAGE_IMAGEALGO_H
 
-#include <vector>
-#include "OpenEXR/ImathBox.h"
-
 #include "GafferImage/Export.h"
+
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include <vector>
 
 namespace GafferImage
 {

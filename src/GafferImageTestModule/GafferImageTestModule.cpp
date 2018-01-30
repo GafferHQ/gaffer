@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImagePlug.h"
 
 #include "Gaffer/Node.h"
 
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageAlgo.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace Gaffer;

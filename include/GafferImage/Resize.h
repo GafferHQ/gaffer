@@ -37,10 +37,10 @@
 #ifndef GAFFERIMAGE_RESIZE_H
 #define GAFFERIMAGE_RESIZE_H
 
-#include "Gaffer/NumericPlug.h"
-
-#include "GafferImage/ImageProcessor.h"
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {

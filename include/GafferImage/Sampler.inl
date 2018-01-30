@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenImageIO/fmath.h"
-
 #include "GafferImage/BufferAlgo.h"
+
+#include "OpenImageIO/fmath.h"
 
 namespace GafferImage
 {

@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/ColorProcessor.h"
+
+#include "GafferImage/ImageAlgo.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
-
-#include "GafferImage/ColorProcessor.h"
-#include "GafferImage/ImageAlgo.h"
 
 using namespace std;
 using namespace IECore;

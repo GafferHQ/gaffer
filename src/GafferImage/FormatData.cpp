@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/TypedData.h"
-#include "IECore/TypedData.inl"
+#include "GafferImage/FormatData.h"
 
 #include "GafferImage/TypeIds.h"
-#include "GafferImage/FormatData.h"
+
+#include "IECore/TypedData.h"
+#include "IECore/TypedData.inl"
 
 using namespace Imath;
 

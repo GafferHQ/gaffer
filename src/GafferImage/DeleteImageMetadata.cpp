@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/DeleteImageMetadata.h"
+
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferImage/DeleteImageMetadata.h"
 
 using namespace IECore;
 using namespace Gaffer;

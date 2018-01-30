@@ -38,16 +38,16 @@
 #ifndef GAFFERIMAGEUI_IMAGEVIEW_H
 #define GAFFERIMAGEUI_IMAGEVIEW_H
 
-#include <memory>
-#include <functional>
+#include "GafferImageUI/Export.h"
+#include "GafferImageUI/TypeIds.h"
+
+#include "GafferUI/View.h"
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "GafferUI/View.h"
-
-#include "GafferImageUI/TypeIds.h"
-#include "GafferImageUI/Export.h"
+#include <functional>
+#include <memory>
 
 namespace Gaffer
 {

@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/ImageSampler.h"
+
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
 

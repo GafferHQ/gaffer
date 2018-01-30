@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_SAMPLER_H
 #define GAFFERIMAGE_SAMPLER_H
 
-#include <vector>
-
 #include "GafferImage/ImagePlug.h"
+
+#include <vector>
 
 namespace GafferImage
 {

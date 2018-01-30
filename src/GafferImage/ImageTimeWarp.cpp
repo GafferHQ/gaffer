@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TimeWarp.inl"
 #include "GafferImage/ImageTimeWarp.h"
+
+#include "Gaffer/TimeWarp.inl"
 
 using namespace GafferImage;
 

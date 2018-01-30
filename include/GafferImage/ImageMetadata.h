@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_IMAGEMETADATA_H
 #define GAFFERIMAGE_IMAGEMETADATA_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferImage/MetadataProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferImage
 {

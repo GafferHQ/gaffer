@@ -36,16 +36,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "MixinBinding.h"
 
+#include "GafferImage/DeleteImageContextVariables.h"
 #include "GafferImage/ImageContextProcessor.h"
 #include "GafferImage/ImageContextVariables.h"
-#include "GafferImage/DeleteImageContextVariables.h"
+#include "GafferImage/ImageLoop.h"
 #include "GafferImage/ImageSwitch.h"
 #include "GafferImage/ImageTimeWarp.h"
-#include "GafferImage/ImageLoop.h"
 
-#include "MixinBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace GafferImage;
 

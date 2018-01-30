@@ -34,12 +34,12 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferImage/ImageStats.h"
-#include "GafferImage/ImageSampler.h"
-
 #include "UtilityNodeBinding.h"
+
+#include "GafferImage/ImageSampler.h"
+#include "GafferImage/ImageStats.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

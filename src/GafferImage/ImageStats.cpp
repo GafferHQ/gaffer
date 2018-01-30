@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/BoxPlug.h"
-#include "Gaffer/ScriptNode.h"
-
 #include "GafferImage/ImageStats.h"
-#include "GafferImage/Sampler.h"
+
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
+#include "GafferImage/Sampler.h"
+
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/TypedPlug.h"
 
 using namespace std;
 using namespace Gaffer;

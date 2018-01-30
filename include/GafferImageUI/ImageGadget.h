@@ -37,17 +37,17 @@
 #ifndef GAFFERIMAGEUI_IMAGEGADGET_H
 #define GAFFERIMAGEUI_IMAGEGADGET_H
 
-#include "tbb/concurrent_unordered_map.h"
+#include "GafferImageUI/Export.h"
+#include "GafferImageUI/TypeIds.h"
+
+#include "GafferImage/Format.h"
+
+#include "GafferUI/Gadget.h"
 
 #include "IECore/MurmurHash.h"
 #include "IECore/VectorTypedData.h"
 
-#include "GafferUI/Gadget.h"
-
-#include "GafferImage/Format.h"
-
-#include "GafferImageUI/TypeIds.h"
-#include "GafferImageUI/Export.h"
+#include "tbb/concurrent_unordered_map.h"
 
 namespace IECoreGL
 {

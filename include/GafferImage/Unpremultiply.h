@@ -38,9 +38,9 @@
 #ifndef GAFFERIMAGE_UNPREMULTIPLY_H
 #define GAFFERIMAGE_UNPREMULTIPLY_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ChannelDataProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {

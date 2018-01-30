@@ -34,17 +34,17 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "CatalogueBinding.h"
+
+#include "GafferImage/Catalogue.h"
+#include "GafferImage/Display.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
-#include "GafferImage/Display.h"
-#include "GafferImage/Catalogue.h"
-
-#include "CatalogueBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace IECorePython;

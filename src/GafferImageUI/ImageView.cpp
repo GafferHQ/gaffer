@@ -35,42 +35,43 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <math.h>
+#include "GafferImageUI/ImageView.h"
+
+#include "GafferImageUI/ImageGadget.h"
+
+#include "GafferImage/Clamp.h"
+#include "GafferImage/Format.h"
+#include "GafferImage/Grade.h"
+#include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageSampler.h"
+
+#include "GafferUI/Gadget.h"
+#include "GafferUI/Pointer.h"
+#include "GafferUI/StandardStyle.h"
+#include "GafferUI/Style.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/Shader.h"
+#include "IECoreGL/ShaderLoader.h"
+#include "IECoreGL/Texture.h"
+#include "IECoreGL/TextureLoader.h"
+#include "IECoreGL/ToGLTextureConverter.h"
+
+#include "IECore/BoxAlgo.h"
+#include "IECore/BoxOps.h"
+#include "IECore/FastFloat.h"
+
+#include "OpenEXR/ImathColorAlgo.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include "OpenEXR/ImathColorAlgo.h"
-
-#include "IECore/FastFloat.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
-
-#include "IECoreGL/ToGLTextureConverter.h"
-#include "IECoreGL/TextureLoader.h"
-#include "IECoreGL/Texture.h"
-#include "IECoreGL/ShaderLoader.h"
-#include "IECoreGL/Shader.h"
-#include "IECoreGL/IECoreGL.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferUI/Gadget.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/StandardStyle.h"
-#include "GafferUI/Pointer.h"
-
-#include "GafferImage/Format.h"
-#include "GafferImage/Grade.h"
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/Clamp.h"
-#include "GafferImage/ImageSampler.h"
-
-#include "GafferImageUI/ImageGadget.h"
-#include "GafferImageUI/ImageView.h"
+#include <math.h>
 
 using namespace boost;
 using namespace IECoreGL;
