@@ -37,10 +37,10 @@
 #ifndef GAFFERAPPLESEED_APPLESEEDRENDER_H
 #define GAFFERAPPLESEED_APPLESEEDRENDER_H
 
-#include "GafferScene/Render.h"
-
-#include "GafferAppleseed/TypeIds.h"
 #include "GafferAppleseed/Export.h"
+#include "GafferAppleseed/TypeIds.h"
+
+#include "GafferScene/Render.h"
 
 namespace GafferAppleseed
 {

@@ -34,22 +34,35 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/atomic.h"
-#include "tbb/concurrent_unordered_map.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "boost/algorithm/string.hpp"
-#include "boost/filesystem/convenience.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/smart_ptr/scoped_ptr.hpp"
-#include "boost/thread.hpp"
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+
+#include "IECoreAppleseed/CameraAlgo.h"
+#include "IECoreAppleseed/ColorAlgo.h"
+#include "IECoreAppleseed/EntityAlgo.h"
+#include "IECoreAppleseed/MeshAlgo.h"
+#include "IECoreAppleseed/MotionAlgo.h"
+#include "IECoreAppleseed/ObjectAlgo.h"
+#include "IECoreAppleseed/ParameterAlgo.h"
+#include "IECoreAppleseed/ProgressTileCallback.h"
+#include "IECoreAppleseed/RendererController.h"
+#include "IECoreAppleseed/ShaderAlgo.h"
+#include "IECoreAppleseed/TransformAlgo.h"
+
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Shader.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/ObjectInterpolator.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/SimpleTypedData.h"
 
 #include "foundation/platform/timers.h"
 #include "foundation/utility/log.h"
 #include "foundation/utility/searchpaths.h"
 #include "foundation/utility/stopwatch.h"
 #include "foundation/utility/string.h"
-
 #include "renderer/api/aov.h"
 #include "renderer/api/bsdf.h"
 #include "renderer/api/camera.h"
@@ -71,27 +84,15 @@
 #include "renderer/api/texture.h"
 #include "renderer/api/utility.h"
 
-#include "IECore/MessageHandler.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/ObjectInterpolator.h"
-#include "IECore/ObjectVector.h"
-#include "IECoreScene/Camera.h"
-#include "IECoreScene/Shader.h"
+#include "boost/algorithm/string.hpp"
+#include "boost/filesystem/convenience.hpp"
+#include "boost/filesystem/operations.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/smart_ptr/scoped_ptr.hpp"
+#include "boost/thread.hpp"
 
-#include "IECoreAppleseed/CameraAlgo.h"
-#include "IECoreAppleseed/ColorAlgo.h"
-#include "IECoreAppleseed/EntityAlgo.h"
-#include "IECoreAppleseed/MeshAlgo.h"
-#include "IECoreAppleseed/MotionAlgo.h"
-#include "IECoreAppleseed/ObjectAlgo.h"
-#include "IECoreAppleseed/ParameterAlgo.h"
-#include "IECoreAppleseed/ProgressTileCallback.h"
-#include "IECoreAppleseed/RendererController.h"
-#include "IECoreAppleseed/ShaderAlgo.h"
-#include "IECoreAppleseed/TransformAlgo.h"
-
-#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "tbb/atomic.h"
+#include "tbb/concurrent_unordered_map.h"
 
 
 namespace asf = foundation;

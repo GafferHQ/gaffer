@@ -34,20 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
+#include "GafferAppleseed/AppleseedLight.h"
+
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreScene/Shader.h"
+
+#include "IECore/Exception.h"
 
 #include "renderer/api/edf.h"
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/light.h"
 #include "renderer/api/version.h"
 
-#include "IECore/Exception.h"
-#include "IECoreScene/Shader.h"
-
-#include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferAppleseed/AppleseedLight.h"
+#include "boost/format.hpp"
 
 using namespace Gaffer;
 using namespace GafferAppleseed;
