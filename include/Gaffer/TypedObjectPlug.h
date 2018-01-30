@@ -38,6 +38,12 @@
 #ifndef GAFFER_TYPEDOBJECTPLUG_H
 #define GAFFER_TYPEDOBJECTPLUG_H
 
+// Include must come first to avoid symbol visibility problems with Clang.
+// It would appear that if any inline code involving `std::vector` appears
+// before the definitions of VectorTypedData, Clang will hide the symbols
+// for `TypedObjectPlug<*VectorData>`.
+#include "IECore/VectorTypedData.h"
+
 #include "Gaffer/ValuePlug.h"
 
 #include "IECore/CompoundData.h"
@@ -45,7 +51,6 @@
 #include "IECore/Object.h"
 #include "IECore/ObjectVector.h"
 #include "IECore/PathMatcherData.h"
-#include "IECore/VectorTypedData.h"
 
 namespace Gaffer
 {

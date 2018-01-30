@@ -38,6 +38,8 @@
 
 #include "PathFilterBinding.h"
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/CompoundPathFilter.h"
@@ -46,8 +48,6 @@
 #include "Gaffer/MatchPatternPathFilter.h"
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 

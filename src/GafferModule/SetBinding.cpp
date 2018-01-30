@@ -37,6 +37,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "SetBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
@@ -44,8 +46,6 @@
 #include "Gaffer/ChildSet.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/StandardSet.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "boost/python/slice.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
