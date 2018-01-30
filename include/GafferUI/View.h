@@ -38,13 +38,13 @@
 #ifndef GAFFERUI_VIEW_H
 #define GAFFERUI_VIEW_H
 
-#include <functional>
-
-#include "boost/regex.hpp"
+#include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Node.h"
 
-#include "GafferUI/ViewportGadget.h"
+#include "boost/regex.hpp"
+
+#include <functional>
 
 namespace Gaffer
 {

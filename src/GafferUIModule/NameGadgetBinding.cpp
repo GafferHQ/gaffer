@@ -37,11 +37,11 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUI/NameGadget.h"
+#include "NameGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "NameGadgetBinding.h"
+#include "GafferUI/NameGadget.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;

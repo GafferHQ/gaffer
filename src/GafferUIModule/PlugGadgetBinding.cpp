@@ -36,13 +36,14 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Plug.h"
-#include "Gaffer/Context.h"
+#include "PlugGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
+
 #include "GafferUI/PlugGadget.h"
 
-#include "PlugGadgetBinding.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Plug.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;

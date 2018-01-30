@@ -38,12 +38,12 @@
 #ifndef GAFFERUIBINDINGS_GADGETBINDING_H
 #define GAFFERUIBINDINGS_GADGETBINDING_H
 
-#include <utility>
-
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
+
+#include <utility>
 
 namespace GafferUIBindings
 {

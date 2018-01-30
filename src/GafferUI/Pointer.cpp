@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CachedReader.h"
-
 #include "GafferUI/Pointer.h"
+
+#include "IECore/CachedReader.h"
 
 using namespace GafferUI;
 

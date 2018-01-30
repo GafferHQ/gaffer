@@ -37,9 +37,9 @@
 #ifndef GAFFERUI_STANDARDCONNECTIONGADGET_H
 #define GAFFERUI_STANDARDCONNECTIONGADGET_H
 
-#include "Gaffer/StringAlgo.h"
-
 #include "GafferUI/ConnectionGadget.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace GafferUI
 {

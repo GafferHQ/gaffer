@@ -35,13 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/lexical_cast.hpp"
+#include "GafferUI/View.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
 
-#include "GafferUI/View.h"
+#include "boost/bind.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace Gaffer;
 using namespace GafferUI;

@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferUI/Style.h"
+
 #include "GafferUI/StandardStyle.h"
 
 #include "IECore/Exception.h"

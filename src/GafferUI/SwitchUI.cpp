@@ -34,16 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
-#include "Gaffer/Switch.h"
-#include "Gaffer/ArrayPlug.h"
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-
 #include "GafferUI/Nodule.h"
-#include "GafferUI/PlugAdder.h"
 #include "GafferUI/NoduleLayout.h"
+#include "GafferUI/PlugAdder.h"
+
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/Switch.h"
+#include "Gaffer/UndoScope.h"
+
+#include "boost/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

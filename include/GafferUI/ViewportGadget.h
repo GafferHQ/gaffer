@@ -38,11 +38,11 @@
 #ifndef GAFFERUI_VIEWPORTGADGET_H
 #define GAFFERUI_VIEWPORTGADGET_H
 
-#include "IECoreScene/Camera.h"
+#include "GafferUI/IndividualContainer.h"
 
 #include "IECoreGL/Selector.h"
 
-#include "GafferUI/IndividualContainer.h"
+#include "IECoreScene/Camera.h"
 
 namespace GafferUI
 {

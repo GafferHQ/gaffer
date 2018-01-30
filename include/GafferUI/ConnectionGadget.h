@@ -38,13 +38,13 @@
 #ifndef GAFFERUI_CONNECTIONGADGET_H
 #define GAFFERUI_CONNECTIONGADGET_H
 
-#include <functional>
-
-#include "boost/regex.hpp"
+#include "GafferUI/Gadget.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferUI/Gadget.h"
+#include "boost/regex.hpp"
+
+#include <functional>
 
 namespace GafferUI
 {

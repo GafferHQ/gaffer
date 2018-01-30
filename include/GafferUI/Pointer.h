@@ -37,11 +37,11 @@
 #ifndef GAFFERUI_POINTER_H
 #define GAFFERUI_POINTER_H
 
-#include "boost/signals.hpp"
+#include "GafferUI/Export.h"
 
 #include "IECoreImage/ImagePrimitive.h"
 
-#include "GafferUI/Export.h"
+#include "boost/signals.hpp"
 
 namespace GafferUI
 {

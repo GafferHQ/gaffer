@@ -35,28 +35,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <cassert>
+#include "GafferUI/StandardGraphLayout.h"
 
-#include "boost/graph/adjacency_list.hpp"
+#include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/NodeGadget.h"
+#include "GafferUI/Nodule.h"
 
-#include "OpenEXR/ImathVec.h"
+#include "Gaffer/BoxOut.h"
+#include "Gaffer/DependencyNode.h"
+#include "Gaffer/Dot.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/Switch.h"
 
 #include "IECore/BoundedKDTree.h"
 #include "IECore/BoxAlgo.h"
+#include "IECore/Export.h"
 #include "IECore/MessageHandler.h"
 
-#include "Gaffer/Plug.h"
-#include "Gaffer/DependencyNode.h"
-#include "Gaffer/StandardSet.h"
-#include "Gaffer/Dot.h"
-#include "Gaffer/Switch.h"
-#include "Gaffer/BoxOut.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
-#include "GafferUI/StandardGraphLayout.h"
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/Nodule.h"
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/NodeGadget.h"
+#include "boost/graph/adjacency_list.hpp"
+
+#include <cassert>
 
 using namespace std;
 using namespace Imath;

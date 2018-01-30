@@ -38,9 +38,9 @@
 #ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_H
 #define GAFFERUIBINDINGS_NODEGADGETBINDING_H
 
-#include "GafferUI/NodeGadget.h"
-
 #include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferUI/NodeGadget.h"
 
 namespace GafferUIBindings
 {

@@ -34,17 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferUI/NoduleLayout.h"
+#include "GafferUI/PlugAdder.h"
+#include "GafferUI/StandardNodeGadget.h"
 
 #include "Gaffer/Box.h"
 #include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
-#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/UndoScope.h"
 
-#include "GafferUI/StandardNodeGadget.h"
-#include "GafferUI/PlugAdder.h"
-#include "GafferUI/NoduleLayout.h"
+#include "boost/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

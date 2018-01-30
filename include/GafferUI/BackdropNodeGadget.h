@@ -37,10 +37,10 @@
 #ifndef GAFFERUI_BACKDROPNODEGADGET_H
 #define GAFFERUI_BACKDROPNODEGADGET_H
 
+#include "GafferUI/NodeGadget.h"
+
 #include "Gaffer/Backdrop.h"
 #include "Gaffer/BoxPlug.h"
-
-#include "GafferUI/NodeGadget.h"
 
 namespace GafferUI
 {

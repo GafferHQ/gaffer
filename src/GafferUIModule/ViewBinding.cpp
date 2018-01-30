@@ -35,18 +35,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/Plug.h"
-#include "Gaffer/Context.h"
-
-#include "GafferBindings/NodeBinding.h"
+#include "ViewBinding.h"
 
 #include "GafferUI/View.h"
 
-#include "ViewBinding.h"
+#include "GafferBindings/NodeBinding.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Plug.h"
+
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace Gaffer;

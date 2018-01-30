@@ -35,28 +35,29 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <sys/time.h>
+#include "GafferUI/ViewportGadget.h"
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "GafferUI/Style.h"
+
+#include "IECoreGL/PerspectiveCamera.h"
+#include "IECoreGL/Selector.h"
+#include "IECoreGL/State.h"
+#include "IECoreGL/ToGLCameraConverter.h"
+
+#include "IECoreScene/Transform.h"
+
+#include "IECore/AngleConversion.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
+#include "IECore/SimpleTypedData.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
 
-#include "IECore/NullObject.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/AngleConversion.h"
-#include "IECore/MessageHandler.h"
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
-#include "IECoreScene/Transform.h"
-
-#include "IECoreGL/ToGLCameraConverter.h"
-#include "IECoreGL/PerspectiveCamera.h"
-#include "IECoreGL/State.h"
-#include "IECoreGL/Selector.h"
-
-#include "GafferUI/ViewportGadget.h"
-#include "GafferUI/Style.h"
+#include <sys/time.h>
 
 using namespace Imath;
 using namespace IECore;

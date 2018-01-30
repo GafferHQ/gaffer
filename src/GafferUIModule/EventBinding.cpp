@@ -38,11 +38,11 @@
 
 #include "EventBinding.h"
 
-#include "GafferUI/Event.h"
-#include "GafferUI/KeyEvent.h"
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/DragDropEvent.h"
+#include "GafferUI/Event.h"
 #include "GafferUI/Gadget.h"
+#include "GafferUI/KeyEvent.h"
 
 using namespace boost::python;
 using namespace GafferUI;

@@ -38,10 +38,10 @@
 #ifndef GAFFERUI_GRAPHGADGET_H
 #define GAFFERUI_GRAPHGADGET_H
 
-#include "Gaffer/Plug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferUI/ContainerGadget.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Plug.h"
 
 namespace Gaffer
 {

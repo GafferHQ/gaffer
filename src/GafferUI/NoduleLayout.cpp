@@ -35,23 +35,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/regex.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/container/flat_set.hpp"
+#include "GafferUI/NoduleLayout.h"
 
-#include "IECore/SimpleTypedData.h"
+#include "GafferUI/CompoundNodule.h"
+#include "GafferUI/LinearContainer.h"
+#include "GafferUI/NodeGadget.h"
+#include "GafferUI/Nodule.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 
-#include "GafferUI/Nodule.h"
-#include "GafferUI/LinearContainer.h"
-#include "GafferUI/CompoundNodule.h"
-#include "GafferUI/NoduleLayout.h"
-#include "GafferUI/NodeGadget.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+#include "boost/container/flat_set.hpp"
+#include "boost/regex.hpp"
 
 using namespace std;
 using namespace IECore;

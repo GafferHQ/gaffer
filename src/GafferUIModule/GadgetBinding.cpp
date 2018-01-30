@@ -37,16 +37,16 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ExceptionAlgo.h"
+#include "GadgetBinding.h"
 
-#include "GafferBindings/SignalBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 
-#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
-#include "GadgetBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;

@@ -37,9 +37,9 @@
 #ifndef GAFFERUI_DOTNODEGADGET_H
 #define GAFFERUI_DOTNODEGADGET_H
 
-#include "Gaffer/Dot.h"
-
 #include "GafferUI/StandardNodeGadget.h"
+
+#include "Gaffer/Dot.h"
 
 namespace Gaffer
 {

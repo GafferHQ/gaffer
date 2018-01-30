@@ -38,10 +38,9 @@
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/ExceptionAlgo.h"
+#include "NodeGadgetBinding.h"
 
-#include "Gaffer/Plug.h"
-#include "GafferBindings/SignalBinding.h"
+#include "GafferUIBindings/NodeGadgetBinding.h"
 
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -49,9 +48,10 @@
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/DotNodeGadget.h"
 
-#include "GafferUIBindings/NodeGadgetBinding.h"
+#include "Gaffer/Plug.h"
+#include "GafferBindings/SignalBinding.h"
 
-#include "NodeGadgetBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace IECorePython;

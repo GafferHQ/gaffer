@@ -37,13 +37,13 @@
 #ifndef GAFFERUI_TOOL_H
 #define GAFFERUI_TOOL_H
 
-#include <functional>
+#include "GafferUI/Export.h"
+#include "GafferUI/TypeIds.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "GafferUI/TypeIds.h"
-#include "GafferUI/Export.h"
+#include <functional>
 
 namespace GafferUI
 {

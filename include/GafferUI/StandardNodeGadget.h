@@ -38,11 +38,11 @@
 #ifndef GAFFERUI_STANDARDNODEGADGET_H
 #define GAFFERUI_STANDARDNODEGADGET_H
 
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferUI/NodeGadget.h"
-#include "GafferUI/LinearContainer.h"
 #include "GafferUI/GraphGadget.h"
+#include "GafferUI/LinearContainer.h"
+#include "GafferUI/NodeGadget.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace GafferUI
 {

@@ -39,7 +39,11 @@
 
 #include "GafferUI/ModifiableEvent.h"
 
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace GafferUI
 {

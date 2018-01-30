@@ -36,11 +36,11 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUI/SpacerGadget.h"
+#include "SpacerGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "SpacerGadgetBinding.h"
+#include "GafferUI/SpacerGadget.h"
 
 using namespace boost::python;
 using namespace GafferUI;

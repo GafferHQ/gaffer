@@ -38,8 +38,8 @@
 #ifndef GAFFERUI_COMPOUNDNODULE_H
 #define GAFFERUI_COMPOUNDNODULE_H
 
-#include "GafferUI/Nodule.h"
 #include "GafferUI/LinearContainer.h"
+#include "GafferUI/Nodule.h"
 
 namespace GafferUI
 {

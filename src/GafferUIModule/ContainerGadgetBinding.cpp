@@ -37,13 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUI/ContainerGadget.h"
-#include "GafferUI/IndividualContainer.h"
-#include "GafferUI/LinearContainer.h"
+#include "ContainerGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "ContainerGadgetBinding.h"
+#include "GafferUI/ContainerGadget.h"
+#include "GafferUI/IndividualContainer.h"
+#include "GafferUI/LinearContainer.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;

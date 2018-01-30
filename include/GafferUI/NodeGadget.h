@@ -38,11 +38,11 @@
 #ifndef GAFFERUI_NODEGADGET_H
 #define GAFFERUI_NODEGADGET_H
 
-#include <functional>
-
 #include "GafferUI/IndividualContainer.h"
 
 #include "Gaffer/Set.h"
+
+#include <functional>
 
 namespace GafferUI
 {

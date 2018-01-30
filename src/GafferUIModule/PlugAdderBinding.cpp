@@ -36,16 +36,18 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "PlugAdderBinding.h"
 
-#include "Gaffer/Plug.h"
-#include "GafferBindings/SignalBinding.h"
-
-#include "GafferUI/PlugAdder.h"
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "PlugAdderBinding.h"
+#include "GafferUI/PlugAdder.h"
+
+#include "GafferBindings/SignalBinding.h"
+
+#include "Gaffer/Plug.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILLock.h"
 
 using namespace boost::python;
 using namespace std;

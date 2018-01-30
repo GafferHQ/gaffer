@@ -35,18 +35,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/find.hpp"
+#include "GafferUI/NodeGadget.h"
+
+#include "GafferUI/LinearContainer.h"
+#include "GafferUI/NameGadget.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/Style.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Metadata.h"
-
-#include "GafferUI/NodeGadget.h"
-#include "GafferUI/NameGadget.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/LinearContainer.h"
-#include "GafferUI/Nodule.h"
+#include "boost/algorithm/string/find.hpp"
 
 using namespace GafferUI;
 using namespace Imath;

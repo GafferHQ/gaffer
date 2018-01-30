@@ -38,11 +38,15 @@
 #ifndef GAFFERUI_STANDARDSTYLE_H
 #define GAFFERUI_STANDARDSTYLE_H
 
-#include "boost/array.hpp"
-
-#include "OpenEXR/ImathColor.h"
-
 #include "GafferUI/Style.h"
+
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathColor.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/array.hpp"
 
 namespace IECoreGL
 {

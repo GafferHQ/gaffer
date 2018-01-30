@@ -38,14 +38,14 @@
 #ifndef GAFFERUI_NODULELAYOUT_H
 #define GAFFERUI_NODULELAYOUT_H
 
-#include <functional>
-
-#include "boost/variant.hpp"
+#include "GafferUI/Gadget.h"
+#include "GafferUI/GraphGadget.h"
 
 #include "Gaffer/StringAlgo.h"
 
-#include "GafferUI/Gadget.h"
-#include "GafferUI/GraphGadget.h"
+#include "boost/variant.hpp"
+
+#include <functional>
 
 namespace Gaffer
 {

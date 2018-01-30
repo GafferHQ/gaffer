@@ -35,34 +35,35 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferUI/StandardNodeGadget.h"
 
-#include "OpenEXR/ImathBoxAlgo.h"
+#include "GafferUI/CompoundNodule.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/ImageGadget.h"
+#include "GafferUI/LinearContainer.h"
+#include "GafferUI/NameGadget.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/NoduleLayout.h"
+#include "GafferUI/PlugAdder.h"
+#include "GafferUI/SpacerGadget.h"
+#include "GafferUI/StandardNodule.h"
+#include "GafferUI/Style.h"
 
-#include "IECore/MessageHandler.h"
-
-#include "IECoreGL/Selector.h"
-
-#include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferUI/StandardNodeGadget.h"
-#include "GafferUI/Nodule.h"
-#include "GafferUI/NameGadget.h"
-#include "GafferUI/LinearContainer.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/CompoundNodule.h"
-#include "GafferUI/StandardNodule.h"
-#include "GafferUI/SpacerGadget.h"
-#include "GafferUI/ImageGadget.h"
-#include "GafferUI/PlugAdder.h"
-#include "GafferUI/NoduleLayout.h"
-#include "GafferUI/GraphGadget.h"
+#include "IECoreGL/Selector.h"
+
+#include "IECore/MessageHandler.h"
+
+#include "OpenEXR/ImathBoxAlgo.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

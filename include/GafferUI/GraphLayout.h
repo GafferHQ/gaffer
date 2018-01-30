@@ -38,12 +38,15 @@
 #ifndef GAFFERUI_GRAPHLAYOUT_H
 #define GAFFERUI_GRAPHLAYOUT_H
 
-#include "OpenEXR/ImathVec.h"
+#include "GafferUI/Export.h"
+#include "GafferUI/TypeIds.h"
 
+#include "IECore/Export.h"
 #include "IECore/RunTimeTyped.h"
 
-#include "GafferUI/TypeIds.h"
-#include "GafferUI/Export.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace Gaffer
 {
