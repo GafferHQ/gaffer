@@ -36,25 +36,25 @@
 
 #include "boost/python.hpp"
 
-#include "OSL/oslversion.h"
+#include "GafferOSL/ClosurePlug.h"
+#include "GafferOSL/OSLCode.h"
+#include "GafferOSL/OSLImage.h"
+#include "GafferOSL/OSLLight.h"
+#include "GafferOSL/OSLObject.h"
+#include "GafferOSL/OSLShader.h"
+#include "GafferOSL/ShadingEngine.h"
 
-#include "IECorePython/ScopedGILRelease.h"
-#include "IECorePython/IECoreBinding.h"
+#include "GafferBindings/DataBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/DataBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/PlugBinding.h"
+#include "IECorePython/IECoreBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
-#include "GafferOSL/OSLShader.h"
-#include "GafferOSL/ShadingEngine.h"
-#include "GafferOSL/OSLImage.h"
-#include "GafferOSL/OSLObject.h"
-#include "GafferOSL/OSLCode.h"
-#include "GafferOSL/ClosurePlug.h"
-#include "GafferOSL/OSLLight.h"
+#include "OSL/oslversion.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

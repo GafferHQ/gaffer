@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/Primitive.h"
+#include "GafferOSL/OSLObject.h"
+
+#include "GafferOSL/OSLShader.h"
+#include "GafferOSL/ShadingEngine.h"
 
 #include "GafferScene/ResamplePrimitiveVariables.h"
 
-#include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLObject.h"
-#include "GafferOSL/ShadingEngine.h"
+#include "IECoreScene/Primitive.h"
 
 using namespace Imath;
 using namespace IECore;

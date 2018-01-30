@@ -34,23 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <fstream>
+#include "GafferOSL/OSLCode.h"
 
-#include "boost/filesystem.hpp"
-#include "boost/bind.hpp"
+#include "GafferOSL/Private/CapturingErrorHandler.h"
 
-#include "OSL/oslcomp.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/Process.h"
+#include "Gaffer/SplinePlug.h"
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
 
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/SplinePlug.h"
-#include "Gaffer/Process.h"
+#include "OSL/oslcomp.h"
 
-#include "GafferOSL/Private/CapturingErrorHandler.h"
-#include "GafferOSL/OSLCode.h"
+#include "boost/bind.hpp"
+#include "boost/filesystem.hpp"
+
+#include <fstream>
 
 using namespace std;
 using namespace IECore;

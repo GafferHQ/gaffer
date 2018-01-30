@@ -34,36 +34,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <limits>
+#include "GafferOSL/ShadingEngine.h"
 
-#include "tbb/spin_mutex.h"
-#include "tbb/spin_rw_mutex.h"
-#include "tbb/parallel_for.h"
-#include "tbb/enumerable_thread_specific.h"
+#include "GafferOSL/OSLShader.h"
 
-#include "boost/algorithm/string/split.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string/classification.hpp"
-#include "boost/algorithm/string/join.hpp"
-#include "boost/unordered_map.hpp"
-
-#include "OSL/oslclosure.h"
-#include "OSL/genclosure.h"
-#include "OSL/oslversion.h"
-#include "OSL/oslexec.h"
-#include "OpenImageIO/ustring.h"
-
-
-#include "IECore/MessageHandler.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/VectorTypedData.h"
-#include "IECore/SplineData.h"
 #include "IECoreScene/Shader.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
-#include "GafferOSL/ShadingEngine.h"
-#include "GafferOSL/OSLShader.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/SplineData.h"
+#include "IECore/VectorTypedData.h"
+
+#include "OSL/genclosure.h"
+#include "OSL/oslclosure.h"
+#include "OSL/oslexec.h"
+#include "OSL/oslversion.h"
+
+#include "OpenImageIO/ustring.h"
+
+#include "boost/algorithm/string/classification.hpp"
+#include "boost/algorithm/string/join.hpp"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/split.hpp"
+#include "boost/unordered_map.hpp"
+
+#include "tbb/enumerable_thread_specific.h"
+#include "tbb/parallel_for.h"
+#include "tbb/spin_mutex.h"
+#include "tbb/spin_rw_mutex.h"
+
+#include <limits>
 
 using namespace std;
 using namespace boost;

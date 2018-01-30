@@ -35,13 +35,13 @@
 #ifndef GAFFEROSL_SHADINGENGINE_H
 #define GAFFEROSL_SHADINGENGINE_H
 
-#include "boost/container/flat_set.hpp"
+#include "GafferOSL/Export.h"
+#include "GafferOSL/TypeIds.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/ObjectVector.h"
 
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/Export.h"
+#include "boost/container/flat_set.hpp"
 
 namespace GafferOSL
 {

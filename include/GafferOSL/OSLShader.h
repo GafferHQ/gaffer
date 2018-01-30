@@ -37,10 +37,10 @@
 #ifndef GAFFEROSL_OSLSHADER_H
 #define GAFFEROSL_OSLSHADER_H
 
-#include "GafferScene/Shader.h"
-
-#include "GafferOSL/TypeIds.h"
 #include "GafferOSL/Export.h"
+#include "GafferOSL/TypeIds.h"
+
+#include "GafferScene/Shader.h"
 
 namespace GafferOSL
 {

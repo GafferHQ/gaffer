@@ -37,12 +37,12 @@
 #ifndef GAFFEROSL_CLOSUREPLUG_H
 #define GAFFEROSL_CLOSUREPLUG_H
 
-#include "IECore/CompoundObject.h"
+#include "GafferOSL/Export.h"
+#include "GafferOSL/TypeIds.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/Export.h"
+#include "IECore/CompoundObject.h"
 
 namespace GafferOSL
 {

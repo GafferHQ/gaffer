@@ -37,13 +37,14 @@
 #ifndef GAFFEROSL_OSLOBJECT_H
 #define GAFFEROSL_OSLOBJECT_H
 
+#include "GafferOSL/Export.h"
+#include "GafferOSL/TypeIds.h"
+
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/ShaderPlug.h"
+
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/Export.h"
 
 namespace GafferOSL
 {
