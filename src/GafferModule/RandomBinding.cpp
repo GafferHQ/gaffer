@@ -37,11 +37,11 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Random.h"
+#include "RandomBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "RandomBinding.h"
+#include "Gaffer/Random.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

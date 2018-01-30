@@ -38,10 +38,10 @@
 #ifndef GAFFER_EXPRESSION_H
 #define GAFFER_EXPRESSION_H
 
-#include <functional>
-
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
+
+#include <functional>
 
 namespace Gaffer
 {

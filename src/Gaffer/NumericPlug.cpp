@@ -35,10 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenEXR/ImathFun.h"
-
 #include "Gaffer/NumericPlug.h"
+
 #include "Gaffer/TypedPlug.h"
+
+#include "OpenEXR/ImathFun.h"
 
 using namespace IECore;
 using namespace Gaffer;

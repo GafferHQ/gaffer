@@ -35,15 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
-#include "boost/algorithm/string/replace.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/Node.h"
 #include "Gaffer/PlugAlgo.h"
-#include "Gaffer/MetadataAlgo.h"
+
 #include "Gaffer/Box.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/ValuePlug.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/format.hpp"
 
 using namespace std;
 using namespace IECore;

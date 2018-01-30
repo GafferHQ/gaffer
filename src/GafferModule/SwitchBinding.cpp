@@ -36,10 +36,11 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Switch.h"
+#include "SwitchBinding.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "SwitchBinding.h"
+#include "Gaffer/Switch.h"
 
 using namespace boost::python;
 using namespace IECorePython;

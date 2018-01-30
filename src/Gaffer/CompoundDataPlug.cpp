@@ -35,17 +35,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SplineData.h"
-
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/SplinePlug.h"
+
 #include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/TypedPlug.h"
+
+#include "IECore/SplineData.h"
 
 using namespace Imath;
 using namespace IECore;

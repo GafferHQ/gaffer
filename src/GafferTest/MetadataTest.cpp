@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
+#include "GafferTest/MetadataTest.h"
+
+#include "GafferTest/Assert.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/Node.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Metadata.h"
-
-#include "GafferTest/Assert.h"
-#include "GafferTest/MetadataTest.h"
+#include "tbb/tbb.h"
 
 using namespace tbb;
 using namespace IECore;

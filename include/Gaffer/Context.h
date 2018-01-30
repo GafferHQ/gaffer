@@ -37,15 +37,15 @@
 #ifndef GAFFER_CONTEXT_H
 #define GAFFER_CONTEXT_H
 
-#include "boost/container/flat_map.hpp"
-#include "boost/signals.hpp"
+#include "Gaffer/Export.h"
+#include "Gaffer/StringAlgo.h"
 
-#include "IECore/InternedString.h"
 #include "IECore/Data.h"
+#include "IECore/InternedString.h"
 #include "IECore/MurmurHash.h"
 
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/Export.h"
+#include "boost/container/flat_map.hpp"
+#include "boost/signals.hpp"
 
 namespace Gaffer
 {

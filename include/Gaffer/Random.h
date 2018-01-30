@@ -37,9 +37,9 @@
 #ifndef GAFFER_RANDOM_H
 #define GAFFER_RANDOM_H
 
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
 
 namespace Gaffer
 {

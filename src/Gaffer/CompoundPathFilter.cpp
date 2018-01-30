@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "Gaffer/CompoundPathFilter.h"
 
 #include "IECore/Exception.h"
 
-#include "Gaffer/CompoundPathFilter.h"
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 

@@ -38,11 +38,11 @@
 #ifndef GAFFER_SPLINEPLUG_H
 #define GAFFER_SPLINEPLUG_H
 
-#include "IECore/Spline.h"
-
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/TypedPlug.h"
 #include "Gaffer/PlugType.h"
+#include "Gaffer/TypedPlug.h"
+
+#include "IECore/Spline.h"
 
 namespace Gaffer
 {

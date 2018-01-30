@@ -38,8 +38,8 @@
 #ifndef GAFFER_SET_H
 #define GAFFER_SET_H
 
-#include "Gaffer/Node.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/Node.h"
 
 #include "IECore/RunTimeTyped.h"
 

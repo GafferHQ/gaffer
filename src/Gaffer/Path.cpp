@@ -35,13 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "Gaffer/Path.h"
+
+#include "Gaffer/PathFilter.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/Path.h"
-#include "Gaffer/PathFilter.h"
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace IECore;

@@ -36,17 +36,18 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/format.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/GraphComponent.h"
+#include "GraphComponentBinding.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialisation.h"
 
-#include "GraphComponentBinding.h"
+#include "Gaffer/GraphComponent.h"
+
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/format.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

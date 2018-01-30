@@ -38,8 +38,8 @@
 #ifndef GAFFER_MATCHPATTERNPATHFILTER_H
 #define GAFFER_MATCHPATTERNPATHFILTER_H
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/PathFilter.h"
+#include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
 {

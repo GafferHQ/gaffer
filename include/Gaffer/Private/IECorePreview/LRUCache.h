@@ -35,16 +35,16 @@
 #ifndef IECOREPREVIEW_LRUCACHE_H
 #define IECOREPREVIEW_LRUCACHE_H
 
-#include <vector>
-#include <memory>
-#include <functional>
+#include "boost/function.hpp"
+#include "boost/noncopyable.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
 
-#include "boost/noncopyable.hpp"
-#include "boost/function.hpp"
-#include "boost/unordered_map.hpp"
+#include <functional>
+#include <memory>
+#include <vector>
 
 namespace IECorePreview
 {

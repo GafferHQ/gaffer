@@ -38,12 +38,12 @@
 #ifndef GAFFERBINDINGS_SIGNALBINDING_INL
 #define GAFFERBINDINGS_SIGNALBINDING_INL
 
-#include "boost/version.hpp"
-#include "boost/signals.hpp"
-
-#include "IECorePython/ScopedGILRelease.h"
-#include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/signals.hpp"
+#include "boost/version.hpp"
 
 namespace GafferBindings
 {

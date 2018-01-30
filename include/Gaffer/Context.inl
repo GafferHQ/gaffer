@@ -37,9 +37,9 @@
 #ifndef GAFFER_CONTEXT_INL
 #define GAFFER_CONTEXT_INL
 
-#include "boost/format.hpp"
-
 #include "IECore/SimpleTypedData.h"
+
+#include "boost/format.hpp"
 
 namespace Gaffer
 {

@@ -38,10 +38,10 @@
 #ifndef GAFFER_COMPOUNDDATAPLUG_H
 #define GAFFER_COMPOUNDDATAPLUG_H
 
+#include "Gaffer/TypedPlug.h"
+
 #include "IECore/CompoundData.h"
 #include "IECore/CompoundObject.h"
-
-#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {

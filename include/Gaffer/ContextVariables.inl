@@ -37,10 +37,10 @@
 #ifndef GAFFER_CONTEXTVARIABLES_INL
 #define GAFFER_CONTEXTVARIABLES_INL
 
-#include "IECore/SimpleTypedData.h"
-
-#include "Gaffer/ContextVariables.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextVariables.h"
+
+#include "IECore/SimpleTypedData.h"
 #include "Gaffer/ContextProcessor.inl"
 
 namespace Gaffer

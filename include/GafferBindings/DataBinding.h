@@ -39,9 +39,9 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/Data.h"
-
 #include "GafferBindings/Export.h"
+
+#include "IECore/Data.h"
 
 namespace GafferBindings
 {

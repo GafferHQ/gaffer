@@ -35,18 +35,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Expression.h"
+
+#include "Gaffer/Action.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECore/Exception.h"
+#include "IECore/MessageHandler.h"
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/Exception.h"
-
-#include "Gaffer/Expression.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/Action.h"
-#include "Gaffer/ScriptNode.h"
 
 using namespace IECore;
 using namespace Gaffer;

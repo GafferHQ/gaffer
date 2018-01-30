@@ -37,21 +37,21 @@
 
 #include "boost/python.hpp"
 
-#include <fstream>
+#include "ApplicationRootBinding.h"
 
-#include "boost/filesystem.hpp"
-
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/Serialisation.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/Preferences.h"
 
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/Serialisation.h"
-#include "GafferBindings/NodeBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILLock.h"
 
-#include "ApplicationRootBinding.h"
+#include "boost/filesystem.hpp"
+
+#include <fstream>
 
 using namespace boost::python;
 using namespace GafferBindings;

@@ -38,9 +38,9 @@
 #ifndef GAFFER_COMPUTENODE_H
 #define GAFFER_COMPUTENODE_H
 
-#include "IECore/MurmurHash.h"
-
 #include "Gaffer/DependencyNode.h"
+
+#include "IECore/MurmurHash.h"
 
 namespace Gaffer
 {

@@ -37,16 +37,16 @@
 #ifndef GAFFER_METADATA_H
 #define GAFFER_METADATA_H
 
-#include <functional>
+#include "Gaffer/CatchingSignalCombiner.h"
+#include "Gaffer/Export.h"
+#include "Gaffer/StringAlgo.h"
+
+#include "IECore/Data.h"
+#include "IECore/InternedString.h"
 
 #include "boost/signals.hpp"
 
-#include "IECore/InternedString.h"
-#include "IECore/Data.h"
-
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/CatchingSignalCombiner.h"
-#include "Gaffer/Export.h"
+#include <functional>
 
 namespace Gaffer
 {

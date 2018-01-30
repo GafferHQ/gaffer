@@ -35,30 +35,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
+#include "boost/python.hpp"
 
-#include "boost/python.hpp" // must be the first include
-#include "boost/algorithm/string/replace.hpp"
-#include "boost/regex.hpp"
-#include "boost/lexical_cast.hpp"
+#include "ScriptNodeBinding.h"
+
+#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/SignalBinding.h"
+
+#include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "IECore/MessageHandler.h"
 
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/ScopedGILRelease.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/regex.hpp"
 
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/ApplicationRoot.h"
-#include "Gaffer/StandardSet.h"
-#include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/NodeBinding.h"
-
-#include "ScriptNodeBinding.h"
+#include <memory>
 
 using namespace Gaffer;
 using namespace GafferBindings;

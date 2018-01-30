@@ -35,8 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/SubGraph.h"
-#include "Gaffer/BoxOut.h"
+
 #include "Gaffer/BoxIn.h"
+#include "Gaffer/BoxOut.h"
 
 using namespace IECore;
 using namespace Gaffer;

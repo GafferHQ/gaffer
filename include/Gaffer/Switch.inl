@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
-#include "boost/regex.hpp"
-
-#include "Gaffer/Switch.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Switch.h"
+
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+#include "boost/regex.hpp"
 
 namespace Gaffer
 {

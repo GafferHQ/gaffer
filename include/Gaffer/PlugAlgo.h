@@ -38,16 +38,17 @@
 #ifndef GAFFER_PLUGALGO_H
 #define GAFFER_PLUGALGO_H
 
-#include "IECore/RefCounted.h"
-#include "IECore/InternedString.h"
-
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/StringAlgo.h"
+
+#include "IECore/InternedString.h"
+#include "IECore/RefCounted.h"
 
 namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( Plug )
+IE_CORE_FORWARDDECLARE( GraphComponent )
 
 namespace PlugAlgo
 {

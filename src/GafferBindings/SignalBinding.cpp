@@ -36,9 +36,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/signals.hpp"
 
 #include "GafferBindings/SignalBinding.h"
+
+#include "boost/signals.hpp"
 
 using namespace boost::python;
 

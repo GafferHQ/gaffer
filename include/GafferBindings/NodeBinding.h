@@ -38,16 +38,16 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_H
 #define GAFFERBINDINGS_NODEBINDING_H
 
-#include <utility>
-
 #include "boost/python.hpp"
-
-#include "IECorePython/ScopedGILLock.h"
-
-#include "Gaffer/Node.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
+
+#include "Gaffer/Node.h"
+
+#include "IECorePython/ScopedGILLock.h"
+
+#include <utility>
 
 namespace GafferBindings
 {

@@ -37,9 +37,9 @@
 #ifndef GAFFER_MONITOR_H
 #define GAFFER_MONITOR_H
 
-#include "boost/noncopyable.hpp"
-
 #include "Gaffer/Export.h"
+
+#include "boost/noncopyable.hpp"
 
 namespace Gaffer
 {

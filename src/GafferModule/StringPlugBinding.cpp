@@ -34,13 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/StringPlug.h"
+#include "StringPlugBinding.h"
 
 #include "GafferBindings/ValuePlugBinding.h"
 
-#include "StringPlugBinding.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace Gaffer;

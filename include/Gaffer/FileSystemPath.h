@@ -38,9 +38,9 @@
 #ifndef GAFFER_FILESYSTEMPATH_H
 #define GAFFER_FILESYSTEMPATH_H
 
-#include "IECore/FileSequence.h"
-
 #include "Gaffer/Path.h"
+
+#include "IECore/FileSequence.h"
 
 namespace Gaffer
 {

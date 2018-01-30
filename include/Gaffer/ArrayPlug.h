@@ -37,9 +37,9 @@
 #ifndef GAFFER_ARRAYPLUG_H
 #define GAFFER_ARRAYPLUG_H
 
-#include "OpenEXR/ImathLimits.h"
-
 #include "Gaffer/Plug.h"
+
+#include "OpenEXR/ImathLimits.h"
 
 namespace Gaffer
 {

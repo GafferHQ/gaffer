@@ -38,9 +38,9 @@
 #ifndef GAFFER_STRINGALGO_H
 #define GAFFER_STRINGALGO_H
 
-#include <string>
-
 #include "Gaffer/Export.h"
+
+#include <string>
 
 namespace Gaffer
 {

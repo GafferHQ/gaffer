@@ -35,8 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/PerformanceMonitor.h"
-#include "Gaffer/Process.h"
+
 #include "Gaffer/Plug.h"
+#include "Gaffer/Process.h"
 
 using namespace Gaffer;
 

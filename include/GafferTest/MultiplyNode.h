@@ -37,11 +37,11 @@
 #ifndef GAFFERTEST_MULTIPLYNODE_H
 #define GAFFERTEST_MULTIPLYNODE_H
 
+#include "GafferTest/Export.h"
+#include "GafferTest/TypeIds.h"
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
-
-#include "GafferTest/TypeIds.h"
-#include "GafferTest/Export.h"
 
 namespace GafferTest
 {

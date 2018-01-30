@@ -36,9 +36,9 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/StringAlgo.h"
-
 #include "StringAlgoBinding.h"
+
+#include "Gaffer/StringAlgo.h"
 
 using namespace boost::python;
 

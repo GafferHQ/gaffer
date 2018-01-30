@@ -37,10 +37,10 @@
 #ifndef GAFFER_BLOCKEDCONNECTION_H
 #define GAFFER_BLOCKEDCONNECTION_H
 
-#include "boost/signals.hpp"
-#include "boost/noncopyable.hpp"
-
 #include "Gaffer/Export.h"
+
+#include "boost/noncopyable.hpp"
+#include "boost/signals.hpp"
 
 namespace Gaffer
 {

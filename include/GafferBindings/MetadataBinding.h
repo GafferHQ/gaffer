@@ -37,9 +37,9 @@
 #ifndef GAFFERBINDINGS_METADATABINDING_H
 #define GAFFERBINDINGS_METADATABINDING_H
 
-#include "Gaffer/Node.h"
-
 #include "GafferBindings/Export.h"
+
+#include "Gaffer/Node.h"
 
 namespace GafferBindings
 {

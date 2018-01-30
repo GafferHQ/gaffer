@@ -37,18 +37,18 @@
 #ifndef GAFFER_CONTEXTMONITOR_H
 #define GAFFER_CONTEXTMONITOR_H
 
-#include <vector>
-#include <map>
+#include "Gaffer/Monitor.h"
 
-#include "tbb/enumerable_thread_specific.h"
+#include "IECore/MurmurHash.h"
+#include "IECore/RefCounted.h"
 
 #include "boost/unordered_map.hpp"
 #include "boost/unordered_set.hpp"
 
-#include "IECore/RefCounted.h"
-#include "IECore/MurmurHash.h"
+#include "tbb/enumerable_thread_specific.h"
 
-#include "Gaffer/Monitor.h"
+#include <map>
+#include <vector>
 
 namespace Gaffer
 {

@@ -36,13 +36,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/signals.hpp"
 
-#include "IECorePython/ScopedGILLock.h"
+#include "SignalBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
 
-#include "SignalBinding.h"
+#include "IECorePython/ScopedGILLock.h"
+
+#include "boost/signals.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

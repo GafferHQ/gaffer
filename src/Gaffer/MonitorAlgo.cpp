@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iomanip>
+#include "Gaffer/MonitorAlgo.h"
 
 #include "Gaffer/PerformanceMonitor.h"
-#include "Gaffer/MonitorAlgo.h"
 #include "Gaffer/Plug.h"
+
+#include <iomanip>
 
 using namespace Gaffer;
 

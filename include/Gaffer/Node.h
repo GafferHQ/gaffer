@@ -38,9 +38,9 @@
 #ifndef GAFFER_NODE_H
 #define GAFFER_NODE_H
 
-#include "Gaffer/GraphComponent.h"
 #include "Gaffer/FilteredChildIterator.h"
 #include "Gaffer/FilteredRecursiveChildIterator.h"
+#include "Gaffer/GraphComponent.h"
 
 namespace Gaffer
 {

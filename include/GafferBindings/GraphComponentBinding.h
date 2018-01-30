@@ -38,11 +38,11 @@
 #ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 #define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 
-#include <utility>
+#include "Gaffer/GraphComponent.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
-#include "Gaffer/GraphComponent.h"
+#include <utility>
 
 namespace GafferBindings
 {

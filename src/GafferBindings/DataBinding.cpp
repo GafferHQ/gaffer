@@ -36,9 +36,9 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/DespatchTypedData.h"
-
 #include "GafferBindings/DataBinding.h"
+
+#include "IECore/DespatchTypedData.h"
 
 using namespace boost::python;
 using namespace IECore;

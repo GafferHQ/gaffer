@@ -38,12 +38,12 @@
 #ifndef GAFFER_ACTION_H
 #define GAFFER_ACTION_H
 
-#include <functional>
+#include "Gaffer/Export.h"
+#include "Gaffer/TypeIds.h"
 
 #include "IECore/RunTimeTyped.h"
 
-#include "Gaffer/TypeIds.h"
-#include "Gaffer/Export.h"
+#include <functional>
 
 namespace Gaffer
 {

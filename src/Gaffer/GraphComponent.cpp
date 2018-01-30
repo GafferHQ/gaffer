@@ -35,19 +35,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <set>
+#include "Gaffer/GraphComponent.h"
 
-#include "boost/format.hpp"
-#include "boost/bind.hpp"
-#include "boost/regex.hpp"
-#include "boost/lexical_cast.hpp"
+#include "Gaffer/Action.h"
+#include "Gaffer/DirtyPropagationScope.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "IECore/Exception.h"
 
-#include "Gaffer/GraphComponent.h"
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/Action.h"
-#include "Gaffer/DirtyPropagationScope.h"
+#include "boost/bind.hpp"
+#include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/regex.hpp"
+
+#include <set>
 
 using namespace Gaffer;
 using namespace IECore;

@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Node.h"
-#include "Gaffer/NumericPlug.h"
+#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
 
 #include "GafferTest/Assert.h"
-#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
+
+#include "Gaffer/Node.h"
+#include "Gaffer/NumericPlug.h"
 
 using namespace Gaffer;
 

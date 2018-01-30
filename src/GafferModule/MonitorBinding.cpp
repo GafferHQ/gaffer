@@ -35,16 +35,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/format.hpp"
-
-#include "Gaffer/Monitor.h"
-#include "Gaffer/PerformanceMonitor.h"
-#include "Gaffer/ContextMonitor.h"
-#include "Gaffer/VTuneMonitor.h"
-#include "Gaffer/MonitorAlgo.h"
-#include "Gaffer/Plug.h"
 
 #include "MonitorBinding.h"
+
+#include "Gaffer/ContextMonitor.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/MonitorAlgo.h"
+#include "Gaffer/PerformanceMonitor.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/VTuneMonitor.h"
+
+#include "boost/format.hpp"
 
 using namespace boost::python;
 using namespace Gaffer;

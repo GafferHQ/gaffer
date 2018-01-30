@@ -38,8 +38,9 @@
 #ifndef GAFFERBINDINGS_VALUEPLUGBINDING_H
 #define GAFFERBINDINGS_VALUEPLUGBINDING_H
 
-#include "Gaffer/ValuePlug.h"
 #include "GafferBindings/PlugBinding.h"
+
+#include "Gaffer/ValuePlug.h"
 
 namespace GafferBindings
 {

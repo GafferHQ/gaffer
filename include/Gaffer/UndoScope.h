@@ -38,11 +38,11 @@
 #ifndef GAFFER_UNDOSCOPE_H
 #define GAFFER_UNDOSCOPE_H
 
-#include <string>
+#include "Gaffer/DirtyPropagationScope.h"
 
 #include "IECore/RefCounted.h"
 
-#include "Gaffer/DirtyPropagationScope.h"
+#include <string>
 
 namespace Gaffer
 {

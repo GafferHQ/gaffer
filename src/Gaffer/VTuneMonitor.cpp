@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/VTuneMonitor.h"
-
 #ifdef GAFFER_VTUNE
 
-#include <stdio.h>
+#include "Gaffer/VTuneMonitor.h"
+
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/Process.h"
 
 #include "ittnotify.h"
-#include "Gaffer/Process.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
+
+#include <stdio.h>
 
 namespace
 {
@@ -90,6 +91,5 @@ void VTuneMonitor::processFinished( const Process *process )
 	__itt_task_end( g_domain);
 
 }
-
 
 #endif //GAFFER_VTUNE

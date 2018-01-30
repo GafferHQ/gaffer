@@ -38,11 +38,11 @@
 #ifndef GAFFER_NUMERICPLUG_H
 #define GAFFER_NUMERICPLUG_H
 
-#include "OpenEXR/ImathLimits.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/ValuePlug.h"
+#include "OpenEXR/ImathLimits.h"
 
 namespace Gaffer
 {

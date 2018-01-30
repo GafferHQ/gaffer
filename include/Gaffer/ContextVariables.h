@@ -37,8 +37,8 @@
 #ifndef GAFFER_CONTEXTVARIABLES_H
 #define GAFFER_CONTEXTVARIABLES_H
 
-#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer

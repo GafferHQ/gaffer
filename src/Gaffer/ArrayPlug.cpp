@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/ArrayPlug.h"
+
+#include "Gaffer/BlockedConnection.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-
-#include "Gaffer/ArrayPlug.h"
-#include "Gaffer/BlockedConnection.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/MetadataAlgo.h"
 
 using namespace boost;
 using namespace Gaffer;

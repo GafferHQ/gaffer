@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/NumericPlug.h"
-
 #include "GafferTest/MultiplyNode.h"
+
+#include "Gaffer/NumericPlug.h"
 
 using namespace GafferTest;
 using namespace Gaffer;

@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/regex.hpp"
-
 #include "Gaffer/Box.h"
+
 #include "Gaffer/BoxIO.h"
-#include "Gaffer/StandardSet.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+
+#include "boost/regex.hpp"
 
 using namespace std;
 using namespace Gaffer;

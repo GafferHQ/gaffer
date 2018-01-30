@@ -38,9 +38,9 @@
 #ifndef GAFFER_TYPEDPLUG_H
 #define GAFFER_TYPEDPLUG_H
 
-#include "IECore/SimpleTypedData.h"
-
 #include "Gaffer/ValuePlug.h"
+
+#include "IECore/SimpleTypedData.h"
 
 namespace Gaffer
 {

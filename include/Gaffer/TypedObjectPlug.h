@@ -38,14 +38,14 @@
 #ifndef GAFFER_TYPEDOBJECTPLUG_H
 #define GAFFER_TYPEDOBJECTPLUG_H
 
-#include "IECore/Object.h"
-#include "IECore/VectorTypedData.h"
-#include "IECore/ObjectVector.h"
-#include "IECore/CompoundObject.h"
-#include "IECore/CompoundData.h"
-#include "IECore/PathMatcherData.h"
-
 #include "Gaffer/ValuePlug.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/CompoundObject.h"
+#include "IECore/Object.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/PathMatcherData.h"
+#include "IECore/VectorTypedData.h"
 
 namespace Gaffer
 {

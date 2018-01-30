@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/DirtyPropagationScope.h"
+
 #include "Gaffer/Plug.h"
 
 using namespace Gaffer;

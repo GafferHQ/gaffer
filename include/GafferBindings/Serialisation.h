@@ -38,10 +38,10 @@
 #ifndef GAFFERBINDINGS_SERIALISATION_H
 #define GAFFERBINDINGS_SERIALISATION_H
 
-#include "Gaffer/Set.h"
-#include "Gaffer/GraphComponent.h"
-
 #include "GafferBindings/Export.h"
+
+#include "Gaffer/GraphComponent.h"
+#include "Gaffer/Set.h"
 
 namespace GafferBindings
 {

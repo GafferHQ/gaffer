@@ -37,13 +37,13 @@
 #ifndef GAFFER_PROCESS_H
 #define GAFFER_PROCESS_H
 
-#include "tbb/enumerable_thread_specific.h"
-
-#include "boost/noncopyable.hpp"
+#include "Gaffer/Export.h"
 
 #include "IECore/InternedString.h"
 
-#include "Gaffer/Export.h"
+#include "boost/noncopyable.hpp"
+
+#include "tbb/enumerable_thread_specific.h"
 
 namespace Gaffer
 {

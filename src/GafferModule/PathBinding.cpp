@@ -38,17 +38,17 @@
 #include "boost/python/slice.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "PathBinding.h"
+
+#include "GafferBindings/PathBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/FileSystemPath.h"
 
-#include "GafferBindings/PathBinding.h"
-#include "GafferBindings/SignalBinding.h"
-
-#include "PathBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace IECorePython;

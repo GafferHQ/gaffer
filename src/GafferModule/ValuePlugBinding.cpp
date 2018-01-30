@@ -36,7 +36,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/format.hpp"
+
+#include "ValuePlugBinding.h"
+
+#include "GafferBindings/ValuePlugBinding.h"
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
@@ -44,11 +49,7 @@
 #include "Gaffer/Reference.h"
 #include "Gaffer/Metadata.h"
 
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/Serialisation.h"
-
-#include "ValuePlugBinding.h"
+#include "boost/format.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

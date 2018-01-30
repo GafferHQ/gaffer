@@ -37,9 +37,9 @@
 #ifndef GAFFER_DIRTYPROPAGATIONSCOPE_H
 #define GAFFER_DIRTYPROPAGATIONSCOPE_H
 
-#include "boost/noncopyable.hpp"
-
 #include "Gaffer/Export.h"
+
+#include "boost/noncopyable.hpp"
 
 namespace Gaffer
 {

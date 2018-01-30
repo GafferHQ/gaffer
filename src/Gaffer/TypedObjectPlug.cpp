@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedObjectPlug.h"
+
 #include "Gaffer/TypedObjectPlug.inl"
 
 namespace Gaffer

@@ -34,18 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "Gaffer/Reference.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 
-#include "Gaffer/Reference.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/StandardSet.h"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace IECore;

@@ -35,11 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Action.h"
+
+#include "Gaffer/ScriptNode.h"
+
 #include "IECore/Exception.h"
 #include "IECore/RunTimeTyped.h"
-
-#include "Gaffer/Action.h"
-#include "Gaffer/ScriptNode.h"
 
 using namespace Gaffer;
 

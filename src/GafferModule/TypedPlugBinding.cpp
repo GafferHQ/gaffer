@@ -35,9 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedPlug.h"
-#include "GafferBindings/TypedPlugBinding.h"
 #include "TypedPlugBinding.h"
+
+#include "GafferBindings/TypedPlugBinding.h"
+
+#include "Gaffer/TypedPlug.h"
 
 using namespace Gaffer;
 using namespace GafferBindings;

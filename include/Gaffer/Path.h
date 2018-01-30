@@ -38,14 +38,14 @@
 #ifndef GAFFER_PATH_H
 #define GAFFER_PATH_H
 
-#include "boost/signals.hpp"
-
-#include "IECore/RunTimeTyped.h"
-#include "IECore/InternedString.h"
-#include "IECore/CompoundData.h"
-
-#include "Gaffer/TypeIds.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/TypeIds.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/InternedString.h"
+#include "IECore/RunTimeTyped.h"
+
+#include "boost/signals.hpp"
 
 namespace GafferModule
 {

@@ -35,8 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
+
+#include "Gaffer/Path.h"
 
 using namespace std;
 using namespace IECore;

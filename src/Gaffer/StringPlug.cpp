@@ -35,8 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+
+#include "Gaffer/Context.h"
 #include "Gaffer/Process.h"
 
 using namespace IECore;

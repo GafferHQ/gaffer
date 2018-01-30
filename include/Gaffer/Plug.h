@@ -38,11 +38,11 @@
 #ifndef GAFFER_PLUG_H
 #define GAFFER_PLUG_H
 
-#include "IECore/Object.h"
-
-#include "Gaffer/GraphComponent.h"
 #include "Gaffer/FilteredChildIterator.h"
 #include "Gaffer/FilteredRecursiveChildIterator.h"
+#include "Gaffer/GraphComponent.h"
+
+#include "IECore/Object.h"
 
 namespace Gaffer
 {

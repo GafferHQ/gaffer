@@ -35,10 +35,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Dot.h"
+
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/Metadata.h"
 
 using namespace IECore;
 using namespace Gaffer;

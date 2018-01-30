@@ -38,16 +38,16 @@
 #ifndef GAFFER_SCRIPTNODE_H
 #define GAFFER_SCRIPTNODE_H
 
-#include <stack>
-#include <functional>
-
-#include "Gaffer/Node.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/Container.h"
-#include "Gaffer/Set.h"
-#include "Gaffer/UndoScope.h"
 #include "Gaffer/Action.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Container.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/Set.h"
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/UndoScope.h"
+
+#include <functional>
+#include <stack>
 
 namespace GafferModule
 {

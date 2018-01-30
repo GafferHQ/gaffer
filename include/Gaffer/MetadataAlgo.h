@@ -37,13 +37,13 @@
 #ifndef GAFFER_METADATAALGO_H
 #define GAFFER_METADATAALGO_H
 
-#include <vector>
+#include "Gaffer/Export.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "IECore/TypeIds.h"
 
-#include "Gaffer/Node.h"
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/Export.h"
+#include <vector>
 
 namespace Gaffer
 {

@@ -38,9 +38,9 @@
 #ifndef GAFFER_FILTEREDRECURSIVECHILDITERATOR_H
 #define GAFFER_FILTEREDRECURSIVECHILDITERATOR_H
 
-#include "boost/iterator/iterator_adaptor.hpp"
-
 #include "Gaffer/RecursiveChildIterator.h"
+
+#include "boost/iterator/iterator_adaptor.hpp"
 
 namespace Gaffer
 {

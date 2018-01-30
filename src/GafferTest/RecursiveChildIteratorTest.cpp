@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/RecursiveChildIterator.h"
+#include "GafferTest/RecursiveChildIteratorTest.h"
 
 #include "GafferTest/Assert.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
+
+#include "Gaffer/RecursiveChildIterator.h"
 
 using namespace Gaffer;
 

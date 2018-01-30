@@ -35,10 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedObjectPlug.h"
+#include "TypedObjectPlugBinding.h"
+
 #include "GafferBindings/TypedObjectPlugBinding.h"
 
-#include "TypedObjectPlugBinding.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 // Deliberately avoiding "using namespace" so that we can be sure
 // TypedPlugBinding uses full namespace qualification for all names.

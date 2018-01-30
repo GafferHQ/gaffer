@@ -38,18 +38,15 @@
 #ifndef GAFFER_COMPOUNDNUMERICPLUG_H
 #define GAFFER_COMPOUNDNUMERICPLUG_H
 
+#include "Gaffer/NumericPlug.h"
+
 #include "IECore/Export.h"
-
-IECORE_PUSH_DEFAULT_VISIBILITY
-
-#include "OpenEXR/ImathVec.h"
-#include "OpenEXR/ImathColor.h"
-
-IECORE_POP_DEFAULT_VISIBILITY
-
 #include "IECore/GeometricTypedData.h"
 
-#include "Gaffer/NumericPlug.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathColor.h"
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace Gaffer
 {

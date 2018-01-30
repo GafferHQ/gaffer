@@ -38,8 +38,8 @@
 #ifndef GAFFER_STRINGPLUG_H
 #define GAFFER_STRINGPLUG_H
 
-#include "Gaffer/ValuePlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
 {

@@ -35,14 +35,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/format.hpp"
+
+#include "ArrayPlugBinding.h"
+
+#include "GafferBindings/PlugBinding.h"
+
+#include "Gaffer/ArrayPlug.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
-#include "Gaffer/ArrayPlug.h"
-#include "GafferBindings/PlugBinding.h"
-
-#include "ArrayPlugBinding.h"
+#include "boost/format.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

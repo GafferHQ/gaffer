@@ -38,13 +38,13 @@
 #ifndef GAFFER_GRAPHCOMPONENT_H
 #define GAFFER_GRAPHCOMPONENT_H
 
-#include "boost/signals.hpp"
-
-#include "IECore/RunTimeTyped.h"
-#include "IECore/InternedString.h"
-
-#include "Gaffer/TypeIds.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/TypeIds.h"
+
+#include "IECore/InternedString.h"
+#include "IECore/RunTimeTyped.h"
+
+#include "boost/signals.hpp"
 
 namespace Gaffer
 {

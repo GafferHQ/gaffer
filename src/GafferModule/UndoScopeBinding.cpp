@@ -35,16 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
-
 #include "boost/python.hpp"
+
+#include "UndoScopeBinding.h"
+
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/UndoScope.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-
-#include "UndoScopeBinding.h"
+#include <memory>
 
 using namespace boost::python;
 using namespace Gaffer;

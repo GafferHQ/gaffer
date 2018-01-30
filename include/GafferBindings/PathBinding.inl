@@ -37,9 +37,9 @@
 #ifndef GAFFERBINDINGS_PATHBINDING_INL
 #define GAFFERBINDINGS_PATHBINDING_INL
 
-#include "Gaffer/Path.h"
-
 #include "GafferBindings/DataBinding.h"
+
+#include "Gaffer/Path.h"
 
 namespace GafferBindings
 {

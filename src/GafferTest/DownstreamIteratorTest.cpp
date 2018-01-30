@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DownstreamIterator.h"
-#include "Gaffer/Random.h"
+#include "GafferTest/DownstreamIteratorTest.h"
 
 #include "GafferTest/Assert.h"
-#include "GafferTest/DownstreamIteratorTest.h"
+
+#include "Gaffer/DownstreamIterator.h"
+#include "Gaffer/Random.h"
 
 using namespace Gaffer;
 

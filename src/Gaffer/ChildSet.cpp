@@ -35,10 +35,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/ChildSet.h"
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-
-#include "Gaffer/ChildSet.h"
 
 using namespace Gaffer;
 

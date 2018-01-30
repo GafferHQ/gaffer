@@ -35,20 +35,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "Gaffer/Path.h"
-#include "Gaffer/PathFilter.h"
-#include "Gaffer/MatchPatternPathFilter.h"
-#include "Gaffer/LeafPathFilter.h"
-#include "Gaffer/FileSequencePathFilter.h"
-#include "Gaffer/CompoundPathFilter.h"
+#include "PathFilterBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
 
-#include "PathFilterBinding.h"
+#include "Gaffer/CompoundPathFilter.h"
+#include "Gaffer/FileSequencePathFilter.h"
+#include "Gaffer/LeafPathFilter.h"
+#include "Gaffer/MatchPatternPathFilter.h"
+#include "Gaffer/Path.h"
+#include "Gaffer/PathFilter.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace IECore;

@@ -37,9 +37,9 @@
 #ifndef GAFFER_MONITORALGO_H
 #define GAFFER_MONITORALGO_H
 
-#include <string>
-
 #include "Gaffer/Export.h"
+
+#include <string>
 
 namespace Gaffer
 {

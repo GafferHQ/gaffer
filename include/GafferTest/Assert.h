@@ -37,9 +37,9 @@
 #ifndef GAFFERTEST_ASSERT_H
 #define GAFFERTEST_ASSERT_H
 
-#include "boost/format.hpp"
-
 #include "IECore/Exception.h"
+
+#include "boost/format.hpp"
 
 namespace GafferTest
 {

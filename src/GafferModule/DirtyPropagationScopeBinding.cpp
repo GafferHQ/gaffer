@@ -36,11 +36,11 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "DirtyPropagationScopeBinding.h"
 
 #include "Gaffer/DirtyPropagationScope.h"
 
-#include "DirtyPropagationScopeBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace Gaffer;
