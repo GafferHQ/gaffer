@@ -37,11 +37,11 @@
 #ifndef GAFFERARNOLD_ARNOLDDISPLACEMENT_H
 #define GAFFERARNOLD_ARNOLDDISPLACEMENT_H
 
+#include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
-
-#include "GafferArnold/TypeIds.h"
-#include "GafferArnold/Export.h"
 
 namespace GafferArnold
 {

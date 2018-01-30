@@ -36,19 +36,20 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
+#include "GafferArnold/ArnoldAOVShader.h"
 #include "GafferArnold/ArnoldAttributes.h"
+#include "GafferArnold/ArnoldDisplacement.h"
 #include "GafferArnold/ArnoldLight.h"
+#include "GafferArnold/ArnoldMeshLight.h"
+#include "GafferArnold/ArnoldOptions.h"
+#include "GafferArnold/ArnoldRender.h"
+#include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/InteractiveArnoldRender.h"
-#include "GafferArnold/ArnoldRender.h"
-#include "GafferArnold/ArnoldDisplacement.h"
-#include "GafferArnold/ArnoldMeshLight.h"
-#include "GafferArnold/ArnoldAOVShader.h"
+
+#include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferArnold;

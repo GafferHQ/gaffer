@@ -35,9 +35,9 @@
 #ifndef IECOREARNOLDPREVIEW_PROCEDURALALGO_H
 #define IECOREARNOLDPREVIEW_PROCEDURALALGO_H
 
-#include "ai.h"
-
 #include "IECoreScene/ExternalProcedural.h"
+
+#include "ai.h"
 
 namespace IECoreArnoldPreview
 {

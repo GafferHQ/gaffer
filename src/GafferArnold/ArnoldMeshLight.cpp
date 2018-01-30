@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferArnold/ArnoldMeshLight.h"
+
+#include "GafferArnold/ArnoldAttributes.h"
+#include "GafferArnold/ArnoldShader.h"
+
+#include "GafferScene/Set.h"
+#include "GafferScene/ShaderAssignment.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/ShaderAssignment.h"
-#include "GafferScene/Set.h"
-
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldMeshLight.h"
-#include "GafferArnold/ArnoldAttributes.h"
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace Gaffer;
 using namespace GafferScene;

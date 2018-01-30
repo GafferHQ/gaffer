@@ -37,11 +37,11 @@
 #ifndef GAFFERARNOLD_PARAMETERHANDLER_H
 #define GAFFERARNOLD_PARAMETERHANDLER_H
 
-#include "ai.h"
+#include "GafferArnold/Export.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferArnold/Export.h"
+#include "ai.h"
 
 namespace GafferArnold
 {

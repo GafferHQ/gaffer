@@ -37,10 +37,10 @@
 #ifndef GAFFERARNOLD_ARNOLDOPTIONS_H
 #define GAFFERARNOLD_ARNOLDOPTIONS_H
 
-#include "GafferScene/Options.h"
-
-#include "GafferArnold/TypeIds.h"
 #include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Options.h"
 
 namespace GafferArnold
 {

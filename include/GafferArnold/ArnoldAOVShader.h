@@ -37,13 +37,13 @@
 #ifndef GAFFERARNOLD_ARNOLDAOVSHADER_H
 #define GAFFERARNOLD_ARNOLDAOVSHADER_H
 
-#include "Gaffer/StringPlug.h"
+#include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
 
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/ShaderPlug.h"
 
-#include "GafferArnold/TypeIds.h"
-#include "GafferArnold/Export.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferArnold
 {

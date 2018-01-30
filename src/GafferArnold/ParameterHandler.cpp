@@ -35,20 +35,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/assign/list_of.hpp"
-#include "boost/container/flat_set.hpp"
+#include "GafferArnold/ParameterHandler.h"
+
+#include "GafferOSL/ClosurePlug.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 #include "IECore/MessageHandler.h"
 
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/PlugAlgo.h"
-#include "GafferOSL/ClosurePlug.h"
-
-#include "GafferArnold/ParameterHandler.h"
+#include "boost/assign/list_of.hpp"
+#include "boost/container/flat_set.hpp"
 
 using namespace std;
 using namespace Imath;

@@ -37,10 +37,10 @@
 #ifndef GAFFERARNOLD_ARNOLDVDB_H
 #define GAFFERARNOLD_ARNOLDVDB_H
 
-#include "GafferScene/ObjectSource.h"
-
-#include "GafferArnold/TypeIds.h"
 #include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferArnold
 {

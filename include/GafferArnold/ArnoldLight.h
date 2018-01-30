@@ -37,10 +37,10 @@
 #ifndef GAFFERARNOLD_ARNOLDLIGHT_H
 #define GAFFERARNOLD_ARNOLDLIGHT_H
 
-#include "GafferScene/Light.h"
-
-#include "GafferArnold/TypeIds.h"
 #include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Light.h"
 
 namespace GafferArnold
 {

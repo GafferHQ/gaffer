@@ -34,45 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <thread>
-#include <memory>
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "tbb/concurrent_vector.h"
-#include "tbb/concurrent_unordered_map.h"
-#include "tbb/spin_mutex.h"
+#include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
 
-#include "boost/format.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string/join.hpp"
-#include "boost/container/flat_map.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/bind.hpp"
-#include "boost/lexical_cast.hpp"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/VectorTypedData.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/ObjectVector.h"
-#include "IECoreScene/Camera.h"
-#include "IECoreScene/Transform.h"
-#include "IECoreScene/Shader.h"
-#include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/CurvesPrimitive.h"
-#include "IECoreScene/ExternalProcedural.h"
-#include "IECoreScene/SpherePrimitive.h"
-
-#include "IECoreArnold/ParameterAlgo.h"
-#include "IECoreArnold/CameraAlgo.h"
-#include "IECoreArnold/NodeAlgo.h"
-#include "IECoreArnold/UniverseBlock.h"
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 #include "Gaffer/StringAlgo.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+#include "IECoreArnold/CameraAlgo.h"
+#include "IECoreArnold/NodeAlgo.h"
+#include "IECoreArnold/ParameterAlgo.h"
+#include "IECoreArnold/UniverseBlock.h"
 
-#include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/ExternalProcedural.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/Shader.h"
+#include "IECoreScene/SpherePrimitive.h"
+#include "IECoreScene/Transform.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/VectorTypedData.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/join.hpp"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+#include "boost/container/flat_map.hpp"
+#include "boost/filesystem/operations.hpp"
+#include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
+
+#include "tbb/concurrent_unordered_map.h"
+#include "tbb/concurrent_vector.h"
+#include "tbb/spin_mutex.h"
+
+#include <memory>
+#include <thread>
 
 using namespace std;
 using namespace boost::filesystem;

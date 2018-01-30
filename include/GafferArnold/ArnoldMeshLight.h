@@ -37,9 +37,10 @@
 #ifndef GAFFERARNOLD_ARNOLDMESHLIGHT_H
 #define GAFFERARNOLD_ARNOLDMESHLIGHT_H
 
-#include "GafferScene/FilteredSceneProcessor.h"
-
 #include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/FilteredSceneProcessor.h"
 
 namespace GafferArnold
 {

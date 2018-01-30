@@ -38,10 +38,10 @@
 #ifndef GAFFERARNOLD_ARNOLDSHADER_H
 #define GAFFERARNOLD_ARNOLDSHADER_H
 
-#include "GafferScene/Shader.h"
-
-#include "GafferArnold/TypeIds.h"
 #include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Shader.h"
 
 namespace GafferArnold
 {

@@ -34,20 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/unordered_map.hpp"
-#include "boost/lexical_cast.hpp"
+#include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
 
-#include "IECore/MessageHandler.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/VectorTypedData.h"
-#include "IECore/SplineData.h"
-#include "IECoreScene/Shader.h"
+#include "GafferOSL/OSLShader.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 
-#include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
-#include "GafferOSL/OSLShader.h"
+#include "IECoreScene/Shader.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/SplineData.h"
+#include "IECore/VectorTypedData.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/unordered_map.hpp"
 
 using namespace std;
 using namespace IECore;

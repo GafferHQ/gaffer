@@ -37,10 +37,10 @@
 #ifndef GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
 #define GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
 
-#include "GafferScene/InteractiveRender.h"
-
-#include "GafferArnold/TypeIds.h"
 #include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/InteractiveRender.h"
 
 namespace GafferArnold
 {
