@@ -49,10 +49,12 @@
 
 #include "tbb/concurrent_unordered_map.h"
 
+#include "boost/array.hpp"
+
 namespace IECoreGL
 {
 
-IE_CORE_FORWARDDECLARE( LuminanceTexture )
+IE_CORE_FORWARDDECLARE( Texture )
 
 } // namespace IECoreGL
 

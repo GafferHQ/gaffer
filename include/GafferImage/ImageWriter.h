@@ -38,6 +38,7 @@
 #define GAFFERIMAGE_IMAGEWRITER_H
 
 #include "GafferImage/TypeIds.h"
+#include "GafferImage/Export.h"
 
 #include "GafferDispatch/TaskNode.h"
 

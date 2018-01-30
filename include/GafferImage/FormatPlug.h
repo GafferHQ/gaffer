@@ -46,6 +46,7 @@ namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( ScriptNode )
+IE_CORE_FORWARDDECLARE( Context )
 
 } // namespace Gaffer
 
