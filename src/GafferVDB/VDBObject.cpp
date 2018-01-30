@@ -32,20 +32,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
+#include "GafferVDB/VDBObject.h"
+
+#include "IECore/Exception.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/MurmurHash.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "openvdb/io/Stream.h"
+#include "openvdb/openvdb.h"
 
 #include "boost/iostreams/categories.hpp"
 #include "boost/iostreams/stream.hpp"
 
-#include "openvdb/openvdb.h"
-#include "openvdb/io/Stream.h"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/Exception.h"
-#include "IECore/MurmurHash.h"
-#include "IECore/SimpleTypedData.h"
-
-#include "GafferVDB/VDBObject.h"
+#include <algorithm>
 
 using namespace IECore;
 using namespace GafferVDB;

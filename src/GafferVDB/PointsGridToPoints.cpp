@@ -34,19 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdint.h>
+#include "GafferVDB/PointsGridToPoints.h"
 
-#include "openvdb/openvdb.h"
-#include "openvdb/points/PointConversion.h"
-#include "openvdb/points/PointCount.h"
-#include "openvdb/points/AttributeSet.h"
-
-#include "IECoreScene/PointsPrimitive.h"
+#include "GafferVDB/VDBObject.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferVDB/VDBObject.h"
-#include "GafferVDB/PointsGridToPoints.h"
+#include "IECoreScene/PointsPrimitive.h"
+
+#include "openvdb/openvdb.h"
+#include "openvdb/points/AttributeSet.h"
+#include "openvdb/points/PointConversion.h"
+#include "openvdb/points/PointCount.h"
+
+#include <stdint.h>
 
 using namespace std;
 using namespace Imath;

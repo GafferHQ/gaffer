@@ -33,14 +33,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include "openvdb/openvdb.h"
-
-#include "IECoreScene/SceneInterface.h"
-#include "IECore/SimpleTypedData.h"
 #include "GafferVDB/TypeIds.h"
 #include "GafferVDB/VDBObject.h"
 
 #include "GafferScene/ScenePlug.h"
+
+#include "IECoreScene/SceneInterface.h"
+
+#include "IECore/SimpleTypedData.h"
+
+#include "openvdb/openvdb.h"
 
 using namespace Imath;
 using namespace IECore;

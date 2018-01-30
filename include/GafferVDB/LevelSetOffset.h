@@ -37,13 +37,13 @@
 #ifndef GAFFERVDB_LEVELSET_OFFSET_H
 #define GAFFERVDB_LEVELSET_OFFSET_H
 
-
-#include "Gaffer/NumericPlug.h"
+#include "GafferVDB/Export.h"
+#include "GafferVDB/TypeIds.h"
 
 #include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferVDB/TypeIds.h"
-#include "GafferVDB/Export.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferVDB
 {

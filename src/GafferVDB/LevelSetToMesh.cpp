@@ -34,18 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/list.hpp>
+#include "GafferVDB/LevelSetToMesh.h"
+
+#include "GafferVDB/VDBObject.h"
+
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/VolumeToMesh.h"
 
-#include "IECoreScene/MeshPrimitive.h"
-
-#include "Gaffer/StringPlug.h"
-
-#include "GafferVDB/VDBObject.h"
-#include "GafferVDB/LevelSetToMesh.h"
+#include "boost/mpl/for_each.hpp"
+#include "boost/mpl/list.hpp"
 
 using namespace std;
 using namespace Imath;

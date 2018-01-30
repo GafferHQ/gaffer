@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "openvdb/openvdb.h"
-#include "openvdb/tools/LevelSetFilter.h"
+#include "GafferVDB/LevelSetOffset.h"
+
+#include "GafferVDB/VDBObject.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferVDB/VDBObject.h"
-#include "GafferVDB/LevelSetOffset.h"
+#include "openvdb/openvdb.h"
+#include "openvdb/tools/LevelSetFilter.h"
 
 using namespace std;
 using namespace Imath;

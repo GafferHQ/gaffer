@@ -34,20 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/list.hpp>
+#include "GafferVDB/VDBObject.h"
+
+#include "GafferSceneUI/ObjectVisualiser.h"
+
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/PointsPrimitive.h"
 
 #include "openvdb/openvdb.h"
 #include "openvdb/points/PointConversion.h"
 #include "openvdb/points/PointCount.h"
 
-#include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/PointsPrimitive.h"
-#include "IECoreGL/Group.h"
-
-#include "GafferSceneUI/ObjectVisualiser.h"
-
-#include "GafferVDB/VDBObject.h"
+#include "boost/mpl/for_each.hpp"
+#include "boost/mpl/list.hpp"
 
 using namespace std;
 using namespace Imath;

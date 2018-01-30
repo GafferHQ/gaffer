@@ -36,14 +36,13 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferVDB/MeshToLevelSet.h"
-#include "GafferVDB/LevelSetToMesh.h"
 #include "GafferVDB/LevelSetOffset.h"
+#include "GafferVDB/LevelSetToMesh.h"
+#include "GafferVDB/MeshToLevelSet.h"
 #include "GafferVDB/PointsGridToPoints.h"
-
 #include "GafferVDB/VDBObject.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferVDB;

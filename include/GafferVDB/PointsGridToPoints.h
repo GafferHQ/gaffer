@@ -37,12 +37,12 @@
 #ifndef GAFFERVDB_POINTSGRIDTOPOINTS_H
 #define GAFFERVDB_POINTSGRIDTOPOINTS_H
 
-#include "Gaffer/NumericPlug.h"
+#include "GafferVDB/Export.h"
+#include "GafferVDB/TypeIds.h"
 
 #include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferVDB/TypeIds.h"
-#include "GafferVDB/Export.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
