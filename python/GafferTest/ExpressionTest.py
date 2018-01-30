@@ -344,8 +344,9 @@ class ExpressionTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s.load( continueOnError = True )
 
-		self.assertEqual( len( mh.messages ), 4 )
-		self.assertTrue( "has no attribute 'CompoundPlug'" in mh.messages[0].message )
+		## \todo: When we run tests without compatibility configs we
+		## expect 4 messages regarding "has no attribute 'CompoundPlug'"
+		self.assertEqual( len( mh.messages ), 0 )
 
 		s.context().setFrame( 3 )
 		with s.context() :
