@@ -37,15 +37,16 @@
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "Gaffer/Plug.h"
-#include "Gaffer/Context.h"
-#include "GafferBindings/PlugBinding.h"
-
-#include "GafferDispatch/TaskNode.h"
+#include "TaskNodeBinding.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
-#include "TaskNodeBinding.h"
+#include "GafferDispatch/TaskNode.h"
+
+#include "GafferBindings/PlugBinding.h"
+
+#include "Gaffer/Plug.h"
+#include "Gaffer/Context.h"
 
 using namespace boost::python;
 using namespace IECore;

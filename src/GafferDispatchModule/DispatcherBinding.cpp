@@ -35,20 +35,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "DispatcherBinding.h"
 
-#include "Gaffer/Context.h"
-#include "Gaffer/ScriptNode.h"
+#include "GafferDispatch/Dispatcher.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
-#include "GafferDispatch/Dispatcher.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
 
-#include "DispatcherBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace IECore;

@@ -37,13 +37,13 @@
 #ifndef GAFFERDISPATCH_TASKNODE_H
 #define GAFFERDISPATCH_TASKNODE_H
 
-#include "IECore/MurmurHash.h"
+#include "GafferDispatch/Export.h"
+#include "GafferDispatch/TypeIds.h"
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Plug.h"
 
-#include "GafferDispatch/TypeIds.h"
-#include "GafferDispatch/Export.h"
+#include "IECore/MurmurHash.h"
 
 namespace Gaffer
 {

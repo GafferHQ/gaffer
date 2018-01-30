@@ -37,9 +37,9 @@
 #ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
 #define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
 
-#include "boost/python/suite/indexing/container_utils.hpp"
-
 #include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 namespace GafferDispatchBindings
 {

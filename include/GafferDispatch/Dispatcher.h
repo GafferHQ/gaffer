@@ -37,22 +37,22 @@
 #ifndef GAFFERDISPATCH_DISPATCHER_H
 #define GAFFERDISPATCH_DISPATCHER_H
 
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include <functional>
+#include "GafferDispatch/Export.h"
+#include "GafferDispatch/TaskNode.h"
 
-#include "boost/signals.hpp"
+#include "Gaffer/NumericPlug.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/FrameList.h"
 #include "IECore/RunTimeTyped.h"
 
-#include "Gaffer/NumericPlug.h"
+#include "boost/signals.hpp"
 
-#include "GafferDispatch/TaskNode.h"
-#include "GafferDispatch/Export.h"
+#include <functional>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace Gaffer
 {
