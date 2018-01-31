@@ -42,3 +42,4 @@ import Gaffer
 # most scripts still use the flag. Here we allow them to be loaded without
 # emitting warnings.
 Gaffer.Plug.Flags.ReadOnly = Gaffer.Plug.Flags.None
+Gaffer.Plug.Flags.PerformsSubstitutions = Gaffer.Plug.Flags.None
