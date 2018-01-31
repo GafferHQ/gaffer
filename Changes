@@ -35,7 +35,7 @@ Fixes
   (#2380).
 - TabbedContainer : Fixed an incompatibility with Qt5 (#2426).
 - PythonCommand : Exposed imath module to the execution command (#2428).
-- CompoundPlug : Added compatibility config for legacy gfr files (#2429)..
+- CompoundPlug : Added compatibility config for legacy gfr files (#2429).
 
 API
 ---
