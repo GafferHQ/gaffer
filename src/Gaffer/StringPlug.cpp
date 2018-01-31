@@ -104,7 +104,6 @@ std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) co
 	const bool performSubstitutions =
 		m_substitutions &&
 		direction() == In &&
-		getFlags( PerformsSubstitutions ) &&
 		Process::current() &&
 		Context::hasSubstitutions( s->readable() )
 	;
@@ -129,8 +128,7 @@ IECore::MurmurHash StringPlug::hash() const
 {
 	const bool performSubstitutions =
 		m_substitutions &&
-		direction() == In &&
-		getFlags( PerformsSubstitutions )
+		direction() == In
 	;
 
 	if( performSubstitutions )

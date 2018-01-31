@@ -70,6 +70,8 @@ class TypedParameterHandler : public ParameterHandler
 
 	private :
 
+		typename PlugType::Ptr createPlug( Gaffer::Plug::Direction direction ) const;
+
 		typename ParameterType::Ptr m_parameter;
 		typename PlugType::Ptr m_plug;
 
