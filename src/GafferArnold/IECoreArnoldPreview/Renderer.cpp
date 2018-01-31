@@ -55,6 +55,9 @@
 #include "IECoreScene/SpherePrimitive.h"
 #include "IECoreScene/Transform.h"
 
+#include "IECoreVDB/VDBObject.h"
+#include "IECoreVDB/TypeIds.h"
+
 #include "IECore/MessageHandler.h"
 #include "IECore/ObjectVector.h"
 #include "IECore/SimpleTypedData.h"
@@ -68,6 +71,7 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/optional.hpp"
 
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_vector.h"
@@ -263,6 +267,11 @@ const AtString g_userPtrArnoldString( "userptr" );
 const AtString g_visibilityArnoldString( "visibility" );
 const AtString g_volumeArnoldString("volume");
 const AtString g_volumePaddingArnoldString( "volume_padding" );
+const AtString g_volumeGridsArnoldString( "grids" );
+const AtString g_velocityGridsArnoldString( "velocity_grids" );
+const AtString g_velocityScaleArnoldString( "velocity_scale" );
+const AtString g_velocityFPSArnoldString( "velocity_fps" );
+const AtString g_velocityOutlierThresholdArnoldString( "velocity_outlier_threshold" );
 const AtString g_widthArnoldString( "width" );
 const AtString g_xresArnoldString( "xres" );
 const AtString g_yresArnoldString( "yres" );
@@ -646,6 +655,11 @@ IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
 IECore::InternedString g_stepSizeAttributeName( "ai:shape:step_size" );
 IECore::InternedString g_volumePaddingAttributeName( "ai:shape:volume_padding" );
+IECore::InternedString g_volumeGridsAttributeName( "ai:volume:grids" );
+IECore::InternedString g_velocityGridsAttributeName( "ai:volume:velocity_grids" );
+IECore::InternedString g_velocityScaleAttributeName( "ai:volume:velocity_scale" );
+IECore::InternedString g_velocityFPSAttributeName( "ai:volume:velocity_fps" );
+IECore::InternedString g_velocityOutlierThresholdAttributeName( "ai:volume:velocity_outlier_threshold" );
 
 IECore::InternedString g_transformTypeAttributeName( "ai:transform_type" );
 
@@ -676,7 +690,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -750,6 +764,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				m_curves.apply( node );
 			}
+			else if( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
+			{
+				m_volume.apply( node );
+			}
+			else if( const IECoreScene::ExternalProcedural *procedural = IECore::runTimeCast<const IECoreScene::ExternalProcedural>( object ) )
+			{
+				if( procedural->getFileName() == "volume" )
+				{
+					m_volume.apply( node );
+				}
+			}
 
 			if( m_stepSize != 0.0f && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), g_stepSizeArnoldString ) )
 			{
@@ -768,6 +793,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				AiNodeSetFlt( node, g_volumePaddingArnoldString, m_volumePadding );
 			}
+
 		}
 
 		// Generates a signature for the work done by applyGeometry.
@@ -1181,6 +1207,90 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		};
 
+	struct Volume
+	{
+		Volume( const IECore::CompoundObject *attributes )
+		{
+			volumeGrids = attribute<IECore::StringVectorData>( g_volumeGridsAttributeName, attributes );
+			velocityGrids = attribute<IECore::StringVectorData>( g_velocityGridsAttributeName, attributes );
+			velocityScale = optionalAttribute<float>( g_velocityScaleAttributeName, attributes );
+			velocityFPS = optionalAttribute<float>( g_velocityFPSAttributeName, attributes );
+			velocityOutlierThreshold = optionalAttribute<float>( g_velocityOutlierThresholdAttributeName, attributes );
+		}
+
+		IECore::ConstStringVectorDataPtr volumeGrids;
+		IECore::ConstStringVectorDataPtr velocityGrids;
+		boost::optional<float> velocityScale;
+		boost::optional<float> velocityFPS;
+		boost::optional<float> velocityOutlierThreshold;
+
+		void hash( IECore::MurmurHash &h ) const
+		{
+			if( volumeGrids )
+			{
+				volumeGrids->hash( h );
+			}
+
+			if( velocityGrids )
+			{
+				velocityGrids->hash( h );
+			}
+
+			h.append( velocityScale.get_value_or( 1.0f ) );
+			h.append( velocityFPS.get_value_or( 24.0f ) );
+			h.append( velocityOutlierThreshold.get_value_or( 0.001f ) );
+		}
+
+		void apply( AtNode *node ) const
+		{
+			if( volumeGrids && volumeGrids->readable().size() )
+			{
+				AtArray *array = ParameterAlgo::dataToArray( volumeGrids.get(), AI_TYPE_STRING );
+				AiNodeSetArray( node, g_volumeGridsArnoldString, array );
+			}
+
+			if( velocityGrids && velocityGrids->readable().size() )
+			{
+				AtArray *array = ParameterAlgo::dataToArray( velocityGrids.get(), AI_TYPE_STRING );
+				AiNodeSetArray( node, g_velocityGridsArnoldString, array );
+			}
+
+			if( !velocityScale || velocityScale.get() > 0 )
+			{
+				AtNode *options = AiUniverseGetOptions();
+				const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, "camera" ) );
+
+				if( arnoldCamera )
+				{
+					float shutterStart = AiNodeGetFlt( arnoldCamera, g_shutterStartArnoldString );
+					float shutterEnd = AiNodeGetFlt( arnoldCamera, g_shutterEndArnoldString );
+
+					// We're getting very lucky here:
+					//  - Arnold has automatically set options.camera the first time we made a camera
+					//  - All cameras output by Gaffer at present will have the same shutter,
+					//    so it doesn't matter if we get it from the final render camera or not.
+					AiNodeSetFlt( node, g_motionStartArnoldString, shutterStart );
+					AiNodeSetFlt( node, g_motionEndArnoldString, shutterEnd );
+				}
+			}
+
+			if( velocityScale )
+			{
+				AiNodeSetFlt( node, g_velocityScaleArnoldString, velocityScale.get() );
+			}
+
+			if( velocityFPS )
+			{
+				AiNodeSetFlt( node, g_velocityFPSArnoldString, velocityFPS.get() );
+			}
+
+			if( velocityOutlierThreshold )
+			{
+				AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.get() );
+			}
+		}
+	};
+
 		enum ShadingFlags
 		{
 			ReceiveShadows = 1,
@@ -1208,6 +1318,14 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			typedef IECore::TypedData<T> DataType;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : defaultValue;
+		}
+
+		template<typename T>
+		static boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
+		{
+			typedef IECore::TypedData<T> DataType;
+			const DataType *data = attribute<DataType>( name, attributes );
+			return data ? data->readable() : boost::optional<T>();
 		}
 
 		void updateVisibility( const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
@@ -1262,7 +1380,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					{
 						h.append( m_stepSize );
 						h.append( m_volumePadding );
+
+						m_volume.hash( h );
 					}
+					break;
+				case IECoreVDB::VDBObjectTypeId :
+					h.append( m_stepSize );
+					h.append( m_volumePadding );
+
+					m_volume.hash( h );
 					break;
 				default :
 					// No geometry attributes for this type.
@@ -1283,6 +1409,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
 		Curves m_curves;
+		Volume m_volume;
 		IECore::ConstStringVectorDataPtr m_linkedLights;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
