@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERTEST_EXPORTS
+#ifdef GafferTest_EXPORTS
 	#define GAFFERTEST_API IECORE_EXPORT
 #else
 	#define GAFFERTEST_API IECORE_IMPORT

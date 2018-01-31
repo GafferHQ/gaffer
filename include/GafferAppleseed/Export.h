@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERAPPLESEED_EXPORTS
+#ifdef GafferAppleseed_EXPORTS
 	#define GAFFERAPPLESEED_API IECORE_EXPORT
 #else
 	#define GAFFERAPPLESEED_API IECORE_IMPORT

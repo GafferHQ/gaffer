@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERBINDINGS_EXPORTS
+#ifdef GafferBindings_EXPORTS
 	#define GAFFERBINDINGS_API IECORE_EXPORT
 #else
 	#define GAFFERBINDINGS_API IECORE_IMPORT

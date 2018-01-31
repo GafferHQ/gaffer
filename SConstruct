@@ -938,7 +938,7 @@ for libraryName, libraryDef in libraries.items() :
 	# environment
 
 	libEnv = baseLibEnv.Clone()
-	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName.upper() ) )
+	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName ) )
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
 
 	# library
@@ -976,7 +976,7 @@ for libraryName, libraryDef in libraries.items() :
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
 
 	bindingsEnv = pythonEnv.Clone()
-	bindingsEnv.Append( CXXFLAGS = "-D{0}BINDINGS_EXPORTS".format( libraryName.upper() ) )
+	bindingsEnv.Append( CXXFLAGS = "-D{0}BINDINGS_EXPORTS".format( libraryName ) )
 
 	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
 	if bindingsSource :

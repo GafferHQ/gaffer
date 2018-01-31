@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERDELIGHT_EXPORTS
+#ifdef GafferDelight_EXPORTS
 	#define GAFFERDELIGHT_API IECORE_EXPORT
 #else
 	#define GAFFERDELIGHT_API IECORE_IMPORT

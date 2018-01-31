@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERIMAGE_EXPORTS
+#ifdef GafferImage_EXPORTS
 	#define GAFFERIMAGE_API IECORE_EXPORT
 #else
 	#define GAFFERIMAGE_API IECORE_IMPORT

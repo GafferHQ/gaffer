@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERVDB_EXPORTS
+#ifdef GafferVDB_EXPORTS
 	#define GAFFERVDB_API IECORE_EXPORT
 #else
 	#define GAFFERVDB_API IECORE_IMPORT

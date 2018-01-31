@@ -37,7 +37,7 @@
 
 #include "IECore/Export.h"
 
-#ifdef GAFFERCORTEX_EXPORTS
+#ifdef GafferCortex_EXPORTS
 	#define GAFFERCORTEX_API IECORE_EXPORT
 #else
 	#define GAFFERCORTEX_API IECORE_IMPORT
