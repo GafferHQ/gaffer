@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,59 +34,57 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUI_AUXILIARYCONNECTIONGADGET_H
+#define GAFFERUI_AUXILIARYCONNECTIONGADGET_H
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "AuxiliaryConnectionGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
+#include "GafferUI/Gadget.h"
 
-using namespace GafferUIModule;
+namespace Gaffer
+{
+	IE_CORE_FORWARDDECLARE( Plug );
+}
 
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace GafferUI
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindAuxiliaryConnectionGadget();
-	bindWidgetSignal();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+IE_CORE_FORWARDDECLARE( NodeGadget );
+IE_CORE_FORWARDDECLARE( Style );
 
-}
+class AuxiliaryConnectionGadget : public Gadget
+{
+
+	public:
+
+		AuxiliaryConnectionGadget( const NodeGadget *srcGadget, const NodeGadget *dstGadget );
+		~AuxiliaryConnectionGadget();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AuxiliaryConnectionGadget, AuxiliaryConnectionGadgetTypeId, Gadget );
+
+		Imath::Box3f bound() const override;
+
+		void doRenderLayer( Layer layer, const Style *style ) const override;
+		std::string getToolTip( const IECore::LineSegment3f &position ) const override;
+
+		int removeConnection( const Gaffer::Plug *dstPlug );
+		int removeConnection( const Gaffer::Plug *srcPlug, const Gaffer::Plug *dstPlug );
+		void addConnection( const Gaffer::Plug *srcPlug, const Gaffer::Plug *dstPlug );
+		bool hasConnection( const Gaffer::Plug *srcPlug, const Gaffer::Plug *dstPlug ) const;
+		bool empty() const;
+
+	private:
+
+		ConstNodeGadgetPtr m_srcGadget;
+		ConstNodeGadgetPtr m_dstGadget;
+
+		mutable std::string m_toolTip;
+		mutable bool m_toolTipValid;
+
+		std::map<const Gaffer::Plug*, const Gaffer::Plug*> m_representedConnections;
+
+};
+
+IE_CORE_DECLAREPTR( AuxiliaryConnectionGadget );
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_AUXILIARYCONNECTIONGADGET_H

@@ -437,6 +437,7 @@ StandardStyle::StandardStyle()
 	setColor( ForegroundColor, Color3f( 0.9 ) );
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
+	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -495,7 +496,8 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
 	/// \todo IECore is currently providing sRGB data in IECore::Font::image() and therefore
 	/// in IECoreGL::Font::texture(). Either we should change image() to return linear data,
@@ -587,7 +589,8 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state, userColor ) );
@@ -613,7 +616,8 @@ void StandardStyle::renderNodule( float radius, State state, const Imath::Color3
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
 	glUniform1f( g_borderWidthParameter, 0.2f );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state, userColor ) );
@@ -636,8 +640,10 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.0 );
 	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.5 );
 
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
@@ -652,6 +658,63 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glUniform1f( g_endPointSizeParameter, g_endPointSize );
 
 	glCallList( connectionDisplayList() );
+}
+
+void StandardStyle::renderAuxiliaryConnection( const IECore::LineSegment3f &line, V2f directionIndicatorLocation ) const
+{
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.2 );
+
+	glColor( getColor( AuxiliaryConnectionColor ) );
+
+	V3f lineDir = line.normalizedDirection();
+
+	float arrowScale = 0.5;
+	V3f arrowDir = lineDir * V3f( arrowScale );
+	V3f arrowDirOrth = V3f( arrowDir.y, -arrowDir.x, 0 );
+
+	glUniform3fv( g_v0Parameter, 1, ( line.p0 - arrowDirOrth ).getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( line.p1 - arrowDirOrth ).getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( lineDir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( -lineDir ).getValue() );
+
+	glCallList( connectionDisplayList() );
+
+	// Render a little direction indication on top. The arrow is build from two
+	// triangles so that it's possible to anti-alias all outer edges.
+
+	V2f tip = directionIndicatorLocation - V2f( arrowDirOrth.x, arrowDirOrth.y );
+	V2f bot = tip - V2f( arrowDir.x, arrowDir.y );
+	V2f botL = bot + V2f( arrowDirOrth.x, arrowDirOrth.y );
+	V2f botR = bot - V2f( arrowDirOrth.x, arrowDirOrth.y );
+
+	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.1 );
+
+	glBegin( GL_TRIANGLES );
+
+	glTexCoord2f( 0, 1 );
+	glVertex2f( botL.x, botL.y);
+	glTexCoord2f( 0, 0 );
+	glVertex2f( bot.x, bot.y );
+	glTexCoord2f( 1, 1 );
+	glVertex2f( tip.x, tip.y);
+
+	glTexCoord2f( 0, 0 );
+	glVertex2f( bot.x, bot.y);
+	glTexCoord2f( 0, 1 );
+	glVertex2f( botR.x, botR.y);
+	glTexCoord2f( 1, 1 );
+	glVertex2f( tip.x, tip.y);
+
+	glEnd();
 }
 
 Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
@@ -689,7 +752,8 @@ void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glBegin( GL_QUADS );
@@ -706,7 +770,8 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glBegin( GL_LINE_LOOP );
@@ -740,7 +805,8 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	Color4f c(
@@ -773,7 +839,8 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glBegin( GL_LINES );
@@ -826,7 +893,8 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 1 );
 
@@ -852,8 +920,10 @@ void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.0 );
 	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.5 );
 
 	glColor( getColor( BackgroundColor ) );
 
@@ -976,6 +1046,7 @@ static const std::string &vertexSource()
 		"uniform vec3 t0;"
 		"uniform vec3 t1;"
 		"uniform float endPointSize;"
+		"uniform float lineWidth;"
 
 		"void main()"
 		"{"
@@ -1014,7 +1085,7 @@ static const std::string &vertexSource()
 		"		vec3 p = abs(cosAngle) > 0.9999 ? endPoint + 2.0 * t * effectiveEndPointSize * endTangent : endPoint + radius * ( ( 1.0 - cos( angle * t ) ) * bendDir * endTangentPerp + sin( angle * t ) * endTangent );"
 		"		vec3 uTangent = ( gl_MultiTexCoord0.y > 0.5 ? 1.0 : -1.0 ) * ( abs(cosAngle) > 0.9999 ? -endTangentPerp : bendDir * normalize( p - ( endPoint + radius * bendDir * endTangentPerp) ) );"
 
-		"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
+		"		p += lineWidth * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
 
 		"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4( p, 1 );"
 		"	}"
@@ -1046,10 +1117,11 @@ static const std::string &fragmentSource()
 		"uniform vec2 borderRadius;"
 		"uniform float borderWidth;"
 
-		"uniform bool edgeAntiAliasing;"
-
 		"uniform int textureType;"
-		"uniform sampler2D texture;\n"
+		"uniform sampler2D texture;"
+
+		"uniform float xAntiAliasing;"
+		"uniform float yAntiAliasing;\n"
 
 		"#if __VERSION__ >= 330\n"
 
@@ -1078,9 +1150,14 @@ static const std::string &fragmentSource()
 		"		OUTCOLOR.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
 		"	}"
 
-		"	if( edgeAntiAliasing )"
+		"	if( xAntiAliasing > 0.0 )"
 		"	{"
-		"		OUTCOLOR.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
+		"		OUTCOLOR.a *= ieFilteredPulse( xAntiAliasing, 1.0 - xAntiAliasing, gl_TexCoord[0].x);"
+		"	}"
+
+		"	if( yAntiAliasing > 0.0 )"
+		"	{"
+		"		OUTCOLOR.a *= ieFilteredPulse( yAntiAliasing, 1.0 - yAntiAliasing, gl_TexCoord[0].y);"
 		"	}"
 
 		/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
@@ -1115,7 +1192,8 @@ static const std::string &fragmentSource()
 int StandardStyle::g_borderParameter;
 int StandardStyle::g_borderRadiusParameter;
 int StandardStyle::g_borderWidthParameter;
-int StandardStyle::g_edgeAntiAliasingParameter;
+float StandardStyle::g_xAntiAliasingParameter;
+float StandardStyle::g_yAntiAliasingParameter;
 int StandardStyle::g_textureParameter;
 int StandardStyle::g_textureTypeParameter;
 int StandardStyle::g_isCurveParameter;
@@ -1124,6 +1202,7 @@ int StandardStyle::g_v0Parameter;
 int StandardStyle::g_v1Parameter;
 int StandardStyle::g_t0Parameter;
 int StandardStyle::g_t1Parameter;
+float StandardStyle::g_lineWidthParameter;
 
 IECoreGL::Shader *StandardStyle::shader()
 {
@@ -1136,7 +1215,8 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_borderParameter = g_shader->uniformParameter( "border" )->location;
 		g_borderRadiusParameter = g_shader->uniformParameter( "borderRadius" )->location;
 		g_borderWidthParameter = g_shader->uniformParameter( "borderWidth" )->location;
-		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;
+		g_xAntiAliasingParameter = g_shader->uniformParameter( "xAntiAliasing" )->location;
+		g_yAntiAliasingParameter = g_shader->uniformParameter( "yAntiAliasing" )->location;
 		g_textureParameter = g_shader->uniformParameter( "texture" )->location;
 		g_textureTypeParameter = g_shader->uniformParameter( "textureType" )->location;
 		g_isCurveParameter = g_shader->uniformParameter( "isCurve" )->location;
@@ -1145,6 +1225,7 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_v1Parameter = g_shader->uniformParameter( "v1" )->location;
 		g_t0Parameter = g_shader->uniformParameter( "t0" )->location;
 		g_t1Parameter = g_shader->uniformParameter( "t1" )->location;
+		g_lineWidthParameter = g_shader->uniformParameter( "lineWidth" )->location;
 	}
 
 	return g_shader.get();

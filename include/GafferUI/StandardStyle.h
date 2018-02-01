@@ -86,6 +86,7 @@ class StandardStyle : public Style
 		void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 		Imath::V3f closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const override;
+		void renderAuxiliaryConnection( const IECore::LineSegment3f &line, Imath::V2f directionIndicatorLocation ) const override;
 
 		void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 
@@ -101,9 +102,9 @@ class StandardStyle : public Style
 			ForegroundColor,
 			HighlightColor,
 			ConnectionColor,
+			AuxiliaryConnectionColor,
 			LastColor
 		};
-
 
 		void setColor( Color c, Imath::Color3f v );
 		const Imath::Color3f &getColor( Color c ) const;
@@ -124,7 +125,8 @@ class StandardStyle : public Style
 		static int g_borderParameter;
 		static int g_borderRadiusParameter;
 		static int g_borderWidthParameter;
-		static int g_edgeAntiAliasingParameter;
+		static float g_xAntiAliasingParameter;
+		static float g_yAntiAliasingParameter;
 		static int g_textureParameter;
 		static int g_textureTypeParameter;
 		static int g_isCurveParameter;
@@ -133,6 +135,7 @@ class StandardStyle : public Style
 		static int g_v1Parameter;
 		static int g_t0Parameter;
 		static int g_t1Parameter;
+		static float g_lineWidthParameter;
 
 		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = nullptr ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;

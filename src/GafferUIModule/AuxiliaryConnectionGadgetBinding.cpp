@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,57 +36,37 @@
 
 #include "boost/python.hpp"
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
+
+#include "GafferUI/NodeGadget.h"
+#include "GafferUI/AuxiliaryConnectionGadget.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
 #include "AuxiliaryConnectionGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
 
-using namespace GafferUIModule;
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+bool removeConnection1( const Gaffer::Plug *dstPlug, AuxiliaryConnectionGadget &a )
 {
+	return a.removeConnection( dstPlug );
+}
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindAuxiliaryConnectionGadget();
-	bindWidgetSignal();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+bool removeConnection2( const Gaffer::Plug *dstPlug, const Gaffer::Plug *srcPlug, AuxiliaryConnectionGadget &a )
+{
+	return a.removeConnection( srcPlug, dstPlug );
+}
 
+void GafferUIModule::bindAuxiliaryConnectionGadget()
+{
+	GadgetClass<AuxiliaryConnectionGadget>()
+		.def( init<NodeGadget*, NodeGadget*>() )
+		.def( "hasConnection", &AuxiliaryConnectionGadget::hasConnection )
+		.def( "addConnection", &AuxiliaryConnectionGadget::addConnection )
+		.def( "removeConnection", &removeConnection1 )
+		.def( "removeConnection", &removeConnection2 )
+	;
 }

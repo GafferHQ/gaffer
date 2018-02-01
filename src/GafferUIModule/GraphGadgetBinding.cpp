@@ -44,6 +44,7 @@
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/AuxiliaryConnectionGadget.h"
 #include "GafferUI/GraphLayout.h"
 #include "GafferUI/StandardGraphLayout.h"
 
@@ -102,6 +103,32 @@ list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, con
 	for( std::vector<ConnectionGadget *>::const_iterator it=connections.begin(), eIt=connections.end(); it!=eIt; ++it )
 	{
 		l.append( ConnectionGadgetPtr( *it ) );
+	}
+	return l;
+}
+
+list auxiliaryConnectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = nullptr )
+{
+	std::vector<AuxiliaryConnectionGadget *> connections;
+	graphGadget.auxiliaryConnectionGadgets( plug, connections, excludedNodes );
+
+	boost::python::list l;
+	for( std::vector<AuxiliaryConnectionGadget *>::const_iterator it=connections.begin(), eIt=connections.end(); it!=eIt; ++it )
+	{
+		l.append( AuxiliaryConnectionGadgetPtr( *it ) );
+	}
+	return l;
+}
+
+list auxiliaryConnectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = nullptr )
+{
+	std::vector<AuxiliaryConnectionGadget *> connections;
+	graphGadget.auxiliaryConnectionGadgets( node, connections, excludedNodes );
+
+	boost::python::list l;
+	for( std::vector<AuxiliaryConnectionGadget *>::const_iterator it=connections.begin(), eIt=connections.end(); it!=eIt; ++it )
+	{
+		l.append( AuxiliaryConnectionGadgetPtr( *it ) );
 	}
 	return l;
 }
@@ -174,6 +201,9 @@ void GafferUIModule::bindGraphGadget()
 			.def( "connectionGadget", (ConnectionGadget *(GraphGadget::*)( const Gaffer::Plug * ))&GraphGadget::connectionGadget, return_value_policy<CastToIntrusivePtr>() )
 			.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 			.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
+			.def( "auxiliaryConnectionGadget", (AuxiliaryConnectionGadget *(GraphGadget::*)( const Gaffer::Plug * ))&GraphGadget::auxiliaryConnectionGadget, return_value_policy<CastToIntrusivePtr>() )
+			.def( "auxiliaryConnectionGadgets", &auxiliaryConnectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
+			.def( "auxiliaryConnectionGadgets", &auxiliaryConnectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
 			.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 			.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 			.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )

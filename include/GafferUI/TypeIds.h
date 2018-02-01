@@ -80,6 +80,8 @@ enum TypeId
 	TranslateHandleTypeId = 110285,
 	ScaleHandleTypeId = 110286,
 	RotateHandleTypeId = 110287,
+	AuxiliaryConnectionGadgetTypeId = 110288,
+	AuxiliaryConnectionsGadgetTypeId = 110289,
 
 	LastTypeId = 110450
 };

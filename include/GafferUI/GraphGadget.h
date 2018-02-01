@@ -57,6 +57,8 @@ IE_CORE_FORWARDDECLARE( NodeGadget );
 IE_CORE_FORWARDDECLARE( Nodule );
 IE_CORE_FORWARDDECLARE( ConnectionGadget );
 IE_CORE_FORWARDDECLARE( GraphLayout );
+IE_CORE_FORWARDDECLARE( AuxiliaryConnectionGadget );
+IE_CORE_FORWARDDECLARE( AuxiliaryConnectionsGadget );
 
 /// Aliases that define the intended use of each
 /// Gadget::Layer by the GraphGadget components.
@@ -107,6 +109,11 @@ class GraphGadget : public ContainerGadget
 		ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug );
 		const ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug ) const;
 
+		/// Returns the AuxiliaryConnectionGadget representing the specified
+		/// destination Plug or nullptr if none exists.
+		AuxiliaryConnectionGadget *auxiliaryConnectionGadget( const Gaffer::Plug *dstPlug );
+		const AuxiliaryConnectionGadget *auxiliaryConnectionGadget( const Gaffer::Plug *dstPlug ) const;
+
 		/// Finds all the ConnectionGadgets (both inputs and outputs) connected
 		/// to the specified plug and appends them to the connections vector.
 		/// Returns the new size of the vector. If excludedNodes is specified,
@@ -120,6 +127,20 @@ class GraphGadget : public ContainerGadget
 		/// nodes it contains will be ignored.
 		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr );
 		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr ) const;
+
+		/// Finds all the AuxiliaryConnectionGadgets connected to the specified node and
+		/// appends them to the connections vector. Returns the new size of the
+		/// vector. If excludedNodes is specified, then connections to any
+		/// nodes it contains will be ignored.
+		size_t auxiliaryConnectionGadgets( const Gaffer::Node *node, std::vector<AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr );
+		size_t auxiliaryConnectionGadgets( const Gaffer::Node *node, std::vector<const AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr ) const;
+
+		/// Finds all the AuxiliaryConnectionGadgets connected to the specified plug and
+		/// appends them to the connections vector. Returns the new size of the
+		/// vector. If excludedNodes is specified, then connections to any
+		/// nodes it contains will be ignored.
+		size_t auxiliaryConnectionGadgets( const Gaffer::Plug *plug, std::vector<AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr );
+		size_t auxiliaryConnectionGadgets( const Gaffer::Plug *plug, std::vector<const AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr ) const;
 
 		/// Finds all the upstream NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.
@@ -142,6 +163,7 @@ class GraphGadget : public ContainerGadget
 		/// \note Here "connected" nodes are defined as nodes at the end of
 		/// connections as shown in the graph - invisible connections and
 		/// invisible nodes are not considered at all.
+		/// \todo What about auxiliary connections?
 		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
 		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
 
@@ -283,6 +305,7 @@ class GraphGadget : public ContainerGadget
 		std::vector<float> m_dragSnapOffsets[2]; // offsets in x and y
 		std::vector<Imath::V2f> m_dragSnapPoints; // specific points that are also target for point snapping
 
+		AuxiliaryConnectionsGadgetPtr m_auxiliaryConnectionsGadget;
 		GraphLayoutPtr m_layout;
 
 };
