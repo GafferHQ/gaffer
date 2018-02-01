@@ -46,5 +46,5 @@ ARNOLD_ROOT = os.environ["ARNOLD_ROOT"]
 DOXYGEN = "/usr/local/bin/doxygen"
 PYTHON_LINK_FLAGS = [ "-lpython$PYTHON_VERSION" ]
 
-if os.path.exists( "/opt/rh/devtoolset-2/root/usr/bin/g++" ) :
-	CXX="/opt/rh/devtoolset-2/root/usr/bin/g++"
+if os.path.exists( "/opt/rh/devtoolset-6/root/usr/bin/g++" ) :
+	CXX="/opt/rh/devtoolset-6/root/usr/bin/g++"
