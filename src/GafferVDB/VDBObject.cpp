@@ -208,59 +208,34 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 
 	for( auto metaIt = grid->beginMeta(); metaIt != grid->endMeta(); ++metaIt )
 	{
-		openvdb::Metadata::Ptr ptr = metaIt->second;
-
-		//todo replace with more generic conversion mechanism.
-		if( metaIt->second->typeName() == "string" )
+		if( metaIt->second->typeName() == openvdb::StringMetadata::staticTypeName() )
 		{
-			openvdb::TypedMetadata<openvdb::Name>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Name> >( ptr );
-
-			if( typedPtr )
-			{
-				StringDataPtr stringData = new StringData();
-				stringData->writable() = typedPtr->value();
-				metadata->members()[metaIt->first] = stringData;
-			}
+			metadata->members()[metaIt->first] = new StringData(
+				static_cast<openvdb::StringMetadata *>( metaIt->second.get() )->value()
+			);
 		}
-		else if( metaIt->second->typeName() == "int64" )
+		else if( metaIt->second->typeName() == openvdb::Int64Metadata::staticTypeName() )
 		{
-			openvdb::TypedMetadata<openvdb::Int64>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Int64> >( ptr );
-			if( typedPtr )
-			{
-				Int64DataPtr intData = new Int64Data();
-				intData->writable() = typedPtr->value();
-				metadata->members()[metaIt->first] = intData;
-			}
+			metadata->members()[metaIt->first] = new Int64Data(
+				static_cast<openvdb::Int64Metadata *>( metaIt->second.get() )->value()
+			);
 		}
-		else if( metaIt->second->typeName() == "int32" )
+		else if( metaIt->second->typeName() == openvdb::Int32Metadata::staticTypeName() )
 		{
-			openvdb::TypedMetadata<openvdb::Int32>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Int32> >( ptr );
-			if( typedPtr )
-			{
-				IntDataPtr intData = new IntData();
-				intData->writable() = typedPtr->value();
-				metadata->members()[metaIt->first] = intData;
-			}
+			metadata->members()[metaIt->first] = new IntData(
+				static_cast<openvdb::Int32Metadata *>( metaIt->second.get() )->value()
+			);
 		}
-		else if( metaIt->second->typeName() == "bool" )
+		else if( metaIt->second->typeName() == openvdb::BoolMetadata::staticTypeName() )
 		{
-			openvdb::TypedMetadata<bool>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<bool> >( ptr );
-			if( typedPtr )
-			{
-				BoolDataPtr data = new BoolData();
-				data->writable() = typedPtr->value();
-				metadata->members()[metaIt->first] = data;
-			}
+			metadata->members()[metaIt->first] = new BoolData(
+				static_cast<openvdb::BoolMetadata *>( metaIt->second.get() )->value()
+			);
 		}
-		else if( metaIt->second->typeName() == "vec3i" )
+		else if( metaIt->second->typeName() == openvdb::Vec3IMetadata::staticTypeName() )
 		{
-			openvdb::TypedMetadata<openvdb::math::Vec3i>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::math::Vec3i> >( ptr );
-			if( typedPtr )
-			{
-				V3iDataPtr data = new V3iData();
-				data->writable() = Imath::V3i( typedPtr->value().x(), typedPtr->value().y(), typedPtr->value().z() );
-				metadata->members()[metaIt->first] = data;
-			}
+			const openvdb::Vec3i &v = static_cast<openvdb::Vec3IMetadata *>( metaIt->second.get() )->value();
+			metadata->members()[metaIt->first] = new V3iData( Imath::V3i( v.x(), v.y(), v.z() ) );
 		}
 		else
 		{
