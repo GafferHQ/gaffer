@@ -57,6 +57,7 @@ IE_CORE_FORWARDDECLARE( NodeGadget );
 IE_CORE_FORWARDDECLARE( Nodule );
 IE_CORE_FORWARDDECLARE( ConnectionGadget );
 IE_CORE_FORWARDDECLARE( GraphLayout );
+IE_CORE_FORWARDDECLARE( AuxiliaryConnectionsGadget );
 
 /// Aliases that define the intended use of each
 /// Gadget::Layer by the GraphGadget components.
@@ -121,10 +122,14 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr );
 		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr ) const;
 
+		/// Returns the Gadget responsible for representing auxiliary connections.
+		AuxiliaryConnectionsGadget *auxiliaryConnectionsGadget();
+		const AuxiliaryConnectionsGadget *auxiliaryConnectionsGadget() const;
+
 		/// Finds all the upstream NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.
 		/// \note Here "upstream" nodes are defined as nodes at the end of input
-		/// connections as shown in the graph - invisible connections and
+		/// connections as shown in the graph - auxiliary connections and
 		/// invisible nodes are not considered at all.
 		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
 		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
@@ -132,7 +137,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		/// Finds all the downstream NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.
 		/// \note Here "downstream" nodes are defined as nodes at the end of output
-		/// connections as shown in the graph - invisible connections and
+		/// connections as shown in the graph - auxiliary connections and
 		/// invisible nodes are not considered at all.
 		size_t downstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &downstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
 		size_t downstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &downstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
@@ -140,7 +145,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		/// Finds all the NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.
 		/// \note Here "connected" nodes are defined as nodes at the end of
-		/// connections as shown in the graph - invisible connections and
+		/// connections as shown in the graph - auxiliary connections and
 		/// invisible nodes are not considered at all.
 		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
 		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
