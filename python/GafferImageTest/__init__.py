@@ -48,6 +48,7 @@ from AtomicFormatPlugTest import AtomicFormatPlugTest
 from MergeTest import MergeTest
 from GradeTest import GradeTest
 from ConstantTest import ConstantTest
+from CheckerboardTest import CheckerboardTest
 from ImageWriterTest import ImageWriterTest
 from SamplerTest import SamplerTest
 from DisplayTest import DisplayTest

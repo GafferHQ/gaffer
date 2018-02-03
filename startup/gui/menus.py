@@ -347,6 +347,7 @@ nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "Im
 nodeMenu.append( "/Image/Shape/Text", GafferImage.Text, postCreator = GafferImageUI.TextUI.postCreate )
 nodeMenu.append( "/Image/Color/Clamp", GafferImage.Clamp )
 nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
+nodeMenu.append( "/Image/Color/Checkerboard", GafferImageUI.CheckerboardUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
 nodeMenu.append( "/Image/Color/CDL", GafferImage.CDL )
 nodeMenu.append( "/Image/Color/ColorSpace", GafferImage.ColorSpace )

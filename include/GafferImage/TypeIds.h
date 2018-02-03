@@ -116,6 +116,7 @@ enum TypeId
 	RankFilterTypeId = 110820,
 	ErodeTypeId = 110821,
 	DilateTypeId = 110822,
+	CheckerboardTypeId = 110823,
 
 	LastTypeId = 110849
 };
