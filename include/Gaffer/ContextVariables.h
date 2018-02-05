@@ -37,15 +37,15 @@
 #ifndef GAFFER_CONTEXTVARIABLES_H
 #define GAFFER_CONTEXTVARIABLES_H
 
-#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
 
 template<typename BaseType>
-class ContextVariables : public ContextProcessor<BaseType>
+class IECORE_EXPORT ContextVariables : public ContextProcessor<BaseType>
 {
 
 	public :

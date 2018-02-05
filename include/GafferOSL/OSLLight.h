@@ -37,19 +37,20 @@
 #ifndef GAFFEROSL_OSLLIGHT_H
 #define GAFFEROSL_OSLLIGHT_H
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "GafferOSL/Export.h"
+#include "GafferOSL/TypeIds.h"
 
 #include "GafferScene/Light.h"
 #include "GafferScene/ShaderPlug.h"
 
-#include "GafferOSL/TypeIds.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferOSL
 {
 
 class OSLShader;
 
-class OSLLight : public GafferScene::Light
+class GAFFEROSL_API OSLLight : public GafferScene::Light
 {
 
 	public :

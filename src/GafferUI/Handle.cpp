@@ -35,21 +35,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "GafferUI/Handle.h"
 
-#include "OpenEXR/ImathMatrixAlgo.h"
-#include "OpenEXR/ImathLine.h"
-#include "OpenEXR/ImathPlane.h"
-#include "OpenEXR/ImathVecAlgo.h"
-
-#include "IECore/NullObject.h"
+#include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
 #include "IECoreGL/Camera.h"
 
-#include "GafferUI/Handle.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/ViewportGadget.h"
+#include "IECore/Export.h"
+#include "IECore/NullObject.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathLine.h"
+#include "OpenEXR/ImathPlane.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathVecAlgo.h"
+
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
 using namespace Imath;
 using namespace IECore;

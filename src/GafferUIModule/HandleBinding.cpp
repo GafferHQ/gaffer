@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUI/TranslateHandle.h"
-#include "GafferUI/ScaleHandle.h"
+#include "HandleBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "HandleBinding.h"
+#include "GafferUI/ScaleHandle.h"
+#include "GafferUI/TranslateHandle.h"
 
 using namespace boost::python;
 using namespace GafferUI;

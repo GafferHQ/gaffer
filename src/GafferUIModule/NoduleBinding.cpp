@@ -37,17 +37,18 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ExceptionAlgo.h"
+#include "NoduleBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUI/Nodule.h"
-#include "GafferUI/StandardNodule.h"
+
 #include "GafferUI/CompoundNodule.h"
+#include "GafferUI/Nodule.h"
 #include "GafferUI/NoduleLayout.h"
+#include "GafferUI/StandardNodule.h"
 
 #include "Gaffer/Plug.h"
 
-#include "NoduleBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace IECorePython;

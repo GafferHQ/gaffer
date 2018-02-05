@@ -34,13 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
-#include "OpenEXR/ImathEuler.h"
+#include "GafferUI/RotateHandle.h"
 
 #include "IECore/Exception.h"
+#include "IECore/Export.h"
 
-#include "GafferUI/RotateHandle.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathEuler.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/bind.hpp"
 
 using namespace Imath;
 using namespace IECore;

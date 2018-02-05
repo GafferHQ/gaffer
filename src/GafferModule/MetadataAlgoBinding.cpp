@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/GraphComponent.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
-
 #include "MetadataAlgoBinding.h"
+
+#include "Gaffer/GraphComponent.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 
 using namespace boost::python;
 using namespace Gaffer;

@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
-#include "IECoreScene/Shader.h"
+#include "GafferScene/LightTweaks.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/StringAlgo.h"
 
-#include "GafferScene/LightTweaks.h"
+#include "IECoreScene/Shader.h"
+
+#include "IECore/SimpleTypedData.h"
+#include "IECore/SplineData.h"
 
 using namespace std;
 using namespace IECore;

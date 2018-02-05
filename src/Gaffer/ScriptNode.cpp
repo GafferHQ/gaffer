@@ -35,26 +35,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <fstream>
+#include "Gaffer/ScriptNode.h"
+
+#include "Gaffer/Action.h"
+#include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/DependencyNode.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedPlug.h"
+
+#include "IECore/Exception.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-#include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
+#include "boost/filesystem/path.hpp"
 
-#include "IECore/Exception.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/MessageHandler.h"
-
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/Action.h"
-#include "Gaffer/ApplicationRoot.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/StandardSet.h"
-#include "Gaffer/DependencyNode.h"
-#include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/StringPlug.h"
+#include <fstream>
 
 using namespace Gaffer;
 

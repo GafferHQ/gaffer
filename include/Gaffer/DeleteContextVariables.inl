@@ -37,10 +37,10 @@
 #ifndef GAFFER_DELETECONTEXTVARIABLES_INL
 #define GAFFER_DELETECONTEXTVARIABLES_INL
 
-#include "IECore/SimpleTypedData.h"
-
-#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/DeleteContextVariables.h"
+
+#include "IECore/SimpleTypedData.h"
 #include "Gaffer/ContextProcessor.inl"
 
 namespace Gaffer

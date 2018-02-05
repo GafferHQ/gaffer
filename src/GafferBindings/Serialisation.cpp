@@ -36,21 +36,22 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "boost/tokenizer.hpp"
-#include "boost/format.hpp"
+#include "GafferBindings/Serialisation.h"
 
-#include "IECore/MessageHandler.h"
-
-#include "IECorePython/ScopedGILLock.h"
+#include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/MetadataBinding.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
 
-#include "GafferBindings/Serialisation.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/MetadataBinding.h"
+#include "IECorePython/ScopedGILLock.h"
+
+#include "IECore/MessageHandler.h"
+
+#include "boost/format.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
+#include "boost/tokenizer.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

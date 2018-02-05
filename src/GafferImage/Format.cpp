@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <map>
-
 #include "GafferImage/Format.h"
+
+#include <map>
 
 using namespace GafferImage;
 

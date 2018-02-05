@@ -38,18 +38,20 @@
 #ifndef GAFFERSCENE_SHADER_H
 #define GAFFERSCENE_SHADER_H
 
-#include "boost/unordered_set.hpp"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
 
-#include "IECore/ObjectVector.h"
-#include "IECore/CompoundObject.h"
-#include "IECoreScene/Shader.h"
-
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/ArrayPlug.h"
 
-#include "GafferScene/TypeIds.h"
+#include "IECoreScene/Shader.h"
+
+#include "IECore/CompoundObject.h"
+#include "IECore/ObjectVector.h"
+
+#include "boost/unordered_set.hpp"
 
 namespace Gaffer
 {
@@ -61,7 +63,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class Shader : public Gaffer::DependencyNode
+class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 {
 
 	public :

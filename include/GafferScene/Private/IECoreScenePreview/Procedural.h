@@ -37,17 +37,9 @@
 #ifndef IECORESCENEPREVIEW_PROCEDURAL_H
 #define IECORESCENEPREVIEW_PROCEDURAL_H
 
-#include "IECoreScene/VisibleRenderable.h"
-
 #include "GafferScene/TypeIds.h"
 
-/// \todo Remove, and use IE_CORE_DECLAREEXTENSIONOBJECT directly.
-/// We need to update the dependencies project to at least 10.0.0-a13
-/// before we can do this.
-#ifndef IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT
-#define IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT IE_CORE_DECLAREEXTENSIONOBJECT
-#define IE_CORE_DEFINEABSTRACTOBJECTTYPEDESCRIPTION IE_CORE_DEFINEOBJECTTYPEDESCRIPTION
-#endif
+#include "IECoreScene/VisibleRenderable.h"
 
 namespace IECoreScenePreview
 {
@@ -56,7 +48,7 @@ class Renderer;
 
 /// \todo Would it be useful to have a virtual function that returns an
 /// ExternalProcedural, for use when serialising scenes?
-class Procedural : public IECoreScene::VisibleRenderable
+class IECORESCENE_API Procedural : public IECoreScene::VisibleRenderable
 {
 
 	public :
@@ -64,7 +56,7 @@ class Procedural : public IECoreScene::VisibleRenderable
 		Procedural();
 		~Procedural();
 
-		IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
 
 		/// Legacy inherited from IECore::VisibleRenderable.
 		/// Should not be implemented by derived classes.

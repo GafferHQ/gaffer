@@ -36,19 +36,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/format.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string/replace.hpp"
-
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/Reference.h"
-#include "Gaffer/Metadata.h"
 
 #include "GafferBindings/ValuePlugBinding.h"
+
 #include "GafferBindings/PlugBinding.h"
 #include "GafferBindings/Serialisation.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Reference.h"
+#include "Gaffer/ValuePlug.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/format.hpp"
 
 using namespace std;
 using namespace boost::python;

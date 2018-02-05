@@ -36,12 +36,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferUI/Frame.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/GraphGadget.h"
 
-#include "IECore/SimpleTypedData.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/Style.h"
+
 #include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/MeshPrimitive.h"
+
+#include "IECore/SimpleTypedData.h"
 
 using namespace GafferUI;
 using namespace IECore;

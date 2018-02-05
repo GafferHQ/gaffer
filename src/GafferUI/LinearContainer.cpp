@@ -35,12 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferUI/LinearContainer.h"
+
+#include "GafferUI/Style.h"
 
 #include "IECore/Exception.h"
 
-#include "GafferUI/LinearContainer.h"
-#include "GafferUI/Style.h"
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

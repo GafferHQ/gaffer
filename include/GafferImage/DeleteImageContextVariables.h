@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_DELETEIMAGECONTEXTVARIABLES_H
 #define GAFFERIMAGE_DELETEIMAGECONTEXTVARIABLES_H
 
-#include "Gaffer/DeleteContextVariables.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/DeleteContextVariables.h"
 
 namespace GafferImage
 {

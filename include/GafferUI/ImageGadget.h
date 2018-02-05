@@ -38,11 +38,11 @@
 #ifndef GAFFERUI_IMAGEGADGET_H
 #define GAFFERUI_IMAGEGADGET_H
 
-#include "IECoreImage/ImagePrimitive.h"
+#include "GafferUI/Gadget.h"
 
 #include "IECoreGL/TextureLoader.h"
 
-#include "GafferUI/Gadget.h"
+#include "IECoreImage/ImagePrimitive.h"
 
 namespace IECoreGL
 {
@@ -54,7 +54,7 @@ IE_CORE_FORWARDDECLARE( Texture )
 namespace GafferUI
 {
 
-class ImageGadget : public Gadget
+class GAFFERUI_API ImageGadget : public Gadget
 {
 
 	public :

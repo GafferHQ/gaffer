@@ -37,22 +37,22 @@
 #ifndef GAFFERDISPATCH_DISPATCHER_H
 #define GAFFERDISPATCH_DISPATCHER_H
 
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include <functional>
+#include "GafferDispatch/Export.h"
+#include "GafferDispatch/TaskNode.h"
 
-#include "boost/signals.hpp"
+#include "Gaffer/NumericPlug.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/FrameList.h"
 #include "IECore/RunTimeTyped.h"
 
-#include "Gaffer/NumericPlug.h"
+#include "boost/signals.hpp"
 
-#include "GafferDispatch/TaskNode.h"
-#include "GafferDispatchBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
+#include <functional>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace Gaffer
 {
@@ -96,7 +96,7 @@ IE_CORE_FORWARDDECLARE( Dispatcher )
 /// of Context specific Tasks from TaskNodes which exist within a ScriptNode.
 /// Dispatchers can also modify TaskNodes during construction, adding
 /// plugs which affect Task execution.
-class Dispatcher : public Gaffer::Node
+class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 {
 	public :
 
@@ -282,7 +282,6 @@ class Dispatcher : public Gaffer::Node
 		static PostDispatchSignal g_postDispatchSignal;
 		static std::string g_defaultDispatcherType;
 
-		friend void GafferDispatchBindings::bindDispatcher();
 };
 
 } // namespace GafferDispatch

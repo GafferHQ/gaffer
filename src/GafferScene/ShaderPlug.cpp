@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MurmurHash.h"
+#include "GafferScene/ShaderPlug.h"
 
-#include "Gaffer/SubGraph.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderSwitch.h"
+
 #include "Gaffer/BoxIO.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/SubGraph.h"
 
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderPlug.h"
-#include "GafferScene/ShaderSwitch.h"
+#include "IECore/MurmurHash.h"
 
 using namespace IECore;
 using namespace Gaffer;

@@ -37,17 +37,17 @@
 
 #include "boost/python.hpp"
 
-#include "IECoreGL/Texture.h"
-#include "IECoreGL/Font.h"
+#include "StyleBinding.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUI/StandardStyle.h"
+#include "GafferUI/Style.h"
 
 #include "GafferBindings/SignalBinding.h"
 
-#include "GafferUI/Style.h"
-#include "GafferUI/StandardStyle.h"
+#include "IECoreGL/Font.h"
+#include "IECoreGL/Texture.h"
 
-#include "StyleBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

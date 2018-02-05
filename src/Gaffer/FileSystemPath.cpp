@@ -35,24 +35,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <pwd.h>
-#include <grp.h>
-#include <sys/stat.h>
+#include "Gaffer/FileSystemPath.h"
 
-#include "boost/filesystem.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/date_time/posix_time/conversion.hpp"
+#include "Gaffer/CompoundPathFilter.h"
+#include "Gaffer/FileSequencePathFilter.h"
+#include "Gaffer/MatchPatternPathFilter.h"
+#include "Gaffer/PathFilter.h"
 
-#include "IECore/SimpleTypedData.h"
 #include "IECore/DateTimeData.h"
 #include "IECore/FileSequenceFunctions.h"
+#include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/PathFilter.h"
-#include "Gaffer/FileSystemPath.h"
-#include "Gaffer/FileSequencePathFilter.h"
-#include "Gaffer/CompoundPathFilter.h"
-#include "Gaffer/MatchPatternPathFilter.h"
+#include "boost/algorithm/string.hpp"
+#include "boost/date_time/posix_time/conversion.hpp"
+#include "boost/filesystem.hpp"
+#include "boost/filesystem/operations.hpp"
+
+#include <grp.h>
+#include <pwd.h>
+#include <sys/stat.h>
 
 using namespace std;
 using namespace boost::filesystem;

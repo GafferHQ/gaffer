@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class ResamplePrimitiveVariables : public PrimitiveVariableProcessor
+class GAFFERSCENE_API ResamplePrimitiveVariables : public PrimitiveVariableProcessor
 {
 
 	public :
@@ -61,6 +61,7 @@ class ResamplePrimitiveVariables : public PrimitiveVariableProcessor
 
 		void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECoreScene::ConstPrimitivePtr inputGeometry, IECoreScene::PrimitiveVariable &inputVariable ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+
 	private :
 
 		static size_t g_firstPlugIndex;

@@ -35,12 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferScene/PathFilter.h"
+
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathFilter.h"
+#include "boost/bind.hpp"
 
 using namespace GafferScene;
 using namespace Gaffer;

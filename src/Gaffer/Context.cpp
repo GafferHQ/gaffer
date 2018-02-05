@@ -35,6 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
+
+#include "IECore/SimpleTypedData.h"
+
+#include "boost/lexical_cast.hpp"
+
+#include "tbb/enumerable_thread_specific.h"
+
+#include <stack>
+
 // Headers needed to access environment - these differ
 // between OS X and Linux.
 #ifdef __APPLE__
@@ -43,16 +53,6 @@ static char **environ = *_NSGetEnviron();
 #else
 #include <unistd.h>
 #endif
-
-#include <stack>
-
-#include "tbb/enumerable_thread_specific.h"
-
-#include "boost/lexical_cast.hpp"
-
-#include "IECore/SimpleTypedData.h"
-
-#include "Gaffer/Context.h"
 
 using namespace Gaffer;
 using namespace IECore;

@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferImage/FormatPlug.h"
 
-#include "Gaffer/ScriptNode.h"
+#include "GafferImage/FormatData.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/Process.h"
+#include "Gaffer/ScriptNode.h"
 
-#include "GafferImage/FormatPlug.h"
-#include "GafferImage/FormatData.h"
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 using namespace GafferImage;

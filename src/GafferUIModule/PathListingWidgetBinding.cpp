@@ -35,42 +35,37 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "boost/date_time/posix_time/conversion.hpp"
+#include "PathListingWidgetBinding.h"
 
-#include "QtCore/QAbstractItemModel"
-#include "QtCore/QAbstractItemModel"
-#include "QtCore/QModelIndex"
-#include "QtCore/QVariant"
-#include "QtCore/QDateTime"
-
-#if QT_VERSION >= 0x050000
-
-	#include "QtWidgets/QTreeView"
-	#include "QtWidgets/QFileIconProvider"
-
-#else
-
-	#include "QtGui/QTreeView"
-	#include "QtGui/QFileIconProvider"
-
-#endif
-
-#include "IECore/MessageHandler.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/DateTimeData.h"
-#include "IECore/SearchPath.h"
-#include "IECore/LRUCache.h"
+#include "Gaffer/FileSystemPath.h"
+#include "Gaffer/Path.h"
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/Path.h"
-#include "Gaffer/FileSystemPath.h"
+#include "IECore/DateTimeData.h"
+#include "IECore/LRUCache.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/SearchPath.h"
+#include "IECore/SimpleTypedData.h"
 
-#include "PathListingWidgetBinding.h"
+#include "boost/date_time/posix_time/conversion.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "QtCore/QAbstractItemModel"
+#include "QtCore/QDateTime"
+#include "QtCore/QModelIndex"
+#include "QtCore/QVariant"
+
+#if QT_VERSION >= 0x050000
+	#include "QtWidgets/QTreeView"
+	#include "QtWidgets/QFileIconProvider"
+#else
+	#include "QtGui/QTreeView"
+	#include "QtGui/QFileIconProvider"
+#endif
 
 using namespace boost::python;
 using namespace boost::posix_time;

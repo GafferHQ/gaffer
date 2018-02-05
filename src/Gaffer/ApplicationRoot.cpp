@@ -35,10 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/filesystem.hpp"
-
 #include "Gaffer/ApplicationRoot.h"
+
 #include "Gaffer/Preferences.h"
+
+#include "boost/filesystem.hpp"
 
 using namespace Gaffer;
 

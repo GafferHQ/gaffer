@@ -42,7 +42,7 @@
 namespace GafferUI
 {
 
-class PlugAdder : public Gadget
+class GAFFERUI_API PlugAdder : public Gadget
 {
 
 	public :

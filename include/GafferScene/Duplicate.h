@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_DUPLICATE_H
 #define GAFFERSCENE_DUPLICATE_H
 
-#include "Gaffer/TransformPlug.h"
-
 #include "GafferScene/BranchCreator.h"
+
+#include "Gaffer/TransformPlug.h"
 
 namespace GafferScene
 {
 
-class Duplicate : public BranchCreator
+class GAFFERSCENE_API Duplicate : public BranchCreator
 {
 
 	public :

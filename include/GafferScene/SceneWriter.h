@@ -37,19 +37,20 @@
 #ifndef GAFFERSCENE_SCENEWRITER_H
 #define GAFFERSCENE_SCENEWRITER_H
 
-#include "IECoreScene/SceneInterface.h"
-
-#include "Gaffer/TypedPlug.h"
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/TypeIds.h"
 
 #include "GafferDispatch/TaskNode.h"
 
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/ScenePlug.h"
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreScene/SceneInterface.h"
 
 namespace GafferScene
 {
 
-class SceneWriter : public GafferDispatch::TaskNode
+class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 {
 
 	public :

@@ -34,20 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string.hpp"
+#include "GafferScene/LightToCamera.h"
 
-#include "OpenEXR/ImathMatrix.h"
-#include "OpenEXR/ImathVec.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 
-#include "IECore/CompoundData.h"
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/Transform.h"
 
-#include "Gaffer/Metadata.h"
-#include "Gaffer/Context.h"
+#include "IECore/CompoundData.h"
+#include "IECore/Export.h"
 
-#include "GafferScene/LightToCamera.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathMatrix.h"
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/algorithm/string.hpp"
 
 using namespace IECore;
 using namespace IECoreScene;

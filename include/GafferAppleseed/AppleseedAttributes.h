@@ -37,14 +37,15 @@
 #ifndef GAFFERAPPLESEED_APPLESEEDATTRIBUTES_H
 #define GAFFERAPPLESEED_APPLESEEDATTRIBUTES_H
 
-#include "GafferScene/Attributes.h"
-
+#include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
+
+#include "GafferScene/Attributes.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedAttributes : public GafferScene::Attributes
+class GAFFERAPPLESEED_API AppleseedAttributes : public GafferScene::Attributes
 {
 
 	public :

@@ -37,14 +37,15 @@
 #ifndef GAFFERSCENETEST_TESTLIGHT_H
 #define GAFFERSCENETEST_TESTLIGHT_H
 
-#include "GafferScene/Light.h"
-
+#include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
+
+#include "GafferScene/Light.h"
 
 namespace GafferSceneTest
 {
 
-class TestLight : public GafferScene::Light
+class GAFFERSCENETEST_API TestLight : public GafferScene::Light
 {
 
 	public :

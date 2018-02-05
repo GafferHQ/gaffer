@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TimeWarp.inl"
 #include "GafferScene/SceneTimeWarp.h"
+
+#include "Gaffer/TimeWarp.inl"
 
 using namespace GafferScene;
 

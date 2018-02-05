@@ -34,14 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenEXR/ImathFun.h"
+#include "GafferImage/VectorWarp.h"
+
+#include "GafferImage/FilterAlgo.h"
+#include "GafferImage/ImageAlgo.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImage/VectorWarp.h"
-#include "GafferImage/FilterAlgo.h"
-#include "math.h"
+#include "OpenEXR/ImathFun.h"
+
+#include <math.h>
 
 using namespace Imath;
 using namespace IECore;

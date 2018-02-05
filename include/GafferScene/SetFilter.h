@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_SETFILTER_H
 #define GAFFERSCENE_SETFILTER_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferScene/Filter.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
@@ -52,7 +52,7 @@ namespace GafferScene
 {
 
 /// \todo Investigate whether or not caching is actually beneficial for this node
-class SetFilter : public Filter
+class GAFFERSCENE_API SetFilter : public Filter
 {
 
 	public :

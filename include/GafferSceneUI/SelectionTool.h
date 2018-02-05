@@ -37,10 +37,11 @@
 #ifndef GAFFERSCENEUI_SELECTIONTOOL_H
 #define GAFFERSCENEUI_SELECTIONTOOL_H
 
-#include "GafferUI/Tool.h"
-#include "GafferUI/DragDropEvent.h"
-
+#include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
+
+#include "GafferUI/DragDropEvent.h"
+#include "GafferUI/Tool.h"
 
 namespace GafferSceneUI
 {
@@ -48,7 +49,7 @@ namespace GafferSceneUI
 IE_CORE_FORWARDDECLARE( SceneView )
 IE_CORE_FORWARDDECLARE( SceneGadget )
 
-class SelectionTool : public GafferUI::Tool
+class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 {
 
 	public :

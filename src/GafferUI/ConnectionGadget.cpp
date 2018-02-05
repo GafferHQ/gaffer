@@ -35,13 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Exception.h"
+#include "GafferUI/ConnectionGadget.h"
+
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/Nodule.h"
 
 #include "Gaffer/Node.h"
 
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/Nodule.h"
+#include "IECore/Exception.h"
 
 using namespace GafferUI;
 

@@ -38,17 +38,17 @@
 #ifndef GAFFER_EXPRESSION_H
 #define GAFFER_EXPRESSION_H
 
-#include <functional>
-
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
+
+#include <functional>
 
 namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( StringPlug )
 
-class Expression : public ComputeNode
+class GAFFER_API Expression : public ComputeNode
 {
 
 	public :

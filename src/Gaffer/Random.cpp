@@ -35,14 +35,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/functional/hash.hpp"
-
-#include "OpenEXR/ImathRandom.h"
-#include "OpenEXR/ImathColorAlgo.h"
-
 #include "Gaffer/Random.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+
+#include "OpenEXR/ImathColorAlgo.h"
+#include "OpenEXR/ImathRandom.h"
+
+#include "boost/functional/hash.hpp"
 
 using namespace Gaffer;
 using namespace Imath;

@@ -32,11 +32,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
+#include "GafferArnold/Private/IECoreArnoldPreview/ProceduralAlgo.h"
 
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
-#include "GafferArnold/Private/IECoreArnoldPreview/ProceduralAlgo.h"
+
+#include "IECore/SimpleTypedData.h"
 
 using namespace std;
 using namespace Imath;

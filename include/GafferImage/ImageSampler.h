@@ -37,11 +37,12 @@
 #ifndef GAFFERIMAGE_IMAGESAMPLER_H
 #define GAFFERIMAGE_IMAGESAMPLER_H
 
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/TypedObjectPlug.h"
-
+#include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
 {
@@ -49,7 +50,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ImagePlug )
 IE_CORE_FORWARDDECLARE( FilterPlug )
 
-class ImageSampler : public Gaffer::ComputeNode
+class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 {
 
 	public :

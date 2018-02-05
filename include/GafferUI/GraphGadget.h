@@ -38,10 +38,10 @@
 #ifndef GAFFERUI_GRAPHGADGET_H
 #define GAFFERUI_GRAPHGADGET_H
 
-#include "Gaffer/Plug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferUI/ContainerGadget.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Plug.h"
 
 namespace Gaffer
 {
@@ -70,7 +70,7 @@ namespace GraphLayer
 };
 
 /// The GraphGadget class provides a ui for connecting nodes together.
-class GraphGadget : public ContainerGadget
+class GAFFERUI_API GraphGadget : public ContainerGadget
 {
 
 	public :

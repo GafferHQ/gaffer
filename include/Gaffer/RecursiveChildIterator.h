@@ -37,9 +37,9 @@
 #ifndef GAFFER_RECURSIVECHILDITERATOR_H
 #define GAFFER_RECURSIVECHILDITERATOR_H
 
-#include "boost/iterator/iterator_facade.hpp"
-
 #include "Gaffer/GraphComponent.h"
+
+#include "boost/iterator/iterator_facade.hpp"
 
 namespace Gaffer
 {

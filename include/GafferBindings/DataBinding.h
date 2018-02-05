@@ -39,6 +39,8 @@
 
 #include "boost/python.hpp"
 
+#include "GafferBindings/Export.h"
+
 #include "IECore/Data.h"
 
 namespace GafferBindings
@@ -52,10 +54,10 @@ namespace GafferBindings
 /// to represent them in Python.
 /// \todo It might be too late, but consider how this could be put to use
 /// in Cortex itself.
-boost::python::object dataToPython( IECore::Data *data, boost::python::object nullValue = boost::python::object() );
+GAFFERBINDINGS_API boost::python::object dataToPython( IECore::Data *data, boost::python::object nullValue = boost::python::object() );
 /// As above, but since the data is const (and python has no const), requiring
 /// an argument specifying whether or not to copy the data.
-boost::python::object dataToPython( const IECore::Data *data, bool copy, boost::python::object nullValue = boost::python::object() );
+GAFFERBINDINGS_API boost::python::object dataToPython( const IECore::Data *data, bool copy, boost::python::object nullValue = boost::python::object() );
 
 } // namespace GafferBindings
 

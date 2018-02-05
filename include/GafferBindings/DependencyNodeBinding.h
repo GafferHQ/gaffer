@@ -39,16 +39,17 @@
 #define GAFFERBINDINGS_DEPENDENCYNODEBINDING_H
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
-
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/ExceptionAlgo.h"
-
-#include "Gaffer/DependencyNode.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/ValuePlug.h"
 
 #include "GafferBindings/NodeBinding.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ValuePlug.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILLock.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 namespace GafferBindings
 {

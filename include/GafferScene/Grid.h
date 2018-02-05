@@ -37,9 +37,9 @@
 #ifndef GAFFERSCENE_GRID_H
 #define GAFFERSCENE_GRID_H
 
-#include "Gaffer/TransformPlug.h"
-
 #include "GafferScene/SceneNode.h"
+
+#include "Gaffer/TransformPlug.h"
 
 namespace Gaffer
 {
@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class Grid : public SceneNode
+class GAFFERSCENE_API Grid : public SceneNode
 {
 
 	public :

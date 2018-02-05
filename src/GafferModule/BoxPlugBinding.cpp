@@ -37,13 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "Gaffer/BoxPlug.h"
+#include "BoxPlugBinding.h"
 
 #include "GafferBindings/PlugBinding.h"
 
-#include "BoxPlugBinding.h"
+#include "Gaffer/BoxPlug.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_GRADE_H
 #define GAFFERIMAGE_GRADE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ChannelDataProcessor.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {
@@ -50,7 +50,7 @@ namespace GafferImage
 /// B = offset + lift - A * blackPoint
 /// output = pow( A * input + B, 1/gamma )
 //
-class Grade : public ChannelDataProcessor
+class GAFFERIMAGE_API Grade : public ChannelDataProcessor
 {
 
 	public :

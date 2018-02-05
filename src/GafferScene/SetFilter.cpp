@@ -34,12 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "Gaffer/StringPlug.h"
+#include "GafferScene/SetFilter.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/SetFilter.h"
 #include "GafferScene/SetAlgo.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace GafferScene;
 using namespace Gaffer;

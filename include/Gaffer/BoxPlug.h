@@ -38,17 +38,20 @@
 #ifndef GAFFER_BOXPLUG_H
 #define GAFFER_BOXPLUG_H
 
-#include "OpenEXR/ImathBox.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "IECore/BoxTraits.h"
+#include "IECore/Export.h"
 
-#include "Gaffer/CompoundNumericPlug.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace Gaffer
 {
 
 template<typename T>
-class BoxPlug : public ValuePlug
+class GAFFER_API BoxPlug : public ValuePlug
 {
 
 	public :

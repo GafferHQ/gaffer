@@ -38,11 +38,11 @@
 #ifndef GAFFERCORTEX_OBJECTPARAMETERHANDLER_H
 #define GAFFERCORTEX_OBJECTPARAMETERHANDLER_H
 
-#include "IECore/ObjectParameter.h"
+#include "GafferCortex/ParameterHandler.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferCortex/ParameterHandler.h"
+#include "IECore/ObjectParameter.h"
 
 namespace GafferCortex
 {
@@ -50,7 +50,7 @@ namespace GafferCortex
 /// \todo Decide whether this is sufficient or we need a TypedParameterHandler
 /// mapping to different types of Plugs. Decide how we deal with input values
 /// which don't validate ok - set error status on Plug?
-class ObjectParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API ObjectParameterHandler : public ParameterHandler
 {
 
 	public :

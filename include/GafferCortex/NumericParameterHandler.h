@@ -38,15 +38,17 @@
 #ifndef GAFFERCORTEX_NUMERICPARAMETERHANDLER_H
 #define GAFFERCORTEX_NUMERICPARAMETERHANDLER_H
 
+#include "GafferCortex/ParameterHandler.h"
+
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferCortex/ParameterHandler.h"
+#include "IECore/NumericParameter.h"
 
 namespace GafferCortex
 {
 
 template<typename T>
-class NumericParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API NumericParameterHandler : public ParameterHandler
 {
 
 	public :

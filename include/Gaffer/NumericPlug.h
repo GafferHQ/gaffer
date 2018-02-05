@@ -38,17 +38,17 @@
 #ifndef GAFFER_NUMERICPLUG_H
 #define GAFFER_NUMERICPLUG_H
 
-#include "OpenEXR/ImathLimits.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/ValuePlug.h"
+#include "OpenEXR/ImathLimits.h"
 
 namespace Gaffer
 {
 
 template<typename T>
-class NumericPlug : public ValuePlug
+class GAFFER_API NumericPlug : public ValuePlug
 {
 
 	public :

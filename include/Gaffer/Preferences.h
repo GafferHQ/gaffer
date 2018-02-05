@@ -43,7 +43,7 @@
 namespace Gaffer
 {
 
-class Preferences : public Node
+class GAFFER_API Preferences : public Node
 {
 
 	public :

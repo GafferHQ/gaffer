@@ -36,26 +36,64 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-
+#include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
 
-#include "GafferImageTest/ProcessTiles.h"
-#include "GafferImageTest/ImageReaderTest.h"
+#include "Gaffer/Node.h"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
-using namespace GafferImageTest;
+using namespace Gaffer;
+using namespace GafferImage;
 
-static void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
+namespace
+{
+
+struct TilesEvaluateFunctor
+{
+	bool operator()( const GafferImage::ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
+	{
+		imagePlug->channelDataPlug()->getValue();
+		return true;
+	}
+};
+
+void processTiles( const GafferImage::ImagePlug *imagePlug )
+{
+	TilesEvaluateFunctor f;
+	ImageAlgo::parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
+}
+
+void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )
+{
+	if( dirtiedPlug == image.get() )
+	{
+		processTiles( image.get() );
+	}
+}
+
+void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	processTiles( imagePlug );
 }
 
+boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
+{
+	const Node *node = image->node();
+	if( !node )
+	{
+		throw IECore::Exception( "Plug does not belong to a node." );
+	}
+
+	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &processTilesOnDirty, ::_1, image ) );
+}
+
+} // namespace
+
 BOOST_PYTHON_MODULE( _GafferImageTest )
 {
 	def( "processTiles", &processTilesWrapper );
 	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );
-	def( "testOIIOJpgRead", &testOIIOJpgRead );
-	def( "testOIIOExrRead", &testOIIOExrRead );
 }

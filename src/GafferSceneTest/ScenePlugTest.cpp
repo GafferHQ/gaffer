@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Timer.h"
+#include "GafferSceneTest/ScenePlugTest.h"
 
 #include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneTest/ScenePlugTest.h"
+#include "IECore/Timer.h"
 
 using namespace GafferScene;
 

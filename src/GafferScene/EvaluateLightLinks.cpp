@@ -34,12 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
+#include "GafferScene/EvaluateLightLinks.h"
+
+#include "GafferScene/SetAlgo.h"
 
 #include "IECore/CompoundData.h"
 
-#include "GafferScene/EvaluateLightLinks.h"
-#include "GafferScene/SetAlgo.h"
+#include <cstdio>
 
 using namespace IECore;
 using namespace Gaffer;

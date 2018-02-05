@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
-
 #include "GafferSceneTest/CompoundObjectSource.h"
+
+#include "boost/tokenizer.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

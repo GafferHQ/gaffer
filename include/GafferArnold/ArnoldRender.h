@@ -37,14 +37,15 @@
 #ifndef GAFFERARNOLD_ARNOLDRENDER_H
 #define GAFFERARNOLD_ARNOLDRENDER_H
 
-#include "GafferScene/Render.h"
-
+#include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Render.h"
 
 namespace GafferArnold
 {
 
-class ArnoldRender : public GafferScene::Render
+class GAFFERARNOLD_API ArnoldRender : public GafferScene::Render
 {
 
 	public :

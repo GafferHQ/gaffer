@@ -37,17 +37,17 @@
 #ifndef GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
 #define GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
 
-#include "OpenColorIO/OpenColorIO.h"
+#include "GafferImage/ColorProcessor.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 
-#include "GafferImage/ColorProcessor.h"
+#include "OpenColorIO/OpenColorIO.h"
 
 namespace GafferImage
 {
 
 /// Abstract base class for nodes which apply an OpenColorIO Transform
-class OpenColorIOTransform : public ColorProcessor
+class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 {
 
 	public :

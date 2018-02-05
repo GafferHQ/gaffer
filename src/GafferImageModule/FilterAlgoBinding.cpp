@@ -34,9 +34,9 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/FilterAlgo.h"
-
 #include "FilterAlgoBinding.h"
+
+#include "GafferImage/FilterAlgo.h"
 
 using namespace boost::python;
 

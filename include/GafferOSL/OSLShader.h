@@ -37,16 +37,17 @@
 #ifndef GAFFEROSL_OSLSHADER_H
 #define GAFFEROSL_OSLSHADER_H
 
-#include "GafferScene/Shader.h"
-
+#include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
+
+#include "GafferScene/Shader.h"
 
 namespace GafferOSL
 {
 
 IE_CORE_FORWARDDECLARE( ShadingEngine )
 
-class OSLShader : public GafferScene::Shader
+class GAFFEROSL_API OSLShader : public GafferScene::Shader
 {
 
 	public :
@@ -101,7 +102,7 @@ class OSLShader : public GafferScene::Shader
 			}
 		}
 
-		
+
 
 	protected :
 

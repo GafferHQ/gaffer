@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/Shader.h"
+#include "GafferSceneTest/TestLight.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferSceneTest/TestLight.h"
+#include "IECoreScene/Shader.h"
 
 using namespace Gaffer;
 using namespace GafferSceneTest;

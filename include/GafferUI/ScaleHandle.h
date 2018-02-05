@@ -43,7 +43,7 @@
 namespace GafferUI
 {
 
-class ScaleHandle : public Handle
+class GAFFERUI_API ScaleHandle : public Handle
 {
 
 	public :

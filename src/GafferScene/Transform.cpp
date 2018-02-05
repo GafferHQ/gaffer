@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferScene/Transform.h"
+
+#include "Gaffer/Context.h"
 
 using namespace IECore;
 using namespace Gaffer;

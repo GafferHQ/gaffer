@@ -37,14 +37,14 @@
 #ifndef GAFFERIMAGE_OFFSET_H
 #define GAFFERIMAGE_OFFSET_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {
 
-class Offset : public ImageProcessor
+class GAFFERIMAGE_API Offset : public ImageProcessor
 {
 	public :
 

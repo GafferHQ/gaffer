@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferArnold/InteractiveArnoldRender.h"
+
 #include "boost/unordered_set.hpp"
 
 #include "ai_universe.h"
-
-#include "GafferArnold/InteractiveArnoldRender.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

@@ -37,9 +37,9 @@
 #ifndef GAFFER_RANDOM_H
 #define GAFFER_RANDOM_H
 
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
 
 namespace Gaffer
 {
@@ -47,7 +47,7 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( StringPlug )
 
 /// Base class for nodes which generate random values based on Context values.
-class Random : public ComputeNode
+class GAFFER_API Random : public ComputeNode
 {
 
 	public :

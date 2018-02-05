@@ -44,7 +44,7 @@ namespace Gaffer
 {
 
 /// Node for applying keyframed animation to plugs.
-class Animation : public ComputeNode
+class GAFFER_API Animation : public ComputeNode
 {
 
 	public :

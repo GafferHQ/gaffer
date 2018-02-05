@@ -37,11 +37,11 @@
 #ifndef IECOREARNOLDPREVIEW_SHADERALGO_H
 #define IECOREARNOLDPREVIEW_SHADERALGO_H
 
-#include <vector>
+#include "IECore/ObjectVector.h"
 
 #include "ai.h"
 
-#include "IECore/ObjectVector.h"
+#include <vector>
 
 namespace IECoreArnoldPreview
 {

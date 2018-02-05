@@ -38,11 +38,11 @@
 #ifndef GAFFER_SPLINEPLUG_H
 #define GAFFER_SPLINEPLUG_H
 
-#include "IECore/Spline.h"
-
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/TypedPlug.h"
 #include "Gaffer/PlugType.h"
+#include "Gaffer/TypedPlug.h"
+
+#include "IECore/Spline.h"
 
 namespace Gaffer
 {
@@ -59,7 +59,7 @@ enum SplineDefinitionInterpolation
 
 
 template<typename T>
-struct SplineDefinition
+struct GAFFER_API SplineDefinition
 {
 	typedef typename T::XType XType;
 	typedef typename T::YType YType;
@@ -115,7 +115,7 @@ private:
 /// details such as adding repeated endpoint values are added when converting to
 /// IECore::Spline.
 template<typename T>
-class SplinePlug : public ValuePlug
+class GAFFER_API SplinePlug : public ValuePlug
 {
 
 	public :

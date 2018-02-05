@@ -37,15 +37,15 @@
 #ifndef GAFFERSCENE_PATHFILTER_H
 #define GAFFERSCENE_PATHFILTER_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferScene/Filter.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferScene
 {
 
 /// \todo Investigate whether or not caching is actually beneficial for this node
-class PathFilter : public Filter
+class GAFFERSCENE_API PathFilter : public Filter
 {
 
 	public :

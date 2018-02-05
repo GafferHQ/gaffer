@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_IMAGESWITCH_H
 #define GAFFERIMAGE_IMAGESWITCH_H
 
-#include "Gaffer/Switch.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/Switch.h"
 
 namespace GafferImage
 {

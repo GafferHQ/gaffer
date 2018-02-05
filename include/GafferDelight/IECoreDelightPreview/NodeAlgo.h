@@ -35,13 +35,14 @@
 #ifndef IECOREDELIGHT_NODEALGO_H
 #define IECOREDELIGHT_NODEALGO_H
 
-#include <vector>
-
-#include "nsi.h"
+#include "IECoreScene/Primitive.h"
 
 #include "IECore/Object.h"
 #include "IECore/VectorTypedData.h"
-#include "IECoreScene/Primitive.h"
+
+#include <vector>
+
+#include <nsi.h>
 
 namespace IECoreDelight
 {

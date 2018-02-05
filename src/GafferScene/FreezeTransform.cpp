@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/DespatchTypedData.h"
-#include "IECoreScene/TransformOp.h"
-#include "IECoreScene/Primitive.h"
+#include "GafferScene/FreezeTransform.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/FreezeTransform.h"
+#include "IECoreScene/Primitive.h"
+#include "IECoreScene/TransformOp.h"
+
+#include "IECore/DespatchTypedData.h"
 
 using namespace std;
 using namespace Imath;

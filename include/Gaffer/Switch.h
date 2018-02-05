@@ -37,10 +37,10 @@
 #ifndef GAFFER_SWITCH_H
 #define GAFFER_SWITCH_H
 
-#include "boost/utility/enable_if.hpp"
-
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
+
+#include "boost/utility/enable_if.hpp"
 
 namespace Gaffer
 {
@@ -61,7 +61,7 @@ namespace Gaffer
 ///   in the GafferTest.SwitchTest
 ///   test cases.
 template<typename BaseType>
-class Switch : public BaseType
+class IECORE_EXPORT Switch : public BaseType
 {
 
 	public :

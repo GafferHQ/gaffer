@@ -37,6 +37,8 @@
 #ifndef GAFFER_DIRTYPROPAGATIONSCOPE_H
 #define GAFFER_DIRTYPROPAGATIONSCOPE_H
 
+#include "Gaffer/Export.h"
+
 #include "boost/noncopyable.hpp"
 
 namespace Gaffer
@@ -56,7 +58,7 @@ namespace Gaffer
 /// // outputs of the node only once, at the exit
 /// // of the scope.
 /// ```
-class DirtyPropagationScope : boost::noncopyable
+class GAFFER_API DirtyPropagationScope : boost::noncopyable
 {
 
 	public :

@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Loop.inl"
-
 #include "GafferImage/ImageLoop.h"
+
+#include "Gaffer/Loop.inl"
 
 namespace Gaffer
 {

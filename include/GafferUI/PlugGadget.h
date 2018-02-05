@@ -54,7 +54,7 @@ namespace GafferUI
 /// GafferUI.PlugWidget to GafferUI.LabelledPlugWidget, to better match
 /// this class (and shorten some rather long names).
 /// Add read-only support in the same way as PlugValueWidget does it.
-class PlugGadget : public ContainerGadget
+class GAFFERUI_API PlugGadget : public ContainerGadget
 {
 
 	public :

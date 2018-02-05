@@ -34,16 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
-
 #include "GafferScene/ResamplePrimitiveVariables.h"
 
-#include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/CurvesPrimitive.h"
-#include "IECoreScene/PointsPrimitive.h"
-#include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/CurvesAlgo.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/MeshAlgo.h"
+#include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/PointsAlgo.h"
+#include "IECoreScene/PointsPrimitive.h"
+
+#include "boost/format.hpp"
 
 using namespace IECore;
 using namespace IECoreScene;

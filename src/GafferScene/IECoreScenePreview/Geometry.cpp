@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MessageHandler.h"
-
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
+
+#include "IECore/MessageHandler.h"
 
 using namespace Imath;
 using namespace IECore;

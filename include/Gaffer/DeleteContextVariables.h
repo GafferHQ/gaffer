@@ -37,15 +37,15 @@
 #ifndef GAFFER_DELETECONTEXTVARIABLES_H
 #define GAFFER_DELETECONTEXTVARIABLES_H
 
-#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/StringPlug.h"
 
 namespace Gaffer
 {
 
 template<typename BaseType>
-class DeleteContextVariables : public ContextProcessor<BaseType>
+class IECORE_EXPORT DeleteContextVariables : public ContextProcessor<BaseType>
 {
 
 	public :

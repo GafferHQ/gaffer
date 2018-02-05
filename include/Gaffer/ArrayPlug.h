@@ -37,9 +37,9 @@
 #ifndef GAFFER_ARRAYPLUG_H
 #define GAFFER_ARRAYPLUG_H
 
-#include "OpenEXR/ImathLimits.h"
-
 #include "Gaffer/Plug.h"
+
+#include "OpenEXR/ImathLimits.h"
 
 namespace Gaffer
 {
@@ -47,7 +47,7 @@ namespace Gaffer
 /// The ArrayPlug maintains a sequence of identically-typed child
 /// plugs, automatically adding new plugs when all existing plugs
 /// have connections.
-class ArrayPlug : public Plug
+class GAFFER_API ArrayPlug : public Plug
 {
 
 	public :

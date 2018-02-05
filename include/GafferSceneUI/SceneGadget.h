@@ -37,15 +37,16 @@
 #ifndef GAFFERSCENEUI_SCENEGADGET_H
 #define GAFFERSCENEUI_SCENEGADGET_H
 
-#include "IECoreGL/State.h"
-
-#include "Gaffer/Context.h"
-
-#include "GafferUI/Gadget.h"
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneUI/TypeIds.h"
+#include "GafferUI/Gadget.h"
+
+#include "Gaffer/Context.h"
+
+#include "IECoreGL/State.h"
 
 namespace GafferSceneUI
 {
@@ -55,7 +56,7 @@ IE_CORE_FORWARDDECLARE( SceneGadget );
 /// \todo Implement IECoreGLPreview::Renderer, and
 /// use an internal InteractiveGLRender node to do
 /// all the hard work.
-class SceneGadget : public GafferUI::Gadget
+class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 {
 
 	public :

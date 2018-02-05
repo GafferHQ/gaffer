@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NullObject.h"
-
 #include "GafferImage/ObjectToImage.h"
+
+#include "IECore/NullObject.h"
 
 using namespace IECore;
 using namespace Gaffer;

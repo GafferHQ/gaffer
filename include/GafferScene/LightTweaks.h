@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_LIGHTTWEAKS_H
 #define GAFFERSCENE_LIGHTTWEAKS_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class LightTweaks : public SceneElementProcessor
+class GAFFERSCENE_API LightTweaks : public SceneElementProcessor
 {
 
 	public :

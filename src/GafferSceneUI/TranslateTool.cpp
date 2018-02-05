@@ -34,20 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferSceneUI/TranslateTool.h"
 
-#include "OpenEXR/ImathMatrixAlgo.h"
-
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/MetadataAlgo.h"
-
-#include "GafferUI/TranslateHandle.h"
+#include "GafferSceneUI/SceneView.h"
 
 #include "GafferScene/SceneAlgo.h"
 
-#include "GafferSceneUI/TranslateTool.h"
-#include "GafferSceneUI/SceneView.h"
+#include "GafferUI/TranslateHandle.h"
+
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/UndoScope.h"
+
+#include "OpenEXR/ImathMatrixAlgo.h"
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

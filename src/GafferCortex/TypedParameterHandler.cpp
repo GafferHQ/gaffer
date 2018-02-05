@@ -35,11 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/TypedParameter.h"
+#include "GafferCortex/TypedParameterHandler.h"
 
 #include "Gaffer/TypedPlug.h"
 
-#include "GafferCortex/TypedParameterHandler.h"
+#include "IECore/TypedParameter.h"
 
 using namespace GafferCortex;
 

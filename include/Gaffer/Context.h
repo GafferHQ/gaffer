@@ -37,14 +37,15 @@
 #ifndef GAFFER_CONTEXT_H
 #define GAFFER_CONTEXT_H
 
-#include "boost/container/flat_map.hpp"
-#include "boost/signals.hpp"
+#include "Gaffer/Export.h"
+#include "Gaffer/StringAlgo.h"
 
-#include "IECore/InternedString.h"
 #include "IECore/Data.h"
+#include "IECore/InternedString.h"
 #include "IECore/MurmurHash.h"
 
-#include "Gaffer/StringAlgo.h"
+#include "boost/container/flat_map.hpp"
+#include "boost/signals.hpp"
 
 namespace Gaffer
 {
@@ -69,7 +70,7 @@ namespace Gaffer
 /// avoid unnecessary recomputation. In the future we may explore having the UI use a separate
 /// container for such variables, or a more general mechanism for variables guaranteed to be
 /// unrelated to computation.
-class Context : public IECore::RefCounted
+class GAFFER_API Context : public IECore::RefCounted
 {
 
 	public :

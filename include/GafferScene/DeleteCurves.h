@@ -50,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class DeleteCurves : public SceneElementProcessor
+class GAFFERSCENE_API DeleteCurves : public SceneElementProcessor
 {
 
 	public :

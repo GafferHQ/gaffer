@@ -37,14 +37,14 @@
 #ifndef GAFFERIMAGE_COLLECTIMAGES_H
 #define GAFFERIMAGE_COLLECTIMAGES_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {
 
-class CollectImages : public ImageProcessor
+class GAFFERIMAGE_API CollectImages : public ImageProcessor
 {
 
 	public :

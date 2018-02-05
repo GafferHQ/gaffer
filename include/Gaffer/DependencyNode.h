@@ -50,7 +50,7 @@ namespace Gaffer
 /// down effect of changes to an input plug to be tracked through the graph. Note however that
 /// the DependencyNode does not define how operations should be performed - see the ComputeNode
 /// derived class for the primary means of achieving that.
-class DependencyNode : public Node
+class GAFFER_API DependencyNode : public Node
 {
 
 	public :

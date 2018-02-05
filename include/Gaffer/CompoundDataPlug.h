@@ -38,10 +38,10 @@
 #ifndef GAFFER_COMPOUNDDATAPLUG_H
 #define GAFFER_COMPOUNDDATAPLUG_H
 
+#include "Gaffer/TypedPlug.h"
+
 #include "IECore/CompoundData.h"
 #include "IECore/CompoundObject.h"
-
-#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {
@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 /// This plug provides an easy means of building CompoundData containing
 /// arbitrary keys and values, where each key and value is represented
 /// by an individual child plug.
-class CompoundDataPlug : public Gaffer::ValuePlug
+class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 {
 
 	public :

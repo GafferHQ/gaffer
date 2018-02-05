@@ -32,12 +32,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <unordered_map>
+#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
+
+#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 #include "IECore/MessageHandler.h"
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include <unordered_map>
 
 using namespace std;
 using namespace IECore;

@@ -36,20 +36,20 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Context.h"
+#include "RenderBinding.h"
 
-#include "GafferBindings/SignalBinding.h"
+#include "GafferScene/InteractiveRender.h"
+#include "GafferScene/OpenGLRender.h"
+#include "GafferScene/Private/IECoreScenePreview/Geometry.h"
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/Render.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
-#include "GafferScene/OpenGLRender.h"
-#include "GafferScene/InteractiveRender.h"
-#include "GafferScene/Render.h"
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
-#include "GafferScene/Private/IECoreScenePreview/Geometry.h"
+#include "GafferBindings/SignalBinding.h"
 
-#include "RenderBinding.h"
+#include "Gaffer/Context.h"
 
 using namespace boost::python;
 

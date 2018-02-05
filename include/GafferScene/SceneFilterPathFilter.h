@@ -37,10 +37,11 @@
 #ifndef GAFFERSCENE_SCENEFILTERPATHFILTER_H
 #define GAFFERSCENE_SCENEFILTERPATHFILTER_H
 
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/Plug.h"
-
-#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
@@ -48,7 +49,7 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( Filter )
 
 /// Filters a ScenePath using a GafferScene::Filter node.
-class SceneFilterPathFilter : public Gaffer::PathFilter
+class GAFFERSCENE_API SceneFilterPathFilter : public Gaffer::PathFilter
 {
 
 	public :

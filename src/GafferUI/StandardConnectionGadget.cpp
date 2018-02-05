@@ -35,24 +35,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "GafferUI/StandardConnectionGadget.h"
 
-#include "OpenEXR/ImathFun.h"
-#include "OpenEXR/ImathBoxAlgo.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/NodeGadget.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/Style.h"
 
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/StandardSet.h"
+#include "Gaffer/Dot.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/Dot.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/UndoScope.h"
 
-#include "GafferUI/StandardConnectionGadget.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/Nodule.h"
-#include "GafferUI/NodeGadget.h"
-#include "GafferUI/GraphGadget.h"
+#include "OpenEXR/ImathBoxAlgo.h"
+#include "OpenEXR/ImathFun.h"
+
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
 using namespace std;
 using namespace Imath;

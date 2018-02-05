@@ -38,10 +38,10 @@
 #ifndef GAFFERSCENE_BRANCHCREATOR_H
 #define GAFFERSCENE_BRANCHCREATOR_H
 
-#include "IECore/CompoundData.h"
-
-#include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
+#include "GafferScene/SceneProcessor.h"
+
+#include "IECore/CompoundData.h"
 
 namespace Gaffer
 {
@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class BranchCreator : public SceneProcessor
+class GAFFERSCENE_API BranchCreator : public SceneProcessor
 {
 
 	public :

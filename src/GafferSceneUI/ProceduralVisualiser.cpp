@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/ExternalProcedural.h"
+#include "GafferSceneUI/ObjectVisualiser.h"
+
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
-
-#include "GafferSceneUI/ObjectVisualiser.h"
+#include "IECoreScene/ExternalProcedural.h"
 
 using namespace std;
 using namespace Imath;

@@ -43,7 +43,7 @@
 namespace GafferScene
 {
 
-class Instancer : public BranchCreator
+class GAFFERSCENE_API Instancer : public BranchCreator
 {
 
 	public :

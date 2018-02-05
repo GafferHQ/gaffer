@@ -36,17 +36,17 @@
 
 #include "boost/python.hpp"
 
+#include "ShaderBinding.h"
+
+#include "GafferScene/OpenGLShader.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
+#include "GafferScene/ShaderSwitch.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
 
 #include "Gaffer/StringPlug.h"
-
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
-#include "GafferScene/ShaderPlug.h"
-#include "GafferScene/OpenGLShader.h"
-
-#include "ShaderBinding.h"
 
 using namespace boost::python;
 

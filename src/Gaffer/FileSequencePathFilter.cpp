@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/filesystem.hpp"
+#include "Gaffer/FileSequencePathFilter.h"
+
+#include "Gaffer/FileSystemPath.h"
 
 #include "IECore/FileSequence.h"
 #include "IECore/FileSequenceFunctions.h"
 
-#include "Gaffer/FileSystemPath.h"
-#include "Gaffer/FileSequencePathFilter.h"
+#include "boost/bind.hpp"
+#include "boost/filesystem.hpp"
 
 using namespace std;
 using namespace IECore;

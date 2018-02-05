@@ -37,15 +37,15 @@
 #ifndef GAFFERIMAGE_DELETECHANNELS_H
 #define GAFFERIMAGE_DELETECHANNELS_H
 
+#include "GafferImage/ImageProcessor.h"
+
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class DeleteChannels : public ImageProcessor
+class GAFFERIMAGE_API DeleteChannels : public ImageProcessor
 {
 
 	public :

@@ -35,12 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "Gaffer/MatchPatternPathFilter.h"
+
+#include "Gaffer/Path.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/MatchPatternPathFilter.h"
-#include "Gaffer/Path.h"
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 

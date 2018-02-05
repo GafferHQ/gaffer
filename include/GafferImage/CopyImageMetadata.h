@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class CopyImageMetadata : public MetadataProcessor
+class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
 {
 
 	public :

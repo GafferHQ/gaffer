@@ -35,12 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferScene/SubTree.h"
+
+#include "GafferScene/SceneAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/SubTree.h"
-#include "GafferScene/SceneAlgo.h"
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace std;
 using namespace IECore;

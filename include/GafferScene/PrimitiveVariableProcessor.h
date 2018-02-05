@@ -38,9 +38,9 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 #define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 
-#include "IECoreScene/Primitive.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "IECoreScene/Primitive.h"
 
 namespace Gaffer
 {
@@ -54,7 +54,7 @@ namespace GafferScene
 
 /// The PrimitiveVariableProcessor base class simplifies the process of manipulating
 /// primitive variables.
-class PrimitiveVariableProcessor : public SceneElementProcessor
+class GAFFERSCENE_API PrimitiveVariableProcessor : public SceneElementProcessor
 {
 
 	public :

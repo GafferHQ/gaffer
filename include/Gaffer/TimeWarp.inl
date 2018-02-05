@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TimeWarp.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/TimeWarp.h"
 #include "Gaffer/ContextProcessor.inl"
 
 namespace Gaffer

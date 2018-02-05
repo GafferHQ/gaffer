@@ -37,8 +37,9 @@
 #ifndef GAFFERSCENE_SCENECONTEXTPROCESSOR_H
 #define GAFFERSCENE_SCENECONTEXTPROCESSOR_H
 
-#include "Gaffer/ContextProcessor.h"
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/ContextProcessor.h"
 
 namespace GafferScene
 {

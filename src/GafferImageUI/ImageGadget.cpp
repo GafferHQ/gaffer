@@ -34,27 +34,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/lexical_cast.hpp"
+#include "GafferImageUI/ImageGadget.h"
 
-#include "IECoreGL/Selector.h"
-#include "IECoreGL/LuminanceTexture.h"
-#include "IECoreGL/IECoreGL.h"
-#include "IECoreGL/ShaderLoader.h"
-#include "IECoreGL/Shader.h"
-#include "IECoreGL/GL.h"
-
-#include "Gaffer/Node.h"
-#include "Gaffer/Context.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImagePlug.h"
 
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageAlgo.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Node.h"
 
-#include "GafferImageUI/ImageGadget.h"
+#include "IECoreGL/GL.h"
+#include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/LuminanceTexture.h"
+#include "IECoreGL/Selector.h"
+#include "IECoreGL/Shader.h"
+#include "IECoreGL/ShaderLoader.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace std;
 using namespace boost;

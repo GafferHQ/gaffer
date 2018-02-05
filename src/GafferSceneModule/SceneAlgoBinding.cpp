@@ -35,17 +35,18 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "SceneAlgoBinding.h"
+
+#include "GafferScene/Filter.h"
+#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "IECoreScene/Camera.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Filter.h"
-
-#include "SceneAlgoBinding.h"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace IECore;

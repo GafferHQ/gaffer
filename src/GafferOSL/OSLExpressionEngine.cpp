@@ -34,25 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/regex.hpp"
-#include "boost/algorithm/string/replace.hpp"
-#include "boost/lexical_cast.hpp"
+#include "GafferOSL/Private/CapturingErrorHandler.h"
 
-#include "OpenImageIO/errorhandler.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Expression.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreImage/OpenImageIOAlgo.h"
 
 #include "OSL/oslcomp.h"
 #include "OSL/oslexec.h"
 
-#include "IECoreImage/OpenImageIOAlgo.h"
+#include "OpenImageIO/errorhandler.h"
 
-#include "Gaffer/Expression.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/StringAlgo.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferOSL/Private/CapturingErrorHandler.h"
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/regex.hpp"
 
 using namespace std;
 using namespace boost;

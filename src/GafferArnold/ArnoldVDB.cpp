@@ -34,17 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <set>
+#include "GafferArnold/ArnoldVDB.h"
+
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreScene/ExternalProcedural.h"
+
+#include "IECore/CompoundData.h"
 
 #include "openvdb/openvdb.h"
 
-#include "IECore/CompoundData.h"
-#include "IECoreScene/ExternalProcedural.h"
-
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferArnold/ArnoldVDB.h"
+#include <set>
 
 using namespace Imath;
 using namespace IECore;

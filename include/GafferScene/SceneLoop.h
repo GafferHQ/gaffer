@@ -37,8 +37,9 @@
 #ifndef GAFFERSCENE_SCENELOOP_H
 #define GAFFERSCENE_SCENELOOP_H
 
-#include "Gaffer/Loop.h"
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/Loop.h"
 
 namespace GafferScene
 {

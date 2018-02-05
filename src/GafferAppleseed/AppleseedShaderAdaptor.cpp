@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/concurrent_hash_map.h"
+#include "GafferAppleseed/AppleseedShaderAdaptor.h"
 
-#include "OSL/oslquery.h"
-
-#include "IECoreScene/Shader.h"
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneProcessor.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/SceneProcessor.h"
-#include "GafferScene/RendererAlgo.h"
+#include "IECoreScene/Shader.h"
 
-#include "GafferAppleseed/AppleseedShaderAdaptor.h"
+#include "OSL/oslquery.h"
+
+#include "tbb/concurrent_hash_map.h"
 
 using namespace std;
 using namespace OSL;

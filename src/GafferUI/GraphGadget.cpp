@@ -35,34 +35,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "GafferUI/GraphGadget.h"
 
-#include "OpenEXR/ImathPlane.h"
+#include "GafferUI/BackdropNodeGadget.h"
+#include "GafferUI/ButtonEvent.h"
+#include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/NodeGadget.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/Pointer.h"
+#include "GafferUI/StandardGraphLayout.h"
+#include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
-#include "IECore/NullObject.h"
-#include "IECore/BoxOps.h"
-
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/StandardSet.h"
 #include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/RecursiveChildIterator.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/RecursiveChildIterator.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+#include "Gaffer/TypedPlug.h"
 
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/NodeGadget.h"
-#include "GafferUI/ButtonEvent.h"
-#include "GafferUI/Nodule.h"
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/ViewportGadget.h"
-#include "GafferUI/StandardGraphLayout.h"
-#include "GafferUI/Pointer.h"
-#include "GafferUI/BackdropNodeGadget.h"
+#include "IECore/BoxOps.h"
+#include "IECore/Export.h"
+#include "IECore/NullObject.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathPlane.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
 using namespace GafferUI;
 using namespace Imath;

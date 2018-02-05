@@ -37,11 +37,13 @@
 #ifndef GAFFER_PROCESS_H
 #define GAFFER_PROCESS_H
 
-#include "tbb/enumerable_thread_specific.h"
+#include "Gaffer/Export.h"
+
+#include "IECore/InternedString.h"
 
 #include "boost/noncopyable.hpp"
 
-#include "IECore/InternedString.h"
+#include "tbb/enumerable_thread_specific.h"
 
 namespace Gaffer
 {
@@ -57,7 +59,7 @@ class Monitor;
 /// considered to be entirely an internal implementation
 /// detail - they are exposed publicly only so they can
 /// be used by the Monitor classes.
-class Process : public boost::noncopyable
+class GAFFER_API Process : public boost::noncopyable
 {
 
 	public :

@@ -32,23 +32,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/iostreams/categories.hpp"
-#include "boost/iostreams/stream.hpp"
-
-#include "openvdb/openvdb.h"
-#include "openvdb/io/Stream.h"
-
-#include "IECore/SimpleTypedData.h"
-#include "IECoreScene/Renderer.h"
-#include "IECore/CompoundData.h"
-#include "IECore/MessageHandler.h"
-#include "IECore/Exception.h"
-
-#include "IECoreArnold/ParameterAlgo.h"
+#include "GafferVDB/VDBObject.h"
 
 #include "IECoreArnold/NodeAlgo.h"
+#include "IECoreArnold/ParameterAlgo.h"
 
-#include "GafferVDB/VDBObject.h"
+#include "IECoreScene/Renderer.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/Exception.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "openvdb/io/Stream.h"
+#include "openvdb/openvdb.h"
+
+#include "boost/iostreams/categories.hpp"
+#include "boost/iostreams/stream.hpp"
 
 using namespace std;
 using namespace Imath;

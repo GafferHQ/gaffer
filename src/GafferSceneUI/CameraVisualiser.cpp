@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/AngleConversion.h"
-#include "IECoreScene/Camera.h"
+#include "GafferSceneUI/ObjectVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
-#include "GafferSceneUI/ObjectVisualiser.h"
+#include "IECoreScene/Camera.h"
+
+#include "IECore/AngleConversion.h"
+#include "IECore/SimpleTypedData.h"
 
 using namespace std;
 using namespace Imath;

@@ -36,16 +36,16 @@
 
 #include "boost/python.hpp"
 
+#include "GLWidgetBinding.h"
+
+#include "IECore/Exception.h"
+#include "IECore/MessageHandler.h"
+
 #include "QtOpenGL/QGLWidget"
 
 #if defined( __linux__ )
 #include "GL/glx.h" // Must come after Qt!
 #endif
-
-#include "IECore/MessageHandler.h"
-#include "IECore/Exception.h"
-
-#include "GLWidgetBinding.h"
 
 using namespace boost::python;
 

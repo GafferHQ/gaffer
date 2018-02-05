@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferScene/SceneFilterPathFilter.h"
+
+#include "GafferScene/Filter.h"
+#include "GafferScene/ScenePath.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/SceneFilterPathFilter.h"
-#include "GafferScene/ScenePath.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/ScenePlug.h"
+#include "boost/bind.hpp"
 
 using namespace GafferScene;
 

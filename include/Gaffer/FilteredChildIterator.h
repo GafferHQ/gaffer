@@ -37,9 +37,9 @@
 #ifndef GAFFER_FILTEREDCHILDITERATOR_H
 #define GAFFER_FILTEREDCHILDITERATOR_H
 
-#include "boost/iterator/filter_iterator.hpp"
-
 #include "Gaffer/GraphComponent.h"
+
+#include "boost/iterator/filter_iterator.hpp"
 
 namespace Gaffer
 {

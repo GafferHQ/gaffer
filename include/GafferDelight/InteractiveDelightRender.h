@@ -37,14 +37,15 @@
 #ifndef GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
 #define GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
 
-#include "GafferScene/InteractiveRender.h"
-
+#include "GafferDelight/Export.h"
 #include "GafferDelight/TypeIds.h"
+
+#include "GafferScene/InteractiveRender.h"
 
 namespace GafferDelight
 {
 
-class InteractiveDelightRender : public GafferScene::InteractiveRender
+class GAFFERDELIGHT_API InteractiveDelightRender : public GafferScene::InteractiveRender
 {
 
 	public :

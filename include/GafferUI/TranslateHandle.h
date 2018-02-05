@@ -43,7 +43,7 @@
 namespace GafferUI
 {
 
-class TranslateHandle : public Handle
+class GAFFERUI_API TranslateHandle : public Handle
 {
 
 	public :

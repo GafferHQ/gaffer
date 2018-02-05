@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RefCountedBinding.h"
+#include "PlugAlgoBinding.h"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugAlgo.h"
 
-#include "PlugAlgoBinding.h"
+#include "IECorePython/RefCountedBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;

@@ -43,7 +43,7 @@
 namespace Gaffer
 {
 
-class TransformPlug : public ValuePlug
+class GAFFER_API TransformPlug : public ValuePlug
 {
 
 	public :

@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "GafferUI/Tool.h"
+
 #include "GafferUI/View.h"
+
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 using namespace GafferUI;

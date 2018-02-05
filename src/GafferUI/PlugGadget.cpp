@@ -34,13 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "GafferUI/PlugGadget.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "GafferUI/PlugGadget.h"
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
 using namespace GafferUI;
 using namespace Gaffer;

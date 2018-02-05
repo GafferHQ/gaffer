@@ -37,11 +37,11 @@
 #ifndef GAFFERIMAGE_WARP_H
 #define GAFFERIMAGE_WARP_H
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
 {
@@ -57,7 +57,7 @@ namespace GafferImage
 ///   pixel positions from output pixel positions.
 /// - Implement hashEngine() and computeEngine() to create
 ///   and return the Engine subclass.
-class Warp : public ImageProcessor
+class GAFFERIMAGE_API Warp : public ImageProcessor
 {
 	public :
 

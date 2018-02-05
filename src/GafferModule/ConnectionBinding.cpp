@@ -36,9 +36,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/signals.hpp"
 
 #include "ConnectionBinding.h"
+
+#include "boost/signals.hpp"
 
 using namespace boost::signals;
 using namespace boost::python;

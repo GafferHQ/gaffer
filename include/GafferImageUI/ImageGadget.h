@@ -37,21 +37,24 @@
 #ifndef GAFFERIMAGEUI_IMAGEGADGET_H
 #define GAFFERIMAGEUI_IMAGEGADGET_H
 
-#include "tbb/concurrent_unordered_map.h"
+#include "GafferImageUI/Export.h"
+#include "GafferImageUI/TypeIds.h"
+
+#include "GafferImage/Format.h"
+
+#include "GafferUI/Gadget.h"
 
 #include "IECore/MurmurHash.h"
 #include "IECore/VectorTypedData.h"
 
-#include "GafferUI/Gadget.h"
+#include "tbb/concurrent_unordered_map.h"
 
-#include "GafferImage/Format.h"
-
-#include "GafferImageUI/TypeIds.h"
+#include "boost/array.hpp"
 
 namespace IECoreGL
 {
 
-IE_CORE_FORWARDDECLARE( LuminanceTexture )
+IE_CORE_FORWARDDECLARE( Texture )
 
 } // namespace IECoreGL
 
@@ -73,7 +76,7 @@ IE_CORE_FORWARDDECLARE( ImagePlug )
 namespace GafferImageUI
 {
 
-class ImageGadget : public GafferUI::Gadget
+class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 {
 
 	public :

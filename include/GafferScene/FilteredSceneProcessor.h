@@ -38,16 +38,16 @@
 #ifndef GAFFERSCENE_FILTEREDSCENEPROCESSOR_H
 #define GAFFERSCENE_FILTEREDSCENEPROCESSOR_H
 
-#include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/FilterPlug.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
 /// The FilteredSceneProcessor provides a base class for limiting the processing of scenes
 /// to certain locations using a Filter node.
-class FilteredSceneProcessor : public SceneProcessor
+class GAFFERSCENE_API FilteredSceneProcessor : public SceneProcessor
 {
 
 	public :

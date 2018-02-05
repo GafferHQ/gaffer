@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextVariables.inl"
 #include "GafferImage/ImageContextVariables.h"
+
+#include "Gaffer/ContextVariables.inl"
 
 using namespace GafferImage;
 

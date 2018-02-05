@@ -34,13 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenEXR/ImathRandom.h"
-
-#include "IECoreScene/Shader.h"
+#include "GafferScene/AttributeVisualiser.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/AttributeVisualiser.h"
+#include "IECoreScene/Shader.h"
+
+#include "OpenEXR/ImathRandom.h"
 
 using namespace Imath;
 using namespace IECore;

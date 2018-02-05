@@ -34,11 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-#include "GafferDispatchBindings/DispatcherBinding.h"
+#include "boost/python.hpp"
+
+#include "DispatcherBinding.h"
+#include "TaskNodeBinding.h"
 
 using namespace boost::python;
-using namespace GafferDispatchBindings;
+using namespace GafferDispatchModule;
 
 BOOST_PYTHON_MODULE( _GafferDispatch )
 {

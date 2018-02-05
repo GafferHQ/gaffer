@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/StringAlgo.h"
-
 #include "GafferScene/Set.h"
+
 #include "GafferScene/FilterResults.h"
+
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace std;
 using namespace IECore;

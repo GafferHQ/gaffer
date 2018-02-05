@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferArnold/ArnoldDisplacement.h"
+
 #include "GafferArnold/ArnoldShader.h"
 
 using namespace IECore;

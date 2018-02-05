@@ -34,20 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
-#include "IECoreGL/Texture.h"
-#include "IECoreGL/Selector.h"
-
-#include "Gaffer/Metadata.h"
-#include "Gaffer/ArrayPlug.h"
-
-#include "GafferUI/Nodule.h"
-#include "GafferUI/ImageGadget.h"
 #include "GafferUI/PlugAdder.h"
-#include "GafferUI/Style.h"
+
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
+#include "GafferUI/ImageGadget.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/Style.h"
+
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Metadata.h"
+
+#include "IECoreGL/Selector.h"
+#include "IECoreGL/Texture.h"
+
+#include "boost/bind.hpp"
 
 using namespace Imath;
 using namespace IECore;

@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class VectorWarp : public Warp
+class GAFFERIMAGE_API VectorWarp : public Warp
 {
 	public :
 

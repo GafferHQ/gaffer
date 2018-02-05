@@ -38,8 +38,14 @@
 #define GAFFERIMAGE_FILTERALGO_H
 
 #include "GafferImage/Sampler.h"
-#include "OpenEXR/ImathVec.h"
+
+#include "IECore/Export.h"
+
 #include "OpenImageIO/filter.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace GafferImage
 {
@@ -47,9 +53,9 @@ namespace GafferImage
 namespace FilterAlgo
 {
 
-const std::vector<std::string> &filterNames();
+GAFFERIMAGE_API const std::vector<std::string> &filterNames();
 
-const OIIO::Filter2D* acquireFilter( const std::string &name );
+GAFFERIMAGE_API const OIIO::Filter2D* acquireFilter( const std::string &name );
 
 
 // Find the region covered by a filter with a given width, given a position and axis-aligned derivatives
@@ -59,14 +65,14 @@ inline Imath::Box2f filterSupport( const Imath::V2f &p, float dx, float dy, floa
 // Filter over a rectangle shaped region of the image defined by a center point and two axis-aligned derivatives.
 // The sampler must have been initialized to cover all pixels with centers lying with the support of the filter,
 // filterSupport above may be used to compute an appropriate bound.
-float sampleBox( Sampler &sampler, const Imath::V2f &p, float dx, float dy, const OIIO::Filter2D *filter, std::vector<float> &scratchMemory );
+GAFFERIMAGE_API float sampleBox( Sampler &sampler, const Imath::V2f &p, float dx, float dy, const OIIO::Filter2D *filter, std::vector<float> &scratchMemory );
 
 // Sample over a parallelogram shaped region defined by a center point and two derivative directions.
 // The sampler must have been initialized to cover all pixels with centers lying with the support of the filter
 // I haven't actually exposed anything that would make this easy to compute at the moment, because it doesn't
 // seem like the cost of this method is worth ever using it.  Currently it is only used in FilterAlgoTest,
 // where it provides a nice visual comparison to the filter shapes you get from sampleBox
-float sampleParallelogram( Sampler &sampler, const Imath::V2f &p, const Imath::V2f &dpdx, const Imath::V2f &dpdy, const OIIO::Filter2D *filter );
+GAFFERIMAGE_API float sampleParallelogram( Sampler &sampler, const Imath::V2f &p, const Imath::V2f &dpdx, const Imath::V2f &dpdy, const OIIO::Filter2D *filter );
 
 // If you have a point and derivatives defining a region to filter over, but you want to use sampleBox
 // instead of sampleParallelogram for performance reasons, you can use this function to get axis-aligned

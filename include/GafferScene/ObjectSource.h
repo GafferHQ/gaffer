@@ -38,9 +38,9 @@
 #ifndef GAFFERSCENE_OBJECTSOURCE_H
 #define GAFFERSCENE_OBJECTSOURCE_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferScene/SceneNode.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( TransformPlug )
 namespace GafferScene
 {
 
-class ObjectSource : public SceneNode
+class GAFFERSCENE_API ObjectSource : public SceneNode
 {
 
 	public :

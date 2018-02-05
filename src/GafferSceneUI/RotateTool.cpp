@@ -34,20 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferSceneUI/RotateTool.h"
 
-#include "OpenEXR/ImathEuler.h"
-
-#include "IECore/AngleConversion.h"
-
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/MetadataAlgo.h"
+#include "GafferSceneUI/SceneView.h"
 
 #include "GafferUI/RotateHandle.h"
 
-#include "GafferSceneUI/RotateTool.h"
-#include "GafferSceneUI/SceneView.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/UndoScope.h"
+
+#include "IECore/AngleConversion.h"
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathEuler.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

@@ -51,7 +51,7 @@ namespace GafferCortex
 
 IE_CORE_FORWARDDECLARE( ParameterHandler )
 
-class OpHolder : public ParameterisedHolderComputeNode
+class GAFFERCORTEX_API OpHolder : public ParameterisedHolderComputeNode
 {
 
 	public :

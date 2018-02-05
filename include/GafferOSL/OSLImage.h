@@ -38,16 +38,17 @@
 #ifndef GAFFEROSL_OSLIMAGE_H
 #define GAFFEROSL_OSLIMAGE_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferOSL/Export.h"
+#include "GafferOSL/TypeIds.h"
 
 #include "GafferScene/ShaderPlug.h"
 
-#include "GafferOSL/TypeIds.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferOSL
 {
 
-class OSLImage : public GafferImage::ImageProcessor
+class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 {
 
 	public :

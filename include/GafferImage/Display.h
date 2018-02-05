@@ -38,20 +38,20 @@
 #ifndef GAFFERIMAGE_DISPLAY_H
 #define GAFFERIMAGE_DISPLAY_H
 
-#include <functional>
-
-#include "IECoreImage/DisplayDriver.h"
+#include "GafferImage/ImageNode.h"
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferImage/ImageNode.h"
+#include "IECoreImage/DisplayDriver.h"
+
+#include <functional>
 
 namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-class Display : public ImageNode
+class GAFFERIMAGE_API Display : public ImageNode
 {
 
 	public :

@@ -37,19 +37,22 @@
 #ifndef GAFFERSCENEUI_CROPWINDOWTOOL_H
 #define GAFFERSCENEUI_CROPWINDOWTOOL_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
-#include "GafferUI/Tool.h"
-#include "GafferUI/DragDropEvent.h"
-
+#include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
+
+#include "GafferScene/ScenePlug.h"
+
+#include "GafferUI/DragDropEvent.h"
+#include "GafferUI/Tool.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferSceneUI
 {
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class CropWindowTool : public GafferUI::Tool
+class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 {
 
 	public :

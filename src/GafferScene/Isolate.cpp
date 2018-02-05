@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferScene/Isolate.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Isolate.h"
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace std;
 using namespace IECore;

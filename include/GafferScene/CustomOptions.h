@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_CUSTOMOPTIONS_H
 #define GAFFERSCENE_CUSTOMOPTIONS_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferScene/Options.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class CustomOptions : public GafferScene::Options
+class GAFFERSCENE_API CustomOptions : public GafferScene::Options
 {
 
 	public :

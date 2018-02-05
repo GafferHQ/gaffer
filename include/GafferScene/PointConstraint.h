@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class PointConstraint : public Constraint
+class GAFFERSCENE_API PointConstraint : public Constraint
 {
 
 	public :

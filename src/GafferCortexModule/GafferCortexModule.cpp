@@ -35,11 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "ParameterisedHolderBinding.h"
-#include "ParameterHandlerBinding.h"
 #include "CompoundParameterHandlerBinding.h"
-#include "OpHolderBinding.h"
 #include "ExecutableOpHolderBinding.h"
+#include "OpHolderBinding.h"
+#include "ParameterHandlerBinding.h"
+#include "ParameterisedHolderBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

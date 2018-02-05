@@ -34,20 +34,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/Group.h"
-#include "IECoreGL/ToGLMeshConverter.h"
-#include "IECoreGL/ShaderStateComponent.h"
-#include "IECoreGL/ShaderLoader.h"
-#include "IECoreGL/TextureLoader.h"
-#include "IECore/ObjectVector.h"
-#include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/Shader.h"
-#include "IECoreGL/Renderable.h"
+#include "GafferSceneUI/LightFilterVisualiser.h"
+#include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "Gaffer/Metadata.h"
-#include "GafferSceneUI/StandardLightVisualiser.h"
-#include "GafferSceneUI/LightFilterVisualiser.h"
+
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/Renderable.h"
+#include "IECoreGL/ShaderLoader.h"
+#include "IECoreGL/ShaderStateComponent.h"
+#include "IECoreGL/TextureLoader.h"
+#include "IECoreGL/ToGLMeshConverter.h"
+
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/Shader.h"
+
+#include "IECore/ObjectVector.h"
 
 using namespace Imath;
 using namespace IECore;

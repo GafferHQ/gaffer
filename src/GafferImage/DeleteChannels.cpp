@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringAlgo.h"
-
 #include "GafferImage/DeleteChannels.h"
+
+#include "Gaffer/StringAlgo.h"
 
 using namespace std;
 using namespace IECore;

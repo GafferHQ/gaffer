@@ -43,7 +43,7 @@
 namespace GafferScene
 {
 
-class Seeds : public BranchCreator
+class GAFFERSCENE_API Seeds : public BranchCreator
 {
 
 	public :

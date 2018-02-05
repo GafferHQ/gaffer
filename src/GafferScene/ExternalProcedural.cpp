@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/ExternalProcedural.h"
+#include "GafferScene/ExternalProcedural.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/ExternalProcedural.h"
+#include "IECoreScene/ExternalProcedural.h"
 
 using namespace Imath;
 using namespace Gaffer;

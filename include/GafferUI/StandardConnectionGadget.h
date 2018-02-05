@@ -37,9 +37,9 @@
 #ifndef GAFFERUI_STANDARDCONNECTIONGADGET_H
 #define GAFFERUI_STANDARDCONNECTIONGADGET_H
 
-#include "Gaffer/StringAlgo.h"
-
 #include "GafferUI/ConnectionGadget.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace GafferUI
 {
@@ -47,7 +47,7 @@ namespace GafferUI
 /// The standard implementation of the abstract ConnectionGadget base
 /// class. Connections endpoints may be dragged + dropped, and the tooltip
 /// displays the name of the source and destination plugs.
-class StandardConnectionGadget : public ConnectionGadget
+class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 {
 
 	public :

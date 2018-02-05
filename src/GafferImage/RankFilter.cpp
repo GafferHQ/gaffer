@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
-#include <climits>
+#include "GafferImage/RankFilter.h"
+
+#include "GafferImage/Sampler.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferImage/RankFilter.h"
-#include "GafferImage/Sampler.h"
+#include <algorithm>
+#include <climits>
 
 using namespace std;
 using namespace Imath;

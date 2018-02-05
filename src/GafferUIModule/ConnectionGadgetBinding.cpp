@@ -37,15 +37,15 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Node.h"
-
-#include "GafferUI/Nodule.h"
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/StandardConnectionGadget.h"
+#include "ConnectionGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "ConnectionGadgetBinding.h"
+#include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/StandardConnectionGadget.h"
+
+#include "Gaffer/Node.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;

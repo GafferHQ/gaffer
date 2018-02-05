@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#ifndef GAFFERDISPATCHMODULE_TASKNODEBINDING_H
+#define GAFFERDISPATCHMODULE_TASKNODEBINDING_H
 
-#include "Gaffer/Node.h"
-
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImageTest/ProcessTiles.h"
-
-using namespace std;
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferImage;
-
-namespace
+namespace GafferDispatchModule
 {
 
-struct TilesEvaluateFunctor
-{
-	bool operator()( const GafferImage::ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
-	{
-		imagePlug->channelDataPlug()->getValue();
-		return true;
-	}
-};
+void bindTaskNode();
 
-void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )
-{
-	if( dirtiedPlug == image.get() )
-	{
-		GafferImageTest::processTiles( image.get() );
-	}
-}
+} // namespace GafferDispatchModule
 
-} // namespace
-
-namespace GafferImageTest
-{
-
-void processTiles( const GafferImage::ImagePlug *imagePlug )
-{
-	TilesEvaluateFunctor f;
-	ImageAlgo::parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
-}
-
-boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
-{
-	const Node *node = image->node();
-	if( !node )
-	{
-		throw IECore::Exception( "Plug does not belong to a node." );
-	}
-
-	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &processTilesOnDirty, ::_1, image ) );
-}
-
-} // namespace GafferImageTest
+#endif // GAFFERDISPATCHMODULE_TASKNODEBINDING_H

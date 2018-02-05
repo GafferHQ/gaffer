@@ -36,18 +36,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/format.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/Serialisation.h"
+#include "ParameterisedHolderBinding.h"
+
+#include "GafferCortex/CompoundParameterHandler.h"
+#include "GafferCortex/ParameterisedHolder.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
-#include "GafferCortex/ParameterisedHolder.h"
-#include "GafferCortex/CompoundParameterHandler.h"
+#include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/Serialisation.h"
 
-#include "ParameterisedHolderBinding.h"
+#include "boost/format.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

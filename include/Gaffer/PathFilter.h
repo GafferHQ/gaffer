@@ -38,12 +38,13 @@
 #ifndef GAFFER_PATHFILTER_H
 #define GAFFER_PATHFILTER_H
 
-#include "boost/signals.hpp"
-
-#include "IECore/RunTimeTyped.h"
-#include "IECore/CompoundData.h"
-
+#include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/RunTimeTyped.h"
+
+#include "boost/signals.hpp"
 
 namespace Gaffer
 {
@@ -55,7 +56,7 @@ IE_CORE_FORWARDDECLARE( PathFilter )
 /// of Path::children() methods to provide a masked view of
 /// the hierarchy the Path navigates. Filters are applied
 /// to a path using the Path::setFilter() method.
-class PathFilter : public IECore::RunTimeTyped
+class GAFFER_API PathFilter : public IECore::RunTimeTyped
 {
 
 	public :

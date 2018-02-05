@@ -38,14 +38,14 @@
 #ifndef GAFFERUI_NODULELAYOUT_H
 #define GAFFERUI_NODULELAYOUT_H
 
-#include <functional>
-
-#include "boost/variant.hpp"
+#include "GafferUI/Gadget.h"
+#include "GafferUI/GraphGadget.h"
 
 #include "Gaffer/StringAlgo.h"
 
-#include "GafferUI/Gadget.h"
-#include "GafferUI/GraphGadget.h"
+#include "boost/variant.hpp"
+
+#include <functional>
 
 namespace Gaffer
 {
@@ -75,7 +75,7 @@ IE_CORE_FORWARDDECLARE( Nodule )
 /// - noduleLayout:section:<sectionName>:direction, string, "increasing" or "decreasing"
 /// - noduleLayout:customGadget:<name>:gadgetType, string
 /// - noduleLayout:customGadget:<name>:*, as for child plug metadata above
-class NoduleLayout : public Gadget
+class GAFFERUI_API NoduleLayout : public Gadget
 {
 
 	public :

@@ -35,16 +35,17 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "IOBinding.h"
 
-#include "GafferImage/OpenImageIOReader.h"
+#include "GafferImage/Constant.h"
 #include "GafferImage/ImageReader.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ObjectToImage.h"
-#include "GafferImage/Constant.h"
+#include "GafferImage/OpenImageIOReader.h"
 
-#include "IOBinding.h"
+#include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace std;
 using namespace boost::python;

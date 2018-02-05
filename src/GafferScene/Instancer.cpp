@@ -35,18 +35,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/parallel_reduce.h"
-#include "tbb/blocked_range.h"
-
-#include "boost/lexical_cast.hpp"
-
-#include "IECore/VectorTypedData.h"
-#include "IECoreScene/Primitive.h"
+#include "GafferScene/Instancer.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Instancer.h"
+#include "IECoreScene/Primitive.h"
+
+#include "IECore/VectorTypedData.h"
+
+#include "boost/lexical_cast.hpp"
+
+#include "tbb/blocked_range.h"
+#include "tbb/parallel_reduce.h"
 
 using namespace std;
 using namespace tbb;

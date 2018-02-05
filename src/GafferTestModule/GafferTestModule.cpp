@@ -35,17 +35,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/ScopedGILRelease.h"
-
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
+#include "GafferTest/ComputeNodeTest.h"
+#include "GafferTest/ContextTest.h"
+#include "GafferTest/DownstreamIteratorTest.h"
 #include "GafferTest/FilteredRecursiveChildIteratorTest.h"
 #include "GafferTest/MetadataTest.h"
-#include "GafferTest/ContextTest.h"
-#include "GafferTest/ComputeNodeTest.h"
-#include "GafferTest/DownstreamIteratorTest.h"
+#include "GafferTest/MultiplyNode.h"
+#include "GafferTest/RecursiveChildIteratorTest.h"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace GafferTest;

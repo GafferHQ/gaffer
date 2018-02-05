@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class DeletePrimitiveVariables : public PrimitiveVariableProcessor
+class GAFFERSCENE_API DeletePrimitiveVariables : public PrimitiveVariableProcessor
 {
 
 	public :

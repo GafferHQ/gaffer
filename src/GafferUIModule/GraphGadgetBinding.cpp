@@ -37,19 +37,19 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Node.h"
-
-#include "GafferBindings/SignalBinding.h"
-
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/NodeGadget.h"
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/GraphLayout.h"
-#include "GafferUI/StandardGraphLayout.h"
+#include "GraphGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "GraphGadgetBinding.h"
+#include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/GraphLayout.h"
+#include "GafferUI/NodeGadget.h"
+#include "GafferUI/StandardGraphLayout.h"
+
+#include "GafferBindings/SignalBinding.h"
+
+#include "Gaffer/Node.h"
 
 using namespace boost::python;
 using namespace IECorePython;

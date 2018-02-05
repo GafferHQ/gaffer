@@ -38,8 +38,9 @@
 #ifndef GAFFERBINDINGS_VALUEPLUGBINDING_H
 #define GAFFERBINDINGS_VALUEPLUGBINDING_H
 
-#include "Gaffer/ValuePlug.h"
 #include "GafferBindings/PlugBinding.h"
+
+#include "Gaffer/ValuePlug.h"
 
 namespace GafferBindings
 {
@@ -51,7 +52,7 @@ namespace GafferBindings
 /// :	Replaces the default value with the current value for plugs
 ///     of the parent node. This is used when exporting the contents
 ///     of a Box node.
-class ValuePlugSerialiser : public PlugSerialiser
+class GAFFERBINDINGS_API ValuePlugSerialiser : public PlugSerialiser
 {
 
 	public :

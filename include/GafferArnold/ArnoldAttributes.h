@@ -37,14 +37,15 @@
 #ifndef GAFFERARNOLD_ARNOLDATTRIBUTES_H
 #define GAFFERARNOLD_ARNOLDATTRIBUTES_H
 
-#include "GafferScene/Attributes.h"
-
+#include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Attributes.h"
 
 namespace GafferArnold
 {
 
-class ArnoldAttributes : public GafferScene::Attributes
+class GAFFERARNOLD_API ArnoldAttributes : public GafferScene::Attributes
 {
 
 	public :

@@ -37,14 +37,14 @@
 #ifndef GAFFERIMAGE_COPYCHANNELS_H
 #define GAFFERIMAGE_COPYCHANNELS_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {
 
-class CopyChannels : public ImageProcessor
+class GAFFERIMAGE_API CopyChannels : public ImageProcessor
 {
 
 	public :

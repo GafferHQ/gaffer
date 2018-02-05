@@ -34,15 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MessageHandler.h"
-
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+
+#include "IECore/MessageHandler.h"
 
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreScenePreview;
 
-IE_CORE_DEFINEABSTRACTOBJECTTYPEDESCRIPTION( Procedural );
+IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Procedural );
 
 Procedural::Procedural()
 {

@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/ClippingPlane.h"
+#include "GafferSceneUI/ObjectVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
-#include "GafferSceneUI/ObjectVisualiser.h"
+#include "IECoreScene/ClippingPlane.h"
 
 using namespace std;
 using namespace Imath;

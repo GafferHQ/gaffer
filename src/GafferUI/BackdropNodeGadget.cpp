@@ -34,23 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string.hpp"
+#include "GafferUI/BackdropNodeGadget.h"
 
-#include "IECore/NullObject.h"
-#include "IECore/BoxOps.h"
-
-#include "IECoreGL/Selector.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/Pointer.h"
+#include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferUI/BackdropNodeGadget.h"
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/Pointer.h"
-#include "GafferUI/ViewportGadget.h"
+#include "IECoreGL/Selector.h"
+
+#include "IECore/BoxOps.h"
+#include "IECore/NullObject.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/bind.hpp"
 
 using namespace Imath;
 using namespace IECore;

@@ -37,10 +37,11 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferBindings/PlugBinding.h"
+
 #include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;

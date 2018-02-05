@@ -38,11 +38,11 @@
 
 #include "IECore/RunTimeTyped.h"
 
+#include "WidgetSignalBinding.h"
+
 #include "GafferUI/EventSignalCombiner.h"
 
 #include "GafferBindings/SignalBinding.h"
-
-#include "WidgetSignalBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

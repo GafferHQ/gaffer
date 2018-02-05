@@ -35,9 +35,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/ContextMonitor.h"
-#include "Gaffer/Process.h"
-#include "Gaffer/Plug.h"
+
 #include "Gaffer/Context.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/Process.h"
 
 using namespace std;
 using namespace IECore;

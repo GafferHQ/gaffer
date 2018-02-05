@@ -35,14 +35,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/lexical_cast.hpp"
 
-#include "Gaffer/Animation.h"
+#include "AnimationBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ValuePlugBinding.h"
 
-#include "AnimationBinding.h"
+#include "Gaffer/Animation.h"
+
+#include "boost/lexical_cast.hpp"
 
 using namespace boost::python;
 using namespace IECorePython;

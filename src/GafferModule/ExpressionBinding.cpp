@@ -36,18 +36,19 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/MessageHandler.h"
-#include "IECorePython/RefCountedBinding.h"
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/ExceptionAlgo.h"
-
-#include "Gaffer/Expression.h"
-#include "Gaffer/StringPlug.h"
+#include "ExpressionBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
-#include "ExpressionBinding.h"
+#include "Gaffer/Expression.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/RefCountedBinding.h"
+#include "IECorePython/ScopedGILLock.h"
+
+#include "IECore/MessageHandler.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

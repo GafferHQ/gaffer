@@ -36,10 +36,11 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/Dot.h"
+#include "DotBinding.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "DotBinding.h"
+#include "Gaffer/Dot.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

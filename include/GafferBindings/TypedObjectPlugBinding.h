@@ -37,9 +37,9 @@
 #ifndef GAFFERBINDINGS_TYPEDOBJECTPLUGBINDING_H
 #define GAFFERBINDINGS_TYPEDOBJECTPLUGBINDING_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferBindings/PlugBinding.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferBindings
 {

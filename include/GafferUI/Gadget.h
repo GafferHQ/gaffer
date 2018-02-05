@@ -38,21 +38,25 @@
 #ifndef GAFFERUI_GADGET_H
 #define GAFFERUI_GADGET_H
 
-#include <functional>
+#include "GafferUI/ButtonEvent.h"
+#include "GafferUI/DragDropEvent.h"
+#include "GafferUI/EventSignalCombiner.h"
+#include "GafferUI/KeyEvent.h"
+#include "GafferUI/TypeIds.h"
 
-#include "OpenEXR/ImathBox.h"
+#include "Gaffer/FilteredChildIterator.h"
+#include "Gaffer/FilteredRecursiveChildIterator.h"
+#include "Gaffer/GraphComponent.h"
 
 #include "IECoreGL/GL.h"
 
-#include "Gaffer/GraphComponent.h"
-#include "Gaffer/FilteredChildIterator.h"
-#include "Gaffer/FilteredRecursiveChildIterator.h"
+#include "IECore/Export.h"
 
-#include "GafferUI/TypeIds.h"
-#include "GafferUI/ButtonEvent.h"
-#include "GafferUI/KeyEvent.h"
-#include "GafferUI/EventSignalCombiner.h"
-#include "GafferUI/DragDropEvent.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include <functional>
 
 namespace GafferUIModule
 {
@@ -71,7 +75,7 @@ IE_CORE_FORWARDDECLARE( Style );
 /// Gadgets are zoomable UI elements. They draw themselves using OpenGL, and provide an interface for
 /// handling events. To present a Gadget in the user interface, it should be placed in the viewport of
 /// a GadgetWidget.
-class Gadget : public Gaffer::GraphComponent
+class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 {
 
 	public :

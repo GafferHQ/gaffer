@@ -37,16 +37,16 @@
 #ifndef GAFFERIMAGE_BLUR_H
 #define GAFFERIMAGE_BLUR_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class Blur : public ImageProcessor
+class GAFFERIMAGE_API Blur : public ImageProcessor
 {
 	public :
 

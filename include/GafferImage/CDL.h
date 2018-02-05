@@ -37,15 +37,15 @@
 #ifndef GAFFERIMAGE_CDL_H
 #define GAFFERIMAGE_CDL_H
 
+#include "GafferImage/OpenColorIOTransform.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
-
-#include "GafferImage/OpenColorIOTransform.h"
 
 namespace GafferImage
 {
 
-class CDL : public OpenColorIOTransform
+class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 {
 
 	public :

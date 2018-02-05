@@ -34,32 +34,34 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/task.h"
-#include "tbb/parallel_reduce.h"
-#include "tbb/blocked_range.h"
+#include "GafferScene/RendererAlgo.h"
 
-#include "boost/filesystem.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/Interpolator.h"
-#include "IECore/NullObject.h"
-#include "IECoreScene/PreWorldRenderable.h"
-#include "IECoreScene/Camera.h"
-#include "IECoreScene/Shader.h"
-#include "IECoreScene/Display.h"
-#include "IECoreScene/CoordinateSystem.h"
-#include "IECoreScene/ClippingPlane.h"
-#include "IECoreScene/VisibleRenderable.h"
-#include "IECoreScene/Primitive.h"
-#include "IECoreScene/Transform.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SceneProcessor.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
 
-#include "GafferScene/RendererAlgo.h"
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/SceneProcessor.h"
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/ClippingPlane.h"
+#include "IECoreScene/CoordinateSystem.h"
+#include "IECoreScene/Display.h"
+#include "IECoreScene/PreWorldRenderable.h"
+#include "IECoreScene/Primitive.h"
+#include "IECoreScene/Shader.h"
+#include "IECoreScene/Transform.h"
+#include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/Interpolator.h"
+#include "IECore/NullObject.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/filesystem.hpp"
+
+#include "tbb/blocked_range.h"
+#include "tbb/parallel_reduce.h"
+#include "tbb/task.h"
 
 using namespace std;
 using namespace Imath;

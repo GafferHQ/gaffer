@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/DisplayTransform.h"
+
+#include "Gaffer/StringPlug.h"
 
 using namespace std;
 using namespace IECore;

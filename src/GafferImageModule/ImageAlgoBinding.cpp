@@ -33,12 +33,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "ImageAlgoBinding.h"
+
+#include "GafferImage/ImageAlgo.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "GafferImage/ImageAlgo.h"
-#include "ImageAlgoBinding.h"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace std;
 using namespace boost::python;

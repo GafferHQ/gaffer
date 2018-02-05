@@ -36,8 +36,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Node.h"
-#include "Gaffer/ScriptNode.h"
+
 #include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace std;
 using namespace Gaffer;

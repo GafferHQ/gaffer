@@ -36,21 +36,21 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "PrimitivesBinding.h"
 
-#include "GafferScene/Sphere.h"
-#include "GafferScene/Plane.h"
-#include "GafferScene/Cube.h"
-#include "GafferScene/Text.h"
 #include "GafferScene/Camera.h"
-#include "GafferScene/ObjectToScene.h"
 #include "GafferScene/ClippingPlane.h"
 #include "GafferScene/CoordinateSystem.h"
+#include "GafferScene/Cube.h"
 #include "GafferScene/ExternalProcedural.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/Light.h"
+#include "GafferScene/ObjectToScene.h"
+#include "GafferScene/Plane.h"
+#include "GafferScene/Sphere.h"
+#include "GafferScene/Text.h"
 
-#include "PrimitivesBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace std;
 using namespace boost::python;

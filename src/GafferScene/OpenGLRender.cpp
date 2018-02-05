@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
+#include "GafferScene/OpenGLRender.h"
 
 #include "IECoreGL/IECoreGL.h"
 #include "IECoreGL/Renderer.h"
 
-#include "GafferScene/OpenGLRender.h"
+#include "IECore/SimpleTypedData.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

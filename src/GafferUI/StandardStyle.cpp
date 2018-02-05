@@ -35,31 +35,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
+#include "GafferUI/StandardStyle.h"
 
-#include "OpenEXR/ImathVecAlgo.h"
+#include "IECoreGL/Camera.h"
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/Font.h"
+#include "IECoreGL/FontLoader.h"
+#include "IECoreGL/GL.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/MeshPrimitive.h"
+#include "IECoreGL/Selector.h"
+#include "IECoreGL/Shader.h"
+#include "IECoreGL/ShaderLoader.h"
+#include "IECoreGL/ShaderStateComponent.h"
+#include "IECoreGL/TextureLoader.h"
+#include "IECoreGL/ToGLMeshConverter.h"
+#include "IECoreGL/TypedStateComponent.h"
 
-#include "IECore/SearchPath.h"
 #include "IECoreScene/Font.h"
 #include "IECoreScene/MeshPrimitive.h"
 
-#include "IECoreGL/GL.h"
-#include "IECoreGL/Font.h"
-#include "IECoreGL/FontLoader.h"
-#include "IECoreGL/ShaderLoader.h"
-#include "IECoreGL/Shader.h"
-#include "IECoreGL/Camera.h"
-#include "IECoreGL/Selector.h"
-#include "IECoreGL/IECoreGL.h"
-#include "IECoreGL/MeshPrimitive.h"
-#include "IECoreGL/ToGLMeshConverter.h"
-#include "IECoreGL/Group.h"
-#include "IECoreGL/TypedStateComponent.h"
-#include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/ShaderStateComponent.h"
-#include "IECoreGL/TextureLoader.h"
+#include "IECore/SearchPath.h"
 
-#include "GafferUI/StandardStyle.h"
+#include "OpenEXR/ImathVecAlgo.h"
+
+#include "boost/tokenizer.hpp"
 
 using namespace GafferUI;
 using namespace IECore;

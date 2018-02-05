@@ -38,14 +38,14 @@
 #ifndef GAFFERSCENE_OPTIONS_H
 #define GAFFERSCENE_OPTIONS_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/GlobalsProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {
 
-class Options : public GlobalsProcessor
+class GAFFERSCENE_API Options : public GlobalsProcessor
 {
 
 	public :

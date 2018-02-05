@@ -34,28 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/container/flat_map.hpp"
-#include "boost/asio.hpp"
-#include "boost/lexical_cast.hpp"
+#include "GafferSceneUI/ShaderView.h"
 
-#include "IECoreImage/DisplayDriverServer.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/Reference.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/PlugAlgo.h"
+#include "GafferScene/DeleteOutputs.h"
+#include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Outputs.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
 
 #include "GafferImage/Display.h"
 
-#include "GafferScene/Shader.h"
-#include "GafferScene/DeleteOutputs.h"
-#include "GafferScene/Outputs.h"
-#include "GafferScene/ShaderPlug.h"
-#include "GafferScene/InteractiveRender.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/PlugAlgo.h"
+#include "Gaffer/Reference.h"
+#include "Gaffer/StringPlug.h"
 
-#include "GafferSceneUI/ShaderView.h"
+#include "IECoreImage/DisplayDriverServer.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/asio.hpp"
+#include "boost/bind.hpp"
+#include "boost/container/flat_map.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace Gaffer;
 using namespace GafferImage;

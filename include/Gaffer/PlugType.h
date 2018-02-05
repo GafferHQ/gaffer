@@ -37,11 +37,11 @@
 #ifndef GAFFER_PLUGTYPE_H
 #define GAFFER_PLUGTYPE_H
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/StringPlug.h"
 #include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {

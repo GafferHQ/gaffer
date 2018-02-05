@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ArrayPlug.h"
-
 #include "GafferScene/FilterProcessor.h"
+
+#include "Gaffer/ArrayPlug.h"
 
 using namespace IECore;
 using namespace Gaffer;

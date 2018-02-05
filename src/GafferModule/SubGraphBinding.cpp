@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
+#include "boost/python.hpp"
 
-#include "Gaffer/Box.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/BoxIn.h"
-#include "Gaffer/BoxOut.h"
-#include "Gaffer/Reference.h"
+#include "SubGraphBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
-#include "SubGraphBinding.h"
+#include "Gaffer/Box.h"
+#include "Gaffer/BoxIn.h"
+#include "Gaffer/BoxOut.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/Reference.h"
 
 using namespace boost::python;
 using namespace IECorePython;

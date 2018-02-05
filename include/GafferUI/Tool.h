@@ -37,12 +37,13 @@
 #ifndef GAFFERUI_TOOL_H
 #define GAFFERUI_TOOL_H
 
-#include <functional>
+#include "GafferUI/Export.h"
+#include "GafferUI/TypeIds.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "GafferUI/TypeIds.h"
+#include <functional>
 
 namespace GafferUI
 {
@@ -70,7 +71,7 @@ IE_CORE_FORWARDDECLARE( View )
 /// It is recommended that such updates are performed via
 /// ViewportGadget::preRenderSignal(), so that they are
 /// performed lazily only when needed.
-class Tool : public Gaffer::Node
+class GAFFERUI_API Tool : public Gaffer::Node
 {
 
 	public :

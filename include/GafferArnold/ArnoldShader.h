@@ -38,14 +38,15 @@
 #ifndef GAFFERARNOLD_ARNOLDSHADER_H
 #define GAFFERARNOLD_ARNOLDSHADER_H
 
-#include "GafferScene/Shader.h"
-
+#include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Shader.h"
 
 namespace GafferArnold
 {
 
-class ArnoldShader : public GafferScene::Shader
+class GAFFERARNOLD_API ArnoldShader : public GafferScene::Shader
 {
 
 	public :

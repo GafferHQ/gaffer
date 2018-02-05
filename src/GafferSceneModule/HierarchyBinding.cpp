@@ -36,21 +36,21 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/Group.h"
-#include "GafferScene/Parent.h"
-#include "GafferScene/Duplicate.h"
-#include "GafferScene/SubTree.h"
-#include "GafferScene/Prune.h"
-#include "GafferScene/Isolate.h"
-#include "GafferScene/CollectScenes.h"
-#include "GafferScene/Seeds.h"
-#include "GafferScene/Instancer.h"
-#include "GafferScene/Capsule.h"
-#include "GafferScene/Encapsulate.h"
-
 #include "HierarchyBinding.h"
+
+#include "GafferScene/Capsule.h"
+#include "GafferScene/CollectScenes.h"
+#include "GafferScene/Duplicate.h"
+#include "GafferScene/Encapsulate.h"
+#include "GafferScene/Group.h"
+#include "GafferScene/Instancer.h"
+#include "GafferScene/Isolate.h"
+#include "GafferScene/Parent.h"
+#include "GafferScene/Prune.h"
+#include "GafferScene/Seeds.h"
+#include "GafferScene/SubTree.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;

@@ -43,7 +43,7 @@
 namespace GafferScene
 {
 
-class StandardOptions : public Options
+class GAFFERSCENE_API StandardOptions : public Options
 {
 
 	public :

@@ -38,6 +38,8 @@
 #ifndef GAFFER_STRINGALGO_H
 #define GAFFER_STRINGALGO_H
 
+#include "Gaffer/Export.h"
+
 #include <string>
 
 namespace Gaffer
@@ -80,9 +82,9 @@ inline bool hasWildcards( const char *pattern );
 /// Returns the numeric suffix from the end of s, if one exists, and -1 if
 /// one doesn't. If stem is specified then it will be filled with the contents
 /// of s preceding the suffix, or the whole of s if no suffix exists.
-int numericSuffix( const std::string &s, std::string *stem = nullptr );
+GAFFER_API int numericSuffix( const std::string &s, std::string *stem = nullptr );
 /// As above, but returns defaultSuffix in the case that no suffix exists.
-int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem = nullptr );
+GAFFER_API int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem = nullptr );
 
 /// Splits the input string wherever the separator is found, outputting all non-empty tokens
 /// in sequence. Note that this is significantly quicker than boost::tokenizer

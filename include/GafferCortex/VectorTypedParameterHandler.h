@@ -38,15 +38,15 @@
 #ifndef GAFFERCORTEX_VECTORTYPEDPARAMETERHANDLER_H
 #define GAFFERCORTEX_VECTORTYPEDPARAMETERHANDLER_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferCortex/ParameterHandler.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferCortex
 {
 
 template<typename ParameterType>
-class VectorTypedParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API VectorTypedParameterHandler : public ParameterHandler
 {
 
 	public :

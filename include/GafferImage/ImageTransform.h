@@ -52,7 +52,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class ImageTransform : public ImageProcessor
+class GAFFERIMAGE_API ImageTransform : public ImageProcessor
 {
 	public :
 

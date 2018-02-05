@@ -35,19 +35,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/lexical_cast.hpp"
-#include "boost/bind.hpp"
+#include "GafferUI/Gadget.h"
 
-#include "OpenEXR/ImathBoxAlgo.h"
-
-#include "IECore/SimpleTypedData.h"
+#include "GafferUI/Style.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/NameStateComponent.h"
 #include "IECoreGL/Selector.h"
 
-#include "GafferUI/Gadget.h"
-#include "GafferUI/Style.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "OpenEXR/ImathBoxAlgo.h"
+
+#include "boost/bind.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace GafferUI;
 using namespace Imath;

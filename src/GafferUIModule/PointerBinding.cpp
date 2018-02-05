@@ -36,13 +36,13 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RefCountedBinding.h"
-
-#include "GafferBindings/SignalBinding.h"
+#include "PointerBinding.h"
 
 #include "GafferUI/Pointer.h"
 
-#include "PointerBinding.h"
+#include "GafferBindings/SignalBinding.h"
+
+#include "IECorePython/RefCountedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

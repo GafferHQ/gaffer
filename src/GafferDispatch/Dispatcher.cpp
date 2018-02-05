@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/filesystem.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/FrameRange.h"
-#include "IECore/MessageHandler.h"
+#include "GafferDispatch/Dispatcher.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
 
-#include "GafferDispatch/Dispatcher.h"
+#include "IECore/FrameRange.h"
+#include "IECore/MessageHandler.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/filesystem.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

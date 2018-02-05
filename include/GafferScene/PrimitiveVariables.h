@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLES_H
 #define GAFFERSCENE_PRIMITIVEVARIABLES_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {
 
-class PrimitiveVariables : public SceneElementProcessor
+class GAFFERSCENE_API PrimitiveVariables : public SceneElementProcessor
 {
 
 	public :

@@ -36,17 +36,18 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/lexical_cast.hpp"
+
+#include "NumericPlugBinding.h"
+
+#include "GafferBindings/ValuePlugBinding.h"
+
+#include "Gaffer/Node.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/Node.h"
-
-#include "GafferBindings/ValuePlugBinding.h"
-
-#include "NumericPlugBinding.h"
+#include "boost/lexical_cast.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

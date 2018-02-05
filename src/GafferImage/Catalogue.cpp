@@ -34,30 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <thread>
-
-#include "boost/bind.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/unordered_map.hpp"
-#include "boost/algorithm/string.hpp"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/ArrayPlug.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/DownstreamIterator.h"
-
 #include "GafferImage/Catalogue.h"
-#include "GafferImage/ImageReader.h"
+
 #include "GafferImage/Constant.h"
-#include "GafferImage/ImageMetadata.h"
 #include "GafferImage/CopyChannels.h"
 #include "GafferImage/Display.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImageMetadata.h"
+#include "GafferImage/ImageReader.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/Text.h"
-#include "GafferImage/ImageAlgo.h"
+
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/DownstreamIterator.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/bind.hpp"
+#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem/path.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/unordered_map.hpp"
+
+#include <thread>
 
 using namespace std;
 using namespace IECore;

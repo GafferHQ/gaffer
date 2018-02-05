@@ -38,21 +38,26 @@
 #ifndef GAFFER_TYPEDOBJECTPLUG_H
 #define GAFFER_TYPEDOBJECTPLUG_H
 
-#include "IECore/Object.h"
+// Include must come first to avoid symbol visibility problems with Clang.
+// It would appear that if any inline code involving `std::vector` appears
+// before the definitions of VectorTypedData, Clang will hide the symbols
+// for `TypedObjectPlug<*VectorData>`.
 #include "IECore/VectorTypedData.h"
-#include "IECore/ObjectVector.h"
-#include "IECore/CompoundObject.h"
-#include "IECore/CompoundData.h"
-#include "IECore/PathMatcherData.h"
 
 #include "Gaffer/ValuePlug.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/CompoundObject.h"
+#include "IECore/Object.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/PathMatcherData.h"
 
 namespace Gaffer
 {
 
 /// A Plug type which can store values derived from IECore::Object.
 template<typename T>
-class TypedObjectPlug : public ValuePlug
+class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 {
 
 	public :
@@ -122,6 +127,25 @@ class TypedObjectPlug : public ValuePlug
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedObjectPlug<T> );
 
 };
+
+#ifndef Gaffer_EXPORTS
+
+extern template class TypedObjectPlug<IECore::Object>;
+extern template class TypedObjectPlug<IECore::BoolVectorData>;
+extern template class TypedObjectPlug<IECore::IntVectorData>;
+extern template class TypedObjectPlug<IECore::FloatVectorData>;
+extern template class TypedObjectPlug<IECore::StringVectorData>;
+extern template class TypedObjectPlug<IECore::InternedStringVectorData>;
+extern template class TypedObjectPlug<IECore::V2iVectorData>;
+extern template class TypedObjectPlug<IECore::V3fVectorData>;
+extern template class TypedObjectPlug<IECore::Color3fVectorData>;
+extern template class TypedObjectPlug<IECore::M44fVectorData>;
+extern template class TypedObjectPlug<IECore::ObjectVector>;
+extern template class TypedObjectPlug<IECore::CompoundObject>;
+extern template class TypedObjectPlug<IECore::CompoundData>;
+extern template class TypedObjectPlug<IECore::PathMatcherData>;
+
+#endif
 
 typedef TypedObjectPlug<IECore::Object> ObjectPlug;
 typedef TypedObjectPlug<IECore::BoolVectorData> BoolVectorDataPlug;

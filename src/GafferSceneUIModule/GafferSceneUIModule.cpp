@@ -36,19 +36,17 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferUIBindings/GadgetBinding.h"
+#include "ContextAlgoBinding.h"
+#include "SceneHierarchyBinding.h"
+#include "ToolBinding.h"
+#include "ViewBinding.h"
+#include "VisualiserBinding.h"
 
 #include "GafferSceneUI/SceneGadget.h"
 
-#include "ViewBinding.h"
-#include "ToolBinding.h"
-#include "VisualiserBinding.h"
-#include "SceneHierarchyBinding.h"
-#include "ContextAlgoBinding.h"
-#include "SceneHierarchyBinding.h"
-#include "ContextAlgoBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferBindings/NodeBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;

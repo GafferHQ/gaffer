@@ -36,20 +36,20 @@
 
 #include "boost/python.hpp"
 
+#include "FilterBinding.h"
+
+#include "GafferScene/Filter.h"
+#include "GafferScene/FilterPlug.h"
+#include "GafferScene/FilterProcessor.h"
+#include "GafferScene/FilterResults.h"
+#include "GafferScene/FilterSwitch.h"
+#include "GafferScene/PathFilter.h"
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/SetFilter.h"
+#include "GafferScene/UnionFilter.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
-
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/FilterPlug.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathFilter.h"
-#include "GafferScene/FilterProcessor.h"
-#include "GafferScene/UnionFilter.h"
-#include "GafferScene/SetFilter.h"
-#include "GafferScene/FilterSwitch.h"
-#include "GafferScene/FilterResults.h"
-
-#include "FilterBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

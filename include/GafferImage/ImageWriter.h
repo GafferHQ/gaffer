@@ -37,13 +37,14 @@
 #ifndef GAFFERIMAGE_IMAGEWRITER_H
 #define GAFFERIMAGE_IMAGEWRITER_H
 
-#include <functional>
-
-#include "IECore/CompoundData.h"
+#include "GafferImage/TypeIds.h"
+#include "GafferImage/Export.h"
 
 #include "GafferDispatch/TaskNode.h"
 
-#include "GafferImage/TypeIds.h"
+#include "IECore/CompoundData.h"
+
+#include <functional>
 
 namespace Gaffer
 {
@@ -57,7 +58,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ColorSpace )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 
-class ImageWriter : public GafferDispatch::TaskNode
+class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 {
 
 	public :

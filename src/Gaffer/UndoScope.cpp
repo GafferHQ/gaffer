@@ -35,11 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MessageHandler.h"
-
 #include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
+
 #include "Gaffer/Action.h"
+#include "Gaffer/ScriptNode.h"
+
+#include "IECore/MessageHandler.h"
 
 using namespace Gaffer;
 

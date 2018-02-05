@@ -35,13 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
-
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/Metadata.h"
-
 #include "GafferUI/Nodule.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
+
+#include "IECore/SimpleTypedData.h"
 
 using namespace GafferUI;
 using namespace Imath;

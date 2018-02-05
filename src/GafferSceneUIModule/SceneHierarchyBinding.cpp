@@ -35,20 +35,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
-#include "boost/algorithm/string/predicate.hpp"
+
+#include "SceneHierarchyBinding.h"
+
+#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Path.h"
+#include "Gaffer/PathFilter.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "IECorePython/RefCountedBinding.h"
 
-#include "Gaffer/Path.h"
-#include "Gaffer/PathFilter.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/SceneAlgo.h"
-
-#include "SceneHierarchyBinding.h"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace std;
 using namespace boost::python;

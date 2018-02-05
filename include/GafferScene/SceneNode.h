@@ -38,16 +38,17 @@
 #ifndef GAFFERSCENE_SCENENODE_H
 #define GAFFERSCENE_SCENENODE_H
 
-#include "Gaffer/ComputeNode.h"
-
+#include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
+
+#include "Gaffer/ComputeNode.h"
 
 namespace GafferScene
 {
 
 /// The SceneNode class is the base class for all Nodes which are capable of generating
 /// or processing scene graphs.
-class SceneNode : public Gaffer::ComputeNode
+class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 {
 
 	public :

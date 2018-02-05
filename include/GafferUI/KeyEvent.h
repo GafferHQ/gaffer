@@ -39,13 +39,17 @@
 
 #include "GafferUI/ModifiableEvent.h"
 
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace GafferUI
 {
 
 /// A class to represent events involving keyboard keys.
-struct KeyEvent : public ModifiableEvent
+struct GAFFERUI_API KeyEvent : public ModifiableEvent
 {
 	KeyEvent(
 		const char *k = "a",

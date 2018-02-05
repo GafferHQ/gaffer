@@ -34,20 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/replace.hpp"
-
-#include "Gaffer/StringPlug.h"
 #include "Gaffer/BoxIO.h"
+
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Box.h"
+#include "Gaffer/BoxIn.h"
+#include "Gaffer/BoxOut.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/BoxIn.h"
-#include "Gaffer/BoxOut.h"
-#include "Gaffer/Box.h"
-#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/StringPlug.h"
+
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

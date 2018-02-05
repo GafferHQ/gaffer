@@ -36,15 +36,15 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-#include "GafferScene/MapProjection.h"
-#include "GafferScene/MapOffset.h"
-
 #include "PrimitiveVariablesBinding.h"
+
+#include "GafferScene/DeletePrimitiveVariables.h"
+#include "GafferScene/MapOffset.h"
+#include "GafferScene/MapProjection.h"
+#include "GafferScene/PrimitiveVariables.h"
+#include "GafferScene/ResamplePrimitiveVariables.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace GafferScene;
 

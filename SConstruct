@@ -85,7 +85,7 @@ options.Add(
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall", "-Werror" ]
+	[ "-pipe", "-Wall" ]
 )
 
 options.Add(
@@ -96,6 +96,10 @@ options.Add(
 	"CXXSTD",
 	"The C++ standard to build against. A minimum of C++11 is required.",
 	"c++11",
+)
+
+options.Add(
+	BoolVariable( "WARNINGS_AS_ERRORS", "Treat compiler and linker warnings as errors.", True )
 )
 
 options.Add(
@@ -386,12 +390,18 @@ elif env["PLATFORM"] == "posix" :
 
 	env["GAFFER_PLATFORM"] = "linux"
 
-env.Append( CXXFLAGS = [ "-std=$CXXSTD" ] )
+env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
 
 if env["DEBUG"] :
 	env.Append( CXXFLAGS = [ "-g", "-O0" ] )
 else :
 	env.Append( CXXFLAGS = [ "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" , "-O3" ] )
+
+if env["WARNINGS_AS_ERRORS"] :
+	env.Append(
+		CXXFLAGS = [ "-Werror" ],
+		SHLINKFLAGS = [ "-Wl,-fatal_warnings" ],
+	)
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
@@ -653,7 +663,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "IECoreScene$CORTEX_LIB_SUFFIX" ],
@@ -697,7 +707,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX",  ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferImageTest", "GafferImage" ],
+			"LIBS" : [ "GafferImage" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferImageTest/scripts/*" ) + glob.glob( "python/GafferImageTest/images/*" ) + glob.glob( "python/GafferImageTest/openColorIO/luts/*" ) + glob.glob( "python/GafferImageTest/openColorIO/*" ),
 	},
@@ -928,6 +938,7 @@ for libraryName, libraryDef in libraries.items() :
 	# environment
 
 	libEnv = baseLibEnv.Clone()
+	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName ) )
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
 
 	# library
@@ -964,22 +975,25 @@ for libraryName, libraryDef in libraries.items() :
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
 
+	bindingsEnv = pythonEnv.Clone()
+	bindingsEnv.Append( CXXFLAGS = "-D{0}BINDINGS_EXPORTS".format( libraryName ) )
+
 	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
 	if bindingsSource :
 
-		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
-		pythonEnv.Default( bindingsLibrary )
+		bindingsLibrary = bindingsEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
+		bindingsEnv.Default( bindingsLibrary )
 
-		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
+		bindingsLibraryInstall = bindingsEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
 
 		# header install
-		bindingsHeaderInstall = pythonEnv.Install(
+		bindingsHeaderInstall = bindingsEnv.Install(
 			"$BUILD_DIR/" + "include/" + libraryName + "Bindings",
 			glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
 			glob.glob( "include/" + libraryName + "Bindings/*.inl" )
 		)
-		pythonEnv.Alias( "build", bindingsHeaderInstall )
+		bindingsEnv.Alias( "build", bindingsHeaderInstall )
 
 
 	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )

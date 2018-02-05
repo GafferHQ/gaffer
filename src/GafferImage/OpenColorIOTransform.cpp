@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
-#include "tbb/null_mutex.h"
-
-#include "IECore/SimpleTypedData.h"
+#include "GafferImage/OpenColorIOTransform.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferImage/OpenColorIOTransform.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "tbb/mutex.h"
+#include "tbb/null_mutex.h"
 
 using namespace std;
 using namespace IECore;

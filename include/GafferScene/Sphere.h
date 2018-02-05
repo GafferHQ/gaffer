@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_SPHERE_H
 #define GAFFERSCENE_SPHERE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferScene/ObjectSource.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferScene
 {
 
-class Sphere : public ObjectSource
+class GAFFERSCENE_API Sphere : public ObjectSource
 {
 
 	public :

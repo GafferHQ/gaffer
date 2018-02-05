@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/CoordinateSystem.h"
+#include "GafferScene/CoordinateSystem.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/CoordinateSystem.h"
+#include "IECoreScene/CoordinateSystem.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

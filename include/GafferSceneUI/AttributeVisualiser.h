@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
 #define GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
 
+#include "GafferSceneUI/Export.h"
+
 #include "IECoreGL/Renderable.h"
 
 #include "IECore/CompoundObject.h"
@@ -47,7 +49,7 @@ namespace GafferSceneUI
 IE_CORE_FORWARDDECLARE( AttributeVisualiser )
 
 
-class AttributeVisualiser : public IECore::RefCounted
+class GAFFERSCENEUI_API AttributeVisualiser : public IECore::RefCounted
 {
 
 	public :

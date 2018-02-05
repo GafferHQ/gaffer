@@ -38,13 +38,13 @@
 #ifndef GAFFERUI_VIEW_H
 #define GAFFERUI_VIEW_H
 
-#include <functional>
-
-#include "boost/regex.hpp"
+#include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Node.h"
 
-#include "GafferUI/ViewportGadget.h"
+#include "boost/regex.hpp"
+
+#include <functional>
 
 namespace Gaffer
 {
@@ -75,7 +75,7 @@ namespace GafferUI
 /// The View classes provide the content for the Viewer, which is implemented in the
 /// GafferUI python module. The View presents whatever is connected into inPlug(),
 /// and may provide further settings via additional plugs.
-class View : public Gaffer::Node
+class GAFFERUI_API View : public Gaffer::Node
 {
 
 	public :

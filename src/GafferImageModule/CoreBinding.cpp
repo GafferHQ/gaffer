@@ -35,24 +35,24 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/SimpleTypedDataBinding.h"
+#include "CoreBinding.h"
 
-#include "Gaffer/ScriptNode.h"
-
-#include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/Serialisation.h"
-
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageNode.h"
-#include "GafferImage/ImageProcessor.h"
 #include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/FormatData.h"
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageNode.h"
+#include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageProcessor.h"
 #include "GafferImage/Sampler.h"
 
-#include "CoreBinding.h"
+#include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/Serialisation.h"
+#include "GafferBindings/TypedPlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
+
+#include "Gaffer/ScriptNode.h"
+
+#include "IECorePython/SimpleTypedDataBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

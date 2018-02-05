@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILLock.h"
+#include "RendererAlgoBinding.h"
 
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 
-#include "RendererAlgoBinding.h"
+#include "IECorePython/ScopedGILLock.h"
 
 using namespace boost::python;
 using namespace GafferScene;

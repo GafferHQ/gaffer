@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SimpleTypedData.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "Gaffer/GraphComponent.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
 #include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 #include "Gaffer/StringAlgo.h"
+
+#include "IECore/SimpleTypedData.h"
 
 using namespace std;
 using namespace IECore;

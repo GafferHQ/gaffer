@@ -35,10 +35,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/logic/tribool.hpp"
-#include "boost/bind.hpp"
-
 #include "GafferScene/Attributes.h"
+
+#include "boost/bind.hpp"
+#include "boost/logic/tribool.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

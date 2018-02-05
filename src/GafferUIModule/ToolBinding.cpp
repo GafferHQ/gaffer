@@ -36,12 +36,12 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
+#include "ToolBinding.h"
 
 #include "GafferUI/Tool.h"
 #include "GafferUI/View.h"
 
-#include "ToolBinding.h"
+#include "GafferBindings/NodeBinding.h"
 
 using namespace std;
 using namespace boost::python;

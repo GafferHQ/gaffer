@@ -38,18 +38,17 @@
 // uncomment to get additional debug output when parsing an expression
 // #define BOOST_SPIRIT_DEBUG
 
-#include <boost/variant/recursive_variant.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
-#include "boost/spirit/include/classic_core.hpp"
-#include <boost/fusion/include/adapt_struct.hpp>
-
 #include "GafferScene/SetAlgo.h"
 
 #include "IECore/MessageHandler.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/fusion/include/adapt_struct.hpp"
+#include "boost/spirit/include/classic_core.hpp"
+#include "boost/spirit/include/phoenix_operator.hpp"
+#include "boost/spirit/include/qi.hpp"
+#include "boost/variant/apply_visitor.hpp"
+#include "boost/variant/recursive_variant.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

@@ -40,14 +40,14 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILLock.h"
 
 namespace GafferBindings
 {

@@ -35,13 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NullObject.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "GafferScene/Filter.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
 
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Filter.h"
+#include "IECore/NullObject.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

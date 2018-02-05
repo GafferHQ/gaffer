@@ -48,7 +48,7 @@ IE_CORE_FORWARDDECLARE( FileSequencePathFilter )
 /// FileSequencePathFilters can filter the results
 /// of FileSystemPath::children() to provide a masked view
 /// that either includes or excludes FileSequences
-class FileSequencePathFilter : public PathFilter
+class GAFFER_API FileSequencePathFilter : public PathFilter
 {
 
 	public :

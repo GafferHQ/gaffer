@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferUI/TextGadget.h"
+
 #include "GafferUI/Style.h"
 
 #include "IECore/SimpleTypedData.h"

@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stack>
+#include "Gaffer/Process.h"
+
+#include "Gaffer/Monitor.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 
 #include "boost/container/flat_set.hpp"
 
-#include "Gaffer/Process.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/Monitor.h"
+#include <stack>
 
 using namespace Gaffer;
 

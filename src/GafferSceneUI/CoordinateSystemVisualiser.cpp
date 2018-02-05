@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/CoordinateSystem.h"
+#include "GafferSceneUI/ObjectVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
-#include "GafferSceneUI/ObjectVisualiser.h"
+#include "IECoreScene/CoordinateSystem.h"
 
 using namespace std;
 using namespace Imath;

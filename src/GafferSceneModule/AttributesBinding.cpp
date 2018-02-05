@@ -36,19 +36,19 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/ShaderAssignment.h"
-#include "GafferScene/Attributes.h"
-#include "GafferScene/OpenGLAttributes.h"
-#include "GafferScene/StandardAttributes.h"
-#include "GafferScene/CustomAttributes.h"
-#include "GafferScene/AttributeProcessor.h"
-#include "GafferScene/DeleteAttributes.h"
-#include "GafferScene/AttributeVisualiser.h"
-#include "GafferScene/EvaluateLightLinks.h"
-
 #include "AttributesBinding.h"
+
+#include "GafferScene/AttributeProcessor.h"
+#include "GafferScene/AttributeVisualiser.h"
+#include "GafferScene/Attributes.h"
+#include "GafferScene/CustomAttributes.h"
+#include "GafferScene/DeleteAttributes.h"
+#include "GafferScene/EvaluateLightLinks.h"
+#include "GafferScene/OpenGLAttributes.h"
+#include "GafferScene/ShaderAssignment.h"
+#include "GafferScene/StandardAttributes.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;

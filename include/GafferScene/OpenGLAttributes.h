@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class OpenGLAttributes : public GafferScene::Attributes
+class GAFFERSCENE_API OpenGLAttributes : public GafferScene::Attributes
 {
 
 	public :

@@ -35,11 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Exception.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
 #include "GafferScene/Filter.h"
 #include "GafferScene/SceneAlgo.h"
+
+#include "IECore/Exception.h"
 
 using namespace IECore;
 using namespace Gaffer;

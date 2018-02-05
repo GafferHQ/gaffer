@@ -37,9 +37,7 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ExceptionAlgo.h"
-
-#include "Gaffer/ScriptNode.h"
+#include "NodeBinding.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -47,7 +45,9 @@
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/MetadataBinding.h"
 
-#include "NodeBinding.h"
+#include "Gaffer/ScriptNode.h"
+
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace IECorePython;

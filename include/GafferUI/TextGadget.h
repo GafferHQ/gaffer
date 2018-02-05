@@ -45,7 +45,7 @@
 namespace GafferUI
 {
 
-class TextGadget : public Gadget
+class GAFFERUI_API TextGadget : public Gadget
 {
 
 	public :

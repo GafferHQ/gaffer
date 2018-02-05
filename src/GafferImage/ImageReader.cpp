@@ -34,17 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferImage/ImageReader.h"
+
+#include "GafferImage/ColorSpace.h"
+#include "GafferImage/OpenImageIOReader.h"
+
+#include "Gaffer/StringPlug.h"
 
 #include "OpenEXR/ImathFun.h"
 
 #include "OpenColorIO/OpenColorIO.h"
 
-#include "Gaffer/StringPlug.h"
-
-#include "GafferImage/ColorSpace.h"
-#include "GafferImage/ImageReader.h"
-#include "GafferImage/OpenImageIOReader.h"
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

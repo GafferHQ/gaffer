@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DeleteContextVariables.inl"
 #include "GafferImage/DeleteImageContextVariables.h"
+
+#include "Gaffer/DeleteContextVariables.inl"
 
 using namespace GafferImage;
 

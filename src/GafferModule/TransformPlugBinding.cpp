@@ -37,13 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "Gaffer/TransformPlug.h"
+#include "TransformPlugBinding.h"
 
 #include "GafferBindings/PlugBinding.h"
 
-#include "TransformPlugBinding.h"
+#include "Gaffer/TransformPlug.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

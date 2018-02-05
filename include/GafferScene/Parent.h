@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class Parent : public BranchCreator
+class GAFFERSCENE_API Parent : public BranchCreator
 {
 
 	public :

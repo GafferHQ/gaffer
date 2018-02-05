@@ -35,19 +35,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/enumerable_thread_specific.h"
+#include "Gaffer/ValuePlug.h"
+
+#include "Gaffer/Action.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
+#include "Gaffer/Process.h"
 
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/unordered_map.hpp"
 
-#include "Gaffer/Private/IECorePreview/LRUCache.h"
-
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/Action.h"
-#include "Gaffer/Process.h"
+#include "tbb/enumerable_thread_specific.h"
 
 using namespace Gaffer;
 

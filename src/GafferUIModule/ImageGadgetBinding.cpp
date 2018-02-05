@@ -36,11 +36,11 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUI/ImageGadget.h"
+#include "ImageGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "ImageGadgetBinding.h"
+#include "GafferUI/ImageGadget.h"
 
 using namespace boost::python;
 using namespace IECorePython;

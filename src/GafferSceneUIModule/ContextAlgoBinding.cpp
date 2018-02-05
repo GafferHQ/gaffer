@@ -36,13 +36,13 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "GafferScene/ScenePlug.h"
+#include "ContextAlgoBinding.h"
 
 #include "GafferSceneUI/ContextAlgo.h"
 
-#include "ContextAlgoBinding.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace IECore;

@@ -37,16 +37,16 @@
 #ifndef GAFFERIMAGE_COLORPROCESSOR_H
 #define GAFFERIMAGE_COLORPROCESSOR_H
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {
 
 /// Forms a useful base class for nodes which must process R,G and B channels at the same time
 /// to perform some sort of channel mixing.
-class ColorProcessor : public ImageProcessor
+class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 {
 
 	public :

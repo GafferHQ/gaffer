@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "Gaffer/LeafPathFilter.h"
+
 #include "Gaffer/Path.h"
+
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 

@@ -64,7 +64,7 @@ IE_CORE_FORWARDDECLARE( Box )
 /// The BoxIO constructor is protected. Construct
 /// the derived BoxIn and BoxOut classes rather than
 /// attempt to construct BoxIO itself.
-class BoxIO : public Node
+class GAFFER_API BoxIO : public Node
 {
 
 	public :

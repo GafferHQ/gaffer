@@ -37,12 +37,12 @@
 #ifndef GAFFERVDB_POINTSGRIDTOPOINTS_H
 #define GAFFERVDB_POINTSGRIDTOPOINTS_H
 
-#include "Gaffer/NumericPlug.h"
+#include "GafferVDB/Export.h"
+#include "GafferVDB/TypeIds.h"
 
 #include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferVDB/TypeIds.h"
-
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
@@ -52,7 +52,7 @@ class StringPlug;
 namespace GafferVDB
 {
 
-class PointsGridToPoints : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcessor
 {
 
 	public :

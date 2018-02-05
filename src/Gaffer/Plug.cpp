@@ -35,22 +35,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/enumerable_thread_specific.h"
+#include "Gaffer/Plug.h"
 
-#include "boost/format.hpp"
+#include "Gaffer/Action.h"
+#include "Gaffer/DependencyNode.h"
+#include "Gaffer/DownstreamIterator.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
+
+#include "IECore/Exception.h"
+
 #include "boost/bind.hpp"
+#include "boost/format.hpp"
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/topological_sort.hpp"
 #include "boost/unordered_map.hpp"
 
-#include "IECore/Exception.h"
-
-#include "Gaffer/Plug.h"
-#include "Gaffer/DependencyNode.h"
-#include "Gaffer/Action.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/DownstreamIterator.h"
+#include "tbb/enumerable_thread_specific.h"
 
 using namespace boost;
 using namespace Gaffer;

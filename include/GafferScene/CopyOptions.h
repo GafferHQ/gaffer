@@ -39,13 +39,14 @@
 
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/ScenePlug.h"
+
 #include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-  class CopyOptions : public GafferScene::GlobalsProcessor
-  {
+class GAFFERSCENE_API CopyOptions : public GafferScene::GlobalsProcessor
+{
 
 	public :
 

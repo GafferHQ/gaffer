@@ -34,22 +34,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreGL/Group.h"
-#include "IECoreGL/Primitive.h"
-#include "IECoreGL/ShaderStateComponent.h"
-#include "IECoreGL/ShaderLoader.h"
-#include "IECoreGL/TextureLoader.h"
-#include "IECoreGL/QuadPrimitive.h"
-#include "IECore/VectorTypedData.h"
-#include "IECore/ObjectVector.h"
-#include "IECoreGL/Renderable.h"
-#include "IECore/LRUCache.h"
-#include "IECoreScene/Shader.h"
+#include "GafferOSL/ShadingEngine.h"
+
+#include "GafferSceneUI/LightFilterVisualiser.h"
+#include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "Gaffer/Metadata.h"
-#include "GafferSceneUI/StandardLightVisualiser.h"
-#include "GafferSceneUI/LightFilterVisualiser.h"
-#include "GafferOSL/ShadingEngine.h"
+
+#include "IECoreGL/Group.h"
+#include "IECoreGL/Primitive.h"
+#include "IECoreGL/QuadPrimitive.h"
+#include "IECoreGL/Renderable.h"
+#include "IECoreGL/ShaderLoader.h"
+#include "IECoreGL/ShaderStateComponent.h"
+#include "IECoreGL/TextureLoader.h"
+
+#include "IECoreScene/Shader.h"
+
+#include "IECore/LRUCache.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/VectorTypedData.h"
 
 #include "boost/format.hpp"
 

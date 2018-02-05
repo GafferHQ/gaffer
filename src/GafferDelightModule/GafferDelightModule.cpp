@@ -36,14 +36,14 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
 #include "GafferDelight/DelightAttributes.h"
 #include "GafferDelight/DelightOptions.h"
 #include "GafferDelight/DelightRender.h"
 #include "GafferDelight/InteractiveDelightRender.h"
+
+#include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

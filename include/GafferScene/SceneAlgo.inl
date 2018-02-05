@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/task.h"
 #include "Gaffer/Context.h"
+
+#include "tbb/task.h"
 
 namespace GafferScene
 {

@@ -36,10 +36,10 @@
 #ifndef IECOREPREVIEW_LRUCACHE_INL
 #define IECOREPREVIEW_LRUCACHE_INL
 
+#include "IECore/Exception.h"
+
 #include <cassert>
 #include <thread>
-
-#include "IECore/Exception.h"
 
 namespace IECorePreview
 {

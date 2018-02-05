@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_EXTERNALPROCEDURAL_H
 #define GAFFERSCENE_EXTERNALPROCEDURAL_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/ObjectSource.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {
 
-class ExternalProcedural : public ObjectSource
+class GAFFERSCENE_API ExternalProcedural : public ObjectSource
 {
 
 	public :

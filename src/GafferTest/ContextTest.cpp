@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/lexical_cast.hpp"
+#include "GafferTest/ContextTest.h"
 
-#include "IECore/Timer.h"
+#include "GafferTest/Assert.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferTest/Assert.h"
-#include "GafferTest/ContextTest.h"
+#include "IECore/Timer.h"
+
+#include "boost/lexical_cast.hpp"
 
 using namespace std;
 using namespace boost;

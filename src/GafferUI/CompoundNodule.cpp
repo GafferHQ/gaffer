@@ -35,10 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Plug.h"
+#include "GafferUI/CompoundNodule.h"
 
 #include "GafferUI/NoduleLayout.h"
-#include "GafferUI/CompoundNodule.h"
+
+#include "Gaffer/Plug.h"
 
 using namespace std;
 using namespace Imath;

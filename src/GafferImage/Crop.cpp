@@ -36,9 +36,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/Crop.h"
+
 #include "GafferImage/BufferAlgo.h"
-#include "GafferImage/Offset.h"
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/Offset.h"
 
 using namespace Imath;
 using namespace IECore;

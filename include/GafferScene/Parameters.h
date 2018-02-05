@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_PARAMETERS_H
 #define GAFFERSCENE_PARAMETERS_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {
 
-class Parameters : public SceneElementProcessor
+class GAFFERSCENE_API Parameters : public SceneElementProcessor
 {
 
 	public :

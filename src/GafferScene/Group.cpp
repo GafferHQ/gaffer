@@ -35,20 +35,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/lexical_cast.hpp"
-#include "boost/regex.hpp"
+#include "GafferScene/Group.h"
+
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TransformPlug.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/CompoundObject.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
-#include "IECore/CompoundObject.h"
-#include "IECore/CompoundData.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/ArrayPlug.h"
-#include "Gaffer/TransformPlug.h"
-
-#include "GafferScene/Group.h"
+#include "boost/lexical_cast.hpp"
+#include "boost/regex.hpp"
 
 using namespace std;
 using namespace Imath;

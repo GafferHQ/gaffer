@@ -36,13 +36,13 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferImage/ImageProcessor.h"
+#include "ImageViewBinding.h"
 
 #include "GafferImageUI/ImageView.h"
 
-#include "ImageViewBinding.h"
+#include "GafferImage/ImageProcessor.h"
+
+#include "GafferBindings/NodeBinding.h"
 
 using namespace std;
 using namespace boost::python;

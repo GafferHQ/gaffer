@@ -37,9 +37,11 @@
 #ifndef GAFFERUI_POINTER_H
 #define GAFFERUI_POINTER_H
 
-#include "boost/signals.hpp"
+#include "GafferUI/Export.h"
 
 #include "IECoreImage/ImagePrimitive.h"
+
+#include "boost/signals.hpp"
 
 namespace GafferUI
 {
@@ -48,7 +50,7 @@ IE_CORE_FORWARDDECLARE( Pointer )
 
 /// The Pointer class allows the mouse pointer to be
 /// manipulated.
-class Pointer : public IECore::RefCounted
+class GAFFERUI_API Pointer : public IECore::RefCounted
 {
 
 	public :

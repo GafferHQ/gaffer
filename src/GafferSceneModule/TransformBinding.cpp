@@ -36,16 +36,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/ComputeNodeBinding.h"
-
-#include "GafferScene/Constraint.h"
-#include "GafferScene/AimConstraint.h"
-#include "GafferScene/PointConstraint.h"
-#include "GafferScene/ParentConstraint.h"
-#include "GafferScene/Transform.h"
-#include "GafferScene/FreezeTransform.h"
-
 #include "TransformBinding.h"
+
+#include "GafferScene/AimConstraint.h"
+#include "GafferScene/Constraint.h"
+#include "GafferScene/FreezeTransform.h"
+#include "GafferScene/ParentConstraint.h"
+#include "GafferScene/PointConstraint.h"
+#include "GafferScene/Transform.h"
+
+#include "GafferBindings/ComputeNodeBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

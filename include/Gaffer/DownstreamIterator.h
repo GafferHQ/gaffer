@@ -37,11 +37,11 @@
 #ifndef GAFFER_DOWNSTREAMITERATOR_H
 #define GAFFER_DOWNSTREAMITERATOR_H
 
-#include "boost/iterator/iterator_facade.hpp"
+#include "Gaffer/DependencyNode.h"
 
 #include "IECore/MessageHandler.h"
 
-#include "Gaffer/DependencyNode.h"
+#include "boost/iterator/iterator_facade.hpp"
 
 namespace Gaffer
 {

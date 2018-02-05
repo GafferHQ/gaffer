@@ -38,14 +38,15 @@
 #ifndef GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H
 #define GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H
 
-#include "boost/format.hpp"
-
-#include "IECore/Parameter.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "GafferCortex/ParameterisedHolder.h"
 
 #include "GafferBindings/NodeBinding.h"
 
-#include "GafferCortex/ParameterisedHolder.h"
+#include "IECorePython/ExceptionAlgo.h"
+
+#include "IECore/Parameter.h"
+
+#include "boost/format.hpp"
 
 namespace GafferCortexModule
 {

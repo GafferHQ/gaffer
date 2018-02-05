@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class Encapsulate : public FilteredSceneProcessor
+class GAFFERSCENE_API Encapsulate : public FilteredSceneProcessor
 {
 
 	public :

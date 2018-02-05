@@ -36,15 +36,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferAppleseed/AppleseedOptions.h"
 #include "GafferAppleseed/AppleseedAttributes.h"
 #include "GafferAppleseed/AppleseedLight.h"
-#include "GafferAppleseed/InteractiveAppleseedRender.h"
-#include "GafferAppleseed/AppleseedShaderAdaptor.h"
+#include "GafferAppleseed/AppleseedOptions.h"
 #include "GafferAppleseed/AppleseedRender.h"
+#include "GafferAppleseed/AppleseedShaderAdaptor.h"
+#include "GafferAppleseed/InteractiveAppleseedRender.h"
+
+#include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferAppleseed;

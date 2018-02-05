@@ -34,37 +34,37 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/ImageWriter.h"
+
+#include "GafferImage/BufferAlgo.h"
+#include "GafferImage/ColorSpace.h"
+#include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImagePlug.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreImage/OpenImageIOAlgo.h"
+
+#include "IECore/MessageHandler.h"
+
+#include "OpenImageIO/imageio.h"
+
+#include "OpenColorIO/OpenColorIO.h"
+
+#include "boost/filesystem.hpp"
+
+#include "tbb/spin_mutex.h"
+
 #include <memory>
 
 #include <sys/utsname.h>
 #include <zlib.h>
 
-#include "tbb/spin_mutex.h"
-
-#include "boost/filesystem.hpp"
-
-#include "OpenImageIO/imageio.h"
-
-#include "OpenColorIO/OpenColorIO.h"
 OIIO_NAMESPACE_USING
-
-#include "OpenEXR/ImfCRgbaFile.h"  // JUST to get symbols to figure out version!
-
-#include "IECore/MessageHandler.h"
-
-#include "IECoreImage/OpenImageIOAlgo.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferImage/FormatPlug.h"
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImage/BufferAlgo.h"
-#include "GafferImage/ImageWriter.h"
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ColorSpace.h"
 
 using namespace std;
 using namespace Imath;

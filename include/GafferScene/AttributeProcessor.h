@@ -51,7 +51,7 @@ namespace GafferScene
 
 /// The AttributeProcessor base class simplifies the process of manipulating
 /// attributes.
-class AttributeProcessor : public SceneElementProcessor
+class GAFFERSCENE_API AttributeProcessor : public SceneElementProcessor
 {
 
 	public :

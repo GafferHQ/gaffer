@@ -34,18 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/LRUCache.h"
-#include "IECore/Exception.h"
-#include "IECore/SearchPath.h"
+#include "GafferUI/ImageGadget.h"
+
+#include "GafferUI/Style.h"
+
+#include "IECoreGL/Texture.h"
+#include "IECoreGL/TextureLoader.h"
+#include "IECoreGL/ToGLTextureConverter.h"
 
 #include "IECoreImage/ImageReader.h"
 
-#include "IECoreGL/ToGLTextureConverter.h"
-#include "IECoreGL/TextureLoader.h"
-#include "IECoreGL/Texture.h"
-
-#include "GafferUI/ImageGadget.h"
-#include "GafferUI/Style.h"
+#include "IECore/Exception.h"
+#include "IECore/LRUCache.h"
+#include "IECore/SearchPath.h"
 
 using namespace Imath;
 using namespace IECore;

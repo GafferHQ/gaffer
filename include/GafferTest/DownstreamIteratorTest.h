@@ -37,10 +37,12 @@
 #ifndef GAFFERTEST_DOWNSTREAMITERATORTEST_H
 #define GAFFERTEST_DOWNSTREAMITERATORTEST_H
 
+#include "GafferTest/Export.h"
+
 namespace GafferTest
 {
 
-void testDownstreamIterator();
+GAFFERTEST_API void testDownstreamIterator();
 
 } // namespace GafferTest
 

@@ -37,17 +37,17 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/IECoreBinding.h"
+#include "SplinePlugBinding.h"
+
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-
-#include "SplinePlugBinding.h"
+#include "IECorePython/IECoreBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

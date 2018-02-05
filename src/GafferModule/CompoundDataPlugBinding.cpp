@@ -37,14 +37,14 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/CompoundDataPlug.h"
+#include "CompoundDataPlugBinding.h"
 
 #include "GafferBindings/ValuePlugBinding.h"
 
-#include "CompoundDataPlugBinding.h"
+#include "Gaffer/CompoundDataPlug.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

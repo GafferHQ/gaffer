@@ -37,16 +37,18 @@
 #ifndef GAFFERVDB_VOLUMETOMESH_H
 #define GAFFERVDB_VOLUMETOMESH_H
 
-#include "Gaffer/NumericPlug.h"
+#include "GafferVDB/Export.h"
+#include "GafferVDB/TypeIds.h"
 
 #include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferVDB/TypeIds.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferVDB
 {
 
-class LevelSetToMesh : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API LevelSetToMesh : public GafferScene::SceneElementProcessor
 {
 
 	public :

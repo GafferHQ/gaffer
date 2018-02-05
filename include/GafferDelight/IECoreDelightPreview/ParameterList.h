@@ -35,13 +35,14 @@
 #ifndef IECOREDELIGHT_PARAMETERLIST_H
 #define IECOREDELIGHT_PARAMETERLIST_H
 
+#include "IECoreScene/PrimitiveVariable.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/VectorTypedData.h"
+
 #include <vector>
 
-#include "nsi.h"
-
-#include "IECore/VectorTypedData.h"
-#include "IECore/CompoundData.h"
-#include "IECoreScene/PrimitiveVariable.h"
+#include <nsi.h>
 
 namespace IECoreDelight
 {

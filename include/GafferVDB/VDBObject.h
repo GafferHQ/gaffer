@@ -37,23 +37,28 @@
 #ifndef GAFFERVDB_VDBOBJECT_H
 #define GAFFERVDB_VDBOBJECT_H
 
-#include <unordered_map>
+#include "GafferVDB/Export.h"
+#include "GafferVDB/TypeIds.h"
+
+#include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/CompoundObject.h"
+#include "IECore/Export.h"
+#include "IECore/Object.h"
+#include "IECore/VectorTypedData.h"
 
 #include "openvdb/openvdb.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
-#include "IECore/Object.h"
-#include "IECore/CompoundObject.h"
-#include "IECoreScene/VisibleRenderable.h"
-#include "IECore/VectorTypedData.h"
-
-#include "GafferVDB/TypeIds.h"
+#include <unordered_map>
 
 namespace GafferVDB
 {
 
-class VDBObject : public IECoreScene::VisibleRenderable
+class GAFFERVDB_API VDBObject : public IECoreScene::VisibleRenderable
 {
 
 	public :

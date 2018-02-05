@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
+#include "GafferScene/Shader.h"
 
 #include "GafferUI/Nodule.h"
-#include "GafferUI/PlugAdder.h"
 #include "GafferUI/NoduleLayout.h"
+#include "GafferUI/PlugAdder.h"
 
-#include "GafferScene/Shader.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/UndoScope.h"
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Gaffer;

@@ -38,19 +38,20 @@
 #ifndef GAFFERSCENE_SCENEPLUG_H
 #define GAFFERSCENE_SCENEPLUG_H
 
-#include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/TypedPlug.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Context.h"
-
-#include "GafferScene/TypeIds.h"
+#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace GafferScene
 {
 
 /// The ScenePlug is used to pass scenegraphs between nodes in the gaffer graph. It is a compound
 /// type, with subplugs for different aspects of the scene.
-class ScenePlug : public Gaffer::ValuePlug
+class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 {
 
 	public :

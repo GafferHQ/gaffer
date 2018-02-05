@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/ObjectParameter.h"
-
 #include "GafferCortex/ObjectParameterHandler.h"
+
+#include "IECore/ObjectParameter.h"
 
 using namespace GafferCortex;
 

@@ -34,17 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/container/flat_map.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string.hpp"
+#include "GafferSceneUI/LightFilterVisualiser.h"
 
-#include "IECoreScene/Shader.h"
+#include "GafferSceneUI/AttributeVisualiser.h"
 
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
 
-#include "GafferSceneUI/LightFilterVisualiser.h"
-#include "GafferSceneUI/AttributeVisualiser.h"
+#include "IECoreScene/Shader.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_map.hpp"
 
 using namespace std;
 using namespace Imath;

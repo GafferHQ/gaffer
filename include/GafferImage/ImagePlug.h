@@ -38,14 +38,15 @@
 #ifndef GAFFER_IMAGEPLUG_H
 #define GAFFER_IMAGEPLUG_H
 
-#include "IECoreImage/ImagePrimitive.h"
+#include "GafferImage/AtomicFormatPlug.h"
+#include "GafferImage/Export.h"
+#include "GafferImage/TypeIds.h"
 
+#include "Gaffer/Context.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/Context.h"
 
-#include "GafferImage/TypeIds.h"
-#include "GafferImage/AtomicFormatPlug.h"
+#include "IECoreImage/ImagePrimitive.h"
 
 namespace GafferImage
 {
@@ -76,7 +77,7 @@ namespace GafferImage
 /// Some notes on color space:
 /// GafferImage nodes expect to operate in linear space, with associated alpha. Users are responsible
 /// for meeting that expectation (or knowing what they're doing when they don't).
-class ImagePlug : public Gaffer::ValuePlug
+class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 {
 
 	public :

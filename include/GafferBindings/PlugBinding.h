@@ -38,14 +38,14 @@
 #ifndef GAFFERBINDINGS_PLUGBINDING_H
 #define GAFFERBINDINGS_PLUGBINDING_H
 
-#include <utility>
-
-#include "IECorePython/ScopedGILRelease.h"
+#include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/Serialisation.h"
+#include "IECorePython/ScopedGILRelease.h"
+
+#include <utility>
 
 namespace GafferBindings
 {
@@ -137,7 +137,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 
 };
 
-class PlugSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API PlugSerialiser : public Serialisation::Serialiser
 {
 
 	public :

@@ -38,11 +38,11 @@
 #ifndef GAFFERUI_STANDARDNODEGADGET_H
 #define GAFFERUI_STANDARDNODEGADGET_H
 
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferUI/NodeGadget.h"
-#include "GafferUI/LinearContainer.h"
 #include "GafferUI/GraphGadget.h"
+#include "GafferUI/LinearContainer.h"
+#include "GafferUI/NodeGadget.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace GafferUI
 {
@@ -60,7 +60,7 @@ class NoduleLayout;
 /// - "nodeGadget:color" : Color3f
 /// - "nodeGadget:shape" : StringData containing "rectangle" or "oval"
 /// - "icon" : string naming an image to be used with ImageGadget
-class StandardNodeGadget : public NodeGadget
+class GAFFERUI_API StandardNodeGadget : public NodeGadget
 {
 
 	public :

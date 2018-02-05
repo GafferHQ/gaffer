@@ -37,10 +37,10 @@
 #ifndef GAFFER_SCENESWITCH_H
 #define GAFFER_SCENESWITCH_H
 
-#include "Gaffer/Switch.h"
-#include "Gaffer/Context.h"
-
 #include "GafferScene/SceneProcessor.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Switch.h"
 
 namespace GafferScene
 {

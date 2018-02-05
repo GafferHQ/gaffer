@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferScene/DeleteSets.h"
+
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferScene/DeleteSets.h"
 
 using namespace IECore;
 using namespace Gaffer;

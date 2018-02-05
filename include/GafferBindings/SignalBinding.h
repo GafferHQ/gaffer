@@ -40,6 +40,8 @@
 
 #include "boost/python.hpp"
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 

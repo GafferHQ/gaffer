@@ -37,10 +37,10 @@
 #ifndef GAFFERSCENE_CAPSULE_H
 #define GAFFERSCENE_CAPSULE_H
 
-#include "Gaffer/Context.h"
-
-#include "GafferScene/ScenePlug.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "Gaffer/Context.h"
 
 namespace GafferScene
 {
@@ -48,7 +48,7 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
 /// Procedural that renders a subtree of a Gaffer scene.
-class Capsule : public IECoreScenePreview::Procedural
+class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 {
 
 	public :

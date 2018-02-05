@@ -35,13 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
-#include "IECore/NullObject.h"
+#include "GafferImage/ImagePrimitiveSource.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferImage/ImagePrimitiveSource.h"
+#include "IECore/BoxAlgo.h"
+#include "IECore/BoxOps.h"
+#include "IECore/NullObject.h"
 
 namespace GafferImage
 {

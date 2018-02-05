@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class EvaluateLightLinks : public GafferScene::SceneProcessor
+class GAFFERSCENE_API EvaluateLightLinks : public GafferScene::SceneProcessor
 {
 
 	public :

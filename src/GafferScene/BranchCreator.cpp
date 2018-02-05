@@ -35,13 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferScene/BranchCreator.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/BranchCreator.h"
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace std;
 using namespace Imath;

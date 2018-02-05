@@ -37,16 +37,16 @@
 #ifndef GAFFERIMAGE_METADATAPROCESSOR_H
 #define GAFFERIMAGE_METADATAPROCESSOR_H
 
-#include "Gaffer/CompoundDataPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferImage
 {
 
 /// The MetadataProcessor class provides a base class for modifying metadata
 /// of an image while passing everything else through unchanged.
-class MetadataProcessor : public ImageProcessor
+class GAFFERIMAGE_API MetadataProcessor : public ImageProcessor
 {
 
 	public :

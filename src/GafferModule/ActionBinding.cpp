@@ -36,11 +36,11 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RefCountedBinding.h"
+#include "ActionBinding.h"
 
 #include "Gaffer/Action.h"
 
-#include "ActionBinding.h"
+#include "IECorePython/RefCountedBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

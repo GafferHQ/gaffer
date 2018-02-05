@@ -37,8 +37,11 @@
 #ifndef GAFFERSCENEUI_LIGHTVISUALISER_H
 #define GAFFERSCENEUI_LIGHTVISUALISER_H
 
-#include "IECore/ObjectVector.h"
+#include "GafferSceneUI/Export.h"
+
 #include "IECoreGL/Renderable.h"
+
+#include "IECore/ObjectVector.h"
 
 namespace GafferSceneUI
 {
@@ -50,7 +53,7 @@ IE_CORE_FORWARDDECLARE( LightVisualiser )
 /// depending on their shader name (accessed using `IECore::Shader::getName()`). A
 /// factory mechanism is provided to map from this name to a specialised
 /// LightVisualiser.
-class LightVisualiser : public IECore::RefCounted
+class GAFFERSCENEUI_API LightVisualiser : public IECore::RefCounted
 {
 
 	public :

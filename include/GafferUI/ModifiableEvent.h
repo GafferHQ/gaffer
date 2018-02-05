@@ -44,7 +44,7 @@ namespace GafferUI
 
 /// A base class for events for which the keyboard
 /// modifier keys are relevant.
-struct ModifiableEvent : public Event
+struct GAFFERUI_API ModifiableEvent : public Event
 {
 	/// An enum to represent the modifier keys. We deliberately ignore
 	/// platform specific modifiers like the Apple and Windows keys to

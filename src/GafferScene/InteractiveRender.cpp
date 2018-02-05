@@ -34,24 +34,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/predicate.hpp"
+#include "GafferScene/InteractiveRender.h"
 
-#include "tbb/task.h"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/NullObject.h"
-#include "IECoreScene/VisibleRenderable.h"
-#include "IECoreScene/Transform.h"
+#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SceneNode.h"
+#include "GafferScene/SceneProcessor.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/InteractiveRender.h"
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/SceneProcessor.h"
+#include "IECoreScene/Transform.h"
+#include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+
+#include "tbb/task.h"
 
 using namespace std;
 using namespace Imath;

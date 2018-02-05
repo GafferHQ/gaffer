@@ -50,7 +50,7 @@ namespace GafferScene
 {
 
 /// Applies texture coordinates via a camera projection.
-class MapProjection : public SceneElementProcessor
+class GAFFERSCENE_API MapProjection : public SceneElementProcessor
 {
 
 	public :

@@ -51,7 +51,7 @@ namespace Gaffer
 /// "in" and "out" already, or that it doesn't and they will be
 /// added dynamically following construction of the node.
 template<typename BaseType>
-class Loop : public BaseType
+class IECORE_EXPORT Loop : public BaseType
 {
 
 	public :

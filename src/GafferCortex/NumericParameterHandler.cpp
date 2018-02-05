@@ -35,11 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NumericParameter.h"
+#include "GafferCortex/NumericParameterHandler.h"
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferCortex/NumericParameterHandler.h"
+#include "IECore/NumericParameter.h"
 
 using namespace GafferCortex;
 

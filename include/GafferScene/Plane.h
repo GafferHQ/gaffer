@@ -38,14 +38,14 @@
 #ifndef GAFFERSCENE_PLANE_H
 #define GAFFERSCENE_PLANE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferScene/ObjectSource.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferScene
 {
 
-class Plane : public ObjectSource
+class GAFFERSCENE_API Plane : public ObjectSource
 {
 
 	public :

@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class DeleteAttributes : public AttributeProcessor
+class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 {
 
 	public :

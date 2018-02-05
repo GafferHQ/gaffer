@@ -49,7 +49,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class PointsType : public SceneElementProcessor
+class GAFFERSCENE_API PointsType : public SceneElementProcessor
 {
 
 	public :

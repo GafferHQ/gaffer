@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_LUT_H
 #define GAFFERIMAGE_LUT_H
 
-#include "Gaffer/NumericPlug.h"
-
 #include "GafferImage/OpenColorIOTransform.h"
+
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class LUT : public OpenColorIOTransform
+class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 {
 
 	public :

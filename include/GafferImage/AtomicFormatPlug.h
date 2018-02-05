@@ -37,10 +37,10 @@
 #ifndef GAFFERIMAGE_ATOMICFORMATPLUG_H
 #define GAFFERIMAGE_ATOMICFORMATPLUG_H
 
-#include "Gaffer/TypedPlug.h"
-
 #include "GafferImage/FormatData.h"
 #include "GafferImage/TypeIds.h"
+
+#include "Gaffer/TypedPlug.h"
 
 namespace GafferImage
 {

@@ -35,20 +35,22 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/raw_function.hpp"
-#include "boost/format.hpp"
-
-#include "IECore/SimpleTypedData.h"
-#include "IECorePython/ScopedGILLock.h"
-
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/Metadata.h"
-
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/DataBinding.h"
 
 #include "MetadataBinding.h"
+
+#include "GafferBindings/DataBinding.h"
+#include "GafferBindings/SignalBinding.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
+
+#include "IECorePython/ScopedGILLock.h"
+
+#include "IECore/SimpleTypedData.h"
+
+#include "boost/format.hpp"
+#include "boost/python/raw_function.hpp"
 
 using namespace boost::python;
 using namespace IECore;

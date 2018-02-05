@@ -37,21 +37,19 @@
 #ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
 #define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
 
-#include <utility>
-
-#include "boost/python/suite/indexing/container_utils.hpp"
-
-#include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "GafferDispatch/TaskNode.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferDispatch/TaskNode.h"
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILLock.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include <utility>
 
 namespace GafferDispatchBindings
 {
-
-void bindTaskNode();
 
 template<typename T, typename TWrapper=T>
 class TaskNodeClass : public GafferBindings::DependencyNodeClass<T, TWrapper>

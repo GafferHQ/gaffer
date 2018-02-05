@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/Primitive.h"
+#include "GafferScene/MapOffset.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/MapOffset.h"
+#include "IECoreScene/Primitive.h"
 
 using namespace std;
 using namespace Imath;

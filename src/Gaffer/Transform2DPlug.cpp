@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/AngleConversion.h"
-
 #include "Gaffer/Transform2DPlug.h"
+
+#include "IECore/AngleConversion.h"
 
 using namespace Imath;
 using namespace Gaffer;

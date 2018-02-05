@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "Gaffer/Loop.h"
+
+#include "boost/bind.hpp"
 
 namespace Gaffer
 {

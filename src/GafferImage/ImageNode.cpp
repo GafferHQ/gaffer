@@ -35,11 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/ImageNode.h"
+
+#include "GafferImage/FormatPlug.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
-
-#include "GafferImage/ImageNode.h"
-#include "GafferImage/FormatPlug.h"
 
 using namespace std;
 using namespace Imath;

@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class LightToCamera : public SceneElementProcessor
+class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
 {
 
 	public :

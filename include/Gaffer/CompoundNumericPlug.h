@@ -38,18 +38,21 @@
 #ifndef GAFFER_COMPOUNDNUMERICPLUG_H
 #define GAFFER_COMPOUNDNUMERICPLUG_H
 
-#include "OpenEXR/ImathVec.h"
-#include "OpenEXR/ImathColor.h"
+#include "Gaffer/NumericPlug.h"
 
+#include "IECore/Export.h"
 #include "IECore/GeometricTypedData.h"
 
-#include "Gaffer/NumericPlug.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathColor.h"
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace Gaffer
 {
 
 template<typename T>
-class CompoundNumericPlug : public ValuePlug
+class GAFFER_API CompoundNumericPlug : public ValuePlug
 {
 
 	public :

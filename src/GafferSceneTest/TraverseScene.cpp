@@ -34,11 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferSceneTest/TraverseScene.h"
+
+#include "GafferScene/SceneAlgo.h"
 
 #include "GafferDispatch/Dispatcher.h"
-#include "GafferScene/SceneAlgo.h"
-#include "GafferSceneTest/TraverseScene.h"
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace IECore;

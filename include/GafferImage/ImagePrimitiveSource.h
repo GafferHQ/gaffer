@@ -38,16 +38,16 @@
 #ifndef GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H
 #define GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
 {
 
 template<typename BaseType>
-class ImagePrimitiveSource : public BaseType
+class GAFFERIMAGE_API ImagePrimitiveSource : public BaseType
 {
 
 	public :

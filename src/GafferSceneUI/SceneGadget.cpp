@@ -34,28 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/task.h"
-#include "tbb/concurrent_unordered_set.h"
+#include "GafferSceneUI/SceneGadget.h"
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/MessageHandler.h"
-#include "IECoreScene/CurvesPrimitive.h"
-
-#include "IECoreGL/Renderable.h"
-#include "IECoreGL/CachedConverter.h"
-#include "IECoreGL/Primitive.h"
-#include "IECoreGL/Selector.h"
-#include "IECoreGL/CurvesPrimitive.h"
-
-#include "Gaffer/Node.h"
+#include "GafferSceneUI/AttributeVisualiser.h"
+#include "GafferSceneUI/ObjectVisualiser.h"
 
 #include "GafferUI/ViewportGadget.h"
 
-#include "GafferSceneUI/SceneGadget.h"
-#include "GafferSceneUI/ObjectVisualiser.h"
-#include "GafferSceneUI/AttributeVisualiser.h"
+#include "Gaffer/Node.h"
+
+#include "IECoreGL/CachedConverter.h"
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/Primitive.h"
+#include "IECoreGL/Renderable.h"
+#include "IECoreGL/Selector.h"
+
+#include "IECoreScene/CurvesPrimitive.h"
+
+#include "IECore/MessageHandler.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+
+#include "tbb/concurrent_unordered_set.h"
+#include "tbb/task.h"
 
 using namespace std;
 using namespace Imath;

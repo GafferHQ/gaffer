@@ -34,10 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-
 #include "GafferScene/Filter.h"
+
 #include "GafferScene/FilterPlug.h"
+
+#include "Gaffer/Context.h"
 
 using namespace GafferScene;
 using namespace Gaffer;

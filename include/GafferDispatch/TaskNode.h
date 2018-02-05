@@ -37,12 +37,13 @@
 #ifndef GAFFERDISPATCH_TASKNODE_H
 #define GAFFERDISPATCH_TASKNODE_H
 
-#include "IECore/MurmurHash.h"
+#include "GafferDispatch/Export.h"
+#include "GafferDispatch/TypeIds.h"
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Plug.h"
 
-#include "GafferDispatch/TypeIds.h"
+#include "IECore/MurmurHash.h"
 
 namespace Gaffer
 {
@@ -73,7 +74,7 @@ IE_CORE_FORWARDDECLARE( TaskNode )
 /// TaskNode can be chained together with other TaskNodes to define a required execution
 /// order. Typically TaskNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
-class TaskNode : public Gaffer::DependencyNode
+class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 {
 
 	public :

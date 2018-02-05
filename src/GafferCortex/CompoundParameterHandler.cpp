@@ -35,14 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/container/flat_set.hpp"
+#include "GafferCortex/CompoundParameterHandler.h"
+
+#include "Gaffer/ValuePlug.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/ValuePlug.h"
-
-#include "GafferCortex/CompoundParameterHandler.h"
+#include "boost/container/flat_set.hpp"
 
 using namespace IECore;
 using namespace GafferCortex;

@@ -35,10 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Exception.h"
-
 #include "GafferUI/ScaleHandle.h"
+
 #include "GafferUI/ViewportGadget.h"
+
+#include "IECore/Exception.h"
 
 using namespace Imath;
 using namespace IECore;

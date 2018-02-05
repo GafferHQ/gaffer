@@ -38,13 +38,13 @@
 #ifndef GAFFERUI_CONNECTIONGADGET_H
 #define GAFFERUI_CONNECTIONGADGET_H
 
-#include <functional>
-
-#include "boost/regex.hpp"
+#include "GafferUI/Gadget.h"
 
 #include "Gaffer/Plug.h"
 
-#include "GafferUI/Gadget.h"
+#include "boost/regex.hpp"
+
+#include <functional>
 
 namespace GafferUI
 {
@@ -61,7 +61,7 @@ IE_CORE_FORWARDDECLARE( ConnectionGadget )
 /// nodes - this allows the customisation of connection display. The most
 /// common customisation would be to apply a different style or custom
 /// tooltip - see ConnectionGadgetTest for an example.
-class ConnectionGadget : public Gadget
+class GAFFERUI_API ConnectionGadget : public Gadget
 {
 
 	public :

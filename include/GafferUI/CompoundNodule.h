@@ -38,8 +38,8 @@
 #ifndef GAFFERUI_COMPOUNDNODULE_H
 #define GAFFERUI_COMPOUNDNODULE_H
 
-#include "GafferUI/Nodule.h"
 #include "GafferUI/LinearContainer.h"
+#include "GafferUI/Nodule.h"
 
 namespace GafferUI
 {
@@ -48,7 +48,7 @@ IE_CORE_FORWARDDECLARE( NoduleLayout );
 
 /// A Nodule subclass to represent each of the children of a
 /// Plug with their own nodule.
-class CompoundNodule : public Nodule
+class GAFFERUI_API CompoundNodule : public Nodule
 {
 
 	public :

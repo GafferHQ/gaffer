@@ -56,7 +56,7 @@ void bindGlobals(); // to enable friend declaration for bindDeleteGlobals().
 namespace GafferScene
 {
 
-class DeleteGlobals : public GlobalsProcessor
+class GAFFERSCENE_API DeleteGlobals : public GlobalsProcessor
 {
 
 	public :

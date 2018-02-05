@@ -37,9 +37,9 @@
 #ifndef GAFFERUI_DOTNODEGADGET_H
 #define GAFFERUI_DOTNODEGADGET_H
 
-#include "Gaffer/Dot.h"
-
 #include "GafferUI/StandardNodeGadget.h"
+
+#include "Gaffer/Dot.h"
 
 namespace Gaffer
 {
@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 namespace GafferUI
 {
 
-class DotNodeGadget : public StandardNodeGadget
+class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 {
 
 	public :

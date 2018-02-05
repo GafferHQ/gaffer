@@ -34,15 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "openvdb/openvdb.h"
-#include "openvdb/tools/MeshToVolume.h"
+#include "GafferVDB/MeshToLevelSet.h"
+
+#include "GafferVDB/VDBObject.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 
-#include "GafferVDB/VDBObject.h"
-#include "GafferVDB/MeshToLevelSet.h"
+#include "openvdb/openvdb.h"
+#include "openvdb/tools/MeshToVolume.h"
 
 using namespace std;
 using namespace Imath;

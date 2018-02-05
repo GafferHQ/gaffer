@@ -37,20 +37,21 @@
 #ifndef GAFFERSCENEUI_SHADERVIEW_H
 #define GAFFERSCENEUI_SHADERVIEW_H
 
-#include <functional>
-
-#include "GafferImage/Display.h"
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/InteractiveRender.h"
 
 #include "GafferImageUI/ImageView.h"
 
-#include "GafferSceneUI/TypeIds.h"
+#include "GafferImage/Display.h"
+
+#include <functional>
 
 namespace GafferSceneUI
 {
 
-class ShaderView : public GafferImageUI::ImageView
+class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 {
 
 	public :

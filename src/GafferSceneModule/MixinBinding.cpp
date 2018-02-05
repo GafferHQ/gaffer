@@ -36,16 +36,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "MixinBinding.h"
 
+#include "GafferScene/DeleteSceneContextVariables.h"
 #include "GafferScene/SceneContextProcessor.h"
 #include "GafferScene/SceneContextVariables.h"
-#include "GafferScene/DeleteSceneContextVariables.h"
+#include "GafferScene/SceneLoop.h"
 #include "GafferScene/SceneSwitch.h"
 #include "GafferScene/SceneTimeWarp.h"
-#include "GafferScene/SceneLoop.h"
 
-#include "MixinBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace GafferScene;
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,28 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGETEST_PROCESSTILES_H
-#define GAFFERIMAGETEST_PROCESSTILES_H
+#ifndef GAFFERDISPATCHMODULE_DISPATCHERBINDING_H
+#define GAFFERDISPATCHMODULE_DISPATCHERBINDING_H
 
-namespace GafferImage
+namespace GafferDispatchModule
 {
 
-	IE_CORE_FORWARDDECLARE( ImagePlug )
+void bindDispatcher();
 
-} // namespace GafferImage
+} // namespace GafferDispatchModule
 
-namespace GafferImageTest
-{
-
-/// Traverses the tiles and channels in an image, processing the channel data for each one, using
-/// parallel threads to process different tiles and channels. It's useful to use this in test
-// cases to exercise any thread related crashes, and also in profiling for performance improvement.
-void processTiles( const GafferImage::ImagePlug *imagePlug );
-
-/// Arranges for processTiles() to be called every time the image is dirtied. This is useful
-/// for exposing bugs, particularly with GIL management.
-boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image );
-
-} // namespace GafferImageTest
-
-#endif // GAFFERIMAGETEST_PROCESSTILES_H
+#endif // GAFFERDISPATCHMODULE_DISPATCHERBINDING_H

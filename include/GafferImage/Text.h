@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_TEXT_H
 #define GAFFERIMAGE_TEXT_H
 
-#include "Gaffer/BoxPlug.h"
-
 #include "GafferImage/Shape.h"
+
+#include "Gaffer/BoxPlug.h"
 
 namespace Gaffer
 {
@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( Transform2DPlug )
 namespace GafferImage
 {
 
-class Text : public Shape
+class GAFFERIMAGE_API Text : public Shape
 {
 
 	public :

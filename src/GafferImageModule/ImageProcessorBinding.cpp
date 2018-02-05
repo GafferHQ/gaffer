@@ -34,19 +34,19 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "ImageProcessorBinding.h"
 
-#include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-
-#include "GafferImage/DeleteChannels.h"
 #include "GafferImage/CollectImages.h"
 #include "GafferImage/CopyChannels.h"
+#include "GafferImage/DeleteChannels.h"
 #include "GafferImage/Merge.h"
 #include "GafferImage/Mix.h"
 #include "GafferImage/Shuffle.h"
 
-#include "ImageProcessorBinding.h"
+#include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;

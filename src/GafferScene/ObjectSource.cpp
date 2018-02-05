@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenEXR/ImathBoxAlgo.h"
+#include "GafferScene/ObjectSource.h"
+
+#include "GafferScene/SceneAlgo.h"
+
+#include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TransformPlug.h"
 
 #include "IECore/NullObject.h"
 
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/TransformPlug.h"
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferScene/ObjectSource.h"
-#include "GafferScene/SceneAlgo.h"
+#include "OpenEXR/ImathBoxAlgo.h"
 
 using namespace GafferScene;
 

@@ -37,16 +37,16 @@
 #ifndef GAFFERSCENEUI_SCALETOOL_H
 #define GAFFERSCENEUI_SCALETOOL_H
 
-#include "GafferUI/Style.h"
-
 #include "GafferSceneUI/TransformTool.h"
+
+#include "GafferUI/Style.h"
 
 namespace GafferSceneUI
 {
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class ScaleTool : public TransformTool
+class GAFFERSCENEUI_API ScaleTool : public TransformTool
 {
 
 	public :

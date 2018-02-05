@@ -37,16 +37,17 @@
 #ifndef GAFFERAPPLESEED_APPLESEEDLIGHT_H
 #define GAFFERAPPLESEED_APPLESEEDLIGHT_H
 
-#include "foundation/utility/api/specializedapiarrays.h"
+#include "GafferAppleseed/Export.h"
+#include "GafferAppleseed/TypeIds.h"
 
 #include "GafferScene/Light.h"
 
-#include "GafferAppleseed/TypeIds.h"
+#include "foundation/utility/api/specializedapiarrays.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedLight : public GafferScene::Light
+class GAFFERAPPLESEED_API AppleseedLight : public GafferScene::Light
 {
 
 	public :

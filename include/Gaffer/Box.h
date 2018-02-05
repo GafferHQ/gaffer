@@ -47,7 +47,7 @@ IE_CORE_FORWARDDECLARE( Set )
 
 /// A Box is simply a Node which is intended to hold other Nodes
 /// as children.
-class Box : public SubGraph
+class GAFFER_API Box : public SubGraph
 {
 
 	public :

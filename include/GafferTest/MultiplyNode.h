@@ -37,15 +37,16 @@
 #ifndef GAFFERTEST_MULTIPLYNODE_H
 #define GAFFERTEST_MULTIPLYNODE_H
 
+#include "GafferTest/Export.h"
+#include "GafferTest/TypeIds.h"
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
-
-#include "GafferTest/TypeIds.h"
 
 namespace GafferTest
 {
 
-class MultiplyNode : public Gaffer::ComputeNode
+class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 {
 
 	public :

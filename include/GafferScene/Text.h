@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class Text : public ObjectSource
+class GAFFERSCENE_API Text : public ObjectSource
 {
 
 	public :

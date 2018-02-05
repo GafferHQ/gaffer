@@ -37,10 +37,10 @@
 #ifndef GAFFERIMAGE_SHAPE_H
 #define GAFFERIMAGE_SHAPE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/ImageSwitch.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace GafferImage
 {
@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( ImageTransform )
 /// Derived classes are responsible only for generating a mask for the
 /// shape, and the base class takes care of colouring it and compositing
 /// it over the input.
-class Shape : public ImageProcessor
+class GAFFERIMAGE_API Shape : public ImageProcessor
 {
 
 	public :

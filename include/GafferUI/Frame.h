@@ -44,7 +44,7 @@ namespace GafferUI
 {
 
 /// The Frame class draws a frame around its child.
-class Frame : public IndividualContainer
+class GAFFERUI_API Frame : public IndividualContainer
 {
 
 	public :

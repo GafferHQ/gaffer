@@ -36,15 +36,15 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/OpenColorIOTransform.h"
-#include "GafferImage/ColorSpace.h"
+#include "OpenColorIOTransformBinding.h"
+
 #include "GafferImage/CDL.h"
+#include "GafferImage/ColorSpace.h"
 #include "GafferImage/DisplayTransform.h"
 #include "GafferImage/LUT.h"
+#include "GafferImage/OpenColorIOTransform.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-
-#include "OpenColorIOTransformBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;

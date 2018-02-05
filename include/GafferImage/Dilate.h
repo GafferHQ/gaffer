@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class Dilate : public RankFilter
+class GAFFERIMAGE_API Dilate : public RankFilter
 {
 
 	public :

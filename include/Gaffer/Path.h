@@ -38,13 +38,14 @@
 #ifndef GAFFER_PATH_H
 #define GAFFER_PATH_H
 
-#include "boost/signals.hpp"
-
-#include "IECore/RunTimeTyped.h"
-#include "IECore/InternedString.h"
-#include "IECore/CompoundData.h"
-
+#include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/InternedString.h"
+#include "IECore/RunTimeTyped.h"
+
+#include "boost/signals.hpp"
 
 namespace GafferModule
 {
@@ -70,7 +71,7 @@ IE_CORE_FORWARDDECLARE( PathFilter )
 ///
 /// A path is represented by a root location followed by a series of names
 /// which refer to items nested below the root.
-class Path : public IECore::RunTimeTyped
+class GAFFER_API Path : public IECore::RunTimeTyped
 {
 
 	public :

@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer

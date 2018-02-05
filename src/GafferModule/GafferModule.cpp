@@ -35,16 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
-
-#include "Gaffer/TimeWarp.h"
-#include "Gaffer/ContextVariables.h"
-#include "Gaffer/DeleteContextVariables.h"
-#include "Gaffer/Backdrop.h"
-#include "Gaffer/Loop.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
 #include "ActionBinding.h"
 #include "AnimationBinding.h"
 #include "ApplicationRootBinding.h"
@@ -83,6 +73,16 @@
 #include "TypedPlugBinding.h"
 #include "UndoScopeBinding.h"
 #include "ValuePlugBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "Gaffer/Backdrop.h"
+#include "Gaffer/ContextVariables.h"
+#include "Gaffer/DeleteContextVariables.h"
+#include "Gaffer/Loop.h"
+#include "Gaffer/TimeWarp.h"
+
+#include "tbb/tbb.h"
 
 using namespace boost::python;
 using namespace Gaffer;

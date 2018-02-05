@@ -34,19 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/algorithm/string/replace.hpp"
-
-#include "Gaffer/BoxIO.h"
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/PlugAdder.h"
 #include "GafferUI/SpacerGadget.h"
+#include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/TextGadget.h"
+
+#include "Gaffer/BoxIO.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/UndoScope.h"
+
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

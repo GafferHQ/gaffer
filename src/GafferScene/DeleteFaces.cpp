@@ -34,15 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
-#include "boost/algorithm/string.hpp"
-
-#include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/MeshAlgo.h"
+#include "GafferScene/DeleteFaces.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/DeleteFaces.h"
+#include "IECoreScene/MeshAlgo.h"
+#include "IECoreScene/MeshPrimitive.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/format.hpp"
 
 using namespace IECore;
 using namespace IECoreScene;

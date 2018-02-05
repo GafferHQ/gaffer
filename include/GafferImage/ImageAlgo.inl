@@ -37,12 +37,14 @@
 #ifndef GAFFERIMAGE_IMAGEALGO_INL
 #define GAFFERIMAGE_IMAGEALGO_INL
 
-#include "tbb/tbb.h"
-#include "boost/tuple/tuple.hpp"
+#include "GafferImage/BufferAlgo.h"
+#include "GafferImage/ImagePlug.h"
 
 #include "Gaffer/Context.h"
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/BufferAlgo.h"
+
+#include "boost/tuple/tuple.hpp"
+
+#include "tbb/tbb.h"
 
 namespace GafferImage
 {

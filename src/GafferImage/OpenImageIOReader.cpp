@@ -35,30 +35,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferImage/OpenImageIOReader.h"
+
+#include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageAlgo.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreImage/OpenImageIOAlgo.h"
+
+#include "IECore/Export.h"
+#include "IECore/FileSequence.h"
+#include "IECore/FileSequenceFunctions.h"
+#include "IECore/LRUCache.h"
+#include "IECore/MessageHandler.h"
+
+#include "OpenImageIO/imagecache.h"
+
 #include "boost/bind.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/regex.hpp"
 
 #include "tbb/mutex.h"
 
-#include "OpenEXR/half.h"
-
-#include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
-
-#include "IECore/FileSequence.h"
-#include "IECore/MessageHandler.h"
-#include "IECore/FileSequenceFunctions.h"
-#include "IECore/LRUCache.h"
-
-#include "IECoreImage/OpenImageIOAlgo.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImage/OpenImageIOReader.h"
-#include "GafferImage/FormatPlug.h"
 
 using namespace std;
 using namespace tbb;
@@ -212,7 +213,7 @@ class File
 
 				// Set up a tile batch that is one tile high, and wide enough to hold everything from the beginning
 				// of a scanline to the end
-				m_tileBatchSize = V2i( 0, 1 ) + 
+				m_tileBatchSize = V2i( 0, 1 ) +
 					ImagePlug::tileIndex( V2i( m_imageSpec.x + m_imageSpec.width + ImagePlug::tileSize() - 1, 0 ) ) -
 					ImagePlug::tileIndex( V2i( m_imageSpec.x, 0 ) );
 			}
@@ -276,12 +277,12 @@ class File
 				// Round the target region coordinates outwards to the tile boundaries in the file
 				// ( these are sized based on m_imageSpec.tile_(width/height), and spaced relative to
 				// the data window origin ).
-				// 
+				//
 				// Then clamp them back to the data window.
 				// ( read_tiles requires that the coordinates lie on either a tile boundary OR the image boundary )
 
 				fileDataRegion = BufferAlgo::intersection( fileDataWindow, Box2i(
-					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin, 
+					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin,
 					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
 				) );
 
@@ -324,7 +325,7 @@ class File
 			}
 
 			// Do the actual read of data
-			// 
+			//
 			// Note - this method is not thread-safe, but because this is a private plug is only computed from
 			// the computeChannelData method, it is safe to assume that we have already acquired m_mutex
 			// at this point
@@ -403,7 +404,7 @@ class File
 		const ImageSpec &imageSpec() const
 		{
 			return m_imageSpec;
-		} 
+		}
 
 		tbb::mutex &mutex()
 		{
@@ -447,7 +448,7 @@ class File
 				// For scanline images, horizontal index relative to data window
 				subIndex.x = tileIndex.x - ImagePlug::tileIndex( V2i( m_imageSpec.x, m_imageSpec.y ) ).x;
 			}
-		
+
 			return channelIndex * tilePlaneSize + subIndex.y * m_tileBatchSize.x + subIndex.x;
 		}
 
@@ -943,9 +944,9 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	V3i tileBatchIndex;
 	int subIndex;
 	file->findTile( channelName, tileOrigin, tileBatchIndex, subIndex );
-		
+
 	c.set( g_tileBatchIndexContextName, tileBatchIndex );
-	
+
 	ConstObjectVectorPtr tileBatch;
 
 	// We never want two threads to both read the same tile batch from disk, so it's important to lock

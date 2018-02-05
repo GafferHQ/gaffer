@@ -38,13 +38,13 @@
 #ifndef GAFFERUI_NODULE_H
 #define GAFFERUI_NODULE_H
 
-#include <functional>
-
-#include "boost/regex.hpp"
+#include "GafferUI/Gadget.h"
 
 #include "Gaffer/FilteredRecursiveChildIterator.h"
 
-#include "GafferUI/Gadget.h"
+#include "boost/regex.hpp"
+
+#include <functional>
 
 namespace Gaffer
 {
@@ -56,7 +56,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Nodule )
 
-class Nodule : public Gadget
+class GAFFERUI_API Nodule : public Gadget
 {
 
 	public :

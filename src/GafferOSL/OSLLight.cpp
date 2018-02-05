@@ -34,17 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NullObject.h"
-#include "IECoreScene/SpherePrimitive.h"
-#include "IECoreScene/DiskPrimitive.h"
+#include "GafferOSL/OSLLight.h"
 
-#include "Gaffer/StringPlug.h"
+#include "GafferOSL/OSLShader.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
 #include "GafferScene/Shader.h"
 
-#include "GafferOSL/OSLLight.h"
-#include "GafferOSL/OSLShader.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreScene/DiskPrimitive.h"
+#include "IECoreScene/SpherePrimitive.h"
+
+#include "IECore/NullObject.h"
 
 using namespace Imath;
 using namespace IECore;

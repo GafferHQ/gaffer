@@ -34,14 +34,14 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferImage/MetadataProcessor.h"
-#include "GafferImage/ImageMetadata.h"
-#include "GafferImage/DeleteImageMetadata.h"
-#include "GafferImage/CopyImageMetadata.h"
-
 #include "MetadataBinding.h"
+
+#include "GafferImage/CopyImageMetadata.h"
+#include "GafferImage/DeleteImageMetadata.h"
+#include "GafferImage/ImageMetadata.h"
+#include "GafferImage/MetadataProcessor.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;

@@ -40,6 +40,8 @@
 
 #include "GafferScene/SceneProcessor.h"
 
+#include "Gaffer/StringPlug.h"
+
 namespace GafferScene
 {
 
@@ -47,7 +49,7 @@ namespace GafferScene
 /// There would be a single virtual method for servicing queries about the mapping between
 /// output and input paths. This would be necessary for backtracking in the SceneInspector
 /// to provide information about who modified what.
-class SubTree : public SceneProcessor
+class GAFFERSCENE_API SubTree : public SceneProcessor
 {
 
 	public :

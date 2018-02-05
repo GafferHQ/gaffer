@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenEXR/ImathMatrixAlgo.h"
-
 #include "GafferScene/AimConstraint.h"
+
+#include "OpenEXR/ImathMatrixAlgo.h"
 
 using namespace Imath;
 using namespace Gaffer;

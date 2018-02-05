@@ -38,15 +38,20 @@
 #ifndef GAFFERUI_STYLE_H
 #define GAFFERUI_STYLE_H
 
-#include "boost/signal.hpp"
+#include "GafferUI/Export.h"
+#include "GafferUI/TypeIds.h"
 
-#include "OpenEXR/ImathBox.h"
-
-#include "IECore/RunTimeTyped.h"
-#include "IECore/LineSegment.h"
 #include "IECoreGL/GL.h"
 
-#include "GafferUI/TypeIds.h"
+#include "IECore/Export.h"
+#include "IECore/LineSegment.h"
+#include "IECore/RunTimeTyped.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/signal.hpp"
 
 namespace IECoreGL
 {
@@ -60,7 +65,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Style );
 
-class Style : public IECore::RunTimeTyped
+class GAFFERUI_API Style : public IECore::RunTimeTyped
 {
 
 	public :

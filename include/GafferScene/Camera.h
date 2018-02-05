@@ -43,7 +43,7 @@
 namespace GafferScene
 {
 
-class Camera : public ObjectSource
+class GAFFERSCENE_API Camera : public ObjectSource
 {
 
 	public :

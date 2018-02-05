@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "Gaffer/Animation.h"
+
+#include "Gaffer/Action.h"
+#include "Gaffer/Context.h"
 
 #include "OpenEXR/ImathFun.h"
 
-#include "Gaffer/Animation.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/Action.h"
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;

@@ -32,13 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "nsi.h"
-
-#include "IECore/MessageHandler.h"
-#include "IECoreScene/CurvesPrimitive.h"
-
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+
+#include "IECoreScene/CurvesPrimitive.h"
+
+#include "IECore/MessageHandler.h"
+
+#include <nsi.h>
 
 using namespace std;
 using namespace IECore;

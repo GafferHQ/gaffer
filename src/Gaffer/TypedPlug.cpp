@@ -36,8 +36,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
+
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedPlug.inl"
 
 namespace Gaffer
 {

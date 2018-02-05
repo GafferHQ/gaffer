@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/ClippingPlane.h"
+#include "GafferScene/ClippingPlane.h"
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/ClippingPlane.h"
+#include "IECoreScene/ClippingPlane.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

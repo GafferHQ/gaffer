@@ -37,16 +37,17 @@
 #ifndef GAFFERSCENE_RENDERERALGO_H
 #define GAFFERSCENE_RENDERERALGO_H
 
-#include <functional>
+#include "GafferScene/ScenePlug.h"
 
-#include "boost/container/flat_map.hpp"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/CompoundObject.h"
 #include "IECore/VectorTypedData.h"
-#include "IECoreScene/VisibleRenderable.h"
-#include "IECoreScene/Camera.h"
 
-#include "GafferScene/ScenePlug.h"
+#include "boost/container/flat_map.hpp"
+
+#include <functional>
 
 namespace IECoreScenePreview
 {
@@ -64,39 +65,39 @@ namespace RendererAlgo
 {
 
 /// Creates the directories necessary to receive the Displays in globals.
-void createDisplayDirectories( const IECore::CompoundObject *globals );
+GAFFERSCENE_API void createDisplayDirectories( const IECore::CompoundObject *globals );
 
 /// Samples the local transform from the current location in preparation for output to the renderer.
 /// If segments is 0, the transform is sampled at the time from the current context. If it is non-zero then
 /// the sampling is performed evenly across the shutter interval, which should have been obtained via
 /// SceneAlgo::shutter(). If all samples turn out to be identical, they will be collapsed automatically
 /// into a single sample. The sampleTimes container is only filled if there is more than one sample.
-void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes );
+GAFFERSCENE_API void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes );
 
 /// Samples the object from the current location in preparation for output to the renderer. Sampling parameters
 /// are as for the transformSamples() method. Multiple samples will only be generated for Primitives, since other
 /// object types cannot be interpolated anyway.
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
+GAFFERSCENE_API void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.
 typedef std::function<SceneProcessorPtr ()> Adaptor;
 /// Registers an adaptor.
-void registerAdaptor( const std::string &name, Adaptor adaptor );
+GAFFERSCENE_API void registerAdaptor( const std::string &name, Adaptor adaptor );
 /// Removes a previously registered adaptor.
-void deregisterAdaptor( const std::string &name );
+GAFFERSCENE_API void deregisterAdaptor( const std::string &name );
 /// Returns a SceneProcessor that will apply all the currently
 /// registered adaptors.
-SceneProcessorPtr createAdaptors();
+GAFFERSCENE_API SceneProcessorPtr createAdaptors();
 
-void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
-void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 /// Utility class to handle all the set computations needed for a render.
-class RenderSets : boost::noncopyable
+class GAFFERSCENE_API RenderSets : boost::noncopyable
 {
 
 	public :
@@ -142,12 +143,12 @@ class RenderSets : boost::noncopyable
 
 };
 
-void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
-void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals );
+GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals );
 
 } // namespace RendererAlgo
 

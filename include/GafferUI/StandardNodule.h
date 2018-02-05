@@ -38,10 +38,10 @@
 #ifndef GAFFERUI_STANDARDNODULE_H
 #define GAFFERUI_STANDARDNODULE_H
 
-#include "Gaffer/StringAlgo.h"
-
-#include "GafferUI/Nodule.h"
 #include "GafferUI/GraphGadget.h"
+#include "GafferUI/Nodule.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
 {
@@ -51,7 +51,7 @@ namespace Gaffer
 namespace GafferUI
 {
 
-class StandardNodule : public Nodule
+class GAFFERUI_API StandardNodule : public Nodule
 {
 
 	public :

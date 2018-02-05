@@ -42,7 +42,7 @@
 namespace Gaffer
 {
 
-class BoxIn : public BoxIO
+class GAFFER_API BoxIn : public BoxIO
 {
 
 	public :

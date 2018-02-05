@@ -35,38 +35,40 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "IECore/VectorTypedData.h"
-#include "IECore/AngleConversion.h"
-#include "IECoreScene/Transform.h"
-
-#include "IECoreGL/GL.h"
-#include "IECoreGL/State.h"
-#include "IECoreGL/Camera.h"
-#include "IECoreGL/Primitive.h"
-#include "IECoreGL/CurvesPrimitive.h"
-
-#include "Gaffer/Context.h"
-#include "Gaffer/BlockedConnection.h"
-#include "Gaffer/StringPlug.h"
-
-#include "GafferUI/Style.h"
-#include "GafferUI/Pointer.h"
-
-#include "GafferScene/StandardAttributes.h"
-#include "GafferScene/PathFilter.h"
-#include "GafferScene/SetFilter.h"
-#include "GafferScene/Grid.h"
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/StandardOptions.h"
-#include "GafferScene/LightToCamera.h"
-#include "GafferScene/RendererAlgo.h"
+#include "GafferSceneUI/SceneView.h"
 
 #include "GafferSceneUI/ContextAlgo.h"
-#include "GafferSceneUI/SceneView.h"
+
+#include "GafferScene/Grid.h"
+#include "GafferScene/LightToCamera.h"
+#include "GafferScene/PathFilter.h"
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SetFilter.h"
+#include "GafferScene/StandardAttributes.h"
+#include "GafferScene/StandardOptions.h"
+
+#include "GafferUI/Pointer.h"
+#include "GafferUI/Style.h"
+
+#include "Gaffer/BlockedConnection.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreGL/Camera.h"
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/GL.h"
+#include "IECoreGL/Primitive.h"
+#include "IECoreGL/State.h"
+
+#include "IECoreScene/Transform.h"
+
+#include "IECore/AngleConversion.h"
+#include "IECore/VectorTypedData.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
 using namespace std;
 using namespace Imath;

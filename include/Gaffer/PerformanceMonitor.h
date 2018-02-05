@@ -37,16 +37,16 @@
 #ifndef GAFFER_PERFORMANCEMONITOR_H
 #define GAFFER_PERFORMANCEMONITOR_H
 
-#include <stack>
-
-#include "tbb/enumerable_thread_specific.h"
-
-#include "boost/unordered_map.hpp"
-#include "boost/chrono.hpp"
+#include "Gaffer/Monitor.h"
 
 #include "IECore/RefCounted.h"
 
-#include "Gaffer/Monitor.h"
+#include "boost/chrono.hpp"
+#include "boost/unordered_map.hpp"
+
+#include "tbb/enumerable_thread_specific.h"
+
+#include <stack>
 
 namespace Gaffer
 {
@@ -55,7 +55,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 
 /// A monitor which collects statistics about the frequency
 /// and duration of hash and compute processes per plug.
-class PerformanceMonitor : public Monitor
+class GAFFER_API PerformanceMonitor : public Monitor
 {
 
 	public :

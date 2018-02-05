@@ -38,11 +38,15 @@
 #ifndef GAFFERUI_GRAPHLAYOUT_H
 #define GAFFERUI_GRAPHLAYOUT_H
 
-#include "OpenEXR/ImathVec.h"
+#include "GafferUI/Export.h"
+#include "GafferUI/TypeIds.h"
 
+#include "IECore/Export.h"
 #include "IECore/RunTimeTyped.h"
 
-#include "GafferUI/TypeIds.h"
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathVec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace Gaffer
 {
@@ -64,7 +68,7 @@ IE_CORE_FORWARDDECLARE( GraphGadget );
 /// a mechanism of named operations which can be invoked by menu items in the NodeGraph.
 /// The StandardGraphLayout should then implement some variation of the Sugiyama algorithm
 /// and have named operations for snapping to grid, aligning etc.
-class GraphLayout : public IECore::RunTimeTyped
+class GAFFERUI_API GraphLayout : public IECore::RunTimeTyped
 {
 
 	public :

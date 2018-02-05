@@ -38,11 +38,13 @@
 #ifndef GAFFERCORTEX_PARAMETERHANDLER_H
 #define GAFFERCORTEX_PARAMETERHANDLER_H
 
-#include <functional>
+#include "GafferCortex/Export.h"
+
+#include "Gaffer/Plug.h"
 
 #include "IECore/Parameter.h"
 
-#include "Gaffer/Plug.h"
+#include <functional>
 
 namespace GafferCortex
 {
@@ -51,7 +53,7 @@ IE_CORE_FORWARDDECLARE( ParameterHandler );
 
 /// ParameterHandlers manage a mapping between IECore::Parameter objects
 /// and Plugs on a Node.
-class ParameterHandler : public IECore::RefCounted
+class GAFFERCORTEX_API ParameterHandler : public IECore::RefCounted
 {
 
 	public :

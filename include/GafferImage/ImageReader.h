@@ -37,11 +37,11 @@
 #ifndef GAFFERIMAGE_IMAGEREADER_H
 #define GAFFERIMAGE_IMAGEREADER_H
 
-#include <functional>
+#include "GafferImage/ImageNode.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferImage/ImageNode.h"
+#include <functional>
 
 namespace Gaffer
 {
@@ -56,7 +56,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ColorSpace )
 IE_CORE_FORWARDDECLARE( OpenImageIOReader )
 
-class ImageReader : public ImageNode
+class GAFFERIMAGE_API ImageReader : public ImageNode
 {
 
 	public :

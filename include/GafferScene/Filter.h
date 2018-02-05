@@ -37,13 +37,13 @@
 #ifndef GAFFERSCENE_FILTER_H
 #define GAFFERSCENE_FILTER_H
 
-#include "IECore/PathMatcher.h"
+#include "GafferScene/FilterPlug.h"
+#include "GafferScene/TypeIds.h"
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/FilterPlug.h"
+#include "IECore/PathMatcher.h"
 
 namespace GafferScene
 {
@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 /// A base class for nodes which are used to limit the scope
 /// of an operation to specific parts of the scene. Used in
 /// conjunction with the FilteredSceneProcessor class.
-class Filter : public Gaffer::ComputeNode
+class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 {
 
 	public :

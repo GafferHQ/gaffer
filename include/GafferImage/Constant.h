@@ -37,16 +37,16 @@
 #ifndef GAFFERIMAGE_CONSTANT_H
 #define GAFFERIMAGE_CONSTANT_H
 
+#include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageNode.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferImage/ImageNode.h"
-#include "GafferImage/FormatPlug.h"
 
 namespace GafferImage
 {
 
-class Constant : public ImageNode
+class GAFFERIMAGE_API Constant : public ImageNode
 {
 
 	public :

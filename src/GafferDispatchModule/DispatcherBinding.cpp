@@ -35,19 +35,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
-#include "IECorePython/ExceptionAlgo.h"
+#include "DispatcherBinding.h"
 
-#include "Gaffer/Context.h"
-#include "Gaffer/ScriptNode.h"
+#include "GafferDispatch/Dispatcher.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
-#include "GafferDispatch/Dispatcher.h"
-#include "GafferDispatchBindings/DispatcherBinding.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace IECore;
@@ -123,6 +125,8 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		// TashBatch method wrappers. These are defined here rather than as free
 		// functions because TaskBatch is a protected member of Dispatcher.
 		//////////////////////////////////////////////////////////////////////////
+
+		typedef Dispatcher::TaskBatch TaskBatch;
 
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
@@ -314,7 +318,7 @@ struct PostDispatchSlotCaller
 
 } // namespace
 
-void GafferDispatchBindings::bindDispatcher()
+void GafferDispatchModule::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &dispatch )
@@ -335,7 +339,7 @@ void GafferDispatchBindings::bindDispatcher()
 		.value( "CustomRange", Dispatcher::CustomRange )
 	;
 
-	RefCountedClass<Dispatcher::TaskBatch, RefCounted>( "_TaskBatch" )
+	RefCountedClass<DispatcherWrapper::TaskBatch, RefCounted>( "_TaskBatch" )
 		.def( "execute", &DispatcherWrapper::taskBatchExecute )
 		.def( "node", &DispatcherWrapper::taskBatchGetNode )
 		.def( "plug", &DispatcherWrapper::taskBatchPlug )

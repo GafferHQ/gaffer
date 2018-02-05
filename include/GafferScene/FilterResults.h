@@ -37,10 +37,11 @@
 #ifndef GAFFERSCENE_FILTERRESULTS_H
 #define GAFFERSCENE_FILTERRESULTS_H
 
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
@@ -48,7 +49,7 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( ScenePlug )
 IE_CORE_FORWARDDECLARE( FilterPlug )
 
-class FilterResults : public Gaffer::ComputeNode
+class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 {
 
 	public :

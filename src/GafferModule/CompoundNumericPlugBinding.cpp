@@ -36,18 +36,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/algorithm/string/replace.hpp"
-#include "boost//format.hpp"
+
+#include "CompoundNumericPlugBinding.h"
+
+#include "GafferBindings/ValuePlugBinding.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "IECorePython/IECoreBinding.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/CompoundNumericPlug.h"
-
-#include "GafferBindings/ValuePlugBinding.h"
-
-#include "CompoundNumericPlugBinding.h"
+#include "boost//format.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;

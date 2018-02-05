@@ -35,10 +35,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "Gaffer/ArrayPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
 
 using namespace Gaffer;
 using namespace GafferImage;

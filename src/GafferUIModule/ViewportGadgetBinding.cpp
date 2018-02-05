@@ -36,15 +36,15 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "GafferBindings/SignalBinding.h"
-
-#include "GafferUI/ViewportGadget.h"
+#include "ViewportGadgetBinding.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "ViewportGadgetBinding.h"
+#include "GafferUI/ViewportGadget.h"
+
+#include "GafferBindings/SignalBinding.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;

@@ -37,8 +37,15 @@
 #ifndef GAFFERIMAGE_IMAGEALGO_H
 #define GAFFERIMAGE_IMAGEALGO_H
 
-#include <vector>
+#include "GafferImage/Export.h"
+
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
+#include <vector>
 
 namespace GafferImage
 {
@@ -67,7 +74,7 @@ namespace ImageAlgo
 ///     - "Z" is the depth channel
 
 /// Returns the names of all layers present in the specified channels.
-std::vector<std::string> layerNames( const std::vector<std::string> &channelNames );
+GAFFERIMAGE_API std::vector<std::string> layerNames( const std::vector<std::string> &channelNames );
 
 /// Returns the name of the layer the channel belongs to.
 /// This is simply the portion of the channelName up to the

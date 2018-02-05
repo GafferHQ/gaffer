@@ -38,14 +38,14 @@
 #ifndef GAFFERSCENE_OUTPUTS_H
 #define GAFFERSCENE_OUTPUTS_H
 
-#include "IECoreScene/Display.h"
-
 #include "GafferScene/GlobalsProcessor.h"
+
+#include "IECoreScene/Display.h"
 
 namespace GafferScene
 {
 
-class Outputs : public GlobalsProcessor
+class GAFFERSCENE_API Outputs : public GlobalsProcessor
 {
 
 	public :

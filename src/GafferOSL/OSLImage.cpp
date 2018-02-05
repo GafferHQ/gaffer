@@ -35,14 +35,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CompoundData.h"
+#include "GafferOSL/OSLImage.h"
+
+#include "GafferOSL/OSLShader.h"
+#include "GafferOSL/ShadingEngine.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferOSL/OSLImage.h"
-#include "GafferOSL/OSLShader.h"
-#include "GafferOSL/ShadingEngine.h"
+#include "IECore/CompoundData.h"
 
 using namespace std;
 using namespace Imath;

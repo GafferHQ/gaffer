@@ -34,20 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
+#include "GafferArnold/ArnoldLight.h"
 
-#include "IECore/Exception.h"
+#include "GafferArnold/ArnoldShader.h"
+#include "GafferArnold/ParameterHandler.h"
 
-#include "IECoreArnold/UniverseBlock.h"
+#include "GafferScene/Shader.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Shader.h"
+#include "IECoreArnold/UniverseBlock.h"
 
-#include "GafferArnold/ArnoldLight.h"
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ParameterHandler.h"
+#include "IECore/Exception.h"
+
+#include "boost/format.hpp"
 
 using namespace Gaffer;
 using namespace GafferScene;

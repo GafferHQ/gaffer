@@ -34,29 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
+#include "GafferOSL/OSLShader.h"
 
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "OSL/oslquery.h"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/LRUCache.h"
-
-#include "IECoreImage/OpenImageIOAlgo.h"
-
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/SplinePlug.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/PlugAlgo.h"
+#include "GafferOSL/ClosurePlug.h"
+#include "GafferOSL/ShadingEngine.h"
 
 #include "GafferScene/RendererAlgo.h"
 
-#include "GafferOSL/ClosurePlug.h"
-#include "GafferOSL/OSLShader.h"
-#include "GafferOSL/ShadingEngine.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/PlugAlgo.h"
+#include "Gaffer/SplinePlug.h"
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreImage/OpenImageIOAlgo.h"
+
+#include "IECore/LRUCache.h"
+#include "IECore/MessageHandler.h"
+
+#include "OSL/oslquery.h"
+
+#include "boost/algorithm/string/predicate.hpp"
+
+#include "tbb/mutex.h"
 
 using namespace std;
 using namespace Imath;

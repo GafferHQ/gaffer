@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferScene/Parameters.h"
+
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ExternalProcedural.h"
-
-#include "GafferScene/Parameters.h"
 
 using namespace IECore;
 using namespace IECoreScene;

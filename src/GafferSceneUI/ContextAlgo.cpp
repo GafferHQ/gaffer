@@ -34,11 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/VectorTypedData.h"
+#include "GafferSceneUI/ContextAlgo.h"
+
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/ScenePlug.h"
+#include "IECore/VectorTypedData.h"
 
 using namespace IECore;
 using namespace Gaffer;

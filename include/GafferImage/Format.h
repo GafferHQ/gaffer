@@ -37,17 +37,23 @@
 #ifndef GAFFERIMAGE_FORMAT_H
 #define GAFFERIMAGE_FORMAT_H
 
+#include "GafferImage/Export.h"
+
+#include "IECore/Export.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathBox.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
 #include <string>
 #include <vector>
-
-#include "OpenEXR/ImathBox.h"
 
 namespace GafferImage
 {
 
 /// Basic maths class to represent the format of an image -
 /// its display window and pixel aspect ratio.
-class Format
+class GAFFERIMAGE_API Format
 {
 
 	public :
@@ -122,7 +128,7 @@ class Format
 
 /// Outputs a numeric description of the format, omitting default information
 /// where possible. Note that this is unrelated to Format::name().
-std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
+GAFFERIMAGE_API std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
 
 } // namespace GafferImage
 
