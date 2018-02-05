@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os
+import unittest
+
 import imath
 
 import IECore
@@ -292,6 +295,9 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		GafferUITest.TestCase.tearDown( self )
 
 		IECoreGL.CachedConverter.defaultCachedConverter().setMaxMemory( self.__cachedConverterMaxMemory )
+
+if "TRAVIS" in os.environ :
+	SceneGadgetTest.testExpansion = unittest.expectedFailure( SceneGadgetTest.testExpansion )
 
 if __name__ == "__main__":
 	unittest.main()
