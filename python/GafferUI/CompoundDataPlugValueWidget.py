@@ -144,6 +144,19 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append( "/Add/Box3i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3iData( imath.Box3i( imath.V3i( 0 ), imath.V3i( 1 ) ) ) ) } )
 		result.append( "/Add/Box3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3fData( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) ) ) } )
 
+		result.append( "/Add/BoxDivider", { "divider" : True } )
+
+		for label, plugType in [
+			( "Float", Gaffer.FloatVectorDataPlug ),
+			( "Int", Gaffer.IntVectorDataPlug),
+			( "NumericDivider", None ),
+			( "String", Gaffer.StringVectorDataPlug ),
+		] :
+			if plugType is not None :
+				result.append( "/Add/Array/" + label, {"command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", plugType.ValueType() ) } )
+			else :
+				result.append( "/Add/Array/" + label, { "divider" : True } )
+
 		return result
 
 	def __addItem( self, name, value ) :
