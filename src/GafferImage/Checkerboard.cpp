@@ -37,13 +37,13 @@
 
 #include "GafferImage/Checkerboard.h"
 
-#include "OpenEXR/ImathFun.h"
-#include "OpenEXR/ImathMatrixAlgo.h"
+#include "GafferImage/ImageAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Transform2DPlug.h"
 
-#include "GafferImage/ImageAlgo.h"
+#include "OpenEXR/ImathFun.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
 
 using namespace std;
 using namespace Imath;
