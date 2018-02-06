@@ -77,7 +77,7 @@ Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
 	{
 		const char *sp = getenv( "GAFFERUI_IMAGE_PATHS" );
 		sp = sp ? sp : "";
-		g_reader = new IECore::CachedReader( IECore::SearchPath( sp, ":" ) );
+		g_reader = new IECore::CachedReader( IECore::SearchPath( sp ) );
 	}
 
 	m_image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( g_reader->read( fileName ) );

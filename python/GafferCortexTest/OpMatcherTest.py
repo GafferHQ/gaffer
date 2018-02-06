@@ -88,7 +88,7 @@ class OpMatcherTest( GafferTest.TestCase ) :
 		self.failUnless( GafferCortex.OpMatcher.defaultInstance() is GafferCortex.OpMatcher.defaultInstance() )
 		self.failUnless( GafferCortex.OpMatcher.defaultInstance( IECore.ClassLoader.defaultOpLoader() ) is GafferCortex.OpMatcher.defaultInstance() )
 
-		alternativeClassLoader = IECore.ClassLoader( IECore.SearchPath( "wherever:i:want", ":" ) )
+		alternativeClassLoader = IECore.ClassLoader( IECore.SearchPath( [ "wherever", "i", "want" ] ) )
 
 		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) )
 		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is not GafferCortex.OpMatcher.defaultInstance() )

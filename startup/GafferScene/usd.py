@@ -38,7 +38,7 @@ import os
 
 import IECore
 
-moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"], ":" )
+moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"] )
 if moduleSearchPath.find( "IECoreUSD" ) :
 	# Import IECoreUSD so that we get the USD SceneInterface registered,
 	# providing USD functionality to both the SceneReader and SceneWriter.
