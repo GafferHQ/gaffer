@@ -193,9 +193,24 @@ class MessageWidget( GafferUI.Widget ) :
 
 		# scroll to the next one
 		toFind = IECore.Msg.levelAsString( button.__level ) + " : "
-		if not self.__text._qtWidget().find( toFind ) :
+
+		def find( widget, text ) :
+
+			# Really we just want to call `widget.find( text )`
+			# but that is utterly broken in PySide - it is marked
+			# as a static method so receives a null self and promptly
+			# crashes. So instead we reproduce the work that
+			# `widget.find()` does internally.
+
+			search = widget.document().find( text, widget.textCursor() )
+			if search :
+				widget.setTextCursor( search )
+
+			return search
+
+		if not find( self.__text._qtWidget(), toFind ) :
 			self.__text._qtWidget().moveCursor( QtGui.QTextCursor.Start )
-			self.__text._qtWidget().find( toFind )
+			find( self.__text._qtWidget(), toFind )
 
 	def __appendMessageToText( self, level, context, message ) :
 
