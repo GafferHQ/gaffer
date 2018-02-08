@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferVDB/VDBObject.h"
+#include "IECoreVDB/VDBObject.h"
 
 #include "GafferSceneUI/ObjectVisualiser.h"
 
@@ -52,8 +52,8 @@
 using namespace std;
 using namespace Imath;
 using namespace GafferSceneUI;
-using namespace GafferVDB;
 using namespace IECoreScene;
+using namespace IECoreVDB;
 
 namespace
 {

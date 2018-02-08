@@ -39,6 +39,7 @@ import GafferTest
 import GafferVDB
 import IECore
 import IECoreScene
+import IECoreVDB
 import GafferVDBTest
 import os
 import GafferScene
@@ -58,7 +59,7 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
 		obj = meshToLevelSet['out'].object( "sphere" )
-		self.assertTrue( isinstance( obj, GafferVDB.VDBObject ) )
+		self.assertTrue( isinstance( obj, IECoreVDB.VDBObject ) )
 
 		self.assertEqual( obj.gridNames(), ['surface'] )
 		grid = obj.findGrid( "surface" )

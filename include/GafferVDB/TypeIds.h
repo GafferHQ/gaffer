@@ -42,9 +42,9 @@ namespace GafferVDB
 
 enum TypeId
 {
-	VDBGridTypeId = 110950,
-	VDBObjectTypeId = 110951,
-	VDBSceneTypeId = 110952,
+	VDBGridTypeId = 110950, // Obsolete - available for reuse
+	VDBObjectTypeId = 110951, // Obsolete - available for reuse
+	VDBSceneTypeId = 110952, // Obsolete - available for reuse
 	MeshToLevelSetTypeId = 110953,
 	LevelSetToMeshTypeId = 110954,
 	LevelSetOffsetTypeId = 110955,

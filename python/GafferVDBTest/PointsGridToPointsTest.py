@@ -39,6 +39,7 @@ import GafferTest
 import GafferVDB
 import IECore
 import IECoreScene
+import IECoreVDB
 import GafferVDBTest
 import os
 import GafferScene
@@ -77,7 +78,7 @@ class PointsGridToPointsTest( GafferVDBTest.VDBTestCase ) :
 		pointsGridToPoints["grid"].setValue( "nogridhere" )
 
 		vdb = pointsGridToPoints["out"].object("/vdb")
-		self.assertTrue( isinstance( vdb, GafferVDB.VDBObject) )
+		self.assertTrue( isinstance( vdb, IECoreVDB.VDBObject) )
 
 if __name__ == "__main__":
 	unittest.main()

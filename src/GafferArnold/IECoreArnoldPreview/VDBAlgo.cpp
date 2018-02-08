@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferVDB/VDBObject.h"
+#include "IECoreVDB/VDBObject.h"
 
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
@@ -85,7 +85,7 @@ namespace
 	};
 
 
-	UCharVectorDataPtr createMemoryBuffer(const GafferVDB::VDBObject* vdbObject)
+	UCharVectorDataPtr createMemoryBuffer(const IECoreVDB::VDBObject* vdbObject)
 	{
 		// estimate the size of the memory required to hand the VDB to arnold.
 		// This is required so we can reserve the right amount of space in the output
@@ -118,7 +118,7 @@ namespace
 		return buffer;
 	}
 
-	CompoundDataPtr  createParameters(const GafferVDB::VDBObject* vdbObject)
+	CompoundDataPtr  createParameters(const IECoreVDB::VDBObject* vdbObject)
 	{
 		CompoundDataPtr parameters = new CompoundData();
 		CompoundDataMap& compoundData = parameters->writable();
@@ -137,7 +137,7 @@ namespace
 		return parameters;
 	}
 
-	AtNode *convert( const GafferVDB::VDBObject *vdbObject, const std::string & name, const AtNode* parent )
+	AtNode *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name, const AtNode* parent )
 	{
 		AtNode *node = AiNode( g_volume, AtString( name.c_str() ), parent );
 
@@ -151,6 +151,6 @@ namespace
 namespace
 {
 
-NodeAlgo::ConverterDescription<GafferVDB::VDBObject> g_description( ::convert );
+NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( ::convert );
 
 } // namespace

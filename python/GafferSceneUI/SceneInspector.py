@@ -45,12 +45,12 @@ import imath
 
 import IECore
 import IECoreScene
+import IECoreVDB
 
 import Gaffer
 import GafferScene
 import GafferUI
 import GafferSceneUI
-import GafferVDB
 
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
@@ -1625,7 +1625,7 @@ class _VDBGridInspector( Inspector ) :
 			return None
 
 		object = target.object()
-		if not isinstance( object, GafferVDB.VDBObject ):
+		if not isinstance( object, IECoreVDB.VDBObject ):
 			return None
 
 		if self.__gridName == None or  self.__metadataName == None:
@@ -1795,7 +1795,7 @@ class __ObjectSection( LocationSection ) :
 				return None
 
 			object = target.object()
-			if not isinstance( object, GafferVDB.VDBObject ):
+			if not isinstance( object, IECoreVDB.VDBObject ):
 				return None
 
 			return ""
@@ -1806,7 +1806,7 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			object = target.object()
-			if not isinstance( object, GafferVDB.VDBObject ) :
+			if not isinstance( object, IECoreVDB.VDBObject ) :
 				return []
 
 			childInspectors = []
