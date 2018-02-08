@@ -134,7 +134,7 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 
 	m_layout = new StandardGraphLayout;
 
-	setChild( g_auxiliaryConnectionsGadgetName, new AuxiliaryConnectionsGadget( this ) );
+	setChild( g_auxiliaryConnectionsGadgetName, new AuxiliaryConnectionsGadget() );
 
 	setRoot( root, filter );
 }

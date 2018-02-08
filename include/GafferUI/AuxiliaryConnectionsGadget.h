@@ -75,6 +75,7 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 		std::pair<NodeGadget *, NodeGadget *> connectionAt( const IECore::LineSegment3f &position );
 		std::pair<const NodeGadget *, const NodeGadget *> connectionAt( const IECore::LineSegment3f &position ) const;
 
+		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 		std::string getToolTip( const IECore::LineSegment3f &position ) const override;
 
 	protected :
@@ -82,13 +83,17 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 		// Constructor is protected because we only want
 		// GraphGadget to be able to construct these, which
 		// we allow by giving it friend access.
-		AuxiliaryConnectionsGadget( GraphGadget *graphGadget );
+		AuxiliaryConnectionsGadget();
 
 		friend class GraphGadget;
 
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void doRenderLayer( Layer layer, const Style *style ) const override;
 
 	private :
+
+		GraphGadget *graphGadget();
+		const GraphGadget *graphGadget() const;
 
 		void graphGadgetChildAdded( GraphComponent *child );
 		void graphGadgetChildRemoved( const GraphComponent *child );
@@ -114,7 +119,9 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 			bool dirty = true;
 		};
 
-		GraphGadget *m_graphGadget;
+		boost::signals::scoped_connection m_graphGadgetChildAddedConnection;
+		boost::signals::scoped_connection m_graphGadgetChildRemovedConnection;
+
 		// Key is the NodeGadget at the destination end of the connections.
 		typedef std::unordered_map<const NodeGadget *, Connections> NodeGadgetConnections;
 		mutable NodeGadgetConnections m_nodeGadgetConnections;

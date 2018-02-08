@@ -109,11 +109,9 @@ Box2f nodeFrame( const NodeGadget *nodeGadget )
 
 IE_CORE_DEFINERUNTIMETYPED( AuxiliaryConnectionsGadget );
 
-AuxiliaryConnectionsGadget::AuxiliaryConnectionsGadget( GraphGadget *graphGadget )
-	:	Gadget( "AuxiliaryConnections" ), m_graphGadget( graphGadget ), m_dirty( false )
+AuxiliaryConnectionsGadget::AuxiliaryConnectionsGadget()
+	:	Gadget( "AuxiliaryConnections" ), m_dirty( false )
 {
-	m_graphGadget->childAddedSignal().connect( boost::bind( &AuxiliaryConnectionsGadget::graphGadgetChildAdded, this, ::_2 ) );
-	m_graphGadget->childRemovedSignal().connect( boost::bind( &AuxiliaryConnectionsGadget::graphGadgetChildRemoved, this, ::_2 ) );
 }
 
 AuxiliaryConnectionsGadget::~AuxiliaryConnectionsGadget()
@@ -129,8 +127,8 @@ bool AuxiliaryConnectionsGadget::hasConnection( const NodeGadget *srcNodeGadget,
 
 bool AuxiliaryConnectionsGadget::hasConnection( const Gaffer::Node *srcNode, const Gaffer::Node *dstNode ) const
 {
-	const NodeGadget *srcNodeGadget = m_graphGadget->nodeGadget( srcNode );
-	const NodeGadget *dstNodeGadget = m_graphGadget->nodeGadget( dstNode );
+	const NodeGadget *srcNodeGadget = graphGadget()->nodeGadget( srcNode );
+	const NodeGadget *dstNodeGadget = graphGadget()->nodeGadget( dstNode );
 	if( !srcNodeGadget || !dstNodeGadget )
 	{
 		return false;
@@ -178,6 +176,27 @@ std::pair<const NodeGadget *, const NodeGadget *> AuxiliaryConnectionsGadget::co
 	return connections[selection[0].name-1];
 }
 
+bool AuxiliaryConnectionsGadget::acceptsParent( const GraphComponent *potentialParent ) const
+{
+	return runTimeCast<const GraphGadget>( potentialParent );
+}
+
+void AuxiliaryConnectionsGadget::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	m_nodeGadgetConnections.clear();
+	m_graphGadgetChildAddedConnection.disconnect();
+	m_graphGadgetChildRemovedConnection.disconnect();
+	if( newParent )
+	{
+		m_graphGadgetChildAddedConnection = newParent->childAddedSignal().connect(
+			boost::bind( &AuxiliaryConnectionsGadget::graphGadgetChildAdded, this, ::_2 )
+		);
+		m_graphGadgetChildRemovedConnection = newParent->childRemovedSignal().connect(
+			boost::bind( &AuxiliaryConnectionsGadget::graphGadgetChildRemoved, this, ::_2 )
+		);
+	}
+}
+
 std::string AuxiliaryConnectionsGadget::getToolTip( const IECore::LineSegment3f &position ) const
 {
 	string s = Gadget::getToolTip( position );
@@ -194,7 +213,7 @@ std::string AuxiliaryConnectionsGadget::getToolTip( const IECore::LineSegment3f 
 
 	s += "Auxiliary connections from " + connection.first->node()->getName().string() + " to " + connection.second->node()->getName().string() + " : \n\n";
 	visitAuxiliaryConnections(
-		m_graphGadget, connection.second,
+		graphGadget(), connection.second,
 		[ &s, &connection ] ( const Plug *srcPlug, const Plug *dstPlug, const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget )
 		{
 			if( srcNodeGadget == connection.first )
@@ -231,6 +250,16 @@ void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style 
 	}
 }
 
+GraphGadget *AuxiliaryConnectionsGadget::graphGadget()
+{
+	return parent<GraphGadget>();
+}
+
+const GraphGadget *AuxiliaryConnectionsGadget::graphGadget() const
+{
+	return parent<GraphGadget>();
+}
+
 void AuxiliaryConnectionsGadget::graphGadgetChildAdded( GraphComponent *child )
 {
 	if( NodeGadget *nodeGadget = runTimeCast<NodeGadget>( child ) )
@@ -265,7 +294,7 @@ void AuxiliaryConnectionsGadget::graphGadgetChildRemoved( const GraphComponent *
 
 void AuxiliaryConnectionsGadget::plugInputChanged( const Gaffer::Plug *plug )
 {
-	if( const NodeGadget *nodeGadget = m_graphGadget->nodeGadget( plug->node() ) )
+	if( const NodeGadget *nodeGadget = graphGadget()->nodeGadget( plug->node() ) )
 	{
 		dirty( nodeGadget );
 	}
@@ -277,7 +306,7 @@ void AuxiliaryConnectionsGadget::childRemoved( const Gaffer::GraphComponent *nod
 	{
 		return;
 	}
-	if( const NodeGadget *nodeGadget = m_graphGadget->nodeGadget( static_cast<const Node *>( node ) ) )
+	if( const NodeGadget *nodeGadget = graphGadget()->nodeGadget( static_cast<const Node *>( node ) ) )
 	{
 		dirty( nodeGadget );
 	}
@@ -330,7 +359,7 @@ void AuxiliaryConnectionsGadget::updateConnections() const
 
 		connections.sourceGadgets.clear();
 		visitAuxiliaryConnections(
-			m_graphGadget, x.first,
+			graphGadget(), x.first,
 			[&connections] ( const Plug *srcPlug, const Plug *dstPlug, const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget )
 			{
 				connections.sourceGadgets.insert( srcNodeGadget );
