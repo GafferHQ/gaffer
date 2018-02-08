@@ -124,6 +124,12 @@ void initialiser( Imath::M44f &v )
 	v = Imath::M44f();
 }
 
+void initialiser( std::string& v )
+{
+	v = std::string();
+}
+
+
 template<typename T>
 typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
 {
@@ -155,6 +161,8 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 					return vectorDataFromTypeDesc<IntVectorData>( type, basePointer );
 				case TypeDesc::FLOAT :
 					return vectorDataFromTypeDesc<FloatVectorData>( type, basePointer );
+				case TypeDesc::STRING :
+					return vectorDataFromTypeDesc<StringVectorData>( type, basePointer );
 			}
 		}
 		else if( type.aggregate == TypeDesc::VEC3 )
@@ -194,6 +202,7 @@ namespace
 
 OIIO::ustring gIndex( "shading:index" );
 OIIO::ustring gMatrixType( "matrix" );
+OIIO::ustring gStringType( "string" );
 
 class RenderState
 {
@@ -471,6 +480,7 @@ struct DebugParameters
 	ustring type;
 	Color3f value;
 	M44f matrixValue;
+	ustring stringValue;
 
 	static void prepare( OSL::RendererServices *rendererServices, int id, void *data )
 	{
@@ -479,6 +489,7 @@ struct DebugParameters
 		debugParameters->type = ustring();
 		debugParameters->value = Color3f( 1.0f );
 		debugParameters->matrixValue = M44f();
+		debugParameters->stringValue = ustring();
 	}
 
 };
@@ -533,6 +544,7 @@ OSL::ShadingSystem *shadingSystem()
 				CLOSURE_STRING_KEYPARAM( DebugParameters, type, "type" ),
 				CLOSURE_COLOR_KEYPARAM( DebugParameters, value, "value" ),
 				CLOSURE_MATRIX_KEYPARAM( DebugParameters, matrixValue, "matrixValue"),
+				CLOSURE_STRING_KEYPARAM( DebugParameters, stringValue, "stringValue"),
 				CLOSURE_FINISH_PARAM( DebugParameters )
 			},
 			DebugParameters::prepare
@@ -745,6 +757,12 @@ class ShadingResults
 				ShadingSystem::convert_value(
 					dst, debugResult.type, &value, TypeDesc::TypeMatrix44
 				);
+			}
+			else if ( parameters->type == gStringType )
+			{
+				std::string *dst = static_cast<std::string*>( debugResult.basePointer );
+				dst += pointIndex;
+				*dst = parameters->stringValue.string();
 			}
 			else
 			{
