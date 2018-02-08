@@ -37,6 +37,7 @@
 
 #include "GafferUI/GraphGadget.h"
 
+#include "GafferUI/AuxiliaryConnectionsGadget.h"
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/ConnectionGadget.h"
@@ -99,6 +100,7 @@ const InternedString g_positionPlugName( "__uiPosition" );
 const InternedString g_inputConnectionsMinimisedPlugName( "__uiInputConnectionsMinimised" );
 const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnectionsMinimised" );
 const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
+const InternedString g_auxiliaryConnectionsGadgetName( "__auxiliaryConnections" );
 
 struct CompareV2fX{
 	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
@@ -132,11 +134,14 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 
 	m_layout = new StandardGraphLayout;
 
+	setChild( g_auxiliaryConnectionsGadgetName, new AuxiliaryConnectionsGadget() );
+
 	setRoot( root, filter );
 }
 
 GraphGadget::~GraphGadget()
 {
+	removeChild( auxiliaryConnectionsGadget() );
 }
 
 Gaffer::Node *GraphGadget::getRoot()
@@ -324,6 +329,16 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<con
 	}
 
 	return connections.size();
+}
+
+AuxiliaryConnectionsGadget *GraphGadget::auxiliaryConnectionsGadget()
+{
+	return getChild<AuxiliaryConnectionsGadget>( g_auxiliaryConnectionsGadgetName );
+}
+
+const AuxiliaryConnectionsGadget *GraphGadget::auxiliaryConnectionsGadget() const
+{
+	return getChild<AuxiliaryConnectionsGadget>( g_auxiliaryConnectionsGadgetName );
 }
 
 size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation )

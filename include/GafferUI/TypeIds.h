@@ -47,7 +47,7 @@ enum TypeId
 	NodeGadgetTypeId = 110252,
 	GraphGadgetTypeId = 110253,
 	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255, // Obsolete - available for reuse
+	AuxiliaryConnectionsGadgetTypeId = 110255,
 	TextGadgetTypeId = 110256,
 	NameGadgetTypeId = 110257,
 	IndividualContainerTypeId = 110258,
