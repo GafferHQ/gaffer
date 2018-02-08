@@ -92,16 +92,10 @@ class GAFFER_API Plug : public GraphComponent
 			/// If the AcceptsInputs flag is not set, then acceptsInput() always returns
 			/// false.
 			AcceptsInputs = 0x00000004,
-			/// If the PerformsSubstitutions flag is set then tokens from the plug value
-			/// will automatically be substituted with values from the context during
-			/// computation. Note that currently this only applies to the StringPlug.
-			/// \deprecated. Use the substitutions argument to the StringPlug constructor
-			/// instead - this provides finer grained control.
-			PerformsSubstitutions = 0x00000008,
 			/// If the Cacheable flag is set then values computed during getValue()
 			/// calls will be stored in a cache and reused if equivalent computations
 			/// are requested in the future.
-			Cacheable = 0x00000010,
+			Cacheable = 0x0000008,
 			/// Generally it is an error to have cyclic dependencies between plugs,
 			/// and creating them will cause an exception to be thrown during dirty
 			/// propagation. However, it is possible to design nodes that create
@@ -111,11 +105,11 @@ class GAFFER_API Plug : public GraphComponent
 			/// not infinite. Because dirty propagation is performed independent of context,
 			/// this flag must be used by such nodes to indicate that the cycle is
 			/// intentional in this case, and is guaranteed to terminate during compute.
-			AcceptsDependencyCycles = 0x00000020,
+			AcceptsDependencyCycles = 0x00000010,
 			/// When adding values, don't forget to update the Default and All values below,
 			/// and to update PlugBinding.cpp too!
-			Default = Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable,
-			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | AcceptsDependencyCycles
+			Default = Serialisable | AcceptsInputs | Cacheable,
+			All = Dynamic | Serialisable | AcceptsInputs | Cacheable | AcceptsDependencyCycles
 		};
 
 		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );

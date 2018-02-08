@@ -41,7 +41,8 @@
 
 #include "IECore/TypedParameter.h"
 
-using namespace GafferCortex;
+namespace GafferCortex
+{
 
 template<typename T>
 ParameterHandler::ParameterHandlerDescription<TypedParameterHandler<T>, IECore::TypedParameter<T> > TypedParameterHandler<T>::g_description;
@@ -75,20 +76,29 @@ void TypedParameterHandler<T>::restore( Gaffer::GraphComponent *plugParent )
 }
 
 template<typename T>
+typename TypedParameterHandler<T>::PlugType::Ptr TypedParameterHandler<T>::createPlug( Gaffer::Plug::Direction direction ) const
+{
+	return new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
+}
+
+template<>
+TypedParameterHandler<std::string>::PlugType::Ptr TypedParameterHandler<std::string>::createPlug( Gaffer::Plug::Direction direction ) const
+{
+	return new Gaffer::StringPlug(
+		m_parameter->name(), direction, m_parameter->typedDefaultValue(), Gaffer::Plug::Default,
+		// We have to turn off substitutions for FileSequenceParameters because they'd remove the
+		// #### destined for the parameter.
+		m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) ? Gaffer::Context::NoSubstitutions : Gaffer::Context::AllSubstitutions
+	);
+}
+
+template<typename T>
 Gaffer::Plug *TypedParameterHandler<T>::setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
-		if( m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) )
-		{
-			// we have to turn off substitutions because they'd remove the #### destined
-			// for the parameter. it's a bit naughty to have FileSequenceParameter-specific
-			// code in here, but i think it's preferable to deriving off a whole new
-			// ParameterHandler just to add this one line of code.
-			flags &= ~Gaffer::Plug::PerformsSubstitutions;
-		}
+		m_plug = createPlug( direction );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
@@ -140,3 +150,5 @@ template class GafferCortex::TypedParameterHandler<Imath::V3i>;
 
 template class GafferCortex::TypedParameterHandler<Imath::Color3f>;
 template class GafferCortex::TypedParameterHandler<Imath::Color4f>;
+
+} // namespace Cortex
