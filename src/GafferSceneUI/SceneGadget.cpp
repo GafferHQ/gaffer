@@ -233,12 +233,27 @@ class SceneGadget::SceneGraph
 			applySelectionWalk( selection, rootPath, true );
 		}
 
-		bool pathFromSelectionId( GLuint selectionId, ScenePlug::ScenePath &path ) const
+		bool pathFromSelection( const IECoreGL::HitRecord &selection, ScenePlug::ScenePath &path ) const
 		{
 			path.clear();
-			const bool result = pathFromSelectionIdWalk( selectionId, path );
+			const bool result = pathFromSelectionIdWalk( selection.name, path );
 			std::reverse( path.begin(), path.end() );
 			return result;
+		}
+
+		size_t pathsFromSelection( const vector<IECoreGL::HitRecord> &selection, PathMatcher &paths ) const
+		{
+			vector<GLuint> selectionIds;
+			selectionIds.reserve( selection.size() );
+			for( const auto &x : selection )
+			{
+				selectionIds.push_back( x.name );
+			}
+			sort( selectionIds.begin(), selectionIds.end() );
+
+			vector<GLuint>::const_iterator begin = selectionIds.begin();
+			paths.addPaths( pathsFromSelectionIdsWalk( begin, selectionIds.end() ) );
+			return selection.size();
 		}
 
 		const Box3f &bound() const
@@ -334,6 +349,46 @@ class SceneGadget::SceneGraph
 			}
 
 			return false;
+		}
+
+		PathMatcher pathsFromSelectionIdsWalk( vector<GLuint>::const_iterator &selectionBegin, vector<GLuint>::const_iterator selectionEnd ) const
+		{
+			PathMatcher result;
+			if( selectionBegin == selectionEnd )
+			{
+				// We've found all paths corresponding to the selection
+				return result;
+			}
+
+			vector<InternedString> namePath;
+			if( !m_name.string().empty() )
+			{
+				namePath.push_back( m_name );
+			}
+
+			// The m_selectionIds were assigned in increasing order
+			// during `render()`and here we are visiting them in the
+			// same order (depth first traversal). The begin/end range
+			// is likewise sorted in increasing order, so at each step
+			// we only have to look for the next id, `*selectionBegin`.
+			if( *selectionBegin == m_selectionId )
+			{
+				result.addPath( namePath );
+				// We are now searching for the next selection id.
+				selectionBegin++;
+			}
+
+			// Recurse to m_children.
+			for( const auto &child : m_children )
+			{
+				PathMatcher childPaths = child->pathsFromSelectionIdsWalk( selectionBegin, selectionEnd );
+				if( !childPaths.isEmpty() )
+				{
+					result.addPaths( childPaths, namePath );
+				}
+			}
+
+			return result;
 		}
 
 		static const IECoreGL::State &selectionState()
@@ -732,7 +787,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 		return false;
 	}
 
-	return m_sceneGraph->pathFromSelectionId( selection[0].name, path );
+	return m_sceneGraph->pathFromSelection( selection[0], path );
 }
 
 size_t SceneGadget::objectsAt(
@@ -743,23 +798,13 @@ size_t SceneGadget::objectsAt(
 {
 	updateSceneGraph();
 
-	std::vector<IECoreGL::HitRecord> selection;
+	vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
 		renderSceneGraph( selectionScope.baseState() );
 	}
 
-	size_t result = 0;
-	ScenePlug::ScenePath path;
-	for( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; ++it )
-	{
-		if( m_sceneGraph->pathFromSelectionId( it->name, path ) )
-		{
-			result += paths.addPath( path );
-		}
-	}
-
-	return result;
+	return m_sceneGraph->pathsFromSelection( selection, paths );
 }
 
 const IECore::PathMatcherData *SceneGadget::getSelection() const
