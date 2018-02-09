@@ -468,6 +468,19 @@ class PathModel : public QAbstractItemModel
 			return indexForPath( path->names() );
 		}
 
+		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths )
+		{
+			std::vector<QModelIndex> result;
+			const Path *rootPath = m_rootItem->path();
+			if( !rootPath )
+			{
+				return result;
+			}
+
+			indicesForPathsWalk( m_rootItem, QModelIndex(), paths, result );
+			return result;
+		}
+
 		///////////////////////////////////////////////////////////////////
 		// QAbstractItemModel implementation - this is what Qt cares about
 		///////////////////////////////////////////////////////////////////
@@ -781,6 +794,27 @@ class PathModel : public QAbstractItemModel
 
 		};
 
+		void indicesForPathsWalk( Item *item, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
+		{
+			const unsigned match = paths.match( item->path()->names() );
+			if( match & IECore::PathMatcher::ExactMatch )
+			{
+				indices.push_back( itemIndex );
+			}
+
+			if( !(match & IECore::PathMatcher::DescendantMatch) )
+			{
+				return;
+			}
+
+			size_t row = 0;
+			for( const auto &childItem : item->childItems( this ) )
+			{
+				const QModelIndex childIndex = index( row++, 0, itemIndex );
+				indicesForPathsWalk( childItem, childIndex, paths, indices );
+			}
+		}
+
 		Item *m_rootItem;
 		bool m_flat;
 		std::vector<ColumnPtr> m_columns;
@@ -843,9 +877,8 @@ void setExpansion( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
 
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	for( const auto &modelIndex : model->indicesForPaths( paths ) )
 	{
-		QModelIndex modelIndex = model->indexForPath( *it );
 		treeView->setExpanded( modelIndex, true );
 	}
 }
