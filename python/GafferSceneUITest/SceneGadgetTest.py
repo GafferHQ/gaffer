@@ -142,9 +142,10 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			gw = GafferUI.GadgetWidget( sg )
 
 		w.setVisible( True )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		gw.getViewportGadget().frame( sg.bound() )
+		self.waitForIdle( 10000 )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
