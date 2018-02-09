@@ -162,19 +162,15 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 		assert( pathListing is self.__pathListing )
 
-		paths = pathListing.getExpandedPaths()
-		paths = IECore.PathMatcher( [ "/" ] + [ str( path ) for path in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setExpandedPaths( self.getContext(), paths )
+			ContextAlgo.setExpandedPaths( self.getContext(), pathListing.getExpansion() )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		paths = pathListing.getSelectedPaths()
-		paths = IECore.PathMatcher( [ str(p) for p in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), paths )
+			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
@@ -183,27 +179,15 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		if expandedPaths is None :
 			return
 
-		p = self.__pathListing.getPath()
-		expandedPaths = [ p.copy().setFromString( s ) for s in expandedPaths.paths() ]
 		with Gaffer.BlockedConnection( self.__expansionChangedConnection ) :
-			self.__pathListing.setExpandedPaths( expandedPaths )
+			self.__pathListing.setExpansion( expandedPaths )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
-		selection = ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+		selection = ContextAlgo.getSelectedPaths( self.getContext() )
 		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
-			## \todo Qt is dog slow with large non-contiguous selections,
-			# so we're only mirroring single selections currently. Rewrite
-			# PathListingWidget so it manages selection itself using a PathMatcher
-			# and we can refer to the same data structure everywhere, and reenable
-			# mirroring of multi-selection.
-			if len( selection ) == 1 :
-				p = self.__pathListing.getPath()
-				selection = [ p.copy().setFromString( s ) for s in selection ]
-				self.__pathListing.setSelectedPaths( selection, scrollToFirst=True, expandNonLeaf=False )
-			else :
-				self.__pathListing.setSelectedPaths( [] )
+			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
 GafferUI.EditorWidget.registerType( "SceneHierarchy", SceneHierarchy )
 
