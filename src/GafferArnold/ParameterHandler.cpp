@@ -275,6 +275,14 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 
 			return setupClosurePlug( parameterName, plugParent, direction );
 
+		case AI_TYPE_STRING :
+
+			return setupTypedPlug<StringPlug>( parameterName, plugParent, direction, "" );
+
+		case AI_TYPE_BOOLEAN :
+
+			return setupTypedPlug<BoolPlug>( parameterName, plugParent, direction, false );
+
 		default :
 
 			msg(
