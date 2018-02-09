@@ -985,7 +985,7 @@ for libraryName, libraryDef in libraries.items() :
 		headerInstall = env.Command( "$BUILD_DIR/" + header, header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		libEnv.Alias( "build", headerInstall )
 
-	# bindings library and binary python modules
+	# bindings library
 
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
@@ -1002,14 +1002,18 @@ for libraryName, libraryDef in libraries.items() :
 		bindingsLibraryInstall = bindingsEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
 
-		# header install
-		bindingsHeaderInstall = bindingsEnv.Install(
-			"$BUILD_DIR/" + "include/" + libraryName + "Bindings",
-			glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
-			glob.glob( "include/" + libraryName + "Bindings/*.inl" )
-		)
-		bindingsEnv.Alias( "build", bindingsHeaderInstall )
+	# bindings header install
 
+	bindingsHeaders = (
+		glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
+		glob.glob( "include/" + libraryName + "Bindings/*.inl" )
+	)
+
+	for header in bindingsHeaders :
+		headerInstall = env.Command( "$BUILD_DIR/" + header, header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		bindingsEnv.Alias( "build", headerInstall )
+
+	# python module binary component
 
 	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )
 	if pythonModuleSource :
