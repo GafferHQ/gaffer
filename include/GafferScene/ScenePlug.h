@@ -227,6 +227,6 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 
 } // namespace GafferScene
 
-std::ostream &operator << ( std::ostream &o, const GafferScene::ScenePlug::ScenePath &path );
+GAFFERSCENE_API std::ostream &operator << ( std::ostream &o, const GafferScene::ScenePlug::ScenePath &path );
 
 #endif // GAFFERSCENE_SCENEPLUG_H
