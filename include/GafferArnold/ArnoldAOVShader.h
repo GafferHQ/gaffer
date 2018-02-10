@@ -40,15 +40,14 @@
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
 
-#include "GafferScene/GlobalsProcessor.h"
-#include "GafferScene/ShaderPlug.h"
+#include "GafferScene/GlobalShader.h"
 
 #include "Gaffer/StringPlug.h"
 
 namespace GafferArnold
 {
 
-class GAFFERARNOLD_API ArnoldAOVShader : public GafferScene::GlobalsProcessor
+class GAFFERARNOLD_API ArnoldAOVShader : public GafferScene::GlobalShader
 {
 
 	public :
@@ -56,20 +55,16 @@ class GAFFERARNOLD_API ArnoldAOVShader : public GafferScene::GlobalsProcessor
 		ArnoldAOVShader( const std::string &name=defaultName<ArnoldAOVShader>() );
 		~ArnoldAOVShader() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAOVShader, ArnoldAOVShaderTypeId, GafferScene::GlobalsProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAOVShader, ArnoldAOVShaderTypeId, GafferScene::GlobalShader );
 
 		Gaffer::StringPlug *optionSuffixPlug();
 		const Gaffer::StringPlug *optionSuffixPlug() const;
 
-		GafferScene::ShaderPlug *shaderPlug();
-		const GafferScene::ShaderPlug *shaderPlug() const;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
+		bool affectsOptionName( const Gaffer::Plug *input ) const override;
+		void hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		std::string computeOptionName( const Gaffer::Context *context ) const override;
 
 	private :
 

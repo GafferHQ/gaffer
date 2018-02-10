@@ -50,6 +50,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	plugs = {
+
 		"optionSuffix" : [
 
 			"description",
@@ -58,16 +59,6 @@ Gaffer.Metadata.registerNode(
 			an existing suffix, you will overwrite instead of creating a new AOV shader.
 			""",
 		],
-		"shader" : [
 
-			"description",
-			"""
-			The shader to be assigned.
-			""",
-
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
-
-		]
 	}
 )

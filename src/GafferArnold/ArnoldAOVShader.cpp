@@ -46,11 +46,10 @@ IE_CORE_DEFINERUNTIMETYPED( ArnoldAOVShader );
 size_t ArnoldAOVShader::g_firstPlugIndex = 0;
 
 ArnoldAOVShader::ArnoldAOVShader( const std::string &name )
-	:	GlobalsProcessor( name )
+	:	GlobalShader( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "optionSuffix", Gaffer::Plug::In, "custom" ) );
-	addChild( new ShaderPlug( "shader" ) );
 }
 
 ArnoldAOVShader::~ArnoldAOVShader()
@@ -67,54 +66,17 @@ const Gaffer::StringPlug *ArnoldAOVShader::optionSuffixPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-GafferScene::ShaderPlug *ArnoldAOVShader::shaderPlug()
+bool ArnoldAOVShader::affectsOptionName( const Gaffer::Plug *input ) const
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
+	return input == optionSuffixPlug();
 }
 
-const GafferScene::ShaderPlug *ArnoldAOVShader::shaderPlug() const
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-void ArnoldAOVShader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	GlobalsProcessor::affects( input, outputs );
-
-	if( input == shaderPlug() || input == optionSuffixPlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
-	}
-}
-
-void ArnoldAOVShader::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ArnoldAOVShader::hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	optionSuffixPlug()->hash( h );
-	h.append( shaderPlug()->attributesHash() );
 }
 
-IECore::ConstCompoundObjectPtr ArnoldAOVShader::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+std::string ArnoldAOVShader::computeOptionName( const Gaffer::Context *context ) const
 {
-	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();
-	if( attributes->members().empty() )
-	{
-		return inputGlobals;
-	}
-
-
-	if( attributes->members().size() > 1 )
-	{
-		throw IECore::Exception( "Invalid shader for ArnoldAOVShader - must contain a single output shader" );
-	}
-
-	CompoundObjectPtr result = new CompoundObject;
-
-	// Since we're not going to modify any existing members (only add new ones),
-	// and our result becomes const on returning it, we can directly reference
-	// the input members in our result without copying. Be careful not to modify
-	// them though!
-	result->members() = inputGlobals->members();
-	result->members()["option:ai:aov_shader:" + optionSuffixPlug()->getValue()] = attributes->members().begin()->second;
-
-	return result;
+	return "ai:aov_shader:" + optionSuffixPlug()->getValue();
 }
