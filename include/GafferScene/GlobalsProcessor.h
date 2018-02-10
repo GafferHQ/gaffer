@@ -55,7 +55,6 @@ class GAFFERSCENE_API GlobalsProcessor : public SceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
 
-		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
