@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,29 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDATMOSPHERE_H
+#define GAFFERARNOLD_ARNOLDATMOSPHERE_H
+
+#include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/GlobalShader.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+class GAFFERSCENE_API ArnoldAtmosphere : public GafferScene::GlobalShader
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
 
-	LastTypeId = 110924
+	public :
+
+		ArnoldAtmosphere( const std::string &name=defaultName<ArnoldAtmosphere>() );
+		~ArnoldAtmosphere() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAtmosphere, ArnoldAtmosphereTypeId, GafferScene::GlobalShader );
+
+	protected :
+
+		bool affectsOptionName( const Gaffer::Plug *input ) const override;
+		void hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		std::string computeOptionName( const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ArnoldAtmosphere )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDATMOSPHERE_H
