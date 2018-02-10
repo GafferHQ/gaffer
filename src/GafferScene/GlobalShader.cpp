@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,82 +34,76 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GlobalsBinding.h"
-
-#include "GafferScene/DeleteOutputs.h"
-#include "GafferScene/DeleteSets.h"
 #include "GafferScene/GlobalShader.h"
-#include "GafferScene/Outputs.h"
-#include "GafferScene/Set.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/ShaderPlug.h"
 
-using namespace std;
-using namespace boost::python;
-using namespace IECorePython;
+using namespace IECore;
 using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferScene;
 
-namespace
-{
+IE_CORE_DEFINERUNTIMETYPED( GlobalShader );
 
-ValuePlugPtr addOutputWrapper( Outputs &o, const std::string &name )
+size_t GlobalShader::g_firstPlugIndex = 0;
+
+GlobalShader::GlobalShader( const std::string &name )
+	:	GlobalsProcessor( name )
 {
-	ScopedGILRelease gilRelease;
-	return o.addOutput( name );
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ShaderPlug( "shader" ) );
 }
 
-ValuePlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECoreScene::Display *output )
+GlobalShader::~GlobalShader()
 {
-	ScopedGILRelease gilRelease;
-	return o.addOutput( name, output );
 }
 
-boost::python::tuple registeredOutputsWrapper()
+ShaderPlug *GlobalShader::shaderPlug()
 {
-	vector<string> names;
-	Outputs::registeredOutputs( names );
-	boost::python::list l;
-	for( vector<string>::const_iterator it = names.begin(); it!=names.end(); it++ )
+	return getChild<ShaderPlug>( g_firstPlugIndex );
+}
+
+const ShaderPlug *GlobalShader::shaderPlug() const
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex );
+}
+
+void GlobalShader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	GlobalsProcessor::affects( input, outputs );
+
+	if( input == shaderPlug() || affectsOptionName( input ) )
 	{
-		l.append( *it );
+		outputs.push_back( outPlug()->globalsPlug() );
 	}
-	return boost::python::tuple( l );
 }
 
-} // namespace
-
-void GafferSceneModule::bindGlobals()
+void GlobalShader::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	h.append( shaderPlug()->attributesHash() );
+	hashOptionName( context, h );
+}
 
-	DependencyNodeClass<GlobalsProcessor>();
-	DependencyNodeClass<DeleteGlobals>()
-		.def( "_namePrefix", &DeleteGlobals::namePrefix )
-	;
-
-	DependencyNodeClass<DeleteOutputs>();
-	DependencyNodeClass<DeleteSets>();
-
-	DependencyNodeClass<Outputs>()
-		.def( "addOutput", &addOutputWrapper )
-		.def( "addOutput", &addOutputWrapper2 )
-		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
-		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
-	;
-
+IECore::ConstCompoundObjectPtr GlobalShader::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+{
+	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();
+	if( attributes->members().empty() )
 	{
-		scope s = DependencyNodeClass<GafferScene::Set>();
-
-			enum_<GafferScene::Set::Mode>( "Mode" )
-				.value( "Create", GafferScene::Set::Create )
-				.value( "Add", GafferScene::Set::Add )
-				.value( "Remove", GafferScene::Set::Remove )
-			;
+		return inputGlobals;
 	}
 
-	DependencyNodeClass<GlobalShader>();
+	if( attributes->members().size() > 1 )
+	{
+		throw IECore::Exception( "Unexpected number of attributes" );
+	}
 
+	CompoundObjectPtr result = new CompoundObject;
+
+	// Since we're not going to modify any existing members (only add new ones),
+	// and our result becomes const on returning it, we can directly reference
+	// the input members in our result without copying. Be careful not to modify
+	// them though!
+	result->members() = inputGlobals->members();
+	result->members()["option:" + computeOptionName( context )] = attributes->members().begin()->second;
+
+	return result;
 }

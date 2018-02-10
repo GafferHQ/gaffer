@@ -71,7 +71,7 @@ enum TypeId
 	FilterTypeId = 110526,
 	PathFilterTypeId = 110527,
 	AttributesTypeId = 110528,
-	ObsoleteAlembicSourceTypeId = 110529, // Obsolete - available for reuse
+	GlobalShaderTypeId = 110529,
 	ClippingPlaneTypeId = 110530,
 	SceneContextVariablesTypeId = 110531,
 	StandardOptionsTypeId = 110532,
