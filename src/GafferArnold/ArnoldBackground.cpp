@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#include "GafferArnold/ArnoldBackground.h"
 
-namespace GafferArnold
+using namespace GafferArnold;
+
+IE_CORE_DEFINERUNTIMETYPED( ArnoldBackground );
+
+ArnoldBackground::ArnoldBackground( const std::string &name )
+	:	GlobalShader( name )
 {
+}
 
-enum TypeId
+ArnoldBackground::~ArnoldBackground()
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
-	ArnoldBackgroundTypeId = 110911,
+}
 
-	LastTypeId = 110924
-};
+bool ArnoldBackground::affectsOptionName( const Gaffer::Plug *input ) const
+{
+	return false;
+}
 
-} // namespace GafferArnold
+void ArnoldBackground::hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	// No need to hash anything, because our option name is constant
+}
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+std::string ArnoldBackground::computeOptionName( const Gaffer::Context *context ) const
+{
+	return "ai:background";
+}
+
