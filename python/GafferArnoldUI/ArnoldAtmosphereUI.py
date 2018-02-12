@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2018, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,19 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
+import GafferArnold
 
-from _GafferArnoldUI import *
+Gaffer.Metadata.registerNode(
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
-import ArnoldVDBUI
-import InteractiveArnoldRenderUI
-import ArnoldDisplacementUI
-import ArnoldMeshLightUI
-import ArnoldShaderBallUI
-import ArnoldAOVShaderUI
-import ArnoldAtmosphereUI
-import CacheMenu
+	GafferArnold.ArnoldAtmosphere,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+	"description",
+	"""
+	Assigns a global atmosphere shader that applies to all objects in
+	the scene. This is stored as an "ai:atmosphere" option in Gaffer's
+	globals, and translated onto the `options.atmosphere` parameter
+	in Arnold.
+	""",
+
+)
