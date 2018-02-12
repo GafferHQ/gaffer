@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2018, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,40 @@
 #
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
-from ArnoldVDBTest import ArnoldVDBTest
-from ArnoldLightTest import ArnoldLightTest
-from ArnoldMeshLightTest import ArnoldMeshLightTest
-from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from ArnoldDisplacementTest import ArnoldDisplacementTest
-from LightToCameraTest import LightToCameraTest
-from IECoreArnoldPreviewTest import *
-from ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from ArnoldBackgroundTest import ArnoldBackgroundTest
+import unittest
+
+import imath
+import arnold
+
+import GafferTest
+import GafferSceneTest
+import GafferArnold
+
+class ArnoldBackgroundTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		a = GafferArnold.ArnoldBackground()
+		self.assertNotIn( "option:ai:background", a["out"]["globals"].getValue() )
+
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "flat" )
+
+		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
+		a["shader"].setInput( s["out"] )
+		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
+
+		backgroundOption = a["out"]["globals"].getValue()["option:ai:background"]
+		self.assertEqual( backgroundOption[0].name, "flat" )
+		self.assertEqual( backgroundOption[0].parameters["color"].value, imath.Color3f( 1 ) )
+
+		del cs[:]
+		s["parameters"]["color"]["r"].setValue( 0.25 )
+		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
+
+		backgroundOption = a["out"]["globals"].getValue()["option:ai:background"]
+		self.assertEqual( backgroundOption[0].name, "flat" )
+		self.assertEqual( backgroundOption[0].parameters["color"].value, imath.Color3f( 0.25, 1, 1 ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
