@@ -191,12 +191,12 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 		assert( widget is self.__directoryListing )
 
-		selection = self.__directoryListing.getSelectedPaths()
-		if not selection :
+		selection = self.__directoryListing.getSelection()
+		if selection.isEmpty() :
 			return
 
 		with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
-			self.__path[:] = selection[0][:]
+			self.__path.setFromString( selection.paths()[0] )
 
 	# This slot is connected to the pathSelectedSignals of the children and just forwards
 	# them to our own pathSelectedSignal.
@@ -268,9 +268,9 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 		# and update the selection in the listing
 		if path.isLeaf() :
-			self.__directoryListing.setSelectedPaths( [ path ] )
+			self.__directoryListing.setSelection( IECore.PathMatcher( [ str( path ) ] ) )
 		else :
-			self.__directoryListing.setSelectedPaths( [] )
+			self.__directoryListing.setSelection( IECore.PathMatcher() )
 
 	def __dirPathChanged( self, dirPath ) :
 

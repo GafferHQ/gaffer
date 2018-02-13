@@ -119,7 +119,8 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 
 	def __result( self ) :
 
-		result = self.__pathChooserWidget.pathListingWidget().getSelectedPaths()
+		result = self.__pathChooserWidget.pathListingWidget().getSelection()
+		result = [ self.__path.copy().setFromString( x ) for x in result.paths() ]
 		if not result and not self.__allowMultipleSelection :
 			result = [ self.__path.copy() ]
 		return result
