@@ -139,6 +139,30 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setExpandedPaths( e )
 		self.assertEqual( len( c ), 4 )
 
+	def testSelection( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True )
+		self.assertTrue( w.getSelection().isEmpty() )
+
+		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
+		s = IECore.PathMatcher( [ "/1", "/2/5", "/3/1" ] )
+
+		w.setSelection( s )
+		self.assertEqual( w.getSelection(), s )
+		self.assertEqual( len( cs ), 1 )
+
+		w.setPath( Gaffer.DictPath( {}, "/" ) )
+		self.assertTrue( w.getSelection().isEmpty() )
+
 	def testSelectionSignalFrequency( self ) :
 
 		d = {

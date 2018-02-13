@@ -937,6 +937,60 @@ void propagateExpanded( uint64_t treeViewAddress, uint64_t modelIndexAddress, bo
 	propagateExpandedWalk( treeView, model, *modelIndex, expanded, numLevels );
 }
 
+void setSelection( uint64_t treeViewAddress, const IECore::PathMatcher &paths, bool scrollToFirst, bool expandNonLeaf )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	if( !model )
+	{
+		return;
+	}
+
+	const std::vector<QModelIndex> indices = model->indicesForPaths( paths );
+	if( treeView->selectionMode() != QAbstractItemView::ExtendedSelection && indices.size() > 1 )
+	{
+		throw IECore::InvalidArgumentException( "More than one path selected" );
+	}
+
+	QItemSelectionModel *selectionModel = treeView->selectionModel();
+	for( const auto &modelIndex : indices )
+	{
+		if( !modelIndex.isValid() )
+		{
+			continue;
+		}
+		selectionModel->select( modelIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows );
+		if( expandNonLeaf && !model->pathForIndex( modelIndex )->isLeaf() )
+		{
+			treeView->setExpanded( modelIndex, true );
+		}
+	}
+
+	if( scrollToFirst && !indices.empty() )
+	{
+		treeView->scrollTo( indices[0], QTreeView::EnsureVisible );
+		selectionModel->setCurrentIndex( indices[0], QItemSelectionModel::Current );
+	}
+}
+
+IECore::PathMatcher getSelection( uint64_t treeViewAddress )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+
+	QModelIndexList selectedIndices = treeView->selectionModel()->selectedRows();
+	IECore::PathMatcher result;
+	for( const auto &index : selectedIndices )
+	{
+		result.addPath( model->pathForIndex( index )->names() );
+	}
+	return result;
+}
+
 PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )
 {
 	// put a GIL release here in case scene child name computations etc triggered by
@@ -1010,6 +1064,8 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetSetExpansion", &setExpansion );
 	def( "_pathListingWidgetGetExpansion", &getExpansion );
 	def( "_pathListingWidgetPropagateExpanded", &propagateExpanded );
+	def( "_pathListingWidgetSetSelection", &setSelection );
+	def( "_pathListingWidgetGetSelection", &getSelection );
 	def( "_pathListingWidgetPathForIndex", &pathForIndex );
 	def( "_pathListingWidgetIndexForPath", &indexForPath );
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
