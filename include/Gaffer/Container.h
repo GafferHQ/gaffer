@@ -37,11 +37,13 @@
 #ifndef GAFFER_CONTAINER_H
 #define GAFFER_CONTAINER_H
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
 template<typename Base, typename T>
-class Container : public Base
+class GAFFER_API Container : public Base
 {
 
 	public :
