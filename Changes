@@ -20,12 +20,14 @@ Fixes
 -----
 
 - MessageWidget : Fixed crash when clicking on message buttons (#2438).
+- BoxIO : Fix promotion of ArrayPlugs (#2446).
 
 API
 ---
 
 - Style : Added `renderAuxiliaryConnection()` method (#2436).
 - Scene : Added GlobalShader base class (#2444).
+- GafferVDB : Using IECoreVDB (#2440).
 
 Breaking Changes
 ----------------
