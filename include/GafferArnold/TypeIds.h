@@ -53,6 +53,8 @@ enum TypeId
 	ArnoldDisplacementTypeId = 110907,
 	ArnoldMeshLightTypeId = 110908,
 	ArnoldAOVShaderTypeId = 110909,
+	ArnoldAtmosphereTypeId = 110910,
+	ArnoldBackgroundTypeId = 110911,
 
 	LastTypeId = 110924
 };

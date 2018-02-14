@@ -37,7 +37,9 @@
 #include "boost/python.hpp"
 
 #include "GafferArnold/ArnoldAOVShader.h"
+#include "GafferArnold/ArnoldAtmosphere.h"
 #include "GafferArnold/ArnoldAttributes.h"
+#include "GafferArnold/ArnoldBackground.h"
 #include "GafferArnold/ArnoldDisplacement.h"
 #include "GafferArnold/ArnoldLight.h"
 #include "GafferArnold/ArnoldMeshLight.h"
@@ -69,6 +71,8 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 {
 
 	GafferBindings::DependencyNodeClass<ArnoldShader>();
+	GafferBindings::DependencyNodeClass<ArnoldAtmosphere>();
+	GafferBindings::DependencyNodeClass<ArnoldBackground>();
 
 	GafferBindings::NodeClass<ArnoldLight>()
 		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )

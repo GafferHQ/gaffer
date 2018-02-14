@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,45 +34,19 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
-import GafferScene
 import GafferArnold
 
-class ArnoldShaderBall( GafferScene.ShaderBall ) :
+Gaffer.Metadata.registerNode(
 
-	def __init__( self, name = "ArnoldShaderBall" ) :
+	GafferArnold.ArnoldAtmosphere,
 
-		GafferScene.ShaderBall.__init__( self, name )
+	"description",
+	"""
+	Assigns a global atmosphere shader that applies to all objects in
+	the scene. This is stored as an "ai:atmosphere" option in Gaffer's
+	globals, and translated onto the `options.atmosphere` parameter
+	in Arnold.
+	""",
 
-		self["environment"] = Gaffer.StringPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
-
-		self["__envMap"] = GafferArnold.ArnoldShader()
-		self["__envMap"].loadShader( "image" )
-		self["__envMap"]["parameters"]["filename"].setInput( self["environment"] )
-
-		self["__skyDome"] = GafferArnold.ArnoldLight()
-		self["__skyDome"].loadShader( "skydome_light" )
-		self["__skyDome"]["parameters"]["color"].setInput( self["__envMap"]["out"] )
-		self["__skyDome"]["parameters"]["format"].setValue( "latlong" )
-		self["__skyDome"]["parameters"]["camera"].setValue( 0 )
-
-		self["__parentLights"] = GafferScene.Parent()
-		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
-		self["__parentLights"]["child"].setInput( self["__skyDome"]["out"] )
-		self["__parentLights"]["parent"].setValue( "/" )
-
-		self["__arnoldOptions"] = GafferArnold.ArnoldOptions()
-		self["__arnoldOptions"]["in"].setInput( self["__parentLights"]["out"] )
-		self["__arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		self["__arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 3 )
-
-		self.addChild(
-			self["__arnoldOptions"]["options"]["threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
-		)
-		self["__arnoldOptions"]["options"]["threads"].setInput( self["threads"] )
-
-		self._outPlug().setInput( self["__arnoldOptions"]["out"] )
-
-IECore.registerRunTimeTyped( ArnoldShaderBall, typeName = "GafferArnold::ArnoldShaderBall" )
+)

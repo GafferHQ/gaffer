@@ -1966,6 +1966,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	@staticmethod
 	def __aovShaders() :
+
 		options = arnold.AiUniverseGetOptions()
 		shaders = arnold.AiNodeGetArray( options, "aov_shaders" )
 
@@ -1976,7 +1977,6 @@ class RendererTest( GafferTest.TestCase ) :
 			result[nodeType] = node
 
 		return result
-
 
 	def testAOVShaders( self ) :
 
@@ -2009,6 +2009,54 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__aovShaders().keys(), [] )
 
 		del r
+
+	def testAtmosphere( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		options = arnold.AiUniverseGetOptions()
+		self.assertEqual( arnold.AiNodeGetPtr( options, "atmosphere" ), None )
+
+		r.option(
+			"ai:atmosphere",
+			IECore.ObjectVector( [ IECoreScene.Shader( "atmosphere_volume", "ai:shader" ) ] )
+		)
+
+		shader = arnold.AtNode.from_address( arnold.AiNodeGetPtr( options, "atmosphere" ) )
+		self.assertEqual(
+			arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( shader ) ),
+			"atmosphere_volume",
+		)
+
+		r.option( "ai:atmosphere", None )
+		self.assertEqual( arnold.AiNodeGetPtr( options, "atmosphere" ), None )
+
+	def testBackground( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		options = arnold.AiUniverseGetOptions()
+		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
+
+		r.option(
+			"ai:background",
+			IECore.ObjectVector( [ IECoreScene.Shader( "flat", "ai:shader" ) ] )
+		)
+
+		shader = arnold.AtNode.from_address( arnold.AiNodeGetPtr( options, "background" ) )
+		self.assertEqual(
+			arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( shader ) ),
+			"flat",
+		)
+
+		r.option( "ai:background", None )
+		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
 
 	@staticmethod
 	def __m44f( m ) :

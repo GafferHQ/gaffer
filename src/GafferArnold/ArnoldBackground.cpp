@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,44 +34,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GLOBALSPROCESSOR_H
-#define GAFFERSCENE_GLOBALSPROCESSOR_H
+#include "GafferArnold/ArnoldBackground.h"
 
-#include "GafferScene/SceneProcessor.h"
+using namespace GafferArnold;
 
-namespace GafferScene
+IE_CORE_DEFINERUNTIMETYPED( ArnoldBackground );
+
+ArnoldBackground::ArnoldBackground( const std::string &name )
+	:	GlobalShader( name )
 {
+}
 
-/// The GlobalsProcessor class provides a base class for modifying the globals
-/// of a scene while passing everything else through unchanged.
-class GAFFERSCENE_API GlobalsProcessor : public SceneProcessor
+ArnoldBackground::~ArnoldBackground()
 {
+}
 
-	public :
+bool ArnoldBackground::affectsOptionName( const Gaffer::Plug *input ) const
+{
+	return false;
+}
 
-		GlobalsProcessor( const std::string &name=defaultName<GlobalsProcessor>() );
-		~GlobalsProcessor() override;
+void ArnoldBackground::hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	// No need to hash anything, because our option name is constant
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
+std::string ArnoldBackground::computeOptionName( const Gaffer::Context *context ) const
+{
+	return "ai:background";
+}
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-	protected :
-
-		/// Implemented to call hashProcessedGlobals().
-		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
-		/// Implemented to call computeProcessedGlobals().
-		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
-
-		/// Must be implemented by derived classes to compute the hash for the work done in processGlobals().
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		/// Must be implemented by derived classes to process the incoming globals.
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const = 0;
-
-};
-
-IE_CORE_DECLAREPTR( GlobalsProcessor )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_GLOBALSPROCESSOR_H

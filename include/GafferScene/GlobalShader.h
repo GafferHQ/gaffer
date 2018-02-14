@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,44 +34,48 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GLOBALSPROCESSOR_H
-#define GAFFERSCENE_GLOBALSPROCESSOR_H
+#ifndef GAFFERSCENE_GLOBALSHADER_H
+#define GAFFERSCENE_GLOBALSHADER_H
 
-#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/GlobalsProcessor.h"
 
 namespace GafferScene
 {
 
-/// The GlobalsProcessor class provides a base class for modifying the globals
-/// of a scene while passing everything else through unchanged.
-class GAFFERSCENE_API GlobalsProcessor : public SceneProcessor
+class ShaderPlug;
+
+class GAFFERSCENE_API GlobalShader : public GlobalsProcessor
 {
 
 	public :
 
-		GlobalsProcessor( const std::string &name=defaultName<GlobalsProcessor>() );
-		~GlobalsProcessor() override;
+		GlobalShader( const std::string &name=defaultName<GlobalShader>() );
+		~GlobalShader() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::GlobalShader, GlobalShaderTypeId, GlobalsProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
+		ShaderPlug *shaderPlug();
+		const ShaderPlug *shaderPlug() const;
+
 	protected :
 
-		/// Implemented to call hashProcessedGlobals().
-		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
-		/// Implemented to call computeProcessedGlobals().
-		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
 
-		/// Must be implemented by derived classes to compute the hash for the work done in processGlobals().
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		/// Must be implemented by derived classes to process the incoming globals.
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const = 0;
+		virtual bool affectsOptionName( const Gaffer::Plug *input ) const = 0;
+		virtual void hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual std::string computeOptionName( const Gaffer::Context *context ) const = 0;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( GlobalsProcessor )
+IE_CORE_DECLAREPTR( GlobalShader )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_GLOBALSPROCESSOR_H
+#endif // GAFFERSCENE_GLOBALSHADER_H
