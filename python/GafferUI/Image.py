@@ -169,7 +169,7 @@ class Image( GafferUI.Widget ) :
 
 		return cls._qtPixmapCache().get( fileName )
 
-	__imageSearchPaths = IECore.SearchPath( os.environ.get( "GAFFERUI_IMAGE_PATHS", "" ), ":" )
+	__imageSearchPaths = IECore.SearchPath( os.environ.get( "GAFFERUI_IMAGE_PATHS", "" ) )
 	@classmethod
 	def __cacheGetter( cls, fileName ) :
 

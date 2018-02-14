@@ -38,7 +38,7 @@ import os
 
 import IECore
 
-moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"], ":" )
+moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"] )
 if moduleSearchPath.find( "IECoreAlembic" ) :
 	# Registers the IECoreAlembic SceneInterface so that the SceneReader
 	# and SceneWriter can support .abc files.
