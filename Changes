@@ -1,3 +1,47 @@
+0.44.0.0
+========
+
+Features
+--------
+
+- Added Checkerboard image node (#2403).
+- Added ArnoldAtmosphere and ArnoldBackground nodes (#2444).
+
+Improvements
+------------
+
+- NodeGraph : Added rendering of auxiliary connections, for instance between Expressions
+  and the nodes they are connected to (#2436).
+- Build : Hid symbols that do not need to be exported (#2431).
+- OSLObject : Added support for creating string primitive variables (#2425).
+- ArnoldShader : Added support for shader outputs of type string and boolean (#2439).
+
+Fixes
+-----
+
+- MessageWidget : Fixed crash when clicking on message buttons (#2438).
+
+API
+---
+
+- Style : Added `renderAuxiliaryConnection()` method (#2436).
+- Scene : Added GlobalShader base class (#2444).
+
+Breaking Changes
+----------------
+
+- Plug : Removed deprecated PerformsSubstitutions flag. Use the `substitutions`
+  argument to the StringPlug constructor instead (#2432).
+- Style : Added a virtual method (#2436).
+- ArnoldAOVShader : Changed base class (#2444).
+
+Build
+-----
+
+- Added WARNINGS_AS_ERRORS build argument. This defaults to being on,
+  which is the same behaviour as before (#2431).
+- Added ASAN build argument for use with Clang (#2434).
+
 0.43.0.0
 ========
 
