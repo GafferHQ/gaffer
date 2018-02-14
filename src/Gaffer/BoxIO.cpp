@@ -49,6 +49,7 @@
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/bind.hpp"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 
@@ -111,6 +112,28 @@ void setupNoduleSectionMetadata( Plug *dst, const Plug *src )
 
 }
 
+// See equivalent function in PlugAlgo.cpp for an explanation of
+// why this nonsense is necessary.
+// \todo Abolish the Dynamic flag and instead make the serialisers
+// smart enough to always do the right thing.
+void applyDynamicFlag( Plug *plug )
+{
+	plug->setFlags( Plug::Dynamic, true );
+
+	auto compoundTypes = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
+	if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)plug->typeId() ) != end( compoundTypes ) )
+	{
+		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+		{
+			(*it)->setFlags( Plug::Dynamic, true );
+			if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)(*it)->typeId() ) != end( compoundTypes ) )
+			{
+				it.prune();
+			}
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -167,8 +190,10 @@ void BoxIO::setup( const Plug *plug )
 		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
 		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
-		inPlugInternal()->setFlags( Plug::Dynamic | Plug::Serialisable, true );
-		outPlugInternal()->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+		inPlugInternal()->setFlags( Plug::Serialisable, true );
+		outPlugInternal()->setFlags( Plug::Serialisable, true );
+		applyDynamicFlag( inPlugInternal() );
+		applyDynamicFlag( outPlugInternal() );
 		outPlugInternal()->setInput( inPlugInternal() );
 
 		MetadataAlgo::copy(
