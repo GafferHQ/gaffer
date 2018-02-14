@@ -36,7 +36,7 @@
 
 #include "GafferVDB/PointsGridToPoints.h"
 
-#include "GafferVDB/VDBObject.h"
+#include "IECoreVDB/VDBObject.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -53,6 +53,7 @@ using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
+using namespace IECoreVDB;
 using namespace Gaffer;
 using namespace GafferVDB;
 

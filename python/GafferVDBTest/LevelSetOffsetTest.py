@@ -39,6 +39,7 @@ import os
 
 import IECore
 import IECoreScene
+import IECoreVDB
 
 import GafferTest
 import GafferScene

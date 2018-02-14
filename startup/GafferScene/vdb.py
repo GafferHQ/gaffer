@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of  Image Engine Design Inc. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,51 +34,12 @@
 #
 ##########################################################################
 
-import GafferTest
-
-import GafferVDB
-import IECore
-import IECoreScene
-import IECoreVDB
-import GafferVDBTest
 import os
-import GafferScene
 
-import imath
+import IECore
 
-
-class PointsGridToPointsTest( GafferVDBTest.VDBTestCase ) :
-	def setUp( self ) :
-		GafferVDBTest.VDBTestCase.setUp( self )
-		self.sourcePath = os.path.join( self.dataDir, "points.vdb" )
-		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
-
-	def testCanConvertPointsGridToPoints( self ) :
-
-		sceneReader = GafferScene.SceneReader( "SceneReader" )
-		sceneReader["fileName"].setValue( self.sourcePath )
-
-		pointsGridToPoints = GafferVDB.PointsGridToPoints( "PointsGridToPoints" )
-		pointsGridToPoints["in"].setInput( sceneReader["out"] )
-
-		points = pointsGridToPoints["out"].object("/vdb")
-
-		self.assertTrue( isinstance( points, IECoreScene.PointsPrimitive ) )
-		self.assertTrue( "P" in points )
-		self.assertEqual( len( points["P"].data), 8 )
-		self.assertEqual( points["P"].data[0], imath.V3f( -0.500004232, 0.366468042, 0.261457711  ) )
-
-	def testVDBObjectLeftUnchangedIfIncorrectGrid( self ) :
-
-		sceneReader = GafferScene.SceneReader( "SceneReader" )
-		sceneReader["fileName"].setValue( self.sourcePath )
-
-		pointsGridToPoints = GafferVDB.PointsGridToPoints( "PointsGridToPoints" )
-		pointsGridToPoints["in"].setInput( sceneReader["out"] )
-		pointsGridToPoints["grid"].setValue( "nogridhere" )
-
-		vdb = pointsGridToPoints["out"].object("/vdb")
-		self.assertTrue( isinstance( vdb, IECoreVDB.VDBObject) )
-
-if __name__ == "__main__":
-	unittest.main()
+moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"] )
+if moduleSearchPath.find( "IECoreVDB" ) :
+	# Import IECoreVDB so that we get the VDB SceneInterface registered,
+	# providing VDB functionality to the SceneReader.
+	import IECoreVDB

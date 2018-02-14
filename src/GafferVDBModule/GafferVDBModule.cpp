@@ -40,135 +40,14 @@
 #include "GafferVDB/LevelSetToMesh.h"
 #include "GafferVDB/MeshToLevelSet.h"
 #include "GafferVDB/PointsGridToPoints.h"
-#include "GafferVDB/VDBObject.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferVDB;
 
-namespace
-{
-
-
-// all functions in iepyopenvdb namespace are from the pyopenvdb bindings
-
-namespace iepyopenvdb
-{
-
-// openvdb/python/pyutil.h
-std::string className( boost::python::object obj )
-{
-	std::string s = boost::python::extract<std::string>( obj.attr( "__class__" ).attr( "__name__" ) );
-	return s;
-}
-
-// openvdb/python/pyGrid.h
-boost::python::object getPyObjectFromGrid( const openvdb::GridBase::Ptr &grid )
-{
-	if( !grid )
-	{
-		return boost::python::object();
-	}
-
-#define CONVERT_BASE_TO_GRID( GridType, grid ) \
-        if (grid->isType<GridType>()) { \
-            return boost::python::object(openvdb::gridPtrCast<GridType>(grid)); \
-        }
-
-	CONVERT_BASE_TO_GRID( openvdb::FloatGrid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::Vec3SGrid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::BoolGrid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::DoubleGrid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::Int32Grid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::Int64Grid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::Vec3IGrid, grid );
-	CONVERT_BASE_TO_GRID( openvdb::Vec3DGrid, grid );
-
-#undef CONVERT_BASE_TO_GRID
-
-	throw openvdb::TypeError( grid->type() + " is not a supported OpenVDB grid type" );
-}
-
-// openvdb/python/pyGrid.h
-openvdb::GridBase::Ptr getGridFromPyObject( const boost::python::object &gridObj )
-{
-	if( !gridObj )
-	{
-		return openvdb::GridBase::Ptr();
-	}
-
-#define CONVERT_GRID_TO_BASE( GridPtrType ) \
-        { \
-            boost::python::extract<GridPtrType> x(gridObj); \
-            if (x.check()) return x(); \
-        }
-
-	// Extract a grid pointer of one of the supported types
-	// from the input object, then cast it to a base pointer.
-	CONVERT_GRID_TO_BASE( openvdb::FloatGrid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::Vec3SGrid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::BoolGrid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::DoubleGrid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::Int32Grid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::Int64Grid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::Vec3IGrid::Ptr );
-	CONVERT_GRID_TO_BASE( openvdb::Vec3DGrid::Ptr );
-
-#undef CONVERT_GRID_TO_BASE
-
-	throw openvdb::TypeError( className( gridObj ) + " is not a supported OpenVDB grid type" );
-}
-
-}
-
-
-boost::python::list gridNames( VDBObject::Ptr vdbObject )
-{
-	boost::python::list result;
-	std::vector<std::string> names = vdbObject->gridNames();
-	for( const auto &name : names )
-	{
-		result.append( name );
-	}
-	return result;
-}
-
-boost::python::object findGrid( VDBObject::Ptr vdbObject, const std::string &gridName )
-{
-	openvdb::GridBase::Ptr grid = vdbObject->findGrid( gridName );
-	if( grid )
-	{
-		return iepyopenvdb::getPyObjectFromGrid( grid );
-	}
-	else
-	{
-		return boost::python::object();
-	}
-}
-
-void insertGrid( VDBObject::Ptr vdbObject, boost::python::object pyObject )
-{
-	openvdb::GridBase::Ptr gridPtr = iepyopenvdb::getGridFromPyObject( pyObject );
-	vdbObject->insertGrid( gridPtr );
-}
-
-}
-
 BOOST_PYTHON_MODULE( _GafferVDB )
 {
-
-	IECorePython::RunTimeTypedClass<VDBObject>()
-		.def(init<const std::string &>())
-		.def(init<>())
-		.def("gridNames", &::gridNames)
-		.def("metadata", &VDBObject::metadata)
-		.def("removeGrid", &VDBObject::removeGrid)
-		.def("findGrid", &::findGrid)
-		.def("insertGrid", &::insertGrid)
-		.def("unmodifiedFromFile", &VDBObject::unmodifiedFromFile)
-		.def("fileName", &VDBObject::fileName)
-		;
 
 	GafferBindings::DependencyNodeClass<MeshToLevelSet>();
 	GafferBindings::DependencyNodeClass<LevelSetToMesh>();
