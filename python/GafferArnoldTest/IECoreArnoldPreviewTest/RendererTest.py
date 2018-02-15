@@ -2058,6 +2058,66 @@ class RendererTest( GafferTest.TestCase ) :
 		r.option( "ai:background", None )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
 
+	def testVDBs( self ) :
+
+		import IECoreVDB
+
+		tmpFile = self.temporaryDirectory() + "/test.ass"
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			tmpFile
+		)
+
+		attributes = IECore.CompoundObject( {
+			"ai:volume:velocity_scale" : IECore.FloatData( 10 ),
+			"ai:volume:velocity_fps" : IECore.FloatData( 25 ),
+			"ai:volume:velocity_outlier_threshold" : IECore.FloatData( 0.5 ) } )
+
+		# Camera needs to be added first as it's being used for translating the VDB.
+		# We are doing the same when translating actual Gaffer scenes here:
+		# https://github.com/GafferHQ/gaffer/blob/master/src/GafferScene/Render.cpp#L254
+		r.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"shutter" : imath.V2f( 10.75, 11.25 )
+				}
+			),
+			r.attributes( IECore.CompoundObject() )
+		)
+
+		r.object( "test_vdb", IECoreVDB.VDBObject(), r.attributes( attributes ) )
+
+		r.option( "camera", IECore.StringData( "testCamera" ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( tmpFile )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numVDBs = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
+
+			self.assertEqual( len( shapes ), 2 )
+			self.assertEqual( numInstances, 1 )
+			self.assertEqual( numVDBs, 1 )
+
+			vdbInstance = arnold.AiNodeLookUpByName( "test_vdb" )
+			vdbShape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( vdbInstance, "node" ) )
+
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "velocity_scale" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "velocity_fps" ), 25 )
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "velocity_outlier_threshold" ), 0.5 )
+
+			# make sure motion_start and motion_end parameters were set according to the active camera's shutter
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "motion_start" ), 10.75 )
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "motion_end" ), 11.25 )
+
 	@staticmethod
 	def __m44f( m ) :
 
