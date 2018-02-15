@@ -954,19 +954,22 @@ void setSelection( uint64_t treeViewAddress, const IECore::PathMatcher &paths, b
 		throw IECore::InvalidArgumentException( "More than one path selected" );
 	}
 
-	QItemSelectionModel *selectionModel = treeView->selectionModel();
+	QItemSelection itemSelection;
 	for( const auto &modelIndex : indices )
 	{
 		if( !modelIndex.isValid() )
 		{
 			continue;
 		}
-		selectionModel->select( modelIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows );
+		itemSelection.select( modelIndex, modelIndex.sibling( modelIndex.row(), model->columnCount() - 1 ) );
 		if( expandNonLeaf && !model->pathForIndex( modelIndex )->isLeaf() )
 		{
 			treeView->setExpanded( modelIndex, true );
 		}
 	}
+
+	QItemSelectionModel *selectionModel = treeView->selectionModel();
+	selectionModel->select( itemSelection, QItemSelectionModel::Select );
 
 	if( scrollToFirst && !indices.empty() )
 	{
