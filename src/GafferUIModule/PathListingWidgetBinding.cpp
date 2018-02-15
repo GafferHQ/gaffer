@@ -985,7 +985,7 @@ IECore::PathMatcher getSelection( uint64_t treeViewAddress )
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 
-	QModelIndexList selectedIndices = treeView->selectionModel()->selectedRows();
+	QModelIndexList selectedIndices = treeView->selectionModel()->selectedIndexes();
 	IECore::PathMatcher result;
 	for( const auto &index : selectedIndices )
 	{
