@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import imath
 
 import IECore
@@ -136,7 +138,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			result.append( "/RemoveDivider", { "divider" : True } )
 
 		for filterType in self.__filterTypes() :
-			result.append( "/" + filterType.staticTypeName().rpartition( ":" )[2], { "command" : IECore.curry( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
+			result.append( "/" + filterType.staticTypeName().rpartition( ":" )[2], { "command" : functools.partial( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
 
 		return result
 

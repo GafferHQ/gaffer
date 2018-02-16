@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import IECore
+import functools
 
 import Gaffer
 import GafferUI
@@ -124,7 +124,7 @@ def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend(
 			menuPrefix + nameWithoutPrefix,
 			{
-				"command" : IECore.curry( __toggleName, plug, nameWithoutPrefix ),
+				"command" : functools.partial( __toggleName, plug, nameWithoutPrefix ),
 				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
 				"checkBox" : nameWithoutPrefix in currentNames,
 			}

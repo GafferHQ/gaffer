@@ -36,6 +36,7 @@
 
 import os
 import string
+import functools
 
 import IECore
 
@@ -106,6 +107,6 @@ def shaderSubMenu() :
 
 	result = IECore.MenuDefinition()
 	for shader in sorted( list( shaders ) ) :
-		result.append( "/" + IECore.CamelCase.toSpaced( shader ), { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shader ) ) } )
+		result.append( "/" + IECore.CamelCase.toSpaced( shader ), { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( functools.partial( __shaderCreator, shader ) ) } )
 
 	return result

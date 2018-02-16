@@ -40,6 +40,7 @@ import unittest
 import weakref
 import sys
 import gc
+import functools
 import imath
 
 import IECore
@@ -320,24 +321,24 @@ class SignalsTest( GafferTest.TestCase ) :
 			values.append( value )
 
 		s = Gaffer.Signal0()
-		c1 = s.connect( IECore.curry( f, "one" ) )
-		c2 = s.connect( IECore.curry( f, "two" ) )
+		c1 = s.connect( functools.partial( f, "one" ) )
+		c2 = s.connect( functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "one", "two" ] )
 
 		del values[:]
 
-		c1 = s.connect( 1, IECore.curry( f, "one" ) )
-		c2 = s.connect( 0, IECore.curry( f, "two" ) )
+		c1 = s.connect( 1, functools.partial( f, "one" ) )
+		c2 = s.connect( 0, functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "two", "one" ] )
 
 		del values[:]
 
-		c1 = s.connect( IECore.curry( f, "one" ) )
-		c2 = s.connect( 0, IECore.curry( f, "two" ) )
+		c1 = s.connect( functools.partial( f, "one" ) )
+		c2 = s.connect( 0, functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "two", "one" ] )

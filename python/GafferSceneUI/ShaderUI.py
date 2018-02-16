@@ -219,7 +219,7 @@ GafferUI.NodeFinderDialogue.registerMode( "Shader Names", __shaderNameExtractor 
 ## Appends menu items for the creation of all shaders found on some searchpaths.
 def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator, matchExpression = "*", searchTextPrefix = "" ) :
 
-	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
+	menuDefinition.append( prefix, { "subMenu" : functools.partial( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
 
 def __nodeName( shaderName ) :
 
@@ -284,7 +284,7 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		result.append(
 			menuPath,
 			{
-				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( nodeCreator, __nodeName( shader ), shader ) ),
+				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( functools.partial( nodeCreator, __nodeName( shader ), shader ) ),
 				"searchText" : searchTextPrefix + menuPath.rpartition( "/" )[-1].replace( " ", "" ),
 			},
 		)

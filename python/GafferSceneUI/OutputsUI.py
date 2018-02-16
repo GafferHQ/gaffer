@@ -35,6 +35,7 @@
 ##########################################################################
 
 import re
+import functools
 import imath
 
 import IECore
@@ -158,7 +159,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			m.append(
 				menuPath,
 				{
-					"command" : IECore.curry( node.addOutput, name ),
+					"command" : functools.partial( node.addOutput, name ),
 					"active" : name not in currentNames
 				}
 			)
@@ -166,7 +167,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if len( registeredOutputs ) :
 			m.append( "/BlankDivider", { "divider" : True } )
 
-		m.append( "/Blank", { "command" : IECore.curry( node.addOutput, "", IECoreScene.Display( "", "", "" ) ) } )
+		m.append( "/Blank", { "command" : functools.partial( node.addOutput, "", IECoreScene.Display( "", "", "" ) ) } )
 
 		return m
 

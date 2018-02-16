@@ -331,7 +331,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.append(
 			"/Delete",
 			{
-				"command" : IECore.curry( __deletePlug, plug ),
+				"command" : functools.partial( __deletePlug, plug ),
 				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug )
 			}
 		)
