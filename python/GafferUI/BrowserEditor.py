@@ -37,6 +37,7 @@
 import os
 import weakref
 import threading
+import functools
 
 import IECore
 
