@@ -120,7 +120,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 	if( !mod )
 	{
 		int lineNumber = 0;
-		std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
+		std::string message = GafferBindings::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
 		IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
 		return false;
 	}
