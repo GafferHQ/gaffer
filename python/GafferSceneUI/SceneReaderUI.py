@@ -34,7 +34,8 @@
 #
 ##########################################################################
 
-import IECore
+import functools
+
 import IECoreScene
 
 import Gaffer
@@ -150,7 +151,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend(
 			"/Tags/%s" % tag,
 			{
-				"command" : IECore.curry( __toggleTag, plug, tag ),
+				"command" : functools.partial( __toggleTag, plug, tag ),
 				"checkBox" : tag in currentTags,
 				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
 			}

@@ -834,7 +834,7 @@ class DiffRow( Row ) :
 	def __contextMenu( self, widget ) :
 
 		GafferUI.Pointer.setCurrent( None )
-		self.__menu = GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( self.__menuDefinition ), widget ) )
+		self.__menu = GafferUI.Menu( functools.partial( Gaffer.WeakMethod( self.__menuDefinition ), widget ) )
 		self.__menu.popup()
 
 	def __menuDefinition( self, widget = None ) :
@@ -864,7 +864,7 @@ class DiffRow( Row ) :
 				m.append(
 					"/Show History" + labelSuffix,
 					{
-						"command" : IECore.curry( Gaffer.WeakMethod( self.__showHistory ), target ),
+						"command" : functools.partial( Gaffer.WeakMethod( self.__showHistory ), target ),
 					}
 				)
 
@@ -873,7 +873,7 @@ class DiffRow( Row ) :
 				m.append(
 					"/Show Inheritance" + labelSuffix,
 					{
-						"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+						"command" : functools.partial( Gaffer.WeakMethod( self.__showInheritance ), target ),
 					}
 				)
 
@@ -1196,7 +1196,7 @@ class _InheritanceSection( Section ) :
 						self.__connections.extend( [
 							label.enterSignal().connect( lambda gadget : gadget.setHighlighted( True ) ),
 							label.leaveSignal().connect( lambda gadget : gadget.setHighlighted( False ) ),
-							label.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
+							label.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
 						] )
 					else :
 						GafferUI.Label( "..." )

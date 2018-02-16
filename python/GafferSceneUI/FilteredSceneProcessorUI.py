@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -125,7 +127,7 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeGraph.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeGraph.getContext() ) } )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -137,4 +139,4 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeEditor.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.getContext() ) } )

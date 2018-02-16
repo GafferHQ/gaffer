@@ -139,10 +139,10 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/Add/BoxDivider", { "divider" : True } )
 
-		result.append( "/Add/Box2i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2iData( imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) ) ) ) } )
-		result.append( "/Add/Box2f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2fData( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) ) ) } )
-		result.append( "/Add/Box3i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3iData( imath.Box3i( imath.V3i( 0 ), imath.V3i( 1 ) ) ) ) } )
-		result.append( "/Add/Box3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3fData( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) ) ) } )
+		result.append( "/Add/Box2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2iData( imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) ) ) ) } )
+		result.append( "/Add/Box2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2fData( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) ) ) } )
+		result.append( "/Add/Box3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3iData( imath.Box3i( imath.V3i( 0 ), imath.V3i( 1 ) ) ) ) } )
+		result.append( "/Add/Box3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3fData( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) ) ) } )
 
 		return result
 
