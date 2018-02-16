@@ -120,13 +120,17 @@ void applyDynamicFlag( Plug *plug )
 {
 	plug->setFlags( Plug::Dynamic, true );
 
-	auto compoundTypes = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
-	if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)plug->typeId() ) != end( compoundTypes ) )
+	std::vector<Gaffer::TypeId> compoundTypes;
+	compoundTypes.push_back( PlugTypeId );
+	compoundTypes.push_back( ValuePlugTypeId );
+	compoundTypes.push_back( ArrayPlugTypeId );
+
+	if( find( compoundTypes.begin(), compoundTypes.end(), (Gaffer::TypeId)plug->typeId() ) != compoundTypes.end() )
 	{
 		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
-			if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)(*it)->typeId() ) != end( compoundTypes ) )
+			if( find( compoundTypes.begin(), compoundTypes.end(), (Gaffer::TypeId)(*it)->typeId() ) != compoundTypes.end() )
 			{
 				it.prune();
 			}
