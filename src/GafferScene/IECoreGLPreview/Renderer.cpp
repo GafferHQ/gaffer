@@ -521,7 +521,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		string m_camera;
 
-		unordered_map<InternedString, ConstDisplayPtr> m_outputs;
+		unordered_map<InternedString, ConstOutputPtr> m_outputs;
 		typedef tbb::concurrent_unordered_map<string, OpenGLCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		typedef tbb::concurrent_vector<OpenGLObjectPtr> OpenGLObjectVector;

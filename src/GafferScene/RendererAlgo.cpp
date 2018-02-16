@@ -46,7 +46,7 @@
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ClippingPlane.h"
 #include "IECoreScene/CoordinateSystem.h"
-#include "IECoreScene/Display.h"
+#include "IECoreScene/Output.h"
 #include "IECoreScene/PreWorldRenderable.h"
 #include "IECoreScene/Primitive.h"
 #include "IECoreScene/Shader.h"
@@ -102,9 +102,9 @@ void createDisplayDirectories( const IECore::CompoundObject *globals )
 	CompoundObject::ObjectMap::const_iterator it, eIt;
 	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )
 	{
-		if( const Display *d = runTimeCast<Display>( it->second.get() ) )
+		if( const Output *o = runTimeCast<Output>( it->second.get() ) )
 		{
-			boost::filesystem::path fileName( d->getName() );
+			boost::filesystem::path fileName( o->getName() );
 			boost::filesystem::path directory = fileName.parent_path();
 			if( !directory.empty() )
 			{
@@ -943,24 +943,24 @@ void outputOutputs( const IECore::CompoundObject *globals, const IECore::Compoun
 		{
 			continue;
 		}
-		if( const Display *display = runTimeCast<Display>( it->second.get() ) )
+		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
 		{
 			bool changedOrAdded = true;
 			if( previousGlobals )
 			{
-				if( const Display *previousDisplay = previousGlobals->member<Display>( it->first ) )
+				if( const Output *previousOutput = previousGlobals->member<Output>( it->first ) )
 				{
-					changedOrAdded = *previousDisplay != *display;
+					changedOrAdded = *previousOutput != *output;
 				}
 			}
 			if( changedOrAdded )
 			{
-				renderer->output( it->first.string().substr( prefix.size() ), display );
+				renderer->output( it->first.string().substr( prefix.size() ), output );
 			}
 		}
 		else
 		{
-			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not an IECoreScene::Display" );
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not an IECoreScene::Output" );
 		}
 	}
 
@@ -977,9 +977,9 @@ void outputOutputs( const IECore::CompoundObject *globals, const IECore::Compoun
 		{
 			continue;
 		}
-		if( runTimeCast<Display>( it->second.get() ) )
+		if( runTimeCast<Output>( it->second.get() ) )
 		{
-			if( !globals->member<Display>( it->first ) )
+			if( !globals->member<Output>( it->first ) )
 			{
 				renderer->output( it->first.string().substr( prefix.size() ), nullptr );
 			}

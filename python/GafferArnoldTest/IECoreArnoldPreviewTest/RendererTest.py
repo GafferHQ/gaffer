@@ -159,7 +159,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				self.temporaryDirectory() + "/beauty.exr",
 				"exr",
 				"rgba",
@@ -516,7 +516,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"testA",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"color A",
@@ -528,7 +528,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# to generalize it across renderer backends, so it may change in the future.
 		r.output(
 			"testB",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"color B",
@@ -564,7 +564,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"rgba",
@@ -598,7 +598,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"lpe C.*D.*",
@@ -608,7 +608,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"testWithAlpha",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"lpe C.*D.*",
@@ -652,7 +652,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"exrTest",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"rgba",
@@ -667,7 +667,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"exrDataTest",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"beauty.exr",
 				"exr",
 				"rgba",
@@ -693,7 +693,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with msg:
 			r.output(
 				"tiffTest",
-				IECoreScene.Display(
+				IECoreScene.Output(
 					"beauty.tiff",
 					"tiff",
 					"rgba",
@@ -1929,7 +1929,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				self.temporaryDirectory() + "/beauty.exr",
 				"exr",
 				"rgba",

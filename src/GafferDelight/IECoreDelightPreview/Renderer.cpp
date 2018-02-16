@@ -247,7 +247,7 @@ class DelightOutput : public IECore::RefCounted
 
 	public :
 
-		DelightOutput( NSIContext_t context, const std::string &name, const IECoreScenePreview::Renderer::Output *output, DelightHandle::Ownership ownership )
+		DelightOutput( NSIContext_t context, const std::string &name, const IECoreScene::Output *output, DelightHandle::Ownership ownership )
 			:	m_context( context )
 		{
 			// Driver
@@ -347,7 +347,7 @@ class DelightOutput : public IECore::RefCounted
 
 	private :
 
-		const char *scalarFormat( const IECoreScenePreview::Renderer::Output *output ) const
+		const char *scalarFormat( const IECoreScene::Output *output ) const
 		{
 			// Map old-school "quantize" setting to scalarformat. Maybe
 			// we should have a standard more suitable for mapping to modern

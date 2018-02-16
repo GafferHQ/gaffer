@@ -63,7 +63,7 @@ class DeleteOutputsTest( GafferSceneTest.SceneTestCase ) :
 
 		# test that we can delete options
 
-		outputs.addOutput( "test", IECoreScene.Display( "fileName", "type", "data", {} ) )
+		outputs.addOutput( "test", IECoreScene.Output( "fileName", "type", "data", {} ) )
 
 		g = deleteOutputs["out"]["globals"].getValue()
 		self.assertTrue( "output:test" in g )

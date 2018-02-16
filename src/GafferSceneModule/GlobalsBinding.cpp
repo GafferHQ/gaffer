@@ -62,7 +62,7 @@ ValuePlugPtr addOutputWrapper( Outputs &o, const std::string &name )
 	return o.addOutput( name );
 }
 
-ValuePlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECoreScene::Display *output )
+ValuePlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECoreScene::Output *output )
 {
 	ScopedGILRelease gilRelease;
 	return o.addOutput( name, output );

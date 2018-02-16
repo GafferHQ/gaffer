@@ -46,7 +46,7 @@ import GafferImageUI
 
 GafferScene.Outputs.registerOutput(
 	"Interactive/Beauty",
-	IECoreScene.Display(
+	IECoreScene.Output(
 		"beauty",
 		"ieDisplay",
 		"rgba",
@@ -62,7 +62,7 @@ GafferScene.Outputs.registerOutput(
 
 GafferScene.Outputs.registerOutput(
 	"Batch/Beauty",
-	IECoreScene.Display(
+	IECoreScene.Output(
 		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
 		"exr",
 		"rgba",
@@ -121,7 +121,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Arnold/" + label,
-			IECoreScene.Display(
+			IECoreScene.Output(
 				aov,
 				"ieDisplay",
 				"color " + data,
@@ -136,7 +136,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Batch/Arnold/" + label,
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				"color " + data,
@@ -163,7 +163,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/3Delight/" + label,
-			IECoreScene.Display(
+			IECoreScene.Output(
 				aov,
 				"ieDisplay",
 				"color " + aov,
@@ -178,7 +178,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Batch/3Delight/" + label,
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				"color " + aov,
@@ -212,7 +212,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Appleseed/" + label,
-			IECoreScene.Display(
+			IECoreScene.Output(
 				aov,
 				"ieDisplay",
 				aovModel,
@@ -227,7 +227,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Batch/Appleseed/" + label,
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				aovModel

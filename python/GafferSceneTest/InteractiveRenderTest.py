@@ -73,7 +73,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -104,7 +104,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["o"].addOutput(
 			"beauty1",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test1",
 				"ieDisplay",
 				"rgba",
@@ -132,7 +132,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["o"].addOutput(
 			"beauty2",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test1",
 				"ieDisplay",
 				"rgba",
@@ -161,7 +161,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["o"].addOutput(
 			"beauty3",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test1",
 				"ieDisplay",
 				"rgba",
@@ -186,7 +186,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -241,7 +241,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -298,7 +298,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -382,7 +382,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -448,7 +448,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -503,7 +503,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -557,7 +557,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -616,7 +616,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -702,7 +702,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -747,7 +747,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -797,7 +797,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -879,7 +879,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -986,7 +986,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1062,7 +1062,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1146,7 +1146,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1218,7 +1218,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1274,7 +1274,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1332,7 +1332,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1442,7 +1442,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1517,7 +1517,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -1565,7 +1565,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",

@@ -424,7 +424,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			script["attributes"]["attributes"][p.getName()] = p
 
 			c.setFrame( 10 )
-			script["outputs"].addOutput( "test", IECoreScene.Display( "beauty.exr", "exr", "rgba" ) )
+			script["outputs"].addOutput( "test", IECoreScene.Output( "beauty.exr", "exr", "rgba" ) )
 
 	def testLoadReferenceAndGIL( self ) :
 

@@ -338,7 +338,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 	public :
 
-		ArnoldOutput( const IECore::InternedString &name, const IECoreScenePreview::Renderer::Output *output, NodeDeleter nodeDeleter )
+		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output, NodeDeleter nodeDeleter )
 		{
 			// Create a driver node and set its parameters.
 
@@ -370,8 +370,7 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 
 			IECore::StringVectorDataPtr customAttributesData;
-			// we need to do the const_cast here because there's not const parametersData() in cortex.
-			if( const IECore::StringVectorData *d = const_cast<IECoreScenePreview::Renderer::Output*>( output )->parametersData()->member<IECore::StringVectorData>( "custom_attributes") )
+			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( "custom_attributes") )
 			{
 				customAttributesData = d->copy();
 			}
@@ -1915,7 +1914,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call option()" );
 		}
 
-		virtual void output( const IECore::InternedString &name, const Output *output ) override
+		virtual void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call output()" );
 		}
@@ -2404,7 +2403,7 @@ class ArnoldGlobals
 			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
 		}
 
-		void output( const IECore::InternedString &name, const IECoreScenePreview::Renderer::Output *output )
+		void output( const IECore::InternedString &name, const IECoreScene::Output *output )
 		{
 			m_outputs.erase( name );
 			if( output )
@@ -2812,7 +2811,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			m_globals->option( name, value );
 		}
 
-		void output( const IECore::InternedString &name, const Output *output ) override
+		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
 		{
 			m_globals->output( name, output );
 		}
