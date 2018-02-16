@@ -180,6 +180,19 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__pathForIndex( index )
 
+	## Sets which paths are currently expanded
+	# using an `IECore.PathMatcher` object.
+	def setExpansion( self, paths ) :
+
+		assert( isinstance( paths, IECore.PathMatcher ) )
+		self._qtWidget().setExpansion( paths )
+
+	## Returns an `IECore.PathMatcher` object containing
+	# the currently expanded paths.
+	def getExpansion( self ) :
+
+		return _GafferUI._pathListingWidgetGetExpansion( GafferUI._qtAddress( self._qtWidget() ) )
+
 	def setPathExpanded( self, path, expanded ) :
 
 		index = self.__indexForPath( path )
@@ -194,23 +207,22 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return False
 
-	## \todo Improve performance of this method by making
-	# a complete implementation in C++. This might be best
-	# done by using a PathMatcher do define the expanded
-	# paths, rather than a huge list.
+	## \deprecated Use `setExpansion()` instead
 	def setExpandedPaths( self, paths ) :
 
-		indices = []
-		for path in paths :
-			index = self.__indexForPath( path )
-			if index.isValid() :
-				indices.append( index )
+		self.setExpansion(
+			IECore.PathMatcher(
+				[ str( x ) for x in paths ]
+			)
+		)
 
-		self._qtWidget().setExpandedIndices( indices )
-
+	## \deprecated Use `getExpansion()` instead
 	def getExpandedPaths( self ) :
 
-		return _GafferUI._pathListingWidgetGetExpandedPaths( GafferUI._qtAddress( self._qtWidget() ) )
+		return _GafferUI._pathListingWidgetPathsForPathMatcher(
+			GafferUI._qtAddress( self._qtWidget() ),
+			self.getExpansion()
+		)
 
 	def expansionChangedSignal( self ) :
 
@@ -591,7 +603,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		self.__recalculateColumnSizes()
 
-	def setExpandedIndices( self, indices ) :
+	def setExpansion( self, paths ) :
 
 		self.collapsed.disconnect( self.__collapsed )
 		self.expanded.disconnect( self.__expanded )
@@ -601,8 +613,8 @@ class _TreeView( QtWidgets.QTreeView ) :
 		# it an update is triggered for every call to
 		# setExpanded().
 		self.scheduleDelayedItemsLayout()
-		for index in indices :
-			self.setExpanded( index, True )
+
+		_GafferUI._pathListingWidgetSetExpansion( GafferUI._qtAddress( self ), paths )
 
 		self.collapsed.connect( self.__collapsed )
 		self.expanded.connect( self.__expanded )

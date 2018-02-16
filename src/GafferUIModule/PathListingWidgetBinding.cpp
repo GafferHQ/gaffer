@@ -48,6 +48,7 @@
 #include "IECore/DateTimeData.h"
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
 
@@ -418,7 +419,7 @@ class PathModel : public QAbstractItemModel
 			return static_cast<Item *>( index.internalPointer() )->path();
 		}
 
-		QModelIndex indexForPath( const Path *path )
+		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path )
 		{
 			const Path *rootPath = m_rootItem->path();
 
@@ -427,25 +428,25 @@ class PathModel : public QAbstractItemModel
 				return QModelIndex();
 			}
 
-			if( path->names().size() <= rootPath->names().size() )
+			if( path.size() <= rootPath->names().size() )
 			{
 				return QModelIndex();
 			}
 
-			if( !equal( rootPath->names().begin(), rootPath->names().end(), path->names().begin() ) )
+			if( !equal( rootPath->names().begin(), rootPath->names().end(), path.begin() ) )
 			{
 				return QModelIndex();
 			}
 
 			QModelIndex result;
 			Item *item = m_rootItem;
-			for( size_t i = rootPath->names().size(); i < path->names().size(); ++i )
+			for( size_t i = rootPath->names().size(); i < path.size(); ++i )
 			{
 				bool foundNextItem = false;
 				const std::vector<Item *> &childItems = item->childItems( this );
 				for( std::vector<Item *>::const_iterator it = childItems.begin(), eIt = childItems.end(); it != eIt; ++it )
 				{
-					if( (*it)->path()->names()[i] == path->names()[i] )
+					if( (*it)->path()->names()[i] == path[i] )
 					{
 						result = index( it - childItems.begin(), 0, result );
 						item = *it;
@@ -460,6 +461,11 @@ class PathModel : public QAbstractItemModel
 			}
 
 			return result;
+		}
+
+		QModelIndex indexForPath( const Path *path )
+		{
+			return indexForPath( path->names() );
 		}
 
 		///////////////////////////////////////////////////////////////////
@@ -831,31 +837,44 @@ bool getFlat( uint64_t treeViewAddress )
 	return model->getFlat();
 }
 
-void getExpandedPathsWalk( QTreeView *treeView, PathModel *model, QModelIndex index, list expanded )
+void setExpansion( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		QModelIndex modelIndex = model->indexForPath( *it );
+		treeView->setExpanded( modelIndex, true );
+	}
+}
+
+void getExpansionWalk( QTreeView *treeView, PathModel *model, QModelIndex index, IECore::PathMatcher &expanded )
 {
 	for( int i = 0, e = model->rowCount( index ); i < e; ++i )
 	{
 		QModelIndex childIndex = model->index( i, 0, index );
 		if( treeView->isExpanded( childIndex ) )
 		{
-			expanded.append( PathPtr( model->pathForIndex( childIndex ) ) );
-			getExpandedPathsWalk( treeView, model, childIndex, expanded );
+			expanded.addPath( model->pathForIndex( childIndex )->names() );
+			getExpansionWalk( treeView, model, childIndex, expanded );
 		}
 	}
 }
 
-list getExpandedPaths( uint64_t treeViewAddress )
+IECore::PathMatcher getExpansion( uint64_t treeViewAddress )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 
-	list result;
+	IECore::PathMatcher result;
 	if( !model )
 	{
 		return result;
 	}
 
-	getExpandedPathsWalk( treeView, model, QModelIndex(), result );
+	getExpansionWalk( treeView, model, QModelIndex(), result );
 	return result;
 }
 
@@ -912,6 +931,30 @@ void indexForPath( uint64_t treeViewAddress, const Path *path, uint64_t modelInd
 	*modelIndex = model->indexForPath( path );
 }
 
+list pathsForPathMatcher( uint64_t treeViewAddress, const IECore::PathMatcher &pathMatcher )
+{
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	if( !model )
+	{
+		return list();
+	}
+
+	std::vector<QModelIndex> indices;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		indices = model->indicesForPaths( pathMatcher );
+	}
+
+	list result;
+	for( const auto &index : indices )
+	{
+		result.append( PathPtr( model->pathForIndex( index ) ) );
+	}
+
+	return result;
+}
+
 } // namespace
 
 void GafferUIModule::bindPathListingWidget()
@@ -931,10 +974,12 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetUpdateModel", &updateModel );
 	def( "_pathListingWidgetSetFlat", &setFlat );
 	def( "_pathListingWidgetGetFlat", &getFlat );
-	def( "_pathListingWidgetGetExpandedPaths", &getExpandedPaths );
+	def( "_pathListingWidgetSetExpansion", &setExpansion );
+	def( "_pathListingWidgetGetExpansion", &getExpansion );
 	def( "_pathListingWidgetPropagateExpanded", &propagateExpanded );
 	def( "_pathListingWidgetPathForIndex", &pathForIndex );
 	def( "_pathListingWidgetIndexForPath", &indexForPath );
+	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
 
 	IECorePython::RefCountedClass<Column, IECore::RefCounted>( "_PathListingWidgetColumn" );
 
