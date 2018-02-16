@@ -82,7 +82,7 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 
 	if( const BoxOut *boxOut = internalOutput->parent<BoxOut>() )
 	{
-		internalOutput = boxOut->plug()->getInput();
+		internalOutput = boxOut->plug<Plug>()->getInput<Plug>();
 	}
 
 	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
@@ -114,10 +114,10 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 		return NULL;
 	}
 
-	const Plug *input = internalInput->getInput();
+	const Plug *input = internalInput->getInput<Plug>();
 	if( const BoxIn *boxIn = input->parent<BoxIn>() )
 	{
-		input = boxIn->promotedPlug();
+		input = boxIn->promotedPlug<Plug>();
 	}
 
 	if( !input || input->node() != this )
