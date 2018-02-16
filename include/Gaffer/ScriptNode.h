@@ -205,7 +205,7 @@ class ScriptNode : public Node
 		/// Imports the nodes from the specified script, adding them to
 		/// the contents of this script. See `execute()` for a description
 		/// of the continueOnError argument and the return value.
-		bool importFile( const std::string &fileName, Node *parent = nullptr, bool continueOnError = false );
+		bool importFile( const std::string &fileName, Node *parent = NULL, bool continueOnError = false );
 		//@}
 
 		//! @name Computation context
