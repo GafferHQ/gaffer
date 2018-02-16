@@ -2480,8 +2480,6 @@ class ArnoldGlobals
 			{
 				case AI_ABORT :
 					throw IECore::Exception( "Render aborted" );
-				case AI_ERROR_WRONG_OUTPUT :
-					throw IECore::Exception( "Can't open output file" );
 				case AI_ERROR_NO_CAMERA :
 					throw IECore::Exception( "Camera not defined" );
 				case AI_ERROR_BAD_CAMERA :
@@ -2490,14 +2488,8 @@ class ArnoldGlobals
 					throw IECore::Exception( "Usage not validated" );
 				case AI_ERROR_RENDER_REGION :
 					throw IECore::Exception( "Invalid render region" );
-				case AI_ERROR_OUTPUT_EXISTS :
-					throw IECore::Exception( "Output file already exists" );
-				case AI_ERROR_OPENING_FILE :
-					throw IECore::Exception( "Can't open file" );
 				case AI_INTERRUPT :
 					throw IECore::Exception( "Render interrupted by user" );
-				case AI_ERROR_UNRENDERABLE_SCENEGRAPH :
-					throw IECore::Exception( "Unrenderable scenegraph" );
 				case AI_ERROR_NO_OUTPUTS :
 					throw IECore::Exception( "No outputs" );
 				case AI_ERROR :
