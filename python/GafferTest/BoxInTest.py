@@ -418,8 +418,6 @@ class BoxInTest( GafferTest.TestCase ) :
 		s["b"]["i"].setup( s["b"]["n"]["in"] )
 		s["b"]["n"]["in"].setInput( s["b"]["i"]["out"] )
 
-		print s.serialise()
-
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
