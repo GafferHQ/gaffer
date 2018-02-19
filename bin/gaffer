@@ -129,6 +129,9 @@ prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
 prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS
 appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
 
+prependToPath "$HOME/gaffer/startup" CORTEX_STARTUP_PATHS
+appendToPath "$GAFFER_ROOT/startup" CORTEX_STARTUP_PATHS
+
 prependToPath "$GAFFER_ROOT/graphics" GAFFERUI_IMAGE_PATHS
 
 if [[ -e $GAFFER_ROOT/bin/oslc ]] ; then
