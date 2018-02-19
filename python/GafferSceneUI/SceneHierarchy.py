@@ -80,6 +80,27 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 
+			# Work around insanely slow selection of a range containing many
+			# objects (using a shift-click). The default selection behaviour
+			# is SelectRows and this triggers some terrible performance problems
+			# in Qt. Since we only have a single column, there is no difference
+			# between SelectItems and SelectRows other than the speed.
+			#
+			# This workaround isn't going to be sufficient when we come to add
+			# additional columns to the SceneHierarchy. What _might_ work instead
+			# is to override `QTreeView.setSelection()` in PathListingWidget.py,
+			# so that we manually expand the selected region to include full rows,
+			# and then don't have to pass the `QItemSelectionModel::Rows` flag to
+			# the subsequent `QItemSelectionModel::select()` call. This would be
+			# essentially the same method we used to speed up
+			# `PathListingWidget.setSelection()`.
+			#
+			# Alternatively we could avoid QItemSelectionModel entirely by managing
+			# the selection ourself as a persistent PathMatcher.
+			self.__pathListing._qtWidget().setSelectionBehavior(
+				self.__pathListing._qtWidget().SelectionBehavior.SelectItems
+			)
+
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
@@ -162,19 +183,15 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 		assert( pathListing is self.__pathListing )
 
-		paths = pathListing.getExpandedPaths()
-		paths = IECore.PathMatcher( [ "/" ] + [ str( path ) for path in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setExpandedPaths( self.getContext(), paths )
+			ContextAlgo.setExpandedPaths( self.getContext(), pathListing.getExpansion() )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		paths = pathListing.getSelectedPaths()
-		paths = IECore.PathMatcher( [ str(p) for p in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), paths )
+			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
@@ -183,27 +200,15 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		if expandedPaths is None :
 			return
 
-		p = self.__pathListing.getPath()
-		expandedPaths = [ p.copy().setFromString( s ) for s in expandedPaths.paths() ]
 		with Gaffer.BlockedConnection( self.__expansionChangedConnection ) :
-			self.__pathListing.setExpandedPaths( expandedPaths )
+			self.__pathListing.setExpansion( expandedPaths )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
-		selection = ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+		selection = ContextAlgo.getSelectedPaths( self.getContext() )
 		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
-			## \todo Qt is dog slow with large non-contiguous selections,
-			# so we're only mirroring single selections currently. Rewrite
-			# PathListingWidget so it manages selection itself using a PathMatcher
-			# and we can refer to the same data structure everywhere, and reenable
-			# mirroring of multi-selection.
-			if len( selection ) == 1 :
-				p = self.__pathListing.getPath()
-				selection = [ p.copy().setFromString( s ) for s in selection ]
-				self.__pathListing.setSelectedPaths( selection, scrollToFirst=True, expandNonLeaf=False )
-			else :
-				self.__pathListing.setSelectedPaths( [] )
+			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
 GafferUI.EditorWidget.registerType( "SceneHierarchy", SceneHierarchy )
 

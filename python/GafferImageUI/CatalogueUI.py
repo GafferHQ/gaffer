@@ -277,12 +277,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			index = self.getPlug().getValue()
 
-		imagePaths = self.__pathListing.getPath().children()
-		if imagePaths :
-			index = index % len( imagePaths )
-			self.__pathListing.setSelectedPaths( imagePaths[index] )
-			self.__descriptionWidget.setPlug( self.__images()[index]["description"] )
-			self.__nameWidget.setGraphComponent( self.__images()[index] )
+		images = self.__images()
+		if len( images ) :
+			image = images[index % len( images )]
+			self.__pathListing.setSelection( IECore.PathMatcher( [ "/" + image.getName() ] ) )
+			self.__descriptionWidget.setPlug( image["description"] )
+			self.__nameWidget.setGraphComponent( image )
 		else :
 			self.__descriptionWidget.setPlug( None )
 			self.__nameWidget.setGraphComponent( None )
@@ -311,12 +311,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __indexFromSelection( self ) :
 
-		paths = self.__pathListing.getSelectedPaths()
-		if len( paths ) != 1 :
-			return None
-
+		selection = self.__pathListing.getSelection()
 		for i, image in enumerate( self.__images() ) :
-			if image.getName() == paths[0][-1] :
+			if selection.match( "/" + image.getName() ) & selection.Result.ExactMatch :
 				return i
 
 		return None

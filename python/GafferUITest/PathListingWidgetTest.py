@@ -37,6 +37,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferTest
 
@@ -81,6 +83,30 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setPath( Gaffer.DictPath( {}, "/" ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 0 )
 
+	def testExpansion( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget( p )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
+		cs = GafferTest.CapturingSlot( w.expansionChangedSignal() )
+		e = IECore.PathMatcher( [ "/1", "/2", "/2" ] )
+
+		w.setExpansion( e )
+		self.assertEqual( w.getExpansion(), e )
+		self.assertEqual( len( cs ), 1 )
+
+		w.setPath( Gaffer.DictPath( {}, "/" ) )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
 	def testExpansionSignalFrequency( self ) :
 
 		d = {}
@@ -112,6 +138,30 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		w.setExpandedPaths( e )
 		self.assertEqual( len( c ), 4 )
+
+	def testSelection( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True )
+		self.assertTrue( w.getSelection().isEmpty() )
+
+		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
+		s = IECore.PathMatcher( [ "/1", "/2/5", "/3/1" ] )
+
+		w.setSelection( s )
+		self.assertEqual( w.getSelection(), s )
+		self.assertEqual( len( cs ), 1 )
+
+		w.setPath( Gaffer.DictPath( {}, "/" ) )
+		self.assertTrue( w.getSelection().isEmpty() )
 
 	def testSelectionSignalFrequency( self ) :
 

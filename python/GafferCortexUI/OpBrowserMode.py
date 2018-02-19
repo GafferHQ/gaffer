@@ -78,11 +78,11 @@ class OpMode( GafferUI.BrowserEditor.Mode ) :
 
 	def __pathSelected( self, pathListing ) :
 
-		selectedPaths = pathListing.getSelectedPaths()
-		if not len( selectedPaths ) :
+		selection = pathListing.getSelection()
+		if selection.isEmpty() :
 			return
 
-		op = selectedPaths[0].classLoader().load( str( selectedPaths[0] )[1:] )()
+		op = self.__classLoader().load( str( selection.paths()[0] )[1:] )()
 		node = GafferCortex.ParameterisedHolderNode()
 		node.setParameterised( op )
 		GafferCortexUI.ParameterPresets.autoLoad( node )

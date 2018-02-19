@@ -297,48 +297,57 @@ class _LocalJobsWindow( GafferUI.Window ) :
 
 	def __updateDetails( self ) :
 
-		paths = self.__jobListingWidget.getSelectedPaths()
-		if not len(paths) :
+		jobs = self.__selectedJobs()
+		if len( jobs ) != 1 :
 			self.__detailsCurrentDescription.setText( "N/A" )
 			self.__detailsDirectory.setText( "N/A" )
 			return
 
-		job = paths[0].job()
-		self.__detailsCurrentDescription.setText( job.description() )
-		self.__detailsDirectory.setText( job.directory() )
+		self.__detailsCurrentDescription.setText( jobs[0].description() )
+		self.__detailsDirectory.setText( jobs[0].directory() )
 
 	def __updateMessages( self ) :
 
 		self.__messageWidget.clear()
 
-		paths = self.__jobListingWidget.getSelectedPaths()
-		if not len(paths) :
+		jobs = self.__selectedJobs()
+		if len( jobs ) != 1 :
 			return
 
-		for m in paths[0].job().messageHandler().messages :
+		for m in jobs[0].messageHandler().messages :
 			self.__messageWidget.appendMessage( m.level, m.context, m.message )
 
 	def __killClicked( self, button ) :
 
-		for path in self.__jobListingWidget.getSelectedPaths() :
-			path.job().kill()
+		for job in self.__selectedJobs() :
+			job.kill()
 
 		self.__update()
 
 	def __removeClicked( self, button ) :
 
-		for path in self.__jobListingWidget.getSelectedPaths() :
-			if path.job().failed() :
-				path.jobPool()._remove( path.job(), force = True )
+		jobPool = self.__jobListingWidget.getPath().jobPool()
+		for job in self.__selectedJobs() :
+			if job.failed() :
+				jobPool._remove( job, force = True )
 
 		self.__update()
 
+	def __selectedJobs( self ) :
+
+		rootPath = self.__jobListingWidget.getPath()
+		selection = self.__jobListingWidget.getSelection()
+		return [
+			path.job() for path in rootPath.children()
+			if selection.match( str( path ) ) & selection.Result.ExactMatch
+		]
+
 	def __jobSelectionChanged( self, widget ) :
 
-		paths = self.__jobListingWidget.getSelectedPaths()
-		numFailed = len([ x for x in paths if x.job().failed() ])
+		jobs = self.__selectedJobs()
+		numFailed = len( [ job for job in jobs if job.failed() ] )
 		self.__removeButton.setEnabled( numFailed )
-		self.__killButton.setEnabled( len(paths) - numFailed > 0 )
+		self.__killButton.setEnabled( len( jobs ) - numFailed > 0 )
 
 		currentTab = self.__tabs.getCurrent()
 		if currentTab is self.__detailsTab :

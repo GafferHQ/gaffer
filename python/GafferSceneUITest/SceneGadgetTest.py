@@ -142,9 +142,10 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			gw = GafferUI.GadgetWidget( sg )
 
 		w.setVisible( True )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		gw.getViewportGadget().frame( sg.bound() )
+		self.waitForIdle( 10000 )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
@@ -283,6 +284,64 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertFalse( sg.bound().isEmpty() )
 			self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "bigSphere" ] ) )
+
+	def testObjectsAt( self ) :
+
+		plane = GafferScene.Plane()
+
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setValue( 0.25 )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/plane" )
+
+		subTree = GafferScene.SubTree()
+		subTree["in"].setInput( instancer["out"] )
+		subTree["root"].setValue( "/plane" )
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setScene( subTree["out"] )
+		sg.setMinimumExpansionDepth( 100 )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+		w.setVisible( True )
+		self.waitForIdle( 10000 )
+
+		gw.getViewportGadget().frame( sg.bound() )
+		self.waitForIdle( 10000 )
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
+			[ "/instances/{}/sphere".format( i ) for i in range( 0, 4 ) ]
+		)
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0 ), imath.V2f( 0.5 ) ),
+			[ "/instances/2/sphere" ]
+		)
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0.5, 0 ), imath.V2f( 1, 0.5 ) ),
+			[ "/instances/3/sphere" ]
+		)
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0, 0.5 ), imath.V2f( 0.5, 1 ) ),
+			[ "/instances/0/sphere" ]
+		)
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0.5 ), imath.V2f( 1 ) ),
+			[ "/instances/1/sphere" ]
+		)
 
 	def setUp( self ) :
 
