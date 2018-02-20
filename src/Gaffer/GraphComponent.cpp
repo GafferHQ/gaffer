@@ -125,8 +125,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 					}
 				}
 			}
-			static boost::format formatter( "%s%d" );
-			newName = boost::str( formatter % prefix % suffix );
+			newName = prefix + std::to_string( suffix );
 		}
 	}
 
