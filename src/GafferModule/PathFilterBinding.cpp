@@ -49,6 +49,8 @@
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
 
+#include "IECorePython/ExceptionAlgo.h"
+
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
@@ -79,18 +81,25 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "_filter" );
-				if( f )
+				try
 				{
-					list pythonPaths;
-					for( std::vector<PathPtr>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+					boost::python::object f = this->methodOverride( "_filter" );
+					if( f )
 					{
-						pythonPaths.append( *it );
+						list pythonPaths;
+						for( std::vector<PathPtr>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+						{
+							pythonPaths.append( *it );
+						}
+						pythonPaths = extract<list>( f( pythonPaths ) );
+						paths.clear();
+						boost::python::container_utils::extend_container( paths, pythonPaths );
+						return;
 					}
-					pythonPaths = extract<list>( f( pythonPaths ) );
-					paths.clear();
-					boost::python::container_utils::extend_container( paths, pythonPaths );
-					return;
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::doFilter( paths );

@@ -71,12 +71,19 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "nodule" );
-				if( f )
+				try
 				{
-					return boost::python::extract<GafferUI::Nodule *>(
-						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) )
-					);
+					boost::python::object f = this->methodOverride( "nodule" );
+					if( f )
+					{
+						return boost::python::extract<GafferUI::Nodule *>(
+							f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::nodule( plug );
@@ -93,12 +100,19 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "noduleTangent" );
-				if( f )
+				try
 				{
-					return boost::python::extract<Imath::V3f>(
-						f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) )
-					);
+					boost::python::object f = this->methodOverride( "noduleTangent" );
+					if( f )
+					{
+						return boost::python::extract<Imath::V3f>(
+							f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::noduleTangent( nodule );

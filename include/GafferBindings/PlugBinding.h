@@ -96,10 +96,17 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "acceptsInput" );
-				if( f )
+				try
 				{
-					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
+					boost::python::object f = this->methodOverride( "acceptsInput" );
+					if( f )
+					{
+						return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::acceptsInput( input );
@@ -110,11 +117,18 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "setInput" );
-				if( f )
+				try
 				{
-					f( boost::const_pointer_cast<Gaffer::Plug>( input ) );
-					return;
+					boost::python::object f = this->methodOverride( "setInput" );
+					if( f )
+					{
+						f( boost::const_pointer_cast<Gaffer::Plug>( input ) );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::setInput( input );
@@ -125,11 +139,18 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "createCounterpart" );
-				if( f )
+				try
 				{
-					Gaffer::PlugPtr result = boost::python::extract<Gaffer::PlugPtr>( f( name, direction ) );
-					return result;
+					boost::python::object f = this->methodOverride( "createCounterpart" );
+					if( f )
+					{
+						Gaffer::PlugPtr result = boost::python::extract<Gaffer::PlugPtr>( f( name, direction ) );
+						return result;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::createCounterpart( name, direction );
