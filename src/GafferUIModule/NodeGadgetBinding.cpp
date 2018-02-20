@@ -47,6 +47,7 @@
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/DotNodeGadget.h"
+#include "GafferUI/AuxiliaryNodeGadget.h"
 
 #include "Gaffer/Plug.h"
 #include "GafferBindings/SignalBinding.h"
@@ -200,6 +201,10 @@ void GafferUIModule::bindNodeGadget()
 	;
 
 	NodeGadgetClass<DotNodeGadget>()
+		.def( init<Gaffer::NodePtr>() )
+	;
+
+	NodeGadgetClass<AuxiliaryNodeGadget>()
 		.def( init<Gaffer::NodePtr>() )
 	;
 
