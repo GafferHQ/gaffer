@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import Gaffer
+
 def __userPlugSetInputWrapper( originalSetInput ) :
 
 	def setInput( self, input ) :
