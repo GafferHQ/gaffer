@@ -194,9 +194,9 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		if "tractor" in parentPlug :
 			return
 
-		parentPlug["tractor"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		parentPlug["tractor"]["service"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		parentPlug["tractor"]["tags"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		parentPlug["tractor"] = Gaffer.Plug()
+		parentPlug["tractor"]["service"] = Gaffer.StringPlug()
+		parentPlug["tractor"]["tags"] = Gaffer.StringPlug()
 
 IECore.registerRunTimeTyped( TractorDispatcher, typeName = "GafferTractor::TractorDispatcher" )
 

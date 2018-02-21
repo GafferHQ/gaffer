@@ -197,6 +197,22 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( isinstance( job.subtasks[0].subtasks[1].subtasks[0], author.Instance ) )
 
+	def testTaskPlugs( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferDispatchTest.LoggingTaskNode()
+		self.assertTrue( "tractor" in [ x.getName() for x in s["n"]["dispatcher"].children() ] )
+		self.assertTrue( "tractor1" not in [ x.getName() for x in s["n"]["dispatcher"].children() ] )
+		s["n"]["dispatcher"]["tractor"]["service"].setValue( "myService" )
+		s["n"]["dispatcher"]["tractor"]["tags"].setValue( "myTag1 myTag2" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertTrue( "tractor" in [ x.getName() for x in s2["n"]["dispatcher"].children() ] )
+		self.assertTrue( "tractor1" not in [ x.getName() for x in s2["n"]["dispatcher"].children() ] )
+		self.assertEqual( s2["n"]["dispatcher"]["tractor"]["service"].getValue(), "myService" )
+		self.assertEqual( s2["n"]["dispatcher"]["tractor"]["tags"].getValue(), "myTag1 myTag2" )
+
 	def testTypeNamePrefixes( self ) :
 
 		self.assertTypeNamesArePrefixed( GafferTractor )
