@@ -54,4 +54,4 @@ import ArnoldAtmosphereUI
 import ArnoldBackgroundUI
 import CacheMenu
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnoldUI" )

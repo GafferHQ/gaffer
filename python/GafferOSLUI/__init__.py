@@ -41,4 +41,4 @@ import OSLCodeUI
 import OSLExpressionEngineUI
 import OSLLightUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferOSLUI" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSLUI" )

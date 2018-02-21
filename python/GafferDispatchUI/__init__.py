@@ -48,4 +48,4 @@ import TaskContextVariablesUI
 import TaskSwitchUI
 import PythonCommandUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDispatchUI" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )

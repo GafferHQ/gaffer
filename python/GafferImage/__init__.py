@@ -49,4 +49,4 @@ __setupEnvironment()
 from _GafferImage import *
 from CatalogueSelect import CatalogueSelect
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImage" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImage" )

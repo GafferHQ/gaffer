@@ -47,4 +47,4 @@ with warnings.catch_warnings():
 
 from _GafferVDB import *
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferVDB" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDB" )
