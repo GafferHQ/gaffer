@@ -134,6 +134,29 @@ void applyDynamicFlag( Plug *plug )
 	}
 }
 
+// \todo This also exists in PlugAlgo.cpp. Should it be a public method,
+// and if so, what should happen when the plugs don't match (the asserts
+// wouldn't be appropriate). Or, more radically, should the `setFrom()`
+// virtual method be moved from ValuePlug to Plug?
+void setFrom( Plug *dst, const Plug *src )
+{
+	assert( dst->typeId() == src->typeId() );
+	if( ValuePlug *dstValuePlug = IECore::runTimeCast<ValuePlug>( dst ) )
+	{
+		dstValuePlug->setFrom( static_cast<const ValuePlug *>( src ) );
+	}
+	else
+	{
+		for( PlugIterator it( dst ); !it.done(); ++it )
+		{
+			Plug *dstChild = it->get();
+			const Plug *srcChild = src->getChild<Plug>( dstChild->getName() );
+			assert( srcChild );
+			setFrom( dstChild, srcChild );
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -189,6 +212,11 @@ void BoxIO::setup( const Plug *plug )
 		}
 		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
 		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
+
+		if( plug->direction() == Plug::In )
+		{
+			setFrom( inPlugInternal(), plug );
+		}
 
 		inPlugInternal()->setFlags( Plug::Serialisable, true );
 		outPlugInternal()->setFlags( Plug::Serialisable, true );
