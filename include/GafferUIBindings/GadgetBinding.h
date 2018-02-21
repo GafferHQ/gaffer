@@ -73,11 +73,18 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "setHighlighted" );
-				if( f )
+				try
 				{
-					f( highlighted );
-					return;
+					boost::python::object f = this->methodOverride( "setHighlighted" );
+					if( f )
+					{
+						f( highlighted );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::setHighlighted( highlighted );
@@ -88,10 +95,17 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "bound" );
-				if( f )
+				try
 				{
-					return boost::python::extract<Imath::Box3f>( f() );
+					boost::python::object f = this->methodOverride( "bound" );
+					if( f )
+					{
+						return boost::python::extract<Imath::Box3f>( f() );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::bound();
@@ -102,10 +116,17 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "getToolTip" );
-				if( f )
+				try
 				{
-					return boost::python::extract<std::string>( f( line ) );
+					boost::python::object f = this->methodOverride( "getToolTip" );
+					if( f )
+					{
+						return boost::python::extract<std::string>( f( line ) );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::getToolTip( line );
@@ -116,11 +137,18 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "doRenderLayer" );
-				if( f )
+				try
 				{
-					f( layer, GafferUI::StylePtr( const_cast<GafferUI::Style *>( style ) ) );
-					return;
+					boost::python::object f = this->methodOverride( "doRenderLayer" );
+					if( f )
+					{
+						f( layer, GafferUI::StylePtr( const_cast<GafferUI::Style *>( style ) ) );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::doRenderLayer( layer, style );

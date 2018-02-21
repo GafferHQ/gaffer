@@ -45,6 +45,7 @@
 
 #include "Gaffer/Node.h"
 
+#include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILLock.h"
 
 #include <utility>
@@ -108,10 +109,17 @@ class NodeWrapper : public GraphComponentWrapper<T>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "acceptsInput" );
-				if( f )
+				try
 				{
-					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );
+					boost::python::object f = this->methodOverride( "acceptsInput" );
+					if( f )
+					{
+						return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return T::acceptsInput( plug, inputPlug );
