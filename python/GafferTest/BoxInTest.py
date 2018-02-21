@@ -346,6 +346,8 @@ class BoxInTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
+		s["b"]["n"]["op1"].setValue( 1 )
+		s["b"]["n"]["op2"].setValue( 2 )
 
 		Gaffer.Metadata.registerValue( s["b"]["n"]["op2"], "nodule:type", "" )
 
@@ -358,6 +360,11 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertTrue( s["b"]["n"]["op2"].getInput().node().isSame( s["b"] ) )
 		self.assertEqual( len( s["b"]["n"]["sum"].outputs() ), 1 )
 		self.assertTrue( isinstance( s["b"]["n"]["sum"].outputs()[0].parent(), Gaffer.BoxOut ) )
+
+		self.assertEqual( s["b"]["n"]["op1"].getValue(), 1 )
+		self.assertEqual( s["b"]["n"]["op1"].source().getValue(), 1 )
+		self.assertEqual( s["b"]["n"]["op2"].getValue(), 2 )
+		self.assertEqual( s["b"]["n"]["op2"].source().getValue(), 2 )
 
 	def testInsert( self ) :
 
