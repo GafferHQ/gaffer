@@ -71,7 +71,7 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		try :
 			e = self.__graphComponent()
-			return [ GraphComponentPath( self.__rootComponent, self[:] + [ x ], self.root() ) for x in e.keys() ]
+			return [ GraphComponentPath( self.__rootComponent, self[:] + [ x ], self.root(), self.getFilter() ) for x in e.keys() ]
 		except :
 			return []
 
