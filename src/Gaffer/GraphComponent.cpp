@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <set>
+#include <sstream>
 
 #include "boost/format.hpp"
 #include "boost/bind.hpp"
@@ -124,7 +125,10 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 					}
 				}
 			}
-			newName = prefix + std::to_string( suffix );
+			
+			std::stringstream ss;
+			ss << suffix;
+			newName = prefix + ss.str();
 		}
 	}
 
