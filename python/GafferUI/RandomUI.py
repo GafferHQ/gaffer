@@ -57,7 +57,6 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
-	"nodeGadget:color", imath.Color3f( 0.45, 0.3, 0.3 ),
 	"auxiliaryNodeGadget:label", "r",
 
 	plugs = {
