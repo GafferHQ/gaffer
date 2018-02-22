@@ -1198,6 +1198,23 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["framesPerSecond"].getValue(), 48.0 )
 		self.assertEqual( s2.context().getFramesPerSecond(), 48.0 )
 
+	def testFrame( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertEqual( s["frame"].getValue(), 1 )
+		self.assertEqual( s.context().getFrame(), 1.0 )
+
+		s["frame"].setValue( 2.0 )
+		self.assertEqual( s.context().getFrame(), 2.0 )
+
+		s.context().setFrame( 4.0 )
+		self.assertEqual( s["frame"].getValue(), 4.0 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["frame"].getValue(), 4.0 )
+		self.assertEqual( s2.context().getFrame(), 4.0 )
+
 	def testLineNumberForExecutionSyntaxError( self ) :
 
 		s = Gaffer.ScriptNode()
