@@ -69,5 +69,16 @@ class GraphComponentPathTest( GafferTest.TestCase ) :
 		self.assertEqual( p.property( "name" ), "d" )
 		self.assertEqual( p.property( "fullName" ), "/d" )
 
+	def testChildrenInheritFilter( self ) :
+
+		r = Gaffer.GraphComponent()
+		r["d"] = Gaffer.GraphComponent()
+		r["d"]["e"] = Gaffer.GraphComponent()
+
+		p = Gaffer.GraphComponentPath( r, "/d", filter = Gaffer.PathFilter() )
+		child = p.children()[0]
+
+		self.assertTrue( isinstance( child.getFilter(), Gaffer.PathFilter ) )
+
 if __name__ == "__main__":
 	unittest.main()
