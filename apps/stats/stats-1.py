@@ -99,10 +99,12 @@ class stats( Gaffer.Application ) :
 					extensions = "",
 				),
 
-				IECore.FloatParameter(
-					name = "frame",
-					description = "The frame to evaluate statistics at.",
-					defaultValue = 1,
+				IECore.FrameListParameter(
+					name = "frames",
+					description = "The frames to evaluate statistics for. The default value "
+						"uses the current frame as stored in the script.",
+					defaultValue = "",
+					allowEmptyList = True,
 				),
 
 				IECore.BoolParameter(
@@ -224,41 +226,37 @@ class stats( Gaffer.Application ) :
 
 		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
 
-		with Gaffer.Context( script.context() ) as context :
+		self.__writeVersion( script )
 
-			context.setFrame( args["frame"].value )
+		self.__output.write( "\n" )
 
-			self.__writeVersion( script )
+		self.__writeArgs( args )
 
-			self.__output.write( "\n" )
+		self.__output.write( "\n" )
 
-			self.__writeArgs( args )
+		self.__writeSettings( script )
 
-			self.__output.write( "\n" )
+		self.__output.write( "\n" )
 
-			self.__writeSettings( script )
+		self.__writeVariables( script )
 
-			self.__output.write( "\n" )
+		self.__output.write( "\n" )
 
-			self.__writeVariables( script )
+		if args["nodeSummary"].value :
 
-			self.__output.write( "\n" )
+			self.__writeNodes( script )
 
-			if args["nodeSummary"].value :
+		if args["scene"].value :
 
-				self.__writeNodes( script )
+			self.__writeScene( script, args )
 
-			if args["scene"].value :
+		if args["image"].value :
 
-				self.__writeScene( script, args )
+			self.__writeImage( script, args )
 
-			if args["image"].value :
+		if args["task"].value :
 
-				self.__writeImage( script, args )
-
-			if args["task"].value :
-
-				self.__writeTask( script, args )
+			self.__writeTask( script, args )
 
 		self.__output.write( "\n" )
 
@@ -366,6 +364,14 @@ class stats( Gaffer.Application ) :
 		self.__output.write( "Nodes :\n\n" )
 		self.__writeItems( items )
 
+	def __frames( self, script, args ) :
+
+		frames = self.parameters()["frames"].getFrameListValue().asList()
+		if not frames :
+			frames = [ script.context().getFrame() ]
+
+		return frames
+
 	def __writeScene( self, script, args ) :
 
 		import GafferScene
@@ -385,7 +391,11 @@ class stats( Gaffer.Application ) :
 		memory = _Memory.maxRSS()
 		with _Timer() as sceneTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
-				GafferSceneTest.traverseScene( scene )
+				with Gaffer.Context( script.context() ) as context :
+					for frame in self.__frames( script, args ) :
+						context.setFrame( frame )
+						GafferSceneTest.traverseScene( scene )
+
 		self.__timers["Scene generation"] = sceneTimer
 		self.__memory["Scene generation"] = _Memory.maxRSS() - memory
 
@@ -412,7 +422,11 @@ class stats( Gaffer.Application ) :
 		memory = _Memory.maxRSS()
 		with _Timer() as imageTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
-				GafferImageTest.processTiles( image )
+				with Gaffer.Context( script.context() ) as context :
+					for frame in self.__frames( script, args ) :
+						context.setFrame( frame )
+						GafferImageTest.processTiles( image )
+
 		self.__timers["Image generation"] = imageTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
 
@@ -443,7 +457,10 @@ class stats( Gaffer.Application ) :
 		memory = _Memory.maxRSS()
 		with _Timer() as taskTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
-				dispatcher.dispatch( [ task ] )
+				with Gaffer.Context( script.context() ) as context :
+					for frame in self.__frames( script, args ) :
+						context.setFrame( frame )
+						dispatcher.dispatch( [ task ] )
 
 		self.__timers["Task execution"] = taskTimer
 		self.__memory["Task execution"] = _Memory.maxRSS() - memory

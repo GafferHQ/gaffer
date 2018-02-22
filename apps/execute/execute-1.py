@@ -89,9 +89,10 @@ class execute( Gaffer.Application ) :
 
 				IECore.FrameListParameter(
 					name = "frames",
-					description = "The frames to execute.",
-					defaultValue = "1",
-					allowEmptyList = False,
+					description = "The frames to execute. The default value executes "
+						"the current frame as stored in the script.",
+					defaultValue = "",
+					allowEmptyList = True,
 				),
 
 				IECore.StringVectorParameter(
@@ -157,6 +158,8 @@ class execute( Gaffer.Application ) :
 			context[entry] = eval( args["context"][i+1] )
 
 		frames = self.parameters()["frames"].getFrameListValue().asList()
+		if not frames :
+			frames = [ scriptNode.context().getFrame() ]
 
 		with context :
 			for node in nodes :
