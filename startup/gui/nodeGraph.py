@@ -62,6 +62,10 @@ Gaffer.Metadata.registerPlugValue( GafferDispatch.TaskNode, "postTasks.*", "conn
 Gaffer.Metadata.registerNodeValue( Gaffer.SubGraph, "nodeGadget:color", imath.Color3f( 0.225 ) )
 Gaffer.Metadata.registerNodeValue( Gaffer.BoxIO, "nodeGadget:color", imath.Color3f( 0.225 ) )
 
+Gaffer.Metadata.registerNodeValue( Gaffer.Random, "nodeGadget:color", imath.Color3f( 0.45, 0.3, 0.3 ) )
+Gaffer.Metadata.registerNodeValue( Gaffer.Expression, "nodeGadget:color", imath.Color3f( 0.3, 0.45, 0.3 ) )
+Gaffer.Metadata.registerNodeValue( Gaffer.Animation, "nodeGadget:color", imath.Color3f( 0.3, 0.3, 0.45 ) )
+
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "in*", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "out", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.InteractiveRender, "in", "nodule:color", imath.Color3f( 0.2346, 0.326, 0.46 ) )
