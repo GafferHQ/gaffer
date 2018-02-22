@@ -214,6 +214,8 @@ class Expression : public ComputeNode
 
 		std::string transcribe( const std::string &expression, bool toInternalForm ) const;
 
+		void plugSet( const Plug *plug );
+
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;
 

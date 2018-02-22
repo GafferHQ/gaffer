@@ -257,6 +257,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	frameRangePlug->addChild( frameEndPlug );
 	addChild( frameRangePlug );
 
+	addChild( new FloatPlug( "frame", Plug::In, 1.0f ) );
 	addChild( new FloatPlug( "framesPerSecond", Plug::In, 24.0f, 0.0f ) );
 	addChild( new CompoundDataPlug( "variables" ) );
 
@@ -265,6 +266,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
 	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
+	m_context->changedSignal().connect( boost::bind( &ScriptNode::contextChanged, this, ::_1, ::_2 ) );
 }
 
 ScriptNode::~ScriptNode()
@@ -311,24 +313,34 @@ const IntPlug *ScriptNode::frameEndPlug() const
 	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
-FloatPlug *ScriptNode::framesPerSecondPlug()
+FloatPlug *ScriptNode::framePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
+const FloatPlug *ScriptNode::framePlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
+FloatPlug *ScriptNode::framesPerSecondPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
 
 const FloatPlug *ScriptNode::framesPerSecondPlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
 
 CompoundDataPlug *ScriptNode::variablesPlug()
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const CompoundDataPlug *ScriptNode::variablesPlug() const
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 5 );
 }
 
 bool ScriptNode::acceptsParent( const GraphComponent *potentialParent ) const
@@ -703,6 +715,23 @@ void ScriptNode::save() const
 	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 }
 
+bool ScriptNode::importFile( const std::string &fileName, Node *parent, bool continueOnError )
+{
+	DirtyPropagationScope dirtyScope;
+
+	ScriptNodePtr script = new ScriptNode();
+	script->fileNamePlug()->setValue( fileName );
+	bool result = script->load( continueOnError );
+
+	StandardSetPtr nodeSet = new StandardSet();
+	nodeSet->add( NodeIterator( script.get() ), NodeIterator( script->children().end(), script->children().end() ) );
+	const std::string nodeSerialisation = script->serialise( script.get(), nodeSet.get() );
+
+	result |= execute( nodeSerialisation, parent, continueOnError );
+
+	return result;
+}
+
 std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
 {
 	if( g_serialiseFunction.empty() )
@@ -757,6 +786,10 @@ void ScriptNode::plugSet( Plug *plug )
 	{
 		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );
 	}
+	else if( plug == framePlug() )
+	{
+		context()->setFrame( framePlug()->getValue() );
+	}
 	else if( plug == framesPerSecondPlug() )
 	{
 		context()->setFramesPerSecond( framesPerSecondPlug()->getValue() );
@@ -775,4 +808,18 @@ void ScriptNode::plugSet( Plug *plug )
 		const boost::filesystem::path fileName( fileNamePlug()->getValue() );
 		context()->set( "script:name", fileName.stem().string() );
 	}
+}
+
+void ScriptNode::contextChanged( const Context *context, const IECore::InternedString &name )
+{
+	if( name == "frame" )
+	{
+		framePlug()->setValue( context->getFrame() );
+	}
+	else if( name == "framesPerSecond" )
+	{
+		framesPerSecondPlug()->setValue( context->getFramesPerSecond() );
+	}
+	/// \todo Emit a warning if manual changes are made that
+	/// wouldn't be preserved across save/load.
 }

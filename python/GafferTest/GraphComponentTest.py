@@ -38,6 +38,8 @@
 import gc
 import weakref
 import unittest
+import threading
+import Queue
 
 import IECore
 
@@ -290,6 +292,34 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( c2.getName(), "b1" )
 		self.assertEqual( c3.getName(), "b2" )
 		self.assertEqual( c4.getName(), "b3" )
+
+	def testParallelUniqueNaming( self ):
+		# At one point setName was using a non-threadsafe static formatter which would throw
+		# exceptions when used from multiple threads
+		
+		def f( q ) :
+			try:
+				g = Gaffer.GraphComponent()
+				for i in range( 500 ):
+					g.addChild( Gaffer.GraphComponent( "a" ) )
+
+				self.assertEqual( set(g.keys()), set( [ "a" ] + [ "a%i" % i for i in range( 1, 500 ) ] ) )
+			except Exception, e:
+				q.put( e )
+
+		threads = []
+		q = Queue.Queue()
+		for i in range( 0, 500 ) :
+
+			t = threading.Thread( target = f, args = (q,) )
+			t.start()
+			threads.append( t )
+
+		for t in threads :
+			t.join()
+
+		if not q.empty():
+			raise q.get( False )
 
 	def testAncestor( self ) :
 
@@ -759,6 +789,16 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		g = Gaffer.GraphComponent()
 		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
 		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
+
+	def testNoneIsNotAString( self ) :
+
+		g = Gaffer.GraphComponent()
+		self.assertRaises( TypeError, g.getChild, None )
+		self.assertRaises( TypeError, g.__getitem__, None )
+		self.assertRaises( TypeError, g.__delitem__, None )
+		self.assertRaises( TypeError, g.descendant, None )
+		self.assertRaises( TypeError, g.__contains__, None )
+		self.assertRaises( TypeError, g.setName, None )
 
 if __name__ == "__main__":
 	unittest.main()

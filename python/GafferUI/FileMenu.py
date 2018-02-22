@@ -271,28 +271,46 @@ def exportSelection( menu ) :
 # has a ScriptWindow in its ancestry.
 def importFile( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	path, bookmarks = __pathAndBookmarks( scriptWindow )
+	scope = GafferUI.EditMenu.scope( menu )
+	path, bookmarks = __pathAndBookmarks( scope.scriptWindow )
 
 	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", valid=True, leaf=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = scriptWindow )
+	path = dialogue.waitForPath( parentWindow = scope.scriptWindow )
 
 	if path is None :
 		return
 
-	newChildren = []
-	c = script.childAddedSignal().connect( lambda parent, child : newChildren.append( child ) )
-	with Gaffer.UndoScope( script ) :
-		## \todo We need to prevent the ScriptNode plugs themselves getting clobbered
-		# when importing an entire script.
-		script.executeFile( str( path ) )
+	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Errors Occurred During Loading",
+		closeLabel = "Oy vey",
+		parentWindow = scope.scriptWindow
+	)
 
-	newNodes = [ c for c in newChildren if isinstance( c, Gaffer.Node ) ]
-	script.selection().clear()
-	script.selection().add( newNodes )
+	with Gaffer.UndoScope( scope.script ), errorHandler :
 
-	## \todo Position the nodes somewhere sensible if there's a Node Graph available
+		newChildren = []
+		c = scope.parent.childAddedSignal().connect( lambda parent, child : newChildren.append( child ) )
+
+		scope.script.importFile( str( path ), parent = scope.parent, continueOnError = True )
+
+		newNodes = [ c for c in newChildren if isinstance( c, Gaffer.Node ) ]
+		scope.script.selection().clear()
+		scope.script.selection().add( newNodes )
+
+		if scope.nodeGraph :
+
+			fallbackPosition = scope.nodeGraph.bound().size() / 2
+			fallbackPosition = scope.nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
+				IECore.V2f( fallbackPosition.x, fallbackPosition.y ),
+				gadget = scope.nodeGraph.graphGadget()
+			).p0
+			fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+
+			scope.nodeGraph.graphGadget().getLayout().positionNodes(
+				scope.nodeGraph.graphGadget(), scope.script.selection(), fallbackPosition
+			)
+
+			scope.nodeGraph.frame( scope.script.selection(), extend = True )
 
 ## A function suitable as the command for a File/Settings... menu item.
 def showSettings( menu ) :

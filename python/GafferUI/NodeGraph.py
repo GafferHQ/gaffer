@@ -296,7 +296,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			return True
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
-			if selection.size() :
+			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :
 				needsModifiers = not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or

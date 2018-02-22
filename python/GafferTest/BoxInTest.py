@@ -346,6 +346,8 @@ class BoxInTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
+		s["b"]["n"]["op1"].setValue( 1 )
+		s["b"]["n"]["op2"].setValue( 2 )
 
 		Gaffer.Metadata.registerValue( s["b"]["n"]["op2"], "nodule:type", "" )
 
@@ -358,6 +360,11 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertTrue( s["b"]["n"]["op2"].getInput().node().isSame( s["b"] ) )
 		self.assertEqual( len( s["b"]["n"]["sum"].outputs() ), 1 )
 		self.assertTrue( isinstance( s["b"]["n"]["sum"].outputs()[0].parent(), Gaffer.BoxOut ) )
+
+		self.assertEqual( s["b"]["n"]["op1"].getValue(), 1 )
+		self.assertEqual( s["b"]["n"]["op1"].source().getValue(), 1 )
+		self.assertEqual( s["b"]["n"]["op2"].getValue(), 2 )
+		self.assertEqual( s["b"]["n"]["op2"].source().getValue(), 2 )
 
 	def testInsert( self ) :
 
@@ -405,6 +412,25 @@ class BoxInTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertTrue( s2["b"]["i"]["out"].source().isSame( s2["a"]["sum"] ) )
+
+	def testArrayPlugSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.ArrayPlugNode()
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"]["name"].setValue( "in" )
+		s["b"]["i"].setup( s["b"]["n"]["in"] )
+		s["b"]["n"]["in"].setInput( s["b"]["i"]["out"] )
+
+		print s.serialise()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["b"]["n"]["in"].source().isSame( s2["b"]["in"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

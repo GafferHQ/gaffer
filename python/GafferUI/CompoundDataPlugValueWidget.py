@@ -136,6 +136,13 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append( "/Add/Color3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color3fData( IECore.Color3f( 0 ) ) ) } )
 		result.append( "/Add/Color4f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color4fData( IECore.Color4f( 0, 0, 0, 1 ) ) ) } )
 
+		result.append( "/Add/BoxDivider", { "divider" : True } )
+
+		result.append( "/Add/Box2i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2iData( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ) ) ) } )
+		result.append( "/Add/Box2f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2fData( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ) ) ) } )
+		result.append( "/Add/Box3i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3iData( IECore.Box3i( IECore.V3i( 0 ), IECore.V3i( 1 ) ) ) ) } )
+		result.append( "/Add/Box3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3fData( IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 1 ) ) ) ) } )
+
 		return result
 
 	def __addItem( self, name, value ) :

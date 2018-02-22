@@ -117,6 +117,14 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		arena.get()
 	);
 
+	if( !mod )
+	{
+		int lineNumber = 0;
+		std::string message = GafferBindings::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
+		IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
+		return false;
+	}
+
 	assert( mod->kind == Module_kind );
 
 	// Loop over the top-level statements in the module body,
@@ -386,6 +394,7 @@ void GafferBindings::bindScriptNode()
 		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "save", &ScriptNode::save )
 		.def( "load", &ScriptNode::load, ( boost::python::arg( "continueOnError" ) = false ) )
+		.def( "importFile", &ScriptNode::importFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "context", &context )
 	;
 

@@ -320,7 +320,11 @@ Serialisation::SerialiserMap &Serialisation::serialiserMap()
 
 void Serialisation::Serialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
-	modules.insert( Serialisation::modulePath( graphComponent ) );
+	const std::string module = Serialisation::modulePath( graphComponent );
+	if( !module.empty() )
+	{
+		modules.insert( module );
+	}
 }
 
 std::string Serialisation::Serialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const

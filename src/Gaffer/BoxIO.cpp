@@ -49,6 +49,7 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/ArrayPlug.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 
@@ -111,6 +112,55 @@ void setupNoduleSectionMetadata( Plug *dst, const Plug *src )
 
 }
 
+// See equivalent function in PlugAlgo.cpp for an explanation of
+// why this nonsense is necessary.
+// \todo Abolish the Dynamic flag and instead make the serialisers
+// smart enough to always do the right thing.
+void applyDynamicFlag( Plug *plug )
+{
+	plug->setFlags( Plug::Dynamic, true );
+
+	std::vector<Gaffer::TypeId> compoundTypes;
+	compoundTypes.push_back( PlugTypeId );
+	compoundTypes.push_back( ValuePlugTypeId );
+	compoundTypes.push_back( ArrayPlugTypeId );
+
+	if( find( compoundTypes.begin(), compoundTypes.end(), (Gaffer::TypeId)plug->typeId() ) != compoundTypes.end() )
+	{
+		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+		{
+			(*it)->setFlags( Plug::Dynamic, true );
+			if( find( compoundTypes.begin(), compoundTypes.end(), (Gaffer::TypeId)(*it)->typeId() ) != compoundTypes.end() )
+			{
+				it.prune();
+			}
+		}
+	}
+}
+
+// \todo This also exists in PlugAlgo.cpp. Should it be a public method,
+// and if so, what should happen when the plugs don't match (the asserts
+// wouldn't be appropriate). Or, more radically, should the `setFrom()`
+// virtual method be moved from ValuePlug to Plug?
+void setFrom( Plug *dst, const Plug *src )
+{
+	assert( dst->typeId() == src->typeId() );
+	if( ValuePlug *dstValuePlug = IECore::runTimeCast<ValuePlug>( dst ) )
+	{
+		dstValuePlug->setFrom( static_cast<const ValuePlug *>( src ) );
+	}
+	else
+	{
+		for( PlugIterator it( dst ); !it.done(); ++it )
+		{
+			Plug *dstChild = it->get();
+			const Plug *srcChild = src->getChild<Plug>( dstChild->getName() );
+			assert( srcChild );
+			setFrom( dstChild, srcChild );
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -167,8 +217,15 @@ void BoxIO::setup( const Plug *plug )
 		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
 		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
-		inPlugInternal()->setFlags( Plug::Dynamic | Plug::Serialisable, true );
-		outPlugInternal()->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+		if( plug->direction() == Plug::In )
+		{
+			setFrom( inPlugInternal(), plug );
+		}
+
+		inPlugInternal()->setFlags( Plug::Serialisable, true );
+		outPlugInternal()->setFlags( Plug::Serialisable, true );
+		applyDynamicFlag( inPlugInternal() );
+		applyDynamicFlag( outPlugInternal() );
 		outPlugInternal()->setInput( inPlugInternal() );
 
 		MetadataAlgo::copy(

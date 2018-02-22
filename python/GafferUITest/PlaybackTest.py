@@ -62,5 +62,15 @@ class PlaybackTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( p3a is p3b )
 
+	def testCurrentFrameIsSavedInScript( self ) :
+
+		s = Gaffer.ScriptNode()
+		p = GafferUI.Playback.acquire( s.context() )
+		p.incrementFrame()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2.context().getFrame(), s.context().getFrame() )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -177,7 +177,7 @@ class ScriptNode : public Node
 		/// As above, but loads the serialisation from the specified file.
 		bool executeFile( const std::string &fileName, Node *parent = NULL, bool continueOnError = false );
 		/// Returns true if a script is currently being executed. Note that
-		/// `execute()`, `executeFile()`, `load()` and `paste()` are all
+		/// `execute()`, `executeFile()`, `load()`, `importFile()` and `paste()` are all
 		/// sources of execution, and there is intentionally no way of
 		/// distinguishing between them.
 		bool isExecuting() const;
@@ -202,19 +202,45 @@ class ScriptNode : public Node
 		bool load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
 		void save() const;
+		/// Imports the nodes from the specified script, adding them to
+		/// the contents of this script. See `execute()` for a description
+		/// of the continueOnError argument and the return value.
+		bool importFile( const std::string &fileName, Node *parent = NULL, bool continueOnError = false );
 		//@}
 
 		//! @name Computation context
-		/// The ScriptNode provides a default context for computations to be
-		/// performed in, and allows the user to define custom variables in
-		/// it via a plug. It also maps the value of fileNamePlug() into
-		/// the script:name variable.
+		///
+		/// The ScriptNode provides a default context that is
+		/// driven by plug values, so that it is serialised
+		/// with the script. This allows the user to :
+		///
+		/// - Set the frame and framesPerSecond variables
+		/// - Add arbitrary variables of their own
+		/// - Use a "script:name" variable generated from
+		///   the filename.
+		///
+		/// It is expected that all computations will use a context
+		/// derived from this default context, but note that this does
+		/// _not_ imply that there is a single global "current time".
+		/// Derived contexts may have their own frame and even framesPerSecond
+		/// values, and can be used in parallel with the default context
+		/// or any other context. This allows features like TimeWarp nodes
+		/// and UI elements which view a different frame than the default.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// The default context - all computations should be performed
-		/// with this context, or one which inherits its variables.
+		/// with this context, or one derived from it.
 		Context *context();
 		const Context *context() const;
+		/// Drives the frame variable in the context.
+		///
+		/// > Warning : This exists primarily as a convenience for the
+		/// > user, so that the "current frame" is saved within the
+		/// > script file. To perform a computation at a particular time,
+		/// > create your own context rather than change the value of
+		/// > this plug.
+		FloatPlug *framePlug();
+		const FloatPlug *framePlug() const;
 		/// Drives the framesPerSecond variable in the context.
 		FloatPlug *framesPerSecondPlug();
 		const FloatPlug *framesPerSecondPlug() const;
@@ -226,6 +252,8 @@ class ScriptNode : public Node
 
 		//! @name Frame range
 		/// The ScriptNode defines the valid frame range using two numeric plugs.
+		/// \todo Perhaps these should also drive context variables? It might
+		/// be useful to use the frame range in expressions etc.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		IntPlug *frameStartPlug();
@@ -293,6 +321,7 @@ class ScriptNode : public Node
 		ContextPtr m_context;
 
 		void plugSet( Plug *plug );
+		void contextChanged( const Context *context, const IECore::InternedString &name );
 
 		static size_t g_firstPlugIndex;
 

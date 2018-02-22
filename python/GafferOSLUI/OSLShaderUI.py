@@ -79,7 +79,7 @@ def __plugPresetNames( plug ) :
 	if not options :
 		return None
 
-	return IECore.StringVectorData( [ o.partition( ":" )[0] for o in options.split( "|" ) ] )
+	return IECore.StringVectorData( [ o.partition( ":" )[0] for o in options.split( "|" ) if o ] )
 
 def __plugPresetValues( plug ) :
 
@@ -87,7 +87,8 @@ def __plugPresetValues( plug ) :
 	if not options :
 		return None
 
-	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) ]
+	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) if o ]
+
 	if isinstance( plug, Gaffer.StringPlug ) :
 		return IECore.StringVectorData( values )
 	elif isinstance( plug, Gaffer.IntPlug ) :
@@ -143,6 +144,18 @@ def __plugNoduleVisibility( plug ) :
 
 	return bool( visible ) if visible is not None else True
 
+def __plugNoduleLabel( plug ) :
+
+	label = __plugLabel( plug )
+	if label is None :
+		return None
+
+	page = __plugPage( plug )
+	if page is not None :
+		label = page + "." + label
+
+	return label
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -164,6 +177,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", __plugWidgetType,
 			"nodule:type", __plugNoduleType,
 			"noduleLayout:visible", __plugNoduleVisibility,
+			"noduleLayout:label", __plugNoduleLabel,
 
 		],
 

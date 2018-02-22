@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <set>
+#include <sstream>
 
 #include "boost/format.hpp"
 #include "boost/bind.hpp"
@@ -124,8 +125,10 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 					}
 				}
 			}
-			static boost::format formatter( "%s%d" );
-			newName = boost::str( formatter % prefix % suffix );
+			
+			std::stringstream ss;
+			ss << suffix;
+			newName = prefix + ss.str();
 		}
 	}
 

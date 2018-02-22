@@ -304,7 +304,7 @@ struct FormatStatistics
 		for( size_t i = 0; i < maxLines && i < v.size(); ++i )
 		{
 			typename Metric::ResultType m = metric( v[i].statistics );
-			if( m == typename Metric::ResultType() )
+			if( m == typename Metric::ResultType( 0 ) )
 			{
 				break;
 			}
