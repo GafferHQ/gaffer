@@ -38,6 +38,7 @@
 import os
 import subprocess32 as subprocess
 import unittest
+import glob
 import imath
 
 import IECore
@@ -286,6 +287,24 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		error = "".join( p.stderr.readlines() )
 		self.assertIn( "MyErroringTaskNode", error )
 		self.assertNotIn( "MyExpression", error )
+
+	def testDefaultFrame( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["t"] = GafferDispatchTest.TextWriter()
+		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.txt" )
+		s["t"]["text"].setValue( "test" )
+
+		s["fileName"].setValue( self.__scriptFileName )
+		s.context().setFrame( 10 )
+		s.save()
+
+		subprocess.check_call( [ "gaffer", "execute", self.__scriptFileName ] )
+
+		self.assertEqual(
+			glob.glob( self.temporaryDirectory() + "/test.*.txt" ),
+			[ self.temporaryDirectory() + "/test.0010.txt" ]
+		)
 
 if __name__ == "__main__":
 	unittest.main()
