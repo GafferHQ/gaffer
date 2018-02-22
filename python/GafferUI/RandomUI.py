@@ -36,6 +36,8 @@
 
 import functools
 
+import imath
+
 import Gaffer
 import GafferUI
 
@@ -53,6 +55,10 @@ Gaffer.Metadata.registerNode(
 	variable - to get useful variation either the seed or the
 	value of the context variable must be varied too.
 	""",
+
+	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
+	"nodeGadget:color", imath.Color3f( 0.45, 0.3, 0.3 ),
+	"auxiliaryNodeGadget:label", "r",
 
 	plugs = {
 

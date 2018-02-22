@@ -37,6 +37,8 @@
 import math
 import functools
 
+import imath
+
 import Gaffer
 import GafferUI
 
@@ -50,7 +52,9 @@ Gaffer.Metadata.registerNode(
 	on other nodes.
 	""",
 
-	"nodeGadget:type", "",
+	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
+	"nodeGadget:color", imath.Color3f( 0.3, 0.3, 0.45 ),
+	"auxiliaryNodeGadget:label", "a",
 
 	plugs = {
 
