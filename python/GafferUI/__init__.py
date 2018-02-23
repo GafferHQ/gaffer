@@ -284,6 +284,7 @@ from UIEditor import UIEditor
 import GraphBookmarksUI
 import DocumentationAlgo
 import _PlugAdder
+from Backups import Backups
 
 # and then specific node uis
 
