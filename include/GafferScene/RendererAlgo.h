@@ -64,8 +64,8 @@ IE_CORE_FORWARDDECLARE( SceneProcessor )
 namespace RendererAlgo
 {
 
-/// Creates the directories necessary to receive the Displays in globals.
-GAFFERSCENE_API void createDisplayDirectories( const IECore::CompoundObject *globals );
+/// Creates the directories necessary to receive the outputs defined in globals.
+GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *globals );
 
 /// Samples the local transform from the current location in preparation for output to the renderer.
 /// If segments is 0, the transform is sampled at the time from the current context. If it is non-zero then

@@ -97,7 +97,7 @@ namespace GafferScene
 namespace RendererAlgo
 {
 
-void createDisplayDirectories( const IECore::CompoundObject *globals )
+void createOutputDirectories( const IECore::CompoundObject *globals )
 {
 	CompoundObject::ObjectMap::const_iterator it, eIt;
 	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )

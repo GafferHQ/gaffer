@@ -234,7 +234,7 @@ void Render::execute() const
 	}
 
 	ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
-	GafferScene::RendererAlgo::createDisplayDirectories( globals.get() );
+	GafferScene::RendererAlgo::createOutputDirectories( globals.get() );
 
 	std::unique_ptr<PerformanceMonitor> performanceMonitor;
 	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
