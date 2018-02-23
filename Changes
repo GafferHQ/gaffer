@@ -1,3 +1,62 @@
+0.35.2.0
+========
+
+Features
+--------
+
+- Added OSL FloatSpline shader.
+
+Improvements
+------------
+
+- Save "current frame" with the script.
+- NodeGraph :
+  - Simplified box navigation.
+  - Fixed tab menu search when user enters special regex characters.
+- NodeEditor :
+  - Always open floating NodeEditors from the NodeGraph.
+  - Simplify embedding of filter widgets for the filtered node.
+  - Use collapsible layouts when rootSection is specified.
+- OSL Shaders : Nodule labels can be specified with shader parameter metadata.
+- GafferArnold: Exposed abortOnError, and maxSubdivision options to the ArnoldOptions node.
+- LightTweaks : Added menu item for deleting tweaks.
+- CompoundDataPlugs : Added Box plug presets.
+
+Fixes
+-----
+
+- Expressions :
+  - Fixed copy/paste bug
+  - Fixed bug when input plug is non-serialisable
+- Arnold Renderer : Throw exception if render fails
+- ImageWriter : Update handling of empty and single pixel images
+- Text : Fixed vertical alignment issue
+- Crop : Fix dirtiness propagation bug
+- Catalogue :
+  - Allow loading images with a dot in the name ('foo.#.ext')
+  - Fixed crashes that occur when removing multiple images quickly
+- SubGraph : Account for BoxIO in `correspondingInput()`
+- PlugAlgo : Fixed bug where promoted plugs had the wrong value.
+- BoxIO :
+  - Preserve plug values when promoting to the Box.
+  - Fixed promotion of ArrayPlugs.
+  - Fixed bug when loading driven shaders.
+- FileMenu : Fixed "Import..." bugs
+- EditMenu : Improved positioning of pasted nodes
+- ColorSwatchPlugValueWidget : Avoid multiple windows per plug.
+- SetUI : Fixed the set names context menus.
+- MessageWidget : Fixed crash when clicking on message buttons.
+- Scripts :
+  - Fixed execute() crash triggered by syntax error.
+  - Fixed syntax error created by `moduleDependencies()`
+  - Fixed crashes caused by `None` arguments
+  - Avoid unsafe use of boost::format.
+- GafferTractor : Removed dynamic flag from TaskNode plugs.
+- RendererAlgo : Fix crash if renderer returns null ObjectInterface
+- SceneInspector : Fixed alignment issue.
+- TabbedContainer : Fixed drawing of disabled tabs.
+- MonitorAlgo : Don't use uninitialised values.
+
 0.35.1.2
 ========
 
