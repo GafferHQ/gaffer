@@ -38,6 +38,8 @@
 
 #include "PrimitivesBinding.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Camera.h"
 #include "GafferScene/ClippingPlane.h"
 #include "GafferScene/CoordinateSystem.h"
@@ -59,6 +61,51 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
+namespace {
+
+class LightSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const GafferBindings::Serialisation &serialisation ) const override
+	{
+		std::string defaultPC = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+		const GafferScene::Light *light = static_cast<const GafferScene::Light *>( graphComponent );
+
+		// \todo - Remove this once old scripts have been converted
+		// Before we start serialization, clean up any old scripts that might have dynamic parameters on lights
+		// ( Now we create the parameters with a loadShader after the constructor, so they don't need to be dynamic )
+		for( PlugIterator it( light->parametersPlug() ); !it.done(); ++it )
+		{
+			(*it)->setFlags( Gaffer::Plug::Dynamic, false );
+		}
+
+		// \todo - We should have a good way to access this on the base class - John is planning
+		// refactor this setup so that lights contain a GafferScene::Shader, instead of implementing
+		// loadShader themselves
+		const StringPlug* shaderNamePlug = light->getChild<Gaffer::StringPlug>( "shaderName" );
+		if( !shaderNamePlug )
+		{
+			shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__shaderName" );
+		}
+		if( !shaderNamePlug )
+		{
+			shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__model" );
+		}
+
+		const std::string shaderName = shaderNamePlug ? shaderNamePlug->getValue() : "";
+		if( shaderName.size() )
+		{
+			return defaultPC + boost::str( boost::format( "%s.loadShader( \"%s\" )\n" ) % identifier % shaderName );
+		}
+
+		return defaultPC;
+	}
+
+};
+
+} // namespace
+
+
 void GafferSceneModule::bindPrimitives()
 {
 
@@ -73,6 +120,8 @@ void GafferSceneModule::bindPrimitives()
 	GafferBindings::DependencyNodeClass<ExternalProcedural>();
 	GafferBindings::DependencyNodeClass<Grid>();
 	GafferBindings::DependencyNodeClass<Light>();
+	GafferBindings::Serialisation::registerSerialiser( Light::staticTypeId(), new LightSerialiser() );
+
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Sphere>();

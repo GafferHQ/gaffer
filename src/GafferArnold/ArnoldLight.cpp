@@ -62,7 +62,7 @@ ArnoldLight::ArnoldLight( const std::string &name )
 	:	GafferScene::Light( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "__shaderName" ) );
+	addChild( new StringPlug( "__shaderName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 }
 
 ArnoldLight::~ArnoldLight()
