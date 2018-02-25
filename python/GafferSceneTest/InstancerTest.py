@@ -798,5 +798,152 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( instancer["out"] )
 
+	def testAttributes( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
+		points["testFloat"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.FloatVectorData( [ 0, 1 ] ),
+		)
+		points["testColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color3fVectorData( [ imath.Color3f( 1, 0, 0 ), imath.Color3f( 0, 1, 0 ) ] ),
+		)
+		points["testPoint"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V3fVectorData(
+				[ imath.V3f( 0, 0, 0 ), imath.V3f( 1, 1, 1 ) ],
+				IECore.GeometricData.Interpretation.Point
+			),
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["instances"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/object" )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances" ),
+			IECore.CompoundObject()
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere" ),
+			IECore.CompoundObject()
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject()
+		)
+
+		instancer["attributes"].setValue( "testFloat testColor testPoint" )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 0.0 ),
+				"testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
+				"testPoint" : IECore.V3fData(
+					imath.V3f( 0 ),
+					IECore.GeometricData.Interpretation.Point
+				)
+			} )
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/1" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 1.0 ),
+				"testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
+				"testPoint" : IECore.V3fData(
+					imath.V3f( 1 ),
+					IECore.GeometricData.Interpretation.Point
+				)
+			} )
+		)
+
+	def testEmptyAttributesHaveConstantHash( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["instances"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/object" )
+
+		self.assertEqual(
+			instancer["out"].attributesHash( "/object/instances/sphere/0" ),
+			instancer["out"].attributesHash( "/object/instances/sphere/1" ),
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			instancer["out"].attributes( "/object/instances/sphere/1" ),
+		)
+
+	def testEditAttributes( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
+		points["testFloat"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.FloatVectorData( [ 0, 1 ] ),
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["instances"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/object" )
+
+		instancer["attributes"].setValue( "test*" )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 0.0 ),
+			} )
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/1" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 1.0 ),
+			} )
+		)
+
+		points["testFloat"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.FloatVectorData( [ 1, 2 ] ),
+		)
+		objectToScene["object"].setValue( points )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 1.0 ),
+			} )
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/1" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 2.0 ),
+			} )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

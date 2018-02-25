@@ -160,6 +160,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes" : [
+
+			"description",
+			"""
+			The names of per-vertex primitive variables to be
+			turned into per-instance attributes. Names should
+			be separated by spaces and can use Gaffer's
+			standard wildcards.
+			""",
+
+		],
+
 	}
 
 )

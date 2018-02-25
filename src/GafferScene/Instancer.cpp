@@ -42,6 +42,7 @@
 
 #include "IECoreScene/Primitive.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/NullObject.h"
 #include "IECore/VectorTypedData.h"
@@ -51,9 +52,11 @@
 #include "tbb/blocked_range.h"
 #include "tbb/parallel_reduce.h"
 
+#include <functional>
 #include <unordered_map>
 
 using namespace std;
+using namespace std::placeholders;
 using namespace tbb;
 using namespace Imath;
 using namespace IECore;
@@ -79,7 +82,8 @@ class Instancer::EngineData : public Data
 			const std::string &id,
 			const std::string &position,
 			const std::string &orientation,
-			const std::string &scale
+			const std::string &scale,
+			const std::string &attributes
 		)
 			:	m_indices( nullptr ),
 				m_ids( nullptr ),
@@ -154,6 +158,8 @@ class Instancer::EngineData : public Data
 					m_idsToPointIndices[(*m_ids)[i]] = i;
 				}
 			}
+
+			initAttributes( attributes );
 		}
 
 		size_t numPoints() const
@@ -210,6 +216,28 @@ class Instancer::EngineData : public Data
 			return result;
 		}
 
+		size_t numInstanceAttributes() const
+		{
+			return m_attributeCreators.size();
+		}
+
+		void instanceAttributesHash( size_t pointIndex, MurmurHash &h ) const
+		{
+			h.append( m_attributesHash );
+			h.append( (uint64_t)pointIndex );
+		}
+
+		CompoundObjectPtr instanceAttributes( size_t pointIndex ) const
+		{
+			CompoundObjectPtr result = new CompoundObject;
+			CompoundObject::ObjectMap &writableResult = result->members();
+			for( const auto &attributeCreator : m_attributeCreators )
+			{
+				writableResult[attributeCreator.first] = attributeCreator.second( pointIndex );
+			}
+			return result;
+		}
+
 	protected :
 
 		void copyFrom( const Object *other, CopyContext *context ) override
@@ -232,6 +260,64 @@ class Instancer::EngineData : public Data
 
 	private :
 
+		typedef std::function<DataPtr ( size_t )> AttributeCreator;
+
+		struct MakeAttributeCreator
+		{
+
+			template<typename T>
+			AttributeCreator operator()( const TypedData<vector<T>> *data )
+			{
+				return std::bind( &createAttribute<T>, data->readable(), ::_1 );
+			}
+
+			template<typename T>
+			AttributeCreator operator()( const GeometricTypedData<vector<T>> *data )
+			{
+				return std::bind( &createGeometricAttribute<T>, data->readable(), data->getInterpretation(), ::_1 );
+			}
+
+			AttributeCreator operator()( const Data *data )
+			{
+				throw IECore::InvalidArgumentException( "Expected VectorTypedData" );
+			}
+
+			private :
+
+				template<typename T>
+				static DataPtr createAttribute( const vector<T> &values, size_t index )
+				{
+					return new TypedData<T>( values[index] );
+				}
+
+				template<typename T>
+				static DataPtr createGeometricAttribute( const vector<T> &values, GeometricData::Interpretation interpretation, size_t index )
+				{
+					return new GeometricTypedData<T>( values[index], interpretation );
+				}
+
+		};
+
+		void initAttributes( const std::string &attributes )
+		{
+			for( auto &primVar : m_primitive->variables )
+			{
+				if( primVar.second.interpolation != PrimitiveVariable::Vertex )
+				{
+					continue;
+				}
+				if( !StringAlgo::matchMultiple( primVar.first, attributes ) )
+				{
+					continue;
+				}
+				DataPtr d = primVar.second.expandedData();
+				AttributeCreator attributeCreator = dispatch( d.get(), MakeAttributeCreator() );
+				m_attributeCreators[primVar.first] = attributeCreator;
+				m_attributesHash.append( primVar.first );
+				d->hash( m_attributesHash );
+			}
+		}
+
 		IECoreScene::ConstPrimitivePtr m_primitive;
 		const std::vector<int> *m_indices;
 		const std::vector<int> *m_ids;
@@ -242,6 +328,9 @@ class Instancer::EngineData : public Data
 
 		typedef std::unordered_map <int, size_t> IdsToPointIndices;
 		IdsToPointIndices m_idsToPointIndices;
+
+		boost::container::flat_map<InternedString, AttributeCreator> m_attributeCreators;
+		MurmurHash m_attributesHash;
 
 };
 
@@ -266,6 +355,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "orientation", Plug::In ) );
 	addChild( new StringPlug( "scale", Plug::In ) );
+	addChild( new StringPlug( "attributes", Plug::In ) );
 	addChild( new ObjectPlug( "__engine", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new AtomicCompoundDataPlug( "__instanceChildNames", Plug::Out, new CompoundData ) );
 }
@@ -344,24 +434,34 @@ const Gaffer::StringPlug *Instancer::scalePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
+Gaffer::StringPlug *Instancer::attributesPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+}
+
+const Gaffer::StringPlug *Instancer::attributesPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+}
+
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::instanceChildNamesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 8 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::instanceChildNamesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 8 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 9 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -374,7 +474,8 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == idPlug() ||
 		input == positionPlug() ||
 		input == orientationPlug() ||
-		input == scalePlug()
+		input == scalePlug() ||
+		input == attributesPlug()
 	)
 	{
 		outputs.push_back( enginePlug() );
@@ -421,7 +522,10 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		outputs.push_back( outPlug()->objectPlug() );
 	}
 
-	if( input == instancesPlug()->attributesPlug() )
+	if(
+		input == instancesPlug()->attributesPlug() ||
+		input == enginePlug()
+	)
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -439,6 +543,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		positionPlug()->hash( h );
 		orientationPlug()->hash( h );
 		scalePlug()->hash( h );
+		attributesPlug()->hash( h );
 	}
 	else if( output == instanceChildNamesPlug() )
 	{
@@ -461,7 +566,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				idPlug()->getValue(),
 				positionPlug()->getValue(),
 				orientationPlug()->getValue(),
-				scalePlug()->getValue()
+				scalePlug()->getValue(),
+				attributesPlug()->getValue()
 			)
 		);
 		return;
@@ -665,6 +771,22 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 		// "/" or "/instances" or "/instances/<instanceName>"
 		h = outPlug()->attributesPlug()->defaultValue()->Object::hash();
 	}
+	else if( branchPath.size() == 3 )
+	{
+		// "/instances/<instanceName>/<id>"
+		BranchCreator::hashBranchAttributes( parentPath, branchPath, context, h );
+		{
+			{
+				InstanceScope instanceScope( context, branchPath );
+				instancesPlug()->attributesPlug()->hash( h );
+			}
+			ConstEngineDataPtr e = engine( parentPath, context );
+			if( e->numInstanceAttributes() )
+			{
+				e->instanceAttributesHash( e->pointIndex( branchPath[2] ), h );
+			}
+		}
+	}
 	else
 	{
 		// "/instances/<instanceName>/<id>/...
@@ -679,6 +801,31 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	{
 		// "/" or "/instances" or "/instances/<instanceName>"
 		return outPlug()->attributesPlug()->defaultValue();
+	}
+	else if( branchPath.size() == 3 )
+	{
+		// "/instances/<instanceName>/<id>"
+		ConstCompoundObjectPtr baseAttributes;
+		{
+			InstanceScope instanceScope( context, branchPath );
+			baseAttributes = instancesPlug()->attributesPlug()->getValue();
+		}
+
+		ConstEngineDataPtr e = engine( parentPath, context );
+		if( e->numInstanceAttributes() )
+		{
+			CompoundObjectPtr attributes = e->instanceAttributes( e->pointIndex( branchPath[2] ) );
+			CompoundObject::ObjectMap &writableAttributes = attributes->members();
+			for( auto &attribute : baseAttributes->members() )
+			{
+				writableAttributes.insert( attribute );
+			}
+			return attributes;
+		}
+		else
+		{
+			return baseAttributes;
+		}
 	}
 	else
 	{
