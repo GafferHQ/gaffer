@@ -64,7 +64,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.setPlug( self, plug )
 
-		if isinstance( plug, Gaffer.SplinefColor3fPlug ) :
+		if isinstance( plug, ( Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug ) ) :
 			self.__splineWidget.setDrawMode( GafferUI.SplineWidget.DrawMode.Ramp )
 		else :
 			self.__splineWidget.setDrawMode( GafferUI.SplineWidget.DrawMode.Splines )
@@ -94,6 +94,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 GafferUI.PlugValueWidget.registerType( Gaffer.SplineffPlug, SplinePlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor3fPlug, SplinePlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor4fPlug, SplinePlugValueWidget )
 
 ## \todo See comments for `ColorSwatchPlugValueWidget._ColorPlugValueDialogue`.
 # I think the best approach is probably to move the `acquire()` mechanism to the
