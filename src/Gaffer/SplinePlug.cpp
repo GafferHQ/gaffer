@@ -79,6 +79,19 @@ inline Imath::Color3f monotoneSlopeCompute<>(
 	);
 }
 
+template<>
+inline Imath::Color4f monotoneSlopeCompute<>(
+	const Imath::Color4f& deltaY1, const Imath::Color4f& deltaY2,
+	const float& deltaX1, const float& deltaX2 )
+{
+	return Imath::Color4f(
+		monotoneSlopeCompute( deltaY1[0], deltaY2[0], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[1], deltaY2[1], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[2], deltaY2[2], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[3], deltaY2[3], deltaX1, deltaX2 )
+	);
+}
+
 // This function translates a set of control points for a MonotoneCubic curve into a set of
 // bezier control points.  The X values are set up to make each segment linear in X, which 
 // makes the control point behaviour a bit more predictable when used as a color ramp.
@@ -526,11 +539,14 @@ namespace Gaffer
 // RunTimeTyped specialisation
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplineffPlug, SplineffPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor3fPlug, SplinefColor3fPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor4fPlug, SplinefColor4fPlugTypeId )
 
 // explicit instantiation
 template struct SplineDefinition< IECore::Splineff >;
 template struct SplineDefinition< IECore::SplinefColor3f >;
+template struct SplineDefinition< IECore::SplinefColor4f >;
 template class SplinePlug< SplineDefinitionff >;
 template class SplinePlug< SplineDefinitionfColor3f >;
+template class SplinePlug< SplineDefinitionfColor4f >;
 
 }
