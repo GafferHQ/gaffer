@@ -217,6 +217,8 @@ void GafferModule::bindSplinePlug()
 
 	bindSplineDefinition<SplineDefinitionff >( "SplineDefinitionff" );
 	bindSplineDefinition<SplineDefinitionfColor3f >( "SplineDefinitionfColor3f" );
+	bindSplineDefinition<SplineDefinitionfColor4f >( "SplineDefinitionfColor4f" );
 	bind<SplineffPlug>();
 	bind<SplinefColor3fPlug>();
+	bind<SplinefColor4fPlug>();
 }
