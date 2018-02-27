@@ -966,5 +966,20 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( script["OutObject"]["parameters"]["in1"].getInput().isSame( script["Box"]["out_primitiveVariable"] ) )
 		self.assertTrue( script["OutObject"]["parameters"]["in1"].source().isSame( script["Box"]["OutFloat"]["out"]["primitiveVariable"] ) )
 
+	def testShaderSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s['n'] = GafferOSL.OSLShader()
+		s['n'].loadShader( "Pattern/Noise" )
+		s['n2'] = GafferOSL.OSLShader()
+		s['n2'].loadShader( "Pattern/Noise" )
+		s['n2']['scale'].setInput( s['n']['n'] )
+		self.assertEqual( s['n2']['scale'].getInput(), s['n']['n'] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2['n2']['scale'].getInput(), s2['n']['n'] )
+
 if __name__ == "__main__":
 	unittest.main()
