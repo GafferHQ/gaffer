@@ -86,20 +86,56 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if event.buttons & event.Buttons.Left :
 
-			if self.__editorWindow is None or self.__editorWindow() is None :
+			if not self._editable() :
+				return False
 
-				## \todo This could perhaps be improved if it derived from a PlugValueDialogue
-				# base class shared with the _ColorPlugValueDialogue.
-				window = GafferUI.Window(
-					title = self.getPlug().relativeName( self.getPlug().ancestor( Gaffer.ScriptNode ) ),
-					borderWidth = 8,
-				)
-				window.setChild( GafferUI.RampPlugValueWidget( self.getPlug() ) )
-
-				self.ancestor( GafferUI.Window ).addChildWindow( window )
-				self.__editorWindow = weakref.ref( window )
-
-			self.__editorWindow().setVisible( True )
+			_SplinePlugValueDialogue.acquire( self.getPlug() )
+			return True
 
 GafferUI.PlugValueWidget.registerType( Gaffer.SplineffPlug, SplinePlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor3fPlug, SplinePlugValueWidget )
+
+## \todo See comments for `ColorSwatchPlugValueWidget._ColorPlugValueDialogue`.
+# I think the best approach is probably to move the `acquire()` mechanism to the
+# main layout class when we do an overhaul of that system.
+class _SplinePlugValueDialogue( GafferUI.Dialogue ) :
+
+	def __init__( self, plug ) :
+
+		GafferUI.Dialogue.__init__(
+			self,
+			plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) )
+		)
+
+		self.__plug = plug
+		self.setChild( GafferUI.RampPlugValueWidget( plug ) )
+
+		## \todo Perhaps if `acquire()` were to be a shared central
+		# mechanism, this handling should be done in `acquire()`
+		# instead of in each of the individual dialogues? Perhaps
+		# `acquire()` should even be responsible for building the
+		# dialogues, so it's able to build a dialogue around any
+		# PlugValueWidget?
+		self.__plugParentChangedConnection = plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+		self.__nodeParentChangedConnection = plug.node().parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+
+	@classmethod
+	def acquire( cls, plug ) :
+
+		script = plug.node().scriptNode()
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+
+		for window in scriptWindow.childWindows() :
+			if isinstance( window, cls ) and window.__plug == plug :
+				window.setVisible( True )
+				return window
+
+		window = cls( plug )
+		scriptWindow.addChildWindow( window, removeOnClose = True )
+		window.setVisible( True )
+
+		return window
+
+	def __destroy( self, *unused ) :
+
+		self.parent().removeChild( self )
