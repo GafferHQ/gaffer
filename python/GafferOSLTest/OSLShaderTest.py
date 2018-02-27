@@ -159,14 +159,18 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertRaises( RuntimeError, n.loadShader,  "nonexistent" )
 
 	def testSearchPaths( self ) :
+		standardShaderPaths = os.environ["OSL_SHADER_PATHS"]
+		try:
+			s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
+			os.environ["OSL_SHADER_PATHS"] = os.path.dirname( s )
+			n = GafferOSL.OSLShader()
+			n.loadShader( os.path.basename( s ) )
 
-		os.environ["OSL_SHADER_PATHS"] = os.path.dirname( s )
-		n = GafferOSL.OSLShader()
-		n.loadShader( os.path.basename( s ) )
-
-		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
+			self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
+		finally:
+			os.environ["OSL_SHADER_PATHS"] = standardShaderPaths
+			
 
 	def testNoConnectionToParametersPlug( self ) :
 
