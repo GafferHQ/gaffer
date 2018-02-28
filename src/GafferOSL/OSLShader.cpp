@@ -1022,6 +1022,13 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 
 	loadShaderParameters( query, parametersPlug, parameterMetadata );
 
+	if( existingOut )
+	{
+		// \todo : This can be removed once old scripts have been updated, and we no longer have
+		// old out plugs set to Dynamic lying around
+		existingOut->setFlags( Gaffer::Plug::Dynamic, false );
+	}
+
 	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
 	{
 		PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default );
