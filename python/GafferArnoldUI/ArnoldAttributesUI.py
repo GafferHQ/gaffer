@@ -120,6 +120,12 @@ def __volumeSummary( plug ) :
 		info.append( "Step %s" % GafferUI.NumericWidget.valueToString( plug["volumeStepSize"]["value"].getValue() ) )
 	if plug["volumePadding"]["enabled"].getValue() :
 		info.append( "Padding %s" % GafferUI.NumericWidget.valueToString( plug["volumePadding"]["value"].getValue() ) )
+	if plug["velocityScale"]["enabled"].getValue() :
+		info.append( "Velocity Scale %s" % GafferUI.NumericWidget.valueToString( plug["velocityScale"]["value"].getValue() ) )
+	if plug["velocityFPS"]["enabled"].getValue() :
+		info.append( "Velocity FPS %s" % GafferUI.NumericWidget.valueToString( plug["velocityFPS"]["value"].getValue() ) )
+	if plug["velocityOutlierThreshold"]["enabled"].getValue() :
+		info.append( "Velocity Outlier Threshold %s" % GafferUI.NumericWidget.valueToString( plug["velocityOutlierThreshold"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -569,6 +575,45 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Volume",
 			"label", "Padding",
+
+		],
+
+		"attributes.velocityScale" : [
+
+			"description",
+			"""
+			Scales the vector used in VDB motion blur computation.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Velocity Scale",
+
+		],
+
+		"attributes.velocityFPS" : [
+
+			"description",
+			"""
+			Sets the frame rate used in VDB motion blur computation.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Velocity FPS",
+
+		],
+
+		"attributes.velocityOutlierThreshold" : [
+
+			"description",
+			"""
+			Sets the outlier threshold used in VDB motion blur computation.
+
+			When rendering physics simulations resulting velocities are
+			potentially noisy and require some filtering for faster rendering.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Velocity Outlier Threshold",
 
 		],
 
