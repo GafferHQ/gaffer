@@ -59,6 +59,10 @@ GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 GafferUI.LocalDispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
+# Turn on backups by default, so they are supported by the open functions
+# in the file menu. They can be turned off again in the preferences menu.
+GafferUI.Backups.acquire( application )
+
 ## Help menu
 ###########################################################################
 
