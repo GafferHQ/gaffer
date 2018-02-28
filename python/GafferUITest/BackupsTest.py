@@ -40,6 +40,7 @@ import GafferTest
 import Gaffer
 
 import os
+import sys
 import time
 import weakref
 
@@ -103,8 +104,21 @@ class BackupsTest( GafferUITest.TestCase ) :
 		s["add"] = GafferTest.AddNode()
 		a["scripts"].addChild( s )
 
+		numBackups = 50
+		timeBetweenBackups = 0.01
+		if sys.platform == "darwin" :
+			# HFS+ only has second resolution, so
+			# we have to wait longer between backups
+			# otherwise all the backups have the
+			# same modification time and we can't
+			# tell which is the latest.
+			timeBetweenBackups = 1.1
+			# We also need to do fewer tests because
+			# otherwise it takes an age.
+			numBackups = 5
+
 		expectedBackups = []
-		for i in range( 0, 50 ) :
+		for i in range( 0, numBackups ) :
 
 			s["add"]["op1"].setValue( i )
 			s.save()
@@ -122,7 +136,7 @@ class BackupsTest( GafferUITest.TestCase ) :
 				del expectedBackups[0]
 			self.assertEqual( b.backups( s ), expectedBackups )
 
-			time.sleep( 0.01 )
+			time.sleep( timeBetweenBackups )
 
 	def __assertFilesEqual( self, f1, f2 ) :
 
