@@ -37,6 +37,7 @@
 import os
 import unittest
 import imath
+import random
 
 import IECore
 
@@ -984,6 +985,32 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		s2.execute( s.serialise() )
 		
 		self.assertEqual( s2['n2']['parameters']['scale'].getInput(), s2['n']['out']['n'] )
+
+	def testSplineParameterSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		shad = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		s['n'] = GafferOSL.OSLShader()
+		s['n'].loadShader( shad )
+
+		splineValue = Gaffer.SplineDefinitionfColor3f( [ ( random.random(), imath.Color3f( random.random(), random.random(), random.random() ) ) for i in range( 10 ) ], Gaffer.SplineDefinitionInterpolation.Linear )
+
+		s['n']["parameters"]["colorSpline"].setValue( splineValue )
+
+		serialised = s.serialise()
+
+		colorSplineLines = [ i for i in serialised.split( "\n" ) if "colorSpline" in i ]
+
+		# Expect a clearPoint line to get serialised
+		self.assertEqual( 1, sum( "clearPoints" in i for i in colorSplineLines ) )
+
+		# Expect 3 addChilds per point ( The parent plug, and x and y )
+		self.assertEqual( 30, sum( "addChild" in i for i in colorSplineLines ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( serialised )
+		self.assertEqual( s2['n']["parameters"]["colorSpline"].getValue(), splineValue )
 
 if __name__ == "__main__":
 	unittest.main()
