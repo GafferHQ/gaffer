@@ -600,7 +600,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["s"] = GafferArnold.ArnoldShader()
 		s["s"].loadShader( "lambert" )
 
-		self.assertTrue( """loadShader( "lambert", keepExistingValues=True )""" in s.serialise() )
+		self.assertTrue( """loadShader( "lambert" )""" in s.serialise() )
 
 	def testReloadShaderWithPartialColourConnections( self ) :
 
