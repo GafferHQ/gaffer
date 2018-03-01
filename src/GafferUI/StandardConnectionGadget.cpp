@@ -189,11 +189,20 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
 	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState )
+	if( state != Style::HighlightedState && srcNodule() && dstNodule() )
 	{
-		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
+		const Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
 		{
 			state = Style::HighlightedState;
+		}
+		else
+		{
+			const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
+			if( dstNodeGadget && dstNodeGadget->getHighlighted() )
+			{
+				state = Style::HighlightedState;
+			}
 		}
 	}
 
@@ -223,11 +232,20 @@ Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
 	Style::State state = ( m_hovering || m_dragEnd ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState )
+	if( state != Style::HighlightedState && srcNodule() && dstNodule() )
 	{
-		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
+		const Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
 		{
 			state = Style::HighlightedState;
+		}
+		else
+		{
+			const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
+			if( dstNodeGadget && dstNodeGadget->getHighlighted() )
+			{
+				state = Style::HighlightedState;
+			}
 		}
 	}
 
@@ -516,23 +534,6 @@ void StandardConnectionGadget::leave( const ButtonEvent &event )
 
 	m_hovering = false;
 	requestRender();
-}
-
-bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
-{
-	if( !nodule )
-	{
-		return false;
-	}
-
-	const Gaffer::Node *node = nodule->plug()->node();
-	if( !node )
-	{
-		return false;
-	}
-
-	const Gaffer::ScriptNode *script = node->scriptNode();
-	return script && script->selection()->contains( node );
 }
 
 void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
