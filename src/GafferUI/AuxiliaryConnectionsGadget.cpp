@@ -163,7 +163,7 @@ std::pair<const NodeGadget *, const NodeGadget *> AuxiliaryConnectionsGadget::co
 			{
 				connections.push_back( { srcNodeGadget, dstNodeGadget } );
 				selector->loadName( name++ );
-				style->renderAuxiliaryConnection( nodeFrame( srcNodeGadget ), dstFrame );
+				style->renderAuxiliaryConnection( nodeFrame( srcNodeGadget ), dstFrame, Style::NormalState );
 			}
 		}
 	}
@@ -242,10 +242,12 @@ void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style 
 	updateConnections();
 	for( auto &x : m_nodeGadgetConnections )
 	{
+		bool dstHighlighted = x.first->getHighlighted();
 		const Box2f dstFrame = nodeFrame( x.first );
 		for( auto &srcNodeGadget : x.second.sourceGadgets )
 		{
-			style->renderAuxiliaryConnection( nodeFrame( srcNodeGadget ), dstFrame );
+			Style::State state = dstHighlighted || srcNodeGadget->getHighlighted() ? Style::HighlightedState : Style::NormalState;
+			style->renderAuxiliaryConnection( nodeFrame( srcNodeGadget ), dstFrame, state );
 		}
 	}
 }
