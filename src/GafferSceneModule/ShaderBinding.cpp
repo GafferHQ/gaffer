@@ -104,16 +104,17 @@ void reloadShader( Shader &shader )
 class ShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
-	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
+		std::string defaultPC = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
 		const Shader *shader = static_cast<const Shader *>( graphComponent );
 		const std::string shaderName = shader->namePlug()->getValue();
 		if( shaderName.size() )
 		{
-			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+			return defaultPC + boost::str( boost::format( "%s.loadShader( \"%s\" )\n" ) % identifier % shaderName );
 		}
 
-		return "";
+		return defaultPC;
 	}
 
 };

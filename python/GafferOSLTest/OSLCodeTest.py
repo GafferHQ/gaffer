@@ -86,9 +86,11 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( oslShader["out"].keys(), oslCode["out"].keys() )
 
 		for p in oslShader["parameters"].children() :
+			p.setFlags( Gaffer.Plug.Flags.Dynamic, True )
 			self.assertEqual( repr( p ), repr( oslCode["parameters"][p.getName()] ) )
 
 		for p in oslShader["out"].children() :
+			p.setFlags( Gaffer.Plug.Flags.Dynamic, True )
 			self.assertEqual( repr( p ), repr( oslCode["out"][p.getName()] ) )
 
 	def testParseError( self ) :
@@ -201,6 +203,8 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		oslShader = GafferOSL.OSLShader()
 		oslShader.loadShader( self.__osoFileName( oslCode ) )
 
+		oslShader["parameters"]["sp"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
+
 		self.assertEqual( repr( oslShader["parameters"]["sp"] ), repr( oslCode["parameters"]["sp"] ) )
 
 	def testShaderNameMatchesFileName( self ) :
@@ -285,9 +289,11 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( oslShader["out"].keys(), oslCode["out"].keys() )
 
 		for p in oslShader["parameters"].children() :
+			p.setFlags( Gaffer.Plug.Flags.Dynamic, True )
 			self.assertEqual( repr( p ), repr( oslCode["parameters"][p.getName()] ) )
 
 		for p in oslShader["out"].children() :
+			p.setFlags( Gaffer.Plug.Flags.Dynamic, True )
 			self.assertEqual( repr( p ), repr( oslCode["out"][p.getName()] ) )
 
 	def testSourceUsesRequestedName( self ) :

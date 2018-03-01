@@ -37,6 +37,7 @@
 import os
 import unittest
 import imath
+import random
 
 import IECore
 
@@ -159,14 +160,18 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertRaises( RuntimeError, n.loadShader,  "nonexistent" )
 
 	def testSearchPaths( self ) :
+		standardShaderPaths = os.environ["OSL_SHADER_PATHS"]
+		try:
+			s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
+			os.environ["OSL_SHADER_PATHS"] = os.path.dirname( s )
+			n = GafferOSL.OSLShader()
+			n.loadShader( os.path.basename( s ) )
 
-		os.environ["OSL_SHADER_PATHS"] = os.path.dirname( s )
-		n = GafferOSL.OSLShader()
-		n.loadShader( os.path.basename( s ) )
-
-		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
+			self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
+		finally:
+			os.environ["OSL_SHADER_PATHS"] = standardShaderPaths
+			
 
 	def testNoConnectionToParametersPlug( self ) :
 
@@ -965,6 +970,47 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( script["OutObject"]["parameters"]["in0"].source().isSame( script["OutFloat"]["out"]["primitiveVariable"] ) )
 		self.assertTrue( script["OutObject"]["parameters"]["in1"].getInput().isSame( script["Box"]["out_primitiveVariable"] ) )
 		self.assertTrue( script["OutObject"]["parameters"]["in1"].source().isSame( script["Box"]["OutFloat"]["out"]["primitiveVariable"] ) )
+
+	def testShaderSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s['n2'] = GafferOSL.OSLShader()
+		s['n2'].loadShader( "Pattern/Noise" )
+		s['n'] = GafferOSL.OSLShader()
+		s['n'].loadShader( "Pattern/Noise" )
+		s['n2']['parameters']['scale'].setInput( s['n']['out']['n'] )
+		self.assertEqual( s['n2']['parameters']['scale'].getInput(), s['n']['out']['n'] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2['n2']['parameters']['scale'].getInput(), s2['n']['out']['n'] )
+
+	def testSplineParameterSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		shad = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		s['n'] = GafferOSL.OSLShader()
+		s['n'].loadShader( shad )
+
+		splineValue = Gaffer.SplineDefinitionfColor3f( [ ( random.random(), imath.Color3f( random.random(), random.random(), random.random() ) ) for i in range( 10 ) ], Gaffer.SplineDefinitionInterpolation.Linear )
+
+		s['n']["parameters"]["colorSpline"].setValue( splineValue )
+
+		serialised = s.serialise()
+
+		colorSplineLines = [ i for i in serialised.split( "\n" ) if "colorSpline" in i ]
+
+		# Expect a clearPoint line to get serialised
+		self.assertEqual( 1, sum( "clearPoints" in i for i in colorSplineLines ) )
+
+		# Expect 3 addChilds per point ( The parent plug, and x and y )
+		self.assertEqual( 30, sum( "addChild" in i for i in colorSplineLines ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( serialised )
+		self.assertEqual( s2['n']["parameters"]["colorSpline"].getValue(), splineValue )
 
 if __name__ == "__main__":
 	unittest.main()

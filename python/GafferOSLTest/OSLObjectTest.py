@@ -592,6 +592,34 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		pv = outputPlane["name"]
 		self.assertEqual( pv.data, IECore.StringVectorData( ["even", "odd", "even", "odd"] ) )
+	
+	def testShaderSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s['shader'] = GafferOSL.OSLShader()
+		s['shader'].loadShader( "ObjectProcessing/OutObject" )
+		s['object'] = GafferOSL.OSLObject()
+		s['object']['shader'].setInput( s['shader']['out'] )
+		self.assertEqual( s['object']['shader'].getInput(), s['shader']['out'] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2['object']['shader'].getInput(), s2['shader']['out'] )
+		
+		# same network as above, but reverse the order of node construction
+
+		s3 = Gaffer.ScriptNode()
+		s3['object'] = GafferOSL.OSLObject()
+		s3['shader'] = GafferOSL.OSLShader()
+		s3['shader'].loadShader( "ObjectProcessing/OutObject" )
+		s3['object']['shader'].setInput( s3['shader']['out'] )
+		self.assertEqual( s3['object']['shader'].getInput(), s3['shader']['out'] )
+
+		s4 = Gaffer.ScriptNode()
+		s4.execute( s3.serialise() )
+		
+		self.assertEqual( s4['object']['shader'].getInput(), s4['shader']['out'] )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -230,7 +230,7 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 		return existingPlug;
 	}
 
-	StringPlugPtr plug = new StringPlug( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
+	StringPlugPtr plug = new StringPlug( name, parent->direction(), defaultValue, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -263,7 +263,7 @@ Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 		return existingPlug;
 	}
 
-	StringVectorDataPlugPtr plug = new StringVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
+	StringVectorDataPlugPtr plug = new StringVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -319,7 +319,7 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -368,7 +368,7 @@ Plug *loadNumericArrayParameter( const OSLQuery::Parameter *parameter, const Int
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -441,7 +441,7 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic, interpretation );
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default , interpretation );
 
 	if( existingPlug )
 	{
@@ -499,7 +499,7 @@ Plug *loadCompoundNumericArrayParameter( const OSLQuery::Parameter *parameter, c
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -529,7 +529,7 @@ Plug *loadMatrixParameter( const OSLQuery::Parameter *parameter, const InternedS
 		return existingPlug;
 	}
 
-	M44fPlugPtr plug = new M44fPlug( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
+	M44fPlugPtr plug = new M44fPlug( name, parent->direction(), defaultValue, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -568,7 +568,7 @@ Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 		return existingPlug;
 	}
 
-	M44fVectorDataPlugPtr plug = new M44fVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
+	M44fVectorDataPlugPtr plug = new M44fVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default );
 
 	if( existingPlug )
 	{
@@ -590,7 +590,7 @@ Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const Interned
 		return existingPlug;
 	}
 
-	ClosurePlugPtr plug = new ClosurePlug( name, parent->direction(), Plug::Default | Plug::Dynamic );
+	ClosurePlugPtr plug = new ClosurePlug( name, parent->direction(), Plug::Default );
 
 	if( existingPlug )
 	{
@@ -669,7 +669,7 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, Plug::Default );
 	parent->setChild( name, plug );
 
 	return plug.get();
@@ -761,7 +761,7 @@ Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 	if( !existingPlug || existingPlug->typeId() != Plug::staticTypeId() )
 	{
 		// No existing plug, or it was the wrong type (we used to use a CompoundPlug).
-		result = new Plug( name, parent->direction(), Plug::Default | Plug::Dynamic );
+		result = new Plug( name, parent->direction(), Plug::Default );
 		if( existingPlug )
 		{
 			// Transfer old plugs onto the replacement.
@@ -934,7 +934,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 		// parameters become a single plug on the node, so we deal with them
 		// outside of `loadShaderParameter()`, which deals exclusively with
 		// the one-parameter-at-a-time case.
-		const Plug *plug = loadSplineParameter( query, parameter, parent, prefix );
+		Plug *plug = loadSplineParameter( query, parameter, parent, prefix );
 		if( !plug )
 		{
 			const CompoundData *parameterMetadata = nullptr;
@@ -949,6 +949,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 
 		if( plug )
 		{
+			plug->setFlags( Gaffer::Plug::Dynamic, false );
 			validPlugs.insert( plug );
 		}
 	}
@@ -1021,9 +1022,16 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 
 	loadShaderParameters( query, parametersPlug, parameterMetadata );
 
+	if( existingOut )
+	{
+		// \todo : This can be removed once old scripts have been updated, and we no longer have
+		// old out plugs set to Dynamic lying around
+		existingOut->setFlags( Gaffer::Plug::Dynamic, false );
+	}
+
 	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
 	{
-		PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default | Plug::Dynamic );
+		PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default );
 		if( existingOut )
 		{
 			// We had an out plug but it was the wrong type (we used

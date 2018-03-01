@@ -64,7 +64,7 @@ AppleseedLight::AppleseedLight( const std::string &name )
 	:	GafferScene::Light( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "__model" ) );
+	addChild( new StringPlug( "__model", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 }
 
 AppleseedLight::~AppleseedLight()
@@ -211,7 +211,6 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 
 		if( plug )
 		{
-			plug->setFlags( Gaffer::Plug::Dynamic, true );
 			parametersPlug()->addChild( plug );
 		}
 	}

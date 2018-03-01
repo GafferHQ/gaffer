@@ -63,7 +63,12 @@ OSLLight::OSLLight( const std::string &name )
 	:	GafferScene::Light( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "shaderName" ) );
+
+	// \todo - now that shaderName is not serialized, it seems questionable whether it even needs to exist, or
+	// whether we should just directly serialize shaderNode()->namePlug()  into the loadShader call.
+	// For the moment, keeping shaderName around makes it easier to support deprecated scripts, which contain
+	// a setValue on shaderName, and no loadShader
+	addChild( new StringPlug( "shaderName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new IntPlug( "shape", Plug::In, Disk, Disk, Geometry ) );
 	addChild( new FloatPlug( "radius", Plug::In, 0.01, 0 ) );
 	addChild( new StringPlug( "geometryType" ) );

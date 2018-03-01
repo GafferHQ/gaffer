@@ -99,10 +99,11 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 		existingPlug->maxValue() == maxValue
 	)
 	{
+		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -117,10 +118,11 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &parameterName, Gaffer::Gr
 		existingPlug->typeId() == Plug::staticTypeId()
 	)
 	{
+		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
 		return existingPlug;
 	}
 
-	PlugPtr plug = new Plug( parameterName, direction, Plug::Default | Plug::Dynamic );
+	PlugPtr plug = new Plug( parameterName, direction, Plug::Default );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -136,11 +138,11 @@ Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffe
 		existingPlug->defaultValue() == defaultValue
 	)
 	{
+		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
 		return existingPlug;
 	}
 
 	typename PlugType::Ptr plug = new PlugType( parameterName, direction, defaultValue );
-	plug->setFlags( Plug::Dynamic, true );
 
 	PlugAlgo::replacePlug( plugParent, plug );
 
@@ -190,10 +192,11 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 		existingPlug->maxValue() == maxValue
 	)
 	{
+		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -207,11 +210,11 @@ Gaffer::Plug *setupClosurePlug( const IECore::InternedString &parameterName, Gaf
 		existingPlug->direction() == direction
 	)
 	{
+		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
 		return existingPlug;
 	}
 
 	GafferOSL::ClosurePlugPtr plug = new GafferOSL::ClosurePlug( parameterName, direction );
-	plug->setFlags( Plug::Dynamic, true );
 
 	PlugAlgo::replacePlug( plugParent, plug );
 

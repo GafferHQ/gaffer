@@ -509,8 +509,8 @@ Shader::Shader( const std::string &name )
 	:	DependencyNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "name" ) );
-	addChild( new StringPlug( "type" ) );
+	addChild( new StringPlug( "name", Gaffer::Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
+	addChild( new StringPlug( "type", Gaffer::Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "attributeSuffix", Gaffer::Plug::In, "" ) );
 	addChild( new Plug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
