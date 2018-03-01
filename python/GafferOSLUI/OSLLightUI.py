@@ -163,7 +163,8 @@ Gaffer.Metadata.registerNode(
 
 def __parameterMetadata( plug, key ) :
 
-	return Gaffer.Metadata.value( plug.node()["__shader"]["parameters"][plug.getName()], key )
+	node = plug.node()
+	return Gaffer.Metadata.value( node["__shader"]["parameters"].descendant( plug.relativeName( node["parameters"] ) ), key )
 
 for key in [
 	"description",
