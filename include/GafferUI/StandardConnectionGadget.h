@@ -91,8 +91,6 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		bool keyPressed( const KeyEvent &event );
 		bool keyReleased( const KeyEvent &event );
 
-		bool nodeSelected( const Nodule *nodule ) const;
-
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 
 		bool updateUserColor();

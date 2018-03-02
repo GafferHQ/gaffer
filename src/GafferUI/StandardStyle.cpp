@@ -687,7 +687,7 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glCallList( connectionDisplayList() );
 }
 
-void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame ) const
+void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame, State state ) const
 {
 
 	glUniform1i( g_isCurveParameter, 1 );
@@ -696,7 +696,7 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 	glUniform1i( g_textureTypeParameter, 0 );
 	glUniform1f( g_lineWidthParameter, 0.2 );
 
-	glColor( getColor( AuxiliaryConnectionColor ) );
+	glColor( colorForState( AuxiliaryConnectionColor, state ) );
 
 	// Get basic properties of a line between the src and dst nodes
 
