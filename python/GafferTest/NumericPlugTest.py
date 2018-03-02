@@ -485,5 +485,22 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		n["op1"].setValue( n["op1"].defaultValue() )
 		self.assertTrue( n["op1"].isSetToDefault() )
 
+	def testSerialiser( self ) :
+
+		p = Gaffer.IntPlug()
+		p.setValue( 10 )
+
+		s = Gaffer.Serialisation.acquireSerialiser( p )
+		# Behind the scenes the serialiser will actually be a
+		# ValuePlugSerialiser, but we haven't exposed that
+		# subclass to Python. Therefore we expect to get an
+		# instance of the base class here.
+		self.assertTrue( type( s ) is Gaffer.Serialisation.Serialiser )
+
+		# When we call a method of the serialiser, we should
+		# still be calling the most-derived override in C++.
+		ss = Gaffer.Serialisation( Gaffer.Node() )
+		self.assertIn( "setValue", s.postConstructor( p, "x", ss ) )
+
 if __name__ == "__main__":
 	unittest.main()

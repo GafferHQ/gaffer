@@ -56,11 +56,11 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 	def testCustomSerialiser( self ) :
 
-		class CustomSerialiser( Gaffer.Serialisation.Serialiser ) :
+		class CustomSerialiser( Gaffer.NodeSerialiser ) :
 
 			def moduleDependencies( self, node, serialisation ) :
 
-				return ( "GafferTest", )
+				return { "GafferTest" } | Gaffer.NodeSerialiser.moduleDependencies( self, node, serialisation )
 
 			def constructor( self, node, serialisation ) :
 
@@ -68,33 +68,35 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 			def postConstructor( self, node, identifier, serialisation ) :
 
-				return identifier + ".postConstructorWasHere = True\n"
+				result = Gaffer.NodeSerialiser.postConstructor( self, node, identifier, serialisation )
+				result += identifier + ".postConstructorWasHere = True\n"
+				return result
 
 			def postHierarchy( self, node, identifier, serialisation ) :
 
-				return identifier + ".postHierarchyWasHere = True\n"
+				result = Gaffer.NodeSerialiser.postHierarchy( self, node, identifier, serialisation )
+				result += identifier + ".postHierarchyWasHere = True\n"
+				return result
 
 			def postScript( self, node, identifier, serialisation ) :
 
-				return identifier + ".postScriptWasHere = True\n"
+				result = Gaffer.NodeSerialiser.postScript( self, node, identifier, serialisation )
+				result += identifier + ".postScriptWasHere = True\n"
+				return result
 
 			def childNeedsSerialisation( self, child, serialisation ) :
 
-				if isinstance( child, Gaffer.Node ) :
-					return child.getName() == "childNodeNeedingSerialisation"
-				elif isinstance( child, Gaffer.Plug ) :
-					return child.getFlags( Gaffer.Plug.Flags.Serialisable )
+				if isinstance( child, Gaffer.Node ) and child.getName() == "childNodeNeedingSerialisation" :
+					return True
 
-				return False
+				return Gaffer.NodeSerialiser.childNeedsSerialisation( self, child, serialisation )
 
 			def childNeedsConstruction( self, child, serialisation ) :
 
 				if isinstance( child, Gaffer.Node ) :
 					return False
-				elif isinstance( child, Gaffer.Plug ) :
-					return child.getFlags( Gaffer.Plug.Flags.Dynamic )
 
-				return False
+				return Gaffer.NodeSerialiser.childNeedsConstruction( self, child, serialisation )
 
 		customSerialiser = CustomSerialiser()
 		Gaffer.Serialisation.registerSerialiser( self.SerialisationTestNode, customSerialiser )
