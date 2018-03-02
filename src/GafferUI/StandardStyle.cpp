@@ -414,7 +414,7 @@ IECoreGL::StatePtr disabledState()
 
 // - p is connection destination ( guaranteed to be contained within the frame)
 // - v is the normalized direction of the connection ( towards the source )
-V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, const V3f &v )
+V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, const V3f &v, float maxT, bool &showArrow )
 {
 	const float offset = 1.0;
 
@@ -439,6 +439,7 @@ V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, c
 	}
 
 	const float t = min( xT, yT );
+	showArrow = t < maxT;
 	return p + v * t;
 }
 
@@ -701,8 +702,8 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 
 	V3f p0( srcNodeFrame.center().x, srcNodeFrame.center().y, 0 );
 	V3f p1( dstNodeFrame.center().x, dstNodeFrame.center().y, 0 );
-
-	const V3f direction = ( p1 - p0 ).normalized();
+	const V3f difference = p1 - p0;
+	const V3f direction = difference.normalized();
 	const V3f normal( direction.y, -direction.x, 0 );
 
 	// Offset the line slightly to one side. This separates connections
@@ -722,7 +723,13 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 
 	// Draw a little arrow to indicate connection direction.
 
-	const V3f tip = auxiliaryConnectionArrowPosition( dstNodeFrame, p1, -direction );
+	bool showArrow;
+	const V3f tip = auxiliaryConnectionArrowPosition( dstNodeFrame, p1, -direction, difference.length() - 2.0, showArrow );
+
+	if( !showArrow )
+	{
+		return;
+	}
 
 	const V3f leftDir = -direction + normal * 0.5f;
 	const V3f rightDir = -direction - normal * 0.5f;
