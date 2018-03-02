@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,71 +34,95 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import IECore
 
-from _GafferImageUI import *
+import imath
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+import Gaffer
+import GafferImage
 
-import ImageReaderPathPreview
+## A function suitable as the postCreator in a NodeMenu.append() call. It
+# sets the ramp position for the node to cover the entire format.
+def postCreate( node, menu ) :
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import CheckerboardUI
-import RampUI
-import ImageSwitchUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import DeleteImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import RankFilterUI
-import ErodeUI
-import DilateUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
-import CatalogueSelectUI
+	format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	displayWindow = format.getDisplayWindow()
+
+	node["startPosition"].setValue( imath.V2f( 0, displayWindow.size().y * .5 ) )
+	node["endPosition"].setValue( imath.V2f( displayWindow.size().x, displayWindow.size().y * .5 ) )
+
+Gaffer.Metadata.registerNode(
+
+	GafferImage.Ramp,
+
+	"description",
+	"""
+	Outputs an image of a color gradient interpolated using the ramp plug.
+	""",
+
+	plugs = {
+
+		"format" : [
+
+			"description",
+			"""
+			The resolution and aspect ratio of the image.
+			""",
+
+		],
+
+		"ramp" : [
+
+			"description",
+			"""
+			The gradient of colour used to draw the ramp.
+			""",
+
+		],
+
+		"startPosition" : [
+
+			"description",
+			"""
+			2d position for the start of the ramp color interpolation.
+			""",
+
+		],
+
+		"endPosition" : [
+
+			"description",
+			"""
+			2d position for the end of the ramp color interpolation.
+			""",
+
+		],
+
+		"layer" : [
+
+			"description",
+			"""
+			The layer to generate. The output channels will
+			be named ( layer.R, layer.G, layer.B and layer.A ).
+			"""
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			A transformation applied to the entire ramp.
+			The translate and pivot values are specified in pixels,
+			and the rotate value is specified in degrees.
+			""",
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Transform",
+
+		],
+
+	}
+
+)

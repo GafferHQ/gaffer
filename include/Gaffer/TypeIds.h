@@ -99,7 +99,7 @@ enum TypeId
 	AtomicCompoundDataPlugTypeId = 110052,
 	BoxTypeId = 110053,
 	InternedStringVectorDataPlugTypeId = 110054,
-	ExecutableNodeTypeId = 110055, // obsolete - available for reuse
+	SplinefColor4fPlugTypeId = 110055,
 	ExecutableOpHolderTypeId = 110056, // obsolete - available for reuse
 	DispatcherTypeId = 110057, // obsolete - available for reuse
 	Transform2DPlugTypeId = 110058,
