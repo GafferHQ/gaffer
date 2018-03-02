@@ -43,6 +43,7 @@
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImage/OpenImageIOReader.h"
+#include "GafferImage/Ramp.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -120,6 +121,7 @@ void GafferImageModule::bindIO()
 	DependencyNodeClass<ObjectToImage>();
 	DependencyNodeClass<Constant>();
 	DependencyNodeClass<Checkerboard>();
+	DependencyNodeClass<Ramp>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<OpenImageIOReader>()
