@@ -59,7 +59,7 @@ using namespace GafferScene;
 namespace
 {
 
-typedef std::pair<std::string, DisplayPtr> NamedOutput;
+typedef std::pair<std::string, OutputPtr> NamedOutput;
 typedef multi_index::multi_index_container<
 	NamedOutput,
 	multi_index::indexed_by<
@@ -118,7 +118,7 @@ Gaffer::ValuePlug *Outputs::addOutput( const std::string &name )
 	return addOutput( it->first, it->second.get() );
 }
 
-Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECoreScene::Display *output )
+Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECoreScene::Output *output )
 {
 	ValuePlugPtr outputPlug = new ValuePlug( "output1" );
 	outputPlug->setFlags( Plug::Dynamic, true );
@@ -149,7 +149,7 @@ Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECoreScen
 
 	CompoundDataPlugPtr parametersPlug = new CompoundDataPlug( "parameters" );
 	parametersPlug->setFlags( Plug::Dynamic, true );
-	parametersPlug->addMembers( const_cast<Display *>( output )->parametersData(), /* useNameAsPlugName = */ true );
+	parametersPlug->addMembers( const_cast<Output *>( output )->parametersData(), /* useNameAsPlugName = */ true );
 	outputPlug->addChild( parametersPlug );
 
 	outputsPlug()->addChild( outputPlug );
@@ -203,7 +203,7 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 			const std::string data = outputPlug->getChild<StringPlug>( "data" )->getValue();
 			if( name.size() && fileName.size() && type.size() && data.size() )
 			{
-				DisplayPtr d = new Display( fileName, type, data );
+				OutputPtr d = new Output( fileName, type, data );
 				outputPlug->getChild<CompoundDataPlug>( "parameters" )->fillCompoundData( d->parameters() );
 				result->members()["output:" + name] = d;
 			}
@@ -213,7 +213,7 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 	return result;
 }
 
-void Outputs::registerOutput( const std::string &name, const IECoreScene::Display *output )
+void Outputs::registerOutput( const std::string &name, const IECoreScene::Output *output )
 {
 	NamedOutput d( name, output->copy() );
 

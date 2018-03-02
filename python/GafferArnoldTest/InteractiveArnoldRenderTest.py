@@ -61,7 +61,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -114,7 +114,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["outputs"] = GafferScene.Outputs()
 		script["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",

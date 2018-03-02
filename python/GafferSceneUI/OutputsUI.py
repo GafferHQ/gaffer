@@ -167,7 +167,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if len( registeredOutputs ) :
 			m.append( "/BlankDivider", { "divider" : True } )
 
-		m.append( "/Blank", { "command" : functools.partial( node.addOutput, "", IECoreScene.Display( "", "", "" ) ) } )
+		m.append( "/Blank", { "command" : functools.partial( node.addOutput, "", IECoreScene.Output( "", "", "" ) ) } )
 
 		return m
 

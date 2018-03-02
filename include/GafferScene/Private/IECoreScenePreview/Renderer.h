@@ -38,7 +38,7 @@
 #define IECORESCENEPREVIEW_RENDERER_H
 
 #include "IECoreScene/Camera.h"
-#include "IECoreScene/Display.h"
+#include "IECoreScene/Output.h"
 
 #include "IECore/CompoundObject.h"
 
@@ -93,9 +93,6 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// Filename is only used if the renderType is SceneDescription.
 		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "" );
 
-		/// \todo Rename Display->Output in Cortex.
-		typedef IECoreScene::Display Output;
-
 		/// Sets a global option for the render. In interactive renders an option may
 		/// be unset by passing a null value.
 		///
@@ -108,7 +105,7 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		virtual void option( const IECore::InternedString &name, const IECore::Object *value ) = 0;
 		/// Adds an output image to be rendered, In interactive renders an output may be
 		/// removed by passing nullptr as the value.
-		virtual void output( const IECore::InternedString &name, const Output *output ) = 0;
+		virtual void output( const IECore::InternedString &name, const IECoreScene::Output *output ) = 0;
 
 		IE_CORE_FORWARDDECLARE( AttributesInterface );
 

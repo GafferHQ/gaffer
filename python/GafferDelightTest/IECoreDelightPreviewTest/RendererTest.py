@@ -75,7 +75,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				self.temporaryDirectory() + "/beauty.exr",
 				"exr",
 				"rgba",
@@ -140,7 +140,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			r.output(
 				"test",
-				IECoreScene.Display(
+				IECoreScene.Output(
 					"beauty.exr",
 					"exr",
 					data,

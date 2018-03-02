@@ -91,7 +91,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				self.temporaryDirectory() + "/test.exr",
 				"exr",
 				"rgba",
@@ -146,7 +146,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				self.temporaryDirectory() + "/test.####.exr",
 				"exr",
 				"rgba",
@@ -199,7 +199,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		s["outputs"].addOutput(
 			"beauty",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"$renderDirectory/test.####.exr",
 				"exr",
 				"rgba",

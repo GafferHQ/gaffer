@@ -182,7 +182,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		r.output(
 			"test",
-			IECoreScene.Display(
+			IECoreScene.Output(
 				"test",
 				"ieDisplay",
 				"rgba",
