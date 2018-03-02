@@ -42,6 +42,7 @@
 #include "GafferBindings/Serialisation.h"
 
 #include "IECorePython/RefCountedBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
@@ -73,14 +74,21 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "moduleDependencies" );
-				if( f )
+				try
 				{
-					boost::python::object mo = f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), serialisation );
-					std::vector<std::string> mv;
-					boost::python::container_utils::extend_container( mv, mo );
-					modules.insert( mv.begin(), mv.end() );
-					return;
+					boost::python::object f = this->methodOverride( "moduleDependencies" );
+					if( f )
+					{
+						boost::python::object mo = f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), serialisation );
+						std::vector<std::string> mv;
+						boost::python::container_utils::extend_container( mv, mo );
+						modules.insert( mv.begin(), mv.end() );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::moduleDependencies( graphComponent, modules, serialisation );
@@ -91,12 +99,19 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "constructor" );
-				if( f )
+				try
 				{
-					return boost::python::extract<std::string>(
-						f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), serialisation )
-					);
+					boost::python::object f = this->methodOverride( "constructor" );
+					if( f )
+					{
+						return boost::python::extract<std::string>(
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), serialisation )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::constructor( graphComponent, serialisation );
@@ -107,12 +122,19 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "postConstructor" );
-				if( f )
+				try
 				{
-					return boost::python::extract<std::string>(
-						f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
-					);
+					boost::python::object f = this->methodOverride( "postConstructor" );
+					if( f )
+					{
+						return boost::python::extract<std::string>(
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::postConstructor( graphComponent, identifier, serialisation );
@@ -123,12 +145,19 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "postHierarchy" );
-				if( f )
+				try
 				{
-					return boost::python::extract<std::string>(
-						f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
-					);
+					boost::python::object f = this->methodOverride( "postHierarchy" );
+					if( f )
+					{
+						return boost::python::extract<std::string>(
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::postHierarchy( graphComponent, identifier, serialisation );
@@ -139,12 +168,19 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "postScript" );
-				if( f )
+				try
 				{
-					return boost::python::extract<std::string>(
-						f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
-					);
+					boost::python::object f = this->methodOverride( "postScript" );
+					if( f )
+					{
+						return boost::python::extract<std::string>(
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::postScript( graphComponent, identifier, serialisation );
@@ -155,10 +191,17 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "childNeedsSerialisation" );
-				if( f )
+				try
 				{
-					return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), serialisation );
+					boost::python::object f = this->methodOverride( "childNeedsSerialisation" );
+					if( f )
+					{
+						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), serialisation );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::childNeedsSerialisation( child, serialisation );
@@ -169,10 +212,17 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "childNeedsConstruction" );
-				if( f )
+				try
 				{
-					return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), serialisation );
+					boost::python::object f = this->methodOverride( "childNeedsConstruction" );
+					if( f )
+					{
+						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), serialisation );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::childNeedsConstruction( child, serialisation );
