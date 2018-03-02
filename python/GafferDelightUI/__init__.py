@@ -39,4 +39,4 @@ import DelightOptionsUI
 import DelightRenderUI
 import InteractiveDelightRenderUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDelightUI" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDelightUI" )

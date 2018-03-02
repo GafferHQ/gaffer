@@ -46,4 +46,4 @@ from TaskContextVariables import TaskContextVariables
 from TaskSwitch import TaskSwitch
 from PythonCommand import PythonCommand
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDispatch" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatch" )

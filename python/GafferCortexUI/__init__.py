@@ -68,4 +68,4 @@ import ObjectWriterUI
 import OpHolderUI
 import ExecutableOpHolderUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCortexUI" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferCortexUI" )

@@ -36,4 +36,4 @@
 
 from TractorDispatcher import TractorDispatcher
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferTractor" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferTractor" )

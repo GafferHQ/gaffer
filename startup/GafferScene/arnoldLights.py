@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import math
+import imath
+
 import Gaffer
 
 Gaffer.Metadata.registerValue( "ai:light:spot_light", "type", "spot" )

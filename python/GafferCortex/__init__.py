@@ -48,4 +48,4 @@ from ClassVectorParameterHandler import ClassVectorParameterHandler
 from ParameterPath import ParameterPath
 from OpMatcher import OpMatcher
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCortex" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferCortex" )

@@ -34,4 +34,6 @@
 #
 ##########################################################################
 
+import Gaffer
+
 Gaffer.UndoContext = Gaffer.UndoScope

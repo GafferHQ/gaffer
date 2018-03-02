@@ -40,4 +40,4 @@ from _GafferAppleseed import *
 
 from AppleseedShaderBall import AppleseedShaderBall
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseed" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferAppleseed" )

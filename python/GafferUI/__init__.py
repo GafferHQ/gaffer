@@ -309,4 +309,4 @@ import BoxOutUI
 ## \todo Remove me
 Metadata = __import__( "Gaffer" ).Metadata
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferUI" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferUI" )
