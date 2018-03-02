@@ -1,3 +1,74 @@
+0.45.0.0
+========
+
+Features
+--------
+
+- Added Ramp image node (#2470).
+- Added SplinefColor4fPlug type (#2470).
+- Added system to backup all open scripts at frequent intervals.
+  This is controlled via the Preferences dialogue (#2469).
+
+Improvements
+------------
+
+- Viewer : Improved performance significantly when selecting large numbers of
+  objects (#2450).
+- SceneHierarchy (#2450) :
+  - Improved performance significantly when selecting or expanding large numbers
+    of objects.
+  - Multiple selections made in the Viewer are now highlighted properly in the
+    SceneHierarchy (#76).
+- Significantly reduced file sizes and load times for scripts
+  containing many shader and/or light nodes (#2455).
+- NodeGraph
+  - Improved representation of Expression, Animation and Random nodes (#2458).
+  - Improved highlighting behaviour for connections to selected nodes (#2473).
+- ScriptNode : The current frame is now saved with the script and restored on
+  loading (#2468).
+- ArnoldAttributes : Added attributes to control volume motion blur (#2433).
+- Stats/Execute apps : By default the current frame stored in the script is
+  executed, rather than frame 1 as before. Use the `-frames` commandline argument
+  to specify a specific range of frames to execute (#2468).
+- CompoundDataPlugValueWidget : Added array types to plug creation menu (#2433).
+
+Fixes
+-----
+
+- Browser : Fixed bug caused by missing import (#2449).
+- OpenColorIO : Added workaround for OpenColorIO bug whereby config parsing would
+  fail for non-English locales (#1654, #2460).
+- Python wrappers : Fixed exception translation (#2459).
+- BoxIn : Plug values are now preserved when promoting an input plug (#2461).
+- Tractor Dispatcher : Fixed accumulation of tractor plugs on TaskNodes (#2463).
+- GraphComponent : Fixed bug which could prevent multiple scripts from being
+  loaded in parallel (#2464).
+- GraphComponentPath : Fixed bug whereby children did not inherit the filter
+  from their parent (#2465).
+- OSLLight : Fixed metadata for child plugs of parameters (#2474).
+- Shader : Fixed serialisation bugs introduced in version 0.43 (#2454, #2455).
+- Spline UI : Prevented creation of multiple editing dialogues for the same
+  plug (#2472).
+- Added backwards compatibility for scripts referencing the old
+  `GafferScene.PathMatcher`, `GafferScene.PathMatcherData` and
+  `GafferScene.PathMatcherDataPlug` types (#2457).
+
+API
+---
+
+- PathListingWidget : Added faster expansion and selection methods using
+  `IECore.PathMatcher()` to store sets of paths (#2450).
+- AuxiliaryNodeGadget : Added new class to represent nodes like Expression and
+  Animation in the NodeGraph (#2458).
+- Style : Added `state` argument to `renderAuxiliaryConnection()` (#2473).
+- Added GafferUI.Backups class (#2469).
+
+Breaking Changes
+----------------
+
+- Stats app : Replaced `-frame` parameter with `-frames` (#2468).
+- Style : Changed signature for `renderAuxiliaryConnection()` method (#2473).
+
 0.44.0.0
 ========
 
