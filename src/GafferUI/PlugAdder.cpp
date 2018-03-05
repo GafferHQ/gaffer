@@ -278,17 +278,12 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 
 	setHighlighted( true );
 
-	V3f center = V3f( 0.0f ) * fullTransform();
-	center = center * event.sourceGadget->fullTransform().inverse();
-	const V3f tangent = edgeTangent( m_edge );
-
-	if( Nodule *sourceNodule = runTimeCast<Nodule>( event.sourceGadget.get() ) )
+	if( auto connectionCreator = runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
-		sourceNodule->updateDragEndPoint( center, tangent );
-	}
-	else if( ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
-	{
-		connectionGadget->updateDragEndPoint( center, tangent );
+		V3f center = V3f( 0.0f ) * fullTransform();
+		center = center * connectionCreator->fullTransform().inverse();
+		const V3f tangent = edgeTangent( m_edge );
+		connectionCreator->updateDragEndPoint( center, tangent );
 	}
 
 	return true;
