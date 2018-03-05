@@ -251,17 +251,12 @@ bool DotNodeGadget::dragEnter( const DragDropEvent &event )
 		return false;
 	}
 
-	V3f tangent = -nodeGadget->noduleTangent( nodule );
-	V3f position = ( tangent * bound().size().x / 2.0f ) * fullTransform();
-	position = position * event.sourceGadget->fullTransform().inverse();
-
-	if( Nodule *sourceNodule = runTimeCast<Nodule>( event.sourceGadget.get() ) )
+	if( auto connectionCreator = runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
-		sourceNodule->updateDragEndPoint( position, tangent );
-	}
-	else if( ConnectionGadget *sourceConnection = runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
-	{
-		sourceConnection->updateDragEndPoint( position, tangent );
+		V3f tangent = -nodeGadget->noduleTangent( nodule );
+		V3f position = ( tangent * bound().size().x / 2.0f ) * fullTransform();
+		position = position * connectionCreator->fullTransform().inverse();
+		connectionCreator->updateDragEndPoint( position, tangent );
 	}
 
 	return true;
