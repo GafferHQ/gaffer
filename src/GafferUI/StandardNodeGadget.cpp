@@ -665,6 +665,7 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( plug )
 	{
+		UndoScope undoScope( node()->scriptNode() );
 		m_dragDestinationProxy->createConnection( plug.get() );
 	}
 	else

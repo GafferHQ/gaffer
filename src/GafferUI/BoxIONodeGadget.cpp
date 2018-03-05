@@ -86,8 +86,6 @@ class BoxIOPlugAdder : public PlugAdder
 
 		void createConnection( Plug *endpoint ) override
 		{
-			UndoScope undoScope( m_boxIO->ancestor<ScriptNode>() );
-
 			std::string name = endpoint->relativeName( endpoint->node() );
 			boost::replace_all( name, ".", "_" );
 			m_boxIO->namePlug()->setValue( name );

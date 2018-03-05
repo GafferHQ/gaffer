@@ -44,6 +44,8 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/UndoScope.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/Texture.h"
@@ -308,6 +310,7 @@ bool PlugAdder::drop( const DragDropEvent &event )
 
 	if( Plug *plug = runTimeCast<Plug>( event.data.get() ) )
 	{
+		UndoScope undoScope( plug->ancestor<ScriptNode>() );
 		createConnection( plug );
 		return true;
 	}
