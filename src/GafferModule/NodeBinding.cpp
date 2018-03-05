@@ -42,6 +42,7 @@
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/SerialisationBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/MetadataBinding.h"
 
@@ -128,6 +129,9 @@ void GafferModule::bindNode()
 	}
 
 	Serialisation::registerSerialiser( Node::staticTypeId(), new NodeSerialiser() );
+
+	typedef SerialiserWrapper<NodeSerialiser> NodeSerialiserWrapper;
+	SerialiserClass<NodeSerialiser, Serialisation::Serialiser, NodeSerialiserWrapper>( "NodeSerialiser" );
 
 	typedef DependencyNodeWrapper<DependencyNode> DependencyNodeWrapper;
 	DependencyNodeClass<DependencyNode, DependencyNodeWrapper>();

@@ -132,6 +132,8 @@ class GAFFERBINDINGS_API NodeSerialiser : public Serialisation::Serialiser
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( NodeSerialiser )
+
 		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override;
 		/// Implemented to serialise per-instance metadata.
 		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;

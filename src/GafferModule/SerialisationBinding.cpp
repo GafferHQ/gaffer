@@ -42,6 +42,7 @@
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/MetadataBinding.h"
 #include "GafferBindings/Serialisation.h"
+#include "GafferBindings/SerialisationBinding.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
@@ -62,144 +63,9 @@ using namespace boost::python;
 namespace
 {
 
-class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::Serialiser>
-{
-
-	public :
-
-		SerialiserWrapper( PyObject *self )
-			:	IECorePython::RefCountedWrapper<Serialisation::Serialiser>( self )
-		{
-		}
-
-		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "moduleDependencies" );
-				if( f )
-				{
-					object mo = f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), serialisation );
-					std::vector<std::string> mv;
-					container_utils::extend_container( mv, mo );
-					modules.insert( mv.begin(), mv.end() );
-					return;
-				}
-			}
-			Serialiser::moduleDependencies( graphComponent, modules, serialisation );
-		}
-
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "constructor" );
-				if( f )
-				{
-					return boost::python::extract<std::string>(
-						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), serialisation )
-					);
-				}
-			}
-			return Serialiser::constructor( graphComponent, serialisation );
-		}
-
-		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "postConstructor" );
-				if( f )
-				{
-					return boost::python::extract<std::string>(
-						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation )
-					);
-				}
-			}
-			return Serialiser::postConstructor( graphComponent, identifier, serialisation );
-		}
-
-		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "postHierarchy" );
-				if( f )
-				{
-					return boost::python::extract<std::string>(
-						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation )
-					);
-				}
-			}
-			return Serialiser::postHierarchy( graphComponent, identifier, serialisation );
-		}
-
-		std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "postScript" );
-				if( f )
-				{
-					return boost::python::extract<std::string>(
-						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation )
-					);
-				}
-			}
-			return Serialiser::postScript( graphComponent, identifier, serialisation );
-		}
-
-		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "childNeedsSerialisation" );
-				if( f )
-				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ), serialisation );
-				}
-			}
-			return Serialiser::childNeedsSerialisation( child, serialisation );
-		}
-
-		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "childNeedsConstruction" );
-				if( f )
-				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ), serialisation );
-				}
-			}
-			return Serialiser::childNeedsConstruction( child, serialisation );
-		}
-
-};
-
 GraphComponentPtr parent( const Serialisation &serialisation )
 {
 	return const_cast<GraphComponent *>( serialisation.parent() );
-}
-
-object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation )
-{
-	std::set<std::string> modules;
-	serialiser.moduleDependencies( graphComponent, modules, serialisation );
-	boost::python::list modulesList;
-	for( std::set<std::string>::const_iterator it = modules.begin(); it != modules.end(); ++it )
-	{
-		modulesList.append( *it );
-	}
-	PyObject *modulesSet = PySet_New( modulesList.ptr() );
-	return object( handle<>( modulesSet ) );
 }
 
 } // namespace
@@ -231,15 +97,6 @@ void GafferModule::bindSerialisation()
 		.staticmethod( "acquireSerialiser" )
 	;
 
-	IECorePython::RefCountedClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapper>( "Serialiser" )
-		.def( init<>() )
-		.def( "moduleDependencies", &moduleDependencies )
-		.def( "constructor", &Serialisation::Serialiser::constructor )
-		.def( "postConstructor", &Serialisation::Serialiser::postConstructor )
-		.def( "postHierarchy", &Serialisation::Serialiser::postHierarchy )
-		.def( "postScript", &Serialisation::Serialiser::postScript )
-		.def( "childNeedsSerialisation", &Serialisation::Serialiser::childNeedsSerialisation )
-		.def( "childNeedsConstruction", &Serialisation::Serialiser::childNeedsConstruction )
-	;
+	SerialiserClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapper<Serialisation::Serialiser>>( "Serialiser" );
 
 }
