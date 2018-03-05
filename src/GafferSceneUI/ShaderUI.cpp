@@ -63,8 +63,8 @@ class ShaderPlugAdder : public PlugAdder
 
 	public :
 
-		ShaderPlugAdder( ShaderPtr shader, StandardNodeGadget::Edge edge )
-			: PlugAdder( edge ), m_shader( shader )
+		ShaderPlugAdder( ShaderPtr shader )
+			:	m_shader( shader )
 		{
 			shader->parametersPlug()->childAddedSignal().connect( boost::bind( &ShaderPlugAdder::childAdded, this ) );
 			shader->parametersPlug()->childRemovedSignal().connect( boost::bind( &ShaderPlugAdder::childRemoved, this ) );
@@ -197,7 +197,7 @@ struct Registration
 				throw IECore::Exception( "ShaderPlugAdder requires a Shader" );
 			}
 
-			return new ShaderPlugAdder( shader, StandardNodeGadget::TopEdge );
+			return new ShaderPlugAdder( shader );
 		}
 
 };

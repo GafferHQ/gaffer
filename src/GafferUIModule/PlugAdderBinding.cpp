@@ -101,7 +101,7 @@ struct PlugMenuSlotCaller
 void GafferUIModule::bindPlugAdder()
 {
 	scope s = ConnectionCreatorClass<PlugAdder, ConnectionCreatorWrapper<PlugAdder>>( "PlugAdder" )
-		.def( init<StandardNodeGadget::Edge>() )
+		.def( init<>() )
 		.def( "plugMenuSignal", &PlugAdder::plugMenuSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugMenuSignal" )
 	;

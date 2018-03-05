@@ -50,7 +50,7 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugAdder, PlugAdderTypeId, ConnectionCreator );
 
-		PlugAdder( StandardNodeGadget::Edge edge );
+		PlugAdder();
 		~PlugAdder() override;
 
 		Imath::Box3f bound() const override;
@@ -81,8 +81,6 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 		bool dragLeave( const DragDropEvent &event );
 		bool drop( const DragDropEvent &event );
 		bool dragEnd( const DragDropEvent &event );
-
-		StandardNodeGadget::Edge m_edge;
 
 		bool m_dragging;
 		Imath::V3f m_dragPosition;

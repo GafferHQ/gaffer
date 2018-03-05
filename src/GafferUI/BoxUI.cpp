@@ -58,8 +58,8 @@ class BoxPlugAdder : public PlugAdder
 
 	public :
 
-		BoxPlugAdder( BoxPtr box, StandardNodeGadget::Edge edge )
-			:	PlugAdder( edge ), m_box( box )
+		BoxPlugAdder( BoxPtr box )
+			:	m_box( box )
 		{
 		}
 
@@ -119,19 +119,16 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder.Top", boost::bind( &create, ::_1, StandardNodeGadget::TopEdge ) );
-		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder.Bottom", boost::bind( &create, ::_1, StandardNodeGadget::BottomEdge ) );
-		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder.Left", boost::bind( &create, ::_1, StandardNodeGadget::LeftEdge ) );
-		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder.Right", boost::bind( &create, ::_1, StandardNodeGadget::RightEdge ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder", boost::bind( &create, ::_1 ) );
 	}
 
 	private :
 
-		static GadgetPtr create( GraphComponentPtr parent, StandardNodeGadget::Edge edge )
+		static GadgetPtr create( GraphComponentPtr parent )
 		{
 			if( BoxPtr box = runTimeCast<Box>( parent ) )
 			{
-				return new BoxPlugAdder( box, edge );
+				return new BoxPlugAdder( box );
 			}
 			throw IECore::Exception( "Expected a Box" );
 		}
