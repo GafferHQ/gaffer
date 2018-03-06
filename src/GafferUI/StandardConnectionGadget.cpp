@@ -188,22 +188,44 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState && srcNodule() && dstNodule() )
+	const Gadget *srcNodeGadget;
+	if( !srcNodule() )
 	{
-		const Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+		const Plug *srcPlug = dstNodule()->plug()->getInput();
+		const GraphGadget *graphGadget = parent<GafferUI::GraphGadget>();
+		srcNodeGadget = graphGadget->nodeGadget( srcPlug->node() );
+	}
+
+	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
+
+	if( state != Style::HighlightedState)
+	{
+		if( srcNodule() )
+		{
+			srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+		}
 		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
 		{
 			state = Style::HighlightedState;
 		}
-		else
+	}
+
+	if( state != Style::HighlightedState && dstNodule())
+	{
+		const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
+		if( dstNodeGadget && dstNodeGadget->getHighlighted() )
 		{
-			const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
-			if( dstNodeGadget && dstNodeGadget->getHighlighted() )
-			{
-				state = Style::HighlightedState;
-			}
+			state = Style::HighlightedState;
 		}
+	}
+
+	// If we're missing the srcNodule, the source node is either hidden or we're
+	// dealing with an AuxiliaryConnection.
+	if( !srcNodule() && srcNodeGadget )
+	{
+		Box3f b = srcNodeGadget->transformedBound();
+		style->renderAuxiliaryConnection( V2f( b.center().x, b.center().y ), V2f( m_srcTangent.x, m_srcTangent.y ), V2f( m_dstPos.x, m_dstPos.y ), V2f( m_dstTangent.x, m_dstTangent.y ), state );
+		return;
 	}
 
 	V3f adjustedSrcPos = m_srcPos;
@@ -286,7 +308,11 @@ Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegme
 	const float length = ( m_srcPos - m_dstPos ).length();
 	const float threshold = clamp( length / 4.0f, 2.5f, 25.0f );
 
-	float dSrc = line.distanceTo( m_srcPos );
+	float dSrc = numeric_limits<float>::max();
+	if( srcNodule() )
+	{
+		line.distanceTo( m_srcPos );
+	}
 	float dDst = line.distanceTo( m_dstPos );
 
 	if( min( dSrc, dDst ) >= threshold )
@@ -478,7 +504,7 @@ void StandardConnectionGadget::updateDotPreviewLocation( const ButtonEvent &even
 
 bool StandardConnectionGadget::keyPressed( const KeyEvent &event )
 {
-	if( event.modifiers & ButtonEvent::Control )
+	if( event.modifiers & ButtonEvent::Control && srcNodule() && dstNodule() )
 	{
 		m_dotPreview = true;
 		requestRender();
@@ -501,7 +527,7 @@ bool StandardConnectionGadget::keyReleased( const KeyEvent &event )
 
 void StandardConnectionGadget::enter( const ButtonEvent &event )
 {
-	if( event.modifiers & ButtonEvent::Control )
+	if( event.modifiers & ButtonEvent::Control && srcNodule() && dstNodule() )
 	{
 		m_dotPreview = true;
 	}
