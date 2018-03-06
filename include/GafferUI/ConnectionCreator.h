@@ -76,6 +76,9 @@ class GAFFERUI_API ConnectionCreator : public Gadget
 
 IE_CORE_DECLAREPTR( ConnectionCreator )
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ConnectionCreator>> ConnectionCreatorIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ConnectionCreator>> RecursiveConnectionCreatorIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_CONNECTIONCREATOR_H
