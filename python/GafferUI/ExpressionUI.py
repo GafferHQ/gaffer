@@ -265,10 +265,11 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 	def __update( self ) :
 
-		expression = self.__node.getExpression()
+		expression, language = self.__node.getExpression()
 
-		self.__textWidget.setText( expression[0] )
-		self.__languageMenu.setText( IECore.CamelCase.toSpaced( expression[1] ) )
+		self.__textWidget.setText( expression )
+		self.__textWidget.setEnabled( bool( language ) )
+		self.__languageMenu.setText( IECore.CamelCase.toSpaced( language ) if language else "Choose..." )
 
 		self.__messageWidget.clear()
 		self.__messageWidget.setVisible( False )
