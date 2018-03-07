@@ -1927,7 +1927,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.option( "ai:aov_shader:test", IECore.ObjectVector( [
 			IECore.Shader( "float_to_rgb", "ai:shader", { "__handle":IECore.StringData( "rgbSource" ) } ),
-			IECore.Shader( "aov_write_rgb", "ai:shader", { "aov_input":IECore.StringData( "link:rgbSource.out" ) } ),
+			IECore.Shader( "aov_write_rgb", "ai:shader", { "aov_input":IECore.StringData( "link:rgbSource" ) } ),
 		] ) )
 
 		self.assertEqual( self.__aovShaders().keys(), [ "aov_write_rgb" ] )
