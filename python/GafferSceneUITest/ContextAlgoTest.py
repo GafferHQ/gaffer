@@ -197,5 +197,39 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		self.assertFalse( GafferSceneUI.ContextAlgo.affectsSelectedPaths( "frame" ) )
 
+	def testSelectionIsCopied( self ) :
+
+		c = Gaffer.Context()
+
+		s = IECore.PathMatcher( [ "/a" ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( c, s )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( c ), s )
+
+		s.addPath( "/a/b" )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( c ), s )
+
+		s = GafferSceneUI.ContextAlgo.getSelectedPaths( c )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( c ), s )
+
+		s.addPath( "/a/b" )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( c ), s )
+
+	def testExpansionIsCopied( self ) :
+
+		c = Gaffer.Context()
+
+		e = IECore.PathMatcher( [ "/a" ] )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( c, e )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), e )
+
+		e.addPath( "/a/b" )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), e )
+
+		e = GafferSceneUI.ContextAlgo.getExpandedPaths( c )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), e )
+
+		e.addPath( "/a/b" )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), e )
+
 if __name__ == "__main__":
 	unittest.main()
