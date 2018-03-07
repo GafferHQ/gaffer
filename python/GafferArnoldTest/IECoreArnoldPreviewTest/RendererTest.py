@@ -1366,6 +1366,71 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 
+	def testOSLMultipleOutputs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		network = IECore.ObjectVector( [
+			IECoreScene.Shader(
+				"Utility/SplitColor",
+				"osl:shader",
+				{
+					"c" : imath.Color3f( 0.1, 0.2, 0.3 ),
+					"__handle" : "splitHandle"
+				}
+			),
+			IECoreScene.Shader(
+				"Utility/BuildColor",
+				"osl:shader",
+				{
+					"r" : "link:splitHandle.r",
+					"g" : "link:splitHandle.g",
+					"b" : "link:splitHandle.b",
+				}
+			)
+		] )
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "ai:surface" : network } ) )
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			n = arnold.AiNodeLookUpByName( "testPlane" )
+
+			build = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( build ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( build, "shadername" ), "Utility/BuildColor" )
+
+			splitR = arnold.AiNodeGetLink( build, "param_r" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splitR ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( splitR, "output" ), "r" )
+			self.assertEqual( arnold.AiNodeGetStr( splitR, "shadername" ), "Utility/SplitColor" )
+			self.assertEqual( arnold.AiNodeGetRGB( splitR, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+
+			splitG = arnold.AiNodeGetLink( build, "param_g" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splitG ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( splitG, "output" ), "g" )
+			self.assertEqual( arnold.AiNodeGetStr( splitG, "shadername" ), "Utility/SplitColor" )
+			self.assertEqual( arnold.AiNodeGetRGB( splitG, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+
+			splitB = arnold.AiNodeGetLink( build, "param_b" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splitB ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( splitB, "output" ), "b" )
+			self.assertEqual( arnold.AiNodeGetStr( splitB, "shadername" ), "Utility/SplitColor" )
+			self.assertEqual( arnold.AiNodeGetRGB( splitB, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+
+
 	def testTraceSets( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
