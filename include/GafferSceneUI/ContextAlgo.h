@@ -87,6 +87,11 @@ namespace ContextAlgo
 GAFFERSCENEUI_API void setExpandedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
 GAFFERSCENEUI_API IECore::PathMatcher getExpandedPaths( const Gaffer::Context *context );
 
+/// Returns true if the named context variable affects the result of `getExpandedPaths()`.
+/// This can be used from `Context::changedSignal()` to determine if the expansion has been
+/// changed.
+GAFFERSCENEUI_API bool affectsExpandedPaths( const IECore::InternedString &name );
+
 /// Appends paths to the current expansion, optionally adding all ancestor paths too.
 GAFFERSCENEUI_API void expand( Gaffer::Context *context, const IECore::PathMatcher &paths, bool expandAncestors = true );
 
@@ -106,6 +111,11 @@ GAFFERSCENEUI_API void clearExpansion( Gaffer::Context *context );
 
 GAFFERSCENEUI_API void setSelectedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
 GAFFERSCENEUI_API IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context );
+
+/// Returns true if the named context variable affects the result of `getSelectedPaths()`.
+/// This can be used from `Context::changedSignal()` to determine if the selection has been
+/// changed.
+GAFFERSCENEUI_API bool affectsSelectedPaths( const IECore::InternedString &name );
 
 } // namespace ContextAlgo
 

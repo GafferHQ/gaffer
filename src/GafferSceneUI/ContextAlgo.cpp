@@ -112,6 +112,11 @@ IECore::PathMatcher getExpandedPaths( const Gaffer::Context *context )
 	return IECore::PathMatcher();
 }
 
+bool affectsExpandedPaths( const IECore::InternedString &name )
+{
+	return name == g_expandedPathsName;
+}
+
 void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
 {
 	IECore::PathMatcherData *expandedPaths = const_cast<IECore::PathMatcherData *>( context->get<IECore::PathMatcherData>( g_expandedPathsName, nullptr ) );
@@ -205,6 +210,11 @@ IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context )
 	}
 
 	return result;
+}
+
+bool affectsSelectedPaths( const IECore::InternedString &name )
+{
+	return name == g_selectedPathsName;
 }
 
 } // namespace ContextAlgo

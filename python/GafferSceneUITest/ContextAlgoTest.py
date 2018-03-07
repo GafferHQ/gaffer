@@ -37,6 +37,7 @@
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUITest
 import GafferScene
 import GafferSceneUI
@@ -171,6 +172,30 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/A/C", "/A/B/D" ] ) )
 		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), IECore.PathMatcher( [ "/A/C", "/A/B/D" ] )  )
+
+	def testAffectsExpandedPaths( self ) :
+
+		c = Gaffer.Context()
+		cs = GafferTest.CapturingSlot( c.changedSignal() )
+
+		GafferSceneUI.ContextAlgo.setExpandedPaths( c, IECore.PathMatcher( [ "/A" ] ) )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( GafferSceneUI.ContextAlgo.affectsExpandedPaths( cs[0][1] ) )
+
+		self.assertFalse( GafferSceneUI.ContextAlgo.affectsExpandedPaths( "frame" ) )
+
+	def testAffectsSelectedPaths( self ) :
+
+		c = Gaffer.Context()
+		cs = GafferTest.CapturingSlot( c.changedSignal() )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( c, IECore.PathMatcher( [ "/A" ] ) )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( GafferSceneUI.ContextAlgo.affectsSelectedPaths( cs[0][1] ) )
+
+		self.assertFalse( GafferSceneUI.ContextAlgo.affectsSelectedPaths( "frame" ) )
 
 if __name__ == "__main__":
 	unittest.main()
