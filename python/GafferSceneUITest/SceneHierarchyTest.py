@@ -45,13 +45,11 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 
 	def assertExpanded( self, context, path, expanded ) :
 
-		e = False
-		if "ui:scene:expandedPaths" in context :
-			expandePaths = GafferSceneUI.ContextAlgo.getExpandedPaths( context )
-			if expandePaths and ( expandePaths.match( path ) & IECore.PathMatcher.Result.ExactMatch ) :
-				e = True
-
-		self.assertEqual( e, expanded )
+		expandedPaths = GafferSceneUI.ContextAlgo.getExpandedPaths( context )
+		self.assertEqual(
+			bool( expandedPaths.match( path ) & IECore.PathMatcher.Result.ExactMatch ),
+			expanded
+		)
 
 	def testNoUnwantedExpansion( self ) :
 

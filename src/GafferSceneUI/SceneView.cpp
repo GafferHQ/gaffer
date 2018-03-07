@@ -1321,7 +1321,7 @@ void SceneView::registeredShadingModes( std::vector<std::string> &names )
 
 void SceneView::contextChanged( const IECore::InternedString &name )
 {
-	if( name.value() == "ui:scene:selectedPaths" )
+	if( ContextAlgo::affectsSelectedPaths( name ) )
 	{
 		// If only the selection has changed then we can just update the selection
 		// on our existing scene representation.
@@ -1332,10 +1332,10 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		m_sceneGadget->setSelection( sg );
 		return;
 	}
-	else if( name.value() == "ui:scene:expandedPaths" )
+	else if( ContextAlgo::affectsExpandedPaths( name ) )
 	{
-		const PathMatcherData *expandedPaths = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths" );
-		m_sceneGadget->setExpandedPaths( expandedPaths );
+		PathMatcher expandedPaths = ContextAlgo::getExpandedPaths( getContext() );
+		m_sceneGadget->setExpandedPaths( new PathMatcherData( expandedPaths ) );
 		return;
 	}
 	else if( boost::starts_with( name.value(), "ui:" ) )

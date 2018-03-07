@@ -132,9 +132,9 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		if "ui:scene:selectedPaths" in modifiedItems :
+		if any( ContextAlgo.affectsSelectedPaths( x ) for x in modifiedItems ) :
 			self.__transferSelectionFromContext()
-		elif "ui:scene:expandedPaths" in modifiedItems :
+		elif any( ContextAlgo.affectsExpandedPaths( x ) for x in modifiedItems ) :
 			self.__transferExpansionFromContext()
 
 		for item in modifiedItems :

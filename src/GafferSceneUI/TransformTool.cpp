@@ -37,6 +37,7 @@
 #include "GafferSceneUI/TransformTool.h"
 
 #include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUI/ContextAlgo.h"
 
 #include "GafferScene/Group.h"
 #include "GafferScene/ObjectSource.h"
@@ -355,7 +356,7 @@ void TransformTool::connectToViewContext()
 void TransformTool::contextChanged( const IECore::InternedString &name )
 {
 	if(
-		name == "ui:scene:selectedPaths" ||
+		ContextAlgo::affectsSelectedPaths( name ) ||
 		!boost::starts_with( name.string(), "ui:" )
 	)
 	{
@@ -444,11 +445,14 @@ void TransformTool::updateSelection() const
 
 	// Find the selected path, and early out if it's not valid.
 	Selection newSelection;
-	if( const IECore::StringVectorData *selection = view()->getContext()->get<IECore::StringVectorData>( "ui:scene:selectedPaths", nullptr ) )
+	PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
+	if( !selectedPaths.isEmpty() )
 	{
-		if( selection->readable().size() == 1 )
+		const PathMatcher::Iterator it = selectedPaths.begin();
+		if( std::next( it ) == selectedPaths.end() )
 		{
-			ScenePlug::stringToPath( selection->readable()[0], newSelection.path );
+			// Single path selected
+			newSelection.path = *it;
 		}
 	}
 	if( newSelection.path.empty() || !SceneAlgo::exists( scenePlug(), newSelection.path ) )
