@@ -130,7 +130,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Drawing" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -181,7 +181,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			menuButton = GafferUI.MenuButton(
 				image = "shading.png",
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Shading" ),
 				hasFrame = False,
 			)
 
@@ -226,7 +226,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Expansion" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -330,7 +330,7 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Gadgets" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "grid.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
