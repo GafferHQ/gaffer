@@ -239,6 +239,7 @@ const AtString g_dispHeightArnoldString( "disp_height" );
 const AtString g_dispPaddingArnoldString( "disp_padding" );
 const AtString g_dispZeroValueArnoldString( "disp_zero_value" );
 const AtString g_dispAutoBumpArnoldString( "disp_autobump" );
+const AtString g_enableProgressiveRenderString( "enable_progressive_render" );
 const AtString g_fileNameArnoldString( "filename" );
 const AtString g_filtersArnoldString( "filters" );
 const AtString g_funcPtrArnoldString( "funcptr" );
@@ -2166,90 +2167,6 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// InteractiveRenderController
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class InteractiveRenderController
-{
-
-	public :
-
-		InteractiveRenderController()
-		{
-			m_rendering = false;
-		}
-
-		void setRendering( bool rendering )
-		{
-			if( rendering == m_rendering )
-			{
-				return;
-			}
-
-			m_rendering = rendering;
-
-			if( rendering )
-			{
-				std::thread thread( boost::bind( &InteractiveRenderController::performInteractiveRender, this ) );
-				m_thread.swap( thread );
-			}
-			else
-			{
-				if( AiRendering() )
-				{
-					AiRenderInterrupt();
-				}
-				m_thread.join();
-			}
-		}
-
-		bool getRendering() const
-		{
-			return m_rendering;
-		}
-
-	private :
-
-		// Called in a background thread to control a
-		// progressive interactive render.
-		void performInteractiveRender()
-		{
-			AtNode *options = AiUniverseGetOptions();
-			const int finalAASamples = AiNodeGetInt( options, g_aaSamplesArnoldString );
-			const int startAASamples = min( -5, finalAASamples );
-
-			for( int aaSamples = startAASamples; aaSamples <= finalAASamples; ++aaSamples )
-			{
-				if( aaSamples == 0 || ( aaSamples > 1 && aaSamples != finalAASamples ) )
-				{
-					// 0 AA_samples is meaningless, and we want to jump straight
-					// from 1 AA_sample to the final sampling quality.
-					continue;
-				}
-
-				AiNodeSetInt( options, g_aaSamplesArnoldString, aaSamples );
-				if( !m_rendering || AiRender( AI_RENDER_MODE_CAMERA ) != AI_SUCCESS )
-				{
-					// Render cancelled on main thread.
-					break;
-				}
-			}
-
-			// Restore the setting we've been monkeying with.
-			AiNodeSetInt( options, g_aaSamplesArnoldString, finalAASamples );
-		}
-
-		std::thread m_thread;
-		tbb::atomic<bool> m_rendering;
-
-};
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // Globals
 //////////////////////////////////////////////////////////////////////////
 
@@ -2265,6 +2182,7 @@ IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
 IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
+IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
 IECore::InternedString g_backgroundOptionName( "ai:background" );
@@ -2292,6 +2210,19 @@ class ArnoldGlobals
 			AiMsgSetConsoleFlags( m_consoleFlags );
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
+		}
+
+		~ArnoldGlobals()
+		{
+			AtRenderStatus status = AiRenderGetStatus();
+			if( status != AI_RENDER_STATUS_NOT_STARTED )
+			{
+				if( status != AI_RENDER_STATUS_FINISHED )
+				{
+					AiRenderAbort( AI_BLOCKING );
+				}
+				AiRenderEnd();
+			}
 		}
 
 		void option( const IECore::InternedString &name, const IECore::Object *value )
@@ -2373,6 +2304,18 @@ class ArnoldGlobals
 				{
 					return;
 				}
+			}
+			else if( name == g_progressiveMinAASamplesOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_progressiveMinAASamples = boost::none;
+				}
+				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
+				{
+					m_progressiveMinAASamples = d->readable();
+				}
+				return;
 			}
 			else if( name == g_aaSeedOptionName )
 			{
@@ -2583,14 +2526,39 @@ class ArnoldGlobals
 					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
 					break;
 				case IECoreScenePreview::Renderer::Interactive :
-					m_interactiveRenderController.setRendering( true );
+					AiNodeSetBool( AiUniverseGetOptions(), g_enableProgressiveRenderString, true );
+					AiRenderSetHintBool( AtString( "progressive" ), true );
+					AiRenderSetHintInt( AtString( "progressive_min_AA_samples" ), m_progressiveMinAASamples.get_value_or( -4 ) );
+
+					AtRenderStatus status = AiRenderGetStatus();
+					if( status == AI_RENDER_STATUS_NOT_STARTED )
+					{
+						AiRenderBegin( AI_RENDER_MODE_CAMERA );
+					}
+					else if( status == AI_RENDER_STATUS_PAUSED || status == AI_RENDER_STATUS_FINISHED )
+					{
+						AiRenderRestart();
+					}
+					else
+					{
+						// We shouldn't really get here when a render is already currently running, 
+						// but if we do, the most consistent thing to do is restart it so that we get
+						// back into a consistent state.
+						AiRenderRestart();
+					}
 					break;
 			}
 		}
 
 		void pause()
 		{
-			m_interactiveRenderController.setRendering( false );
+			AtRenderStatus status = AiRenderGetStatus();
+			if( status == AI_RENDER_STATUS_RENDERING )
+			{
+				// We need to block here because pause() is used to make sure that the render isn't running
+				// before performing IPR edits.
+				AiRenderInterrupt( AI_BLOCKING );
+			}
 		}
 
 	private :
@@ -2805,12 +2773,9 @@ class ArnoldGlobals
 		int m_consoleFlags;
 		boost::optional<int> m_frame;
 		boost::optional<int> m_aaSeed;
+		boost::optional<int> m_progressiveMinAASamples;
 		boost::optional<bool> m_sampleMotion;
 		ShaderCache *m_shaderCache;
-
-		// Members used by interactive renders
-
-		InteractiveRenderController m_interactiveRenderController;
 
 		// Members used by ass generation "renders"
 
