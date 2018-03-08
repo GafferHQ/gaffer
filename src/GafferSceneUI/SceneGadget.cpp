@@ -549,7 +549,7 @@ class SceneGadget::UpdateTask : public tbb::task
 				m_sceneGraph->m_expanded = m_sceneGadget->m_minimumExpansionDepth >= m_scenePath.size();
 				if( !m_sceneGraph->m_expanded )
 				{
-					m_sceneGraph->m_expanded = m_sceneGadget->m_expandedPaths->readable().match( m_scenePath ) & PathMatcher::ExactMatch;
+					m_sceneGraph->m_expanded = m_sceneGadget->m_expandedPaths.match( m_scenePath ) & PathMatcher::ExactMatch;
 				}
 			}
 
@@ -674,11 +674,9 @@ SceneGadget::SceneGadget()
 		m_scene( nullptr ),
 		m_context( nullptr ),
 		m_dirtyFlags( UpdateTask::AllDirty ),
-		m_expandedPaths( new PathMatcherData ),
 		m_minimumExpansionDepth( 0 ),
 		m_baseState( new IECoreGL::State( true ) ),
-		m_sceneGraph( new SceneGraph ),
-		m_selection( new PathMatcherData )
+		m_sceneGraph( new SceneGraph )
 {
 	m_baseState->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
 	m_baseState->add( new IECoreGL::PointColorStateComponent( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) );
@@ -739,16 +737,16 @@ const Gaffer::Context *SceneGadget::getContext() const
 	return m_context.get();
 }
 
-void SceneGadget::setExpandedPaths( IECore::ConstPathMatcherDataPtr expandedPaths )
+void SceneGadget::setExpandedPaths( const IECore::PathMatcher &expandedPaths )
 {
 	m_expandedPaths = expandedPaths;
 	m_dirtyFlags |= UpdateTask::ExpansionDirty;
 	requestRender();
 }
 
-const IECore::PathMatcherData *SceneGadget::getExpandedPaths() const
+const IECore::PathMatcher &SceneGadget::getExpandedPaths() const
 {
-	return m_expandedPaths.get();
+	return m_expandedPaths;
 }
 
 void SceneGadget::setMinimumExpansionDepth( size_t depth )
@@ -807,15 +805,15 @@ size_t SceneGadget::objectsAt(
 	return m_sceneGraph->pathsFromSelection( selection, paths );
 }
 
-const IECore::PathMatcherData *SceneGadget::getSelection() const
+const IECore::PathMatcher &SceneGadget::getSelection() const
 {
-	return m_selection.get();
+	return m_selection;
 }
 
-void SceneGadget::setSelection( ConstPathMatcherDataPtr selection )
+void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 {
 	m_selection = selection;
-	m_sceneGraph->applySelection( m_selection->readable() );
+	m_sceneGraph->applySelection( m_selection );
 	requestRender();
 }
 
@@ -926,7 +924,7 @@ void SceneGadget::updateSceneGraph() const
 
 		if( m_dirtyFlags && UpdateTask::ChildNamesDirty )
 		{
-			m_sceneGraph->applySelection( m_selection->readable() );
+			m_sceneGraph->applySelection( m_selection );
 		}
 	}
 	catch( const std::exception& e )
