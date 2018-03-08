@@ -71,7 +71,12 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 			plugPathSplit = plugPath.split( "." )
 			for p in plugPathSplit[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
-			parentDict[plugPathSplit[-1]] = plug.getValue()
+			if isinstance( plug, Gaffer.CompoundDataPlug ) :
+				value = IECore.CompoundData()
+				plug.fillCompoundData( value )
+			else :
+				value = plug.getValue()
+			parentDict[plugPathSplit[-1]] = value
 
 		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
