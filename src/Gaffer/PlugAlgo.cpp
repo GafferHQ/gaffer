@@ -392,7 +392,7 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 
 	Node *externalNode = ::externalNode( plug );
 	const bool dynamic = runTimeCast<Box>( externalNode ) || parent == externalNode->userPlug();
-	MetadataAlgo::copy( plug, externalPlug.get(), excludeMetadata, /* persistentOnly = */ true, /* persistent = */ dynamic );
+	MetadataAlgo::copy( plug, externalPlug.get(), excludeMetadata, /* persistentOnly = */ dynamic, /* persistent = */ dynamic );
 	if( dynamic )
 	{
 		applyDynamicFlag( externalPlug.get() );
