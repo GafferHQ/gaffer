@@ -39,13 +39,15 @@
 
 #include "ConnectionGadgetBinding.h"
 
-#include "GafferUIBindings/GadgetBinding.h"
+#include "ConnectionCreatorBinding.h"
 
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/Nodule.h"
 #include "GafferUI/StandardConnectionGadget.h"
 
 #include "Gaffer/Node.h"
+
+#include "IECorePython/ScopedGILLock.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -98,7 +100,7 @@ void registerConnectionGadget2( IECore::TypeId nodeType, const std::string &dstP
 
 void GafferUIModule::bindConnectionGadget()
 {
-	GadgetClass<ConnectionGadget>()
+	ConnectionCreatorClass<ConnectionGadget>()
 		.def( "srcNodule", &srcNodule )
 		.def( "dstNodule", &dstNodule )
 		.def( "setNodules", &ConnectionGadget::setNodules )
@@ -111,7 +113,7 @@ void GafferUIModule::bindConnectionGadget()
 		.staticmethod( "registerConnectionGadget" )
 	;
 
-	GadgetClass<StandardConnectionGadget>()
+	ConnectionCreatorClass<StandardConnectionGadget>()
 		.def( init<NodulePtr, NodulePtr>() )
 	;
 }

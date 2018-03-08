@@ -63,8 +63,8 @@ class ShaderPlugAdder : public PlugAdder
 
 	public :
 
-		ShaderPlugAdder( ShaderPtr shader, StandardNodeGadget::Edge edge )
-			: PlugAdder( edge ), m_shader( shader )
+		ShaderPlugAdder( ShaderPtr shader )
+			:	m_shader( shader )
 		{
 			shader->parametersPlug()->childAddedSignal().connect( boost::bind( &ShaderPlugAdder::childAdded, this ) );
 			shader->parametersPlug()->childRemovedSignal().connect( boost::bind( &ShaderPlugAdder::childRemoved, this ) );
@@ -77,25 +77,23 @@ class ShaderPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *plug ) const override
+		bool canCreateConnection( const Plug *endpoint ) const override
 		{
-			vector<Plug *> plugs = showablePlugs( plug );
+			vector<Plug *> plugs = showablePlugs( endpoint );
 			return !plugs.empty();
 		}
 
-		void addPlug( Plug *connectionEndPoint ) override
+		void createConnection( Plug *endpoint ) override
 		{
-			vector<Plug *> plugs = showablePlugs( connectionEndPoint );
+			vector<Plug *> plugs = showablePlugs( endpoint );
 			Plug *plug = plugMenuSignal()( "Connect To", plugs );
 			if( !plug )
 			{
 				return;
 			}
 
-			UndoScope undoScope( m_shader->scriptNode() );
-
 			Metadata::registerValue( plug, g_visibleKey, new IECore::BoolData( true ) );
-			plug->setInput( connectionEndPoint );
+			plug->setInput( endpoint );
 		}
 
 	private :
@@ -199,7 +197,7 @@ struct Registration
 				throw IECore::Exception( "ShaderPlugAdder requires a Shader" );
 			}
 
-			return new ShaderPlugAdder( shader, StandardNodeGadget::TopEdge );
+			return new ShaderPlugAdder( shader );
 		}
 
 };

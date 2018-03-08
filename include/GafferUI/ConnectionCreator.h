@@ -34,108 +34,51 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/NoduleLayout.h"
-#include "GafferUI/PlugAdder.h"
-#include "GafferUI/StandardNodeGadget.h"
+#ifndef GAFFERUI_CONNECTIONCREATOR_H
+#define GAFFERUI_CONNECTIONCREATOR_H
 
-#include "Gaffer/Box.h"
-#include "Gaffer/BoxIn.h"
-#include "Gaffer/BoxOut.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/UndoScope.h"
+#include "GafferUI/Gadget.h"
 
-#include "boost/bind.hpp"
-
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferUI;
-
-namespace
+namespace Gaffer
 {
 
-class BoxPlugAdder : public PlugAdder
+class Plug;
+
+} // namespace Gaffer
+
+namespace GafferUI
+{
+
+class GAFFERUI_API ConnectionCreator : public Gadget
 {
 
 	public :
 
-		BoxPlugAdder( BoxPtr box )
-			:	m_box( box )
-		{
-		}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionCreator, ConnectionCreatorTypeId, Gadget );
 
-	protected :
+		ConnectionCreator( const std::string &name=defaultName<ConnectionCreator>() );
+		virtual ~ConnectionCreator();
 
-		bool canCreateConnection( const Plug *endpoint ) const override
-		{
-			if( !PlugAdder::canCreateConnection( endpoint ) )
-			{
-				return false;
-			}
+		/// May be called by the recipient of a drag to figure out if this
+		/// ConnectionCreator can set up the connection.
+		virtual bool canCreateConnection( const Gaffer::Plug *endpoint ) const = 0;
 
-			if( endpoint->node() == m_box )
-			{
-				return false;
-			}
+		/// May be called by the recipient of a drag to set a more appropriate position
+		/// and tangent for the connection as the drag progresses within the destination.
+		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) = 0;
 
-			return true;
-		}
-
-		void createConnection( Plug *endpoint ) override
-		{
-			BoxIOPtr boxIO;
-			if( endpoint->direction() == Plug::In )
-			{
-				boxIO = new BoxOut;
-			}
-			else
-			{
-				boxIO = new BoxIn;
-			}
-
-			m_box->addChild( boxIO );
-			boxIO->setup( endpoint );
-
-			if( endpoint->direction() == Plug::In )
-			{
-				endpoint->setInput( boxIO->promotedPlug() );
-			}
-			else
-			{
-				boxIO->promotedPlug()->setInput( endpoint );
-			}
-
-			applyEdgeMetadata( boxIO->promotedPlug() );
-			applyEdgeMetadata( boxIO->plug(), /* opposite = */ true );
-		}
-
-	private :
-
-		BoxPtr m_box;
+		/// May be called by the recipient of a drag to create a connection,
+		/// allowing this ConnectionCreator to set up the necessary plugs or clean up
+		/// potentially outdated connections afterwards.
+		virtual void createConnection( Gaffer::Plug *plug ) = 0;
 
 };
 
-struct Registration
-{
+IE_CORE_DECLAREPTR( ConnectionCreator )
 
-	Registration()
-	{
-		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder", boost::bind( &create, ::_1 ) );
-	}
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ConnectionCreator>> ConnectionCreatorIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ConnectionCreator>> RecursiveConnectionCreatorIterator;
 
-	private :
+} // namespace GafferUI
 
-		static GadgetPtr create( GraphComponentPtr parent )
-		{
-			if( BoxPtr box = runTimeCast<Box>( parent ) )
-			{
-				return new BoxPlugAdder( box );
-			}
-			throw IECore::Exception( "Expected a Box" );
-		}
-
-};
-
-Registration g_registration;
-
-} // namespace
-
+#endif // GAFFERUI_CONNECTIONCREATOR_H

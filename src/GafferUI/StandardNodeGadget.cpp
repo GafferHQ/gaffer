@@ -147,12 +147,13 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 };
 
 //////////////////////////////////////////////////////////////////////////
-// StandardNodeGadget implementation
+// Internal utilities
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
-static IECoreGL::Texture *bookmarkTexture()
+
+IECoreGL::Texture *bookmarkTexture()
 {
 	static IECoreGL::TexturePtr bookmarkTexture;
 
@@ -169,7 +170,44 @@ static IECoreGL::Texture *bookmarkTexture()
 	return bookmarkTexture.get();
 }
 
+bool canConnect( const DragDropEvent &event, const ConnectionCreator *destination )
+{
+	if( auto plug = IECore::runTimeCast<const Plug>( event.data.get() ) )
+	{
+		return destination->canCreateConnection( plug );
+	}
+	else if( auto sourceCreator = IECore::runTimeCast<const ConnectionCreator>( event.sourceGadget.get() ) )
+	{
+		if( auto destinationNodule = IECore::runTimeCast<const Nodule>( destination ) )
+		{
+			return sourceCreator->canCreateConnection( destinationNodule->plug() );
+		}
+	}
+	return false;
+}
+
+void connect( const DragDropEvent &event, ConnectionCreator *destination )
+{
+	if( auto plug = IECore::runTimeCast<Plug>( event.data.get() ) )
+	{
+		UndoScope undoScope( plug->ancestor<ScriptNode>() );
+		destination->createConnection( plug );
+	}
+	else if( auto sourceCreator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
+	{
+		if( auto destinationNodule = IECore::runTimeCast<Nodule>( destination ) )
+		{
+			UndoScope undoScope( destinationNodule->plug()->ancestor<ScriptNode>() );
+			sourceCreator->createConnection( destinationNodule->plug() );
+		}
+	}
+}
+
 } // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// StandardNodeGadget implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 
@@ -188,7 +226,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
-		m_dragDestinationProxy( nullptr ),
+		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
 		m_oval( false )
 {
@@ -413,17 +451,17 @@ const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
 	return const_cast<StandardNodeGadget *>( this )->nodule( plug );
 }
 
-Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
+Imath::V3f StandardNodeGadget::connectionTangent( const ConnectionCreator *creator ) const
 {
-	if( noduleContainer( LeftEdge )->isAncestorOf( nodule ) )
+	if( noduleContainer( LeftEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( -1, 0, 0 );
 	}
-	else if( noduleContainer( RightEdge )->isAncestorOf( nodule ) )
+	else if( noduleContainer( RightEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( 1, 0, 0 );
 	}
-	else if( noduleContainer( TopEdge )->isAncestorOf( nodule ) )
+	else if( noduleContainer( TopEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( 0, 1, 0 );
 	}
@@ -610,11 +648,15 @@ void StandardNodeGadget::leave( Gadget *gadget )
 
 bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
-	// we'll accept the drag if we know we can forward it on to a nodule
-	// we own. we don't actually start the forwarding until dragMove, here we
-	// just check there is something to forward to.
-	if( closestDragDestinationProxy( event ) )
+	// Accept the drag if there's something we can connect it to.
+	if( closestDragDestination( event ) )
 	{
+		// Display the labels for all the compatible nodules so the
+		// user can see their options.
+		for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+		{
+			(*it)->setLabelVisible( canConnect( event, it->get() ) );
+		}
 		return true;
 	}
 
@@ -623,50 +665,63 @@ bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event
 
 bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
-	Gadget *closest = closestDragDestinationProxy( event );
-	if( closest != m_dragDestinationProxy )
+	ConnectionCreator *closest = closestDragDestination( event );
+	if( closest != m_dragDestination )
 	{
-		if( closest->dragEnterSignal()( closest, event ) )
+		if( m_dragDestination )
 		{
-			if( m_dragDestinationProxy )
+			m_dragDestination->setHighlighted( false );
+		}
+		m_dragDestination = closest;
+		if( m_dragDestination )
+		{
+			if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 			{
-				m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+				V3f centre = V3f( 0 ) * m_dragDestination->fullTransform();
+				centre = centre * creator->fullTransform().inverse();
+				creator->updateDragEndPoint( centre, connectionTangent( m_dragDestination ) );
 			}
-			m_dragDestinationProxy = closest;
+			m_dragDestination->setHighlighted( true );
 		}
 	}
-	return m_dragDestinationProxy;
+	return m_dragDestination;
 }
 
 bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( !m_dragDestinationProxy )
+	if( !m_dragDestination )
 	{
 		return false;
 	}
 
-	if( m_dragDestinationProxy != event.destinationGadget )
+	if( m_dragDestination != event.destinationGadget )
 	{
-		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+		m_dragDestination->setHighlighted( false );
+		for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+		{
+			(*it)->setLabelVisible( false );
+		}
 	}
-	m_dragDestinationProxy = nullptr;
+	m_dragDestination = nullptr;
 
 	return true;
 }
 
 bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( !m_dragDestinationProxy )
+	if( !m_dragDestination )
 	{
 		return false;
 	}
 
-	const bool result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
-	m_dragDestinationProxy = nullptr;
-	return result;
+	connect( event, m_dragDestination );
+
+	m_dragDestination->setHighlighted( false );
+	m_dragDestination = nullptr;
+	return true;
 }
 
-Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &event ) const
+ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEvent &event ) const
 {
 	if( event.buttons != DragDropEvent::Left )
 	{
@@ -674,34 +729,17 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 		return nullptr;
 	}
 
-	Gadget *result = nullptr;
+	ConnectionCreator *result = nullptr;
 	float maxDist = Imath::limits<float>::max();
-	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
+
+	for( RecursiveConnectionCreatorIterator it( this ); !it.done(); it++ )
 	{
 		if( !(*it)->getVisible() )
 		{
 			it.prune();
 			continue;
 		}
-
-		/// \todo It's a bit ugly that we have to have these
-		/// `*IsCompatible()` methods - can we just use dragEnterSignal
-		/// to find out if the potential proxy accepts the drag?
-		if( const Nodule *nodule = IECore::runTimeCast<const Nodule>( it->get() ) )
-		{
-			if( !noduleIsCompatible( nodule, event ) )
-			{
-				continue;
-			}
-		}
-		else if( const PlugAdder *plugAdder = IECore::runTimeCast<const PlugAdder>( it->get() ) )
-		{
-			if( !plugAdderIsCompatible( plugAdder, event ) )
-			{
-				continue;
-			}
-		}
-		else
+		if( !canConnect( event, it->get() ) )
 		{
 			continue;
 		}
@@ -717,45 +755,6 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 	}
 
 	return result;
-}
-
-bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const
-{
-	if( const PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
-	{
-		return plugAdder->acceptsPlug( nodule->plug() );
-	}
-
-	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
-	if( !dropPlug || dropPlug->node() == node() )
-	{
-		return false;
-	}
-
-	const Plug *nodulePlug = nodule->plug();
-	if( MetadataAlgo::readOnly( nodulePlug ) )
-	{
-		return false;
-	}
-
-	if( dropPlug->direction() == Plug::Out )
-	{
-		return nodulePlug->direction() == Plug::In && nodulePlug->acceptsInput( dropPlug );
-	}
-	else
-	{
-		return nodulePlug->direction() == Plug::Out && dropPlug->acceptsInput( nodulePlug );
-	}
-}
-
-bool StandardNodeGadget::plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const
-{
-	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
-	if( !plug )
-	{
-		return false;
-	}
-	return plugAdder->acceptsPlug( plug );
 }
 
 void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )

@@ -85,3 +85,12 @@ const NoduleLayout *CompoundNodule::noduleLayout() const
 {
 	return getChild<NoduleLayout>( 0 );
 }
+
+bool CompoundNodule::canCreateConnection( const Gaffer::Plug *endpoint ) const
+{
+	return false;
+}
+
+void CompoundNodule::createConnection( Gaffer::Plug *endpoint )
+{
+}

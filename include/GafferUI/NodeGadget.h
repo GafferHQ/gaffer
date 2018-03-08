@@ -49,6 +49,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Nodule )
 IE_CORE_FORWARDDECLARE( NodeGadget )
+IE_CORE_FORWARDDECLARE( ConnectionCreator )
 
 /// A base class for representing nodes within a GraphGadget.
 class GAFFERUI_API NodeGadget : public Gadget
@@ -70,7 +71,7 @@ class GAFFERUI_API NodeGadget : public Gadget
 		/// Returns the tangent for a nodule - this is a direction which
 		/// can be considered to be "away" from the NodeGadget for the
 		/// purposes of drawing connections.
-		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
+		virtual Imath::V3f connectionTangent( const ConnectionCreator *creator ) const;
 
 		typedef boost::signal<void ( NodeGadget *, Nodule * )> NoduleSignal;
 		/// Emitted when a nodule is added. It is the responsibility

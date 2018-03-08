@@ -38,17 +38,15 @@
 #ifndef GAFFERUI_STANDARDNODEGADGET_H
 #define GAFFERUI_STANDARDNODEGADGET_H
 
-#include "GafferUI/GraphGadget.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/NodeGadget.h"
-
-#include "Gaffer/StringAlgo.h"
 
 namespace GafferUI
 {
 
 class PlugAdder;
 class NoduleLayout;
+class ConnectionCreator;
 
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
@@ -84,7 +82,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 		Nodule *nodule( const Gaffer::Plug *plug ) override;
 		const Nodule *nodule( const Gaffer::Plug *plug ) const override;
-		Imath::V3f noduleTangent( const Nodule *nodule ) const override;
+		Imath::V3f connectionTangent( const ConnectionCreator *creator ) const override;
 
 		/// The central content of the Gadget may be customised. By default
 		/// the contents is a simple NameGadget for the node, but any Gadget or
@@ -138,9 +136,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		Gadget *closestDragDestinationProxy( const DragDropEvent &event ) const;
-		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const;
-		bool plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const;
+		ConnectionCreator *closestDragDestination( const DragDropEvent &event ) const;
 
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
@@ -157,12 +153,12 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
-		// We accept drags onto the node itself and
-		// forward them to the nearest compatible
-		// Nodule or PlugAdder. This provides the user
-		// with a bigger drag target that is easier
+		// We accept drags onto the NodeGadget itself and
+		// use them to create a connection to the
+		// nearest Nodule or PlugAdder child. This provides
+		// the user with a bigger drag target that is easier
 		// to hit.
-		Gadget *m_dragDestinationProxy;
+		ConnectionCreator *m_dragDestination;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
 

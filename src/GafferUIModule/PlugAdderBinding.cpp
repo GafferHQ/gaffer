@@ -38,6 +38,8 @@
 
 #include "PlugAdderBinding.h"
 
+#include "ConnectionCreatorBinding.h"
+
 #include "GafferUIBindings/GadgetBinding.h"
 
 #include "GafferUI/PlugAdder.h"
@@ -94,68 +96,14 @@ struct PlugMenuSlotCaller
 
 };
 
-struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
-{
-
-	PlugAdderWrapper(PyObject *self, StandardNodeGadget::Edge edge )
-		: GadgetWrapper<PlugAdder>( self, edge )
-	{
-	}
-
-	bool acceptsPlug( const Gaffer::Plug *connectionEndPoint ) const override
-	{
-		if( this->isSubclassed() )
-		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "acceptsPlug" );
-			if( f )
-			{
-				try
-				{
-					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( connectionEndPoint ) ) );
-				}
-				catch( const error_already_set &e )
-				{
-					IECorePython::ExceptionAlgo::translatePythonException();
-				}
-			}
-		}
-		throw IECore::Exception( "No acceptsPlug method defined in Python." );
-	}
-
-	void addPlug( Gaffer::Plug *connectionEndPoint ) override
-	{
-		if( this->isSubclassed() )
-		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "addPlug" );
-			if( f )
-			{
-				try
-				{
-					f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( connectionEndPoint ) ) );
-					return;
-				}
-				catch( const error_already_set &e )
-				{
-					IECorePython::ExceptionAlgo::translatePythonException();
-				}
-			}
-		}
-		throw IECore::Exception( "No addPlug method defined in Python." );
-	}
-};
-
 } // namespace
 
 void GafferUIModule::bindPlugAdder()
 {
-	scope s = GadgetClass<PlugAdder, PlugAdderWrapper>( "PlugAdder" )
-		.def( init<StandardNodeGadget::Edge>() )
+	scope s = ConnectionCreatorClass<PlugAdder, ConnectionCreatorWrapper<PlugAdder>>( "PlugAdder" )
+		.def( init<>() )
 		.def( "plugMenuSignal", &PlugAdder::plugMenuSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugMenuSignal" )
-		.def( "acceptsPlug", &PlugAdderWrapper::acceptsPlug )
-		.def( "addPlug", &PlugAdderWrapper::addPlug )
 	;
 
 	SignalClass<PlugAdder::PlugMenuSignal, PlugMenuSignalCaller, PlugMenuSlotCaller>( "PlugMenuSignal" );

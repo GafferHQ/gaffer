@@ -34,108 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/NoduleLayout.h"
-#include "GafferUI/PlugAdder.h"
-#include "GafferUI/StandardNodeGadget.h"
+#ifndef GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL
+#define GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL
 
-#include "Gaffer/Box.h"
-#include "Gaffer/BoxIn.h"
-#include "Gaffer/BoxOut.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/UndoScope.h"
-
-#include "boost/bind.hpp"
-
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferUI;
-
-namespace
+namespace GafferUIModule
 {
 
-class BoxPlugAdder : public PlugAdder
+namespace Detail
 {
 
-	public :
-
-		BoxPlugAdder( BoxPtr box )
-			:	m_box( box )
-		{
-		}
-
-	protected :
-
-		bool canCreateConnection( const Plug *endpoint ) const override
-		{
-			if( !PlugAdder::canCreateConnection( endpoint ) )
-			{
-				return false;
-			}
-
-			if( endpoint->node() == m_box )
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		void createConnection( Plug *endpoint ) override
-		{
-			BoxIOPtr boxIO;
-			if( endpoint->direction() == Plug::In )
-			{
-				boxIO = new BoxOut;
-			}
-			else
-			{
-				boxIO = new BoxIn;
-			}
-
-			m_box->addChild( boxIO );
-			boxIO->setup( endpoint );
-
-			if( endpoint->direction() == Plug::In )
-			{
-				endpoint->setInput( boxIO->promotedPlug() );
-			}
-			else
-			{
-				boxIO->promotedPlug()->setInput( endpoint );
-			}
-
-			applyEdgeMetadata( boxIO->promotedPlug() );
-			applyEdgeMetadata( boxIO->plug(), /* opposite = */ true );
-		}
-
-	private :
-
-		BoxPtr m_box;
-
-};
-
-struct Registration
+template<typename T>
+static bool canCreateConnection( const T &connectionCreator, const Gaffer::Plug *endpoint )
 {
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::canCreateConnection( endpoint );
+}
 
-	Registration()
-	{
-		NoduleLayout::registerCustomGadget( "GafferUI.BoxUI.PlugAdder", boost::bind( &create, ::_1 ) );
-	}
+template<typename T>
+static void updateDragEndPoint( T &connectionCreator, const Imath::V3f position, const Imath::V3f &tangent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::updateDragEndPoint( position, tangent );
+}
 
-	private :
+template<typename T>
+static void createConnection( T &connectionCreator, Gaffer::Plug *endpoint )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::createConnection( endpoint );
+}
 
-		static GadgetPtr create( GraphComponentPtr parent )
-		{
-			if( BoxPtr box = runTimeCast<Box>( parent ) )
-			{
-				return new BoxPlugAdder( box );
-			}
-			throw IECore::Exception( "Expected a Box" );
-		}
+} // namespace Detail
 
-};
+template<typename T, typename TWrapper>
+ConnectionCreatorClass<T, TWrapper>::ConnectionCreatorClass( const char *docString )
+	:	GafferUIBindings::GadgetClass<T, TWrapper>( docString )
+{
+	this->def( "canCreateConnection", &Detail::canCreateConnection<T> );
+	this->def( "updateDragEndPoint", &Detail::updateDragEndPoint<T> );
+	this->def( "createConnection", &Detail::createConnection<T> );
+}
 
-Registration g_registration;
+} // namespace GafferUIModule
 
-} // namespace
-
+#endif // GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL

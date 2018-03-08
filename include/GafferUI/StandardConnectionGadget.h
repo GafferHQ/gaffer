@@ -39,6 +39,7 @@
 
 #include "GafferUI/ConnectionGadget.h"
 
+#include "Gaffer/Plug.h"
 #include "Gaffer/StringAlgo.h"
 
 namespace GafferUI
@@ -61,7 +62,9 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 
 		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule ) override;
 
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
+		void createConnection( Gaffer::Plug *endpoint ) override;
 
 		Imath::V3f closestPoint( const Imath::V3f &p ) const override;
 
@@ -113,6 +116,10 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 
 		bool m_dotPreview;
 		Imath::V3f m_dotPreviewLocation;
+
+		bool m_addingConnection;
+		Imath::V3f m_dstPosOrig;
+		Imath::V3f m_dstTangentOrig;
 
 		boost::signals::scoped_connection m_keyPressConnection;
 		boost::signals::scoped_connection m_keyReleaseConnection;

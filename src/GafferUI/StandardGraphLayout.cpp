@@ -247,8 +247,8 @@ class LayoutEngine
 					const NodeGadget *dstNodeGadget = graphGadget->nodeGadget( dstNodule->plug()->node() );
 					const V3f srcNoduleOffset = srcNodule->transformedBound( srcNodeGadget ).center();
 					const V3f dstNoduleOffset = dstNodule->transformedBound( dstNodeGadget ).center();
-					const V3f srcNoduleTangent( srcNodeGadget->noduleTangent( srcNodule ) );
-					const V3f dstNoduleTangent( dstNodeGadget->noduleTangent( dstNodule ) );
+					const V3f srcNoduleTangent( srcNodeGadget->connectionTangent( srcNodule ) );
+					const V3f dstNoduleTangent( dstNodeGadget->connectionTangent( dstNodule ) );
 
 					EdgeDescriptor e = add_edge( srcIt->second, it->second, m_graph ).first;
 					m_graph[e].sourceOffset = V2f( srcNoduleOffset.x, srcNoduleOffset.y );

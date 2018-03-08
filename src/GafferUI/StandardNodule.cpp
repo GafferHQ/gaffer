@@ -112,12 +112,45 @@ Imath::Box3f StandardNodule::bound() const
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
 }
 
+bool StandardNodule::canCreateConnection( const Gaffer::Plug *endpoint ) const
+{
+	const Gaffer::Plug *localPlug = plug();
+
+	if( localPlug->node() == endpoint->node() || localPlug->direction() == endpoint->direction() )
+	{
+		return false;
+	}
+
+	if( localPlug->direction() == Gaffer::Plug::Direction::In )
+	{
+		return localPlug->acceptsInput( endpoint );
+	}
+	else
+	{
+		return endpoint->acceptsInput( localPlug );
+	}
+}
+
 void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
 {
 	m_dragPosition = position;
 	m_dragTangent = tangent;
 	m_draggingConnection = true;
  	requestRender();
+}
+
+void StandardNodule::createConnection( Gaffer::Plug *endpoint )
+{
+	Gaffer::Plug *localPlug = plug();
+
+	if( localPlug->direction() == Gaffer::Plug::Direction::In )
+	{
+		localPlug->setInput( endpoint );
+	}
+	else
+	{
+		endpoint->setInput( localPlug );
+	}
 }
 
 bool StandardNodule::hasLayer( Layer layer ) const
@@ -149,7 +182,7 @@ void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 				V3f srcTangent( 0.0f, 1.0f, 0.0f );
 				if( const NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 				{
-					srcTangent = nodeGadget->noduleTangent( this );
+					srcTangent = nodeGadget->connectionTangent( this );
 				}
 				style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 			}
@@ -208,7 +241,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 	}
 
 	// we rotate the label based on the angle the connection exits the node at.
-	V3f tangent = nodeGadget->noduleTangent( this );
+	V3f tangent = nodeGadget->connectionTangent( this );
 	float theta = IECore::radiansToDegrees( atan2f( tangent.y, tangent.x ) );
 
 	// but we don't want the text to be vertical, so we bend it away from the
@@ -304,21 +337,14 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		return true;
 	}
 
-	bool accept = false;
-	if( IECore::runTimeCast<Plug>( event.data ) )
+	ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() );
+	if( !creator )
 	{
-		Gaffer::PlugPtr input, output;
-		connection( event, input, output );
-		accept = static_cast<bool>( input );
-	}
-	else if( const PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
-	{
-		// We must accept the drag so that the PlugAdder gets
-		// a chance to do its thing.
-		accept = plugAdder->acceptsPlug( plug() );
+		// we only accept drags from compatible gadgets, namely ConnectionCreators
+		return false;
 	}
 
-	if( accept )
+	if( creator->canCreateConnection( plug() ) )
 	{
 		setHighlighted( true );
 
@@ -330,21 +356,10 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		V3f tangent( 0 );
 		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 		{
-			tangent = nodeGadget->noduleTangent( this );
+			tangent = nodeGadget->connectionTangent( this );
 		}
 
-		if( Nodule *sourceNodule = IECore::runTimeCast<Nodule>( event.sourceGadget.get() ) )
-		{
-			sourceNodule->updateDragEndPoint( centre, tangent );
-		}
-		else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
-		{
-			sourceConnection->updateDragEndPoint( centre, tangent );
-		}
-		else if( PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
-		{
-			plugAdder->updateDragEndPoint( centre, tangent );
-		}
+		creator->updateDragEndPoint( centre, tangent );
 
 		// show the labels of all compatible nodules on this node, if it doesn't
 		// look like the previous drag destination would have done so.
@@ -355,9 +370,10 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		}
 
  		requestRender();
+		return true;
 	}
 
-	return accept;
+	return false;
 }
 
 bool StandardNodule::dragMove( GadgetPtr gadget, const DragDropEvent &event )
@@ -415,69 +431,19 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 	setHighlighted( false );
 	setCompatibleLabelsVisible( event, false );
 
-	if( PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+	if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
-		plugAdder->addPlug( plug() );
-		return true;
-	}
+		if( !creator->canCreateConnection( plug() ) )
+		{
+			return false;
+		}
 
-	Gaffer::PlugPtr input, output;
-	connection( event, input, output );
-
-	if( input )
-	{
-		Gaffer::UndoScope undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
-
-			input->setInput( output );
-
-			ConnectionGadgetPtr connection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget );
-			if( connection && plug()->direction()==Gaffer::Plug::In )
-			{
-				// it's important that we remove the old connection /after/ making the
-				// new connection above, as removing a connection can trigger an InputGenerator
-				// to remove plugs, possibly including the input plug we're want to connect to.
-				// see issue #302.
-				if( connection->dstNodule()->plug() != input )
-				{
-					connection->dstNodule()->plug()->setInput( nullptr );
-				}
-			}
-
+		UndoScope undoScope( plug()->ancestor<ScriptNode>() );
+		creator->createConnection( plug() );
 		return true;
 	}
 
 	return false;
-}
-
-void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &input, Gaffer::PlugPtr &output )
-{
-	Gaffer::PlugPtr dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data );
-	if( dropPlug )
-	{
-		Gaffer::PlugPtr thisPlug = plug();
-		if( thisPlug->node() != dropPlug->node() && thisPlug->direction()!=dropPlug->direction() )
-		{
-			if( thisPlug->direction()==Gaffer::Plug::In )
-			{
-				input = thisPlug;
-				output = dropPlug;
-			}
-			else
-			{
-				input = dropPlug;
-				output = thisPlug;
-			}
-
-			if( input->acceptsInput( output.get() ) )
-			{
-				// success
-				return;
-			}
-		}
-	}
-
-	input = output = nullptr;
-	return;
 }
 
 void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, bool visible )
@@ -488,20 +454,15 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 		return;
 	}
 
+	ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() );
+	if( !creator )
+	{
+		return;
+	}
+
 	for( RecursiveStandardNoduleIterator it( nodeGadget ); !it.done(); ++it )
 	{
-		bool compatible = false;
-		if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
-		{
-			compatible = true;
-		}
-		else
-		{
-			Gaffer::PlugPtr input, output;
-			(*it)->connection( event, input, output );
-			compatible = input && output;
-		}
-		if( compatible )
+		if( creator->canCreateConnection( it->get()->plug() ) )
 		{
 			(*it)->setLabelVisible( visible );
 		}

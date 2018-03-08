@@ -57,8 +57,8 @@ class SwitchPlugAdder : public PlugAdder
 
 	public :
 
-		SwitchPlugAdder( SwitchComputeNodePtr node, StandardNodeGadget::Edge edge )
-			:	PlugAdder( edge ), m_switch( node )
+		SwitchPlugAdder( SwitchComputeNodePtr node )
+			:	m_switch( node )
 		{
 			node->childAddedSignal().connect( boost::bind( &SwitchPlugAdder::childAdded, this ) );
 			node->childRemovedSignal().connect( boost::bind( &SwitchPlugAdder::childRemoved, this ) );
@@ -68,28 +68,26 @@ class SwitchPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *connectionEndPoint ) const override
+		bool canCreateConnection( const Plug *endpoint ) const override
 		{
-			return true;
+			return PlugAdder::canCreateConnection( endpoint );
 		}
 
-		void addPlug( Plug *connectionEndPoint ) override
+		void createConnection( Plug *endpoint ) override
 		{
-			UndoScope undoScope( m_switch->ancestor<ScriptNode>() );
-
-			m_switch->setup( connectionEndPoint );
+			m_switch->setup( endpoint );
 			ArrayPlug *inPlug = m_switch->getChild<ArrayPlug>( "in" );
 			Plug *outPlug = m_switch->getChild<Plug>( "out" );
 
 			bool inOpposite = false;
-			if( connectionEndPoint->direction() == Plug::Out )
+			if( endpoint->direction() == Plug::Out )
 			{
-				inPlug->getChild<Plug>( 0 )->setInput( connectionEndPoint );
+				inPlug->getChild<Plug>( 0 )->setInput( endpoint );
 				inOpposite = false;
 			}
 			else
 			{
-				connectionEndPoint->setInput( outPlug );
+				endpoint->setInput( outPlug );
 				inOpposite = true;
 			}
 
@@ -123,15 +121,12 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Top", boost::bind( &create, ::_1, StandardNodeGadget::TopEdge ) );
-		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Bottom", boost::bind( &create, ::_1, StandardNodeGadget::BottomEdge ) );
-		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Left", boost::bind( &create, ::_1, StandardNodeGadget::LeftEdge ) );
-		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Right", boost::bind( &create, ::_1, StandardNodeGadget::RightEdge ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder", boost::bind( &create, ::_1 ) );
 	}
 
 	private :
 
-		static GadgetPtr create( GraphComponentPtr parent, StandardNodeGadget::Edge edge )
+		static GadgetPtr create( GraphComponentPtr parent )
 		{
 			SwitchComputeNodePtr switchNode = runTimeCast<SwitchComputeNode>( parent );
 			if( !switchNode )
@@ -139,7 +134,7 @@ struct Registration
 				throw Exception( "SwitchPlugAdder requires a SwitchComputeNode" );
 			}
 
-			return new SwitchPlugAdder( switchNode, edge );
+			return new SwitchPlugAdder( switchNode );
 		}
 
 };

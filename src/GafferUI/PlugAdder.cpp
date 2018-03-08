@@ -44,12 +44,15 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/UndoScope.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/Texture.h"
 
 #include "boost/bind.hpp"
 
+using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
@@ -81,19 +84,30 @@ static IECoreGL::Texture *texture( Style::State state )
 	return texture.get();
 }
 
-V3f edgeTangent( StandardNodeGadget::Edge edge )
+V3f tangent( const PlugAdder *g )
 {
-	switch( edge )
+	const NodeGadget *ng = g->ancestor<NodeGadget>();
+	return ng ? ng->connectionTangent( g ) : V3f( 0 );
+}
+
+StandardNodeGadget::Edge tangentEdge( const V3f &tangent )
+{
+	auto tangents = {
+		make_pair( V3f( 0, 1, 0 ), StandardNodeGadget::TopEdge ),
+		make_pair( V3f( 0, -1, 0 ), StandardNodeGadget::BottomEdge ),
+		make_pair( V3f( -1, 0, 0 ), StandardNodeGadget::LeftEdge ),
+		make_pair( V3f( 1, 0, 0 ), StandardNodeGadget::RightEdge )
+	};
+
+	for( const auto &t : tangents )
 	{
-		case StandardNodeGadget::TopEdge :
-			return V3f( 0, 1, 0 );
-		case StandardNodeGadget::BottomEdge :
-			return V3f( 0, -1, 0 );
-		case StandardNodeGadget::LeftEdge :
-			return V3f( -1, 0, 0 );
-		default :
-			return V3f( 1, 0, 0 );
+		if( tangent.dot( t.first ) > 0.9 )
+		{
+			return t.second;
+		}
 	}
+
+	return StandardNodeGadget::TopEdge;
 }
 
 StandardNodeGadget::Edge oppositeEdge( StandardNodeGadget::Edge edge )
@@ -147,8 +161,8 @@ void updateMetadata( Plug *plug, InternedString key, const char *value )
 
 IE_CORE_DEFINERUNTIMETYPED( PlugAdder );
 
-PlugAdder::PlugAdder( StandardNodeGadget::Edge edge )
-	:	m_edge( edge ), m_dragging( false )
+PlugAdder::PlugAdder()
+	:	m_dragging( false )
 {
 	enterSignal().connect( boost::bind( &PlugAdder::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &PlugAdder::leave, this, ::_1, ::_2 ) );
@@ -168,6 +182,20 @@ PlugAdder::~PlugAdder()
 Imath::Box3f PlugAdder::bound() const
 {
 	return Box3f( V3f( -0.5f, -0.5f, 0.0f ), V3f( 0.5f, 0.5f, 0.0f ) );
+}
+
+bool PlugAdder::canCreateConnection( const Gaffer::Plug *endpoint ) const
+{
+	ConstStringDataPtr noduleType = Gaffer::Metadata::value<StringData>( endpoint, IECore::InternedString( "nodule:type" ) );
+	if( noduleType )
+	{
+		if( noduleType->readable() == "GafferUI::CompoundNodule" )
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
@@ -193,7 +221,7 @@ void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 			{
 				if( !IECoreGL::Selector::currentSelector() )
 				{
-					V3f srcTangent( 0.0f, 0.0f, 0.0f );
+					const V3f srcTangent = tangent( this );
 					style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 				}
 			}
@@ -219,8 +247,8 @@ void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 
 void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const
 {
-	StandardNodeGadget::Edge edge = opposite ? oppositeEdge( m_edge ) : m_edge;
-	updateMetadata( plug, "noduleLayout:section", edgeName( edge ) );
+	const StandardNodeGadget::Edge edge = tangentEdge( tangent( this ) );
+	updateMetadata( plug, "noduleLayout:section", edgeName( opposite ? oppositeEdge( edge ) : edge ) );
 }
 
 void PlugAdder::enter( GadgetPtr gadget, const ButtonEvent &event )
@@ -257,24 +285,18 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 	}
 
 	const Plug *plug = runTimeCast<Plug>( event.data.get() );
-	if( !plug || !acceptsPlug( plug ) )
+	if( !plug || !canCreateConnection( plug ) )
 	{
 		return false;
 	}
 
 	setHighlighted( true );
 
-	V3f center = V3f( 0.0f ) * fullTransform();
-	center = center * event.sourceGadget->fullTransform().inverse();
-	const V3f tangent = edgeTangent( m_edge );
-
-	if( Nodule *sourceNodule = runTimeCast<Nodule>( event.sourceGadget.get() ) )
+	if( auto connectionCreator = runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
-		sourceNodule->updateDragEndPoint( center, tangent );
-	}
-	else if( ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
-	{
-		connectionGadget->updateDragEndPoint( center, tangent );
+		V3f center = V3f( 0.0f ) * fullTransform();
+		center = center * connectionCreator->fullTransform().inverse();
+		connectionCreator->updateDragEndPoint( center, tangent( this ) );
 	}
 
 	return true;
@@ -299,7 +321,8 @@ bool PlugAdder::drop( const DragDropEvent &event )
 
 	if( Plug *plug = runTimeCast<Plug>( event.data.get() ) )
 	{
-		addPlug( plug );
+		UndoScope undoScope( plug->ancestor<ScriptNode>() );
+		createConnection( plug );
 		return true;
 	}
 
