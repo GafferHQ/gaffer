@@ -194,7 +194,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	ScenePlug::ScenePath objectUnderMouse;
 	sg->objectAt( event.line, objectUnderMouse );
 
-	PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
+	PathMatcher selection = sg->getSelection();
 
 	const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 	bool selectionChanged = false;
@@ -234,7 +234,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 	if( selectionChanged )
 	{
-		ContextAlgo::setSelectedPaths( view()->getContext(), sceneGadget()->getSelection()->readable() );
+		ContextAlgo::setSelectedPaths( view()->getContext(), selection );
 	}
 
 	return true;
@@ -255,7 +255,7 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 	}
 	else
 	{
-		const PathMatcher &selection = sg->getSelection()->readable();
+		const PathMatcher &selection = sg->getSelection();
 		if( selection.match( objectUnderMouse ) & PathMatcher::ExactMatch )
 		{
 			// drag the selection somewhere
@@ -290,11 +290,11 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 	dragOverlay()->setVisible( false );
 
 	SceneGadget *sg = sceneGadget();
-	PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
+	PathMatcher selection = sg->getSelection();
 
 	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), selection ) )
 	{
-		ContextAlgo::setSelectedPaths( view()->getContext(), sceneGadget()->getSelection()->readable() );
+		ContextAlgo::setSelectedPaths( view()->getContext(), selection );
 	}
 
 	return true;

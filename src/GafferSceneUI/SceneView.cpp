@@ -1321,21 +1321,14 @@ void SceneView::registeredShadingModes( std::vector<std::string> &names )
 
 void SceneView::contextChanged( const IECore::InternedString &name )
 {
-	if( name.value() == "ui:scene:selectedPaths" )
+	if( ContextAlgo::affectsSelectedPaths( name ) )
 	{
-		// If only the selection has changed then we can just update the selection
-		// on our existing scene representation.
-		PathMatcher selection = ContextAlgo::getSelectedPaths( getContext() );
-		/// \todo Store selection as PathMatcherData within the context, so we don't need
-		/// to contruct a new one.
-		PathMatcherDataPtr sg = new PathMatcherData( selection );
-		m_sceneGadget->setSelection( sg );
+		m_sceneGadget->setSelection( ContextAlgo::getSelectedPaths( getContext() ) );
 		return;
 	}
-	else if( name.value() == "ui:scene:expandedPaths" )
+	else if( ContextAlgo::affectsExpandedPaths( name ) )
 	{
-		const PathMatcherData *expandedPaths = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths" );
-		m_sceneGadget->setExpandedPaths( expandedPaths );
+		m_sceneGadget->setExpandedPaths( ContextAlgo::getExpandedPaths( getContext() ) );
 		return;
 	}
 	else if( boost::starts_with( name.value(), "ui:" ) )
@@ -1400,51 +1393,38 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 
 void SceneView::expandSelection( size_t depth )
 {
-	PathMatcher &selection = const_cast<PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
-
 	Context::Scope scope( getContext() );
-	selection = ContextAlgo::expandDescendants( getContext(), selection, preprocessedInPlug<ScenePlug>(), depth - 1 );
-
+	PathMatcher selection = ContextAlgo::expandDescendants( getContext(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
 	ContextAlgo::setSelectedPaths( getContext(), selection );
 }
 
 void SceneView::collapseSelection()
 {
-	PathMatcher &selection = const_cast<PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
-
-	std::vector<string> toCollapse;
-	selection.paths( toCollapse );
-
-	if( !toCollapse.size() )
+	PathMatcher selection = m_sceneGadget->getSelection();
+	if( selection.isEmpty() )
 	{
 		return;
 	}
 
 	PathMatcher expanded = ContextAlgo::getExpandedPaths( getContext() );
 
-	for( vector<string>::const_iterator it = toCollapse.begin(), eIt = toCollapse.end(); it != eIt; ++it )
+	for( PathMatcher::Iterator it = selection.begin(), eIt = selection.end(); it != eIt; ++it )
 	{
-		/// \todo It would be nice to be able to get ScenePaths out of
-		/// PathMatcher::paths() directly.
-		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( *it, path );
-
-		if( !expanded.removePath( path ) )
+		if( !expanded.removePath( *it ) )
 		{
-			if( path.size() <= 1 )
+			if( it->size() <= 1 )
 			{
 				continue;
 			}
-			selection.removePath( path );
-			path.pop_back(); // now the parent path
-			expanded.removePath( path );
-			selection.addPath( path );
+			selection.removePath( *it );
+			ScenePlug::ScenePath parentPath( it->begin(), it->end() - 1 );
+			expanded.removePath( parentPath );
+			selection.addPath( parentPath );
 		}
 	}
 
-	// \todo: add ContextAlgo::collapse() so we can do the collapse in-place
 	ContextAlgo::setExpandedPaths( getContext(), expanded );
-	ContextAlgo::setSelectedPaths( getContext(), m_sceneGadget->getSelection()->readable() );
+	ContextAlgo::setSelectedPaths( getContext(), selection );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )

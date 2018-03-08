@@ -237,7 +237,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	def _updateFromContext( self, modifiedItems ) :
 
 		for item in modifiedItems :
-			if not item.startswith( "ui:" ) or ( item == "ui:scene:selectedPaths" and self.__targetPaths is None ) :
+			if not item.startswith( "ui:" ) or ( GafferSceneUI.ContextAlgo.affectsSelectedPaths( item ) and self.__targetPaths is None ) :
 				self.__updateLazily()
 				break
 

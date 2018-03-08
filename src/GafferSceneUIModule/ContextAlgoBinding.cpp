@@ -69,10 +69,12 @@ void GafferSceneUIModule::bindContextAlgo()
 
 	def( "setExpandedPaths", &setExpandedPaths );
 	def( "getExpandedPaths", &getExpandedPaths );
+	def( "affectsExpandedPaths", &affectsExpandedPaths );
 	def( "expand", &expand, ( arg( "expandAncestors" ) = true ) );
 	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
 	def( "clearExpansion", &clearExpansion );
 	def( "setSelectedPaths", &setSelectedPaths );
 	def( "getSelectedPaths", &getSelectedPaths );
+	def( "affectsSelectedPaths", &affectsSelectedPaths );
 
 }

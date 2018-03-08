@@ -76,10 +76,8 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		const Gaffer::Context *getContext() const;
 
 		/// Limits the expanded parts of the scene to those in the specified paths.
-		/// Without this, the whole scene is shown. A copy is not taken, but the
-		/// SceneGadget will not modify the expanded paths.
-		void setExpandedPaths( IECore::ConstPathMatcherDataPtr expandedPaths );
-		const IECore::PathMatcherData *getExpandedPaths() const;
+		void setExpandedPaths( const IECore::PathMatcher &expandedPaths );
+		const IECore::PathMatcher &getExpandedPaths() const;
 
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
@@ -102,10 +100,9 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		) const;
 
 		/// Returns the selection.
-		const IECore::PathMatcherData *getSelection() const;
-		/// Sets the selection. A copy is not taken, but the selection
-		/// is const and will not be modified by the SceneGadget.
-		void setSelection( IECore::ConstPathMatcherDataPtr selection );
+		const IECore::PathMatcher &getSelection() const;
+		/// Sets the selection.
+		void setSelection( const IECore::PathMatcher &selection );
 		/// Returns the bounding box of all the selected objects.
 		Imath::Box3f selectionBound() const;
 
@@ -129,7 +126,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		GafferScene::ConstScenePlugPtr m_scene;
 		Gaffer::ContextPtr m_context;
 		mutable unsigned m_dirtyFlags;
-		IECore::ConstPathMatcherDataPtr m_expandedPaths;
+		IECore::PathMatcher m_expandedPaths;
 		size_t m_minimumExpansionDepth;
 
 		class SceneGraph;
@@ -138,7 +135,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		IECoreGL::StatePtr m_baseState;
 		std::unique_ptr<SceneGraph> m_sceneGraph;
 
-		IECore::ConstPathMatcherDataPtr m_selection;
+		IECore::PathMatcher m_selection;
 
 };
 
