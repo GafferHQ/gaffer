@@ -619,6 +619,7 @@ void ViewportGadget::setCamera( const IECoreScene::Camera *camera )
 	// So we must reset the viewport to update the camera
 	setViewport( viewport );
 	m_cameraChangedSignal( this );
+	requestRender();
 }
 
 const Imath::M44f &ViewportGadget::getCameraTransform() const
