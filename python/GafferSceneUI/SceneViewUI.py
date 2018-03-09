@@ -264,31 +264,94 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		menuButton = GafferUI.MenuButton(
+			image = "camera.png",
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Camera" ),
+			hasFrame = False,
+		)
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
-
-		with row :
-			self.__enabledWidget = GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode=GafferUI.BoolWidget.DisplayMode.Switch )
-			self.__cameraWidget = GafferSceneUI.ScenePathPlugValueWidget(
-				plug["camera"],
-				path = GafferScene.ScenePath(
-					plug.node()["in"],
-					plug.node().getContext(),
-					"/",
-					filter = self.__pathFilter()
-				),
-			)
-			self.__cameraWidget.pathWidget().setFixedCharacterWidth( 13 )
-			if hasattr( self.__cameraWidget.pathWidget()._qtWidget(), "setPlaceholderText" ) :
-				self.__cameraWidget.pathWidget()._qtWidget().setPlaceholderText( "Render Camera" )
-
-		self._updateFromPlug()
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
 
 	def _updateFromPlug( self ) :
 
-		with self.getContext() :
-			self.__cameraWidget.setEnabled( self.getPlug()["enabled"].getValue() )
+		pass
+
+	def __menuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+
+		if self.getPlug()["enabled"].getValue() :
+			currentLookThrough = self.getPlug()["camera"].getValue()
+		else :
+			currentLookThrough = None
+
+		m.append(
+			"/Default",
+			{
+				"checkBox" : currentLookThrough is None,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), None )
+			}
+		)
+
+		m.append(
+			"/Render Camera",
+			{
+				"checkBox" : currentLookThrough is "",
+				"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), "" )
+			}
+		)
+
+		sets = {}
+		with IECore.IgnoredExceptions( Exception ) :
+			with self.getContext() :
+				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
+
+		for setName in sorted( sets.keys() ) :
+			for path in sorted( sets[setName].value.paths() ) :
+				m.append(
+					"/{}{}".format( setName[2:-1].title(), path ),
+					{
+						"checkBox" : currentLookThrough == path,
+						"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
+					}
+				)
+
+		m.append( "/BrowseDivider", { "divider" : True } )
+
+		m.append(
+			"/Browse...",
+			{
+				"command" : Gaffer.WeakMethod( self.__browse ),
+			}
+		)
+
+		return m
+
+	def __lookThrough( self, path, *unused ) :
+
+		self.getPlug()["enabled"].setValue( path is not None )
+		self.getPlug()["camera"].setValue( path or "" )
+
+	def __browse( self ) :
+
+		w = GafferSceneUI.ScenePathPlugValueWidget(
+			self.getPlug()["camera"],
+			path = GafferScene.ScenePath(
+				self.getPlug().node()["in"],
+				self.getPlug().node().getContext(),
+				"/",
+				filter = self.__pathFilter()
+			),
+		)
+		## \todo We're making a ScenePathPlugValueWidget just
+		# to get its dialogue, because it customises it for
+		# browsing scenes. Perhaps we should expose this
+		# functionality somewhere more officially.
+		dialogue = w._pathChooserDialogue()
+
+		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
+		if path is not None :
+			self.__lookThrough( str( path ) )
 
 	@staticmethod
 	def __pathFilter() :
