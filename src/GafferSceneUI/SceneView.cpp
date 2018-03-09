@@ -770,8 +770,9 @@ class SceneView::LookThrough : public boost::signals::trackable
 			:	m_view( view ),
 				m_framed( false ),
 				m_standardOptions( new StandardOptions ),
-				m_originalCamera( m_view->viewportGadget()->getCamera() ),
-				m_lookThroughCameraDirty( true ),
+				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
+				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
+				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( NULL ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
@@ -780,8 +781,30 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// Set up our plugs
 
 			ValuePlugPtr lookThrough = new ValuePlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+
+			lookThrough->addChild(
+				new Gaffer::FloatPlug(
+					"fieldOfView",
+					Plug::In,
+					54.43f,
+					0.01f,
+					Imath::limits<float>::max(),
+					Plug::Default & ~Plug::AcceptsInputs
+				)
+			);
+			lookThrough->addChild(
+				new Gaffer::V2fPlug(
+					"clippingPlanes", Plug::In,
+					V2f( 0.01, 100000 ),
+					V2f( 0.0001 ),
+					V2f( Imath::limits<float>::max() ),
+					Plug::Default & ~Plug::AcceptsInputs
+				)
+			);
+
 			lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 			lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+
 			view->addChild( lookThrough );
 
 			// Set up our nodes.
@@ -822,9 +845,11 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// Connect to the signals we need
 
 			m_standardOptions->plugDirtiedSignal().connect( boost::bind( &LookThrough::plugDirtied, this, ::_1 ) );
+			m_plugSetConnection = view->plugSetSignal().connect( boost::bind( &LookThrough::plugSet, this, ::_1 ) );
 			view->plugDirtiedSignal().connect( boost::bind( &LookThrough::plugDirtied, this, ::_1 ) );
 			view->viewportGadget()->preRenderSignal().connect( boost::bind( &LookThrough::preRender, this ) );
 			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &LookThrough::viewportChanged, this ) );
+			view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &LookThrough::viewportCameraChanged, this ) );
 
 			connectToViewContext();
 			view->contextChangedSignal().connect( boost::bind( &LookThrough::connectToViewContext, this ) );
@@ -855,14 +880,34 @@ class SceneView::LookThrough : public boost::signals::trackable
 			return m_standardOptions->outPlug();
 		}
 
+		Gaffer::FloatPlug *fieldOfViewPlug()
+		{
+			return plug()->getChild<Gaffer::FloatPlug>( 0 );
+		}
+
+		const Gaffer::FloatPlug *fieldOfViewPlug() const
+		{
+			return plug()->getChild<Gaffer::FloatPlug>( 0 );
+		}
+
+		Gaffer::V2fPlug *clippingPlanesPlug()
+		{
+			return plug()->getChild<Gaffer::V2fPlug>( 1 );
+		}
+
+		const Gaffer::V2fPlug *clippingPlanesPlug() const
+		{
+			return plug()->getChild<Gaffer::V2fPlug>( 1 );
+		}
+
 		const Gaffer::BoolPlug *enabledPlug() const
 		{
-			return plug()->getChild<BoolPlug>( 0 );
+			return plug()->getChild<BoolPlug>( 2 );
 		}
 
 		const Gaffer::StringPlug *cameraPlug() const
 		{
-			return plug()->getChild<StringPlug>( 1 );
+			return plug()->getChild<StringPlug>( 3 );
 		}
 
 		void connectToViewContext()
@@ -878,6 +923,39 @@ class SceneView::LookThrough : public boost::signals::trackable
 				{
 					m_lookThroughCameraDirty = m_viewportCameraDirty = true;
 				}
+			}
+		}
+
+		void plugSet( Gaffer::Plug *plug )
+		{
+			if(
+				plug != clippingPlanesPlug() &&
+				plug != fieldOfViewPlug()
+			)
+			{
+				return;
+			}
+
+			updateLookThroughCamera();
+
+			CameraPtr camera = m_lookThroughCamera ? m_originalCamera : m_view->viewportGadget()->getCamera()->copy();
+
+			V2f clippingPlanes = clippingPlanesPlug()->getValue();
+			if( clippingPlanes[1] < clippingPlanes[0] )
+			{
+				std::swap( clippingPlanes[0], clippingPlanes[1] );
+			}
+			else if( clippingPlanes[1] == clippingPlanes[0] )
+			{
+				clippingPlanes[1] += 0.001;
+			}
+			camera->parameters()["clippingPlanes"] = new V2fData( clippingPlanes );
+
+			camera->parameters()["projection:fov"] = new FloatData( fieldOfViewPlug()->getValue() );
+
+			if( !m_lookThroughCamera )
+			{
+				m_view->viewportGadget()->setCamera( camera.get() );
 			}
 		}
 
@@ -911,6 +989,24 @@ class SceneView::LookThrough : public boost::signals::trackable
 		{
 			m_viewportCameraDirty = true;
 			m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
+		}
+
+		void viewportCameraChanged()
+		{
+			if( !enabledPlug()->getValue() )
+			{
+				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
+
+				const Camera *camera = m_view->viewportGadget()->getCamera();
+				if( auto clippingPlanes = camera->parametersData()->member<V2fData>( "clippingPlanes" ) )
+				{
+					clippingPlanesPlug()->setValue( clippingPlanes->readable() );
+				}
+				if( auto fieldOfView = camera->parametersData()->member<FloatData>( "projection:fov" ) )
+				{
+					fieldOfViewPlug()->setValue( fieldOfView->readable() );
+				}
+			}
 		}
 
 		void preRender()
@@ -1071,11 +1167,13 @@ class SceneView::LookThrough : public boost::signals::trackable
 		/// so they don't get destroyed
 		std::vector< Gaffer::ConstNodePtr > m_internalNodes;
 
+		boost::signals::scoped_connection m_plugSetConnection;
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		/// The default viewport camera - we store this so we can
 		/// return to it after looking through a scene camera.
-		IECore::ConstCameraPtr m_originalCamera;
+		IECore::CameraPtr m_originalCamera;
+		M44f m_originalCameraTransform;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;

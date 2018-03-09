@@ -330,5 +330,70 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
+	def testClippingsPlanesAndFOV( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["camera"] = GafferScene.Camera()
+
+		view = GafferUI.View.create( script["camera"]["out"] )
+
+		def assertDefaultCamera() :
+
+			# Force update
+			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+			self.assertEqual(
+				view["lookThrough"]["clippingPlanes"].getValue(),
+				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
+			)
+			self.assertEqual(
+				view["lookThrough"]["fieldOfView"].getValue(),
+				view.viewportGadget().getCamera().parameters()["projection:fov"].value
+			)
+
+		assertDefaultCamera()
+
+		view["lookThrough"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
+		assertDefaultCamera()
+
+		view["lookThrough"]["fieldOfView"].setValue( 40 )
+		assertDefaultCamera()
+
+		def assertLookThroughCamera() :
+
+			# Force update
+			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+			self.assertEqual(
+				script["camera"]["clippingPlanes"].getValue(),
+				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
+			)
+			self.assertEqual(
+				script["camera"]["fieldOfView"].getValue(),
+				view.viewportGadget().getCamera().parameters()["projection:fov"].value
+			)
+
+		view["lookThrough"]["camera"].setValue( "/camera" )
+		view["lookThrough"]["enabled"].setValue( True )
+
+		assertLookThroughCamera()
+
+		view["lookThrough"]["enabled"].setValue( False )
+
+		assertDefaultCamera()
+
+		view["lookThrough"]["enabled"].setValue( True )
+
+		assertLookThroughCamera()
+
+		view["lookThrough"]["clippingPlanes"].setValue( imath.V2f( 10, 20 ) )
+		view["lookThrough"]["fieldOfView"].setValue( 60 )
+
+		assertLookThroughCamera()
+
+		view["lookThrough"]["enabled"].setValue( False )
+
+		assertDefaultCamera()
+
 if __name__ == "__main__":
 	unittest.main()
