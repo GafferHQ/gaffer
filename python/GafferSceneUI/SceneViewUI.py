@@ -344,9 +344,9 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
 
 		for setName in sorted( sets.keys() ) :
-			for path in sorted( sets[setName].value.paths() ) :
+			for abbreviatedPath, path in self.__abbreviatedPaths( sets[setName].value ) :
 				m.append(
-					"/{}{}".format( setName[2:-1].title(), path ),
+					"/{}{}".format( setName[2:-1].title(), abbreviatedPath ),
 					{
 						"checkBox" : currentLookThrough == path,
 						"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
@@ -483,6 +483,46 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.setHighlighted( False )
 		self.__lookThrough( event.data[0] )
 		return True
+
+	## \todo Would this be useful as PathMatcherAlgo
+	# somewhere (implemented in C++ using iterators)?
+	@staticmethod
+	def __abbreviatedPaths( pathMatcher ) :
+
+		class Node( dict ) :
+			fullPath = None
+			def __missing__( self, key ) :
+				n = Node()
+				self[key] = n
+				return n
+
+		# Build tree of dicts equivalent to the
+		# PathMatcher.
+		root = Node()
+		for path in pathMatcher.paths() :
+			node = root
+			for name in path[1:].split( "/" ) :
+				node = node[name]
+			node.fullPath = path
+
+		# Walk the tree, building the abbreviated
+		# paths. We abbreviate by omitting the names
+		# of nodes which have no siblings.
+		result = []
+		def walk( node, abbreviatedPath ) :
+
+			for key in node.keys() :
+				abbreviatedChildPath = abbreviatedPath
+				if len( node ) > 1 or node[key].fullPath :
+					abbreviatedChildPath += "/" + key
+				walk( node[key], abbreviatedChildPath )
+
+			if node.fullPath :
+				result.append( ( abbreviatedPath, node.fullPath ) )
+
+		walk( root, "" )
+
+		return sorted( result )
 
 ##########################################################################
 # _GridPlugValueWidget
