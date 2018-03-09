@@ -513,5 +513,20 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["b"]["sum"].getInput().isSame( s2["b"]["a"]["sum"] ) )
 
+	def testNonBoxDoublePromote( self ) :
+
+		s = Gaffer.ScriptNode()
+		s['a'] = Gaffer.SubGraph()
+		s['a']['b'] = Gaffer.SubGraph()
+		s['a']['b']['c'] = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( s['a']['b']['c']["op1"], "test", 10 )
+
+		Gaffer.PlugAlgo.promote( s['a']['b']['c']['op1'] )
+		Gaffer.PlugAlgo.promote( s['a']['b']['op1'] )
+
+		self.assertEqual( Gaffer.Metadata.value( s['a']['b']['c']['op1'], "test" ), 10 )
+		self.assertEqual( Gaffer.Metadata.value( s['a']['b']['op1'], "test" ), 10 )
+		self.assertEqual( Gaffer.Metadata.value( s['a']['op1'], "test" ), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
