@@ -291,15 +291,25 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menuButton = GafferUI.MenuButton(
+		self.__menuButton = GafferUI.MenuButton(
 			image = "camera.png",
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Camera" ),
 			hasFrame = False,
 		)
 
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
 		self.__settingsWindow = None
+
+		# Must connect with group 0 so we get called before PlugValueWidget's default handlers
+		self.__dragEnterConnection = self.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dropConnection = self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ) )
+
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+
+		self.__menuButton.setHighlighted( highlighted )
 
 	def _updateFromPlug( self ) :
 
@@ -447,6 +457,34 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		camerasPathFilter.userData()["UI"] = { "label" : "Show Lights", "invertEnabled" : True }
 
 		return Gaffer.CompoundPathFilter( [ validPathFilter, camerasPathFilter ] )
+
+	def __dragEnter( self, widget, event ) :
+
+		if not isinstance( event.data, IECore.StringVectorData ) :
+			return False
+
+		if len( event.data ) != 1 :
+			return False
+
+		sets = {}
+		with IECore.IgnoredExceptions( Exception ) :
+			with self.getContext() :
+				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
+
+		if not any(
+			s.value.match( event.data[0] ) & IECore.PathMatcher.Result.ExactMatch
+			for s in sets.values()
+		) :
+			return False
+
+		self.setHighlighted( True )
+		return True
+
+	def __drop( self, widget, event ) :
+
+		self.setHighlighted( False )
+		self.__lookThrough( event.data[0] )
+		return True
 
 ##########################################################################
 # _GridPlugValueWidget
