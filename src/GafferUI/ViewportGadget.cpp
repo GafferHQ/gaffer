@@ -201,6 +201,7 @@ void ViewportGadget::setCamera( const IECore::Camera *camera )
 	// So we must reset the viewport to update the camera
 	setViewport( viewport );
 	m_cameraChangedSignal( this );
+	requestRender();
 }
 
 ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
