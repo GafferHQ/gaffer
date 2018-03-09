@@ -53,6 +53,8 @@
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/Style.h"
 
+#include <cmath>
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreGL;
@@ -230,6 +232,28 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	const Imath::V3f &upVector )
 {
 	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraChangedSignal( this );
+	requestRender();
+}
+
+void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
+{
+	// Transform bound to camera space.
+	Box3f b = transform( box, getCameraTransform().inverse() );
+	// Choose a far plane that should still be
+	// sufficient no matter how we orbit about the
+	// centre of the bound.
+	float far = b.center().z - b.size().length() / 2.0;
+	// Make it positive (camera looks down -ve Z, but clipping
+	// planes are specified as +ve values).
+	far *= -1.0f;
+	// Pad to the next power of 10, because we like nice numbers,
+	// and choose a near clipping plane suitable for maintaining
+	// precision.
+	const int farLogTen = ceil( log10( far ) );
+	const int nearLogTen = farLogTen - 5;
+
+	m_cameraController->setClippingPlanes( V2f( pow( 10, nearLogTen ), pow( 10, farLogTen ) ) );
 	m_cameraChangedSignal( this );
 	requestRender();
 }
