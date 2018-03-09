@@ -59,6 +59,8 @@ def __samplingSummary( plug ) :
 	info = []
 	if plug["aaSamples"]["enabled"].getValue() :
 		info.append( "AA %d" % plug["aaSamples"]["value"].getValue() )
+	if plug["aaMinInteractiveSamples"]["enabled"].getValue() :
+		info.append( "Min AA %d" % plug["aaMinInteractiveSamples"]["value"].getValue() )
 	if plug["giDiffuseSamples"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseSamples"]["value"].getValue() )
 	if plug["giSpecularSamples"]["enabled"].getValue() :
@@ -288,6 +290,22 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "AA Samples",
+
+		],
+
+		"options.aaMinInteractiveSamples" : [
+
+			"description",
+			"""
+			Controls the number of rays per pixel
+			for the first low quality pass of
+			interactive rendering.  -5 will start
+			with large squares, 1 will start one
+			sample for every pixel.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "AA Min Interactive Samples",
 
 		],
 
