@@ -57,6 +57,7 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include <cmath>
 #include <sys/time.h>
 
 using namespace Imath;
@@ -174,6 +175,16 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		const Imath::V2i &getResolution() const
 		{
 			return m_resolution->readable();
+		}
+
+		void setClippingPlanes( const Imath::V2f &clippingPlanes )
+		{
+			m_clippingPlanes->writable() = clippingPlanes;
+		}
+
+		const Imath::V2f &getClippingPlanes() const
+		{
+			return m_clippingPlanes->readable();
 		}
 
 		/// Moves the camera to frame the specified box, keeping the
@@ -459,7 +470,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		Box2fDataPtr m_screenWindow;
 		ConstStringDataPtr m_projection;
 		ConstFloatDataPtr m_fov;
-		ConstV2fDataPtr m_clippingPlanes;
+		V2fDataPtr m_clippingPlanes;
 		float m_centreOfInterest;
 		M44f m_transform;
 
@@ -663,6 +674,28 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	const Imath::V3f &upVector )
 {
 	m_cameraController->frame( box, viewDirection, upVector );
+	m_cameraChangedSignal( this );
+	requestRender();
+}
+
+void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
+{
+	// Transform bound to camera space.
+	Box3f b = transform( box, getCameraTransform().inverse() );
+	// Choose a far plane that should still be
+	// sufficient no matter how we orbit about the
+	// centre of the bound.
+	float far = b.center().z - b.size().length() / 2.0;
+	// Make it positive (camera looks down -ve Z, but clipping
+	// planes are specified as +ve values).
+	far *= -1.0f;
+	// Pad to the next power of 10, because we like nice numbers,
+	// and choose a near clipping plane suitable for maintaining
+	// precision.
+	const int farLogTen = ceil( log10( far ) );
+	const int nearLogTen = farLogTen - 5;
+
+	m_cameraController->setClippingPlanes( V2f( pow( 10, nearLogTen ), pow( 10, farLogTen ) ) );
 	m_cameraChangedSignal( this );
 	requestRender();
 }

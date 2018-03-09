@@ -107,6 +107,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );
 
+		void fitClippingPlanes( const Imath::Box3f &box );
+
 		/// When drag tracking is enabled, the camera will automatically
 		/// move to follow drags that would otherwise be exiting the viewport.
 		void setDragTracking( bool dragTracking );
