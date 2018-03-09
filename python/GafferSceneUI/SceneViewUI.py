@@ -83,6 +83,25 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._LookThroughPlugValueWidget",
 			"toolbarLayout:divider", True,
 			"toolbarLayout:label", "",
+			"layout:activator:hidden", lambda plug : False,
+
+		],
+
+		"lookThrough.fieldOfView" : [
+
+			"description",
+			"""
+			The field of view for the viewport's default perspective camera.
+			""",
+
+		],
+
+		"lookThrough.clippingPlanes" : [
+
+			"description",
+			"""
+			The near and far clipping planes for the viewport's default perspective camera.
+			""",
 
 		],
 
@@ -94,6 +113,9 @@ Gaffer.Metadata.registerNode(
 			By default, the current render camera is used, but this can be changed using the lookThrough.camera
 			setting.
 			""",
+
+			"layout:visibilityActivator", "hidden"
+
 		],
 
 		"lookThrough.camera" : [
@@ -104,6 +126,9 @@ Gaffer.Metadata.registerNode(
 			means that the current render camera will be used - the paths to other cameras may be specified
 			to choose another camera."
 			""",
+
+			"layout:visibilityActivator", "hidden"
+
 		],
 
 		"grid" : [
@@ -272,6 +297,8 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
 
+		self.__settingsWindow = None
+
 	def _updateFromPlug( self ) :
 
 		pass
@@ -325,6 +352,20 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
+		m.append(
+			"/SettingsDivider",
+			{
+				"divider" : True,
+			}
+		)
+
+		m.append(
+			"/Settings...",
+			{
+				"command" : Gaffer.WeakMethod( self.__showSettings ),
+			}
+		)
+
 		return m
 
 	def __lookThrough( self, path, *unused ) :
@@ -352,6 +393,26 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 		if path is not None :
 			self.__lookThrough( str( path ) )
+
+	def __showSettings( self, menu ) :
+
+		if self.__settingsWindow is None :
+
+			self.__settingsWindow = GafferUI.Window( title = "Camera Settings" )
+			with self.__settingsWindow :
+				with GafferUI.ListContainer() :
+					with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None, borderWidth = 4 ) :
+						layout = GafferUI.PlugLayout( self.getPlug() )
+					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
+			self.ancestor( GafferUI.Window ).addChildWindow( self.__settingsWindow )
+
+			# Force layout to build immediately, so we can then match
+			# the window size to it.
+			layout.plugValueWidget( self.getPlug()["fieldOfView"], lazy = False )
+			self.__settingsWindow.resizeToFitChild()
+
+		self.__settingsWindow.setVisible( True )
 
 	@staticmethod
 	def __pathFilter() :
