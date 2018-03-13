@@ -118,7 +118,7 @@ def layoutMenuCallable( menu ) :
 
 	menuDefinition = IECore.MenuDefinition()
 
-	layoutNames = layouts.names()
+	layoutNames = sorted( layouts.names() )
 
 	if layoutNames :
 
