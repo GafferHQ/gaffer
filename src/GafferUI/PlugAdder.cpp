@@ -250,6 +250,11 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 
 	setHighlighted( true );
 
+	if( !event.sourceGadget )
+	{
+		return true;
+	}
+
 	V3f center = V3f( 0.0f ) * fullTransform();
 	center = center * event.sourceGadget->fullTransform().inverse();
 	const V3f tangent = edgeTangent( m_edge );
