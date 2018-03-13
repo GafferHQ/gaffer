@@ -40,6 +40,12 @@ def __sceneViewGetItemWrapper( originalGetItem ) :
 
 	def getItem( self, key ) :
 
+		if key == "lookThrough" :
+			return {
+				"enabled" : originalGetItem( self, "camera" )["lookThroughEnabled"],
+				"camera" : originalGetItem( self, "camera" )["lookThroughCamera"],
+			}
+
 		key = {
 			"baseState" : "drawingMode",
 		}.get( key, key )
