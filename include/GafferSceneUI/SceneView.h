@@ -77,8 +77,8 @@ class SceneView : public GafferUI::View
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;
 
-		Gaffer::ValuePlug *lookThroughPlug();
-		const Gaffer::ValuePlug *lookThroughPlug() const;
+		Gaffer::ValuePlug *cameraPlug();
+		const Gaffer::ValuePlug *cameraPlug() const;
 
 		Gaffer::ValuePlug *gridPlug();
 		const Gaffer::ValuePlug *gridPlug() const;
@@ -128,8 +128,8 @@ class SceneView : public GafferUI::View
 		boost::shared_ptr<DrawingMode> m_drawingMode;
 		class ShadingMode;
 		boost::shared_ptr<ShadingMode> m_shadingMode;
-		class LookThrough;
-		boost::shared_ptr<LookThrough> m_lookThrough;
+		class Camera;
+		boost::shared_ptr<Camera> m_camera;
 		class Grid;
 		boost::shared_ptr<Grid> m_grid;
 		class Gnomon;

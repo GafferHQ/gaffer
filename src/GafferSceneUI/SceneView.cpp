@@ -635,7 +635,7 @@ class SceneView::Gnomon : public boost::signals::trackable
 };
 
 //////////////////////////////////////////////////////////////////////////
-// SceneView::LookThrough implementation
+// SceneView::Camera implementation
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -761,12 +761,12 @@ IE_CORE_DECLAREPTR( CameraOverlay )
 
 } // namespace
 
-class SceneView::LookThrough : public boost::signals::trackable
+class SceneView::Camera : public boost::signals::trackable
 {
 
 	public :
 
-		LookThrough( SceneView *view )
+		Camera( SceneView *view )
 			:	m_view( view ),
 				m_framed( false ),
 				m_standardOptions( new StandardOptions ),
@@ -780,9 +780,9 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 			// Set up our plugs
 
-			ValuePlugPtr lookThrough = new ValuePlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+			ValuePlugPtr plug = new ValuePlug( "camera", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
 
-			lookThrough->addChild(
+			plug->addChild(
 				new Gaffer::FloatPlug(
 					"fieldOfView",
 					Plug::In,
@@ -792,7 +792,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 					Plug::Default & ~Plug::AcceptsInputs
 				)
 			);
-			lookThrough->addChild(
+			plug->addChild(
 				new Gaffer::V2fPlug(
 					"clippingPlanes", Plug::In,
 					V2f( 0.01, 100000 ),
@@ -802,10 +802,10 @@ class SceneView::LookThrough : public boost::signals::trackable
 				)
 			);
 
-			lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
-			lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+			plug->addChild( new BoolPlug( "lookThroughEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
+			plug->addChild( new StringPlug( "lookThroughCamera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 
-			view->addChild( lookThrough );
+			view->addChild( plug );
 
 			// Set up our nodes.
 			// We use a LightToCamera node filtered to all lights to create camera standins so that we can
@@ -844,32 +844,32 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 			// Connect to the signals we need
 
-			m_standardOptions->plugDirtiedSignal().connect( boost::bind( &LookThrough::plugDirtied, this, ::_1 ) );
-			m_plugSetConnection = view->plugSetSignal().connect( boost::bind( &LookThrough::plugSet, this, ::_1 ) );
-			view->plugDirtiedSignal().connect( boost::bind( &LookThrough::plugDirtied, this, ::_1 ) );
-			view->viewportGadget()->preRenderSignal().connect( boost::bind( &LookThrough::preRender, this ) );
-			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &LookThrough::viewportChanged, this ) );
-			view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &LookThrough::viewportCameraChanged, this ) );
+			m_standardOptions->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
+			m_plugSetConnection = view->plugSetSignal().connect( boost::bind( &Camera::plugSet, this, ::_1 ) );
+			view->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
+			view->viewportGadget()->preRenderSignal().connect( boost::bind( &Camera::preRender, this ) );
+			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &Camera::viewportChanged, this ) );
+			view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &Camera::viewportCameraChanged, this ) );
 
 			connectToViewContext();
-			view->contextChangedSignal().connect( boost::bind( &LookThrough::connectToViewContext, this ) );
+			view->contextChangedSignal().connect( boost::bind( &Camera::connectToViewContext, this ) );
 
 		}
 
 		Gaffer::ValuePlug *plug()
 		{
-			return m_view->getChild<Gaffer::ValuePlug>( "lookThrough" );
+			return m_view->getChild<Gaffer::ValuePlug>( "camera" );
 		}
 
 		const Gaffer::ValuePlug *plug() const
 		{
-			return m_view->getChild<Gaffer::ValuePlug>( "lookThrough" );
+			return m_view->getChild<Gaffer::ValuePlug>( "camera" );
 		}
 
 		const Imath::Box2f &resolutionGate() const
 		{
-			const_cast<LookThrough *>( this )->updateLookThroughCamera();
-			const_cast<LookThrough *>( this )->updateViewportCameraAndOverlay();
+			const_cast<Camera *>( this )->updateLookThroughCamera();
+			const_cast<Camera *>( this )->updateViewportCameraAndOverlay();
 			return m_overlay->getResolutionGate();
 		}
 
@@ -900,26 +900,26 @@ class SceneView::LookThrough : public boost::signals::trackable
 			return plug()->getChild<Gaffer::V2fPlug>( 1 );
 		}
 
-		const Gaffer::BoolPlug *enabledPlug() const
+		const Gaffer::BoolPlug *lookThroughEnabledPlug() const
 		{
 			return plug()->getChild<BoolPlug>( 2 );
 		}
 
-		const Gaffer::StringPlug *cameraPlug() const
+		const Gaffer::StringPlug *lookThroughCameraPlug() const
 		{
 			return plug()->getChild<StringPlug>( 3 );
 		}
 
 		void connectToViewContext()
 		{
-			m_contextChangedConnection = m_view->getContext()->changedSignal().connect( boost::bind( &LookThrough::contextChanged, this, ::_2 ) );
+			m_contextChangedConnection = m_view->getContext()->changedSignal().connect( boost::bind( &Camera::contextChanged, this, ::_2 ) );
 		}
 
 		void contextChanged( const IECore::InternedString &name )
 		{
 			if( !boost::starts_with( name.value(), "ui:" ) )
 			{
-				if( enabledPlug()->getValue() )
+				if( lookThroughEnabledPlug()->getValue() )
 				{
 					m_lookThroughCameraDirty = m_viewportCameraDirty = true;
 				}
@@ -961,7 +961,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 		void plugDirtied( Gaffer::Plug *plug )
 		{
-			if( plug != enabledPlug() && !enabledPlug()->getValue() )
+			if( plug != lookThroughEnabledPlug() && !lookThroughEnabledPlug()->getValue() )
 			{
 				// No need to do anything if we're turned off.
 				return;
@@ -972,12 +972,12 @@ class SceneView::LookThrough : public boost::signals::trackable
 				plug == scenePlug()->globalsPlug() ||
 				plug == scenePlug()->objectPlug() ||
 				plug == scenePlug()->transformPlug() ||
-				plug == enabledPlug() ||
-				plug == cameraPlug()
+				plug == lookThroughEnabledPlug() ||
+				plug == lookThroughCameraPlug()
 			)
 			{
 				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
-				if( plug == enabledPlug() && enabledPlug()->getValue() )
+				if( plug == lookThroughEnabledPlug() && lookThroughEnabledPlug()->getValue() )
 				{
 					m_originalCamera = m_view->viewportGadget()->getCamera()->copy();
 				}
@@ -993,11 +993,11 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 		void viewportCameraChanged()
 		{
-			if( !enabledPlug()->getValue() )
+			if( !lookThroughEnabledPlug()->getValue() )
 			{
 				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
 
-				const Camera *camera = m_view->viewportGadget()->getCamera();
+				const IECoreScene::Camera *camera = m_view->viewportGadget()->getCamera();
 				if( auto clippingPlanes = camera->parametersData()->member<V2fData>( "clippingPlanes" ) )
 				{
 					clippingPlanesPlug()->setValue( clippingPlanes->readable() );
@@ -1032,7 +1032,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 			m_lookThroughCameraDirty = false;
 			m_lookThroughCamera = NULL;
-			if( !enabledPlug()->getValue() )
+			if( !lookThroughEnabledPlug()->getValue() )
 			{
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
 				m_view->viewportGadget()->setCameraEditable( true );
@@ -1045,6 +1045,10 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 			Context::Scope scopedContext( m_view->getContext() );
 
+			string cameraPathString = lookThroughCameraPlug()->getValue();
+			ConstCompoundObjectPtr globals;
+			ConstPathMatcherDataPtr cameraSet;
+			M44f cameraTransform;
 			try
 			{
 				const string cameraPathString = cameraPlug()->getValue();
@@ -1233,7 +1237,7 @@ SceneView::SceneView( const std::string &name )
 
 	m_drawingMode = boost::make_shared<DrawingMode>( this );
 	m_shadingMode = boost::make_shared<ShadingMode>( this );
-	m_lookThrough = boost::make_shared<LookThrough>( this );
+	m_camera = boost::make_shared<LookThrough>( this );
 	m_grid = boost::make_shared<Grid>( this );
 	m_gnomon = boost::make_shared<Gnomon>( this );
 
@@ -1291,14 +1295,14 @@ const Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-Gaffer::ValuePlug *SceneView::lookThroughPlug()
+Gaffer::ValuePlug *SceneView::cameraPlug()
 {
-	return m_lookThrough->plug();
+	return m_camera->plug();
 }
 
-const Gaffer::ValuePlug *SceneView::lookThroughPlug() const
+const Gaffer::ValuePlug *SceneView::cameraPlug() const
 {
-	return m_lookThrough->plug();
+	return m_camera->plug();
 }
 
 Gaffer::ValuePlug *SceneView::gridPlug()
@@ -1339,7 +1343,7 @@ void SceneView::setContext( Gaffer::ContextPtr context )
 
 const Box2f &SceneView::resolutionGate() const
 {
-	return m_lookThrough->resolutionGate();
+	return m_camera->resolutionGate();
 }
 
 void SceneView::registerShadingMode( const std::string &name, ShadingModeCreator creator )

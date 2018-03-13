@@ -241,17 +241,17 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 100, 0, 0 ) ) )
 
 		# Set the path for the look-through camera, but don't activate it - nothing should have changed.
-		view["lookThrough"]["camera"].setValue( "/group/camera" )
+		view["camera"]["lookThroughCamera"].setValue( "/group/camera" )
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 100, 0, 0 ) ) )
 
 		# Enable the look-through - the camera should update.
-		view["lookThrough"]["enabled"].setValue( True )
-		self.waitForIdle()
+		view["camera"]["lookThroughEnabled"].setValue( True )
+		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), script["group"]["out"].transform( "/group/camera" ) )
 
 		# Disable the look-through - the camera should revert to its previous position.
-		view["lookThrough"]["enabled"].setValue( False )
-		self.waitForIdle()
+		view["camera"]["lookThroughEnabled"].setValue( False )
+		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 100, 0, 0 ) ) )
 
 		# Simulate the user moving the viewport camera, and then move the (now disabled) look-through
@@ -343,20 +343,20 @@ class SceneViewTest( GafferUITest.TestCase ) :
 			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
 
 			self.assertEqual(
-				view["lookThrough"]["clippingPlanes"].getValue(),
+				view["camera"]["clippingPlanes"].getValue(),
 				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
 			)
 			self.assertEqual(
-				view["lookThrough"]["fieldOfView"].getValue(),
+				view["camera"]["fieldOfView"].getValue(),
 				view.viewportGadget().getCamera().parameters()["projection:fov"].value
 			)
 
 		assertDefaultCamera()
 
-		view["lookThrough"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
 		assertDefaultCamera()
 
-		view["lookThrough"]["fieldOfView"].setValue( 40 )
+		view["camera"]["fieldOfView"].setValue( 40 )
 		assertDefaultCamera()
 
 		def assertLookThroughCamera() :
@@ -373,25 +373,25 @@ class SceneViewTest( GafferUITest.TestCase ) :
 				view.viewportGadget().getCamera().parameters()["projection:fov"].value
 			)
 
-		view["lookThrough"]["camera"].setValue( "/camera" )
-		view["lookThrough"]["enabled"].setValue( True )
+		view["camera"]["lookThroughCamera"].setValue( "/camera" )
+		view["camera"]["lookThroughEnabled"].setValue( True )
 
 		assertLookThroughCamera()
 
-		view["lookThrough"]["enabled"].setValue( False )
+		view["camera"]["lookThroughEnabled"].setValue( False )
 
 		assertDefaultCamera()
 
-		view["lookThrough"]["enabled"].setValue( True )
+		view["camera"]["lookThroughEnabled"].setValue( True )
 
 		assertLookThroughCamera()
 
-		view["lookThrough"]["clippingPlanes"].setValue( imath.V2f( 10, 20 ) )
-		view["lookThrough"]["fieldOfView"].setValue( 60 )
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 10, 20 ) )
+		view["camera"]["fieldOfView"].setValue( 60 )
 
 		assertLookThroughCamera()
 
-		view["lookThrough"]["enabled"].setValue( False )
+		view["camera"]["lookThroughEnabled"].setValue( False )
 
 		assertDefaultCamera()
 
