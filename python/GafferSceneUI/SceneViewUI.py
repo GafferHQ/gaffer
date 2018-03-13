@@ -567,3 +567,51 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		return m
+
+##########################################################################
+# Context menu
+##########################################################################
+
+def __fitClippingPlanes( view, toSelection = False ) :
+
+	viewportGadget = view.viewportGadget()
+	sceneGadget = viewportGadget.getPrimaryChild()
+	viewportGadget.fitClippingPlanes(
+		sceneGadget.bound() if not toSelection else sceneGadget.selectionBound()
+	)
+
+def __viewContextMenu( viewer, view, menuDefinition ) :
+
+	if not isinstance( view, GafferSceneUI.SceneView ) :
+		return False
+
+	sceneGadget = view.viewportGadget().getPrimaryChild()
+	cameraEditable = view.viewportGadget().getCameraEditable()
+
+	menuDefinition.append(
+		"/Clipping Planes/Fit To Selection",
+		{
+			"active" : cameraEditable and not sceneGadget.getSelection().isEmpty(),
+			"command" : functools.partial( __fitClippingPlanes, view, toSelection = True ),
+			"shortCut" : "Ctrl+K",
+		}
+	)
+
+	menuDefinition.append(
+		"/Clipping Planes/Fit To Scene",
+		{
+			"active" : cameraEditable,
+			"command" : functools.partial( __fitClippingPlanes, view ),
+		}
+	)
+
+	menuDefinition.append(
+		"/Clipping Planes/Reset",
+		{
+			"active" : cameraEditable,
+			"command" : view["lookThrough"]["clippingPlanes"].setToDefault,
+		}
+	)
+
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+
