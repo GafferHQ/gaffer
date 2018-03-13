@@ -80,16 +80,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"lookThrough" : [
+		"camera" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._LookThroughPlugValueWidget",
+			"description",
+			"""
+			Defines the camera used to view the scene.
+			""",
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._CameraPlugValueWidget",
 			"toolbarLayout:divider", True,
 			"toolbarLayout:label", "",
 			"layout:activator:hidden", lambda plug : False,
 
 		],
 
-		"lookThrough.fieldOfView" : [
+		"camera.fieldOfView" : [
 
 			"description",
 			"""
@@ -98,7 +103,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"lookThrough.clippingPlanes" : [
+		"camera.clippingPlanes" : [
 
 			"description",
 			"""
@@ -107,12 +112,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"lookThrough.enabled" : [
+		"camera.lookThroughEnabled" : [
 
 			"description",
 			"""
 			When enabled, locks the view to look through a specific camera in the scene.
-			By default, the current render camera is used, but this can be changed using the lookThrough.camera
+			By default, the current render camera is used, but this can be changed using the camera.lookThroughCamera
 			setting.
 			""",
 
@@ -120,7 +125,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"lookThrough.camera" : [
+		"camera.lookThroughCamera" : [
 
 			"description",
 			"""
@@ -284,10 +289,10 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
 
 ##########################################################################
-# _LookThroughPlugValueWidget
+# _CameraPlugValueWidget
 ##########################################################################
 
-class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
+class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
@@ -319,8 +324,8 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m = IECore.MenuDefinition()
 
-		if self.getPlug()["enabled"].getValue() :
-			currentLookThrough = self.getPlug()["camera"].getValue()
+		if self.getPlug()["lookThroughEnabled"].getValue() :
+			currentLookThrough = self.getPlug()["lookThroughCamera"].getValue()
 		else :
 			currentLookThrough = None
 
@@ -382,13 +387,13 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __lookThrough( self, path, *unused ) :
 
-		self.getPlug()["enabled"].setValue( path is not None )
-		self.getPlug()["camera"].setValue( path or "" )
+		self.getPlug()["lookThroughEnabled"].setValue( path is not None )
+		self.getPlug()["lookThroughCamera"].setValue( path or "" )
 
 	def __browse( self ) :
 
 		w = GafferSceneUI.ScenePathPlugValueWidget(
-			self.getPlug()["camera"],
+			self.getPlug()["lookThroughCamera"],
 			path = GafferScene.ScenePath(
 				self.getPlug().node()["in"],
 				self.getPlug().node().getContext(),
@@ -609,7 +614,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 		"/Clipping Planes/Reset",
 		{
 			"active" : cameraEditable,
-			"command" : view["lookThrough"]["clippingPlanes"].setToDefault,
+			"command" : view["camera"]["clippingPlanes"].setToDefault,
 		}
 	)
 
