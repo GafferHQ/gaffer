@@ -1405,6 +1405,13 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 		collapseSelection();
 		return true;
 	}
+	else if( event.key == "K" && event.modifiers == KeyEvent::Control )
+	{
+		if( viewportGadget()->getCameraEditable() )
+		{
+			viewportGadget()->fitClippingPlanes( framingBound() );
+		}
+	}
 
 	return false;
 }
