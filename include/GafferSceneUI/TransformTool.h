@@ -68,6 +68,18 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 		struct Selection
 		{
+
+			// Constructs an empty selection.
+			Selection();
+
+			// Constructs a selection for the specified
+			// viewed scene.
+			Selection(
+				const GafferScene::ConstScenePlugPtr scene,
+				const GafferScene::ScenePlug::ScenePath &path,
+				const Gaffer::ConstContextPtr &context
+			);
+
 			/// Viewed scene
 			/// ============
 			///
