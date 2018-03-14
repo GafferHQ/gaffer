@@ -1346,5 +1346,45 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n2"]["op1"].getValue(), 302 )
 
+	def testReadFromCompoundDataPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["s"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			c = parent["n"]["c"]
+			parent["n"]["s"] = ",".join( "{}:{}".format( k, c[k] ) for k in sorted( c.keys() ) )
+			"""
+		) )
+
+		self.assertEqual( s["n"]["s"].getValue(), "" )
+
+		cs = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
+		m1 = s["n"]["c"].addOptionalMember( "a", 1, enabled = True )
+		self.assertTrue( s["n"]["s"] in { x[0] for x in cs } )
+		self.assertEqual( s["n"]["s"].getValue(), "a:1" )
+
+		del cs[:]
+		m2 = s["n"]["c"].addOptionalMember( "b", 2, enabled = True )
+		self.assertTrue( s["n"]["s"] in { x[0] for x in cs } )
+		self.assertEqual( s["n"]["s"].getValue(), "a:1,b:2" )
+
+		del cs[:]
+		m1["enabled"].setValue( False )
+		self.assertTrue( s["n"]["s"] in { x[0] for x in cs } )
+		self.assertEqual( s["n"]["s"].getValue(), "b:2" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["s"].getValue(), "b:2" )
+		s2["n"]["c"][m1.getName()]["enabled"].setValue( True )
+		self.assertEqual( s2["n"]["s"].getValue(), "a:1,b:2" )
+
 if __name__ == "__main__":
 	unittest.main()
