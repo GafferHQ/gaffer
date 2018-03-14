@@ -240,10 +240,21 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState && srcNodule() && dstNodule() )
+	const Gadget *srcNodeGadget = nullptr;
+	if( srcNodule() )
 	{
-		const Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+		srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+	}
+	else if( auto graphGadget = parent<GraphGadget>() )
+	{
+		srcNodeGadget = graphGadget->nodeGadget(
+			dstNodule()->plug()->getInput()->node()
+		);
+	}
+
+	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
+	if( state != Style::HighlightedState )
+	{
 		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
 		{
 			state = Style::HighlightedState;
@@ -256,6 +267,20 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 				state = Style::HighlightedState;
 			}
 		}
+	}
+
+	if( !srcNodule() && srcNodeGadget )
+	{
+		// Auxiliary connection. This case is not dealt with fully in
+		// `setPositionsFromNodules()` (it thinks we're a stub), but that's
+		// OK because we generate srcPos and srcTangent ourselves.
+		const V3f srcPos = srcNodeGadget->transformedBound().center();
+		style->renderAuxiliaryConnection(
+			V2f( srcPos.x, srcPos.y ), V2f( 0.0f ),
+			V2f( m_dstPos.x, m_dstPos.y ), V2f( m_dstTangent.x, m_dstTangent.y ),
+			state
+		);
+		return;
 	}
 
 	V3f adjustedSrcPos = m_srcPos;
@@ -335,6 +360,13 @@ float StandardConnectionGadget::distanceToNodeGadget( const IECore::LineSegment3
 
 Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegment3f &line ) const
 {
+	if( !srcNodule() )
+	{
+		// Either a stub connection or an auxiliary connection.
+		// We don't allow interaction with these at present.
+		return Plug::Invalid;
+	}
+
 	// Connections are only sensitive to hovering and dragging close
 	// to their ends, since it is confusing to accidentally pick up
 	// a connection in the middle, and some graphs use very long
@@ -551,7 +583,7 @@ void StandardConnectionGadget::updateDotPreviewLocation( const ButtonEvent &even
 
 bool StandardConnectionGadget::keyPressed( const KeyEvent &event )
 {
-	if( event.modifiers & ButtonEvent::Control )
+	if( event.modifiers & ButtonEvent::Control && srcNodule() )
 	{
 		m_dotPreview = true;
 		requestRender();
@@ -574,7 +606,7 @@ bool StandardConnectionGadget::keyReleased( const KeyEvent &event )
 
 void StandardConnectionGadget::enter( const ButtonEvent &event )
 {
-	if( event.modifiers & ButtonEvent::Control )
+	if( event.modifiers & ButtonEvent::Control && srcNodule() )
 	{
 		m_dotPreview = true;
 	}
