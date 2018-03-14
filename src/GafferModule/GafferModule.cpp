@@ -157,6 +157,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSignal();
 	bindGraphComponent();
 	bindContext();
+	bindSerialisation();
 	bindNode();
 	bindDependencyNode();
 	bindComputeNode();
@@ -188,7 +189,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindAction();
 	bindReference();
 	bindArrayPlug();
-	bindSerialisation();
 	bindMetadata();
 	bindStringAlgo();
 	bindDot();

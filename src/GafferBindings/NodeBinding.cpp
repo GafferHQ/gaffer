@@ -42,6 +42,7 @@
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/MetadataBinding.h"
+#include "GafferBindings/SerialisationBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -152,19 +153,23 @@ void GafferBindings::bindNode()
 {
 	typedef NodeWrapper<Node> Wrapper;
 
-	scope s = NodeClass<Node, Wrapper>()
-		.def( "scriptNode", (ScriptNode *(Node::*)())&Node::scriptNode, return_value_policy<CastToIntrusivePtr>() )
-		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
-		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
-		.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
-		.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
-		.def( "errorSignal", (Node::ErrorSignal &(Node::*)())&Node::errorSignal, return_internal_reference<1>() )
-	;
+	{
+		scope s = NodeClass<Node, Wrapper>()
+			.def( "scriptNode", (ScriptNode *(Node::*)())&Node::scriptNode, return_value_policy<CastToIntrusivePtr>() )
+			.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
+			.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
+			.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
+			.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
+			.def( "errorSignal", (Node::ErrorSignal &(Node::*)())&Node::errorSignal, return_internal_reference<1>() )
+		;
 
-	SignalClass<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >( "UnaryPlugSignal" );
-	SignalClass<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, BinaryPlugSlotCaller >( "BinaryPlugSignal" );
-	SignalClass<Node::ErrorSignal, DefaultSignalCaller<Node::ErrorSignal>, ErrorSlotCaller >( "ErrorSignal" );
+		SignalClass<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >( "UnaryPlugSignal" );
+		SignalClass<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, BinaryPlugSlotCaller >( "BinaryPlugSignal" );
+		SignalClass<Node::ErrorSignal, DefaultSignalCaller<Node::ErrorSignal>, ErrorSlotCaller >( "ErrorSignal" );
+	}
 
 	Serialisation::registerSerialiser( Node::staticTypeId(), new NodeSerialiser() );
 
+	typedef SerialiserWrapper<NodeSerialiser> NodeSerialiserWrapper;
+	SerialiserClass<NodeSerialiser, Serialisation::Serialiser, NodeSerialiserWrapper>( "NodeSerialiser" );
 }
