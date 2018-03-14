@@ -132,7 +132,7 @@ class Layouts( object ) :
 
 		# finally write out the layouts
 		for name in namesToWrite :
-			fileObject.write( "layouts.add( \"%s\", \"%s\" )\n\n" % ( name, self.__namedLayouts[name] ) )
+			fileObject.write( "layouts.add( {0}, {1} )\n\n".format( repr( name ), repr( self.__namedLayouts[name] ) ) )
 
 		# tidy up by deleting the temporary variable, keeping the namespace clean for
 		# subsequently executed config files.
