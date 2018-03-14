@@ -487,52 +487,6 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			doRemoveEntities( m_colors, m_mainAssembly->colors() );
 		}
 
-		void resetFrame( const string &cameraName, const CompoundData *cameraParams )
-		{
-			assert( cameraParams );
-			asr::ParamArray &params = m_project.get_frame()->get_parameters();
-
-			// Resolution
-			const V2iData *resolution = cameraParams->member<V2iData>( "resolution" );
-			asf::Vector2i res( resolution->readable().x, resolution->readable().y );
-			params.insert( "resolution", res );
-
-			// Render region.
-			if( const Box2iData *renderRegion = cameraParams->member<Box2iData>( "renderRegion" ) )
-			{
-				// For now, we don't do overscan.
-				// We keep only the crop part of the render region.
-				asf::AABB2u crop;
-				crop.min[0] = asf::clamp( (int) renderRegion->readable().min.x, 0, res[0] - 1 );
-				crop.min[1] = asf::clamp( (int) renderRegion->readable().min.y, 0, res[1] - 1 );
-				crop.max[0] = asf::clamp( (int) renderRegion->readable().max.x, 0, res[0] - 1 );
-				crop.max[1] = asf::clamp( (int) renderRegion->readable().max.y, 0, res[1] - 1 );
-				params.insert( "crop_window", crop );
-			}
-			else
-			{
-				params.remove_path( "crop_window" );
-			}
-
-			// Choose the active camera.
-			params.insert( "camera", cameraName.c_str() );
-
-			// Replace the frame.
-			m_project.set_frame( asr::FrameFactory().create( "beauty", params, m_project.get_frame()->aovs() ) );
-		}
-
-		void resetFrame()
-		{
-			// Reset the frame to default values.
-			asr::ParamArray &params = m_project.get_frame()->get_parameters();
-			params.remove_path( "camera" );
-			params.insert( "resolution", "640 480" );
-			params.remove_path( "crop_window" );
-
-			// Replace the frame.
-			m_project.set_frame( asr::FrameFactory().create( "beauty", params, m_project.get_frame()->aovs() ) );
-		}
-
 	private :
 
 		template <typename EntityType, typename EntityContainer>
@@ -913,18 +867,14 @@ class AppleseedCamera : public AppleseedEntity
 
 	public :
 
-		AppleseedCamera( asr::Project &project, const string &name, Camera *camera, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool activeCamera, bool interactive )
-			:	AppleseedEntity( project, name, interactive ), m_activeCamera( activeCamera )
+		AppleseedCamera( asr::Project &project, const string &name, Camera *camera, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
+			:	AppleseedEntity( project, name, interactive )
 		{
 			asf::auto_release_ptr<asr::Camera> appleseedCamera( CameraAlgo::convert( camera ) );
 			appleseedCamera->set_name( name.c_str() );
 			m_camera = appleseedCamera.get();
-			insertCamera( appleseedCamera );
 
-			if( m_activeCamera )
-			{
-				resetFrame( name, camera->parametersData() );
-			}
+			insertCamera( appleseedCamera );
 		}
 
 		~AppleseedCamera() override
@@ -932,11 +882,6 @@ class AppleseedCamera : public AppleseedEntity
 			if( isInteractiveRender() )
 			{
 				removeCamera( m_camera );
-
-				if( m_activeCamera )
-				{
-					resetFrame();
-				}
 			}
 		}
 
@@ -959,7 +904,6 @@ class AppleseedCamera : public AppleseedEntity
 	private :
 
 		asr::Camera *m_camera;
-		bool m_activeCamera;
 };
 
 } // namespace
@@ -2825,7 +2769,6 @@ class AppleseedRenderer final : public AppleseedRendererBase
 		{
 			CameraPtr cameraCopy = camera->copy();
 			cameraCopy->addStandardParameters();
-			bool activeCamera = false;
 
 			// Check if this is the active camera.
 			if( name == m_cameraName )
@@ -2835,10 +2778,10 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				m_shutterOpenTime = shutter.x;
 				m_shutterCloseTime = shutter.y;
 
-				activeCamera = true;
+				updateFrame( name, cameraCopy->parametersData() );
 			}
 
-			return new AppleseedCamera( *m_project, name, cameraCopy.get(), attributes, activeCamera, isInteractiveRender() );
+			return new AppleseedCamera( *m_project, name, cameraCopy.get(), attributes, isInteractiveRender() );
 		}
 
 		ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes ) override
@@ -3052,6 +2995,62 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			catch( ... )
 			{
 				msg( MessageHandler::Error, "AppleseedRenderer", "Unknown exception in render thread" );
+			}
+		}
+
+		void updateFrame( const string &cameraName, const CompoundData *cameraParams )
+		{
+			assert( cameraParams );
+
+			asr::Frame* frame = m_project->get_frame();
+			asr::ParamArray &params = frame->get_parameters();
+
+			// Resolution
+			const asf::Vector2i oldRes = params.get<asf::Vector2i>( "resolution" );
+
+			const V2iData *resolution = cameraParams->member<V2iData>( "resolution" );
+			const asf::Vector2i res( resolution->readable().x, resolution->readable().y );
+			params.insert( "resolution", res );
+
+			// Render region.
+			if( const Box2iData *renderRegion = cameraParams->member<Box2iData>( "renderRegion" ) )
+			{
+				// For now, we don't do overscan.
+				// We keep only the crop part of the render region.
+				asf::AABB2u crop;
+				crop.min[0] = asf::clamp( (int) renderRegion->readable().min.x, 0, res[0] - 1 );
+				crop.min[1] = asf::clamp( (int) renderRegion->readable().min.y, 0, res[1] - 1 );
+				crop.max[0] = asf::clamp( (int) renderRegion->readable().max.x, 0, res[0] - 1 );
+				crop.max[1] = asf::clamp( (int) renderRegion->readable().max.y, 0, res[1] - 1 );
+				frame->set_crop_window( crop );
+			}
+			else
+			{
+				frame->reset_crop_window();
+			}
+
+			// Set the active camera.
+			params.insert( "camera", cameraName.c_str() );
+
+			if ( isInteractiveRender() )
+			{
+				// If the resolution changed, we need to re-create the frame.
+				if ( res != oldRes )
+				{
+					m_project->set_frame( asr::FrameFactory().create( "beauty", params, m_project->get_frame()->aovs() ) );
+
+					// Re-create the display if we had one.
+					if( const asr::Display *display = m_project->get_display() )
+					{
+						asf::auto_release_ptr<asr::Display> dpy( asr::DisplayFactory::create( display->get_name(), display->get_parameters() ) );
+						m_project->set_display( dpy );
+						m_renderer.reset();
+					}
+				}
+			}
+			else
+			{
+				m_project->set_frame( asr::FrameFactory().create( "beauty", params, m_project->get_frame()->aovs() ) );
 			}
 		}
 
