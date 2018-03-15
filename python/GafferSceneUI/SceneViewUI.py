@@ -290,7 +290,6 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __init__( self, plug, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
-			image = "camera.png",
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Camera" ),
 			hasFrame = False,
 		)
@@ -303,6 +302,8 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__dragEnterConnection = self.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dropConnection = self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ) )
 
+		self._updateFromPlug()
+
 	def setHighlighted( self, highlighted ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
@@ -311,7 +312,9 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 
-		pass
+		self.__menuButton.setImage(
+			"cameraOn.png" if self.getPlug()["enabled"].getValue() else "cameraOff.png"
+		)
 
 	def __menuDefinition( self ) :
 
