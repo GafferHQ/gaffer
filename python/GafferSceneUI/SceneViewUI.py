@@ -588,38 +588,65 @@ def __fitClippingPlanes( view, toSelection = False ) :
 		sceneGadget.bound() if not toSelection else sceneGadget.selectionBound()
 	)
 
+def __appendClippingPlaneMenuItems( menuDefinition, prefix, view, parentWidget ) :
+
+	sceneGadget = view.viewportGadget().getPrimaryChild()
+
+	if isinstance( parentWidget, GafferUI.Viewer ) :
+		editable = view.viewportGadget().getCameraEditable()
+	else :
+		editable = not parentWidget.getReadOnly()
+
+	menuDefinition.append(
+		prefix + "/Fit To Selection",
+		{
+			"active" : editable and not sceneGadget.getSelection().isEmpty(),
+			"command" : functools.partial( __fitClippingPlanes, view, toSelection = True ),
+			"shortCut" : "Ctrl+K" if isinstance( parentWidget, GafferUI.Viewer ) else "",
+		}
+	)
+
+	menuDefinition.append(
+		prefix + "/Fit To Scene",
+		{
+			"active" : editable,
+			"command" : functools.partial( __fitClippingPlanes, view ),
+		}
+	)
+
+	if isinstance( parentWidget, GafferUI.Viewer ) :
+
+		# No need to add this one when parentWidget is a PlugValueWidget,
+		# because there's already a menu item for that.
+
+		menuDefinition.append(
+			prefix + "/Default",
+			{
+				"active" : editable,
+				"command" : view["camera"]["clippingPlanes"].setToDefault,
+			}
+		)
+
 def __viewContextMenu( viewer, view, menuDefinition ) :
 
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return False
 
-	sceneGadget = view.viewportGadget().getPrimaryChild()
-	cameraEditable = view.viewportGadget().getCameraEditable()
-
-	menuDefinition.append(
-		"/Clipping Planes/Fit To Selection",
-		{
-			"active" : cameraEditable and not sceneGadget.getSelection().isEmpty(),
-			"command" : functools.partial( __fitClippingPlanes, view, toSelection = True ),
-			"shortCut" : "Ctrl+K",
-		}
-	)
-
-	menuDefinition.append(
-		"/Clipping Planes/Fit To Scene",
-		{
-			"active" : cameraEditable,
-			"command" : functools.partial( __fitClippingPlanes, view ),
-		}
-	)
-
-	menuDefinition.append(
-		"/Clipping Planes/Reset",
-		{
-			"active" : cameraEditable,
-			"command" : view["camera"]["clippingPlanes"].setToDefault,
-		}
-	)
+	__appendClippingPlaneMenuItems( menuDefinition, "/Clipping Planes", view, viewer )
 
 GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
 
+def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if not isinstance( node, GafferSceneUI.SceneView ) :
+		return
+	if plug != node["camera"]["clippingPlanes"] :
+		return
+
+	menuDefinition.append( "/FitDivider", { "divider" : True } )
+
+	__appendClippingPlaneMenuItems( menuDefinition, "", node, plugValueWidget )
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu, scoped = False )
