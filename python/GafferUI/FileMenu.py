@@ -88,36 +88,40 @@ def open( menu ) :
 
 	__open( scriptWindow.scriptNode(), str( path ) )
 
-def __open( currentScript, fileName ) :
+## Opens a script and adds it to the application, as if the user
+# had done so via the File Open dialogue.
+def addScript( application, fileName ) :
 
-	application = currentScript.ancestor( Gaffer.ApplicationRoot )
+	return __addScript( application, fileName )
 
-	backupFileName = None
+def __addScript( application, fileName, dialogueParentWindow = None ) :
+
+	recoveryFileName = None
 	backups = GafferUI.Backups.acquire( application, createIfNecessary = False )
 	if backups is not None :
-		backupFiles = backups.backups( fileName )
-		if backupFiles :
-			if os.path.getmtime( backupFiles[-1] ) > os.path.getmtime( fileName ) :
-				dialogue = GafferUI.ConfirmationDialogue(
-					title = "Backup Available",
-					message = "A more recent backup is available. Open backup instead?",
-					confirmLabel = "Open Backup",
-					cancelLabel = "Open",
-				)
-				if dialogue.waitForConfirmation( parentWindow = GafferUI.ScriptWindow.acquire( currentScript ) ) :
-					backupFileName = backupFiles[-1]
+		recoveryFileName = backups.recoveryFile( fileName )
+		if recoveryFileName :
+			dialogue = GafferUI.ConfirmationDialogue(
+				title = "Backup Available",
+				message = "A more recent backup is available. Open backup instead?",
+				confirmLabel = "Open Backup",
+				cancelLabel = "Open",
+			)
+			if not dialogue.waitForConfirmation( parentWindow = dialogueParentWindow ) :
+				recoveryFileName = None
+			del dialogue
 
 	script = Gaffer.ScriptNode()
-	script["fileName"].setValue( backupFileName or fileName )
+	script["fileName"].setValue( recoveryFileName or fileName )
 
 	with GafferUI.ErrorDialogue.ErrorHandler(
 		title = "Errors Occurred During Loading",
 		closeLabel = "Oy vey",
-		parentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+		parentWindow = dialogueParentWindow
 	) :
 		script.load( continueOnError = True )
 
-	if backupFileName :
+	if recoveryFileName :
 		# If we loaded a backup, give the script the original
 		# filename so the user can resave and continue as before.
 		script["fileName"].setValue( fileName )
@@ -127,12 +131,20 @@ def __open( currentScript, fileName ) :
 
 	addRecentFile( application, fileName )
 
+	return script
+
+def __open( currentScript, fileName ) :
+
+	application = currentScript.ancestor( Gaffer.ApplicationRoot )
+	currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+
+	script = __addScript( application, fileName, dialogueParentWindow = currentWindow )
+
 	removeCurrentScript = False
 	if not currentScript["fileName"].getValue() and not currentScript["unsavedChanges"].getValue() :
 		# the current script is empty - the user will think of the operation as loading
 		# the new script into the current window, rather than adding a new window. so make it
 		# look like that.
-		currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
 		newWindow = GafferUI.ScriptWindow.acquire( script )
 		## \todo We probably want a way of querying and setting geometry in the public API
 		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )

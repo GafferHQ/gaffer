@@ -42,6 +42,7 @@ from Qt import QtCore
 
 import collections
 import os
+import re
 import stat
 import weakref
 
@@ -105,7 +106,18 @@ class Backups( object ) :
 			if not os.path.isdir( dirName ) :
 				raise
 
+		# When overwriting a previous backup we need to
+		# temporarily make it writable. If this fails for
+		# any reason we leave it to `serialiseToFile()` to
+		# throw.
+		with IECore.IgnoredExceptions( OSError ) :
+			os.chmod( fileName, stat.S_IWUSR )
+
 		script.serialiseToFile( fileName )
+
+		# Protect file by making it read only.
+		os.chmod( fileName, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH )
+
 		return fileName
 
 	# Returns the filenames of all the backups that have
@@ -121,6 +133,52 @@ class Backups( object ) :
 
 		timesAndFiles.sort()
 		return [ x[1] for x in timesAndFiles ]
+
+	# Returns the most recent backup for `script`, if it is
+	# both newer and has different contents to the original.
+	# Otherwise returns None. Script may either be a ScriptNode
+	# or a filename.
+	def recoveryFile( self, script ) :
+
+		scriptFileName = self.__scriptFileName( script )
+		backups = self.backups( scriptFileName )
+		if not backups :
+			return None
+
+		backupFileName = backups[-1]
+		if not os.path.exists( scriptFileName ) :
+			return backupFileName
+
+		if os.path.getmtime( backupFileName ) < os.path.getmtime( scriptFileName ) :
+			return None
+
+		ignorePatterns = [
+			# Commented lines, for instance a header.
+			r'#.*$',
+			# Version metadata.
+			r'Gaffer\.Metadata\.registerNodeValue\( parent, "serialiser:.*Version", .* \)$',
+			# Pesky catalogue port number, which is different each time we run.
+			r'parent\["variables"\]\["imageCataloguePort"\]\["value"\]\.setValue\( [0-9]* \)$',
+		]
+		ignorePatterns = [ re.compile( x ) for x in ignorePatterns ]
+
+		with open( backupFileName ) as backupFile, open( scriptFileName ) as scriptFile :
+
+			backupLines = backupFile.readlines()
+			scriptLines = scriptFile.readlines()
+
+			if len( backupLines ) != len( scriptLines ) :
+				return backupFileName
+
+			for backupLine, scriptLine in zip( backupLines, scriptLines ) :
+
+				if any( x.match( backupLine ) and x.match( scriptLine ) for x in ignorePatterns ) :
+					continue
+
+				if backupLine != scriptLine :
+					return backupFileName
+
+		return None
 
 	def settings( self ) :
 
@@ -181,13 +239,17 @@ class Backups( object ) :
 						str( e )
 					)
 
-	def __potentialFileNames( self, script ) :
+	def __scriptFileName( self, script ) :
 
 		if isinstance( script, Gaffer.ScriptNode ) :
-			fileName = script["fileName"].getValue()
+			return script["fileName"].getValue()
 		else :
 			assert( isinstance( script, str ) )
-			fileName = script
+			return script
+
+	def __potentialFileNames( self, script ) :
+
+		fileName = self.__scriptFileName( script )
 
 		if not fileName :
 			return []
