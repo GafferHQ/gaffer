@@ -106,7 +106,18 @@ class Backups( object ) :
 			if not os.path.isdir( dirName ) :
 				raise
 
+		# When overwriting a previous backup we need to
+		# temporarily make it writable. If this fails for
+		# any reason we leave it to `serialiseToFile()` to
+		# throw.
+		with IECore.IgnoredExceptions( OSError ) :
+			os.chmod( fileName, stat.S_IWUSR )
+
 		script.serialiseToFile( fileName )
+
+		# Protect file by making it read only.
+		os.chmod( fileName, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH )
+
 		return fileName
 
 	# Returns the filenames of all the backups that have
