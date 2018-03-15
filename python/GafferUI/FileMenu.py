@@ -92,23 +92,22 @@ def __open( currentScript, fileName ) :
 
 	application = currentScript.ancestor( Gaffer.ApplicationRoot )
 
-	backupFileName = None
+	recoveryFileName = None
 	backups = GafferUI.Backups.acquire( application, createIfNecessary = False )
 	if backups is not None :
-		backupFiles = backups.backups( fileName )
-		if backupFiles :
-			if os.path.getmtime( backupFiles[-1] ) > os.path.getmtime( fileName ) :
-				dialogue = GafferUI.ConfirmationDialogue(
-					title = "Backup Available",
-					message = "A more recent backup is available. Open backup instead?",
-					confirmLabel = "Open Backup",
-					cancelLabel = "Open",
-				)
-				if dialogue.waitForConfirmation( parentWindow = GafferUI.ScriptWindow.acquire( currentScript ) ) :
-					backupFileName = backupFiles[-1]
+		recoveryFileName = backups.recoveryFile( fileName )
+		if recoveryFileName :
+			dialogue = GafferUI.ConfirmationDialogue(
+				title = "Backup Available",
+				message = "A more recent backup is available. Open backup instead?",
+				confirmLabel = "Open Backup",
+				cancelLabel = "Open",
+			)
+			if not dialogue.waitForConfirmation( parentWindow = GafferUI.ScriptWindow.acquire( currentScript ) ) :
+				recoveryFileName = None
 
 	script = Gaffer.ScriptNode()
-	script["fileName"].setValue( backupFileName or fileName )
+	script["fileName"].setValue( recoveryFileName or fileName )
 
 	with GafferUI.ErrorDialogue.ErrorHandler(
 		title = "Errors Occurred During Loading",
@@ -117,7 +116,7 @@ def __open( currentScript, fileName ) :
 	) :
 		script.load( continueOnError = True )
 
-	if backupFileName :
+	if recoveryFileName :
 		# If we loaded a backup, give the script the original
 		# filename so the user can resave and continue as before.
 		script["fileName"].setValue( fileName )

@@ -122,6 +122,40 @@ class Backups( object ) :
 		timesAndFiles.sort()
 		return [ x[1] for x in timesAndFiles ]
 
+	# Returns the most recent backup for `script`, if it is
+	# both newer and has different contents to the original.
+	# Otherwise returns None. Script may either be a ScriptNode
+	# or a filename.
+	def recoveryFile( self, script ) :
+
+		scriptFileName = self.__scriptFileName( script )
+		backups = self.backups( scriptFileName )
+		if not backups :
+			return None
+
+		backupFileName = backups[-1]
+		if not os.path.exists( scriptFileName ) :
+			return backupFileName
+
+		if os.path.getmtime( backupFileName ) < os.path.getmtime( scriptFileName ) :
+			return None
+
+		with open( backupFileName ) as backupFile, open( scriptFileName ) as scriptFile :
+
+			backupLines = backupFile.readlines()
+			scriptLines = scriptFile.readlines()
+
+			if len( backupLines ) != len( scriptLines ) :
+				return backupFileName
+
+			for backupLine, scriptLine in zip( backupLines, scriptLines ) :
+				if scriptLine.startswith( "#" ) and backupLine.startswith( "#" ) :
+					continue
+				elif backupLine != scriptLine :
+					return backupFileName
+
+		return None
+
 	def settings( self ) :
 
 		return self.__settings
@@ -181,13 +215,17 @@ class Backups( object ) :
 						str( e )
 					)
 
-	def __potentialFileNames( self, script ) :
+	def __scriptFileName( self, script ) :
 
 		if isinstance( script, Gaffer.ScriptNode ) :
-			fileName = script["fileName"].getValue()
+			return script["fileName"].getValue()
 		else :
 			assert( isinstance( script, str ) )
-			fileName = script
+			return script
+
+	def __potentialFileNames( self, script ) :
+
+		fileName = self.__scriptFileName( script )
 
 		if not fileName :
 			return []
