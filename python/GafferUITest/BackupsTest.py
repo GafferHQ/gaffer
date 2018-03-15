@@ -188,6 +188,23 @@ class BackupsTest( GafferUITest.TestCase ) :
 		b.backup( s )
 		self.assertEqual( b.recoveryFile( s ), self.temporaryDirectory() + "/test-backup1.gfr" )
 
+	def testReadOnly( self ) :
+
+		a = Gaffer.ApplicationRoot()
+		b = GafferUI.Backups.acquire( a )
+		b.settings()["fileName"].setValue( self.temporaryDirectory() + "/backups/${script:name}.gfr" )
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+
+		def assertBackupsReadOnly() :
+
+			for f in b.backups( s ) :
+				self.assertFalse( os.access( f, os.W_OK ) )
+
+		b.backup( s )
+		assertBackupsReadOnly()
+
 	def __assertFilesEqual( self, f1, f2 ) :
 
 		with open( f1 ) as f1 :
