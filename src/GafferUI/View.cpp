@@ -115,11 +115,6 @@ boost::signals::connection &View::contextChangedConnection()
 	return m_contextChangedConnection;
 }
 
-Imath::Box3f View::framingBound() const
-{
-	return Imath::Box3f();
-}
-
 View::CreatorMap &View::creators()
 {
 	static CreatorMap m;

@@ -160,9 +160,6 @@ class GAFFERUI_API View : public Gaffer::Node
 		/// this can be useful when modifying the context.
 		boost::signals::connection &contextChangedConnection();
 
-		/// \deprecated This function has no effect
-		virtual Imath::Box3f framingBound() const;
-
 		template<class T>
 		struct ViewDescription
 		{

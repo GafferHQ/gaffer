@@ -110,13 +110,14 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 	protected :
 
 		void contextChanged( const IECore::InternedString &name ) override;
-		Imath::Box3f framingBound() const override;
 
 	private :
 
 		// The filter for a preprocessing node used to hide things.
 		GafferScene::PathFilter *hideFilter();
 		const GafferScene::PathFilter *hideFilter() const;
+
+		Imath::Box3f framingBound() const;
 
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
 		void transferSelectionToContext();
