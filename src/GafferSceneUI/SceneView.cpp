@@ -1390,7 +1390,7 @@ Imath::Box3f SceneView::framingBound() const
 		return b;
 	}
 
-	b = View::framingBound();
+	b = m_sceneGadget->bound();
 	if( m_grid->gadget()->getVisible() )
 	{
 		b.extendBy( m_grid->gadget()->bound() );
@@ -1410,6 +1410,19 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	{
 		collapseSelection();
 		return true;
+	}
+	else if( event.key == "F" )
+	{
+		Imath::Box3f b = framingBound();
+		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
+		{
+			viewportGadget()->frame( b );
+			if( event.modifiers == KeyEvent::Control )
+			{
+				viewportGadget()->fitClippingPlanes( b );
+			}
+			return true;
+		}
 	}
 	else if( event.key == "K" && event.modifiers == KeyEvent::Control )
 	{
