@@ -34,8 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferOSL/ShadingEngine.h"
+#include "Gaffer/Context.h"
 
+#include "GafferOSL/ShadingEngine.h"
 #include "GafferOSL/OSLShader.h"
 
 #include "IECoreScene/Shader.h"
@@ -1082,6 +1083,9 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	shaderGlobals.dPdu = uniformValue<V3f>( points, "dPdu" );
 	shaderGlobals.dPdv = uniformValue<V3f>( points, "dPdv" );
+
+	const Gaffer::Context *context = Gaffer::Context::current();
+	shaderGlobals.time = context->getTime();
 
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
