@@ -151,16 +151,16 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="147.49614"
-     inkscape:cy="842.16785"
+     inkscape:zoom="2.8284272"
+     inkscape:cx="147.31936"
+     inkscape:cy="877.16963"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="851"
+     showgrid="true"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
      inkscape:window-x="0"
-     inkscape:window-y="1"
+     inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:snap-global="true"
      inkscape:snap-nodes="true"
@@ -3607,7 +3607,7 @@
       </g>
     </g>
     <g
-       id="forExport:camera"
+       id="forExport:cameraOff"
        transform="matrix(1.15625,0,0,1.15625,-167.57812,-126.61909)"
        inkscape:label="#g5275">
       <path
@@ -3635,6 +3635,36 @@
          cx="256.5"
          id="circle5283"
          style="fill:#3c3c3c;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <g
+       inkscape:label="#g5275"
+       transform="matrix(1.15625,0,0,1.15625,-141.57812,-126.61909)"
+       id="forExport:cameraOn">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4695"
+         transform="translate(0,52.362183)"
+         d="m 247.5,198 c -1.108,0 -1.21653,1.21652 -2,2 l -0.5,0.5 -1.5,0 c -1.662,0 -3,1.338 -3,3 l 0,7 c 0,1.662 1.338,3 3,3 l 13,0 c 1.662,0 3,-1.338 3,-3 l 0,-7 c 0,-1.662 -1.338,-3 -3,-3 l -1.5,0 -0.5,-0.5 c -0.78347,-0.78348 -0.892,-2 -2,-2 l -5,0 z"
+         style="fill:#c6c6c6;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.86486483;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <ellipse
+         ry="4"
+         rx="4.0000005"
+         cy="258.86218"
+         cx="250.00002"
+         id="ellipse4697"
+         style="fill:#494949;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.86486489;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <circle
+         r="1"
+         cy="257.36218"
+         cx="249"
+         id="circle4699"
+         style="fill:#9b9b9b;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <circle
+         style="fill:#3c3c3c;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="circle4701"
+         cx="256.5"
+         cy="255.86218"
+         r="1" />
     </g>
   </g>
 </svg>
