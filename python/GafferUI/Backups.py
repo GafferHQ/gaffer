@@ -55,7 +55,7 @@ class Backups( object ) :
 		# of manually tracking the "parent" like this?
 		self.__applicationRoot = weakref.ref( applicationRoot )
 
-		self.__settings = Gaffer.Plug()
+		self.__settings = Gaffer.CompoundPlug()
 		self.__settings["enabled"] = Gaffer.BoolPlug( defaultValue = True )
 		self.__settings["frequency"] = Gaffer.IntPlug( defaultValue = 5, minValue = 0 )
 		self.__settings["fileName"] = Gaffer.StringPlug( defaultValue = "${script:directory}/.gafferBackups/${script:name}-backup${backup:number}.gfr" )
@@ -210,18 +210,6 @@ class Backups( object ) :
 # UI
 ##########################################################################
 
-def __backupsEnabled( plug ) :
-
-	return plug["enabled"].getValue()
-
-def __backupNumberEnabled( plug ) :
-
-	if not __backupsEnabled( plug ) :
-		return False
-
-	f = plug["fileName"].getValue()
-	return "${backup:number}" in f
-
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Preferences,
@@ -235,12 +223,6 @@ Gaffer.Metadata.registerNode(
 			Controls a mechanism used to create automatic
 			backup copies of scripts.
 			""",
-
-			"layout:section", "Backups",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-
-			"layout:activator:backupsEnabled", __backupsEnabled,
-			"layout:activator:backupNumberEnabled", __backupNumberEnabled,
 
 		],
 
@@ -259,8 +241,6 @@ Gaffer.Metadata.registerNode(
 			"""
 			How often backups are made, measured in minutes.
 			""",
-
-			"layout:activator", "backupsEnabled",
 
 		],
 
@@ -282,8 +262,6 @@ Gaffer.Metadata.registerNode(
 			- `#` : the same as `${backup:number}`.
 			""",
 
-			"layout:activator", "backupsEnabled",
-
 		],
 
 		"backups.files" : [
@@ -295,8 +273,6 @@ Gaffer.Metadata.registerNode(
 			When the backup limit is reached, the oldest backup
 			will be overwritten.
 			""",
-
-			"layout:activator", "backupNumberEnabled",
 
 		],
 
