@@ -48,6 +48,7 @@
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/StandardOptions.h"
 
+#include "GafferUI/ImageGadget.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
 
@@ -723,6 +724,21 @@ class CameraOverlay : public GafferUI::Gadget
 			return m_caption;
 		}
 
+		void setIcon( const std::string &icon )
+		{
+			if( icon == m_icon )
+			{
+				return;
+			}
+			m_icon = icon;
+			requestRender();
+		}
+
+		const std::string &getIcon() const
+		{
+			return m_icon;
+		}
+
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override
@@ -760,6 +776,24 @@ class CameraOverlay : public GafferUI::Gadget
 				glColor4f( 0, 0.25, 0, 1.0f );
 				style->renderRectangle( m_resolutionGate );
 
+				if( !m_icon.empty() )
+				{
+					IECoreGL::ConstTexturePtr texture = ImageGadget::loadTexture( m_icon );
+					const V2f size(
+						std::min(
+							std::min( m_resolutionGate.size().x, m_resolutionGate.size().y ) / 4.0f,
+							100.0f
+						)
+					);
+					style->renderImage(
+						Box2f(
+							m_resolutionGate.center() + size / 2.0f,
+							m_resolutionGate.center() - size / 2.0f
+						),
+						texture.get()
+					);
+				}
+
 				glPushMatrix();
 
 					glTranslatef( m_resolutionGate.min.x + 5, m_resolutionGate.max.y + 10, 0.0f );
@@ -776,6 +810,7 @@ class CameraOverlay : public GafferUI::Gadget
 		Box2f m_resolutionGate;
 		Box2f m_cropWindow;
 		std::string m_caption;
+		std::string m_icon;
 
 };
 
@@ -1064,6 +1099,7 @@ class SceneView::Camera : public boost::signals::trackable
 			ConstCompoundObjectPtr globals;
 			ConstPathMatcherDataPtr cameraSet;
 			M44f cameraTransform;
+			string errorMessage;
 			try
 			{
 				globals = scenePlug()->globals();
@@ -1104,21 +1140,22 @@ class SceneView::Camera : public boost::signals::trackable
 					m_lookThroughCamera = defaultCamera;
 				}
 			}
-			catch( ... )
+			catch( const std::exception &e )
 			{
 				// If an invalid path has been entered for the camera, computation will fail.
-				// We just ignore that and lock to the current camera instead.
-				m_lookThroughCamera = nullptr;
+				// Record the error to go in the caption, and make a default camera to lock to.
+				CameraPtr defaultCamera = new IECoreScene::Camera;
+				defaultCamera->addStandardParameters();
+				m_lookThroughCamera = defaultCamera;
+				cameraSet = new PathMatcherData;
+				globals = new CompoundObject;
+				errorMessage = e.what();
 			}
 
 			m_view->viewportGadget()->setCameraTransform( cameraTransform );
 
 			m_view->viewportGadget()->setCameraEditable( false );
 			m_view->hideFilter()->pathsPlug()->setToDefault();
-			if( !m_lookThroughCamera )
-			{
-				return;
-			}
 
 			// When looking through a camera, we hide the camera, since the overlay
 			// tells us everything we need to know about the camera. If looking through
@@ -1145,14 +1182,23 @@ class SceneView::Camera : public boost::signals::trackable
 				m_overlay->setCropWindow( Box2f( V2f( 0 ), V2f( 1 ) ) );
 			}
 
-			const V2i resolution = m_lookThroughCamera->parametersData()->member<V2iData>( "resolution" )->readable();
-			const float pixelAspectRatio = m_lookThroughCamera->parametersData()->member<FloatData>( "pixelAspectRatio" )->readable();
-			m_overlay->setCaption( boost::str(
-				boost::format( "%dx%d, %.3f, %s" ) %
-					resolution.x % resolution.y %
-					pixelAspectRatio %
-					(!cameraPathString.empty() ? cameraPathString : "default")
-			) );
+			if( errorMessage.empty() )
+			{
+				const V2i resolution = m_lookThroughCamera->parametersData()->member<V2iData>( "resolution" )->readable();
+				const float pixelAspectRatio = m_lookThroughCamera->parametersData()->member<FloatData>( "pixelAspectRatio" )->readable();
+				m_overlay->setCaption( boost::str(
+					boost::format( "%dx%d, %.3f, %s" ) %
+						resolution.x % resolution.y %
+						pixelAspectRatio %
+						(!cameraPathString.empty() ? cameraPathString : "default")
+				) );
+				m_overlay->setIcon( "" );
+			}
+			else
+			{
+				m_overlay->setCaption( "ERROR : " + errorMessage );
+				m_overlay->setIcon( "gadgetError.png" );
+			}
 		}
 
 		void updateViewportCameraAndOverlay()
