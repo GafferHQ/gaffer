@@ -263,7 +263,8 @@ std::string replaceImath( const std::string &serialisation )
 		}
 	)
 	{
-		boost::replace_all( result, std::string( "IECore." ) + x, std::string( "imath." ) + x );
+		boost::replace_all( result, std::string( "IECore." ) + x + "(", std::string( "imath." ) + x + "(" );
+		boost::replace_all( result, std::string( "IECore." ) + x + ".", std::string( "imath." ) + x + "." );
 	}
 
 	return result;
