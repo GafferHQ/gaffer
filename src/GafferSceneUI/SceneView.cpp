@@ -56,6 +56,7 @@
 
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"
+#include "GafferUI/ImageGadget.h"
 
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardAttributes.h"
@@ -706,6 +707,21 @@ class CameraOverlay : public GafferUI::Gadget
 			return m_caption;
 		}
 
+		void setIcon( const std::string &icon )
+		{
+			if( icon == m_icon )
+			{
+				return;
+			}
+			m_icon = icon;
+			requestRender();
+		}
+
+		const std::string &getIcon() const
+		{
+			return m_icon;
+		}
+
 	protected :
 
 		virtual void doRender( const Style *style ) const
@@ -738,6 +754,24 @@ class CameraOverlay : public GafferUI::Gadget
 				glColor4f( 0, 0.25, 0, 1.0f );
 				style->renderRectangle( m_resolutionGate );
 
+				if( !m_icon.empty() )
+				{
+					IECoreGL::ConstTexturePtr texture = ImageGadget::loadTexture( m_icon );
+					const V2f size(
+						std::min(
+							std::min( m_resolutionGate.size().x, m_resolutionGate.size().y ) / 4.0f,
+							100.0f
+						)
+					);
+					style->renderImage(
+						Box2f(
+							m_resolutionGate.center() + size / 2.0f,
+							m_resolutionGate.center() - size / 2.0f
+						),
+						texture.get()
+					);
+				}
+
 				glPushMatrix();
 
 					glTranslatef( m_resolutionGate.min.x + 5, m_resolutionGate.max.y + 10, 0.0f );
@@ -754,6 +788,7 @@ class CameraOverlay : public GafferUI::Gadget
 		Box2f m_resolutionGate;
 		Box2f m_cropWindow;
 		std::string m_caption;
+		std::string m_icon;
 
 };
 
@@ -1044,8 +1079,14 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 			Context::Scope scopedContext( m_view->getContext() );
 
+			ConstCompoundObjectPtr globals;
+			ConstPathMatcherDataPtr cameraSet;
+			string errorMessage;
 			try
 			{
+				globals = scenePlug()->globals();
+				cameraSet = m_view->inPlug<ScenePlug>()->set( "__cameras" );
+
 				const string cameraPathString = cameraPlug()->getValue();
 				if( cameraPathString.empty() )
 				{
@@ -1058,32 +1099,62 @@ class SceneView::LookThrough : public boost::signals::trackable
 					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug(), cameraPath );
 				}
 			}
-			catch( ... )
+			catch( const std::exception &e )
 			{
 				// If an invalid path has been entered for the camera, computation will fail.
-				// We just ignore that and lock to the current camera instead.
-				m_lookThroughCamera = NULL;
+				// Record the error to go in the caption, and make a default camera to lock to.
+				CameraPtr defaultCamera = new IECore::Camera;
+				defaultCamera->addStandardParameters();
+				m_lookThroughCamera = defaultCamera;
+				cameraSet = new PathMatcherData;
+				globals = new CompoundObject;
+				errorMessage = e.what();
 			}
 
 			m_view->viewportGadget()->setCameraEditable( false );
-			if( m_lookThroughCamera )
+			m_view->hideFilter()->pathsPlug()->setToDefault();
+
+			// When looking through a camera, we hide the camera, since the overlay
+			// tells us everything we need to know about the camera. If looking through
+			// something else, such as a light, we may want to see the viewport
+			// visualisation of what we're looking through.
+			const bool isCamera = cameraSet->readable().match( m_lookThroughCamera->getName() );
+			if( isCamera )
 			{
 				StringVectorDataPtr invisiblePaths = new StringVectorData();
-
-				// When looking through a camera, we hide the camera, since the overlay
-				// tells us everything we need to know about the camera.
-				// If looking through something else, such as a light, we may want to
-				// see the viewport visualisation of what we're looking through
-				if( m_view->inPlug<ScenePlug>()->set( "__cameras" )->readable().match(
-					m_lookThroughCamera->getName() ) )
-				{
-					invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
-				}
+				invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
 				m_view->hideFilter()->pathsPlug()->setValue( invisiblePaths );
+			}
+
+			// Set up the static parts of the overlay. The parts that change when the
+			// viewport changes will be updated in updateViewportCameraAndOverlay().
+
+			const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
+			if( isCamera && cropWindowData )
+			{
+				m_overlay->setCropWindow( cropWindowData->readable() );
 			}
 			else
 			{
-				m_view->hideFilter()->pathsPlug()->setToDefault();
+				m_overlay->setCropWindow( Box2f( V2f( 0 ), V2f( 1 ) ) );
+			}
+
+			if( errorMessage.empty() )
+			{
+				const V2i resolution = m_lookThroughCamera->parametersData()->member<V2iData>( "resolution" )->readable();
+				const float pixelAspectRatio = m_lookThroughCamera->parametersData()->member<FloatData>( "pixelAspectRatio" )->readable();
+				m_overlay->setCaption( boost::str(
+					boost::format( "%dx%d, %.3f, %s" ) %
+						resolution.x % resolution.y %
+						pixelAspectRatio %
+						m_lookThroughCamera->getName()
+				) );
+				m_overlay->setIcon( "" );
+			}
+			else
+			{
+				m_overlay->setCaption( "ERROR : " + errorMessage );
+				m_overlay->setIcon( "gadgetError.png" );
 			}
 		}
 
@@ -1136,8 +1207,6 @@ class SceneView::LookThrough : public boost::signals::trackable
 			const V2f offset = ( viewport - resolutionGateSize ) / 2.0f;
 
 			m_overlay->setResolutionGate( Box2f( V2f( offset ), V2f( resolutionGateSize + offset ) ) );
-			m_overlay->setCropWindow( camera->parametersData()->member<Box2fData>( "cropWindow" )->readable() );
-			m_overlay->setCaption( boost::str( boost::format( "%dx%d, %.3f, %s" ) % resolution.x % resolution.y % pixelAspectRatio % camera->getName() ) );
 			m_overlay->setVisible( true );
 
 			// Now modify the camera, so that the view through the resolution gate we've calculated
