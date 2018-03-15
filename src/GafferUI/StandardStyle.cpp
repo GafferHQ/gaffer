@@ -676,7 +676,6 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 
 	V3f dir = ( dstPosition - srcPosition ).normalized();
 
-
 	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
 	glUniform3fv( g_v1Parameter, 1, dstPosition.getValue() );
 	glUniform3fv( g_t0Parameter, 1, ( srcTangent != V3f( 0 ) ? srcTangent :  dir ).getValue() );
@@ -741,6 +740,34 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 
 	glCallList( connectionDisplayList() );
 
+}
+
+void StandardStyle::renderAuxiliaryConnection( const Imath::V2f &srcPosition, const Imath::V2f &srcTangent, const Imath::V2f &dstPosition, const Imath::V2f &dstTangent, State state ) const
+{
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.2 );
+
+	glColor( colorForState( AuxiliaryConnectionColor, state ) );
+
+	const V3f p0( srcPosition.x, srcPosition.y, 0 );
+	const V3f p1( dstPosition.x, dstPosition.y, 0 );
+
+	V3f dir = ( V3f( dstPosition.x, dstPosition.y, 0 ) - V3f( srcPosition.x, srcPosition.y, 0 ) ).normalized();
+
+	const V3f t0 = srcTangent != V2f( 0 ) ? V3f( srcTangent.x, dstTangent.y, 0 ) : dir;
+	const V3f t1 = dstTangent != V2f( 0 ) ? V3f( dstTangent.x, dstTangent.y, 0 ) : -dir;
+
+	glUniform3fv( g_v0Parameter, 1, p0.getValue() );
+	glUniform3fv( g_v1Parameter, 1, p1.getValue() );
+	glUniform3fv( g_t0Parameter, 1, t0.getValue() );
+	glUniform3fv( g_t1Parameter, 1, t1.getValue() );
+
+	glUniform1f( g_endPointSizeParameter, g_endPointSize );
+
+	glCallList( connectionDisplayList() );
 }
 
 Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
