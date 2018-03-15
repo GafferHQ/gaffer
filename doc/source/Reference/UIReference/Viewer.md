@@ -10,6 +10,7 @@ Action			                      Shortcut/gesture
 ===================================== =============================================
 Pan                                   Alt + left drag
 Zoom                                  Alt + right drag, or mouse wheel
+Frame image                           F
 Centre image at 1:1 scale             Home
 Toggle red channel                    R
 Toggle green channel                  G
@@ -31,5 +32,8 @@ Dolly                                 Alt + right drag, or mouse wheel
 Expand selection                      Down arrow
 Fully expand selection                Shift + down arrow
 Collapse selection                    Up arrow
+Frame selection                       F
+Fit clipping planes to selection      Ctrl + K
+Frame and fit clipping to selection   Ctrl + F
 ===================================== =============================================
 ```
