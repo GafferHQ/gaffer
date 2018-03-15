@@ -37,6 +37,7 @@
 
 import os
 import gc
+import functools
 
 import IECore
 
@@ -85,14 +86,19 @@ class gui( Gaffer.Application ) :
 
 		GafferUI.ScriptWindow.connect( self.root() )
 
+		# Must start the event loop before adding scripts,
+		# because `FileMenu.addScript()` may launch
+		# interactive dialogues.
+		GafferUI.EventLoop.addIdleCallback( functools.partial( self.__addScripts, args ) )
+		GafferUI.EventLoop.mainEventLoop().start()
+
+		return 0
+
+	def __addScripts( self, args ) :
+
 		if len( args["scripts"] ) :
 			for fileName in args["scripts"] :
-				scriptNode = Gaffer.ScriptNode()
-				scriptNode["fileName"].setValue( os.path.abspath( fileName ) )
-				# \todo: Display load errors in a dialog, like in python/GafferUI/FileMenu.py
-				scriptNode.load( continueOnError = True )
-				self.root()["scripts"].addChild( scriptNode )
-				GafferUI.FileMenu.addRecentFile( self, fileName )
+				GafferUI.FileMenu.addScript( self.root(), fileName )
 		else :
 			scriptNode = Gaffer.ScriptNode()
 			Gaffer.NodeAlgo.applyUserDefaults( scriptNode )
@@ -103,9 +109,7 @@ class gui( Gaffer.Application ) :
 			primaryWindow = GafferUI.ScriptWindow.acquire( primaryScript )
 			primaryWindow.setFullScreen( True )
 
-		GafferUI.EventLoop.mainEventLoop().start()
-
-		return 0
+		return False # Remove idle callback
 
 	def __setupClipboardSync( self ) :
 
