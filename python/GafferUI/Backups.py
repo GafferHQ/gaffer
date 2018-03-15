@@ -42,6 +42,7 @@ from Qt import QtCore
 
 import collections
 import os
+import re
 import stat
 import weakref
 
@@ -140,6 +141,16 @@ class Backups( object ) :
 		if os.path.getmtime( backupFileName ) < os.path.getmtime( scriptFileName ) :
 			return None
 
+		ignorePatterns = [
+			# Commented lines, for instance a header.
+			r'#.*$',
+			# Version metadata.
+			r'Gaffer\.Metadata\.registerNodeValue\( parent, "serialiser:.*Version", .* \)$',
+			# Pesky catalogue port number, which is different each time we run.
+			r'parent\["variables"\]\["imageCataloguePort"\]\["value"\]\.setValue\( [0-9]* \)$',
+		]
+		ignorePatterns = [ re.compile( x ) for x in ignorePatterns ]
+
 		with open( backupFileName ) as backupFile, open( scriptFileName ) as scriptFile :
 
 			backupLines = backupFile.readlines()
@@ -149,9 +160,11 @@ class Backups( object ) :
 				return backupFileName
 
 			for backupLine, scriptLine in zip( backupLines, scriptLines ) :
-				if scriptLine.startswith( "#" ) and backupLine.startswith( "#" ) :
+
+				if any( x.match( backupLine ) and x.match( scriptLine ) for x in ignorePatterns ) :
 					continue
-				elif backupLine != scriptLine :
+
+				if backupLine != scriptLine :
 					return backupFileName
 
 		return None
