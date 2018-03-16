@@ -167,7 +167,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		tabsVisible = tabbedContainer.getTabsVisible()
 		# because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
 		# users know it exists. it is actually implemented directly in __keyPress.
-		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : IECore.curry( Gaffer.WeakMethod( tabbedContainer.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
+		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : IECore.curry( Gaffer.WeakMethod( self.__updateTabVisibility ), tabbedContainer, not tabsVisible ), "shortCut" : "Ctrl+T" } )
 		m.append( "/TabsDivider", { "divider" : True } )
 
 		m.append( "/Split Left", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
@@ -245,7 +245,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 			tabbedContainer = GafferUI.Widget.widgetAt( GafferUI.Widget.mousePosition(), _TabbedContainer )
 			if tabbedContainer is not None :
-				tabbedContainer.setTabsVisible( not tabbedContainer.getTabsVisible() )
+				self.__updateTabVisibility( tabbedContainer, not tabbedContainer.getTabsVisible() )
 
 		return False
 
@@ -273,15 +273,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				if "currentTab" in children :
 					splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
 
-				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
-
-				# this is a shame-faced hack to make sure the timeline in the default layout can't be compressed
-				# or stretched vertically. fixing this properly is quite involved, because we'd need to find a sensible
-				# generic way for TabbedContainer to set a min/max height based on it's children, and then a sensible
-				# generic rule for what SplitContainer should do in its __applySizePolicy() method.
-				if len( splitContainer[0] ) == 1 and isinstance( splitContainer[0][0], GafferUI.Timeline ) :
-					splitContainer[0]._qtWidget().setFixedHeight( splitContainer[0][0]._qtWidget().sizeHint().height() )
-					splitContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
+				self.__updateTabVisibility( splitContainer[0], children.get( "tabsVisible", True ) )
 
 	def __addChild( self, splitContainer, nameOrEditor ) :
 
@@ -353,6 +345,25 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		# way in case the menu we're called from is holding on to references to the ui elements
 		# which are going to die.
 		GafferUI.EventLoop.addIdleCallback( self.__collect )
+
+	def __updateTabVisibility( self, tabbedContainer, tabsVisible ) :
+
+		tabbedContainer.setTabsVisible( tabsVisible )
+
+		# This is a shame-faced hack to make sure the timeline in the default layout can't be compressed
+		# or stretched vertically. Fixing this properly is quite involved, because we'd need to find a sensible
+		# generic way for TabbedContainer to set a min/max height based on it's children, and then a sensible
+		# generic rule for what SplitContainer should do in its __applySizePolicy() method.
+		if len( tabbedContainer ) == 1 and isinstance( tabbedContainer[0], GafferUI.Timeline ) :
+			if not tabsVisible :
+				# Fix height so timeline is not resizable
+				tabbedContainer._qtWidget().setFixedHeight( tabbedContainer[0]._qtWidget().sizeHint().height() )
+				tabbedContainer.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+			else :
+				# Undo the above
+				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by Qt.py, but needed to remove fixed height
+				tabbedContainer._qtWidget().setFixedHeight( QWIDGETSIZE_MAX )
+				tabbedContainer.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
 
 	@staticmethod
 	def __handlePosition( splitContainer ) :
