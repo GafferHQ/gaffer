@@ -69,6 +69,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 	public :
 
 		CameraController( IECoreScene::CameraPtr camera )
+			:	m_centreOfInterest( 1.0f )
 		{
 			setCamera( camera );
 		}
@@ -89,8 +90,6 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			{
 				m_fov = nullptr;
 			}
-
-			m_centreOfInterest = 1;
 		}
 
 		IECoreScene::Camera *getCamera()
