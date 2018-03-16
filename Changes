@@ -7,14 +7,22 @@ Features
 - Added Ramp image node (#2470).
 - Added SplinefColor4fPlug type (#2470).
 - Added system to backup all open scripts at frequent intervals.
-  This is controlled via the Preferences dialogue (#2469).
+  This is controlled via the Preferences dialogue (#2469, #2499, #2503).
 
 Improvements
 ------------
 
-- Viewer : Improved performance significantly when selecting large numbers of
-  objects (#2450).
-- SceneHierarchy (#2450) :
+- Viewer :
+  - Improved performance significantly when selecting large numbers of
+    objects (#2450, #2486).
+  - Improved reporting of errors involving look-through cameras (#2490).
+  - Improved camera selection UI (#2490).
+  - Added default camera settings dialogue (#2490).
+  - Added Ctrl+K shortcut to fit clipping planes to selection (#2490).
+  - Added Ctrl+F shortcut to frame selection and fit clipping planes to
+    match (#2490).
+  - Added context menu (#2490).
+- SceneHierarchy (#2450, #2486) :
   - Improved performance significantly when selecting or expanding large numbers
     of objects.
   - Multiple selections made in the Viewer are now highlighted properly in the
@@ -22,19 +30,26 @@ Improvements
 - Significantly reduced file sizes and load times for scripts
   containing many shader and/or light nodes (#2455).
 - NodeGraph
-  - Improved representation of Expression, Animation and Random nodes (#2458).
+  - Added ability to Shift+Drag a connection to duplicate it (#2480).
+  - Improved representation of Expression, Animation and Random nodes (#2458, #2497).
   - Improved highlighting behaviour for connections to selected nodes (#2473).
-- ScriptNode : The current frame is now saved with the script and restored on
-  loading (#2468).
+- ScriptNode :
+  - The current frame is now saved with the script and restored on
+    loading (#2468).
+  - Read-only files are now read-only in the UI (#2503).
 - ArnoldAttributes : Added attributes to control volume motion blur (#2433).
 - Stats/Execute apps : By default the current frame stored in the script is
   executed, rather than frame 1 as before. Use the `-frames` commandline argument
   to specify a specific range of frames to execute (#2468).
 - CompoundDataPlugValueWidget : Added array types to plug creation menu (#2433).
+- Startup : Startup files are now executed in isolated scopes, so they cannot
+  accidentally rely on other startup files (#2462).
+- Expression : Python expressions can now read from CompoundDataPlugs (#2484).
 
 Fixes
 -----
 
+- Appleseed : Fixed crashes when editing cameras during interactive renders (#2489).
 - Browser : Fixed bug caused by missing import (#2449).
 - OpenColorIO : Added workaround for OpenColorIO bug whereby config parsing would
   fail for non-English locales (#1654, #2460).
@@ -52,6 +67,26 @@ Fixes
 - Added backwards compatibility for scripts referencing the old
   `GafferScene.PathMatcher`, `GafferScene.PathMatcherData` and
   `GafferScene.PathMatcherDataPlug` types (#2457).
+- Layouts :
+  - Fixed incorrect vertical sizing of Timelines in custom
+    layouts (#2502).
+  - Fixed bug serialising custom layouts containing special characters (#2492).
+- ScriptNode :
+  - Hid "frame" plug from the UI, and clarified in the documentation
+    that is not intended for widespread use (#2504).
+  - Fixed a bug loading old scripts which referenced `IECore::Data` types
+    wrapping `imath` types (#2487).
+- Viewer (#2490) : Fixed bug where centre of interest was lost when switching between
+  the default and look-through cameras.
+- PlugValueWidget : Fixed bug that allowed drags to be received for read-only
+  plugs (#2503).
+- GUI App : Errors are now reported correctly when loading files from the command
+  line (#2499).
+- Serialiser : Fixed handling of exceptions in Python serialisers (#2475).
+- Expression : Fixed initial UI state so that the expression is not editable until
+  a language has been chosen. This avoids problems where an expression was entered
+  and then lost when the language was set (#2482).
+- PlugAlgo : Fixed problems with metadata promotion when using non-Box parents (#2488).
 
 API
 ---
@@ -62,12 +97,36 @@ API
   Animation in the NodeGraph (#2458).
 - Style : Added `state` argument to `renderAuxiliaryConnection()` (#2473).
 - Added GafferUI.Backups class (#2469).
+- ImageGadget : Added `loadTexture()` method (#2490).
+- ViewportGadget : Added `fitClippingPlanes()` method (#2490).
+- Viewer : Added `viewContextMenuSignal()`. This allows context menus for views to be
+  customised using the same basic mechanism we use in the NodeGraph and elsewhere.
+  (#2490).
+- FileMenu : Added `addScript()` function (#2499).
+- Serialisation : Improved support for Python serialisers (#2475).
+- ConnectionCreator : Added new class to improve drag & drop functionality in
+  the NodeGraph (#2480).
+- ContextAlgo : Added `affects*Paths()` methods (#2486).
 
 Breaking Changes
 ----------------
 
 - Stats app : Replaced `-frame` parameter with `-frames` (#2468).
 - Style : Changed signature for `renderAuxiliaryConnection()` method (#2473).
+- View : Removed `framingBound()` method (#2490).
+- RendererAlgo : Renamed `createDisplayDirectories()` to `createOutputDirectories()`
+  (#2452).
+- PlugAdder (#2480) :
+  - Removed `edge` constructor argument.
+  - Changed base class.
+- Nodule : Changed base class (#2480).
+- ConnectionGadget : Changed base class (#2480).
+- NodeGadget : Renamed `noduleTangent()` to `connectionTangent()` (#2480).
+- ContextAlgo : The scene selection is now stored as a PathMatcher and not
+  StringVectorData (#2486).
+- SceneGadget : Changed signatures for methods for accessing selection and
+  expansion (#2486).
+- Style : Added new `renderAuxiliaryConnection()` virtual method (#2497).
 
 0.44.0.0
 ========
