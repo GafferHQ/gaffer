@@ -806,7 +806,6 @@ class SceneView::Camera : public boost::signals::trackable
 				m_framed( false ),
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
-				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
 				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( NULL ),
 				m_viewportCameraDirty( true ),
@@ -1032,12 +1031,12 @@ class SceneView::Camera : public boost::signals::trackable
 			{
 				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
 
-				const IECoreScene::Camera *camera = m_view->viewportGadget()->getCamera();
-				if( auto clippingPlanes = camera->parametersData()->member<V2fData>( "clippingPlanes" ) )
+				const IECore::Camera *camera = m_view->viewportGadget()->getCamera();
+				if( const V2fData *clippingPlanes = camera->parametersData()->member<V2fData>( "clippingPlanes" ) )
 				{
 					clippingPlanesPlug()->setValue( clippingPlanes->readable() );
 				}
-				if( auto fieldOfView = camera->parametersData()->member<FloatData>( "projection:fov" ) )
+				if( const FloatData *fieldOfView = camera->parametersData()->member<FloatData>( "projection:fov" ) )
 				{
 					fieldOfViewPlug()->setValue( fieldOfView->readable() );
 				}
@@ -1087,23 +1086,49 @@ class SceneView::Camera : public boost::signals::trackable
 			string errorMessage;
 			try
 			{
-				const string cameraPathString = cameraPlug()->getValue();
+				globals = scenePlug()->globals();
+				cameraSet = m_view->inPlug<ScenePlug>()->set( "__cameras" );
+
 				if( cameraPathString.empty() )
 				{
-					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug() ); // primary render camera
+					if( const StringData *cameraData = globals->member<StringData>( "option:render:camera" ) )
+					{
+						cameraPathString = cameraData->readable();
+					}
 				}
-				else
+
+				if( !cameraPathString.empty() )
 				{
 					ScenePlug::ScenePath cameraPath;
 					ScenePlug::stringToPath( cameraPathString, cameraPath );
-					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug(), cameraPath );
+					if( !SceneAlgo::exists( scenePlug(), cameraPath ) )
+					{
+						throw IECore::Exception( "Camera \"" + cameraPathString + "\" does not exist" );
+					}
+
+					IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scenePlug()->object( cameraPath ) );
+					if( !constCamera )
+					{
+						throw IECore::Exception( "Location \"" + cameraPathString + "\" does not have a camera" );
+					}
+					cameraTransform = scenePlug()->fullTransform( cameraPath );
+
+					IECore::CameraPtr camera = constCamera->copy();
+					SceneAlgo::applyCameraGlobals( camera.get(), globals.get() );
+					m_lookThroughCamera = camera;
+				}
+				else
+				{
+					CameraPtr defaultCamera = new IECore::Camera;
+					SceneAlgo::applyCameraGlobals( defaultCamera.get(), globals.get() );
+					m_lookThroughCamera = defaultCamera;
 				}
 			}
 			catch( const std::exception &e )
 			{
 				// If an invalid path has been entered for the camera, computation will fail.
 				// Record the error to go in the caption, and make a default camera to lock to.
-				CameraPtr defaultCamera = new IECoreScene::Camera;
+				CameraPtr defaultCamera = new IECore::Camera;
 				defaultCamera->addStandardParameters();
 				m_lookThroughCamera = defaultCamera;
 				cameraSet = new PathMatcherData;
@@ -1243,7 +1268,6 @@ class SceneView::Camera : public boost::signals::trackable
 		/// The default viewport camera - we store this so we can
 		/// return to it after looking through a scene camera.
 		IECore::CameraPtr m_originalCamera;
-		M44f m_originalCameraTransform;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;
@@ -1303,7 +1327,7 @@ SceneView::SceneView( const std::string &name )
 
 	m_drawingMode = boost::make_shared<DrawingMode>( this );
 	m_shadingMode = boost::make_shared<ShadingMode>( this );
-	m_camera = boost::make_shared<LookThrough>( this );
+	m_camera = boost::make_shared<Camera>( this );
 	m_grid = boost::make_shared<Grid>( this );
 	m_gnomon = boost::make_shared<Gnomon>( this );
 
