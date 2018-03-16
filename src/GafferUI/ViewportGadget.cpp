@@ -265,7 +265,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 {
 	// Transform bound to camera space.
-	Box3f b = transform( box, getCameraTransform().inverse() );
+	Box3f b = transform( box, m_cameraController.getCamera()->getTransform()->transform().inverse() );
 	// Choose a far plane that should still be
 	// sufficient no matter how we orbit about the
 	// centre of the bound.
@@ -306,7 +306,9 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 		near = std::max( near, nearMin );
 	}
 
-	m_cameraController->setClippingPlanes( V2f( near, far ) );
+	IECore::CameraPtr camera = m_cameraController.getCamera();
+	camera->parameters()["clippingPlanes"] = new V2fData( V2f( near, far ) );
+	m_cameraController.setCamera( camera );
 	m_cameraChangedSignal( this );
 	requestRender();
 }
