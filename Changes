@@ -1,3 +1,35 @@
+0.35.3.0
+========
+
+Features
+--------
+
+- Added system to backup all open scripts at frequent intervals.
+  This is controlled via the Preferences dialogue.
+
+Improvements
+------------
+
+- Expression : Python expressions can now read from CompoundDataPlugs.
+- Read-only files are now read-only in the UI.
+- Serialiser : Improved support for Python-based serialisers.
+
+Fixes
+-----
+
+- Spline UI : Prevented creation of multiple editing dialogues for the same plug.
+- Layouts :
+  - Fixed incorrect vertical sizing of Timelines in custom layouts.
+  - Fixed bug serialising custom layouts containing special characters.
+- PlugValueWidget : Fixed bug that allowed drags to be received for read-only plugs.
+- GUI App : Errors are now reported correctly when loading files from the command line.
+- Serialiser : Fixed handling of exceptions in Python serialisers.
+- Expression : Fixed initial UI state so that the expression is not editable until
+  a language has been chosen. This avoids problems where an expression was entered
+  and then lost when the language was set.
+- PlugAdder : Fixed crash when dragging from a plug without a nodule.
+- GLWidget : Fixed OpenGL Context issue for Houdini 16.0 & 16.5 Qt5 builds.
+
 0.35.2.0
 ========
 
