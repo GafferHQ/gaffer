@@ -1225,6 +1225,11 @@ static const std::string &fragmentSource()
 		"		OUTCOLOR.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
 		"	}"
 
+		"	if( OUTCOLOR.a == 0.0 )"
+		"	{"
+		"		discard;"
+		"	}"
+
 		/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
 		/// textures and output only linear data."
 
