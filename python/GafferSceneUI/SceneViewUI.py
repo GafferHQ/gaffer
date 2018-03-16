@@ -78,25 +78,52 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"lookThrough" : [
+		"camera" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._LookThroughPlugValueWidget",
+			"description",
+			"""
+			Defines the camera used to view the scene.
+			""",
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._CameraPlugValueWidget",
 			"toolbarLayout:divider", True,
 			"toolbarLayout:label", "",
+			"layout:activator:hidden", lambda plug : False,
 
 		],
 
-		"lookThrough.enabled" : [
+		"camera.fieldOfView" : [
+
+			"description",
+			"""
+			The field of view for the viewport's default perspective camera.
+			""",
+
+		],
+
+		"camera.clippingPlanes" : [
+
+			"description",
+			"""
+			The near and far clipping planes for the viewport's default perspective camera.
+			""",
+
+		],
+
+		"camera.lookThroughEnabled" : [
 
 			"description",
 			"""
 			When enabled, locks the view to look through a specific camera in the scene.
-			By default, the current render camera is used, but this can be changed using the lookThrough.camera
+			By default, the current render camera is used, but this can be changed using the camera.lookThroughCamera
 			setting.
 			""",
+
+			"layout:visibilityActivator", "hidden"
+
 		],
 
-		"lookThrough.camera" : [
+		"camera.lookThroughCamera" : [
 
 			"description",
 			"""
@@ -104,6 +131,9 @@ Gaffer.Metadata.registerNode(
 			means that the current render camera will be used - the paths to other cameras may be specified
 			to choose another camera."
 			""",
+
+			"layout:visibilityActivator", "hidden"
+
 		],
 
 		"grid" : [
@@ -130,7 +160,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Drawing" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -181,7 +211,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			menuButton = GafferUI.MenuButton(
 				image = "shading.png",
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Shading" ),
 				hasFrame = False,
 			)
 
@@ -226,7 +256,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Expansion" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -257,38 +287,150 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
 
 ##########################################################################
-# _LookThroughPlugValueWidget
+# _CameraPlugValueWidget
 ##########################################################################
 
-class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
+class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		self.__menuButton = GafferUI.MenuButton(
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Camera" ),
+			hasFrame = False,
+		)
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
-		with row :
-			self.__enabledWidget = GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode=GafferUI.BoolWidget.DisplayMode.Switch )
-			self.__cameraWidget = GafferSceneUI.ScenePathPlugValueWidget(
-				plug["camera"],
-				path = GafferScene.ScenePath(
-					plug.node()["in"],
-					plug.node().getContext(),
-					"/",
-					filter = self.__pathFilter()
-				),
-			)
-			self.__cameraWidget.pathWidget().setFixedCharacterWidth( 13 )
-			if hasattr( self.__cameraWidget.pathWidget()._qtWidget(), "setPlaceholderText" ) :
-				self.__cameraWidget.pathWidget()._qtWidget().setPlaceholderText( "Render Camera" )
+		self.__settingsWindow = None
+
+		# Must connect with group 0 so we get called before PlugValueWidget's default handlers
+		self.__dragEnterConnection = self.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dropConnection = self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ) )
 
 		self._updateFromPlug()
 
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+
+		self.__menuButton.setHighlighted( highlighted )
+
 	def _updateFromPlug( self ) :
 
-		with self.getContext() :
-			self.__cameraWidget.setEnabled( self.getPlug()["enabled"].getValue() )
+		self.__menuButton.setImage(
+			"cameraOn.png" if self.getPlug()["lookThroughEnabled"].getValue() else "cameraOff.png"
+		)
+
+	def __menuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+
+		if self.getPlug()["lookThroughEnabled"].getValue() :
+			currentLookThrough = self.getPlug()["lookThroughCamera"].getValue()
+		else :
+			currentLookThrough = None
+
+		m.append(
+			"/Default",
+			{
+				"checkBox" : currentLookThrough is None,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), None )
+			}
+		)
+
+		m.append(
+			"/Render Camera",
+			{
+				"checkBox" : currentLookThrough is "",
+				"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), "" )
+			}
+		)
+
+		sets = {}
+		with IECore.IgnoredExceptions( Exception ) :
+			with self.getContext() :
+				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
+
+		for setName in sorted( sets.keys() ) :
+			for abbreviatedPath, path in self.__abbreviatedPaths( sets[setName].value ) :
+				m.append(
+					"/{}{}".format( setName[2:-1].title(), abbreviatedPath ),
+					{
+						"checkBox" : currentLookThrough == path,
+						"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
+					}
+				)
+
+		m.append( "/BrowseDivider", { "divider" : True } )
+
+		m.append(
+			"/Browse...",
+			{
+				"command" : Gaffer.WeakMethod( self.__browse ),
+			}
+		)
+
+		m.append(
+			"/SettingsDivider",
+			{
+				"divider" : True,
+			}
+		)
+
+		m.append(
+			"/Settings...",
+			{
+				"command" : Gaffer.WeakMethod( self.__showSettings ),
+			}
+		)
+
+		return m
+
+	def __lookThrough( self, path, *unused ) :
+
+		self.getPlug()["lookThroughEnabled"].setValue( path is not None )
+		self.getPlug()["lookThroughCamera"].setValue( path or "" )
+
+	def __browse( self ) :
+
+		w = GafferSceneUI.ScenePathPlugValueWidget(
+			self.getPlug()["lookThroughCamera"],
+			path = GafferScene.ScenePath(
+				self.getPlug().node()["in"],
+				self.getPlug().node().getContext(),
+				"/",
+				filter = self.__pathFilter()
+			),
+		)
+		## \todo We're making a ScenePathPlugValueWidget just
+		# to get its dialogue, because it customises it for
+		# browsing scenes. Perhaps we should expose this
+		# functionality somewhere more officially.
+		dialogue = w._pathChooserDialogue()
+
+		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
+		if path is not None :
+			self.__lookThrough( str( path ) )
+
+	def __showSettings( self, menu ) :
+
+		if self.__settingsWindow is None :
+
+			self.__settingsWindow = GafferUI.Window( title = "Camera Settings" )
+			with self.__settingsWindow :
+				with GafferUI.ListContainer() :
+					with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None, borderWidth = 4 ) :
+						layout = GafferUI.PlugLayout( self.getPlug() )
+					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
+			self.ancestor( GafferUI.Window ).addChildWindow( self.__settingsWindow )
+
+			# Force layout to build immediately, so we can then match
+			# the window size to it.
+			layout.plugValueWidget( self.getPlug()["fieldOfView"], lazy = False )
+			self.__settingsWindow.resizeToFitChild()
+
+		self.__settingsWindow.setVisible( True )
 
 	@staticmethod
 	def __pathFilter() :
@@ -322,6 +464,74 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return Gaffer.CompoundPathFilter( [ validPathFilter, camerasPathFilter ] )
 
+	def __dragEnter( self, widget, event ) :
+
+		if not isinstance( event.data, IECore.StringVectorData ) :
+			return False
+
+		if len( event.data ) != 1 :
+			return False
+
+		sets = {}
+		with IECore.IgnoredExceptions( Exception ) :
+			with self.getContext() :
+				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
+
+		if not any(
+			s.value.match( event.data[0] ) & IECore.PathMatcher.Result.ExactMatch
+			for s in sets.values()
+		) :
+			return False
+
+		self.setHighlighted( True )
+		return True
+
+	def __drop( self, widget, event ) :
+
+		self.setHighlighted( False )
+		self.__lookThrough( event.data[0] )
+		return True
+
+	## \todo Would this be useful as PathMatcherAlgo
+	# somewhere (implemented in C++ using iterators)?
+	@staticmethod
+	def __abbreviatedPaths( pathMatcher ) :
+
+		class Node( dict ) :
+			fullPath = None
+			def __missing__( self, key ) :
+				n = Node()
+				self[key] = n
+				return n
+
+		# Build tree of dicts equivalent to the
+		# PathMatcher.
+		root = Node()
+		for path in pathMatcher.paths() :
+			node = root
+			for name in path[1:].split( "/" ) :
+				node = node[name]
+			node.fullPath = path
+
+		# Walk the tree, building the abbreviated
+		# paths. We abbreviate by omitting the names
+		# of nodes which have no siblings.
+		result = []
+		def walk( node, abbreviatedPath ) :
+
+			for key in node.keys() :
+				abbreviatedChildPath = abbreviatedPath
+				if len( node ) > 1 or node[key].fullPath :
+					abbreviatedChildPath += "/" + key
+				walk( node[key], abbreviatedChildPath )
+
+			if node.fullPath :
+				result.append( ( abbreviatedPath, node.fullPath ) )
+
+		walk( root, "" )
+
+		return sorted( result )
+
 ##########################################################################
 # _GridPlugValueWidget
 ##########################################################################
@@ -330,7 +540,7 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Gadgets" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "grid.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -363,3 +573,78 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		return m
+
+##########################################################################
+# Context menu
+##########################################################################
+
+def __fitClippingPlanes( view, toSelection = False ) :
+
+	viewportGadget = view.viewportGadget()
+	sceneGadget = viewportGadget.getPrimaryChild()
+	viewportGadget.fitClippingPlanes(
+		sceneGadget.bound() if not toSelection else sceneGadget.selectionBound()
+	)
+
+def __appendClippingPlaneMenuItems( menuDefinition, prefix, view, parentWidget ) :
+
+	sceneGadget = view.viewportGadget().getPrimaryChild()
+
+	if isinstance( parentWidget, GafferUI.Viewer ) :
+		editable = view.viewportGadget().getCameraEditable()
+	else :
+		editable = not parentWidget.getReadOnly()
+
+	menuDefinition.append(
+		prefix + "/Fit To Selection",
+		{
+			"active" : editable and not sceneGadget.getSelection().isEmpty(),
+			"command" : functools.partial( __fitClippingPlanes, view, toSelection = True ),
+			"shortCut" : "Ctrl+K" if isinstance( parentWidget, GafferUI.Viewer ) else "",
+		}
+	)
+
+	menuDefinition.append(
+		prefix + "/Fit To Scene",
+		{
+			"active" : editable,
+			"command" : functools.partial( __fitClippingPlanes, view ),
+		}
+	)
+
+	if isinstance( parentWidget, GafferUI.Viewer ) :
+
+		# No need to add this one when parentWidget is a PlugValueWidget,
+		# because there's already a menu item for that.
+
+		menuDefinition.append(
+			prefix + "/Default",
+			{
+				"active" : editable,
+				"command" : view["camera"]["clippingPlanes"].setToDefault,
+			}
+		)
+
+def __viewContextMenu( viewer, view, menuDefinition ) :
+
+	if not isinstance( view, GafferSceneUI.SceneView ) :
+		return False
+
+	__appendClippingPlaneMenuItems( menuDefinition, "/Clipping Planes", view, viewer )
+
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+
+def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if not isinstance( node, GafferSceneUI.SceneView ) :
+		return
+	if plug != node["camera"]["clippingPlanes"] :
+		return
+
+	menuDefinition.append( "/FitDivider", { "divider" : True } )
+
+	__appendClippingPlaneMenuItems( menuDefinition, "", node, plugValueWidget )
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu, scoped = False )

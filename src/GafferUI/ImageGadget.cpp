@@ -87,6 +87,16 @@ Box3f boundGetter( const std::string &fileName, size_t &cost )
 	return Box3f( -size/2.0f, size/2.0f );
 }
 
+void applyTextureParameters( IECoreGL::Texture *texture )
+{
+	IECoreGL::Texture::ScopedBinding binding( *texture );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0 );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+}
+
 const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextureOrFileName )
 {
 	if( const Texture *texture = runTimeCast<const Texture>( imageOrTextureOrFileName.get() ) )
@@ -109,12 +119,7 @@ const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextu
 
 	if( texture )
 	{
-		IECoreGL::Texture::ScopedBinding binding( *texture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0 );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+		applyTextureParameters( texture.get() );
 	}
 
 	imageOrTextureOrFileName = texture;
@@ -165,9 +170,19 @@ IECoreGL::TextureLoader *ImageGadget::textureLoader()
 	return loader.get();
 }
 
+IECoreGL::ConstTexturePtr ImageGadget::loadTexture( const std::string &fileName )
+{
+	TexturePtr texture = textureLoader()->load( fileName );
+	if( texture )
+	{
+		applyTextureParameters( texture.get() );
+	}
+	return texture;
+}
+
 void ImageGadget::doRender( const Style *style ) const
 {
-	if( const Texture *texture = loadTexture( m_imageOrTextureOrFileName ) )
+	if( const Texture *texture = ::loadTexture( m_imageOrTextureOrFileName ) )
 	{
 		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
 		style->renderImage( b, texture );
