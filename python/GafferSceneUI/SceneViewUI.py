@@ -37,8 +37,6 @@
 
 import functools
 
-import imath
-
 import IECore
 
 import Gaffer
@@ -423,7 +421,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 				with GafferUI.ListContainer() :
 					with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None, borderWidth = 4 ) :
 						layout = GafferUI.PlugLayout( self.getPlug() )
-					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
+					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 			self.ancestor( GafferUI.Window ).addChildWindow( self.__settingsWindow )
 

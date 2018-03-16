@@ -353,7 +353,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		assertDefaultCamera()
 
-		view["camera"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
+		view["camera"]["clippingPlanes"].setValue( IECore.V2f( 1, 10 ) )
 		assertDefaultCamera()
 
 		view["camera"]["fieldOfView"].setValue( 40 )
@@ -386,7 +386,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		assertLookThroughCamera()
 
-		view["camera"]["clippingPlanes"].setValue( imath.V2f( 10, 20 ) )
+		view["camera"]["clippingPlanes"].setValue( IECore.V2f( 10, 20 ) )
 		view["camera"]["fieldOfView"].setValue( 60 )
 
 		assertLookThroughCamera()
