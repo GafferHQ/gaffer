@@ -4,11 +4,9 @@ language: cpp
 
 os:
     - linux
-    - osx
 
 compiler:
     - gcc
-    - clang
 
 addons:
   apt:
@@ -83,12 +81,3 @@ matrix:
         - os: linux
           compiler: gcc
           env: COMPILER_VERSION=4.8 CXXSTD=c++98 DEBUG=0
-        - os: linux
-          compiler: gcc
-          env: COMPILER_VERSION=4.8 CXXSTD=c++11 DEBUG=0
-        - os: linux
-          compiler: gcc
-          env: COMPILER_VERSION=5 CXXSTD=c++11 DEBUG=0
-    exclude:
-        - os: osx
-          compiler: gcc
