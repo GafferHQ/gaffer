@@ -60,6 +60,29 @@ using namespace IECoreGL;
 using namespace GafferUI;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+float ceilSignificantDigits( float x, int significantDigits )
+{
+	const int ceilLog10 = ceil( log10( x ) );
+	const float magnitude = pow( 10, ceilLog10 - significantDigits );
+	return ceil( x / magnitude ) * magnitude;
+}
+
+float floorSignificantDigits( float x, int significantDigits )
+{
+	const int ceilLog10 = ceil( log10( x ) );
+	const float magnitude = pow( 10, ceilLog10 - significantDigits );
+	return floor( x / magnitude ) * magnitude;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // CameraController
 //////////////////////////////////////////////////////////////////////////
 
@@ -662,17 +685,44 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 	// Choose a far plane that should still be
 	// sufficient no matter how we orbit about the
 	// centre of the bound.
-	float far = b.center().z - b.size().length() / 2.0;
-	// Make it positive (camera looks down -ve Z, but clipping
-	// planes are specified as +ve values).
-	far *= -1.0f;
-	// Pad to the next power of 10, because we like nice numbers,
-	// and choose a near clipping plane suitable for maintaining
-	// precision.
-	const int farLogTen = ceil( log10( far ) );
-	const int nearLogTen = farLogTen - 5;
+	const float bRadius = b.size().length() / 2.0;
+	float far = b.center().z - bRadius;
+	if( far >= 0.0f )
+	{
+		// Far plane behind the camera - not much we
+		// can sensibly do.
+		return;
+	}
+	else
+	{
+		// Far will be -ve because camera looks down -ve
+		// Z, but clipping is specified as +ve.
+		far *= -1;
+	}
+	// Round up to 2 significant digits, so we have a tiny
+	// bit of padding and a neatish number.
+	far = ceilSignificantDigits( far, 2 );
 
-	m_cameraController->setClippingPlanes( V2f( pow( 10, nearLogTen ), pow( 10, farLogTen ) ) );
+	// Now choose a near plane. We don't want this to get
+	// too small, to avoid losing precision.
+	const float nearMin = far / 10000.0f;
+	float near = b.center().z + bRadius;
+	if( near >= 0.0f )
+	{
+		// Behind camera.
+		near = nearMin;
+	}
+	else
+	{
+		// Neaten
+		near = floorSignificantDigits( -1 * near, 2 );
+		// Provide room for dollying in.
+		near /= 100.0f;
+		// But don't allow precision to be lost.
+		near = std::max( near, nearMin );
+	}
+
+	m_cameraController->setClippingPlanes( V2f( near, far ) );
 	m_cameraChangedSignal( this );
 	requestRender();
 }
