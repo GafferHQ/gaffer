@@ -41,7 +41,7 @@ import GafferTest
 
 class NodeAlgoTest( GafferTest.TestCase ) :
 
-	def test( self ) :
+	def testUserDefaults( self ) :
 
 		node = GafferTest.AddNode()
 
@@ -73,7 +73,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node3["op1"].getValue(), 0 )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 
-	def testCompoundPlug( self ) :
+	def testCompoundPlugUserDefaults( self ) :
 
 		node = GafferTest.CompoundPlugNode()
 
@@ -98,7 +98,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node2["p"]["s"].getValue(), "from the metadata" )
 		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node2["p"]["s"] ) )
 
-	def testSeveral( self ) :
+	def testSeveralUserDefaults( self ) :
 
 		node = GafferTest.AddNode()
 		node2 = GafferTest.AddNode()
