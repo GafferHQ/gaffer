@@ -67,6 +67,7 @@ class ScriptWindow( GafferUI.Window ) :
 		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 
 		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
+		self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
 
 		self.__updateTitle()
 
@@ -114,6 +115,11 @@ class ScriptWindow( GafferUI.Window ) :
 		if plug.isSame( self.__script["fileName"] ) or plug.isSame( self.__script["unsavedChanges"] ) :
 			self.__updateTitle()
 
+	def __metadataChanged( self, nodeTypeId, key, node ) :
+
+		if key == "readOnly" and Gaffer.MetadataAlgo.affectedByChange( self.__script, nodeTypeId, node ) :
+			self.__updateTitle()
+
 	def __updateTitle( self ) :
 
 		f = self.__script["fileName"].getValue()
@@ -125,8 +131,9 @@ class ScriptWindow( GafferUI.Window ) :
 			d = " - " + d
 
 		u = " *" if self.__script["unsavedChanges"].getValue() else ""
+		ro = " (read only) " if Gaffer.MetadataAlgo.readOnly( self.__script ) else ""
 
-		self.setTitle( "Gaffer : %s%s%s" % ( f, u, d ) )
+		self.setTitle( "Gaffer : %s%s%s%s" % ( f, ro, u, d ) )
 
 	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one

@@ -224,6 +224,15 @@ class Backups( object ) :
 	def __timeout( self ) :
 
 		for script in self.__applicationRoot()["scripts"] :
+
+			if Gaffer.MetadataAlgo.readOnly( script ) :
+				# Skip read-only scripts as a heuristic for
+				# not making backups-of-backups. Even if this
+				# isn't actually a backup, the user can't edit
+				# it anyway, so can't make any changes that
+				# would require backing up.
+				continue
+
 			if script["fileName"].getValue() :
 				try :
 					backupFileName = self.backup( script )
