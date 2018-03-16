@@ -58,8 +58,6 @@ View::View( const std::string &name, Gaffer::PlugPtr inPlug )
 	setChild( "in", inPlug );
 
 	setContext( new Context() );
-
-	viewportGadget()->keyPressSignal().connect( boost::bind( &View::keyPress, this, ::_1, ::_2 ) );
 }
 
 View::~View()
@@ -115,30 +113,6 @@ void View::contextChanged( const IECore::InternedString &name )
 boost::signals::connection &View::contextChangedConnection()
 {
 	return m_contextChangedConnection;
-}
-
-bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
-{
-	if( keyEvent.key == "F" )
-	{
-		Imath::Box3f b = framingBound();
-		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
-		{
-			viewportGadget()->frame( b );
-			return true;
-		}
-	}
-
-	return false;
-}
-
-Imath::Box3f View::framingBound() const
-{
-	if( const Gadget *c = viewportGadget()->getPrimaryChild() )
-	{
-		return c->bound();
-	}
-	return Imath::Box3f();
 }
 
 View::CreatorMap &View::creators()

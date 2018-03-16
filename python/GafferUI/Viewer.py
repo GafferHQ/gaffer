@@ -148,6 +148,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__currentView = None
 
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__contextMenuConnection = self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 		self._updateFromSet()
 
@@ -158,6 +159,16 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def viewGadgetWidget( self ) :
 
 		return self.__gadgetWidget
+
+	__viewContextMenuSignal = Gaffer.Signal3()
+
+	## Returns a signal emitted to generate a context menu for a view.
+	# The signature for connected slots is `slot( viewer, view, menuDefiniton )`.
+	# Slots should edit the menu definition in place.
+	@classmethod
+	def viewContextMenuSignal( cls ) :
+
+		return cls.__viewContextMenuSignal
 
 	def __repr__( self ) :
 
@@ -225,6 +236,22 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				return True
 
 		return False
+
+	def __contextMenu( self, widget ) :
+
+		if self.view() is None :
+			return False
+
+		menuDefinition = IECore.MenuDefinition()
+		self.viewContextMenuSignal()( self, self.view(), menuDefinition )
+
+		if not len( menuDefinition.items() ) :
+			return False
+
+		self.__viewContextMenu = GafferUI.Menu( menuDefinition )
+		self.__viewContextMenu.popup( self )
+
+		return True
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 

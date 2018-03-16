@@ -76,6 +76,9 @@ class GAFFERUI_API ImageGadget : public Gadget
 		/// publicly so that other code can share the same texture
 		/// cache.
 		static IECoreGL::TextureLoader *textureLoader();
+		/// Loads a texture using the `textureLoader()` and applies
+		/// the default ImageGadget texture parameters.
+		static IECoreGL::ConstTexturePtr loadTexture( const std::string &fileName );
 
 	protected :
 

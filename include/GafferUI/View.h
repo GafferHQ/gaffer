@@ -160,10 +160,6 @@ class GAFFERUI_API View : public Gaffer::Node
 		/// this can be useful when modifying the context.
 		boost::signals::connection &contextChangedConnection();
 
-		/// May be overridden by derived classes to control the region that is framed
-		/// when "F" is pressed.
-		virtual Imath::Box3f framingBound() const;
-
 		template<class T>
 		struct ViewDescription
 		{
@@ -178,8 +174,6 @@ class GAFFERUI_API View : public Gaffer::Node
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
 		boost::signals::scoped_connection m_contextChangedConnection;
-
-		bool keyPress( GadgetPtr gadget, const KeyEvent &keyEvent );
 
 		typedef std::map<IECore::TypeId, ViewCreator> CreatorMap;
 		static CreatorMap &creators();

@@ -79,8 +79,8 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;
 
-		Gaffer::ValuePlug *lookThroughPlug();
-		const Gaffer::ValuePlug *lookThroughPlug() const;
+		Gaffer::ValuePlug *cameraPlug();
+		const Gaffer::ValuePlug *cameraPlug() const;
 
 		Gaffer::ValuePlug *gridPlug();
 		const Gaffer::ValuePlug *gridPlug() const;
@@ -110,13 +110,14 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 	protected :
 
 		void contextChanged( const IECore::InternedString &name ) override;
-		Imath::Box3f framingBound() const override;
 
 	private :
 
 		// The filter for a preprocessing node used to hide things.
 		GafferScene::PathFilter *hideFilter();
 		const GafferScene::PathFilter *hideFilter() const;
+
+		Imath::Box3f framingBound() const;
 
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
 		void transferSelectionToContext();
@@ -130,8 +131,8 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		std::unique_ptr<DrawingMode> m_drawingMode;
 		class ShadingMode;
 		std::unique_ptr<ShadingMode> m_shadingMode;
-		class LookThrough;
-		std::unique_ptr<LookThrough> m_lookThrough;
+		class Camera;
+		std::unique_ptr<Camera> m_camera;
 		class Grid;
 		std::unique_ptr<Grid> m_grid;
 		class Gnomon;

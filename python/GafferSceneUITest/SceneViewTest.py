@@ -241,16 +241,16 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getViewCameraTransform(), imath.M44f().translate( imath.V3f( 100, 0, 0 ) ) )
 
 		# Set the path for the look-through camera, but don't activate it - nothing should have changed.
-		view["lookThrough"]["camera"].setValue( "/group/camera" )
+		view["camera"]["lookThroughCamera"].setValue( "/group/camera" )
 		self.assertEqual( getViewCameraTransform(), imath.M44f().translate( imath.V3f( 100, 0, 0 ) ) )
 
 		# Enable the look-through - the camera should update.
-		view["lookThrough"]["enabled"].setValue( True )
+		view["camera"]["lookThroughEnabled"].setValue( True )
 		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), script["group"]["out"].transform( "/group/camera" ) )
 
 		# Disable the look-through - the camera should revert to its previous position.
-		view["lookThrough"]["enabled"].setValue( False )
+		view["camera"]["lookThroughEnabled"].setValue( False )
 		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), imath.M44f().translate( imath.V3f( 100, 0, 0 ) ) )
 
@@ -329,6 +329,71 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+	def testClippingsPlanesAndFOV( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["camera"] = GafferScene.Camera()
+
+		view = GafferUI.View.create( script["camera"]["out"] )
+
+		def assertDefaultCamera() :
+
+			# Force update
+			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+			self.assertEqual(
+				view["camera"]["clippingPlanes"].getValue(),
+				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
+			)
+			self.assertEqual(
+				view["camera"]["fieldOfView"].getValue(),
+				view.viewportGadget().getCamera().parameters()["projection:fov"].value
+			)
+
+		assertDefaultCamera()
+
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
+		assertDefaultCamera()
+
+		view["camera"]["fieldOfView"].setValue( 40 )
+		assertDefaultCamera()
+
+		def assertLookThroughCamera() :
+
+			# Force update
+			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+			self.assertEqual(
+				script["camera"]["clippingPlanes"].getValue(),
+				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
+			)
+			self.assertEqual(
+				script["camera"]["fieldOfView"].getValue(),
+				view.viewportGadget().getCamera().parameters()["projection:fov"].value
+			)
+
+		view["camera"]["lookThroughCamera"].setValue( "/camera" )
+		view["camera"]["lookThroughEnabled"].setValue( True )
+
+		assertLookThroughCamera()
+
+		view["camera"]["lookThroughEnabled"].setValue( False )
+
+		assertDefaultCamera()
+
+		view["camera"]["lookThroughEnabled"].setValue( True )
+
+		assertLookThroughCamera()
+
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 10, 20 ) )
+		view["camera"]["fieldOfView"].setValue( 60 )
+
+		assertLookThroughCamera()
+
+		view["camera"]["lookThroughEnabled"].setValue( False )
+
+		assertDefaultCamera()
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1109,6 +1109,9 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __contextMenu( self, qObject, qEvent ) :
 
+		if qEvent.modifiers() :
+			return False
+
 		widget = Widget._owner( qObject )
 		if widget._contextMenuSignal is not None :
 			return widget._contextMenuSignal( widget )
