@@ -674,7 +674,22 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
-	V3f dir = ( dstPosition - srcPosition ).normalized();
+	// To guarantee straight curve sections we add an offset when computing
+	// tangents. This is done because the effective end point is slightly shifted
+	// due to how we draw curves at where they hit a node.
+	V3f adjustedSrcPosition( srcPosition );
+	if( dstTangent == V3f( 0 ) && srcTangent != V3f( 0 ) )
+	{
+		adjustedSrcPosition += srcTangent * g_endPointSize;
+	}
+
+	V3f adjustedDstPosition( dstPosition );
+	if( srcTangent == V3f( 0 ) && dstTangent != V3f( 0 ) )
+	{
+		adjustedDstPosition += dstTangent * g_endPointSize;
+	}
+
+	V3f dir = ( adjustedDstPosition - adjustedSrcPosition ).normalized();
 
 	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
 	glUniform3fv( g_v1Parameter, 1, dstPosition.getValue() );
