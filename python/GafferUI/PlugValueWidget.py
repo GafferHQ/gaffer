@@ -625,7 +625,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __dragEnter( self, widget, event ) :
 
-		if self.getReadOnly() :
+		if self.getReadOnly() or Gaffer.MetadataAlgo.readOnly( self.getPlug() ):
 			return False
 
 		if isinstance( event.sourceWidget, GafferUI.PlugValueWidget ) :
