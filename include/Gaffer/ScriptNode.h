@@ -238,7 +238,8 @@ class ScriptNode : public Node
 		/// > user, so that the "current frame" is saved within the
 		/// > script file. To perform a computation at a particular time,
 		/// > create your own context rather than change the value of
-		/// > this plug.
+		/// > this plug. Likewise, don't refer to this plug from an
+		/// > expression - always use `context.getFrame()` instead.
 		FloatPlug *framePlug();
 		const FloatPlug *framePlug() const;
 		/// Drives the framesPerSecond variable in the context.

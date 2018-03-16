@@ -48,6 +48,8 @@ Gaffer.Metadata.registerNode(
 	saved to disk as a ".gfr" file and reloaded.
 	""",
 
+	"layout:visibilityActivator:hidden", lambda node : False,
+
 	plugs = {
 
 		"fileName" : (
@@ -125,7 +127,13 @@ Gaffer.Metadata.registerNode(
 			> 	c.setFrame( f )
 			>   ...
 			> ```
+			>
+			> Likewise, you should never refer to this plug from
+			> an expression. Always retrieve the frame with
+			> `context.getFrame()` instead.
 			""",
+
+			"layout:visibilityActivator", "hidden",
 
 		),
 
