@@ -51,10 +51,14 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/DependencyNode.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
+
+#include <unistd.h>
 
 using namespace Gaffer;
 
@@ -807,6 +811,11 @@ void ScriptNode::plugSet( Plug *plug )
 	{
 		const boost::filesystem::path fileName( fileNamePlug()->getValue() );
 		context()->set( "script:name", fileName.stem().string() );
+		MetadataAlgo::setReadOnly(
+			this,
+			boost::filesystem::exists( fileName ) && 0 != access( fileName.c_str(), W_OK ),
+			/* persistent = */ false
+		);
 	}
 }
 
