@@ -770,7 +770,16 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::V2f &srcPosition, co
 	const V3f p0( srcPosition.x, srcPosition.y, 0 );
 	const V3f p1( dstPosition.x, dstPosition.y, 0 );
 
-	V3f dir = ( V3f( dstPosition.x, dstPosition.y, 0 ) - V3f( srcPosition.x, srcPosition.y, 0 ) ).normalized();
+	// To guarantee straight curve sections we add an offset when computing
+	// tangents. This is done because the effective end point is slightly shifted
+	// due to how we draw curves at where they hit a node.
+	V2f adjustedDstPosition( dstPosition );
+	if( srcTangent == V2f( 0 ) && dstTangent != V2f( 0 ) )
+	{
+		adjustedDstPosition += dstTangent * g_endPointSize;
+	}
+
+	V3f dir = ( V3f( adjustedDstPosition.x, adjustedDstPosition.y, 0 ) - V3f( srcPosition.x, srcPosition.y, 0 ) ).normalized();
 
 	const V3f t0 = srcTangent != V2f( 0 ) ? V3f( srcTangent.x, dstTangent.y, 0 ) : dir;
 	const V3f t1 = dstTangent != V2f( 0 ) ? V3f( dstTangent.x, dstTangent.y, 0 ) : -dir;
