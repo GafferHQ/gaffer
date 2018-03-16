@@ -41,6 +41,7 @@ import weakref
 import gc
 import os
 import shutil
+import stat
 import inspect
 import functools
 
@@ -1415,6 +1416,33 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		self.assertNotIn( "p", s2 )
 		self.assertEqual( len( s2["variables"] ), 0 )
+
+	def testReadOnlyMetadata( self ) :
+
+		fileName = self.temporaryDirectory() + "/test.gfr"
+
+		s = Gaffer.ScriptNode()
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
+
+		s["fileName"].setValue( fileName )
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
+		s.save()
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( fileName )
+		s.load()
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
+
+		os.chmod( s["fileName"].getValue(), stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH )
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( fileName )
+		s.load()
+		self.assertTrue( Gaffer.MetadataAlgo.getReadOnly( s ) )
+
+		s["fileName"].setValue( self.temporaryDirectory() + "/test2.gfr" )
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
 
 if __name__ == "__main__":
 	unittest.main()
