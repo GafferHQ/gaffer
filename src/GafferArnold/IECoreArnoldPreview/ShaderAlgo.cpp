@@ -116,6 +116,51 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 	ShaderMap shaderMap; // Maps handles to nodes
 
 	vector<AtNode *> result;
+
+	// \todo - We need to hack around Arnold's lack of support for multiple outputs by outputting
+	// nodes multiple times if they have multiple outputs that are used.  For this reason, we first
+	// collect a list of all outputs that are used.  If in the future Arnold makes it possible to
+	// just use all the outputs of OSL nodes, we can remove all this.
+	std::vector<std::string> usedHandles;
+	for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
+	{
+		const Shader *shader = runTimeCast<const Shader>( it->get() );
+		if( !shader )
+		{
+			continue;
+		}
+		const CompoundDataMap *parameters = &shader->parameters();
+		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
+		{
+			if( const StringData *stringData = runTimeCast<const StringData>( pIt->second.get() ) )
+			{
+				const string &value = stringData->readable();
+				if( boost::starts_with( value, "link:" ) )
+				{
+					usedHandles.push_back( value.c_str() + 5 );
+				}
+			}
+			else if( const StringVectorData *stringVectorData = runTimeCast<const StringVectorData>( pIt->second.get() ) )
+			{
+				const vector<string> &values = stringVectorData->readable();
+
+				vector<AtNode *> nodes;
+				for( unsigned int i = 0; i < values.size(); i++ )
+				{
+					const string &value = values[i];
+					if( boost::starts_with( value, "link:" ) )
+					{
+						usedHandles.push_back( value.c_str() + 5 );
+					}
+				}
+			}
+		}
+	}
+
+	// Sort and remove duplicates using silly std syntax
+	std::sort( usedHandles.begin(), usedHandles.end() );
+	usedHandles.erase( std::unique( usedHandles.begin(), usedHandles.end() ), usedHandles.end() );
+
 	for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
 	{
 		const char *nodeType = NULL;
@@ -165,140 +210,171 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			}
 		}
 
-		AtNode *node = AiNode( nodeType, AtString( (namePrefix + nodeName).c_str() ) );
-
-		if( !node )
-		{
-			msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't load shader \"%s\"" ) % nodeType );
-			continue;
-		}
-
-		if( handleData )
-		{
-			shaderMap[nodeName] = node;
-		}
-
+		std::vector<std::string> outputNames;
 		if( oslShaderName )
 		{
-			AiNodeSetStr( node, "shadername", oslShaderName );
+			// Find all outputs of this node which are used
+			std::string outputPrefix = nodeName + ".";
+			std::vector<std::string>::iterator matchStart = std::lower_bound(usedHandles.begin(), usedHandles.end(), outputPrefix );
+			while( matchStart != usedHandles.end() && boost::starts_with( *matchStart, outputPrefix ) )
+			{
+				outputNames.push_back( matchStart->c_str() + outputPrefix.length() );
+				matchStart++;
+			}
 		}
 
-		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
+		if( outputNames.size() == 0 )
 		{
-			std::string parameterName = pIt->first;
+			// Either not an OSL shader, or the final shader in the chain
+			outputNames.push_back( "" );
+		}
+
+		// Output the node repeatedly for each output, because Arnold does not currently support
+		// multiple outputs from a node
+		for( unsigned int nI = 0; nI < outputNames.size(); nI++ )
+		{
+			std::string &outputName = outputNames[nI];
+
+			AtNode *node = AiNode( AtString( nodeType ), AtString( (namePrefix + nodeName + outputName).c_str() ) );
+
+			if( !node )
+			{
+				msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't load shader \"%s\"" ) % nodeType );
+				continue;
+			}
+
+			if( handleData )
+			{
+				if( outputName == "" )
+				{
+					shaderMap[nodeName] = node;
+				}
+				else
+				{
+					shaderMap[nodeName + "." + outputName] = node;
+				}
+			}
+
+			if( outputName != "" )
+			{
+				AiNodeDeclare( node, "output", "constant STRING" );
+				AiNodeSetStr( node, "output", AtString( outputName.c_str() ) );
+			}
+
 			if( oslShaderName )
 			{
-				parameterName = "param_" + parameterName;
+				AiNodeSetStr( node, "shadername", oslShaderName );
 			}
 
-			if( const StringData *stringData = runTimeCast<const StringData>( pIt->second.get() ) )
+			for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
 			{
-				const string &value = stringData->readable();
-				if( boost::starts_with( value, "link:" ) )
+				std::string parameterName = pIt->first;
+				if( oslShaderName )
 				{
-					string linkHandle = value.c_str() + 5;
-					const size_t dotIndex = linkHandle.find_first_of( '.' );
-					if( dotIndex != string::npos )
-					{
-						// Arnold does not support multiple outputs from OSL
-						// shaders, so we must strip off any suffix specifying
-						// a specific output.
-						linkHandle = linkHandle.substr( 0, dotIndex );
-					}
-
-					ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
-					if( shaderIt != shaderMap.end() )
-					{
-						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
-						// If the parameter is a node pointer, we just set it to the source node.
-						// Otherwise we assume that it is of a matching type to the output of the
-						// source node, and try to link it
-						if( AiParamGetType( parmEntry ) == AI_TYPE_NODE )
-						{
-							AiNodeSetPtr( node, parameterName.c_str(), shaderIt->second );
-						}
-						else
-						{
-							AiNodeLinkOutput( shaderIt->second, "", node, parameterName.c_str() );
-						}
-					}
-					else
-					{
-						msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't find shader handle \"%s\" for linking" ) % linkHandle );
-					}
-					continue;
+					parameterName = "param_" + parameterName;
 				}
-				else if( pIt->first.value() == "__handle" )
-				{
-					continue;
-				}
-			}
-			else if( const StringVectorData *stringVectorData = runTimeCast<const StringVectorData>( pIt->second.get() ) )
-			{
-				const vector<string> &values = stringVectorData->readable();
 
-				vector<AtNode *> nodes;
-				for( unsigned int i = 0; i < values.size(); i++ )
+				if( const StringData *stringData = runTimeCast<const StringData>( pIt->second.get() ) )
 				{
-					const string &value = values[i];
+					const string &value = stringData->readable();
 					if( boost::starts_with( value, "link:" ) )
 					{
-						const string linkHandle = value.c_str() + 5;
+						string linkHandle = value.c_str() + 5;
+
 						ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
 						if( shaderIt != shaderMap.end() )
 						{
-							nodes.push_back( shaderIt->second );
+							const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
+							// If the parameter is a node pointer, we just set it to the source node.
+							// Otherwise we assume that it is of a matching type to the output of the
+							// source node, and try to link it
+							if( AiParamGetType( parmEntry ) == AI_TYPE_NODE )
+							{
+								AiNodeSetPtr( node, parameterName.c_str(), shaderIt->second );
+							}
+							else
+							{
+								AiNodeLinkOutput( shaderIt->second, "", node, parameterName.c_str() );
+							}
 						}
 						else
 						{
 							msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't find shader handle \"%s\" for linking" ) % linkHandle );
 						}
+						continue;
 					}
-				}
-
-				if( nodes.size() )
-				{
-					const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
-					if( AiParamGetType( parmEntry ) == AI_TYPE_ARRAY )
+					else if( pIt->first.value() == "__handle" )
 					{
-						const AtParamValue *def = AiParamGetDefault( parmEntry );
-
-						// Appropriately use SetArray vs LinkOutput depending on target type, as above
-						if( AiArrayGetType( def->ARRAY() ) == AI_TYPE_NODE )
-						{
-							AtArray *nodesArray = AiArrayConvert( nodes.size(), 1, AI_TYPE_POINTER, &nodes[0] );
-							AiNodeSetArray( node, parameterName.c_str(), nodesArray );
-						}
-						else
-						{
-							for( unsigned int i = 0; i < nodes.size(); i++ )
-							{
-								AiNodeLinkOutput(
-									nodes[i], "", node,
-									( parameterName + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str()
-								);
-							}
-						}
-
 						continue;
 					}
 				}
-			}
-			else if( const SplineffData *splineData = runTimeCast<const SplineffData>( pIt->second.get() ) )
-			{
-				setSplineParameter( node, parameterName.c_str(), splineData->readable() );
-				continue;
-			}
-			else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( pIt->second.get() ) )
-			{
-				setSplineParameter( node, parameterName.c_str(), splineData->readable() );
-				continue;
+				else if( const StringVectorData *stringVectorData = runTimeCast<const StringVectorData>( pIt->second.get() ) )
+				{
+					const vector<string> &values = stringVectorData->readable();
+
+					vector<AtNode *> nodes;
+					for( unsigned int i = 0; i < values.size(); i++ )
+					{
+						const string &value = values[i];
+						if( boost::starts_with( value, "link:" ) )
+						{
+							const string linkHandle = value.c_str() + 5;
+							ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
+							if( shaderIt != shaderMap.end() )
+							{
+								nodes.push_back( shaderIt->second );
+							}
+							else
+							{
+								msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't find shader handle \"%s\" for linking" ) % linkHandle );
+							}
+						}
+					}
+
+					if( nodes.size() )
+					{
+						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
+						if( AiParamGetType( parmEntry ) == AI_TYPE_ARRAY )
+						{
+							const AtParamValue *def = AiParamGetDefault( parmEntry );
+
+							// Appropriately use SetArray vs LinkOutput depending on target type, as above
+							if( AiArrayGetType( def->ARRAY() ) == AI_TYPE_NODE )
+							{
+								AtArray *nodesArray = AiArrayConvert( nodes.size(), 1, AI_TYPE_POINTER, &nodes[0] );
+								AiNodeSetArray( node, parameterName.c_str(), nodesArray );
+							}
+							else
+							{
+								for( unsigned int i = 0; i < nodes.size(); i++ )
+								{
+									AiNodeLinkOutput(
+										nodes[i], "", node,
+										( parameterName + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str()
+									);
+								}
+							}
+
+							continue;
+						}
+					}
+				}
+				else if( const SplineffData *splineData = runTimeCast<const SplineffData>( pIt->second.get() ) )
+				{
+					setSplineParameter( node, parameterName.c_str(), splineData->readable() );
+					continue;
+				}
+				else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( pIt->second.get() ) )
+				{
+					setSplineParameter( node, parameterName.c_str(), splineData->readable() );
+					continue;
+				}
+
+				ParameterAlgo::setParameter( node, parameterName.c_str(), pIt->second.get() );
 			}
 
-			ParameterAlgo::setParameter( node, parameterName.c_str(), pIt->second.get() );
+			result.push_back( node );
 		}
-
-		result.push_back( node );
 	}
 
 	return result;
