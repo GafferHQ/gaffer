@@ -187,5 +187,11 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 10 )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "c" )
 
+	def tearDown( self ) :
+		
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "userDefault" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op2", "userDefault" )
+		Gaffer.Metadata.deregisterValue( GafferTest.CompoundPlugNode, "p.s", "userDefault" )
+		
 if __name__ == "__main__":
 	unittest.main()
