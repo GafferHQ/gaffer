@@ -107,7 +107,25 @@ struct NodeMetadata
 		>
 	> PlugValues;
 
-	typedef map<StringAlgo::MatchPattern, PlugValues> PlugPathsToValues;
+	struct MatchPatternComparator
+	{
+		bool operator()(const StringAlgo::MatchPattern& a, const StringAlgo::MatchPattern& b) const
+		{
+			if( a.length() != b.length() )
+			{
+				// Sort longer match pattern first, so that if we search from the beginning of
+				// the list for wildcard matches, we will match a more specific pattern before
+				// a more general one
+				return a.length() > b.length();
+			}
+			else
+			{
+				return a < b;
+			}
+		}
+	};
+
+	typedef map<StringAlgo::MatchPattern, PlugValues, MatchPatternComparator > PlugPathsToValues;
 
 	NodeValues nodeValues;
 	PlugPathsToValues plugPathsToValues;

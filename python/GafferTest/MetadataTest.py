@@ -723,6 +723,43 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( n["a"], "test" ), "exact" )
 		self.assertEqual( Gaffer.Metadata.value( n["b"], "test" ), "wildcard" )
 
+	def testPreferSpecificWildcards( self ) :
+
+		class MetadataTestNodeE( Gaffer.Node ) :
+
+			def __init__( self, name = "MetadataTestNodeE" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["a"] = Gaffer.Plug()
+				self["a"]["c"] = Gaffer.IntPlug()
+				self["b"] = Gaffer.Plug()
+				self["b"]["d"] = Gaffer.IntPlug()
+
+		IECore.registerRunTimeTyped( MetadataTestNodeE )
+
+		Gaffer.Metadata.registerNode(
+
+			MetadataTestNodeE,
+
+			plugs = {
+				"*" : [
+					"test", "general",
+				],
+				"*.c" : [
+					"test", "specific",
+				],
+			}
+
+		)
+
+		n = MetadataTestNodeE()
+
+		self.assertEqual( Gaffer.Metadata.value( n["a"], "test" ), "general" )
+		self.assertEqual( Gaffer.Metadata.value( n["a"]["c"], "test" ), "specific" )
+		self.assertEqual( Gaffer.Metadata.value( n["b"], "test" ), "general" )
+		self.assertEqual( Gaffer.Metadata.value( n["b"]["d"], "test" ), "general" )
+
 	def testNoSerialiseAfterUndo( self ) :
 
 		s = Gaffer.ScriptNode()
