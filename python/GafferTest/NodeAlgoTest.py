@@ -113,6 +113,21 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 1 )
 		self.assertEqual( node2["op1"].getValue(), 2 )
 
+	def testUnsettableUserDefaults( self ) :
+
+		node = GafferTest.AddNode()
+		node["op2"].setInput( node["op1"] )
+
+		self.assertEqual( node["op1"].getValue(), 0 )
+		self.assertEqual( node["op2"].getValue(), 0 )
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "userDefault", IECore.IntData( 1 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op2", "userDefault", IECore.IntData( 2 ) )
+		Gaffer.NodeAlgo.applyUserDefaults( node )
+
+		self.assertEqual( node["op1"].getValue(), 1 )
+		self.assertEqual( node["op2"].getValue(), 1 )
+
 	def testPresets( self ) :
 
 		node = GafferTest.AddNode()
