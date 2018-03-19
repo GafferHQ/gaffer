@@ -133,11 +133,11 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		script["filter"] = GafferScene.PathFilter()
-		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*/sphere" ] ) )
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/sphere/*" ] ) )
 
 		script["filterResults"] = GafferScene.FilterResults()
 		script["filterResults"]["scene"].setInput( script["instancer"]["out"] )
@@ -151,10 +151,10 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			script["filterResults"]["user"]["strings"].getValue(),
 			IECore.StringVectorData( [
-				"/plane/instances/0/sphere",
-				"/plane/instances/1/sphere",
-				"/plane/instances/2/sphere",
-				"/plane/instances/3/sphere",
+				"/plane/instances/sphere/0",
+				"/plane/instances/sphere/1",
+				"/plane/instances/sphere/2",
+				"/plane/instances/sphere/3",
 			] )
 		)
 

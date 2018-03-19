@@ -294,7 +294,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 		instancer["parent"].setValue( "/plane" )
 
 		subTree = GafferScene.SubTree()
@@ -316,31 +316,31 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertObjectsAt(
 			sg,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
-			[ "/instances/{}/sphere".format( i ) for i in range( 0, 4 ) ]
+			[ "/instances/sphere/{}".format( i ) for i in range( 0, 4 ) ]
 		)
 
 		self.assertObjectsAt(
 			sg,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 0.5 ) ),
-			[ "/instances/2/sphere" ]
+			[ "/instances/sphere/2" ]
 		)
 
 		self.assertObjectsAt(
 			sg,
 			imath.Box2f( imath.V2f( 0.5, 0 ), imath.V2f( 1, 0.5 ) ),
-			[ "/instances/3/sphere" ]
+			[ "/instances/sphere/3" ]
 		)
 
 		self.assertObjectsAt(
 			sg,
 			imath.Box2f( imath.V2f( 0, 0.5 ), imath.V2f( 0.5, 1 ) ),
-			[ "/instances/0/sphere" ]
+			[ "/instances/sphere/0" ]
 		)
 
 		self.assertObjectsAt(
 			sg,
 			imath.Box2f( imath.V2f( 0.5 ), imath.V2f( 1 ) ),
-			[ "/instances/1/sphere" ]
+			[ "/instances/sphere/1" ]
 		)
 
 	def testSetAndGetScene( self ) :

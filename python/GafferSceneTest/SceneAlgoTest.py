@@ -59,18 +59,18 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane2["out"] )
 		instancer["parent"].setValue( "/plane" )
-		instancer["instance"].setInput( group["out"] )
+		instancer["instances"].setInput( group["out"] )
 
 		filter = GafferScene.PathFilter()
-		filter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*1/group/plane" ] ) )
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/group/*1/plane" ] ) )
 
 		matchingPaths = IECore.PathMatcher()
 		GafferScene.SceneAlgo.matchingPaths( filter, instancer["out"], matchingPaths )
 
 		self.assertEqual( len( matchingPaths.paths() ), 1000 )
-		self.assertEqual( matchingPaths.match( "/plane/instances/1/group/plane" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/plane" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/sphere" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/group/1/plane" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/group/1121/plane" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/group/1121/sphere" ), IECore.PathMatcher.Result.NoMatch )
 
 	def testExists( self ) :
 
