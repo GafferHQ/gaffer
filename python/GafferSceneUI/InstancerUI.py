@@ -114,6 +114,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"id" : [
+
+			"description",
+			"""
+			The name of a per-vertex integer primitive variable
+			used to give each instance a unique identity. This
+			is useful when points are added and removed over time,
+			as is often the case in a particle simulation. The
+			id is used to name the instance in the output scene.
+			"""
+
+		],
+
 		"position" : [
 
 			"description",

@@ -51,6 +51,8 @@
 #include "tbb/blocked_range.h"
 #include "tbb/parallel_reduce.h"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace tbb;
 using namespace Imath;
@@ -74,11 +76,13 @@ class Instancer::EngineData : public Data
 		EngineData(
 			ConstObjectPtr object,
 			const std::string &index,
+			const std::string &id,
 			const std::string &position,
 			const std::string &orientation,
 			const std::string &scale
 		)
 			:	m_indices( nullptr ),
+				m_ids( nullptr ),
 				m_positions( nullptr ),
 				m_orientations( nullptr ),
 				m_scales( nullptr ),
@@ -93,16 +97,25 @@ class Instancer::EngineData : public Data
 			if( const IntVectorData *indices = m_primitive->variableData<IntVectorData>( index ) )
 			{
 				m_indices = &indices->readable();
-				if( m_indices->size() != numInstances() )
+				if( m_indices->size() != numPoints() )
 				{
 					throw IECore::Exception( "Index primitive variable has incorrect size" );
+				}
+			}
+
+			if( const IntVectorData *ids = m_primitive->variableData<IntVectorData>( id ) )
+			{
+				m_ids = &ids->readable();
+				if( m_ids->size() != numPoints() )
+				{
+					throw IECore::Exception( "Id primitive variable has incorrect size" );
 				}
 			}
 
 			if( const V3fVectorData *p = m_primitive->variableData<V3fVectorData>( position ) )
 			{
 				m_positions = &p->readable();
-				if( m_positions->size() != numInstances() )
+				if( m_positions->size() != numPoints() )
 				{
 					throw IECore::Exception( "Position primitive variable has incorrect size" );
 				}
@@ -111,7 +124,7 @@ class Instancer::EngineData : public Data
 			if( const QuatfVectorData *o = m_primitive->variableData<QuatfVectorData>( orientation ) )
 			{
 				m_orientations = &o->readable();
-				if( m_orientations->size() != numInstances() )
+				if( m_orientations->size() != numPoints() )
 				{
 					throw IECore::Exception( "Orientation primitive variable has incorrect size" );
 				}
@@ -120,7 +133,7 @@ class Instancer::EngineData : public Data
 			if( const V3fVectorData *s = m_primitive->variableData<V3fVectorData>( scale ) )
 			{
 				m_scales = &s->readable();
-				if( m_scales->size() != numInstances() )
+				if( m_scales->size() != numPoints() )
 				{
 					throw IECore::Exception( "Scale primitive variable has incorrect size" );
 				}
@@ -128,41 +141,71 @@ class Instancer::EngineData : public Data
 			else if( const FloatVectorData *s = m_primitive->variableData<FloatVectorData>( scale ) )
 			{
 				m_uniformScales = &s->readable();
-				if( m_uniformScales->size() != numInstances() )
+				if( m_uniformScales->size() != numPoints() )
 				{
 					throw IECore::Exception( "Scale primitive variable has incorrect size" );
 				}
 			}
+
+			if( m_ids )
+			{
+				for( size_t i = 0; i<numPoints(); ++i )
+				{
+					m_idsToPointIndices[(*m_ids)[i]] = i;
+				}
+			}
 		}
 
-		size_t numInstances() const
+		size_t numPoints() const
 		{
 			return m_primitive ? m_primitive->variableSize( PrimitiveVariable::Vertex ) : 0;
 		}
 
-		size_t instanceIndex( size_t instanceIndex ) const
+		size_t instanceId( size_t pointIndex ) const
 		{
-			return m_indices ? (*m_indices)[instanceIndex] : 0;
+			return m_ids ? (*m_ids)[pointIndex] : pointIndex;
 		}
 
-		M44f instanceTransform( size_t instanceIndex ) const
+		size_t pointIndex( const InternedString &name ) const
+		{
+			const size_t i = boost::lexical_cast<size_t>( name );
+			if( !m_ids )
+			{
+				return i;
+			}
+
+			IdsToPointIndices::const_iterator it = m_idsToPointIndices.find( i );
+			if( it == m_idsToPointIndices.end() )
+			{
+				throw IECore::Exception( "Invalid id" );
+			}
+
+			return it->second;
+		}
+
+		size_t instanceIndex( size_t pointIndex ) const
+		{
+			return m_indices ? (*m_indices)[pointIndex] : 0;
+		}
+
+		M44f instanceTransform( size_t pointIndex ) const
 		{
 			M44f result;
 			if( m_positions )
 			{
-				result.translate( (*m_positions)[instanceIndex] );
+				result.translate( (*m_positions)[pointIndex] );
 			}
 			if( m_orientations )
 			{
-				result = (*m_orientations)[instanceIndex].toMatrix44() * result;
+				result = (*m_orientations)[pointIndex].toMatrix44() * result;
 			}
 			if( m_scales )
 			{
-				result.scale( (*m_scales)[instanceIndex] );
+				result.scale( (*m_scales)[pointIndex] );
 			}
 			if( m_uniformScales )
 			{
-				result.scale( V3f( (*m_uniformScales)[instanceIndex] ) );
+				result.scale( V3f( (*m_uniformScales)[pointIndex] ) );
 			}
 			return result;
 		}
@@ -191,10 +234,14 @@ class Instancer::EngineData : public Data
 
 		IECoreScene::ConstPrimitivePtr m_primitive;
 		const std::vector<int> *m_indices;
+		const std::vector<int> *m_ids;
 		const std::vector<Imath::V3f> *m_positions;
 		const std::vector<Imath::Quatf> *m_orientations;
 		const std::vector<Imath::V3f> *m_scales;
 		const std::vector<float> *m_uniformScales;
+
+		typedef std::unordered_map <int, size_t> IdsToPointIndices;
+		IdsToPointIndices m_idsToPointIndices;
 
 };
 
@@ -215,6 +262,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "name", Plug::In, "instances" ) );
 	addChild( new ScenePlug( "instances" ) );
 	addChild( new StringPlug( "index", Plug::In, "instanceIndex" ) );
+	addChild( new StringPlug( "id", Plug::In, "instanceId" ) );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "orientation", Plug::In ) );
 	addChild( new StringPlug( "scale", Plug::In ) );
@@ -256,54 +304,64 @@ const Gaffer::StringPlug *Instancer::indexPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::StringPlug *Instancer::positionPlug()
+Gaffer::StringPlug *Instancer::idPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Instancer::idPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *Instancer::positionPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::StringPlug *Instancer::positionPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::StringPlug *Instancer::orientationPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::StringPlug *Instancer::orientationPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::StringPlug *Instancer::scalePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::StringPlug *Instancer::scalePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::instanceChildNamesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 7 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::instanceChildNamesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 7 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 8 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -312,6 +370,8 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 
 	if(
 		input == inPlug()->objectPlug() ||
+		input == indexPlug() ||
+		input == idPlug() ||
 		input == positionPlug() ||
 		input == orientationPlug() ||
 		input == scalePlug()
@@ -374,6 +434,8 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	if( output == enginePlug() )
 	{
 		inPlug()->objectPlug()->hash( h );
+		indexPlug()->hash( h );
+		idPlug()->hash( h );
 		positionPlug()->hash( h );
 		orientationPlug()->hash( h );
 		scalePlug()->hash( h );
@@ -396,6 +458,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			new EngineData(
 				inPlug()->objectPlug()->getValue(),
 				indexPlug()->getValue(),
+				idPlug()->getValue(),
 				positionPlug()->getValue(),
 				orientationPlug()->getValue(),
 				scalePlug()->getValue()
@@ -423,10 +486,10 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			indexedInstanceChildNames.push_back( &instanceChildNames->writable() );
 		}
 
-		for( size_t i = 0, e = engine->numInstances(); i < e; ++i )
+		for( size_t i = 0, e = engine->numPoints(); i < e; ++i )
 		{
-			size_t index = engine->instanceIndex( i ) % indexedInstanceChildNames.size();
-			indexedInstanceChildNames[index]->push_back( InternedString( i ) );
+			size_t instanceIndex = engine->instanceIndex( i ) % indexedInstanceChildNames.size();
+			indexedInstanceChildNames[instanceIndex]->push_back( InternedString( engine->instanceId( i ) ) );
 		}
 
 		static_cast<AtomicCompoundDataPlug *>( output )->setValue( result );
@@ -515,8 +578,8 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 			[ &e, &childBound, &childTransform ] ( const Range &r, Box3f u ) {
 				for( Iterator i = r.begin(); i != r.end(); ++i )
 				{
-					const size_t index = instanceIndex( *i );
-					const M44f m = childTransform * e->instanceTransform( index );
+					const size_t pointIndex = e->pointIndex( *i );
+					const M44f m = childTransform * e->instanceTransform( pointIndex );
 					const Box3f b = transform( childBound, m );
 					u.extendBy( b );
 				}
@@ -557,7 +620,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 			instancesPlug()->transformPlug()->hash( h );
 		}
 		engineHash( parentPath, context, h );
-		h.append( instanceIndex( branchPath ) );
+		h.append( branchPath[2] );
 	}
 	else
 	{
@@ -583,8 +646,8 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 			result = instancesPlug()->transformPlug()->getValue();
 		}
 		ConstEngineDataPtr e = engine( parentPath, context );
-		const int index = instanceIndex( branchPath );
-		result = result * e->instanceTransform( index );
+		const size_t pointIndex = e->pointIndex( branchPath[2] );
+		result = result * e->instanceTransform( pointIndex );
 		return result;
 	}
 	else
@@ -791,16 +854,6 @@ void Instancer::instanceChildNamesHash( const ScenePath &parentPath, const Gaffe
 {
 	ScenePlug::PathScope scope( context, parentPath );
 	instanceChildNamesPlug()->hash( h );
-}
-
-int Instancer::instanceIndex( const IECore::InternedString &name )
-{
-	return boost::lexical_cast<int>( name );
-}
-
-int Instancer::instanceIndex( const ScenePath &branchPath )
-{
-	return instanceIndex( branchPath[2] );
 }
 
 Instancer::InstanceScope::InstanceScope( const Gaffer::Context *context, const ScenePath &branchPath )
