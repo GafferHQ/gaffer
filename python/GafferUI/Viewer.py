@@ -64,7 +64,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget = GafferUI.GadgetWidget(
 			bufferOptions = set( (
 				GafferUI.GLWidget.BufferOptions.Depth,
-				GafferUI.GLWidget.BufferOptions.Double )
+				GafferUI.GLWidget.BufferOptions.Double,
+				GafferUI.GLWidget.BufferOptions.AntiAlias )
 			),
 		)
 
