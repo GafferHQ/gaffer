@@ -53,10 +53,39 @@
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/Style.h"
 
+#include <cmath>
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreGL;
 using namespace GafferUI;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+float ceilSignificantDigits( float x, int significantDigits )
+{
+	const int ceilLog10 = ceil( log10( x ) );
+	const float magnitude = pow( 10, ceilLog10 - significantDigits );
+	return ceil( x / magnitude ) * magnitude;
+}
+
+float floorSignificantDigits( float x, int significantDigits )
+{
+	const int ceilLog10 = ceil( log10( x ) );
+	const float magnitude = pow( 10, ceilLog10 - significantDigits );
+	return floor( x / magnitude ) * magnitude;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ViewportGadget
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ViewportGadget );
 
@@ -197,10 +226,13 @@ void ViewportGadget::setCamera( const IECore::Camera *camera )
 	// Remember the viewport size
 	const V2i viewport = getViewport();
 	// Because the incoming camera resolution might not be right
+	const float centreOfInterest = m_cameraController.getCentreOfInterest();
 	m_cameraController.setCamera( camera->copy() );
+	m_cameraController.setCentreOfInterest( centreOfInterest );
 	// So we must reset the viewport to update the camera
 	setViewport( viewport );
 	m_cameraChangedSignal( this );
+	requestRender();
 }
 
 ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
@@ -229,6 +261,62 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	const Imath::V3f &upVector )
 {
 	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraChangedSignal( this );
+	requestRender();
+}
+
+void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
+{
+	IECore::CameraPtr camera = m_cameraController.getCamera()->copy();
+
+	// Transform bound to camera space.
+	Box3f b = transform( box, camera->getTransform()->transform().inverse() );
+	// Choose a far plane that should still be
+	// sufficient no matter how we orbit about the
+	// centre of the bound.
+	const float bRadius = b.size().length() / 2.0;
+	float far = b.center().z - bRadius;
+	if( far >= 0.0f )
+	{
+		// Far plane behind the camera - not much we
+		// can sensibly do.
+		return;
+	}
+	else
+	{
+		// Far will be -ve because camera looks down -ve
+		// Z, but clipping is specified as +ve.
+		far *= -1;
+	}
+	// Round up to 2 significant digits, so we have a tiny
+	// bit of padding and a neatish number.
+	far = ceilSignificantDigits( far, 2 );
+
+	// Now choose a near plane. We don't want this to get
+	// too small, to avoid losing precision.
+	const float nearMin = far / 10000.0f;
+	float near = b.center().z + bRadius;
+	if( near >= 0.0f )
+	{
+		// Behind camera.
+		near = nearMin;
+	}
+	else
+	{
+		// Neaten
+		near = floorSignificantDigits( -1 * near, 2 );
+		// Provide room for dollying in.
+		near /= 100.0f;
+		// But don't allow precision to be lost.
+		near = std::max( near, nearMin );
+	}
+
+	camera->parameters()["clippingPlanes"] = new V2fData( V2f( near, far ) );
+
+	const float centreOfInterest = m_cameraController.getCentreOfInterest();
+	m_cameraController.setCamera( camera );
+	m_cameraController.setCentreOfInterest( centreOfInterest );
+
 	m_cameraChangedSignal( this );
 	requestRender();
 }

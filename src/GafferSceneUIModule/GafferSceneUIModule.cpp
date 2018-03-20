@@ -74,6 +74,17 @@ IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegmen
 	return NULL;
 }
 
+GafferScene::PathMatcher getExpandedPaths( SceneGadget &g )
+{
+	return g.getExpandedPaths()->readable();
+}
+
+
+GafferScene::PathMatcher getSelection( SceneGadget &g )
+{
+	return g.getSelection()->readable();
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferSceneUI )
@@ -89,14 +100,14 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 		.def( "setContext", &SceneGadget::setContext )
 		.def( "getContext", (Gaffer::Context *(SceneGadget::*)())&SceneGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setExpandedPaths", &SceneGadget::setExpandedPaths )
-		.def( "getExpandedPaths", &SceneGadget::getExpandedPaths, return_value_policy<CastToIntrusivePtr>() )
+		.def( "getExpandedPaths", &getExpandedPaths )
 		.def( "setMinimumExpansionDepth", &SceneGadget::setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &SceneGadget::getMinimumExpansionDepth )
 		.def( "baseState", &SceneGadget::baseState, return_value_policy<CastToIntrusivePtr>() )
 		.def( "objectAt", &objectAt )
 		.def( "objectsAt", &SceneGadget::objectsAt )
 		.def( "setSelection", &SceneGadget::setSelection )
-		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<CastToIntrusivePtr>() )
+		.def( "getSelection", &getSelection )
 		.def( "selectionBound", &SceneGadget::selectionBound )
 	;
 

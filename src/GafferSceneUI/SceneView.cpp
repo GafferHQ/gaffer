@@ -56,6 +56,7 @@
 
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"
+#include "GafferUI/ImageGadget.h"
 
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardAttributes.h"
@@ -706,6 +707,21 @@ class CameraOverlay : public GafferUI::Gadget
 			return m_caption;
 		}
 
+		void setIcon( const std::string &icon )
+		{
+			if( icon == m_icon )
+			{
+				return;
+			}
+			m_icon = icon;
+			requestRender();
+		}
+
+		const std::string &getIcon() const
+		{
+			return m_icon;
+		}
+
 	protected :
 
 		virtual void doRender( const Style *style ) const
@@ -738,6 +754,24 @@ class CameraOverlay : public GafferUI::Gadget
 				glColor4f( 0, 0.25, 0, 1.0f );
 				style->renderRectangle( m_resolutionGate );
 
+				if( !m_icon.empty() )
+				{
+					IECoreGL::ConstTexturePtr texture = ImageGadget::loadTexture( m_icon );
+					const V2f size(
+						std::min(
+							std::min( m_resolutionGate.size().x, m_resolutionGate.size().y ) / 4.0f,
+							100.0f
+						)
+					);
+					style->renderImage(
+						Box2f(
+							m_resolutionGate.center() + size / 2.0f,
+							m_resolutionGate.center() - size / 2.0f
+						),
+						texture.get()
+					);
+				}
+
 				glPushMatrix();
 
 					glTranslatef( m_resolutionGate.min.x + 5, m_resolutionGate.max.y + 10, 0.0f );
@@ -754,6 +788,7 @@ class CameraOverlay : public GafferUI::Gadget
 		Box2f m_resolutionGate;
 		Box2f m_cropWindow;
 		std::string m_caption;
+		std::string m_icon;
 
 };
 
@@ -770,8 +805,8 @@ class SceneView::LookThrough : public boost::signals::trackable
 			:	m_view( view ),
 				m_framed( false ),
 				m_standardOptions( new StandardOptions ),
-				m_originalCamera( m_view->viewportGadget()->getCamera() ),
-				m_lookThroughCameraDirty( true ),
+				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
+				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( NULL ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
@@ -780,8 +815,30 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// Set up our plugs
 
 			ValuePlugPtr lookThrough = new ValuePlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+
+			lookThrough->addChild(
+				new Gaffer::FloatPlug(
+					"fieldOfView",
+					Plug::In,
+					54.43f,
+					0.01f,
+					Imath::limits<float>::max(),
+					Plug::Default & ~Plug::AcceptsInputs
+				)
+			);
+			lookThrough->addChild(
+				new Gaffer::V2fPlug(
+					"clippingPlanes", Plug::In,
+					V2f( 0.01, 100000 ),
+					V2f( 0.0001 ),
+					V2f( Imath::limits<float>::max() ),
+					Plug::Default & ~Plug::AcceptsInputs
+				)
+			);
+
 			lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 			lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+
 			view->addChild( lookThrough );
 
 			// Set up our nodes.
@@ -822,9 +879,11 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// Connect to the signals we need
 
 			m_standardOptions->plugDirtiedSignal().connect( boost::bind( &LookThrough::plugDirtied, this, ::_1 ) );
+			m_plugSetConnection = view->plugSetSignal().connect( boost::bind( &LookThrough::plugSet, this, ::_1 ) );
 			view->plugDirtiedSignal().connect( boost::bind( &LookThrough::plugDirtied, this, ::_1 ) );
 			view->viewportGadget()->preRenderSignal().connect( boost::bind( &LookThrough::preRender, this ) );
 			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &LookThrough::viewportChanged, this ) );
+			view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &LookThrough::viewportCameraChanged, this ) );
 
 			connectToViewContext();
 			view->contextChangedSignal().connect( boost::bind( &LookThrough::connectToViewContext, this ) );
@@ -855,14 +914,34 @@ class SceneView::LookThrough : public boost::signals::trackable
 			return m_standardOptions->outPlug();
 		}
 
+		Gaffer::FloatPlug *fieldOfViewPlug()
+		{
+			return plug()->getChild<Gaffer::FloatPlug>( 0 );
+		}
+
+		const Gaffer::FloatPlug *fieldOfViewPlug() const
+		{
+			return plug()->getChild<Gaffer::FloatPlug>( 0 );
+		}
+
+		Gaffer::V2fPlug *clippingPlanesPlug()
+		{
+			return plug()->getChild<Gaffer::V2fPlug>( 1 );
+		}
+
+		const Gaffer::V2fPlug *clippingPlanesPlug() const
+		{
+			return plug()->getChild<Gaffer::V2fPlug>( 1 );
+		}
+
 		const Gaffer::BoolPlug *enabledPlug() const
 		{
-			return plug()->getChild<BoolPlug>( 0 );
+			return plug()->getChild<BoolPlug>( 2 );
 		}
 
 		const Gaffer::StringPlug *cameraPlug() const
 		{
-			return plug()->getChild<StringPlug>( 1 );
+			return plug()->getChild<StringPlug>( 3 );
 		}
 
 		void connectToViewContext()
@@ -878,6 +957,39 @@ class SceneView::LookThrough : public boost::signals::trackable
 				{
 					m_lookThroughCameraDirty = m_viewportCameraDirty = true;
 				}
+			}
+		}
+
+		void plugSet( Gaffer::Plug *plug )
+		{
+			if(
+				plug != clippingPlanesPlug() &&
+				plug != fieldOfViewPlug()
+			)
+			{
+				return;
+			}
+
+			updateLookThroughCamera();
+
+			CameraPtr camera = m_lookThroughCamera ? m_originalCamera : m_view->viewportGadget()->getCamera()->copy();
+
+			V2f clippingPlanes = clippingPlanesPlug()->getValue();
+			if( clippingPlanes[1] < clippingPlanes[0] )
+			{
+				std::swap( clippingPlanes[0], clippingPlanes[1] );
+			}
+			else if( clippingPlanes[1] == clippingPlanes[0] )
+			{
+				clippingPlanes[1] += 0.001;
+			}
+			camera->parameters()["clippingPlanes"] = new V2fData( clippingPlanes );
+
+			camera->parameters()["projection:fov"] = new FloatData( fieldOfViewPlug()->getValue() );
+
+			if( !m_lookThroughCamera )
+			{
+				m_view->viewportGadget()->setCamera( camera.get() );
 			}
 		}
 
@@ -911,6 +1023,24 @@ class SceneView::LookThrough : public boost::signals::trackable
 		{
 			m_viewportCameraDirty = true;
 			m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
+		}
+
+		void viewportCameraChanged()
+		{
+			if( !enabledPlug()->getValue() )
+			{
+				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
+
+				const Camera *camera = m_view->viewportGadget()->getCamera();
+				if( const V2fData *clippingPlanes = camera->parametersData()->member<V2fData>( "clippingPlanes" ) )
+				{
+					clippingPlanesPlug()->setValue( clippingPlanes->readable() );
+				}
+				if( const FloatData *fieldOfView = camera->parametersData()->member<FloatData>( "projection:fov" ) )
+				{
+					fieldOfViewPlug()->setValue( fieldOfView->readable() );
+				}
+			}
 		}
 
 		void preRender()
@@ -949,8 +1079,14 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 			Context::Scope scopedContext( m_view->getContext() );
 
+			ConstCompoundObjectPtr globals;
+			ConstPathMatcherDataPtr cameraSet;
+			string errorMessage;
 			try
 			{
+				globals = scenePlug()->globals();
+				cameraSet = m_view->inPlug<ScenePlug>()->set( "__cameras" );
+
 				const string cameraPathString = cameraPlug()->getValue();
 				if( cameraPathString.empty() )
 				{
@@ -963,32 +1099,62 @@ class SceneView::LookThrough : public boost::signals::trackable
 					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug(), cameraPath );
 				}
 			}
-			catch( ... )
+			catch( const std::exception &e )
 			{
 				// If an invalid path has been entered for the camera, computation will fail.
-				// We just ignore that and lock to the current camera instead.
-				m_lookThroughCamera = NULL;
+				// Record the error to go in the caption, and make a default camera to lock to.
+				CameraPtr defaultCamera = new IECore::Camera;
+				defaultCamera->addStandardParameters();
+				m_lookThroughCamera = defaultCamera;
+				cameraSet = new PathMatcherData;
+				globals = new CompoundObject;
+				errorMessage = e.what();
 			}
 
 			m_view->viewportGadget()->setCameraEditable( false );
-			if( m_lookThroughCamera )
+			m_view->hideFilter()->pathsPlug()->setToDefault();
+
+			// When looking through a camera, we hide the camera, since the overlay
+			// tells us everything we need to know about the camera. If looking through
+			// something else, such as a light, we may want to see the viewport
+			// visualisation of what we're looking through.
+			const bool isCamera = cameraSet->readable().match( m_lookThroughCamera->getName() );
+			if( isCamera )
 			{
 				StringVectorDataPtr invisiblePaths = new StringVectorData();
-
-				// When looking through a camera, we hide the camera, since the overlay
-				// tells us everything we need to know about the camera.
-				// If looking through something else, such as a light, we may want to
-				// see the viewport visualisation of what we're looking through
-				if( m_view->inPlug<ScenePlug>()->set( "__cameras" )->readable().match(
-					m_lookThroughCamera->getName() ) )
-				{
-					invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
-				}
+				invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
 				m_view->hideFilter()->pathsPlug()->setValue( invisiblePaths );
+			}
+
+			// Set up the static parts of the overlay. The parts that change when the
+			// viewport changes will be updated in updateViewportCameraAndOverlay().
+
+			const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
+			if( isCamera && cropWindowData )
+			{
+				m_overlay->setCropWindow( cropWindowData->readable() );
 			}
 			else
 			{
-				m_view->hideFilter()->pathsPlug()->setToDefault();
+				m_overlay->setCropWindow( Box2f( V2f( 0 ), V2f( 1 ) ) );
+			}
+
+			if( errorMessage.empty() )
+			{
+				const V2i resolution = m_lookThroughCamera->parametersData()->member<V2iData>( "resolution" )->readable();
+				const float pixelAspectRatio = m_lookThroughCamera->parametersData()->member<FloatData>( "pixelAspectRatio" )->readable();
+				m_overlay->setCaption( boost::str(
+					boost::format( "%dx%d, %.3f, %s" ) %
+						resolution.x % resolution.y %
+						pixelAspectRatio %
+						m_lookThroughCamera->getName()
+				) );
+				m_overlay->setIcon( "" );
+			}
+			else
+			{
+				m_overlay->setCaption( "ERROR : " + errorMessage );
+				m_overlay->setIcon( "gadgetError.png" );
 			}
 		}
 
@@ -1041,8 +1207,6 @@ class SceneView::LookThrough : public boost::signals::trackable
 			const V2f offset = ( viewport - resolutionGateSize ) / 2.0f;
 
 			m_overlay->setResolutionGate( Box2f( V2f( offset ), V2f( resolutionGateSize + offset ) ) );
-			m_overlay->setCropWindow( camera->parametersData()->member<Box2fData>( "cropWindow" )->readable() );
-			m_overlay->setCaption( boost::str( boost::format( "%dx%d, %.3f, %s" ) % resolution.x % resolution.y % pixelAspectRatio % camera->getName() ) );
 			m_overlay->setVisible( true );
 
 			// Now modify the camera, so that the view through the resolution gate we've calculated
@@ -1071,11 +1235,12 @@ class SceneView::LookThrough : public boost::signals::trackable
 		/// so they don't get destroyed
 		std::vector< Gaffer::ConstNodePtr > m_internalNodes;
 
+		boost::signals::scoped_connection m_plugSetConnection;
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		/// The default viewport camera - we store this so we can
 		/// return to it after looking through a scene camera.
-		IECore::ConstCameraPtr m_originalCamera;
+		IECore::CameraPtr m_originalCamera;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;
@@ -1288,7 +1453,7 @@ Imath::Box3f SceneView::framingBound() const
 		return b;
 	}
 
-	b = View::framingBound();
+	b = m_sceneGadget->bound();
 	if( m_grid->gadget()->getVisible() )
 	{
 		b.extendBy( m_grid->gadget()->bound() );
@@ -1308,6 +1473,26 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	{
 		collapseSelection();
 		return true;
+	}
+	else if( event.key == "F" )
+	{
+		Imath::Box3f b = framingBound();
+		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
+		{
+			viewportGadget()->frame( b );
+			if( event.modifiers == KeyEvent::Control )
+			{
+				viewportGadget()->fitClippingPlanes( b );
+			}
+			return true;
+		}
+	}
+	else if( event.key == "K" && event.modifiers == KeyEvent::Control )
+	{
+		if( viewportGadget()->getCameraEditable() )
+		{
+			viewportGadget()->fitClippingPlanes( framingBound() );
+		}
 	}
 
 	return false;

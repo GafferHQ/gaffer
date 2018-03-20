@@ -512,7 +512,16 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
 	if( !event.modifiers )
 	{
-		if(event.key == "Home")
+		if( event.key == "F" )
+		{
+			const Box3f b = m_imageGadget->bound();
+			if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
+			{
+				viewportGadget()->frame( b );
+				return true;
+			}
+		}
+		else if( event.key == "Home" )
 		{
 			V2i viewport = viewportGadget()->getViewport();
 			V3f halfViewportSize(viewport.x / 2, viewport.y / 2, 0);
