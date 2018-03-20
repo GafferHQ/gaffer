@@ -473,7 +473,7 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
 
 		if not any(
-			s.value.match( event.data[0] ) & IECore.PathMatcher.Result.ExactMatch
+			s.value.match( event.data[0] ) & GafferScene.Filter.Result.ExactMatch
 			for s in sets.values()
 		) :
 			return False
