@@ -53,6 +53,9 @@ signal.signal( signal.SIGINT, signal.SIG_DFL )
 warnings.simplefilter( "default", DeprecationWarning )
 
 import IECore
+from Gaffer._Gaffer import _nameProcess
+
+_nameProcess()
 
 helpText = """Usage :
 
