@@ -806,7 +806,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 				m_framed( false ),
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
-				m_lookThroughCameraDirty( true ),
+				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( NULL ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
