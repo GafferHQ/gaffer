@@ -226,7 +226,9 @@ void ViewportGadget::setCamera( const IECore::Camera *camera )
 	// Remember the viewport size
 	const V2i viewport = getViewport();
 	// Because the incoming camera resolution might not be right
+	const float centreOfInterest = m_cameraController.getCentreOfInterest();
 	m_cameraController.setCamera( camera->copy() );
+	m_cameraController.setCentreOfInterest( centreOfInterest );
 	// So we must reset the viewport to update the camera
 	setViewport( viewport );
 	m_cameraChangedSignal( this );
@@ -310,7 +312,10 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 	}
 
 	camera->parameters()["clippingPlanes"] = new V2fData( V2f( near, far ) );
+
+	const float centreOfInterest = m_cameraController.getCentreOfInterest();
 	m_cameraController.setCamera( camera );
+	m_cameraController.setCentreOfInterest( centreOfInterest );
 
 	m_cameraChangedSignal( this );
 	requestRender();
