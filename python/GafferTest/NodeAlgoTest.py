@@ -41,7 +41,7 @@ import GafferTest
 
 class NodeAlgoTest( GafferTest.TestCase ) :
 
-	def test( self ) :
+	def testUserDefaults( self ) :
 
 		node = GafferTest.AddNode()
 
@@ -73,7 +73,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node3["op1"].getValue(), 0 )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 
-	def testCompoundPlug( self ) :
+	def testCompoundPlugUserDefaults( self ) :
 
 		node = GafferTest.CompoundPlugNode()
 
@@ -98,7 +98,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node2["p"]["s"].getValue(), "from the metadata" )
 		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node2["p"]["s"] ) )
 
-	def testSeveral( self ) :
+	def testSeveralUserDefaults( self ) :
 
 		node = GafferTest.AddNode()
 		node2 = GafferTest.AddNode()
@@ -112,6 +112,21 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( node["op1"].getValue(), 1 )
 		self.assertEqual( node2["op1"].getValue(), 2 )
+
+	def testUnsettableUserDefaults( self ) :
+
+		node = GafferTest.AddNode()
+		node["op2"].setInput( node["op1"] )
+
+		self.assertEqual( node["op1"].getValue(), 0 )
+		self.assertEqual( node["op2"].getValue(), 0 )
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "userDefault", IECore.IntData( 1 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op2", "userDefault", IECore.IntData( 2 ) )
+		Gaffer.NodeAlgo.applyUserDefaults( node )
+
+		self.assertEqual( node["op1"].getValue(), 1 )
+		self.assertEqual( node["op2"].getValue(), 1 )
 
 	def testPresets( self ) :
 
@@ -172,5 +187,11 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 10 )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "c" )
 
+	def tearDown( self ) :
+		
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "userDefault" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op2", "userDefault" )
+		Gaffer.Metadata.deregisterValue( GafferTest.CompoundPlugNode, "p.s", "userDefault" )
+		
 if __name__ == "__main__":
 	unittest.main()
