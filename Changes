@@ -38,6 +38,7 @@ Improvements
     loading (#2468).
   - Read-only files are now read-only in the UI (#2503).
 - ArnoldAttributes : Added attributes to control volume motion blur (#2433).
+- Arnold : Added support for OSL shaders with multiple outputs (#2494).
 - Stats/Execute apps : By default the current frame stored in the script is
   executed, rather than frame 1 as before. Use the `-frames` commandline argument
   to specify a specific range of frames to execute (#2468).
@@ -87,6 +88,7 @@ Fixes
   a language has been chosen. This avoids problems where an expression was entered
   and then lost when the language was set (#2482).
 - PlugAlgo : Fixed problems with metadata promotion when using non-Box parents (#2488).
+- NodeAlgo : Fixed attempts to apply user defaults to plugs that are not settable (#2507).
 
 API
 ---
