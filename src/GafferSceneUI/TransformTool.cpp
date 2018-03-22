@@ -554,32 +554,44 @@ void TransformTool::preRender()
 
 Imath::M44f TransformTool::orientedTransform( Orientation orientation )
 {
-	Context::Scope scopedContext( view()->getContext() );
-
 	const Selection &selection = this->selection();
-	const M44f localMatrix = scenePlug()->transform( selection.path );
-	M44f parentMatrix;
-	if( selection.path.size() )
-	{
-		const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-		parentMatrix = scenePlug()->fullTransform( parentPath );
-	}
+	Context::Scope scopedContext( selection.context.get() );
+
+	// Get a matrix with the orientation we want
 
 	M44f result;
-	switch( orientation )
 	{
-		case Local :
-			result = localMatrix * parentMatrix;
-			break;
-		case Parent :
-			result = M44f().setTranslation( localMatrix.translation() ) * parentMatrix;
-			break;
-		case World :
-			result.setTranslation( ( localMatrix * parentMatrix ).translation() );
-			break;
+		switch( orientation )
+		{
+			case Local :
+				result = selection.scene->fullTransform( selection.path );
+				break;
+			case Parent :
+				if( selection.path.size() )
+				{
+					const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
+					result = scenePlug()->fullTransform( parentPath );
+				}
+				break;
+			case World :
+				result = M44f();
+				break;
+		}
 	}
 
-	return sansScaling( result );
+	result = sansScaling( result );
+
+	// And reset the translation to put it where the pivot is
+
+	const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
+	const V3f translate = selection.transformPlug->translatePlug()->getValue();
+	const V3f downstreamWorldPivot = (pivot + translate) * selection.sceneToTransformSpace().inverse();
+
+	result[3][0] = downstreamWorldPivot[0];
+	result[3][1] = downstreamWorldPivot[1];
+	result[3][2] = downstreamWorldPivot[2];
+
+	return result;
 }
 
 void TransformTool::dragBegin()
