@@ -275,6 +275,26 @@ class _Parser( ast.NodeVisitor ) :
 
 		ast.NodeVisitor.generic_visit( self, node )
 
+	def visit_Compare( self, node ) :
+
+		ast.NodeVisitor.generic_visit( self, node )
+
+		# Look for `"x" in context` and `"x" not in context`
+
+		if not isinstance( node.ops[0], ( ast.In, ast.NotIn ) ) :
+			return
+
+		if not isinstance( node.comparators[0], ast.Name ) :
+			return
+
+		if node.comparators[0].id != "context" :
+			return
+
+		if not isinstance( node.left, ast.Str ) :
+			raise SyntaxError( "Context name must be a string" )
+
+		self.contextReads.add( node.left.s )
+
 	def __path( self, node ) :
 
 		result = []
@@ -395,6 +415,10 @@ class _ContextProxy( object ) :
 	def __getitem__( self, key ) :
 
 		return self.__context[key]
+
+	def __contains__( self, key ) :
+
+		return key in self.__context
 
 	def __getattr__( self, name ) :
 
