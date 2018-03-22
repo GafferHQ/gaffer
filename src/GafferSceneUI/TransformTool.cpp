@@ -286,6 +286,27 @@ class HandlesGadget : public Gadget
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// TransformTool::Selection
+//////////////////////////////////////////////////////////////////////////
+
+Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
+{
+	M44f downstreamMatrix;
+	{
+		Context::Scope scopedContext( context.get() );
+		downstreamMatrix = scene->fullTransform( path );
+	}
+
+	M44f upstreamMatrix;
+	{
+		Context::Scope scopedContext( upstreamContext.get() );
+		upstreamMatrix = upstreamScene->fullTransform( upstreamPath );
+	}
+
+	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace.inverse();
+}
+
+//////////////////////////////////////////////////////////////////////////
 // TransformTool
 //////////////////////////////////////////////////////////////////////////
 
