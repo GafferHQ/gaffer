@@ -118,7 +118,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( const IECore::InternedString &name );
 		void updateSceneGraph() const;
-		void renderSceneGraph( const IECoreGL::State *stateToBind ) const;
+		void renderSceneGraph() const;
 
 		boost::signals::scoped_connection m_plugDirtiedConnection;
 		boost::signals::scoped_connection m_contextChangedConnection;

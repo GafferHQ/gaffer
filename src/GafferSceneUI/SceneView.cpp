@@ -59,6 +59,7 @@
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/GL.h"
+#include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/State.h"
 
@@ -128,6 +129,15 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			curvesInterpolate->addChild( new BoolPlug( "enabled" ) );
 			curvesInterpolate->addChild( new BoolPlug( "override" ) );
 
+			ValuePlugPtr pointsPrimitives = new ValuePlug( "pointsPrimitives" );
+			drawingMode->addChild( pointsPrimitives );
+
+			ValuePlugPtr pointsPrimitivesUseGLPoints = new ValuePlug( "useGLPoints" );
+			pointsPrimitives->addChild( pointsPrimitivesUseGLPoints );
+
+			pointsPrimitivesUseGLPoints->addChild( new BoolPlug( "enabled", Plug::In, /* defaultValue = */ true ) );
+			pointsPrimitivesUseGLPoints->addChild( new BoolPlug( "override" ) );
+
 			updateBaseState();
 
 			view->plugSetSignal().connect( boost::bind( &DrawingMode::plugSet, this, ::_1 ) );
@@ -195,6 +205,15 @@ class SceneView::DrawingMode : public boost::signals::trackable
 				/// in Cortex.
 				new IECoreGL::CurvesPrimitive::IgnoreBasis( !curvesInterpolate->getChild<BoolPlug>( "enabled" )->getValue() ),
 				curvesInterpolate->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			const ValuePlug *pointsPrimitives = drawingModePlug()->getChild<ValuePlug>( "pointsPrimitives" );
+			const ValuePlug *pointsPrimitivesUseGLPoints = pointsPrimitives->getChild<ValuePlug>( "useGLPoints" );
+			baseState->add(
+				new IECoreGL::PointsPrimitive::UseGLPoints(
+					pointsPrimitivesUseGLPoints->getChild<BoolPlug>( "enabled" )->getValue() ? IECoreGL::ForAll : IECoreGL::ForPointsOnly
+				),
+				pointsPrimitivesUseGLPoints->getChild<BoolPlug>( "override" )->getValue()
 			);
 
 			sceneGadget()->renderRequestSignal()( sceneGadget() );

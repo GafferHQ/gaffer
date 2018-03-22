@@ -45,6 +45,7 @@
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/Selector.h"
@@ -777,7 +778,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
-		renderSceneGraph( selectionScope.baseState() );
+		renderSceneGraph();
 	}
 
 	if( !selection.size() )
@@ -799,7 +800,7 @@ size_t SceneGadget::objectsAt(
 	vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		renderSceneGraph( selectionScope.baseState() );
+		renderSceneGraph();
 	}
 
 	return m_sceneGraph->pathsFromSelection( selection, paths );
@@ -859,7 +860,7 @@ void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	}
 
 	updateSceneGraph();
-	renderSceneGraph( m_baseState.get() );
+	renderSceneGraph();
 
 	doPendingReferenceRemovals();
 }
@@ -942,7 +943,7 @@ void SceneGadget::updateSceneGraph() const
 	m_dirtyFlags = UpdateTask::NothingDirty;
 }
 
-void SceneGadget::renderSceneGraph( const IECoreGL::State *stateToBind ) const
+void SceneGadget::renderSceneGraph() const
 {
 	GLint prevProgram;
 	glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
@@ -951,8 +952,36 @@ void SceneGadget::renderSceneGraph( const IECoreGL::State *stateToBind ) const
 	try
 	{
 		IECoreGL::State::bindBaseState();
-		stateToBind->bind();
-		m_sceneGraph->render( const_cast<IECoreGL::State *>( stateToBind ), IECoreGL::Selector::currentSelector() );
+		m_baseState->bind();
+
+		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+		{
+			// IECoreGL expects us to bind `selector->baseState()` here, so the
+			// selector can control a few specific parts of the state.
+			// That overrides _all_ of our own state though, including things that
+			// are crucial to accurate selection because they change the size of
+			// primitives on screen. So we need to bind the selection state and then
+			// rebind the crucial bits of our state back on top of it.
+			/// \todo Change IECoreGL::Selector so it provides a partial state object
+			/// containing only the things it needs to change.
+			IECoreGL::StatePtr shapeState = new IECoreGL::State( /* complete = */ false );
+			shapeState->add( m_baseState->get<IECoreGL::PointsPrimitive::UseGLPoints>() );
+			shapeState->add( m_baseState->get<IECoreGL::PointsPrimitive::GLPointWidth>() );
+			shapeState->add( m_baseState->get<IECoreGL::CurvesPrimitive::UseGLLines>() );
+			shapeState->add( m_baseState->get<IECoreGL::CurvesPrimitive::IgnoreBasis>() );
+			shapeState->add( m_baseState->get<IECoreGL::CurvesPrimitive::GLLineWidth>() );
+			IECoreGL::State::ScopedBinding selectorStateBinding(
+				*selector->baseState(), const_cast<IECoreGL::State &>( *m_baseState )
+			);
+			IECoreGL::State::ScopedBinding shapeStateBinding(
+				*shapeState, const_cast<IECoreGL::State &>( *m_baseState )
+			);
+			m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ), selector );
+		}
+		else
+		{
+			m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ) );
+		}
 	}
 	catch( const std::exception& e )
 	{
