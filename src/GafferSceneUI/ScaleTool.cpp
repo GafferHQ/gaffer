@@ -91,13 +91,23 @@ bool ScaleTool::affectsHandles( const Gaffer::Plug *input ) const
 
 void ScaleTool::updateHandles()
 {
-	Context::Scope scopedContext( view()->getContext() );
-	handles()->setTransform( scenePlug()->fullTransform( selection().path ) );
+	const Selection &selection = this->selection();
+
+	M44f pivotMatrix;
+	{
+		Context::Scope upstreamScope( selection.upstreamContext.get() );
+		const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
+		pivotMatrix.translate( pivot );
+	}
+
+	handles()->setTransform(
+		pivotMatrix * selection.transformPlug->matrix() * selection.sceneToTransformSpace().inverse()
+	);
 
 	bool allSettable = true;
 	for( int i = 0; i < 3; ++i )
 	{
-		ValuePlug *plug = selection().transformPlug->scalePlug()->getChild( i );
+		ValuePlug *plug = selection.transformPlug->scalePlug()->getChild( i );
 		const bool settable = plug->settable() && !MetadataAlgo::readOnly( plug );
 		handles()->getChild<Gadget>( i )->setEnabled( settable );
 		allSettable &= settable;
