@@ -152,27 +152,14 @@ RotateTool::Rotation RotateTool::createRotation( int axis )
 	Rotation result;
 	result.originalRotation = selection.transformPlug->rotatePlug()->getValue();
 
-	/// \todo Share this with TranslateTool somehow
 	V3f handleSpaceAxis( 0.0f );
 	handleSpaceAxis[axis] = 1.0f;
 	const M44f handlesTransform = orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) );
 	V3f worldSpaceAxis;
 	handlesTransform.multDirMatrix( handleSpaceAxis, worldSpaceAxis );
 
-	const M44f downstreamMatrix = scenePlug()->fullTransform( selection.path );
-	M44f upstreamMatrix;
-	{
-		Context::Scope scopedContext( selection.context.get() );
-		upstreamMatrix = selection.upstreamScene->fullTransform( selection.upstreamPath );
-	}
+	selection.sceneToTransformSpace().multDirMatrix( worldSpaceAxis, result.axis );
 
-	V3f downstreamAxis;
-	downstreamMatrix.inverse().multDirMatrix( worldSpaceAxis, downstreamAxis );
-
-	V3f upstreamWorldAxis;
-	upstreamMatrix.multDirMatrix( downstreamAxis, upstreamWorldAxis );
-
-	selection.transformSpace.inverse().multDirMatrix( upstreamWorldAxis, result.axis );
 	return result;
 }
 

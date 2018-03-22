@@ -99,7 +99,7 @@ class TransformTool : public GafferSceneUI::SelectionTool
 
 			/// Transform to edit
 			/// =================
-
+			///
 			/// The plug to edit. This will be a child of
 			/// the node generating the upstream scene.
 			Gaffer::TransformPlugPtr transformPlug;
@@ -108,6 +108,13 @@ class TransformTool : public GafferSceneUI::SelectionTool
 			/// This is relative to the world space of the
 			/// upstream scene.
 			Imath::M44f transformSpace;
+
+			/// Utilities
+			/// =========
+			///
+			/// Returns a matrix which converts from world
+			/// space in `scene` to `transformSpace`.
+			Imath::M44f sceneToTransformSpace() const;
 
 		};
 

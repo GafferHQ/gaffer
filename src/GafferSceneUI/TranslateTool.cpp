@@ -169,20 +169,7 @@ TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &d
 	V3f worldSpaceDirection;
 	handlesTransform.multDirMatrix( directionInHandleSpace, worldSpaceDirection );
 
-	const M44f downstreamMatrix = scenePlug()->fullTransform( selection.path );
-	M44f upstreamMatrix;
-	{
-		Context::Scope scopedContext( selection.context.get() );
-		upstreamMatrix = selection.upstreamScene->fullTransform( selection.upstreamPath );
-	}
-
-	V3f downstreamDirection;
-	downstreamMatrix.inverse().multDirMatrix( worldSpaceDirection, downstreamDirection );
-
-	V3f upstreamWorldDirection;
-	upstreamMatrix.multDirMatrix( downstreamDirection, upstreamWorldDirection );
-
-	selection.transformSpace.inverse().multDirMatrix( upstreamWorldDirection, result.direction );
+	selection.sceneToTransformSpace().multDirMatrix( worldSpaceDirection, result.direction );
 
 	return result;
 }
