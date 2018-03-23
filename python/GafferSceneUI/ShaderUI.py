@@ -64,10 +64,6 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:minWidth", 0.0,
 
-	# Add + button for showing and hiding parameters in the NodeGraph
-	"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
-	"noduleLayout:customGadget:addButton:section", "left",
-
 	plugs = {
 
 		"name" : [
@@ -112,6 +108,9 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
+			# Add + button for showing and hiding parameters in the NodeGraph
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+
 		],
 
 		"parameters.*" : [
@@ -134,6 +133,9 @@ Gaffer.Metadata.registerNode(
 
 			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
+
+			# Add + button for showing and hiding parameters in the NodeGraph
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
 
 		],
 
