@@ -258,23 +258,27 @@ class HandlesGadget : public Gadget
 
 		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
-			if( layer != Layer::Main )
+			if( layer != Layer::MidFront )
 			{
 				return;
 			}
-			// TODO: can this be done via layers now?
 
+			// Clear the depth buffer so that the handles render
+			// over the top of the SceneGadget. Otherwise they are
+			// unusable when the object is larger than the handles.
+			/// \todo Can we really justify this approach? Does it
+			/// play well with new Gadgets we'll add over time? If
+			/// so, then we should probably move the depth clearing
+			/// to `Gadget::render()`, in between each layer. If
+			/// not we'll need to come up with something else, perhaps
+			/// going back to punching a hole in the depth buffer using
+			/// `glDepthFunc( GL_GREATER )`. Or maybe an option to
+			/// render gadgets in an offscreen buffer before compositing
+			/// them over the current framebuffer?
+			glClearDepth( 1.0f );
+			glClear( GL_DEPTH_BUFFER_BIT );
 			glEnable( GL_DEPTH_TEST );
-			// Render with reversed depth test so
-			// the handles are visible even when
-			// behind an object.
-			glDepthFunc( GL_GREATER );
-			Gadget::doRenderLayer( layer, style );
-			// The render with the regular depth
-			// test so that the handles occlude
-			// themselves appropriately.
-			glDepthFunc( GL_LESS );
-			Gadget::doRenderLayer( layer, style );
+
 		}
 
 };
