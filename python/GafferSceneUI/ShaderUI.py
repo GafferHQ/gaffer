@@ -310,18 +310,25 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 	if not isinstance( plug.node(), GafferScene.Shader ) :
 		return
 
-	if not plug.node()["parameters"].isAncestorOf( plug ) :
+	isParameter = plug.node()["parameters"].isAncestorOf( plug )
+	isOutput = plug.node()["out"].isAncestorOf( plug )
+	if not ( isParameter or isOutput ):
 		return
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/HideDivider", { "divider" : True } )
 
+	if isOutput:
+		active = len( plug.outputs()) == 0
+	else:
+		active = plug.getInput() is None and not Gaffer.readOnly( plug )
+			
 	menuDefinition.append(
 
 		"/Hide",
 		{
 			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : plug.getInput() is None and not Gaffer.readOnly( plug ),
+			"active" : active
 		}
 
 	)
