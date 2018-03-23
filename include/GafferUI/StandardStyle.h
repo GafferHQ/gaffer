@@ -124,6 +124,7 @@ class GAFFERUI_API StandardStyle : public Style
 
 	private :
 
+		void renderConnectionInternal( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const;
 		static unsigned int connectionDisplayList();
 
 		static IECoreGL::Shader *shader();
