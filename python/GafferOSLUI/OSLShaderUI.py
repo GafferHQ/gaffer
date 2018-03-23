@@ -205,6 +205,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"out.*" : [
+
+			"noduleLayout:visible", __plugNoduleVisibility,
+
+		]
+
 	}
 
 )
