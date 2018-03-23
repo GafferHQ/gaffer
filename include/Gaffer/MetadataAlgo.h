@@ -95,6 +95,11 @@ GAFFER_API bool getChildNodesAreReadOnly( const Node *node );
 /// by the user or not.
 GAFFER_API bool readOnly( const GraphComponent *graphComponent );
 
+/// Determines if a metadata value change affects the result of `readOnly( graphComponent )`.
+GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug );
+GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::InternedString &changedKey, const Gaffer::Node *changedNode );
+GAFFER_API bool readOnlyAffectedByChange( const IECore::InternedString &changedKey );
+
 /// Bookmarks
 /// =========
 ///

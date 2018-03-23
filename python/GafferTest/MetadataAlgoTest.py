@@ -358,6 +358,56 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( plug2, "connectionGadget:color" ), connectionColor )
 		self.assertEqual( Gaffer.Metadata.value( plug2, "nodule:color" ), noodleColor )
 
+	def testReadOnlyAffectedByChange( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+		s["b2"] = Gaffer.Box()
+
+		affected = []
+		def nodeValueChanged( nodeTypeId, key, node ) :
+
+			a = set()
+			for g in ( s["b"]["n"]["op1"], s["b"]["n"], s["b"] ) :
+				if Gaffer.MetadataAlgo.readOnlyAffectedByChange( g, nodeTypeId, key, node ) :
+					a.add( g )
+
+			affected.append( a )
+
+		c1 = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
+
+		def plugValueChanged( nodeTypeId, plugPath, key, plug ) :
+
+			a = set()
+			for g in ( s["b"]["n"]["op1"], s["b"]["n"], s["b"] ) :
+				if Gaffer.MetadataAlgo.readOnlyAffectedByChange( g, nodeTypeId, plugPath, key, plug ) :
+					a.add( g )
+
+			affected.append( a )
+
+		c2 = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged )
+
+		Gaffer.Metadata.registerValue( s["b"]["n"]["op1"], "metadataAlgoTest", "test" )
+		self.assertEqual( len( affected ), 1 )
+		self.assertEqual( affected[-1], set() )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["b"]["n"]["op1"], True )
+		self.assertEqual( len( affected ), 2 )
+		self.assertEqual( affected[-1], { s["b"]["n"]["op1"] } )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["b"]["n"], True )
+		self.assertEqual( len( affected ), 3 )
+		self.assertEqual( affected[-1], { s["b"]["n"]["op1"], s["b"]["n"] } )
+
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b"], True )
+		self.assertEqual( len( affected ), 4 )
+		self.assertEqual( affected[-1], { s["b"]["n"]["op1"], s["b"]["n"] } )
+
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b2"], True )
+		self.assertEqual( len( affected ), 5 )
+		self.assertEqual( affected[-1], set() )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :
