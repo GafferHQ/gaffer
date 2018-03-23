@@ -34,13 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader BuildPoint
+shader ColorToFloat
 (
-	float x = 0,
-	float y = 0,
-	float z = 0,
-	output point p = 0
+	color c = 0,
+	output float r = 0,
+	output float g = 0,
+	output float b = 0
 )
 {
-	p = point( x, y, z );
+	r = c[0];
+	g = c[1];
+	b = c[2];
 }

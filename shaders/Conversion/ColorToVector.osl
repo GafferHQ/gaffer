@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,15 +34,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader SplitColor
+shader ColorToVector
 (
-	color c = 0,
-	output float r = 0,
-	output float g = 0,
-	output float b = 0
+	vector col = 0,
+	output color vec = 0
 )
 {
-	r = c[0];
-	g = c[1];
-	b = c[2];
+	vec = vector( col );
 }
