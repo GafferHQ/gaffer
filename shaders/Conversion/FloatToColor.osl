@@ -34,15 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader SplitColor
+shader FloatToColor
 (
-	color c = 0,
-	output float r = 0,
-	output float g = 0,
-	output float b = 0
+	float r = 0,
+	float g = 0,
+	float b = 0,
+	output color c = 0
 )
 {
-	r = c[0];
-	g = c[1];
-	b = c[2];
+	c = color( r, g, b );
 }
