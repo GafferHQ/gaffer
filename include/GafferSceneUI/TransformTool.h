@@ -155,7 +155,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		void connectToViewContext();
 		void contextChanged( const IECore::InternedString &name );
 		void plugDirtied( const Gaffer::Plug *plug );
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void metadataChanged( IECore::InternedString key );
 		void updateSelection() const;
 		void preRender();
 

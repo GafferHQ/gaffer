@@ -310,7 +310,8 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 	connectToViewContext();
 	view->contextChangedSignal().connect( boost::bind( &TransformTool::connectToViewContext, this ) );
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &TransformTool::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+	Metadata::plugValueChangedSignal().connect( boost::bind( &TransformTool::metadataChanged, this, ::_3 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &TransformTool::metadataChanged, this, ::_2 ) );
 }
 
 TransformTool::~TransformTool()
@@ -383,46 +384,24 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 	}
 }
 
-void TransformTool::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void TransformTool::metadataChanged( IECore::InternedString key )
 {
-	if( key != "readOnly" || m_handlesDirty )
+	if( !MetadataAlgo::readOnlyAffectedByChange( key ) || m_handlesDirty )
 	{
 		return;
 	}
 
-	const Selection &s = selection();
-	if( !s.transformPlug )
-	{
-		return;
-	}
+	// We could spend a little time here to figure out if the metadata
+	// change definitely applies to `selection().transformPlug`, but that
+	// would involve computing our selection, which might trigger a compute.
+	// Our general rule is to delay all computes until `preRender()`
+	// so that a hidden Viewer has no overhead, so we just assume the worst
+	// for now and do a more accurate analysis in `updateHandles()`.
 
-	if( MetadataAlgo::affectedByChange( s.transformPlug.get(), nodeTypeId, plugPath, plug ) )
-	{
-		m_handlesDirty = true;
-	}
-	else
-	{
-		/// \todo Maybe a new MetadataAlgo::descendantAffectedByChange() could make
-		/// this simpler?
-		for( PlugIterator it( s.transformPlug.get() ); !it.done(); ++it )
-		{
-			if(
-				MetadataAlgo::affectedByChange( it->get(), nodeTypeId, plugPath, plug ) ||
-				MetadataAlgo::childAffectedByChange( it->get(), nodeTypeId, plugPath, plug )
-			)
-			{
-				m_handlesDirty = true;
-				break;
-			}
-		}
-	}
-
-	if( m_handlesDirty )
-	{
-		view()->viewportGadget()->renderRequestSignal()(
-			view()->viewportGadget()
-		);
-	}
+	m_handlesDirty = true;
+	view()->viewportGadget()->renderRequestSignal()(
+		view()->viewportGadget()
+	);
 }
 
 void TransformTool::updateSelection() const
