@@ -1,0 +1,347 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "GafferOSL/GradeUtils.h"
+#include "GafferOSL/Spline.h"
+
+color colorGrade( float preSat, int normalizeDarkenOnly, color tint, color multiply, float exposure, color offset, color gamma, float hueOffset, float postSat, color c )
+{
+	float tintNormalize = normalizeDarkenOnly ?
+		max( tint[0], max( tint[1], tint[2] ) ) :
+		(tint[0] + tint[1] + tint[2]) / 3;
+
+    color g = c;
+    g = colorSaturation(preSat, g);
+    g = g * tint / max( 1e-6, tintNormalize );
+    g = multiply * g;
+	g = pow( 2, exposure ) * g;
+    g = g + offset;
+    g = color(
+		pow( g[0], 1 / gamma[0] ),
+		pow( g[1], 1 / gamma[1] ),
+		pow( g[2], 1 / gamma[2] ) );
+	if( hueOffset != 0 )
+	{
+		color hsv = transformc( "rgb", "hsv", g );
+		g = transformc( "hsv", "rgb", hsv + color( hueOffset, 0, 0 ) );
+	}
+    g = colorSaturation(postSat, g);
+    return g;
+}
+
+shader GradeColor
+[[
+	string help = "A variety of remappings useful for grading textures",
+]]
+(
+	color input = 1 [[
+		string widget = "null",
+		int gafferNoduleLayoutVisible = 1,
+	]],
+	float mask = 1 [[
+		int gafferNoduleLayoutVisible = 1,
+	]],
+
+	int preRemapEnable = 0 [[
+		string page = "PreRemap",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color minIn = 0 [[
+		string page = "PreRemap",
+		string help = "The input value to remap to 0",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color maxIn = 1 [[
+		string page = "PreRemap",
+		string help = "The input value to remap to 1",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	int preClamp = 0 [[
+		string page = "PreRemap",
+		string help = "Clamp the input between 0 and 1",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	int preInvert = 0 [[
+		string page = "PreRemap",
+		string help = "Invert the input after remapping",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+	int rampEnable = 0 [[
+		string page = "Ramp",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float rampPositions[] = { 0, 0, 1, 1 }[[
+		string page = "Ramp",
+		string help = "A ramp",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color rampValues[] = { 0, 0, 1, 1 } ,
+	string rampBasis = "catmull-rom",
+
+	int smoothThresholdEnable = 0 [[
+		string page = "SmoothThreshold",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color thresholdMidpoint = 0.5 [[
+		string page = "SmoothThreshold",
+		string help = "Midpoint defines the center of the smooth transition",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color thresholdSoftness = 1.0 [[
+		string page = "SmoothThreshold",
+		string help = "Softness defines the width of the soft transition",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color thresholdBias = 0.5 [[
+		string page = "SmoothThreshold",
+		string help = "thresholdBias defines the bias of the smoothstep. 1 eases tangent of whites while 0 eases tangent of blacks.",
+		color min = 0,
+		color max = 1,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+	int biasGainEnable = 0 [[
+		string page = "BiasGain",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color bias = 0.5 [[
+		string page = "BiasGain",
+		string help = "Bias favors brights when > 0.5 and darks when &lt; 0.5",
+		color min = 0,
+		color max = 1,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	color gain = 0.5 [[
+		string page = "BiasGain",
+		string help = "Gain favors medium values when > 0.5 and extreme values when &lt; 0.5",
+		color min = 0,
+		color max = 1,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+    int gradeEnable = 0 [[
+		string page = "Grade",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float preSat = 1 [[
+		string page = "Grade",
+		string help = "Apply a saturation before grading",
+		float min = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    int tintNormalize = 1 [[
+		string page = "Grade",
+		string help = "Darken:  Divide out the max tint channel, so that the result has no channel increase in brightness. Preserve Luminance: Divide out the average of the tint channels, so that the result has the same average brightness as before tinting.",
+		string widget = "mapper",
+		string options = "Darken:1|Preserve Luminance:0",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color tint = 1 [[
+		string page = "Grade",
+		string help = "Balances the color components to tint the color. The components will be normalized, either to preserve either the overall luminance, or to keep any channel from being multiplied by more than 1.",
+		color min = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color multiply = 1 [[
+		string page = "Grade",
+		string help = "The result is multiplied by this color",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float exposure = 0 [[
+		string page = "Grade",
+		string help = "Also acts as a multiplier, but instead of a linear value is specified in stops of exposure. +1 is twice as bright, -1 is half as bright. ",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color offset = 0 [[
+		string page = "Grade",
+		string help = "The result is offset with this color",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color gamma = 1 [[
+		string page = "Grade",
+		string help = "Applies a gamma to all three channels",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float hueOffset = 0 [[
+		string page = "Grade",
+		string help = "Offsets the hue. An offset of 1 returns to the original hue, 0.5 reverses the hue.",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float postSat = 1 [[
+		string page = "Grade",
+		string help = "The saturation to apply after grading",
+		float min = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+    int clampLow = 0 [[
+		string page = "Clamp",
+		string widget = "checkBox",
+		string help = "Enable the clamping to a minimum value",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color clampLowValue = 0 [[
+		string page = "Clamp",
+		string help = "The minimum value to clamp to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    int clampHigh = 0 [[
+		string page = "Clamp",
+		string widget = "checkBox",
+		string help = "Enable the clamping to a maximum value",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color clampHighValue = 1 [[
+		string page = "Clamp",
+		string help = "The maxmimum value to clamp to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+    int postRemapEnable = 0 [[
+		string page = "PostRemap",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    int postInvert = 0 [[
+		string page = "PostRemap",
+		string help = "Invert the value at the beginning of post remapping",
+		string widget = "checkBox",
+		int connectable = 0,
+	]],
+    color minOut = 0 [[
+		string page = "PostRemap",
+		string help = "The output value to remap the 0 to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    color maxOut = 1 [[
+		string page = "PostRemap",
+		string help = "The output value to remap the 1 to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+	output color out = 0 [[ string correspondingInput = "input" ]]
+)
+{
+	if( mask <= 0 )
+	{
+		out = input;
+		return;
+	}
+
+	color graded = input;
+
+	// PRE-GRADE REMAP
+	if( preRemapEnable )
+	{
+		// REMAP
+		graded = colorRemap(minIn, maxIn, 0, 1, graded);
+
+		// PRE-GRADE INVERT
+		if( preClamp ) graded = clamp( graded, 0, 1 );
+		if( preInvert ) graded = 1-graded;
+	}
+
+	// RAMP
+	if( rampEnable )
+	{
+		color r = colorSpline( rampPositions, rampValues, rampBasis, graded[0] );
+		color g = colorSpline( rampPositions, rampValues, rampBasis, graded[1] );
+		color b = colorSpline( rampPositions, rampValues, rampBasis, graded[2] );
+		graded = color( r[0], g[1], b[2] );
+	}
+
+	// SMOOTHSTEP
+	if( smoothThresholdEnable )
+	{
+		color mapped = colorRemap(
+			thresholdMidpoint - thresholdSoftness * 0.5,
+			thresholdMidpoint + thresholdSoftness * 0.5,
+			0, 1, graded );
+		color biased = colorBias( thresholdBias, mapped );
+
+		float c1 = smoothstep(0, 1, biased[0]);
+		float c2 = smoothstep(0, 1, biased[1]);
+		float c3 = smoothstep(0, 1, biased[2]);
+		graded = color( c1, c2, c3 );
+	}
+
+	// BIAS/GAIN
+	if( biasGainEnable )
+	{
+		graded = colorBiasGain( bias, gain, graded);
+	}
+
+	// GRADE
+	if( gradeEnable )
+	{
+		graded = colorGrade(preSat, tintNormalize, tint, multiply, exposure, offset, gamma, hueOffset, postSat, graded);
+	}
+
+	// CLAMP OUTPUT
+	if( clampLow ) graded = max( graded, clampLowValue );
+	if( clampHigh ) graded = min( graded, clampHighValue );
+
+	// POST-GRADE REMAP
+	if( postRemapEnable == 1 )
+	{
+		if( postInvert == 1 ) graded = 1 - graded;
+		graded = colorRemap(0, 1, minOut, maxOut, graded);
+	}
+
+	// Use node mask to mix graded result with original input color
+	out = mix(input, graded, clamp( mask, 0, 1 ) );
+
+}

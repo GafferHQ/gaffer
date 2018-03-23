@@ -1,0 +1,290 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "GafferOSL/GradeUtils.h"
+#include "GafferOSL/Spline.h"
+
+float floatGrade( float multiply, float offset, float gamma, float c )
+{
+    float g = c;
+    g = multiply * g;
+    g = g + offset;
+    g = pow( g, 1 / gamma );
+    return g;
+}
+
+shader GradeFloat
+[[
+	string help = "A variety of remappings useful for grading textures",
+]]
+(
+	float input = 1 [[
+		string widget = "null",
+		int gafferNoduleLayoutVisible = 1,
+	]],
+	float mask = 1 [[
+		int gafferNoduleLayoutVisible = 1,
+	]],
+
+	int preRemapEnable = 0 [[
+		string page = "PreRemap",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float minIn = 0 [[
+		string page = "PreRemap",
+		string help = "The input value to remap to 0",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float maxIn = 1 [[
+		string page = "PreRemap",
+		string help = "The input value to remap to 1",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	int preClamp = 0 [[
+		string page = "PreRemap",
+		string help = "Clamp the input between 0 and 1",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	int preInvert = 0 [[
+		string page = "PreRemap",
+		string help = "Invert the input after remapping",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+	int rampEnable = 0 [[
+		string page = "Ramp",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float rampPositions[] = { 0, 0, 1, 1 }[[
+		string page = "Ramp",
+		string help = "A ramp",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float rampValues[] = { 0, 0, 1, 1 } ,
+	string rampBasis = "catmull-rom",
+
+	int smoothThresholdEnable = 0 [[
+		string page = "SmoothThreshold",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float thresholdMidpoint = 0.5 [[
+		string page = "SmoothThreshold",
+		string help = "Midpoint defines the center of the smooth transition",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float thresholdSoftness = 1.0 [[
+		string page = "SmoothThreshold",
+		string help = "Softness defines the width of the soft transition",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float thresholdBias = 0.5 [[
+		string page = "SmoothThreshold",
+		string help = "thresholdBias defines the bias of the smoothstep. 1 eases tangent of whites while 0 eases tangent of blacks.",
+		float min = 0,
+		float max = 1,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+	int biasGainEnable = 0 [[
+		string page = "BiasGain",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float bias = 0.5 [[
+		string page = "BiasGain",
+		string help = "Bias favors brights when > 0.5 and darks when &lt; 0.5",
+		float min = 0,
+		float max = 1,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+	float gain = 0.5 [[
+		string page = "BiasGain",
+		string help = "Gain favors medium values when > 0.5 and extreme values when &lt; 0.5",
+		float min = 0,
+		float max = 1,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+    int gradeEnable = 0 [[
+		string page = "Grade",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float multiply = 1 [[
+		string page = "Grade",
+		string help = "The result is multiplied by this",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float offset = 0 [[
+		string page = "Grade",
+		string help = "The result is offset with this",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float gamma = 1 [[
+		string page = "Grade",
+		string help = "Applies a gamma to all three channels",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+    float clampLow = 0 [[
+		string page = "Clamp",
+		string widget = "checkBox",
+		string help = "Enable the clamping to a minimum value",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float clampLowValue = 0 [[
+		string page = "Clamp",
+		string help = "The minimum value to clamp to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float clampHigh = 0 [[
+		string page = "Clamp",
+		string widget = "checkBox",
+		string help = "Enable the clamping to a maximum value",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float clampHighValue = 1 [[
+		string page = "Clamp",
+		string help = "The maxmimum value to clamp to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+    int postRemapEnable = 0 [[
+		string page = "PostRemap",
+		string widget = "checkBox",
+		int connectable = 0,
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float postInvert = 0 [[
+		string page = "PostRemap",
+		string help = "Invert the value at the beginning of post remapping",
+		string widget = "checkBox",
+		int connectable = 0,
+	]],
+    float minOut = 0 [[
+		string page = "PostRemap",
+		string help = "The output value to remap the 0 to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+    float maxOut = 1 [[
+		string page = "PostRemap",
+		string help = "The output value to remap the 1 to",
+		int gafferNoduleLayoutVisible = 0,
+	]],
+
+	output float out = 0 [[ string correspondingInput = "input" ]]
+)
+{
+	if( mask <= 0 )
+	{
+		out = input;
+		return;
+	}
+
+	float graded = input;
+
+	// PRE-GRADE REMAP
+	if( preRemapEnable )
+	{
+		// REMAP
+		graded = floatRemap(minIn, maxIn, 0, 1, graded);
+
+		// PRE-GRADE INVERT
+		if( preClamp ) graded = clamp( graded, 0, 1 );
+		if( preInvert ) graded = 1-graded;
+	}
+
+	// RAMP
+	if( rampEnable )
+	{
+		graded = floatSpline( rampPositions, rampValues, rampBasis, graded );
+	}
+
+
+	// SMOOTHSTEP
+	if( smoothThresholdEnable )
+	{
+		float mapped = floatRemap(
+			thresholdMidpoint - thresholdSoftness * 0.5,
+			thresholdMidpoint + thresholdSoftness * 0.5,
+			0, 1, graded );
+		float biased = floatBias( thresholdBias, mapped );
+
+		graded = smoothstep(0, 1, biased);
+	}
+
+	// BIAS/GAIN
+	if( biasGainEnable )
+	{
+		graded = floatBiasGain( bias, gain, graded);
+	}
+
+	// GRADE
+	if( gradeEnable )
+	{
+		graded = floatGrade( multiply, offset, gamma, graded);
+	}
+
+	// CLAMP OUTPUT
+	if( clampLow ) graded = max( graded, clampLowValue );
+	if( clampHigh ) graded = min( graded, clampHighValue );
+
+	// POST-GRADE REMAP
+	if( postRemapEnable == 1 )
+	{
+		if( postInvert == 1 ) graded = 1 - graded;
+		graded = floatRemap(0, 1, minOut, maxOut, graded);
+	}
+
+	// Use node mask to mix graded result with original input
+	out = mix(input, graded, clamp( mask, 0, 1 ) );
+
+}
