@@ -281,5 +281,15 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+		# But if we edit in World space, then the existing transform
+		# should have no relevance.
+
+		script["transform"]["space"].setValue( script["transform"].Space.World )
+
+		self.assertEqual(
+			imath.V3f( 0 ) * tool.handlesTransform(),
+			imath.V3f( 1, 0, 0 ),
+		)
+
 if __name__ == "__main__":
 	unittest.main()

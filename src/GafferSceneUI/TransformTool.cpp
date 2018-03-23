@@ -195,7 +195,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
 			ScenePlug::ScenePath spacePath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			switch( transform->spacePlug()->getValue() )
+			switch( (GafferScene::Transform::Space)transform->spacePlug()->getValue() )
 			{
 				case GafferScene::Transform::Local :
 					break;
@@ -203,6 +203,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 				case GafferScene::Transform::ResetLocal :
 					spacePath.pop_back();
 					break;
+				case GafferScene::Transform::World :
 				case GafferScene::Transform::ResetWorld :
 					spacePath.clear();
 					break;
