@@ -332,6 +332,23 @@ const TransformTool::Selection &TransformTool::selection() const
 	return m_selection;
 }
 
+Imath::M44f TransformTool::handlesTransform()
+{
+	updateSelection();
+	if( !m_selection.transformPlug )
+	{
+		throw IECore::Exception( "Selection not valid" );
+	}
+
+	if( m_handlesDirty )
+	{
+		updateHandles();
+		m_handlesDirty = false;
+	}
+
+	return handles()->getTransform();
+}
+
 GafferScene::ScenePlug *TransformTool::scenePlug()
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );

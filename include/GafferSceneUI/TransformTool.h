@@ -120,6 +120,12 @@ class TransformTool : public GafferSceneUI::SelectionTool
 
 		const Selection &selection() const;
 
+		/// Returns the transform of the handles. Throws
+		/// if the selection is invalid because then the
+		/// transform would be meaningless. This is
+		/// exposed primarily for the unit tests.
+		Imath::M44f handlesTransform();
+
 	protected :
 
 		TransformTool( SceneView *view, const std::string &name );
