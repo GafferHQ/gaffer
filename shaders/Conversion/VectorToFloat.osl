@@ -34,13 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader BuildColor
+shader VectorToFloat
 (
-	float r = 0,
-	float g = 0,
-	float b = 0,
-	output color c = 0
+	vector p = 0,
+	output float x = 0,
+	output float y = 0,
+	output float z = 0
 )
 {
-	c = color( r, g, b );
+	x = p[0];
+	y = p[1];
+	z = p[2];
 }
