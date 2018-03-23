@@ -117,7 +117,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 	def __metadataChanged( self, nodeTypeId, key, node ) :
 
-		if key == "readOnly" and Gaffer.MetadataAlgo.affectedByChange( self.__script, nodeTypeId, node ) :
+		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__script, nodeTypeId, key, node ) :
 			self.__updateTitle()
 
 	def __updateTitle( self ) :
