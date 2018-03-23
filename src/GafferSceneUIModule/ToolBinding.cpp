@@ -109,6 +109,7 @@ void GafferSceneUIModule::bindTools()
 	{
 		scope s = GafferBindings::NodeClass<TransformTool>( nullptr, no_init )
 			.def( "selection", &TransformTool::selection, return_value_policy<copy_const_reference>() )
+			.def( "handlesTransform", &TransformTool::handlesTransform )
 		;
 
 		class_<TransformTool::Selection>( "Selection", no_init )

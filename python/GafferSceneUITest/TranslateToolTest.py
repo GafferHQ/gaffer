@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import math
+
 import imath
 
 import IECore
@@ -387,6 +389,38 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 				script["transform"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)
+		)
+
+	def testHandlesTransform( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["rotate"]["y"].setValue( 90 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				imath.M44f().rotate( imath.V3f( 0, math.pi / 2, 0 ) ),
+				0.000001
+			)
+		)
+
+		tool["orientation"].setValue( tool.Orientation.Parent )
+		self.assertEqual(
+			tool.handlesTransform(), imath.M44f()
+		)
+
+		tool["orientation"].setValue( tool.Orientation.World )
+		self.assertEqual(
+			tool.handlesTransform(), imath.M44f()
 		)
 
 if __name__ == "__main__":
