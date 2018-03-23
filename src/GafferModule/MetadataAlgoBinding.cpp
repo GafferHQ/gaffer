@@ -102,7 +102,17 @@ void GafferModule::bindMetadataAlgo()
 		( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
 	);
 
-	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def(
+		"ancestorAffectedByChange",
+		(bool (*)( const Plug *, IECore::TypeId, const StringAlgo::MatchPattern &, const Gaffer::Plug * ))&ancestorAffectedByChange,
+		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
+	);
+
+	def(
+		"ancestorAffectedByChange",
+		(bool (*)( const GraphComponent *, IECore::TypeId, const Gaffer::Node * ))&ancestorAffectedByChange,
+		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
+	);
 
 	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
 

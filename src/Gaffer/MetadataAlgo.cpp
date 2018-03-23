@@ -258,6 +258,26 @@ bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeI
 	return false;
 }
 
+bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode )
+{
+	if( changedNode )
+	{
+		return changedNode->isAncestorOf( graphComponent );
+	}
+
+	while( ( graphComponent = graphComponent->parent<GraphComponent>() ) )
+	{
+		if( auto node = runTimeCast<const Node>( graphComponent ) )
+		{
+			if( affectedByChange( node, changedNodeTypeId, changedNode ) )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode )
 {
 	if( changedNode )

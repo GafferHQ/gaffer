@@ -116,9 +116,9 @@ GAFFER_API bool affectedByChange( const Node *node, IECore::TypeId changedNodeTy
 /// As above, but determines if any child will be affected.
 GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
-/// As above, but determines if any ancestor plug will be affected. This is particularly useful in conjunction with
-/// the `readOnly()` method.
+/// As above, but determines if any ancestor will be affected.
 GAFFER_API bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+GAFFER_API bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 
 /// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
 GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
