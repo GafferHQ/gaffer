@@ -174,6 +174,15 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			}
 		)
 
+		readOnly = Gaffer.MetadataAlgo.getReadOnly( self.nodeUI().node() )
+		result.append(
+			"/Unlock" if readOnly else "/Lock",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( self.nodeUI().node().parent() ),
+			}
+		)
+
 		self.toolMenuSignal()( self, self.nodeUI().node(), result )
 
 		return result
@@ -210,5 +219,11 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			applyDefaults( node )
 			Gaffer.NodeAlgo.applyUserDefaults( node )
+
+	def __applyReadOnly( self, readOnly ) :
+
+		node = self.nodeUI().node()
+		with Gaffer.UndoScope( node.scriptNode() ) :
+			Gaffer.MetadataAlgo.setReadOnly( node, readOnly )
 
 GafferUI.EditorWidget.registerType( "NodeEditor", NodeEditor )
