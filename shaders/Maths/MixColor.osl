@@ -34,15 +34,27 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader SplitColor
+#include "GafferOSL/GradeUtils.h"
+
+shader MixColor
 (
-	color c = 0,
-	output float r = 0,
-	output float g = 0,
-	output float b = 0
+	color a = 0,
+	color b = 0,
+	float m = 0 [[
+		float min = 0,
+		float max = 1,
+	]],
+	float bias = 0.5 [[
+		float min = 0,
+		float max = 1,
+	]],
+	output color out = 0 [[ string correspondingInput = "a" ]]
 )
 {
-	r = c[0];
-	g = c[1];
-	b = c[2];
+	float mixFraction = clamp( m, 0, 1 );
+	if( bias != 0.5 )
+	{
+		mixFraction = floatBias( bias, mixFraction );
+	}
+	out = mix( a, b, mixFraction );
 }

@@ -34,9 +34,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader SplitPoint
+shader VectorToFloat
 (
-	point p = 0,
+	vector p = 0,
 	output float x = 0,
 	output float y = 0,
 	output float z = 0

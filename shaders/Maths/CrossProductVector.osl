@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+//
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,13 +35,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader VectorMix
+shader CrossProductVector
 (
 	vector a = 0,
 	vector b = 0,
-	float m = 0,
 	output vector out = 0 [[ string correspondingInput = "a" ]]
 )
 {
-	out = mix( a, b, m );
+	out = cross( a, b );
 }

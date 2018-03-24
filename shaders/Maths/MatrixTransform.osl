@@ -1,0 +1,9 @@
+shader MatrixTransform
+(
+	point p = 0,
+	matrix m = 1,
+	output point outP = 0 [[ string correspondingInput = "p" ]]
+)
+{
+	outP = transform( m, p );
+}

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,13 +34,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader BuildColor
+shader SubtractColor
 (
-	float r = 0,
-	float g = 0,
-	float b = 0,
-	output color c = 0
+	color a = 0,
+	color b = 0,
+	output color out = 0 [[ string correspondingInput = "a" ]]
 )
 {
-	c = color( r, g, b );
+	out = a - b;
 }
