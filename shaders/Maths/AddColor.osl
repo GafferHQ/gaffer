@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,11 +34,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader FloatAdd
+shader AddColor
 (
-	float a = 0,
-	float b = 0,
-	output float out = 0 [[ string correspondingInput = "a" ]]
+	color a = 0,
+	color b = 0,
+	output color out = 0 [[ string correspondingInput = "a" ]]
 )
 {
 	out = a + b;

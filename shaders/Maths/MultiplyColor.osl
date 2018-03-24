@@ -35,11 +35,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader MultiplyVector
+shader MultiplyColor
 (
-	vector a = 1,
-	vector b = 1,
-	output vector out = 0 [[ string correspondingInput = "a" ]]
+	color a = 1,
+	color b = 1,
+	output color out = 0 [[ string correspondingInput = "a" ]]
 )
 {
 	out = a * b;
