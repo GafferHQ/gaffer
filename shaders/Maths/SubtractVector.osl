@@ -2,7 +2,6 @@
 //
 //  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
-//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
@@ -35,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader MultiplyVector
+shader SubtractVector
 (
-	vector a = 1,
-	vector b = 1,
+	vector a = 0,
+	vector b = 0,
 	output vector out = 0 [[ string correspondingInput = "a" ]]
 )
 {
-	out = a * b;
+	out = a - b;
 }

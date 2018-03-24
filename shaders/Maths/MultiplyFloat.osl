@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader FloatMultiply
+shader MultiplyFloat
 (
-	float a = 0,
-	float b = 0,
+	float a = 1,
+	float b = 1,
 	output float out = 0 [[ string correspondingInput = "a" ]]
 )
 {
