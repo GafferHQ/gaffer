@@ -77,6 +77,22 @@ void GafferModule::bindMetadataAlgo()
 	def( "setChildNodesAreReadOnly", &setChildNodesAreReadOnly, ( arg( "node" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getChildNodesAreReadOnly", &getChildNodesAreReadOnly );
 	def( "readOnly", &readOnly );
+	def(
+		"readOnlyAffectedByChange",
+		(bool (*)( const GraphComponent *, IECore::TypeId, const StringAlgo::MatchPattern &, const IECore::InternedString &, const Gaffer::Plug * ))&readOnlyAffectedByChange,
+		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedKey" ), arg( "changedPlug" ) )
+	);
+	def(
+		"readOnlyAffectedByChange",
+		(bool (*)( const GraphComponent *, IECore::TypeId, const IECore::InternedString &, const Gaffer::Node * ))&readOnlyAffectedByChange,
+		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedKey" ), arg( "changedNode" ) )
+	);
+	def(
+		"readOnlyAffectedByChange",
+		(bool (*)( const IECore::InternedString & ))&readOnlyAffectedByChange,
+		( arg( "changedKey" ) )
+	);
+
 	def( "setBookmarked", &setBookmarked, ( arg( "graphComponent" ), arg( "bookmarked"), arg( "persistent" ) = true ) );
 	def( "getBookmarked", &getBookmarked );
 	def( "bookmarks", &bookmarksWrapper );
@@ -102,7 +118,17 @@ void GafferModule::bindMetadataAlgo()
 		( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
 	);
 
-	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def(
+		"ancestorAffectedByChange",
+		(bool (*)( const Plug *, IECore::TypeId, const StringAlgo::MatchPattern &, const Gaffer::Plug * ))&ancestorAffectedByChange,
+		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
+	);
+
+	def(
+		"ancestorAffectedByChange",
+		(bool (*)( const GraphComponent *, IECore::TypeId, const Gaffer::Node * ))&ancestorAffectedByChange,
+		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
+	);
 
 	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
 

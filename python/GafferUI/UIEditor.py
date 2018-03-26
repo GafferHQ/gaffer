@@ -161,6 +161,8 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def appendNodeEditorToolMenuDefinitions( cls, nodeEditor, node, menuDefinition ) :
 
+		menuDefinition.append( "/Edit UI Divider", { "divider" : True } )
+
 		menuDefinition.append(
 			"/Edit UI...",
 			{

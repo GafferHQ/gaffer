@@ -136,6 +136,59 @@ bool readOnly( const GraphComponent *graphComponent )
 	return false;
 }
 
+bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug )
+{
+	if( changedKey != g_readOnlyName )
+	{
+		return false;
+	}
+
+	auto plug = runTimeCast<const Plug>( graphComponent );
+	if( !plug )
+	{
+		return false;
+	}
+
+	if( affectedByChange( plug, changedNodeTypeId, changedPlugPath, changedPlug ) )
+	{
+		return true;
+	}
+	if( ancestorAffectedByChange( plug, changedNodeTypeId, changedPlugPath, changedPlug ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::InternedString &changedKey, const Gaffer::Node *changedNode )
+{
+	if( changedKey == g_readOnlyName )
+	{
+		if( auto node = runTimeCast<const Node>( graphComponent ) )
+		{
+			if( affectedByChange( node, changedNodeTypeId, changedNode ) )
+			{
+				return true;
+			}
+		}
+		if( ancestorAffectedByChange( graphComponent, changedNodeTypeId, changedNode ) )
+		{
+			return true;
+		}
+	}
+	else if( changedKey == g_childNodesAreReadOnlyName )
+	{
+		return ancestorAffectedByChange( graphComponent, changedNodeTypeId, changedNode );
+	}
+	return false;
+}
+
+bool readOnlyAffectedByChange( const IECore::InternedString &changedKey )
+{
+	return changedKey == g_readOnlyName || changedKey == g_childNodesAreReadOnlyName;
+}
+
 void setBookmarked( Node *node, bool bookmarked, bool persistent /* = true */ )
 {
 	Metadata::registerValue( node, g_bookmarkedName, new BoolData( bookmarked ), persistent );
@@ -255,6 +308,26 @@ bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeI
 		}
 	}
 
+	return false;
+}
+
+bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode )
+{
+	if( changedNode )
+	{
+		return changedNode->isAncestorOf( graphComponent );
+	}
+
+	while( ( graphComponent = graphComponent->parent<GraphComponent>() ) )
+	{
+		if( auto node = runTimeCast<const Node>( graphComponent ) )
+		{
+			if( affectedByChange( node, changedNodeTypeId, changedNode ) )
+			{
+				return true;
+			}
+		}
+	}
 	return false;
 }
 

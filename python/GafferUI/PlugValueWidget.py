@@ -71,6 +71,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
+		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__nodeMetadataChanged )
+		)
+
 	## Note that it is acceptable to pass None to setPlug() (and to the constructor)
 	# and that derived classes should be implemented to cope with this eventuality.
 	def setPlug( self, plug ) :
@@ -476,8 +480,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		if (
 			Gaffer.MetadataAlgo.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) or
-			( key == "readOnly" and Gaffer.MetadataAlgo.ancestorAffectedByChange( self.__plug, nodeTypeId, plugPath, plug ) )
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plug, nodeTypeId, plugPath, key, plug )
 		) :
+			self._updateFromPlug()
+
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
+
+		if self.__plug is None :
+			return
+
+		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plug, nodeTypeId, key, node ) :
 			self._updateFromPlug()
 
 	def __contextChanged( self, context, key ) :
