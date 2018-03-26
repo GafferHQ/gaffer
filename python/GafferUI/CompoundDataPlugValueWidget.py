@@ -99,11 +99,14 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlug( self ) :
 
 		editable = True
+		readOnly = False
 		if self.getPlug() is not None :
 			editable = Gaffer.Metadata.value( self.getPlug(), "compoundDataPlugValueWidget:editable" )
 			editable = editable if editable is not None else True
+			readOnly = Gaffer.MetadataAlgo.readOnly( self.getPlug() )
 
 		self.__editRow.setVisible( editable )
+		self.__editRow.setEnabled( not readOnly )
 
 	def __addMenuDefinition( self ) :
 
