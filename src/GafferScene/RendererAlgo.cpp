@@ -510,7 +510,10 @@ struct LocationOutput
 
 	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 	{
-		updateAttributes( scene, path );
+		if( path.size() > m_root.size() )
+		{
+			updateAttributes( scene, path );
+		}
 
 		if( const IECore::BoolData *d = m_attributes->member<IECore::BoolData>( g_visibleAttributeName ) )
 		{
@@ -520,7 +523,10 @@ struct LocationOutput
 			}
 		}
 
-		updateTransform( scene );
+		if( path.size() > m_root.size() )
+		{
+			updateTransform( scene );
+		}
 
 		return true;
 	}
