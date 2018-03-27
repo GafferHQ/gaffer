@@ -201,6 +201,29 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 	}
 }
 
+bool aiVersionLessThan( int arch, int major, int minor, int patch )
+{
+	// The Arnold API has an `AiCheckAPIVersion()` function that sounds
+	// like exactly what we need, but it doesn't support comparing for
+	// patch versions. Instead we're forced to parse the version string
+	// ourselves.
+
+	const char *arnoldVersionString = AiGetVersion( nullptr, nullptr, nullptr, nullptr );
+	int arnoldVersion[4];
+	for( int i = 0; i < 4; ++i )
+	{
+		arnoldVersion[i] = strtol( arnoldVersionString, const_cast<char **>( &arnoldVersionString ), 10 );
+		++arnoldVersionString;
+	}
+
+	auto version = { arch, major, minor, patch };
+
+	return std::lexicographical_compare(
+		begin( arnoldVersion ), end( arnoldVersion ),
+		version.begin(), version.end()
+	);
+}
+
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
 const AtString g_aovShadersArnoldString( "aov_shaders" );
@@ -1578,12 +1601,14 @@ class InstanceCache : public IECore::RefCounted
 		{
 			if( IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) && m_nodeDeleter == AiNodeDestroy )
 			{
-				// Work around Arnold bug whereby deleting an instanced procedural
-				// can lead to crashes. This unfortunately means that we don't get
-				// to do instancing of procedurals during interactive renders, but
-				// we can at least do it during batch renders.
-				/// \todo Remove this workaround once the Arnold bug is fixed.
-				return false;
+				if( aiVersionLessThan( 5, 0, 1, 4 ) )
+				{
+					// Work around Arnold bug whereby deleting an instanced procedural
+					// can lead to crashes. This unfortunately means that we don't get
+					// to do instancing of procedurals during interactive renders, but
+					// we can at least do it during batch renders.
+					return false;
+				}
 			}
 			return attributes->canInstanceGeometry( object );
 		}
