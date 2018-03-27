@@ -99,7 +99,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 			/// Transform to edit
 			/// =================
-
+			///
 			/// The plug to edit. This will be a child of
 			/// the node generating the upstream scene.
 			Gaffer::TransformPlugPtr transformPlug;
@@ -109,9 +109,22 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// upstream scene.
 			Imath::M44f transformSpace;
 
+			/// Utilities
+			/// =========
+			///
+			/// Returns a matrix which converts from world
+			/// space in `scene` to `transformSpace`.
+			Imath::M44f sceneToTransformSpace() const;
+
 		};
 
 		const Selection &selection() const;
+
+		/// Returns the transform of the handles. Throws
+		/// if the selection is invalid because then the
+		/// transform would be meaningless. This is
+		/// exposed primarily for the unit tests.
+		Imath::M44f handlesTransform();
 
 	protected :
 

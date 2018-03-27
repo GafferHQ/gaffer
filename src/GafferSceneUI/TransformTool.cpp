@@ -201,7 +201,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
 			ScenePlug::ScenePath spacePath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			switch( transform->spacePlug()->getValue() )
+			switch( (GafferScene::Transform::Space)transform->spacePlug()->getValue() )
 			{
 				case GafferScene::Transform::Local :
 					break;
@@ -209,6 +209,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 				case GafferScene::Transform::ResetLocal :
 					spacePath.pop_back();
 					break;
+				case GafferScene::Transform::World :
 				case GafferScene::Transform::ResetWorld :
 					spacePath.clear();
 					break;
@@ -258,28 +259,53 @@ class HandlesGadget : public Gadget
 
 		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
-			if( layer != Layer::Main )
+			if( layer != Layer::MidFront )
 			{
 				return;
 			}
-			// TODO: can this be done via layers now?
 
+			// Clear the depth buffer so that the handles render
+			// over the top of the SceneGadget. Otherwise they are
+			// unusable when the object is larger than the handles.
+			/// \todo Can we really justify this approach? Does it
+			/// play well with new Gadgets we'll add over time? If
+			/// so, then we should probably move the depth clearing
+			/// to `Gadget::render()`, in between each layer. If
+			/// not we'll need to come up with something else, perhaps
+			/// going back to punching a hole in the depth buffer using
+			/// `glDepthFunc( GL_GREATER )`. Or maybe an option to
+			/// render gadgets in an offscreen buffer before compositing
+			/// them over the current framebuffer?
+			glClearDepth( 1.0f );
+			glClear( GL_DEPTH_BUFFER_BIT );
 			glEnable( GL_DEPTH_TEST );
-			// Render with reversed depth test so
-			// the handles are visible even when
-			// behind an object.
-			glDepthFunc( GL_GREATER );
-			Gadget::doRenderLayer( layer, style );
-			// The render with the regular depth
-			// test so that the handles occlude
-			// themselves appropriately.
-			glDepthFunc( GL_LESS );
-			Gadget::doRenderLayer( layer, style );
+
 		}
 
 };
 
 } // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// TransformTool::Selection
+//////////////////////////////////////////////////////////////////////////
+
+Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
+{
+	M44f downstreamMatrix;
+	{
+		Context::Scope scopedContext( context.get() );
+		downstreamMatrix = scene->fullTransform( path );
+	}
+
+	M44f upstreamMatrix;
+	{
+		Context::Scope scopedContext( upstreamContext.get() );
+		upstreamMatrix = upstreamScene->fullTransform( upstreamPath );
+	}
+
+	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace.inverse();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // TransformTool
@@ -322,6 +348,23 @@ const TransformTool::Selection &TransformTool::selection() const
 {
 	updateSelection();
 	return m_selection;
+}
+
+Imath::M44f TransformTool::handlesTransform()
+{
+	updateSelection();
+	if( !m_selection.transformPlug )
+	{
+		throw IECore::Exception( "Selection not valid" );
+	}
+
+	if( m_handlesDirty )
+	{
+		updateHandles();
+		m_handlesDirty = false;
+	}
+
+	return handles()->getTransform();
 }
 
 GafferScene::ScenePlug *TransformTool::scenePlug()
@@ -491,32 +534,44 @@ void TransformTool::preRender()
 
 Imath::M44f TransformTool::orientedTransform( Orientation orientation )
 {
-	Context::Scope scopedContext( view()->getContext() );
-
 	const Selection &selection = this->selection();
-	const M44f localMatrix = scenePlug()->transform( selection.path );
-	M44f parentMatrix;
-	if( selection.path.size() )
-	{
-		const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-		parentMatrix = scenePlug()->fullTransform( parentPath );
-	}
+	Context::Scope scopedContext( selection.context.get() );
+
+	// Get a matrix with the orientation we want
 
 	M44f result;
-	switch( orientation )
 	{
-		case Local :
-			result = localMatrix * parentMatrix;
-			break;
-		case Parent :
-			result = M44f().setTranslation( localMatrix.translation() ) * parentMatrix;
-			break;
-		case World :
-			result.setTranslation( ( localMatrix * parentMatrix ).translation() );
-			break;
+		switch( orientation )
+		{
+			case Local :
+				result = selection.scene->fullTransform( selection.path );
+				break;
+			case Parent :
+				if( selection.path.size() )
+				{
+					const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
+					result = scenePlug()->fullTransform( parentPath );
+				}
+				break;
+			case World :
+				result = M44f();
+				break;
+		}
 	}
 
-	return sansScaling( result );
+	result = sansScaling( result );
+
+	// And reset the translation to put it where the pivot is
+
+	const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
+	const V3f translate = selection.transformPlug->translatePlug()->getValue();
+	const V3f downstreamWorldPivot = (pivot + translate) * selection.sceneToTransformSpace().inverse();
+
+	result[3][0] = downstreamWorldPivot[0];
+	result[3][1] = downstreamWorldPivot[1];
+	result[3][2] = downstreamWorldPivot[2];
+
+	return result;
 }
 
 void TransformTool::dragBegin()

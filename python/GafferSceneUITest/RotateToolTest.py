@@ -200,5 +200,98 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	def testPivotAffectsHandlesTransform( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["cube"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+
+		script["cube"]["transform"]["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		self.assertEqual(
+			tool.handlesTransform(),
+			imath.M44f().translate(
+				script["cube"]["transform"]["pivot"].getValue()
+			)
+		)
+
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 1, 2, -1 ) )
+
+		self.assertEqual(
+			tool.handlesTransform(),
+			imath.M44f().translate(
+				script["cube"]["transform"]["pivot"].getValue() +
+				script["cube"]["transform"]["translate"].getValue()
+			)
+		)
+
+	def testPivotAndExistingTransform( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["cube"] = GafferScene.Cube()
+
+		script["transformFilter"] = GafferScene.PathFilter()
+		script["transformFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["transform"] = GafferScene.Transform()
+		script["transform"]["in"].setInput( script["cube"]["out"] )
+		script["transform"]["filter"].setInput( script["transformFilter"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["transform"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		# Start with default pivot
+
+		self.assertEqual(
+			imath.V3f( 0 ) * tool.handlesTransform(),
+			imath.V3f( 0, 0, 0 ),
+		)
+
+		# Offset it
+
+		script["transform"]["transform"]["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		self.assertEqual(
+			imath.V3f( 0 ) * tool.handlesTransform(),
+			imath.V3f( 1, 0, 0 ),
+		)
+
+		# Now add an existing transform on the cube, prior
+		# to it entering the transform node we're editing.
+		# The pivot's world space position should be affected
+		# because the Transform node is operating in Local space.
+
+		script["cube"]["transform"]["rotate"]["y"].setValue( 90 )
+
+		self.assertTrue(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
+				imath.V3f( 0 ) * tool.handlesTransform(),
+				0.0000001,
+			)
+		)
+
+		# But if we edit in World space, then the existing transform
+		# should have no relevance.
+
+		script["transform"]["space"].setValue( script["transform"].Space.World )
+
+		self.assertEqual(
+			imath.V3f( 0 ) * tool.handlesTransform(),
+			imath.V3f( 1, 0, 0 ),
+		)
+
 if __name__ == "__main__":
 	unittest.main()
