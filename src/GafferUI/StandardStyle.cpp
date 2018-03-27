@@ -666,29 +666,14 @@ void StandardStyle::renderNodule( float radius, State state, const Imath::Color3
 
 void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state, const Imath::Color3f *userColor ) const
 {
-	glUniform1i( g_isCurveParameter, 1 );
-	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 1 );
-	glUniform1i( g_textureTypeParameter, 0 );
 	glUniform1f( g_lineWidthParameter, 0.5 );
-
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
-	V3f dir = ( dstPosition - srcPosition ).normalized();
-
-	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
-	glUniform3fv( g_v1Parameter, 1, dstPosition.getValue() );
-	glUniform3fv( g_t0Parameter, 1, ( srcTangent != V3f( 0 ) ? srcTangent :  dir ).getValue() );
-	glUniform3fv( g_t1Parameter, 1, ( dstTangent != V3f( 0 ) ? dstTangent : -dir ).getValue() );
-
-	glUniform1f( g_endPointSizeParameter, g_endPointSize );
-
-	glCallList( connectionDisplayList() );
+	renderConnectionInternal( srcPosition, srcTangent, dstPosition, dstTangent );
 }
 
 void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame, State state ) const
 {
-
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
@@ -744,30 +729,15 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 
 void StandardStyle::renderAuxiliaryConnection( const Imath::V2f &srcPosition, const Imath::V2f &srcTangent, const Imath::V2f &dstPosition, const Imath::V2f &dstTangent, State state ) const
 {
-	glUniform1i( g_isCurveParameter, 1 );
-	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 1 );
-	glUniform1i( g_textureTypeParameter, 0 );
 	glUniform1f( g_lineWidthParameter, 0.2 );
-
 	glColor( colorForState( AuxiliaryConnectionColor, state ) );
 
 	const V3f p0( srcPosition.x, srcPosition.y, 0 );
 	const V3f p1( dstPosition.x, dstPosition.y, 0 );
+	const V3f t0( srcTangent.x, srcTangent.y, 0 );
+	const V3f t1( dstTangent.x, dstTangent.y, 0 );
 
-	V3f dir = ( V3f( dstPosition.x, dstPosition.y, 0 ) - V3f( srcPosition.x, srcPosition.y, 0 ) ).normalized();
-
-	const V3f t0 = srcTangent != V2f( 0 ) ? V3f( srcTangent.x, dstTangent.y, 0 ) : dir;
-	const V3f t1 = dstTangent != V2f( 0 ) ? V3f( dstTangent.x, dstTangent.y, 0 ) : -dir;
-
-	glUniform3fv( g_v0Parameter, 1, p0.getValue() );
-	glUniform3fv( g_v1Parameter, 1, p1.getValue() );
-	glUniform3fv( g_t0Parameter, 1, t0.getValue() );
-	glUniform3fv( g_t1Parameter, 1, t1.getValue() );
-
-	glUniform1f( g_endPointSizeParameter, g_endPointSize );
-
-	glCallList( connectionDisplayList() );
+	renderConnectionInternal( p0, t0, p1, t1 );
 }
 
 Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
@@ -1035,6 +1005,40 @@ float StandardStyle::getFontScale( TextType textType ) const
 	return m_fontScales[textType];
 }
 
+void StandardStyle::renderConnectionInternal( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
+{
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
+
+	// To guarantee straight curve sections we add an offset when computing
+	// tangents. This is done because the effective end point is slightly shifted
+	// due to how we draw curves at where they hit a node.
+	V3f adjustedSrcPosition( srcPosition );
+	if( dstTangent == V3f( 0 ) && srcTangent != V3f( 0 ) )
+	{
+		adjustedSrcPosition += srcTangent * g_endPointSize;
+	}
+
+	V3f adjustedDstPosition( dstPosition );
+	if( srcTangent == V3f( 0 ) && dstTangent != V3f( 0 ) )
+	{
+		adjustedDstPosition += dstTangent * g_endPointSize;
+	}
+
+	V3f dir = ( adjustedDstPosition - adjustedSrcPosition ).normalized();
+
+	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
+	glUniform3fv( g_v1Parameter, 1, dstPosition.getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( srcTangent != V3f( 0 ) ? srcTangent :  dir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( dstTangent != V3f( 0 ) ? dstTangent : -dir ).getValue() );
+
+	glUniform1f( g_endPointSizeParameter, g_endPointSize );
+
+	glCallList( connectionDisplayList() );
+}
+
 unsigned int StandardStyle::connectionDisplayList()
 {
 	static unsigned int g_list;
@@ -1199,6 +1203,11 @@ static const std::string &fragmentSource()
 		"	if( edgeAntiAliasing )"
 		"	{"
 		"		OUTCOLOR.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
+		"	}"
+
+		"	if( OUTCOLOR.a == 0.0 )"
+		"	{"
+		"		discard;"
 		"	}"
 
 		/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
