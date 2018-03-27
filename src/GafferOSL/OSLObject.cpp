@@ -146,8 +146,12 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == shaderPlug() ||
-		input == inPlug()->transformPlug() ||
+	if( input == shaderPlug() )
+	{
+		outputs.push_back( resampledNamesPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
+	}
+	else if (input == inPlug()->transformPlug() ||
 		input == interpolationPlug() ||
 		input == resampledInPlug()->objectPlug()
 		)
@@ -276,6 +280,7 @@ void OSLObject::hash( const ValuePlug *output, const Context *context, IECore::M
 	if( output == resampledNamesPlug() )
 	{
 		inPlug()->objectPlug()->hash( h );
+		h.append( shaderPlug()->attributesHash() );
 	}
 }
 
@@ -291,7 +296,10 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			return;
 		}
 
-		std::string nonConstantPrimitiveVariables;
+		std::string primitiveVariablesToResample;
+
+		const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
+		ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
 
 		for( PrimitiveVariableMap::const_iterator it = prim->variables.begin(); it != prim->variables.end(); ++it )
 		{
@@ -300,10 +308,15 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				continue;
 			}
 
-			nonConstantPrimitiveVariables += " " + it->first;
+			if( shadingEngine && !shadingEngine->needsAttribute( "", it->first ) )
+			{
+				continue;
+			}
+
+			primitiveVariablesToResample += " " + it->first;
 		}
 
-		static_cast<StringPlug *>( output )->setValue( nonConstantPrimitiveVariables );
+		static_cast<StringPlug *>( output )->setValue( primitiveVariablesToResample );
 		return;
 	}
 
