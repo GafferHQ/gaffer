@@ -1300,6 +1300,7 @@ class SceneView::Camera : public boost::signals::trackable
 			m_view->viewportGadget()->setCamera( camera.get() );
 			m_view->viewportGadget()->setCameraEditable( false );
 
+			m_viewportCameraDirty = false;
 		}
 
 		SceneView *m_view;
