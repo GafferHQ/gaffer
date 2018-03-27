@@ -412,8 +412,8 @@ IECoreGL::StatePtr disabledState()
 	return s;
 }
 
-// - p is connection destination ( guaranteed to be contained within the frame)
-// - v is the normalized direction of the connection ( towards the source )
+// - p is connection destination (guaranteed to be contained within the frame)
+// - v is the vector between source and destination
 V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, const V3f &v )
 {
 	const float offset = 1.0;
@@ -438,7 +438,7 @@ V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, c
 		yT = ( offset + p.y - dstNodeFrame.min.y ) / -v.y;
 	}
 
-	const float t = min( xT, yT );
+	const float t = min( min( xT, yT ), 1.0f );
 	return p + v * t;
 }
 
@@ -708,8 +708,8 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 	// Offset the line slightly to one side. This separates connections
 	// going in opposite directions between the same two nodes.
 
-	p0 += normal * 0.5f;
-	p1 += normal * 0.5f;
+	p0 += normal * 0.3f;
+	p1 += normal * 0.3f;
 
 	// Draw the line
 
@@ -722,19 +722,19 @@ void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame,
 
 	// Draw a little arrow to indicate connection direction.
 
-	const V3f tip = auxiliaryConnectionArrowPosition( dstNodeFrame, p1, -direction );
+	const V3f tip = auxiliaryConnectionArrowPosition( dstNodeFrame, p1, p0 - p1 );
 
 	const V3f leftDir = -direction + normal * 0.5f;
 	const V3f rightDir = -direction - normal * 0.5f;
 
 	glUniform3fv( g_v0Parameter, 1, ( tip ).getValue() );
-	glUniform3fv( g_v1Parameter, 1, ( tip + leftDir ).getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( tip + leftDir * 0.75 ).getValue() );
 	glUniform3fv( g_t0Parameter, 1, ( leftDir ).getValue() );
 	glUniform3fv( g_t1Parameter, 1, ( -leftDir ).getValue() );
 
 	glCallList( connectionDisplayList() );
 
-	glUniform3fv( g_v1Parameter, 1, ( tip + rightDir ).getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( tip + rightDir * 0.75 ).getValue() );
 	glUniform3fv( g_t0Parameter, 1, ( rightDir ).getValue() );
 	glUniform3fv( g_t1Parameter, 1, ( -rightDir ).getValue() );
 
