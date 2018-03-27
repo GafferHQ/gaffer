@@ -64,10 +64,6 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:minWidth", 0.0,
 
-	# Add + button for showing and hiding parameters in the NodeGraph
-	"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
-	"noduleLayout:customGadget:addButton:section", "left",
-
 	plugs = {
 
 		"name" : [
@@ -112,6 +108,9 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
+			# Add + button for showing and hiding parameters in the NodeGraph
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+
 		],
 
 		"parameters.*" : [
@@ -134,6 +133,9 @@ Gaffer.Metadata.registerNode(
 
 			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
+
+			# Add + button for showing and hiding parameters in the NodeGraph
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
 
 		],
 
@@ -308,18 +310,26 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 	if not isinstance( plug.node(), GafferScene.Shader ) :
 		return
 
-	if not plug.node()["parameters"].isAncestorOf( plug ) :
+	if not (
+		plug.node()["parameters"].isAncestorOf( plug ) or
+		plug.node()["out"].isAncestorOf( plug )
+	) :
 		return
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/HideDivider", { "divider" : True } )
+
+	if plug.direction() == plug.Direction.In :
+		numConnections = 1 if plug.getInput() else 0
+	else :
+		numConnections = len( plug.outputs() )
 
 	menuDefinition.append(
 
 		"/Hide",
 		{
 			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : plug.getInput() is None and not Gaffer.readOnly( plug ),
+			"active" : numConnections == 0 and not Gaffer.readOnly( plug ),
 		}
 
 	)
