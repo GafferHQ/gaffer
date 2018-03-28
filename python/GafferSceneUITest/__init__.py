@@ -47,6 +47,7 @@ from TranslateToolTest import TranslateToolTest
 from ScaleToolTest import ScaleToolTest
 from RotateToolTest import RotateToolTest
 from ContextAlgoTest import ContextAlgoTest
+from CameraToolTest import CameraToolTest
 
 if __name__ == "__main__":
 	unittest.main()
