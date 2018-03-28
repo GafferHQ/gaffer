@@ -228,7 +228,14 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 ]
 
 if targetAppVersion :
-	LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+	## \todo: We should probably be doing this for all targetApps,
+	# but we're limiting ourselves to the only known problem case
+	# for now. Reconsider this decision when we have fewer active
+	# app versions (and ideally more conforming to VFX Platform).
+	if targetApp == "maya" and targetAppMajorVersion == "2016" :
+		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+	else :
+		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
 
 LOCATE_DEPENDENCY_CPPPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "include" ),
