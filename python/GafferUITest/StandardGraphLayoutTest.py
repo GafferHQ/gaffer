@@ -734,5 +734,170 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( s["s"]["in"][0], Gaffer.IntPlug ) )
 		self.assertTrue( s["s"]["in"][0].getInput().isSame( s["n"]["sum"] ) )
 
+	def testSimpleAuxiliaryConnectionToNode( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = LayoutNode()
+		Gaffer.Metadata.registerPlugValue( s["n"]["top0"], "nodule:type", "" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['top0'] = 0" )
+
+		ng = GafferUI.NodeGraph( s )
+		g = ng.graphGadget()
+
+		g.getLayout().layoutNodes( g )
+
+		# In this simple case the expression node needs to be put to the left
+		# of the affected node.
+
+		self.assertTrue( g.getNodePosition( s["n"] ).x > g.getNodePosition( s["e"] ).x )
+		self.assertAlmostEqual(  g.getNodePosition( s["n"] ).y, g.getNodePosition( s["e"] ).y, delta = 0.001 )
+
+		expressionPosition = g.getNodePosition( s["e"] )
+
+		# If the expression has an input, we don't want that to affect the
+		# expression's position if it has only one output like in this case.
+
+		s["n2"] = LayoutNode()
+		g.setNodePosition( s["n2"], g.getNodePosition( s["n"] ) + imath.V2f( 0, 10 ) )
+
+		s["e"].setExpression( "parent['n']['top0'] = parent['n2']['bottom0']" )
+
+		g.getLayout().layoutNodes( g )
+
+		self.assertAlmostEqual( g.getNodePosition( s["e"] ).x, expressionPosition.x, delta = 0.001 )
+		self.assertAlmostEqual( g.getNodePosition( s["e"] ).y, expressionPosition.y, delta = 0.001 )
+
+	def testSimpleAuxiliaryConnectionToShader( self ) :
+
+		# A shader is defined as a node that has data flowing left to right as
+		# opposed to top to bottom
+
+		s = Gaffer.ScriptNode()
+		s["n"] = LayoutNode()
+
+		Gaffer.Metadata.registerPlugValue( s["n"]["left0"], "nodule:type", "" )
+
+		Gaffer.Metadata.registerPlugValue( s["n"]["top0"], "nodule:type", "" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["top1"], "nodule:type", "" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["top2"], "nodule:type", "" )
+
+		Gaffer.Metadata.registerPlugValue( s["n"]["bottom0"], "nodule:type", "" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["bottom1"], "nodule:type", "" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["bottom2"], "nodule:type", "" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['left0'] = 0" )
+
+		ng = GafferUI.NodeGraph( s )
+		g = ng.graphGadget()
+
+		g.getLayout().layoutNodes( g )
+
+		# Because the left edge is blocked by nodules, but the top edge isn't,
+		# auxiliary connections to this node should cause the expression to be
+		# put above the "shader"
+
+		self.assertTrue( g.getNodePosition( s["e"] ).y > g.getNodePosition( s["n"] ).y )
+		self.assertAlmostEqual(  g.getNodePosition( s["n"] ).x, g.getNodePosition( s["e"] ).x, delta = 0.001 )
+
+	def testSimpleAuxiliaryConnectionToNodule( self ) :
+
+		# The nodule's tangent will determine how the auxiliary node is positioned.
+
+		s = Gaffer.ScriptNode()
+		s["n"] = LayoutNode()
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['top1'] = 0" )
+
+		ng = GafferUI.NodeGraph( s )
+		g = ng.graphGadget()
+
+		g.getLayout().layoutNodes( g )
+
+		affectedNodeBounds = g.nodeGadget( s["n"] ).transformedBound()
+
+		self.assertTrue( g.getNodePosition( s["e"] ).y > g.getNodePosition( s["n"] ).y )
+		self.assertTrue( affectedNodeBounds.min().x < g.getNodePosition( s["e"] ).x < affectedNodeBounds.max().x )
+
+		s["e"].setExpression( "parent['n']['left1'] = 0" )
+
+		g.getLayout().layoutNodes( g )
+
+		self.assertTrue( g.getNodePosition( s["n"] ).x > g.getNodePosition( s["e"] ).x )
+		self.assertTrue( affectedNodeBounds.min().y < g.getNodePosition( s["e"] ).y < affectedNodeBounds.max().y )
+
+	def testMultipleAuxiliaryConnectionsToNode( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = LayoutNode()
+
+		Gaffer.Metadata.registerPlugValue( s["n"]["left0"], "nodule:type", "" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["left1"], "nodule:type", "" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["left2"], "nodule:type", "" )
+
+		s["e1"] = Gaffer.Expression()
+		s["e1"].setExpression( "parent['n']['left0'] = 0" )
+
+		s["e2"] = Gaffer.Expression()
+		s["e2"].setExpression( "parent['n']['left1'] = 0" )
+
+		s["e3"] = Gaffer.Expression()
+		s["e3"].setExpression( "parent['n']['left2'] = 0" )
+
+		ng = GafferUI.NodeGraph( s )
+		g = ng.graphGadget()
+
+		g.getLayout().layoutNodes( g )
+
+		# All expression nodes needs to be stacked above each other on the left of the affected node
+
+		self.assertTrue( g.getNodePosition( s["n"] ).x > g.getNodePosition( s["e1"] ).x )
+		self.assertAlmostEqual( g.getNodePosition( s["e1"] ).x, g.getNodePosition( s["e2"] ).x, delta = 0.001 )
+		self.assertAlmostEqual( g.getNodePosition( s["e2"] ).x, g.getNodePosition( s["e3"] ).x, delta = 0.001 )
+
+	def testAuxiliaryConnectionsToMultipleNodes( self ) :
+
+		# If an AuxiliaryNode is affecting multiple nodes, it's going to be
+		# positioned between all nodes it has connections to.
+
+		s = Gaffer.ScriptNode()
+
+		s["o"] = LayoutNode()
+		Gaffer.Metadata.registerPlugValue( s["o"]["left0"], "nodule:type", "" )
+
+		s["i1"] = LayoutNode()
+		Gaffer.Metadata.registerPlugValue( s["i1"]["left0"], "nodule:type", "" )
+
+		s["i2"] = LayoutNode()
+		Gaffer.Metadata.registerPlugValue( s["i2"]["left0"], "nodule:type", "" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['i1']['left0'] = 0\nparent['i2']['left0'] = parent['o']['right0']" )
+
+		ng = GafferUI.NodeGraph( s )
+		g = ng.graphGadget()
+
+		g.setNodePosition( s["i1"], imath.V2f( 20, 20 ) )
+		g.setNodePosition( s["i2"], imath.V2f( 20, -20 ) )
+		g.setNodePosition( s["o"], imath.V2f( -20, 0 ) )
+
+		g.getLayout().layoutNodes( g )
+
+		oBounds = g.nodeGadget( s["o"] ).transformedBound()
+		i1Bounds = g.nodeGadget( s["i1"] ).transformedBound()
+		i2Bounds = g.nodeGadget( s["i2"] ).transformedBound()
+
+		expressionPosition = g.getNodePosition( s["e"] )
+
+		self.assertTrue( expressionPosition.x < i1Bounds.min().x )
+		self.assertTrue( expressionPosition.x < i2Bounds.min().x )
+		self.assertTrue( expressionPosition.x > oBounds.max().x )
+
+		self.assertTrue( expressionPosition.y < i1Bounds.min().y )
+		self.assertTrue( expressionPosition.y > i2Bounds.max().y )
+
 if __name__ == "__main__":
 	unittest.main()
