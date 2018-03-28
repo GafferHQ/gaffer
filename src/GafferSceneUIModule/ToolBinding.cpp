@@ -36,6 +36,7 @@
 
 #include "ToolBinding.h"
 
+#include "GafferSceneUI/CameraTool.h"
 #include "GafferSceneUI/CropWindowTool.h"
 #include "GafferSceneUI/RotateTool.h"
 #include "GafferSceneUI/ScaleTool.h"
@@ -147,6 +148,10 @@ void GafferSceneUIModule::bindTools()
 	GafferBindings::NodeClass<RotateTool>( nullptr, no_init )
 		.def( init<SceneView *>() )
 		.def( "rotate", &RotateTool::rotate )
+	;
+
+	GafferBindings::NodeClass<CameraTool>( nullptr, no_init )
+		.def( init<SceneView *>() )
 	;
 
 }
