@@ -56,3 +56,23 @@ Set::MemberSignal &Set::memberRemovedSignal()
 {
 	return m_memberRemovedSignal;
 }
+
+Set::Iterator Set::begin()
+{
+	return Iterator( this, 0 );
+}
+
+Set::Iterator Set::end()
+{
+	return Iterator( this, size() );
+}
+
+Set::ConstIterator Set::begin() const
+{
+	return ConstIterator( this, 0 );
+}
+
+Set::ConstIterator Set::end() const
+{
+	return ConstIterator( this, size() );
+}

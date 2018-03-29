@@ -40,6 +40,9 @@
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/StandardNodeGadget.h"
+#include "GafferUI/AuxiliaryNodeGadget.h"
+#include "GafferUI/AuxiliaryConnectionsGadget.h"
 #include "GafferUI/Nodule.h"
 
 #include "Gaffer/BoxOut.h"
@@ -208,12 +211,15 @@ class LayoutEngine
 
 				Box3f bb = nodeGadget->bound();
 
+				bool auxiliary = bool( runTimeCast<const AuxiliaryNodeGadget>( nodeGadget ) );
+
 				VertexDescriptor v = add_vertex( m_graph );
 				m_graph[v].node = node;
 				m_graph[v].position = graphGadget->getNodePosition( node );
 				m_graph[v].bound = Box2f( V2f( bb.min.x, bb.min.y ), V2f( bb.max.x, bb.max.y ) );
 				m_graph[v].pinned = false;
 				m_graph[v].collisionGroup = 0;
+				m_graph[v].auxiliary = auxiliary;
 				m_nodesToVertices[node] = v;
 			}
 
@@ -256,6 +262,7 @@ class LayoutEngine
 					m_graph[e].sourceTangent = direction( srcNoduleTangent );
 					m_graph[e].targetTangent = direction( dstNoduleTangent );
 					m_graph[e].idealDirection = direction( srcNoduleTangent - dstNoduleTangent );
+					m_graph[e].auxiliary = false;
 				}
 			}
 
@@ -277,6 +284,22 @@ class LayoutEngine
 			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
 			{
 				if( nodes->contains( it->first ) != invert )
+				{
+					m_graph[it->second].pinned = true;
+				}
+			}
+		}
+
+		void pinNonAuxiliaryNodes( const Gaffer::Set *nodes )
+		{
+			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
+			{
+				if( nodes && !nodes->contains( it->first ) )
+				{
+					continue;
+				}
+
+				if( !m_graph[it->second].auxiliary )
 				{
 					m_graph[it->second].pinned = true;
 				}
@@ -484,6 +507,94 @@ class LayoutEngine
 			}
 		}
 
+		void addAuxiliaryConnections()
+		{
+			AuxiliaryConnectionsGadget *auxiliaryConnectionsGadget = m_graphGadget->auxiliaryConnectionsGadget();
+
+			// AuxiliaryConnections can represent more than a single connection
+			// between two nodes. By storing the ones added, we can make sure that we
+			// don't add any twice.
+			std::set<std::pair<const Node*, const Node*> > existingAuxiliaryConnections;
+
+			// In a second step we'll handle all auxiliary nodes that have incoming
+			// auxiliary connections. Of these staged vertices, we'll add additional
+			// springs to those that have more than one outgoing connection.
+			std::vector<std::pair<const Plug*, const Plug*> > stagedAuxiliaryConnectionPlugs;
+
+			for( NodesToVertices::const_iterator nodeIt = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); nodeIt != eIt; ++nodeIt )
+			{
+				for( RecursiveInputPlugIterator plugIt( nodeIt->first ); !plugIt.done(); ++plugIt )
+				{
+					const Plug *dstPlug = plugIt->get();
+					const Plug *srcPlug = dstPlug->getInput();
+
+					if( !srcPlug )
+					{
+						continue;
+					}
+
+					const Node *srcNode = srcPlug->node();
+					NodesToVertices::const_iterator srcIt = m_nodesToVertices.find( srcNode );
+					if( srcIt == m_nodesToVertices.end() )
+					{
+						continue;
+					}
+
+					const Node *dstNode = dstPlug->node();
+					if( !auxiliaryConnectionsGadget->hasConnection( srcNode, dstNode ) )
+					{
+						// Potentially an auxiliary connection represented by a StandardConnectionGadget
+						const ConnectionGadget *standardConnectionGadget = m_graphGadget->connectionGadget( dstPlug ) ;
+						if( !standardConnectionGadget || standardConnectionGadget->srcNodule() )
+						{
+							continue;
+						}
+					}
+
+					if( m_graph[nodeIt->second].auxiliary )
+					{
+						// Determining whether incoming edges (functioning as springs) need
+						// to be added to this vertex depends on the number of outgoing
+						// edges. We postpone this decision to later when we know about all
+						// outgoing connections.
+						stagedAuxiliaryConnectionPlugs.push_back( std::make_pair( srcPlug, dstPlug ) );
+						continue;
+					}
+
+					const auto nodePair = std::make_pair( srcNode, dstNode );
+					if( existingAuxiliaryConnections.find( nodePair ) != existingAuxiliaryConnections.end() )
+					{
+							continue;
+					}
+					existingAuxiliaryConnections.insert( nodePair );
+
+					addAuxiliaryConnection( srcPlug, dstPlug );
+				}
+			}
+
+			for( auto plugs : stagedAuxiliaryConnectionPlugs )
+			{
+				const Node *dstNode = plugs.second->node();
+
+				if( out_degree( m_nodesToVertices.find( dstNode )->second, m_graph ) <= 1 )
+				{
+					// Auxiliary vertices with only one outgoing connection should be put
+					// close to that connected node. No need for springs that would pull
+					// the two nodes apart.
+					continue;
+				}
+
+				auto nodePair = std::make_pair( plugs.first->node(), dstNode );
+				if( existingAuxiliaryConnections.find( nodePair ) != existingAuxiliaryConnections.end() )
+				{
+					continue;
+				}
+				existingAuxiliaryConnections.insert( nodePair );
+
+				addAuxiliaryConnection( plugs.first, plugs.second );
+			}
+		}
+
 		void clearConstraints()
 		{
 			m_constraints.clear();
@@ -587,6 +698,9 @@ class LayoutEngine
 			// State variables for use in solve().
 			V2f previousPosition;
 			V2f force;
+
+			// True if node is represented by a (smaller) AuxiliaryNodeGadget
+			bool auxiliary;
 		};
 
 		struct Edge
@@ -599,6 +713,9 @@ class LayoutEngine
 			Direction sourceTangent;
 			Direction targetTangent;
 			Direction idealDirection;
+
+			// True if edge is representing an auxiliary connection
+			bool auxiliary;
 		};
 
 		typedef boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS, Vertex, Edge> Graph;
@@ -706,9 +823,15 @@ class LayoutEngine
 			VertexIteratorRange v = vertices( m_graph );
 			for( VertexIterator it = v.first; it != v.second; ++it )
 			{
+				V2f nodePadding( padding );
+				if( m_graph[*it].auxiliary )
+				{
+					nodePadding *= 0.5;
+				}
+
 				Box2f b = m_graph[*it].bound;
-				b.min = b.min + m_graph[*it].position - padding;
-				b.max = b.max + m_graph[*it].position + padding;
+				b.min = b.min + m_graph[*it].position - nodePadding;
+				b.max = b.max + m_graph[*it].position + nodePadding;
 				bounds.push_back( b );
 				vertexDescriptors.push_back( *it );
 			}
@@ -773,6 +896,11 @@ class LayoutEngine
 
 		int collisionSeparationAxis( VertexDescriptor vertex1, VertexDescriptor vertex2 )
 		{
+			if( m_graph[vertex1].auxiliary && m_graph[vertex2].auxiliary )
+			{
+				return 1; // y-axis
+			}
+
 			bool foundHorizontalConnection = false;
 			for( int i = 0; i < 2; ++i )
 			{
@@ -895,6 +1023,102 @@ class LayoutEngine
 				Graph *m_graph;
 
 		};
+
+		void addAuxiliaryConnection( const Plug *srcPlug, const Plug *dstPlug )
+		{
+			const Node *srcNode = srcPlug->node();
+			const Node *dstNode = dstPlug->node();
+
+			NodesToVertices::const_iterator srcIt = m_nodesToVertices.find( srcNode );
+			NodesToVertices::const_iterator dstIt = m_nodesToVertices.find( dstNode );
+
+			const NodeGadget *srcNodeGadget = m_graphGadget->nodeGadget( srcNode );
+			const NodeGadget *dstNodeGadget = m_graphGadget->nodeGadget( dstNode );
+			const Nodule *srcNodule = srcNodeGadget->nodule( srcPlug );
+			const Nodule *dstNodule = dstNodeGadget->nodule( dstPlug );
+
+			// Determine if default should be laying out nodes side by side or stacked on top of each other.
+			const V3f defaultDstTangent = m_graph[dstIt->second].auxiliary ? V3f( -1, 0, 0 ) : defaultTangent( dstNodeGadget );
+
+			const V3f dstTangent = !dstNodule ? defaultDstTangent : dstNodeGadget->connectionTangent( dstNodule );
+			V3f srcTangent = !srcNodule ? -1.0f * defaultDstTangent : srcNodeGadget->connectionTangent( srcNodule );
+
+			// Ajust tangent if the auxiliary connection is represented by a
+			// StandardConnectionGadget and has a dstNodule.
+			// \todo: Inverse case needs handling once we draw those connections correctly.
+			if( dstNodule && !srcNodule )
+			{
+				srcTangent = -1.0f * dstTangent;
+			}
+
+			Direction idealDirection = direction( srcTangent - dstTangent );
+
+			V3f srcOffset, dstOffset;
+			if( srcNodule )
+			{
+				srcOffset = srcNodule->transformedBound( srcNodeGadget ).center();
+			}
+			else
+			{
+				srcOffset = V3f( .5 * idealDirection.x, .5 * idealDirection.y, 0 ) * srcNodeGadget->bound().size();
+			}
+
+			if( dstNodule )
+			{
+				dstOffset = dstNodule->transformedBound( dstNodeGadget ).center();
+			}
+			else
+			{
+				dstOffset = V3f( -.5 * idealDirection.x, -.5 * idealDirection.y, 0 ) * dstNodeGadget->bound().size();
+			}
+
+			EdgeDescriptor e = add_edge( srcIt->second, dstIt->second, m_graph ).first;
+			m_graph[e].sourceTangent = direction( srcTangent );
+			m_graph[e].targetTangent = direction( dstTangent );
+			m_graph[e].idealDirection = idealDirection;
+			m_graph[e].sourceOffset = V2f( srcOffset.x, srcOffset.y );
+			m_graph[e].targetOffset = V2f( dstOffset.x, dstOffset.y );
+			m_graph[e].auxiliary = true;
+		}
+
+		// Defaulting to putting auxiliary nodes to the left, unless there are nodules
+		// on the left, but none on the top edge
+		V3f defaultTangent( const NodeGadget *dstNodeGadget )
+		{
+			V3f up( 0, 1, 0 );
+			V3f left( -1, 0, 0 );
+
+			const StandardNodeGadget *standardNodeGadget = runTimeCast<const StandardNodeGadget>( dstNodeGadget );
+
+			// For auxiliary edges we default to a horizontal tangent
+			if( !standardNodeGadget )
+			{
+				return left;
+			}
+
+			bool leftEdgeBlocked = false;
+			for( RecursiveNoduleIterator it( dstNodeGadget ); !it.done(); ++it )
+			{
+				V3f noduleTangent = dstNodeGadget->connectionTangent( it->get() );
+
+				if( noduleTangent == up )
+				{
+					// If the top edge is blocked by nodules, default to using the left edge for connections
+					return left;
+				}
+				else if( noduleTangent == left && !leftEdgeBlocked )
+				{
+					leftEdgeBlocked = true;
+				}
+			}
+
+			if( leftEdgeBlocked )
+			{
+				return up;
+			}
+
+			return left;
+		}
 
 		GraphGadget *m_graphGadget;
 		Graph m_graph;
@@ -1027,6 +1251,17 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 
 	layout.clearConstraints();
 	layout.addConnectionDirectionConstraints();
+	layout.solve( true );
+
+	layout.applyPositions();
+
+	// do a third round of layout, now positioning nodes that are not represented
+	// by StandardConnectionGadgets next to the affected node or in the middle of
+	// multiple affected nodes (this is done for Expressions, for example).
+
+	layout.pinNonAuxiliaryNodes( nodes );
+	layout.clearConstraints();
+	layout.addAuxiliaryConnections();
 	layout.solve( true );
 
 	layout.applyPositions();
