@@ -295,6 +295,9 @@ IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePa
 	{
 		CompoundObjectPtr result = new CompoundObject;
 
+		/// \todo Remove hardcoded GL-specific attributes,
+		/// and consider removing GL line width plugs too.
+
 		result->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
 		result->members()["gl:smoothing:lines"] = new BoolData( true );
 
