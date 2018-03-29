@@ -103,6 +103,11 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		bool getCameraEditable() const;
 		void setCameraEditable( bool editable );
 
+		/// The centre of interest is the depth (in camera space)
+		/// of a pivot about which the Alt+drag camera motion operates.
+		void setCentreOfInterest( float centreOfInterest );
+		float getCentreOfInterest();
+
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );

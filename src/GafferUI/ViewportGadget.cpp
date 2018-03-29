@@ -685,6 +685,16 @@ void ViewportGadget::setCameraEditable( bool editable )
 	m_cameraEditable = editable;
 }
 
+void ViewportGadget::setCentreOfInterest( float centreOfInterest )
+{
+	m_cameraController->setCentreOfInterest( centreOfInterest );
+}
+
+float ViewportGadget::getCentreOfInterest()
+{
+	return m_cameraController->getCentreOfInterest();
+}
+
 void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController->frame( box );
