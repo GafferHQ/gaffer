@@ -1,3 +1,49 @@
+0.45.1.0
+========
+
+Improvements
+------------
+
+- NodeGraph (#2495) :
+  - Added automatic layout for auxiliary nodes.
+  - Improved aesthetics of auxiliary nodes and connections.
+- Viewer :
+  - PointsPrimitives now default to drawing as GL points. The Drawing dropdown menu can
+    be used to display them as disks instead (#2512).
+  - Enabled anti-aliasing in the 3d view (#2521).
+- Application : Gaffer processes are now named `gaffer ...` rather than
+  `python gaffer.py ...` (#2511).
+- Expression : Added support for `"x" in context` Python syntax (#2513).
+- NodeEditor : Added Lock/Unlock menu items to the tool menu (#2517).
+- Shader : Added support for showing/hiding output parameters in the NodeGraph (#2515).
+- Arnold : Enabled procedural instancing during interactive renders. This requires a
+  minimum Arnold version of 5.0.1.4 (#2519).
+
+Fixes
+-----
+
+- Viewer : Fixed inaccurate picking of points and curves (#2512).
+- Transform tools (#2137, #2516) :
+  - Fixed bug where pivot was ignored.
+  - Fixed bug affecting Transform node when space was set to World.
+  - Fixed drawing order so handles are always on top.
+- NodeGraph :
+  - Fixed kink in connection drawing (#2500).
+  - Fixed inaccurate picking in the corners of rounded nodes (#2500).
+- NodeEditor (#2517) :
+  - Fixed update bug which allowed plugs to be edited after an
+    ancestor node was made read only.
+  - Fixed bugs which allowed plugs to be added to read only nodes.
+- Encapsulate : Fixed double transformation bug (#2518).
+
+API
+---
+
+- Set : Added iterators (#2495).
+- MetadataAlgo (#2517) :
+  - Added `ancestorAffectedByChange()` function.
+  - Added `readOnlyAffectedByChange()` functions.
+
 0.45.0.0
 ========
 
