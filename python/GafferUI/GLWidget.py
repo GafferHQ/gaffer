@@ -69,7 +69,8 @@ class GLWidget( GafferUI.Widget ) :
 	BufferOptions = IECore.Enum.create(
 		"Alpha",
 		"Depth",
-		"Double"
+		"Double",
+		"AntiAlias"
 	)
 
 	## Note that you won't always get the buffer options you ask for - a best fit is found
@@ -83,6 +84,11 @@ class GLWidget( GafferUI.Widget ) :
 		format.setAlpha( self.BufferOptions.Alpha in bufferOptions )
 		format.setDepth( self.BufferOptions.Depth in bufferOptions )
 		format.setDoubleBuffer( self.BufferOptions.Double in bufferOptions )
+
+		self.__multisample = self.BufferOptions.AntiAlias in bufferOptions
+		if self.__multisample:
+			format.setSampleBuffers( True )
+			format.setSamples( 8 )
 
 		if hasattr( format, "setVersion" ) : # setVersion doesn't exist in qt prior to 4.7.
 			format.setVersion( 2, 1 )
@@ -193,6 +199,9 @@ class GLWidget( GafferUI.Widget ) :
 		## \todo: this might be removable if we can prove resizeEvent
 		# is always called first.
 		IECoreGL.init( True )
+
+		if self.__multisample:
+			GL.glEnable( GL.GL_MULTISAMPLE )
 
 		self._draw()
 
