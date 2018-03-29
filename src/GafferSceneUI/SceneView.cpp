@@ -349,6 +349,9 @@ class SceneView::Grid : public boost::signals::trackable
 			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new SceneGadget )
 		{
 			m_node->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
+			m_node->gridColorPlug()->setValue( Color3f( 0.21 ) );
+			m_node->gridPixelWidthPlug()->setValue( 1 );
+			m_node->borderColorPlug()->setValue( Color3f( 0.1 ) );
 
 			ValuePlugPtr plug = new ValuePlug( "grid" );
 			view->addChild( plug );
@@ -367,6 +370,15 @@ class SceneView::Grid : public boost::signals::trackable
 
 			m_gadget->setMinimumExpansionDepth( 1 );
 			m_gadget->setScene( m_node->outPlug() );
+
+			// Turn off line smoothing because we're using MSAA in the
+			// viewer anyway, and line smoothing doesn't interact well
+			// with it on all drivers.
+			m_gadget->baseState()->add(
+				new IECoreGL::LineSmoothingStateComponent( false ),
+				/* override = */ true
+			);
+
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 
 			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
