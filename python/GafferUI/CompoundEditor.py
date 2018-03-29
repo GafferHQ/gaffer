@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import gc
 import functools
 import collections
 
@@ -294,22 +293,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		splitContainer.setOrientation( subPanelToKeepFrom.getOrientation() )
 
-		# schedule some garbage collection to hoover up the remains. we do this in a delayed
-		# way in case the menu we're called from is holding on to references to the ui elements
-		# which are going to die.
-		## \todo I don't think this should be necessary now we're using WeakMethods for slots. It
-		# may be a good idea to remove it, as it may otherwise mask problems temporarily.
-		GafferUI.EventLoop.addIdleCallback( self.__collect )
-
 	def __removeCurrentTab( self, tabbedContainer ) :
 
 		currentTab = tabbedContainer.getCurrent()
 		tabbedContainer.remove( currentTab )
-
-		# schedule some garbage collection to hoover up the remains. we do this in a delayed
-		# way in case the menu we're called from is holding on to references to the ui elements
-		# which are going to die.
-		GafferUI.EventLoop.addIdleCallback( self.__collect )
 
 	def __updateTabVisibility( self, tabbedContainer, tabsVisible ) :
 
@@ -337,17 +324,6 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		sizes = splitContainer.getSizes()
 		return float( sizes[0] ) / sum( sizes )
-
-	@staticmethod
-	def __collect() :
-
-		try :
-			while gc.collect() :
-				pass
-		except :
-			pass
-
-		return False
 
 # The internal class used to allow hierarchical splitting of the layout.
 class _SplitContainer( GafferUI.SplitContainer ) :
