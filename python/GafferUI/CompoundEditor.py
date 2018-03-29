@@ -69,8 +69,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		def __recurse( w ) :
 			assert( isinstance( w, _SplitContainer ) )
-			if len( w ) > 1 :
-				# it's split
+			if w.isSplit() :
 				return __recurse( w[0] ) + __recurse( w[1] )
 			else :
 				return [ e for e in w[0] if isinstance( e, type ) ]
@@ -82,7 +81,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 	def addEditor( self, editor ) :
 
 		def __findContainer( w, editorType ) :
-			if len( w ) > 1 :
+			if w.isSplit() :
 				ideal, backup = __findContainer( w[0], editorType )
 				if ideal is not None :
 					return ideal, backup
@@ -96,7 +95,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		ideal, backup = __findContainer( self.__splitContainer, editor.__class__ )
 		container = ideal if ideal is not None else backup
 
-		self.__addChild( container, editor )
+		container[0].addEditor( editor )
 
 	## A signal emitted whenever an editor is added -
 	# the signature is ( compoundEditor, childEditor ).
@@ -108,8 +107,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		assert( isinstance( w, _SplitContainer ) )
 
-		if len( w ) > 1 :
-			# it's split
+		if w.isSplit() :
 			sizes = w.getSizes()
 			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
 			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, self.__serialise( w[0] ), self.__serialise( w[1] ) )
@@ -134,46 +132,6 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % self.__serialise( self.__splitContainer )
 
-	def _layoutMenuDefinition( self, tabbedContainer ) :
-
-		splitContainer = tabbedContainer.ancestor( _SplitContainer )
-
-		m = IECore.MenuDefinition()
-
-		layouts = GafferUI.Layouts.acquire( self.scriptNode().applicationRoot() )
-		for c in layouts.registeredEditors() :
-			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : functools.partial( self.__addChild, splitContainer, c ) } )
-
-		m.append( "/divider", { "divider" : True } )
-
-		removeItemAdded = False
-
-		splitContainerParent = splitContainer.parent()
-		if isinstance( splitContainerParent, _SplitContainer ) :
-			m.append( "Remove Panel", { "command" : functools.partial( self.__join, splitContainerParent, 1 - splitContainerParent.index( splitContainer ) ) } )
-			removeItemAdded = True
-
-		currentTab = tabbedContainer.getCurrent()
-		if currentTab :
-			m.append( "/Remove " + tabbedContainer.getLabel( currentTab ), { "command" : functools.partial( self.__removeCurrentTab, tabbedContainer ) } )
-			removeItemAdded = True
-
-		if removeItemAdded :
-			m.append( "/divider2", { "divider" : True } )
-
-		tabsVisible = tabbedContainer.getTabsVisible()
-		# because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
-		# users know it exists. it is actually implemented directly in __keyPress.
-		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : functools.partial( Gaffer.WeakMethod( self.__updateTabVisibility ), tabbedContainer, not tabsVisible ), "shortCut" : "Ctrl+T" } )
-		m.append( "/TabsDivider", { "divider" : True } )
-
-		m.append( "/Split Left", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
-		m.append( "/Split Right", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
-		m.append( "/Split Bottom", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
-		m.append( "/Split Top", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
-
-		return m
-
 	def __keyPress( self, unused, event ) :
 
 		if event.key == "Space" :
@@ -188,7 +146,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 			while widget is not None :
 				parent = widget.parent()
-				if isinstance( parent, _SplitContainer ) and len( parent ) > 1 :
+				if isinstance( parent, _SplitContainer ) and parent.isSplit() :
 					childIndex = parent.index( widget )
 					ancestors.append(
 						Ancestor(
@@ -214,7 +172,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 			tabbedContainer = GafferUI.Widget.widgetAt( GafferUI.Widget.mousePosition(), _TabbedContainer )
 			if tabbedContainer is not None :
-				self.__updateTabVisibility( tabbedContainer, not tabbedContainer.getTabsVisible() )
+				tabbedContainer.setTabsVisible( not tabbedContainer.getTabsVisible() )
 
 		return False
 
@@ -222,7 +180,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
 
-			self.__split( splitContainer, children[0], 0 )
+			splitContainer.split( children[0], 0 )
 			self.__addChildren( splitContainer[0], children[2][0] )
 			self.__addChildren( splitContainer[1], children[2][1] )
 			splitContainer.setSizes( [ children[1], 1.0 - children[1] ] )
@@ -231,91 +189,18 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			if isinstance( children, tuple ) :
 				# backwards compatibility - tabs provided as a tuple
 				for c in children :
-					self.__addChild( splitContainer, c )
+					splitContainer[0].addEditor( c )
 			else :
 				# new format - various fields provided by a dictionary
 				for i, c in enumerate( children["tabs"] ) :
-					editor = self.__addChild( splitContainer, c )
+					editor = splitContainer[0].addEditor( c )
 					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
 						editor.setNodeSet( Gaffer.StandardSet() )
 
 				if "currentTab" in children :
 					splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
 
-				self.__updateTabVisibility( splitContainer[0], children.get( "tabsVisible", True ) )
-
-	def __addChild( self, splitContainer, nameOrEditor ) :
-
-		assert( len( splitContainer ) == 1 )
-
-		tabbedContainer = splitContainer[0]
-
-		if isinstance( nameOrEditor, basestring ) :
-			editor = GafferUI.EditorWidget.create( nameOrEditor, self.scriptNode() )
-		else :
-			editor = nameOrEditor
-			assert( editor.scriptNode().isSame( self.scriptNode() ) )
-
-		tabbedContainer.insert( len( tabbedContainer ), editor )
-		tabbedContainer.setCurrent( editor )
-
-		return editor
-
-	def __split( self, splitContainer, orientation, subPanelIndex ) :
-
-		assert( len( splitContainer ) == 1 ) # we should not be split already
-
-		sc1 = _SplitContainer()
-		sc1.append( splitContainer[0] )
-
-		assert( len( splitContainer ) == 0 )
-
-		sc2 = _SplitContainer()
-		sc2.append( _TabbedContainer() )
-
-		if subPanelIndex==1 :
-			splitContainer.append( sc1 )
-			splitContainer.append( sc2 )
-		else :
-			splitContainer.append( sc2 )
-			splitContainer.append( sc1 )
-
-		assert( len( splitContainer ) == 2 )
-
-		splitContainer.setOrientation( orientation )
-
-	def __join( self, splitContainer, subPanelIndex ) :
-
-		subPanelToKeepFrom = splitContainer[subPanelIndex]
-		del splitContainer[:]
-		for w in subPanelToKeepFrom[:] :
-			splitContainer.append( w )
-
-		splitContainer.setOrientation( subPanelToKeepFrom.getOrientation() )
-
-	def __removeCurrentTab( self, tabbedContainer ) :
-
-		currentTab = tabbedContainer.getCurrent()
-		tabbedContainer.remove( currentTab )
-
-	def __updateTabVisibility( self, tabbedContainer, tabsVisible ) :
-
-		tabbedContainer.setTabsVisible( tabsVisible )
-
-		# This is a shame-faced hack to make sure the timeline in the default layout can't be compressed
-		# or stretched vertically. Fixing this properly is quite involved, because we'd need to find a sensible
-		# generic way for TabbedContainer to set a min/max height based on it's children, and then a sensible
-		# generic rule for what SplitContainer should do in its __applySizePolicy() method.
-		if len( tabbedContainer ) == 1 and isinstance( tabbedContainer[0], GafferUI.Timeline ) :
-			if not tabsVisible :
-				# Fix height so timeline is not resizable
-				tabbedContainer._qtWidget().setFixedHeight( tabbedContainer[0]._qtWidget().sizeHint().height() )
-				tabbedContainer.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
-			else :
-				# Undo the above
-				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by Qt.py, but needed to remove fixed height
-				tabbedContainer._qtWidget().setFixedHeight( QWIDGETSIZE_MAX )
-				tabbedContainer.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
+				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
 
 	@staticmethod
 	def __handlePosition( splitContainer ) :
@@ -325,12 +210,61 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		sizes = splitContainer.getSizes()
 		return float( sizes[0] ) / sum( sizes )
 
+# Internal widget classes
+# =======================
+#
+# These assist in creating the layout but are not part of the public API,
+# which is provided solely by the methods of the CompoundEditor itself.
+#
+# > Todo : We could further insulate the CompoundEditor from the details
+# > of these classes by not exposing the SplitContainer/TabbedContainer as
+# > base classes but instead using a has-a relationship. We could also move
+# > the keypress handling out of CompoundEditor.
+
 # The internal class used to allow hierarchical splitting of the layout.
 class _SplitContainer( GafferUI.SplitContainer ) :
 
 	def __init__( self, **kw ) :
 
 		GafferUI.SplitContainer.__init__( self, **kw )
+
+	def isSplit( self ) :
+
+		return len( self ) == 2
+
+	def split( self, orientation, subPanelIndex ) :
+
+		assert( not self.isSplit() )
+
+		sc1 = _SplitContainer()
+		sc1.append( self[0] )
+
+		assert( len( self ) == 0 )
+
+		sc2 = _SplitContainer()
+		sc2.append( _TabbedContainer() )
+
+		if subPanelIndex==1 :
+			self.append( sc1 )
+			self.append( sc2 )
+		else :
+			self.append( sc2 )
+			self.append( sc1 )
+
+		assert( len( self ) == 2 )
+
+		self.setOrientation( orientation )
+
+	def join( self, subPanelIndex ) :
+
+		assert( self.isSplit() )
+
+		subPanelToKeepFrom = self[subPanelIndex]
+		del self[:]
+		for w in subPanelToKeepFrom[:] :
+			self.append( w )
+
+		self.setOrientation( subPanelToKeepFrom.getOrientation() )
 
 # The internal class used to keep a bunch of editors in tabs, updating the titles
 # when appropriate, and keeping a track of the pinning of nodes.
@@ -356,24 +290,80 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
-	## \todo We're overriding this so we can connect to titleChanged(). This works OK
-	# because we know that CompoundEditor only uses insert(), and not any other means of
-	# adding a child. A more general solution might be to have a Container.childAddedSignal()
-	# method so we can get called no matter how we get a new child.
-	def insert( self, index, editor ) :
+	def addEditor( self, nameOrEditor ) :
 
-		GafferUI.TabbedContainer.insert( self, index, editor )
+		if isinstance( nameOrEditor, basestring ) :
+			editor = GafferUI.EditorWidget.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
+		else :
+			editor = nameOrEditor
+
+		self.insert( len( self ), editor )
+		self.setCurrent( editor )
 
 		self.setLabel( editor, editor.getTitle() )
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 
 		self.ancestor( CompoundEditor ).editorAddedSignal()( self.ancestor( CompoundEditor ), editor )
 
+		return editor
+
+	def setTabsVisible( self, tabsVisible ) :
+
+		GafferUI.TabbedContainer.setTabsVisible( self, tabsVisible )
+
+		# This is a shame-faced hack to make sure the timeline in the default layout can't be compressed
+		# or stretched vertically. Fixing this properly is quite involved, because we'd need to find a sensible
+		# generic way for TabbedContainer to set a min/max height based on it's children, and then a sensible
+		# generic rule for what SplitContainer should do in its __applySizePolicy() method.
+		if len( self ) == 1 and isinstance( self[0], GafferUI.Timeline ) :
+			if not tabsVisible :
+				# Fix height so timeline is not resizable
+				self._qtWidget().setFixedHeight( self[0]._qtWidget().sizeHint().height() )
+				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+			else :
+				# Undo the above
+				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by Qt.py, but needed to remove fixed height
+				self._qtWidget().setFixedHeight( QWIDGETSIZE_MAX )
+				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
+
 	def __layoutMenuDefinition( self ) :
 
-		# the menu definition for the layout is dealt with by the CompoundEditor, because only it
-		# has the high-level view necessary to do splitting of layouts and so on.
-		return self.ancestor( CompoundEditor )._layoutMenuDefinition( self )
+		m = IECore.MenuDefinition()
+
+		layouts = GafferUI.Layouts.acquire( self.ancestor( CompoundEditor ).scriptNode().applicationRoot() )
+		for c in layouts.registeredEditors() :
+			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : functools.partial( Gaffer.WeakMethod( self.addEditor ), c ) } )
+
+		m.append( "/divider", { "divider" : True } )
+
+		removeItemAdded = False
+
+		splitContainer = self.ancestor( _SplitContainer )
+		splitContainerParent = splitContainer.parent()
+		if isinstance( splitContainerParent, _SplitContainer ) :
+			m.append( "Remove Panel", { "command" : functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) } )
+			removeItemAdded = True
+
+		currentTab = self.getCurrent()
+		if currentTab is not None :
+			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeCurrentTab ) } )
+			removeItemAdded = True
+
+		if removeItemAdded :
+			m.append( "/divider2", { "divider" : True } )
+
+		tabsVisible = self.getTabsVisible()
+		# Because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
+		# users know it exists. It is actually implemented directly in __keyPress.
+		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : functools.partial( Gaffer.WeakMethod( self.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
+		m.append( "/TabsDivider", { "divider" : True } )
+
+		m.append( "/Split Left", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
+		m.append( "/Split Right", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
+		m.append( "/Split Bottom", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
+		m.append( "/Split Top", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
+
+		return m
 
 	def __titleChanged( self, editor ) :
 
@@ -466,3 +456,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__pinningButton.setHighlighted( False )
 
 		return True
+
+	def __removeCurrentTab( self ) :
+
+		self.remove( self.getCurrent() )
