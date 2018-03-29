@@ -860,6 +860,7 @@ class SceneView::Camera : public boost::signals::trackable
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
 				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
+				m_originalCentreOfInterest( m_view->viewportGadget()->getCentreOfInterest() ),
 				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
@@ -1059,6 +1060,7 @@ class SceneView::Camera : public boost::signals::trackable
 				{
 					m_originalCamera = m_view->viewportGadget()->getCamera()->copy();
 					m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
+					m_originalCentreOfInterest = m_view->viewportGadget()->getCentreOfInterest();
 				}
 				m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 			}
@@ -1115,6 +1117,7 @@ class SceneView::Camera : public boost::signals::trackable
 			{
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
 				m_view->viewportGadget()->setCameraTransform( m_originalCameraTransform );
+				m_view->viewportGadget()->setCentreOfInterest( m_originalCentreOfInterest );
 				m_view->viewportGadget()->setCameraEditable( true );
 				m_view->hideFilter()->pathsPlug()->setToDefault();
 				return;
@@ -1316,6 +1319,7 @@ class SceneView::Camera : public boost::signals::trackable
 		/// return to it after looking through a scene camera.
 		IECoreScene::CameraPtr m_originalCamera;
 		M44f m_originalCameraTransform;
+		float m_originalCentreOfInterest;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;
