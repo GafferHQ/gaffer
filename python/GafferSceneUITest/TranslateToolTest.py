@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import math
 
 import imath
@@ -422,6 +423,34 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual(
 			tool.handlesTransform(), imath.M44f()
 		)
+
+	def testContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addMember( "enabled", True )
+		script["variables"].addMember( "x", 1.0 )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["plane"]["transform"]["translate"]["x"] = context["x"]
+			parent["plane"]["enabled"] = context["enabled"]
+			"""
+		) )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		view.setContext( script.context() )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.selection().path, "/plane" )
+		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
 
 if __name__ == "__main__":
 	unittest.main()
