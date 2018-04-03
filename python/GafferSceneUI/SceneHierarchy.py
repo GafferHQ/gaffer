@@ -173,11 +173,13 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 			contextCopy = Gaffer.Context( self.getContext() )
 			for f in self.__filter.getFilters() :
 				f.setContext( contextCopy )
-			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
+			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+				self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
 			self.__transferExpansionFromContext()
 			self.__transferSelectionFromContext()
 		else :
-			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+				self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
 
 	def __expansionChanged( self, pathListing ) :
 
