@@ -277,6 +277,7 @@ from NodeFinderDialogue import NodeFinderDialogue
 from ConnectionPlugValueWidget import ConnectionPlugValueWidget
 from ButtonPlugValueWidget import ButtonPlugValueWidget
 import ViewUI
+import ToolUI
 from Playback import Playback
 from UIEditor import UIEditor
 import GraphBookmarksUI
