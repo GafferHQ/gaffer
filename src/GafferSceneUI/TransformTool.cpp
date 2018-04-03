@@ -440,9 +440,16 @@ void TransformTool::updateSelection() const
 			ScenePlug::stringToPath( selection->readable()[0], newSelection.path );
 		}
 	}
-	if( newSelection.path.empty() || !exists( scenePlug(), newSelection.path ) )
+	if( newSelection.path.empty() )
 	{
 		return;
+	}
+	{
+		Context::Scope scope( view()->getContext() );
+		if( !SceneAlgo::exists( scenePlug(), newSelection.path ) )
+		{
+			return;
+		}
 	}
 
 	// Do an evaluation of the transform hash for our selection,
