@@ -477,9 +477,16 @@ void TransformTool::updateSelection() const
 			newSelection.path = *it;
 		}
 	}
-	if( newSelection.path.empty() || !SceneAlgo::exists( scenePlug(), newSelection.path ) )
+	if( newSelection.path.empty() )
 	{
 		return;
+	}
+	{
+		Context::Scope scope( view()->getContext() );
+		if( !SceneAlgo::exists( scenePlug(), newSelection.path ) )
+		{
+			return;
+		}
 	}
 
 	// Do an evaluation of the transform hash for our selection,
