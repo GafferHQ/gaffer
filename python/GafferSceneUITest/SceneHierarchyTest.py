@@ -37,6 +37,7 @@
 import IECore
 
 import Gaffer
+import GafferUI
 import GafferUITest
 import GafferScene
 import GafferSceneUI
@@ -86,6 +87,46 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		self.waitForIdle( 1000 )
 		self.assertExpanded( script.context(), "/", True )
 		self.assertExpanded( script.context(), "/group", False )
+
+	def testDeselectAndReselectNode( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+
+		with GafferUI.Window() as w :
+			sceneHierarchy = GafferSceneUI.SceneHierarchy( script )
+
+		w.setVisible( True )
+
+		sceneHierarchy.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
+
+		groupPathMatcher = IECore.PathMatcher( [ "/group" ] )
+		planePathMatcher = IECore.PathMatcher( [ "/group/plane" ] )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), groupPathMatcher )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), planePathMatcher )
+
+		def assertExpectedState() :
+
+			self.waitForIdle( 10000 )
+
+			self.assertEqual(
+				GafferSceneUI.ContextAlgo.getExpandedPaths( script.context() ),
+				groupPathMatcher
+			)
+			self.assertEqual(
+				GafferSceneUI.ContextAlgo.getSelectedPaths( script.context() ),
+				planePathMatcher
+			)
+
+		assertExpectedState()
+
+		sceneHierarchy.setNodeSet( Gaffer.StandardSet() )
+		assertExpectedState()
+
+		sceneHierarchy.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
+		assertExpectedState()
 
 if __name__ == "__main__":
 	unittest.main()
