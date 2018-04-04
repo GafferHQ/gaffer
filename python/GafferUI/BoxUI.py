@@ -279,15 +279,6 @@ def __unpromote( plug ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.PlugAlgo.unpromote( plug )
 
-def __promoteToBoxEnabledPlug( box, plug ) :
-
-	with Gaffer.UndoScope( box.ancestor( Gaffer.ScriptNode ) ) :
-		enabledPlug = box.getChild( "enabled" )
-		if enabledPlug is None :
-			enabledPlug = Gaffer.BoolPlug( "enabled", defaultValue = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		box["enabled"] = enabledPlug
-		plug.setInput( enabledPlug )
-
 def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 	node = plug.node()
@@ -313,13 +304,6 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 				"command" : functools.partial( __promote, plug.parent() ),
 				"active" : not readOnly,
 			} )
-
-		if isinstance( node, Gaffer.DependencyNode ) :
-			if plug.isSame( node.enabledPlug() ) :
-				menuDefinition.append( "/Promote to %s.enabled" % box.getName(), {
-					"command" : functools.partial( __promoteToBoxEnabledPlug, box, plug ),
-					"active" : not readOnly,
-				} )
 
 	elif Gaffer.PlugAlgo.isPromoted( plug ) :
 
