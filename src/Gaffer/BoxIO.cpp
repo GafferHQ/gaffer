@@ -213,11 +213,6 @@ void BoxIO::setup( const Plug *plug )
 		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
 		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
-		if( plug->direction() == Plug::In )
-		{
-			setFrom( inPlugInternal(), plug );
-		}
-
 		inPlugInternal()->setFlags( Plug::Serialisable, true );
 		outPlugInternal()->setFlags( Plug::Serialisable, true );
 		applyDynamicFlag( inPlugInternal() );
@@ -503,6 +498,11 @@ Plug *BoxIO::promote( Plug *plug )
 	box->addChild( boxIO );
 	boxIO->namePlug()->setValue( promotedName( plug ) );
 	boxIO->setup( plug );
+
+	if( plug->direction() == Plug::In )
+	{
+		setFrom( boxIO->promotedPlug(), plug );
+	}
 
 	connect( plug, boxIO->plug() );
 

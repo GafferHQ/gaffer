@@ -359,5 +359,21 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( s2["a"]["shader"].source().isSame( s2["Box"]["s"]["out"] ) )
 
+	def testInsertBoxIO( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferScene.ShaderAssignment()
+		s["n2"] = GafferScene.ShaderAssignment()
+		s["n2"]["in"].setInput( s["n1"]["out"] )
+		s["n3"] = GafferScene.ShaderAssignment()
+		s["n3"]["in"].setInput( s["n2"]["out"] )
+
+		box = Gaffer.Box.create( s, Gaffer.StandardSet( { s["n2"] } ) )
+		Gaffer.BoxIO.insert( box )
+
+		self.assertTrue( box["n2"]["in"].source().isSame( s["n1"]["out"] ) )
+		self.assertTrue( s["n3"]["in"].source().isSame( box["n2"]["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
