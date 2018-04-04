@@ -108,6 +108,12 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void setCentreOfInterest( float centreOfInterest );
 		float getCentreOfInterest();
 
+		/// By default, the motion of orthographic cameras is
+		/// constrained to the image plane during Alt+drag interaction.
+		/// To allow full 3D movement call `setOrthographic2D( true )`.
+		void setOrthographic3D( bool orthographic3D );
+		const bool getOrthographic3D() const;
+
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );

@@ -1356,6 +1356,8 @@ SceneView::SceneView( const std::string &name )
 	matrix.rotate( IECore::degreesToRadians( V3f( -25, 45, 0 ) ) );
 	viewportGadget()->setCameraTransform( matrix );
 
+	viewportGadget()->setOrthographic3D( true );
+
 	// add plugs and signal handling for them
 
 	storeIndexOfNextChild( g_firstPlugIndex );

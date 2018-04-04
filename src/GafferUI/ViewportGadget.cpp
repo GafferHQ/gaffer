@@ -99,7 +99,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 	public :
 
 		CameraController( IECoreScene::CameraPtr camera )
-			:	m_centreOfInterest( 1.0f )
+			:	m_centreOfInterest( 1.0f ), m_orthographic3D( false )
 		{
 			setCamera( camera );
 		}
@@ -151,6 +151,16 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		float getCentreOfInterest()
 		{
 			return m_centreOfInterest;
+		}
+
+		void setOrthographic3D( bool orthographic3D )
+		{
+			m_orthographic3D = orthographic3D;
+		}
+
+		bool getOrthographic3D() const
+		{
+			return m_orthographic3D;
 		}
 
 		enum ScreenWindowAdjustment
@@ -226,13 +236,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) )
 		{
-			// make a matrix to centre the camera on the box, with the appropriate view direction
+			// Make a matrix to centre the camera on the box, with the appropriate view direction.
 			M44f cameraMatrix = rotationMatrixWithUpDir( V3f( 0, 0, -1 ), viewDirection, upVector );
 			M44f translationMatrix;
 			translationMatrix.translate( box.center() );
 			cameraMatrix *= translationMatrix;
 
-			// translate the camera back until the box is completely visible
+			// Now translate the camera back until the box is completely visible. How
+			// we do this exactly depends on the camera projection.
 			M44f inverseCameraMatrix = cameraMatrix.inverse();
 			Box3f cBox = transform( box, inverseCameraMatrix );
 
@@ -252,20 +263,40 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			}
 			else
 			{
-				// orthographic. translate to front of box and set screen window
-				// to frame the box, maintaining the aspect ratio of the screen window.
-				m_centreOfInterest = cBox.max.z + m_clippingPlanes->readable()[0] + 0.1; // 0.1 is a fudge factor
+				// Orthographic. Translate to front of box.
+				// We need to clamp the near clipping plane to >= 0.0f because
+				// the LightToCamera node creates hugely negative near clipping
+				// planes that would otherwise send us way out into space. The
+				// 0.1 is just a fudge factor to ensure we don't accidentally clip
+				// the front of the box.
+				m_centreOfInterest = cBox.max.z + std::max( m_clippingPlanes->readable()[0], 0.0f ) + 0.1;
 				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centreOfInterest ) );
 
-				float xScale = cBox.size().x / screenWindow.size().x;
-				float yScale = cBox.size().y / screenWindow.size().y;
-				float scale = std::max( xScale, yScale );
+				if( getOrthographic3D() )
+				{
+					// The user might want to tumble around the thing
+					// they framed. Translate back some more to make
+					// room to tumble around the entire bound.
+					const float offset = cBox.size().length();
+					m_centreOfInterest += offset;
+					cameraMatrix.translate( V3f( 0.0f, 0.0f, offset ) );
+				}
+				else
+				{
+					// Adjust the screenwindow so the entire bound can be
+					// seen. We don't do this in orthographic3D mode because
+					// the user's expectation is that they are only moving the
+					// camera, not modifying the projection.
+					float xScale = cBox.size().x / screenWindow.size().x;
+					float yScale = cBox.size().y / screenWindow.size().y;
+					float scale = std::max( xScale, yScale );
 
-				V2f newSize = screenWindow.size() * scale;
-				screenWindow.min.x = cBox.center().x - newSize.x / 2.0f;
-				screenWindow.min.y = cBox.center().y - newSize.y / 2.0f;
-				screenWindow.max.x = cBox.center().x + newSize.x / 2.0f;
-				screenWindow.max.y = cBox.center().y + newSize.y / 2.0f;
+					V2f newSize = screenWindow.size() * scale;
+					screenWindow.min.x = cBox.center().x - newSize.x / 2.0f;
+					screenWindow.min.y = cBox.center().y - newSize.y / 2.0f;
+					screenWindow.max.x = cBox.center().x + newSize.x / 2.0f;
+					screenWindow.max.y = cBox.center().y + newSize.y / 2.0f;
+				}
 			}
 
 			m_transform = cameraMatrix;
@@ -357,6 +388,11 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		/// Starts a motion of the specified type.
 		void motionStart( MotionType motion, const Imath::V2f &startPosition )
 		{
+			if( motion == Tumble && m_projection->readable()=="orthographic" && !m_orthographic3D )
+			{
+				motion = Track;
+			}
+
 			m_motionType = motion;
 			m_motionStart = startPosition;
 			m_motionMatrix = m_transform;
@@ -454,7 +490,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			V2f dv = V2f( (p - m_motionStart) ) / resolution;
 			float d = dv.x - dv.y;
 
-			if( m_projection->readable()=="perspective" )
+			if( m_projection->readable()=="perspective" || m_orthographic3D )
 			{
 				// perspective
 				m_centreOfInterest = m_motionCentreOfInterest * expf( -1.9f * d );
@@ -502,6 +538,10 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		Imath::M44f m_motionMatrix;
 		float m_motionCentreOfInterest;
 		Imath::Box2f m_motionScreenWindow;
+
+		// General options
+
+		bool m_orthographic3D;
 
 };
 
@@ -693,6 +733,16 @@ void ViewportGadget::setCentreOfInterest( float centreOfInterest )
 float ViewportGadget::getCentreOfInterest()
 {
 	return m_cameraController->getCentreOfInterest();
+}
+
+void ViewportGadget::setOrthographic3D( bool orthographic3D )
+{
+	m_cameraController->setOrthographic3D( orthographic3D );
+}
+
+const bool ViewportGadget::getOrthographic3D() const
+{
+	return m_cameraController->getOrthographic3D();
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box )
@@ -1042,12 +1092,6 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 			default :
 				motionType = CameraController::None;
 				break;
-		}
-
-		const StringData *projection = getCamera()->parametersData()->member<StringData>( "projection" );
-		if( motionType == CameraController::Tumble && ( !projection || projection->readable()=="orthographic" ) )
-		{
-			motionType = CameraController::Track;
 		}
 
 		if( motionType )
