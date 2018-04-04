@@ -44,6 +44,8 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include <unordered_map>
+
 namespace GafferSceneUI
 {
 
@@ -94,10 +96,18 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 
 		boost::signals::connection m_viewportCameraChangedConnection;
 
+		void setCameraCentreOfInterest( const GafferScene::ScenePlug::ScenePath &camera, float centreOfInterest );
+		float getCameraCentreOfInterest( const GafferScene::ScenePlug::ScenePath &camera ) const;
+
+		typedef std::unordered_map<std::string, float> CameraCentresOfInterest;
+		CameraCentresOfInterest m_cameraCentresOfInterest;
+
 		static ToolDescription<CameraTool, SceneView> g_toolDescription;
 		static size_t g_firstPlugIndex;
 
 };
+
+IE_CORE_DECLAREPTR( CameraTool )
 
 } // namespace GafferSceneUI
 

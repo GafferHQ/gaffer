@@ -235,6 +235,9 @@ void CameraTool::preRenderEnd()
 
 	if( selectionEditable )
 	{
+		view()->viewportGadget()->setCentreOfInterest(
+			getCameraCentreOfInterest( selection.path )
+		);
 		m_viewportCameraChangedConnection.unblock();
 	}
 }
@@ -302,4 +305,44 @@ void CameraTool::viewportCameraChanged()
 	selection.transformPlug->rotatePlug()->setValue( r );
 	selection.transformPlug->translatePlug()->setValue( transformSpaceMatrix.translation() );
 
+	// Create an action to save/restore the current centre of interest, so that
+	// when the user undos a framing action, they get back to the old centre of
+	// interest as well as the old transform.
+	Action::enact(
+		selection.transformPlug,
+		// Do
+		boost::bind(
+			&CameraTool::setCameraCentreOfInterest,
+			CameraToolPtr( this ), selection.path,
+			view()->viewportGadget()->getCentreOfInterest()
+		),
+		// Undo
+		boost::bind(
+			&CameraTool::setCameraCentreOfInterest,
+			CameraToolPtr( this ), selection.path,
+			getCameraCentreOfInterest( selection.path )
+		)
+	);
+}
+
+void CameraTool::setCameraCentreOfInterest( const GafferScene::ScenePlug::ScenePath &camera, float centreOfInterest )
+{
+	string key;
+	ScenePlug::pathToString( camera, key );
+	m_cameraCentresOfInterest[key] = centreOfInterest;
+}
+
+float CameraTool::getCameraCentreOfInterest( const GafferScene::ScenePlug::ScenePath &camera ) const
+{
+	string key;
+	ScenePlug::pathToString( camera, key );
+	CameraCentresOfInterest::const_iterator it = m_cameraCentresOfInterest.find( key );
+	if( it != m_cameraCentresOfInterest.end() )
+	{
+		return it->second;
+	}
+	else
+	{
+		return 1.0f;
+	}
 }
