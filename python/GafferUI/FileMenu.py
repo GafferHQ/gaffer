@@ -107,7 +107,7 @@ def __addScript( application, fileName, dialogueParentWindow = None ) :
 			)
 			if not dialogue.waitForConfirmation( parentWindow = dialogueParentWindow ) :
 				recoveryFileName = None
-			del dialogue
+			dialogue.setVisible( False )
 
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( recoveryFileName or fileName )
