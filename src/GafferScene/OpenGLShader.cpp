@@ -41,6 +41,7 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -71,6 +72,28 @@ OpenGLShader::~OpenGLShader()
 
 void OpenGLShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
+	if( const ScriptNode *script = scriptNode() )
+	{
+		if( script->isExecuting() )
+		{
+			// We're being called during the loading of a script.
+			// We might be on a headless farm blade with no GL available,
+			// so we can't use IECoreGL to load the shader. Just set the
+			// name and type correctly, and assume the dynamic plugs we
+			// created for the parameters originally are still correct.
+			/// \todo Investigate methods of loading shaders that don't
+			/// require GL calls. Candidates include :
+			///
+			/// - Manual parsing of the GL source looking for "uniform"
+			///   declarations.
+			/// - Adopting something like GLSLFX and using that to load
+			///   shaders.
+			namePlug()->setValue( shaderName );
+			typePlug()->setValue( "gl:surface" );
+			return;
+		}
+	}
+
 	IECoreGL::init( false );
 
 	IECoreGL::ShaderLoaderPtr loader = IECoreGL::ShaderLoader::defaultShaderLoader();

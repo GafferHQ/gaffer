@@ -133,6 +133,22 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		# By default we don't keep existing values
 		self.assertEqual( s["parameters"]["mult"].getValue(), 0 )
 
+	def testSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["shader"] = GafferScene.OpenGLShader()
+		s["shader"].loadShader( "Constant" )
+
+		self.assertEqual(
+			s["shader"].attributes()["gl:surface"][0].name,
+			"Constant"
+		)
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["shader"].attributes(), s["shader"].attributes() )
+
 if sys.platform == "darwin" :
 	# The Texture shader used in the test provides only a .frag file, which
 	# means that it gets the default vertex shader. The default vertex shader
@@ -143,6 +159,7 @@ if sys.platform == "darwin" :
 	# not much we can do (other than provide a .vert shader with the unnecessary
 	# bit omitted), so for now we mark the test as an expected failure.
 	OpenGLShaderTest.test = unittest.expectedFailure( OpenGLShaderTest.test )
+	OpenGLShaderTest.testLoadShader = unittest.expectedFailure( OpenGLShaderTest.testLoadShader )
 
 if __name__ == "__main__":
 	unittest.main()
