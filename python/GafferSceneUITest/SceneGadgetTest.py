@@ -343,6 +343,20 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[ "/instances/1/sphere" ]
 		)
 
+	def testSetAndGetScene( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		sg = GafferSceneUI.SceneGadget()
+		self.assertEqual( sg.getScene(), None )
+
+		sg.setScene( plane["out"] )
+		self.assertEqual( sg.getScene(), plane["out"] )
+
+		sg.setScene( sphere["out"] )
+		self.assertEqual( sg.getScene(), sphere["out"] )
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )
