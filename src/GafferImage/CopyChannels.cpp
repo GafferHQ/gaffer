@@ -40,7 +40,8 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
+
+#include "IECore/StringAlgo.h"
 
 using namespace std;
 using namespace Imath;

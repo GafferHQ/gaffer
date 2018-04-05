@@ -44,12 +44,12 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
 #include "IECore/MessageHandler.h"
+#include "IECore/StringAlgo.h"
 
 #include "OpenImageIO/imageio.h"
 

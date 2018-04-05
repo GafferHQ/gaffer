@@ -40,9 +40,9 @@
 #include "GafferScene/Filter.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECore/NullObject.h"
+#include "IECore/StringAlgo.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
@@ -462,7 +462,7 @@ IECore::MurmurHash ScenePlug::setHash( const IECore::InternedString &setName ) c
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
 	path.clear();
-	StringAlgo::tokenize( s, '/', path );
+	IECore::StringAlgo::tokenize( s, '/', path );
 }
 
 void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )

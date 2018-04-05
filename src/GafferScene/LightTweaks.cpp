@@ -38,12 +38,12 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/SplinePlug.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECoreScene/Shader.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/SplineData.h"
+#include "IECore/StringAlgo.h"
 
 using namespace std;
 using namespace IECore;

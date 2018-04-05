@@ -493,7 +493,7 @@ void NoduleLayout::childRemoved( Gaffer::GraphComponent *child )
 	}
 }
 
-void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
 	if( MetadataAlgo::childAffectedByChange( m_parent.get(), nodeTypeId, plugPath, plug ) )
 	{

@@ -40,8 +40,9 @@
 
 #include "GafferUI/Nodule.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/Plug.h"
+
+#include "IECore/StringAlgo.h"
 
 namespace Gaffer
 {
@@ -92,7 +93,7 @@ class GAFFERUI_API StandardNodule : public Nodule
 
 	private :
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 
 		bool updateUserColor();
 

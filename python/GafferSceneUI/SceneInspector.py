@@ -995,7 +995,7 @@ class DiffColumn( GafferUI.Widget ) :
 			visible = False
 			if row.__valid :
 				numValidRows += 1
-				if Gaffer.StringAlgo.matchMultiple( row.inspector().name().lower(), patterns ) :
+				if IECore.StringAlgo.matchMultiple( row.inspector().name().lower(), patterns ) :
 					visible = True
 
 			row.setVisible( visible )

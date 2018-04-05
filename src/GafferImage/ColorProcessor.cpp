@@ -39,7 +39,8 @@
 #include "GafferImage/ImageAlgo.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
+
+#include "IECore/StringAlgo.h"
 
 using namespace std;
 using namespace IECore;

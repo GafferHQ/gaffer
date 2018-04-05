@@ -37,7 +37,7 @@
 
 #include "GafferImage/ChannelDataProcessor.h"
 
-#include "Gaffer/StringAlgo.h"
+#include "IECore/StringAlgo.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -94,7 +94,7 @@ bool ChannelDataProcessor::channelEnabled( const std::string &channel ) const
 		return false;
 	}
 
-	return StringAlgo::matchMultiple( channel, channelsPlug()->getValue() );
+	return IECore::StringAlgo::matchMultiple( channel, channelsPlug()->getValue() );
 }
 
 IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const

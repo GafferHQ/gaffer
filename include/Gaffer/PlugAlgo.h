@@ -39,10 +39,10 @@
 #define GAFFER_PLUGALGO_H
 
 #include "Gaffer/Export.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECore/InternedString.h"
 #include "IECore/RefCounted.h"
+#include "IECore/StringAlgo.h"
 
 namespace Gaffer
 {
@@ -75,11 +75,11 @@ GAFFER_API bool canPromote( const Plug *plug, const Plug *parent = nullptr );
 /// plug - this can be controlled with the `excludeMetadata`
 /// argument.
 /// \undoable
-GAFFER_API Plug *promote( Plug *plug, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+GAFFER_API Plug *promote( Plug *plug, Plug *parent = nullptr, const IECore::StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
 /// As `promote` but by providing the name argument, you can skip an additional
 /// renaming step after promoting.
 /// \undoable
-GAFFER_API Plug *promoteWithName( Plug *plug, const IECore::InternedString &name, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+GAFFER_API Plug *promoteWithName( Plug *plug, const IECore::InternedString &name, Plug *parent = nullptr, const IECore::StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
 /// Returns true if the plug appears to have been promoted.
 GAFFER_API bool isPromoted( const Plug *plug );
 /// Unpromotes a previously promoted plug, removing the

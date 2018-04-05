@@ -37,13 +37,13 @@
 #include "GafferScene/SceneReader.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/SceneCache.h"
 #include "IECoreScene/SharedSceneInterfaces.h"
 
 #include "IECore/InternedString.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/bind.hpp"
 

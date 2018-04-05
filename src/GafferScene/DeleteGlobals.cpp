@@ -36,8 +36,9 @@
 
 #include "GafferScene/DeleteGlobals.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
+
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -123,7 +124,7 @@ IECore::ConstCompoundObjectPtr DeleteGlobals::computeProcessedGlobals( const Gaf
 		bool keep = true;
 		if( boost::starts_with( it->first.c_str(), prefix ) )
 		{
-			if( StringAlgo::matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) != invert )
+			if( IECore::StringAlgo::matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) != invert )
 			{
 				keep = false;
 			}

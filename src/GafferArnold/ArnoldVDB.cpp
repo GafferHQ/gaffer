@@ -36,12 +36,12 @@
 
 #include "GafferArnold/ArnoldVDB.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/ExternalProcedural.h"
 
 #include "IECore/CompoundData.h"
+#include "IECore/StringAlgo.h"
 
 #include "openvdb/openvdb.h"
 

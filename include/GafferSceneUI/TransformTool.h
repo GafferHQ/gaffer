@@ -42,7 +42,6 @@
 
 #include "GafferScene/ScenePlug.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/TransformPlug.h"
 
 namespace GafferSceneUI

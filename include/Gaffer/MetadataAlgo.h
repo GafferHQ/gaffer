@@ -39,8 +39,8 @@
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
-#include "Gaffer/StringAlgo.h"
 
+#include "IECore/StringAlgo.h"
 #include "IECore/TypeIds.h"
 
 #include <vector>
@@ -96,7 +96,7 @@ GAFFER_API bool getChildNodesAreReadOnly( const Node *node );
 GAFFER_API bool readOnly( const GraphComponent *graphComponent );
 
 /// Determines if a metadata value change affects the result of `readOnly( graphComponent )`.
-GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug );
+GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug );
 GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::InternedString &changedKey, const Gaffer::Node *changedNode );
 GAFFER_API bool readOnlyAffectedByChange( const IECore::InternedString &changedKey );
 
@@ -116,17 +116,17 @@ GAFFER_API void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks );
 
 /// Determines if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`
 /// or `Metadata:nodeValueChangedSignal()`) affects a given plug or node.
-GAFFER_API bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+GAFFER_API bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 GAFFER_API bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 /// As above, but determines if any child will be affected.
-GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 /// As above, but determines if any ancestor will be affected.
-GAFFER_API bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+GAFFER_API bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 GAFFER_API bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 
 /// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
-GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
+GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
 
 /// Copy nodule and noodle color meta data from srcPlug to dstPlug
 GAFFER_API void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, bool overwrite );

@@ -38,9 +38,9 @@
 #include "Gaffer/Path.h"
 
 #include "Gaffer/PathFilter.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/bind.hpp"
 

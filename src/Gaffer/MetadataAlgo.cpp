@@ -40,7 +40,6 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -136,7 +135,7 @@ bool readOnly( const GraphComponent *graphComponent )
 	return false;
 }
 
-bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug )
+bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug )
 {
 	if( changedKey != g_readOnlyName )
 	{
@@ -219,7 +218,7 @@ void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
 	}
 }
 
-bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
@@ -240,7 +239,7 @@ bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const
 	return false;
 }
 
-bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
@@ -293,7 +292,7 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 	return false;
 }
 
-bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
@@ -341,7 +340,7 @@ bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const
 	return node->isInstanceOf( changedNodeTypeId );
 }
 
-void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
+void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
 {
 	vector<IECore::InternedString> keys;
 	Metadata::registeredValues( from, keys, /* instanceOnly = */ false, /* persistentOnly = */ persistentOnly );

@@ -79,7 +79,7 @@ void GafferModule::bindMetadataAlgo()
 	def( "readOnly", &readOnly );
 	def(
 		"readOnlyAffectedByChange",
-		(bool (*)( const GraphComponent *, IECore::TypeId, const StringAlgo::MatchPattern &, const IECore::InternedString &, const Gaffer::Plug * ))&readOnlyAffectedByChange,
+		(bool (*)( const GraphComponent *, IECore::TypeId, const IECore::StringAlgo::MatchPattern &, const IECore::InternedString &, const Gaffer::Plug * ))&readOnlyAffectedByChange,
 		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedKey" ), arg( "changedPlug" ) )
 	);
 	def(
@@ -98,7 +98,7 @@ void GafferModule::bindMetadataAlgo()
 	def( "bookmarks", &bookmarksWrapper );
 	def(
 		"affectedByChange",
-		(bool (*)( const Plug *, IECore::TypeId, const StringAlgo::MatchPattern &, const Plug * ))&affectedByChange,
+		(bool (*)( const Plug *, IECore::TypeId, const IECore::StringAlgo::MatchPattern &, const Plug * ))&affectedByChange,
 		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
 	);
 	def(
@@ -109,7 +109,7 @@ void GafferModule::bindMetadataAlgo()
 
 	def(
 		"childAffectedByChange",
-		(bool (*)( const GraphComponent *, IECore::TypeId, const StringAlgo::MatchPattern &, const Gaffer::Plug * ))&childAffectedByChange,
+		(bool (*)( const GraphComponent *, IECore::TypeId, const IECore::StringAlgo::MatchPattern &, const Gaffer::Plug * ))&childAffectedByChange,
 		( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
 	);
 	def(
@@ -120,7 +120,7 @@ void GafferModule::bindMetadataAlgo()
 
 	def(
 		"ancestorAffectedByChange",
-		(bool (*)( const Plug *, IECore::TypeId, const StringAlgo::MatchPattern &, const Gaffer::Plug * ))&ancestorAffectedByChange,
+		(bool (*)( const Plug *, IECore::TypeId, const IECore::StringAlgo::MatchPattern &, const Gaffer::Plug * ))&ancestorAffectedByChange,
 		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
 	);
 

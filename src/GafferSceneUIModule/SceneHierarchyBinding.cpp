@@ -44,9 +44,10 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECorePython/RefCountedBinding.h"
+
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"

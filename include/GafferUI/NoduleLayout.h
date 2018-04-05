@@ -41,7 +41,7 @@
 #include "GafferUI/Gadget.h"
 #include "GafferUI/GraphGadget.h"
 
-#include "Gaffer/StringAlgo.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/variant.hpp"
 
@@ -127,7 +127,7 @@ class GAFFERUI_API NoduleLayout : public Gadget
 		void childAdded( Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *child );
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
 		std::vector<GadgetKey> layoutOrder();

@@ -35,7 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/CopyOptions.h"
-#include "Gaffer/StringAlgo.h"
+
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -123,7 +124,7 @@ IECore::ConstCompoundObjectPtr CopyOptions::computeProcessedGlobals( const Gaffe
 	{
 		if( boost::starts_with( it->first.c_str(), prefix ) )
 		{
-			if( StringAlgo::matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) )
+			if( IECore::StringAlgo::matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) )
 			{
 				result->members()[it->first] = it->second;
 			}
