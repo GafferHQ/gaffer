@@ -223,6 +223,15 @@ def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator,
 
 	menuDefinition.append( prefix, { "subMenu" : functools.partial( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
 
+__hiddenShadersPathMatcher = IECore.PathMatcher()
+## Hides shaders from the menu created by `appendShaders()`.
+# The `pathMatcher` is an `IECore.PathMatcher()` that will be used
+# to match searchpath-relative shader filenames.
+def hideShaders( pathMatcher ) :
+
+	global __hiddenShadersPathMatcher
+	__hiddenShadersPathMatcher.addPaths( pathMatcher )
+
 def __nodeName( shaderName ) :
 
 	nodeName = os.path.split( shaderName )[-1]
@@ -247,6 +256,8 @@ def __loadFromFile( menu, extensions, nodeCreator ) :
 
 def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) :
 
+	global __hiddenShadersPathMatcher
+
 	if isinstance( matchExpression, str ) :
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
 
@@ -261,6 +272,8 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 			for file in files :
 				if os.path.splitext( file )[1][1:] in extensions :
 					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
+					if __hiddenShadersPathMatcher.match( shaderPath ) & IECore.PathMatcher.Result.ExactMatch :
+						continue
 					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
 						shaders.add( os.path.splitext( shaderPath )[0] )
 
