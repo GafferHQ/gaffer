@@ -86,7 +86,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 			else :
 				return "GafferUI::StandardNodule"
 
-		Gaffer.Metadata.registerValue( DeeplyNestedNode, "*", "nodule:type", noduleType )
+		Gaffer.Metadata.registerValue( DeeplyNestedNode, "...", "nodule:type", noduleType )
 
 		g = GafferUI.StandardNodeGadget( n )
 

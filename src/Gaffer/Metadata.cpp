@@ -43,6 +43,7 @@
 #include "IECore/CompoundData.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/bind.hpp"
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -60,6 +61,88 @@ using namespace Gaffer;
 
 namespace
 {
+
+/// \todo Would this make sense in a GraphComponentAlgo namespace?
+vector<InternedString> relativePath( const GraphComponent *graphComponent, const GraphComponent *ancestor )
+{
+	vector<InternedString> result;
+	while( graphComponent && graphComponent != ancestor )
+	{
+		result.push_back( graphComponent->getName() );
+		graphComponent = graphComponent->parent();
+	}
+	if( ancestor && graphComponent != ancestor )
+	{
+		const string what = boost::str( boost::format( "Object \"%s\" is not an ancestor of \"%s\"." ) % graphComponent->fullName() % ancestor->fullName() );
+		throw Exception( what );
+	}
+
+	std::reverse( result.begin(), result.end() );
+	return result;
+}
+
+IECore::InternedString g_ellipsis( "..." );
+
+typedef vector<InternedString> MatchPatternPath;
+vector<InternedString> matchPatternPath( std::string path )
+{
+	const InternedString ellipsisSubstitute = "!!!";
+	boost::replace_all( path, "...", "." + ellipsisSubstitute.string() + "." );
+
+	vector<InternedString> result;
+	StringAlgo::tokenize( path, '.', result );
+
+	std::replace( result.begin(), result.end(), ellipsisSubstitute, g_ellipsis );
+	return result;
+}
+
+bool matchInternal(
+	vector<InternedString>::const_iterator pathBegin,
+	vector<InternedString>::const_iterator pathEnd,
+	MatchPatternPath::const_iterator matchPathBegin,
+	MatchPatternPath::const_iterator matchPathEnd
+)
+{
+	while( true )
+	{
+		if( matchPathBegin == matchPathEnd )
+		{
+			return pathBegin == pathEnd;
+		}
+		else if( *matchPathBegin == g_ellipsis )
+		{
+			auto nextMatchPathBegin = std::next( matchPathBegin );
+			if( nextMatchPathBegin == matchPathEnd )
+			{
+				return true;
+			}
+			for( auto pb = pathBegin; pb != pathEnd; ++pb )
+			{
+				if( matchInternal( pb, pathEnd, nextMatchPathBegin, matchPathEnd ) )
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		else if( pathBegin == pathEnd )
+		{
+			return false;
+		}
+		else if( !StringAlgo::match( *pathBegin, *matchPathBegin ) )
+		{
+			return false;
+		}
+		++pathBegin;
+		++matchPathBegin;
+	}
+}
+
+/// \todo Move to IECore::StringAlgo?
+bool match( const vector<InternedString> &path, const MatchPatternPath &matchPath )
+{
+	return matchInternal( path.begin(), path.end(), matchPath.begin(), matchPath.end() );
+}
 
 typedef std::pair<InternedString, Metadata::ValueFunction> NamedValue;
 
@@ -107,7 +190,7 @@ struct NodeMetadata
 		>
 	> PlugValues;
 
-	typedef map<StringAlgo::MatchPattern, PlugValues> PlugPathsToValues;
+	typedef map<MatchPatternPath, PlugValues> PlugPathsToValues;
 
 	NodeValues nodeValues;
 	PlugPathsToValues plugPathsToValues;
@@ -514,7 +597,7 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::M
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
 {
 	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
-	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
+	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[matchPatternPath(plugPath)];
 
 	NodeMetadata::NamedPlugValue namedValue( key, value );
 
@@ -541,7 +624,7 @@ void Metadata::registeredPlugValues( const Plug *plug, std::vector<IECore::Inter
 	const Node *node = plug->node();
 	if( node && !instanceOnly )
 	{
-		const string plugPath = plug->relativeName( node );
+		const vector<InternedString> plugPath = relativePath( plug, node );
 
 		IECore::TypeId typeId = node->typeId();
 		while( typeId != InvalidTypeId )
@@ -552,7 +635,7 @@ void Metadata::registeredPlugValues( const Plug *plug, std::vector<IECore::Inter
 				NodeMetadata::PlugPathsToValues::const_iterator it, eIt;
 				for( it = nIt->second.plugPathsToValues.begin(), eIt = nIt->second.plugPathsToValues.end(); it != eIt; ++it )
 				{
-					if( StringAlgo::match( plugPath, it->first ) )
+					if( match( plugPath, it->first ) )
 					{
 						const NodeMetadata::PlugValues::nth_index<1>::type &index = it->second.get<1>();
 						for( NodeMetadata::PlugValues::nth_index<1>::type::const_reverse_iterator vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
@@ -588,7 +671,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 		return nullptr;
 	}
 
-	const string plugPath = plug->relativeName( node );
+	const vector<InternedString> plugPath = relativePath( plug, node );
 
 	IECore::TypeId typeId = node->typeId();
 	while( typeId != InvalidTypeId )
@@ -611,7 +694,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 			// wildcard matches.
 			for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
 			{
-				if( StringAlgo::match( plugPath, it->first ) )
+				if( match( plugPath, it->first ) )
 				{
 					NodeMetadata::PlugValues::const_iterator vIt = it->second.find( key );
 					if( vIt != it->second.end() )
@@ -629,7 +712,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 void Metadata::deregisterPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
 {
 	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
-	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
+	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[matchPatternPath(plugPath)];
 
 	NodeMetadata::PlugValues::const_iterator it = plugValues.find( key );
 	if( it == plugValues.end() )

@@ -1022,6 +1022,83 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		subprocess.check_call( [ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/unloadExceptionScript.py" ] )
 
+	def testWildcardsAndDot( self ) :
+
+		class MetadataTestNodeE( Gaffer.Node ) :
+
+			def __init__( self, name = "MetadataTestNodeE" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["p"] = Gaffer.Plug()
+				self["p"]["a"] = Gaffer.IntPlug()
+				self["p"]["b"] = Gaffer.Plug()
+				self["p"]["b"]["c"] = Gaffer.IntPlug()
+				self["p"]["b"]["d"] = Gaffer.IntPlug()
+
+		IECore.registerRunTimeTyped( MetadataTestNodeE )
+
+		Gaffer.Metadata.registerNode(
+
+			MetadataTestNodeE,
+
+			# '*' should not match '.', and `...` should
+			# match any number of components, including 0.
+			plugs = {
+				"*" : [
+					"root", True,
+				],
+				"*.a" : [
+					"a", True,
+				],
+				"*.b" : [
+					"b", True,
+				],
+				"*.b.*" : [
+					"cd", True,
+				],
+				"...c" : [
+					"c", True,
+				],
+				"p...d" : [
+					"d", True,
+				],
+				"...[cd]" : [
+					"cd2", True,
+				],
+				"..." : [
+					"all", True,
+				],
+				"p.b..." : [
+					"allB", True,
+				],
+			}
+
+		)
+
+		n = MetadataTestNodeE()
+		allPlugs = { n["p"], n["p"]["a"], n["p"]["b"], n["p"]["b"]["c"], n["p"]["b"]["d"] }
+
+		for key, plugs in (
+			( "root", { n["p"] } ),
+			( "a", { n["p"]["a"] } ),
+			( "b", { n["p"]["b"] } ),
+			( "cd", { n["p"]["b"]["c"], n["p"]["b"]["d"] } ),
+			( "c", { n["p"]["b"]["c"] } ),
+			( "d", { n["p"]["b"]["d"] } ),
+			( "cd2", { n["p"]["b"]["c"], n["p"]["b"]["d"] } ),
+			( "all", allPlugs ),
+			( "allB", { n["p"]["b"], n["p"]["b"]["c"], n["p"]["b"]["d"] } )
+		) :
+
+			for plug in allPlugs :
+
+				if plug in plugs :
+					self.assertEqual( Gaffer.Metadata.value( plug, key ), True )
+					self.assertIn( key, Gaffer.Metadata.registeredValues( plug ) )
+				else :
+					self.assertEqual( Gaffer.Metadata.value( plug, key ), None )
+					self.assertNotIn( key, Gaffer.Metadata.registeredValues( plug ) )
 
 if __name__ == "__main__":
 	unittest.main()
