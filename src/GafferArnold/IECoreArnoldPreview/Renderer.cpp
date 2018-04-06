@@ -259,6 +259,7 @@ const AtString g_nodeArnoldString("node");
 const AtString g_objectArnoldString( "object" );
 const AtString g_opaqueArnoldString( "opaque" );
 const AtString g_proceduralArnoldString( "procedural" );
+const AtString g_pinCornersArnoldString( "pin_corners" );
 const AtString g_pixelAspectRatioArnoldString( "pixel_aspect_ratio" );
 const AtString g_pluginSearchPathArnoldString( "plugin_searchpath" );
 const AtString g_polymeshArnoldString("polymesh");
@@ -282,6 +283,7 @@ const AtString g_subdivAdaptiveMetricArnoldString( "subdiv_adaptive_metric" );
 const AtString g_subdivAdaptiveSpaceArnoldString( "subdiv_adaptive_space" );
 const AtString g_subdivSmoothDerivsArnoldString( "subdiv_smooth_derivs" );
 const AtString g_subdivTypeArnoldString( "subdiv_type" );
+const AtString g_subdivUVSmoothingArnoldString( "subdiv_uv_smoothing" );
 const AtString g_traceSetsArnoldString( "trace_sets" );
 const AtString g_transformTypeArnoldString( "transform_type" );
 const AtString g_thickArnoldString( "thick" );
@@ -691,6 +693,7 @@ IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
 IECore::InternedString g_polyMeshSubdivSmoothDerivsAttributeName( "ai:polymesh:subdiv_smooth_derivs" );
 IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdivide_polygons" );
+IECore::InternedString g_polyMeshSubdivUVSmoothingAttributeName( "ai:polymesh:subdiv_uv_smoothing" );
 
 IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
 IECore::InternedString g_dispHeightAttributeName( "ai:disp_height" );
@@ -1094,6 +1097,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					subdivAdaptiveSpace = g_rasterArnoldString;
 				}
 
+				if( auto a = attribute<IECore::StringData>( g_polyMeshSubdivUVSmoothingAttributeName, attributes ) )
+				{
+					subdivUVSmoothing = AtString( a->readable().c_str() );
+				}
+				else
+				{
+					subdivUVSmoothing = g_pinCornersArnoldString;
+				}
+
 				subdividePolygons = attributeValue<bool>( g_polyMeshSubdividePolygonsAttributeName, attributes, false );
 				subdivSmoothDerivs = attributeValue<bool>( g_polyMeshSubdivSmoothDerivsAttributeName, attributes, false );
 			}
@@ -1102,6 +1114,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			float subdivAdaptiveError;
 			AtString subdivAdaptiveMetric;
 			AtString subdivAdaptiveSpace;
+			AtString subdivUVSmoothing;
 			bool subdividePolygons;
 			bool subdivSmoothDerivs;
 
@@ -1113,6 +1126,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					h.append( subdivAdaptiveError );
 					h.append( subdivAdaptiveMetric.c_str() );
 					h.append( subdivAdaptiveSpace.c_str() );
+					h.append( subdivUVSmoothing.c_str() );
 					h.append( subdivSmoothDerivs );
 				}
 			}
@@ -1125,6 +1139,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetFlt( node, g_subdivAdaptiveErrorArnoldString, subdivAdaptiveError );
 					AiNodeSetStr( node, g_subdivAdaptiveMetricArnoldString, subdivAdaptiveMetric );
 					AiNodeSetStr( node, g_subdivAdaptiveSpaceArnoldString, subdivAdaptiveSpace );
+					AiNodeSetStr( node, g_subdivUVSmoothingArnoldString, subdivUVSmoothing );
 					AiNodeSetBool( node, g_subdivSmoothDerivsArnoldString, subdivSmoothDerivs );
 					if( mesh->interpolation() == "linear" )
 					{

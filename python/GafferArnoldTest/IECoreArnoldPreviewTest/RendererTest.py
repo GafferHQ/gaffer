@@ -1144,6 +1144,45 @@ class RendererTest( GafferTest.TestCase ) :
 					else :
 						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "catclark" if interpolation == "catmullClark" else "none" )
 
+	def testUVSmoothingAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		mesh.interpolation = "catmullClark"
+
+		smoothingTypes = ( "pin_corners", "pin_borders", "linear", "smooth", None )
+		for uvSmoothing in smoothingTypes :
+			attributes = IECore.CompoundObject()
+			if uvSmoothing is not None :
+				attributes["ai:polymesh:subdiv_uv_smoothing"] = IECore.StringData( uvSmoothing )
+			r.object(
+				"mesh-" + ( uvSmoothing or "default" ),
+				mesh,
+				r.attributes( attributes )
+			)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			for uvSmoothing in smoothingTypes :
+
+				instance = arnold.AiNodeLookUpByName( "mesh-" + ( uvSmoothing or "default" ) )
+				self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
+
+				mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+				self.assertTrue( arnold.AiNodeIs( mesh, "polymesh" ) )
+
+				self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_uv_smoothing" ), uvSmoothing or "pin_corners" )
+
 	def testMeshLight( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
