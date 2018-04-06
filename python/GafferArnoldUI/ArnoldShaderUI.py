@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import re
 import ctypes
 import functools
 import collections
