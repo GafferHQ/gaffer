@@ -101,4 +101,4 @@ def __fixedLineHeight( plug ) :
 	return fixedLineHeight
 
 for nodeType in __nodeTypes:
-	Gaffer.Metadata.registerValue( nodeType, "*", "fixedLineHeight", __fixedLineHeight )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*...", "fixedLineHeight", __fixedLineHeight )

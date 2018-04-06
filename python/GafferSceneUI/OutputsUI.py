@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import re
 import functools
 import imath
 
@@ -74,6 +73,12 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferSceneUI.OutputsUI.OutputsPlugValueWidget",
+
+		],
+
+		"outputs.*" : [
+
+			"plugValueWidget:type", "GafferSceneUI.OutputsUI.ChildPlugValueWidget",
 
 		],
 
@@ -172,7 +177,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return m
 
 # A widget for representing an individual output.
-class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
+class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, childPlug ) :
 
@@ -254,9 +259,3 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().parent().removeChild( self.getPlug() )
-
-## \todo This regex is an interesting case to be considered during the string matching unification for #707. Once that
-# is done, intuitively we want to use an "outputs.*" glob expression, but because the "*" will match anything
-# at all, including ".", it will match the children of what we want too. We might want to prevent wildcards from
-# matching "." when we come to use them in this context.
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Outputs, re.compile( "outputs\.[^\.]+$" ), _ChildPlugWidget )

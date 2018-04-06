@@ -66,7 +66,7 @@ Gaffer.Metadata.registerNodeValue( Gaffer.Random, "nodeGadget:color", imath.Colo
 Gaffer.Metadata.registerNodeValue( Gaffer.Expression, "nodeGadget:color", imath.Color3f( 0.3, 0.45, 0.3 ) )
 Gaffer.Metadata.registerNodeValue( Gaffer.Animation, "nodeGadget:color", imath.Color3f( 0.3, 0.3, 0.45 ) )
 
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "in*", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
+Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "in...", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "out", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.InteractiveRender, "in", "nodule:color", imath.Color3f( 0.2346, 0.326, 0.46 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.Parent, "child", "nodule:color", imath.Color3f( 0.2346, 0.326, 0.46 ) )
@@ -76,6 +76,7 @@ Gaffer.Metadata.registerNodeValue( GafferScene.SceneElementProcessor, "nodeGadge
 
 Gaffer.Metadata.registerPlugValue( GafferScene.FilteredSceneProcessor, "filter", "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.Filter, "out", "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
+Gaffer.Metadata.registerPlugValue( GafferScene.Filter, "in...", "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
 
 Gaffer.Metadata.registerNodeValue( GafferScene.Transform, "nodeGadget:color", imath.Color3f( 0.485, 0.3112, 0.2255 ) )
 Gaffer.Metadata.registerNodeValue( GafferScene.Constraint, "nodeGadget:color", imath.Color3f( 0.485, 0.3112, 0.2255 ) )
@@ -92,7 +93,7 @@ def __shaderNoduleColor( plug ) :
 
 	return __shaderNoduleColors.get( plug.typeId(), None )
 
-Gaffer.Metadata.registerPlugValue( GafferScene.Shader, "*", "nodule:color", __shaderNoduleColor )
+Gaffer.Metadata.registerPlugValue( GafferScene.Shader, "...", "nodule:color", __shaderNoduleColor )
 
 ##########################################################################
 # Behaviour

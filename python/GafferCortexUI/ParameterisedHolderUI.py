@@ -272,7 +272,7 @@ for nodeType in __nodeTypes :
 
 			],
 
-			"parameters.*" : [
+			"parameters.*..." : [
 
 				"description", __plugDescription,
 				"presetNames", __plugPresetNames,
