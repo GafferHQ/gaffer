@@ -100,6 +100,17 @@ def __subdivisionSummary( plug ) :
 		info.append( string.capwords( plug["subdivAdaptiveMetric"]["value"].getValue().replace( "_", " " ) ) + " Metric" )
 	if plug["subdivAdaptiveSpace"]["enabled"].getValue() :
 		info.append( string.capwords( plug["subdivAdaptiveSpace"]["value"].getValue() ) + " Space" )
+	if plug["subdivUVSmoothing"]["enabled"].getValue() :
+		info.append(
+			{
+				"pin_corners" : "Pin UV Corners",
+				"pin_borders" : "Pin UV Borders",
+				"linear" : "Linear UVs",
+				"smooth" : "Smooth UVs",
+			}.get( plug["subdivUVSmoothing"]["value"].getValue() )
+		)
+	if plug["subdivSmoothDerivs"]["enabled"].getValue() :
+		info.append( "Smooth Derivs " + ( "On" if plug["subdivSmoothDerivs"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -477,6 +488,29 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Raster", "raster",
 			"preset:Object", "object",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"attributes.subdivUVSmoothing" : [
+
+			"label", "UV Smoothing",
+			"description",
+			"""
+			Determines how UVs are subdivided.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		"attributes.subdivUVSmoothing.value" : [
+
+			"preset:Pin Corners", "pin_corners",
+			"preset:Pin Borders", "pin_borders",
+			"preset:Linear", "linear",
+			"preset:Smooth", "smooth",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
