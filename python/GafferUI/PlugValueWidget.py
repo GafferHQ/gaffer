@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import re
-import fnmatch
 import functools
 import warnings
 
@@ -364,9 +362,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# "plugValueWidget:type" metadata value, specifying the fully qualified
 	# python type name for a widget class. To suppress the creation of a widget,
 	# a value of "" may be registered - in this case None will be returned from
-	# create(). If useTypeOnly is True, then custom registrations made by
-	# registerCreator() will be ignored and only the plug type will be taken into
-	# account in creating a PlugValueWidget.
+	# create(). If useTypeOnly is True, then the metadata will be ignored and
+	# only the plug type will be taken into account in creating a PlugValueWidget.
 	@classmethod
 	def create( cls, plug, useTypeOnly=False ) :
 
@@ -389,20 +386,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 				for n in path[1:] :
 					widgetClass = getattr( widgetClass, n )
 				return widgetClass( plug )
-
-			node = plug.node()
-			if node is not None :
-				plugPath = plug.relativeName( node )
-				nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-				for nodeTypeId in [ node.typeId() ] + nodeHierarchy :
-					creators = cls.__nodeTypesToCreators.get( nodeTypeId, None )
-					if creators :
-						for creator in creators :
-							if creator.plugPathMatcher.match( plugPath ) :
-								if creator.creator is not None :
-									return creator.creator( plug, **(creator.creatorKeywordArgs) )
-								else :
-									return None
 
 		# if that failed, then just create something based on the type of the plug
 		typeId = plug.typeId()
@@ -427,34 +410,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		cls.__plugTypesToCreators[plugTypeId] = creator
 
-	## \deprecated
-	## \todo Use "plugValueWidget:type" metadata everywhere instead of
-	# using this. Then remove this method.
-	@classmethod
-	def registerCreator( cls, nodeClassOrTypeId, plugPath, creator, **creatorKeywordArgs ) :
-
-		if isinstance( nodeClassOrTypeId, IECore.TypeId ) :
-			nodeTypeId = nodeClassOrTypeId
-		else :
-			nodeTypeId = nodeClassOrTypeId.staticTypeId()
-
-		if isinstance( plugPath, basestring ) :
-			plugPath = re.compile( fnmatch.translate( plugPath ) )
-		else :
-			assert( type( plugPath ) is type( re.compile( "" ) ) )
-
-		creators = cls.__nodeTypesToCreators.setdefault( nodeTypeId, [] )
-
-		creator = IECore.Struct(
-			plugPathMatcher = plugPath,
-			creator = creator,
-			creatorKeywordArgs = creatorKeywordArgs,
-		)
-
-		creators.insert( 0, creator )
-
 	__plugTypesToCreators = {}
-	__nodeTypesToCreators = {}
 
 	def __plugDirtied( self, plug ) :
 

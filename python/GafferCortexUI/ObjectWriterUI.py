@@ -91,6 +91,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferCortexUI.ObjectWriterUI.__createParameterWidget",
 
 		],
 
@@ -98,12 +99,6 @@ Gaffer.Metadata.registerNode(
 
 )
 
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
 def __createParameterWidget( plug ) :
 
 	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
-
-GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "parameters", __createParameterWidget )
