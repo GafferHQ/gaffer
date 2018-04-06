@@ -42,8 +42,6 @@
 
 #include "Gaffer/FilteredRecursiveChildIterator.h"
 
-#include "boost/regex.hpp"
-
 #include <functional>
 
 namespace Gaffer

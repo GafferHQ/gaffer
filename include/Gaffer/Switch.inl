@@ -41,7 +41,6 @@
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-#include "boost/regex.hpp"
 
 namespace Gaffer
 {

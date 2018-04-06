@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import re
-import fnmatch
 import inspect
 import imath
 

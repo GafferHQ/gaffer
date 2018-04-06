@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import re
 import os
 import functools
 import imath
