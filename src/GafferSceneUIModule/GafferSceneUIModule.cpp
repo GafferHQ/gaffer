@@ -56,6 +56,11 @@ using namespace GafferSceneUIModule;
 namespace
 {
 
+GafferScene::ScenePlugPtr getScene( SceneGadget &g )
+{
+	return const_cast<GafferScene::ScenePlug *>( g.getScene() );
+}
+
 IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegment3f &l )
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
@@ -78,7 +83,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	GafferUIBindings::GadgetClass<SceneGadget>()
 		.def( init<>() )
 		.def( "setScene", &SceneGadget::setScene )
-		.def( "getScene", &SceneGadget::getScene, return_value_policy<CastToIntrusivePtr>() )
+		.def( "getScene", &getScene )
 		.def( "setContext", &SceneGadget::setContext )
 		.def( "getContext", (Gaffer::Context *(SceneGadget::*)())&SceneGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setExpandedPaths", &SceneGadget::setExpandedPaths )

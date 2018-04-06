@@ -1610,6 +1610,7 @@ SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
 ##########################################################################
 # Object section
 ##########################################################################
+
 class _VDBGridInspector( Inspector ) :
 
 	def __init__( self, gridName, metadataName ) :
@@ -2108,19 +2109,29 @@ class _SetDiff( Diff ) :
 
 	def update( self, values ) :
 
-		paths = [ v.value.paths() if v is not None else [] for v in values ]
-		if len( paths ) == 1 :
-			self.__updateField( 0, [] )
-			self.__updateField( 1, paths[0] )
-			self.__updateField( 2, [] )
+		values = [
+			v.value if v is not None else IECore.PathMatcher()
+			for v in values
+		]
+
+		if len( values ) == 1 :
+			self.__updateField( 0, IECore.PathMatcher() )
+			self.__updateField( 1, values[0] )
+			self.__updateField( 2, IECore.PathMatcher() )
 		else :
-			paths = [ set( p ) for p in paths ]
-			aOnly = paths[0] - paths[1]
-			bOnly = paths[1] - paths[0]
-			intersection = paths[0] & paths[1]
-			self.__updateField( 0, paths[0] - paths[1], "-" )
-			self.__updateField( 1, paths[0] & paths[1], "" )
-			self.__updateField( 2, paths[1] - paths[0], " +" )
+			assert( len( values ) == 2 )
+
+			aOnly = IECore.PathMatcher( values[0] )
+			aOnly.removePaths( values[1] )
+
+			bOnly = IECore.PathMatcher( values[1] )
+			bOnly.removePaths( values[0] )
+
+			intersection = values[0].intersection( values[1] )
+
+			self.__updateField( 0, aOnly, "-" )
+			self.__updateField( 1, intersection, "" )
+			self.__updateField( 2, bOnly, " +" )
 
 		GafferUI.WidgetAlgo.joinEdges( self.__row )
 
@@ -2128,11 +2139,14 @@ class _SetDiff( Diff ) :
 
 		self.__row[i].paths = paths
 
-		if not len( paths ) :
+		if paths.isEmpty() :
 			self.__row[i].setVisible( False )
 			return
 
-		self.__row[i].getChild().setText( prefix + str( len( paths ) ) )
+		## \todo Remove fallback to slow `paths()` method
+		size = paths.size() if hasattr( paths, "size" ) else len( paths.paths() )
+
+		self.__row[i].getChild().setText( prefix + str( size ) )
 		self.__row[i].setVisible( True )
 
 	def __buttonPress( self, widget, event ) :
@@ -2147,7 +2161,7 @@ class _SetDiff( Diff ) :
 		editor = self.ancestor( SceneInspector )
 
 		context = editor.getContext()
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( widget.paths ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, widget.paths )
 
 		return True
 
@@ -2157,7 +2171,7 @@ class _SetDiff( Diff ) :
 			return None
 
 		GafferUI.Pointer.setCurrent( "objects" )
-		return IECore.StringVectorData( widget.paths )
+		return IECore.StringVectorData( widget.paths.paths() )
 
 	def __dragEnd( self, widget, event ) :
 
