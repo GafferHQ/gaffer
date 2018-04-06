@@ -172,19 +172,4 @@ void GafferSceneModule::bindShader()
 
 	GafferBindings::NodeClass<OpenGLShader>();
 
-	// TODO - remove this line once loadShader on a OpenGLShader no longer requires a GPU
-	// Currently, loadShader requires a GL driver to parse the shader text and then return
-	// parameter names via glGetProgramiv.  This would cause problems on headless farm blades,
-	// where there is no GL driver available.
-	// Ideally, creating a shader node would not require a GPU.  Proposed solutions include:
-	// * just parse all the lines from the shader code starting with "uniform"
-	//   ( John doesn't like this because it's a different code path for getting parameters
-	//   and compiling shaders, I think it would probably be fine in practice, because the
-	//   set of uniforms we actually care about is simple enough that some basic code would
-	//   probably handle them all )
-	// * store our GLSL shaders in a format such as GLSLFX from Disney, which adds a header
-	//    to the beginning of the file defining parameters.
-	//   ( This would allow defining parameter metadata too )
-	GafferBindings::Serialisation::registerSerialiser( OpenGLShader::staticTypeId(), new NodeSerialiser() );
-
 }
