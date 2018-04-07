@@ -1,3 +1,33 @@
+0.45.2.0
+========
+
+Improvements
+------------
+
+- ArnoldAttributes : Added support for "subdiv_uv_smoothing" Arnold parameter (#2538).
+- OSLObject : Improved performance by removing unnecessary primitive variable resampling (#2523).
+- BoxUI : Removed "Promote as Box.enabled" menu item. The regular "Promote to Box" menu
+  item should be used instead (#2528).
+
+Fixes
+-----
+
+- SceneHierarchy : Fixed bug which caused the scene selection to be cleared
+  unnecessarily (#2525).
+- SceneInspector (#2532) :
+  - Fixed selection bug in Globals->Sets section.
+  - Fixed graphical glitch in Globals->Sets section.
+- Transform Tools : Fixed context management bug (#2524).
+- FileMenu : Fixed premature exit when opening backup containing error (#2526, #2527).
+- OpenGLShader : Fixed serialisation (#2529).
+- Box : Fixed creation of Boxes around existing SceneNode graphs (#2530).
+- SceneGadget : Fixed Python binding for `getScene()` (#2532).
+
+API
+---
+
+- ShaderUI : Added `hideShaders()` function (#2533).
+
 0.45.1.0
 ========
 
