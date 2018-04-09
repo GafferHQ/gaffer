@@ -923,7 +923,7 @@ void SceneGadget::updateSceneGraph() const
 		UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
 		tbb::task::spawn_root_and_wait( *task );
 
-		if( m_dirtyFlags && UpdateTask::ChildNamesDirty )
+		if( m_dirtyFlags & UpdateTask::ChildNamesDirty )
 		{
 			m_sceneGraph->applySelection( m_selection );
 		}
