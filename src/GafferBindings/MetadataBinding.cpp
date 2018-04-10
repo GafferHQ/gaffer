@@ -423,6 +423,7 @@ void bindMetadata()
 		)
 		.staticmethod( "value" )
 
+		.def( "deregisterValue", (void (*)( IECore::InternedString, IECore::InternedString ) )&Metadata::deregisterValue )
 		.def( "deregisterValue", (void (*)( IECore::TypeId, IECore::InternedString ) )&Metadata::deregisterValue )
 		.def( "deregisterValue", (void (*)( IECore::TypeId, const StringAlgo::MatchPattern &, IECore::InternedString ) )&Metadata::deregisterValue )
 		.def( "deregisterValue", (void (*)( GraphComponent *, IECore::InternedString ) )&Metadata::deregisterValue )
