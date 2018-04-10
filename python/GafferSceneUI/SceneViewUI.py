@@ -187,12 +187,21 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		for n in ( "useGLLines", "interpolate" ) :
 			plug = self.getPlug()["curves"][n]["enabled"]
 			m.append(
-				"/Curves/" + IECore.CamelCase.toSpaced( n ),
+				"/Curves Primitives/" + IECore.CamelCase.toSpaced( n ),
 				{
 					"command" : plug.setValue,
 					"checkBox" : plug.getValue(),
 				}
 			)
+
+		useGLPointsPlug = self.getPlug()["pointsPrimitives"]["useGLPoints"]["enabled"]
+		m.append(
+			"/Points Primitives/Use GL Points",
+			{
+				"command" : useGLPointsPlug.setValue,
+				"checkBox" : useGLPointsPlug.getValue()
+			}
+		)
 
 		return m
 

@@ -63,10 +63,6 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:minWidth", 0.0,
 
-	# Add + button for showing and hiding parameters in the NodeGraph
-	"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
-	"noduleLayout:customGadget:addButton:section", "left",
-
 	plugs = {
 
 		"name" : [
@@ -111,6 +107,9 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
+			# Add + button for showing and hiding parameters in the NodeGraph
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+
 		],
 
 		"parameters.*" : [
@@ -133,6 +132,9 @@ Gaffer.Metadata.registerNode(
 
 			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
+
+			# Add + button for showing and hiding parameters in the NodeGraph
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
 
 		],
 
@@ -220,6 +222,15 @@ def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator,
 
 	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
 
+__hiddenShadersPathMatcher = GafferScene.PathMatcher()
+## Hides shaders from the menu created by `appendShaders()`.
+# The `pathMatcher` is an `IECore.PathMatcher()` that will be used
+# to match searchpath-relative shader filenames.
+def hideShaders( pathMatcher ) :
+
+	global __hiddenShadersPathMatcher
+	__hiddenShadersPathMatcher.addPaths( pathMatcher )
+
 def __nodeName( shaderName ) :
 
 	nodeName = os.path.split( shaderName )[-1]
@@ -244,6 +255,8 @@ def __loadFromFile( menu, extensions, nodeCreator ) :
 
 def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) :
 
+	global __hiddenShadersPathMatcher
+
 	if isinstance( matchExpression, str ) :
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
 
@@ -258,6 +271,8 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 			for file in files :
 				if os.path.splitext( file )[1][1:] in extensions :
 					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
+					if __hiddenShadersPathMatcher.match( shaderPath ) & GafferScene.Filter.Result.ExactMatch :
+						continue
 					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
 						shaders.add( os.path.splitext( shaderPath )[0] )
 
@@ -307,18 +322,26 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 	if not isinstance( plug.node(), GafferScene.Shader ) :
 		return
 
-	if not plug.node()["parameters"].isAncestorOf( plug ) :
+	if not (
+		plug.node()["parameters"].isAncestorOf( plug ) or
+		plug.node()["out"].isAncestorOf( plug )
+	) :
 		return
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/HideDivider", { "divider" : True } )
+
+	if plug.direction() == plug.Direction.In :
+		numConnections = 1 if plug.getInput() else 0
+	else :
+		numConnections = len( plug.outputs() )
 
 	menuDefinition.append(
 
 		"/Hide",
 		{
 			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : plug.getInput() is None and not Gaffer.readOnly( plug ),
+			"active" : numConnections == 0 and not Gaffer.readOnly( plug ),
 		}
 
 	)

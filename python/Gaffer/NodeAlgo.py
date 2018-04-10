@@ -131,7 +131,7 @@ def applyUserDefault( plug ) :
 
 def __applyUserDefaults( graphComponent ) :
 
-	if isinstance( graphComponent, Gaffer.Plug ) :
+	if isinstance( graphComponent, Gaffer.ValuePlug ) and graphComponent.settable() :
 		plugValue = Gaffer.Metadata.value( graphComponent, "userDefault" )
 		if plugValue is not None :
 			graphComponent.setValue( plugValue )

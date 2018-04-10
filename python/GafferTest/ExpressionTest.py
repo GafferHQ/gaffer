@@ -1386,5 +1386,31 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s2["n"]["c"][m1.getName()]["enabled"].setValue( True )
 		self.assertEqual( s2["n"]["s"].getValue(), "a:1,b:2" )
 
+	def testContextContains( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent["n"]["op1"] = 1 if "a" in context else 0
+			parent["n"]["op2"] = 1 if "a" not in context else 0
+			"""
+		) )
+
+		with Gaffer.Context() as c :
+
+			self.assertEqual( s["n"]["op1"].getValue(), 0 )
+			self.assertEqual( s["n"]["op2"].getValue(), 1 )
+
+			c["a"] = "a"
+			self.assertEqual( s["n"]["op1"].getValue(), 1 )
+			self.assertEqual( s["n"]["op2"].getValue(), 0 )
+
+			del c["a"]
+			self.assertEqual( s["n"]["op1"].getValue(), 0 )
+			self.assertEqual( s["n"]["op2"].getValue(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

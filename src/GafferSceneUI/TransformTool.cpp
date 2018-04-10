@@ -195,7 +195,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
 			ScenePlug::ScenePath spacePath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			switch( transform->spacePlug()->getValue() )
+			switch( (GafferScene::Transform::Space)transform->spacePlug()->getValue() )
 			{
 				case GafferScene::Transform::Local :
 					break;
@@ -203,6 +203,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 				case GafferScene::Transform::ResetLocal :
 					spacePath.pop_back();
 					break;
+				case GafferScene::Transform::World :
 				case GafferScene::Transform::ResetWorld :
 					spacePath.clear();
 					break;
@@ -270,6 +271,27 @@ class HandlesGadget : public Gadget
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// TransformTool::Selection
+//////////////////////////////////////////////////////////////////////////
+
+Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
+{
+	M44f downstreamMatrix;
+	{
+		Context::Scope scopedContext( context.get() );
+		downstreamMatrix = scene->fullTransform( path );
+	}
+
+	M44f upstreamMatrix;
+	{
+		Context::Scope scopedContext( upstreamContext.get() );
+		upstreamMatrix = upstreamScene->fullTransform( upstreamPath );
+	}
+
+	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace.inverse();
+}
+
+//////////////////////////////////////////////////////////////////////////
 // TransformTool
 //////////////////////////////////////////////////////////////////////////
 
@@ -309,6 +331,23 @@ const TransformTool::Selection &TransformTool::selection() const
 {
 	updateSelection();
 	return m_selection;
+}
+
+Imath::M44f TransformTool::handlesTransform()
+{
+	updateSelection();
+	if( !m_selection.transformPlug )
+	{
+		throw IECore::Exception( "Selection not valid" );
+	}
+
+	if( m_handlesDirty )
+	{
+		updateHandles();
+		m_handlesDirty = false;
+	}
+
+	return handles()->getTransform();
 }
 
 GafferScene::ScenePlug *TransformTool::scenePlug()
@@ -440,9 +479,16 @@ void TransformTool::updateSelection() const
 			ScenePlug::stringToPath( selection->readable()[0], newSelection.path );
 		}
 	}
-	if( newSelection.path.empty() || !exists( scenePlug(), newSelection.path ) )
+	if( newSelection.path.empty() )
 	{
 		return;
+	}
+	{
+		Context::Scope scope( view()->getContext() );
+		if( !SceneAlgo::exists( scenePlug(), newSelection.path ) )
+		{
+			return;
+		}
 	}
 
 	// Do an evaluation of the transform hash for our selection,
@@ -497,32 +543,44 @@ void TransformTool::preRender()
 
 Imath::M44f TransformTool::orientedTransform( Orientation orientation )
 {
-	Context::Scope scopedContext( view()->getContext() );
-
 	const Selection &selection = this->selection();
-	const M44f localMatrix = scenePlug()->transform( selection.path );
-	M44f parentMatrix;
-	if( selection.path.size() )
-	{
-		const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-		parentMatrix = scenePlug()->fullTransform( parentPath );
-	}
+	Context::Scope scopedContext( selection.context.get() );
+
+	// Get a matrix with the orientation we want
 
 	M44f result;
-	switch( orientation )
 	{
-		case Local :
-			result = localMatrix * parentMatrix;
-			break;
-		case Parent :
-			result = M44f().setTranslation( localMatrix.translation() ) * parentMatrix;
-			break;
-		case World :
-			result.setTranslation( ( localMatrix * parentMatrix ).translation() );
-			break;
+		switch( orientation )
+		{
+			case Local :
+				result = selection.scene->fullTransform( selection.path );
+				break;
+			case Parent :
+				if( selection.path.size() )
+				{
+					const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
+					result = scenePlug()->fullTransform( parentPath );
+				}
+				break;
+			case World :
+				result = M44f();
+				break;
+		}
 	}
 
-	return sansScaling( result );
+	result = sansScaling( result );
+
+	// And reset the translation to put it where the pivot is
+
+	const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
+	const V3f translate = selection.transformPlug->translatePlug()->getValue();
+	const V3f downstreamWorldPivot = (pivot + translate) * selection.sceneToTransformSpace().inverse();
+
+	result[3][0] = downstreamWorldPivot[0];
+	result[3][1] = downstreamWorldPivot[1];
+	result[3][2] = downstreamWorldPivot[2];
+
+	return result;
 }
 
 void TransformTool::dragBegin()

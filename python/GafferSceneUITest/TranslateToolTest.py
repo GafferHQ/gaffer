@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import inspect
+import math
+
 import IECore
 
 import Gaffer
@@ -386,6 +389,66 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 				0.0000001
 			)
 		)
+
+	def testHandlesTransform( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["rotate"]["y"].setValue( 90 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				IECore.M44f().rotate( IECore.V3f( 0, math.pi / 2, 0 ) ),
+				0.000001
+			)
+		)
+
+		tool["orientation"].setValue( tool.Orientation.Parent )
+		self.assertEqual(
+			tool.handlesTransform(), IECore.M44f()
+		)
+
+		tool["orientation"].setValue( tool.Orientation.World )
+		self.assertEqual(
+			tool.handlesTransform(), IECore.M44f()
+		)
+
+	def testContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addMember( "enabled", True )
+		script["variables"].addMember( "x", 1.0 )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["plane"]["transform"]["translate"]["x"] = context["x"]
+			parent["plane"]["enabled"] = context["enabled"]
+			"""
+		) )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		view.setContext( script.context() )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.selection().path, "/plane" )
+		self.assertEqual( tool.selection().transformSpace, IECore.M44f() )
 
 if __name__ == "__main__":
 	unittest.main()
