@@ -172,9 +172,9 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		# Remember what the default camera looks like
 		defaultCamera = view.viewportGadget().getCamera()
 		defaultCameraTransform = imath.M44f().translate( imath.V3f( 10, 11, 12 ) )
-		defaultCentreOfInterest = 2.5
+		defaultCenterOfInterest = 2.5
 		view.viewportGadget().setCameraTransform( defaultCameraTransform )
-		view.viewportGadget().setCentreOfInterest( defaultCentreOfInterest )
+		view.viewportGadget().setCenterOfInterest( defaultCenterOfInterest )
 
 		# Look through a scene camera
 		view["camera"]["lookThroughCamera"].setValue( "/camera" )
@@ -185,13 +185,13 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( view.viewportGadget().getCameraTransform(), script["camera"]["out"].fullTransform( "/camera" ) )
 
 		# Make an edit with the CameraTool, and change the transform and
-		# centre of interest.
+		# center of interest.
 
 		tool = GafferSceneUI.CameraTool( view )
 		tool["active"].setValue( True )
 
 		view.viewportGadget().frame( imath.Box3f( imath.V3f( -1000 ), imath.V3f( 1000 ) ) )
-		self.assertNotEqual( view.viewportGadget().getCentreOfInterest(), defaultCentreOfInterest )
+		self.assertNotEqual( view.viewportGadget().getCenterOfInterest(), defaultCenterOfInterest )
 
 		# Switch back out of the tool and make sure the default camera
 		# is restored.
@@ -201,9 +201,9 @@ class CameraToolTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( view.viewportGadget().getCamera(), defaultCamera )
 		self.assertEqual( view.viewportGadget().getCameraTransform(), defaultCameraTransform )
-		self.assertEqual( view.viewportGadget().getCentreOfInterest(), defaultCentreOfInterest )
+		self.assertEqual( view.viewportGadget().getCenterOfInterest(), defaultCenterOfInterest )
 
-	def testCentreOfInterestAndUndo( self ) :
+	def testCenterOfInterestAndUndo( self ) :
 
 		script = Gaffer.ScriptNode()
 		script["camera"] = GafferScene.Camera()
@@ -216,38 +216,38 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.CameraTool( view )
 		tool["active"].setValue( True )
 
-		centreOfInterest1 = view.viewportGadget().getCentreOfInterest()
+		centerOfInterest1 = view.viewportGadget().getCenterOfInterest()
 
 		with Gaffer.UndoScope( script ) :
 			view.viewportGadget().frame( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) )
 
-		centreOfInterest2 = view.viewportGadget().getCentreOfInterest()
+		centerOfInterest2 = view.viewportGadget().getCenterOfInterest()
 
 		with Gaffer.UndoScope( script ) :
 			view.viewportGadget().frame( imath.Box3f( imath.V3f( 0 ), imath.V3f( 10 ) ) )
 
-		centreOfInterest3 = view.viewportGadget().getCentreOfInterest()
+		centerOfInterest3 = view.viewportGadget().getCenterOfInterest()
 
-		def assertCentreOfInterestEqual( centreOfInterest ) :
+		def assertCenterOfInterestEqual( centerOfInterest ) :
 
 			# Force update, since everything is done lazily in the SceneView
 			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
 			self.assertEqual(
-				view.viewportGadget().getCentreOfInterest(),
-				centreOfInterest
+				view.viewportGadget().getCenterOfInterest(),
+				centerOfInterest
 			)
 
 		script.undo()
-		assertCentreOfInterestEqual( centreOfInterest2 )
+		assertCenterOfInterestEqual( centerOfInterest2 )
 
 		script.undo()
-		assertCentreOfInterestEqual( centreOfInterest1 )
+		assertCenterOfInterestEqual( centerOfInterest1 )
 
 		script.redo()
-		assertCentreOfInterestEqual( centreOfInterest2 )
+		assertCenterOfInterestEqual( centerOfInterest2 )
 
 		script.redo()
-		assertCentreOfInterestEqual( centreOfInterest3 )
+		assertCenterOfInterestEqual( centerOfInterest3 )
 
 if __name__ == "__main__":
 	unittest.main()

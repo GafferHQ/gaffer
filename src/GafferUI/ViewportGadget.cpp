@@ -99,7 +99,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 	public :
 
 		CameraController( IECoreScene::CameraPtr camera )
-			:	m_centreOfInterest( 1.0f ), m_orthographic3D( false )
+			:	m_centerOfInterest( 1.0f ), m_orthographic3D( false )
 		{
 			setCamera( camera );
 		}
@@ -143,14 +143,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		}
 
 		/// Positive.
-		void setCentreOfInterest( float centreOfInterest )
+		void setCenterOfInterest( float centerOfInterest )
 		{
-			m_centreOfInterest = centreOfInterest;
+			m_centerOfInterest = centerOfInterest;
 		}
 
-		float getCentreOfInterest()
+		float getCenterOfInterest()
 		{
-			return m_centreOfInterest;
+			return m_centerOfInterest;
 		}
 
 		void setOrthographic3D( bool orthographic3D )
@@ -236,7 +236,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) )
 		{
-			// Make a matrix to centre the camera on the box, with the appropriate view direction.
+			// Make a matrix to center the camera on the box, with the appropriate view direction.
 			M44f cameraMatrix = rotationMatrixWithUpDir( V3f( 0, 0, -1 ), viewDirection, upVector );
 			M44f translationMatrix;
 			translationMatrix.translate( box.center() );
@@ -252,14 +252,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			{
 				// perspective. leave the field of view and screen window as is and translate
 				// back till the box is wholly visible. this currently assumes the screen window
-				// is centred about the camera axis.
+				// is centered about the camera axis.
 				float z0 = cBox.size().x / screenWindow.size().x;
 				float z1 = cBox.size().y / screenWindow.size().y;
 
-				m_centreOfInterest = std::max( z0, z1 ) / tan( M_PI * m_fov->readable() / 360.0 ) + cBox.max.z +
+				m_centerOfInterest = std::max( z0, z1 ) / tan( M_PI * m_fov->readable() / 360.0 ) + cBox.max.z +
 					m_clippingPlanes->readable()[0];
 
-				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centreOfInterest ) );
+				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centerOfInterest ) );
 			}
 			else
 			{
@@ -269,8 +269,8 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				// planes that would otherwise send us way out into space. The
 				// 0.1 is just a fudge factor to ensure we don't accidentally clip
 				// the front of the box.
-				m_centreOfInterest = cBox.max.z + std::max( m_clippingPlanes->readable()[0], 0.0f ) + 0.1;
-				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centreOfInterest ) );
+				m_centerOfInterest = cBox.max.z + std::max( m_clippingPlanes->readable()[0], 0.0f ) + 0.1;
+				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centerOfInterest ) );
 
 				if( getOrthographic3D() )
 				{
@@ -278,7 +278,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					// they framed. Translate back some more to make
 					// room to tumble around the entire bound.
 					const float offset = cBox.size().length();
-					m_centreOfInterest += offset;
+					m_centerOfInterest += offset;
 					cameraMatrix.translate( V3f( 0.0f, 0.0f, offset ) );
 				}
 				else
@@ -397,7 +397,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_motionStart = startPosition;
 			m_motionMatrix = m_transform;
 			m_motionScreenWindow = m_screenWindow->readable();
-			m_motionCentreOfInterest = m_centreOfInterest;
+			m_motionCenterOfInterest = m_centerOfInterest;
 		}
 
 		/// Updates the camera position based on a changed mouse position. Can only
@@ -453,7 +453,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			translate.y = screenWindow.size().y * d.y/(float)resolution.y;
 			if( m_projection->readable()=="perspective" && m_fov )
 			{
-				translate *= tan( M_PI * m_fov->readable() / 360.0f ) * (float)m_centreOfInterest;
+				translate *= tan( M_PI * m_fov->readable() / 360.0f ) * (float)m_centerOfInterest;
 			}
 			M44f t = m_motionMatrix;
 			t.translate( translate );
@@ -464,13 +464,13 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		{
 			V2f d = p - m_motionStart;
 
-			V3f centreOfInterestInWorld = V3f( 0, 0, -m_centreOfInterest ) * m_motionMatrix;
+			V3f centerOfInterestInWorld = V3f( 0, 0, -m_centerOfInterest ) * m_motionMatrix;
 			V3f xAxisInWorld = V3f( 1, 0, 0 );
 			m_motionMatrix.multDirMatrix( xAxisInWorld, xAxisInWorld );
 			xAxisInWorld.normalize();
 
 			M44f t;
-			t.translate( centreOfInterestInWorld );
+			t.translate( centerOfInterestInWorld );
 
 				t.rotate( V3f( 0, -d.x / 100.0f, 0 ) );
 
@@ -479,7 +479,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 				t = xRotate * t;
 
-			t.translate( -centreOfInterestInWorld );
+			t.translate( -centerOfInterestInWorld );
 
 			m_transform = m_motionMatrix * t;
 		}
@@ -493,10 +493,10 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			if( m_projection->readable()=="perspective" || m_orthographic3D )
 			{
 				// perspective
-				m_centreOfInterest = m_motionCentreOfInterest * expf( -1.9f * d );
+				m_centerOfInterest = m_motionCenterOfInterest * expf( -1.9f * d );
 
 				M44f t = m_motionMatrix;
-				t.translate( V3f( 0, 0, m_centreOfInterest - m_motionCentreOfInterest ) );
+				t.translate( V3f( 0, 0, m_centerOfInterest - m_motionCenterOfInterest ) );
 
 				m_transform = t;
 			}
@@ -505,10 +505,10 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				// orthographic
 				Box2f screenWindow = m_motionScreenWindow;
 
-				V2f centreNDC = V2f( m_motionStart ) / resolution;
-				V2f centre(
-					lerp( screenWindow.min.x, screenWindow.max.x, centreNDC.x ),
-					lerp( screenWindow.max.y, screenWindow.min.y, centreNDC.y )
+				V2f centerNDC = V2f( m_motionStart ) / resolution;
+				V2f center(
+					lerp( screenWindow.min.x, screenWindow.max.x, centerNDC.x ),
+					lerp( screenWindow.max.y, screenWindow.min.y, centerNDC.y )
 				);
 
 				float newWidth = m_motionScreenWindow.size().x * expf( -1.9f * d );
@@ -516,8 +516,8 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 				float scale = newWidth / screenWindow.size().x;
 
-				screenWindow.min = (screenWindow.min - centre) * scale + centre;
-				screenWindow.max = (screenWindow.max - centre) * scale + centre;
+				screenWindow.min = (screenWindow.min - center) * scale + center;
+				screenWindow.max = (screenWindow.max - center) * scale + center;
 				m_screenWindow->writable() = screenWindow;
 			}
 		}
@@ -529,14 +529,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		ConstStringDataPtr m_projection;
 		ConstFloatDataPtr m_fov;
 		V2fDataPtr m_clippingPlanes;
-		float m_centreOfInterest;
+		float m_centerOfInterest;
 		M44f m_transform;
 
 		// Motion state
 		MotionType m_motionType;
 		Imath::V2f m_motionStart;
 		Imath::M44f m_motionMatrix;
-		float m_motionCentreOfInterest;
+		float m_motionCenterOfInterest;
 		Imath::Box2f m_motionScreenWindow;
 
 		// General options
@@ -725,14 +725,14 @@ void ViewportGadget::setCameraEditable( bool editable )
 	m_cameraEditable = editable;
 }
 
-void ViewportGadget::setCentreOfInterest( float centreOfInterest )
+void ViewportGadget::setCenterOfInterest( float centerOfInterest )
 {
-	m_cameraController->setCentreOfInterest( centreOfInterest );
+	m_cameraController->setCenterOfInterest( centerOfInterest );
 }
 
-float ViewportGadget::getCentreOfInterest()
+float ViewportGadget::getCenterOfInterest()
 {
-	return m_cameraController->getCentreOfInterest();
+	return m_cameraController->getCenterOfInterest();
 }
 
 void ViewportGadget::setOrthographic3D( bool orthographic3D )
@@ -766,7 +766,7 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 	Box3f b = transform( box, getCameraTransform().inverse() );
 	// Choose a far plane that should still be
 	// sufficient no matter how we orbit about the
-	// centre of the bound.
+	// center of the bound.
 	const float bRadius = b.size().length() / 2.0;
 	float far = b.center().z - bRadius;
 	if( far >= 0.0f )

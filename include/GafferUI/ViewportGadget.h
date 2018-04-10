@@ -103,10 +103,10 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		bool getCameraEditable() const;
 		void setCameraEditable( bool editable );
 
-		/// The centre of interest is the depth (in camera space)
+		/// The center of interest is the depth (in camera space)
 		/// of a pivot about which the Alt+drag camera motion operates.
-		void setCentreOfInterest( float centreOfInterest );
-		float getCentreOfInterest();
+		void setCenterOfInterest( float centerOfInterest );
+		float getCenterOfInterest();
 
 		/// By default, the motion of orthographic cameras is
 		/// constrained to the image plane during Alt+drag interaction.

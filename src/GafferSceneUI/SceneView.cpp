@@ -484,7 +484,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 			// now for our model-view matrix. this is the same as is used by the main
 			// view, but with the translation reset. this means when we draw our
-			// children at the origin, they will be centred within camera space.
+			// children at the origin, they will be centered within camera space.
 
 			glMatrixMode( GL_MODELVIEW );
 			glPushMatrix();
@@ -860,7 +860,7 @@ class SceneView::Camera : public boost::signals::trackable
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
 				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
-				m_originalCentreOfInterest( m_view->viewportGadget()->getCentreOfInterest() ),
+				m_originalCenterOfInterest( m_view->viewportGadget()->getCenterOfInterest() ),
 				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
@@ -1060,7 +1060,7 @@ class SceneView::Camera : public boost::signals::trackable
 				{
 					m_originalCamera = m_view->viewportGadget()->getCamera()->copy();
 					m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
-					m_originalCentreOfInterest = m_view->viewportGadget()->getCentreOfInterest();
+					m_originalCenterOfInterest = m_view->viewportGadget()->getCenterOfInterest();
 				}
 				m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 			}
@@ -1117,7 +1117,7 @@ class SceneView::Camera : public boost::signals::trackable
 			{
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
 				m_view->viewportGadget()->setCameraTransform( m_originalCameraTransform );
-				m_view->viewportGadget()->setCentreOfInterest( m_originalCentreOfInterest );
+				m_view->viewportGadget()->setCenterOfInterest( m_originalCenterOfInterest );
 				m_view->viewportGadget()->setCameraEditable( true );
 				m_view->hideFilter()->pathsPlug()->setToDefault();
 				return;
@@ -1320,7 +1320,7 @@ class SceneView::Camera : public boost::signals::trackable
 		/// return to it after looking through a scene camera.
 		IECoreScene::CameraPtr m_originalCamera;
 		M44f m_originalCameraTransform;
-		float m_originalCentreOfInterest;
+		float m_originalCenterOfInterest;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;

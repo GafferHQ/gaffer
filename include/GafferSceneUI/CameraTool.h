@@ -96,11 +96,11 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 
 		boost::signals::connection m_viewportCameraChangedConnection;
 
-		void setCameraCentreOfInterest( const GafferScene::ScenePlug::ScenePath &camera, float centreOfInterest );
-		float getCameraCentreOfInterest( const GafferScene::ScenePlug::ScenePath &camera ) const;
+		void setCameraCenterOfInterest( const GafferScene::ScenePlug::ScenePath &camera, float centerOfInterest );
+		float getCameraCenterOfInterest( const GafferScene::ScenePlug::ScenePath &camera ) const;
 
-		typedef std::unordered_map<std::string, float> CameraCentresOfInterest;
-		CameraCentresOfInterest m_cameraCentresOfInterest;
+		typedef std::unordered_map<std::string, float> CameraCentersOfInterest;
+		CameraCentersOfInterest m_cameraCentersOfInterest;
 
 		static ToolDescription<CameraTool, SceneView> g_toolDescription;
 		static size_t g_firstPlugIndex;
