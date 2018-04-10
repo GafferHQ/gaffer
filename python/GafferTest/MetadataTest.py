@@ -937,6 +937,18 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertTrue( names.index( "testInt" ) < names.index( "testIntVectorData" ) )
 		self.assertTrue( names.index( "testIntVectorData" ) < names.index( "testDynamicValue" ) )
 
+	def testOverwriteNonNodeMetadata( self ) :
+
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+
+		Gaffer.Metadata.registerValue( "testTarget", "testInt", 1 )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 1 )
+
+		Gaffer.Metadata.registerValue( "testTarget", "testInt", 2 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 2 )
+
 	def testSerialisationQuoting( self ) :
 
 		s = Gaffer.ScriptNode()

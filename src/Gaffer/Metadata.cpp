@@ -298,7 +298,14 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
 {
-	metadataMap()[target].insert( NamedValue( key, value ) );
+	NamedValue namedValue( key, value );
+	auto &m = metadataMap()[target];
+	auto i = m.insert( namedValue );
+	if( !i.second )
+	{
+		m.replace( i.first, namedValue );
+	}
+
 	valueChangedSignal()( target, key );
 }
 
