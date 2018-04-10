@@ -110,7 +110,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		/// By default, the motion of orthographic cameras is
 		/// constrained to the image plane during Alt+drag interaction.
-		/// To allow full 3D movement call `setOrthographic2D( true )`.
+		/// To allow full 3D movement call `setOrthographic3D( true )`.
 		void setOrthographic3D( bool orthographic3D );
 		const bool getOrthographic3D() const;
 
