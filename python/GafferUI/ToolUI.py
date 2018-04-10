@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,20 +34,33 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
-from RotateToolTest import RotateToolTest
-from ContextAlgoTest import ContextAlgoTest
-from CameraToolTest import CameraToolTest
+import Gaffer
+import GafferUI
 
-if __name__ == "__main__":
-	unittest.main()
+def __image( plug ) :
+
+	image = plug.node().typeName().replace( ":", "" )
+	image = image[:1].lower() + image[1:] + ".png"
+	return image
+
+Gaffer.Metadata.registerNode(
+
+	GafferUI.Tool,
+
+	"description",
+	"""
+	Base class for interactive tools used in the Viewer.
+	""",
+
+	plugs = {
+
+		"active" : [
+
+			"boolPlugValueWidget:displayMode", "tool",
+			"boolPlugValueWidget:image", __image,
+
+		],
+
+	}
+
+)

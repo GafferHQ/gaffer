@@ -103,6 +103,17 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		bool getCameraEditable() const;
 		void setCameraEditable( bool editable );
 
+		/// The center of interest is the depth (in camera space)
+		/// of a pivot about which the Alt+drag camera motion operates.
+		void setCenterOfInterest( float centerOfInterest );
+		float getCenterOfInterest();
+
+		/// By default, the motion of orthographic cameras is
+		/// constrained to the image plane during Alt+drag interaction.
+		/// To allow full 3D movement call `setOrthographic3D( true )`.
+		void setOrthographic3D( bool orthographic3D );
+		const bool getOrthographic3D() const;
+
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );

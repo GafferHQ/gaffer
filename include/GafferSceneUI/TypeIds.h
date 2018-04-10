@@ -52,6 +52,7 @@ enum TypeId
 	TranslateToolTypeId = 110658,
 	ScaleToolTypeId = 110659,
 	RotateToolTypeId = 110660,
+	CameraToolTypeId = 110661,
 	LastTypeId = 110700
 };
 

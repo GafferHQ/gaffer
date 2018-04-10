@@ -42,12 +42,16 @@ import GafferUI
 
 ## Supported plug metadata :
 #
-# - "boolPlugValueWidget:displayMode", with a value of "checkBox" or "switch"
+# - "boolPlugValueWidget:displayMode", with a value of "checkBox", "switch" or "tool"
+# - "boolPlugValueWidget:image", with the name of an image to display when displayMode is "tool"
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
 
-		self.__boolWidget = GafferUI.BoolWidget( displayMode=displayMode )
+		self.__boolWidget = GafferUI.BoolWidget(
+			displayMode = displayMode,
+			image = Gaffer.Metadata.value( plug, "boolPlugValueWidget:image" )
+		)
 
 		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plug, **kw )
 
@@ -56,6 +60,10 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
 		self._updateFromPlug()
+
+	def boolWidget( self ) :
+
+		return self.__boolWidget
 
 	def setHighlighted( self, highlighted ) :
 
@@ -80,8 +88,12 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 					self.__boolWidget.setState( value )
 
 			displayMode = Gaffer.Metadata.value( self.getPlug(), "boolPlugValueWidget:displayMode" )
-			if displayMode is not None :
-				self.__boolWidget.setDisplayMode( self.__boolWidget.DisplayMode.Switch if displayMode == "switch" else self.__boolWidget.DisplayMode.CheckBox )
+			displayMode = {
+				"switch" : self.__boolWidget.DisplayMode.Switch,
+				"checkBox" : self.__boolWidget.DisplayMode.CheckBox,
+				"tool" : self.__boolWidget.DisplayMode.Tool,
+			}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
+			self.__boolWidget.setDisplayMode( displayMode )
 
 		self.__boolWidget.setEnabled( self._editable( canEditAnimation = True ) )
 

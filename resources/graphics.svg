@@ -3541,7 +3541,7 @@
          style="fill:none;stroke:none" />
     </g>
     <g
-       id="forExport:cameraTool"
+       id="forExport:gafferSceneUICameraTool"
        inkscape:label="#g5318">
       <g
          transform="matrix(1.1796873,0,0,1.1815592,-43.1523,-43.361813)"
@@ -3553,7 +3553,7 @@
            transform="translate(0,52.362183)"
            id="rect5222" />
         <ellipse
-           style="fill:#515151;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.84701049;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           style="fill:#2a2a2a;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.84701049;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
            id="path5224"
            cx="250.00002"
            cy="258.86218"

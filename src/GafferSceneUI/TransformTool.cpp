@@ -290,6 +290,40 @@ class HandlesGadget : public Gadget
 // TransformTool::Selection
 //////////////////////////////////////////////////////////////////////////
 
+TransformTool::Selection::Selection()
+{
+}
+
+TransformTool::Selection::Selection(
+	const GafferScene::ConstScenePlugPtr scene,
+	const GafferScene::ScenePlug::ScenePath &path,
+	const Gaffer::ConstContextPtr &context
+)
+	:	scene( scene ), path( path ), context( context )
+{
+	Context::Scope scopedContext( context.get() );
+	if( path.empty() || !SceneAlgo::exists( scene.get(), path ) )
+	{
+		return;
+	}
+
+	// Do an evaluation of the transform hash for our selection,
+	// using a monitor to capture the upstream processes it triggers.
+	CapturingMonitor monitor;
+	{
+		Monitor::Scope scopedMonitor( &monitor );
+		ScenePlug::PathScope pathScope( context.get(), path );
+		// Trick to bypass the hash cache and get a full upstream evaluation.
+		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
+		scene->transformPlug()->hash();
+	}
+
+	// Iterate over the captured processes to update the selection with
+	// the upstream transform plug we want to edit.
+
+	updateSelectionWalk( monitor.rootProcesses(), *this );
+}
+
 Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 {
 	M44f downstreamMatrix;
@@ -465,49 +499,16 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
-	// Find the selected path, and early out if it's not valid.
-	Selection newSelection;
-	PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
+	// If there's a single path selected, then
+	// update our selection from it.
+	const PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
 	if( !selectedPaths.isEmpty() )
 	{
 		const PathMatcher::Iterator it = selectedPaths.begin();
 		if( std::next( it ) == selectedPaths.end() )
 		{
-			// Single path selected
-			newSelection.path = *it;
+			m_selection = Selection( scenePlug(), *it, view()->getContext() );
 		}
-	}
-	if( newSelection.path.empty() )
-	{
-		return;
-	}
-	{
-		Context::Scope scope( view()->getContext() );
-		if( !SceneAlgo::exists( scenePlug(), newSelection.path ) )
-		{
-			return;
-		}
-	}
-
-	// Do an evaluation of the transform hash for our selection,
-	// using a monitor to capture the upstream processes it triggers.
-	CapturingMonitor monitor;
-	{
-		Monitor::Scope scopedMonitor( &monitor );
-		ScenePlug::PathScope pathScope( view()->getContext(), newSelection.path );
-		// Trick to bypass the hash cache and get a full upstream evaluation.
-		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
-		scenePlug()->transformPlug()->hash();
-	}
-
-	// Iterate over the captured processes to update the selection with
-	// the upstream transform plug we want to edit.
-
-	if( updateSelectionWalk( monitor.rootProcesses(), newSelection ) )
-	{
-		newSelection.scene = scenePlug();
-		newSelection.context = view()->getContext();
-		m_selection = newSelection;
 	}
 }
 

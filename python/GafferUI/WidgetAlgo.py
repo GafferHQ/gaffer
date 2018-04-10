@@ -55,10 +55,20 @@ def joinEdges( listContainer ) :
 
 	visibleWidgets = [ w for w in listContainer if w.getVisible() ]
 	l = len( visibleWidgets )
-	for i in range( 0, l ) :
-		visibleWidgets[i]._qtWidget().setProperty( lowProperty, i > 0 )
-		visibleWidgets[i]._qtWidget().setProperty( highProperty, i < l - 1 )
-		visibleWidgets[i]._repolish()
+	for i, widget in enumerate( visibleWidgets ) :
+
+		if isinstance( widget, GafferUI.BoolPlugValueWidget ) :
+			# Special case - we need to apply the rounding to
+			# the internal widget.
+			## \todo Is there a better approach here, perhaps
+			# using the stylesheet?
+			qtWidget = widget.boolWidget()._qtWidget()
+		else :
+			qtWidget = widget._qtWidget()
+
+		qtWidget.setProperty( lowProperty, i > 0 )
+		qtWidget.setProperty( highProperty, i < l - 1 )
+		widget._repolish()
 
 def grab( widget, imagePath ) :
 
