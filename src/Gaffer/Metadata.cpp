@@ -309,6 +309,25 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 	valueChangedSignal()( target, key );
 }
 
+void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedString key )
+{
+	auto &m = metadataMap();
+	auto mIt = m.find( target );
+	if( mIt == m.end() )
+	{
+		return;
+	}
+
+	auto vIt = mIt->second.find( key );
+	if( vIt == mIt->second.end() )
+	{
+		return;
+	}
+
+	mIt->second.erase( vIt );
+	valueChangedSignal()( target, key );
+}
+
 void Metadata::registeredValues( IECore::InternedString target, std::vector<IECore::InternedString> &keys )
 {
 	const MetadataMap &m = metadataMap();

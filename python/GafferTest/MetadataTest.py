@@ -949,6 +949,23 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 2 )
 
+	def testDeregisterNonNodeMetadata( self ) :
+
+		Gaffer.Metadata.registerValue( "testTarget", "testInt", 1 )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 1 )
+
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		Gaffer.Metadata.deregisterValue( "testTarget", "testInt" )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( "testTarget", "testInt" ) )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), None )
+
+		Gaffer.Metadata.deregisterValue( "testTarget", "nonExistentKey" )
+		self.assertEqual( len( cs ), 1 )
+
+		Gaffer.Metadata.deregisterValue( "nonExistentTarget", "testInt" )
+		self.assertEqual( len( cs ), 1 )
+
 	def testSerialisationQuoting( self ) :
 
 		s = Gaffer.ScriptNode()
