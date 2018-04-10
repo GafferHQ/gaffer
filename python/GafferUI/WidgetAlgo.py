@@ -68,7 +68,7 @@ def joinEdges( listContainer ) :
 
 		qtWidget.setProperty( lowProperty, i > 0 )
 		qtWidget.setProperty( highProperty, i < l - 1 )
-		qtWidget._repolish()
+		widget._repolish()
 
 def grab( widget, imagePath ) :
 
