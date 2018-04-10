@@ -285,25 +285,48 @@ void CameraTool::viewportCameraChanged()
 		return;
 	}
 
+	// Figure out the offset from where the camera is in the scene
+	// to where the user has just moved the viewport camera.
+
 	const M44f viewportCameraTransform = view()->viewportGadget()->getCameraTransform();
+	M44f cameraTransform;
 	{
 		Context::Scope scopedContext( selection.context.get() );
-		if( selection.scene->transform( selection.path ) == viewportCameraTransform )
-		{
-			return;
-		}
+		cameraTransform = selection.scene->fullTransform( selection.path );
 	}
 
-	const M44f transformSpaceMatrix = viewportCameraTransform * selection.sceneToTransformSpace();
+	if( cameraTransform == viewportCameraTransform )
+	{
+		return;
+	}
 
-	Eulerf e; e.extract( transformSpaceMatrix );
+	const M44f offset = cameraTransform.inverse() * viewportCameraTransform;
+
+	// This offset is measured in the downstream world space.
+	// Transform it into the space the transform is applied in.
+	// This requires a "change of basis" because it is a transformation
+	// matrix.
+
+	const M44f sceneToTransformSpace = selection.sceneToTransformSpace();
+	const M44f transformSpaceOffset = sceneToTransformSpace.inverse() * offset * sceneToTransformSpace;
+
+	// Now apply this offset to the current value on the transform plug.
+
+	M44f plugTransform;
+	{
+		Context::Scope scopedContext( selection.upstreamContext.get() );
+		plugTransform = selection.transformPlug->matrix();
+	}
+	plugTransform = plugTransform * transformSpaceOffset;
+
+	Eulerf e; e.extract( plugTransform );
 	e.makeNear( degreesToRadians( selection.transformPlug->rotatePlug()->getValue() ) );
 	const V3f r = radiansToDegrees( V3f( e ) );
 
 	UndoScope undoScope( selection.transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
 
 	selection.transformPlug->rotatePlug()->setValue( r );
-	selection.transformPlug->translatePlug()->setValue( transformSpaceMatrix.translation() );
+	selection.transformPlug->translatePlug()->setValue( plugTransform.translation() );
 
 	// Create an action to save/restore the current center of interest, so that
 	// when the user undos a framing action, they get back to the old center of

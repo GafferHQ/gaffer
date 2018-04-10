@@ -249,5 +249,44 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script.redo()
 		assertCenterOfInterestEqual( centerOfInterest3 )
 
+	def testTransformNode( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 1 )
+		script["camera"]["transform"]["rotate"]["y"].setValue( 90 )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/camera" ] ) )
+
+		script["transform"] = GafferScene.Transform()
+		script["transform"]["in"].setInput( script["camera"]["out"] )
+		script["transform"]["filter"].setInput( script["filter"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["transform"]["out"] )
+
+		view["camera"]["lookThroughEnabled"].setValue( True )
+		view["camera"]["lookThroughCamera"].setValue( "/camera" )
+
+		tool = GafferSceneUI.CameraTool( view )
+		tool["active"].setValue( True )
+
+		cameraTransform = imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) * imath.M44f().rotate( IECore.degreesToRadians( imath.V3f( 15, 90, 0 ) ) )
+
+		for space in GafferScene.Transform.Space.values.values() :
+
+			script["transform"]["space"].setValue( space )
+			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+			view.viewportGadget().setCameraTransform( cameraTransform )
+
+			self.assertTrue(
+				cameraTransform.equalWithAbsError(
+					script["transform"]["out"].fullTransform( "/camera" ),
+					0.00001
+				)
+			)
+
 if __name__ == "__main__":
 	unittest.main()
