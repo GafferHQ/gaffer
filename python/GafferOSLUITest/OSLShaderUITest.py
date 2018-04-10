@@ -36,6 +36,7 @@
 
 import os
 
+import Gaffer
 import GafferUI
 
 import GafferOSL
@@ -71,6 +72,52 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 
 		node.loadShader( surfaceShader )
 		self.assertTrue( isinstance( nodeGadget.nodule( node["out"] ), GafferUI.StandardNodule ) )
+
+	def testParameterUserDefaults( self ) :
+
+		s = GafferOSL.OSLShader()
+		s.loadShader( "ObjectProcessing/InFloat" )
+
+		self.assertEqual( s["parameters"]["name"].getValue(), "u" )
+		self.assertEqual( s["parameters"]["defaultValue"].getValue(), 0 )
+
+		Gaffer.NodeAlgo.applyUserDefaults( s )
+
+		self.assertEqual( s["parameters"]["name"].getValue(), "u" )
+		self.assertEqual( s["parameters"]["defaultValue"].getValue(), 0 )
+
+		Gaffer.Metadata.registerValue( "osl:shader:ObjectProcessing/InFloat:name", "userDefault", "xx" )
+		Gaffer.Metadata.registerValue( "osl:shader:ObjectProcessing/InFloat:defaultValue", "userDefault", 1 )
+
+		Gaffer.NodeAlgo.applyUserDefaults( s )
+
+		self.assertEqual( s["parameters"]["name"].getValue(), "xx" )
+		self.assertEqual( s["parameters"]["defaultValue"].getValue(), 1 )
+
+	def testSplineParameterUserDefaults( self ) :
+
+		Gaffer.Metadata.registerValue(
+			"osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault",
+			Gaffer.SplineDefinitionInterpolation.Linear
+		)
+
+		s = GafferOSL.OSLShader()
+		s.loadShader( "Pattern/ColorSpline" )
+		Gaffer.NodeAlgo.applyUserDefaults( s )
+		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.SplineDefinitionInterpolation.Linear )
+
+		Gaffer.Metadata.registerValue(
+			"osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault",
+			Gaffer.SplineDefinitionInterpolation.MonotoneCubic
+		)
+		Gaffer.NodeAlgo.applyUserDefaults( s )
+		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+
+	def tearDown( self ) :
+
+		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:name", "userDefault" )
+		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:defaultValue", "userDefault" )
+		Gaffer.Metadata.deregisterValue( "osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault" )
 
 if __name__ == "__main__":
 	unittest.main()
