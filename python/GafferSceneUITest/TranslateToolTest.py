@@ -399,7 +399,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["plane"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
@@ -442,7 +442,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		view["in"].setInput( script["plane"]["out"] )
 		view.setContext( script.context() )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )

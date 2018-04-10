@@ -205,27 +205,27 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["cube"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/cube" ] ) )
 
 		tool = GafferSceneUI.RotateTool( view )
 		tool["active"].setValue( True )
 
-		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+		self.assertEqual( tool.handlesTransform(), IECore.M44f() )
 
-		script["cube"]["transform"]["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
+		script["cube"]["transform"]["pivot"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertEqual(
 			tool.handlesTransform(),
-			imath.M44f().translate(
+			IECore.M44f().translate(
 				script["cube"]["transform"]["pivot"].getValue()
 			)
 		)
 
-		script["cube"]["transform"]["translate"].setValue( imath.V3f( 1, 2, -1 ) )
+		script["cube"]["transform"]["translate"].setValue( IECore.V3f( 1, 2, -1 ) )
 
 		self.assertEqual(
 			tool.handlesTransform(),
-			imath.M44f().translate(
+			IECore.M44f().translate(
 				script["cube"]["transform"]["pivot"].getValue() +
 				script["cube"]["transform"]["translate"].getValue()
 			)
@@ -246,7 +246,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["transform"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/cube" ] ) )
 
 		tool = GafferSceneUI.RotateTool( view )
 		tool["active"].setValue( True )
@@ -254,17 +254,17 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		# Start with default pivot
 
 		self.assertEqual(
-			imath.V3f( 0 ) * tool.handlesTransform(),
-			imath.V3f( 0, 0, 0 ),
+			IECore.V3f( 0 ) * tool.handlesTransform(),
+			IECore.V3f( 0, 0, 0 ),
 		)
 
 		# Offset it
 
-		script["transform"]["transform"]["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
+		script["transform"]["transform"]["pivot"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertEqual(
-			imath.V3f( 0 ) * tool.handlesTransform(),
-			imath.V3f( 1, 0, 0 ),
+			IECore.V3f( 0 ) * tool.handlesTransform(),
+			IECore.V3f( 1, 0, 0 ),
 		)
 
 		# Now add an existing transform on the cube, prior
@@ -275,8 +275,8 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		script["cube"]["transform"]["rotate"]["y"].setValue( 90 )
 
 		self.assertTrue(
-			imath.V3f( 0, 0, -1 ).equalWithAbsError(
-				imath.V3f( 0 ) * tool.handlesTransform(),
+			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+				IECore.V3f( 0 ) * tool.handlesTransform(),
 				0.0000001,
 			)
 		)
@@ -287,8 +287,8 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		script["transform"]["space"].setValue( script["transform"].Space.World )
 
 		self.assertEqual(
-			imath.V3f( 0 ) * tool.handlesTransform(),
-			imath.V3f( 1, 0, 0 ),
+			IECore.V3f( 0 ) * tool.handlesTransform(),
+			IECore.V3f( 1, 0, 0 ),
 		)
 
 if __name__ == "__main__":
