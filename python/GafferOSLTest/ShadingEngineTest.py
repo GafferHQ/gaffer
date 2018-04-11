@@ -54,6 +54,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		vData = IECore.FloatVectorData()
 		floatUserData = IECore.FloatVectorData()
 		colorUserData = IECore.Color3fVectorData()
+		doubleUserData = IECore.DoubleVectorData()
 		for y in range( 0, divisions.y ) :
 			for x in range( 0, divisions.x ) :
 				u = float( x ) / float( divisions.x - 1 )
@@ -67,6 +68,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				vData.append( v )
 				floatUserData.append( r.nextf( 0, 1 ) )
 				colorUserData.append( imath.Color3f( r.nextf(), r.nextf(), r.nextf() ) )
+				doubleUserData.append( y * divisions.x  + x )
 
 		return IECore.CompoundData( {
 			"P" : pData,
@@ -74,6 +76,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			"v" : vData,
 			"floatUserData" : floatUserData,
 			"colorUserData" : colorUserData,
+			"doubleUserData" : doubleUserData
 		} )
 
 	def test( self ) :
@@ -118,6 +121,23 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			for i in range( 0, len( v1 ) ) :
 				self.assertEqual( v1[i], imath.Color3f( v2[i] ) )
 
+	def testDoubleAsIntViaGetAttribute( self ):
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/intAttribute.osl" )
+
+		rp = self.rectanglePoints()
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( shader, "osl:surface", { "name" : "doubleUserData" } ),
+		] ) )
+
+		self.assertEqual( e.needsAttribute( "", "floatUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "doubleUserData" ), True )
+
+		p = e.shade( rp )
+
+		for i, c in enumerate( p["Ci"] ) :
+			self.assertEqual( c[0], float(i) )
+
 	def testUserDataViaGetAttribute( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/attribute.osl" )
@@ -129,19 +149,32 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		] ) )
 
 		self.assertEqual( e.needsAttribute( "", "floatUserData" ), True )
+		self.assertEqual( e.needsAttribute( "", "doubleUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "colorUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "shading:index" ), False )
+
+		p = e.shade( rp )
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( shader, "osl:surface", { "name" : "doubleUserData" } ),
+		] ) )
+
+		self.assertEqual( e.needsAttribute( "", "floatUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "doubleUserData" ), True )
 		self.assertEqual( e.needsAttribute( "", "colorUserData" ), False )
 		self.assertEqual( e.needsAttribute( "", "shading:index" ), False )
 
 		p = e.shade( rp )
 
 		for i, c in enumerate( p["Ci"] ) :
-			self.assertEqual( c.r, rp["floatUserData"][i] )
+			self.assertEqual( c[0], float(i) )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
 			IECoreScene.Shader( shader, "osl:surface", { "name" : "colorUserData" } ),
 		] ) )
 
 		self.assertEqual( e.needsAttribute( "", "floatUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "doubleUserData" ), False )
 		self.assertEqual( e.needsAttribute( "", "colorUserData" ), True )
 		self.assertEqual( e.needsAttribute( "", "shading:index" ), False )
 
@@ -156,6 +189,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		] ) )
 
 		self.assertEqual( e.needsAttribute( "", "floatUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "doubleUserData" ), False )
 		self.assertEqual( e.needsAttribute( "", "colorUserData" ), False )
 		self.assertEqual( e.needsAttribute( "", "shading:index" ), True )
 

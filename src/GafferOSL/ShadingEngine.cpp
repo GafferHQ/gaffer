@@ -294,6 +294,21 @@ class RenderState
 				t.arraylen = 2;
 				return ShadingSystem::convert_value( value, type, src, t );
 			}
+			else if ( it->dataView.type.basetype == TypeDesc::DOUBLE && it->dataView.type.aggregate == TypeDesc::SCALAR )
+			{
+				double doubleValue = *reinterpret_cast<const double*>( src );
+				if (type == TypeDesc::FLOAT)
+				{
+					*((float*)value) = static_cast<float>( doubleValue );
+					return true;
+				}
+				else if (type == TypeDesc::INT)
+				{
+					*((int*)value) = static_cast<int>( doubleValue );
+					return true;
+				}
+				return false;
+			}
 			/// \todo Try to get these additional conversions accepted into OSL itself
 
 			return false;
