@@ -129,6 +129,40 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( curveDeletedObject["e"].data,  IECore.FloatVectorData(range( 0, 3 )) )
 		self.assertEqual( curveDeletedObject["e"].interpolation,  IECoreScene.PrimitiveVariable.Interpolation.FaceVarying )
 
+		# invert
+		# ======
+		deleteCurves["invert"].setValue( True )
+		curveDeletedObject = deleteCurves["out"].object( "/object" )
+
+		self.assertEqual( curveDeletedObject.verticesPerCurve(), IECore.IntVectorData([7]) )
+		self.assertEqual( curveDeletedObject.numCurves(), 1 )
+		self.assertEqual( curveDeletedObject["P"].data, IECore.V3fVectorData(
+			[
+				imath.V3f( 0, 0, 0 ),
+				imath.V3f( 0, 0, 1 ),
+				imath.V3f( 1, 0, 1 ),
+				imath.V3f( 1, 0, 0 ),
+				imath.V3f( 1, 0, -1 ),
+				imath.V3f( 2, 0, -1 ),
+				imath.V3f( 2, 0, 0 )
+			] ) )
+
+		# verify the primvars are correct
+		self.assertEqual( curveDeletedObject["a"].data,  IECore.FloatData(0.5) )
+		self.assertEqual( curveDeletedObject["a"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Constant)
+
+		self.assertEqual( curveDeletedObject["b"].data,  IECore.FloatVectorData( range( 7, 14 ) ) )
+		self.assertEqual( curveDeletedObject["b"].interpolation,  IECoreScene.PrimitiveVariable.Interpolation.Vertex )
+
+		self.assertEqual( curveDeletedObject["c"].data,  IECore.FloatVectorData([1.0]) )
+		self.assertEqual( curveDeletedObject["c"].interpolation,  IECoreScene.PrimitiveVariable.Interpolation.Uniform )
+
+		self.assertEqual( curveDeletedObject["d"].data,  IECore.FloatVectorData(range( 3, 6 )) )
+		self.assertEqual( curveDeletedObject["d"].interpolation,  IECoreScene.PrimitiveVariable.Interpolation.Varying )
+
+		self.assertEqual( curveDeletedObject["e"].data,  IECore.FloatVectorData(range( 3, 6 )) )
+		self.assertEqual( curveDeletedObject["e"].interpolation,  IECoreScene.PrimitiveVariable.Interpolation.FaceVarying )
+
 	def testBoundsUpdate( self ) :
 
 		curvesScene = self.makeCurves()

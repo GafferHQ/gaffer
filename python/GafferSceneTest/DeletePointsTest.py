@@ -101,6 +101,32 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 				0, 0
 			] ) )
 
+		# invert
+		# ======
+
+		deletePoints["invert"].setValue( True )
+
+		pointsDeletedObject = deletePoints["out"].object( "/object" )
+
+		self.assertEqual( pointsDeletedObject.numPoints, 2 )
+		self.assertEqual( pointsDeletedObject["P"].data, IECore.V3fVectorData(
+			[
+				#imath.V3f( 0, 0, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				#imath.V3f( 1, 1, 0 )
+				imath.V3f( 1, 0, 0 )
+			] ) )
+
+		self.assertEqual( pointsDeletedObject["r"].data, IECore.FloatVectorData(
+			[
+				1, 3
+			] ) )
+
+		self.assertEqual( pointsDeletedObject["deletePoints"].data, IECore.IntVectorData(
+			[
+				1, 1
+			] ) )
+
 
 	def testBoundsUpdate( self ) :
 

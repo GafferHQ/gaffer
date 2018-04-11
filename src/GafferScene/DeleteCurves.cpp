@@ -58,6 +58,7 @@ DeleteCurves::DeleteCurves( const std::string &name ) : SceneElementProcessor( n
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "curves", Plug::In, "deleteCurves" ) );
+	addChild( new BoolPlug( "invert", Plug::In, false ) );
 
 	// Fast pass-through for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -78,11 +79,23 @@ const Gaffer::StringPlug *DeleteCurves::curvesPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+
+Gaffer::BoolPlug *DeleteCurves::invertPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1);
+}
+
+const Gaffer::BoolPlug *DeleteCurves::invertPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1);
+}
+
+
 void DeleteCurves::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == curvesPlug() )
+	if( input == curvesPlug() || input == invertPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -120,6 +133,7 @@ bool DeleteCurves::processesObject() const
 void DeleteCurves::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	curvesPlug()->hash( h );
+	invertPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr DeleteCurves::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -143,5 +157,5 @@ IECore::ConstObjectPtr DeleteCurves::computeProcessedObject( const ScenePath &pa
 		throw InvalidArgumentException( boost::str( boost::format( "DeleteCurves : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
 	}
 
-	return CurvesAlgo::deleteCurves(curves, it->second);
+	return CurvesAlgo::deleteCurves(curves, it->second, invertPlug()->getValue());
 }

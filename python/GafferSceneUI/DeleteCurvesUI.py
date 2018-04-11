@@ -53,7 +53,14 @@ Gaffer.Metadata.registerNode(
 			"""
 			Uniformly interpolated int, float or bool primitive variable to choose which curves to delete. Note a non-zero value indicates the curve will be deleted. 
 			"""
+		],
+		"invert" : [
+			"description",
+			"""
+			Invert the condition used to delete curves. If the primvar is zero then the curve will be deleted. 
+			"""
 		]
+
 	}
 
 )

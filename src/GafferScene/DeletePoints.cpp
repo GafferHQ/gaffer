@@ -59,6 +59,7 @@ DeletePoints::DeletePoints( const std::string &name ) : SceneElementProcessor( n
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "points", Plug::In, "deletePoints" ) );
+	addChild( new BoolPlug( "invert", Plug::In, false ) );
 
 	// Fast pass-through for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -79,11 +80,22 @@ const Gaffer::StringPlug *DeletePoints::pointsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+
+Gaffer::BoolPlug *DeletePoints::invertPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1);
+}
+
+const Gaffer::BoolPlug *DeletePoints::invertPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1);
+}
+
 void DeletePoints::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == pointsPlug() )
+	if( input == pointsPlug() || input == invertPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -122,6 +134,7 @@ bool DeletePoints::processesObject() const
 void DeletePoints::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	pointsPlug()->hash( h );
+	invertPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -145,5 +158,5 @@ IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &pa
 		throw InvalidArgumentException( boost::str( boost::format( "DeletePoints : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
 	}
 
-	return PointsAlgo::deletePoints( points, it->second );
+	return PointsAlgo::deletePoints( points, it->second, invertPlug()->getValue() );
 }
