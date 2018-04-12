@@ -300,8 +300,8 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
 {
 	NamedValue namedValue( key, value );
-	auto &m = metadataMap()[target];
-	auto i = m.insert( namedValue );
+	MetadataMap::mapped_type &m = metadataMap()[target];
+	std::pair<MetadataMap::mapped_type::iterator,bool> i = m.insert( namedValue );
 	if( !i.second )
 	{
 		m.replace( i.first, namedValue );
@@ -312,14 +312,14 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 
 void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedString key )
 {
-	auto &m = metadataMap();
-	auto mIt = m.find( target );
+	MetadataMap &m = metadataMap();
+	MetadataMap::iterator mIt = m.find( target );
 	if( mIt == m.end() )
 	{
 		return;
 	}
 
-	auto vIt = mIt->second.find( key );
+	MetadataMap::mapped_type::iterator vIt = mIt->second.find( key );
 	if( vIt == mIt->second.end() )
 	{
 		return;
