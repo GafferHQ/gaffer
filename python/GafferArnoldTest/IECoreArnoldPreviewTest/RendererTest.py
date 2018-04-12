@@ -1371,15 +1371,15 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		network = IECore.ObjectVector( [
-			IECoreScene.Shader(
+			IECore.Shader(
 				"Utility/SplitColor",
 				"osl:shader",
 				{
-					"c" : imath.Color3f( 0.1, 0.2, 0.3 ),
+					"c" : IECore.Color3f( 0.1, 0.2, 0.3 ),
 					"__handle" : "splitHandle"
 				}
 			),
-			IECoreScene.Shader(
+			IECore.Shader(
 				"Utility/BuildColor",
 				"osl:shader",
 				{
@@ -1392,7 +1392,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testPlane",
-			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "ai:surface" : network } ) )
 		)
 
