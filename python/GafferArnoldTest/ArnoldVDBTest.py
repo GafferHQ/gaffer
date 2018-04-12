@@ -67,12 +67,12 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 
 		# Invalid grid names should create errors.
 		v["grids"].setValue( "notAGrid" )
-		self.assertRaisesRegexp( KeyError, "has no grid named \"notAGrid\"", v["out"].bound, "/volume" )
+		self.assertRaisesRegexp( RuntimeError, "has no grid named \"notAGrid\"", v["out"].bound, "/volume" )
 
 		# As should invalid file names.
 		v["grids"].setValue( "density" )
 		v["fileName"].setValue( "notAFile.vdb" )
-		self.assertRaisesRegexp( IOError, "No such file or directory", v["out"].bound, "/volume" )
+		self.assertRaisesRegexp( RuntimeError, "No such file or directory", v["out"].bound, "/volume" )
 
 	def testStepSize( self ) :
 
