@@ -52,6 +52,14 @@ import GafferSceneUI
 # Metadata
 ##########################################################################
 
+def __parameterUserDefault( plug ) :
+
+	shader = plug.node()
+	return Gaffer.Metadata.value(
+		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( shader["parameters"] ),
+		"userDefault"
+	)
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Shader,
@@ -121,6 +129,8 @@ Gaffer.Metadata.registerNode(
 			# for the case where they get promoted to a box
 			# individually.
 			"noduleLayout:section", "left",
+
+			"userDefault", __parameterUserDefault,
 
 		],
 

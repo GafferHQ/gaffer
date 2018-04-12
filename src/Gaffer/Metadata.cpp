@@ -298,7 +298,33 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
 {
-	metadataMap()[target].insert( NamedValue( key, value ) );
+	NamedValue namedValue( key, value );
+	auto &m = metadataMap()[target];
+	auto i = m.insert( namedValue );
+	if( !i.second )
+	{
+		m.replace( i.first, namedValue );
+	}
+
+	valueChangedSignal()( target, key );
+}
+
+void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedString key )
+{
+	auto &m = metadataMap();
+	auto mIt = m.find( target );
+	if( mIt == m.end() )
+	{
+		return;
+	}
+
+	auto vIt = mIt->second.find( key );
+	if( vIt == mIt->second.end() )
+	{
+		return;
+	}
+
+	mIt->second.erase( vIt );
 	valueChangedSignal()( target, key );
 }
 
