@@ -108,7 +108,7 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 {
 	cost = 1;
 	const char *oslShaderPaths = getenv( "OSL_SHADER_PATHS" );
-	SearchPath searchPath( oslShaderPaths ? oslShaderPaths : "", ":" );
+	SearchPath searchPath( oslShaderPaths ? oslShaderPaths : "" );
 	boost::filesystem::path path = searchPath.find( shaderName + ".oso" );
 	if( path.empty() )
 	{

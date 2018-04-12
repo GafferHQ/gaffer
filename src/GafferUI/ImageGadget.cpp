@@ -64,7 +64,7 @@ namespace
 Box3f boundGetter( const std::string &fileName, size_t &cost )
 {
 	const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-	IECore::SearchPath sp( s ? s : "", ":" );
+	IECore::SearchPath sp( s ? s : "" );
 
 	boost::filesystem::path path = sp.find( fileName );
 	if( path.empty() )
@@ -170,7 +170,7 @@ IECoreGL::TextureLoader *ImageGadget::textureLoader()
 	if( !loader )
 	{
 		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-		IECore::SearchPath sp( s ? s : "", ":" );
+		IECore::SearchPath sp( s ? s : "" );
 		loader = new TextureLoader( sp );
 	}
 	return loader.get();

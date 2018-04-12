@@ -56,8 +56,6 @@
 #include "IECoreScene/Font.h"
 #include "IECoreScene/MeshPrimitive.h"
 
-#include "IECore/SearchPath.h"
-
 #include "OpenEXR/ImathVecAlgo.h"
 
 #include "boost/tokenizer.hpp"

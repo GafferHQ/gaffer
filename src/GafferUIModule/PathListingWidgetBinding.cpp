@@ -257,7 +257,7 @@ class IconColumn : public Column
 		static QVariant iconGetter( const std::string &fileName, size_t &cost )
 		{
 			const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-			IECore::SearchPath sp( s ? s : "", ":" );
+			IECore::SearchPath sp( s ? s : "" );
 
 			boost::filesystem::path path = sp.find( fileName );
 			if( path.empty() )
