@@ -78,12 +78,12 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 		s = GafferOSL.OSLShader()
 		s.loadShader( "ObjectProcessing/InFloat" )
 
-		self.assertEqual( s["parameters"]["name"].getValue(), "u" )
+		self.assertEqual( s["parameters"]["name"].getValue(), "s" )
 		self.assertEqual( s["parameters"]["defaultValue"].getValue(), 0 )
 
 		Gaffer.NodeAlgo.applyUserDefaults( s )
 
-		self.assertEqual( s["parameters"]["name"].getValue(), "u" )
+		self.assertEqual( s["parameters"]["name"].getValue(), "s" )
 		self.assertEqual( s["parameters"]["defaultValue"].getValue(), 0 )
 
 		Gaffer.Metadata.registerValue( "osl:shader:ObjectProcessing/InFloat:name", "userDefault", "xx" )
