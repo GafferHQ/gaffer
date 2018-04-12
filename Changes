@@ -1,3 +1,46 @@
+0.35.4.0
+========
+
+Improvements
+------------
+
+- OSLObject : Improved performance by removing unnecessary primitive variable resampling.
+- Arnold : Added support for OSL shaders with multiple outputs.
+- Viewer :
+  - Improved reporting of errors involving look-through cameras.
+  - Improved camera selection UI.
+  - Added default camera settings dialogue.
+  - Added Ctrl+K shortcut to fit clipping planes to selection.
+  - Added Ctrl+F shortcut to frame selection and fit clipping planes to match.
+  - Added context menu.
+  - PointsPrimitives now default to drawing as GL points. The Drawing dropdown menu can
+    be used to display them as disks instead.
+- Expression : Added support for "x" in context Python syntax.
+- Shader :
+  - Added support for showing/hiding output parameters in the NodeGraph.
+  - Added support for userDefault metadata for shader parameters.
+
+Fixes
+-----
+
+- Transform tools :
+  - Fixed bug where pivot was ignored.
+  - Fixed bug affecting Transform node when space was set to World.
+  - Fixed context management bug.
+- FileMenu : Fixed premature exit when opening backup containing error.
+- NodeAlgo : Fixed attempts to apply user defaults to plugs that are not settable.
+- Metadata : Fix overwriting of values for string targets.
+
+API
+---
+
+- ShaderUI : Added hideShaders() function.
+
+Build
+-----
+
+- Arnold 5.1 Compatibility
+
 0.35.3.0
 ========
 
