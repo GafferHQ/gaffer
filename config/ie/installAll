@@ -19,8 +19,8 @@ if IEEnv.platform() in ( "cent7.x86_64" ) :
 
 	# fetch at least one active version of each renderer
 	aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
-	dlVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] )[-1]
-	appleseedVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] )[-1]
+	dlVersion = "UNDEFINED"#IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] )[-1]
+	appleseedVersion = "1.6.0-beta2"#IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] )[-1]
 	
 	extraArgs = [ "ARNOLD_VERSION="+aiVersion, "APPLESEED_VERSION="+appleseedVersion, "DL_VERSION="+dlVersion ]
 	
