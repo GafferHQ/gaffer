@@ -106,6 +106,8 @@ bool isDebug()
 #endif
 }
 
+#ifndef _MSC_VER
+
 int g_argc = 0;
 char **g_argv = nullptr;
 
@@ -165,12 +167,15 @@ void clobberArgv()
 	g_argv[g_argc-1] = c;
 	memset( c, 0, end - c );
 }
+#endif
 
 void nameProcess()
 {
 	// Some things (for instance, `ps` in default mode) look at `argv` to get
 	// the name.
+#ifndef _MSC_VER
 	clobberArgv();
+#endif
 	// Others (for instance, `top` in default mode) use other methods.
 	// Cater to everyone as best we can.
 #ifdef __linux__
