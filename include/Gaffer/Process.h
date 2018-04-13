@@ -48,6 +48,7 @@
 namespace Gaffer
 {
 
+class Context;
 class Plug;
 class Monitor;
 
@@ -69,6 +70,9 @@ class GAFFER_API Process : public boost::noncopyable
 		/// The plug for which the process is being
 		/// performed.
 		const Plug *plug() const { return m_plug; }
+		/// The context in which the process is being
+		/// performed.
+		const Context *context() const { return m_context; }
 
 		/// Returns the parent process for this process - that
 		/// is, the process that invoked this one.
@@ -84,7 +88,9 @@ class GAFFER_API Process : public boost::noncopyable
 	protected :
 
 		/// Protected constructor for use by derived classes only.
-		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = nullptr );
+		/// If `Context::current()` has already been retrieved it can be passed
+		/// via `currentContext` to avoid a second lookup.
+		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = nullptr, const Context *currentContext = nullptr );
 		~Process();
 
 		/// Derived classes should catch exceptions thrown
@@ -112,6 +118,7 @@ class GAFFER_API Process : public boost::noncopyable
 		IECore::InternedString m_type;
 		const Plug *m_plug;
 		const Plug *m_downstream;
+		const Context *m_context;
 		const Process *m_parent;
 		ThreadData *m_threadData;
 

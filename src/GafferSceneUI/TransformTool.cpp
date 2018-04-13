@@ -118,7 +118,7 @@ class CapturingMonitor : public Monitor
 			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
 			capturedProcess->type = process->type();
 			capturedProcess->plug = process->plug();
-			capturedProcess->context = new Context( *Context::current() );
+			capturedProcess->context = new Context( *process->context() );
 
 			Mutex::scoped_lock lock( m_mutex );
 

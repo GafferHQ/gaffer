@@ -214,7 +214,7 @@ IECore::MurmurHash TaskNode::TaskPlug::hash() const
 	TaskNodeProcess p( TaskNodeProcess::hashProcessType, this );
 	try
 	{
-		return p.taskNode()->hash( Context::current() );
+		return p.taskNode()->hash( p.context() );
 	}
 	catch( ... )
 	{
@@ -270,7 +270,7 @@ void TaskNode::TaskPlug::preTasks( Tasks &tasks ) const
 	TaskNodeProcess p( TaskNodeProcess::preTasksProcessType, this );
 	try
 	{
-		p.taskNode()->preTasks( Context::current(), tasks );
+		p.taskNode()->preTasks( p.context(), tasks );
 	}
 	catch( ... )
 	{
@@ -284,7 +284,7 @@ void TaskNode::TaskPlug::postTasks( Tasks &tasks ) const
 	TaskNodeProcess p( TaskNodeProcess::postTasksProcessType, this );
 	try
 	{
-		p.taskNode()->postTasks( Context::current(), tasks );
+		p.taskNode()->postTasks( p.context(), tasks );
 	}
 	catch( ... )
 	{

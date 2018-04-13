@@ -36,9 +36,12 @@
 
 #include "Gaffer/Process.h"
 
+#include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+
+#include "IECore/Canceller.h"
 
 #include "boost/container/flat_set.hpp"
 
@@ -66,9 +69,12 @@ struct Process::ThreadData
 
 tbb::enumerable_thread_specific<Process::ThreadData, tbb::cache_aligned_allocator<Process::ThreadData>, tbb::ets_key_per_instance> Process::g_threadData;
 
-Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream )
-	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug ), m_threadData( &g_threadData.local() )
+Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream, const Context *currentContext )
+	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug ),
+		m_context( currentContext ? currentContext : Context::current() ),
+		m_threadData( &g_threadData.local() )
 {
+	IECore::Canceller::check( m_context->canceller() );
 	ThreadData::Stack &stack = m_threadData->stack;
 	m_parent = stack.size() ? stack.top() : nullptr;
 	m_threadData->stack.push( this );
@@ -105,6 +111,12 @@ void Process::handleException()
 	{
 		// Rethrow the current exception
 		// so we can examine it.
+		throw;
+	}
+	catch( const IECore::Cancelled &e )
+	{
+		// Process is just being cancelled. No need
+		// to report via `emitError()`.
 		throw;
 	}
 	catch( const std::exception &e )
