@@ -406,7 +406,7 @@ def _extractPlugValue( plug, topLevelPlug, value ) :
 
 class _ContextProxy( object ) :
 
-	__whitelist = { "get", "getFrame", "getFramesPerSecond", "getTime" }
+	__whitelist = { "get", "getFrame", "getFramesPerSecond", "getTime", "canceller" }
 
 	def __init__( self, context ) :
 
