@@ -178,6 +178,11 @@ void GafferModule::bindContext()
 	contextClass
 		.def( init<>() )
 		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
+		.def(
+			init<const Context &, const IECore::Canceller &>( ( arg( "other" ), arg( "canceller" ) ) ) [
+				with_custodian_and_ward<1,2>()
+			]
+		)
 		.def( "setFrame", &setFrame )
 		.def( "getFrame", &Context::getFrame )
 		.def( "setFramesPerSecond", &setFramesPerSecond )
@@ -219,6 +224,7 @@ void GafferModule::bindContext()
 		.def( "substitute", &Context::substitute, ( arg( "input" ), arg( "substitutions" ) = Context::AllSubstitutions ) )
 		.def( "substitutions", &Context::substitutions ).staticmethod( "substitutions" )
 		.def( "hasSubstitutions", &Context::hasSubstitutions ).staticmethod( "hasSubstitutions" )
+		.def( "canceller", &Context::canceller, return_internal_reference<1>() )
 		.def( "current", &current ).staticmethod( "current" )
 		;
 
