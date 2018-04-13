@@ -242,47 +242,43 @@ add_custom_command(
 # ==============
 
 
-# generate an object list from the svg
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graphics/objectList.txt
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/graphics/
-        COMMAND inkscape --query-all ${GAFFER_SOURCE_DIR}/resources/graphics.svg > ${CMAKE_CURRENT_BINARY_DIR}/graphics/objectList.txt
-        DEPENDS ${GAFFER_SOURCE_DIR}/resources/graphics.svg
-        WORKING_DIRECTORY ${GAFFER_SOURCE_DIR}
-)
-
-# read the object list and add custom commands for each *exported* object
-FILE(READ  ${CMAKE_CURRENT_BINARY_DIR}/graphics/objectList.txt svgContents)
-
-STRING(REGEX REPLACE ";" "\\\\;" svgContents "${svgContents}")
-STRING(REGEX REPLACE "\n" ";" svgContents "${svgContents}")
-
-set(svgExport "")
-
-foreach(svg ${svgContents})
-  string(FIND ${svg} "forExport:" a)
-  if("${a}" STREQUAL "0")
-      list(APPEND svgExport ${svg})
-  endif()
-endforeach()
-
+file( GLOB GAFFER_SVG_FILES ${GAFFER_SOURCE_DIR}/resources/*.svg)
 set(outputPNGs "")
 
-foreach(svg ${svgExport})
-  string(SUBSTRING ${svg} 10 4096 svg)
-  STRING(REGEX REPLACE "," ";" svg "${svg}")
-  list(GET svg 0 name)
-  list(GET svg 3 width)
-  list(GET svg 4 height)
+foreach(srcSvgFile ${GAFFER_SVG_FILES})
+  # generate an object list from the svg file
+  execute_process( COMMAND inkscape --query-all ${srcSvgFile} OUTPUT_VARIABLE svgContents)
 
-  list(APPEND outputPNGs ${CMAKE_CURRENT_BINARY_DIR}/graphics/${name}.png)
-  add_custom_command(
-          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graphics/${name}.png
-          COMMAND inkscape  --export-png=${CMAKE_CURRENT_BINARY_DIR}/graphics/${name}.png --export-id=forExport:${name} --export-width=${width} --export-height=${height} --export-background-opacity=0 ${GAFFER_SOURCE_DIR}/resources/graphics.svg
-          DEPENDS ${GAFFER_SOURCE_DIR}/resources/graphics.svg
-          WORKING_DIRECTORY ${GAFFER_SOURCE_DIR}
-  )
+  STRING(REGEX REPLACE ";" "\\\\;" svgContents "${svgContents}")
+  STRING(REGEX REPLACE "\n" ";" svgContents "${svgContents}")
+
+  set(svgExport "")
+
+  foreach(svg ${svgContents})
+    string(FIND ${svg} "forExport:" a)
+    if("${a}" STREQUAL "0")
+      list(APPEND svgExport ${svg})
+    endif()
+  endforeach()
+
+  foreach(svg ${svgExport})
+    string(SUBSTRING ${svg} 10 4096 svg)
+    STRING(REGEX REPLACE "," ";" svg "${svg}")
+    list(GET svg 0 name)
+    list(GET svg 3 width)
+    list(GET svg 4 height)
+
+    list(APPEND outputPNGs ${CMAKE_CURRENT_BINARY_DIR}/graphics/${name}.png)
+    add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graphics/${name}.png
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/graphics/
+            COMMAND inkscape  --export-png=${CMAKE_CURRENT_BINARY_DIR}/graphics/${name}.png --export-id=forExport:${name} --export-width=${width} --export-height=${height} --export-background-opacity=0 ${srcSvgFile}
+            DEPENDS ${srcSvgFile}
+            WORKING_DIRECTORY ${GAFFER_SOURCE_DIR}
+    )
+  endforeach()
 endforeach()
+
 
 add_custom_target(Graphics ALL DEPENDS ${outputPNGs})
 
@@ -386,7 +382,6 @@ target_link_libraries( _GafferOSL ${BASE_LIBS} ${BASE_PYTHON_LIBS} GafferBinding
 # GafferVDB
 add_library( GafferVDB SHARED ${GAFFERVDB_CXX_FILES} ${GAFFERVDB_H_FILES} )
 target_link_libraries( GafferVDB ${BASE_LIBS} Gaffer GafferScene ${OpenVDB_LIBRARIES} ${Cortex_IECORESCENE_LIBRARY} )
-target_compile_options( GafferVDB PRIVATE -DOPENVDB_3_ABI_COMPATIBLE )
 
 # GafferVDB Python Module
 add_library( _GafferVDB MODULE ${GAFFERVDB_CXX_MODULE_FILES} )
