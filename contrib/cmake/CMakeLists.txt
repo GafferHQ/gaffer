@@ -386,12 +386,10 @@ target_link_libraries( GafferVDB ${BASE_LIBS} Gaffer GafferScene ${OpenVDB_LIBRA
 # GafferVDB Python Module
 add_library( _GafferVDB MODULE ${GAFFERVDB_CXX_MODULE_FILES} )
 target_link_libraries( _GafferVDB GafferVDB ${BASE_LIBS} ${BASE_PYTHON_LIBS} GafferBindings GafferScene ${OpenVDB_LIBRARIES} ${Cortex_IECORESCENE_LIBRARY} )
-target_compile_options( _GafferVDB PRIVATE -DOPENVDB_3_ABI_COMPATIBLE )
 
 # GafferVDBUI
 add_library( GafferVDBUI SHARED ${GAFFERVDBUI_CXX_FILES} ${GAFFERVDBUI_H_FILES} )
 target_link_libraries( GafferVDBUI ${BASE_LIBS} Gaffer GafferVDB GafferSceneUI ${OpenVDB_LIBRARIES} ${Cortex_IECOREGL_LIBRARY} )
-target_compile_options( GafferVDBUI PRIVATE -DOPENVDB_3_ABI_COMPATIBLE )
 
 # GafferVDBUI Python Module
 add_library( _GafferVDBUI MODULE ${GAFFERVDBUI_CXX_MODULE_FILES} )
@@ -412,7 +410,6 @@ target_compile_options( _GafferAppleseed PRIVATE -DAPPLESEED_ENABLE_IMATH_INTERO
 file( GLOB IECOREARNOLD_PREVIEW_CXX_FILES ${GAFFER_SOURCE_DIR}/src/GafferArnold/IECoreArnoldPreview/*.cpp )
 add_library( GafferArnold SHARED ${GAFFERARNOLD_CXX_FILES} ${GAFFERARNOLD_H_FILES} ${IECOREARNOLD_PREVIEW_CXX_FILES} )
 target_link_libraries( GafferArnold ${BASE_LIBS} Gaffer GafferDispatch GafferScene GafferOSL GafferVDB ${OpenVDB_LIBRARIES} ${CORTEX_ARNOLD_LIBS} ${Cortex_IECOREARNOLD_LIBRARY} )
-target_compile_options( GafferArnold PRIVATE -DOPENVDB_3_ABI_COMPATIBLE )
 
 # GafferArnold Python Module
 add_library( _GafferArnold MODULE ${GAFFERARNOLD_CXX_MODULE_FILES} )
