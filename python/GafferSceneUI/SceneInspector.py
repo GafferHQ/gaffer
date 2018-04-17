@@ -1876,7 +1876,7 @@ class __SetMembershipSection( LocationSection ) :
 		LocationSection.__init__( self, collapsed = True, label = "Set Membership" )
 
 		with self._mainColumn() :
-			self.__diffColumn = DiffColumn( self.__Inspector(), _SetMembershipDiff )
+			self.__diffColumn = DiffColumn( self.__Inspector(), _SetMembershipDiff, filterable = True )
 
 	def update( self, targets ) :
 
@@ -2184,7 +2184,7 @@ class _SetsSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Sets" )
 
 		with self._mainColumn() :
-			self.__diffColumn = DiffColumn( self.__Inspector(), _SetDiff )
+			self.__diffColumn = DiffColumn( self.__Inspector(), _SetDiff, filterable = True )
 
 	def update( self, targets ) :
 
