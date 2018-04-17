@@ -190,7 +190,7 @@ class SplineWidget( GafferUI.Widget ) :
 			for s in self.__splinesToDraw :
 				self.__splineBound = self.__splineBound.united( s.path.controlPointRect() )
 
-		# draw the splines
+		# Set view transform
 		rect = self._qtWidget().contentsRect()
 		transform = QtGui.QTransform()
 		if self.__splineBound.width() :
@@ -202,6 +202,26 @@ class SplineWidget( GafferUI.Widget ) :
 			transform.translate( 0, -self.__splineBound.top() )
 
 		painter.setTransform( transform )
+
+		# Draw axis lines at y=0 and y=1
+		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_SourceOver )
+		pen = QtGui.QPen( self._qtColor( imath.Color3f( 0 ) ) )
+		pen.setCosmetic( True )
+		painter.setPen( pen )
+		zeroLine = QtGui.QPainterPath()
+		zeroLine.moveTo( 0, 0 )
+		zeroLine.lineTo( 1, 0 )
+		painter.drawPath( zeroLine )
+
+		pen = QtGui.QPen( self._qtColor( imath.Color3f( 0.4 ) ) )
+		pen.setCosmetic( True )
+		painter.setPen( pen )
+		oneLine = QtGui.QPainterPath()
+		oneLine.moveTo( 0, 1 )
+		oneLine.lineTo( 1, 1 )
+		painter.drawPath( oneLine )
+
+		# draw the splines
 		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_Plus )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
