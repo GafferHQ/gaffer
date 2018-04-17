@@ -153,15 +153,13 @@ class SplineWidget( GafferUI.Widget ) :
 		numPoints = 200
 		if not self.__splinesToDraw :
 			self.__splinesToDraw = []
-			interval = self.__spline.interval()
 			if isinstance( self.__spline, IECore.Splineff ) :
 				spline = IECore.Struct()
 				spline.color = imath.Color3f( 1 )
 				spline.path = QtGui.QPainterPath()
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
-					tt = interval[0] + (interval[1] - interval[0]) * t
-					c = self.__spline( tt )
+					c = self.__spline( t )
 					if i==0 :
 						spline.path.moveTo( t, c )
 					else :
@@ -181,8 +179,7 @@ class SplineWidget( GafferUI.Widget ) :
 
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
-					tt = interval[0] + (interval[1] - interval[0]) * t
-					c = self.__spline( tt )
+					c = self.__spline( t )
 					for j in range( 0, c.dimensions() ) :
 						if i == 0 :
 							self.__splinesToDraw[j].path.moveTo( t, c[j] )
