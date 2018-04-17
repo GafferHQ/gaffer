@@ -1,3 +1,52 @@
+0.45.3.0
+========
+
+Features
+--------
+
+- GafferSceneUI : Added CameraTool to the Viewer (#2531).
+  - This enables the movement of the camera in the viewport to be pushed back upstream
+    into the node for the camera or light that is currently being looked through. Note
+    that once activated, the CameraTool will remain active even after another tool has
+    been chosen.
+
+Improvements
+------------
+
+- ShaderUI : Added support for userDefault metadata for shader parameters (#2544).
+
+Fixes
+-----
+
+- SceneGadget : Fixed dirty propogation (#2541).
+- Metadata (#2544) :
+  - Added `deregisterValue()` overload for string targets.
+  - Fixed overwriting of values for string targets.
+- FormatPlug::acquireDefaultFormatPlug() : Fixed crashes if None is passed via
+  python bindings (#2549).
+
+Build
+-----
+
+- Added experimental CMake build in contrib (#2543).
+
+API
+---
+
+- ViewportGadget (#2531) :
+  - Added accessors for center of interest.
+  - Added `orthographic3D` camera mode.
+- BoolPlugValueWidget (#2531) :
+  - Added support for `BoolWidget.DisplayMode.Tool`
+  - Added `boolWidget()` accessor, matching `StringPlugValueWidget.textWidget()`.
+- GafferUI : Add ToolUI (#2531) :
+  - This sets up the "active" plug to use a BoolPlugValueWidget in tool mode,
+    with an appropriate icon.
+- Viewer : Added support for "tool:exclusive" metadata (#2531) :
+  - This allows certain tools to be marked as non-exclusive, allowing them to
+    remain active even when another tool has been chosen.
+- TransformTool : Exposed constructor for Selection class (#2531).
+
 0.45.2.0
 ========
 
