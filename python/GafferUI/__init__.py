@@ -220,6 +220,7 @@ from DataPathPreview import DataPathPreview
 
 # then stuff specific to graph uis
 
+from BackgroundMethod import BackgroundMethod
 from PlugValueWidget import PlugValueWidget
 from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget
