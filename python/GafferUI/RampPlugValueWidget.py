@@ -72,7 +72,10 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.PlugWidget( GafferUI.PlugValueWidget.create( plug["interpolation"] ) )
 
 			self.__splineWidget = GafferUI.SplineWidget()
-			self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp )
+			if isinstance( plug, ( Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug ) ) :
+				self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp )
+			else:
+				self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Splines )
 			self.__splineWidget._qtWidget().setMinimumHeight( 50 )
 
 			self.__slider = GafferUI.Slider()
