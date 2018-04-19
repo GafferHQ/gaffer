@@ -61,6 +61,9 @@ class GAFFERSCENE_API DeleteFaces : public SceneElementProcessor
 		Gaffer::StringPlug *facesPlug();
 		const Gaffer::StringPlug *facesPlug() const;
 
+		Gaffer::BoolPlug *invertPlug();
+		const Gaffer::BoolPlug *invertPlug() const;
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteFaces, DeleteFacesTypeId, SceneElementProcessor );
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

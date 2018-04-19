@@ -58,6 +58,7 @@ DeleteFaces::DeleteFaces( const std::string &name ) : SceneElementProcessor( nam
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "faces", Plug::In, "deleteFaces" ) );
+	addChild( new BoolPlug( "invert", Plug::In, false ) );
 
 	// Fast pass-through for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -78,11 +79,21 @@ const Gaffer::StringPlug *DeleteFaces::facesPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *DeleteFaces::invertPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1);
+}
+
+const Gaffer::BoolPlug *DeleteFaces::invertPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1);
+}
+
 void DeleteFaces::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == facesPlug() )
+	if( input == facesPlug() || input == invertPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -121,6 +132,7 @@ bool DeleteFaces::processesObject() const
 void DeleteFaces::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	facesPlug()->hash( h );
+	invertPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr DeleteFaces::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -145,5 +157,5 @@ IECore::ConstObjectPtr DeleteFaces::computeProcessedObject( const ScenePath &pat
 		throw InvalidArgumentException( boost::str( boost::format( "DeleteFaces : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
 	}
 
-	return MeshAlgo::deleteFaces( mesh, it->second );
+	return MeshAlgo::deleteFaces( mesh, it->second, invertPlug()->getValue() );
 }

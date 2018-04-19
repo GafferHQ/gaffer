@@ -88,6 +88,22 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( faceDeletedObject["vertex"].data,  IECore.IntVectorData([100, 101, 103, 104]) )
 		self.assertEqual( faceDeletedObject["faceVarying"].data,  IECore.IntVectorData([20, 21, 22, 23]) )
 
+		# invert
+		# ======
+
+		deleteFaces["invert"].setValue( True )
+		faceDeletedObject = deleteFaces["out"].object( "/object" )
+
+		self.assertEqual( faceDeletedObject.verticesPerFace, IECore.IntVectorData([4]) )
+		self.assertEqual( faceDeletedObject.vertexIds, IECore.IntVectorData([0, 1, 3, 2]) )
+		self.assertEqual( faceDeletedObject.numFaces(), 1 )
+		self.assertEqual( faceDeletedObject["P"].data, IECore.V3fVectorData( [imath.V3f( 1, 0, 0 ), imath.V3f( 2, 0, 0 ), imath.V3f( 1, 1, 0 ), imath.V3f( 2, 1, 0 )] ) )
+
+		# verify the primvars are correct
+		self.assertEqual( faceDeletedObject["uniform"].data,  IECore.IntVectorData([11]) )
+		self.assertEqual( faceDeletedObject["vertex"].data,  IECore.IntVectorData([101, 102, 104, 105]) )
+		self.assertEqual( faceDeletedObject["faceVarying"].data,  IECore.IntVectorData([24, 25, 26, 27]) )
+
 	def testDeletingFacesUpdatesBounds( self ) :
 
 		rectangleScene = self.makeRectangleFromTwoSquaresScene()

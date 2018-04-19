@@ -61,6 +61,9 @@ class GAFFERSCENE_API DeleteCurves : public SceneElementProcessor
 		Gaffer::StringPlug *curvesPlug();
 		const Gaffer::StringPlug *curvesPlug() const;
 
+		Gaffer::BoolPlug *invertPlug();
+		const Gaffer::BoolPlug *invertPlug() const;
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteCurves, DeleteCurvesTypeId, SceneElementProcessor );
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
