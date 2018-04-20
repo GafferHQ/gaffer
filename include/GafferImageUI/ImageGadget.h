@@ -44,10 +44,14 @@
 
 #include "GafferUI/Gadget.h"
 
+#include "Gaffer/ParallelAlgo.h"
+
+#include "IECore/Canceller.h"
 #include "IECore/MurmurHash.h"
 #include "IECore/VectorTypedData.h"
 
 #include "tbb/concurrent_unordered_map.h"
+#include "tbb/spin_mutex.h"
 
 #include "boost/array.hpp"
 
@@ -158,6 +162,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			AllDirty = FormatDirty | DataWindowDirty | ChannelNamesDirty | TilesDirty
 		};
 
+		void dirty( unsigned flags );
 		const GafferImage::Format &format() const;
 		const Imath::Box2i &dataWindow() const;
 		const std::vector<std::string> &channelNames() const;
@@ -193,30 +198,49 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		struct Tile
 		{
-			IECore::MurmurHash channelDataHash;
-			// Updated in parallel when the hash has changed.
-			IECore::ConstFloatVectorDataPtr channelDataToConvert;
-			// Created from channelDataToConvert in a serial process,
-			// because we can only to OpenGL work on the main thread.
-			IECoreGL::TexturePtr texture;
-		};
 
-		void updateTiles() const;
-		void removeOutOfBoundsTiles() const;
+			Tile() = default;
+			Tile( const Tile &other );
+
+			// Called from a background thread with the context
+			// already set up appropriately for the tile.
+			void update( const GafferImage::ImagePlug *image );
+			// Called from the UI thread.
+			const IECoreGL::Texture *texture();
+
+			private :
+
+				IECore::MurmurHash m_channelDataHash;
+				IECore::ConstFloatVectorDataPtr m_channelDataToConvert;
+				IECoreGL::TexturePtr m_texture;
+				typedef tbb::spin_mutex Mutex;
+				Mutex m_mutex;
+
+		};
 
 		typedef tbb::concurrent_unordered_map<TileIndex, Tile> Tiles;
 		mutable Tiles m_tiles;
 
 		friend size_t tbb_hasher( const ImageGadget::TileIndex &tileIndex );
 
-		struct TileFunctor;
+		// Tile update. We update tiles asynchronously from background
+		// threads.
+
+		void updateTiles();
+		void removeOutOfBoundsTiles() const;
+
+		std::unique_ptr<Gaffer::BackgroundTask> m_tilesTask;
+		std::atomic_bool m_renderRequestPending;
 
 		// Rendering.
 
+		void visibilityChanged();
 		void renderTiles() const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
 
 };
+
+IE_CORE_DECLAREPTR( ImageGadget )
 
 size_t tbb_hasher( const ImageGadget::TileIndex &tileIndex );
 

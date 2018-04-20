@@ -42,8 +42,10 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/IECoreGL.h"
@@ -74,7 +76,8 @@ ImageGadget::ImageGadget()
 	:	Gadget( defaultName<ImageGadget>() ),
 		m_image( nullptr ),
 		m_soloChannel( -1 ),
-		m_dirtyFlags( AllDirty )
+		m_dirtyFlags( AllDirty ),
+		m_renderRequestPending( false )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -82,10 +85,15 @@ ImageGadget::ImageGadget()
 	m_rgbaChannels[3] = "A";
 
 	setContext( new Context() );
+
+	visibilityChangedSignal().connect( boost::bind( &ImageGadget::visibilityChanged, this ) );
 }
 
 ImageGadget::~ImageGadget()
 {
+	// Make sure background task completes before anything
+	// it relies on is destroyed.
+	m_tilesTask.reset();
 }
 
 void ImageGadget::setImage( GafferImage::ConstImagePlugPtr image )
@@ -105,8 +113,7 @@ void ImageGadget::setImage( GafferImage::ConstImagePlugPtr image )
 		m_plugDirtiedConnection.disconnect();
 	}
 
-	m_dirtyFlags = AllDirty;
-	requestRender();
+	dirty( AllDirty );
 }
 
 const GafferImage::ImagePlug *ImageGadget::getImage() const
@@ -124,8 +131,7 @@ void ImageGadget::setContext( Gaffer::ContextPtr context )
 	m_context = context;
 	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &ImageGadget::contextChanged, this, ::_2 ) );
 
-	m_dirtyFlags = AllDirty;
-	requestRender();
+	dirty( AllDirty );
 }
 
 Gaffer::Context *ImageGadget::getContext()
@@ -146,9 +152,8 @@ void ImageGadget::setChannels( const Channels &channels )
 	}
 
 	m_rgbaChannels = channels;
-	m_dirtyFlags |= TilesDirty;
 	channelsChangedSignal()( this );
-	requestRender();
+	dirty( TilesDirty );
 }
 
 const ImageGadget::Channels &ImageGadget::getChannels() const
@@ -179,7 +184,7 @@ void ImageGadget::setSoloChannel( int index )
 		// only updated the solo channel, so now
 		// we need to trigger a pass over all the
 		// channels.
-		m_dirtyFlags |= TilesDirty;
+		dirty( TilesDirty );
 	}
 	requestRender();
 }
@@ -229,24 +234,19 @@ void ImageGadget::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == m_image->formatPlug() )
 	{
-		m_dirtyFlags |= FormatDirty;
+		dirty( FormatDirty );
 	}
 	else if( plug == m_image->dataWindowPlug() )
 	{
-		m_dirtyFlags |= DataWindowDirty | TilesDirty;
+		dirty( DataWindowDirty | TilesDirty );
 	}
 	else if( plug == m_image->channelNamesPlug() )
 	{
-		m_dirtyFlags |= ChannelNamesDirty | TilesDirty;
+		dirty( ChannelNamesDirty | TilesDirty );
 	}
 	else if( plug == m_image->channelDataPlug() )
 	{
-		m_dirtyFlags |= TilesDirty;
-	}
-
-	if( m_dirtyFlags )
-	{
-		requestRender();
+		dirty( TilesDirty );
 	}
 }
 
@@ -254,14 +254,29 @@ void ImageGadget::contextChanged( const IECore::InternedString &name )
 {
 	if( !boost::starts_with( name.string(), "ui:" ) )
 	{
-		m_dirtyFlags = AllDirty;
-		requestRender();
+		dirty( AllDirty );
 	}
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Image property access.
 //////////////////////////////////////////////////////////////////////////
+
+void ImageGadget::dirty( unsigned flags )
+{
+	if( (flags & m_dirtyFlags) == flags )
+	{
+		return;
+	}
+
+	if( (flags & TilesDirty) && !(m_dirtyFlags & TilesDirty) )
+	{
+		m_tilesTask.reset();
+	}
+
+	m_dirtyFlags |= flags;
+	requestRender();
+}
 
 const GafferImage::Format &ImageGadget::format() const
 {
@@ -323,6 +338,82 @@ const std::vector<std::string> &ImageGadget::channelNames() const
 // Tile storage
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+IECoreGL::Texture *blackTexture()
+{
+	static IECoreGL::TexturePtr g_texture;
+	if( !g_texture )
+	{
+		GLuint texture;
+		glGenTextures( 1, &texture );
+		g_texture = new Texture( texture );
+		Texture::ScopedBinding binding( *g_texture );
+
+		const float black = 0;
+		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE, /* width = */ 1, /* height = */ 1, 0, GL_LUMINANCE,
+			GL_FLOAT, &black );
+	}
+	return g_texture.get();
+}
+
+} // namespace
+
+ImageGadget::Tile::Tile( const Tile &other )
+	:	m_channelDataHash( other.m_channelDataHash ),
+		m_channelDataToConvert( other.m_channelDataToConvert ),
+		m_texture( other.m_texture )
+{
+
+}
+
+void ImageGadget::Tile::update( const ImagePlug *image )
+{
+	const IECore::MurmurHash h = image->channelDataPlug()->hash();
+	Mutex::scoped_lock lock( m_mutex );
+	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
+	{
+		return;
+	}
+
+	lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
+	ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
+	lock.acquire( m_mutex ); // Re-acquire before writing
+	m_channelDataToConvert = channelData;
+	m_channelDataHash = h;
+}
+
+const IECoreGL::Texture *ImageGadget::Tile::texture()
+{
+	Mutex::scoped_lock lock( m_mutex );
+	ConstFloatVectorDataPtr channelDataToConvert = m_channelDataToConvert;
+	m_channelDataToConvert = nullptr;
+	lock.release(); // Don't hold lock while doing expensive conversion
+
+	if( channelDataToConvert )
+	{
+		GLuint texture;
+		glGenTextures( 1, &texture );
+		m_texture = new Texture( texture ); // Lock not needed, because this is only touched on the UI thread.
+		Texture::ScopedBinding binding( *m_texture );
+
+		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_LUMINANCE, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_LUMINANCE,
+			GL_FLOAT, channelDataToConvert->readable().data()
+		);
+
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	}
+
+	return m_texture ? m_texture.get() : blackTexture();
+}
+
 // Needed to allow TileIndex to be used as a key in concurrent_unordered_map.
 inline size_t GafferImageUI::tbb_hasher( const ImageGadget::TileIndex &tileIndex )
 {
@@ -332,37 +423,14 @@ inline size_t GafferImageUI::tbb_hasher( const ImageGadget::TileIndex &tileIndex
 		tbb::tbb_hasher( tileIndex.channelName.c_str() );
 }
 
-// Tests to see if a tile needs updating, and if it does, computes
-// the channel data to go into it.
-struct ImageGadget::TileFunctor
-{
-
-	TileFunctor( Tiles &tiles )
-		:	m_tiles( tiles )
-	{
-	}
-
-	void operator()( const ImagePlug *image, const string &channelName, const V2i &tileOrigin )
-	{
-		Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-		ConstFloatVectorDataPtr channelData;
-		const IECore::MurmurHash h = image->channelDataPlug()->hash();
-		if( !tile.texture || tile.channelDataHash != h )
-		{
-			tile.channelDataToConvert = image->channelDataPlug()->getValue( &h );
-			tile.channelDataHash = h;
-		}
-	}
-
-	private :
-
-		Tiles &m_tiles;
-
-};
-
-void ImageGadget::updateTiles() const
+void ImageGadget::updateTiles()
 {
 	if( !(m_dirtyFlags & TilesDirty) )
+	{
+		return;
+	}
+
+	if( m_tilesTask && !m_tilesTask->done() )
 	{
 		return;
 	}
@@ -385,38 +453,46 @@ void ImageGadget::updateTiles() const
 		}
 	}
 
-	// Use parallelGatherTiles() to do the hard work of launching
-	// threads and iterating over tiles to get any modified channelData.
-	TileFunctor tileFunctor( m_tiles );
-	{
-		Context::Scope scopedContext( m_context.get() );
-		ImageAlgo::parallelProcessTiles( m_image.get(), channelsToCompute, tileFunctor, dataWindow() );
-	}
+	const Box2i dataWindow = this->dataWindow();
 
-	// Now take the new channelData and convert it into textures for display.
-	// We must do this on the main thread because it involves OpenGL.
-	for( Tiles::iterator it = m_tiles.begin(); it != m_tiles.end(); ++it )
-	{
-		if( it->second.channelDataToConvert )
+	// Do the actual work of generating the tiles asynchronously,
+	// in the background.
+
+	auto tileFunctor = [this, channelsToCompute] ( const ImagePlug *image, const V2i &tileOrigin ) {
+
+		ImagePlug::ChannelDataScope channelScope( Context::current() );
+		for( auto &channelName : channelsToCompute )
 		{
-			GLuint texture;
-			glGenTextures( 1, &texture );
-			it->second.texture = new Texture( texture );
-			Texture::ScopedBinding binding( *it->second.texture );
-
-			glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_LUMINANCE,
-				GL_FLOAT, &it->second.channelDataToConvert->readable().front() );
-
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
-			it->second.channelDataToConvert = nullptr;
+			channelScope.setChannelName( channelName );
+			Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
+			tile.update( image );
 		}
-	}
-	m_dirtyFlags &= ~TilesDirty;
+
+		if( refCount() && !m_renderRequestPending.exchange( true ) )
+		{
+			// Must hold a reference to stop us dying before our UI thread call is scheduled.
+			ImageGadgetPtr thisRef = this;
+			ParallelAlgo::callOnUIThread(
+				[thisRef] {
+					thisRef->m_renderRequestPending = false;
+					thisRef->requestRender();
+				}
+			);
+		}
+	};
+
+	Context::Scope scopedContext( m_context.get() );
+	m_tilesTask = ParallelAlgo::callOnBackgroundThread(
+		// Subject
+		m_image.get(),
+		// OK to capture `this` via raw pointer, because ~ImageGadget waits for
+		// the background process to complete.
+		[this, channelsToCompute, dataWindow, tileFunctor] {
+			ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
+			m_dirtyFlags &= ~TilesDirty;
+		}
+	);
+
 }
 
 void ImageGadget::removeOutOfBoundsTiles() const
@@ -516,25 +592,15 @@ IECoreGL::Shader *shader()
 	return g_shader.get();
 }
 
-IECoreGL::Texture *blackTexture()
-{
-	static IECoreGL::TexturePtr g_texture;
-	if( !g_texture )
-	{
-		GLuint texture;
-		glGenTextures( 1, &texture );
-		g_texture = new Texture( texture );
-		Texture::ScopedBinding binding( *g_texture );
-
-		const float black = 0;
-		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE, /* width = */ 1, /* height = */ 1, 0, GL_LUMINANCE,
-			GL_FLOAT, &black );
-	}
-	return g_texture.get();
-}
-
 } // namespace
+
+void ImageGadget::visibilityChanged()
+{
+	if( !visible() )
+	{
+		m_tilesTask.reset();
+	}
+}
 
 void ImageGadget::renderTiles() const
 {
@@ -575,9 +641,9 @@ void ImageGadget::renderTiles() const
 				glActiveTexture( GL_TEXTURE0 + textureUnits[i] );
 				const InternedString channelName = m_soloChannel == -1 ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
 				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
-				if( it != m_tiles.end()  && it->second.texture )
+				if( it != m_tiles.end() )
 				{
-					it->second.texture->bind();
+					it->second.texture()->bind();
 				}
 				else
 				{
@@ -658,7 +724,7 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	{
 		format = this->format();
 		dataWindow = this->dataWindow();
-		updateTiles();
+		const_cast<ImageGadget *>( this )->updateTiles();
 	}
 	catch( ... )
 	{

@@ -37,9 +37,8 @@
 import unittest
 import imath
 
-import IECore
-
 import Gaffer
+import GafferUI
 import GafferUITest
 import GafferImage
 import GafferImageUI
@@ -77,6 +76,29 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 		c = GafferImage.Constant()
 		g.setImage( c["out"] )
 		self.assertTrue( g.getImage().isSame( c["out"] ) )
+
+	def testDestroyWhileProcessing( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+		s["c"]["format"].setValue( GafferImage.Format( 2000, 2000 ) )
+
+		s["b"] = GafferImage.Blur()
+		s["b"]["in"].setInput( s["c"]["out"] )
+		s["b"]["radius"].setValue( imath.V2f( 400 ) )
+
+		g = GafferImageUI.ImageGadget()
+		g.setImage( s["b"]["out"] )
+
+		with GafferUI.Window() as w :
+			GafferUI.GadgetWidget( g )
+
+		w.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		del g, w
+		del s
 
 if __name__ == "__main__":
 	unittest.main()
