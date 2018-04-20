@@ -117,6 +117,7 @@ enum TypeId
 	ErodeTypeId = 110821,
 	DilateTypeId = 110822,
 	RampTypeId = 110823,
+	NoiseTypeId = 110824,
 
 	LastTypeId = 110849
 };
