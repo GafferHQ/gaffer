@@ -88,12 +88,13 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 					self.__boolWidget.setState( value )
 
 			displayMode = Gaffer.Metadata.value( self.getPlug(), "boolPlugValueWidget:displayMode" )
-			displayMode = {
-				"switch" : self.__boolWidget.DisplayMode.Switch,
-				"checkBox" : self.__boolWidget.DisplayMode.CheckBox,
-				"tool" : self.__boolWidget.DisplayMode.Tool,
-			}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
-			self.__boolWidget.setDisplayMode( displayMode )
+			if displayMode is not None :
+				displayMode = {
+					"switch" : self.__boolWidget.DisplayMode.Switch,
+					"checkBox" : self.__boolWidget.DisplayMode.CheckBox,
+					"tool" : self.__boolWidget.DisplayMode.Tool,
+				}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
+				self.__boolWidget.setDisplayMode( displayMode )
 
 		self.__boolWidget.setEnabled( self._editable( canEditAnimation = True ) )
 
