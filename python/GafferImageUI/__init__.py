@@ -54,6 +54,7 @@ import ImageTransformUI
 import ConstantUI
 import CheckerboardUI
 import RampUI
+import NoiseUI
 import ColorSpaceUI
 import ImageContextVariablesUI
 import DeleteImageContextVariablesUI
