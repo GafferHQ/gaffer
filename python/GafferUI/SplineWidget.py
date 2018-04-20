@@ -186,7 +186,7 @@ class SplineWidget( GafferUI.Widget ) :
 						else :
 							self.__splinesToDraw[j].path.lineTo( t, c[j] )
 
-			self.__splineBound = QtCore.QRectF()
+			self.__splineBound = QtCore.QRectF( 0, 0, 1, 1 )
 			for s in self.__splinesToDraw :
 				self.__splineBound = self.__splineBound.united( s.path.controlPointRect() )
 
@@ -203,23 +203,26 @@ class SplineWidget( GafferUI.Widget ) :
 
 		painter.setTransform( transform )
 
-		# Draw axis lines at y=0 and y=1
 		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_SourceOver )
-		pen = QtGui.QPen( self._qtColor( imath.Color3f( 0 ) ) )
-		pen.setCosmetic( True )
-		painter.setPen( pen )
-		zeroLine = QtGui.QPainterPath()
-		zeroLine.moveTo( 0, 0 )
-		zeroLine.lineTo( 1, 0 )
-		painter.drawPath( zeroLine )
 
-		pen = QtGui.QPen( self._qtColor( imath.Color3f( 0.4 ) ) )
-		pen.setCosmetic( True )
-		painter.setPen( pen )
-		oneLine = QtGui.QPainterPath()
-		oneLine.moveTo( 0, 1 )
-		oneLine.lineTo( 1, 1 )
-		painter.drawPath( oneLine )
+		# Draw axis lines at y=0 and y=1
+		if self.__splineBound.top() < 0:
+			pen = QtGui.QPen( self._qtColor( imath.Color3f( 0.2 ) ) )
+			pen.setCosmetic( True )
+			painter.setPen( pen )
+			zeroLine = QtGui.QPainterPath()
+			zeroLine.moveTo( 0, 0 )
+			zeroLine.lineTo( 1, 0 )
+			painter.drawPath( zeroLine )
+
+		if self.__splineBound.bottom() > 1:
+			pen = QtGui.QPen( self._qtColor( imath.Color3f( 0.4 ) ) )
+			pen.setCosmetic( True )
+			painter.setPen( pen )
+			oneLine = QtGui.QPainterPath()
+			oneLine.moveTo( 0, 1 )
+			oneLine.lineTo( 1, 1 )
+			painter.drawPath( oneLine )
 
 		# draw the splines
 		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_Plus )
