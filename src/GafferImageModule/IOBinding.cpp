@@ -44,6 +44,7 @@
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImage/OpenImageIOReader.h"
 #include "GafferImage/Ramp.h"
+#include "GafferImage/Noise.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -122,6 +123,7 @@ void GafferImageModule::bindIO()
 	DependencyNodeClass<Constant>();
 	DependencyNodeClass<Checkerboard>();
 	DependencyNodeClass<Ramp>();
+	DependencyNodeClass<Noise>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<OpenImageIOReader>()
