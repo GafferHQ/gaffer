@@ -49,6 +49,7 @@ from MergeTest import MergeTest
 from GradeTest import GradeTest
 from ConstantTest import ConstantTest
 from CheckerboardTest import CheckerboardTest
+from NoiseTest import NoiseTest
 from RampTest import RampTest
 from ImageWriterTest import ImageWriterTest
 from SamplerTest import SamplerTest
