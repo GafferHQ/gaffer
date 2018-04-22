@@ -53,6 +53,24 @@ using namespace GafferBindings;
 namespace
 {
 
+void setTime( Animation::Key &k, float time )
+{
+	ScopedGILRelease gilRelease;
+	k.setTime( time );
+}
+
+void setValue( Animation::Key &k, float value )
+{
+	ScopedGILRelease gilRelease;
+	k.setValue( value );
+}
+
+void setType( Animation::Key &k, Animation::Type type )
+{
+	ScopedGILRelease gilRelease;
+	k.setType( type );
+}
+
 const char *typeRepr( const Animation::Type &t )
 {
 	switch( t )
@@ -61,21 +79,29 @@ const char *typeRepr( const Animation::Type &t )
 			return "Gaffer.Animation.Type.Step";
 		case Animation::Linear :
 			return "Gaffer.Animation.Type.Linear";
-		default :
-			return "Gaffer.Animation.Type.Invalid";
 	}
+
+	throw IECore::Exception( "Unknown Animation::Type" );
 }
 
 std::string keyRepr( const Animation::Key &k )
 {
-	if( !k )
-	{
-		return "Gaffer.Animation.Key()";
-	}
 	return boost::str(
-		boost::format( "Gaffer.Animation.Key( %f, %f, %s )" ) % k.time % k.value % typeRepr( k.type )
+		boost::format( "Gaffer.Animation.Key( %f, %f, %s )" ) % k.getTime() % k.getValue() % typeRepr( k.getType() )
 	);
 };
+
+void addKey( Animation::CurvePlug &p, const Animation::KeyPtr &k )
+{
+	ScopedGILRelease gilRelease;
+	p.addKey( k );
+}
+
+void removeKey( Animation::CurvePlug &p, const Animation::KeyPtr &k )
+{
+	ScopedGILRelease gilRelease;
+	p.removeKey( k );
+}
 
 class CurvePlugSerialiser : public ValuePlugSerialiser
 {
@@ -86,12 +112,10 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const Animation::CurvePlug *curve = static_cast<const Animation::CurvePlug *>( graphComponent );
-
-			for( std::set<Animation::Key>::const_iterator it = curve->keys().begin(), eIt = curve->keys().end(); it != eIt; ++it )
+			for( const auto &key : *curve )
 			{
-				result += identifier + ".addKey( " + keyRepr( *it ) + " )\n";
+				result += identifier + ".addKey( " + keyRepr( key ) + " )\n";
 			}
-
 			return result;
 		}
 
@@ -112,28 +136,33 @@ void GafferModule::bindAnimation()
 	;
 
 	enum_<Animation::Type>( "Type" )
-		.value( "Invalid", Animation::Invalid )
 		.value( "Step", Animation::Step )
 		.value( "Linear", Animation::Linear )
 	;
 
-	class_<Animation::Key>( "Key" )
-		.def( init<const Animation::Key &>() )
+	IECorePython::RefCountedClass<Animation::Key, IECore::RefCounted>( "Key" )
 		.def( init<float, float, Animation::Type>(
 				(
-					arg( "time" ),
+					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
 					arg( "type" ) = Animation::Linear
 				)
 			)
 		)
-		.def_readwrite( "time", &Animation::Key::time )
-		.def_readwrite( "value", &Animation::Key::value )
-		.def_readwrite( "type", &Animation::Key::type )
+		.def( "getTime", &Animation::Key::getTime )
+		.def( "setTime", &setTime )
+		.def( "getValue", &Animation::Key::getValue )
+		.def( "setValue", &setValue )
+		.def( "getType", &Animation::Key::getType )
+		.def( "setType", &setType )
 		.def( "__repr__", &keyRepr )
 		.def( self == self )
 		.def( self != self )
-		.def( !self )
+		.def(
+			"parent",
+			(Animation::CurvePlug *(Animation::Key::*)())&Animation::Key::parent,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
 	;
 
 	PlugClass<Animation::CurvePlug>()
@@ -145,13 +174,29 @@ void GafferModule::bindAnimation()
 				)
 			)
 		)
-		.def( "addKey", &Animation::CurvePlug::addKey )
+		.def( "addKey", &addKey )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
-		.def( "getKey", &Animation::CurvePlug::getKey )
-		.def( "removeKey", &Animation::CurvePlug::removeKey )
-		.def( "closestKey", &Animation::CurvePlug::closestKey )
-		.def( "previousKey", &Animation::CurvePlug::previousKey )
-		.def( "nextKey", &Animation::CurvePlug::nextKey )
+		.def(
+			"getKey",
+			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::getKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def( "removeKey", &removeKey )
+		.def(
+			"closestKey",
+			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::closestKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def(
+			"previousKey",
+			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::previousKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def(
+			"nextKey",
+			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::nextKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
 		.def( "evaluate", &Animation::CurvePlug::evaluate )
 		.attr( "__qualname__" ) = "Animation.CurvePlug"
 	;
