@@ -1,3 +1,37 @@
+0.45.3.0-shaderPreview
+========
+
+Fixes
+-----
+
+- Spline Editing UI
+	- Default to curve draw mode when editing float splines
+	- Fixed draw range of curve mode
+	- Draw axis lines at y=0 and y=1
+
+Shader Renames
+--------------
+
+- Utility/VectorToColor -> Conversion/VectorToColor
+- Utility/BuildColor -> Conversion/FloatToColor
+- Utility/SplitColor -> Conversion/ColorToFloat
+- Utility/BuildPoint -> Conversion/FloatToVector
+- Utility/SplitPoint -> Conversion/VectorToFloat
+- Maths/FloatMix -> Maths/MixFloat
+- Maths/VectorMix -> Maths/MixVector
+- Maths/FloatAdd -> Maths/AddFloat
+- Maths/FloatMultiply -> Maths/MultiplyFloat
+- Maths/VectorAdd -> Maths/AddVector
+- Maths/VectorMultiply -> Maths/ScaleVector
+
+New Shaders
+-----------
+
+- Luminance
+- Remap*, Mix*, Add*, Multiply*, Subtract*, Divide*, Compare*, Switch* for Float, Vector and Color
+- RoundFloat, PowFloat, SinFloat, Normalize, Length, InvertMatrix
+- MatrixTransform, CoordinateSystemMatrix, CoordinateSystemTransform
+
 0.45.3.0
 ========
 
