@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,28 +34,51 @@
 #
 ##########################################################################
 
-# Utility classes
+import unittest
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
-from ErroringTaskNode import ErroringTaskNode
+import IECore
 
-# Test cases
+import Gaffer
+import GafferTest
+import GafferDispatch
+import GafferDispatchTest
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
-from FrameMaskTest import FrameMaskTest
+class FrameMaskTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["task"] = GafferDispatchTest.LoggingTaskNode()
+		s["task"]["frameDependency"] = Gaffer.StringPlug( defaultValue = "#" )
+
+		s["mask"] = GafferDispatch.FrameMask()
+		s["mask"]["preTasks"][0].setInput( s["task"]["task"] )
+		s["mask"]["mask"].setValue( "1,3,10-15,20-30x2" )
+
+		d = GafferDispatch.LocalDispatcher()
+		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		d["framesMode"].setValue( d.FramesMode.CustomRange )
+		d["frameRange"].setValue( "1-50" )
+
+		d.dispatch( [ s["mask"] ] )
+
+		self.assertEqual(
+			[ l.context.getFrame() for l in s["task"].log ],
+			IECore.FrameList.parse( s["mask"]["mask"].getValue() ).asList()
+		)
+
+		# Check that empty mask is a pass-through
+
+		del s["task"].log[:]
+		s["mask"]["mask"].setValue( "" )
+
+		d.dispatch( [ s["mask"] ] )
+
+		self.assertEqual(
+			[ l.context.getFrame() for l in s["task"].log ],
+			IECore.FrameList.parse( d["frameRange"].getValue() ).asList()
+		)
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
