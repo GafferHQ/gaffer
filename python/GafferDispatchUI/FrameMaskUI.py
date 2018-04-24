@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,19 +34,36 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import Gaffer
+import GafferUI
+import GafferDispatch
 
-import DispatcherUI
-from DispatcherUI import DispatcherWindow
-import LocalDispatcherUI
-import TaskNodeUI
-import SystemCommandUI
-import TaskListUI
-import TaskContextProcessorUI
-import WedgeUI
-import TaskContextVariablesUI
-import TaskSwitchUI
-import PythonCommandUI
-import FrameMaskUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )
+	GafferDispatch.FrameMask,
+
+	"description",
+	"""
+	Masks upstream tasks so that they will only be executed for
+	a subset of the Dispatcher's frame range.
+	""",
+
+	plugs = {
+
+		"mask" : (
+
+			"description",
+			"""
+			The subset of frames that will be executed by upstream tasks.
+			Any frames not included here will be ignored, regardless
+			of the dispatcher's frame range.
+
+			> Note : This can only remove frames. To add frames, edit the
+			> settings on the Dispatcher.
+			""",
+
+		),
+
+	}
+
+)
