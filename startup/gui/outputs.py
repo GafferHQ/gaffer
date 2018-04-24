@@ -38,8 +38,9 @@
 import IECore
 import IECoreScene
 
+import Gaffer
 import GafferScene
-import GafferImageUI
+import GafferImage
 
 # Add standard beauty output that should be supported by
 # all renderers.
