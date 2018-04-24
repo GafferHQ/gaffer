@@ -139,16 +139,34 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 		jobDirectory = boost::filesystem::current_path().string();
 	}
 
-	boost::filesystem::path result;
-	for( int i=0; ; ++i )
+	boost::filesystem::create_directories( jobDirectory );
+
+	// To distinguish between multiple jobs with the same settings
+	// we use a unique numeric subdirectory per job. Start by finding
+	// the highest existing numbered directory entry. Doing this with
+	// a directory iterator is much quicker than calling `is_directory()`
+	// in a loop.
+
+	long i = -1;
+	for( const auto &d : boost::filesystem::directory_iterator( jobDirectory ) )
 	{
-		result = jobDirectory / ( boost::format("%06d") % i ).str();
-		if( boost::filesystem::is_directory( result ) )
+		i = std::max( i, strtol( d.path().filename().c_str(), nullptr, 10 ) );
+	}
+
+	// Now create the next directory and return it. We do this in a loop
+	// until we successfully create a directory of our own, because we
+	// may be in a race against other processes.
+
+	boost::format formatter( "%06d" );
+	boost::filesystem::path numberedJobDirectory;
+	while( true )
+	{
+		++i;
+		numberedJobDirectory = jobDirectory / ( formatter % i ).str();
+		if( boost::filesystem::create_directory( numberedJobDirectory ) )
 		{
-			continue;
+			return numberedJobDirectory.string();
 		}
-		boost::filesystem::create_directories( result );
-		return result.string();
 	}
 }
 
