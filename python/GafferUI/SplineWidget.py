@@ -153,15 +153,13 @@ class SplineWidget( GafferUI.Widget ) :
 		numPoints = 200
 		if not self.__splinesToDraw :
 			self.__splinesToDraw = []
-			interval = self.__spline.interval()
 			if isinstance( self.__spline, IECore.Splineff ) :
 				spline = IECore.Struct()
 				spline.color = imath.Color3f( 1 )
 				spline.path = QtGui.QPainterPath()
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
-					tt = interval[0] + (interval[1] - interval[0]) * t
-					c = self.__spline( tt )
+					c = self.__spline( t )
 					if i==0 :
 						spline.path.moveTo( t, c )
 					else :
@@ -181,19 +179,18 @@ class SplineWidget( GafferUI.Widget ) :
 
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
-					tt = interval[0] + (interval[1] - interval[0]) * t
-					c = self.__spline( tt )
+					c = self.__spline( t )
 					for j in range( 0, c.dimensions() ) :
 						if i == 0 :
 							self.__splinesToDraw[j].path.moveTo( t, c[j] )
 						else :
 							self.__splinesToDraw[j].path.lineTo( t, c[j] )
 
-			self.__splineBound = QtCore.QRectF()
+			self.__splineBound = QtCore.QRectF( 0, 0, 1, 1 )
 			for s in self.__splinesToDraw :
 				self.__splineBound = self.__splineBound.united( s.path.controlPointRect() )
 
-		# draw the splines
+		# Set view transform
 		rect = self._qtWidget().contentsRect()
 		transform = QtGui.QTransform()
 		if self.__splineBound.width() :
@@ -205,6 +202,29 @@ class SplineWidget( GafferUI.Widget ) :
 			transform.translate( 0, -self.__splineBound.top() )
 
 		painter.setTransform( transform )
+
+		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_SourceOver )
+
+		# Draw axis lines at y=0 and y=1
+		if self.__splineBound.top() < 0:
+			pen = QtGui.QPen( self._qtColor( imath.Color3f( 0.2 ) ) )
+			pen.setCosmetic( True )
+			painter.setPen( pen )
+			zeroLine = QtGui.QPainterPath()
+			zeroLine.moveTo( 0, 0 )
+			zeroLine.lineTo( 1, 0 )
+			painter.drawPath( zeroLine )
+
+		if self.__splineBound.bottom() > 1:
+			pen = QtGui.QPen( self._qtColor( imath.Color3f( 0.4 ) ) )
+			pen.setCosmetic( True )
+			painter.setPen( pen )
+			oneLine = QtGui.QPainterPath()
+			oneLine.moveTo( 0, 1 )
+			oneLine.lineTo( 1, 1 )
+			painter.drawPath( oneLine )
+
+		# draw the splines
 		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_Plus )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
