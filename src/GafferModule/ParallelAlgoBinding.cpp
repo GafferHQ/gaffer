@@ -160,6 +160,42 @@ void callOnUIThread( boost::python::object f )
 	);
 }
 
+std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boost::python::object f )
+{
+	auto fPtr = std::make_shared<boost::python::object>( f );
+	auto backgroundTask = ParallelAlgo::callOnBackgroundThread(
+		subject,
+		[fPtr]() mutable {
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				(*fPtr)();
+				// We are likely to be the last owner of the python
+				// function object. Make sure we release it while we
+				// still hold the GIL.
+				fPtr.reset();
+			}
+			catch( boost::python::error_already_set &e )
+			{
+				fPtr.reset();
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
+
+	return std::shared_ptr<BackgroundTask>(
+		backgroundTask.release(),
+		// Custom deleter. We need to release
+		// the GIL when deleting, because the destructor
+		// waits on the background task, and the background
+		// task might need the GIL in order to complete.
+		[]( BackgroundTask *t ) {
+			IECorePython::ScopedGILRelease gilRelease;
+			delete t;
+		}
+	);
+}
+
 } // namespace
 
 void GafferModule::bindParallelAlgo()
@@ -173,12 +209,15 @@ void GafferModule::bindParallelAlgo()
 		.def( "done", &BackgroundTask::done )
 	;
 
+	register_ptr_to_python<std::shared_ptr<BackgroundTask>>();
+
 	object module( borrowed( PyImport_AddModule( "Gaffer.ParallelAlgo" ) ) );
 	scope().attr( "ParallelAlgo" ) = module;
 	scope moduleScope( module );
 
 	def( "callOnUIThread", &callOnUIThread );
 	def( "callOnUIThreadSignal", &Gaffer::ParallelAlgo::callOnUIThreadSignal, boost::python::return_value_policy<boost::python::reference_existing_object>() );
+	def( "callOnBackgroundThread", &callOnBackgroundThread );
 
 	SignalClass<Gaffer::ParallelAlgo::CallOnUIThreadSignal, DefaultSignalCaller<Gaffer::ParallelAlgo::CallOnUIThreadSignal>, CallOnUIThreadSlotCaller>( "CallOnUIThreadSignal" );
 
