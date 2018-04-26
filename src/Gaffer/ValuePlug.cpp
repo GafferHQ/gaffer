@@ -434,11 +434,13 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 
 		void doAction() override
 		{
+			Action::doAction();
 			m_plug->setValueInternal( m_doValue, true );
 		}
 
 		void undoAction() override
 		{
+			Action::undoAction();
 			m_plug->setValueInternal( m_undoValue, true );
 		}
 
