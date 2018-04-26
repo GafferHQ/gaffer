@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import math
 import imath
 
 import IECore
@@ -258,22 +259,67 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__hsvLabel = GafferUI.Label()
 
+		self.__pixel = imath.V2f( 0 )
+
+		viewportGadget = plug.parent().viewportGadget()
+		self.__mouseMoveConnection = viewportGadget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+
+		imageGadget = viewportGadget.getPrimaryChild()
+		self.__buttonPressSignal = imageGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__dragBeginSignal = imageGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__dragEndSignal = imageGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+
 	def _updateFromPlug( self ) :
 
-		view = self.getPlug().node()
+		self.__updateLazily()
+
+	@GafferUI.LazyMethod()
+	def __updateLazily( self ) :
 
 		with self.getContext() :
-			pixel = self.getPlug()["pixel"].getValue()
+			self.__updateInBackground( self.__pixel )
+
+	@GafferUI.BackgroundMethod()
+	def __updateInBackground( self, pixel ) :
+
+		image = self.getPlug().node().viewportGadget().getPrimaryChild().getImage()
+
+		with Gaffer.Context( Gaffer.Context.current() ) as c :
+			c["colorInspector:pixel"] = pixel
 			samplerChannels = self.getPlug()["color"].getInput().node()["channels"].getValue()
-			try :
-				channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].getValue()
-				color = self.getPlug()["color"].getValue()
-			except :
-				channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].defaultValue()
-				color = self.getPlug()["color"].defaultValue()
+			channelNames = image["channelNames"].getValue()
+			color = self.getPlug()["color"].getValue()
 
 		if samplerChannels[3] not in channelNames :
 			color = imath.Color3f( color[0], color[1], color[2] )
+
+		return pixel, color
+
+	@__updateInBackground.postCall
+	def __updateInBackgroundPostCall( self, backgroundResult ) :
+
+		if isinstance( backgroundResult, IECore.Cancelled ) :
+			# Cancellation. This could be due to any of the
+			# following :
+			#
+			# - This widget being hidden.
+			# - A graph edit that will affect the image and will have
+			#   triggered a call to _updateFromPlug().
+			# - A graph edit that won't trigger a call to _updateFromPlug().
+			#
+			# LazyMethod takes care of all this for us. If we're hidden,
+			# it waits till we're visible. If `updateFromPlug()` has already
+			# called `__updateLazily()`, our call will just replace the
+			# pending call.
+			self.__updateLazily()
+			return
+		elif isinstance( backgroundResult, Exception ) :
+			# Computation error. This will be reported elsewhere
+			# in the UI.
+			pixel, color = self.__pixel, imath.Color4f( 0 )
+		else :
+			# Success. We have valid infomation to display.
+			pixel, color = backgroundResult[0], backgroundResult[1]
 
 		self.__positionLabel.setText( "<b>XY : %d %d</b>" % ( pixel.x, pixel.y ) )
 		self.__swatch.setColor( color )
@@ -285,6 +331,59 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		hsv = color.rgb2hsv()
 		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
+
+	def __mouseMove( self, viewportGadget, event ) :
+
+		imageGadget = viewportGadget.getPrimaryChild()
+		l = viewportGadget.rasterToGadgetSpace( imath.V2f( event.line.p0.x, event.line.p0.y ), imageGadget )
+
+		try :
+			pixel = imageGadget.pixelAt( l )
+		except :
+			# `pixelAt()` can throw if there is an error
+			# computing the image being viewed. We leave
+			# the error reporting to other UI components.
+			return False
+
+		pixel = imath.V2f( math.floor( pixel.x ), math.floor( pixel.y ) ) # Origin
+		pixel = pixel + imath.V2f( 0.5 ) # Center
+
+		if pixel == self.__pixel :
+			return False
+
+		self.__pixel = pixel
+
+		self.__updateLazily()
+
+		return True
+
+	def __buttonPress( self, imageGadget, event ) :
+
+		if event.buttons != event.Buttons.Left or event.modifiers :
+			return False
+
+		return True # accept press so we get dragBegin()
+
+	def __dragBegin( self, imageGadget, event ) :
+
+		if event.buttons != event.Buttons.Left or event.modifiers :
+			return False
+
+		with Gaffer.Context( self.getContext() ) as c :
+			c["colorInspector:pixel"] = self.__pixel
+			try :
+				color = self.getPlug()["color"].getValue()
+			except :
+				# Error will be reported elsewhere in the UI
+				return None
+
+		GafferUI.Pointer.setCurrent( "rgba" )
+		return color
+
+	def __dragEnd( self, imageGadget, event ) :
+
+		GafferUI.Pointer.setCurrent( "" )
+		return True
 
 ##########################################################################
 # _SoloChannelPlugValueWidget
