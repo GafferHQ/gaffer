@@ -293,11 +293,6 @@ class EventLoop( object ) :
 
 		cls.__ensureIdleTimer()
 
-	@classmethod
-	def _gadgetExecuteOnUIThread( cls, callable ) :
-
-		cls.executeOnUIThread( callable )
-
 	def __pumpThreadFn( self ) :
 
 		import maya.utils
@@ -312,7 +307,6 @@ class EventLoop( object ) :
 			self.__qtEventLoop.processEvents()
 
 _gadgetIdleSignalAccessedConnection = GafferUI.Gadget._idleSignalAccessedSignal().connect( EventLoop._gadgetIdleSignalAccessed )
-_gadgetExecuteOnUIThreadConnection = GafferUI.Gadget._executeOnUIThreadSignal().connect( EventLoop._gadgetExecuteOnUIThread )
 
 class _UIThreadExecutor( QtCore.QObject ) :
 

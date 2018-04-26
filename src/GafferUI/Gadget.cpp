@@ -465,17 +465,6 @@ Gadget::IdleSignal &Gadget::idleSignalAccessedSignal()
 	return g_idleSignalAccessedSignal;
 }
 
-void Gadget::executeOnUIThread( UIThreadFunction function )
-{
-	executeOnUIThreadSignal()( function );
-}
-
-Gadget::ExecuteOnUIThreadSignal &Gadget::executeOnUIThreadSignal()
-{
-	static ExecuteOnUIThreadSignal g_executeOnUIThreadSignal;
-	return g_executeOnUIThreadSignal;
-}
-
 void Gadget::styleChanged()
 {
 	requestRender();
