@@ -36,6 +36,11 @@
 
 #include "Gaffer/ParallelAlgo.h"
 
+#include "Gaffer/BackgroundTask.h"
+#include "Gaffer/Context.h"
+
+#include "boost/make_unique.hpp"
+
 using namespace Gaffer;
 
 void ParallelAlgo::callOnUIThread( const UIThreadFunction &function )
@@ -47,4 +52,23 @@ ParallelAlgo::CallOnUIThreadSignal &ParallelAlgo::callOnUIThreadSignal()
 {
 	static CallOnUIThreadSignal s;
 	return s;
+}
+
+GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread( const Plug *subject, BackgroundFunction function )
+{
+	ContextPtr backgroundContext = new Context( *Context::current() );
+
+	return boost::make_unique<BackgroundTask>(
+
+		subject,
+
+		[backgroundContext, function] ( const IECore::Canceller &canceller ) {
+
+			ContextPtr c = new Context( *backgroundContext, canceller );
+			Context::Scope contextScope( c.get() );
+			function();
+
+		}
+
+	);
 }

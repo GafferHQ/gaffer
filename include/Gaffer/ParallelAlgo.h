@@ -42,9 +42,13 @@
 #include "boost/signals.hpp"
 
 #include <functional>
+#include <memory>
 
 namespace Gaffer
 {
+
+class BackgroundTask;
+class Plug;
 
 namespace ParallelAlgo
 {
@@ -68,6 +72,15 @@ GAFFER_API void callOnUIThread( const UIThreadFunction &function );
 /// > alternative UI framework to be connected.
 typedef boost::signal<void ( UIThreadFunction )> CallOnUIThreadSignal;
 GAFFER_API CallOnUIThreadSignal &callOnUIThreadSignal();
+
+/// Runs the specified function asynchronously on a background thread,
+/// using a copy of the current Context from the calling thread. This
+/// context contains an `IECore::Canceller` controlled by the returned
+/// `BackgroundTask`, allowing the background work to be cancelled
+/// explicitly. Implicit cancellation is also performed using the `subject`
+/// argument : see the `BackgroundTask` documentation for details.
+typedef std::function<void ()> BackgroundFunction;
+GAFFER_API std::unique_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, BackgroundFunction function );
 
 } // namespace ParallelAlgo
 
