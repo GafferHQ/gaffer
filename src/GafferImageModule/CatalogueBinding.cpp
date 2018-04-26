@@ -71,56 +71,6 @@ struct DriverCreatedSlotCaller
 	}
 };
 
-struct DisplayWrapper : public Display
-{
-
-	typedef Display::UIThreadFunction UIThreadFunction;
-	typedef Display::ExecuteOnUIThreadSignal ExecuteOnUIThreadSignal;
-
-	static Display::ExecuteOnUIThreadSignal &executeOnUIThreadSignal()
-	{
-		return Display::executeOnUIThreadSignal();
-	}
-
-};
-
-struct GILReleaseUIThreadFunction
-{
-
-	GILReleaseUIThreadFunction( DisplayWrapper::UIThreadFunction function )
-		:	m_function( function )
-	{
-	}
-
-	void operator()()
-	{
-		ScopedGILRelease gilRelease;
-		m_function();
-	}
-
-	private :
-
-		DisplayWrapper::UIThreadFunction m_function;
-
-};
-
-struct ExecuteOnUIThreadSlotCaller
-{
-	boost::signals::detail::unusable operator()( boost::python::object slot, DisplayWrapper::UIThreadFunction function )
-	{
-		object pythonFunction = make_function( GILReleaseUIThreadFunction( function ), default_call_policies(), boost::mpl::vector<void>() );
-		try
-		{
-			slot( pythonFunction );
-		}
-		catch( const error_already_set &e )
-		{
-			ExceptionAlgo::translatePythonException();
-		}
-		return boost::signals::detail::unusable();
-	}
-};
-
 class CatalogueSerialiser : public NodeSerialiser
 {
 
@@ -180,11 +130,9 @@ void GafferImageModule::bindCatalogue()
 			.def( "getDriver", (IECoreImage::DisplayDriver *(Display::*)())&Display::getDriver, return_value_policy<CastToIntrusivePtr>() )
 			.def( "driverCreatedSignal", &Display::driverCreatedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "driverCreatedSignal" )
 			.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
-			.def( "executeOnUIThreadSignal", &DisplayWrapper::executeOnUIThreadSignal, return_value_policy<reference_existing_object>() ).staticmethod( "executeOnUIThreadSignal" )
 		;
 
 		SignalClass<Display::DriverCreatedSignal, DefaultSignalCaller<Display::DriverCreatedSignal>, DriverCreatedSlotCaller>( "DriverCreated" );
-		SignalClass<DisplayWrapper::ExecuteOnUIThreadSignal, DefaultSignalCaller<DisplayWrapper::ExecuteOnUIThreadSignal>, ExecuteOnUIThreadSlotCaller>( "ExecuteOnUIThreadSignal" );
 	}
 
 	{

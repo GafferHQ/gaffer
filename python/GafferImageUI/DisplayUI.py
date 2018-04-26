@@ -76,7 +76,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-# Service the Display's requests to execute things on the UI thread.
-# We must do this here because GafferImage has no direct access to the UI.
-GafferImage.Display.executeOnUIThreadSignal().connect( GafferUI.EventLoop.executeOnUIThread, scoped = False )

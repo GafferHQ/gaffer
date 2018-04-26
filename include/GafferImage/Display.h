@@ -78,12 +78,6 @@ class GAFFERIMAGE_API Display : public ImageNode
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
-		/// Used to trigger UI updates when image data is received
-		/// via a driver on a background thread. Exposed publicly
-		/// for the use of the Catalogue node.
-		typedef std::function<void ()> UIThreadFunction;
-		static void executeOnUIThread( UIThreadFunction function );
-
 	protected :
 
 		void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -100,11 +94,6 @@ class GAFFERIMAGE_API Display : public ImageNode
 
 		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
-
-		// Signal used to request the execution of a function on the UI thread.
-		// We service these requests in DisplayUI.py.
-		typedef boost::signal<void ( UIThreadFunction )> ExecuteOnUIThreadSignal;
-		static ExecuteOnUIThreadSignal &executeOnUIThreadSignal();
 
 	private :
 
