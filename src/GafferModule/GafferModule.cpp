@@ -53,6 +53,7 @@
 #include "MonitorBinding.h"
 #include "NodeBinding.h"
 #include "NumericPlugBinding.h"
+#include "ParallelAlgoBinding.h"
 #include "PathBinding.h"
 #include "PathFilterBinding.h"
 #include "PlugAlgoBinding.h"
@@ -251,6 +252,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindMetadataAlgo();
 	bindSwitch();
 	bindPlugAlgo();
+	bindParallelAlgo();
 
 	NodeClass<Backdrop>();
 

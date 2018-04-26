@@ -43,6 +43,7 @@ import functools
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 from Qt import QtCore
@@ -347,3 +348,6 @@ class _UIThreadExecutor( QtCore.QObject ) :
 			return True
 
 		return False
+
+# Service the requests made to `ParallelAlgo::callOnUIThread()`.
+Gaffer.ParallelAlgo.callOnUIThreadSignal().connect( EventLoop.executeOnUIThread, scoped = False )
