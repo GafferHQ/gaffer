@@ -40,7 +40,9 @@
 
 #include "GafferBindings/SignalBinding.h"
 
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/ParallelAlgo.h"
+#include "Gaffer/Plug.h"
 
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
@@ -51,6 +53,48 @@ using namespace boost::python;
 
 namespace
 {
+
+BackgroundTask *backgroundTaskConstructor( const Plug *subject, object f )
+{
+	auto fPtr = std::make_shared<boost::python::object>( f );
+	return new BackgroundTask(
+		subject,
+		[fPtr]( const IECore::Canceller &canceller ) mutable {
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				(*fPtr)( boost::ref( canceller ) );
+				// We are likely to be the last owner of the python
+				// function object. Make sure we release it while we
+				// still hold the GIL.
+				fPtr.reset();
+			}
+			catch( boost::python::error_already_set &e )
+			{
+				fPtr.reset();
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
+}
+
+void backgroundTaskCancel( BackgroundTask &b )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	b.cancel();
+}
+
+void backgroundTaskWait( BackgroundTask &b )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	b.wait();
+}
+
+void backgroundTaskCancelAndWait( BackgroundTask &b )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	b.cancelAndWait();
+}
 
 struct GILReleaseUIThreadFunction
 {
@@ -120,6 +164,14 @@ void callOnUIThread( boost::python::object f )
 
 void GafferModule::bindParallelAlgo()
 {
+
+	class_<BackgroundTask, boost::noncopyable>( "BackgroundTask", no_init )
+		.def( "__init__", make_constructor( &backgroundTaskConstructor, default_call_policies() ) )
+		.def( "cancel", &backgroundTaskCancel )
+		.def( "wait", &backgroundTaskWait )
+		.def( "cancelAndWait", &backgroundTaskCancelAndWait )
+		.def( "done", &BackgroundTask::done )
+	;
 
 	object module( borrowed( PyImport_AddModule( "Gaffer.ParallelAlgo" ) ) );
 	scope().attr( "ParallelAlgo" ) = module;
