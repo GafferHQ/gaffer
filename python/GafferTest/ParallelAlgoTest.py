@@ -102,5 +102,44 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( s.getName(), "test" )
 		self.assertEqual( s.uiThreadId, thread.get_ident() )
 
+	def testCallOnBackgroundThread( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["n"] = GafferTest.AddNode()
+
+		foregroundContext = Gaffer.Context( script.context() )
+		foregroundContext["a"] = "a"
+
+		def f() :
+
+			backgroundContext = Gaffer.Context.current()
+			self.assertFalse( backgroundContext.isSame( foregroundContext ) )
+			self.assertEqual( backgroundContext, foregroundContext )
+
+			with self.assertRaises( IECore.Cancelled ) :
+				while True :
+					script["n"]["sum"].getValue()
+
+		# Explicit cancellation
+
+		with foregroundContext :
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread( script["n"]["sum"], f )
+
+		backgroundTask.cancel()
+
+		# Implicit cancellation through graph edit
+
+		with foregroundContext :
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread( script["n"]["sum"], f )
+
+		script["n"]["op1"].setValue( 10 )
+
+		# Cancellation through deletion
+
+		with foregroundContext :
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread( script["n"]["sum"], f )
+
+		del backgroundTask
+
 if __name__ == "__main__":
 	unittest.main()
