@@ -136,155 +136,154 @@ class ProcessTiles
 		const Gaffer::Context *m_parentContext;
 };
 
-class TileInputIterator
+class TileInputIterator : public boost::iterator_facade<TileInputIterator, const Imath::V2i, boost::forward_traversal_tag>
 {
-	public:
-		typedef boost::tuple<Imath::V2i> Result;
+
+	public :
 
 		TileInputIterator(
-			const Imath::V2i &numTiles,
+			const Imath::Box2i &window,
 			const TileOrder tileOrder
 		) :
-			m_numTiles( numTiles ),
-			m_tileOrder( tileOrder ),
-			nextTileId( Imath::V2i( 0 ) )
+			m_range( ImagePlug::tileOrigin( window.min ), ImagePlug::tileOrigin( window.max - Imath::V2i( 1 ) ) ),
+			m_tileOrder( tileOrder )
 		{
-			if( m_tileOrder == TopToBottom )
+			switch( m_tileOrder )
 			{
-				nextTileId.y = m_numTiles.y - 1;
+				case Unordered :
+				case TopToBottom :
+					m_tileOrigin = Imath::V2i( m_range.min.x, m_range.max.y );
+					break;
+				case BottomToTop :
+					m_tileOrigin = ImagePlug::tileOrigin( m_range.min );
+					break;
 			}
 		}
 
-		bool finished()
+		bool done() const
 		{
-			if( m_tileOrder == TopToBottom )
-			{
-				return nextTileId.y < 0;
-			}
-			else
-			{
-				return nextTileId.y >= m_numTiles.y;
-			}
+			return !m_range.intersects( m_tileOrigin );
 		}
 
-		Result next()
-		{
-			Imath::V2i returnTileId( nextTileId );
+	private :
 
-			++nextTileId.x;
-			if( nextTileId.x >= m_numTiles.x )
+		friend class boost::iterator_core_access;
+
+		void increment()
+		{
+			m_tileOrigin.x += ImagePlug::tileSize();
+			if( m_tileOrigin.x > m_range.max.x )
 			{
-				nextTileId.x = 0;
-				if( m_tileOrder == TopToBottom )
+				m_tileOrigin.x = m_range.min.x;
+				switch( m_tileOrder )
 				{
-					--nextTileId.y;
-				}
-				else
-				{
-					++nextTileId.y;
+					case Unordered :
+					case TopToBottom :
+						m_tileOrigin.y -= ImagePlug::tileSize();
+						break;
+					case BottomToTop :
+						m_tileOrigin.y += ImagePlug::tileSize();
 				}
 			}
-
-			return Result( returnTileId );
 		}
 
-	private:
-		const Imath::V2i &m_numTiles;
-		const TileOrder m_tileOrder;
-		Imath::V2i nextTileId;
+		const Imath::V2i &dereference() const
+		{
+			return m_tileOrigin;
+		}
+
+		const Imath::Box2i m_range;
+		const ImageAlgo::TileOrder m_tileOrder;
+		Imath::V2i m_tileOrigin;
+
 };
 
-class TileChannelInputIterator
+struct OriginAndName
 {
-	public:
-		typedef boost::tuple<size_t, Imath::V2i> Result;
+	Imath::V2i origin;
+	std::string name;
+};
+
+class TileChannelInputIterator : public boost::iterator_facade<TileChannelInputIterator, const OriginAndName, boost::forward_traversal_tag>
+{
+
+	public :
 
 		TileChannelInputIterator(
+			const Imath::Box2i &window,
 			const std::vector<std::string> &channelNames,
-			const Imath::V2i &numTiles,
 			const TileOrder tileOrder
 		) :
+			m_originIt( window, tileOrder ),
 			m_channelNames( channelNames ),
-			m_numTiles( numTiles ),
-			m_tileOrder( tileOrder ),
-			nextTileId( Imath::V2i( 0 ) ),
-			nextChannelIndex( 0 )
+			m_channelIt( m_channelNames.begin() )
 		{
-			if( m_tileOrder == TopToBottom )
-			{
-				nextTileId.y = m_numTiles.y - 1;
-			}
+			m_value.origin = *m_originIt;
+			m_value.name = *m_channelIt;
 		}
 
-		bool finished()
+		bool done() const
 		{
-			if( m_tileOrder == TopToBottom )
-			{
-				return nextTileId.y < 0;
-			}
-			else
-			{
-				return nextTileId.y >= m_numTiles.y;
-			}
+			return m_originIt.done();
 		}
 
-		Result next()
+	private :
+
+		friend class boost::iterator_core_access;
+
+		void increment()
 		{
-			Imath::V2i returnTileId( nextTileId );
-			size_t returnChannelIndex( nextChannelIndex );
-
-			++nextChannelIndex;
-			if( nextChannelIndex >= m_channelNames.size() )
+			if( ++m_channelIt == m_channelNames.end() )
 			{
-				nextChannelIndex = 0;
-
-				++nextTileId.x;
-				if( nextTileId.x >= m_numTiles.x )
+				m_channelIt = m_channelNames.begin();
+				++m_originIt;
+				if( !m_originIt.done() )
 				{
-					nextTileId.x = 0;
-					if( m_tileOrder == TopToBottom )
-					{
-						--nextTileId.y;
-					}
-					else
-					{
-						++nextTileId.y;
-					}
+					m_value.origin = *m_originIt;
 				}
 			}
-
-			return Result( returnChannelIndex, returnTileId );
+			m_value.name = *m_channelIt;
 		}
 
-	private:
-		const std::vector<std::string> &m_channelNames;
-		const Imath::V2i &m_numTiles;
-		const TileOrder m_tileOrder;
-		Imath::V2i nextTileId;
-		size_t nextChannelIndex;
+		const OriginAndName &dereference() const
+		{
+			return m_value;
+		}
+
+		TileInputIterator m_originIt;
+
+		const std::vector<std::string> m_channelNames;
+		std::vector<std::string>::const_iterator m_channelIt;
+
+		OriginAndName m_value;
 
 };
 
-template <class InputIterator>
+template <class Iterator>
 class TileInputFilter
 {
 	public:
-		TileInputFilter( InputIterator &it )
+		TileInputFilter( Iterator &it )
 			:	m_it( it )
 		{}
 
-		typename InputIterator::Result operator()( tbb::flow_control &fc ) const
+		typename Iterator::value_type operator()( tbb::flow_control &fc ) const
 		{
-			if( m_it.finished() )
+			if( m_it.done() )
 			{
 				fc.stop();
+				return typename Iterator::value_type();
 			}
 
-			return m_it.next();
+			typename Iterator::value_type result = *m_it;
+			++m_it;
+			return result;
 		}
 
 	private:
-		InputIterator &m_it;
+
+		Iterator &m_it;
+
 };
 
 template<class TileFunctor>
@@ -294,59 +293,37 @@ class TileFunctorFilter
 		TileFunctorFilter(
 			TileFunctor &functor,
 			const ImagePlug *imagePlug,
-			const Imath::V2i &tilesOrigin,
 			const Gaffer::Context *context
 		) :
 			m_functor( functor ),
 			m_imagePlug( imagePlug ),
-			m_tilesOrigin( tilesOrigin ),
 			m_parentContext( context )
 		{}
 
-		TileFunctorFilter(
-			TileFunctor &functor,
-			const ImagePlug *imagePlug,
-			const std::vector<std::string> &channelNames,
-			const Imath::V2i &tilesOrigin,
-			const Gaffer::Context *context
-		) :
-			m_functor( functor ),
-			m_imagePlug( imagePlug ),
-			m_channelNames( channelNames ),
-			m_tilesOrigin( tilesOrigin ),
-			m_parentContext( context )
-		{}
-
-		boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> operator()( boost::tuple<size_t, Imath::V2i> &it ) const
+		boost::tuple<Imath::V2i, typename TileFunctor::Result> operator()( const Imath::V2i &tileOrigin ) const
 		{
 			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
-
-			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<1>( it ) * ImagePlug::tileSize() );
-			channelDataScope.setTileOrigin( tileOrigin );
-			channelDataScope.setChannelName( m_channelNames[boost::get<0>( it )] );
-
-			typename TileFunctor::Result result = m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin );
-
-			return boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result>( boost::get<0>( it ), boost::get<1>( it ), result );
-		}
-
-		boost::tuple<Imath::V2i, typename TileFunctor::Result> operator()( boost::tuple<Imath::V2i> &it ) const
-		{
-			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
-
-			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
 			channelDataScope.setTileOrigin( tileOrigin );
 
 			typename TileFunctor::Result result = m_functor( m_imagePlug, tileOrigin );
 
-			return boost::tuple<Imath::V2i, typename TileFunctor::Result>( boost::get<0>( it ), result );
+			return boost::tuple<Imath::V2i, typename TileFunctor::Result>( tileOrigin, result );
+		}
+
+		boost::tuple<OriginAndName, typename TileFunctor::Result> operator()( OriginAndName &it ) const
+		{
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
+			channelDataScope.setTileOrigin( it.origin );
+			channelDataScope.setChannelName( it.name );
+
+			typename TileFunctor::Result result = m_functor( m_imagePlug, it.name, it.origin );
+
+			return boost::tuple<OriginAndName, typename TileFunctor::Result>( it, result );
 		}
 
 	private:
 		TileFunctor &m_functor;
 		const ImagePlug *m_imagePlug;
-		const std::vector<std::string> m_channelNames; // Don't declare as a reference, as it may not be set in the constructor
-		const Imath::V2i &m_tilesOrigin;
 		const Gaffer::Context *m_parentContext;
 };
 
@@ -357,55 +334,33 @@ class GatherFunctorFilter
 		GatherFunctorFilter(
 			GatherFunctor &functor,
 			const ImagePlug *imagePlug,
-			const Imath::V2i &tilesOrigin,
 			const Gaffer::Context *context
 		) :
 			m_functor( functor ),
 			m_imagePlug( imagePlug ),
-			m_tilesOrigin( tilesOrigin ),
 			m_parentContext( context )
 		{}
-
-		GatherFunctorFilter(
-			GatherFunctor &functor,
-			const ImagePlug *imagePlug,
-			const std::vector<std::string> &channelNames,
-			const Imath::V2i &tilesOrigin,
-			const Gaffer::Context *context
-		) :
-			m_functor( functor ),
-			m_imagePlug( imagePlug ),
-			m_channelNames( channelNames ),
-			m_tilesOrigin( tilesOrigin ),
-			m_parentContext( context )
-		{}
-
-		void operator()( boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> &it ) const
-		{
-			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
-
-			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<1>( it ) * ImagePlug::tileSize() );
-			channelDataScope.setTileOrigin( tileOrigin );
-			channelDataScope.setChannelName( m_channelNames[boost::get<0>( it )] );
-
-			m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin, boost::get<2>( it ) );
-		}
 
 		void operator()( boost::tuple<Imath::V2i, typename TileFunctor::Result> &it ) const
 		{
 			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
+			channelDataScope.setTileOrigin( boost::get<0>( it ) );
 
-			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
-			channelDataScope.setTileOrigin( tileOrigin );
+			m_functor( m_imagePlug, boost::get<0>( it ), boost::get<1>( it ) );
+		}
 
-			m_functor( m_imagePlug, tileOrigin, boost::get<1>( it ) );
+		void operator()( boost::tuple<OriginAndName, typename TileFunctor::Result> &it ) const
+		{
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
+			channelDataScope.setTileOrigin( boost::get<0>( it ).origin );
+			channelDataScope.setChannelName( boost::get<0>( it ).name );
+
+			m_functor( m_imagePlug, boost::get<0>( it ).name, boost::get<0>( it ).origin, boost::get<1>( it ) );
 		}
 
 	private:
 		GatherFunctor &m_functor;
 		const ImagePlug *m_imagePlug;
-		const std::vector<std::string> m_channelNames; // Don't declare as a reference, as it may not be set in the constructor
-		const Imath::V2i m_tilesOrigin;
 		const Gaffer::Context *m_parentContext;
 };
 
@@ -568,23 +523,20 @@ void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, 
 		}
 	}
 
-	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
-	const Imath::V2i numTiles = ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize();
-
-	Detail::TileInputIterator inputIterator( numTiles, tileOrder );
+	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
 
 	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
-		tbb::make_filter<void, boost::tuple<Imath::V2i> >(
+		tbb::make_filter<void, Imath::V2i>(
 			tbb::filter::serial,
-			Detail::TileInputFilter<Detail::TileInputIterator>( inputIterator )
+			Detail::TileInputFilter<Detail::TileInputIterator>( tileIterator )
 		) &
-		tbb::make_filter<boost::tuple<Imath::V2i>, boost::tuple<Imath::V2i, typename TileFunctor::Result> >(
+		tbb::make_filter<Imath::V2i, boost::tuple<Imath::V2i, typename TileFunctor::Result>>(
 			tbb::filter::parallel,
-			Detail::TileFunctorFilter<TileFunctor>( tileFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() )
+			Detail::TileFunctorFilter<TileFunctor>( tileFunctor, imagePlug, Gaffer::Context::current() )
 		) &
 		tbb::make_filter<boost::tuple<Imath::V2i, typename TileFunctor::Result>, void>(
 			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
-			Detail::GatherFunctorFilter<GatherFunctor, TileFunctor>( gatherFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() )
+			Detail::GatherFunctorFilter<GatherFunctor, TileFunctor>( gatherFunctor, imagePlug, Gaffer::Context::current() )
 		)
 	);
 }
@@ -602,23 +554,21 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 		}
 	}
 
-	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
-	const Imath::V2i numTiles = ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize() + Imath::V2i( 1 );
+	Detail::TileChannelInputIterator tileIterator( processWindow, channelNames, tileOrder );
 
-	Detail::TileChannelInputIterator inputIterator( channelNames, numTiles, tileOrder );
-
-	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
-		tbb::make_filter<void, boost::tuple<size_t, Imath::V2i> >(
+	parallel_pipeline(
+		tbb::task_scheduler_init::default_num_threads(),
+		tbb::make_filter<void, Detail::OriginAndName> (
 			tbb::filter::serial_in_order,
-			Detail::TileInputFilter<Detail::TileChannelInputIterator>( inputIterator )
+			Detail::TileInputFilter<Detail::TileChannelInputIterator>( tileIterator )
 		) &
-		tbb::make_filter<boost::tuple<size_t, Imath::V2i>, boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> >(
+		tbb::make_filter<Detail::OriginAndName, boost::tuple<Detail::OriginAndName, typename TileFunctor::Result>>(
 			tbb::filter::parallel,
-			Detail::TileFunctorFilter<TileFunctor>( tileFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+			Detail::TileFunctorFilter<TileFunctor>( tileFunctor, imagePlug, Gaffer::Context::current() )
 		) &
-		tbb::make_filter<boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result>, void>(
+		tbb::make_filter<boost::tuple<Detail::OriginAndName, typename TileFunctor::Result>, void>(
 			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
-			Detail::GatherFunctorFilter<GatherFunctor, TileFunctor>( gatherFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+			Detail::GatherFunctorFilter<GatherFunctor, TileFunctor>( gatherFunctor, imagePlug, Gaffer::Context::current() )
 		)
 	);
 }
