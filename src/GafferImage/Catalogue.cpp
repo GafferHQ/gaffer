@@ -491,8 +491,6 @@ class Catalogue::InternalImage : public ImageNode
 					{
 					}
 
-					typedef IECore::MurmurHash Result;
-
 					IECore::MurmurHash operator()( const ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
 					{
 						return imagePlug->channelDataPlug()->hash();

@@ -107,9 +107,7 @@ class CopyTile
 struct HashTile
 {
 
-	typedef MurmurHash Result;
-
-	Result operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	MurmurHash operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	{
 		return imagePlug->channelDataPlug()->hash();
 	}
