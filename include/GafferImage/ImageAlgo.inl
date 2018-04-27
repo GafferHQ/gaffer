@@ -55,87 +55,6 @@ namespace ImageAlgo
 namespace Detail
 {
 
-template <class ThreadableFunctor>
-class ProcessTiles
-{
-	public:
-		ProcessTiles(
-			ThreadableFunctor &functor,
-			const ImagePlug* imagePlug,
-			const Imath::V2i &tilesOrigin,
-			const Gaffer::Context *context
-		) :
-			m_functor( functor ),
-			m_imagePlug( imagePlug ),
-			m_tilesOrigin( tilesOrigin ),
-			m_parentContext( context )
-		{}
-
-		ProcessTiles(
-			ThreadableFunctor &functor,
-			const ImagePlug* imagePlug,
-			const std::vector<std::string> &channelNames,
-			const Imath::V2i &tilesOrigin,
-			const Gaffer::Context *context
-		) :
-			m_functor( functor ),
-			m_imagePlug( imagePlug ),
-			m_channelNames( channelNames ),
-			m_tilesOrigin( tilesOrigin ),
-			m_parentContext( context )
-		{}
-
-		void operator()( const tbb::blocked_range2d<size_t>& r ) const
-		{
-			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
-
-			Imath::V2i tileId;
-			Imath::V2i tileIdMax( r.rows().end(), r.cols().end() );
-
-			for( tileId.x = r.rows().begin(); tileId.x < tileIdMax.x; ++tileId.x )
-			{
-				for( tileId.y = r.cols().begin(); tileId.y < tileIdMax.y; ++tileId.y )
-				{
-					Imath::V2i tileOrigin = m_tilesOrigin + ( tileId * ImagePlug::tileSize() );
-					channelDataScope.setTileOrigin( tileOrigin );
-
-					m_functor( m_imagePlug, tileOrigin );
-				}
-			}
-		}
-
-		void operator()( const tbb::blocked_range3d<size_t>& r ) const
-		{
-			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
-
-			Imath::V2i tileId;
-			Imath::V2i tileIdMax( r.rows().end(), r.cols().end() );
-
-			for( tileId.x = r.rows().begin(); tileId.x < tileIdMax.x; ++tileId.x )
-			{
-				for( tileId.y = r.cols().begin(); tileId.y < tileIdMax.y; ++tileId.y )
-				{
-					Imath::V2i tileOrigin = m_tilesOrigin + ( tileId * ImagePlug::tileSize() );
-					channelDataScope.setTileOrigin( tileOrigin );
-
-					for( size_t channelIndex = r.pages().begin(); channelIndex < r.pages().end(); ++channelIndex )
-					{
-						channelDataScope.setChannelName( m_channelNames[channelIndex] );
-
-						m_functor( m_imagePlug, m_channelNames[channelIndex], tileOrigin );
-					}
-				}
-			}
-		}
-
-	private:
-		ThreadableFunctor &m_functor;
-		const ImagePlug *m_imagePlug;
-		const std::vector<std::string> m_channelNames; // Don't declare as a reference, as it may not be set in the constructor
-		const Imath::V2i &m_tilesOrigin;
-		const Gaffer::Context *m_parentContext;
-};
-
 class TileInputIterator : public boost::iterator_facade<TileInputIterator, const Imath::V2i, boost::forward_traversal_tag>
 {
 
@@ -389,7 +308,7 @@ inline bool channelExists( const std::vector<std::string> &channelNames, const s
 }
 
 template <class ThreadableFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functor, const Imath::Box2i &window )
+void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -401,17 +320,35 @@ void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functo
 		}
 	}
 
-	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
-	const Imath::V2i numTiles = ( ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize() ) + Imath::V2i( 1 );
+	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
+	const Gaffer::Context *context = Gaffer::Context::current();
 
-	parallel_for(
-		tbb::blocked_range2d<size_t>( 0, numTiles.x, 1, 0, numTiles.y, 1 ),
-		Detail::ProcessTiles<ThreadableFunctor>( functor, imagePlug, tilesOrigin, Gaffer::Context::current() )
+	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
+
+		tbb::make_filter<void, Imath::V2i>(
+			tbb::filter::serial,
+			Detail::TileInputFilter<Detail::TileInputIterator>( tileIterator )
+		) &
+
+		tbb::make_filter<Imath::V2i, void>(
+
+			tbb::filter::parallel,
+
+			[ imagePlug, &functor, context ] ( const Imath::V2i &tileOrigin ) {
+
+				ImagePlug::ChannelDataScope channelDataScope( context );
+				channelDataScope.setTileOrigin( tileOrigin );
+				functor( imagePlug, tileOrigin );
+
+			}
+
+		)
+
 	);
 }
 
 template <class ThreadableFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ThreadableFunctor &functor, const Imath::Box2i &window )
+void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ThreadableFunctor &functor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -423,12 +360,33 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 		}
 	}
 
-	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
-	Imath::V2i numTiles = ( ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize() ) + Imath::V2i( 1 );
+	Detail::TileChannelInputIterator tileIterator( processWindow, channelNames, tileOrder );
+	const Gaffer::Context *context = Gaffer::Context::current();
 
-	parallel_for(
-		tbb::blocked_range3d<size_t>( 0, channelNames.size(), 1, 0, numTiles.x, 1, 0, numTiles.y, 1 ),
-		Detail::ProcessTiles<ThreadableFunctor>( functor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+	parallel_pipeline(
+
+		tbb::task_scheduler_init::default_num_threads(),
+
+		tbb::make_filter<void, Detail::OriginAndName> (
+			tbb::filter::serial_in_order,
+			Detail::TileInputFilter<Detail::TileChannelInputIterator>( tileIterator )
+		) &
+
+		tbb::make_filter<Detail::OriginAndName, void>(
+
+			tbb::filter::parallel,
+
+			[ imagePlug, &functor, context ] ( const Detail::OriginAndName &input ) {
+
+				ImagePlug::ChannelDataScope channelDataScope( context );
+				channelDataScope.setTileOrigin( input.origin );
+				channelDataScope.setChannelName( input.name );
+				functor( imagePlug, input.name, input.origin );
+
+			}
+
+		)
+
 	);
 }
 

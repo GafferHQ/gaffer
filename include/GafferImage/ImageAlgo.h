@@ -111,7 +111,8 @@ template <class ThreadableFunctor>
 void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
-	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	TileOrder tileOrder = Unordered
 );
 
 // Call the functor in parallel, once per tile per channel
@@ -120,7 +121,8 @@ void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	const std::vector<std::string> &channelNames,
 	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	TileOrder tileOrder = Unordered
 );
 
 // Process all tiles in parallel using TileFunctor, passing the
