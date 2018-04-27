@@ -128,8 +128,8 @@ void parallelProcessTiles(
 template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles(
 	const ImagePlug *image,
-	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
-	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, TileFunctor::Result )
+	TileFunctor &tileFunctor, // Signature : T tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, T &tileFunctorResult )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
@@ -140,8 +140,8 @@ template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles(
 	const ImagePlug *image,
 	const std::vector<std::string> &channelNames,
-	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, TileFunctor::Result )
+	TileFunctor &tileFunctor, // Signature : T tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, T &tileFunctorResult )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
