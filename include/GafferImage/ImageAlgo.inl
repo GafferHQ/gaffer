@@ -307,8 +307,8 @@ inline bool channelExists( const std::vector<std::string> &channelNames, const s
 	return std::find( channelNames.begin(), channelNames.end(), channelName ) != channelNames.end();
 }
 
-template <class ThreadableFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functor, const Imath::Box2i &window, TileOrder tileOrder )
+template <class TileFunctor>
+void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -347,8 +347,8 @@ void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functo
 	);
 }
 
-template <class ThreadableFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ThreadableFunctor &functor, const Imath::Box2i &window, TileOrder tileOrder )
+template <class TileFunctor>
+void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -391,7 +391,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 }
 
 template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -451,7 +451,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, 
 }
 
 template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
