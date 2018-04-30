@@ -38,6 +38,7 @@ import os
 import time
 import subprocess32 as subprocess
 
+import IECore
 import Gaffer
 import GafferTest
 
@@ -47,8 +48,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 		def f() :
 
-			import Gaffer._Gaffer as _Gaffer
-			with _Gaffer._tbb_task_scheduler_init( _Gaffer._tbb_task_scheduler_init.automatic ) :
+			with IECore.tbb_task_scheduler_init( IECore.tbb_task_scheduler_init.automatic ) :
 				raise Exception( "Woops!")
 
 		self.assertRaises( Exception, f )

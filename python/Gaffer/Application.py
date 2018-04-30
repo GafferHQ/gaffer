@@ -132,10 +132,8 @@ class Application( IECore.Parameterised ) :
 
 	def __run( self, args ) :
 
-		import _Gaffer
-
-		with _Gaffer._tbb_task_scheduler_init(
-			_Gaffer._tbb_task_scheduler_init.automatic if args["threads"].value == 0 else args["threads"].value
+		with IECore.tbb_task_scheduler_init(
+			IECore.tbb_task_scheduler_init.automatic if args["threads"].value == 0 else args["threads"].value
 		) :
 
 			self._executeStartupFiles( self.root().getName() )
