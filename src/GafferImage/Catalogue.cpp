@@ -483,38 +483,21 @@ class Catalogue::InternalImage : public ImageNode
 					m_writer->fileNamePlug()->setValue( fileName );
 				}
 
-				struct HashGatherer
-				{
-
-					HashGatherer( ChannelDataHashes &hashes )
-						:	m_hashes( hashes )
-					{
-					}
-
-					IECore::MurmurHash operator()( const ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
-					{
-						return imagePlug->channelDataPlug()->hash();
-					}
-
-					void operator()( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash hash )
-					{
-						m_hashes[TileIndex(channelName, tileOrigin)] = hash;
-					}
-
-					private :
-
-						ChannelDataHashes &m_hashes;
-
-				};
-
 				void save( WeakPtr forWrapUp )
 				{
-					HashGatherer hashGatherer( channelDataHashes );
 					ImageAlgo::parallelGatherTiles(
 						m_imageCopy->copyChannels()->outPlug(),
 						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
-						hashGatherer,
-						hashGatherer
+						// Tile
+						[] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin )
+						{
+							return imagePlug->channelDataPlug()->hash();
+						},
+						// Gather
+						[ this ] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+						{
+							channelDataHashes[TileIndex(channelName, tileOrigin)] = tileHash;
+						}
 					);
 
 					m_writer->taskPlug()->execute();

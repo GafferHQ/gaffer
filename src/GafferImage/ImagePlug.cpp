@@ -104,35 +104,6 @@ class CopyTile
 
 };
 
-struct HashTile
-{
-
-	MurmurHash operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-	{
-		return imagePlug->channelDataPlug()->hash();
-	}
-
-};
-
-struct AppendHash
-{
-
-	AppendHash( MurmurHash &hash )
-		:	m_hash( hash )
-	{
-	}
-
-	void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, const IECore::MurmurHash &tileHash )
-	{
-		m_hash.append( tileHash );
-	}
-
-	private :
-
-		MurmurHash &m_hash;
-
-};
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -398,9 +369,21 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	result.append( metadataPlug()->hash() );
 	result.append( channelNamesPlug()->hash() );
 
-	HashTile hashTile;
-	AppendHash appendHash( result );
-	ImageAlgo::parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, ImageAlgo::BottomToTop );
+	ImageAlgo::parallelGatherTiles(
+		this, channelNames,
+		// Tile
+		[] ( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+		{
+			return imagePlug->channelDataPlug()->hash();
+		},
+		// Gather
+		[ &result ] ( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+		{
+			result.append( tileHash );
+		},
+		dataWindow,
+		ImageAlgo::BottomToTop
+	);
 
 	return result;
 }

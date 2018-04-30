@@ -121,7 +121,7 @@ class TileProcessor
 
 		TileProcessor() {}
 
-		ConstFloatVectorDataPtr operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+		ConstFloatVectorDataPtr operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin ) const
 		{
 			return imagePlug->channelDataPlug()->getValue();
 		}
