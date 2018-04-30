@@ -96,41 +96,6 @@ using namespace GafferBindings;
 namespace
 {
 
-// Wraps task_scheduler_init so it can be used as a python
-// context manager.
-class TaskSchedulerInitWrapper : public tbb::task_scheduler_init
-{
-
-	public :
-
-		TaskSchedulerInitWrapper( int max_threads )
-			:	tbb::task_scheduler_init( deferred ), m_maxThreads( max_threads )
-		{
-			if( max_threads != automatic && max_threads <= 0 )
-			{
-				PyErr_SetString( PyExc_ValueError, "max_threads must be either automatic or a positive integer" );
-				throw_error_already_set();
-			}
-		}
-
-		void enter()
-		{
-			initialize( m_maxThreads );
-		}
-
-		bool exit( boost::python::object excType, boost::python::object excValue, boost::python::object excTraceBack )
-		{
-			terminate();
-			return false; // don't suppress exceptions
-		}
-
-	private :
-
-		int m_maxThreads;
-
-};
-
-
 bool isDebug()
 {
 #ifdef NDEBUG
@@ -261,13 +226,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<LoopComputeNode>();
 
 	def( "isDebug", &isDebug );
-
-	object tsi = class_<TaskSchedulerInitWrapper, boost::noncopyable>( "_tbb_task_scheduler_init", no_init )
-		.def( init<int>( arg( "max_threads" ) = int( tbb::task_scheduler_init::automatic ) ) )
-		.def( "__enter__", &TaskSchedulerInitWrapper::enter, return_self<>() )
-		.def( "__exit__", &TaskSchedulerInitWrapper::exit )
-	;
-	tsi.attr( "automatic" ) = int( tbb::task_scheduler_init::automatic );
 
 	def( "_nameProcess", &nameProcess );
 
