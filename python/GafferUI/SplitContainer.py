@@ -53,7 +53,6 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 
 		self.__widgets = []
 		self.__handleWidgets = {}
-		self.__sizeAnimation = None
 
 		self._qtWidget().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 
@@ -128,9 +127,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	# the overall size of the SplitContainer - instead the sizes are
 	# adjusted to take up all the space available. Therefore it is only
 	# the relative differences in sizes which are important.
-	# If animationDuration is non-zero then it specifies a period
-	# in milliseconds over which to adjust the sizes.
-	def setSizes( self, sizes, animationDuration=0 ) :
+	def setSizes( self, sizes ) :
 
 		assert( len( sizes ) == len( self ) )
 
@@ -145,23 +142,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		scaleFactor = availableSize / sum( sizes )
 		sizes = [ scaleFactor * x for x in sizes ]
 
-		if animationDuration == 0 :
-			self._qtWidget().setSizes( sizes )
-		else :
-			animation = _SizeAnimation( self._qtWidget(), sizes )
-			animation.setDuration( animationDuration )
-			self.__sizeAnimation = animation
-			animation.start()
-
-	## If a size animation is currently in progress, then returns the
-	# final sizes of the animation, otherwise returns None.
-	def targetSizes( self ) :
-
-		if self.__sizeAnimation is not None :
-			if self.__sizeAnimation.state() == _SizeAnimation.Running :
-				return self.__sizeAnimation.targetSizes()
-
-		return None
+		self._qtWidget().setSizes( sizes )
 
 	## Returns the handle to the right/bottom of the specified child index.
 	# Note that you should not attempt to reparent the handles, and you will
@@ -227,26 +208,3 @@ class _Splitter( QtWidgets.QSplitter ) :
 	def createHandle( self ) :
 
 		return QtWidgets.QSplitterHandle( self.orientation(), self )
-
-class _SizeAnimation( QtCore.QVariantAnimation ) :
-
-	def __init__( self, qSplitter, newSizes ) :
-
-		QtCore.QVariantAnimation.__init__( self, None )
-
-		self.__splitter = qSplitter
-		self.sizes = zip( qSplitter.sizes(), newSizes )
-		self.setStartValue( 0.0 )
-		self.setEndValue( 1.0 )
-		self.setEasingCurve( QtCore.QEasingCurve( QtCore.QEasingCurve.OutCubic ) )
-
-	def targetSizes( self ) :
-
-		return ( self.sizes[0][1], self.sizes[1][1] )
-
-	def updateCurrentValue( self, value ) :
-
-		value = GafferUI._Variant.fromVariant( value )
-		sizes = [ x[0] + ( x[1] - x[0] ) * value for x in self.sizes ]
-
-		self.__splitter.setSizes( sizes )
