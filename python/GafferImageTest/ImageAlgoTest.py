@@ -170,5 +170,71 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			[ "", "foreground.diffuse" ]
 		)
 
+	def testParallelGatherTileOrder( self ) :
+
+		c = GafferImage.Constant()
+
+		tileOrigins = []
+		channelTileOrigins = []
+
+		def tileFunctor( *args ) :
+
+			pass
+
+		def gatherFunctor( image, tileOrigin, tile ) :
+
+			tileOrigins.append( tileOrigin )
+
+		def channelGatherFunctor( image, channelName, tileOrigin, tile ) :
+
+			channelTileOrigins.append( tileOrigin )
+
+		for window in [
+			# Window not aligned to tile boundaries
+			imath.Box2i( imath.V2i( 2 ), GafferImage.ImagePlug.tileSize() * imath.V2i( 20, 8 ) - imath.V2i( 2 ) ),
+			# Window aligned to tile boundaries
+			imath.Box2i( imath.V2i( 0 ), GafferImage.ImagePlug.tileSize() * imath.V2i( 6, 7 ) ),
+			# Negative origin
+			imath.Box2i( imath.V2i( -GafferImage.ImagePlug.tileSize() ), GafferImage.ImagePlug.tileSize() * imath.V2i( 4, 6 ) )
+		] :
+
+			size = GafferImage.ImagePlug.tileIndex( window.max() - imath.V2i( 1 ) ) - GafferImage.ImagePlug.tileIndex( window.min() ) + imath.V2i( 1 )
+			numTiles = size.x * size.y
+
+			for order in GafferImage.ImageAlgo.TileOrder.values.values() :
+
+				del tileOrigins[:]
+				del channelTileOrigins[:]
+
+				GafferImage.ImageAlgo.parallelGatherTiles(
+					c["out"],
+					tileFunctor,
+					gatherFunctor,
+					window = window,
+					tileOrder = order
+				)
+
+				GafferImage.ImageAlgo.parallelGatherTiles(
+					c["out"],
+					[ "R" ],
+					tileFunctor,
+					channelGatherFunctor,
+					window = window,
+					tileOrder = order
+				)
+
+				self.assertEqual( len( tileOrigins ), numTiles )
+				self.assertEqual( len( channelTileOrigins ), numTiles )
+
+				for i in range( 1, len( tileOrigins ) ) :
+
+					if order == GafferImage.ImageAlgo.TileOrder.TopToBottom :
+						self.assertGreaterEqual( tileOrigins[i-1].y, tileOrigins[i].y )
+					elif order == GafferImage.ImageAlgo.TileOrder.BottomToTop :
+						self.assertLessEqual( tileOrigins[i-1].y, tileOrigins[i].y )
+
+					if order != GafferImage.ImageAlgo.TileOrder.Unordered :
+						self.assertEqual( channelTileOrigins[i], tileOrigins[i] )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -118,11 +118,10 @@ typedef std::shared_ptr<ImageOutput> ImageOutputPtr;
 class TileProcessor
 {
 	public:
-		typedef ConstFloatVectorDataPtr Result;
 
 		TileProcessor() {}
 
-		Result operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+		ConstFloatVectorDataPtr operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin ) const
 		{
 			return imagePlug->channelDataPlug()->getValue();
 		}
