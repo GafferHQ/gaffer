@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,28 +34,36 @@
 #
 ##########################################################################
 
-# Utility classes
+import Gaffer
+import GafferUI
+import GafferDispatch
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
-from ErroringTaskNode import ErroringTaskNode
+Gaffer.Metadata.registerNode(
 
-# Test cases
+	GafferDispatch.FrameMask,
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
-from FrameMaskTest import FrameMaskTest
+	"description",
+	"""
+	Masks upstream tasks so that they will only be executed for
+	a subset of the Dispatcher's frame range.
+	""",
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	plugs = {
+
+		"mask" : (
+
+			"description",
+			"""
+			The subset of frames that will be executed by upstream tasks.
+			Any frames not included here will be ignored, regardless
+			of the dispatcher's frame range.
+
+			> Note : This can only remove frames. To add frames, edit the
+			> settings on the Dispatcher.
+			""",
+
+		),
+
+	}
+
+)

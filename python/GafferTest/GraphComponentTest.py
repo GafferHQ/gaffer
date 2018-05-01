@@ -296,7 +296,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testParallelUniqueNaming( self ):
 		# At one point setName was using a non-threadsafe static formatter which would throw
 		# exceptions when used from multiple threads
-		
+
 		def f( q ) :
 			try:
 				g = Gaffer.GraphComponent()
@@ -716,6 +716,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				"GafferDispatch::TaskList",
 				"GafferDispatch::TaskSwitch",
 				"GafferDispatch::Wedge",
+				"GafferDispatch::FrameMask",
 			] )
 		)
 		self.assertTypeNamesArePrefixed( GafferTest )
