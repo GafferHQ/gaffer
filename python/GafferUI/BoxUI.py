@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import re
 import os
 import functools
 
@@ -193,62 +192,6 @@ def __upgradeToUseBoxIO( node ) :
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 		Gaffer.BoxIO.insert( node )
-
-# PlugValueWidget registrations
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, re.compile( "in[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, re.compile( "out[0-9]*" ), None )
-
-def __correspondingInternalPlug( plug ) :
-
-	node = plug.node()
-	if plug.direction() == plug.Direction.In :
-		for output in plug.outputs() :
-			if node.isAncestorOf( output.node() ) :
-				return output
-	elif plug.direction() == plug.Direction.Out :
-		input = plug.getInput()
-		if input is not None and node.isAncestorOf( input.node() ) :
-			return input
-
-	return None
-
-def __plugValueWidgetCreator( plug ) :
-
-	# When a plug has been promoted, we get the widget that would
-	# have been used to represent the internal plug, and then
-	# call setPlug() with the external plug. This allows us to
-	# transfer custom uis from inside the node to outside the node.
-	#
-	# But If the types don't match, we can't expect the
-	# UI for the internal plug to work with the external
-	# plug. Typically the types will match, because the
-	# external plug was created by PlugAlgo.promote(), but
-	# it's possible to use scripting to connect different
-	# types, for instance to drive an internal IntPlug with
-	# an external BoolPlug. In this case we make no attempt
-	# to transfer the internal UI.
-	#
-	# \todo A better solution may be to mandate the use of Metadata to
-	# choose a widget type for each plug, and then just make sure we
-	# pass on the internal Metadata.
-	internalPlug = __correspondingInternalPlug( plug )
-	if type( internalPlug ) is type( plug ) :
-		widget = GafferUI.PlugValueWidget.create( internalPlug )
-		if widget is not None :
-			widget.setPlug( plug )
-		return widget
-
-	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
-
-## \todo We're registering the Box PlugValueWidget creator for the Reference node too, because
-# we want the two to have the same appearance. We perhaps should just have one registration for
-# the SubGraph (the base class for Box and Reference) instead, but it's not yet totally clear
-# whether or not we'll have future SubGraph subclasses that will want a different behaviour.
-for nodeType in ( Gaffer.Box, Gaffer.Reference ) :
-
-	GafferUI.PlugValueWidget.registerCreator( nodeType, "*" , __plugValueWidgetCreator )
 
 # Shared menu code
 ##########################################################################

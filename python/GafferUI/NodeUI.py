@@ -89,7 +89,7 @@ Gaffer.Metadata.registerNode(
 
 		"*" : (
 
-			"layout:section", lambda plug : "Settings" if isinstance( plug.parent(), Gaffer.Node ) else ""
+			"layout:section", "Settings"
 
 		),
 
