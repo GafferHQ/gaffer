@@ -121,7 +121,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"parameters.*" : [
+		"parameters..." : [
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
