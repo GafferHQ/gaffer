@@ -72,9 +72,6 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 
 		boost::signals::scoped_connection m_contextChangedConnection;
 
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Plug *plug );
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
-
 		void plugDirtied( const Gaffer::Plug *plug );
 		GafferScene::ScenePlug::ScenePath cameraPath() const;
 		const TransformTool::Selection &cameraSelection();
