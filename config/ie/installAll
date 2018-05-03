@@ -28,8 +28,12 @@ if IEEnv.platform() in ( "cent7.x86_64" ) :
 	build( extraArgs )
 	
 	# app specific builds
-	for app in ( "maya", "houdini", "nuke" ) :
-		for version in IEEnv.activeAppVersions( app ) :
+	for app, minimumVersion in (
+		( "maya", None ),
+		( "houdini", "16.5.268" ),
+		( "nuke", None )
+	) :
+		for version in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
 			build( [ "APP=" + app, "APP_VERSION=" + version ] + extraArgs )
 			
 else :
