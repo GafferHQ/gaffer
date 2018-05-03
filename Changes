@@ -1,3 +1,74 @@
+0.46.0.0
+========
+
+Features
+--------
+
+- FrameMask : Added new node to mask out upstream tasks on particular frames (#2558).
+
+Improvements
+------------
+
+- Layouts (#2522) :
+  - Simplified space-bar panel expansion, and removed the annoying auto-expand
+    behaviour for collapsed panels.
+  - Removed tabs from the Scene layout's Timeline panel.
+- DeleteFaces/DeletePoints/DeleteCurves : Added invert plug (#2546).
+- Spline widgets (#2551) :
+  - Added axis lines at y=0 and y=1.
+  - Improved framing behaviour.
+  - Made float splines display as curves by default.
+- Dispatcher : Reduced overhead of job directory creation (#2557).
+- OSLObject : Added support for double primitive variables (#2547).
+
+Fixes
+-----
+
+- Layouts : Fixed circular references created by layout menus. These could cause crashes
+  during shutdown (#2522).
+- BoolPlugValueWidget : Fixed displayMode metadata handling. This restores the little
+  switches on the Attributes nodes (#2553).
+
+API
+---
+
+- Metadata : Improved wildcard matching (#2536) :
+  - Stopped '*' matching '.' in a plug path. This mimics how '*' doesn't match '/' in a
+    glob match or in the PathMatcher.
+  - Added '...' wildcard that matches any number of plug path elements, in the same way a
+    PathMatcher does.
+- ImageAlgo (#2561) :
+  - Added support for lambdas in `parallelGatherTiles()`.
+  - Added a `tileOrder` parameter to `parallelProcessTiles()`.
+  - Added python bindings for `parallelGatherTiles()`.
+- Context : Added optional `IECore::Canceller` that can be used to cancel long
+  running background processes (#2559).
+- BackgroundTask : Added new class to assist in the running of processes on background
+  threads (#2559).
+- ParallelAlgo (#2559) :
+  - Added `callOnUIThread()` method.
+  - Added `callOnBackgroundThread()` method.
+
+Breaking Changes
+----------------
+
+- SplitContainer (#2522) :
+  - Removed `animationDuration` argument from `setSizes()` method.
+  - Removed `targetSizes()` method.
+- Metadata : `*` no longer matches `.` in a plug path (#2536).
+- PlugValueWidget : Removed `registerCreator()` method. Use metadata instead (#2536).
+- ImageAlgo : Changed signatures for `parallelProcessTiles()` and `parallelGatherTiles()`
+  (#2561).
+- StringAlgo : Removed. Use `IECore::StringAlgo` instead (#2534).
+- Display : Removed `executeOnUIThread()` method. Use ParallelAlgo instead (#2559).
+- Gadget : Removed `executeOnUIThread()` method. Use ParallelAlgo instead (#2559).
+
+Build
+-----
+
+- Requires Cortex 10.0.0-a20.
+- Improved experimental CMake build setup (#2560).
+
 0.45.3.0
 ========
 
