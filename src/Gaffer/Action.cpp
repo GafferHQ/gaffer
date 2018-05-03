@@ -37,6 +37,7 @@
 
 #include "Gaffer/Action.h"
 
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/Exception.h"
@@ -84,6 +85,7 @@ void Action::doAction()
 	{
 		throw IECore::Exception( "Action cannot be done again without being undone first." );
 	}
+	BackgroundTask::cancelAffectedTasks( subject() );
 	m_done = true;
 }
 
@@ -93,6 +95,7 @@ void Action::undoAction()
 	{
 		throw IECore::Exception( "Action cannot be undone without being done first." );
 	}
+	BackgroundTask::cancelAffectedTasks( subject() );
 	m_done = false;
 }
 

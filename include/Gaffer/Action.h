@@ -52,19 +52,23 @@ IE_CORE_FORWARDDECLARE( GraphComponent );
 IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( Action );
 
-/// The Action class forms the basis of the undo system - all
-/// methods which wish to support undo must be implemented by
-/// calling Action::enact(). Note that client code never creates Actions
-/// explicitly - instead they are created implicitly whenever an UndoScope
-/// is active and an undoable method is called. Because Actions are
-/// essentially an implementation detail of the undo system, subclasses
-/// shouldn't be exposed in the public headers.
+/// The Action class represents node graph edits. It forms the basis of
+/// the undo system, and cooperates with `BackgroundTask` to synchronise
+/// graph edits with background computes. All methods which wish to edit
+/// the node graph and/or support undo _must_ be implemented by
+/// calling Action::enact().
 ///
-/// Because Actions are held in the undo queue in the ScriptNode, it's
-/// essential that they do not themselves hold an intrusive pointer pointing
-/// back to the ScriptNode - this would result in a circular reference,
-/// preventing the ScriptNode from being deleted appropriately. It is essential
-/// that great care is taken with this when implementing subclasses.
+/// > Note : Client code never creates Actions explicitly; instead they
+/// > are created implicitly whenever an UndoScope is active and an undoable
+/// > method is called. Because Actions are essentially an implementation detail
+/// > of the undo system, subclasses shouldn't be exposed in the public headers.
+///
+/// > Warning : Because Actions are held in the undo queue in the ScriptNode, it's
+/// > essential that they do not themselves hold an intrusive pointer pointing
+/// > back to the ScriptNode - this would result in a circular reference,
+/// > preventing the ScriptNode from being deleted appropriately. It is essential
+/// > that great care is taken with this when implementing subclasses or
+/// > calling `enact()`.
 class GAFFER_API Action : public IECore::RunTimeTyped
 {
 

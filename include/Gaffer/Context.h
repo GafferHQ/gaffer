@@ -40,6 +40,7 @@
 #include "Gaffer/Export.h"
 #include "Gaffer/StringAlgo.h"
 
+#include "IECore/Canceller.h"
 #include "IECore/Data.h"
 #include "IECore/InternedString.h"
 #include "IECore/MurmurHash.h"
@@ -108,6 +109,10 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// Copy constructor. The ownership argument is deprecated - use
 		/// an EditableScope instead of Borrowed ownership.
 		Context( const Context &other, Ownership ownership = Copied );
+		/// Copy constructor for creating a cancellable context.
+		/// The canceller is referenced, not copied, and must remain
+		/// alive for as long as the context is in use.
+		Context( const Context &other, const IECore::Canceller &canceller );
 		~Context() override;
 
 		IE_CORE_DECLAREMEMBERPTR( Context )
@@ -220,6 +225,11 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// false, it is guaranteed that substitute( input ) == input.
 		static bool hasSubstitutions( const std::string &input );
 
+		/// Used to request cancellation of long running background operations.
+		/// May be null. Nodes that perform expensive work should check for
+		/// cancellation periodically by calling `Canceller::check( context->canceller() )`.
+		inline const IECore::Canceller *canceller() const;
+
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
 		class Scope : boost::noncopyable
@@ -278,6 +288,8 @@ class GAFFER_API Context : public IECore::RefCounted
 
 	private :
 
+		Context( const Context &other, Ownership ownership, const IECore::Canceller *canceller );
+
 		void substituteInternal( const char *s, std::string &result, const int recursionDepth, unsigned substitutions ) const;
 
 		// Storage for each entry.
@@ -298,6 +310,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		ChangedSignal *m_changedSignal;
 		mutable IECore::MurmurHash m_hash;
 		mutable bool m_hashValid;
+		const IECore::Canceller *m_canceller;
 
 };
 

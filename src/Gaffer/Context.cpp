@@ -119,14 +119,18 @@ static InternedString g_frame( "frame" );
 static InternedString g_framesPerSecond( "framesPerSecond" );
 
 Context::Context()
-	:	m_changedSignal( nullptr ), m_hashValid( false )
+	:	m_changedSignal( nullptr ), m_hashValid( false ), m_canceller( nullptr )
 {
 	set( g_frame, 1.0f );
 	set( g_framesPerSecond, 24.0f );
 }
 
-Context::Context( const Context &other, Ownership ownership )
-	:	m_map( other.m_map ), m_changedSignal( nullptr ), m_hash( other.m_hash ), m_hashValid( other.m_hashValid )
+Context::Context( const Context &other, Ownership ownership, const IECore::Canceller *canceller )
+	:	m_map( other.m_map ),
+		m_changedSignal( nullptr ),
+		m_hash( other.m_hash ),
+		m_hashValid( other.m_hashValid ),
+		m_canceller( other.m_canceller )
 {
 	// We used the (shallow) Map copy constructor in our initialiser above
 	// because it offers a big performance win over iterating and inserting copies
@@ -152,6 +156,25 @@ Context::Context( const Context &other, Ownership ownership )
 				break;
 		}
 	}
+
+	if( canceller )
+	{
+		if( m_canceller )
+		{
+			throw IECore::Exception( "Can't replace an existing Canceller" );
+		}
+		m_canceller = canceller;
+	}
+}
+
+Context::Context( const Context &other, Ownership ownership )
+	:	Context( other, ownership, nullptr )
+{
+}
+
+Context::Context( const Context &other, const IECore::Canceller &canceller )
+	:	Context( other, Copied, &canceller )
+{
 }
 
 Context::~Context()

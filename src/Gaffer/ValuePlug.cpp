@@ -142,14 +142,15 @@ class ValuePlug::HashProcess : public Process
 				threadData.clearCache = 0;
 			}
 
-			const CacheKey key( p, Context::current()->hash() );
+			const Context *currentContext = Context::current();
+			const CacheKey key( p, currentContext->hash() );
 			Cache::iterator it = threadData.cache.find( key );
 			if( it != threadData.cache.end() )
 			{
 				return it->second;
 			}
 
-			HashProcess process( p, plug );
+			HashProcess process( p, plug, currentContext );
 			threadData.cache[key] = process.m_result;
 			return process.m_result;
 		}
@@ -179,8 +180,8 @@ class ValuePlug::HashProcess : public Process
 
 	private :
 
-		HashProcess( const ValuePlug *plug, const ValuePlug *downstream )
-			:	Process( staticType, plug, downstream )
+		HashProcess( const ValuePlug *plug, const ValuePlug *downstream, const Context *currentContext )
+			:	Process( staticType, plug, downstream, currentContext )
 		{
 			try
 			{
@@ -373,7 +374,7 @@ class ValuePlug::ComputeProcess : public Process
 						throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no ComputeNode." ) % plug->fullName() ) );
 					}
 					// Cast is ok - see comment above.
-					n->compute( const_cast<ValuePlug *>( plug ), Context::current() );
+					n->compute( const_cast<ValuePlug *>( plug ), context() );
 				}
 				// The calls above should cause setValue() to be called on the result plug, which in
 				// turn will call ValuePlug::setObjectValue(), which will then store the result in
@@ -433,11 +434,13 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 
 		void doAction() override
 		{
+			Action::doAction();
 			m_plug->setValueInternal( m_doValue, true );
 		}
 
 		void undoAction() override
 		{
+			Action::undoAction();
 			m_plug->setValueInternal( m_undoValue, true );
 		}
 

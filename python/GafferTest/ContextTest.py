@@ -652,5 +652,21 @@ class ContextTest( GafferTest.TestCase ) :
 
 		GafferTest.testEditableScope()
 
+	def testCanceller( self ) :
+
+		c = Gaffer.Context()
+		c["test"] = 1
+		self.assertEqual( c.canceller(), None )
+
+		canceller = IECore.Canceller()
+		cc = Gaffer.Context( c, canceller )
+
+		self.assertEqual( cc["test"], 1 )
+		self.assertTrue( cc.canceller() is not None )
+
+		canceller.cancel()
+		with self.assertRaises( IECore.Cancelled ) :
+			IECore.Canceller.check( cc.canceller() )
+
 if __name__ == "__main__":
 	unittest.main()

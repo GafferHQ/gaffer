@@ -275,15 +275,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		static IdleSignal &idleSignal();
 		//@}
 
-		typedef std::function<void ()> UIThreadFunction;
-		/// Arranges for the specified function to be run on the main UI thread.
-		/// Note that this is run asynchronously at some point in the future. If
-		/// using boost::bind() to pass a member function here, you _must_
-		/// guarantee that the class instance will still be alive when the
-		/// member function is called. Typically this means using a smart pointer
-		/// to hold `this`.
-		static void executeOnUIThread( UIThreadFunction function );
-
 	protected :
 
 		/// Emits renderRequestSignal() as necessary for this and all ancestors.
@@ -348,14 +339,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		// when absolutely necessary (when slots are connected).
 		static IdleSignal &idleSignalAccessedSignal();
 		friend void GafferUIModule::bindGadget();
-		// Used to implement executeOnUIThread(). When Gadget::executeOnUIThread()
-		// is called, it emits this signal to request that EventLoop.py arranges
-		// to call the passed function on the UI thread.
-		/// \todo I suspect that soon we'll have a Qt dependency in the C++
-		/// half of GafferUI, at which point it'd make more sense to implement
-		/// EventLoop in C++ rather than to implement this in such an awkward way.
-		typedef boost::signal<void ( UIThreadFunction )> ExecuteOnUIThreadSignal;
-		static ExecuteOnUIThreadSignal &executeOnUIThreadSignal();
+
 };
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;

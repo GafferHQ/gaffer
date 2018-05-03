@@ -41,6 +41,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/DirtyPropagationScope.h"
+#include "Gaffer/ParallelAlgo.h"
 
 #include "IECoreImage/DisplayDriver.h"
 
@@ -103,8 +104,8 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 
 			// This is a bit sketchy. By creating `Ptr( this )` we're adding a reference to ourselves from within
 			// our own constructor - if that reference is dropped before we return, we'll be double deleted. We rely
-			// on the fact that executeOnUIThreadl() will keep us alive long enough for this not to occur.
-			Display::executeOnUIThread( boost::bind( &GafferDisplayDriver::emitDriverCreated, Ptr( this ), m_parameters ) );
+			// on the fact that callOnUIThread() will keep us alive long enough for this not to occur.
+			ParallelAlgo::callOnUIThread( boost::bind( &GafferDisplayDriver::emitDriverCreated, Ptr( this ), m_parameters ) );
 		}
 
 		GafferDisplayDriver( GafferDisplayDriver &other )
@@ -535,11 +536,6 @@ PendingUpdates &pendingUpdates()
 
 };
 
-void Display::executeOnUIThread( UIThreadFunction function )
-{
-	executeOnUIThreadSignal()( function );
-}
-
 // Called on a background thread when data is received on the driver.
 // We need to increment `updateCountPlug()`, but all graph edits must
 // be performed on the UI thread, so we can't do it directly.
@@ -563,7 +559,7 @@ void Display::dataReceived()
 	}
 	if( scheduleUpdate )
 	{
-		executeOnUIThread( &Display::dataReceivedUI );
+		ParallelAlgo::callOnUIThread( &Display::dataReceivedUI );
 	}
 }
 
@@ -607,16 +603,10 @@ void Display::dataReceivedUI()
 
 void Display::imageReceived()
 {
-	executeOnUIThread( boost::bind( &Display::imageReceivedUI, DisplayPtr( this ) ) );
+	ParallelAlgo::callOnUIThread( boost::bind( &Display::imageReceivedUI, DisplayPtr( this ) ) );
 }
 
 void Display::imageReceivedUI( Ptr display )
 {
 	imageReceivedSignal()( display->outPlug() );
-}
-
-Display::ExecuteOnUIThreadSignal &Display::executeOnUIThreadSignal()
-{
-	static ExecuteOnUIThreadSignal s;
-	return s;
 }

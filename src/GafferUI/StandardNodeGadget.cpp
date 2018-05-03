@@ -52,6 +52,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/TypedObjectPlug.h"
@@ -945,7 +946,7 @@ void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *so
 	// on the main thread. We _must_ use smart pointers for both
 	// this and plug, because otherwise we have no guarantee that
 	// they'll be alive later when the UI thread does its thing.
-	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, StandardNodeGadgetPtr( this ), ConstPlugPtr( plug ), header + message ) );
+	ParallelAlgo::callOnUIThread( boost::bind( &StandardNodeGadget::displayError, StandardNodeGadgetPtr( this ), ConstPlugPtr( plug ), header + message ) );
 }
 
 void StandardNodeGadget::displayError( ConstPlugPtr plug, const std::string &message )

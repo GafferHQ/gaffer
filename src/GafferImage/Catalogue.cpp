@@ -48,6 +48,7 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/DownstreamIterator.h"
+#include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
@@ -507,7 +508,7 @@ class Catalogue::InternalImage : public ImageNode
 					// we absolutely _must not_ create a Ptr here on the
 					// background thread - ownership must be managed on
 					// the UI thread only (see ~AsynchronousSaver).
-					Display::executeOnUIThread(
+					ParallelAlgo::callOnUIThread(
 						[forWrapUp] {
 							if( Ptr that = forWrapUp.lock() )
 							{

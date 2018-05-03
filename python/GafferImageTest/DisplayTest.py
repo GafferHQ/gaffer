@@ -53,19 +53,12 @@ import GafferImageTest
 class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	# Utility class for sending images to Display nodes.
-	# This does a couple of important things :
-	#
-	# - Abstracts away the different image orientations between
-	#   Gaffer and Cortex. All Driver methods expect data with the
-	#   usual Gaffer conventions.
-	# - Emulates the DisplayUI's connection to Display.executeOnUIThreadSignal().
+	# This abstracts away the different image orientations between
+	# Gaffer and Cortex. All Driver methods expect data with the
+	# usual Gaffer conventions.
 	class Driver( object ) :
 
 		def __init__( self, format, dataWindow, channelNames, port, extraParameters = {}  ) :
-
-			self.__executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( Gaffer.WeakMethod( self.__executeOnUIThread ) )
-			self.__executeOnUIThreadCondition = threading.Condition()
-			self.__executeOnUIThreadCondition.toExecute = None
 
 			self.__format = format
 
@@ -76,15 +69,15 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			}
 			parameters.update( extraParameters )
 
-			self.__driver = IECoreImage.ClientDisplayDriver(
-				self.__format.toEXRSpace( self.__format.getDisplayWindow() ),
-				self.__format.toEXRSpace( dataWindow ),
-				list( channelNames ),
-				parameters,
-			)
+			# Expect UI thread call used to emit Display::driverCreatedSignal()
+			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
 
-			# Wait for UI thread execution used to emit Display::driverCreatedSignal()
-			self.performExpectedUIThreadExecution()
+				self.__driver = IECoreImage.ClientDisplayDriver(
+					self.__format.toEXRSpace( self.__format.getDisplayWindow() ),
+					self.__format.toEXRSpace( dataWindow ),
+					list( channelNames ),
+					parameters,
+				)
 
 		# The channelData argument is a list of FloatVectorData
 		# per channel.
@@ -98,30 +91,18 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 					for c in channelData :
 						bucketData.append( c[i] )
 
-			self.__driver.imageData(
-				self.__format.toEXRSpace( bucketWindow ),
-				bucketData
-			)
-
-			# Wait for UI thread execution used to increment updateCount plug
-			self.performExpectedUIThreadExecution()
+			# Expect UI thread call used to increment updateCount plug
+			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+				self.__driver.imageData(
+					self.__format.toEXRSpace( bucketWindow ),
+					bucketData
+				)
 
 		def close( self ) :
 
-			self.__driver.imageClose()
-
-			# Wait for UI thread execution used to emit Display::imageReceivedSignal()
-			self.performExpectedUIThreadExecution()
-
-		def performExpectedUIThreadExecution( self ) :
-
-			with self.__executeOnUIThreadCondition :
-
-				while self.__executeOnUIThreadCondition.toExecute is None :
-					self.__executeOnUIThreadCondition.wait()
-
-				self.__executeOnUIThreadCondition.toExecute()
-				self.__executeOnUIThreadCondition.toExecute = None
+			# Expect UI thread call used to emit Display::imageReceivedSignal()
+			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+				self.__driver.imageClose()
 
 		@classmethod
 		def sendImage( cls, image, port, extraParameters = {} ) :
@@ -150,13 +131,6 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			driver.close()
 
 			return driver
-
-		def __executeOnUIThread( self, f ) :
-
-			with self.__executeOnUIThreadCondition :
-
-				self.__executeOnUIThreadCondition.toExecute = f
-				self.__executeOnUIThreadCondition.notify()
 
 	def testDefaultFormat( self ) :
 

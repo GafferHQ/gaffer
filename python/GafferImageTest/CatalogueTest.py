@@ -50,16 +50,17 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	@staticmethod
 	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True ) :
 
-		driver = GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
-
 		if catalogue["directory"].getValue() and waitForSave :
 
 			# When the image has been received, the Catalogue will
 			# save it to disk on a background thread, and we need
 			# to wait for that to complete.
-			driver.performExpectedUIThreadExecution()
+			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+				GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
 
-		return driver
+		else :
+
+			GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
 
 	def testImages( self ) :
 
@@ -539,10 +540,10 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
-		driver = self.sendImage( r["out"], c, waitForSave = False )
 
-		del c
-		driver.performExpectedUIThreadExecution()
+		with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+			self.sendImage( r["out"], c, waitForSave = False )
+			del c
 
 if __name__ == "__main__":
 	unittest.main()

@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 import threading
 import time
@@ -481,6 +482,83 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 	def testThreading( self ) :
 
 		GafferTest.testComputeNodeThreading()
+
+	def testCancellationWithoutCooperation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# The Expression nodes contain no explicit cancellation
+		# checks. We rely on the Process stack to cancel prior to even
+		# calling `compute()`. We use two expressions with a sleep
+		# in each to give the main thread time to call cancel before
+		# the second compute starts.
+
+		s["n"] = GafferTest.AddNode()
+		s["e1"] = Gaffer.Expression()
+		s["e1"].setExpression( "import time; time.sleep( 1 ); parent['n']['op1'] = 10" )
+		s["e2"] = Gaffer.Expression()
+		s["e2"].setExpression( "import time; time.sleep( 1 ); parent['n']['op2'] = 20" )
+
+		cs = GafferTest.CapturingSlot( s["n"].errorSignal() )
+
+		def f( context ) :
+
+			with context :
+				with self.assertRaises( IECore.Cancelled ) :
+					s["n"]["sum"].getValue()
+
+		canceller = IECore.Canceller()
+		thread = threading.Thread(
+			target = f,
+			args = [  Gaffer.Context( s.context(), canceller ) ]
+		)
+		thread.start()
+
+		canceller.cancel()
+		thread.join()
+
+		# No errors should have been signalled, because cancellation
+		# is not an error.
+		self.assertEqual( len( cs ), 0 )
+
+	def testCancellationWithCooperation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent['n']['op1'] = 10
+			while True :
+				IECore.Canceller.check( context.canceller() )
+			"""
+		) )
+
+		cs = GafferTest.CapturingSlot( s["n"].errorSignal() )
+
+		def f( context ) :
+
+			with context :
+				with self.assertRaises( IECore.Cancelled ) :
+					s["n"]["sum"].getValue()
+
+		canceller = IECore.Canceller()
+		thread = threading.Thread(
+			target = f,
+			args = [  Gaffer.Context( s.context(), canceller ) ]
+		)
+		thread.start()
+
+		# Give the background thread time to get into the infinite
+		# loop in the Expression, and then cancel it.
+		time.sleep( 1 )
+		canceller.cancel()
+		thread.join()
+
+		# No errors should have been signalled, because cancellation
+		# is not an error.
+		self.assertEqual( len( cs ), 0 )
 
 if __name__ == "__main__":
 	unittest.main()

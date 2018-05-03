@@ -211,6 +211,11 @@ typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedSt
 	return Accessor<T>().get( it->second.data );
 }
 
+const IECore::Canceller *Context::canceller() const
+{
+	return m_canceller;
+}
+
 template<typename T>
 void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
 {
