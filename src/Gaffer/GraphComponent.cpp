@@ -39,9 +39,9 @@
 
 #include "Gaffer/Action.h"
 #include "Gaffer/DirtyPropagationScope.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECore/Exception.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/bind.hpp"
 #include "boost/format.hpp"

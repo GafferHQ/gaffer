@@ -39,8 +39,6 @@
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
-#include "Gaffer/StringAlgo.h"
-
 #include "IECoreScene/Shader.h"
 
 #include "IECore/LRUCache.h"
@@ -48,6 +46,7 @@
 #include "IECore/ObjectVector.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -270,7 +269,7 @@ class DelightOutput : public IECore::RefCounted
 			int withAlpha = 0;
 
 			vector<string> tokens;
-			Gaffer::StringAlgo::tokenize( output->getData(), ' ', tokens );
+			IECore::StringAlgo::tokenize( output->getData(), ' ', tokens );
 			if( tokens.size() == 1 )
 			{
 				if( tokens[0] == "rgb" || tokens[0] == "rgba" )
@@ -303,7 +302,7 @@ class DelightOutput : public IECore::RefCounted
 				}
 
 				vector<string> nameTokens;
-				Gaffer::StringAlgo::tokenize( tokens[1], ':', nameTokens );
+				IECore::StringAlgo::tokenize( tokens[1], ':', nameTokens );
 				if( nameTokens.size() == 1 )
 				{
 					variableName = nameTokens[0];

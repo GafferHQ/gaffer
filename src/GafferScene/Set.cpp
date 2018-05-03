@@ -38,8 +38,9 @@
 
 #include "GafferScene/FilterResults.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
+
+#include "IECore/StringAlgo.h"
 
 using namespace std;
 using namespace IECore;

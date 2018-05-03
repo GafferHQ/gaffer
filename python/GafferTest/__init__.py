@@ -114,7 +114,6 @@ from ArrayPlugTest import ArrayPlugTest
 from SerialisationTest import SerialisationTest
 from SwitchTest import SwitchTest
 from MetadataTest import MetadataTest
-from StringAlgoTest import StringAlgoTest
 from NodeAlgoTest import NodeAlgoTest
 from DotTest import DotTest
 from ApplicationTest import ApplicationTest

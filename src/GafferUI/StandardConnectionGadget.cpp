@@ -641,7 +641,7 @@ void StandardConnectionGadget::leave( const ButtonEvent &event )
 	requestRender();
 }
 
-void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
 	if( key != g_colorKey || !MetadataAlgo::affectedByChange( dstNodule()->plug(), nodeTypeId, plugPath, plug ) )
 	{

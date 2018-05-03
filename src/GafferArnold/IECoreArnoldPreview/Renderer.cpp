@@ -40,8 +40,6 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
-#include "Gaffer/StringAlgo.h"
-
 #include "IECoreArnold/CameraAlgo.h"
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
@@ -61,6 +59,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/ObjectVector.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/StringAlgo.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string.hpp"
@@ -496,7 +495,7 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 
 				vector<std::string> tokens;
-				Gaffer::StringAlgo::tokenize( m_data, ' ', tokens );
+				IECore::StringAlgo::tokenize( m_data, ' ', tokens );
 				if( tokens.size() == 2 )
 				{
 					if( tokens[0] == "color" )

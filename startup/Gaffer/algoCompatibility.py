@@ -36,7 +36,7 @@
 
 import Gaffer
 
-for module in ( Gaffer.StringAlgo, Gaffer.MetadataAlgo, Gaffer.MonitorAlgo ) :
+for module in ( Gaffer.MetadataAlgo, Gaffer.MonitorAlgo ) :
 	for name in dir( module ) :
 		if not name.startswith( "__" ) :
 			setattr( Gaffer, name, getattr( module, name ) )

@@ -36,7 +36,7 @@
 
 #include "GafferImage/DeleteChannels.h"
 
-#include "Gaffer/StringAlgo.h"
+#include "IECore/StringAlgo.h"
 
 using namespace std;
 using namespace IECore;

@@ -41,10 +41,10 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/SplinePlug.h"
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
+#include "IECore/StringAlgo.h"
 
 #include "OSL/oslcomp.h"
 

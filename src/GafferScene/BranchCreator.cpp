@@ -38,8 +38,9 @@
 #include "GafferScene/BranchCreator.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
+
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 

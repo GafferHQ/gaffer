@@ -38,11 +38,11 @@
 
 #include "GafferScene/SceneAlgo.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
 
 #include "IECore/NullObject.h"
+#include "IECore/StringAlgo.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
@@ -281,7 +281,7 @@ void ObjectSource::hashSetNames( const Gaffer::Context *context, const ScenePlug
 IECore::ConstInternedStringVectorDataPtr ObjectSource::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
-	Gaffer::StringAlgo::tokenize( setsPlug()->getValue(), ' ', result->writable() );
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', result->writable() );
 	IECore::ConstInternedStringVectorDataPtr setNames = computeStandardSetNames();
 	for(unsigned int i = 0; i < setNames->readable().size(); ++i)
 	{
@@ -332,6 +332,6 @@ bool ObjectSource::setNameValid( const IECore::InternedString &setName ) const
 	}
 
 	std::vector<IECore::InternedString> setNames;
-	Gaffer::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
 	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
 }

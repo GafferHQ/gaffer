@@ -1630,7 +1630,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 		for m in self.__metadataDefinitions :
 			widget = self.__metadataWidgets[m.key]
-			widget.parent().setVisible( Gaffer.StringAlgo.match( widgetType, m.plugValueWidgetType ) )
+			widget.parent().setVisible( IECore.StringAlgo.match( widgetType, m.plugValueWidgetType ) )
 
 		self.__metadataWidgets["connectionGadget:color"].parent().setEnabled(
 			self.getPlug() is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In

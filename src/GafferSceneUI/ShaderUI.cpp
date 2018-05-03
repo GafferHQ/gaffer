@@ -171,7 +171,7 @@ class ShaderPlugAdder : public PlugAdder
 			updateVisibility();
 		}
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 		{
 			if( MetadataAlgo::childAffectedByChange( m_plugsParent.get(), nodeTypeId, plugPath, plug ) )
 			{

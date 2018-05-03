@@ -40,10 +40,11 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Expression.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
+
+#include "IECore/StringAlgo.h"
 
 #include "OSL/oslcomp.h"
 #include "OSL/oslexec.h"

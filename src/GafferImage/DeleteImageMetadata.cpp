@@ -36,8 +36,9 @@
 
 #include "GafferImage/DeleteImageMetadata.h"
 
-#include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
+
+#include "IECore/StringAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;

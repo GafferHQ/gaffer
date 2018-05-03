@@ -319,7 +319,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			for path in paths :
 				attributes = node["in"].attributes( path )
 				for name, network in attributes.items() :
-					if not Gaffer.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+					if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 						continue
 					if not isinstance( network, IECore.ObjectVector ) or not len( network ):
 						continue

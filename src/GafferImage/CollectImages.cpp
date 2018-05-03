@@ -41,7 +41,6 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/StringAlgo.h"
 
 using namespace std;
 using namespace Imath;
@@ -92,7 +91,7 @@ void sourceLayerAndChannel( const string &destChannel, const vector<string> &roo
 			return;
 		}
 	}
-	
+
 	srcLayer = "";
 	srcChannel = destChannel;
 }
@@ -321,7 +320,7 @@ IECore::ConstStringVectorDataPtr CollectImages::computeChannelNames( const Gaffe
 		editScope.set( layerVariable, rootLayers[i] );
 		ConstStringVectorDataPtr layerChannelsData = inPlug()->channelNamesPlug()->getValue();
 		const std::vector<string> &layerChannels = layerChannelsData->readable();
-		
+
 		for( unsigned int j = 0; j < layerChannels.size(); j++ )
 		{
 			std::string curName = GafferImage::ImageAlgo::channelName( rootLayers[i], layerChannels[j] );
@@ -338,7 +337,7 @@ IECore::ConstStringVectorDataPtr CollectImages::computeChannelNames( const Gaffe
 			}
 		}
 	}
-	
+
 	return channelNamesData;
 }
 
@@ -354,7 +353,7 @@ void CollectImages::hashChannelData( const GafferImage::ImagePlug *parent, const
 	}
 
 	const vector<string> &rootLayers = rootLayersData->readable();
-	
+
 	const std::string &channelName = context->get<string>( ImagePlug::channelNameContextName );
 	std::string srcLayer, srcChannel;
 	sourceLayerAndChannel( channelName, rootLayers, srcLayer, srcChannel );
@@ -402,7 +401,7 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 	}
 
 	const vector<string> &rootLayers = rootLayersData->readable();
-	
+
 	std::string srcLayer, srcChannel;
 	sourceLayerAndChannel( channelName, rootLayers, srcLayer, srcChannel );
 

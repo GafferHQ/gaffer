@@ -40,7 +40,8 @@
 #include "GafferUI/ConnectionGadget.h"
 
 #include "Gaffer/Plug.h"
-#include "Gaffer/StringAlgo.h"
+
+#include "IECore/StringAlgo.h"
 
 namespace GafferUI
 {
@@ -94,7 +95,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		bool keyPressed( const KeyEvent &event );
 		bool keyReleased( const KeyEvent &event );
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 
 		bool updateUserColor();
 

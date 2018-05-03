@@ -64,7 +64,6 @@
 #include "SetBinding.h"
 #include "SignalBinding.h"
 #include "SplinePlugBinding.h"
-#include "StringAlgoBinding.h"
 #include "StringPlugBinding.h"
 #include "SubGraphBinding.h"
 #include "SwitchBinding.h"
@@ -208,7 +207,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindAction();
 	bindArrayPlug();
 	bindMetadata();
-	bindStringAlgo();
 	bindDot();
 	bindPath();
 	bindPathFilter();

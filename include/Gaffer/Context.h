@@ -38,12 +38,12 @@
 #define GAFFER_CONTEXT_H
 
 #include "Gaffer/Export.h"
-#include "Gaffer/StringAlgo.h"
 
 #include "IECore/Canceller.h"
 #include "IECore/Data.h"
 #include "IECore/InternedString.h"
 #include "IECore/MurmurHash.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/container/flat_map.hpp"
 #include "boost/signals.hpp"
@@ -142,7 +142,7 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		/// Removes any entries whose names match the space separated patterns
 		/// provided. Matching is performed using `StringAlgo::matchMultiple()`.
-		void removeMatching( const StringAlgo::MatchPattern &pattern );
+		void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
 
 		/// When a Shared or Borrowed value is changed behind the scenes, this method
 		/// must be called to notify the Context of the change.
@@ -275,7 +275,7 @@ class GAFFER_API Context : public IECore::RefCounted
 				void setTime( float timeInSeconds );
 
 				void remove( const IECore::InternedString &name );
-				void removeMatching( const StringAlgo::MatchPattern &pattern );
+				void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
 
 			private :
 
