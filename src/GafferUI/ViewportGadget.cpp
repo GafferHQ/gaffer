@@ -88,6 +88,21 @@ float floorSignificantDigits( float x, int significantDigits )
 	return floor( x / magnitude ) * magnitude;
 }
 
+// This horrible function is just because theoretically someone could call
+// setCamera while in planarMovement mode, requiring us to reverse engineer
+// a planarScale based on the current resolution.  This is pretty useless,
+// setting planarScale directly would be far more useful - but since the
+// interface exists, we have to deal with someone potentially calling it.
+V2f planarScaleFromCameraAndRes( const IECoreScene::Camera *cam, const V2i &res )
+{
+	if( cam->getProjection() != "orthographic" )
+	{
+		return V2f( 1.0f );
+	}
+	
+	return V2f( cam->getAperture()[0] / ((float)res[0] ), cam->getAperture()[1] / ((float)res[1] ) );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -99,38 +114,46 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 	public :
 
-		CameraController( IECoreScene::CameraPtr camera )
-			:	m_centerOfInterest( 1.0f ), m_orthographic3D( false )
+		CameraController()
+			:	m_planarMovement( true ), m_sourceCamera( new IECoreScene::Camera() ), m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ), m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
 		{
-			setCamera( camera );
 		}
 
 		void setCamera( IECoreScene::CameraPtr camera )
 		{
-			m_camera = camera;
-			m_camera->addStandardParameters(); // subsequent casts are safe because of this
-			m_resolution = boost::static_pointer_cast<V2iData>( m_camera->parameters()["resolution"] );
-			m_screenWindow = boost::static_pointer_cast<Box2fData>( m_camera->parameters()["screenWindow"] );
-			m_clippingPlanes = boost::static_pointer_cast<V2fData>( m_camera->parameters()["clippingPlanes"] );
-			m_projection = boost::static_pointer_cast<StringData>( m_camera->parameters()["projection"] );
-			if( m_projection->readable()=="perspective" )
+			if( m_planarMovement )
 			{
-				m_fov = boost::static_pointer_cast<FloatData>( m_camera->parameters()["projection:fov"] );
+				m_planarScale = planarScaleFromCameraAndRes( camera.get(), m_viewportResolution );
 			}
-			else
-			{
-				m_fov = nullptr;
-			}
+			m_clippingPlanes = camera->getClippingPlanes();
+			m_sourceCamera = camera;
 		}
 
-		IECoreScene::Camera *getCamera()
+		IECoreScene::ConstCameraPtr getCamera() const
 		{
-			return m_camera.get();
+			IECoreScene::CameraPtr viewportCamera = m_sourceCamera->copy();
+			if( m_planarMovement )
+			{
+				viewportCamera->setProjection( "orthographic" );
+				viewportCamera->setAperture( m_planarScale * V2f( m_viewportResolution[0], m_viewportResolution[1] ) );
+			}
+			viewportCamera->setResolution( m_viewportResolution );
+			viewportCamera->setClippingPlanes( m_clippingPlanes );
+			return viewportCamera;
 		}
 
-		const IECoreScene::Camera *getCamera() const
+		void setPlanarMovement( bool planarMovement )
 		{
-			return m_camera.get();
+			if( planarMovement && !m_planarMovement )
+			{
+				m_planarScale = planarScaleFromCameraAndRes( m_sourceCamera.get(), m_viewportResolution );
+			}
+			m_planarMovement = planarMovement;
+		}
+
+		bool getPlanarMovement() const
+		{
+			return m_planarMovement;
 		}
 
 		void setTransform( const M44f &transform )
@@ -154,70 +177,25 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			return m_centerOfInterest;
 		}
 
-		void setOrthographic3D( bool orthographic3D )
+		/// Set the resolution of the viewport we are working in
+		void setViewportResolution( const Imath::V2i &viewportResolution )
 		{
-			m_orthographic3D = orthographic3D;
+			m_viewportResolution = viewportResolution;
 		}
 
-		bool getOrthographic3D() const
+		const Imath::V2i &getViewportResolution() const
 		{
-			return m_orthographic3D;
-		}
-
-		enum ScreenWindowAdjustment
-		{
-			/// Crop/extend the screen window to accommodate
-			/// the new resolution without scaling the content.
-			CropScreenWindow,
-			/// Preserve the horizontal framing and change the
-			/// vertical framing to maintain aspect ratio.
-			ScaleScreenWindow
-		};
-
-		/// Changes the camera resolution, modifying the screen window
-		/// in a manner determined by the adjustment argument.
-		void setResolution( const Imath::V2i &resolution, ScreenWindowAdjustment adjustment )
-		{
-			const V2i oldResolution = m_resolution->readable();
-			const Box2f oldScreenWindow = m_screenWindow->readable();
-
-			m_resolution->writable() = resolution;
-
-			Box2f newScreenWindow;
-			if( adjustment == ScaleScreenWindow )
-			{
-				const float oldAspect = (float)oldResolution.x/(float)oldResolution.y;
-				const float badAspect = (float)resolution.x/(float)resolution.y;
-				const float yScale = oldAspect / badAspect;
-
-				newScreenWindow = oldScreenWindow;
-				newScreenWindow.min.y *= yScale;
-				newScreenWindow.max.y *= yScale;
-			}
-			else
-			{
-				const V2f screenWindowCenter = oldScreenWindow.center();
-				const V2f scale = V2f( resolution ) / V2f( oldResolution );
-				newScreenWindow.min = screenWindowCenter + (oldScreenWindow.min - screenWindowCenter) * scale;
-				newScreenWindow.max = screenWindowCenter + (oldScreenWindow.max - screenWindowCenter) * scale;
-			}
-
-			m_screenWindow->writable() = newScreenWindow;
-		}
-
-		const Imath::V2i &getResolution() const
-		{
-			return m_resolution->readable();
+			return m_viewportResolution;
 		}
 
 		void setClippingPlanes( const Imath::V2f &clippingPlanes )
 		{
-			m_clippingPlanes->writable() = clippingPlanes;
+			m_clippingPlanes = clippingPlanes;
 		}
 
 		const Imath::V2f &getClippingPlanes() const
 		{
-			return m_clippingPlanes->readable();
+			return m_clippingPlanes;
 		}
 
 		/// Moves the camera to frame the specified box, keeping the
@@ -248,68 +226,66 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			M44f inverseCameraMatrix = cameraMatrix.inverse();
 			Box3f cBox = transform( box, inverseCameraMatrix );
 
-			Box2f screenWindow = m_screenWindow->readable();
-			if( m_projection->readable()=="perspective" )
-			{
-				// perspective. leave the field of view and screen window as is and translate
-				// back till the box is wholly visible. this currently assumes the screen window
-				// is centered about the camera axis.
-				float z0 = cBox.size().x / screenWindow.size().x;
-				float z1 = cBox.size().y / screenWindow.size().y;
-
-				m_centerOfInterest = std::max( z0, z1 ) / tan( M_PI * m_fov->readable() / 360.0 ) + cBox.max.z +
-					m_clippingPlanes->readable()[0];
-
-				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centerOfInterest ) );
-			}
-			else
+			if( m_planarMovement )
 			{
 				// Orthographic. Translate to front of box.
-				// We need to clamp the near clipping plane to >= 0.0f because
-				// the LightToCamera node creates hugely negative near clipping
-				// planes that would otherwise send us way out into space. The
-				// 0.1 is just a fudge factor to ensure we don't accidentally clip
+				// The 0.1 is just a fudge factor to ensure we don't accidentally clip
 				// the front of the box.
-				m_centerOfInterest = cBox.max.z + std::max( m_clippingPlanes->readable()[0], 0.0f ) + 0.1;
-				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centerOfInterest ) );
+				m_centerOfInterest = cBox.max.z + m_clippingPlanes[0] + 0.1;
 
-				if( getOrthographic3D() )
+				// Adjust the planar scale so the entire bound can be seen.
+				V2f ratio( cBox.size().x / m_viewportResolution[0], cBox.size().y / m_viewportResolution[1] );
+				if( variableAspectZoom )
 				{
-					// The user might want to tumble around the thing
-					// they framed. Translate back some more to make
-					// room to tumble around the entire bound.
-					const float offset = cBox.size().length();
-					m_centerOfInterest += offset;
-					cameraMatrix.translate( V3f( 0.0f, 0.0f, offset ) );
+					m_planarScale = ratio;
 				}
 				else
 				{
-					// Adjust the screenwindow so the entire bound can be
-					// seen. We don't do this in orthographic3D mode because
-					// the user's expectation is that they are only moving the
-					// camera, not modifying the projection.
-					float xScale = cBox.size().x / screenWindow.size().x;
-					float yScale = cBox.size().y / screenWindow.size().y;
+					m_planarScale = V2f( std::max( ratio.x, ratio.y ) );
+				}
+			}
+			else
+			{
+				if( m_sourceCamera->getProjection()=="perspective" )
+				{
+					// Perspective. leave the field of view and screen window as is and translate
+					// back till the box is wholly visible. this currently assumes the screen window
+					// is centered about the camera axis.
 
-					V2f newSize = screenWindow.size();
-					if( variableAspectZoom )
-					{
-						newSize *= V2f( xScale, yScale );
-					}
-					else
-					{
-						newSize *= std::max( xScale, yScale );
-					}
+					const Box2f &normalizedScreenWindow = m_sourceCamera->frustum(
+						m_sourceCamera->getFilmFit(),
+						( (float)m_viewportResolution.x ) / m_viewportResolution.y
+					);
 
-					screenWindow.min.x = cBox.center().x - newSize.x / 2.0f;
-					screenWindow.min.y = cBox.center().y - newSize.y / 2.0f;
-					screenWindow.max.x = cBox.center().x + newSize.x / 2.0f;
-					screenWindow.max.y = cBox.center().y + newSize.y / 2.0f;
+					// Compute a distance to push back in z in order to see the whole width and height of cBox
+					float z0 = cBox.size().x / normalizedScreenWindow.size().x;
+					float z1 = cBox.size().y / normalizedScreenWindow.size().y;
+
+					m_centerOfInterest = std::max( z0, z1 ) + cBox.max.z + m_clippingPlanes[0];
+				}
+				else
+				{
+					// Orthographic. Note that we are not altering the projection, so we may still not
+					// be able to see the entire bound, if the ortho camera has too small an aperture to
+					// see the whole bound at once.
+
+					// Translate to front of box.
+					// We need to clamp the near clipping plane to >= 0.0f because
+					// the LightToCamera node creates hugely negative near clipping
+					// planes that would otherwise send us way out into space. The
+					// 0.1 is just a fudge factor to ensure we don't accidentally clip
+					// the front of the box.
+					m_centerOfInterest = cBox.max.z + std::max( m_clippingPlanes[0], 0.0f ) + 0.1;
+
+					// The user might want to tumble around the thing
+					// they framed. Translate back some more to make
+					// room to tumble around the entire bound.
+					m_centerOfInterest += cBox.size().length();
 				}
 			}
 
+			cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centerOfInterest ) );
 			m_transform = cameraMatrix;
-			m_screenWindow->writable() = screenWindow;
 
 		}
 
@@ -317,26 +293,36 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		/// with the specified raster position. Points are computed in world space.
 		void unproject( const Imath::V2f rasterPosition, Imath::V3f &near, Imath::V3f &far ) const
 		{
-			V2f ndc = V2f( rasterPosition ) / m_resolution->readable();
-			const Box2f &screenWindow = m_screenWindow->readable();
-			V2f screen(
-				lerp( screenWindow.min.x, screenWindow.max.x, ndc.x ),
-				lerp( screenWindow.max.y, screenWindow.min.y, ndc.y )
-			);
-
-			const V2f &clippingPlanes = m_clippingPlanes->readable();
-			if( m_projection->readable()=="perspective" )
+			if( m_planarMovement )
 			{
-				float fov = m_fov->readable();
-				float d = tan( degreesToRadians( fov / 2.0f ) ); // camera x coordinate at screen window x==1
-				V3f camera( screen.x * d, screen.y * d, -1.0f );
-				near = camera * clippingPlanes[0];
-				far = camera * clippingPlanes[1];
+				V2f rasterCenter = 0.5f * V2f( m_viewportResolution );
+				V2f unscaled = ( rasterPosition - rasterCenter ) * m_planarScale;
+				near = V3f( unscaled.x, -unscaled.y, -m_clippingPlanes[0] );
+				far = V3f( unscaled.x, -unscaled.y, -m_clippingPlanes[1] );
 			}
 			else
 			{
-				near = V3f( screen.x, screen.y, -clippingPlanes[0] );
-				far = V3f( screen.x, screen.y, -clippingPlanes[1] );
+				V2f ndc = V2f( rasterPosition ) / m_viewportResolution;
+				const Box2f &normalizedScreenWindow = m_sourceCamera->frustum(
+					m_sourceCamera->getFilmFit(),
+					( (float)m_viewportResolution.x ) / m_viewportResolution.y
+				);
+				V2f screen(
+					lerp( normalizedScreenWindow.min.x, normalizedScreenWindow.max.x, ndc.x ),
+					lerp( normalizedScreenWindow.max.y, normalizedScreenWindow.min.y, ndc.y )
+				);
+
+				if( m_sourceCamera->getProjection()=="perspective" )
+				{
+					V3f camera( screen.x, screen.y, -1.0f );
+					near = camera * m_clippingPlanes[0];
+					far = camera * m_clippingPlanes[1];
+				}
+				else
+				{
+					near = V3f( screen.x, screen.y, -m_clippingPlanes[0] );
+					far = V3f( screen.x, screen.y, -m_clippingPlanes[1] );
+				}
 			}
 
 			near = near * m_transform;
@@ -349,28 +335,27 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			M44f inverseCameraMatrix = m_transform.inverse();
 			V3f cameraPosition = worldPosition * inverseCameraMatrix;
 
-			const V2i &resolution = m_resolution->readable();
-			const Box2f &screenWindow = m_screenWindow->readable();
-			if( m_projection->readable() == "perspective" )
+			if( m_planarMovement )
 			{
-				V3f screenPosition = cameraPosition / cameraPosition.z;
-				float fov = m_fov->readable();
-				float d = tan( degreesToRadians( fov / 2.0f ) ); // camera x coordinate at screen window x==1
-				screenPosition /= d;
-				V2f ndcPosition(
-					lerpfactor( screenPosition.x, screenWindow.max.x, screenWindow.min.x ),
-					lerpfactor( screenPosition.y, screenWindow.min.y, screenWindow.max.y )
-				);
-				return V2f(
-					ndcPosition.x * resolution.x,
-					ndcPosition.y * resolution.y
-				);
+				V2f rasterCenter = 0.5f * V2f( m_viewportResolution );
+				return rasterCenter + V2f( cameraPosition.x, -cameraPosition.y ) / m_planarScale;
 			}
 			else
 			{
+
+				const V2i &resolution = m_viewportResolution;
+				const Box2f &normalizedScreenWindow = m_sourceCamera->frustum(
+					m_sourceCamera->getFilmFit(),
+					( (float)m_viewportResolution.x ) / m_viewportResolution.y
+				);
+				if( m_sourceCamera->getProjection() == "perspective" )
+				{
+					cameraPosition = cameraPosition / cameraPosition.z;
+				}
+
 				V2f ndcPosition(
-					lerpfactor( cameraPosition.x, screenWindow.min.x, screenWindow.max.x ),
-					lerpfactor( cameraPosition.y, screenWindow.max.y, screenWindow.min.y )
+					lerpfactor( cameraPosition.x, normalizedScreenWindow.max.x, normalizedScreenWindow.min.x ),
+					lerpfactor( cameraPosition.y, normalizedScreenWindow.min.y, normalizedScreenWindow.max.y )
 				);
 				return V2f(
 					ndcPosition.x * resolution.x,
@@ -392,7 +377,6 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			Track,
 			Tumble,
 			Dolly,
-			VariableAspectZoom
 		};
 
 		enum class ZoomAxis
@@ -405,7 +389,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		/// Starts a motion of the specified type.
 		void motionStart( MotionType motion, const Imath::V2f &startPosition )
 		{
-			if( motion == Tumble && m_projection->readable()=="orthographic" && !m_orthographic3D )
+			if( motion == Tumble && m_planarMovement )
 			{
 				motion = Track;
 			}
@@ -413,13 +397,13 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_motionType = motion;
 			m_motionStart = startPosition;
 			m_motionMatrix = m_transform;
-			m_motionScreenWindow = m_screenWindow->readable();
+			m_motionPlanarScale = m_planarScale;
 			m_motionCenterOfInterest = m_centerOfInterest;
 		}
 
 		/// Updates the camera position based on a changed mouse position. Can only
 		/// be called after motionStart() and before motionEnd().
-		void motionUpdate( const Imath::V2f &newPosition )
+		void motionUpdate( const Imath::V2f &newPosition, bool variableAspect = false )
 		{
 			switch( m_motionType )
 			{
@@ -430,8 +414,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					tumble( newPosition );
 					break;
 				case Dolly :
-				case VariableAspectZoom :
-					dolly( newPosition );
+					dolly( newPosition, variableAspect );
 					break;
 				default :
 					throw Exception( "CameraController not in motion." );
@@ -439,7 +422,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		}
 
 		/// End the current motion, ready to call motionStart() again if required.
-		void motionEnd( const Imath::V2f &endPosition )
+		void motionEnd( const Imath::V2f &endPosition, bool variableAspect = false )
 		{
 			switch( m_motionType )
 			{
@@ -450,8 +433,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					tumble( endPosition );
 					break;
 				case Dolly :
-				case VariableAspectZoom :
-					dolly( endPosition );
+					dolly( endPosition, variableAspect );
 					break;
 				default :
 					break;
@@ -461,20 +443,31 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			Pointer::setCurrent( "" );
 		}
 
+
 	private:
 
 		void track( const Imath::V2f &p )
 		{
-			V2i resolution = m_resolution->readable();
-			Box2f screenWindow = m_screenWindow->readable();
-
 			V2f d = p - m_motionStart;
+
 			V3f translate( 0.0f );
-			translate.x = -screenWindow.size().x * d.x/(float)resolution.x;
-			translate.y = screenWindow.size().y * d.y/(float)resolution.y;
-			if( m_projection->readable()=="perspective" && m_fov )
+			if( m_planarMovement )
 			{
-				translate *= tan( M_PI * m_fov->readable() / 360.0f ) * (float)m_centerOfInterest;
+				translate = V3f( -d[0] * m_planarScale[0], d[1] * m_planarScale[1], 0.0f );
+			}
+			else
+			{
+				const Box2f &normalizedScreenWindow = m_sourceCamera->frustum(
+					m_sourceCamera->getFilmFit(),
+					( (float)m_viewportResolution.x ) / m_viewportResolution.y
+				);
+
+				translate.x = -normalizedScreenWindow.size().x * d.x/(float)m_viewportResolution.x;
+				translate.y = normalizedScreenWindow.size().y * d.y/(float)m_viewportResolution.y;
+				if( m_sourceCamera->getProjection()=="perspective" )
+				{
+					translate *= m_centerOfInterest;
+				}
 			}
 			M44f t = m_motionMatrix;
 			t.translate( translate );
@@ -505,15 +498,39 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_transform = m_motionMatrix * t;
 		}
 
-		void dolly( const Imath::V2f &p )
+		void dolly( const Imath::V2f &p, bool variableAspect )
 		{
-			V2i resolution = m_resolution->readable();
+			V2i resolution = m_viewportResolution;
 			V2f dv = V2f( (p - m_motionStart) ) / resolution;
 			float d = dv.x - dv.y;
 
-			if( m_projection->readable()=="perspective" || m_orthographic3D )
+			if( m_planarMovement )
 			{
-				// perspective
+				V2f mult;
+				if( !variableAspect )
+				{
+					mult = V2f( expf( -1.9f * d ) );
+					Pointer::setCurrent( "" );
+				}
+				else
+				{
+					if( abs( dv.x ) >= abs( dv.y ) )
+					{
+						m_zoomAxis = ZoomAxis::X;
+						Pointer::setCurrent( "moveHorizontally" );
+						mult = V2f( expf( -1.9f * dv.x ), 1.0f );
+					}
+					else
+					{
+						m_zoomAxis = ZoomAxis::Y;
+						Pointer::setCurrent( "moveVertically" );
+						mult = V2f( 1.0f, expf( 1.9f * dv.y ) );
+					}
+				}
+				m_planarScale = m_motionPlanarScale * mult;
+			}
+			else
+			{
 				m_centerOfInterest = m_motionCenterOfInterest * expf( -1.9f * d );
 
 				M44f t = m_motionMatrix;
@@ -521,65 +538,23 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 				m_transform = t;
 			}
-			else
-			{
-				// orthographic
-				Box2f screenWindow = m_motionScreenWindow;
-
-				V2f centerNDC = V2f( m_motionStart ) / resolution;
-				V2f center(
-					lerp( screenWindow.min.x, screenWindow.max.x, centerNDC.x ),
-					lerp( screenWindow.max.y, screenWindow.min.y, centerNDC.y )
-				);
-
-				float newWidth = m_motionScreenWindow.size().x * expf( -1.9f * d );
-				newWidth = std::max( newWidth, 0.01f );
-
-				float scale = newWidth / screenWindow.size().x;
-				if( m_motionType == Dolly )
-				{
-					screenWindow.min = (screenWindow.min - center) * scale + center;
-					screenWindow.max = (screenWindow.max - center) * scale + center;
-				}
-				else if( m_motionType == VariableAspectZoom )
-				{
-					if( m_zoomAxis == ZoomAxis::Undefined )
-					{
-						if( abs( dv.x ) >= abs( dv.y ) )
-						{
-							m_zoomAxis = ZoomAxis::X;
-							Pointer::setCurrent( "moveHorizontally" );
-						}
-						else
-						{
-							m_zoomAxis = ZoomAxis::Y;
-							Pointer::setCurrent( "moveVertically" );
-						}
-					}
-
-					if( m_zoomAxis == ZoomAxis::X )
-					{
-						screenWindow.min.x = (screenWindow.min.x - center.x) * scale + center.x;
-						screenWindow.max.x = (screenWindow.max.x - center.x) * scale + center.x;
-					}
-					else
-					{
-						screenWindow.min.y = (screenWindow.min.y - center.y) * scale + center.y;
-						screenWindow.max.y = (screenWindow.max.y - center.y) * scale + center.y;
-					}
-				}
-
-				m_screenWindow->writable() = screenWindow;
-			}
 		}
 
+		// If m_planarMovement is true, we are doing a 2D view with a fixed scaling
+		// between world units and pixels, independ of viewport resolution
+		// ( and m_sourceCamera will be null ).
+		bool m_planarMovement;
+
+		// m_sourceCamera provides the values for any camera properties
+		// which we don't override
+		IECoreScene::ConstCameraPtr m_sourceCamera;
+
+		// Resolution of the viewport we are working in
+		Imath::V2i m_viewportResolution;
+
 		// Parts of the camera we manipulate
-		IECoreScene::CameraPtr m_camera;
-		V2iDataPtr m_resolution;
-		Box2fDataPtr m_screenWindow;
-		ConstStringDataPtr m_projection;
-		ConstFloatDataPtr m_fov;
-		V2fDataPtr m_clippingPlanes;
+		Imath::V2f m_planarScale;
+		Imath::V2f m_clippingPlanes;
 		float m_centerOfInterest;
 		M44f m_transform;
 
@@ -588,11 +563,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		Imath::V2f m_motionStart;
 		Imath::M44f m_motionMatrix;
 		float m_motionCenterOfInterest;
-		Imath::Box2f m_motionScreenWindow;
-
-		// General options
-
-		bool m_orthographic3D;
+		Imath::V2f m_motionPlanarScale;
 
 		ZoomAxis m_zoomAxis;
 };
@@ -605,7 +576,7 @@ IE_CORE_DEFINERUNTIMETYPED( ViewportGadget );
 
 ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	: Gadget(),
-	  m_cameraController( new CameraController( new IECoreScene::Camera ) ),
+	  m_cameraController( new CameraController() ),
 	  m_cameraInMotion( false ),
 	  m_cameraEditable( true ),
 	  m_dragTracking( DragTracking::NoDragTracking ),
@@ -698,26 +669,17 @@ const Gadget *ViewportGadget::getPrimaryChild() const
 
 const Imath::V2i &ViewportGadget::getViewport() const
 {
-	return m_cameraController->getResolution();
+	return m_cameraController->getViewportResolution();
 }
 
 void ViewportGadget::setViewport( const Imath::V2i &viewport )
 {
-	if( viewport == m_cameraController->getResolution() )
+	if( viewport == m_cameraController->getViewportResolution() )
 	{
 		return;
 	}
 
-	CameraController::ScreenWindowAdjustment adjustment = CameraController::ScaleScreenWindow;
-	if( const StringData *projection = getCamera()->parametersData()->member<StringData>( "projection" ) )
-	{
-		if( projection->readable() == "orthographic" )
-		{
-			adjustment = CameraController::CropScreenWindow;
-		}
-	}
-
-	m_cameraController->setResolution( viewport, adjustment );
+	m_cameraController->setViewportResolution( viewport );
 
 	m_viewportChangedSignal( this );
 }
@@ -727,23 +689,33 @@ ViewportGadget::UnarySignal &ViewportGadget::viewportChangedSignal()
 	return m_viewportChangedSignal;
 }
 
-const IECoreScene::Camera *ViewportGadget::getCamera() const
+bool ViewportGadget::getPlanarMovement() const
+{
+	return m_cameraController->getPlanarMovement();
+}
+
+void ViewportGadget::setPlanarMovement( bool planarMovement )
+{
+	m_cameraController->setPlanarMovement( planarMovement );
+}
+
+IECoreScene::ConstCameraPtr ViewportGadget::getCamera() const
 {
 	return m_cameraController->getCamera();
 }
 
-void ViewportGadget::setCamera( const IECoreScene::Camera *camera )
+void ViewportGadget::setCamera( IECoreScene::CameraPtr camera )
 {
-	if( m_cameraController->getCamera()->isEqualTo( camera ) )
+	if( !camera )
+	{
+		throw Exception( "Cannot use null camera in ViewportGadget." );
+	}
+
+	if( m_cameraController->getCamera()->isEqualTo( camera.get() ) )
 	{
 		return;
 	}
-	// Remember the viewport size
-	const V2i viewport = getViewport();
-	// Because the incoming camera resolution might not be right
 	m_cameraController->setCamera( camera->copy() );
-	// So we must reset the viewport to update the camera
-	setViewport( viewport );
 	m_cameraChangedSignal( this );
 	requestRender();
 }
@@ -787,16 +759,6 @@ void ViewportGadget::setCenterOfInterest( float centerOfInterest )
 float ViewportGadget::getCenterOfInterest()
 {
 	return m_cameraController->getCenterOfInterest();
-}
-
-void ViewportGadget::setOrthographic3D( bool orthographic3D )
-{
-	m_cameraController->setOrthographic3D( orthographic3D );
-}
-
-bool ViewportGadget::getOrthographic3D() const
-{
-	return m_cameraController->getOrthographic3D();
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box )
@@ -952,10 +914,6 @@ void ViewportGadget::render() const
 	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
 	camera->setTransform( getCameraTransform() );
-	if( m_cameraController->getCamera()->getTransform() )
-	{
-		IECore::msg( IECore::Msg::Warning, "ViewportGadget", "Camera has unexpected transform" );
-	}
 	camera->render( nullptr );
 
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
@@ -1151,7 +1109,7 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 				motionType = CameraController::Track;
 				break;
 			case ButtonEvent::Right :
-				motionType = event.modifiers & ModifiableEvent::Shift ? CameraController::VariableAspectZoom : CameraController::Dolly;
+				motionType = CameraController::Dolly;
 				break;
 			default :
 				motionType = CameraController::None;
@@ -1219,7 +1177,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		if( getCameraEditable() )
 		{
-			m_cameraController->motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraController->motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Shift ) != 0 );
 			m_cameraChangedSignal( this );
 			requestRender();
 		}
@@ -1448,7 +1406,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		m_cameraInMotion = false;
 		if( getCameraEditable() )
 		{
-			m_cameraController->motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraController->motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Shift ) != 0 );
 			m_cameraChangedSignal( this );
 			requestRender();
 		}
