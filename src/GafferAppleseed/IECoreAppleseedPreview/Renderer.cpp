@@ -872,7 +872,7 @@ class AppleseedCamera : public AppleseedEntity
 
 	public :
 
-		AppleseedCamera( asr::Project &project, const string &name, Camera *camera, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
+		AppleseedCamera( asr::Project &project, const string &name, const Camera *camera, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
 			:	AppleseedEntity( project, name, interactive )
 		{
 			asf::auto_release_ptr<asr::Camera> appleseedCamera( CameraAlgo::convert( camera ) );
@@ -2818,21 +2818,18 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		ObjectInterfacePtr camera( const string &name, const Camera *camera, const AttributesInterface *attributes ) override
 		{
-			CameraPtr cameraCopy = camera->copy();
-			cameraCopy->addStandardParameters();
-
 			// Check if this is the active camera.
 			if( name == m_cameraName )
 			{
 				// Save the shutter times for later use.
-				const V2f &shutter = cameraCopy->parametersData()->member<V2fData>( "shutter", true )->readable();
+				const V2f &shutter = camera->getShutter();
 				m_shutterOpenTime = shutter.x;
 				m_shutterCloseTime = shutter.y;
 
-				updateFrame( name, cameraCopy->parametersData() );
+				updateFrame( name, camera->renderResolution(), camera->renderRegion() );
 			}
 
-			return new AppleseedCamera( *m_project, name, cameraCopy.get(), attributes, isInteractiveRender() );
+			return new AppleseedCamera( *m_project, name, camera, attributes, isInteractiveRender() );
 		}
 
 		ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes ) override
@@ -3049,36 +3046,30 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			}
 		}
 
-		void updateFrame( const string &cameraName, const CompoundData *cameraParams )
+		void updateFrame( const string &cameraName, const V2i &resolution, const Box2i &renderRegion )
 		{
-			assert( cameraParams );
-
 			asr::Frame* frame = m_project->get_frame();
 			asr::ParamArray &params = frame->get_parameters();
 
 			// Resolution
 			const asf::Vector2i oldRes = params.get<asf::Vector2i>( "resolution" );
 
-			const V2iData *resolution = cameraParams->member<V2iData>( "resolution" );
-			const asf::Vector2i res( resolution->readable().x, resolution->readable().y );
+			const asf::Vector2i res( resolution.x, resolution.y );
 			params.insert( "resolution", res );
 
 			// Render region.
-			if( const Box2iData *renderRegion = cameraParams->member<Box2iData>( "renderRegion" ) )
-			{
-				// For now, we don't do overscan.
-				// We keep only the crop part of the render region.
-				asf::AABB2u crop;
-				crop.min[0] = asf::clamp( (int) renderRegion->readable().min.x, 0, res[0] - 1 );
-				crop.min[1] = asf::clamp( (int) renderRegion->readable().min.y, 0, res[1] - 1 );
-				crop.max[0] = asf::clamp( (int) renderRegion->readable().max.x, 0, res[0] - 1 );
-				crop.max[1] = asf::clamp( (int) renderRegion->readable().max.y, 0, res[1] - 1 );
-				frame->set_crop_window( crop );
-			}
-			else
-			{
-				frame->reset_crop_window();
-			}
+			// For now, we don't do overscan.
+			// We keep only the crop part of the render region.
+			//
+			// Note that we have to flip Y and subtract 1 from the max value, because
+			// renderRegion is stored in Gaffer image format ( +Y up and an exclusive upper bound )
+			asf::AABB2u crop;
+			crop.min[0] = asf::clamp( renderRegion.min.x, 0, res[0] - 1 );
+			crop.min[1] = asf::clamp( res[1] - renderRegion.max.y, 0, res[1] - 1 );
+			crop.max[0] = asf::clamp( renderRegion.max.x - 1, 0, res[0] - 1 );
+			crop.max[1] = asf::clamp( res[1] - renderRegion.min.y - 1, 0, res[1] - 1 );
+
+			frame->set_crop_window( crop );
 
 			// Set the active camera.
 			params.insert( "camera", cameraName.c_str() );
