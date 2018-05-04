@@ -74,9 +74,6 @@ class CameraVisualiser : public ObjectVisualiser
 				return nullptr;
 			}
 
-			IECoreScene::CameraPtr fullCamera = camera->copy();
-			fullCamera->addStandardParameters();
-
 			IECoreGL::GroupPtr group = new IECoreGL::Group();
 			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
 			group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
@@ -124,8 +121,11 @@ class CameraVisualiser : public ObjectVisualiser
 
 			// frustum
 
-			const std::string &projection = fullCamera->parametersData()->member<IECore::StringData>( "projection" )->readable();
-			const Box2f &screenWindow = fullCamera->parametersData()->member<IECore::Box2fData>( "screenWindow" )->readable();
+			const std::string &projection = camera->getProjection();
+
+			// Use distort mode to get a screen window that matches the whole aperture
+			const Box2f &screenWindow = camera->frustum( IECoreScene::Camera::Distort );
+
 			/// \todo When we're drawing the camera by some means other than creating a primitive for it,
 			/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
 			/// framing bounds when the viewer frames a selected camera.
@@ -136,12 +136,10 @@ class CameraVisualiser : public ObjectVisualiser
 
 			if( projection == "perspective" )
 			{
-				float fov = fullCamera->parametersData()->member<IECore::FloatData>( "projection:fov" )->readable();
-				float d = tan( IECore::degreesToRadians( fov / 2.0f ) );
-				near.min *= d * clippingPlanes[0];
-				near.max *= d * clippingPlanes[0];
-				far.min *= d * clippingPlanes[1];
-				far.max *= d * clippingPlanes[1];
+				near.min *= clippingPlanes[0];
+				near.max *= clippingPlanes[0];
+				far.min *= clippingPlanes[1];
+				far.max *= clippingPlanes[1];
 			}
 
 			vertsPerCurve.push_back( 5 );
