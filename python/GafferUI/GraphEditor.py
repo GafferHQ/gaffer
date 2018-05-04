@@ -432,13 +432,14 @@ class GraphEditor( GafferUI.Editor ) :
 		return []
 
 	def __currentFrame( self ) :
-
 		viewportGadget = self.graphGadgetWidget().getViewportGadget()
-		camera = viewportGadget.getCamera()
-		frame = camera.parameters()["screenWindow"].value
-		translation = viewportGadget.getCameraTransform().translation()
-		frame.setMin( frame.min() + imath.V2f( translation.x, translation.y ) )
-		frame.setMax( frame.max() + imath.V2f( translation.x, translation.y ) )
+
+		rasterMin = viewportGadget.rasterToWorldSpace( imath.V2f( 0 ) ).p0
+		rasterMax = viewportGadget.rasterToWorldSpace( imath.V2f( viewportGadget.getViewport() ) ).p0
+
+		frame = imath.Box2f()
+		frame.extendBy( imath.V2f( rasterMin[0], rasterMin[1] ) )
+		frame.extendBy( imath.V2f( rasterMax[0], rasterMax[1] ) )
 
 		return frame
 
