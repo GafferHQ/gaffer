@@ -350,20 +350,13 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
-		sets = {}
-		with IECore.IgnoredExceptions( Exception ) :
-			with self.getContext() :
-				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
-
-		for setName in sorted( sets.keys() ) :
-			for abbreviatedPath, path in self.__abbreviatedPaths( sets[setName].value ) :
-				m.append(
-					"/{}{}".format( setName[2:-1].title(), abbreviatedPath ),
-					{
-						"checkBox" : currentLookThrough == path,
-						"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
-					}
-				)
+		for setName in ( "__cameras", "__lights" ) :
+			m.append(
+				"/{}".format( setName[2:-1].title() ),
+				{
+					"subMenu" : functools.partial( Gaffer.WeakMethod( self.__setMenu ), setName, currentLookThrough ),
+				}
+			)
 
 		m.append( "/BrowseDivider", { "divider" : True } )
 
@@ -476,17 +469,6 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if len( event.data ) != 1 :
 			return False
 
-		sets = {}
-		with IECore.IgnoredExceptions( Exception ) :
-			with self.getContext() :
-				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], ( "__cameras", "__lights" ) )
-
-		if not any(
-			s.value.match( event.data[0] ) & GafferScene.Filter.Result.ExactMatch
-			for s in sets.values()
-		) :
-			return False
-
 		self.setHighlighted( True )
 		return True
 
@@ -495,6 +477,34 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.setHighlighted( False )
 		self.__lookThrough( event.data[0] )
 		return True
+
+	def __computeSet( self, setName ) :
+
+		sets = {}
+		with IECore.IgnoredExceptions( Exception ) :
+			with self.getContext() :
+				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], [ setName ] )
+
+		return sets.get( setName )
+
+	def __setMenu( self, setName, currentLookThrough ) :
+
+		m = IECore.MenuDefinition()
+
+		set = self.__computeSet( setName )
+		if not set :
+			return m
+
+		for abbreviatedPath, path in self.__abbreviatedPaths( set.value ) :
+			m.append(
+				"/{}".format( abbreviatedPath ),
+				{
+					"checkBox" : currentLookThrough == path,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
+				}
+			)
+
+		return m
 
 	## \todo Would this be useful as PathMatcherAlgo
 	# somewhere (implemented in C++ using iterators)?
