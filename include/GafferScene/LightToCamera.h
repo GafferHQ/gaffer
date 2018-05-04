@@ -52,6 +52,9 @@ class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::LightToCamera, LightToCameraTypeId, SceneElementProcessor );
 
+		Gaffer::IntPlug *filmFitPlug();
+		const Gaffer::IntPlug *filmFitPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 

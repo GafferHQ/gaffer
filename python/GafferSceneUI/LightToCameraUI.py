@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferScene
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -49,6 +50,8 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	plugs = {
+
+		"filmFit" : GafferSceneUI.CameraUI.filmFitMetadata,
 
 		"filter" : [
 

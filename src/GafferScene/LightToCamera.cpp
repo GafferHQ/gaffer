@@ -45,6 +45,7 @@
 
 #include "IECore/CompoundData.h"
 #include "IECore/Export.h"
+#include "IECore/AngleConversion.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathMatrix.h"
@@ -201,20 +202,18 @@ M44f lightCameraTransform( const IECore::CompoundData *shaderParameters, const s
 	}
 }
 
-IECoreScene::CameraPtr lightToCamera( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+IECoreScene::CameraPtr lightToCamera( const IECore::CompoundData *shaderParameters, Camera::FilmFit filmFit, const std::string &metadataTarget )
 {
 	IECoreScene::CameraPtr result = new IECoreScene::Camera();
 	const char *type = lightType( shaderParameters, metadataTarget );
 
-
-	float screenWindowScale = 1.0f;
 	if( type && !strcmp( type, "distant" ) )
 	{
 		const float locatorScale = parameter<float>( metadataTarget, shaderParameters, "locatorScaleParameter", 1 );
 
-		result->parameters()["projection"] = new StringData( "orthographic" );
-		result->parameters()["clippingPlanes"] = new V2fData( V2f( -100000, 100000 ) );
-		screenWindowScale = locatorScale;
+		result->setProjection( "orthographic" );
+		result->setClippingPlanes( V2f( -100000, 100000 ) );
+		result->setAperture( V2f( 2.0f * locatorScale ) );
 	}
 	else if( type && !strcmp( type, "spot" ) )
 	{
@@ -227,20 +226,16 @@ IECoreScene::CameraPtr lightToCamera( const IECore::CompoundData *shaderParamete
 		// to make sure that we don't go under 0.01 in near clip to preserve depth range,
 		// and we keep the near clip slightly past the origin of the light so we don't see
 		// the light's color indicator when looking through it in the viewport
-		result->parameters()["clippingPlanes"] = new V2fData( V2f( std::max( focalPointOffset + 0.0001f, 0.01f ), 100000 ) );
-		result->parameters()["projection"] = new StringData( "perspective" );
-		result->parameters()["projection:fov"] = new FloatData( outerAngle );
+		result->setClippingPlanes( V2f( std::max( focalPointOffset + 0.0001f, 0.01f ), 100000 ) );
+		result->setProjection( "perspective" );
+		result->setAperture( V2f( 1.0f ) );
+		result->setFocalLengthFromFieldOfView( outerAngle );
 	}
 	else
 	{
 		return nullptr;
 	}
-
-	// Hardcode resolution to some sort of square by default, interface for selecting resolution
-	// not yet decided, as per John
-	result->parameters()["resolutionOverride"] = new V2iData( V2i( 512, 512 ) );
-	Box2f screenWindow( screenWindowScale * V2f( -1.0f ), screenWindowScale * V2f( 1.0f ) );
-	result->parameters()["screenWindow"] = new Box2fData( screenWindow );
+	result->setFilmFit( filmFit );
 
 	return result;
 }
@@ -256,6 +251,8 @@ LightToCamera::LightToCamera( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
+	addChild( new IntPlug( "filmFit", Plug::In, IECoreScene::Camera::Fit ) );
+
 	// Fast pass-throughs for things we don't modify
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 
@@ -268,11 +265,22 @@ LightToCamera::~LightToCamera()
 {
 }
 
+Gaffer::IntPlug *LightToCamera::filmFitPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *LightToCamera::filmFitPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+
 void LightToCamera::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == inPlug()->attributesPlug() )
+	if( input == inPlug()->attributesPlug() || input == filmFitPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 		outputs.push_back( outPlug()->transformPlug() );
@@ -325,6 +333,7 @@ bool LightToCamera::processesObject() const
 
 void LightToCamera::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	filmFitPlug()->hash( h );
 	inPlug()->attributesPlug()->hash( h );
 }
 
@@ -333,23 +342,19 @@ IECore::ConstObjectPtr LightToCamera::computeProcessedObject( const ScenePath &p
 	const IECore::CompoundData* shaderParameters;
 	std::string metadataTarget;
 	light( inPlug()->attributesPlug()->getValue().get(), shaderParameters, metadataTarget );
-	IECoreScene::ConstCameraPtr camera = nullptr;
+	IECoreScene::CameraPtr camera = nullptr;
 	if( shaderParameters )
 	{
-		camera = lightToCamera( shaderParameters, metadataTarget );
+		camera = lightToCamera( shaderParameters, (Camera::FilmFit)filmFitPlug()->getValue(), metadataTarget );
 	}
 
-	if( camera )
+	if( !camera )
 	{
-		return camera;
+		camera = new IECoreScene::Camera();
+		camera->setProjection( "perspective" );
 	}
-	else
-	{
-		IECoreScene::CameraPtr defaultCamera = new IECoreScene::Camera();
-		defaultCamera->parameters()["projection"] = new StringData( "perspective" );
-		defaultCamera->parameters()["resolutionOverride"] = new V2iData( V2i( 512, 512 ) );
-		return defaultCamera;
-	}
+
+	return camera;
 }
 
 bool LightToCamera::processesTransform() const

@@ -37,6 +37,7 @@
 import imath
 
 import IECore
+import IECoreScene
 
 import GafferScene
 import GafferSceneTest
@@ -74,34 +75,26 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 		lc["filter"].setInput( f["out"] )
 
 		# Test spot to persp cam
-		self.assertEqual(
-			lc["out"].object( "/group/spot1" ).parameters(),
-			IECore.CompoundData( {
-				'projection:fov':IECore.FloatData( 65 ),
-				'clippingPlanes':IECore.V2fData( imath.V2f( 0.01, 100000 ) ),
-				'projection':IECore.StringData( 'perspective' ),
-				'resolutionOverride':IECore.V2iData( imath.V2i( 512, 512 ) ),
-				'screenWindow':IECore.Box2fData( imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
-			} )
-		)
+		spotCam = lc["out"].object( "/group/spot1" )
+		self.assertEqual( spotCam.calculateFieldOfView(), imath.V2f( 65 ) )
+		self.assertEqual( spotCam.getClippingPlanes(), imath.V2f( 0.01, 100000 ) )
+		self.assertEqual( spotCam.getProjection(), 'perspective' )
+		self.assertEqual( spotCam.getFilmFit(), IECoreScene.Camera.FilmFit.Fit )
+		self.assertEqual( spotCam.hasResolution(), False )
 
 		# Test distant to ortho cam
-		self.assertEqual(
-			lc["out"].object( "/group/distant1" ).parameters(),
-			IECore.CompoundData( {
-				'clippingPlanes':IECore.V2fData( imath.V2f( -100000, 100000 ) ),
-				'projection':IECore.StringData( 'orthographic' ),
-				'resolutionOverride':IECore.V2iData( imath.V2i( 512, 512 ) ),
-				'screenWindow':IECore.Box2fData( imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
-			} )
-		)
+		distantCam = lc["out"].object( "/group/distant1" )
+		self.assertEqual( distantCam.getAperture(), imath.V2f( 2, 2 ) )
+		self.assertEqual( distantCam.getClippingPlanes(), imath.V2f( -100000, 100000 ) )
+		self.assertEqual( distantCam.getProjection(), 'orthographic' )
+		self.assertEqual( distantCam.getFilmFit(), IECoreScene.Camera.FilmFit.Fit )
+		self.assertEqual( distantCam.hasResolution(), False )
 
 		# Test light with no corresponding camera ( gets default cam )
 		self.assertEqual(
 			lc["out"].object( "/group/env1" ).parameters(),
 			IECore.CompoundData({
 				'projection':IECore.StringData( 'perspective' ),
-				'resolutionOverride':IECore.V2iData( imath.V2i( 512, 512 ) )
 			} )
 		)
 
