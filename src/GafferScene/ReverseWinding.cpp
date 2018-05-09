@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,40 +34,48 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "ObjectProcessorBinding.h"
-
-#include "GafferScene/DeleteCurves.h"
-#include "GafferScene/DeleteFaces.h"
-#include "GafferScene/DeletePoints.h"
-#include "GafferScene/LightToCamera.h"
-#include "GafferScene/MeshTangents.h"
-#include "GafferScene/MeshToPoints.h"
-#include "GafferScene/MeshType.h"
-#include "GafferScene/Parameters.h"
-#include "GafferScene/PointsType.h"
 #include "GafferScene/ReverseWinding.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "IECoreScene/MeshAlgo.h"
+#include "IECoreScene/MeshPrimitive.h"
 
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
+using namespace IECore;
+using namespace IECoreScene;
 using namespace GafferScene;
 
-void GafferSceneModule::bindObjectProcessor()
+IE_CORE_DEFINERUNTIMETYPED( ReverseWinding );
+
+ReverseWinding::ReverseWinding( const std::string &name )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
+	// Fast pass-throughs for things we don't modify
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
+}
 
-	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
-	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshToPoints>();
-	GafferBindings::DependencyNodeClass<MeshType>();
-	GafferBindings::DependencyNodeClass<GafferScene::LightToCamera>();
-	GafferBindings::DependencyNodeClass<Parameters>();
-	GafferBindings::DependencyNodeClass<ReverseWinding>();
+ReverseWinding::~ReverseWinding()
+{
+}
 
+bool ReverseWinding::processesObject() const
+{
+	return true;
+}
+
+void ReverseWinding::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
+IECore::ConstObjectPtr ReverseWinding::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+{
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	if( !mesh )
+	{
+		return inputObject;
+	}
+
+	MeshPrimitivePtr meshCopy = mesh->copy();
+	MeshAlgo::reverseWinding( meshCopy.get() );
+	return meshCopy;
 }

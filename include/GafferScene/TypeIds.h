@@ -79,7 +79,7 @@ enum TypeId
 	OpenGLAttributesTypeId = 110534,
 	SceneWriterTypeId = 110535,
 	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537, // Obsolete - available for reuse
+	ReverseWindingTypeId = 110537,
 	LightTypeId = 110538,
 	StandardAttributesTypeId = 110539,
 	OpenGLShaderTypeId = 110540,

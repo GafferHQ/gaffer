@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,40 +34,34 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_REVERSEWINDING_H
+#define GAFFERSCENE_REVERSEWINDING_H
 
-#include "ObjectProcessorBinding.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferScene/DeleteCurves.h"
-#include "GafferScene/DeleteFaces.h"
-#include "GafferScene/DeletePoints.h"
-#include "GafferScene/LightToCamera.h"
-#include "GafferScene/MeshTangents.h"
-#include "GafferScene/MeshToPoints.h"
-#include "GafferScene/MeshType.h"
-#include "GafferScene/Parameters.h"
-#include "GafferScene/PointsType.h"
-#include "GafferScene/ReverseWinding.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindObjectProcessor()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
-	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshToPoints>();
-	GafferBindings::DependencyNodeClass<MeshType>();
-	GafferBindings::DependencyNodeClass<GafferScene::LightToCamera>();
-	GafferBindings::DependencyNodeClass<Parameters>();
-	GafferBindings::DependencyNodeClass<ReverseWinding>();
+class GAFFERSCENE_API ReverseWinding : public SceneElementProcessor
+{
 
-}
+	public :
+
+		ReverseWinding( const std::string &name=defaultName<ReverseWinding>() );
+		~ReverseWinding() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ReverseWinding, ReverseWindingTypeId, SceneElementProcessor );
+
+	protected :
+
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+
+};
+
+IE_CORE_DECLAREPTR( ReverseWinding )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_REVERSEWINDING_H
