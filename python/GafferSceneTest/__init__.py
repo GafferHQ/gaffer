@@ -125,6 +125,7 @@ from CapsuleTest import CapsuleTest
 from EncapsulateTest import EncapsulateTest
 from FilterPlugTest import FilterPlugTest
 from ReverseWindingTest import ReverseWindingTest
+from MeshDistortionTest import MeshDistortionTest
 
 from IECoreGLPreviewTest import *
 
