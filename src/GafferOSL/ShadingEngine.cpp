@@ -58,6 +58,7 @@
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/split.hpp"
+#include "boost/container/flat_map.hpp"
 #include "boost/unordered_map.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
@@ -218,7 +219,6 @@ class RenderState
 				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get() );
 				if( userData.dataView.data )
 				{
-					userData.name = it->first;
 					if( userData.dataView.type.arraylen )
 					{
 						// we unarray the TypeDesc so we can use it directly with
@@ -226,11 +226,9 @@ class RenderState
 						userData.dataView.type.unarray();
 						userData.array = true;
 					}
-					m_userData.push_back( userData );
+					m_userData.insert( make_pair( ustring( it->first.c_str() ), userData ) );
 				}
 			}
-
-			sort( m_userData.begin(), m_userData.end() );
 
 			for( ShadingEngine::Transforms::const_iterator it = transforms.begin(); it != transforms.end(); it++ )
 			{
@@ -256,45 +254,40 @@ class RenderState
 				}
 			}
 
-			vector<UserData>::const_iterator it = lower_bound(
-				m_userData.begin(),
-				m_userData.end(),
-				name
-			);
-
-			if( it == m_userData.end() || it->name != name )
+			auto it = m_userData.find( name );
+			if( it == m_userData.end() )
 			{
 				return false;
 			}
 
-			const char *src = static_cast<const char *>( it->dataView.data );
-			if( it->array )
+			const char *src = static_cast<const char *>( it->second.dataView.data );
+			if( it->second.array )
 			{
-				src += pointIndex * it->dataView.type.elementsize();
+				src += pointIndex * it->second.dataView.type.elementsize();
 			}
 
-			if( ShadingSystem::convert_value( value, type, src, it->dataView.type ) )
+			if( ShadingSystem::convert_value( value, type, src, it->second.dataView.type ) )
 			{
 				// OSL converted successfully
 				return true;
 			}
-			else if( it->dataView.type.basetype == type.basetype && it->dataView.type.aggregate == type.arraylen )
+			else if( it->second.dataView.type.basetype == type.basetype && it->second.dataView.type.aggregate == type.arraylen )
 			{
 				// Convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
 				// Note that the aggregate enum value is the number of elements.
 				memcpy( value, src, type.size() );
 				return true;
 			}
-			else if( it->dataView.type.aggregate == TypeDesc::VEC2 )
+			else if( it->second.dataView.type.aggregate == TypeDesc::VEC2 )
 			{
 				// OSL doesn't know how to convert these, but it knows how to convert
 				// float[2], which has an identical layout.
-				TypeDesc t = it->dataView.type;
+				TypeDesc t = it->second.dataView.type;
 				t.aggregate = TypeDesc::SCALAR;
 				t.arraylen = 2;
 				return ShadingSystem::convert_value( value, type, src, t );
 			}
-			else if ( it->dataView.type.basetype == TypeDesc::DOUBLE && it->dataView.type.aggregate == TypeDesc::SCALAR )
+			else if( it->second.dataView.type.basetype == TypeDesc::DOUBLE && it->second.dataView.type.aggregate == TypeDesc::SCALAR )
 			{
 				double doubleValue = *reinterpret_cast<const double*>( src );
 				if (type == TypeDesc::FLOAT)
@@ -348,22 +341,11 @@ class RenderState
 			{
 			}
 
-			ustring name;
 			IECoreImage::OpenImageIOAlgo::DataView dataView;
 			bool array;
-
-			bool operator < ( const UserData &rhs ) const
-			{
-				return name.c_str() < rhs.name.c_str();
-			}
-
-			bool operator < ( const ustring &rhs ) const
-			{
-				return name.c_str() < rhs.c_str();
-			}
 		};
 
-		vector<UserData> m_userData; // sorted on name for quick lookups
+		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
 
 };
 
@@ -625,24 +607,13 @@ class ShadingResults
 			{
 			}
 
-			ustring name;
 			TypeDesc type;
 			void *basePointer;
-
-			bool operator < ( const DebugResult &rhs ) const
-			{
-				return name.c_str() < rhs.name.c_str();
-			}
-
-			bool operator < ( const ustring &rhs ) const
-			{
-				return name.c_str() < rhs.c_str();
-			}
 		};
 
-		typedef vector<DebugResult> DebugResultsContainer;
+		typedef container::flat_map<ustring, DebugResult, OIIO::ustringPtrIsLess> DebugResultsMap;
 
-		void addResult( size_t pointIndex, const ClosureColor *result, DebugResultsContainer& threadCache )
+		void addResult( size_t pointIndex, const ClosureColor *result, DebugResultsMap &threadCache )
 		{
 			addResult( pointIndex, result, Color3f( 1.0f ), threadCache );
 		}
@@ -654,7 +625,7 @@ class ShadingResults
 
 	private :
 
-		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight, DebugResultsContainer& threadCache )
+		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight, DebugResultsMap &threadCache )
 		{
 			if( closure )
 			{
@@ -687,81 +658,52 @@ class ShadingResults
 			(*m_ci)[pointIndex] += weight;
 		}
 
-
-		vector<DebugResult>::iterator search(ustring name, bool& match)
+		DebugResult acquireDebugResult( const DebugParameters *parameters, DebugResultsMap &threadCache )
 		{
-			vector<DebugResult>::iterator it = lower_bound(
-				m_debugResults.begin(),
-				m_debugResults.end(),
-				name
-			);
-
-			if (it != m_debugResults.end() && it->name == name)
+			// Try the per-thread cache first.
+			auto it = threadCache.find( parameters->name );
+			if( it != threadCache.end() )
 			{
-				match = true;
+				return it->second;
 			}
 
-			return it;
-		}
-
-		DebugResult findDebugResult(const DebugParameters *parameters, DebugResultsContainer& threadCache)
-		{
-			vector<DebugResult>::iterator threadCacheIt = lower_bound(
-				threadCache.begin(),
-				threadCache.end(),
-				parameters->name
-			);
-
-			if (threadCacheIt != threadCache.end() && threadCacheIt->name == parameters->name)
-			{
-				return *threadCacheIt;
-			}
-
-			// take a reader lock and attempt to find the DebugResults object
+			// If it's not there, then we need to look in `m_debugResults`,
+			// which requires locking. Start optimistically with a read lock.
 			tbb::spin_rw_mutex::scoped_lock rwScopedLock( m_resultsMutex, /* write = */ false  );
 
-			bool match = false;
-			vector<DebugResult>::iterator it = search( parameters->name , match);
-
-			if( match )
+			it = m_debugResults.find( parameters->name );
+			if( it == m_debugResults.end() )
 			{
-				threadCache.insert( threadCacheIt, *it);
-				// we've found the object and our reader lock will be released here
-				return *it;
+				// Need to insert the result, so need a write lock.
+				rwScopedLock.upgrade_to_writer();
+				// But another thread may have got the write lock before us
+				// and done the work itself, so check again just in case.
+				it = m_debugResults.find( parameters->name );
+				if( it == m_debugResults.end() )
+				{
+					// Create the result.
+					DebugResult result;
+					result.type = parameters->type != ustring() ? TypeDesc( parameters->type.c_str() ) : TypeDesc::TypeColor;
+					result.type.arraylen = m_ci->size();
+					DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
+					if( !data )
+					{
+						throw IECore::Exception( "Unsupported type specified in debug() closure." );
+					}
+					result.type.unarray(); // so we can use convert_value
+
+					m_results->writable()[parameters->name.c_str()] = data;
+					it = m_debugResults.insert( make_pair( parameters->name, result ) ).first;
+				}
 			}
 
-			// lets take a writer lock and crate the output data array
-			rwScopedLock.upgrade_to_writer();
-
-			match = false;
-			it = search( parameters->name, match );
-
-			if( match )
-			{
-				return *it;
-			}
-
-			DebugResult result;
-			result.name = parameters->name;
-			result.type = parameters->type != ustring() ? TypeDesc( parameters->type.c_str() ) : TypeDesc::TypeColor;
-			result.type.arraylen = m_ci->size();
-			DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
-			if( !data )
-			{
-				throw IECore::Exception( "Unsupported type specified in debug() closure." );
-			}
-			result.type.unarray(); // so we can use convert_value
-
-			m_results->writable()[result.name.c_str()] = data;
-			m_debugResults.insert( it, result );
-			threadCache.insert( threadCacheIt, result);
-
-			return result;
+			// Cache so the next lookup on this thread doesn't need a lock.
+			return threadCache.insert( *it ).first->second;
 		}
 
-		void addDebug( size_t pointIndex, const DebugParameters *parameters, const Color3f &weight, DebugResultsContainer& threadCache )
+		void addDebug( size_t pointIndex, const DebugParameters *parameters, const Color3f &weight, DebugResultsMap &threadCache )
 		{
-			DebugResult debugResult = findDebugResult( parameters, threadCache );
+			DebugResult debugResult = acquireDebugResult( parameters, threadCache );
 
 			if ( parameters->type == gMatrixType )
 			{
@@ -797,9 +739,9 @@ class ShadingResults
 
 		CompoundDataPtr m_results;
 		vector<Color3f> *m_ci;
-		DebugResultsContainer m_debugResults; // sorted on name for quick lookups
-
+		DebugResultsMap m_debugResults;
 		tbb::spin_rw_mutex m_resultsMutex;
+
 };
 
 } // namespace
@@ -1125,7 +1067,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	struct ThreadContext
 	{
 		ShadingContext *shadingContext;
-		ShadingResults::DebugResultsContainer results;
+		ShadingResults::DebugResultsMap results;
 	};
 
 	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
