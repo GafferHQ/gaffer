@@ -82,7 +82,7 @@ using namespace GafferOSL;
     { TypeDesc::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
 
 //////////////////////////////////////////////////////////////////////////
-// Utility for converting IECore::Data types to OSL::TypeDesc types.
+// Conversion utilities
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -192,6 +192,49 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 	return nullptr;
 }
 
+// Equivalent to `OSL::ShadingSystem:convert_value()`, but with support for
+// additional conversions.
+bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcType )
+{
+	if( srcType.aggregate == TypeDesc::VEC2 )
+	{
+		// OSL doesn't know how to convert these, but it knows how to convert
+		// float[2], which has an identical layout.
+		srcType.aggregate = TypeDesc::SCALAR;
+		srcType.arraylen = 2;
+	}
+
+	if( ShadingSystem::convert_value( dst, dstType, src, srcType ) )
+	{
+		// OSL converted successfully
+		return true;
+	}
+	else if( srcType.basetype == dstType.basetype && srcType.aggregate == dstType.arraylen )
+	{
+		// Convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
+		// Note that the aggregate enum value is the number of elements.
+		memcpy( dst, src, dstType.size() );
+		return true;
+	}
+	else if( srcType.basetype == TypeDesc::DOUBLE && srcType.aggregate == TypeDesc::SCALAR )
+	{
+		double doubleValue = *reinterpret_cast<const double *>( src );
+		if( dstType == TypeDesc::FLOAT )
+		{
+			*((float*)dst) = static_cast<float>( doubleValue );
+			return true;
+		}
+		else if( dstType == TypeDesc::INT )
+		{
+			*((int*)dst) = static_cast<int>( doubleValue );
+			return true;
+		}
+		return false;
+	}
+
+	return false;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -222,7 +265,7 @@ class RenderState
 					if( userData.dataView.type.arraylen )
 					{
 						// we unarray the TypeDesc so we can use it directly with
-						// convert_value() in get_userdata().
+						// convertValue() in get_userdata().
 						userData.dataView.type.unarray();
 						userData.array = true;
 					}
@@ -266,45 +309,7 @@ class RenderState
 				src += pointIndex * it->second.dataView.type.elementsize();
 			}
 
-			if( ShadingSystem::convert_value( value, type, src, it->second.dataView.type ) )
-			{
-				// OSL converted successfully
-				return true;
-			}
-			else if( it->second.dataView.type.basetype == type.basetype && it->second.dataView.type.aggregate == type.arraylen )
-			{
-				// Convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
-				// Note that the aggregate enum value is the number of elements.
-				memcpy( value, src, type.size() );
-				return true;
-			}
-			else if( it->second.dataView.type.aggregate == TypeDesc::VEC2 )
-			{
-				// OSL doesn't know how to convert these, but it knows how to convert
-				// float[2], which has an identical layout.
-				TypeDesc t = it->second.dataView.type;
-				t.aggregate = TypeDesc::SCALAR;
-				t.arraylen = 2;
-				return ShadingSystem::convert_value( value, type, src, t );
-			}
-			else if( it->second.dataView.type.basetype == TypeDesc::DOUBLE && it->second.dataView.type.aggregate == TypeDesc::SCALAR )
-			{
-				double doubleValue = *reinterpret_cast<const double*>( src );
-				if (type == TypeDesc::FLOAT)
-				{
-					*((float*)value) = static_cast<float>( doubleValue );
-					return true;
-				}
-				else if (type == TypeDesc::INT)
-				{
-					*((int*)value) = static_cast<int>( doubleValue );
-					return true;
-				}
-				return false;
-			}
-			/// \todo Try to get these additional conversions accepted into OSL itself
-
-			return false;
+			return convertValue( value, type, src,  it->second.dataView.type );
 		}
 
 		bool matrixToObject( OIIO::ustring name, Imath::M44f &result ) const
@@ -727,7 +732,7 @@ class ShadingResults
 
 				char *dst = static_cast<char *>( debugResult.basePointer );
 				dst += pointIndex * debugResult.type.elementsize();
-				ShadingSystem::convert_value(
+				convertValue(
 					dst,
 					debugResult.type,
 					&value,
