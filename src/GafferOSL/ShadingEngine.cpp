@@ -166,6 +166,16 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 					return vectorDataFromTypeDesc<StringVectorData>( type, basePointer );
 			}
 		}
+		else if( type.aggregate == TypeDesc::VEC2 )
+		{
+			switch( type.basetype )
+			{
+				case TypeDesc::INT :
+					return geometricVectorDataFromTypeDesc<V2iVectorData>( type, basePointer );
+				case TypeDesc::FLOAT :
+					return geometricVectorDataFromTypeDesc<V2fVectorData>( type, basePointer );
+			}
+		}
 		else if( type.aggregate == TypeDesc::VEC3 )
 		{
 			switch( type.basetype )
@@ -202,6 +212,13 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 		// float[2], which has an identical layout.
 		srcType.aggregate = TypeDesc::SCALAR;
 		srcType.arraylen = 2;
+	}
+
+	if( dstType.aggregate == TypeDesc::VEC2 && srcType.aggregate == TypeDesc::VEC3 )
+	{
+		// OSL doesn't know how to convert VEC2->VEC3, so we encourage it
+		// by truncating srcType.
+		srcType.aggregate = TypeDesc::VEC2;
 	}
 
 	if( ShadingSystem::convert_value( dst, dstType, src, srcType ) )
@@ -245,8 +262,6 @@ namespace
 {
 
 OIIO::ustring gIndex( "shading:index" );
-OIIO::ustring gMatrixType( "matrix" );
-OIIO::ustring gStringType( "string" );
 
 class RenderState
 {
@@ -587,6 +602,13 @@ OSL::ShadingSystem *shadingSystem()
 namespace
 {
 
+OIIO::ustring g_matrixType( "matrix" );
+OIIO::ustring g_stringType( "string" );
+OIIO::ustring g_point2Type( "point2" );
+OIIO::ustring g_vector2Type( "vector2" );
+OIIO::ustring g_normal2Type( "normal2" );
+OIIO::ustring g_uvType( "uv" );
+
 class ShadingResults
 {
 
@@ -688,13 +710,19 @@ class ShadingResults
 				{
 					// Create the result.
 					DebugResult result;
-					result.type = parameters->type != ustring() ? TypeDesc( parameters->type.c_str() ) : TypeDesc::TypeColor;
+					result.type = typeDescFromTypeName( parameters->type );
 					result.type.arraylen = m_ci->size();
+
 					DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
 					if( !data )
 					{
 						throw IECore::Exception( "Unsupported type specified in debug() closure." );
 					}
+					if( parameters->type == g_uvType )
+					{
+						static_cast<V2fVectorData *>( data.get() )->setInterpretation( GeometricData::UV );
+					}
+
 					result.type.unarray(); // so we can use convert_value
 
 					m_results->writable()[parameters->name.c_str()] = data;
@@ -710,7 +738,7 @@ class ShadingResults
 		{
 			DebugResult debugResult = acquireDebugResult( parameters, threadCache );
 
-			if ( parameters->type == gMatrixType )
+			if( parameters->type == g_matrixType )
 			{
 				M44f value = parameters->matrixValue;
 
@@ -720,7 +748,7 @@ class ShadingResults
 					dst, debugResult.type, &value, TypeDesc::TypeMatrix44
 				);
 			}
-			else if ( parameters->type == gStringType )
+			else if( parameters->type == g_stringType )
 			{
 				std::string *dst = static_cast<std::string*>( debugResult.basePointer );
 				dst += pointIndex;
@@ -741,6 +769,22 @@ class ShadingResults
 			}
 		}
 
+		OIIO::TypeDesc typeDescFromTypeName( ustring type )
+		{
+			if( type == g_point2Type )
+			{
+				return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC2, TypeDesc::POINT );
+			}
+			else if( type == g_vector2Type || type == g_uvType )
+			{
+				return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC2, TypeDesc::VECTOR );
+			}
+			else if( type == g_normal2Type )
+			{
+				return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC2, TypeDesc::NORMAL );
+			}
+			return type != ustring() ? TypeDesc( type.c_str() ) : TypeDesc::TypeColor;
+		}
 
 		CompoundDataPtr m_results;
 		vector<Color3f> *m_ci;
