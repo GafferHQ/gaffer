@@ -592,7 +592,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		pv = outputPlane["name"]
 		self.assertEqual( pv.data, IECore.StringVectorData( ["even", "odd", "even", "odd"] ) )
-	
+
 	def testShaderSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -604,9 +604,9 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
-		
+
 		self.assertEqual( s2['object']['shader'].getInput(), s2['shader']['out'] )
-		
+
 		# same network as above, but reverse the order of node construction
 
 		s3 = Gaffer.ScriptNode()
@@ -618,8 +618,42 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s4 = Gaffer.ScriptNode()
 		s4.execute( s3.serialise() )
-		
+
 		self.assertEqual( s4['object']['shader'].getInput(), s4['shader']['out'] )
+
+	def testWriteUV( self ) :
+
+		plane = GafferScene.Plane()
+
+		inPoint = GafferOSL.OSLShader()
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
+
+		outUV = GafferOSL.OSLShader()
+		outUV.loadShader( "ObjectProcessing/OutUV" )
+		outUV["parameters"]["value"].setInput( inPoint["out"]["value"] )
+
+		outObject = GafferOSL.OSLShader()
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outUV["out"]["primitiveVariable"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["filter"].setInput( filter["out"] )
+		oslObject["shader"].setInput( outObject["out"] )
+
+		mesh = oslObject["out"].object( "/plane" )
+		self.assertEqual( mesh["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex )
+		self.assertEqual(
+			mesh["uv"].data,
+			IECore.V2fVectorData(
+				[ imath.V2f( x[0], x[1] ) for x in mesh["P"].data ],
+				IECore.GeometricData.Interpretation.UV
+			)
+		)
+		self.assertEqual( mesh["uv"].indices, None )
 
 if __name__ == "__main__":
 	unittest.main()

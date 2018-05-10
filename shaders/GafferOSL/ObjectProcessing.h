@@ -133,4 +133,9 @@ closure color outString( string name, string value )
 	return debug( name, "type", "string", "stringValue", value );
 }
 
+closure color outUV( string name, point value )
+{
+	return debug( name, "type", "uv", "value", color( value ) );
+}
+
 #endif // GAFFEROSL_OBJECTPROCESSING_H
