@@ -216,7 +216,7 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 
 	if( dstType.aggregate == TypeDesc::VEC2 && srcType.aggregate == TypeDesc::VEC3 )
 	{
-		// OSL doesn't know how to convert VEC2->VEC3, so we encourage it
+		// OSL doesn't know how to convert VEC3->VEC2, so we encourage it
 		// by truncating srcType.
 		srcType.aggregate = TypeDesc::VEC2;
 	}
