@@ -290,10 +290,18 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( isinstance( shading["v"], IECore.V3fVectorData ) )
 		self.assertTrue( isinstance( shading["n"], IECore.V3fVectorData ) )
 		self.assertTrue( isinstance( shading["c"], IECore.Color3fVectorData ) )
+		self.assertTrue( isinstance( shading["p2"], IECore.V2fVectorData ) )
+		self.assertTrue( isinstance( shading["v2"], IECore.V2fVectorData ) )
+		self.assertTrue( isinstance( shading["n2"], IECore.V2fVectorData ) )
+		self.assertTrue( isinstance( shading["uv"], IECore.V2fVectorData ) )
 
 		self.assertEqual( shading["p"].getInterpretation(), IECore.GeometricData.Interpretation.Point )
 		self.assertEqual( shading["v"].getInterpretation(), IECore.GeometricData.Interpretation.Vector )
 		self.assertEqual( shading["n"].getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+		self.assertEqual( shading["p2"].getInterpretation(), IECore.GeometricData.Interpretation.Point )
+		self.assertEqual( shading["v2"].getInterpretation(), IECore.GeometricData.Interpretation.Vector )
+		self.assertEqual( shading["n2"].getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+		self.assertEqual( shading["uv"].getInterpretation(), IECore.GeometricData.Interpretation.UV )
 
 		for i in range( 0, len( points["P"] ) ) :
 			self.assertEqual( shading["f"][i], points["u"][i] )
@@ -303,6 +311,11 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				self.assertEqual( shading[n][i][0], points["P"][i][0] )
 				self.assertEqual( shading[n][i][1], points["P"][i][1] )
 				self.assertEqual( shading[n][i][2], points["P"][i][2] )
+
+		for n in ( "p2", "v2", "n2", "uv" ) :
+			for i in range( 0, len( points["P"] ) ) :
+				self.assertEqual( shading[n][i][0], points["P"][i][0] )
+				self.assertEqual( shading[n][i][1], points["P"][i][1] )
 
 	def testDebugClosureWithInternalValue( self ) :
 
