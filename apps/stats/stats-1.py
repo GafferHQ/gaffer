@@ -385,16 +385,20 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
 			return
 
+		def computeScene() :
+
+			with Gaffer.Context( script.context() ) as context :
+				for frame in self.__frames( script, args ) :
+					context.setFrame( frame )
+					GafferSceneTest.traverseScene( scene )
+
 		if args["preCache"].value :
-			GafferSceneTest.traverseScene( scene )
+			computeScene()
 
 		memory = _Memory.maxRSS()
 		with _Timer() as sceneTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
-				with Gaffer.Context( script.context() ) as context :
-					for frame in self.__frames( script, args ) :
-						context.setFrame( frame )
-						GafferSceneTest.traverseScene( scene )
+				computeScene()
 
 		self.__timers["Scene generation"] = sceneTimer
 		self.__memory["Scene generation"] = _Memory.maxRSS() - memory
@@ -416,16 +420,20 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
 			return
 
+		def computeImage() :
+
+			with Gaffer.Context( script.context() ) as context :
+				for frame in self.__frames( script, args ) :
+					context.setFrame( frame )
+					GafferImageTest.processTiles( image )
+
 		if args["preCache"].value :
-			GafferImageTest.processTiles( image )
+			computeImage()
 
 		memory = _Memory.maxRSS()
 		with _Timer() as imageTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
-				with Gaffer.Context( script.context() ) as context :
-					for frame in self.__frames( script, args ) :
-						context.setFrame( frame )
-						GafferImageTest.processTiles( image )
+				computeImage()
 
 		self.__timers["Image generation"] = imageTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
