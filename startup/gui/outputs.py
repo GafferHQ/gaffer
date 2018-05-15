@@ -205,7 +205,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"indirect_glossy",
 		"depth",
 		"normal",
-		"uv"
+		"uv",
+		"pixel_time"
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
