@@ -119,6 +119,12 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.StringVectorParameter(
+					name = "sets",
+					description = "The names of scene sets to be examined.",
+					defaultValue = IECore.StringVectorData(),
+				),
+
 				IECore.StringParameter(
 					name = "image",
 					description = "The name of an ImageNode or ImagePlug to examine.",
@@ -390,7 +396,10 @@ class stats( Gaffer.Application ) :
 			with Gaffer.Context( script.context() ) as context :
 				for frame in self.__frames( script, args ) :
 					context.setFrame( frame )
-					GafferSceneTest.traverseScene( scene )
+					if args["sets"] :
+						GafferScene.SceneAlgo.sets( scene, args["sets"] )
+					else :
+						GafferSceneTest.traverseScene( scene )
 
 		if args["preCache"].value :
 			computeScene()
