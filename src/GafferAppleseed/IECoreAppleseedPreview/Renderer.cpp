@@ -2367,6 +2367,7 @@ namespace
 
 InternedString g_cameraOptionName( "camera" );
 InternedString g_frameOptionName( "frame" );
+InternedString g_lightingEngine( "as:cfg:lighting_engine" );
 InternedString g_environmentEDFName( "as:environment_edf" );
 InternedString g_environmentEDFBackground( "as:environment_edf_background" );
 InternedString g_logLevelOptionName( "as:log:level" );
@@ -2474,6 +2475,32 @@ class AppleseedRenderer final : public AppleseedRendererBase
 							m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), overrideMode );
 						}
 					}
+					return;
+				}
+
+				if( name == g_lightingEngine )
+				{
+					if( value == nullptr )
+					{
+						// Remove lighting engine.
+						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( "shading_engine.override_shading" );
+						m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( "shading_engine.override_shading" );
+					}
+					else if( const StringData *d = reportedCast<const StringData>( value, "option", name ) )
+					{
+						string lightingEngine = d->readable();
+						string interactiveLightingEngine = lightingEngine;
+
+						if( lightingEngine == "sppm" && isInteractiveRender() )
+						{
+							msg( Msg::Warning, "AppleseedRenderer::option", "SPPM cannot be used with interactive renders. Path tracing will be used." );
+							interactiveLightingEngine = "pt";
+						}
+
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), lightingEngine );
+						m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), interactiveLightingEngine );
+					}
+
 					return;
 				}
 
