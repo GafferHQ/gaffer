@@ -2297,10 +2297,6 @@ void AppleseedRendererBase::createProject()
 	asf::auto_release_ptr<asr::Frame> frame( asr::FrameFactory::create( "beauty", asr::ParamArray().insert( "resolution", "640 480" ) ) );
 	m_project->set_frame( frame );
 
-	// 16 bits float (half) is the default pixel format in appleseed.
-	// Force the pixel format to float to avoid half -> float conversions in the display driver.
-	m_project->get_frame()->get_parameters().insert( "pixel_format", "float" );
-
 	// Create the scene
 	asf::auto_release_ptr<asr::Scene> scene = asr::SceneFactory::create();
 	m_project->set_scene( scene );
