@@ -83,6 +83,12 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:cfg:sppm:max_photons_per_estimate", new IECore::IntData( 100 ), "sppmMaxPhotons", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:sppm:alpha", new IECore::FloatData( 0.7f ), "sppmAlpha", Gaffer::Plug::Default, false );
 
+	// denoiser
+	options->addOptionalMember( "as:frame:denoiser", new IECore::StringData( "off" ), "denoiserMode", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:frame:skip_denoised", new IECore::BoolData( true ), "denoiserSkipPixels", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:frame:random_pixel_order", new IECore::BoolData( true ), "denoiserRandomPixelOrder", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:frame:denoise_scales", new IECore::IntData( 3 ), "denoiserScales", Gaffer::Plug::Default, false );
+
 	// system parameters
 	options->addOptionalMember( "as:searchpath", new IECore::StringData( "" ), "searchPath", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:rendering_threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );

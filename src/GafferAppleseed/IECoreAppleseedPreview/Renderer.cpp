@@ -2592,6 +2592,29 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				return;
 			}
 
+			// appleseed frame settings.
+			if( boost::starts_with( name.c_str(), "as:frame:" ) )
+			{
+				// remove the option prefix.
+				string optName( name.string(), 9, string::npos );
+
+				asr::Frame* frame = m_project->get_frame();
+
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+
+				if( dataValue == nullptr )
+				{
+					frame->get_parameters().remove_path( optName.c_str() );
+				}
+				else
+				{
+					string valueStr = ParameterAlgo::dataToString( dataValue );
+					frame->get_parameters().insert( optName.c_str(), valueStr.c_str() );
+				}
+
+				return;
+			}
+
 			// other appleseed options.
 			if( boost::starts_with( name.c_str(), "as:" ) )
 			{
