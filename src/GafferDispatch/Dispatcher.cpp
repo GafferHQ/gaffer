@@ -64,6 +64,7 @@ static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
+Dispatcher::DispatchSignal Dispatcher::g_dispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 std::string Dispatcher::g_defaultDispatcherType = "";
 
@@ -177,6 +178,11 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 Dispatcher::PreDispatchSignal &Dispatcher::preDispatchSignal()
 {
 	return g_preDispatchSignal;
+}
+
+Dispatcher::DispatchSignal &Dispatcher::dispatchSignal()
+{
+	return g_dispatchSignal;
 }
 
 Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
@@ -668,6 +674,15 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	if ( signalGuard.cancelledByPreDispatch() )
 	{
 		return;
+	}
+
+	try
+	{
+		dispatchSignal()( this, taskNodes );
+	}
+	catch( const std::exception& e )
+	{
+		IECore::msg( IECore::Msg::Error, "dispatchSignal exception:", e.what() );
 	}
 
 	std::vector<FrameList::Frame> frames;

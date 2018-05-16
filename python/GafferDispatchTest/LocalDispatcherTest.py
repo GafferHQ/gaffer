@@ -317,6 +317,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		preCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
+		dispatchCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
+		self.assertEqual( len( dispatchCs ), 0 )
 		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
@@ -332,6 +334,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.failUnless( preCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( preCs[0][1], [ s["n1"] ] )
 
+		self.assertEqual( len( dispatchCs ), 1 )
+		self.failUnless( dispatchCs[0][0].isSame( dispatcher ) )
+		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
+
 		self.assertEqual( len( postCs ), 1 )
 		self.failUnless( postCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( postCs[0][1], [ s["n1"] ] )
@@ -340,6 +346,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		preCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
+		dispatchCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.dispatchSignal() )
+		self.assertEqual( len( dispatchCs ), 0 )
 		postCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
@@ -354,6 +362,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# the dispatching started and finished
 		self.assertEqual( len( preCs ), 1 )
+		self.assertEqual( len( dispatchCs ), 1 )
 		self.assertEqual( len( postCs ), 1 )
 
 		# but the execution hasn't finished yet
@@ -370,6 +379,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		preCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
+		dispatchCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.dispatchSignal() )
+		self.assertEqual( len( dispatchCs ), 0 )
 		postCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
@@ -412,6 +423,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# the dispatching started and finished
 		self.assertEqual( len( preCs ), 1 )
+		self.assertEqual( len( dispatchCs ), 1 )
 		self.assertEqual( len( postCs ), 1 )
 
 		# all the foreground execution has finished

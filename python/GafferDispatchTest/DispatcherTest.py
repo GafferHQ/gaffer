@@ -170,6 +170,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		preCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
+		dispatchCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		self.assertEqual( len( dispatchCs ), 0 )
 		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
@@ -182,6 +184,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( preCs ), 1 )
 		self.failUnless( preCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( preCs[0][1], [ s["n1"] ] )
+
+		self.assertEqual( len( dispatchCs ), 1 )
+		self.failUnless( dispatchCs[0][0].isSame( dispatcher ) )
+		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
 		self.failUnless( postCs[0][0].isSame( dispatcher ) )
@@ -196,7 +202,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			return False
 
-		connection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
+		preConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
+		connection = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
@@ -205,14 +212,17 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# never run
 		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( connection ), 0 )
 
 		# runs the first time
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( connection ), 1 )
 
 		# never runs again
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( connection ), 1 )
 
 	def testPlugs( self ) :
 
