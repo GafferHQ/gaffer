@@ -277,5 +277,19 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		ss = s.serialise()
 		self.assertFalse( "out" in ss )
 
+	def testAlembic( self ) :
+
+		p = GafferScene.Plane()
+
+		w = GafferScene.SceneWriter()
+		w["in"].setInput( p["out"] )
+		w["fileName"].setValue( self.temporaryDirectory() + "/test.abc" )
+		w["task"].execute()
+
+		r = GafferScene.SceneReader()
+		r["fileName"].setInput( w["fileName"] )
+
+		self.assertScenesEqual( p["out"], r["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
