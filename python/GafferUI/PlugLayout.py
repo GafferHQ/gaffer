@@ -88,11 +88,15 @@ class PlugLayout( GafferUI.Widget ) :
 	# We use this when we can't find a ScriptNode to provide the context.
 	__fallbackContext = Gaffer.Context()
 
-	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", **kw ) :
+	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", embedded = False, **kw ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
 
-		self.__layout = _TabLayout( orientation ) if isinstance( parent, Gaffer.Node ) and not rootSection else _CollapsibleLayout( orientation )
+		# embedded indicates that the PlugLayout is embedded in another layout
+		# which affects how the widget is built
+		self.__embedded = embedded
+
+		self.__layout = _TabLayout( orientation, embedded = embedded ) if isinstance( parent, Gaffer.Node ) and not rootSection else _CollapsibleLayout( orientation )
 
 		GafferUI.Widget.__init__( self, self.__layout, **kw )
 
@@ -598,7 +602,9 @@ class _Layout( GafferUI.Widget ) :
 
 class _TabLayout( _Layout ) :
 
-	def __init__( self, orientation, **kw ) :
+	def __init__( self, orientation, embedded = False, **kw ) :
+
+		self.__embedded = embedded
 
 		self.__mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
@@ -607,6 +613,12 @@ class _TabLayout( _Layout ) :
 		with self.__mainColumn :
 			self.__widgetsColumn = GafferUI.ListContainer( self.orientation(), spacing = 4, borderWidth = 4 )
 			self.__tabbedContainer = GafferUI.TabbedContainer()
+			# if the TabLayout is embedded, we want to restrict the maximum width/height depending on the orientation
+			if self.__embedded :
+				if self.orientation() == GafferUI.ListContainer.Orientation.Vertical :
+					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum ) )
+				else :
+					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Expanding ) )
 
 		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
 			Gaffer.WeakMethod( self.__currentTabChanged )
@@ -625,11 +637,16 @@ class _TabLayout( _Layout ) :
 		for name, subsection in section.subsections.items() :
 			tab = existingTabs.get( name )
 			if tab is None :
-				tab = GafferUI.ScrolledContainer( borderWidth = 8 )
-				if self.orientation() == GafferUI.ListContainer.Orientation.Vertical :
-					tab.setHorizontalMode( GafferUI.ScrolledContainer.ScrollMode.Never )
+				# Use scroll bars only when the TabLayout is not embedded
+				if self.__embedded :
+					tab = GafferUI.Frame()
 				else :
-					tab.setVerticalMode( GafferUI.ScrolledContainer.ScrollMode.Never )
+					tab = GafferUI.ScrolledContainer( borderWidth = 8 )
+					if self.orientation() == GafferUI.ListContainer.Orientation.Vertical :
+						tab.setHorizontalMode( GafferUI.ScrolledContainer.ScrollMode.Never )
+					else :
+						tab.setVerticalMode( GafferUI.ScrolledContainer.ScrollMode.Never )
+
 				tab.setChild( _CollapsibleLayout( self.orientation() ) )
 			tab.getChild().update( subsection )
 			updatedTabs[name] = tab
