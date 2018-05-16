@@ -501,7 +501,14 @@ class Catalogue::InternalImage : public ImageNode
 						}
 					);
 
-					m_writer->taskPlug()->execute();
+					try
+					{
+						m_writer->taskPlug()->execute();
+					}
+					catch( const std::exception &e )
+					{
+						IECore::msg( IECore::Msg::Error, "Saving Catalogue image", e.what() );
+					}
 
 					// Schedule execution of wrapUp() on the UI thread,
 					// to make our results visible to the user. Note that

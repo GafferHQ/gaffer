@@ -36,6 +36,7 @@
 
 import os
 import threading
+import stat
 import imath
 
 import IECore
@@ -544,6 +545,32 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
 			self.sendImage( r["out"], c, waitForSave = False )
 			del c
+
+	def testNonWritableDirectory( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Catalogue()
+		s["c"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		os.chmod( self.temporaryDirectory(), stat.S_IREAD )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+
+		originalMessageHandler = IECore.MessageHandler.getDefaultHandler()
+		mh = IECore.CapturingMessageHandler()
+		IECore.MessageHandler.setDefaultHandler( mh )
+
+		try :
+			self.sendImage( r["out"], s["c"] )
+		finally :
+			IECore.MessageHandler.setDefaultHandler( originalMessageHandler )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertIn( "Permission denied", mh.messages[0].message )
+
+		with self.assertRaisesRegexp( RuntimeError, "Could not open file" ) :
+			s["c"]["out"].image()
 
 if __name__ == "__main__":
 	unittest.main()
