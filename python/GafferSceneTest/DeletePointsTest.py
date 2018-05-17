@@ -89,7 +89,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 				#IECore.V3f( 0, 1, 0 ),
 				imath.V3f( 1, 1, 0 )
 				#IECore.V3f( 1, 0, 0 )
-			] ) )
+			], IECore.GeometricData.Interpretation.Point ) )
 
 		self.assertEqual( pointsDeletedObject["r"].data, IECore.FloatVectorData(
 			[
@@ -115,7 +115,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 				imath.V3f( 0, 1, 0 ),
 				#imath.V3f( 1, 1, 0 )
 				imath.V3f( 1, 0, 0 )
-			] ) )
+			], IECore.GeometricData.Interpretation.Point ) )
 
 		self.assertEqual( pointsDeletedObject["r"].data, IECore.FloatVectorData(
 			[
