@@ -315,18 +315,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatcherSignals( self ) :
 
-		class CapturingSlot2( list ) :
-
-			def __init__( self, *signals ) :
-
-				self.__connections = []
-				for s in signals :
-					self.__connections.append( s.connect( Gaffer.WeakMethod( self.__slot ) ) )
-
-			def __slot( self, d, nodes ) :
-				self.append( (d,nodes) )
-
-		preCs = CapturingSlot2( GafferDispatch.Dispatcher.preDispatchSignal() )
+		preCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
 		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
