@@ -575,14 +575,14 @@ class DispatcherSignalGuard
 
 		DispatcherSignalGuard( const Dispatcher* d, const std::vector<TaskNodePtr> &taskNodes ) : m_dispatchSuccessful( false ), m_taskNodes( taskNodes ), m_dispatcher( d )
 		{
-			m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_taskNodes );
+			m_cancelledByPreDispatch = Dispatcher::preDispatchSignal()( m_dispatcher, m_taskNodes );
 		}
 
 		~DispatcherSignalGuard()
 		{
 			try
 			{
-				m_dispatcher->postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+				Dispatcher::postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
 			}
 			catch( const std::exception& e )
 			{
