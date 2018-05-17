@@ -13,6 +13,7 @@ Improvements
 
 - Stats app : Added `-sets` command line argument, to allow scene sets to be computed (#2572).
 - OSLObject : Added support for reading and writing UVs via new InUV and OutUV shaders (#2569).
+- SceneViewUI : Defer camera and light set computation until required (#2567).
 
 Fixes
 -----
@@ -21,6 +22,7 @@ Fixes
 - Catalogue : Fixed crash caused by non-writable directory (#2571).
 - Stats app : Fixed bugs in `-preCache` argument. It was using the wrong context and
   not respecting the `-frames` flag (#2572).
+- WidgetAlgo : Fixed bug when `grab()` with the event loop running (#2575).
 
 0.46.0.0
 ========
