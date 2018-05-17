@@ -510,5 +510,26 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( r["out"].transform( "/group" ), r["transform"].matrix() )
 		self.assertSceneValid( r["out"] )
 
+	def testAlembicThreading( self ) :
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		fileName = self.temporaryDirectory() + "/test.abc"
+
+		root = IECoreScene.SceneInterface.create( fileName, IECore.IndexedIO.OpenMode.Write )
+		root.writeBound( imath.Box3d( mesh.bound() ), 0 )
+		for i in range( 0, 1000 ) :
+			child = root.createChild( str( i ) )
+			child.writeObject( mesh, 0 )
+			child.writeBound( imath.Box3d( mesh.bound() ), 0 )
+
+		del root, child
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( fileName )
+
+		for i in range( 0, 20 ) :
+			sceneReader["refreshCount"].setValue( sceneReader["refreshCount"].getValue() + 1 )
+			GafferSceneTest.traverseScene( sceneReader["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
