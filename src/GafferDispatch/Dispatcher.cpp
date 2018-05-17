@@ -655,8 +655,9 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 	}
 
-	// create the job directory now, so it's available in preDispatchSignal().
 	Context::EditableScope jobScope( Context::current() );
+	// create the job directory now, so it's available in preDispatchSignal().
+	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal()
 	m_jobDirectory = createJobDirectory( Context::current() );
 	jobScope.set( g_jobDirectoryContextEntry, m_jobDirectory );
 
