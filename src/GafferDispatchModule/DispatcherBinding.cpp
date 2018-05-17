@@ -286,9 +286,9 @@ struct PreDispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			return slot( dd, nodeList );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			ExceptionAlgo::translatePythonException();
 		}
 		return false;
 	}
@@ -308,9 +308,9 @@ struct PostDispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			slot( dd, nodeList, success );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}
