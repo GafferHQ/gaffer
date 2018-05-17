@@ -40,6 +40,7 @@
 #include "GafferDispatch/Export.h"
 #include "GafferDispatch/TaskNode.h"
 
+#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/NumericPlug.h"
 
 #include "IECore/CompoundData.h"
@@ -106,9 +107,8 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
 		typedef boost::signal<bool (const Dispatcher *, const std::vector<TaskNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
-		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &)> DispatchSignal;
-		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &, bool)> PostDispatchSignal;
-
+		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &), Gaffer::CatchingSignalCombiner<void> > DispatchSignal;
+		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &, bool), Gaffer::CatchingSignalCombiner<void> > PostDispatchSignal;
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////

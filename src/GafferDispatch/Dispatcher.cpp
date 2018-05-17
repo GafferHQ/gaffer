@@ -586,14 +586,7 @@ class DispatcherSignalGuard
 
 		~DispatcherSignalGuard()
 		{
-			try
-			{
-				Dispatcher::postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
-			}
-			catch( const std::exception& e )
-			{
-				IECore::msg( IECore::Msg::Error, "postDispatchSignal exception:", e.what() );
-			}
+			Dispatcher::postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
 		}
 
 		bool cancelledByPreDispatch( )
@@ -676,14 +669,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		return;
 	}
 
-	try
-	{
-		dispatchSignal()( this, taskNodes );
-	}
-	catch( const std::exception& e )
-	{
-		IECore::msg( IECore::Msg::Error, "dispatchSignal exception:", e.what() );
-	}
+	dispatchSignal()( this, taskNodes );
 
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange( script, Context::current() );

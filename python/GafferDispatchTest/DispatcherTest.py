@@ -224,6 +224,57 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s["n1"].log ), 1 )
 		self.assertEqual( len( connection ), 1 )
 
+	def testCatchThrowingSlots( self ) :
+
+		class BadSlot( list ) :
+
+			def __init__( self, signal ) :
+
+				self.__connection = signal.connect( Gaffer.WeakMethod( self.__slot ) )
+
+			def __slot( self, *args ) :
+
+				self.append( args )
+				raise RuntimeError, "bad slot!"
+
+		badConnection = BadSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		cs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+
+		# never run
+		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( badConnection ), 0 )
+		self.assertEqual( len( cs ), 0 )
+		self.assertEqual( len( postCs ), 0 )
+
+		# runs even though the bad slot throws
+		with IECore.CapturingMessageHandler() as mh :
+			dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "bad slot!" )
+		self.assertEqual( len( badConnection ), 1 )
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( len( postCs ), 1 )
+
+		# replace the bad slot with a connection to postDispatch
+		badConnection = BadSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
+
+		# runs even though bad slot throws
+		with IECore.CapturingMessageHandler() as mh :
+			dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "bad slot!" )
+		self.assertEqual( len( badConnection ), 1 )
+		self.assertEqual( len( s["n1"].log ), 2 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( len( postCs ), 2 )
+
 	def testPlugs( self ) :
 
 		n = GafferDispatchTest.TextWriter()
