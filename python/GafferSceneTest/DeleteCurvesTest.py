@@ -111,7 +111,7 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 				imath.V3f( 1, -1, 0 ),
 				imath.V3f( 2, -1, 0 ),
 				imath.V3f( 2, 0, 0 )
-			] ) )
+			], IECore.GeometricData.Interpretation.Point ) )
 
 		# verify the primvars are correct
 		self.assertEqual( curveDeletedObject["a"].data,  IECore.FloatData(0.5) )
@@ -145,7 +145,7 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 				imath.V3f( 1, 0, -1 ),
 				imath.V3f( 2, 0, -1 ),
 				imath.V3f( 2, 0, 0 )
-			] ) )
+			], IECore.GeometricData.Interpretation.Point ) )
 
 		# verify the primvars are correct
 		self.assertEqual( curveDeletedObject["a"].data,  IECore.FloatData(0.5) )
