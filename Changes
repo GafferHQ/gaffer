@@ -1,3 +1,27 @@
+0.46.1.0
+========
+
+Features
+--------
+
+- ReverseWinding : Added new node that reverses the winding order of meshes (#2568).
+- MeshDistortion : Added new node that calculates the distortion of a mesh from a
+  reference shape (#2568).
+
+Improvements
+------------
+
+- Stats app : Added `-sets` command line argument, to allow scene sets to be computed (#2572).
+- OSLObject : Added support for reading and writing UVs via new InUV and OutUV shaders (#2569).
+
+Fixes
+-----
+
+- Arnold : Fixed NodeEditor layout of new standard_surface shader parameters (#2573).
+- Catalogue : Fixed crash caused by non-writable directory (#2571).
+- Stats app : Fixed bugs in `-preCache` argument. It was using the wrong context and
+  not respecting the `-frames` flag (#2572).
+
 0.46.0.0
 ========
 
