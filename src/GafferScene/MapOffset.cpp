@@ -142,6 +142,14 @@ IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
+
+	// also early out if the uv set doesn't exist on the input primitive
+
+	if ( inputPrimitive->variables.find( uvSet ) == inputPrimitive->variables.end() )
+	{
+		return inputObject;
+	}
+
 	// do the work
 
 	PrimitivePtr result = inputPrimitive->copy();
@@ -152,7 +160,7 @@ IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path,
 	offset.x += (udim - 1001) % 10;
 	offset.y += (udim - 1001) / 10;
 
-	if( V2fVectorData *uvData = result->variableData<V2fVectorData>( uvSet ) )
+	if( V2fVectorData *uvData = runTimeCast<V2fVectorData>( result->variables[uvSet].data.get() ) )
 	{
 		for( V2f &uv : uvData->writable() )
 		{
