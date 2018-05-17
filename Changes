@@ -23,6 +23,7 @@ Fixes
 - Stats app : Fixed bugs in `-preCache` argument. It was using the wrong context and
   not respecting the `-frames` flag (#2572).
 - WidgetAlgo : Fixed bug when `grab()` with the event loop running (#2575).
+- MapOffset : Fixed bug when offsetting an indexed uv set (#2576).
 
 0.46.0.0
 ========
