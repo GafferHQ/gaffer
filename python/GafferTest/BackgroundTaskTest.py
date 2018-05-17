@@ -34,8 +34,10 @@
 #
 ##########################################################################
 
+import functools
 import thread
 import threading
+import time
 
 import IECore
 
@@ -139,6 +141,47 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertEqual( mh.messages[0].context, "BackgroundTask" )
 		self.assertIn( "Oops!", mh.messages[0].message )
+
+	def testScriptNodeLifetime( self ) :
+
+		def f( canceller, plug ) :
+
+			while True :
+				self.assertIsNotNone( plug.ancestor( Gaffer.ScriptNode ) )
+				self.assertEqual( plug.getValue(), 0 )
+				IECore.Canceller.check( canceller )
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		t = Gaffer.BackgroundTask( s["n"]["sum"], functools.partial( f, plug = s["n"]["sum"] ) )
+
+		# Drop our reference to the script, and sleep for
+		# a bit to demonstrate that the background task can
+		# still operate.
+		del s
+		time.sleep( 0.25 )
+
+		# Cancel the task. This should drop the final reference
+		# to the script.
+		t.cancelAndWait()
+
+	def testScriptNodeRemovalCancellation( self ) :
+
+		def f( canceller ) :
+
+			while True :
+				IECore.Canceller.check( canceller )
+
+		a = Gaffer.ApplicationRoot()
+		a["scripts"]["s"] = Gaffer.ScriptNode()
+		a["scripts"]["s"]["n"] = GafferTest.AddNode()
+
+		# If not cancelled, this task will spin forever.
+		t = Gaffer.BackgroundTask( a["scripts"]["s"]["n"]["sum"], f )
+		# But removing the script from the application should cancel it.
+		del a["scripts"]["s"]
+		t.wait()
 
 if __name__ == "__main__":
 	unittest.main()

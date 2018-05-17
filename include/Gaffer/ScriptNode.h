@@ -269,6 +269,10 @@ class GAFFER_API ScriptNode : public Node
 		const IntPlug *frameEndPlug() const;
 		//@}
 
+	protected :
+
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
+
 	private :
 
 		// Selection

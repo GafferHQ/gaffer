@@ -113,7 +113,9 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 struct ActiveTask
 {
 	BackgroundTask *task;
-	const ScriptNode *subject;
+	// Held via Ptr to keep the script alive
+	// for the duration of the task.
+	ConstScriptNodePtr subject;
 };
 
 typedef boost::multi_index::multi_index_container<
@@ -123,7 +125,7 @@ typedef boost::multi_index::multi_index_container<
 			boost::multi_index::member<ActiveTask, BackgroundTask *, &ActiveTask::task>
 		>,
 		boost::multi_index::hashed_non_unique<
-			boost::multi_index::member<ActiveTask, const ScriptNode *, &ActiveTask::subject>
+			boost::multi_index::member<ActiveTask, ConstScriptNodePtr, &ActiveTask::subject>
 		>
 	>
 > ActiveTasks;

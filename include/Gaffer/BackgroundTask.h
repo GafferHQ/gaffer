@@ -103,6 +103,7 @@ class GAFFER_API BackgroundTask : public boost::noncopyable
 		// before an edit is made to `actionSubject`.
 		static void cancelAffectedTasks( const GraphComponent *actionSubject );
 		friend class Action;
+		friend class ScriptNode;
 
 		IECore::Canceller m_canceller;
 		std::mutex m_mutex;
