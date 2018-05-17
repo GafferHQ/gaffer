@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 import imath
 
@@ -72,6 +73,24 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 			expectedSize *= screen.devicePixelRatio()
 
 		self.assertEqual( imath.V2f( i.displayWindow.size() ) + imath.V2f( 1 ), expectedSize )
+
+	def testGrabWithEventLoopRunning( self ) :
+
+		with GafferUI.Window() as w :
+			b = GafferUI.Button( "HI!" )
+
+		w.setVisible( True )
+		self.waitForIdle( 100000 )
+
+		def grab() :
+
+			GafferUI.WidgetAlgo.grab( b, self.temporaryDirectory() + "/grab.png" )
+			GafferUI.EventLoop.mainEventLoop().stop()
+
+		GafferUI.EventLoop.addIdleCallback( grab )
+		GafferUI.EventLoop.mainEventLoop().start()
+
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/grab.png" ) )
 
 if __name__ == "__main__":
 	unittest.main()
