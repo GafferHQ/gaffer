@@ -72,7 +72,13 @@ def joinEdges( listContainer ) :
 
 def grab( widget, imagePath ) :
 
-	GafferUI.EventLoop.waitForIdle()
+	if not GafferUI.EventLoop.mainEventLoop().running() :
+		# This is a hack to try to give Qt time to
+		# finish processing any events needed to get
+		# the widget ready for capture. Really we need
+		# a rock solid way that _guarantees_ this, and which
+		# we can also use when the event loop is running.
+		GafferUI.EventLoop.waitForIdle()
 
 	imageDir = os.path.dirname( imagePath )
 	if imageDir and not os.path.isdir( imageDir ) :
