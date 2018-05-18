@@ -227,7 +227,7 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	long i = -1;
 	for( const auto &d : boost::filesystem::directory_iterator( jobDirectory ) )
 	{
-		i = std::max( i, strtol( d.path().filename().c_str(), nullptr, 10 ) );
+		i = std::max( i, strtol( d.path().filename().string().c_str(), nullptr, 10 ) );
 	}
 
 	// Now create the next directory. We do this in a loop until we
