@@ -353,7 +353,10 @@ void registerInstanceValue( GraphComponent *instance, IECore::InternedString key
 		// ok to bind raw pointers to instance, because enact() guarantees
 		// the lifetime of the subject.
 		boost::bind( &registerInstanceValueAction, instance, key, value, persistent ),
-		boost::bind( &registerInstanceValueAction, instance, key, currentValue, currentPersistent )
+		boost::bind( &registerInstanceValueAction, instance, key, currentValue, currentPersistent ),
+		// Metadata may not be used in computation, so cancellation of
+		// background tasks isn't necessary.
+		false
 	);
 }
 

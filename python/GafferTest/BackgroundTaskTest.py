@@ -183,5 +183,31 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		del a["scripts"]["s"]
 		t.wait()
 
+	def testMetadataChangesDontCancel( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		operations = []
+
+		def f( canceller ) :
+
+			while True :
+				try :
+					IECore.Canceller.check( canceller )
+				except IECore.Cancelled :
+					operations.append( "cancellation received" )
+					return
+
+		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
+		Gaffer.Metadata.registerValue( s["n"], "test", 10 )
+		Gaffer.Metadata.registerValue( s["n"]["sum"], "test", 10 )
+
+		time.sleep( 0.25 )
+		operations.append( "requesting explicit cancellation" )
+		t.cancelAndWait()
+
+		self.assertEqual( operations, [ "requesting explicit cancellation", "cancellation received" ] )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -51,8 +51,8 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Action );
 
-Action::Action()
-	:	m_done( false )
+Action::Action( bool cancelBackgroundTasks )
+	:	m_done( false ), m_cancelBackgroundTasks( cancelBackgroundTasks )
 {
 }
 
@@ -85,7 +85,10 @@ void Action::doAction()
 	{
 		throw IECore::Exception( "Action cannot be done again without being undone first." );
 	}
-	BackgroundTask::cancelAffectedTasks( subject() );
+	if( m_cancelBackgroundTasks )
+	{
+		BackgroundTask::cancelAffectedTasks( subject() );
+	}
 	m_done = true;
 }
 
@@ -95,7 +98,10 @@ void Action::undoAction()
 	{
 		throw IECore::Exception( "Action cannot be undone without being done first." );
 	}
-	BackgroundTask::cancelAffectedTasks( subject() );
+	if( m_cancelBackgroundTasks )
+	{
+		BackgroundTask::cancelAffectedTasks( subject() );
+	}
 	m_done = false;
 }
 
@@ -120,8 +126,8 @@ class SimpleAction : public Action
 
 	public :
 
-		SimpleAction( const GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
-			:	m_subject( subject.get() ), m_doFn( doFn ), m_undoFn( undoFn )
+		SimpleAction( const GraphComponentPtr subject, const Function &doFn, const Function &undoFn, bool cancelBackgroundTasks )
+			:	Action( cancelBackgroundTasks ), m_subject( subject.get() ), m_doFn( doFn ), m_undoFn( undoFn )
 		{
 			// In the documentation for Action::enact(), we promise that we'll keep
 			// the subject alive for as long as the Functions are in use. If the subject
@@ -188,13 +194,13 @@ class SimpleAction : public Action
 
 IE_CORE_DEFINERUNTIMETYPED( SimpleAction );
 
-void Action::enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
+void Action::enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn, bool cancelBackgroundTasks )
 {
 	/// \todo We might want to optimise away the construction of a SimpleAction
 	/// when we know that enact() will just call doFn and throw it away (when undo
 	/// is disabled). If we do that we should make it easy for other subclasses to do
 	/// the same.
-	enact( new SimpleAction( subject, doFn, undoFn ) );
+	enact( new SimpleAction( subject, doFn, undoFn, cancelBackgroundTasks ) );
 }
 
 } // namespace Gaffer
