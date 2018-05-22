@@ -396,6 +396,12 @@ void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect
 	s.deleteNodes( parent, filter, reconnect );
 }
 
+void save( ScriptNode &s )
+{
+	IECorePython::ScopedGILRelease r;
+	s.save();
+}
+
 struct ActionSlotCaller
 {
 
@@ -474,7 +480,7 @@ void GafferModule::bindScriptNode()
 		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, boost::python::return_internal_reference<1>() )
 		.def( "serialise", &ScriptNode::serialise, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
-		.def( "save", &ScriptNode::save )
+		.def( "save", &save )
 		.def( "load", &ScriptNode::load, ( boost::python::arg( "continueOnError" ) = false ) )
 		.def( "importFile", &ScriptNode::importFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "context", &context )
