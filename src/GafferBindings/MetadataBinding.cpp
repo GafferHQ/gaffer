@@ -60,7 +60,7 @@ using namespace GafferBindings;
 namespace GafferBindings
 {
 
-void metadataModuleDependencies( const Gaffer::Node *node, std::set<std::string> &modules )
+void metadataModuleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules )
 {
 	/// \todo Derive from the registered values so we can support
 	/// datatypes from other modules.
@@ -69,19 +69,10 @@ void metadataModuleDependencies( const Gaffer::Node *node, std::set<std::string>
 	modules.insert( "Gaffer" );
 }
 
-void metadataModuleDependencies( const Gaffer::Plug *plug, std::set<std::string> &modules )
-{
-	/// \todo Derive from the registered values so we can support
-	/// datatypes from other modules.
-	modules.insert( "imath" );
-	modules.insert( "IECore" );
-	modules.insert( "Gaffer" );
-}
-
-std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier )
+std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredValues( node, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( graphComponent, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
@@ -89,45 +80,14 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 		object pythonKey( it->c_str() );
 		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
 
-		ConstDataPtr value = Metadata::value( node, *it );
+		ConstDataPtr value = Metadata::value( graphComponent, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 
 		object repr = boost::python::import( "IECore" ).attr( "repr" );
 		std::string stringValue = extract<std::string>( repr( pythonValue ) );
 
 		result += boost::str(
-			boost::format( "Gaffer.Metadata.registerNodeValue( %s, %s, %s )\n" ) %
-				identifier %
-				key %
-				stringValue
-		);
-	}
-
-	return result;
-}
-
-std::string metadataSerialisation( const Plug *plug, const std::string &identifier )
-{
-	std::vector<InternedString> keys;
-	Metadata::registeredValues( plug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
-
-	std::string result;
-	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
-	{
-		object pythonKey( it->c_str() );
-		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
-
-		ConstDataPtr value = Metadata::value( plug, *it );
-		object pythonValue = dataToPython( value.get(), /* copy = */ false );
-		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
-		const std::string modulePath = Serialisation::modulePath( pythonValue );
-		if( modulePath == "imath" )
-		{
-			stringValue = modulePath + "." + stringValue;
-		}
-
-		result += boost::str(
-			boost::format( "Gaffer.Metadata.registerPlugValue( %s, %s, %s )\n" ) %
+			boost::format( "Gaffer.Metadata.registerValue( %s, %s, %s )\n" ) %
 				identifier %
 				key %
 				stringValue
