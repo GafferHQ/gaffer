@@ -229,6 +229,11 @@ void Outputs::registerOutput( const std::string &name, const IECoreScene::Output
 	}
 }
 
+void Outputs::deregisterOutput( const std::string &name )
+{
+	outputMap().erase( name );
+}
+
 void Outputs::registeredOutputs( std::vector<std::string> &names )
 {
 	const OutputMap::nth_index<1>::type &index = outputMap().get<1>();

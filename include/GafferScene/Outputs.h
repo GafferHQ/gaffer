@@ -65,6 +65,8 @@ class GAFFERSCENE_API Outputs : public GlobalsProcessor
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		static void registerOutput( const std::string &name, const IECoreScene::Output *output );
+		static void deregisterOutput( const std::string &name );
+
 		static void registeredOutputs( std::vector<std::string> &names );
 
 	protected :
