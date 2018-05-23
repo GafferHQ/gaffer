@@ -80,6 +80,8 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		typedef std::map<IECore::InternedString, Transform> Transforms;
 
+		/// Append a unique hash representing this shading engine to `h`.
+		void hash( IECore::MurmurHash &h ) const;
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
 
 		bool needsAttribute( const std::string &scope, const std::string &name ) const;
@@ -87,6 +89,8 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 	private :
 
 		void queryAttributesNeeded();
+
+		const IECore::MurmurHash m_hash;
 
 		typedef boost::container::flat_set<std::pair<std::string, std::string> > AttributesNeededContainer;
 		AttributesNeededContainer m_attributesNeeded;

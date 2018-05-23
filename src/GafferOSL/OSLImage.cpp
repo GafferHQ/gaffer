@@ -253,19 +253,17 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 	}
 
 	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	if( shader )
+	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
+	if( shadingEngine )
 	{
-		shader->attributesHash( h );
+		shadingEngine->hash( h );
 	}
 }
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
-	ConstShadingEnginePtr shadingEngine;
-	if( const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
-	{
-		shadingEngine = shader->shadingEngine();
-	}
+	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
+	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
 
 	if( !shadingEngine )
 	{

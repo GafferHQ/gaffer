@@ -953,7 +953,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 } // namespace
 
 ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
-	: m_unknownAttributesNeeded( false )
+	:	m_hash( shaderNetwork->Object::hash() ), m_unknownAttributesNeeded( false )
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
@@ -1042,6 +1042,11 @@ void ShadingEngine::queryAttributesNeeded()
 ShadingEngine::~ShadingEngine()
 {
 	delete static_cast<ShaderGroupRef *>( m_shaderGroupRef );
+}
+
+void ShadingEngine::hash( IECore::MurmurHash &h ) const
+{
+	h.append( m_hash );
 }
 
 IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms ) const
