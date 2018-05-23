@@ -1129,5 +1129,10 @@ class MetadataTest( GafferTest.TestCase ) :
 					self.assertEqual( Gaffer.Metadata.value( plug, key ), None )
 					self.assertNotIn( key, Gaffer.Metadata.registeredValues( plug ) )
 
+	def testCantPassNoneForGraphComponent( self ) :
+
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			Gaffer.Metadata.registerValue( None, "test", "test" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -316,10 +316,10 @@ struct ValueChangedSlotCaller
 
 };
 
-void registerInstanceValue( GraphComponent *instance, InternedString key, ConstDataPtr value, bool persistent )
+void registerInstanceValue( GraphComponent &instance, InternedString key, ConstDataPtr value, bool persistent )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	Metadata::registerValue( instance, key, value, persistent );
+	Metadata::registerValue( &instance, key, value, persistent );
 }
 
 list keysToList( const std::vector<InternedString> &keys )
