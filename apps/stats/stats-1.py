@@ -175,7 +175,8 @@ class stats( Gaffer.Application ) :
 
 				IECore.BoolParameter(
 					name = "vtune",
-					description = "enable vtune instrumentation. When enabled the VTune profile 'Tasks & Frames' view will be broken down by node type.",
+					description = "Enables VTune instrumentation. When enabled, the VTune "
+						"'Tasks & Frames' view will be broken down by node type.",
 					defaultValue = False,
 				)
 
