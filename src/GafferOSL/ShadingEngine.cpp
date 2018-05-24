@@ -38,6 +38,8 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include "Gaffer/Context.h"
+
 #include "IECoreScene/Shader.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
@@ -262,13 +264,15 @@ namespace
 {
 
 OIIO::ustring gIndex( "shading:index" );
+ustring g_contextVariableAttributeScope( "gaffer:context" );
 
 class RenderState
 {
 
 	public :
 
-		RenderState( const IECore::CompoundData *shadingPoints, const ShadingEngine::Transforms &transforms )
+		RenderState( const IECore::CompoundData *shadingPoints, const ShadingEngine::Transforms &transforms, const Gaffer::Context *context )
+			:	m_context( context )
 		{
 			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
@@ -349,7 +353,14 @@ class RenderState
 			return false;
 		}
 
+		const Gaffer::Context *context() const
+		{
+			return m_context;
+		}
+
 	private :
+
+		const Gaffer::Context *m_context;
 
 		typedef boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash > RenderStateTransforms;
 		RenderStateTransforms m_transforms;
@@ -439,6 +450,23 @@ class RendererServices : public OSL::RendererServices
 			{
 				return false;
 			}
+
+			if( object == g_contextVariableAttributeScope )
+			{
+				IECoreImage::OpenImageIOAlgo::DataView dataView(
+					threadRenderState->renderState.context()->get<Data>( name.string(), nullptr ),
+					/* createUStrings = */ true
+				);
+				if( !dataView.data )
+				{
+					return false;
+				}
+				else
+				{
+					return ShadingSystem::convert_value( value, type, dataView.data, dataView.type );
+				}
+			}
+
 			// fall through to get_userdata - i'm not sure this is the intention of the osl spec, but how else can
 			// a shader access a primvar by name? maybe i've overlooked something.
 			return get_userdata( derivatives, name, type, sg, value );
@@ -953,7 +981,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 } // namespace
 
 ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
-	:	m_hash( shaderNetwork->Object::hash() ), m_unknownAttributesNeeded( false )
+	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false )
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
@@ -1010,14 +1038,32 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 		}
 	}
 
-	queryAttributesNeeded();
+	queryContextVariablesAndAttributesNeeded();
 }
 
-void ShadingEngine::queryAttributesNeeded()
+void ShadingEngine::queryContextVariablesAndAttributesNeeded()
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
-
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
+
+	// Globals
+
+	int numGlobalsNeeded = 0;
+	shadingSystem->getattribute( &shaderGroup, "num_globals_needed", numGlobalsNeeded );
+	if( numGlobalsNeeded )
+	{
+		ustring *globalsNames = nullptr;
+		shadingSystem->getattribute(  &shaderGroup, "globals_needed", TypeDesc::PTR, &globalsNames );
+		for( int i = 0; i < numGlobalsNeeded; ++i )
+		{
+			if( globalsNames[i] == "time" )
+			{
+				m_timeNeeded = true;
+			}
+		}
+	}
+
+	// Attributes
 
 	int unknownAttributesNeeded = 0;
 	shadingSystem->getattribute(  &shaderGroup, "unknown_attributes_needed", unknownAttributesNeeded );
@@ -1034,7 +1080,14 @@ void ShadingEngine::queryAttributesNeeded()
 
 		for (int i = 0; i < numAttributes; ++i)
 		{
-			m_attributesNeeded.insert(std::make_pair(scopeNames[i].string(), attributeNames[i].string() ) );
+			if( scopeNames[i] == g_contextVariableAttributeScope )
+			{
+				m_contextVariablesNeeded.push_back( attributeNames[i].string() );
+			}
+			else
+			{
+				m_attributesNeeded.insert( std::make_pair( scopeNames[i].string(), attributeNames[i].string() ) );
+			}
 		}
 	}
 }
@@ -1047,6 +1100,26 @@ ShadingEngine::~ShadingEngine()
 void ShadingEngine::hash( IECore::MurmurHash &h ) const
 {
 	h.append( m_hash );
+	if( m_timeNeeded || m_contextVariablesNeeded.size() )
+	{
+		const Gaffer::Context *context = Gaffer::Context::current();
+		if( m_timeNeeded )
+		{
+			h.append( context->getTime() );
+		}
+		for( const auto &name : m_contextVariablesNeeded )
+		{
+			const IECore::Data *d = context->get<IECore::Data>( name, nullptr );
+			if( d )
+			{
+				d->hash( h );
+			}
+			else
+			{
+				h.append( 0 );
+			}
+		}
+	}
 }
 
 IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms ) const
@@ -1071,6 +1144,9 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	ShaderGlobals shaderGlobals;
 	memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+
+	const Gaffer::Context *context = Gaffer::Context::current();
+	shaderGlobals.time = context->getTime();
 
 	shaderGlobals.dPdx = uniformValue<V3f>( points, "dPdx" );
 	shaderGlobals.dPdy = uniformValue<V3f>( points, "dPdy" );
@@ -1097,7 +1173,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms );
+	RenderState renderState( points, transforms, context );
 
 	// Get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.

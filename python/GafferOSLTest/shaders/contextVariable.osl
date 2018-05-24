@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-surface globals
+surface contextVariable
 (
-	string global = "P"
+	string type = "color",
+	string name = ""
 )
 {
 	color c = 0;
-	if( global == "P" )
+	if( type == "color" )
 	{
-		c = color( P );
+		getattribute( "gaffer:context", name, c );
 	}
-	else if( global == "u" )
+	else if( type == "int" )
 	{
-		c = color( u );
+		int i = 0;
+		getattribute( "gaffer:context", name, i );
+		c = i;
 	}
-	else if( global == "v" )
+	else if( type == "vector" )
 	{
-		c = color( v );
-	}
-	else if( global == "time" )
-	{
-		c = color( time );
+		vector v = 0;
+		getattribute( "gaffer:context", name, v );
+		c = v;
 	}
 	Ci = c * emission();
 }

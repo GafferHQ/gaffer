@@ -88,9 +88,12 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 	private :
 
-		void queryAttributesNeeded();
+		void queryContextVariablesAndAttributesNeeded();
 
 		const IECore::MurmurHash m_hash;
+
+		bool m_timeNeeded;
+		std::vector<IECore::InternedString> m_contextVariablesNeeded;
 
 		typedef boost::container::flat_set<std::pair<std::string, std::string> > AttributesNeededContainer;
 		AttributesNeededContainer m_attributesNeeded;
