@@ -271,8 +271,12 @@ class RenderState
 
 	public :
 
-		RenderState( const IECore::CompoundData *shadingPoints, const ShadingEngine::Transforms &transforms, const Gaffer::Context *context )
-			:	m_context( context )
+		RenderState(
+			const IECore::CompoundData *shadingPoints,
+			const ShadingEngine::Transforms &transforms,
+			const std::vector<InternedString> &contextVariablesNeeded,
+			const Gaffer::Context *context
+		)
 		{
 			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
@@ -296,6 +300,30 @@ class RenderState
 			{
 				m_transforms[ OIIO::ustring( it->first.string() ) ] = it->second;
 			}
+
+			for( const auto &name : contextVariablesNeeded )
+			{
+				m_contextVariables.insert(
+					make_pair(
+						ustring( name.c_str() ),
+						IECoreImage::OpenImageIOAlgo::DataView(
+							context->get<Data>( name.string(), nullptr ),
+							/* createUStrings = */ true
+						)
+					)
+				);
+			}
+		}
+
+		bool contextVariable( ustring name, TypeDesc type, void *value ) const
+		{
+			auto it = m_contextVariables.find( name );
+			if( it == m_contextVariables.end() )
+			{
+				return false;
+			}
+
+			return ShadingSystem::convert_value( value, type, it->second.data, it->second.type );
 		}
 
 		bool userData( size_t pointIndex, ustring name, TypeDesc type, void *value ) const
@@ -353,14 +381,7 @@ class RenderState
 			return false;
 		}
 
-		const Gaffer::Context *context() const
-		{
-			return m_context;
-		}
-
 	private :
-
-		const Gaffer::Context *m_context;
 
 		typedef boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash > RenderStateTransforms;
 		RenderStateTransforms m_transforms;
@@ -377,6 +398,7 @@ class RenderState
 		};
 
 		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
+		container::flat_map<ustring, IECoreImage::OpenImageIOAlgo::DataView, OIIO::ustringPtrIsLess> m_contextVariables;
 
 };
 
@@ -453,18 +475,7 @@ class RendererServices : public OSL::RendererServices
 
 			if( object == g_contextVariableAttributeScope )
 			{
-				IECoreImage::OpenImageIOAlgo::DataView dataView(
-					threadRenderState->renderState.context()->get<Data>( name.string(), nullptr ),
-					/* createUStrings = */ true
-				);
-				if( !dataView.data )
-				{
-					return false;
-				}
-				else
-				{
-					return ShadingSystem::convert_value( value, type, dataView.data, dataView.type );
-				}
+				return threadRenderState->renderState.contextVariable( name, type, value );
 			}
 
 			// fall through to get_userdata - i'm not sure this is the intention of the osl spec, but how else can
@@ -1173,7 +1184,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms, context );
+	RenderState renderState( points, transforms, m_contextVariablesNeeded, context );
 
 	// Get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.
