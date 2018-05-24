@@ -363,5 +363,34 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		for y in range( 0, 31 ) :
 			self.assertAlmostEqual( sampler.sample( 5, y ), (y + 0.5) / 32.0, delta = 0.02 )
 
+	def testPullsMinimalSetOfInputChannels( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0.1101, 0.1224, 0.1353, 0.135 ) )
+
+		outLayer = GafferOSL.OSLShader()
+		outLayer.loadShader( "ImageProcessing/OutLayer" )
+
+		outImage = GafferOSL.OSLShader()
+		outImage.loadShader( "ImageProcessing/OutImage" )
+		outImage["parameters"][0].setInput( outLayer["out"]["layer"] )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["in"].setInput( constant["out"] )
+		oslImage["shader"].setInput( outImage["out"] )
+
+		with Gaffer.PerformanceMonitor() as pm :
+			oslImage["out"].image()
+
+		# Because the shader doesn't use any input channels,
+		# the OSLImage node shouldn't have needed to pull on
+		# any of the RGB channels. Because the shader doesn't
+		# write to alpha, it does need to pull on alpha to pass
+		# it through. Hence we expect a single computation for
+		# the Constant's channelData.
+
+		s = pm.plugStatistics( constant["out"]["channelData"] )
+		self.assertEqual( s.computeCount, 1 )
+
 if __name__ == "__main__":
 	unittest.main()

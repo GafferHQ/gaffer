@@ -218,6 +218,7 @@ void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 	ImageProcessor::hashChannelData( output, context, h );
 	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	shadingPlug()->hash( h );
+	inPlug()->channelDataPlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
@@ -235,29 +236,36 @@ IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string 
 
 void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
-	h.append( tileOrigin );
+	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
+	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
+	if( !shadingEngine )
+	{
+		h = shadingPlug()->defaultValue()->hash();
+		return;
+	}
+
+	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 
 	ConstStringVectorDataPtr channelNamesData;
-
 	{
 		ImagePlug::GlobalScope c( context );
 		inPlug()->formatPlug()->hash( h );
 		channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	}
 
-	const vector<string> &channelNames = channelNamesData->readable();
-	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 	{
-		h.append( inPlug()->channelDataHash( *it, tileOrigin ) );
+		ImagePlug::ChannelDataScope c( context );
+		for( const auto &channelName : channelNamesData->readable() )
+		{
+			if( shadingEngine->needsAttribute( "", channelName ) )
+			{
+				c.setChannelName( channelName );
+				inPlug()->channelDataPlug()->hash( h );
+			}
+		}
 	}
 
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
-	if( shadingEngine )
-	{
-		shadingEngine->hash( h );
-	}
+	shadingEngine->hash( h );
 }
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
@@ -315,10 +323,18 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	shadingPoints->writable()["u"] = uData;
 	shadingPoints->writable()["v"] = vData;
 
-	const vector<string> &channelNames = channelNamesData->readable();
-	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 	{
-		shadingPoints->writable()[*it] = boost::const_pointer_cast<FloatVectorData>( inPlug()->channelData( *it, tileOrigin ) );
+		ImagePlug::ChannelDataScope c( context );
+		for( const auto &channelName : channelNamesData->readable() )
+		{
+			if( shadingEngine->needsAttribute( "", channelName ) )
+			{
+				c.setChannelName( channelName );
+				shadingPoints->writable()[channelName] = boost::const_pointer_cast<FloatVectorData>(
+					inPlug()->channelDataPlug()->getValue()
+				);
+			}
+		}
 	}
 
 	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
