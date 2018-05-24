@@ -1207,20 +1207,36 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	struct ThreadContext
 	{
-		ShadingContext *shadingContext;
+
+		ThreadContext( ShadingSystem *shadingSystem )
+			:	m_shadingSystem( shadingSystem ), m_shadingContext( shadingSystem->get_context() )
+		{
+		}
+
+		~ThreadContext()
+		{
+			m_shadingSystem->release_context( m_shadingContext );
+		}
+
 		ShadingResults::DebugResultsMap results;
+
+		ShadingContext *shadingContext() { return m_shadingContext; }
+
+		private :
+
+			ShadingSystem *m_shadingSystem;
+			ShadingContext *m_shadingContext;
+
 	};
 
 	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
-	ThreadContextType contexts;
+	ThreadContextType contexts( shadingSystem );
 
-	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
+	const IECore::Canceller *canceller = context->canceller();
+
+	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts, canceller]( const tbb::blocked_range<size_t> &r )
 	{
 		ThreadContextType::reference context = contexts.local();
-		if( !context.shadingContext )
-		{
-			context.shadingContext = shadingSystem->get_context();
-		}
 
 		ThreadRenderState threadRenderState( renderState );
 
@@ -1230,6 +1246,8 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 		for( size_t i = r.begin(); i < r.end(); ++i )
 		{
+			IECore::Canceller::check( canceller );
+
 			threadShaderGlobals.P = p[i];
 
 			if( uv )
@@ -1257,18 +1275,13 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 			threadShaderGlobals.Ci = nullptr;
 
 			threadRenderState.pointIndex = i;
-			shadingSystem->execute( context.shadingContext, shaderGroup, threadShaderGlobals );
+			shadingSystem->execute( context.shadingContext(), shaderGroup, threadShaderGlobals );
 
 			results.addResult( i, threadShaderGlobals.Ci, context.results );
 		}
 	};
 
 	tbb::parallel_for( tbb::blocked_range<size_t>( 0, numPoints, 5000 ), f );
-
-	for( auto &shadingContext : contexts )
-	{
-		shadingSystem->release_context( shadingContext.shadingContext );
-	}
 
 	return results.results();
 }
