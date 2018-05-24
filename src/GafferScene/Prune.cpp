@@ -248,6 +248,7 @@ void Prune::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	// See further comments in acceptsInput()
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
 	sceneScope.remove( ScenePlug::scenePathContextName );
+	sceneScope.remove( ScenePlug::setNameContextName );
 	filterPlug()->hash( h );
 }
 
@@ -264,6 +265,7 @@ GafferScene::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedSt
 	PathMatcher &outputSet = outputSetData->writable();
 
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
+	sceneScope.remove( ScenePlug::setNameContextName );
 
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
