@@ -316,6 +316,12 @@ struct ValueChangedSlotCaller
 
 };
 
+void registerInstanceValue( GraphComponent &instance, InternedString key, ConstDataPtr value, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	Metadata::registerValue( &instance, key, value, persistent );
+}
+
 list keysToList( const std::vector<InternedString> &keys )
 {
 	list result;
@@ -389,7 +395,7 @@ void GafferModule::bindMetadata()
 		.def( "registerValue", &registerValue )
 		.def( "registerValue", &registerNodeValue )
 		.def( "registerValue", &registerPlugValue )
-		.def( "registerValue", (void (*)( GraphComponent *, InternedString key, ConstDataPtr value, bool ))&Metadata::registerValue,
+		.def( "registerValue", &registerInstanceValue,
 			(
 				boost::python::arg( "target" ),
 				boost::python::arg( "value" ),
