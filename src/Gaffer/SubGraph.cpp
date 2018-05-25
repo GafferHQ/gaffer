@@ -83,6 +83,10 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 	if( const BoxOut *boxOut = internalOutput->parent<BoxOut>() )
 	{
 		internalOutput = boxOut->plug<Plug>()->getInput<Plug>();
+		if( !internalOutput )
+		{
+			return NULL;
+		}
 	}
 
 	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
