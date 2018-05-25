@@ -61,15 +61,15 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		with GafferUI.ListContainer() as self.__settings :
 			with GafferUI.TabbedContainer() as self.__tabs :
 
-				with GafferUI.ListContainer( spacing=2, borderWidth=2 ) as dispatcherTab :
+				with GafferUI.ListContainer( borderWidth=3 ) as dispatcherTab :
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=2, borderWidth=2 ) :
-						GafferUI.Label( "Dispatcher" )
+						GafferUI.Label( "<h4>Current Dispatcher</h4>" )
 						self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 						self.__dispatchersMenu.append( list(GafferDispatch.Dispatcher.registeredDispatchers()) )
 						self.__dispatchersMenu.setSelection( [ dispatcherType ] )
 						self.__dispatchersMenuChanged = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
 
-					self.__dispatcherFrame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
+					self.__dispatcherFrame = GafferUI.Frame( borderWidth=2 )
 					self.__tabs.setLabel( dispatcherTab, "Dispatcher" )
 
 				with GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=2 ) as contextTab :
@@ -117,12 +117,11 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		del self.__tabs[:-2]
 
 		for task in reversed( self.__tasks ) :
-			with GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=2 ) as nodeFrame :
-				## \todo: can we use NodeEditor to gain the tool menu?
-				GafferUI.NodeUI.create( task )
-				# remove the per-node execute button
-				Gaffer.Metadata.registerValue( task, "layout:customWidget:dispatchButton:widgetType", "", persistent = False )
-			self.__tabs.insert( 0, nodeFrame, label = task.relativeName( self.__script ) )
+			editor = GafferUI.NodeEditor( self.__script )
+			editor.setNodeSet( Gaffer.StandardSet( [ task ] ) )
+			# remove the per-node execute button
+			Gaffer.Metadata.registerValue( task, "layout:customWidget:dispatchButton:widgetType", "", persistent = False )
+			self.__tabs.insert( 0, editor, label = task.relativeName( self.__script ) )
 
 	def setDispatcher( self, dispatcherType ) :
 
@@ -132,7 +131,10 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				Gaffer.NodeAlgo.applyUserDefaults( self.__dispatchers[dispatcherType] )
 
 		self.__currentDispatcher = self.__dispatchers[dispatcherType]
-		self.__dispatcherFrame.setChild( GafferUI.NodeUI.create( self.__currentDispatcher ) )
+
+		editor = GafferUI.NodeEditor( self.__script )
+		editor.setNodeSet( Gaffer.StandardSet( [ self.__currentDispatcher ] ) )
+		self.__dispatcherFrame.setChild( editor )
 
 	def getDispatcher( self ) :
 
