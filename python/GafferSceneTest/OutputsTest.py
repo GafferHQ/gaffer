@@ -111,6 +111,22 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( GafferScene.Outputs.registeredOutputs(), ( "test", "test2" ) )
 
+		o = GafferScene.Outputs()
+		p = o.addOutput( "test" )
+		self.assertEqual( p["name"].getValue(), "test" )
+		self.assertEqual( p["fileName"].getValue(), "test.exr" )
+		self.assertEqual( p["data"].getValue(), "rgba" )
+
+		GafferScene.Outputs.deregisterOutput( "test" )
+		self.assertEqual( GafferScene.Outputs.registeredOutputs(), ( "test2", ) )
+
+		o = GafferScene.Outputs()
+		with self.assertRaisesRegexp( RuntimeError, "Output not registered" ) :
+			o.addOutput( "test" )
+
+		GafferScene.Outputs.deregisterOutput( "test2" )
+		self.assertEqual( GafferScene.Outputs.registeredOutputs(), () )
+
 	def testHashPassThrough( self ) :
 
 		# the hash of the per-object part of the output should be

@@ -97,6 +97,7 @@ void GafferSceneModule::bindGlobals()
 		.def( "addOutput", &addOutputWrapper )
 		.def( "addOutput", &addOutputWrapper2 )
 		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
+		.def( "deregisterOutput", &Outputs::deregisterOutput ).staticmethod( "deregisterOutput" )
 		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
 	;
 
