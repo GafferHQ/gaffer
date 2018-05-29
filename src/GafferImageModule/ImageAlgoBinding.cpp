@@ -100,6 +100,12 @@ inline bool channelExistsWrapper( const GafferImage::ImagePlug *image, const std
 	return GafferImage::ImageAlgo::channelExists( image, channelName );
 }
 
+void deleteWithGIL( object *o )
+{
+	IECorePython::ScopedGILLock gilLock;
+	delete o;
+}
+
 void parallelGatherTiles1( const GafferImage::ImagePlug &image, object pythonTileFunctor, object pythonGatherFunctor, const Imath::Box2i &window, ImageAlgo::TileOrder tileOrder )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -110,13 +116,14 @@ void parallelGatherTiles1( const GafferImage::ImagePlug &image, object pythonTil
 		[ &pythonTileFunctor ] ( const ImagePlug *image, const Imath::V2i &tileOrigin )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			return pythonTileFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), tileOrigin );
+			object tile = pythonTileFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), tileOrigin );
+			return std::shared_ptr<object>( new object( tile ), deleteWithGIL );
 		},
 
-		[ &pythonGatherFunctor ] ( const ImagePlug *image, const Imath::V2i &tileOrigin, object tile )
+		[ &pythonGatherFunctor ] ( const ImagePlug *image, const Imath::V2i &tileOrigin, std::shared_ptr<object> tile )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			pythonGatherFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), tileOrigin, tile );
+			pythonGatherFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), tileOrigin, *tile );
 		},
 
 		window,
@@ -138,13 +145,14 @@ void parallelGatherTiles2( const GafferImage::ImagePlug &image, object pythonCha
 		[ &pythonTileFunctor ] ( const ImagePlug *image, const std::string &channelName, const Imath::V2i &tileOrigin )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			return pythonTileFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), channelName, tileOrigin );
+			object tile = pythonTileFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), channelName, tileOrigin );
+			return std::shared_ptr<object>( new object( tile ), deleteWithGIL );
 		},
 
-		[ &pythonGatherFunctor ] ( const ImagePlug *image, const std::string &channelName, const Imath::V2i &tileOrigin, object tile )
+		[ &pythonGatherFunctor ] ( const ImagePlug *image, const std::string &channelName, const Imath::V2i &tileOrigin, std::shared_ptr<object> tile )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			pythonGatherFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), channelName, tileOrigin, tile );
+			pythonGatherFunctor( ImagePlugPtr( const_cast<ImagePlug *>( image ) ), channelName, tileOrigin, *tile );
 		},
 
 		window,
