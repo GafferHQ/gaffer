@@ -236,5 +236,20 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 					if order != GafferImage.ImageAlgo.TileOrder.Unordered :
 						self.assertEqual( channelTileOrigins[i], tileOrigins[i] )
 
+	def testParallelGatherTileLifetime( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 1 ) )
+
+		def computeTile( image, channelName, tileOrigin ) :
+
+			return image["channelData"].getValue()
+
+		def gatherTile( image, channelName, tileOrigin, tile ) :
+
+			self.assertIsInstance( tile, IECore.FloatVectorData )
+
+		GafferImage.ImageAlgo.parallelGatherTiles( constant["out"], [ "R", "G", "B", "A" ], computeTile, gatherTile )
+
 if __name__ == "__main__":
 	unittest.main()
