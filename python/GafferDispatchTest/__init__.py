@@ -55,6 +55,7 @@ from TaskContextVariablesTest import TaskContextVariablesTest
 from ExecuteApplicationTest import ExecuteApplicationTest
 from TaskPlugTest import TaskPlugTest
 from FrameMaskTest import FrameMaskTest
+from DispatchApplicationTest import DispatchApplicationTest
 
 if __name__ == "__main__":
 	import unittest
