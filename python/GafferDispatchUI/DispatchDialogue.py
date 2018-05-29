@@ -121,8 +121,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		del self.__tabs[:-2]
 
 		for task in reversed( self.__tasks ) :
-			editor = GafferUI.NodeEditor( self.__script )
-			editor.setNodeSet( Gaffer.StandardSet( [ task ] ) )
+			editor = self.__nodeEditor( task )
 			# remove the per-node execute button
 			Gaffer.Metadata.registerValue( task, "layout:customWidget:dispatchButton:widgetType", "", persistent = False )
 			self.__tabs.insert( 0, editor, label = task.relativeName( self.__script ) )
@@ -135,10 +134,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				Gaffer.NodeAlgo.applyUserDefaults( self.__dispatchers[dispatcherType] )
 
 		self.__currentDispatcher = self.__dispatchers[dispatcherType]
-
-		editor = GafferUI.NodeEditor( self.__script )
-		editor.setNodeSet( Gaffer.StandardSet( [ self.__currentDispatcher ] ) )
-		self.__dispatcherFrame.setChild( editor )
+		self.__dispatcherFrame.setChild( self.__nodeEditor( self.__currentDispatcher ) )
 
 	def getDispatcher( self ) :
 
@@ -177,6 +173,16 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		applicationRoot._dispatchDialogueMenuDefinition = menuDefinition
 
 		return menuDefinition
+
+	def __nodeEditor( self, node ) :
+
+		editor = GafferUI.NodeEditor( self.__script )
+		editor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
+		## \todo: Expose public API for the NodeEditor's NameWidget visibility
+		editor._NodeEditor__nameWidget.setVisible( False )
+		editor._NodeEditor__nameWidget.parent()[0].setVisible( False )
+
+		return editor
 
 	def __dispatcherChanged( self, menu ) :
 
