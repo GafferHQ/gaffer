@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+//
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader FloatMix
+shader DotProduct
 (
-	float a = 0,
-	float b = 0,
-	float m = 0,
-	output float out = 0 [[ string correspondingInput = "a" ]]
+	vector a = 0,
+	vector b = 0,
+	output float out = 0
 )
 {
-	out = mix( a, b, m );
+	out = dot( a, b );
 }
-
