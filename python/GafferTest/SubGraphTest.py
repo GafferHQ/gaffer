@@ -93,5 +93,13 @@ class SubGraphTest( GafferTest.TestCase ) :
 
 		self.assertEqual( b.correspondingInput( b["o"].promotedPlug() ), b["i"].promotedPlug() )
 
+	def testCorrespondingInputWithUnconnectedBoxOut( self ) :
+
+		b = Gaffer.Box()
+		b["o"] = Gaffer.BoxOut()
+		b["o"].setup( Gaffer.IntPlug( "p" ) )
+
+		self.assertIsNone( b.correspondingInput( b["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
