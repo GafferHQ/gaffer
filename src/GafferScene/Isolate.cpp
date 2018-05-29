@@ -369,6 +369,7 @@ void Isolate::hashSet( const IECore::InternedString &setName, const Gaffer::Cont
 	// See further comments in acceptsInput()
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
 	sceneScope.remove( ScenePlug::scenePathContextName );
+	sceneScope.remove( ScenePlug::setNameContextName );
 	filterPlug()->hash( h );
 }
 
@@ -393,6 +394,7 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 	PathMatcher &outputSet = outputSetData->writable();
 
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
+	sceneScope.remove( ScenePlug::setNameContextName );
 
 	const std::string fromString = fromPlug()->getValue();
 	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
