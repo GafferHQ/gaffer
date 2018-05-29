@@ -198,7 +198,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( job.subtasks[0].subtasks[1].subtasks[0], author.Instance ) )
 
 	def testTaskPlugs( self ) :
-		
+
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatchTest.LoggingTaskNode()
 		self.assertTrue( "tractor" in [ x.getName() for x in s["n"]["dispatcher"].children() ] )
@@ -220,6 +220,25 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 	def testDefaultNames( self ) :
 
 		self.assertDefaultNamesAreCorrect( GafferTractor )
+
+	def testTasksWithoutCommands( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["systemCommand"] = GafferDispatch.SystemCommand()
+		s["systemCommand"]["command"].setValue( "ls" )
+
+		s["taskList"] = GafferDispatch.TaskList()
+		s["taskList"]["preTasks"][0].setInput( s["systemCommand"]["task"] )
+
+		job = self.__job( [ s["taskList" ] ] )
+
+		taskListTask = job.subtasks[0]
+		self.assertEqual( taskListTask.title, "taskList" )
+		self.assertEqual( len( taskListTask.cmds ), 0 )
+
+		systemCommandTask = taskListTask.subtasks[0]
+		self.assertEqual( systemCommandTask.title, "systemCommand 1" )
+		self.assertEqual( len( systemCommandTask.cmds ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()
