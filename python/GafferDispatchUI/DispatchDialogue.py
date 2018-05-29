@@ -59,6 +59,10 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		# build tabs for all the node, dispatcher, and context settings
 		with GafferUI.ListContainer() as self.__settings :
+
+			mainMenu = GafferUI.MenuBar( self.menuDefinition( script.applicationRoot() ) )
+			mainMenu.setVisible( False )
+
 			with GafferUI.TabbedContainer() as self.__tabs :
 
 				with GafferUI.ListContainer( borderWidth=3 ) as dispatcherTab :
@@ -140,6 +144,10 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		return self.__currentDispatcher
 
+	def scriptNode( self ) :
+
+		return self.__script
+
 	def setVisible( self, visible ) :
 
 		if visible :
@@ -147,6 +155,28 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			self._qtWidget().resize( 400, 400 )
 
 		GafferUI.Window.setVisible( self, visible )
+
+	## Returns an IECore.MenuDefinition which is used to define the keyboard shortcuts for all DispatchDialogues
+	# created as part of the specified application. This can be edited at any time to modify subsequently
+	# created DispatchDialogues - typically editing would be done as part of gaffer startup. Note that
+	# this menu is never shown to users, but we need it in order to register keyboard shortcuts.
+	@staticmethod
+	def menuDefinition( applicationOrApplicationRoot ) :
+
+		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
+			applicationRoot = applicationOrApplicationRoot.root()
+		else :
+			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
+			applicationRoot = applicationOrApplicationRoot
+
+		menuDefinition = getattr( applicationRoot, "_dispatchDialogueMenuDefinition", None )
+		if menuDefinition :
+			return menuDefinition
+
+		menuDefinition = IECore.MenuDefinition()
+		applicationRoot._dispatchDialogueMenuDefinition = menuDefinition
+
+		return menuDefinition
 
 	def __dispatcherChanged( self, menu ) :
 
