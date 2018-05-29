@@ -1281,7 +1281,11 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 		}
 	};
 
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, numPoints, 5000 ), f );
+	// Use `task_group_context::isolated` to prevent TBB cancellation in outer
+	// tasks from propagating down and stopping our tasks from being started.
+	// Otherwise we silently return results with black gaps where tasks were omitted.
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, numPoints, 5000 ), f, taskGroupContext );
 
 	return results.results();
 }
