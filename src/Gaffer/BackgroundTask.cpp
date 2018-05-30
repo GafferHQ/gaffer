@@ -227,11 +227,19 @@ void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
 
 	const ScriptNode *s = scriptNode( actionSubject );
 	auto range = a.get<1>().equal_range( s );
+
+	// Call cancel for everything first.
+	for( auto it = range.first; it != range.second; ++it )
+	{
+		it->task->cancel();
+	}
+	// And then perform all the waits. This way the wait on one
+	// task doesn't delay the start of cancellation for the next.
 	for( auto it = range.first; it != range.second; )
 	{
-		// Cancellation invalidates iterator, so must increment first.
+		// Wait invalidates iterator, so must increment first.
 		auto nextIt = std::next( it );
-		it->task->cancelAndWait();
+		it->task->wait();
 		it = nextIt;
 	}
 }
