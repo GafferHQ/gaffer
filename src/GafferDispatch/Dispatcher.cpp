@@ -64,6 +64,7 @@ static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
+Dispatcher::DispatchSignal Dispatcher::g_dispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 std::string Dispatcher::g_defaultDispatcherType = "";
 
@@ -177,6 +178,11 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 Dispatcher::PreDispatchSignal &Dispatcher::preDispatchSignal()
 {
 	return g_preDispatchSignal;
+}
+
+Dispatcher::DispatchSignal &Dispatcher::dispatchSignal()
+{
+	return g_dispatchSignal;
 }
 
 Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
@@ -575,19 +581,12 @@ class DispatcherSignalGuard
 
 		DispatcherSignalGuard( const Dispatcher* d, const std::vector<TaskNodePtr> &taskNodes ) : m_dispatchSuccessful( false ), m_taskNodes( taskNodes ), m_dispatcher( d )
 		{
-			m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_taskNodes );
+			m_cancelledByPreDispatch = Dispatcher::preDispatchSignal()( m_dispatcher, m_taskNodes );
 		}
 
 		~DispatcherSignalGuard()
 		{
-			try
-			{
-				m_dispatcher->postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
-			}
-			catch( const std::exception& e )
-			{
-				IECore::msg( IECore::Msg::Error, "postDispatchSignal exception:", e.what() );
-			}
+			Dispatcher::postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
 		}
 
 		bool cancelledByPreDispatch( )
@@ -656,8 +655,9 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 	}
 
-	// create the job directory now, so it's available in preDispatchSignal().
 	Context::EditableScope jobScope( Context::current() );
+	// create the job directory now, so it's available in preDispatchSignal().
+	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal()
 	m_jobDirectory = createJobDirectory( Context::current() );
 	jobScope.set( g_jobDirectoryContextEntry, m_jobDirectory );
 
@@ -669,6 +669,8 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		return;
 	}
+
+	dispatchSignal()( this, taskNodes );
 
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange( script, Context::current() );

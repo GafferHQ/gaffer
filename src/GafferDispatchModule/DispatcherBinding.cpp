@@ -286,11 +286,33 @@ struct PreDispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			return slot( dd, nodeList );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			ExceptionAlgo::translatePythonException();
 		}
 		return false;
+	}
+};
+
+struct DispatchSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
+	{
+		try
+		{
+			list nodeList;
+			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			{
+				nodeList.append( *nIt );
+			}
+			DispatcherPtr dd = const_cast<Dispatcher*>(d);
+			slot( dd, nodeList );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
 	}
 };
 
@@ -308,9 +330,9 @@ struct PostDispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			slot( dd, nodeList, success );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}
@@ -330,6 +352,7 @@ void GafferDispatchModule::bindDispatcher()
 		.def( "registerDispatcher", &registerDispatcher, ( arg( "dispatcherType" ), arg( "creator" ), arg( "setupPlugsFn" ) = 0 ) ).staticmethod( "registerDispatcher" )
 		.def( "registeredDispatchers", &registeredDispatchersWrapper ).staticmethod( "registeredDispatchers" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
+		.def( "dispatchSignal", &Dispatcher::dispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;
 
@@ -350,5 +373,6 @@ void GafferDispatchModule::bindDispatcher()
 	;
 
 	SignalClass<Dispatcher::PreDispatchSignal, DefaultSignalCaller<Dispatcher::PreDispatchSignal>, PreDispatchSlotCaller >( "PreDispatchSignal" );
+	SignalClass<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >( "DispatchSignal" );
 	SignalClass<Dispatcher::PostDispatchSignal, DefaultSignalCaller<Dispatcher::PostDispatchSignal>, PostDispatchSlotCaller >( "PostDispatchSignal" );
 }

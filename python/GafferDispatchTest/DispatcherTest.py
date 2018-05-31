@@ -168,19 +168,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatcherSignals( self ) :
 
-		class CapturingSlot2( list ) :
-
-			def __init__( self, *signals ) :
-
-				self.__connections = []
-				for s in signals :
-					self.__connections.append( s.connect( Gaffer.WeakMethod( self.__slot ) ) )
-
-			def __slot( self, d, nodes ) :
-				self.append( (d,nodes) )
-
-		preCs = CapturingSlot2( GafferDispatch.Dispatcher.preDispatchSignal() )
+		preCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
+		dispatchCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		self.assertEqual( len( dispatchCs ), 0 )
 		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
@@ -193,6 +184,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( preCs ), 1 )
 		self.failUnless( preCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( preCs[0][1], [ s["n1"] ] )
+
+		self.assertEqual( len( dispatchCs ), 1 )
+		self.failUnless( dispatchCs[0][0].isSame( dispatcher ) )
+		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
 		self.failUnless( postCs[0][0].isSame( dispatcher ) )
@@ -207,7 +202,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			return False
 
-		connection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
+		preConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
+		connection = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
@@ -216,14 +212,68 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# never run
 		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( connection ), 0 )
 
 		# runs the first time
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( connection ), 1 )
 
 		# never runs again
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( connection ), 1 )
+
+	def testCatchThrowingSlots( self ) :
+
+		class BadSlot( list ) :
+
+			def __init__( self, signal ) :
+
+				self.__connection = signal.connect( Gaffer.WeakMethod( self.__slot ) )
+
+			def __slot( self, *args ) :
+
+				self.append( args )
+				raise RuntimeError, "bad slot!"
+
+		badConnection = BadSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		cs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+
+		# never run
+		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( badConnection ), 0 )
+		self.assertEqual( len( cs ), 0 )
+		self.assertEqual( len( postCs ), 0 )
+
+		# runs even though the bad slot throws
+		with IECore.CapturingMessageHandler() as mh :
+			dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "bad slot!" )
+		self.assertEqual( len( badConnection ), 1 )
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( len( postCs ), 1 )
+
+		# replace the bad slot with a connection to postDispatch
+		badConnection = BadSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
+
+		# runs even though bad slot throws
+		with IECore.CapturingMessageHandler() as mh :
+			dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "bad slot!" )
+		self.assertEqual( len( badConnection ), 1 )
+		self.assertEqual( len( s["n1"].log ), 2 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( len( postCs ), 2 )
 
 	def testPlugs( self ) :
 
