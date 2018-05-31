@@ -184,9 +184,12 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 			}
 
 			BoundHash hasher( this, branchChildPath, context );
+			task_group_context taskGroupContext( task_group_context::isolated );
 			parallel_deterministic_reduce(
 				blocked_range<size_t>( 0, p->readable().size(), 100 ),
-				hasher
+				hasher,
+				// Prevents outer tasks silently cancelling our tasks
+				taskGroupContext
 			);
 
 			h.append( hasher.result() );
@@ -266,9 +269,13 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 			}
 
 			BoundUnion unioner( this, branchChildPath, context, p.get() );
+			task_group_context taskGroupContext( task_group_context::isolated );
 			parallel_reduce(
 				blocked_range<size_t>( 0, p->readable().size() ),
-				unioner
+				unioner,
+				tbb::auto_partitioner(),
+				// Prevents outer tasks silently cancelling our tasks
+				taskGroupContext
 			);
 
 			result = unioner.result();

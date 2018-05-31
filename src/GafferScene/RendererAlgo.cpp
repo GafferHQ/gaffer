@@ -412,7 +412,14 @@ unsigned RenderSets::update( const ScenePlug *scene )
 	// Update all the sets we want in parallel.
 
 	Updater updater( scene, Context::current(), *this, changed );
-	parallel_reduce( tbb::blocked_range<size_t>( 0, m_sets.size() + 2 ), updater );
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	parallel_reduce(
+		tbb::blocked_range<size_t>( 0, m_sets.size() + 2 ),
+		updater,
+		tbb::auto_partitioner(),
+		// Prevents outer tasks silently cancelling our tasks
+		taskGroupContext
+	);
 
 	return updater.changed;
 }
