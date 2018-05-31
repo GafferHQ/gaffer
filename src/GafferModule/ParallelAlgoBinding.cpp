@@ -162,7 +162,17 @@ void callOnUIThread( boost::python::object f )
 
 std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boost::python::object f )
 {
-	auto fPtr = std::make_shared<boost::python::object>( f );
+	// The BackgroundTask we return will own the python function we
+	// pass to it. Wrap the function so that the GIL is acquired
+	// before the python object is destroyed.
+	auto fPtr = std::shared_ptr<boost::python::object>(
+		new boost::python::object( f ),
+		[]( boost::python::object *o ) {
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+
 	auto backgroundTask = ParallelAlgo::callOnBackgroundThread(
 		subject,
 		[fPtr]() mutable {
@@ -170,14 +180,9 @@ std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boo
 			try
 			{
 				(*fPtr)();
-				// We are likely to be the last owner of the python
-				// function object. Make sure we release it while we
-				// still hold the GIL.
-				fPtr.reset();
 			}
 			catch( boost::python::error_already_set &e )
 			{
-				fPtr.reset();
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}
 		}

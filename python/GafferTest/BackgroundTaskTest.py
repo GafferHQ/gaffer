@@ -83,6 +83,7 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 
 		s["n"]["op1"].setValue( 10 )
 		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
+		time.sleep( 0.01 ) # Give task a chance to start before we cancel it
 		s["n"]["op1"].setValue( 20 )
 
 		self.assertEqual( operations, [ "set", "background", "set" ] )
@@ -108,6 +109,7 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 			lambda plug : operations.append( "undo" )
 		)
 		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
+		time.sleep( 0.01 ) # Give task a chance to start before we cancel it
 		s.undo()
 
 		self.assertEqual( operations, [ "background", "undo" ] )
@@ -117,6 +119,7 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 			lambda plug : operations.append( "redo" )
 		)
 		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
+		time.sleep( 0.01 ) # Give task a chance to start before we cancel it
 		s.redo()
 
 		self.assertEqual( operations, [ "background", "redo" ] )
