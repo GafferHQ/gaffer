@@ -141,6 +141,9 @@ class GAFFER_API Animation : public ComputeNode
 				Key *closestKey( float time );
 				const Key *closestKey( float time ) const;
 
+				Key *closestKey( float time, float maxDistance );
+				const Key *closestKey( float time, float maxDistance ) const;
+
 				Key *previousKey( float time );
 				const Key *previousKey( float time ) const;
 

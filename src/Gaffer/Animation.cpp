@@ -311,6 +311,23 @@ const Animation::Key *Animation::CurvePlug::closestKey( float time ) const
 	}
 }
 
+Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDistance )
+{
+	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->closestKey( time, maxDistance ) );
+}
+
+const Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDistance ) const
+{
+	const Animation::Key *candidate = closestKey( time );
+
+	if( !candidate || fabs( candidate->getTime() - time) > maxDistance )
+	{
+		return nullptr;
+	}
+
+	return candidate;
+}
+
 Animation::Key *Animation::CurvePlug::previousKey( float time )
 {
 	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->previousKey( time ) );
