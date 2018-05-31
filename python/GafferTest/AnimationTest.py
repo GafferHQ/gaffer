@@ -206,6 +206,12 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( curve.closestKey( 1 ), key1 )
 		self.assertEqual( curve.closestKey( 1.1 ), key1 )
 
+		self.assertEqual( curve.closestKey( -1, 1 ), key0 )
+		self.assertEqual( curve.closestKey( -1, 0.9 ), None )
+
+		self.assertEqual( curve.closestKey( 0.75, 1 ), key1 )
+		self.assertEqual( curve.closestKey( 0.75, 0.2 ), None )
+
 	def testRemoveKey( self ) :
 
 		s = Gaffer.ScriptNode()
