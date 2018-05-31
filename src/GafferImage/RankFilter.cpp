@@ -80,7 +80,7 @@ Gaffer::V2iPlug *RankFilter::radiusPlug()
 }
 
 const Gaffer::V2iPlug *RankFilter::radiusPlug() const
-{ 
+{
 	return getChild<V2iPlug>( g_firstPlugIndex );
 }
 
@@ -132,7 +132,7 @@ void RankFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	if(
 		input == expandDataWindowPlug() ||
 		input == inPlug()->dataWindowPlug() ||
-		input->parent<V2iPlug>() == radiusPlug() 
+		input->parent<V2iPlug>() == radiusPlug()
 	)
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
@@ -142,7 +142,7 @@ void RankFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 		input == inPlug()->channelDataPlug() ||
 		input->parent<V2iPlug>() == radiusPlug() ||
 		input == boundingModePlug() ||
-		input == masterChannelPlug() 
+		input == masterChannelPlug()
 	)
 	{
 		outputs.push_back( pixelOffsetsPlug() );
@@ -215,7 +215,7 @@ void RankFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 		Sampler sampler(
 			inPlug(),
 			// This plug should only be evaluated with channel name already set to the driver channel
-			context->get<std::string>( ImagePlug::channelNameContextName ), 
+			context->get<std::string>( ImagePlug::channelNameContextName ),
 			inputBound,
 			(Sampler::BoundingMode)boundingModePlug()->getValue()
 		);
@@ -294,7 +294,7 @@ void RankFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 					}
 				}
 
-				// One of the pixels must match the rank 
+				// One of the pixels must match the rank
 				assert( r != V2i( INT_MAX, INT_MAX ) );
 
 				result.push_back( r );
@@ -341,7 +341,7 @@ void RankFilter::hashChannelData( const GafferImage::ImagePlug *parent, const Ga
 	{
 		ImagePlug::ChannelDataScope pixelOffsetsScope( context );
 		pixelOffsetsScope.setChannelName( masterChannel );
-	
+
 		pixelOffsetsPlug()->hash( h );
 	}
 
