@@ -181,9 +181,5 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["filterScale"].setValue( imath.V2f( 10 ) )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i( d.min() - imath.V2i( 5 ), d.max() + imath.V2i( 5 ) ) )
 
-	def __matrix( self, inputDataWindow, outputDataWindow ) :
-
-		return imath.M33f()
-
 if __name__ == "__main__":
 	unittest.main()
