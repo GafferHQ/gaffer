@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import time
 import unittest
 import imath
 
@@ -141,6 +142,34 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 			# When we look at just the channel being used as the master, it matches a default median not using
 			# a master
 			self.assertImagesEqual( masterMedianSingleChannel["out"], defaultMedianSingleChannel["out"] )
+
+	def testCancellation( self ) :
+
+		c = GafferImage.Constant()
+
+		m = GafferImage.Median()
+		m["in"].setInput( c["out"] )
+		m["radius"].setValue( imath.V2i( 2000 ) )
+
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( m["out"], lambda : GafferImageTest.processTiles( m["out"] ) )
+		# Give background tasks time to get into full swing
+		time.sleep( 0.1 )
+
+		# Check that we can cancel them in reasonable time
+		t = time.time()
+		bt.cancelAndWait()
+		self.assertLess( time.time() - t, 0.2 )
+
+		# Check that we can do the same when using a master
+		# channel.
+		m["masterChannel"].setValue( "R" )
+
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( m["out"], lambda : GafferImageTest.processTiles( m["out"] ) )
+		time.sleep( 0.1 )
+
+		t = time.time()
+		bt.cancelAndWait()
+		self.assertLess( time.time() - t, 0.2 )
 
 if __name__ == "__main__":
 	unittest.main()

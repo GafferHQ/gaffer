@@ -233,6 +233,8 @@ void RankFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 		{
 			for( p.x = tileBound.min.x; p.x < tileBound.max.x; ++p.x )
 			{
+				IECore::Canceller::check( context->canceller() );
+
 				// Fill array with all nearby samples
 				V2i o;
 				vector<float>::iterator pixelsIt = pixels.begin();
@@ -403,6 +405,8 @@ IECore::ConstFloatVectorDataPtr RankFilter::computeChannelData( const std::strin
 	{
 		for( p.x = tileBound.min.x; p.x < tileBound.max.x; ++p.x )
 		{
+			IECore::Canceller::check( context->canceller() );
+
 			V2i o;
 			vector<float>::iterator pixelsIt = pixels.begin();
 			for( o.y = -radius.y; o.y <= radius.y; ++o.y )
