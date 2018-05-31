@@ -202,9 +202,20 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			Tile() = default;
 			Tile( const Tile &other );
 
+			struct Update
+			{
+				Tile *tile;
+				IECore::ConstFloatVectorDataPtr channelData;
+				const IECore::MurmurHash channelDataHash;
+			};
+
 			// Called from a background thread with the context
 			// already set up appropriately for the tile.
-			void update( const GafferImage::ImagePlug *image );
+			Update computeUpdate( const GafferImage::ImagePlug *image );
+			// Applies previously computed updates for several tiles
+			// such that they become visible to the UI thread together.
+			static void applyUpdates( const std::vector<Update> &updates );
+
 			// Called from the UI thread.
 			const IECoreGL::Texture *texture();
 

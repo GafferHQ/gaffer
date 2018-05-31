@@ -369,20 +369,46 @@ ImageGadget::Tile::Tile( const Tile &other )
 
 }
 
-void ImageGadget::Tile::update( const ImagePlug *image )
+ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image )
 {
 	const IECore::MurmurHash h = image->channelDataPlug()->hash();
 	Mutex::scoped_lock lock( m_mutex );
 	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
 	{
-		return;
+		return Update{ nullptr, nullptr, MurmurHash() };
 	}
 
 	lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
 	ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
-	lock.acquire( m_mutex ); // Re-acquire before writing
-	m_channelDataToConvert = channelData;
-	m_channelDataHash = h;
+	return Update{ this, channelData, h };
+}
+
+void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
+{
+	for( const auto &u : updates )
+	{
+		if( u.tile )
+		{
+			u.tile->m_mutex.lock();
+		}
+	}
+
+	for( const auto &u : updates )
+	{
+		if( u.tile )
+		{
+			u.tile->m_channelDataToConvert = u.channelData;
+			u.tile->m_channelDataHash = u.channelDataHash;
+		}
+	}
+
+	for( const auto &u : updates )
+	{
+		if( u.tile )
+		{
+			u.tile->m_mutex.unlock();
+		}
+	}
 }
 
 const IECoreGL::Texture *ImageGadget::Tile::texture()
@@ -460,13 +486,16 @@ void ImageGadget::updateTiles()
 
 	auto tileFunctor = [this, channelsToCompute] ( const ImagePlug *image, const V2i &tileOrigin ) {
 
+		vector<Tile::Update> updates;
 		ImagePlug::ChannelDataScope channelScope( Context::current() );
 		for( auto &channelName : channelsToCompute )
 		{
 			channelScope.setChannelName( channelName );
 			Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-			tile.update( image );
+			updates.push_back( tile.computeUpdate( image ) );
 		}
+
+		Tile::applyUpdates( updates );
 
 		if( refCount() && !m_renderRequestPending.exchange( true ) )
 		{
