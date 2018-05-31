@@ -545,6 +545,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
+				Canceller::check( context->canceller() );
+
 				iP.x = ( oP.x + 0.5 ) / ratio.x + offset.x;
 				iPF.x = OIIO::floorfrac( iP.x, &iPI.x );
 
@@ -622,6 +624,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
+			Canceller::check( context->canceller() );
+
 			std::vector<float>::const_iterator wIt = weights.begin();
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
@@ -666,6 +670,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
+			Canceller::check( context->canceller() );
+
 			iY = ( oP.y + 0.5 ) / ratio.y + offset.y;
 			OIIO::floorfrac( iY, &iYI );
 
