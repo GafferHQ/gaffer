@@ -455,11 +455,23 @@ class ShaderCache : public IECore::RefCounted
 		// Can be called concurrently with other get() calls.
 		ArnoldShaderPtr get( const IECore::ObjectVector *shader )
 		{
+			// Rehashing shaders is expensive, so we keep a map of ObjectVector addresses
+			// to hash values.  In order to ensure there isn't a tiny risk of freeing one
+			// of these addresses and constructing a different ObjectVector at the same
+			// location, the hash keys are shared pointers which will keep these
+			// ObjectVectors alive.  We clear them out before the render starts in clearUnused()
+			HashCache::accessor ha;
+			m_hashCache.insert( ha, shader );
+			if( ha->second == IECore::MurmurHash() )
+			{
+				ha->second = shader->Object::hash();
+			}
+
 			Cache::accessor a;
-			m_cache.insert( a, shader->Object::hash() );
+			m_cache.insert( a, ha->second );
 			if( !a->second )
 			{
-				a->second = new ArnoldShader( shader, m_nodeDeleter, "shader:" + shader->Object::hash().toString() + ":" );
+				a->second = new ArnoldShader( shader, m_nodeDeleter, "shader:" + ha->second.toString() + ":" );
 			}
 			return a->second;
 		}
@@ -467,6 +479,23 @@ class ShaderCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
+			vector<IECore::ConstObjectVectorPtr> toEraseHash;
+			for( HashCache::iterator it = m_hashCache.begin(), eIt = m_hashCache.end(); it != eIt; ++it )
+			{
+				if( it->first->refCount() == 1 )
+				{
+					// Only one reference - this is ours, so
+					// nothing outside of the cache is using the
+					// object vector we're keeping alive to match
+					// the shader hash.
+					toEraseHash.push_back( it->first );
+				}
+			}
+			for( vector<IECore::ConstObjectVectorPtr>::const_iterator it = toEraseHash.begin(), eIt = toEraseHash.end(); it != eIt; ++it )
+			{
+				m_hashCache.erase( *it );
+			}
+
 			vector<IECore::MurmurHash> toErase;
 			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
@@ -488,9 +517,11 @@ class ShaderCache : public IECore::RefCounted
 
 		NodeDeleter m_nodeDeleter;
 
+		typedef tbb::concurrent_hash_map<IECore::ConstObjectVectorPtr, IECore::MurmurHash> HashCache;
+		HashCache m_hashCache;
+
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr> Cache;
 		Cache m_cache;
-
 };
 
 IE_CORE_DECLAREPTR( ShaderCache )
