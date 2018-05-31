@@ -113,7 +113,9 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 struct ActiveTask
 {
 	BackgroundTask *task;
-	const ScriptNode *subject;
+	// Held via Ptr to keep the script alive
+	// for the duration of the task.
+	ConstScriptNodePtr subject;
 };
 
 typedef boost::multi_index::multi_index_container<
@@ -123,7 +125,7 @@ typedef boost::multi_index::multi_index_container<
 			boost::multi_index::member<ActiveTask, BackgroundTask *, &ActiveTask::task>
 		>,
 		boost::multi_index::hashed_non_unique<
-			boost::multi_index::member<ActiveTask, const ScriptNode *, &ActiveTask::subject>
+			boost::multi_index::member<ActiveTask, ConstScriptNodePtr, &ActiveTask::subject>
 		>
 	>
 > ActiveTasks;
@@ -140,16 +142,53 @@ ActiveTasks &activeTasks()
 // BackgroundTask
 //////////////////////////////////////////////////////////////////////////
 
+struct BackgroundTask::TaskData : public boost::noncopyable
+{
+	TaskData( Function *function )
+		:	function( function ), status( WaitingToStart )
+	{
+	}
+
+	enum Status
+	{
+		WaitingToStart,
+		Started,
+		Done,
+		Cancelled
+	};
+
+	Function *function;
+	IECore::Canceller canceller;
+	std::mutex mutex; // Protects `conditionVariable` and `status`
+	std::condition_variable conditionVariable;
+	Status status;
+};
+
 BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
-	:	m_done( false )
+	:	m_function( function ), m_taskData( std::make_shared<TaskData>( &m_function ) )
 {
 	activeTasks().insert( ActiveTask{ this, scriptNode( subject ) } );
 
+	auto taskData = m_taskData;
 	tbb::task *functionTask = new( tbb::task::allocate_root() ) FunctionTask(
-		[this, function] {
+		[taskData] {
+
+			// Early out if we were cancelled before the task
+			// even started.
+			std::unique_lock<std::mutex> lock( taskData->mutex );
+			if( taskData->status == TaskData::Cancelled )
+			{
+				return;
+			}
+
+			// Otherwise do the work.
+
+			taskData->status = TaskData::Started;
+			lock.unlock();
+
 			try
 			{
-				function( m_canceller );
+				(*taskData->function)( taskData->canceller );
 			}
 			catch( const std::exception &e )
 			{
@@ -171,9 +210,10 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 					"Unknown error"
 				);
 			}
-			std::unique_lock<std::mutex> lock( m_mutex );
-			m_done = true;
-			m_conditionVariable.notify_one();
+
+			lock.lock();
+			taskData->status = TaskData::Done;
+			taskData->conditionVariable.notify_one();
 		}
 	);
 	tbb::task::enqueue( *functionTask );
@@ -186,25 +226,30 @@ BackgroundTask::~BackgroundTask()
 
 void BackgroundTask::cancel()
 {
-	m_canceller.cancel();
+	std::unique_lock<std::mutex> lock( m_taskData->mutex );
+	if( m_taskData->status == TaskData::WaitingToStart )
+	{
+		m_taskData->status = TaskData::Cancelled;
+	}
+	m_taskData->canceller.cancel();
 }
 
 void BackgroundTask::wait()
 {
-	std::unique_lock<std::mutex> lock( m_mutex );
-	m_conditionVariable.wait( lock, [this]{ return m_done == true; } );
+	std::unique_lock<std::mutex> lock( m_taskData->mutex );
+	m_taskData->conditionVariable.wait( lock, [this]{ return done(); } );
 	activeTasks().erase( this );
 }
 
 void BackgroundTask::cancelAndWait()
 {
-	m_canceller.cancel();
+	cancel();
 	wait();
 }
 
 bool BackgroundTask::done() const
 {
-	return m_done;
+	return m_taskData->status == TaskData::Done || m_taskData->status == TaskData::Cancelled;
 }
 
 void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
@@ -225,11 +270,19 @@ void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
 
 	const ScriptNode *s = scriptNode( actionSubject );
 	auto range = a.get<1>().equal_range( s );
+
+	// Call cancel for everything first.
+	for( auto it = range.first; it != range.second; ++it )
+	{
+		it->task->cancel();
+	}
+	// And then perform all the waits. This way the wait on one
+	// task doesn't delay the start of cancellation for the next.
 	for( auto it = range.first; it != range.second; )
 	{
-		// Cancellation invalidates iterator, so must increment first.
+		// Wait invalidates iterator, so must increment first.
 		auto nextIt = std::next( it );
-		it->task->cancelAndWait();
+		it->task->wait();
 		it = nextIt;
 	}
 }

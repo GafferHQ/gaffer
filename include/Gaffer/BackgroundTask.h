@@ -45,6 +45,7 @@
 
 #include <condition_variable>
 #include <functional>
+#include <memory>
 #include <mutex>
 
 namespace Gaffer
@@ -103,11 +104,15 @@ class GAFFER_API BackgroundTask : public boost::noncopyable
 		// before an edit is made to `actionSubject`.
 		static void cancelAffectedTasks( const GraphComponent *actionSubject );
 		friend class Action;
+		friend class ScriptNode;
 
-		IECore::Canceller m_canceller;
-		std::mutex m_mutex;
-		std::condition_variable m_conditionVariable;
-		bool m_done;
+		// Function to be executed.
+		Function m_function;
+
+		// Control structure for the TBB task we use to execute
+		// `m_function`. This is shared with the TBB task.
+		struct TaskData;
+		std::shared_ptr<TaskData> m_taskData;
 
 };
 

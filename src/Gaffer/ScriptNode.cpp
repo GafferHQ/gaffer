@@ -39,6 +39,7 @@
 
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/DependencyNode.h"
@@ -359,6 +360,14 @@ ApplicationRoot *ScriptNode::applicationRoot()
 const ApplicationRoot *ScriptNode::applicationRoot() const
 {
 	return ancestor<ApplicationRoot>();
+}
+
+void ScriptNode::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	if( !newParent )
+	{
+		BackgroundTask::cancelAffectedTasks( this );
+	}
 }
 
 bool ScriptNode::selectionSetAcceptor( const Set *s, const Set::Member *m )

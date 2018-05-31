@@ -101,11 +101,17 @@ class GAFFER_API Action : public IECore::RunTimeTyped
 		/// circular reference. It is guaranteed that the subject will
 		/// remain alive for as long as the Functions are in use by the undo
 		/// system, so it is sufficient to bind only raw pointers to the subject.
-		static void enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn );
+		///
+		/// > Warning : Only pass `cancelBackgroundTasks = false` if you are
+		/// > _certain_ that there is no possible interaction between this Action
+		/// > and a concurrent background task. At the time of writing, the only
+		/// > known valid use is in the Metadata system (because computations are
+		/// > not allowed to depend on metadata).
+		static void enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn, bool cancelBackgroundTasks = true );
 
 	protected :
 
-		Action();
+		Action( bool cancelBackgroundTasks = true );
 		~Action() override;
 
 		/// Must be implemented by derived classes to
@@ -142,6 +148,7 @@ class GAFFER_API Action : public IECore::RunTimeTyped
 		friend class ScriptNode;
 
 		bool m_done;
+		const bool m_cancelBackgroundTasks;
 
 };
 

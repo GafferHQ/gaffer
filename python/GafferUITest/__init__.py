@@ -100,6 +100,7 @@ from VectorDataWidgetTest import VectorDataWidgetTest
 from DotNodeGadgetTest import DotNodeGadgetTest
 from DocumentationTest import DocumentationTest
 from LazyMethodTest import LazyMethodTest
+from BackgroundMethodTest import BackgroundMethodTest
 from ReferenceUITest import ReferenceUITest
 from CompoundDataPlugValueWidgetTest import CompoundDataPlugValueWidgetTest
 from GraphGadgetTest import GraphGadgetTest

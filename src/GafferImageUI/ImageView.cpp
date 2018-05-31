@@ -40,6 +40,7 @@
 #include "GafferImageUI/ImageGadget.h"
 
 #include "GafferImage/Clamp.h"
+#include "GafferImage/DeleteImageContextVariables.h"
 #include "GafferImage/Format.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/ImagePlug.h"
@@ -186,6 +187,95 @@ class ImageView::ChannelChooser : public boost::signals::trackable
 /// Implementation of ImageView::ColorInspector
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+class V2fContextVariable : public Gaffer::ComputeNode
+{
+
+	public :
+
+		V2fContextVariable( const std::string &name = "V2fContextVariable" )
+			:	ComputeNode( name )
+		{
+			storeIndexOfNextChild( g_firstPlugIndex );
+			addChild( new StringPlug( "name" ) );
+			addChild( new V2fPlug( "out", Plug::Out ) );
+		}
+
+		// Deliberately omitting RunTimeTyped macros because this
+		// is just a private class and doesn't need its own type.
+
+		StringPlug *namePlug()
+		{
+			return getChild<StringPlug>( g_firstPlugIndex );
+		}
+
+		const StringPlug *namePlug() const
+		{
+			return getChild<StringPlug>( g_firstPlugIndex );
+		}
+
+		V2fPlug *outPlug()
+		{
+			return getChild<V2fPlug>( g_firstPlugIndex + 1 );
+		}
+
+		const V2fPlug *outPlug() const
+		{
+			return getChild<V2fPlug>( g_firstPlugIndex + 1 );
+		}
+
+		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override
+		{
+			ComputeNode::affects( input, outputs );
+
+			if( input == namePlug() )
+			{
+				outputs.push_back( outPlug()->getChild( 0 ) );
+				outputs.push_back( outPlug()->getChild( 1 ) );
+			}
+		}
+
+	protected :
+
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override
+		{
+			ComputeNode::hash( output, context, h );
+			if( output->parent() == outPlug() )
+			{
+				const std::string name = namePlug()->getValue();
+				h.append( context->get<V2f>( name, V2f( 0 ) ) );
+			}
+		}
+
+		void compute( ValuePlug *output, const Context *context ) const override
+		{
+			if( output->parent() == outPlug() )
+			{
+				const std::string name = namePlug()->getValue();
+				const V2f value = context->get<V2f>( name, V2f( 0 ) );
+				const size_t index = output == outPlug()->getChild( 0 ) ? 0 : 1;
+				static_cast<FloatPlug *>( output )->setValue( value[index] );
+			}
+			else
+			{
+				ComputeNode::compute( output, context );
+			}
+		}
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+size_t V2fContextVariable::g_firstPlugIndex = 0;
+
+IE_CORE_DECLAREPTR( V2fContextVariable )
+
+} // namespace
+
 class ImageView::ColorInspector : public boost::signals::trackable
 {
 
@@ -193,29 +283,40 @@ class ImageView::ColorInspector : public boost::signals::trackable
 
 		ColorInspector( ImageView *view )
 			:	m_view( view ),
+				m_pixel( new V2fContextVariable ),
+				m_deleteContextVariables( new DeleteImageContextVariables ),
 				m_sampler( new ImageSampler )
 		{
 			PlugPtr plug = new Plug( "colorInspector" );
 			view->addChild( plug );
-
-			plug->addChild( new V2iPlug( "pixel" ) );
 			plug->addChild( new Color4fPlug( "color" ) );
+
+			// We use `m_pixel` to fetch a context variable to transfer
+			// the mouse position into `m_sampler`. We could use `mouseMoveSignal()`
+			// to instead call `m_sampler->pixelPlug()->setValue()`, but that
+			// would cause cancellation of the ImageView background compute every
+			// time the mouse was moved. The "colorInspector:pixel" variable is
+			// created in ImageViewUI's `_ColorInspectorPlugValueWidget`.
+			m_pixel->namePlug()->setValue( "colorInspector:pixel" );
+
+			// And we use a DeleteContextVariables node to make sure that our
+			// private context variable doesn't become visible to the upstream
+			// graph.
+			m_deleteContextVariables->variablesPlug()->setValue( "colorInspector:pixel" );
 
 			// We want to sample the image before the display transforms
 			// are applied. We can't simply get this image from inPlug()
 			// because derived classes may have called insertConverter(),
 			// so we take it from the input to the display transform chain.
+
 			ImagePlug *image = view->getPreprocessor()->getChild<Clamp>( "__clamp" )->inPlug();
-			m_sampler->imagePlug()->setInput( image );
+			m_deleteContextVariables->inPlug()->setInput( image );
+			m_sampler->imagePlug()->setInput( m_deleteContextVariables->outPlug() );
+			m_sampler->pixelPlug()->setInput( m_pixel->outPlug() );
 
 			plug->getChild<Color4fPlug>( "color" )->setInput( m_sampler->colorPlug() );
 
-			m_view->viewportGadget()->mouseMoveSignal().connect( boost::bind( &ColorInspector::mouseMove, this, ::_2 ) );
-
 			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
-			imageGadget->buttonPressSignal().connect( boost::bind( &ColorInspector::buttonPress, this,  ::_2 ) );
-			imageGadget->dragBeginSignal().connect( boost::bind( &ColorInspector::dragBegin, this, ::_2 ) );
-			imageGadget->dragEndSignal().connect( boost::bind( &ColorInspector::dragEnd, this, ::_2 ) );
 			imageGadget->channelsChangedSignal().connect( boost::bind( &ColorInspector::channelsChanged, this ) );
 		}
 
@@ -224,70 +325,6 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		Plug *plug()
 		{
 			return m_view->getChild<Plug>( "colorInspector" );
-		}
-
-		bool mouseMove( const ButtonEvent &event )
-		{
-			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
-			const LineSegment3f l = m_view->viewportGadget()->rasterToGadgetSpace( V2f( event.line.p0.x, event.line.p0.y ), imageGadget );
-			V2f pixel( 0 );
-			try
-			{
-				pixel = imageGadget->pixelAt( l );
-			}
-			catch( ... )
-			{
-				// pixelAt() can throw if there is an error
-				// computing the image being viewed. We
-				// leave the error reporting to other UI
-				// components.
-				return false;
-			}
-			const V2f pixelOrigin = V2f( floor( pixel.x ), floor( pixel.y ) );
-			m_sampler->pixelPlug()->setValue( pixelOrigin + V2f( 0.5 ) );
-			plug()->getChild<V2iPlug>( "pixel" )->setValue( pixelOrigin );
-			return false;
-		}
-
-		bool buttonPress( const ButtonEvent &event )
-		{
-			if( event.buttons != ButtonEvent::Left || event.modifiers )
-			{
-				return false;
-			}
-
-			return true; // accept press so we get dragBegin()
-		}
-
-		IECore::DataPtr dragBegin( const ButtonEvent &event )
-		{
-			if( event.buttons != ButtonEvent::Left || event.modifiers )
-			{
-				return nullptr;
-			}
-
-			Color4f color;
-			try
-			{
-				Context::Scope scopedContext( m_view->getContext() );
-				color = plug()->getChild<Color4fPlug>( "color" )->getValue();
-			}
-			catch( ... )
-			{
-				// If there's an error computing the image, we can't
-				// start a drag.
-				return nullptr;
-			}
-
-			Pointer::setCurrent( "rgba" );
-
-			return new Color4fData( color );
-		}
-
-		bool dragEnd( const ButtonEvent &event )
-		{
-			Pointer::setCurrent( "" );
-			return true;
 		}
 
 		void channelsChanged()
@@ -302,6 +339,8 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		}
 
 		ImageView *m_view;
+		V2fContextVariablePtr m_pixel;
+		DeleteImageContextVariablesPtr m_deleteContextVariables;
 		ImageSamplerPtr m_sampler;
 
 };
