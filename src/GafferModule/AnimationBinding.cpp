@@ -188,6 +188,11 @@ void GafferModule::bindAnimation()
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
 		.def(
+			"closestKey",
+			(Animation::Key *(Animation::CurvePlug::*)( float, float ))&Animation::CurvePlug::closestKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def(
 			"previousKey",
 			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::previousKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
