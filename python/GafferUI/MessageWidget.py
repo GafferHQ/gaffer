@@ -217,11 +217,11 @@ class MessageWidget( GafferUI.Widget ) :
 		if level > self.__messageLevel :
 			return False
 
-		formatted = "<h1 class='%s'>%s : %s </h1><span class='message'>%s</span><br>" % (
+		formatted = "<h1 class='%s'>%s : %s </h1><pre class='message'>%s</pre><br>" % (
 			IECore.Msg.levelAsString( level ),
 			IECore.Msg.levelAsString( level ),
 			context,
-			message.replace( "\n", "<br>" )
+			message
 		)
 
 		self.__text.appendHTML( formatted )
