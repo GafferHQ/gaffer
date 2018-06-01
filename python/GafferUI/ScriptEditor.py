@@ -197,11 +197,11 @@ class _MessageHandler( IECore.MessageHandler ) :
 
 	def handle( self, level, context, message ) :
 
-		html = formatted = "<h1 class='%s'>%s : %s </h1><span class='message'>%s</span><br>" % (
+		html = formatted = "<h1 class='%s'>%s : %s </h1><pre class='message'>%s</pre><br>" % (
 			IECore.Msg.levelAsString( level ),
 			IECore.Msg.levelAsString( level ),
 			context,
-			message.replace( "\n", "<br>" )
+			message
 		)
 		self.__textWidget.appendHTML( html )
 		# update the gui so messages are output as they occur, rather than all getting queued
