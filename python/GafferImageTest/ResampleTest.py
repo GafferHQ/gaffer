@@ -38,6 +38,8 @@ import os
 import shutil
 import unittest
 import subprocess
+import time
+
 import imath
 
 import IECore
@@ -181,9 +183,33 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["filterScale"].setValue( imath.V2f( 10 ) )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i( d.min() - imath.V2i( 5 ), d.max() + imath.V2i( 5 ) ) )
 
-	def __matrix( self, inputDataWindow, outputDataWindow ) :
+	def testCancellation( self ) :
 
-		return imath.M33f()
+		c = GafferImage.Constant()
+
+		r = GafferImage.Resample()
+		r["in"].setInput( c["out"] )
+		r["filterScale"].setValue( imath.V2f( 2000 ) )
+
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( r["out"], lambda : GafferImageTest.processTiles( r["out"] ) )
+		# Give background tasks time to get into full swing
+		time.sleep( 0.1 )
+
+		# Check that we can cancel them in reasonable time
+		acceptableCancellationDelay = 0.25 if "TRAVIS" not in os.environ else 4.0
+		t = time.time()
+		bt.cancelAndWait()
+		self.assertLess( time.time() - t, acceptableCancellationDelay )
+
+		# Check that we can do the same when using a non-separable filter
+		r["filter"].setValue( "disk" )
+
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( r["out"], lambda : GafferImageTest.processTiles( r["out"] ) )
+		time.sleep( 0.1 )
+
+		t = time.time()
+		bt.cancelAndWait()
+		self.assertLess( time.time() - t, acceptableCancellationDelay )
 
 if __name__ == "__main__":
 	unittest.main()

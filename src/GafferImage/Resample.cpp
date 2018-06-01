@@ -177,7 +177,7 @@ const OIIO::Filter2D *filterAndScale( const std::string &name, V2f ratio, V2f &i
 
 	// Convert the filter scale into input space
 	inputFilterScale = V2f( 1.0f ) / ratio;
-	
+
 	// Don't allow the filter scale to cover less than 1 pixel in input space
 	inputFilterScale = V2f( std::max( 1.0f, inputFilterScale.x ), std::max( 1.0f, inputFilterScale.y ) );
 
@@ -405,7 +405,7 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 		V2f inputFilterScale;
 		const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );
 		inputFilterScale *= filterScalePlug()->getValue();
-		
+
 		const V2f filterRadius = V2f( filter->width(), filter->height() ) * inputFilterScale * 0.5f;
 
 		dstDataWindow.min -= filterRadius * ratio;
@@ -545,6 +545,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
+				Canceller::check( context->canceller() );
+
 				iP.x = ( oP.x + 0.5 ) / ratio.x + offset.x;
 				iPF.x = OIIO::floorfrac( iP.x, &iPI.x );
 
@@ -571,7 +573,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 				// center is actually within the filter support.  This fix should also be done to the
 				// seperable case.  Once that is done, we should probably also hoist the multiply by
 				// filterCoordinateMult out of the loop.
-				
+
 				V2i fP; // relative filter position
 				float v = 0.0f;
 				float totalW = 0.0f;
@@ -622,6 +624,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
+			Canceller::check( context->canceller() );
+
 			std::vector<float>::const_iterator wIt = weights.begin();
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
@@ -666,6 +670,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
+			Canceller::check( context->canceller() );
+
 			iY = ( oP.y + 0.5 ) / ratio.y + offset.y;
 			OIIO::floorfrac( iY, &iYI );
 
