@@ -166,6 +166,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.failUnless( "testDispatcher" in GafferDispatch.Dispatcher.registeredDispatchers() )
 		self.failUnless( GafferDispatch.Dispatcher.create( 'testDispatcher' ).isInstanceOf( DispatcherTest.TestDispatcher.staticTypeId() ) )
 
+		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcher" )
+		self.failUnless( "testDispatcher" not in GafferDispatch.Dispatcher.registeredDispatchers() )
+
+		# testing that deregistering a non-existent dispatcher is safe
+		GafferDispatch.Dispatcher.deregisterDispatcher( "fake" )
+
 	def testDispatcherSignals( self ) :
 
 		class CapturingSlot2( list ) :
