@@ -161,25 +161,12 @@ class dispatch( Gaffer.Application ) :
 			nodes.append( node )
 
 		dispatcherType = args["dispatcher"].value or GafferDispatch.Dispatcher.getDefaultDispatcherType()
+		dispatcher = GafferDispatch.Dispatcher.create( dispatcherType )
+		if not dispatcher :
+			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "{} is not a registered dispatcher.".format( dispatcherType ) )
+			return 1
 
-		if args["gui"].value :
-
-			import GafferUI
-			import GafferDispatchUI
-
-			self.__dialogue = GafferDispatchUI.DispatchDialogue( script, nodes, dispatcherType, applyUserDefaults=args["applyUserDefaults"].value )
-			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
-			dispatcher = self.__dialogue.getDispatcher()
-
-		else :
-
-			dispatcher = GafferDispatch.Dispatcher.create( dispatcherType )
-			if not dispatcher :
-				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "{} is not a registered dispatcher.".format( dispatcherType ) )
-				return 1
-
-			if args["applyUserDefaults"].value :
-				Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+		Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
 
 		if len(args["settings"]) % 2 :
 			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"settings\" parameter must have matching entry/value pairs" )
@@ -201,6 +188,11 @@ class dispatch( Gaffer.Application ) :
 
 		if args["gui"].value :
 
+			import GafferUI
+			import GafferDispatchUI
+
+			self.__dialogue = GafferDispatchUI.DispatchDialogue( nodes, [ dispatcher ] )
+			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 			self.__dialogue.setVisible( True )
 
 			GafferUI.EventLoop.mainEventLoop().start()
