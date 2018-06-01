@@ -39,45 +39,59 @@ import sys
 import threading
 import traceback
 
-import imath
-
 import IECore
 
 import Gaffer
-import GafferDispatch
 
 import GafferUI
 
 ## A dialogue which can be used to dispatch tasks
 class DispatchDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, script, tasks, dispatcherType, applyUserDefaults=False, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def __init__( self, tasks, dispatchers, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
 		self._getWidget().setBorderStyle( GafferUI.Frame.BorderStyle.None )
 
+		self.__dispatchers = dispatchers
+		self.__tasks = tasks
+		self.__script = tasks[0].scriptNode()
+		# hold a reference to the script window so plugs which launch child windows work properly.
+		# this is necessary for PlugValueWidgets like color swatches and ramps. Ideally those widgets
+		# wouldn't rely on the existence of a ScriptWindow and we could drop this acquisition.
+		self.__scriptWindow = GafferUI.ScriptWindow.acquire( self.__script )
+
 		# build tabs for all the node, dispatcher, and context settings
 		with GafferUI.ListContainer() as self.__settings :
 
-			mainMenu = GafferUI.MenuBar( self.menuDefinition( script.applicationRoot() ) )
+			mainMenu = GafferUI.MenuBar( self.menuDefinition( self.__script.applicationRoot() ) )
 			mainMenu.setVisible( False )
 
 			with GafferUI.TabbedContainer() as self.__tabs :
 
-				with GafferUI.ListContainer( borderWidth=3 ) as dispatcherTab :
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=2, borderWidth=2 ) :
-						GafferUI.Label( "<h4>Current Dispatcher</h4>" )
-						self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-						self.__dispatchersMenu.append( list(GafferDispatch.Dispatcher.registeredDispatchers()) )
-						self.__dispatchersMenu.setSelection( [ dispatcherType ] )
-						self.__dispatchersMenuChanged = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
+				for task in self.__tasks :
+					taskFrame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
+					taskFrame.addChild( self.__nodeEditor( task ) )
+					# remove the per-node execute button
+					Gaffer.Metadata.registerValue( task, "layout:customWidget:dispatchButton:widgetType", "", persistent = False )
+					self.__tabs.setLabel( taskFrame, task.relativeName( self.__script ) )
 
-					self.__dispatcherFrame = GafferUI.Frame( borderWidth=2 )
+				with GafferUI.ListContainer() as dispatcherTab :
+
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=2, borderWidth=4 ) as dispatcherMenuColumn :
+						GafferUI.Label( "<h4>Dispatcher</h4>" )
+						self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
+						self.__dispatchersMenu.append( [ x.getName() for x in self.__dispatchers ] )
+						self.__dispatchersMenu.setSelection( [ self.__dispatchers[0].getName() ] )
+						self.__dispatchersMenuChanged = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
+						dispatcherMenuColumn.setVisible( len(self.__dispatchers) > 1 )
+
+					self.__dispatcherFrame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 					self.__tabs.setLabel( dispatcherTab, "Dispatcher" )
 
-				with GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=2 ) as contextTab :
-					GafferUI.PlugValueWidget.create( script["variables"] )
+				with GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=4 ) as contextTab :
+					GafferUI.PlugValueWidget.create( self.__script["variables"] )
 					self.__tabs.setLabel( contextTab, "Context Variables" )
 
 		# build a ui element for progress feedback and messages
@@ -95,50 +109,9 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		self.__button = self._addButton( "Dispatch" )
 
-		self.__script = script
-		# hold a reference to the script window so plugs which launch child windows work properly
-		self.__scriptWindow = GafferUI.ScriptWindow.acquire( script )
-
-		self.__applyUserDefaults = applyUserDefaults
-		self.__dispatchers = {}
-		self.setDispatcher( dispatcherType )
-		self.setTasks( tasks )
+		self.__setDispatcher( dispatchers[0] )
 
 		self.__initiateSettings( self.__button )
-
-	def __initiateSettings( self, button ) :
-
-		button.setText( "Dispatch" )
-		self.__buttonConnection = button.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateDispatch ) )
-		self.__tabs.setCurrent( self.__tabs[0] )
-		self._getWidget().setChild( self.__settings )
-
-	def setTasks( self, tasks ) :
-
-		self.__tasks = tasks
-
-		# remove the task tabs but leave the dispatcher and context variables
-		del self.__tabs[:-2]
-
-		for task in reversed( self.__tasks ) :
-			editor = self.__nodeEditor( task )
-			# remove the per-node execute button
-			Gaffer.Metadata.registerValue( task, "layout:customWidget:dispatchButton:widgetType", "", persistent = False )
-			self.__tabs.insert( 0, editor, label = task.relativeName( self.__script ) )
-
-	def setDispatcher( self, dispatcherType ) :
-
-		if dispatcherType not in self.__dispatchers.keys() :
-			self.__dispatchers[dispatcherType] = GafferDispatch.Dispatcher.create( dispatcherType )
-			if self.__applyUserDefaults :
-				Gaffer.NodeAlgo.applyUserDefaults( self.__dispatchers[dispatcherType] )
-
-		self.__currentDispatcher = self.__dispatchers[dispatcherType]
-		self.__dispatcherFrame.setChild( self.__nodeEditor( self.__currentDispatcher ) )
-
-	def getDispatcher( self ) :
-
-		return self.__currentDispatcher
 
 	def scriptNode( self ) :
 
@@ -184,9 +157,24 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		return editor
 
+	def __setDispatcher( self, dispatcher ) :
+
+		self.__currentDispatcher = dispatcher
+		self.__dispatcherFrame.setChild( self.__nodeEditor( self.__currentDispatcher ) )
+
 	def __dispatcherChanged( self, menu ) :
 
-		self.setDispatcher( menu.getSelection()[0] )
+		for dispatcher in self.__dispatchers :
+			if dispatcher.getName() == menu.getSelection()[0] :
+				self.__setDispatcher( dispatcher )
+				return
+
+	def __initiateSettings( self, button ) :
+
+		button.setText( "Dispatch" )
+		self.__buttonConnection = button.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateDispatch ) )
+		self.__tabs.setCurrent( self.__tabs[0] )
+		self._getWidget().setChild( self.__settings )
 
 	def __initiateDispatch( self, button ) :
 
