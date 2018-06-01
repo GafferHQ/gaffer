@@ -240,7 +240,11 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 	setsVector.resize( setNames.size(), nullptr );
 
 	Sets setsCompute( scene, Context::current(), setNames, setsVector );
-	parallel_for( tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute );
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	parallel_for(
+		tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute,
+		taskGroupContext // Prevents outer tasks silently cancelling our tasks
+	);
 
 	CompoundDataPtr result = new CompoundData;
 	for( size_t i = 0, e = setsVector.size(); i < e; ++i )

@@ -323,6 +323,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
 	const Gaffer::Context *context = Gaffer::Context::current();
 
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
 
 		tbb::make_filter<void, Imath::V2i>(
@@ -342,7 +343,10 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 
 			}
 
-		)
+		),
+
+		// Prevents outer tasks silently cancelling our tasks
+		taskGroupContext
 
 	);
 }
@@ -363,6 +367,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 	Detail::TileChannelInputIterator tileIterator( processWindow, channelNames, tileOrder );
 	const Gaffer::Context *context = Gaffer::Context::current();
 
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline(
 
 		tbb::task_scheduler_init::default_num_threads(),
@@ -385,7 +390,10 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 
 			}
 
-		)
+		),
+
+		// Prevents outer tasks silently cancelling our tasks
+		taskGroupContext
 
 	);
 }
@@ -409,6 +417,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
 	const Gaffer::Context *context = Gaffer::Context::current();
 
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
 
 		tbb::make_filter<void, Imath::V2i>(
@@ -445,7 +454,10 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 
 			}
 
-		)
+		),
+
+		// Prevents outer tasks silently cancelling our tasks
+		taskGroupContext
 
 	);
 }
@@ -469,6 +481,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 	Detail::TileChannelInputIterator tileIterator( processWindow, channelNames, tileOrder );
 	const Gaffer::Context *context = Gaffer::Context::current();
 
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline(
 
 		tbb::task_scheduler_init::default_num_threads(),
@@ -509,7 +522,10 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 				gatherFunctor( imagePlug, input.first.name, input.first.origin, input.second );
 			}
 
-		)
+		),
+
+		// Prevents outer tasks silently cancelling our tasks
+		taskGroupContext
 
 	);
 }

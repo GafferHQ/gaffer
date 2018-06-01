@@ -238,7 +238,8 @@ template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
 	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
-	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), root, f );
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
+	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), root, f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 
@@ -246,7 +247,8 @@ template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
 	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
-	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::Context::current(), f );
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
+	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::Context::current(), f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 
