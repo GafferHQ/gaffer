@@ -194,6 +194,8 @@ class Dispatcher : public Gaffer::Node
 		static void registerDispatcher( const std::string &dispatcherType, Creator creator, SetupPlugsFn setupPlugsFn = 0 );
 		/// Fills the vector with the names of all the registered Dispatcher creators.
 		static void registeredDispatchers( std::vector<std::string> &dispatcherTypes );
+		/// Removes a dispatcher from the registry
+		static void deregisterDispatcher( const std::string &dispatcherType );
 		//@}
 
 	protected :

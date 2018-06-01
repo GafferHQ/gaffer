@@ -751,6 +751,11 @@ void Dispatcher::registeredDispatchers( std::vector<std::string> &dispatcherType
 	}
 }
 
+void Dispatcher::deregisterDispatcher( const std::string &dispatcherType )
+{
+	creators().erase( dispatcherType );
+}
+
 Dispatcher::CreatorMap &Dispatcher::creators()
 {
 	static CreatorMap m;
