@@ -156,9 +156,10 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		time.sleep( 0.1 )
 
 		# Check that we can cancel them in reasonable time
+		acceptableCancellationDelay = 0.25 if "TRAVIS" not in os.environ else 4.0
 		t = time.time()
 		bt.cancelAndWait()
-		self.assertLess( time.time() - t, 0.2 )
+		self.assertLess( time.time() - t, acceptableCancellationDelay )
 
 		# Check that we can do the same when using a master
 		# channel.
@@ -169,7 +170,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		t = time.time()
 		bt.cancelAndWait()
-		self.assertLess( time.time() - t, 0.2 )
+		self.assertLess( time.time() - t, acceptableCancellationDelay )
 
 if __name__ == "__main__":
 	unittest.main()
