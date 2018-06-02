@@ -56,9 +56,9 @@ class dispatch( Gaffer.Application ) :
 			Example usage :
 
 			```
-			gaffer dispatch -script comp.gfr -nodes ImageWriter -dispatcher Local -settings -dispatcher.executeInBackground 1
+			gaffer dispatch -script comp.gfr -nodes ImageWriter1 -dispatcher Local -settings -dispatcher.frameRange '"1001-1020"'
 
-			gaffer dispatch -gui -nodes GafferDispatch.SystemCommand -dispatcher Local -settings -SystemCommand.command "ls -l"
+			gaffer dispatch -gui -nodes GafferDispatch.SystemCommand -dispatcher Local -settings -SystemCommand.command '"ls -l"'
 			```
 			"""
 		)
@@ -91,8 +91,8 @@ class dispatch( Gaffer.Application ) :
 
 				IECore.BoolParameter(
 					name = "applyUserDefaults",
-					description = "Applies userDefault values to all nodes and plugs created by the app, "
-						"including the dispatchers. Note if a script is supplied, the nodes will be unaffected.",
+					description = "Applies userDefault values to all nodes and plugs created by the app. "
+						"Note if a script is supplied, the nodes will be unaffected.",
 					defaultValue = False,
 				),
 
@@ -112,10 +112,17 @@ class dispatch( Gaffer.Application ) :
 				),
 
 				IECore.StringVectorParameter(
+					name = "alternateDispatchers",
+					description = "A list of alternate dispatcher types to make available when running the gui. "
+						"This parameter has no effect unless the gui is loaded.",
+					defaultValue = IECore.StringVectorData( [ "*" ] ),
+				),
+
+				IECore.StringVectorParameter(
 					name = "settings",
 					description = "The values to be set on the nodes, dispatcher, or context. Values "
 						"should be in the format -nodeA.plugA value -nodeA.plugB value -nodeB.plugC value "
-						"-dispatcher.plugD value -context.entry value",
+						"-dispatcher.plugD value -LocalDispatcher.plugE value -context.entry value",
 					defaultValue = IECore.StringVectorData( [] ),
 					userData = {
 						"parser" : {
@@ -163,12 +170,18 @@ class dispatch( Gaffer.Application ) :
 			nodes.append( node )
 
 		dispatcherType = args["dispatcher"].value or GafferDispatch.Dispatcher.getDefaultDispatcherType()
-		dispatcher = GafferDispatch.Dispatcher.create( dispatcherType )
-		if not dispatcher :
+		dispatchers = [ GafferDispatch.Dispatcher.create( dispatcherType ) ]
+		if not dispatchers[0] :
 			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "{} is not a registered dispatcher.".format( dispatcherType ) )
 			return 1
 
-		Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+		if args["gui"].value and len(args["alternateDispatchers"]) :
+			dispatchers.extend( GafferDispatch.Dispatcher.createMatching( " ".join( args["alternateDispatchers"] ) ) )
+
+		dispatcherNames = {}
+		for dispatcher in dispatchers :
+			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+			dispatcherNames[dispatcher.getName()] = dispatcher
 
 		if len(args["settings"]) % 2 :
 			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"settings\" parameter must have matching entry/value pairs" )
@@ -176,24 +189,28 @@ class dispatch( Gaffer.Application ) :
 
 		for i in range( 0, len(args["settings"]), 2 ) :
 			key = args["settings"][i].lstrip( "-" )
+			parent = key.split( "." )[0]
 			value = args["settings"][i+1]
 			if key.startswith( "context." ) :
 				entry = key.partition( "context." )[-1]
 				status = self.__setValue( entry, value, script, context=True )
 			elif key.startswith( "dispatcher." ) :
 				identifier = key.partition( "dispatcher." )[-1]
-				status = self.__setValue( identifier, value, dispatcher )
+				for dispatcher in dispatchers :
+					status = self.__setValue( identifier, value, dispatcher )
+			elif parent in dispatcherNames :
+				status = self.__setValue( key.partition( parent + "." )[-1], value, dispatcherNames[parent] )
 			else :
 				status = self.__setValue( key, value, script )
 			if status :
-					return status
+				return status
 
 		if args["gui"].value :
 
 			import GafferUI
 			import GafferDispatchUI
 
-			self.__dialogue = GafferDispatchUI.DispatchDialogue( nodes, [ dispatcher ] )
+			self.__dialogue = GafferDispatchUI.DispatchDialogue( nodes, dispatchers )
 			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 			self.__dialogue.setVisible( True )
 
@@ -201,7 +218,7 @@ class dispatch( Gaffer.Application ) :
 
 		else :
 
-			return self.__dispatch( dispatcher, nodes )
+			return self.__dispatch( dispatchers[0], nodes )
 
 		return 0
 
@@ -237,6 +254,8 @@ class dispatch( Gaffer.Application ) :
 	def __setValue( identifier, value, parent, context=False ) :
 
 		if context :
+			## \todo: this eval isn't ideal. we should have a way of parsing values
+			# and setting them onto plugs.
 			parent["variables"].addMember( identifier, eval( value ) )
 			return 0
 
@@ -249,6 +268,8 @@ class dispatch( Gaffer.Application ) :
 			return 1
 
 		try :
+			## \todo: this eval isn't ideal. we should have a way of parsing values
+			# and setting them onto plugs.
 			plug.setValue( eval( value ) )
 		except Exception as exception :
 			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch : setting \"%s\"" % identifier, str( exception ) )
