@@ -124,6 +124,16 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "test.text" in "".join( p.stderr.readlines() ) )
 		self.failUnless( p.returncode )
 
+		# bad dispatcher plugs
+		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -LocalDispatcher.notAPlug 1".format( script = self.__scriptFileName ) )
+		self.failUnless( "notAPlug" in "".join( p.stderr.readlines() ) )
+		self.failUnless( p.returncode )
+
+		# bad dispatcher values
+		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -LocalDispatcher.executeInBackground '\"its a bool\"'".format( script = self.__scriptFileName ) )
+		self.failUnless( "executeInBackground" in "".join( p.stderr.readlines() ) )
+		self.failUnless( p.returncode )
+
 	def testScript( self ) :
 
 		self.writeSimpleScript()
