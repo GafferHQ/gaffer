@@ -92,6 +92,11 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "NotANode" in "".join( p.stderr.readlines() ) )
 		self.failUnless( p.returncode )
 
+		# no namespace
+		p = self.waitForCommand( "gaffer dispatch -nodes TextWriter" )
+		self.failUnless( "TextWriter" in "".join( p.stderr.readlines() ) )
+		self.failUnless( p.returncode )
+
 		# bad dispatcher
 		p = self.waitForCommand( "gaffer dispatch -nodes GafferDispatchTest.TextWriter -dispatcher NotADispatcher" )
 		self.failUnless( "NotADispatcher" in "".join( p.stderr.readlines() ) )
