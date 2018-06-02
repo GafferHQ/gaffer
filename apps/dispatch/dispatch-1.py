@@ -155,6 +155,8 @@ class dispatch( Gaffer.Application ) :
 					return 1
 			else :
 				node = self.__create( nodeName )
+				if node is None :
+					return 1
 				if args["applyUserDefaults"].value :
 					Gaffer.NodeAlgo.applyUserDefaults( node )
 				script.addChild( node )
@@ -258,7 +260,13 @@ class dispatch( Gaffer.Application ) :
 	def __create( path ) :
 
 		path = path.split( "." )
-		result = __import__( path[0] )
+
+		try :
+			result = __import__( path[0] )
+		except ImportError as exception :
+			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch : Please provide the namespaced python class for \"%s\"" % path[0], str( exception ) )
+			return None
+
 		for n in path[1:] :
 			result = getattr( result, n )
 
