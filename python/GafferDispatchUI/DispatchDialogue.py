@@ -42,6 +42,7 @@ import traceback
 import IECore
 
 import Gaffer
+import GafferDispatch
 
 import GafferUI
 
@@ -112,6 +113,22 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__setDispatcher( dispatchers[0] )
 
 		self.__initiateSettings( self.__button )
+
+	@staticmethod
+	def createWithDefaultDispatchers( tasks, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+
+		defaultType = GafferDispatch.Dispatcher.getDefaultDispatcherType()
+		dispatcherTypes = list(GafferDispatch.Dispatcher.registeredDispatchers())
+		dispatcherTypes.remove( defaultType )
+		dispatcherTypes.insert( 0, defaultType )
+
+		dispatchers = []
+		for key in dispatcherTypes :
+			dispatcher = GafferDispatch.Dispatcher.create( key )
+			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+			dispatchers.append( dispatcher )
+
+		return DispatchDialogue( tasks, dispatchers, title = title, sizeMode = sizeMode, **kw )
 
 	def scriptNode( self ) :
 
