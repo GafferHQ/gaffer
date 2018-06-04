@@ -445,6 +445,17 @@ foreach( GAFFER_LIB ${GAFFER_LIB_NAMES} )
   endif()
 endforeach()
 
+foreach( GAFFER_LIB ${GAFFERTEST_LIB_NAMES} )
+  if( DARWIN )
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES SUFFIX ".so" )
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES PREFIX "" )
+    elif( WINDOWS )
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES SUFFIX ".pyd" )
+  else()
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES PREFIX "" )
+  endif()
+endforeach()
+
 
 # Gaffer OSL Shaders
 file( GLOB_RECURSE OSL_HEADER_FILES ${GAFFER_SOURCE_DIR}/shaders/*.h)
