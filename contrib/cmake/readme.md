@@ -14,17 +14,17 @@ cd dev-gaffer
 
 **Download Gaffer Dependencies**
 ~~~
-wget https://github.com/GafferHQ/dependencies/releases/download/0.45.0.0/gafferDependencies-0.45.0.0-linux.tar.gz
+wget https://github.com/GafferHQ/dependencies/releases/download/0.48.0.0/gafferDependencies-0.48.0.0-linux.tar.gz
 ~~~
 
 **Extract**
 ~~~
-tar xvf gafferDependencies-0.45.0.0-linux.tar.gz
+tar xvf gafferDependencies-0.48.0.0-linux.tar.gz
 ~~~
 
 **Set root env var for build**
 ~~~
-export GAFFER_DEPENDENCIES_ROOT=$PWD/gafferDependencies-0.45.0.0-linux
+export GAFFER_DEPENDENCIES_ROOT=$PWD/gafferDependencies-0.48.0.0-linux
 
 export ILMBASE_ROOT=$GAFFER_DEPENDENCIES_ROOT
 export OPENEXR_ROOT=$GAFFER_DEPENDENCIES_ROOT

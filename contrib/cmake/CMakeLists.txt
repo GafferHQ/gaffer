@@ -7,19 +7,32 @@ set (CMAKE_CXX_STANDARD 11)
 project( Gaffer )
 
 # Declare the version
-set( GAFFER_MILESTONE_VERSION 0 )
-set( GAFFER_MAJOR_VERSION 45 )
-set( GAFFER_MINOR_VERSION 0 )
-set( GAFFER_PATCH_VERSION 0 )
 
-add_definitions( -DGAFFER_MILESTONE_VERSION=${GAFFER_MILESTONE_VERSION}
-                 -DGAFFER_MAJOR_VERSION=${GAFFER_MAJOR_VERSION}
-                 -DGAFFER_MINOR_VERSION=${GAFFER_MINOR_VERSION}
-                 -DGAFFER_PATCH_VERSION=${GAFFER_PATCH_VERSION} )
 
 option( WITH_TESTS "Compile tests" OFF )
 
 set( GAFFER_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../.. )
+
+file( READ  ${GAFFER_SOURCE_DIR}/SConstruct SCONSTRUCT)
+
+string( REGEX MATCH "gafferMilestoneVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_MILESTONE_VERSION ${CMAKE_MATCH_1} )
+
+string( REGEX MATCH "gafferMajorVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_MAJOR_VERSION ${CMAKE_MATCH_1} )
+
+string( REGEX MATCH "gafferMinorVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_MINOR_VERSION ${CMAKE_MATCH_1} )
+
+string( REGEX MATCH "gafferPatchVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_PATCH_VERSION ${CMAKE_MATCH_1} )
+
+message(STATUS "Configuring Gaffer : " ${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION})
+
+add_definitions( -DGAFFER_MILESTONE_VERSION=${GAFFER_MILESTONE_VERSION}
+        -DGAFFER_MAJOR_VERSION=${GAFFER_MAJOR_VERSION}
+        -DGAFFER_MINOR_VERSION=${GAFFER_MINOR_VERSION}
+        -DGAFFER_PATCH_VERSION=${GAFFER_PATCH_VERSION} )
 #-******************************************************************************
 #-******************************************************************************
 # PLATFORM SPECIFIC
