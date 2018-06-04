@@ -49,7 +49,14 @@ import GafferUI
 ## A dialogue which can be used to dispatch tasks
 class DispatchDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, tasks, dispatchers, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	## Defines what happens when the tasks have been successfully dispatched :
+	#
+	# Close : The dialogue is closed immediately.
+	#
+	# Confirm : The dialogue remains open confirming success, with a button for returning to the editing state.
+	PostDispatchBehaviour = IECore.Enum.create( "Close", "Confirm" )
+
+	def __init__( self, tasks, dispatchers, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
@@ -62,6 +69,8 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		# this is necessary for PlugValueWidgets like color swatches and ramps. Ideally those widgets
 		# wouldn't rely on the existence of a ScriptWindow and we could drop this acquisition.
 		self.__scriptWindow = GafferUI.ScriptWindow.acquire( self.__script )
+
+		self.__postDispatchBehaviour = postDispatchBehaviour
 
 		# build tabs for all the node, dispatcher, and context settings
 		with GafferUI.ListContainer() as self.__settings :
@@ -108,14 +117,17 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				# size when the details pane is first shown.
 				self.__messageCollapsibleConneciton = self.__messageCollapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__messageCollapsibleChanged ) )
 
-		self.__button = self._addButton( "Dispatch" )
+		self.__backButton = self._addButton( "Back" )
+		self.__backButtonConnection = self.__backButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateSettings ) )
+
+		self.__primaryButton = self._addButton( "Dispatch" )
 
 		self.__setDispatcher( dispatchers[0] )
 
-		self.__initiateSettings( self.__button )
+		self.__initiateSettings( self.__primaryButton )
 
 	@staticmethod
-	def createWithDefaultDispatchers( tasks, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def createWithDefaultDispatchers( tasks, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		defaultType = GafferDispatch.Dispatcher.getDefaultDispatcherType()
 		dispatcherTypes = list(GafferDispatch.Dispatcher.registeredDispatchers())
@@ -128,7 +140,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
 			dispatchers.append( dispatcher )
 
-		return DispatchDialogue( tasks, dispatchers, title = title, sizeMode = sizeMode, **kw )
+		return DispatchDialogue( tasks, dispatchers, postDispatchBehaviour=postDispatchBehaviour, title = title, sizeMode = sizeMode, **kw )
 
 	def scriptNode( self ) :
 
@@ -188,8 +200,14 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 	def __initiateSettings( self, button ) :
 
-		button.setText( "Dispatch" )
-		self.__buttonConnection = button.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateDispatch ) )
+		self.__backButton.setEnabled( False )
+		self.__backButton.setVisible( False )
+
+		self.__primaryButton.setText( "Dispatch" )
+		self.__primaryButton.setEnabled( True )
+		self.__primaryButton.setVisible( True )
+		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateDispatch ) )
+
 		self.__tabs.setCurrent( self.__tabs[0] )
 		self._getWidget().setChild( self.__settings )
 
@@ -198,9 +216,11 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
 		self.__progressLabel.setText( "<h3>Dispatching...</h3>" )
 
-		self.__button.setVisible( False )
-		self.__button.setEnabled( False )
-		self.__buttonConnection = None
+		self.__backButton.setVisible( False )
+		self.__backButton.setEnabled( False )
+
+		self.__primaryButton.setVisible( False )
+		self.__primaryButton.setEnabled( False )
 
 		self.__messageWidget.clear()
 		self.__messageCollapsible.setCollapsed( True )
@@ -253,11 +273,14 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			userFriendlyException,
 		)
 
-		self.__button.setText( "Retry" )
-		self.__button.setEnabled( True )
-		self.__button.setVisible( True )
-		self.__buttonConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateSettings ) )
-		self.__button._qtWidget().setFocus()
+		self.__backButton.setEnabled( True )
+		self.__backButton.setVisible( True )
+		self.__backButton._qtWidget().setFocus()
+
+		self.__primaryButton.setText( "Quit" )
+		self.__primaryButton.setEnabled( True )
+		self.__primaryButton.setVisible( True )
+		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 
 	def __initiateResultDisplay( self, result ) :
 
@@ -269,7 +292,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			if count :
 				problems.append( "%d %s%s" % ( count, IECore.Msg.levelAsString( level ).capitalize(), "s" if count > 1 else "" ) )
 
-		if not problems :
+		if not problems and self.__postDispatchBehaviour == self.PostDispatchBehaviour.Close :
 			self.close()
 			return
 
@@ -286,11 +309,18 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Info, "Result", str( result ) )
 
-		self.__button.setText( "Ok" )
-		self.__button.setEnabled( True )
-		self.__button.setVisible( True )
-		self.__buttonClickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.close ) )
-		self.__button._qtWidget().setFocus()
+		self.__backButton.setEnabled( True )
+		self.__backButton.setVisible( True )
+
+		self.__primaryButton.setText( "Ok" )
+		self.__primaryButton.setEnabled( True )
+		self.__primaryButton.setVisible( True )
+		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		self.__primaryButton._qtWidget().setFocus()
+
+	def __close( self, *unused ) :
+
+		self.close()
 
 	def __messageCollapsibleChanged( self, collapsible ) :
 
