@@ -76,7 +76,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake )
 
 find_package( TBB REQUIRED )
 find_package( PythonLibs 2.7 REQUIRED )
-find_package( Boost REQUIRED COMPONENTS signals iostreams filesystem date_time wave regex system chrono python )
+find_package( Boost REQUIRED COMPONENTS signals iostreams filesystem date_time wave regex system chrono python timer)
 find_package( IlmBase REQUIRED )
 find_package( OpenEXR REQUIRED )
 find_package( Cortex REQUIRED )
@@ -114,6 +114,7 @@ add_definitions( -DBOOST_PYTHON_MAX_ARITY=20 )
 
 # Base libs to link to
 set( BASE_LIBS
+     ${Cortex_IECORE_LIBRARY}
      ${Boost_SIGNALS_LIBRARY}
      ${Boost_IOSTREAMS_LIBRARY}
      ${Boost_FILESYSTEM_LIBRARY}
@@ -123,6 +124,7 @@ set( BASE_LIBS
      ${Boost_REGEX_LIBRARY}
      ${Boost_SYSTEM_LIBRARY}
      ${Boost_CHRONO_LIBRARY}
+     ${Boost_TIMER_LIBRARY}
      ${TBB_LIBRARIES}
      ${Ilmbase_HALF_LIBRARY}
      ${Ilmbase_IEX_LIBRARY}
@@ -130,7 +132,7 @@ set( BASE_LIBS
      ${Ilmbase_ILMTHREAD_LIBRARY}
      ${Ilmbase_IMATH_LIBRARY}
      ${Openexr_ILMIMF_LIBRARY}
-     ${Cortex_IECORE_LIBRARY})
+     )
 
 set( BASE_PYTHON_LIBS
      ${PYTHON_LIBRARIES}
