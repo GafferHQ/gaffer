@@ -247,7 +247,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 	def __finish( self, result ) :
 
 		if result == 0 :
-			self.__initiateResultDisplay( result )
+			self.__initiateResultDisplay()
 		else :
 			self.__initiateErrorDisplay( result )
 
@@ -282,7 +282,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__primaryButton.setVisible( True )
 		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 
-	def __initiateResultDisplay( self, result ) :
+	def __initiateResultDisplay( self ) :
 
 		# Although we computed a result successfully, there may still be minor problems
 		# indicated by messages emitted - check for those.
@@ -307,7 +307,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		self.__progressLabel.setText( "<h3>" + completionMessage + "</h3>" )
 
-		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Info, "Result", str( result ) )
+		self.__messageCollapsible.setVisible( self.__messageWidget.messageCount() )
 
 		self.__backButton.setEnabled( True )
 		self.__backButton.setVisible( True )
