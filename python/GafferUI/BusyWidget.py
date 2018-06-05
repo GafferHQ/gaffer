@@ -49,6 +49,14 @@ class BusyWidget( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), **kw )
 
+	def setBusy( self, busy ) :
+
+		self._qtWidget().setBusy( busy )
+
+	def getBusy( self ) :
+
+		return self._qtWidget().getBusy()
+
 # qt implementation class
 class _BusyWidget( QtWidgets.QWidget ) :
 
@@ -57,29 +65,42 @@ class _BusyWidget( QtWidgets.QWidget ) :
 		QtWidgets.QWidget.__init__( self, parent )
 
 		self.__size = size
-		self.setMinimumSize( size, size )
+		self.setFixedSize( size, size )
 		self.__timer = None
+		self.__busy = True
+
+	def setBusy( self, busy ) :
+
+		if busy == self.__busy :
+			return
+
+		self.__busy = busy
+		self.__updateTimer()
+		self.update()
+
+	def getBusy( self ) :
+
+		return self.__busy
 
 	def showEvent( self, event ) :
 
 		QtWidgets.QWidget.showEvent( self, event )
-
-		if self.__timer is None :
-			self.__timer = self.startTimer( 1000 / 25 )
+		self.__updateTimer()
 
 	def hideEvent( self, event ) :
 
 		QtWidgets.QWidget.hideEvent( self, event )
 
-		if self.__timer is not None :
-			self.killTimer( self.__timer )
-			self.__timer = None
+		self.__updateTimer()
 
 	def timerEvent( self, event ) :
 
 		self.update()
 
 	def paintEvent( self, event ) :
+
+		if not self.getBusy() :
+			return
 
 		painter = QtGui.QPainter( self )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
@@ -108,3 +129,12 @@ class _BusyWidget( QtWidgets.QWidget ) :
 			painter.setPen( pen )
 
 			painter.drawEllipse( QtCore.QPointF( circleCentreX, circleCentreY ), circleRadius, circleRadius )
+
+	def __updateTimer( self ) :
+
+		if self.isVisible() and self.getBusy() :
+			if self.__timer is None :
+				self.__timer = self.startTimer( 1000 / 25 )
+		elif self.__timer is not None :
+			self.killTimer( self.__timer )
+			self.__timer = None
