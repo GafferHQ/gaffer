@@ -220,11 +220,14 @@ bool OSLObject::processesObject() const
 void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	if( shader )
+	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
+
+	if( !shadingEngine )
 	{
-		shader->attributesHash( h );
+		return;
 	}
 
+	shadingEngine->hash( h );
 	interpolationPlug()->hash( h );
 	h.append( inPlug()->fullTransformHash( path ) );
 	h.append( resampledInPlug()->objectPlug()->hash() );
@@ -240,7 +243,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
+	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
 
 	if( !shadingEngine )

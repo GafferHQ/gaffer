@@ -38,6 +38,8 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include "Gaffer/Context.h"
+
 #include "IECoreScene/Shader.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
@@ -262,13 +264,19 @@ namespace
 {
 
 OIIO::ustring gIndex( "shading:index" );
+ustring g_contextVariableAttributeScope( "gaffer:context" );
 
 class RenderState
 {
 
 	public :
 
-		RenderState( const IECore::CompoundData *shadingPoints, const ShadingEngine::Transforms &transforms )
+		RenderState(
+			const IECore::CompoundData *shadingPoints,
+			const ShadingEngine::Transforms &transforms,
+			const std::vector<InternedString> &contextVariablesNeeded,
+			const Gaffer::Context *context
+		)
 		{
 			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
@@ -292,6 +300,30 @@ class RenderState
 			{
 				m_transforms[ OIIO::ustring( it->first.string() ) ] = it->second;
 			}
+
+			for( const auto &name : contextVariablesNeeded )
+			{
+				m_contextVariables.insert(
+					make_pair(
+						ustring( name.c_str() ),
+						IECoreImage::OpenImageIOAlgo::DataView(
+							context->get<Data>( name.string(), nullptr ),
+							/* createUStrings = */ true
+						)
+					)
+				);
+			}
+		}
+
+		bool contextVariable( ustring name, TypeDesc type, void *value ) const
+		{
+			auto it = m_contextVariables.find( name );
+			if( it == m_contextVariables.end() )
+			{
+				return false;
+			}
+
+			return ShadingSystem::convert_value( value, type, it->second.data, it->second.type );
 		}
 
 		bool userData( size_t pointIndex, ustring name, TypeDesc type, void *value ) const
@@ -366,6 +398,7 @@ class RenderState
 		};
 
 		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
+		container::flat_map<ustring, IECoreImage::OpenImageIOAlgo::DataView, OIIO::ustringPtrIsLess> m_contextVariables;
 
 };
 
@@ -439,6 +472,12 @@ class RendererServices : public OSL::RendererServices
 			{
 				return false;
 			}
+
+			if( object == g_contextVariableAttributeScope )
+			{
+				return threadRenderState->renderState.contextVariable( name, type, value );
+			}
+
 			// fall through to get_userdata - i'm not sure this is the intention of the osl spec, but how else can
 			// a shader access a primvar by name? maybe i've overlooked something.
 			return get_userdata( derivatives, name, type, sg, value );
@@ -953,7 +992,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 } // namespace
 
 ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
-	: m_unknownAttributesNeeded( false )
+	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false )
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
@@ -1010,14 +1049,32 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 		}
 	}
 
-	queryAttributesNeeded();
+	queryContextVariablesAndAttributesNeeded();
 }
 
-void ShadingEngine::queryAttributesNeeded()
+void ShadingEngine::queryContextVariablesAndAttributesNeeded()
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
-
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
+
+	// Globals
+
+	int numGlobalsNeeded = 0;
+	shadingSystem->getattribute( &shaderGroup, "num_globals_needed", numGlobalsNeeded );
+	if( numGlobalsNeeded )
+	{
+		ustring *globalsNames = nullptr;
+		shadingSystem->getattribute(  &shaderGroup, "globals_needed", TypeDesc::PTR, &globalsNames );
+		for( int i = 0; i < numGlobalsNeeded; ++i )
+		{
+			if( globalsNames[i] == "time" )
+			{
+				m_timeNeeded = true;
+			}
+		}
+	}
+
+	// Attributes
 
 	int unknownAttributesNeeded = 0;
 	shadingSystem->getattribute(  &shaderGroup, "unknown_attributes_needed", unknownAttributesNeeded );
@@ -1034,7 +1091,14 @@ void ShadingEngine::queryAttributesNeeded()
 
 		for (int i = 0; i < numAttributes; ++i)
 		{
-			m_attributesNeeded.insert(std::make_pair(scopeNames[i].string(), attributeNames[i].string() ) );
+			if( scopeNames[i] == g_contextVariableAttributeScope )
+			{
+				m_contextVariablesNeeded.push_back( attributeNames[i].string() );
+			}
+			else
+			{
+				m_attributesNeeded.insert( std::make_pair( scopeNames[i].string(), attributeNames[i].string() ) );
+			}
 		}
 	}
 }
@@ -1042,6 +1106,31 @@ void ShadingEngine::queryAttributesNeeded()
 ShadingEngine::~ShadingEngine()
 {
 	delete static_cast<ShaderGroupRef *>( m_shaderGroupRef );
+}
+
+void ShadingEngine::hash( IECore::MurmurHash &h ) const
+{
+	h.append( m_hash );
+	if( m_timeNeeded || m_contextVariablesNeeded.size() )
+	{
+		const Gaffer::Context *context = Gaffer::Context::current();
+		if( m_timeNeeded )
+		{
+			h.append( context->getTime() );
+		}
+		for( const auto &name : m_contextVariablesNeeded )
+		{
+			const IECore::Data *d = context->get<IECore::Data>( name, nullptr );
+			if( d )
+			{
+				d->hash( h );
+			}
+			else
+			{
+				h.append( 0 );
+			}
+		}
+	}
 }
 
 IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms ) const
@@ -1066,6 +1155,9 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	ShaderGlobals shaderGlobals;
 	memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+
+	const Gaffer::Context *context = Gaffer::Context::current();
+	shaderGlobals.time = context->getTime();
 
 	shaderGlobals.dPdx = uniformValue<V3f>( points, "dPdx" );
 	shaderGlobals.dPdy = uniformValue<V3f>( points, "dPdy" );
@@ -1092,7 +1184,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms );
+	RenderState renderState( points, transforms, m_contextVariablesNeeded, context );
 
 	// Get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.
@@ -1115,20 +1207,36 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	struct ThreadContext
 	{
-		ShadingContext *shadingContext;
+
+		ThreadContext( ShadingSystem *shadingSystem )
+			:	m_shadingSystem( shadingSystem ), m_shadingContext( shadingSystem->get_context() )
+		{
+		}
+
+		~ThreadContext()
+		{
+			m_shadingSystem->release_context( m_shadingContext );
+		}
+
 		ShadingResults::DebugResultsMap results;
+
+		ShadingContext *shadingContext() { return m_shadingContext; }
+
+		private :
+
+			ShadingSystem *m_shadingSystem;
+			ShadingContext *m_shadingContext;
+
 	};
 
 	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
-	ThreadContextType contexts;
+	ThreadContextType contexts( shadingSystem );
 
-	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
+	const IECore::Canceller *canceller = context->canceller();
+
+	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts, canceller]( const tbb::blocked_range<size_t> &r )
 	{
 		ThreadContextType::reference context = contexts.local();
-		if( !context.shadingContext )
-		{
-			context.shadingContext = shadingSystem->get_context();
-		}
 
 		ThreadRenderState threadRenderState( renderState );
 
@@ -1138,6 +1246,8 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 		for( size_t i = r.begin(); i < r.end(); ++i )
 		{
+			IECore::Canceller::check( canceller );
+
 			threadShaderGlobals.P = p[i];
 
 			if( uv )
@@ -1165,18 +1275,17 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 			threadShaderGlobals.Ci = nullptr;
 
 			threadRenderState.pointIndex = i;
-			shadingSystem->execute( context.shadingContext, shaderGroup, threadShaderGlobals );
+			shadingSystem->execute( context.shadingContext(), shaderGroup, threadShaderGlobals );
 
 			results.addResult( i, threadShaderGlobals.Ci, context.results );
 		}
 	};
 
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, numPoints, 5000 ), f );
-
-	for( auto &shadingContext : contexts )
-	{
-		shadingSystem->release_context( shadingContext.shadingContext );
-	}
+	// Use `task_group_context::isolated` to prevent TBB cancellation in outer
+	// tasks from propagating down and stopping our tasks from being started.
+	// Otherwise we silently return results with black gaps where tasks were omitted.
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, numPoints, 5000 ), f, taskGroupContext );
 
 	return results.results();
 }

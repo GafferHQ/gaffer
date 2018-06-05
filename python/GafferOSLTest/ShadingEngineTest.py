@@ -40,6 +40,7 @@ import imath
 import IECore
 import IECoreScene
 
+import Gaffer
 import GafferOSL
 import GafferOSLTest
 
@@ -578,6 +579,105 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		for i, c in enumerate( r["Ci"] ) :
 			self.assertAlmostEqual( c[1], p["v"][i], delta = 0.02 )
+
+	def testTime( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+
+		# A shader that doesn't read time should yield a hash which
+		# doesn't vary with time.
+
+		def hashAtFrame( e, frame ) :
+
+			with Gaffer.Context() as c :
+				c.setFrame( frame )
+				h = IECore.MurmurHash()
+				e.hash( h )
+				return h
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( s, "osl:surface", { "global" : "P" } ),
+		] ) )
+		self.assertEqual( hashAtFrame( e, 0 ), hashAtFrame( e, 1 ) )
+		self.assertEqual( hashAtFrame( e, 1 ), hashAtFrame( e, 2 ) )
+
+		# And a shader that does read time needs to reflect that
+		# in the hash.
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( s, "osl:surface", { "global" : "time" } ),
+		] ) )
+		self.assertNotEqual( hashAtFrame( e, 0 ), hashAtFrame( e, 1 ) )
+		self.assertNotEqual( hashAtFrame( e, 1 ), hashAtFrame( e, 2 ) )
+		self.assertEqual( hashAtFrame( e, 1 ), hashAtFrame( e, 1 ) )
+
+		# And should be able to read the time from the current context.
+
+		def assertCanReadTime( e, time ) :
+
+			with Gaffer.Context() as c :
+				c.setTime( time )
+				r = e.shade( self.rectanglePoints() )
+				for c in r["Ci"] :
+					self.assertEqual( c, imath.Color3f( time ) )
+
+		assertCanReadTime( e, 0 )
+		assertCanReadTime( e, 1 )
+
+	def testContextVariable( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/contextVariable.osl" )
+
+		# A shader which doesn't read a context variable should
+		# have a hash which is constant with respect to that variable.
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( s, "osl:surface", { "name" : "" } ),
+		] ) )
+
+		def hashWithVariable( e, name, value ) :
+
+			with Gaffer.Context() as c :
+				c[name] = value
+				h = IECore.MurmurHash()
+				e.hash( h )
+				return h
+
+		self.assertEqual( hashWithVariable( e, "unused", 0 ), hashWithVariable( e, "unused", 1 ) );
+
+		# And a shader which does read a context variable needs to reflect
+		# that in the hash.
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( s, "osl:surface", { "name" : "myVariable", "type" : "int" } ),
+		] ) )
+
+		self.assertEqual( hashWithVariable( e, "unrelated", 0 ), hashWithVariable( e, "unrelated", 1 ) )
+		self.assertNotEqual( hashWithVariable( e, "myVariable", 0 ), hashWithVariable( e, "myVariable", 1 ) )
+		self.assertNotEqual( hashWithVariable( e, "myVariable", 1 ), hashWithVariable( e, "myVariable", 2 ) )
+		self.assertEqual( hashWithVariable( e, "myVariable", 0 ), hashWithVariable( e, "myVariable", 0 ) )
+
+		# And should be able to read the variable from the current context.
+
+		def assertCanReadVariable( e, name, value ) :
+
+			with Gaffer.Context() as c :
+				c[name] = value
+				r = e.shade( self.rectanglePoints() )
+				for c in r["Ci"] :
+					self.assertEqual( c, imath.Color3f( value ) )
+
+		assertCanReadVariable( e, "myVariable", 0 )
+		assertCanReadVariable( e, "myVariable", 1 )
+
+		# Same goes for variables of other types
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( s, "osl:surface", { "name" : "myVariable", "type" : "color" } ),
+		] ) )
+
+		assertCanReadVariable( e, "myVariable", imath.Color3f( 0, 0.5, 1 ) )
+		assertCanReadVariable( e, "myVariable", imath.Color3f( 1, 0.5, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

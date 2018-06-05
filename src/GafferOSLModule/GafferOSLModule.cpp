@@ -180,6 +180,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	{
 		scope s = IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
 			.def( init<const IECore::ObjectVector *>() )
+			.def( "hash", &ShadingEngine::hash )
 			.def( "shade", &shadeWrapper,
 				(
 					boost::python::arg( "points" ),
