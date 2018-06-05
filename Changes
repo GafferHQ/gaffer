@@ -1,3 +1,45 @@
+0.35.5.0
+========
+
+Features
+--------
+
+- Added a new `dispatch` application (#2601).
+  - This app dispatches task nodes such as ImageWriters, SystemCommands and Render nodes,
+    either from within an existing .gfr file or by creating a script on the fly. This
+    differs from the execute app in that it performs a full dispatch via a dispatcher,
+    rather than executing a single task node.
+  - The `gui` mode of this app uses a more general `DispatchDialogue` which can be used
+    by external tools for customized dispatching.
+
+Improvements
+------------
+
+- Isolate/Prune/Parent : Improved performance when processing sets (#2595).
+- Arnold Renderer : Improved performance when outputting shaders (#2595).
+- ArnoldOptions : Turn on parallel_node_init by default (#2595).
+  - This was a problem with Cryptomatte in Arnold 4, but appears to be safe in Arnold 5.
+- SceneViewUI : Defer camera and light set computation until required (#2600).
+- PlugLayout : Added support for embedded PlugLayouts (#2596).
+- Application : Run startup files before evaluating args (#2601).
+- Dispatcher : Add ability to deregister a dispatcher type (#2601).
+- ErrorDialogue : Present more user friendly message (#2601).
+
+Fixes
+-----
+
+- SubGraph : Account for BoxIO in correspondingInput() (#2600).
+- FormatPlug::acquireDefaultFormatPlug() : Fixed crashes if None is passed via
+  python bindings (#2600).
+- Arnold : Fixed NodeEditor layout of new standard_surface shader parameters (#2600).
+- MessageWidget : Maintain indentation in tracebacks (#2601).
+- LocalDispatcher : Fixed suppression of exceptions during foreground dispatch (#2601).
+
+Build
+-----
+
+- Fixed IE install script for Cortex 9.
+
 0.35.4.0
 ========
 
