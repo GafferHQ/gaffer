@@ -103,6 +103,7 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	else if( input == parentPlug() )
 	{
 		outputs.push_back( mappingPlug() );
+		outputs.push_back( outPlug()->setNamesPlug() );
 	}
 	else if( input == mappingPlug() )
 	{
@@ -113,7 +114,6 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 		outputs.push_back( outPlug()->childNamesPlug() );
 		// Globals plug deliberately omitted - because
 		// it's just a pass-through connection.
-		outputs.push_back( outPlug()->setNamesPlug() );
 		outputs.push_back( outPlug()->setPlug() );
 	}
 }
@@ -321,15 +321,18 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 
 void BranchCreator::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
-	if( !mapping->readable().size() )
+	ScenePlug::ScenePath parentPath;
+	string parentAsString = parentPlug()->getValue();
+	if( parentAsString.empty() )
 	{
+		// no parent specified so setNames will be unchanged
 		h = inPlug()->setNamesPlug()->hash();
 		return;
 	}
+	ScenePlug::stringToPath( parentAsString, parentPath );
 
 	MurmurHash branchSetNamesHash;
-	hashBranchSetNames( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), context, branchSetNamesHash );
+	hashBranchSetNames( parentPath, context, branchSetNamesHash );
 	if( branchSetNamesHash == MurmurHash() )
 	{
 		h = inPlug()->setNamesPlug()->hash();
@@ -345,13 +348,16 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeSetNames( const G
 {
 	ConstInternedStringVectorDataPtr inputSetNamesData = inPlug()->setNamesPlug()->getValue();
 
-	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
-	if( !mapping->readable().size() )
+	ScenePlug::ScenePath parentPath;
+	string parentAsString = parentPlug()->getValue();
+	if( parentAsString.empty() )
 	{
+		// no parent specified so setNames will be unchanged
 		return inputSetNamesData;
 	}
+	ScenePlug::stringToPath( parentAsString, parentPath );
 
-	ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), context );
+	ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( parentPath, context );
 	if( !branchSetNamesData )
 	{
 		return inputSetNamesData;

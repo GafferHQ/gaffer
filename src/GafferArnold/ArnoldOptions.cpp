@@ -51,7 +51,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	options->addOptionalMember( "ai:bucket_size", new IECore::IntData( 64 ), "bucketSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:bucket_scanning", new IECore::StringData( "spiral" ), "bucketScanning", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:parallel_node_init", new IECore::BoolData( false ), "parallelNodeInit", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:parallel_node_init", new IECore::BoolData( true ), "parallelNodeInit", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:threads", new IECore::IntData( 0 ), "threads", Gaffer::Plug::Default, false );
 
 	// Sampling parameters
