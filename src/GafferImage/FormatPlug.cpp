@@ -146,6 +146,11 @@ void FormatPlug::setDefaultFormat( Gaffer::Context *context, const Format &forma
 
 FormatPlug *FormatPlug::acquireDefaultFormatPlug( Gaffer::ScriptNode *scriptNode )
 {
+	if( !scriptNode )
+	{
+		throw IECore::Exception( "Can't provide the default FormatPlug for an invalid ScriptNode" );
+	}
+
 	if( FormatPlug *p = scriptNode->getChild<FormatPlug>( g_defaultFormatPlugName ) )
 	{
 		return p;
