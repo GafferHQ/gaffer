@@ -45,6 +45,11 @@ import GafferUI
 import GafferDispatch
 
 ##########################################################################
+# Note this file is shared with the `dispatch` app. We need to ensure any
+# changes here have the desired behaviour in both applications.
+##########################################################################
+
+##########################################################################
 # Project variables
 ##########################################################################
 
