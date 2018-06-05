@@ -280,17 +280,17 @@ class dispatch( Gaffer.Application ) :
 	@staticmethod
 	def __create( path ) :
 
-		path = path.split( "." )
+		tokens = path.split( "." )
 
 		try :
-			result = __import__( path[0] )
-		except ImportError as exception :
-			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch : Please provide the namespaced python class for \"%s\"" % path[0], str( exception ) )
+			result = __import__( tokens[0] )
+			for n in tokens[1:] :
+				result = getattr( result, n )
+			node = result()
+		except Exception as exception :
+			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch : Please provide the namespaced python class for \"%s\"" % path, str( exception ) )
 			return None
 
-		for n in path[1:] :
-			result = getattr( result, n )
-
-		return result()
+		return node
 
 IECore.registerRunTimeTyped( dispatch )

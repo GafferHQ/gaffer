@@ -88,18 +88,31 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( p.returncode )
 
 		# bad nodes
+		p = self.waitForCommand( "gaffer dispatch -nodes Gaffer" )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "Gaffer" in "".join( error ) )
+		self.failUnless( p.returncode )
+
+		# bad nodes in a module
 		p = self.waitForCommand( "gaffer dispatch -nodes Gaffer.NotANode" )
-		self.failUnless( "NotANode" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "NotANode" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# no namespace
 		p = self.waitForCommand( "gaffer dispatch -nodes TextWriter" )
-		self.failUnless( "TextWriter" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "TextWriter" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad dispatcher
 		p = self.waitForCommand( "gaffer dispatch -nodes GafferDispatchTest.TextWriter -dispatcher NotADispatcher" )
-		self.failUnless( "NotADispatcher" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "NotADispatcher" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# invalid script
@@ -111,27 +124,37 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 
 		# nodes not in script
 		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes notANode".format( script = self.__scriptFileName ) )
-		self.failUnless( "notANode" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "notANode" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad plugs
 		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -test.notAPlug 1".format( script = self.__scriptFileName ) )
-		self.failUnless( "notAPlug" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "notAPlug" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad values (text is a string so needs quotations)
 		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -test.text 1".format( script = self.__scriptFileName ) )
-		self.failUnless( "test.text" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "test.text" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad dispatcher plugs
 		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -LocalDispatcher.notAPlug 1".format( script = self.__scriptFileName ) )
-		self.failUnless( "notAPlug" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "notAPlug" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad dispatcher values
 		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -LocalDispatcher.executeInBackground '\"its a bool\"'".format( script = self.__scriptFileName ) )
-		self.failUnless( "executeInBackground" in "".join( p.stderr.readlines() ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "executeInBackground" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 	def testScript( self ) :
