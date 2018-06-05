@@ -1264,8 +1264,6 @@ if conf.checkSphinx() :
 	docEnv.Depends( docs, "build" )
 	if resources is not None :
 		docEnv.Depends( docs, resources )
-	docEnv.AlwaysBuild( docs )
-	docEnv.NoCache( docs )
 	docEnv.Alias( "docs", docs )
 
 else :
