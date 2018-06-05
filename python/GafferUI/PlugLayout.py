@@ -412,10 +412,7 @@ class PlugLayout( GafferUI.Widget ) :
 	@classmethod
 	def __metadataValue( cls, plugOrNode, name ) :
 
-		if isinstance( plugOrNode, Gaffer.Node ) :
-			return Gaffer.Metadata.value( plugOrNode, name )
-		else :
-			return Gaffer.Metadata.value( plugOrNode, name )
+		return Gaffer.Metadata.value( plugOrNode, name )
 
 	@classmethod
 	def __staticItemMetadataValue( cls, item, name, parent, layoutName ) :
@@ -563,17 +560,11 @@ class _Section( object ) :
 
 	def saveState( self, name, value ) :
 
-		if isinstance( self.__parent, Gaffer.Node ) :
-			Gaffer.Metadata.registerValue( self.__parent, self.__stateName( name ), value, persistent = False )
-		else :
-			Gaffer.Metadata.registerValue( self.__parent, self.__stateName( name ), value, persistent = False )
+		Gaffer.Metadata.registerValue( self.__parent, self.__stateName( name ), value, persistent = False )
 
 	def restoreState( self, name ) :
 
-		if isinstance( self.__parent, Gaffer.Node ) :
-			return Gaffer.Metadata.value( self.__parent, self.__stateName( name ) )
-		else :
-			return Gaffer.Metadata.value( self.__parent, self.__stateName( name ) )
+		return Gaffer.Metadata.value( self.__parent, self.__stateName( name ) )
 
 	def __stateName( self, name ) :
 
