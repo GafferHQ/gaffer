@@ -1163,39 +1163,6 @@ if commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" ) :
 
 def buildDocs( target, source, env ) :
 
-	# This is a little bit tricky. We need Gaffer itself to build the
-	# docs, because we autogenerate the node reference from the node metadata.
-	# And we also need sphinx, but `sphinx_build` starts with `#!/usr/bin/python`,
-	# which may not be compatible with Gaffer's built-in python. So, we locate
-	# the modules sphinx needs upfront, and make sure they're on the PYTHONPATH,
-	# then we use `gaffer env python` to launch Gaffer's python, and generate
-	# all the docs in that environment.
-
-	for module in ( "sphinx", "markupsafe", "CommonMark", "pytz" ) :
-		if not findOnPath( module, env["ENV"]["PYTHONPATH"] ) :
-			try :
-				m = __import__( module )
-				env["ENV"]["PYTHONPATH"] = env["ENV"]["PYTHONPATH"] + ":" + os.path.dirname( m.__path__[0] )
-			except ImportError :
-				pass
-
-	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
-	# environment.
-
-	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if commandEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
-
-	if env.subst( "$ARNOLD_ROOT" ) :
-		env["ENV"]["PATH"] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
-		env["ENV"]["PYTHONPATH"] += ":" + env.subst( "$ARNOLD_ROOT/python" )
-		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
-
-	if env.subst( "$APPLESEED_ROOT" ) and env["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
-		env["ENV"]["PATH"] += ":" + env.subst( "$APPLESEED_ROOT/bin" )
-		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$APPLESEED_ROOT/lib" )
-		env["ENV"]["OSLHOME"] = env.subst( "$OSLHOME" )
-		env["ENV"]["OSL_SHADER_PATHS"] = env.subst( "$APPLESEED_ROOT/shaders/gaffer" )
-		env["ENV"]["APPLESEED_SEARCHPATH"] = env.subst( "$APPLESEED_ROOT/shaders/gaffer:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
-
 	# Run any python scripts we find in the document source tree. These are
 	# used to autogenerate source files for processing by sphinx.
 
@@ -1225,13 +1192,48 @@ def buildDocs( target, source, env ) :
 
 if conf.checkSphinx() :
 
-	docs = commandEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
-	commandEnv.Depends( docs, "build" )
+	docEnv = commandEnv.Clone()
+
+	# This is a little bit tricky. We need Gaffer itself to build the
+	# docs, because we autogenerate the node reference from the node metadata.
+	# And we also need sphinx, but `sphinx_build` starts with `#!/usr/bin/python`,
+	# which may not be compatible with Gaffer's built-in python. So, we locate
+	# the modules sphinx needs upfront, and make sure they're on the PYTHONPATH,
+	# then we use `gaffer env python` to launch Gaffer's python, and generate
+	# all the docs in that environment.
+
+	for module in ( "sphinx", "markupsafe", "CommonMark", "pytz" ) :
+		if not findOnPath( module, docEnv["ENV"]["PYTHONPATH"] ) :
+			try :
+				m = __import__( module )
+				docEnv["ENV"]["PYTHONPATH"] = docEnv["ENV"]["PYTHONPATH"] + ":" + os.path.dirname( m.__path__[0] )
+			except ImportError :
+				pass
+
+	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
+	# environment.
+
+	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if docEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
+
+	if docEnv.subst( "$ARNOLD_ROOT" ) :
+		docEnv["ENV"]["PATH"] += ":" + docEnv.subst( "$ARNOLD_ROOT/bin" )
+		docEnv["ENV"]["PYTHONPATH"] += ":" + docEnv.subst( "$ARNOLD_ROOT/python" )
+		docEnv["ENV"][libraryPathEnvVar] += ":" + docEnv.subst( "$ARNOLD_ROOT/bin" )
+
+	if docEnv.subst( "$APPLESEED_ROOT" ) and docEnv["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
+		docEnv["ENV"]["PATH"] += ":" + docEnv.subst( "$APPLESEED_ROOT/bin" )
+		docEnv["ENV"][libraryPathEnvVar] += ":" + docEnv.subst( "$APPLESEED_ROOT/lib" )
+		docEnv["ENV"]["OSLHOME"] = docEnv.subst( "$OSLHOME" )
+		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/gaffer" )
+		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/gaffer:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
+
+	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
+	docEnv.Depends( docs, "build" )
 	if resources is not None :
-		commandEnv.Depends( docs, resources )
-	commandEnv.AlwaysBuild( docs )
-	commandEnv.NoCache( docs )
-	commandEnv.Alias( "docs", docs )
+		docEnv.Depends( docs, resources )
+	docEnv.AlwaysBuild( docs )
+	docEnv.NoCache( docs )
+	docEnv.Alias( "docs", docs )
 
 else :
 
