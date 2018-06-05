@@ -76,6 +76,7 @@ ImageGadget::ImageGadget()
 	:	Gadget( defaultName<ImageGadget>() ),
 		m_image( nullptr ),
 		m_soloChannel( -1 ),
+		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
 		m_renderRequestPending( false )
 {
@@ -161,7 +162,7 @@ const ImageGadget::Channels &ImageGadget::getChannels() const
 	return m_rgbaChannels;
 }
 
-ImageGadget::ChannelsChangedSignal &ImageGadget::channelsChangedSignal()
+ImageGadget::ImageGadgetSignal &ImageGadget::channelsChangedSignal()
 {
 	return m_channelsChangedSignal;
 }
@@ -192,6 +193,43 @@ void ImageGadget::setSoloChannel( int index )
 int ImageGadget::getSoloChannel() const
 {
 	return m_soloChannel;
+}
+
+void ImageGadget::setPaused( bool paused )
+{
+	if( paused == m_paused )
+	{
+		return;
+	}
+	m_paused = paused;
+	if( m_paused )
+	{
+		m_tilesTask.reset();
+		stateChangedSignal()( this );
+	}
+	else if( m_dirtyFlags )
+	{
+		requestRender();
+	}
+}
+
+bool ImageGadget::getPaused() const
+{
+	return m_paused;
+}
+
+ImageGadget::State ImageGadget::state() const
+{
+	if( m_paused )
+	{
+		return Paused;
+	}
+	return m_dirtyFlags ? Running : Complete;
+}
+
+ImageGadget::ImageGadgetSignal &ImageGadget::stateChangedSignal()
+{
+	return m_stateChangedSignal;
 }
 
 Imath::V2f ImageGadget::pixelAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
@@ -456,11 +494,12 @@ void ImageGadget::updateTiles()
 		return;
 	}
 
-	if( m_tilesTask && !m_tilesTask->done() )
+	if( m_paused || (m_tilesTask && !m_tilesTask->done()) )
 	{
 		return;
 	}
 
+	stateChangedSignal()( this );
 	removeOutOfBoundsTiles();
 
 	// Decide which channels to compute. This is the intersection
@@ -519,6 +558,15 @@ void ImageGadget::updateTiles()
 		[this, channelsToCompute, dataWindow, tileFunctor] {
 			ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
 			m_dirtyFlags &= ~TilesDirty;
+			if( refCount() )
+			{
+				ImageGadgetPtr thisRef = this;
+				ParallelAlgo::callOnUIThread(
+					[thisRef] {
+						thisRef->stateChangedSignal()( thisRef.get() );
+					}
+				);
+			}
 		}
 	);
 

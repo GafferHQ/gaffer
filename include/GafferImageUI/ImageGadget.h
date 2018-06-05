@@ -106,8 +106,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setChannels( const Channels &channels );
 		const Channels &getChannels() const;
 
-		typedef boost::signal<void (ImageGadget *)> ChannelsChangedSignal;
-		ChannelsChangedSignal &channelsChangedSignal();
+		typedef boost::signal<void (ImageGadget *)> ImageGadgetSignal;
+		ImageGadgetSignal &channelsChangedSignal();
 
 		/// Chooses a channel to show in isolation.
 		/// Indices are in the range 0-3 to choose
@@ -115,6 +115,19 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		/// -1 to show a colour image as usual.
 		void setSoloChannel( int index );
 		int getSoloChannel() const;
+
+		void setPaused( bool paused );
+		bool getPaused() const;
+
+		enum State
+		{
+			Paused,
+			Running,
+			Complete
+		};
+
+		State state() const;
+		ImageGadgetSignal &stateChangedSignal();
 
 		Imath::V2f pixelAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
 
@@ -141,7 +154,9 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		Channels m_rgbaChannels;
 		int m_soloChannel;
-		ChannelsChangedSignal m_channelsChangedSignal;
+		ImageGadgetSignal m_channelsChangedSignal;
+		bool m_paused;
+		ImageGadgetSignal m_stateChangedSignal;
 
 		// Image access.
 		//

@@ -44,13 +44,17 @@
 
 #include "GafferUIBindings/GadgetBinding.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "Gaffer/Context.h"
 
+#include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
+using namespace GafferBindings;
 using namespace GafferUIBindings;
 using namespace GafferImage;
 using namespace GafferImageUI;
@@ -63,6 +67,12 @@ ImagePlugPtr getImage( const ImageGadget &v )
 	return ImagePlugPtr( const_cast<ImagePlug *>( v.getImage() ) );
 }
 
+void setPaused( ImageGadget &g, bool paused )
+{
+	ScopedGILRelease gilRelease;
+	g.setPaused( paused );
+}
+
 Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGadgetSpace )
 {
 	// Need GIL release because this method may trigger a compute of the format.
@@ -70,11 +80,27 @@ Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGad
 	return g.pixelAt( lineInGadgetSpace );
 }
 
+struct ImageGadgetSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, ImageGadgetPtr g )
+	{
+		try
+		{
+			slot( g );
+		}
+		catch( const error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 } // namespace
 
 void GafferImageUIModule::bindImageGadget()
 {
-	GadgetClass<ImageGadget>()
+	scope s = GadgetClass<ImageGadget>()
 		.def( init<>() )
 		.def( "setImage", &ImageGadget::setImage )
 		.def( "getImage", &getImage )
@@ -82,6 +108,18 @@ void GafferImageUIModule::bindImageGadget()
 		.def( "getContext", (Context *(ImageGadget::*)())&ImageGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setSoloChannel", &ImageGadget::setSoloChannel )
 		.def( "getSoloChannel", &ImageGadget::getSoloChannel )
+		.def( "setPaused", &setPaused )
+		.def( "getPaused", &ImageGadget::getPaused )
+		.def( "state", &ImageGadget::state )
+		.def( "stateChangedSignal", &ImageGadget::stateChangedSignal, return_internal_reference<1>() )
 		.def( "pixelAt", &pixelAt )
 	;
+
+	enum_<ImageGadget::State>( "State" )
+		.value( "Paused", ImageGadget::Paused )
+		.value( "Running", ImageGadget::Running )
+		.value( "Complete", ImageGadget::Complete )
+	;
+
+	SignalClass<ImageGadget::ImageGadgetSignal, DefaultSignalCaller<ImageGadget::ImageGadgetSignal>, ImageGadgetSlotCaller>( "ImageGadgetSignal" );
 }
