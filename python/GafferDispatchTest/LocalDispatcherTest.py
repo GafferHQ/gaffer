@@ -492,7 +492,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2"]["preTasks"][0].setInput( s["n3"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
-		dispatcher.dispatch( [ s["n1"] ] )
+		
+		try :
+			dispatcher.dispatch( [ s["n1"] ] )
+		except Exception as e :
+			self.assertTrue( "No such file or directory" in str(e) )
 
 		# it still cleans up the JobPool
 		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )

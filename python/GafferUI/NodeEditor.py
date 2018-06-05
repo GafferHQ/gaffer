@@ -117,7 +117,11 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				# have to propagate it like this.
 				self.__nameWidget.setEditable( not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( node ) )
 
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
+				with GafferUI.ListContainer(
+					GafferUI.ListContainer.Orientation.Horizontal,
+					spacing=4,
+					parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Right },
+				) as infoSection :
 
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,27 +34,32 @@
 #
 ##########################################################################
 
-# Utility classes
+import IECore
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
+import Gaffer
 
-# Test cases
+import GafferDispatch
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
-from DispatchApplicationTest import DispatchApplicationTest
+##########################################################################
+# Setup the UI
+##########################################################################
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+if application["gui"].getTypedValue() :
+
+	import GafferUI
+	import GafferDispatchUI
+
+	for module in (
+		"GafferSceneUI",
+		"GafferImageUI",
+		"GafferAppleseedUI",
+		"GafferArnoldUI",
+		"GafferDelightUI",
+		"GafferTractorUI",
+	) :
+		with IECore.IgnoredExceptions( ImportError ) :
+			__import__( module )
+
+	menu = GafferDispatchUI.DispatchDialogue.menuDefinition( application )
+	menu.append( "/Edit/Undo", { "command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().undo(), "shortCut" : "Ctrl+Z" } )
+	menu.append( "/Edit/Redo", { "command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().redo(), "shortCut" : "Shift+Ctrl+Z" } )
