@@ -72,16 +72,15 @@ application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped 
 # Bookmarks
 ##########################################################################
 
-def __projectBookmark( forWidget, location ) :
+def __projectBookmark( widget, location ) :
 
 	script = None
-	if forWidget is not None :
-		if isinstance( forWidget, GafferUI.ScriptWindow ) :
-			scriptWindow = forWidget
-		else :
-			scriptWindow = forWidget.ancestor( GafferUI.ScriptWindow )
-		if scriptWindow is not None :
-			script = scriptWindow.scriptNode()
+	while widget is not None :
+		if hasattr( widget, "scriptNode" ) :
+			script = widget.scriptNode()
+			if isinstance( script, Gaffer.ScriptNode ) :
+				break
+		widget = widget.parent()
 
 	if script is not None :
 		p = script.context().substitute( location )
