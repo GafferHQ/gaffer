@@ -41,6 +41,7 @@ import sys
 import glob
 import shutil
 import fnmatch
+import functools
 import platform
 import py_compile
 import subprocess
@@ -1161,22 +1162,52 @@ if commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" ) :
 # Documentation
 #########################################################################################################
 
-def buildDocs( target, source, env ) :
+def generateDocs( target, source, env ) :
 
-	# Run any python scripts we find in the document source tree. These are
-	# used to autogenerate source files for processing by sphinx.
+	# Run a script in the document source tree. These are used to
+	# autogenerate source files for processing by sphinx.
 
-	for root, dirs, files in os.walk( str( source[0] ) ) :
+	root = os.path.dirname( str(source[0]) )
+	localFile = os.path.basename( str(source[0]) )
+
+	ext = os.path.splitext( localFile )[1]
+	command = []
+	if ext == ".py" :
+		command = [ "gaffer", "env", "python", localFile ]
+	elif ext == ".sh" :
+		command = [ "gaffer", "env", "./" + localFile ]
+	if command :
+		sys.stdout.write( "Running {0}\n".format( os.path.join( root, localFile ) ) )
+		subprocess.check_call( command, cwd = root, env = env["ENV"] )
+
+def locateDocs( docRoot, env ) :
+
+	# Locate files in the document source tree which are used by
+	# sphinx to generate the final html.
+
+	commands = []
+	sources = [ docRoot ]
+
+	for root, dirs, files in os.walk( docRoot ) :
 		for f in files :
+			sourceFile = os.path.join( root, f )
+			sources.append( sourceFile )
 			ext = os.path.splitext( f )[1]
-			command = []
-			if ext == ".py" :
-				command = [ "gaffer", "env", "python", f ]
-			elif ext == ".sh" :
-				command = [ "gaffer", "env", "./" + f ]
-			if command :
-				sys.stdout.write( "Running {0}\n".format( os.path.join( root, f ) ) )
-				subprocess.check_call( command, cwd = root, env = env["ENV"] )
+			if ext in ( ".py", ".sh" ) :
+				with file( sourceFile ) as s :
+					line = s.readline()
+					# the first line in a shell script is the language
+					# specifier so we need the second line
+					if ext == ".sh" :
+						line = s.readline()
+					if line.startswith( "# BuildTarget:" ) :
+						target = os.path.join( root, line.partition( "# BuildTarget:" )[-1].strip( " \n" ) )
+						commands.append( env.Command( target, sourceFile, generateDocs ) )
+						sources.append( target )
+
+	return sources, commands
+
+def buildDocs( target, source, env ) :
 
 	# Run sphinx to generate the final documentation.
 
@@ -1227,7 +1258,9 @@ if conf.checkSphinx() :
 		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/gaffer" )
 		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/gaffer:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
-	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
+	docSource, docGenerationCommands = locateDocs( "doc/source", docEnv )
+	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
+	docEnv.Depends( docs, docGenerationCommands )
 	docEnv.Depends( docs, "build" )
 	if resources is not None :
 		docEnv.Depends( docs, resources )
