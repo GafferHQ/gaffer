@@ -39,6 +39,7 @@ import stat
 import shutil
 import unittest
 import time
+import functools
 
 import IECore
 
@@ -493,10 +494,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
 		
-		try :
-			dispatcher.dispatch( [ s["n1"] ] )
-		except Exception as e :
-			self.assertTrue( "No such file or directory" in str(e) )
+		# fails because n2 doesn't have a valid fileName
+		self.assertRaisesRegexp( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
 
 		# it still cleans up the JobPool
 		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
