@@ -251,6 +251,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__swatch._qtWidget().setFixedWidth( 12 )
 				self.__swatch._qtWidget().setFixedHeight( 12 )
 
+				self.__busyWidget = GafferUI.BusyWidget( size = 12 )
+
 				self.__rgbLabel = GafferUI.Label()
 
 				GafferUI.Spacer( imath.V2i( 20, 10 ), imath.V2i( 20, 10 ) )
@@ -266,6 +268,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__buttonPressSignal = imageGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__dragBeginSignal = imageGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndSignal = imageGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+
+		self.__updateLabels( imath.V2i( 0 ), imath.Color4f( 0, 0, 0, 1 ) )
 
 	def _updateFromPlug( self ) :
 
@@ -293,6 +297,11 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return pixel, color
 
+	@__updateInBackground.preCall
+	def __updateInBackgroundPreCall( self ) :
+
+		self.__busyWidget.setBusy( True )
+
 	@__updateInBackground.postCall
 	def __updateInBackgroundPostCall( self, backgroundResult ) :
 
@@ -314,10 +323,14 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		elif isinstance( backgroundResult, Exception ) :
 			# Computation error. This will be reported elsewhere
 			# in the UI.
-			pixel, color = self.__pixel, imath.Color4f( 0 )
+			self.__updateLabels( self.__pixel, imath.Color4f( 0 ) )
 		else :
 			# Success. We have valid infomation to display.
-			pixel, color = backgroundResult[0], backgroundResult[1]
+			self.__updateLabels( backgroundResult[0], backgroundResult[1] )
+
+		self.__busyWidget.setBusy( False )
+
+	def __updateLabels( self, pixel, color ) :
 
 		self.__positionLabel.setText( "<b>XY : %d %d</b>" % ( pixel.x, pixel.y ) )
 		self.__swatch.setColor( color )
