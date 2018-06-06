@@ -55,6 +55,18 @@ Gaffer.Metadata.registerNode(
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:LeftSpacer:section", "Top",
+	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+
+	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferImageUI.ImageViewUI._StateWidget",
+	"toolbarLayout:customWidget:StateWidget:section", "Top",
+	"toolbarLayout:customWidget:StateWidget:index", -1,
+
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:RightSpacer:section", "Top",
+	"toolbarLayout:customWidget:RightSpacer:index", -2,
+
 	plugs = {
 
 		"clipping" : [
@@ -129,7 +141,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
-			"toolbarLayout:index", 0,
+			"toolbarLayout:index", 1,
 			"label", "",
 
 		],
@@ -142,7 +154,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
-			"toolbarLayout:index", 0,
+			"toolbarLayout:index", 1,
 			"toolbarLayout:divider", True,
 			"label", "",
 
@@ -424,3 +436,52 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setValue( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
+
+##########################################################################
+# _StateWidget
+##########################################################################
+
+class _Spacer( GafferUI.Spacer ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 0 ) )
+
+class _StateWidget( GafferUI.Widget ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		with row :
+
+			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
+			self.__button = GafferUI.Button( hasFrame = False )
+
+		self.__imageGadget = imageView.viewportGadget().getPrimaryChild()
+
+		self.__buttonClickedConnection = self.__button.clickedSignal().connect(
+			Gaffer.WeakMethod( self.__buttonClick )
+		)
+
+		self.__stateChangedConnection = self.__imageGadget.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__stateChanged )
+		)
+
+		self.__update()
+
+	def __stateChanged( self, imageGadget ) :
+
+		self.__update()
+
+	def __buttonClick( self, button ) :
+
+		self.__imageGadget.setPaused( not self.__imageGadget.getPaused() )
+		self.__update()
+
+	def __update( self ) :
+
+		paused = self.__imageGadget.getPaused()
+		self.__button.setImage( "timelinePause.png" if not paused else "timelinePlay.png" )
+		self.__busyWidget.setBusy( self.__imageGadget.state() == self.__imageGadget.State.Running )
