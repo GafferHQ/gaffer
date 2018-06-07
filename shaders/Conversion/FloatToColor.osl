@@ -34,13 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader VectorMix
+shader FloatToColor
 (
-	vector a = 0,
-	vector b = 0,
-	float m = 0,
-	output vector out = 0 [[ string correspondingInput = "a" ]]
+	float r = 0,
+	float g = 0,
+	float b = 0,
+	output color c = 0
 )
 {
-	out = mix( a, b, m );
+	c = color( r, g, b );
 }

@@ -51,7 +51,7 @@ import subprocess
 
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 46 # backwards-incompatible changes
-gafferMinorVersion = 1 # new backwards-compatible features
+gafferMinorVersion = 2 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
 
 # All of the following must be considered when determining
@@ -1071,9 +1071,8 @@ for libraryName, libraryDef in libraries.items() :
 		subprocess.check_call( [ "oslc", "-I./shaders", "-o", str( target[0] ), str( source[0] ) ], env = env["ENV"] )
 
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
-		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
-		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, buildOSL )
+		compiledFile = commandEnv.Command( "$BUILD_DIR/" + os.path.splitext( oslShader )[0] + ".oso", oslShader, buildOSL )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 
