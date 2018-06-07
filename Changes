@@ -1,3 +1,21 @@
+0.46.2.0
+========
+
+Features
+--------
+
+- Revamped OSL shaders (#2539).
+  - Added MultiplyVector, DotProduct, CrossProduct, RemapFloat, RemapColor, RemapVector,
+    FloatToColor, ColorToFloat, FloatToVector, VectorToFloat, ColorToVector,
+    Luminance, MixColor, MixVector, MixFloat, AddColor, AddFloat, AddVector,
+    DivideColor, DivideFloat, DivideVector, MultiplyColor, MultiplyFloat, MultiplyVector,
+    SubtractColor, SubtractFloat, SubtractVector, InvertMatrix, Length, Normalize,
+    PowFloat, RoundFloat, SinFloat, MatrixTransform, CompareColor, CompareFloat,
+    CompareVector, SwitchColor, SwitchFloat, SwitchVector, CoordinateSystemTransform,
+    CoordinateSystemMatrix.
+  - Removed some old shaders, keeping compatibility by converting them to new shaders
+    during loading.
+
 0.46.1.0
 ========
 
