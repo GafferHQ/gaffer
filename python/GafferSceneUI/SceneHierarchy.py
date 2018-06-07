@@ -212,7 +212,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
-GafferUI.EditorWidget.registerType( "SceneHierarchy", SceneHierarchy )
+GafferUI.Editor.registerType( "SceneHierarchy", SceneHierarchy )
 
 ##########################################################################
 # _SetFilterWidget

@@ -53,9 +53,9 @@ class _EditorMetaclass( type ) :
 
 		return instance
 
-## The EditorWidget is a base class for all Widgets which somehow display or
-# manipulate a ScriptNode or its children.
-class EditorWidget( GafferUI.Widget ) :
+## Base class for UI components which display or manipulate a ScriptNode
+# or its children. These make up the tabs in the UI layout.
+class Editor( GafferUI.Widget ) :
 
 	__metaclass__ = _EditorMetaclass
 
@@ -100,7 +100,7 @@ class EditorWidget( GafferUI.Widget ) :
 		# string to signify that the derived class is free
 		# to return what it wants
 		c = self.__class__
-		while c is not EditorWidget :
+		while c is not Editor :
 			if "getTitle" in c.__dict__ :
 				return ""
 			c = c.__bases__[0]
@@ -158,7 +158,7 @@ class EditorWidget( GafferUI.Widget ) :
 	## This must be implemented by all derived classes as it is used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation -
 	# instead the new script will be provided later as a variable named scriptNode. So a suitable
-	# serialisation will look like "GafferUI.EditorWidget( scriptNode )".
+	# serialisation will look like "GafferUI.Editor( scriptNode )".
 	def __repr__( self ) :
 
 		raise NotImplementedError

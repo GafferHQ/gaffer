@@ -301,7 +301,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 			return False # remove idle callback
 
-GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
+GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 
 ##########################################################################
 # Diff

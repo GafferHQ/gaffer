@@ -52,13 +52,13 @@ from Qt import QtCore
 ## \todo Standard way for users to customise all menus
 ## \todo Tab completion and popup help. rlcompleter module should be useful for tab completion. Completer( dict ) constructs a completer
 # that works in a specific namespace.
-class ScriptEditor( GafferUI.EditorWidget ) :
+class ScriptEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		self.__splittable = GafferUI.SplitContainer()
 
-		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, self.__splittable, scriptNode, **kw )
 
 		self.__outputWidget = GafferUI.MultiLineTextWidget(
 			editable = False,
@@ -187,7 +187,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			# up till the end.
 			QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
 
-GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
+GafferUI.Editor.registerType( "ScriptEditor", ScriptEditor )
 
 class _MessageHandler( IECore.MessageHandler ) :
 

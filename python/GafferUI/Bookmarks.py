@@ -68,7 +68,7 @@ class Bookmarks( object ) :
 	#     of the ApplicationRoot ancestor of target are returned, with None
 	#     being returned in the absence of such an ancestor.
 	#  - An of instance of GafferUI.Widget. In this case, an instance of
-	#     of EditorWidget or ScriptWindow will be sought, and the application
+	#     of Editor or ScriptWindow will be sought, and the application
 	#     determined using the attached script. This too may return None if
 	#     no application can be found.
 	#  - A tuple or list, containing potential targets in the above form. Each
@@ -95,10 +95,10 @@ class Bookmarks( object ) :
 		else :
 			assert( isinstance( target, GafferUI.Widget ) )
 			scriptWidget = None
-			if isinstance( target, ( GafferUI.EditorWidget, GafferUI.ScriptWindow ) ) :
+			if isinstance( target, ( GafferUI.Editor, GafferUI.ScriptWindow ) ) :
 				scriptWidget = target
 			else :
-				scriptWidget = target.ancestor( GafferUI.EditorWidget )
+				scriptWidget = target.ancestor( GafferUI.Editor )
 				if scriptWidget is None :
 					scriptWidget = target.ancestor( GafferUI.ScriptWindow )
 
@@ -110,7 +110,7 @@ class Bookmarks( object ) :
 				window = target
 				while window is not None :
 					window = window.ancestor( GafferUI.Window )
-					if window is not None and isinstance( window.getChild(), GafferUI.EditorWidget ) :
+					if window is not None and isinstance( window.getChild(), GafferUI.Editor ) :
 						scriptWidget = window.getChild()
 						break
 
