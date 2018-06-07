@@ -2297,10 +2297,6 @@ void AppleseedRendererBase::createProject()
 	asf::auto_release_ptr<asr::Frame> frame( asr::FrameFactory::create( "beauty", asr::ParamArray().insert( "resolution", "640 480" ) ) );
 	m_project->set_frame( frame );
 
-	// 16 bits float (half) is the default pixel format in appleseed.
-	// Force the pixel format to float to avoid half -> float conversions in the display driver.
-	m_project->get_frame()->get_parameters().insert( "pixel_format", "float" );
-
 	// Create the scene
 	asf::auto_release_ptr<asr::Scene> scene = asr::SceneFactory::create();
 	m_project->set_scene( scene );
@@ -2367,6 +2363,7 @@ namespace
 
 InternedString g_cameraOptionName( "camera" );
 InternedString g_frameOptionName( "frame" );
+InternedString g_lightingEngine( "as:cfg:lighting_engine" );
 InternedString g_environmentEDFName( "as:environment_edf" );
 InternedString g_environmentEDFBackground( "as:environment_edf_background" );
 InternedString g_logLevelOptionName( "as:log:level" );
@@ -2477,6 +2474,32 @@ class AppleseedRenderer final : public AppleseedRendererBase
 					return;
 				}
 
+				if( name == g_lightingEngine )
+				{
+					if( value == nullptr )
+					{
+						// Remove lighting engine.
+						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( "shading_engine.override_shading" );
+						m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( "shading_engine.override_shading" );
+					}
+					else if( const StringData *d = reportedCast<const StringData>( value, "option", name ) )
+					{
+						string lightingEngine = d->readable();
+						string interactiveLightingEngine = lightingEngine;
+
+						if( lightingEngine == "sppm" && isInteractiveRender() )
+						{
+							msg( Msg::Warning, "AppleseedRenderer::option", "SPPM cannot be used with interactive renders. Path tracing will be used." );
+							interactiveLightingEngine = "pt";
+						}
+
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), lightingEngine );
+						m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), interactiveLightingEngine );
+					}
+
+					return;
+				}
+
 				if( name == g_ptMaxRayIntensity )
 				{
 					if( value == nullptr )
@@ -2560,6 +2583,29 @@ class AppleseedRenderer final : public AppleseedRendererBase
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), valueStr.c_str() );
 						m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), valueStr.c_str() );
 					}
+				}
+
+				return;
+			}
+
+			// appleseed frame settings.
+			if( boost::starts_with( name.c_str(), "as:frame:" ) )
+			{
+				// remove the option prefix.
+				string optName( name.string(), 9, string::npos );
+
+				asr::Frame* frame = m_project->get_frame();
+
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+
+				if( dataValue == nullptr )
+				{
+					frame->get_parameters().remove_path( optName.c_str() );
+				}
+				else
+				{
+					string valueStr = ParameterAlgo::dataToString( dataValue );
+					frame->get_parameters().insert( optName.c_str(), valueStr.c_str() );
 				}
 
 				return;

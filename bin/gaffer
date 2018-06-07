@@ -220,6 +220,7 @@ if [[ $APPLESEED ]] ; then
 	done
 
 	prependToPath "$APPLESEED/shaders/gaffer" OSL_SHADER_PATHS
+	prependToPath "$APPLESEED/shaders/appleseed" OSL_SHADER_PATHS
 	prependToPath "$GAFFER_ROOT/appleseedDisplays" APPLESEED_SEARCHPATH
 	prependToPath "$OSL_SHADER_PATHS" APPLESEED_SEARCHPATH
 

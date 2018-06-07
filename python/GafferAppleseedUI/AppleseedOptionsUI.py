@@ -153,6 +153,20 @@ def __sppmSummary( plug ) :
 
 	return ", ".join( info )
 
+def __denoiserSummary( plug ) :
+
+	info = []
+	if plug["denoiserMode"]["enabled"].getValue() :
+		info.append( "Denoiser %s" % plug["denoiserMode"]["value"].getValue() )
+	if plug["denoiserSkipPixels"]["enabled"].getValue() :
+		info.append( "Skip Pixels %s" % plug["denoiserSkipPixels"]["value"].getValue() )
+	if plug["denoiserRandomPixelOrder"]["enabled"].getValue() :
+		info.append( "Random Order %s" % plug["denoiserRandomPixelOrder"]["value"].getValue() )
+	if plug["denoiserScales"]["enabled"].getValue() :
+		info.append( "Scales %s" % plug["denoiserScales"]["value"].getValue() )
+
+	return ", ".join( info )
+
 def __systemSummary( plug ) :
 
 	info = []
@@ -200,6 +214,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Environment:summary", __environmentSummary,
 			"layout:section:Unidirectional Path Tracer:summary", __ptSummary,
 			"layout:section:SPPM:summary", __sppmSummary,
+			"layout:section:Denoiser:summary", __denoiserSummary,
 			"layout:section:System:summary", __systemSummary,
 			"layout:section:Logging:summary", __loggingSummary,
 
@@ -591,6 +606,71 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "SPPM",
 			"label", "Alpha",
+
+		],
+
+		# Denoiser
+
+		"options.denoiserMode" : [
+
+			"description",
+			"""
+			Enable the denoiser.
+			When choosing Write Outputs, two EXR images with denoising AOVs
+			will be written in the same directory as the beauty image.
+			The command line denoiser in appleseed can be used with the EXR files
+			to produce denoised images.
+			""",
+
+			"layout:section", "Denoiser",
+			"label", "Denoiser",
+		],
+
+		"options.denoiserMode.value" : [
+
+			"preset:Off", "off",
+			"preset:On", "on",
+			"preset:Write Outputs", "write_outputs",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.denoiserSkipPixels" : [
+
+			"description",
+			"""
+			Disabling this option will produce better results 
+			at the expense of slower processing time.
+			""",
+
+			"layout:section", "Denoiser",
+			"label", "Skip Denoised Pixels",
+
+		],
+
+		"options.denoiserRandomPixelOrder" : [
+
+			"description",
+			"""
+			Process pixels in random order.
+			Enabling this option can help reducing artifacts.
+			""",
+
+			"layout:section", "Denoiser",
+			"label", "Random Pixel Order",
+
+		],
+
+		"options.denoiserScales" : [
+
+			"description",
+			"""
+			Number of resolution scales used for denoising.
+			""",
+
+			"layout:section", "Denoiser",
+			"label", "Denoise Scales",
 
 		],
 
