@@ -104,9 +104,9 @@ Gaffer.Metadata.registerNode(
 			Applies colour space transformations for viewing the image correctly.
 			""",
 
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._DisplayTransformPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"label", "",
+			"toolbarLayout:width", 100,
 
 			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
 			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
@@ -214,20 +214,6 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().setValue( self.__toggleValue )
 		else :
 			self.getPlug().setToDefault()
-
-##########################################################################
-# _DisplayTransformPlugValueWidget
-##########################################################################
-
-class _DisplayTransformPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		GafferUI.PresetsPlugValueWidget.__init__( self, plug, **kw )
-
-		## \todo Perhaps the layout could do this sort of thing for us
-		# based on a metadata value?
-		self._qtWidget().setFixedWidth( 100 )
 
 ##########################################################################
 # _ColorInspectorPlugValueWidget
