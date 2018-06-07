@@ -166,6 +166,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.failUnless( "testDispatcher" in GafferDispatch.Dispatcher.registeredDispatchers() )
 		self.failUnless( GafferDispatch.Dispatcher.create( 'testDispatcher' ).isInstanceOf( DispatcherTest.TestDispatcher.staticTypeId() ) )
 
+		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcher" )
+		self.failUnless( "testDispatcher" not in GafferDispatch.Dispatcher.registeredDispatchers() )
+
+		# testing that deregistering a non-existent dispatcher is safe
+		GafferDispatch.Dispatcher.deregisterDispatcher( "fake" )
+
 	def testDispatcherSignals( self ) :
 
 		preCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
@@ -1547,6 +1553,39 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "a", "a", "b" ] * 2 )
 		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 1 ] * 2 )
 		self.assertEqual( [ l.context["wedge:value"] for l in log ], [ "X", "X", "X", "X", "Y", "Y", "Y", "Y" ] )
+
+	def testCreateMatching( self ) :
+
+		self.assertEqual( GafferDispatch.Dispatcher.registeredDispatchers(), tuple([ "Debug", "Local", "testDispatcher" ]) )
+
+		# match all
+		dispatchers = GafferDispatch.Dispatcher.createMatching( "*" )
+		self.assertEqual( len(dispatchers), 3 )
+		self.assertTrue( isinstance( dispatchers[0], GafferDispatchTest.DebugDispatcher ) )
+		self.assertTrue( isinstance( dispatchers[1], GafferDispatch.LocalDispatcher ) )
+		self.assertTrue( isinstance( dispatchers[2], DispatcherTest.TestDispatcher ) )
+
+		# match specific
+		dispatchers = GafferDispatch.Dispatcher.createMatching( "Local" )
+		self.assertEqual( len(dispatchers), 1 )
+		self.assertTrue( isinstance( dispatchers[0], GafferDispatch.LocalDispatcher ) )
+
+		# match specific with wildcards
+		dispatchers = GafferDispatch.Dispatcher.createMatching( "test*" )
+		self.assertEqual( len(dispatchers), 1 )
+		self.assertTrue( isinstance( dispatchers[0], DispatcherTest.TestDispatcher ) )
+
+		# match several by wildcard
+		dispatchers = GafferDispatch.Dispatcher.createMatching( "*e*" )
+		self.assertEqual( len(dispatchers), 2 )
+		self.assertTrue( isinstance( dispatchers[0], GafferDispatchTest.DebugDispatcher ) )
+		self.assertTrue( isinstance( dispatchers[1], DispatcherTest.TestDispatcher ) )
+
+		# match seveal exactly
+		dispatchers = GafferDispatch.Dispatcher.createMatching( "Debug Local" )
+		self.assertEqual( len(dispatchers), 2 )
+		self.assertTrue( isinstance( dispatchers[0], GafferDispatchTest.DebugDispatcher ) )
+		self.assertTrue( isinstance( dispatchers[1], GafferDispatch.LocalDispatcher ) )
 
 if __name__ == "__main__":
 	unittest.main()

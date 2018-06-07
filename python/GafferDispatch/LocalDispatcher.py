@@ -215,10 +215,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			try :
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Running )
 				batch.execute()
-			except :
-				traceback.print_exc()
+			except Exception as e :
+				IECore.msg( IECore.MessageHandler.Level.Debug, self.__messageTitle, traceback.format_exc() )
 				self.__reportFailed( batch )
-				return False
+				raise e
 
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
 

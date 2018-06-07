@@ -45,6 +45,11 @@ import GafferUI
 import GafferDispatch
 
 ##########################################################################
+# Note this file is shared with the `dispatch` app. We need to ensure any
+# changes here have the desired behaviour in both applications.
+##########################################################################
+
+##########################################################################
 # Project variables
 ##########################################################################
 
@@ -67,16 +72,15 @@ application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped 
 # Bookmarks
 ##########################################################################
 
-def __projectBookmark( forWidget, location ) :
+def __projectBookmark( widget, location ) :
 
 	script = None
-	if forWidget is not None :
-		if isinstance( forWidget, GafferUI.ScriptWindow ) :
-			scriptWindow = forWidget
-		else :
-			scriptWindow = forWidget.ancestor( GafferUI.ScriptWindow )
-		if scriptWindow is not None :
-			script = scriptWindow.scriptNode()
+	while widget is not None :
+		if hasattr( widget, "scriptNode" ) :
+			script = widget.scriptNode()
+			if isinstance( script, Gaffer.ScriptNode ) :
+				break
+		widget = widget.parent()
 
 	if script is not None :
 		p = script.context().substitute( location )
@@ -107,6 +111,3 @@ for dispatcher in dispatchers :
 	Gaffer.Metadata.registerPlugValue( dispatcher, "jobName", "userDefault", "${script:name}" )
 	directoryName = dispatcher.staticTypeName().rpartition( ":" )[2].replace( "Dispatcher", "" ).lower()
 	Gaffer.Metadata.registerPlugValue( dispatcher, "jobsDirectory", "userDefault", "${project:rootDirectory}/dispatcher/" + directoryName )
-
-Gaffer.Metadata.registerPlugValue( GafferDispatch.LocalDispatcher, "executeInBackground", "userDefault", True )
-GafferDispatch.Dispatcher.setDefaultDispatcherType( "Local" )

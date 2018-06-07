@@ -272,6 +272,17 @@ static tuple registeredDispatchersWrapper()
 	return boost::python::tuple( result );
 }
 
+static list createMatching( std::string pattern )
+{
+	std::vector<DispatcherPtr> dispatchers = Dispatcher::createMatching( pattern );
+	list result;
+	for( auto &d : dispatchers )
+	{
+		result.append( d );
+	}
+	return result;
+}
+
 struct PreDispatchSlotCaller
 {
 	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
@@ -347,10 +358,12 @@ void GafferDispatchModule::bindDispatcher()
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "frameRange", &frameRange )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
+		.def( "createMatching", &createMatching, ( arg( "matchPattern" ) ) ).staticmethod( "createMatching" )
 		.def( "getDefaultDispatcherType", &Dispatcher::getDefaultDispatcherType, return_value_policy<copy_const_reference>() ).staticmethod( "getDefaultDispatcherType" )
 		.def( "setDefaultDispatcherType", &Dispatcher::setDefaultDispatcherType ).staticmethod( "setDefaultDispatcherType" )
 		.def( "registerDispatcher", &registerDispatcher, ( arg( "dispatcherType" ), arg( "creator" ), arg( "setupPlugsFn" ) = 0 ) ).staticmethod( "registerDispatcher" )
 		.def( "registeredDispatchers", &registeredDispatchersWrapper ).staticmethod( "registeredDispatchers" )
+		.def( "deregisterDispatcher", &Dispatcher::deregisterDispatcher, ( arg( "dispatcherType" ) ) ).staticmethod( "deregisterDispatcher" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "dispatchSignal", &Dispatcher::dispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )

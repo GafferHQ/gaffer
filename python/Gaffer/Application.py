@@ -98,17 +98,16 @@ class Application( IECore.Parameterised ) :
 			self.__formatHelp()
 			return 0
 
-		args = self.parameters().getValidatedValue()
+		profileFileName = self.parameters()["profileFileName"].getTypedValue()
 
-		if args["profileFileName"].value :
+		if profileFileName :
 			contextDict = {
 				"self" : self,
-				"args" : args,
 			}
-			cProfile.runctx( "result = self._Application__run( args )", contextDict, contextDict, args["profileFileName"].value )
+			cProfile.runctx( "result = self._Application__run()", contextDict, contextDict, profileFileName )
 			return contextDict["result"]
 		else :
-			return self.__run( args )
+			return self.__run()
 
 	## Must be implemented by subclasses to do the actual work of
 	# running the application and returning a status value. The args
@@ -130,14 +129,17 @@ class Application( IECore.Parameterised ) :
 		contextDict = {	"application" : self }
 		IECore.loadConfig( "GAFFER_STARTUP_PATHS", contextDict, subdirectory = applicationName )
 
-	def __run( self, args ) :
+	def __run( self ) :
+
+		threads = self.parameters()["threads"].getTypedValue()
 
 		with IECore.tbb_task_scheduler_init(
-			IECore.tbb_task_scheduler_init.automatic if args["threads"].value == 0 else args["threads"].value
+			IECore.tbb_task_scheduler_init.automatic if threads == 0 else threads
 		) :
 
 			self._executeStartupFiles( self.root().getName() )
-			return self._run( args )
+
+			return self._run( self.parameters().getValidatedValue() )
 
 	def __formatHelp( self ) :
 

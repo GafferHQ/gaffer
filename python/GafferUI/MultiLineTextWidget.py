@@ -63,7 +63,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			h1[class="INFO"] { color : #80b3ff }
 			h1[class="DEBUG"] { color : #aaffcc }
 			body { color : red }
-			span[class="message"] { color : #999999 }
+			pre[class="message"] { color : #999999 }
 			"""
 		)
 
