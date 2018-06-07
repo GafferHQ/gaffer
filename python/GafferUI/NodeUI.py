@@ -103,7 +103,7 @@ Gaffer.Metadata.registerNode(
 
 ## This class forms the base class for all uis for nodes.
 ## \todo: We should provide setContext()/getContext() methods
-## as EditorWidget and PlugValueWidget do.
+## as Editor and PlugValueWidget do.
 class NodeUI( GafferUI.Widget ) :
 
 	def __init__( self, node, topLevelWidget, **kw ) :

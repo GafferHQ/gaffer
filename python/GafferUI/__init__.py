@@ -232,7 +232,7 @@ from PathVectorDataPlugValueWidget import PathVectorDataPlugValueWidget
 from FileSystemPathVectorDataPlugValueWidget import FileSystemPathVectorDataPlugValueWidget
 from PlugWidget import PlugWidget
 from PlugLayout import PlugLayout
-from EditorWidget import EditorWidget
+from Editor import Editor
 from ScriptEditor import ScriptEditor
 from GadgetWidget import GadgetWidget
 from NodeGraph import NodeGraph

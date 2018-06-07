@@ -45,14 +45,14 @@ from Qt import QtCore
 ## The NodeSetEditor is a base class for all Editors which focus their
 # editing on a subset of nodes beneath a ScriptNode. This set defaults
 # to the ScriptNode.selection() but can be modified to be any Set of nodes.
-class NodeSetEditor( GafferUI.EditorWidget ) :
+class NodeSetEditor( GafferUI.Editor ) :
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
 		self.__nodeSet = Gaffer.StandardSet()
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
 
-		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, topLevelWidget, scriptNode, **kw )
 
 		self.__titleFormat = None
 
@@ -82,7 +82,7 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	# reimplement this again.
 	def getTitle( self ) :
 
-		t = GafferUI.EditorWidget.getTitle( self )
+		t = GafferUI.Editor.getTitle( self )
 		if t :
 			return t
 

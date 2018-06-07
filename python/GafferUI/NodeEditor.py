@@ -230,4 +230,4 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( node.scriptNode() ) :
 			Gaffer.MetadataAlgo.setReadOnly( node, readOnly )
 
-GafferUI.EditorWidget.registerType( "NodeEditor", NodeEditor )
+GafferUI.Editor.registerType( "NodeEditor", NodeEditor )

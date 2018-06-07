@@ -138,7 +138,7 @@ class Layouts( object ) :
 		# subsequently executed config files.
 		fileObject.write( "del layouts\n" )
 
-	## The EditorWidget factory provides access to every single registered subclass of
+	## The Editor factory provides access to every single registered subclass of
 	# editor, but specific applications may wish to only provide a subset of those
 	# editors to the user. This method is used from config files to define the subset
 	# of editors to use in the application.

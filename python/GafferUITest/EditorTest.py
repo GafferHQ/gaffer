@@ -43,7 +43,7 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
-class EditorWidgetTest( GafferUITest.TestCase ) :
+class EditorTest( GafferUITest.TestCase ) :
 
 	def testLifetime( self ) :
 
@@ -54,8 +54,8 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 		scriptNode["write"] = Gaffer.ObjectWriter()
 		scriptNode.selection().add( scriptNode["write"] )
 
-		for type in GafferUI.EditorWidget.types() :
-			editor = GafferUI.EditorWidget.create( type, scriptNode )
+		for type in GafferUI.Editor.types() :
+			editor = GafferUI.Editor.create( type, scriptNode )
 			w = weakref.ref( editor )
 			del editor
 			self.assertEqual( w(), None )
@@ -83,11 +83,32 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 		application.root()["scripts"].addChild( scriptNode )
 
 		layouts = GafferUI.Layouts.acquire( application )
-		for type in GafferUI.EditorWidget.types() :
-			editor = GafferUI.EditorWidget.create( type, scriptNode )
+		for type in GafferUI.Editor.types() :
+			editor = GafferUI.Editor.create( type, scriptNode )
 			layouts.add( "testLayout", editor )
 			editor2 = layouts.create( "testLayout", scriptNode )
 			self.failUnless( editor2.scriptNode() is scriptNode )
+
+	def testInstanceCreatedSignal( self ) :
+
+		editorsCreated = []
+		def editorCreated( editor ) :
+			editorsCreated.append( editor )
+		editorCreatedConnection = GafferUI.Editor.instanceCreatedSignal().connect( editorCreated )
+
+		scriptEditorsCreated = []
+		def scriptEditorCreated( editor ) :
+			scriptEditorsCreated.append( editor )
+		scriptEditorCreatedConnection = GafferUI.ScriptEditor.instanceCreatedSignal().connect( scriptEditorCreated )
+
+		s = Gaffer.ScriptNode()
+
+		e1 = GafferUI.NodeEditor( s )
+		e2 = GafferUI.ScriptEditor( s )
+		e3 = GafferUI.NodeEditor( s )
+
+		self.assertEqual( editorsCreated, [ e1, e2, e3 ] )
+		self.assertEqual( scriptEditorsCreated, [ e2 ] )
 
 if __name__ == "__main__":
 	unittest.main()

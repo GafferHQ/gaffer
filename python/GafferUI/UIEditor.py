@@ -242,7 +242,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 				Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
 
-GafferUI.EditorWidget.registerType( "UIEditor", UIEditor )
+GafferUI.Editor.registerType( "UIEditor", UIEditor )
 
 ##########################################################################
 # PlugValueWidget popup menu

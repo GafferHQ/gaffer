@@ -44,13 +44,13 @@ import IECore
 import Gaffer
 import GafferUI
 
-class BrowserEditor( GafferUI.EditorWidget ) :
+class BrowserEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		self.__column = GafferUI.ListContainer( borderWidth = 8, spacing = 6 )
 
-		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, self.__column, scriptNode, **kw )
 
 		with self.__column :
 
@@ -244,7 +244,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 
 		cls.__modes.append( ( label, modeCreator ) )
 
-GafferUI.EditorWidget.registerType( "Browser", BrowserEditor )
+GafferUI.Editor.registerType( "Browser", BrowserEditor )
 
 class FileSystemMode( BrowserEditor.Mode ) :
 

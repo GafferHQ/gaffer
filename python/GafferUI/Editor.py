@@ -42,9 +42,22 @@ import IECore
 import Gaffer
 import GafferUI
 
-## The EditorWidget is a base class for all Widgets which somehow display or
-# manipulate a ScriptNode or its children.
-class EditorWidget( GafferUI.Widget ) :
+class _EditorMetaclass( type ) :
+
+	def __call__( cls, *args, **kw ) :
+
+		instance = type.__call__( cls, *args, **kw )
+		while hasattr( cls, "instanceCreatedSignal" ) :
+			cls.instanceCreatedSignal()( instance )
+			cls = cls.__bases__[0]
+
+		return instance
+
+## Base class for UI components which display or manipulate a ScriptNode
+# or its children. These make up the tabs in the UI layout.
+class Editor( GafferUI.Widget ) :
+
+	__metaclass__ = _EditorMetaclass
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
@@ -87,7 +100,7 @@ class EditorWidget( GafferUI.Widget ) :
 		# string to signify that the derived class is free
 		# to return what it wants
 		c = self.__class__
-		while c is not EditorWidget :
+		while c is not Editor :
 			if "getTitle" in c.__dict__ :
 				return ""
 			c = c.__bases__[0]
@@ -145,7 +158,7 @@ class EditorWidget( GafferUI.Widget ) :
 	## This must be implemented by all derived classes as it is used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation -
 	# instead the new script will be provided later as a variable named scriptNode. So a suitable
-	# serialisation will look like "GafferUI.EditorWidget( scriptNode )".
+	# serialisation will look like "GafferUI.Editor( scriptNode )".
 	def __repr__( self ) :
 
 		raise NotImplementedError
@@ -172,3 +185,14 @@ class EditorWidget( GafferUI.Widget ) :
 		cls.__namesToCreators[name] = creator
 
 	__namesToCreators = {}
+
+	@classmethod
+	def instanceCreatedSignal( cls ) :
+
+		s = cls.__dict__.get( "__instanceCreatedSignal", None )
+		if s is not None :
+			return s
+
+		s = Gaffer.Signal1()
+		setattr( cls, "__instanceCreatedSignal", s )
+		return s

@@ -46,13 +46,13 @@ from Qt import QtWidgets
 
 ## The Timeline presents a time slider which edits the frame
 # entry of a context.
-class Timeline( GafferUI.EditorWidget ) :
+class Timeline( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 4, spacing = 2 )
 
-		GafferUI.EditorWidget.__init__( self, self.__row, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, self.__row, scriptNode, **kw )
 
 		with self.__row :
 
@@ -248,4 +248,4 @@ class Timeline( GafferUI.EditorWidget ) :
 
 		return "GafferUI.Timeline( scriptNode )"
 
-GafferUI.EditorWidget.registerType( "Timeline", Timeline )
+GafferUI.Editor.registerType( "Timeline", Timeline )

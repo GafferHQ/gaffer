@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-class NodeGraph( GafferUI.EditorWidget ) :
+class NodeGraph( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -53,7 +53,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			] ),
 		)
 
-		GafferUI.EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
@@ -513,4 +513,4 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.enabledPlug().setValue( value )
 
-GafferUI.EditorWidget.registerType( "NodeGraph", NodeGraph )
+GafferUI.Editor.registerType( "NodeGraph", NodeGraph )

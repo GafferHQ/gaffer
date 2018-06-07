@@ -256,7 +256,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		return True
 
-GafferUI.EditorWidget.registerType( "Viewer", Viewer )
+GafferUI.Editor.registerType( "Viewer", Viewer )
 
 # Internal widget to simplify the management of node toolbars.
 class _Toolbar( GafferUI.Frame ) :

@@ -46,13 +46,13 @@ import GafferUI
 from Qt import QtWidgets
 
 ## \todo Implement an option to float in a new window, and an option to anchor back - drag and drop of tabs?
-class CompoundEditor( GafferUI.EditorWidget ) :
+class CompoundEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, children=None, **kw ) :
 
 		self.__splitContainer = _SplitContainer()
 
-		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, self.__splitContainer, scriptNode, **kw )
 
 		self.__splitContainer.append( _TabbedContainer() )
 
@@ -65,7 +65,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
-	def editors( self, type = GafferUI.EditorWidget ) :
+	def editors( self, type = GafferUI.Editor ) :
 
 		def __recurse( w ) :
 			assert( isinstance( w, _SplitContainer ) )
@@ -293,7 +293,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, basestring ) :
-			editor = GafferUI.EditorWidget.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
+			editor = GafferUI.Editor.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
 		else :
 			editor = nameOrEditor
 
