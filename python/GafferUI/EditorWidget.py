@@ -42,9 +42,22 @@ import IECore
 import Gaffer
 import GafferUI
 
+class _EditorMetaclass( type ) :
+
+	def __call__( cls, *args, **kw ) :
+
+		instance = type.__call__( cls, *args, **kw )
+		while hasattr( cls, "instanceCreatedSignal" ) :
+			cls.instanceCreatedSignal()( instance )
+			cls = cls.__bases__[0]
+
+		return instance
+
 ## The EditorWidget is a base class for all Widgets which somehow display or
 # manipulate a ScriptNode or its children.
 class EditorWidget( GafferUI.Widget ) :
+
+	__metaclass__ = _EditorMetaclass
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
@@ -172,3 +185,14 @@ class EditorWidget( GafferUI.Widget ) :
 		cls.__namesToCreators[name] = creator
 
 	__namesToCreators = {}
+
+	@classmethod
+	def instanceCreatedSignal( cls ) :
+
+		s = cls.__dict__.get( "__instanceCreatedSignal", None )
+		if s is not None :
+			return s
+
+		s = Gaffer.Signal1()
+		setattr( cls, "__instanceCreatedSignal", s )
+		return s

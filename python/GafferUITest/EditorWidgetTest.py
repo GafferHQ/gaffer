@@ -89,5 +89,26 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 			editor2 = layouts.create( "testLayout", scriptNode )
 			self.failUnless( editor2.scriptNode() is scriptNode )
 
+	def testInstanceCreatedSignal( self ) :
+
+		editorsCreated = []
+		def editorCreated( editor ) :
+			editorsCreated.append( editor )
+		editorCreatedConnection = GafferUI.EditorWidget.instanceCreatedSignal().connect( editorCreated )
+
+		scriptEditorsCreated = []
+		def scriptEditorCreated( editor ) :
+			scriptEditorsCreated.append( editor )
+		scriptEditorCreatedConnection = GafferUI.ScriptEditor.instanceCreatedSignal().connect( scriptEditorCreated )
+
+		s = Gaffer.ScriptNode()
+
+		e1 = GafferUI.NodeEditor( s )
+		e2 = GafferUI.ScriptEditor( s )
+		e3 = GafferUI.NodeEditor( s )
+
+		self.assertEqual( editorsCreated, [ e1, e2, e3 ] )
+		self.assertEqual( scriptEditorsCreated, [ e2 ] )
+
 if __name__ == "__main__":
 	unittest.main()
