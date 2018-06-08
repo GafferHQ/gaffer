@@ -251,12 +251,16 @@ Dispatcher::TaskBatch::TaskBatch()
 }
 
 Dispatcher::TaskBatch::TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
-	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData )
+	:	m_plug( plug ), m_context( new Context( *context ) ), m_blindData( new CompoundData )
 {
+	// Frames must be determined by our `frames()` field, so
+	// remove any possibility of accidentally using the frame
+	// from the context.
+	m_context->remove( "frame" );
 }
 
 Dispatcher::TaskBatch::TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context )
-	:	m_plug( node->taskPlug() ), m_context( context ), m_blindData( new CompoundData )
+	:	TaskBatch( node->taskPlug(), context )
 {
 }
 
