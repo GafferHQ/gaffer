@@ -434,6 +434,8 @@ class Dispatcher::Batcher
 			// our current batches, or we may need to make a new one
 			// entirely if the current batch is full.
 
+			const bool requiresSequenceExecution = task.plug()->requiresSequenceExecution();
+
 			TaskBatchPtr batch = nullptr;
 			const MurmurHash batchMapHash = batchHash( task );
 			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
@@ -445,7 +447,7 @@ class Dispatcher::Batcher
 				IntDataPtr batchSizeData = candidateBatch->blindData()->member<IntData>( g_sizeBlindDataName );
 				const IntPlug *batchSizePlug = task.node()->dispatcherPlug()->getChild<const IntPlug>( g_batchSize );
 				const int batchSizeLimit = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-				if( task.plug()->requiresSequenceExecution() || ( batchSizeData->readable() < batchSizeLimit ) )
+				if( requiresSequenceExecution || ( batchSizeData->readable() < batchSizeLimit ) )
 				{
 					batch = candidateBatch;
 					batchSizeData->writable()++;
@@ -466,7 +468,7 @@ class Dispatcher::Batcher
 			{
 				float frame = task.context()->getFrame();
 				std::vector<float> &frames = batch->frames();
-				if( task.plug()->requiresSequenceExecution() )
+				if( requiresSequenceExecution )
 				{
 					frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
 				}
