@@ -254,7 +254,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 			private :
 
 				TaskNode::ConstTaskPlugPtr m_plug;
-				Gaffer::ConstContextPtr m_context;
+				Gaffer::ContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
 				TaskBatches m_preTasks;

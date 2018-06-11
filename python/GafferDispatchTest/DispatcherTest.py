@@ -83,9 +83,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			GafferDispatch.Dispatcher.__init__( self )
 
+			self.lastDispatch = None
+
 		def _doDispatch( self, batch ) :
 
-			pass
+			self.lastDispatch = batch
 
 	IECore.registerRunTimeTyped( NullDispatcher )
 
@@ -1374,7 +1376,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["t"] ] )
 
 		self.assertEqual( [ l.node for l in log ], [ s["t"], s["t"], s["t"], s["t"], s["p"], ] )
-		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4, 1 ] )
+		self.assertEqual( [ l.context.get( "frame", None ) for l in log ], [ 1, 2, 3, 4, None ] )
 		self.assertEqual( [ l.frames for l in log ], [ None, None, None, None, [ 1, 2, 3, 4 ] ] )
 
 	def testScaling( self ) :
@@ -1586,6 +1588,26 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len(dispatchers), 2 )
 		self.assertTrue( isinstance( dispatchers[0], GafferDispatchTest.DebugDispatcher ) )
 		self.assertTrue( isinstance( dispatchers[1], GafferDispatch.LocalDispatcher ) )
+
+	def testBatchContextsAreIdentical( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferDispatch.SystemCommand()
+		s["n"]["command"].setValue( "echo #" )
+
+		dispatcher = self.NullDispatcher()
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-10" )
+		dispatcher.dispatch( [ s["n"] ] )
+
+		batches = dispatcher.lastDispatch.preTasks()
+		self.assertEqual( len( batches ), 10 )
+
+		for i, batch in enumerate( batches ) :
+			self.assertEqual( batch.plug(), s["n"]["task"] )
+			self.assertEqual( batch.frames(), [ i + 1 ] )
+			self.assertNotIn( "frame", batch.context() )
+			self.assertEqual( batch.context(), batches[0].context() )
 
 if __name__ == "__main__":
 	unittest.main()
