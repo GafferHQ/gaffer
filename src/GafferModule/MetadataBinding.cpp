@@ -560,8 +560,8 @@ void GafferModule::bindMetadata()
 		.staticmethod( "nodesWithMetadata" )
 	;
 
-	SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
+	SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::ValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
 	SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
-	SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
+	SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::PlugValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
 
 }
