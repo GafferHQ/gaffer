@@ -1,0 +1,78 @@
+/* ===================================
+CSS overrides for Gaffer documentation
+==================================== */
+
+/* Match regular nav background to Gaffer brand colors */
+.wy-side-nav-search {
+    background-color: #343131;
+}
+
+/* Match mobile nav background to Gaffer brand colors */
+.wy-nav-top {
+    background-color: #b92227;
+}
+
+/* Increase nav version color visibility */
+.wy-side-nav-search > div.version {
+    color: inherit;
+}
+
+/* Add "Gaffer" in front of nav version (this sidesteps changing the Sphinx template) */
+.wy-side-nav-search > div.version::before {
+    content: "Gaffer ";
+}
+
+/* Make nav search simpler and a little duller when not focused */
+.wy-side-nav-search input[type="text"] {
+    border-width: 2px;
+    border-color: transparent;
+    background-color: lightgrey;
+    background-clip:  padding-box;
+    transition: all 0.3s linear;
+}
+
+/* Transition search bar to white bg with Gaffer red border on focus */
+.wy-side-nav-search input[type="text"]:focus {
+    border-color: #b92227;
+    background-color: white;
+}
+
+/* Make nav button color red on click */
+.wy-menu-vertical a:active {
+    background-color:#b92227;
+}
+
+/* Increase font size for mobile header title */
+.wy-nav-top a {
+    font-size: 120%;
+}
+
+/* Adjust the mobile menu button (and center-align mobile header title) */
+.wy-nav-top i {
+    display: block;
+    position: absolute;
+    left: 15px;
+    top: 15px;
+}
+
+/* Add icon after external links */
+a[href^="http"]:after {
+    content: " " url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);
+    color: #2980B9;
+}
+
+/* Fix fallback image text vertically alignment when inline */
+img {
+    vertical-align: initial;
+}
+
+/* Make nested and serial headers more distinguishable */
+h2 {
+    margin-top: 2em;
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid #e1e4e5;
+}
+
+h3 {
+    font-size: 100%;
+}
