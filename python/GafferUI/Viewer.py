@@ -82,7 +82,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			with GafferUI.ListContainer(
 				orientation = GafferUI.ListContainer.Orientation.Vertical,
 				parenting = {
-					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
 					"verticalAlignment" : GafferUI.VerticalAlignment.Top,
 				}
 			) :
@@ -96,7 +95,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				spacing = 0,
 				orientation = GafferUI.ListContainer.Orientation.Vertical,
 				parenting = {
-					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
 					"verticalAlignment" : GafferUI.VerticalAlignment.Bottom,
 				}
 			) :
@@ -269,6 +267,11 @@ class _Toolbar( GafferUI.Frame ) :
 		# to avoid unnecessary reconstruction when switching back and
 		# forth between the same set of nodes.
 		self.__nodeToolbarCache = IECore.LRUCache( self.__cacheGetter, 5 )
+
+		# Remove the SetMinAndMaxSize constraint that our base class added,
+		# so that we expand to the full width of the viewport, and our toolbar
+		# is centered inside.
+		self._qtWidget().layout().setSizeConstraint( self._qtWidget().layout().SetDefaultConstraint )
 
 		self.__edge = edge
 		self.__context = context

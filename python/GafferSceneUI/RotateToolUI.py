@@ -63,8 +63,10 @@ Gaffer.Metadata.registerNode(
 			setting can be mixed and matched freely.
 			""",
 
-			"toolbarLayout:section", "Bottom",
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 100,
 
 			"preset:Local", GafferSceneUI.TransformTool.Orientation.Local,
 			"preset:Parent", GafferSceneUI.TransformTool.Orientation.Parent,

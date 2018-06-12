@@ -55,6 +55,18 @@ Gaffer.Metadata.registerNode(
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:LeftSpacer:section", "Top",
+	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+
+	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferImageUI.ImageViewUI._StateWidget",
+	"toolbarLayout:customWidget:StateWidget:section", "Top",
+	"toolbarLayout:customWidget:StateWidget:index", -1,
+
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:RightSpacer:section", "Top",
+	"toolbarLayout:customWidget:RightSpacer:index", -2,
+
 	plugs = {
 
 		"clipping" : [
@@ -104,9 +116,9 @@ Gaffer.Metadata.registerNode(
 			Applies colour space transformations for viewing the image correctly.
 			""",
 
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._DisplayTransformPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"label", "",
+			"toolbarLayout:width", 100,
 
 			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
 			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
@@ -129,7 +141,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
-			"toolbarLayout:index", 0,
+			"toolbarLayout:index", 1,
 			"label", "",
 
 		],
@@ -142,7 +154,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
-			"toolbarLayout:index", 0,
+			"toolbarLayout:index", 1,
 			"toolbarLayout:divider", True,
 			"label", "",
 
@@ -216,20 +228,6 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().setToDefault()
 
 ##########################################################################
-# _DisplayTransformPlugValueWidget
-##########################################################################
-
-class _DisplayTransformPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		GafferUI.PresetsPlugValueWidget.__init__( self, plug, **kw )
-
-		## \todo Perhaps the layout could do this sort of thing for us
-		# based on a metadata value?
-		self._qtWidget().setFixedWidth( 100 )
-
-##########################################################################
 # _ColorInspectorPlugValueWidget
 ##########################################################################
 
@@ -253,6 +251,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__swatch._qtWidget().setFixedWidth( 12 )
 				self.__swatch._qtWidget().setFixedHeight( 12 )
 
+				self.__busyWidget = GafferUI.BusyWidget( size = 12 )
+
 				self.__rgbLabel = GafferUI.Label()
 
 				GafferUI.Spacer( imath.V2i( 20, 10 ), imath.V2i( 20, 10 ) )
@@ -268,6 +268,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__buttonPressSignal = imageGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__dragBeginSignal = imageGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndSignal = imageGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+
+		self.__updateLabels( imath.V2i( 0 ), imath.Color4f( 0, 0, 0, 1 ) )
 
 	def _updateFromPlug( self ) :
 
@@ -295,6 +297,11 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return pixel, color
 
+	@__updateInBackground.preCall
+	def __updateInBackgroundPreCall( self ) :
+
+		self.__busyWidget.setBusy( True )
+
 	@__updateInBackground.postCall
 	def __updateInBackgroundPostCall( self, backgroundResult ) :
 
@@ -316,10 +323,14 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		elif isinstance( backgroundResult, Exception ) :
 			# Computation error. This will be reported elsewhere
 			# in the UI.
-			pixel, color = self.__pixel, imath.Color4f( 0 )
+			self.__updateLabels( self.__pixel, imath.Color4f( 0 ) )
 		else :
 			# Success. We have valid infomation to display.
-			pixel, color = backgroundResult[0], backgroundResult[1]
+			self.__updateLabels( backgroundResult[0], backgroundResult[1] )
+
+		self.__busyWidget.setBusy( False )
+
+	def __updateLabels( self, pixel, color ) :
 
 		self.__positionLabel.setText( "<b>XY : %d %d</b>" % ( pixel.x, pixel.y ) )
 		self.__swatch.setColor( color )
@@ -438,3 +449,52 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setValue( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
+
+##########################################################################
+# _StateWidget
+##########################################################################
+
+class _Spacer( GafferUI.Spacer ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 0 ) )
+
+class _StateWidget( GafferUI.Widget ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		with row :
+
+			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
+			self.__button = GafferUI.Button( hasFrame = False )
+
+		self.__imageGadget = imageView.viewportGadget().getPrimaryChild()
+
+		self.__buttonClickedConnection = self.__button.clickedSignal().connect(
+			Gaffer.WeakMethod( self.__buttonClick )
+		)
+
+		self.__stateChangedConnection = self.__imageGadget.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__stateChanged )
+		)
+
+		self.__update()
+
+	def __stateChanged( self, imageGadget ) :
+
+		self.__update()
+
+	def __buttonClick( self, button ) :
+
+		self.__imageGadget.setPaused( not self.__imageGadget.getPaused() )
+		self.__update()
+
+	def __update( self ) :
+
+		paused = self.__imageGadget.getPaused()
+		self.__button.setImage( "timelinePause.png" if not paused else "timelinePlay.png" )
+		self.__busyWidget.setBusy( self.__imageGadget.state() == self.__imageGadget.State.Running )

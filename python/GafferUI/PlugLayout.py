@@ -55,6 +55,7 @@ from Qt import QtWidgets
 #	- "<layoutName>:activator" the name of an activator to control editability
 #	- "<layoutName>:visibilityActivator" the name of an activator to control visibility
 #	- "<layoutName>:accessory" groups as an accessory to the previous widget
+#	- "<layoutName>:width" gives a specific width to the plug's widget
 #
 # Per-parent metadata support :
 #
@@ -375,6 +376,12 @@ class PlugLayout( GafferUI.Widget ) :
 		result = GafferUI.PlugValueWidget.create( plug )
 		if result is None :
 			return result
+
+		width = self.__itemMetadataValue( plug, "width" )
+		if width is not None :
+			result._qtWidget().setFixedWidth( width )
+			if result._qtWidget().layout() is not None :
+				result._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and self.__itemMetadataValue( plug, "label" ) != "" :
  			result = GafferUI.PlugWidget( result )
