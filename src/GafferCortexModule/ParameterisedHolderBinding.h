@@ -48,6 +48,8 @@
 
 #include "boost/format.hpp"
 
+#include <memory>
+
 namespace GafferCortexModule
 {
 
@@ -143,7 +145,7 @@ class ParameterisedHolderClass : public BaseType
 			this->def( "setParameterisedValues", &BaseType::wrapped_type::setParameterisedValues );
 
 			boost::python::scope s = *this;
-			boost::python::class_<ParameterModificationContextWrapper>( "ParameterModificationContext", boost::python::init<typename BaseType::wrapped_type::Ptr>() )
+			boost::python::class_<ParameterModificationContextWrapper, boost::noncopyable>( "ParameterModificationContext", boost::python::init<typename BaseType::wrapped_type::Ptr>() )
 				.def( "__enter__", &ParameterModificationContextWrapper::enter )
 				.def( "__exit__", &ParameterModificationContextWrapper::exit )
 			;
@@ -161,7 +163,7 @@ class ParameterisedHolderClass : public BaseType
 			return boost::python::make_tuple( p, className, classVersion, searchPathEnvVar );
 		}
 
-		class ParameterModificationContextWrapper
+		class ParameterModificationContextWrapper : boost::noncopyable
 		{
 
 			public :
@@ -186,7 +188,7 @@ class ParameterisedHolderClass : public BaseType
 			private :
 
 				typename BaseType::wrapped_type::Ptr m_parameterisedHolder;
-				boost::shared_ptr<typename BaseType::wrapped_type::ParameterModificationContext> m_context;
+				std::unique_ptr<typename BaseType::wrapped_type::ParameterModificationContext> m_context;
 
 		};
 

@@ -59,6 +59,8 @@
 
 #include "tbb/mutex.h"
 
+#include <memory>
+
 OIIO_NAMESPACE_USING
 
 using namespace std;
@@ -463,14 +465,14 @@ class File
 
 
 
-typedef boost::shared_ptr<File> FilePtr;
+typedef std::shared_ptr<File> FilePtr;
 
 // For success, file should be set, and error left null
 // For failure, file should be left null, and error should be set
 struct CacheEntry
 {
 	FilePtr file;
-	boost::shared_ptr<std::string> error;
+	std::shared_ptr<std::string> error;
 };
 
 
