@@ -485,26 +485,19 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lookThrough( event.data[0] )
 		return True
 
-	def __computeSet( self, setName ) :
-
-		sets = {}
-		with IECore.IgnoredExceptions( Exception ) :
-			with self.getContext() :
-				sets = GafferScene.SceneAlgo.sets( self.getPlug().node()["in"], [ setName ] )
-
-		return sets.get( setName )
-
 	def __setMenu( self, setName, currentLookThrough ) :
 
 		m = IECore.MenuDefinition()
 
-		set = self.__computeSet( setName )
-		if not set :
+		try :
+			with self.getContext() :
+				set = self.getPlug().node()["in"].set( setName )
+		except :
 			return m
 
 		for abbreviatedPath, path in self.__abbreviatedPaths( set.value ) :
 			m.append(
-				"/{}".format( abbreviatedPath ),
+				abbreviatedPath,
 				{
 					"checkBox" : currentLookThrough == path,
 					"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
