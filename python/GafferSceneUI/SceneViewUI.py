@@ -497,7 +497,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		for abbreviatedPath, path in self.__abbreviatedPaths( set.value ) :
 			m.append(
-				"/{}".format( abbreviatedPath ),
+				abbreviatedPath,
 				{
 					"checkBox" : currentLookThrough == path,
 					"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), path )
