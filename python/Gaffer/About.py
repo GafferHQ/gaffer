@@ -104,13 +104,13 @@ class About :
 			{
 				"name" : "boost",
 				"url" : "http://www.boost.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/boost",
+				"license" : "$GAFFER_ROOT/doc/licenses/Boost",
 			},
 
 			{
 				"name" : "cortex",
 				"url" : "https://github.com/ImageEngine/cortex/",
-				"license" : "$GAFFER_ROOT/doc/licenses/cortex",
+				"license" : "$GAFFER_ROOT/doc/licenses/Cortex",
 			},
 
 			{
@@ -123,7 +123,7 @@ class About :
 			{
 				"name" : "glew",
 				"url" : "http://glew.sourceforge.net/",
-				"license" : "$GAFFER_ROOT/doc/licenses/glew",
+				"license" : "$GAFFER_ROOT/doc/licenses/GLEW",
 			},
 
 			{
@@ -177,13 +177,13 @@ class About :
 			{
 				"name" : "OpenColorIO",
 				"url" : "http://opencolorio.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/openColorIO",
+				"license" : "$GAFFER_ROOT/doc/licenses/OpenColorIO",
 			},
 
 			{
 				"name" : "OpenImageIO",
 				"url" : "http://www.openimageio.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/openImageIO",
+				"license" : "$GAFFER_ROOT/doc/licenses/OpenImageIO",
 			},
 
 			{
@@ -201,13 +201,19 @@ class About :
 			{
 				"name" : "OpenShadingLanguage",
 				"url" : "https://github.com/imageworks/OpenShadingLanguage/",
-				"license" : "$GAFFER_ROOT/doc/licenses/osl",
+				"license" : "$GAFFER_ROOT/doc/licenses/OpenShadingLanguage",
 			},
 
 			{
 				"name" : "OpenVDB",
 				"url" : "http://www.openvdb.org//",
 				"license" : "$GAFFER_ROOT/doc/licenses/openvdb",
+			},
+
+			{
+				"name" : "USD",
+				"url" : "http://http://graphics.pixar.com/usd",
+				"license" : "$GAFFER_ROOT/doc/licenses/usd",
 			},
 
 			{
