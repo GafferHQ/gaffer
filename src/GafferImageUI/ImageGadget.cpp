@@ -505,9 +505,18 @@ void ImageGadget::updateTiles()
 		return;
 	}
 
-	if( m_paused || (m_tilesTask && !m_tilesTask->done()) )
+	if( m_paused )
 	{
 		return;
+	}
+
+	if( m_tilesTask )
+	{
+		const auto status = m_tilesTask->status();
+		if( status == BackgroundTask::Pending || status == BackgroundTask::Running )
+		{
+			return;
+		}
 	}
 
 	stateChangedSignal()( this );

@@ -145,17 +145,9 @@ ActiveTasks &activeTasks()
 struct BackgroundTask::TaskData : public boost::noncopyable
 {
 	TaskData( Function *function )
-		:	function( function ), status( WaitingToStart )
+		:	function( function ), status( Pending )
 	{
 	}
-
-	enum Status
-	{
-		WaitingToStart,
-		Started,
-		Done,
-		Cancelled
-	};
 
 	Function *function;
 	IECore::Canceller canceller;
@@ -176,19 +168,21 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 			// Early out if we were cancelled before the task
 			// even started.
 			std::unique_lock<std::mutex> lock( taskData->mutex );
-			if( taskData->status == TaskData::Cancelled )
+			if( taskData->status == Cancelled )
 			{
 				return;
 			}
 
 			// Otherwise do the work.
 
-			taskData->status = TaskData::Started;
+			taskData->status = Running;
 			lock.unlock();
 
+			Status status;
 			try
 			{
 				(*taskData->function)( taskData->canceller );
+				status = Completed;
 			}
 			catch( const std::exception &e )
 			{
@@ -197,10 +191,12 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 					"BackgroundTask",
 					e.what()
 				);
+				status = Errored;
 			}
 			catch( const IECore::Cancelled &e )
 			{
 				// No need to do anything
+				status = Cancelled;
 			}
 			catch( ... )
 			{
@@ -209,10 +205,11 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 					"BackgroundTask",
 					"Unknown error"
 				);
+				status = Errored;
 			}
 
 			lock.lock();
-			taskData->status = TaskData::Done;
+			taskData->status = status;
 			taskData->conditionVariable.notify_one();
 		}
 	);
@@ -227,9 +224,9 @@ BackgroundTask::~BackgroundTask()
 void BackgroundTask::cancel()
 {
 	std::unique_lock<std::mutex> lock( m_taskData->mutex );
-	if( m_taskData->status == TaskData::WaitingToStart )
+	if( m_taskData->status == Pending )
 	{
-		m_taskData->status = TaskData::Cancelled;
+		m_taskData->status = Cancelled;
 	}
 	m_taskData->canceller.cancel();
 }
@@ -237,7 +234,20 @@ void BackgroundTask::cancel()
 void BackgroundTask::wait()
 {
 	std::unique_lock<std::mutex> lock( m_taskData->mutex );
-	m_taskData->conditionVariable.wait( lock, [this]{ return done(); } );
+	m_taskData->conditionVariable.wait(
+		lock,
+		[this]{
+			switch( this->m_taskData->status )
+			{
+				case Completed :
+				case Cancelled :
+				case Errored :
+					return true;
+				default :
+					return false;
+			}
+		}
+	);
 	activeTasks().erase( this );
 }
 
@@ -247,9 +257,10 @@ void BackgroundTask::cancelAndWait()
 	wait();
 }
 
-bool BackgroundTask::done() const
+BackgroundTask::Status BackgroundTask::status() const
 {
-	return m_taskData->status == TaskData::Done || m_taskData->status == TaskData::Cancelled;
+	std::unique_lock<std::mutex> lock( m_taskData->mutex );
+	return m_taskData->status;
 }
 
 void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
