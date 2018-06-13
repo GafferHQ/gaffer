@@ -107,11 +107,16 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 			return self.__script["n"]["sum"]
 
-	def __waitForSignal( self, signal ) :
+	class WaitingSlot( GafferTest.CapturingSlot ) :
 
-		c = GafferTest.CapturingSlot( signal )
-		while len( c ) == 0 :
-			self.waitForIdle()
+		def __init__( self, signal ) :
+
+			GafferTest.CapturingSlot.__init__( self, signal )
+
+		def wait( self ) :
+
+			while len( self ) == 0 :
+				GafferUI.EventLoop.waitForIdle()
 
 	def test( self ) :
 
@@ -127,12 +132,15 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 		w.node()["op1"].setValue( 1 )
 
+		ws = self.WaitingSlot( w.valueChangedSignal() )
+
 		w.updateInBackground( 100 )
 		self.assertEqual( w.getEnabled(), False )
 		self.assertEqual( w.getValue(), 0 )
 		self.assertTrue( w.updateInBackground.running( w ) )
 
-		self.__waitForSignal( w.valueChangedSignal() )
+		ws.wait()
+
 		self.assertFalse( w.updateInBackground.running( w ) )
 
 		self.assertEqual( w.getValue(), 1 )
@@ -155,14 +163,20 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 		window.setVisible( True )
 
+		ws = self.WaitingSlot( w.valueChangedSignal() )
 		w.updateInBackground( 1 )
 		window.setVisible( False )
 
-		self.__waitForSignal( w.valueChangedSignal() )
+		ws.wait()
 		self.assertEqual( w.getValue(), -1 )
 
 		self.assertEqual( w.numPreCalls, 1 )
-		self.assertEqual( w.numBackgroundCalls, 1 )
+		# Background function may have been cancelled before
+		# it even started, in which case it will not even have
+		# been called.
+		self.assertIn( w.numBackgroundCalls, { 0, 1 } )
+		# But no matter what, we always expect a matching postCall
+		# for the original preCall.
 		self.assertEqual( w.numPostCalls, 1 )
 
 		self.assertIsInstance( w.postCallArg, IECore.Cancelled )
@@ -174,9 +188,11 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 			w.throw = True
 
 		window.setVisible( True )
+
+		ws = self.WaitingSlot( w.valueChangedSignal() )
 		w.updateInBackground( 1000 )
 
-		self.__waitForSignal( w.valueChangedSignal() )
+		ws.wait()
 		self.assertEqual( w.getValue(), -1 )
 
 		self.assertEqual( w.numPreCalls, 1 )
@@ -194,10 +210,12 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 		w.node()["op1"].setValue( 2 )
 
+		ws = self.WaitingSlot( w.valueChangedSignal() )
+
 		w.updateInBackground( 10 )
 		w.updateInBackground( 11 )
 
-		self.__waitForSignal( w.valueChangedSignal() )
+		ws.wait()
 		self.assertEqual( w.getValue(), 2 )
 
 		# Second call re-uses the first precall

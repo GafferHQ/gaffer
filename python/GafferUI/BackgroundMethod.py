@@ -67,6 +67,7 @@ import GafferUI
 #
 #		# Will be called automatically on the UI
 #		# thread before background processing starts.
+#		# Typically used to indicate a "busy" status.
 #
 #		pass
 #
@@ -74,8 +75,11 @@ import GafferUI
 #	def __updateInBackgroundPreCall( self, result )
 #
 #		# Called on the UI thread with the result
-#		# of the background call. Typically used to
-#		# display the result.
+#		# of the background call (or any exception it
+#		# throws). Typically used to display the result.
+#		# It is guaranteed that every call to `preCall`
+#		# is matched with a call to `postCall`, even if
+#		# the background call is cancelled.
 #
 #		pass
 # ```
@@ -147,7 +151,7 @@ class BackgroundMethod( object ) :
 					widget,
 					method.__name__ + "__VisibilityChangedConnection",
 					widget.visibilityChangedSignal().connect(
-						functools.partial( self.__visibilityChanged, method = method )
+						functools.partial( self.__visibilityChanged, method = method, foregroundFunction = foregroundFunction )
 					)
 				)
 
@@ -179,12 +183,19 @@ class BackgroundMethod( object ) :
 			return widget.plug()
 
 	@staticmethod
-	def __visibilityChanged( widget, method ) :
+	def __visibilityChanged( widget, method, foregroundFunction ) :
 
 		if not widget.visible() :
 			currentCall = getattr( widget, method.__name__ + "__CurrentCall", None )
 			if currentCall is not None :
 				currentCall.backgroundTask.cancel()
+				if currentCall.backgroundTask.status() == Gaffer.BackgroundTask.Status.Cancelled :
+					# Because we catch `IECore.Cancelled` ourselves in `backgroundFunction`,
+					# the only way a Cancelled status can occur is if the cancellation
+					# preempts the background task before it even runs. In this case we must run
+					# the `foregroundFunction` so that the `preCall` we've already done has a
+					# matching `postCall`.
+					foregroundFunction( widget, IECore.Cancelled(), currentCall.superceded )
 
 class _ValueWrapper( object ) :
 
