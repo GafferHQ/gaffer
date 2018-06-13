@@ -61,6 +61,8 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 	index = open( "%s/index.md" % directory, "w" )
 	index.write( __heading( "Node Reference" ) )
 
+	tocIndex = ""
+
 	for module in sorted( modules, key = lambda x : getattr( x, "__name__" ) ) :
 
 		moduleIndex = ""
@@ -83,15 +85,17 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 			__makeDirs( directory + "/" + module.__name__ )
 			with open( "%s/%s/%s.md" % ( directory, module.__name__, name ), "w" ) as f :
 				f.write( __nodeDocumentation( node ) )
-				moduleIndex += "- [%s](%s.md)\n" % ( name, name )
+				moduleIndex += "\t%s.md\n" % name
 
 		if moduleIndex :
 
 			with open( "%s/%s/index.md" % ( directory, module.__name__ ), "w" ) as f :
 				f.write( __heading( module.__name__ ) )
-				f.write( moduleIndex )
+				f.write( __tocString( ).format( moduleIndex ) )
 
-			index.write( "- [%s](%s/index.md)\n" % ( module.__name__, module.__name__ ) )
+			tocIndex += "\t%s/index.md\n" % ( module.__name__ )
+
+	index.write( __tocString( ).format( tocIndex ) )
 
 def exportLicenseReference( directory, about ) :
 
@@ -172,15 +176,19 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 
 	index.write( "\n\n" )
 
+	tocIndex = ""
+
 	for appName in classLoader.classNames() :
 
 		if appName in ignore :
 			continue
 
-		index.write( "- [%s](%s.md)\n" % ( appName, appName ) )
+		tocIndex += "\t%s.md\n" % appName
 		with open( "%s.md" % appName, "w" ) as f :
 
 			f.write( __appDocumentation( classLoader.load( appName )() ) )
+
+	index.write( __tocString( ).format( tocIndex ) )
 
 def __nodeDocumentation( node ) :
 
@@ -255,3 +263,20 @@ def __makeDirs( directory ) :
 		# raise if it fails. We reraise only in the latter case.
 		if not os.path.isdir( directory ) :
 			raise
+
+def __tocString( ) :
+
+	tocString = inspect.cleandoc(
+
+		"""
+		```eval_rst
+		.. toctree::
+		    :titlesonly:
+
+		{0}
+		```
+		"""
+
+	)
+
+	return tocString
