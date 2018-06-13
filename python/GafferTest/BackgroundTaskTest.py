@@ -54,14 +54,13 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		def f( canceller ) :
 
 			s["n"]["sum"].getValue()
-			with self.assertRaises( IECore.Cancelled ) :
-				while True :
-					IECore.Canceller.check( canceller )
+			while True :
+				IECore.Canceller.check( canceller )
 
 		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
 		t.cancelAndWait()
 
-		self.assertTrue( t.done() )
+		self.assertEqual( t.status(), t.Status.Cancelled )
 
 	def testGraphEditCancellation( self ) :
 
@@ -144,6 +143,7 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertEqual( mh.messages[0].context, "BackgroundTask" )
 		self.assertIn( "Oops!", mh.messages[0].message )
+		self.assertEqual( t.status(), t.Status.Errored )
 
 	def testScriptNodeLifetime( self ) :
 

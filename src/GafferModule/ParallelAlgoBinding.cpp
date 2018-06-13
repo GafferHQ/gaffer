@@ -96,6 +96,12 @@ void backgroundTaskCancelAndWait( BackgroundTask &b )
 	b.cancelAndWait();
 }
 
+BackgroundTask::Status backgroundTaskStatus( const BackgroundTask &b )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return b.status();
+}
+
 struct GILReleaseUIThreadFunction
 {
 
@@ -206,13 +212,23 @@ std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boo
 void GafferModule::bindParallelAlgo()
 {
 
-	class_<BackgroundTask, boost::noncopyable>( "BackgroundTask", no_init )
-		.def( "__init__", make_constructor( &backgroundTaskConstructor, default_call_policies() ) )
-		.def( "cancel", &backgroundTaskCancel )
-		.def( "wait", &backgroundTaskWait )
-		.def( "cancelAndWait", &backgroundTaskCancelAndWait )
-		.def( "done", &BackgroundTask::done )
-	;
+	{
+		scope s = class_<BackgroundTask, boost::noncopyable>( "BackgroundTask", no_init )
+			.def( "__init__", make_constructor( &backgroundTaskConstructor, default_call_policies() ) )
+			.def( "cancel", &backgroundTaskCancel )
+			.def( "wait", &backgroundTaskWait )
+			.def( "cancelAndWait", &backgroundTaskCancelAndWait )
+			.def( "status", &backgroundTaskStatus )
+		;
+
+		enum_<BackgroundTask::Status>( "Status" )
+			.value( "Pending", BackgroundTask::Pending )
+			.value( "Running", BackgroundTask::Running )
+			.value( "Completed", BackgroundTask::Completed )
+			.value( "Cancelled", BackgroundTask::Cancelled )
+			.value( "Errored", BackgroundTask::Errored )
+		;
+	}
 
 	register_ptr_to_python<std::shared_ptr<BackgroundTask>>();
 

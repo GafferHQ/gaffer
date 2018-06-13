@@ -94,9 +94,28 @@ class GAFFER_API BackgroundTask : public boost::noncopyable
 		/// Utility to call `cancel()` then `wait()`.
 		void cancelAndWait();
 
-		/// Returns true once the background call as finished, either
-		/// through cancellation or running to completion.
-		bool done() const;
+		enum Status
+		{
+			Pending,
+			Running,
+			Completed,
+			Cancelled,
+			Errored
+		};
+
+		/// Returns the status of the task.
+		//
+		/// > Note :
+		/// >
+		/// > - A return value of Pending or Running may
+		/// >   be invalidated immediately by a change of
+		/// >   status on the background thread.
+		/// > - Calls to `cancel()` or `cancelAndWait()` do
+		/// >   not _guarantee_ that the status will ever
+		/// >   become `Cancelled`. The `function` may have completed
+		/// >   concurrently, or may have ignored the request
+		/// >   for cancellation.
+		Status status() const;
 
 	private :
 
