@@ -53,7 +53,7 @@
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/spin_mutex.h"
 
-#include "boost/array.hpp"
+#include <array>
 
 #include <chrono>
 
@@ -101,7 +101,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
-		typedef boost::array<IECore::InternedString, 4> Channels;
+		typedef std::array<IECore::InternedString, 4> Channels;
 		/// Chooses which 4 channels to display as RGBA.
 		/// For instance, to display Z as a greyscale image
 		/// with black alpha you would pass { "Z", "Z", "Z", "" }.

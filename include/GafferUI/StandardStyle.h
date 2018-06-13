@@ -46,7 +46,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathColor.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
-#include "boost/array.hpp"
+#include <array>
 
 namespace IECoreGL
 {
@@ -143,7 +143,7 @@ class GAFFERUI_API StandardStyle : public Style
 		static int g_lineWidthParameter;
 
 		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = nullptr ) const;
-		boost::array<Imath::Color3f, LastColor> m_colors;
+		std::array<Imath::Color3f, LastColor> m_colors;
 
 		IECoreGL::FontPtr m_fonts[LastText];
 		float m_fontScales[LastText];

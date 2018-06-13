@@ -48,7 +48,6 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/assign/list_of.hpp"
 #include "boost/container/flat_set.hpp"
 
 using namespace std;
