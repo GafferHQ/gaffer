@@ -220,12 +220,13 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 		# Second call re-uses the first precall
 		self.assertEqual( w.numPreCalls, 1 )
-		# Two background calls got started.
-		self.assertEqual( w.numBackgroundCalls, 2 )
-		# But the first call doesn't make it to
+		# The first call may have got started before
+		# it was cancelled by the second, or it may
+		# not.
+		self.assertIn( w.numBackgroundCalls, { 1, 2 } )
+		# But either way the first call doesn't make it to
 		# the post-call stage.
 		self.assertEqual( w.numPostCalls, 1 )
-
 		self.assertEqual( w.backgroundCallArg, 11 )
 
 if __name__ == "__main__":
