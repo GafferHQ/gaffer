@@ -1,7 +1,13 @@
 UI Reference
 ============
 
-- [Node Graph](NodeGraph.md)
-- [Viewer](Viewer.md)
-- [Script Editor](ScriptEditor.md)
+<!-- TOC -->
 
+```eval_rst
+.. toctree::
+    :titlesonly:
+
+    NodeGraph.md
+    Viewer.md
+    ScriptEditor.md
+```

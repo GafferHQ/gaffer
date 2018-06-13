@@ -12,3 +12,29 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 - [Reference](Reference/index.md)
 - [Release Notes](ReleaseNotes/index.md)
 - [Appendices](Appendices/index.md)
+
+<!-- TOC -->
+
+```eval_rst
+.. toctree::
+    :hidden:
+    :titlesonly:
+    :maxdepth: 1
+    :caption: User Documentation
+
+    Installation/index.md
+    Tutorials/index.md
+
+```
+
+```eval_rst
+.. toctree::
+    :hidden:
+    :titlesonly:
+    :maxdepth: 1
+    :caption: Supplemental Material
+
+    Reference/index.md
+    ReleaseNotes/index.md
+    Appendices/index.md
+```

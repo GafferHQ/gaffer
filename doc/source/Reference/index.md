@@ -1,7 +1,14 @@
 Reference
 =========
 
-- [UI Reference](UIReference/index.md)
-- [Node Reference](NodeReference/index.md)
-- [Scripting Reference](ScriptingReference/index.md)
-- [Command Line Reference](CommandLineReference/index.md)
+<!-- TOC -->
+
+```eval_rst
+.. toctree::
+    :titlesonly:
+
+    UIReference/index.md
+    NodeReference/index.md
+    ScriptingReference/index.md
+    CommandLineReference/index.md
+```
