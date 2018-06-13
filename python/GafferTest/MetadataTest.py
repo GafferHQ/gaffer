@@ -1134,5 +1134,19 @@ class MetadataTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
 			Gaffer.Metadata.registerValue( None, "test", "test" )
 
+	def testCallSignalDirectly( self ) :
+
+		cs1 = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		cs2 = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		cs3 = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+
+		Gaffer.Metadata.valueChangedSignal()( "target", "key" )
+		Gaffer.Metadata.plugValueChangedSignal()( Gaffer.Node, "*", "key", None )
+		Gaffer.Metadata.nodeValueChangedSignal()( Gaffer.Node, "key", None )
+
+		self.assertEqual( cs1, [ ( "target", "key" ) ] )
+		self.assertEqual( cs2, [ ( Gaffer.Node.staticTypeId(), "*", "key", None ) ] )
+		self.assertEqual( cs3, [ ( Gaffer.Node.staticTypeId(), "key", None ) ] )
+
 if __name__ == "__main__":
 	unittest.main()
