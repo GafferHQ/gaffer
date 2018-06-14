@@ -122,7 +122,8 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'logo_only': True
+    'logo_only': True,
+    'collapse_navigation': False
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -376,6 +377,9 @@ def setup( app ) :
     app.add_config_value(
     	'recommonmark_config',
     	{
+            # Disable general automatic TOC parsing. Prevents Autostructify
+            # from turning all Markdown list items with links into TOC items
+            'enable_auto_toc_tree': False
         },
         True
     )
