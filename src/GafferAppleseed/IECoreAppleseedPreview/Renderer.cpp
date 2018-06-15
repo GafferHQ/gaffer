@@ -619,10 +619,9 @@ class AppleseedShader : public AppleseedEntity
 		AppleseedShader( asr::Project &project, const string &name, const ShaderNetwork *shader, bool interactiveRender )
 			:	AppleseedEntity( project, name, interactiveRender )
 		{
-			asf::auto_release_ptr<asr::ShaderGroup> shaderGroup( ShaderNetworkAlgo::convert( shader ) );
-			shaderGroup->set_name( name.c_str() );
-			m_shaderGroup = shaderGroup.get();
-			insertShaderGroup( shaderGroup );
+			m_shaderGroup.reset( ShaderNetworkAlgo::convert( shader ), true );
+			m_shaderGroup->set_name( name.c_str() );
+			insertShaderGroup( m_shaderGroup );
 		}
 
 		~AppleseedShader() override
@@ -2618,12 +2617,17 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				{
 					if( value == nullptr )
 					{
-						m_project->search_paths().reset();
+						m_project->search_paths().clear_explicit_paths();
 					}
 					else if( const StringData *d = reportedCast<const StringData>( value, "option", name ) )
 					{
-						m_project->search_paths().reset();
-						m_project->search_paths().split_and_push_back(d->readable().c_str(), ':');
+						m_project->search_paths().clear_explicit_paths();
+
+						vector<string> path_list;
+						asf::split(d->readable().c_str(), ":", path_list);
+
+						for (const auto& i:path_list)
+							m_project->search_paths().push_back_explicit_path(i);
 					}
 					return;
 				}
@@ -2908,7 +2912,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			else
 			{
 				asr::Frame *frame = m_project->get_frame();
-				size_t numPixels = frame->get_pixel_count();
+				size_t numPixels = frame->get_crop_window().volume();
 				m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( "progressive_frame_renderer.max_samples", numPixels * m_maxInteractiveRenderSamples );
 			}
 
