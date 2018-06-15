@@ -1202,14 +1202,11 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	// Iterate over the input points, doing the shading as we go
 
-	ShadingSystem *shadingSystem = ::shadingSystem();
-	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
-
 	struct ThreadContext
 	{
 
-		ThreadContext( ShadingSystem *shadingSystem )
-			:	m_shadingSystem( shadingSystem ), m_shadingContext( shadingSystem->get_context() )
+		ThreadContext()
+			:	m_shadingSystem( ::shadingSystem() ), m_shadingContext( m_shadingSystem->get_context() )
 		{
 		}
 
@@ -1220,7 +1217,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 		ShadingResults::DebugResultsMap results;
 
-		ShadingContext *shadingContext() { return m_shadingContext; }
+		ShadingContext *shadingContext() const { return m_shadingContext; }
 
 		private :
 
@@ -1230,9 +1227,12 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	};
 
 	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
-	ThreadContextType contexts( shadingSystem );
+	ThreadContextType contexts;
 
 	const IECore::Canceller *canceller = context->canceller();
+
+	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
 	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts, canceller]( const tbb::blocked_range<size_t> &r )
 	{
