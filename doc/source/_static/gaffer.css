@@ -76,3 +76,20 @@ h2 {
 h3 {
     font-size: 100%;
 }
+
+/* Enable word-wrapping and multiple lines for table cells */
+table.docutils td {    
+    white-space: initial !important;
+    vertical-align: initial !important;
+}
+
+/* Fix font size and spacing with multi-line table cells */
+table.docutils td p {
+    font-size: inherit;
+    margin-bottom: 12px;
+}
+
+/* Fix erroneous black middle borders in table headers */
+table.docutils th.head {
+    border-color: #e1e4e5;
+}
