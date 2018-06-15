@@ -49,7 +49,7 @@ import GafferImageTest
 class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	@staticmethod
-	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True ) :
+	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True, close = True ) :
 
 		if catalogue["directory"].getValue() and waitForSave :
 
@@ -57,11 +57,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			# save it to disk on a background thread, and we need
 			# to wait for that to complete.
 			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
-				GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
+				return GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
 
 		else :
 
-			GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
+			return GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
 
 	def testImages( self ) :
 
@@ -545,6 +545,43 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
 			self.sendImage( r["out"], c, waitForSave = False )
 			del c
+
+	def testDeleteBeforeSaveCompletesWithScriptVariables( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "testDeleteBeforeSaveCompletesWithScriptVariables" )
+		self.assertEqual( s.context().substitute( "${script:name}" ), "testDeleteBeforeSaveCompletesWithScriptVariables" )
+
+		baseDirectory = os.path.join( self.temporaryDirectory(), "catalogue" )
+		# we don't expect to need to write here, but to ensure
+		# we didn't even try to do so we make it read only.
+		os.mkdir( baseDirectory )
+		os.chmod( baseDirectory, stat.S_IREAD )
+		directory = os.path.join( baseDirectory, "${script:name}", "images" )
+
+		s["c"] = GafferImage.Catalogue()
+		s["c"]["directory"].setValue( directory )
+
+		fullDirectory = s.context().substitute( s["c"]["directory"].getValue() )
+		self.assertNotEqual( directory, fullDirectory )
+		self.assertFalse( os.path.exists( directory ) )
+		self.assertFalse( os.path.exists( fullDirectory ) )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+
+		driver = self.sendImage( r["out"], s["c"], waitForSave = False, close = False )
+		# Simulate deletion by removing it from the script but keeping it alive.
+		# This would typically be fine, but we've setup the directory to require
+		# a script and then removed the script prior to closing the driver. Note
+		# we can't actually delete the catalogue yet or `driver.close()` would
+		# hang indefinitely waiting for an imageReceivedSignal.
+		c = s["c"]
+		s.removeChild( s["c"] )
+		driver.close()
+
+		self.assertFalse( os.path.exists( directory ) )
+		self.assertFalse( os.path.exists( fullDirectory ) )
 
 	def testNonWritableDirectory( self ) :
 

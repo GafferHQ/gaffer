@@ -827,6 +827,17 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 	{
 		directory = script->context()->substitute( directory );
 	}
+	else if( Context::hasSubstitutions( directory ) )
+	{
+		// Its possible for a Catalogue to have been removed from its script
+		// and still receive an image. If it will attempt to save that image
+		// to a file which needed the script context to resolve properly, the
+		// saving will eventually error, so we return an empty string instead.
+		// Its likely this only occurs while the node is in the process of
+		// being deleted (perhaps inside python's garbage collector).
+		return "";
+	}
+
 	if( directory.empty() )
 	{
 		return "";
