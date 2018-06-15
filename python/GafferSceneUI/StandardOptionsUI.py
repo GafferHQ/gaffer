@@ -35,11 +35,12 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
+import GafferSceneUI.CameraUI
 
 ##########################################################################
 # Metadata
@@ -50,6 +51,10 @@ def __cameraSummary( plug ) :
 	info = []
 	if plug["renderCamera"]["enabled"].getValue() :
 		info.append( plug["renderCamera"]["value"].getValue() )
+	if plug["filmFit"]["enabled"].getValue() :
+		info.append( "Fit Mode %s" %
+			IECoreScene.Camera.FilmFit.values[ plug["filmFit"]["value"].getValue() ].name
+		)
 	if plug["renderResolution"]["enabled"].getValue() :
 		resolution = plug["renderResolution"]["value"].getValue()
 		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
@@ -135,6 +140,15 @@ Gaffer.Metadata.registerNode(
 			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
 
 		],
+
+		"options.filmFit" : [
+			#Naughtily grab the description that I know comes first
+			"description", GafferSceneUI.CameraUI.filmFitMetadata[1],
+			"layout:section", "Camera",
+			"label", "Film Fit",
+		],
+
+		"options.filmFit.value" : GafferSceneUI.CameraUI.filmFitMetadata,
 
 		"options.renderResolution" : [
 

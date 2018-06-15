@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECoreScene/Camera.h"
+
 #include "GafferScene/StandardOptions.h"
 
 using namespace Gaffer;
@@ -50,6 +52,7 @@ StandardOptions::StandardOptions( const std::string &name )
 	// Camera
 
 	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, false );
+	options->addOptionalMember( "render:filmFit", new IECore::IntData( IECoreScene::Camera::Horizontal ), "filmFit", Plug::Default, false );
 	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, false );
 	options->addOptionalMember( "render:pixelAspectRatio", new IECore::FloatData( 1.0f ), "pixelAspectRatio", Plug::Default, false );
 	options->addOptionalMember( "render:resolutionMultiplier", new IECore::FloatData( 1.0f ), "resolutionMultiplier", Plug::Default, false );
