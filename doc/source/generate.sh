@@ -1,4 +1,5 @@
 #! /bin/bash
+# BuildTarget: _static/GafferLogo.svg
 
 set -e
 
