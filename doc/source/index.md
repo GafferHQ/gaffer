@@ -9,6 +9,7 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 
 - [Installation](Installation/index.md)
 - [Tutorials](Tutorials/index.md)
+- [Interface](Interface/index.md)
 - [Reference](Reference/index.md)
 - [Release Notes](ReleaseNotes/index.md)
 - [Appendices](Appendices/index.md)
@@ -24,7 +25,7 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 
     Installation/index.md
     Tutorials/index.md
-
+    Interface/index.md
 ```
 
 ```eval_rst

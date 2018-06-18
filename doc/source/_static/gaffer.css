@@ -93,3 +93,14 @@ table.docutils td p {
 table.docutils th.head {
     border-color: #e1e4e5;
 }
+
+/* Add custom keystroke class */
+kbd, code.kbd {
+    font-size: 0.9em;
+    border: 1px solid #888888;
+    border-radius: 3px;
+    background: #f5f5f5;
+    padding: 0 3px 1px 3px;
+    font-family: inherit;
+    color: #404040 !important;
+}
