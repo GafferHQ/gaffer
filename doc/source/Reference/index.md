@@ -7,7 +7,6 @@ Reference
 .. toctree::
     :titlesonly:
 
-    UIReference/index.md
     NodeReference/index.md
     ScriptingReference/index.md
     CommandLineReference/index.md
