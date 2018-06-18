@@ -37,7 +37,12 @@ import Gaffer
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+    'sphinx.ext.autosectionlabel'
+]
+
+# Whether to use unique IDs for automatic section labels (articleName:section).
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
