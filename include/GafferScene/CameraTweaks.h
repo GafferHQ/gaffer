@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,76 +34,43 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_CAMERATWEAKS_H
+#define GAFFERSCENE_CAMERATWEAKS_H
 
-#include "TweaksBinding.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferScene/LightTweaks.h"
-#include "GafferScene/CameraTweaks.h"
-#include "GafferScene/TweakPlug.h"
+#include "Gaffer/StringPlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-namespace
+namespace GafferScene
 {
 
-TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstDataPtr tweakValue, bool enabled )
+class GAFFERSCENE_API CameraTweaks : public SceneElementProcessor
 {
-	return new TweakPlug( tweakName, tweakValue.get(), enabled );
-}
 
-} // namespace
+	public :
 
-void GafferSceneModule::bindTweaks()
-{
-	DependencyNodeClass<LightTweaks>();
-	DependencyNodeClass<CameraTweaks>();
+		CameraTweaks( const std::string &name=defaultName<CameraTweaks>() );
+		~CameraTweaks() override;
 
-	scope tweakPlugScope = PlugClass<TweakPlug>()
-		.def(
-			init<const char *, Plug::Direction, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<TweakPlug>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-		.def(
-			"__init__",
-			make_constructor(
-				constructUsingData,
-				default_call_policies(),
-				(
-					boost::python::arg_( "tweakName" ),
-					boost::python::arg_( "tweakValuePlug" ),
-					boost::python::arg_( "enabled" )=true
-				)
-			)
-		)
-		.def(
-			init<const std::string &, const ValuePlugPtr, bool>(
-				(
-					boost::python::arg_( "tweakName" ),
-					boost::python::arg_( "tweakValue" ),
-					boost::python::arg_( "enabled" )=true
-				)
-			)
-		)
-	;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CameraTweaks, CameraTweaksTypeId, SceneElementProcessor );
 
-	enum_<TweakPlug::Mode>( "Mode" )
-		.value( "Replace", TweakPlug::Replace )
-		.value( "Add", TweakPlug::Add )
-		.value( "Subtract", TweakPlug::Subtract )
-		.value( "Multiply", TweakPlug::Multiply )
-		.value( "Remove", TweakPlug::Remove )
-	;
+		Gaffer::Plug *tweaksPlug();
+		const Gaffer::Plug *tweaksPlug() const;
 
-}
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputAttributes ) const override;
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CameraTweaks )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_CAMERATWEAKS_H

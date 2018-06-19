@@ -148,6 +148,7 @@ enum TypeId
 	CollectPrimitiveVariablesTypeId = 110603,
 	PrimitiveVariableExistsTypeId = 110604,
 	CollectTransformsTypeId = 110605,
+	CameraTweaksTypeId = 110606,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
