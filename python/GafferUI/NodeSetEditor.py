@@ -140,12 +140,12 @@ class NodeSetEditor( GafferUI.Editor ) :
 			scriptWindow.getLayout().addEditor( editor )
 		else :
 			window = _EditorWindow( scriptWindow, editor )
-			window.setVisible( True )
 			## \todo Can we do better using `window.resizeToFitChild()`?
 			# Our problem is that some NodeEditors (for GafferImage.Text for instance)
 			# are very large, whereas some (GafferScene.Shader) don't have
 			# a valid size until the UI has been built lazily.
 			window._qtWidget().resize( 400, 400 )
+			window.setVisible( True )
 
 		return editor
 
