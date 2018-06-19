@@ -40,11 +40,13 @@
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
 
+#include "GafferScene/RenderController.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferUI/Gadget.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ParallelAlgo.h"
 
 #include "IECoreGL/State.h"
 
@@ -53,9 +55,6 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneGadget );
 
-/// \todo Implement IECoreGLPreview::Renderer, and
-/// use an internal InteractiveGLRender node to do
-/// all the hard work.
 class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 {
 
@@ -71,8 +70,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void setScene( GafferScene::ConstScenePlugPtr scene );
 		const GafferScene::ScenePlug *getScene() const;
 
-		void setContext( Gaffer::ContextPtr context );
-		Gaffer::Context *getContext();
+		void setContext( Gaffer::ConstContextPtr context );
 		const Gaffer::Context *getContext() const;
 
 		/// Limits the expanded parts of the scene to those in the specified paths.
@@ -115,26 +113,15 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 	private :
 
-		void plugDirtied( const Gaffer::Plug *plug );
-		void contextChanged( const IECore::InternedString &name );
-		void updateSceneGraph() const;
-		void renderSceneGraph() const;
+		void updateRenderer();
+		IECore::PathMatcher convertSelection( IECore::UIntVectorDataPtr ids ) const;
 
-		boost::signals::scoped_connection m_plugDirtiedConnection;
-		boost::signals::scoped_connection m_contextChangedConnection;
-
-		GafferScene::ConstScenePlugPtr m_scene;
-		Gaffer::ContextPtr m_context;
-		mutable unsigned m_dirtyFlags;
-		IECore::PathMatcher m_expandedPaths;
-		size_t m_minimumExpansionDepth;
-
-		class SceneGraph;
-		class UpdateTask;
+		IECoreScenePreview::RendererPtr m_renderer;
+		mutable GafferScene::RenderController m_controller;
+		mutable std::shared_ptr<Gaffer::BackgroundTask> m_updateTask;
+		std::atomic_bool m_renderRequestPending;
 
 		IECoreGL::StatePtr m_baseState;
-		std::unique_ptr<SceneGraph> m_sceneGraph;
-
 		IECore::PathMatcher m_selection;
 
 };
