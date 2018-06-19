@@ -446,7 +446,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		// During interactive renders, the client code controls the lifetime
 		// of objects by managing ObjectInterfacePtrs. But we also hold a
-		// reference to the objects ourselves so that we iterate to render them.
+		// reference to the objects ourselves so we can iterate to render them.
 		// Here we remove any objects with only a single reference - our own.
 		// This does mean we delete objects later than the client might expect,
 		// but this is actually necessary anyway, because we can only delete GL
@@ -468,7 +468,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			OpenGLObjectVector objectsToKeep;
 			for( const auto &o : m_objects )
 			{
-				if( o->refCount() == 1 )
+				if( o->refCount() > 1 )
 				{
 					objectsToKeep.push_back( o );
 				}
