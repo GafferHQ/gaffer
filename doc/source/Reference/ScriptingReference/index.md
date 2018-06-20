@@ -6,6 +6,7 @@ Scripting Reference
 ```eval_rst
 .. toctree::
     :titlesonly:
+    :maxdepth: 1
 
     CommonOperations/index.md
     StringSubstitutionSyntax/index.md
