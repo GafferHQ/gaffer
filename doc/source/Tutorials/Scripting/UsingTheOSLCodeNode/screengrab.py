@@ -20,7 +20,7 @@ script["OSLCode"]["parameters"]["width"] = Gaffer.FloatPlug( defaultValue = 0.0 
 script["OSLCode"]["parameters"]["width"].setValue( 0.025 )
 script["OSLCode"]["out"]["stripes"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = imath.Color3f( 0, 0, 0 ) )
 GafferUI.WidgetAlgo.grab( widget = oslEditor, imagePath = "images/parameters.png" )
-oslEditor.setVisible( False )
+oslEditor.parent().setVisible( False )
 
 script["OSLCode"]["code"].setValue( "stripes = aastep( 0, sin( v * M_PI / width ) )" )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
