@@ -53,10 +53,34 @@ using namespace GafferSceneUI::ContextAlgo;
 namespace
 {
 
+void setExpandedPathsWrapper( Context &context, const IECore::PathMatcher &paths )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setExpandedPaths( &context, paths );
+}
+
+void expandWrapper( Context &context, const IECore::PathMatcher &paths, bool expandAncestors )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	expand( &context, paths, expandAncestors );
+}
+
 PathMatcher expandDescendantsWrapper( Context &context, PathMatcher &paths, ScenePlug &scene, int depth )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return expandDescendants( &context, paths, &scene, depth );
+}
+
+void clearExpansionWrapper( Context &context )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	clearExpansion( &context );
+}
+
+void setSelectedPathsWrapper( Context &context, const IECore::PathMatcher &paths )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setSelectedPaths( &context, paths );
 }
 
 } // namespace
@@ -67,13 +91,13 @@ void GafferSceneUIModule::bindContextAlgo()
 	scope().attr( "ContextAlgo" ) = module;
 	scope moduleScope( module );
 
-	def( "setExpandedPaths", &setExpandedPaths );
+	def( "setExpandedPaths", &setExpandedPathsWrapper );
 	def( "getExpandedPaths", &getExpandedPaths );
 	def( "affectsExpandedPaths", &affectsExpandedPaths );
-	def( "expand", &expand, ( arg( "expandAncestors" ) = true ) );
+	def( "expand", &expandWrapper, ( arg( "expandAncestors" ) = true ) );
 	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
-	def( "clearExpansion", &clearExpansion );
-	def( "setSelectedPaths", &setSelectedPaths );
+	def( "clearExpansion", &clearExpansionWrapper );
+	def( "setSelectedPaths", &setSelectedPathsWrapper );
 	def( "getSelectedPaths", &getSelectedPaths );
 	def( "affectsSelectedPaths", &affectsSelectedPaths );
 
