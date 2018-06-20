@@ -40,6 +40,8 @@
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/RendererAlgo.h"
 
+#include "Gaffer/BackgroundTask.h"
+
 #include "boost/signals.hpp"
 
 #include <functional>
@@ -74,6 +76,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		typedef std::function<void ( bool complete )> UpdateCallback;
 
 		void update( const UpdateCallback &callback = UpdateCallback() );
+		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const UpdateCallback &callback = UpdateCallback() );
 
 	private :
 
@@ -81,7 +84,9 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		void contextChanged( const IECore::InternedString &name );
 		void requestUpdate();
 
+		void updateInternal( const UpdateCallback &callback = UpdateCallback() );
 		void updateDefaultCamera();
+		void cancelBackgroundTask();
 
 		class SceneGraph;
 		class SceneGraphUpdateTask;
@@ -101,6 +106,8 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		IECore::ConstCompoundObjectPtr m_globals;
 		RendererAlgo::RenderSets m_renderSets;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
+
+		std::shared_ptr<Gaffer::BackgroundTask> m_backgroundTask;
 
 };
 

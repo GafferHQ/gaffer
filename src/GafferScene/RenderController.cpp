@@ -38,6 +38,8 @@
 
 #include "GafferScene/SceneAlgo.h"
 
+#include "Gaffer/ParallelAlgo.h"
+
 #include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -667,6 +669,9 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 
 RenderController::~RenderController()
 {
+	// Cancel background task before the things it relies
+	// on are destroyed.
+	cancelBackgroundTask();
 	// Drop references to ObjectInterfaces before the renderer
 	// is destroyed.
 	m_renderer->pause();
@@ -686,6 +691,8 @@ void RenderController::setScene( const ConstScenePlugPtr &scene )
 	{
 		throw Exception( "Scene must belong to a Node" );
 	}
+
+	cancelBackgroundTask();
 
 	m_scene = scene;
 	m_plugDirtiedConnection = const_cast<Node *>( node )->plugDirtiedSignal().connect(
@@ -707,6 +714,8 @@ void RenderController::setContext( const Gaffer::ConstContextPtr &context )
 	{
 		return;
 	}
+
+	cancelBackgroundTask();
 
 	m_context = context;
 	m_contextChangedConnection = const_cast<Context *>( m_context.get() )->changedSignal().connect(
@@ -774,6 +783,9 @@ void RenderController::contextChanged( const IECore::InternedString &name )
 	{
 		return;
 	}
+
+	cancelBackgroundTask();
+
 	m_dirtyComponents |= SceneGraph::AllComponents;
 	requestUpdate();
 }
@@ -799,6 +811,34 @@ void RenderController::update( const UpdateCallback &callback )
 	Context::EditableScope scopedContext( m_context.get() );
 	scopedContext.set( "scene:renderer", m_renderer->name().string() );
 
+	updateInternal();
+}
+
+std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( const UpdateCallback &callback )
+{
+	if( !m_scene || !m_context )
+	{
+		return nullptr;
+	}
+
+	cancelBackgroundTask();
+
+	Context::EditableScope scopedContext( m_context.get() );
+	scopedContext.set( "scene:renderer", m_renderer->name().string() );
+
+	m_backgroundTask = ParallelAlgo::callOnBackgroundThread(
+		// Subject
+		m_scene.get(),
+		[this, callback] {
+			updateInternal( callback );
+		}
+	);
+
+	return m_backgroundTask;
+}
+
+void RenderController::updateInternal( const UpdateCallback &callback )
+{
 	bool cameraGlobalsChanged = false;
 	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
@@ -826,7 +866,9 @@ void RenderController::update( const UpdateCallback &callback )
 			// the globals have changed, so we clear the scene graph and start again.
 			sceneGraph->clear();
 		}
-		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask(
+
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
 			this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, Context::current(), ScenePlug::ScenePath(), callback
 		);
 		tbb::task::spawn_root_and_wait( *task );
@@ -861,4 +903,13 @@ void RenderController::updateDefaultCamera()
 	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
 	m_renderer->option( "camera", name.get() );
+}
+
+void RenderController::cancelBackgroundTask()
+{
+	if( m_backgroundTask )
+	{
+		m_backgroundTask->cancelAndWait();
+		m_backgroundTask.reset();
+	}
 }
