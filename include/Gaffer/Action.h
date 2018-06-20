@@ -63,7 +63,7 @@ IE_CORE_FORWARDDECLARE( Action );
 /// > method is called. Because Actions are essentially an implementation detail
 /// > of the undo system, subclasses shouldn't be exposed in the public headers.
 ///
-/// > Warning : Because Actions are held in the undo queue in the ScriptNode, it's
+/// > Caution : Because Actions are held in the undo queue in the ScriptNode, it's
 /// > essential that they do not themselves hold an intrusive pointer pointing
 /// > back to the ScriptNode - this would result in a circular reference,
 /// > preventing the ScriptNode from being deleted appropriately. It is essential
@@ -102,7 +102,7 @@ class GAFFER_API Action : public IECore::RunTimeTyped
 		/// remain alive for as long as the Functions are in use by the undo
 		/// system, so it is sufficient to bind only raw pointers to the subject.
 		///
-		/// > Warning : Only pass `cancelBackgroundTasks = false` if you are
+		/// > Caution : Only pass `cancelBackgroundTasks = false` if you are
 		/// > _certain_ that there is no possible interaction between this Action
 		/// > and a concurrent background task. At the time of writing, the only
 		/// > known valid use is in the Metadata system (because computations are

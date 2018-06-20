@@ -240,7 +240,7 @@ class GAFFER_API ScriptNode : public Node
 		const Context *context() const;
 		/// Drives the frame variable in the context.
 		///
-		/// > Warning : This exists primarily as a convenience for the
+		/// > Caution : This exists primarily as a convenience for the
 		/// > user, so that the "current frame" is saved within the
 		/// > script file. To perform a computation at a particular time,
 		/// > create your own context rather than change the value of

@@ -50,7 +50,7 @@ class python( Gaffer.Application ) :
 			Runs python scripts in an environment where all the
 			Gaffer modules are available.
 
-			> Warning : This application is deprecated.
+			> Caution : This application is deprecated.
 			> Use `gaffer env python` instead.
 			"""
 		)
