@@ -11,7 +11,7 @@ for line in changes :
 
 	m = re.match( r"^(Gaffer )?(([0-9]+\.){2,3}[0-9]+)", line )
 	if m :
-		versionIndex += ( "\t{0}.md\n".format( m.group( 2 ) ) )
+		versionIndex += ( "\n\t{0}.md".format( m.group( 2 ) ) )
 		versionFile = open( m.group( 2 ) + ".md", "w" )
 		versionFile.write( m.group( 2 ) + "\n" )
 		continue
@@ -33,10 +33,8 @@ index.write( inspect.cleandoc(
 	```eval_rst
 	.. toctree::
 	    :titlesonly:
-	    :glob:
-
-	    *
+	{0}
 	```
 	"""
 
-) )
+).format( versionIndex ) )
