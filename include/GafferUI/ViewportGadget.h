@@ -127,6 +127,11 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void setDragTracking( bool dragTracking );
 		bool getDragTracking() const;
 
+		/// When variable aspect zoom is enabled, the two axis can be scaled
+		/// independently when performing a 2D zoom.
+		void setVariableAspectZoom( bool variableAspectZoom );
+		bool getVariableAspectZoom() const;
+
 		/// Fills the passed vector with all the Gadgets below the specified position.
 		/// The first Gadget in the list will be the frontmost, determined either by the
 		/// depth buffer if it exists or the drawing order if it doesn't.
@@ -249,6 +254,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		float m_dragTrackingThreshold;
 		Imath::V2f m_dragTrackingVelocity;
 		std::chrono::steady_clock::time_point m_dragTrackingTime;
+
+		bool m_variableAspectZoom;
 
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;
