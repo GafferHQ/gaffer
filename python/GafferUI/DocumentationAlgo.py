@@ -85,7 +85,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 			__makeDirs( directory + "/" + module.__name__ )
 			with open( "%s/%s/%s.md" % ( directory, module.__name__, name ), "w" ) as f :
 				f.write( __nodeDocumentation( node ) )
-				moduleIndex += "\t%s.md\n" % name
+				moduleIndex += "\n\t%s.md" % name
 
 		if moduleIndex :
 
@@ -93,7 +93,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 				f.write( __heading( module.__name__ ) )
 				f.write( __tocString( ).format( moduleIndex ) )
 
-			tocIndex += "\t%s/index.md\n" % ( module.__name__ )
+			tocIndex += "\n\t%s/index.md" % ( module.__name__ )
 
 	index.write( __tocString( ).format( tocIndex ) )
 
@@ -183,7 +183,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 		if appName in ignore :
 			continue
 
-		tocIndex += "\t%s.md\n" % appName
+		tocIndex += "\n\t%s.md" % appName
 		with open( "%s.md" % appName, "w" ) as f :
 
 			f.write( __appDocumentation( classLoader.load( appName )() ) )
@@ -272,7 +272,7 @@ def __tocString( ) :
 		```eval_rst
 		.. toctree::
 		    :titlesonly:
-
+		    :maxdepth: 1
 		{0}
 		```
 		"""
