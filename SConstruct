@@ -1203,9 +1203,9 @@ def locateDocs( docRoot, env ) :
 					if ext == ".sh" :
 						line = s.readline()
 					if line.startswith( "# BuildTarget:" ) :
-						target = os.path.join( root, line.partition( "# BuildTarget:" )[-1].strip( " \n" ) )
-						commands.append( env.Command( target, sourceFile, generateDocs ) )
-						sources.append( target )
+						targets = [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ]
+						commands.append( env.Command( targets, sourceFile, generateDocs ) )
+						sources.extend( targets )
 
 	return sources, commands
 
