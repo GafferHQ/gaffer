@@ -105,7 +105,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 				self.__driver.imageClose()
 
 		@classmethod
-		def sendImage( cls, image, port, extraParameters = {} ) :
+		def sendImage( cls, image, port, extraParameters = {}, close = True ) :
 
 			dataWindow = image["dataWindow"].getValue()
 			channelNames = image["channelNames"].getValue()
@@ -128,7 +128,8 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 						channelData.append( image.channelData( channelName, tileOrigin ) )
 					driver.sendBucket( imath.Box2i( tileOrigin, tileOrigin + imath.V2i( tileSize ) ), channelData )
 
-			driver.close()
+			if close :
+				driver.close()
 
 			return driver
 
