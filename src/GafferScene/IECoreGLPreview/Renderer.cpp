@@ -56,10 +56,11 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/format.hpp"
 
-#include "tbb/concurrent_unordered_map.h"
-#include "tbb/concurrent_vector.h"
+#include "tbb/concurrent_queue.h"
 
+#include <functional>
 #include <unordered_map>
+#include <vector>
 
 using namespace std;
 using namespace Imath;
@@ -323,7 +324,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		{
 			OpenGLCameraPtr result = new OpenGLCamera( camera );
 			result->attributes( attributes );
-			m_cameras[name] = result;
+			m_editQueue.push( [this, result, name]() { m_cameras[name] = result; } );
 			return result;
 		}
 
@@ -344,7 +345,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 			OpenGLObjectPtr result = new OpenGLObject( renderable );
 			result->attributes( attributes );
-			m_objects.push_back( result );
+			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
 		}
 
@@ -377,6 +378,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderInteractive()
 		{
+			processQueue();
 			removeDeletedObjects();
 			CachedConverter::defaultCachedConverter()->clearUnused();
 
@@ -396,6 +398,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderBatch()
 		{
+			processQueue();
 			CachedConverter::defaultCachedConverter()->clearUnused();
 
 			OpenGLCameraPtr camera;
@@ -444,6 +447,15 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			glUseProgram( prevProgram );
 		}
 
+		void processQueue()
+		{
+			Edit edit;
+			while( m_editQueue.try_pop( edit ) )
+			{
+				edit();
+			}
+		}
+
 		// During interactive renders, the client code controls the lifetime
 		// of objects by managing ObjectInterfacePtrs. But we also hold a
 		// reference to the objects ourselves so we can iterate to render them.
@@ -457,7 +469,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( it->second->refCount() == 1 )
 				{
-					it = m_cameras.unsafe_erase( it );
+					it = m_cameras.erase( it );
 				}
 				else
 				{
@@ -465,15 +477,14 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			OpenGLObjectVector objectsToKeep;
-			for( const auto &o : m_objects )
-			{
-				if( o->refCount() > 1 )
-				{
-					objectsToKeep.push_back( o );
-				}
-			}
-			m_objects.swap( objectsToKeep );
+			m_objects.erase(
+				remove_if(
+					m_objects.begin(),
+					m_objects.end(),
+					[]( const OpenGLObjectPtr &o ) { return o->refCount() == 1; }
+				),
+				m_objects.end()
+			);
 		}
 
 		void renderObjects( IECoreGL::State *currentState )
@@ -522,14 +533,23 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
+		// Global options
 		RenderType m_renderType;
-
 		string m_camera;
 
+		// Queue used to pass edits from background threads to the render thread.
+		typedef std::function<void ()> Edit;
+		typedef tbb::concurrent_queue<Edit> EditQueue;
+		EditQueue m_editQueue;
+
+		// Render state. Updated on the render thread by processing Edits
+		// from m_editQueue.
+
 		unordered_map<InternedString, ConstOutputPtr> m_outputs;
-		typedef tbb::concurrent_unordered_map<string, OpenGLCameraPtr> CameraMap;
+		typedef std::unordered_map<string, OpenGLCameraPtr> CameraMap;
 		CameraMap m_cameras;
-		typedef tbb::concurrent_vector<OpenGLObjectPtr> OpenGLObjectVector;
+
+		typedef std::vector<OpenGLObjectPtr> OpenGLObjectVector;
 		OpenGLObjectVector m_objects;
 
 		// Registration with factory
