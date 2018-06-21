@@ -522,7 +522,8 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			unsigned dirtyComponents,
 			unsigned changedParentComponents,
 			const Context *context,
-			const ScenePlug::ScenePath &scenePath
+			const ScenePlug::ScenePath &scenePath,
+			const UpdateCallback &callback
 		)
 			:	m_controller( controller ),
 				m_sceneGraph( sceneGraph ),
@@ -530,7 +531,8 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				m_dirtyComponents( dirtyComponents ),
 				m_changedParentComponents( changedParentComponents ),
 				m_context( context ),
-				m_scenePath( scenePath )
+				m_scenePath( scenePath ),
+				m_callback( callback )
 		{
 		}
 
@@ -572,6 +574,11 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				m_controller
 			);
 
+			if( changedComponents && m_callback )
+			{
+				m_callback( /* complete = */ false );
+			}
+
 			// Spawn subtasks to apply updates to each child.
 
 			const std::vector<SceneGraph *> &children = m_sceneGraph->children();
@@ -584,7 +591,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
 				{
 					childPath.back() = (*it)->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath, m_callback );
 					spawn( *t );
 				}
 
@@ -635,6 +642,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		unsigned m_changedParentComponents;
 		const Context *m_context;
 		ScenePlug::ScenePath m_scenePath;
+		const UpdateCallback &m_callback;
 
 };
 
@@ -781,7 +789,7 @@ void RenderController::requestUpdate()
 	updateRequiredSignal()( *this );
 }
 
-void RenderController::update()
+void RenderController::update( const UpdateCallback &callback )
 {
 	if( !m_scene || !m_context )
 	{
@@ -818,7 +826,9 @@ void RenderController::update()
 			// the globals have changed, so we clear the scene graph and start again.
 			sceneGraph->clear();
 		}
-		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, Context::current(), ScenePlug::ScenePath() );
+		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask(
+			this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, Context::current(), ScenePlug::ScenePath(), callback
+		);
 		tbb::task::spawn_root_and_wait( *task );
 	}
 
@@ -829,6 +839,11 @@ void RenderController::update()
 
 	m_dirtyComponents = SceneGraph::NoComponent;
 	m_updateRequired = false;
+
+	if( callback )
+	{
+		callback( /* complete = */ true );
+	}
 }
 
 void RenderController::updateDefaultCamera()

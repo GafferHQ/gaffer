@@ -42,6 +42,8 @@
 
 #include "boost/signals.hpp"
 
+#include <functional>
+
 namespace GafferScene
 {
 
@@ -69,7 +71,9 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 
 		bool updateRequired() const;
 
-		void update();
+		typedef std::function<void ( bool complete )> UpdateCallback;
+
+		void update( const UpdateCallback &callback = UpdateCallback() );
 
 	private :
 
