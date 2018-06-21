@@ -159,7 +159,7 @@ class RenderController::SceneGraph
 
 		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
 		// of the components which were changed.
-		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const RendererAlgo::RenderSets &renderSets )
+		unsigned update( const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, const RenderController *controller )
 		{
 			unsigned changedComponents = 0;
 
@@ -170,7 +170,7 @@ class RenderController::SceneGraph
 				// Root - get attributes from globals.
 				if( dirtyComponents & GlobalsComponent )
 				{
-					if( updateAttributes( globals ) )
+					if( updateAttributes( controller->m_globals.get() ) )
 					{
 						changedComponents |= AttributesComponent;
 					}
@@ -182,7 +182,7 @@ class RenderController::SceneGraph
 				const bool parentAttributesChanged = changedParentComponents & AttributesComponent;
 				if( parentAttributesChanged || ( dirtyComponents & AttributesComponent ) )
 				{
-					if( updateAttributes( scene->attributesPlug(), parentAttributesChanged ) )
+					if( updateAttributes( controller->m_scene->attributesPlug(), parentAttributesChanged ) )
 					{
 						changedComponents |= AttributesComponent;
 					}
@@ -202,7 +202,7 @@ class RenderController::SceneGraph
 
 			if( ( dirtyComponents & RenderSetsComponent ) || ( changedComponents & AttributesComponent ) )
 			{
-				if( updateRenderSets( path, renderSets ) )
+				if( updateRenderSets( path, controller->m_renderSets ) )
 				{
 					changedComponents |= AttributesComponent;
 				}
@@ -210,14 +210,14 @@ class RenderController::SceneGraph
 
 			// Transform
 
-			if( ( dirtyComponents & TransformComponent ) && updateTransform( scene->transformPlug(), changedParentComponents & TransformComponent ) )
+			if( ( dirtyComponents & TransformComponent ) && updateTransform( controller->m_scene->transformPlug(), changedParentComponents & TransformComponent ) )
 			{
 				changedComponents |= TransformComponent;
 			}
 
 			// Object
 
-			if( ( dirtyComponents & ObjectComponent ) && updateObject( scene->objectPlug(), type, renderer, globals ) )
+			if( ( dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
 			{
 				changedComponents |= ObjectComponent;
 			}
@@ -231,11 +231,11 @@ class RenderController::SceneGraph
 					// Apply attribute update to old object if necessary.
 					if( changedComponents & AttributesComponent )
 					{
-						if( !m_objectInterface->attributes( attributesInterface( renderer ) ) )
+						if( !m_objectInterface->attributes( attributesInterface( controller->m_renderer.get() ) ) )
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( scene->objectPlug(), type, renderer, globals ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
 							{
 								changedComponents |= ObjectComponent;
 							}
@@ -253,7 +253,7 @@ class RenderController::SceneGraph
 
 			// Children
 
-			if( ( dirtyComponents & ChildNamesComponent ) && updateChildren( scene->childNamesPlug() ) )
+			if( ( dirtyComponents & ChildNamesComponent ) && updateChildren( controller->m_scene->childNamesPlug() ) )
 			{
 				changedComponents |= ChildNamesComponent;
 			}
@@ -565,14 +565,11 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			// Update the scene graph at this location.
 
 			unsigned changedComponents = m_sceneGraph->update(
-				scene(),
 				m_scenePath,
 				m_dirtyComponents,
 				m_changedParentComponents,
 				sceneGraphMatch & IECore::PathMatcher::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
-				m_controller->m_renderer.get(),
-				m_controller->m_globals.get(),
-				m_controller->m_renderSets
+				m_controller
 			);
 
 			// Spawn subtasks to apply updates to each child.
