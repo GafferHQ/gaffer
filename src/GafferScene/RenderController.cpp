@@ -40,6 +40,7 @@
 
 #include "Gaffer/ParallelAlgo.h"
 
+#include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -138,7 +139,8 @@ class RenderController::SceneGraph
 			GlobalsComponent = 32,
 			SetsComponent = 64,
 			RenderSetsComponent = 128, // Sets prefixed with "render:"
-			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent | RenderSetsComponent
+			ExpansionComponent = 256,
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent | RenderSetsComponent | ExpansionComponent
 		};
 
 		// Constructs the root of the scene graph.
@@ -224,8 +226,6 @@ class RenderController::SceneGraph
 				changedComponents |= ObjectComponent;
 			}
 
-			// Object updates for transform and attributes
-
 			if( m_objectInterface )
 			{
 				if( !(changedComponents & ObjectComponent) )
@@ -260,9 +260,44 @@ class RenderController::SceneGraph
 				changedComponents |= ChildNamesComponent;
 			}
 
+			// Expansion
+
+			if( ( dirtyComponents & ExpansionComponent ) && updateExpansion( path, controller->m_expandedPaths, controller->m_minimumExpansionDepth ) )
+			{
+				changedComponents |= ExpansionComponent;
+			}
+
+			if( changedComponents & ( ExpansionComponent | BoundComponent | ChildNamesComponent ) )
+			{
+				// Create bounding box if needed
+				m_boundInterface = nullptr;
+				if( !m_expanded && m_children.size() )
+				{
+					const Box3f bound = controller->m_scene->boundPlug()->getValue();
+					IECoreScene::CurvesPrimitivePtr boundCurves = IECoreScene::CurvesPrimitive::createBox( bound );
+
+					std::string boundName;
+					ScenePlug::pathToString( path, boundName );
+					boundName += "/__unexpandedChildren__";
+
+					m_boundInterface = controller->m_renderer->object( boundName, boundCurves.get(), controller->m_boundAttributes.get() );
+					m_boundInterface->transform( m_fullTransform );
+				}
+			}
+			else if( m_boundInterface && ( changedComponents & TransformComponent ) )
+			{
+				// Apply new transform to existing bounding box
+				m_boundInterface->transform( m_fullTransform );
+			}
+
 			m_cleared = false;
 
 			return changedComponents;
+		}
+
+		bool expanded() const
+		{
+			return m_expanded;
 		}
 
 		const std::vector<SceneGraph *> &children()
@@ -283,6 +318,8 @@ class RenderController::SceneGraph
 			clearObject();
 			m_attributesHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
 			m_cleared = true;
+			m_expanded = false;
+			m_boundInterface = nullptr;
 		}
 
 		// Returns true if the location has not been finalised
@@ -440,6 +477,17 @@ class RenderController::SceneGraph
 			m_objectHash = MurmurHash();
 		}
 
+		bool updateExpansion( const ScenePlug::ScenePath &path, const IECore::PathMatcher &expandedPaths, size_t minimumExpansionDepth )
+		{
+			const bool expanded = ( minimumExpansionDepth >= path.size() ) || ( expandedPaths.match( path ) & PathMatcher::ExactMatch );
+			if( expanded == m_expanded )
+			{
+				return false;
+			}
+			m_expanded = expanded;
+			return true;
+		}
+
 		// Ensures that children() contains a child for every name specified
 		// by childNamesPlug(). This just ensures that the children exist - they
 		// will be subsequently be updated in parallel by the SceneGraphUpdateTask.
@@ -506,6 +554,9 @@ class RenderController::SceneGraph
 
 		IECore::MurmurHash m_childNamesHash;
 		std::vector<SceneGraph *> m_children;
+
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_boundInterface;
+		bool m_expanded;
 
 		bool m_cleared;
 
@@ -584,7 +635,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			// Spawn subtasks to apply updates to each child.
 
 			const std::vector<SceneGraph *> &children = m_sceneGraph->children();
-			if( children.size() )
+			if( m_sceneGraph->expanded() && children.size() )
 			{
 				set_ref_count( 1 + children.size() );
 
@@ -598,6 +649,13 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				}
 
 				wait_for_all();
+			}
+			else
+			{
+				for( auto &child : children )
+				{
+					child->clear();
+				}
 			}
 
 			return nullptr;
@@ -654,6 +712,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, IECoreScenePreview::RendererPtr &renderer )
 	:	m_renderer( renderer ),
+		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_dirtyComponents( SceneGraph::AllComponents ),
 		m_globals( new CompoundObject )
@@ -662,6 +721,13 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 	{
 		m_sceneGraphs.push_back( unique_ptr<SceneGraph>( new SceneGraph ) );
 	}
+
+	CompoundObjectPtr boundAttributes = new CompoundObject;
+	boundAttributes->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
+	boundAttributes->members()["gl:primitive:solid"] = new BoolData( false );
+	boundAttributes->members()["gl:primitive:wireframe"] = new BoolData( true );
+	boundAttributes->members()["gl:primitive:wireframeColor"] = new Color4fData( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) );
+	m_boundAttributes = m_renderer->attributes( boundAttributes.get() );
 
 	setScene( scene );
 	setContext( context );
@@ -729,6 +795,39 @@ void RenderController::setContext( const Gaffer::ConstContextPtr &context )
 const Gaffer::Context *RenderController::getContext() const
 {
 	return m_context.get();
+}
+
+void RenderController::setExpandedPaths( const IECore::PathMatcher &expandedPaths )
+{
+	cancelBackgroundTask();
+
+	m_expandedPaths = expandedPaths;
+	m_dirtyComponents |= SceneGraph::ExpansionComponent;
+	requestUpdate();
+}
+
+const IECore::PathMatcher &RenderController::getExpandedPaths() const
+{
+	return m_expandedPaths;
+}
+
+void RenderController::setMinimumExpansionDepth( size_t depth )
+{
+	if( depth == m_minimumExpansionDepth )
+	{
+		return;
+	}
+
+	cancelBackgroundTask();
+
+	m_minimumExpansionDepth = depth;
+	m_dirtyComponents |= SceneGraph::ExpansionComponent;
+	requestUpdate();
+}
+
+size_t RenderController::getMinimumExpansionDepth() const
+{
+	return m_minimumExpansionDepth;
 }
 
 RenderController::UpdateRequiredSignal &RenderController::updateRequiredSignal()

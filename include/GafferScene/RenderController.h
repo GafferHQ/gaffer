@@ -68,6 +68,12 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		void setContext( const Gaffer::ConstContextPtr &context );
 		const Gaffer::Context *getContext() const;
 
+		void setExpandedPaths( const IECore::PathMatcher &expandedPaths );
+		const IECore::PathMatcher &getExpandedPaths() const;
+
+		void setMinimumExpansionDepth( size_t depth );
+		size_t getMinimumExpansionDepth() const;
+
 		typedef boost::signal<void (RenderController &)> UpdateRequiredSignal;
 		UpdateRequiredSignal &updateRequiredSignal();
 
@@ -95,6 +101,9 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
 
+		IECore::PathMatcher m_expandedPaths;
+		size_t m_minimumExpansionDepth;
+
 		boost::signals::scoped_connection m_plugDirtiedConnection;
 		boost::signals::scoped_connection m_contextChangedConnection;
 
@@ -106,6 +115,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		IECore::ConstCompoundObjectPtr m_globals;
 		RendererAlgo::RenderSets m_renderSets;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
+		IECoreScenePreview::Renderer::AttributesInterfacePtr m_boundAttributes;
 
 		std::shared_ptr<Gaffer::BackgroundTask> m_backgroundTask;
 
