@@ -1204,7 +1204,14 @@ def locateDocs( docRoot, env ) :
 						line = s.readline()
 					if line.startswith( "# BuildTarget:" ) :
 						targets = [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ]
-						commands.append( env.Command( targets, sourceFile, generateDocs ) )
+						command = env.Command( targets, sourceFile, generateDocs )
+						docEnv.Depends( command, "build" )
+						# Force the commands to run serially, in case the doc generation
+						# has been run in parallel. Otherwise we can get overlapping
+						# screengrabs from the commands that launch Gaffer UIs.
+						if commands :
+							docEnv.Depends( command, commands[-1] )
+						commands.append( command )
 						sources.extend( targets )
 
 	return sources, commands
