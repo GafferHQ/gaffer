@@ -235,7 +235,7 @@ from PlugLayout import PlugLayout
 from Editor import Editor
 from ScriptEditor import ScriptEditor
 from GadgetWidget import GadgetWidget
-from NodeGraph import NodeGraph
+from GraphEditor import GraphEditor
 from ScriptWindow import ScriptWindow
 from CompoundEditor import CompoundEditor
 from NameWidget import NameWidget

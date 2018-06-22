@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-class NodeGraph( GafferUI.Editor ) :
+class GraphEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -93,7 +93,7 @@ class NodeGraph( GafferUI.Editor ) :
 
 	def getTitle( self ) :
 
-		title = super( NodeGraph, self ).getTitle()
+		title = super( GraphEditor, self ).getTitle()
 		if title:
 			return title
 
@@ -109,7 +109,7 @@ class NodeGraph( GafferUI.Editor ) :
 	## Returns a signal which is emitted to create a context menu for a
 	# plug in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
-	# ( nodeGraph, plug, menuDefinition ) and the menu definition should just be
+	# ( graphEditor, plug, menuDefinition ) and the menu definition should just be
 	# edited in place.
 	@classmethod
 	def plugContextMenuSignal( cls ) :
@@ -120,7 +120,7 @@ class NodeGraph( GafferUI.Editor ) :
 	## Returns a signal which is emitted to create a context menu for a
 	# connection in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
-	# ( nodeGraph, destinationPlug, menuDefinition ) and the menu definition
+	# ( graphEditor, destinationPlug, menuDefinition ) and the menu definition
 	# should just be edited in place.
 	@classmethod
 	def connectionContextMenuSignal( cls ) :
@@ -131,7 +131,7 @@ class NodeGraph( GafferUI.Editor ) :
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
-	# ( nodeGraph, node, menuDefinition ) and the menu definition should just be
+	# ( graphEditor, node, menuDefinition ) and the menu definition should just be
 	# edited in place. Typically you would add slots to this signal
 	# as part of a startup script.
 	@classmethod
@@ -142,28 +142,28 @@ class NodeGraph( GafferUI.Editor ) :
 	## May be used from a slot attached to nodeContextMenuSignal() to install some
 	# standard menu items for modifying the connection visibility for a node.
 	@classmethod
-	def appendConnectionVisibilityMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
 		menuDefinition.append( "/ConnectionVisibilityDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Show Input Connections",
 			{
-				"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, nodeGraph.graphGadget(), node ),
-				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, nodeGraph.graphGadget(), node )
+				"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
+				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node )
 			}
 		)
 		menuDefinition.append(
 			"/Show Output Connections",
 			{
-				"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node ),
-				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
+				"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
+				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node )
 			}
 		)
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install a
 	# standard menu item for modifying the enabled state of a node.
 	@classmethod
-	def appendEnabledPlugMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+	def appendEnabledPlugMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
 		enabledPlug = node.enabledPlug() if isinstance( node, Gaffer.DependencyNode ) else None
 		if enabledPlug is not None :
@@ -178,9 +178,9 @@ class NodeGraph( GafferUI.Editor ) :
 			)
 
 	@classmethod
-	def appendContentsMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
-		if not Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" ) :
+		if not Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
@@ -188,13 +188,13 @@ class NodeGraph( GafferUI.Editor ) :
 
 	__nodeDoubleClickSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted whenever a node is double clicked.
-	# Slots should have the signature ( nodeGraph, node ).
+	# Slots should have the signature ( graphEditor, node ).
 	@classmethod
 	def nodeDoubleClickSignal( cls ) :
 
 		return cls.__nodeDoubleClickSignal
 
-	## Ensures that the specified node has a visible NodeGraph viewing
+	## Ensures that the specified node has a visible GraphEditor viewing
 	# it, and returns that editor.
 	## \todo Consider how this relates to the todo items in NodeSetEditor.acquire().
 	@classmethod
@@ -207,12 +207,12 @@ class NodeGraph( GafferUI.Editor ) :
 
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 		tabbedContainer = None
-		for editor in scriptWindow.getLayout().editors( type = GafferUI.NodeGraph ) :
+		for editor in scriptWindow.getLayout().editors( type = GafferUI.GraphEditor ) :
 			if rootNode.isSame( editor.graphGadget().getRoot() ) :
 				editor.parent().setCurrent( editor )
 				return editor
 
-		editor = NodeGraph( script )
+		editor = GraphEditor( script )
 		editor.graphGadget().setRoot( rootNode )
 		scriptWindow.getLayout().addEditor( editor )
 
@@ -220,7 +220,7 @@ class NodeGraph( GafferUI.Editor ) :
 
 	def __repr__( self ) :
 
-		return "GafferUI.NodeGraph( scriptNode )"
+		return "GafferUI.GraphEditor( scriptNode )"
 
 	def _nodeMenu( self ) :
 
@@ -298,7 +298,7 @@ class NodeGraph( GafferUI.Editor ) :
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :
-				needsModifiers = not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
+				needsModifiers = not Gaffer.Metadata.value( selection[0], "graphEditor:childrenViewable" )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
 					( not needsModifiers and event.modifiers == event.modifiers.None )
@@ -424,9 +424,9 @@ class NodeGraph( GafferUI.Editor ) :
 		# save/restore the current framing so jumping in
 		# and out of Boxes isn't a confusing experience.
 
-		Gaffer.Metadata.registerValue( previousRoot, "ui:nodeGraph:framing", self.__currentFrame(), persistent = False )
+		Gaffer.Metadata.registerValue( previousRoot, "ui:graphEditor:framing", self.__currentFrame(), persistent = False )
 
-		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:nodeGraph:framing" )
+		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:graphEditor:framing" )
 		if frame is not None :
 			self.graphGadgetWidget().getViewportGadget().frame(
 				imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
@@ -513,4 +513,4 @@ class NodeGraph( GafferUI.Editor ) :
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.enabledPlug().setValue( value )
 
-GafferUI.Editor.registerType( "NodeGraph", NodeGraph )
+GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
