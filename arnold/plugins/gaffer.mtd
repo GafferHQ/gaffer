@@ -674,29 +674,29 @@
 
 	gaffer.nodeMenu.category STRING "Surface"
 
-	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
 
 	[attr base]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Base"
 	[attr base_color]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Base"
 	[attr diffuse_roughness]
 		page STRING "Base"
 	[attr metalness]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Base"
 
 	[attr specular]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Specular"
 	[attr specular_color]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Specular"
 	[attr specular_roughness]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Specular"
 	[attr specular_IOR]
 		page STRING "Specular"
@@ -725,7 +725,7 @@
 	[attr subsurface]
 		page STRING "Subsurface"
 	[attr subsurface_color]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Subsurface"
 	[attr subsurface_radius]
 		page STRING "Subsurface"
@@ -745,7 +745,7 @@
 	[attr coat_IOR]
 		page STRING "Coat"
 	[attr coat_normal]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		widget STRING "null"
 		page STRING "Coat"
 	[attr coat_affect_color]
@@ -768,11 +768,11 @@
 	[attr opacity]
 		page STRING "Geometry"
 	[attr normal]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		widget STRING "null"
 		page STRING "Geometry"
 	[attr tangent]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		widget STRING "null"
 		page STRING "Geometry"
 
@@ -823,13 +823,13 @@
 [node standard_hair]
 
 	gaffer.nodeMenu.category STRING "Surface"
-	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
 	[attr base]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Color"
 	[attr base_color]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Color"
 	[attr melanin]
 		page STRING "Color"
@@ -839,7 +839,7 @@
 		page STRING "Color"
 
 	[attr roughness]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Specular"
 	[attr ior]
 		page STRING "Specular"
@@ -877,19 +877,19 @@
 [node standard_volume]
 
 	gaffer.nodeMenu.category STRING "Volume"
-	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
 	[attr density]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Density"
 	[attr density_channel]
 		page STRING "Density"
 
 	[attr scatter]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Scatter"
 	[attr scatter_color]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Scatter"
 	[attr scatter_color_channel]
 		page STRING "Scatter"
@@ -906,15 +906,15 @@
 	[attr emission_mode]
 		page STRING "Emission"
 	[attr emission]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
 	[attr emission_color]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
 	[attr emission_channel]
 		page STRING "Emission"
 	[attr temperature]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
 	[attr temperature_channel]
 		page STRING "Emission"
@@ -924,7 +924,7 @@
 		page STRING "Emission"
 
 	[attr displacement]
-		gaffer.nodeGraphLayout.visible BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Sampling"
 	[attr interpolation]
 		page STRING "Sampling"

@@ -187,10 +187,10 @@ def __translateNodeMetadata( nodeEntry ) :
 			__metadata[paramPath]["label"] = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
 
 
-		# NodeGraph visibility from Gaffer-specific metadata
+		# GraphEditor visibility from Gaffer-specific metadata
 
-		visible = __aiMetadataGetBool( nodeEntry, None, "gaffer.nodeGraphLayout.defaultVisibility" )
-		visible = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.nodeGraphLayout.visible", visible )
+		visible = __aiMetadataGetBool( nodeEntry, None, "gaffer.graphEditorLayout.defaultVisibility" )
+		visible = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.graphEditorLayout.visible", visible )
 		if visible is not None :
 			__metadata[paramPath]["noduleLayout:visible"] = visible
 
