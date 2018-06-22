@@ -1689,7 +1689,7 @@ class RendererTest( GafferTest.TestCase ) :
 		del polygonMeshObject, subdivMeshObject
 		del r
 
-	def testStepSizeAttribute( self ) :
+	def testStepSizeAndScaleAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
@@ -1715,6 +1715,10 @@ class RendererTest( GafferTest.TestCase ) :
 			"stepSizeOne" : IECore.CompoundObject( {
 				"ai:shape:step_size" : IECore.FloatData( 1 ),
 			} ),
+			"stepSizeOneStepScaleHalf" : IECore.CompoundObject( {
+				"ai:shape:step_size" : IECore.FloatData( 1 ),
+				"ai:shape:step_scale" : IECore.FloatData( 0.5 ),
+			} ),
 			"stepSizeTwo" : IECore.CompoundObject( {
 				"ai:shape:step_size" : IECore.FloatData( 2 ),
 			} )
@@ -1739,12 +1743,12 @@ class RendererTest( GafferTest.TestCase ) :
 			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
 			numVolumes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
 
-			self.assertEqual( numInstances, 16 )
-			self.assertEqual( numMeshes, 3 )
+			self.assertEqual( numInstances, 20 )
+			self.assertEqual( numMeshes, 4 )
 			self.assertEqual( numBoxes, 0 )
-			self.assertEqual( numSpheres, 3 )
+			self.assertEqual( numSpheres, 4 )
 			self.assertEqual( numCurves, 1 )
-			self.assertEqual( numVolumes, 3 )
+			self.assertEqual( numVolumes,  4 )
 
 			self.__assertInstanced(
 				"mesh_default",
@@ -1771,7 +1775,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 					stepSize = a.get( "ai:shape:step_size" )
 					stepSize = stepSize.value if stepSize is not None else 0
+					
+					stepScale = a.get( "ai:shape:step_scale" )
+					stepScale = stepScale.value if stepScale is not None else 1
 
+					stepSize = stepSize * stepScale
+					
 					if pn == "curves" :
 						self.assertTrue( arnold.AiNodeIs( shape, "curves" ) )
 					elif pn == "sphere" :
@@ -2176,7 +2185,9 @@ class RendererTest( GafferTest.TestCase ) :
 		attributes = IECore.CompoundObject( {
 			"ai:volume:velocity_scale" : IECore.FloatData( 10 ),
 			"ai:volume:velocity_fps" : IECore.FloatData( 25 ),
-			"ai:volume:velocity_outlier_threshold" : IECore.FloatData( 0.5 ) } )
+			"ai:volume:velocity_outlier_threshold" : IECore.FloatData( 0.5 ),
+			"ai:volume:step_size" : IECore.FloatData( 0.75 ), 
+			"ai:volume:step_scale" : IECore.FloatData( 1.25 ) } )
 
 		# Camera needs to be added first as it's being used for translating the VDB.
 		# We are doing the same when translating actual Gaffer scenes here:
@@ -2220,6 +2231,9 @@ class RendererTest( GafferTest.TestCase ) :
 			# make sure motion_start and motion_end parameters were set according to the active camera's shutter
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "motion_start" ), 10.75 )
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "motion_end" ), 11.25 )
+
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "step_size"), 0.75 )
+			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "step_scale"), 1.25 )
 
 	@staticmethod
 	def __m44f( m ) :
