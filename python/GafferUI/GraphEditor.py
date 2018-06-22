@@ -180,7 +180,8 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
-		if not Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) :
+		## \todo: Remove nodeGraph fallback when all client code has been updated
+		if not Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) and not Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
@@ -298,7 +299,8 @@ class GraphEditor( GafferUI.Editor ) :
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :
-				needsModifiers = not Gaffer.Metadata.value( selection[0], "graphEditor:childrenViewable" )
+				## \todo: Remove nodeGraph fallback when all client code has been updated
+				needsModifiers = not Gaffer.Metadata.value( selection[0], "graphEditor:childrenViewable" ) or not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
 					( not needsModifiers and event.modifiers == event.modifiers.None )
