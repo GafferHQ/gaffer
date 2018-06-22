@@ -276,6 +276,7 @@ const AtString g_sidednessArnoldString( "sidedness" );
 const AtString g_sphereArnoldString("sphere");
 const AtString g_sssSetNameArnoldString( "sss_setname" );
 const AtString g_stepSizeArnoldString( "step_size" );
+const AtString g_stepScaleArnoldString( "step_scale" );
 const AtString g_subdivIterationsArnoldString( "subdiv_iterations" );
 const AtString g_subdivAdaptiveErrorArnoldString( "subdiv_adaptive_error" );
 const AtString g_subdivAdaptiveMetricArnoldString( "subdiv_adaptive_metric" );
@@ -707,8 +708,11 @@ IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
 IECore::InternedString g_arnoldOpaqueAttributeName( "ai:opaque" );
 IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
-IECore::InternedString g_stepSizeAttributeName( "ai:shape:step_size" );
-IECore::InternedString g_volumePaddingAttributeName( "ai:shape:volume_padding" );
+IECore::InternedString g_volumeStepSizeAttributeName( "ai:volume:step_size" );
+IECore::InternedString g_volumeStepScaleAttributeName( "ai:volume:step_scale" );
+IECore::InternedString g_shapeVolumeStepScaleAttributeName( "ai:shape:step_scale" );
+IECore::InternedString g_shapeVolumeStepSizeAttributeName( "ai:shape:step_size" );
+IECore::InternedString g_shapeVolumePaddingAttributeName( "ai:shape:volume_padding" );
 IECore::InternedString g_volumeGridsAttributeName( "ai:volume:grids" );
 IECore::InternedString g_velocityGridsAttributeName( "ai:volume:velocity_grids" );
 IECore::InternedString g_velocityScaleAttributeName( "ai:volume:velocity_scale" );
@@ -745,7 +749,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -780,8 +784,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
-			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
-			m_volumePadding = attributeValue<float>( g_volumePaddingAttributeName, attributes, 0.0f );
+			m_stepSize = attributeValue<float>( g_shapeVolumeStepSizeAttributeName, attributes, 0.0f );
+			m_stepScale = attributeValue<float>( g_shapeVolumeStepScaleAttributeName, attributes, 1.0f );
+			m_volumePadding = attributeValue<float>( g_shapeVolumePaddingAttributeName, attributes, 0.0f );
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
 			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
@@ -831,7 +836,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			if( m_stepSize != 0.0f && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), g_stepSizeArnoldString ) )
+			float actualStepSize = m_stepSize * m_stepScale;
+
+			if( actualStepSize != 0.0f && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), g_stepSizeArnoldString ) )
 			{
 				// Only apply step_size if it hasn't already been set to a non-zero
 				// value by the geometry converter. This allows procedurals to carry
@@ -840,7 +847,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				// calculate the correct step size and provide it via a parameter.
 				if( AiNodeGetFlt( node, g_stepSizeArnoldString ) == 0.0f )
 				{
-					AiNodeSetFlt( node, g_stepSizeArnoldString, m_stepSize );
+					AiNodeSetFlt( node, g_stepSizeArnoldString, actualStepSize );
 				}
 			}
 
@@ -1283,6 +1290,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			velocityScale = optionalAttribute<float>( g_velocityScaleAttributeName, attributes );
 			velocityFPS = optionalAttribute<float>( g_velocityFPSAttributeName, attributes );
 			velocityOutlierThreshold = optionalAttribute<float>( g_velocityOutlierThresholdAttributeName, attributes );
+			stepSize = optionalAttribute<float> ( g_volumeStepSizeAttributeName, attributes );
+			stepScale = optionalAttribute<float>( g_volumeStepScaleAttributeName, attributes );
 		}
 
 		IECore::ConstStringVectorDataPtr volumeGrids;
@@ -1290,6 +1299,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		boost::optional<float> velocityScale;
 		boost::optional<float> velocityFPS;
 		boost::optional<float> velocityOutlierThreshold;
+		boost::optional<float> stepSize;
+		boost::optional<float> stepScale;
 
 		void hash( IECore::MurmurHash &h ) const
 		{
@@ -1306,6 +1317,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( velocityScale.get_value_or( 1.0f ) );
 			h.append( velocityFPS.get_value_or( 24.0f ) );
 			h.append( velocityOutlierThreshold.get_value_or( 0.001f ) );
+			h.append( stepSize.get_value_or( 1.0f ) );
+			h.append( stepScale.get_value_or( 1.0f ) );
 		}
 
 		void apply( AtNode *node ) const
@@ -1355,6 +1368,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.get() );
 			}
+
+			if ( stepSize )
+			{
+				AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.get() );
+			}
+
+			if ( stepScale )
+			{
+				AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.get() );
+			}
+
 		}
 	};
 
@@ -1433,6 +1457,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					m_polyMesh.hash( meshInterpolationIsLinear, h );
 					m_displacement.hash( h );
 					h.append( m_stepSize );
+					h.append( m_stepScale );
 					h.append( m_volumePadding );
 					break;
 				case IECoreScene::CurvesPrimitiveTypeId :
@@ -1440,19 +1465,20 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					break;
 				case IECoreScene::SpherePrimitiveTypeId :
 					h.append( m_stepSize );
+					h.append( m_stepScale );
 					h.append( m_volumePadding );
 					break;
 				case IECoreScene::ExternalProceduralTypeId :
 					if( proceduralIsVolumetric )
 					{
 						h.append( m_stepSize );
+						h.append( m_stepScale );
 						h.append( m_volumePadding );
 
 						m_volume.hash( h );
 					}
 					break;
 				case IECoreVDB::VDBObjectTypeId :
-					h.append( m_stepSize );
 					h.append( m_volumePadding );
 
 					m_volume.hash( h );
@@ -1472,6 +1498,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
 		IECore::ConstStringDataPtr m_transformType;
 		float m_stepSize;
+		float m_stepScale;
 		float m_volumePadding;
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
