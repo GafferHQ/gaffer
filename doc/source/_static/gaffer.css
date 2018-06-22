@@ -104,3 +104,56 @@ kbd, code.kbd {
     font-family: inherit;
     color: #404040 !important;
 }
+
+/* Change icon of "Note" admonition to paperclip */
+.admonition.note p.first.admonition-title::before {
+    content: "\f0c6";
+}
+
+/* Change color of "Note" admonition to muted blue */
+.admonition.note {
+    background-color: #f3f6f6;
+}
+
+.admonition.note p.first.admonition-title {
+    background-color: #7796ab;
+}
+
+/* Change icon of "Tip" admonition to pointing hand */
+.admonition.tip p.first.admonition-title::before {
+    content: "\f0a4";
+}
+
+/* Change icon of "Important" admonition to star */
+.admonition.important p.first.admonition-title::before {
+    content: "\f005";
+    color: #ffffcc;
+}
+
+/* Change color of "Important" admonition to standard blue */
+.admonition.important {
+    background-color: #e7f2fa;
+}
+
+.admonition.important p.first.admonition-title {
+    background-color:#6ab0de
+}
+
+/* Change icon of "Caution" admonition to triangular exclamation */
+.admonition.caution p.first.admonition-title::before {
+    content: "\f071";
+}
+
+/* Change icon of "Warning" admonition to "no" sign */
+.admonition.warning p.first.admonition-title::before {
+    content: "\f05e";
+}
+
+/* Change color of "Warning" admonition to Gaffer red */
+.admonition.warning {
+    background-color: #fff0f0;
+}
+
+.admonition.warning p.first.admonition-title {
+    background-color: #b92227;
+}

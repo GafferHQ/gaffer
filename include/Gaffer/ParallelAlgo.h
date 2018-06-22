@@ -58,7 +58,7 @@ namespace ParallelAlgo
 /// > Note : This function does nothing unless the GafferUI module has
 /// > been imported.
 ///
-/// > Warning : If calling a member function, you _must_ guarantee that
+/// > Caution : If calling a member function, you _must_ guarantee that
 /// > the class instance will still be alive when the member function is
 /// > called. Typically this means binding `this` via a smart pointer.
 typedef std::function<void ()> UIThreadFunction;

@@ -46,7 +46,7 @@ Gaffer.Metadata.registerNode(
 	Searches an input scene for all locations matched
 	by a filter.
 
-	> Warning : This can be an arbitrarily expensive operation
+	> Caution : This can be an arbitrarily expensive operation
 	depending on the size of the input scene and the filter
 	used. In particular it should be noted that the usage of
 	`...` in a PathFilter will cause the entire input scene to
