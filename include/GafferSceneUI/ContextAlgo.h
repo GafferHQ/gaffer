@@ -69,20 +69,20 @@ namespace ContextAlgo
 /// The UI components coordinate with each other to perform on-demand scene
 /// generation by using the Context to store paths to the currently expanded
 /// locations within the scene. For instance, this allows the Viewer show the
-/// objects from locations exposed by expansion performed in the SceneHierarchy,
+/// objects from locations exposed by expansion performed in the HierarchyView,
 /// and vice versa.
 ///
 /// By convention, an expanded location is one whose children are visible,
-/// meaning that they are listed below it in the SceneHierarchy and their objects
+/// meaning that they are listed below it in the HierarchyView and their objects
 /// are drawn in the Viewer. Conversely, a collapsed location's children are
-/// not listed in the SceneHierarchy and the location itself is drawn as a
+/// not listed in the HierarchyView and the location itself is drawn as a
 /// the bounding box of the children.
 ///
 /// As a consequence of this definition, it is not necessary to expand locations
 /// without children. For a simple node such as Sphere, it is only necessary
 /// to expand the root location ("/") to view the geometry. For nodes which
 /// construct a deeper hierarchy, if the name of a location is visible in
-/// the SceneHierarchy, then it's geometry will be displayed in the Viewer.
+/// the HierarchyView, then it's geometry will be displayed in the Viewer.
 
 GAFFERSCENEUI_API void setExpandedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
 GAFFERSCENEUI_API IECore::PathMatcher getExpandedPaths( const Gaffer::Context *context );

@@ -161,17 +161,17 @@ class screengrab( Gaffer.Application ) :
 					members = [
 						IECore.StringVectorParameter(
 							name = "expandedPaths",
-							description = "A list of locations to expand in the Viewer and SceneHierarchy.",
+							description = "A list of locations to expand in the Viewer and HierarchyView.",
 							defaultValue = IECore.StringVectorData(),
 						),
 						IECore.StringVectorParameter(
 							name = "fullyExpandedPaths",
-							description = "A list of locations to expand fully in the Viewer and SceneHierarchy.",
+							description = "A list of locations to expand fully in the Viewer and HierarchyView.",
 							defaultValue = IECore.StringVectorData(),
 						),
 						IECore.StringVectorParameter(
 							name = "selectedPaths",
-							description = "A list of locations to select in the Viewer and SceneHierarchy.",
+							description = "A list of locations to select in the Viewer and HierarchyView.",
 							defaultValue = IECore.StringVectorData(),
 						),
 					]

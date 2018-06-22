@@ -47,7 +47,7 @@ The newly created node has been selected automatically, and each of the editor p
 
 ![SceneReader Bounding Box](images/sceneReaderBound.png)
 
-Something seems to be happening, but frankly not much. The SceneHierarchy in the bottom right pane has updated to show we have a "GAFFERBOT" located at the root of our scene, and the Viewer in the top left is showing a mysterious new bounding box. It seems that our SceneReader is loading _something_, but how do we find out what exactly?
+Something seems to be happening, but frankly not much. The HierarchyView in the bottom right pane has updated to show we have a "GAFFERBOT" located at the root of our scene, and the Viewer in the top left is showing a mysterious new bounding box. It seems that our SceneReader is loading _something_, but how do we find out what exactly?
 
 > Tip : As mentioned above, by default the UI updates to view the currently selected node.
 > This can be confusing if you accidentally deselect a node, because the editors will go blank.
@@ -59,13 +59,13 @@ Navigating the scene
 
 One of the key features that allows Gaffer to deal with highly complex scenes is that it loads geometry lazily on demand, processing only the portions of the scene that have been requested by the user. Any geometry that has not yet been requested is displayed as a simple bounding box, like the one we're looking at. Let's find out what's in the box.
 
-- Locate the SceneHierarchy editor in the bottom right pane.
+- Locate the HierarchyView editor in the bottom right pane.
 - _Left-Click_ the triangle to the left of "GAFFERBOT". The "GAFFERBOT" location should expand to show a child named "C_torso_GRP".
 - _Left-Click_ the triangle to the left of "C_torso_GRP" to expand to show its children.
 
 We can now see the basic structure of the model coming into view.
 
-![SceneHierarchy Expanded Two Levels](images/sceneHierarchyExpandedTwoLevels.png)
+![HierarchyView Expanded Two Levels](images/HierarchyViewExpandedTwoLevels.png)
 
 It would be tedious to expand the whole scene location by location like this, so let's speed things along a little :
 
@@ -83,7 +83,7 @@ Shift clicking loads the entire scene below the location which was clicked, so w
 Navigating using the Viewer
 ---------------------------
 
-As we navigated the scene using the SceneHierarchy editor, the [Viewer][4] was loading the geometry we discovered and displaying it. We can also control this expansion process directly within the Viewer itself :
+As we navigated the scene using the HierarchyView editor, the [Viewer][4] was loading the geometry we discovered and displaying it. We can also control this expansion process directly within the Viewer itself :
 
 - _Left-Drag_ over the bounding box of the other leg to select it. It should highlight to show that you have been successful.
 - Press _Down-Arrow_ on the keyboard to expand it one level.
@@ -153,7 +153,7 @@ Gaffer allows scenes to be modified by making connections between nodes so that 
 
 ![Group](images/group.png)
 
-The Group node is generating a new scene which combines the input scenes by placing them both under a new parent called "group", as can be seen in the SceneHierarchy in the bottom right panel. Note that this is an entirely non-destructive process, and the upstream scenes from the SceneReader and Camera nodes are still available at any time simply by selecting the relevant node.
+The Group node is generating a new scene which combines the input scenes by placing them both under a new parent called "group", as can be seen in the HierarchyView in the bottom right panel. Note that this is an entirely non-destructive process, and the upstream scenes from the SceneReader and Camera nodes are still available at any time simply by selecting the relevant node.
 
 Positioning the camera
 ----------------------
@@ -227,7 +227,7 @@ It's hardly worthy of an Oscar, but we've successfully made our first image, and
 Organising the user interface
 -----------------------------
 
-Before we dive into lighting and shading though, let's take a brief detour to reorganise the user interface a little better for our workflow. As we've already learned, editors such as the Viewer, NodeEditor and SceneHierarchy always show the currently selected node by default. This isn't always convenient, because often we want to edit one node while viewing the effects in another. This can be achieved by "pinning" specific nodes into an editor, so that they stay there regardless of the selection :
+Before we dive into lighting and shading though, let's take a brief detour to reorganise the user interface a little better for our workflow. As we've already learned, editors such as the Viewer, NodeEditor and HierarchyView always show the currently selected node by default. This isn't always convenient, because often we want to edit one node while viewing the effects in another. This can be achieved by "pinning" specific nodes into an editor, so that they stay there regardless of the selection :
 
 - Select the InteractiveAppleseedRender node by _Left-Clicking_ on it in the NodeGraph.
 - Locate the  pinning icon ![Pinning](images/targetNodesUnlocked.png) at the top right
@@ -235,11 +235,11 @@ Before we dive into lighting and shading though, let's take a brief detour to re
 - Deselect the InteractiveAppleseedRender node by _Left-Clicking_ in empty space in the NodeGraph.
 - Note that the Viewer is still showing the pinned node.
 
-It'd be useful to pin the same node into the SceneHierarchy, so let's use a shortcut to do that :
+It'd be useful to pin the same node into the HierarchyView, so let's use a shortcut to do that :
 
 - _Middle-Drag_ the InteractiveAppleseedRender node from the NodeGraph panel into the
-  SceneHierarchy panel.
-- Note that the SceneHierarchy is now showing our node, and the pinning icon has highlighted
+  HierarchyView panel.
+- Note that the HierarchyView is now showing our node, and the pinning icon has highlighted
   to notify us of the pinning ![Pinning](images/targetNodesLocked.png).
 
 Now we're free to select any node we want to edit it in the NodeEditor, but will always be viewing the results
@@ -308,7 +308,7 @@ This node outputs a new scene containing a single light. As we did before with t
 
 We should have successfully inserted the light into the scene hierarchy, without affecting the structure of the rest of the scene.
 
-![Parenting Scene Hierarchy](images/parentingSceneHierarchy.png)
+![Parenting Scene Hierarchy](images/parentingHierarchyView.png)
 
 Now we need to enable environment lighting in Appleseed for our light to take effect.
 
@@ -359,7 +359,7 @@ Oops. Because the new ShaderAssignment is downstream from the first one, it has 
 
 - Create a PathFilter node (_/Scene/Filters/PathFilter_). This chooses which objects to affect based on their names.
 - Use the NodeEditor to add `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN` to the **Paths**. This is the
-  full name of the left ear of the robot, as you see it listed in the SceneHierarchy.
+  full name of the left ear of the robot, as you see it listed in the HierarchyView.
 - Connect the output of the PathFilter into the filter input on the right hand side of the ShaderAssignment1 node.
 
 ![Filter connection](images/filterConnection.png)

@@ -65,7 +65,7 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
 
-		# Unsorted tree view with only a name column - like the SceneHierarchy.
+		# Unsorted tree view with only a name column - like the HierarchyView.
 		dialogue.pathChooserWidget().pathListingWidget().setDisplayMode( GafferUI.PathListingWidget.DisplayMode.Tree )
 		dialogue.pathChooserWidget().pathListingWidget().setColumns( ( GafferUI.PathListingWidget.defaultNameColumn, ) )
 		dialogue.pathChooserWidget().pathListingWidget().setSortable( False )
