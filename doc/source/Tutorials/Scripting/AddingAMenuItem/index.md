@@ -30,7 +30,7 @@ You’ll find that most user interfaces in Gaffer can be extended with similar e
 specified the path to the menu item, and specified that it should run a python function called `__iWantAPony` - we’ll
 define that in the next section.
 
-> Tip : Here we're concentrating on the main menu, but you'll find examples for adding menu items to the NodeGraph,
+> Tip : Here we're concentrating on the main menu, but you'll find examples for adding menu items to the GraphEditor,
 > NodeEditor and more in [Gaffer's own configuration files][2]
 
 Creating some nodes

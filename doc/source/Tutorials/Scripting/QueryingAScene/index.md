@@ -198,7 +198,7 @@ del __children
 Our first scene queries
 -----------------------
 
-Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the ScriptEditor, we can either type a reference to it in directly, or middle-mouse drag it from the NodeGraph to the ScriptEditor. To query the output of the StandardOptions node we'll be using the following :
+Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the ScriptEditor, we can either type a reference to it in directly, or middle-mouse drag it from the GraphEditor to the ScriptEditor. To query the output of the StandardOptions node we'll be using the following :
 
 ```
 script["StandardOptions"]["out"]
@@ -214,7 +214,7 @@ print g["option:render:camera"].value
 print g["option:render:resolution"].value
 ```
 
-There are a couple of things to note here. Firstly, although the `out` plug appears as a single plug in the NodeGraph, it actually has several child plugs, which allow different aspects of the scene to be queried. We accessed the `globals` plug using dictionary syntax, and then retrieved its value using the getValue() method. The result was an IECore::CompoundObject which we can pretty much treat like a dictionary, with the minor annoyance that we need to use `.value` to actually retrieve the final value we want.
+There are a couple of things to note here. Firstly, although the `out` plug appears as a single plug in the GraphEditor, it actually has several child plugs, which allow different aspects of the scene to be queried. We accessed the `globals` plug using dictionary syntax, and then retrieved its value using the getValue() method. The result was an IECore::CompoundObject which we can pretty much treat like a dictionary, with the minor annoyance that we need to use `.value` to actually retrieve the final value we want.
 
 The `"option:render:camera"` globals entry tells us that the user wants to render through a camera called `"/world/camera"`, so let's try to retrieve the object representing the camera. Just as the globals within the scene were represented by a `globals` plug, the objects are represented by an `object` plug. Maybe we can get the camera out using a simple getValue() call as before?
 

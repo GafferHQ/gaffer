@@ -73,7 +73,7 @@ del cameraEditor
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettings.gfr" ) )
 script.load()
 script.selection().add( script["Catalogue"] )
-graph = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
+graph = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 graph.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/renderSettings.png" )
 
@@ -112,7 +112,7 @@ script["fileName"].setValue( os.path.abspath( "scripts/firstLight.gfr" ) )
 script.load()
 script.selection().add( script["Parent"] )
 graph.frame( Gaffer.StandardSet( [ script["Group"], script["Parent"], script["hosek_environment_edf"] ] ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/parentingNodeGraph.png" )
+GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/parentingGraphEditor.png" )
 
 paths = IECore.PathMatcher( [ "/", "/group" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )

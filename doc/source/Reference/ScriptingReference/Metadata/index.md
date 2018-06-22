@@ -42,7 +42,7 @@ layout:accessory    Places widget on same line as   True
 =================== =============================== ============================
 ```
 
-NodeGraph Layout
+GraphEditor Layout
 ----------------
 
 ```eval_rst

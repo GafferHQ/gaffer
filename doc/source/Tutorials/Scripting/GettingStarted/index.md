@@ -30,7 +30,7 @@ node["firstPlug"] = Gaffer.IntPlug()
 node["secondPlug"] = Gaffer.FloatPlug()
 ```
 
-If you follow along by entering the code above in the ScriptEditor, you may wonder why our newly created node hasn't appeared in the NodeEditor or NodeGraph. This is because we haven't given it a parent yet, so it is not associated with any script. Let's add it to the `script` root, and select it so that it appears in the NodeEditor :
+If you follow along by entering the code above in the ScriptEditor, you may wonder why our newly created node hasn't appeared in the NodeEditor or GraphEditor. This is because we haven't given it a parent yet, so it is not associated with any script. Let's add it to the `script` root, and select it so that it appears in the NodeEditor :
 
 ```
 script.addChild( node )
@@ -64,7 +64,7 @@ import GafferScene
 script.addChild( GafferScene.Sphere() )
 ```
 
-This time we've added the node directly to the script without assigning it to a variable, so we don't yet have a convenient handle for the node. Fear not, we can always get an appropriate reference to a node by _Middle Dragging_ it from the NodeGraph and into the ScriptEditor. As you might guess, this gives us the familiar dictionary syntax of `script["Sphere"]`. We can do the same for plugs by _Left Dragging_ them from the NodeEditor. Get the plug for controlling the radius by dragging the "Radius" label from the NodeEditor, to insert the text `script["Sphere"]["radius"]`.
+This time we've added the node directly to the script without assigning it to a variable, so we don't yet have a convenient handle for the node. Fear not, we can always get an appropriate reference to a node by _Middle Dragging_ it from the GraphEditor and into the ScriptEditor. As you might guess, this gives us the familiar dictionary syntax of `script["Sphere"]`. We can do the same for plugs by _Left Dragging_ them from the NodeEditor. Get the plug for controlling the radius by dragging the "Radius" label from the NodeEditor, to insert the text `script["Sphere"]["radius"]`.
 
 Plugs are Python classes in the same way that nodes are, and have additional methods we can use for editing them. The `getValue()` method returns the current value of a plug, so we can use it to learn that the sphere has a radius of 1 :
 
@@ -110,7 +110,7 @@ script.addChild( meshToPoints )
 As before, `meshToPoints["in"]` refers to a plug that is the child of a node, but instead of setting its value with the `setValue()` method, this time we have given it an input connection with the `setInput()` method.
 
 ![MeshToPoints Viewer](images/meshToPointsViewer.png)
-![MeshToPoints NodeGraph](images/meshToPointsNodeGraph.png)
+![MeshToPoints GraphEditor](images/meshToPointsGraphEditor.png)
 
 Now, let's create a Camera and group it with our funky sphere thing, so that we have the beginnings of a scene we could render.
 
@@ -126,9 +126,9 @@ group["in"][1].setInput( camera["out"] )
 
 Until now, we've been accessing plugs and nodes by name, using Python's dictionary syntax. In the code snippet above you can see that we can also access children using Python's list syntax, and for the Group node this is particularly convenient. The Group can have any number of inputs, so the `group["in"]` plug behaves like an array, and we can access its first child with `group["in"][0]` and it's second child with `group["in"][1]`, and so on.
 
-![MeshToPoints NodeGraph](images/group.png)
+![MeshToPoints GraphEditor](images/group.png)
 
-> Tip : The fact that some plugs are visible only in the NodeEditor and some plugs are visible only in the NodeGraph might give the false impression that only the plugs in the NodeGraph can be connected. In fact, this is not the case, and as a general rule almost any plug can be given an input connection.
+> Tip : The fact that some plugs are visible only in the NodeEditor and some plugs are visible only in the GraphEditor might give the false impression that only the plugs in the GraphEditor can be connected. In fact, this is not the case, and as a general rule almost any plug can be given an input connection.
 
 Recap
 -----
@@ -139,7 +139,7 @@ We've seen that Gaffer's node graphs can be constructed using a minimal set of s
 > to reconstruct the saved node network. If you're ever struggling to find a way of scripting
 > something in the documentation, it can be handy to construct a network by hand and then open
 > the .gfr file in a text editor for use as a cheat sheet. Similarly, you can use _Ctrl+C_
-> to copy a network from the NodeGraph, and paste it as code into the ScriptEditor with _Ctrl+V_.
+> to copy a network from the GraphEditor, and paste it as code into the ScriptEditor with _Ctrl+V_.
 >
 > Finally, since Gaffer is open source, you'll often find inspiration and examples in the
 > [source code itself][4].

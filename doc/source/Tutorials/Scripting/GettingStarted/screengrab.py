@@ -38,9 +38,9 @@ GafferUI.EventLoop.waitForIdle()
 viewer.view().viewportGadget().frame( script["MeshToPoints"]["out"].bound( "/sphere" ) )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/meshToPointsViewer.png" )
 
-graph = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
+graph = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 graph.frame( script.children( Gaffer.Node ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/meshToPointsNodeGraph.png" )
+GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/meshToPointsGraphEditor.png" )
 
 script["Camera"] = GafferScene.Camera()
 script["Group"] = GafferScene.Group()
