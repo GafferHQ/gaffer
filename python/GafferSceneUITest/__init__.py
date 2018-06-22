@@ -39,7 +39,7 @@ from ShaderAssignmentUITest import ShaderAssignmentUITest
 from StandardGraphLayoutTest import StandardGraphLayoutTest
 from SceneGadgetTest import SceneGadgetTest
 from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
+from HierarchyViewTest import HierarchyViewTest
 from DocumentationTest import DocumentationTest
 from ShaderViewTest import ShaderViewTest
 from ShaderUITest import ShaderUITest

@@ -34,17 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_SCENEHIERARCHYBINDING_H
-#define GAFFERSCENEUIMODULE_SCENEHIERARCHYBINDING_H
+#ifndef GAFFERSCENEUIMODULE_HIERARCHYVIEWBINDING_H
+#define GAFFERSCENEUIMODULE_HIERARCHYVIEWBINDING_H
 
 namespace GafferSceneUIModule
 {
 
-/// This doesn't actually bind SceneHierarchy, because that is implemented
+/// This doesn't actually bind HierarchyView, because that is implemented
 /// in Python at present. Instead, it binds C++ support classes and functions
-/// that the SceneHierarchy uses internally.
-void bindSceneHierarchy();
+/// that the HierarchyView uses internally.
+void bindHierarchyView();
 
 } // namespace GafferSceneUIModule
 
-#endif // GAFFERSCENEUIMODULE_SCENEHIERARCHYBINDING_H
+#endif // GAFFERSCENEUIMODULE_HIERARCHYVIEWBINDING_H

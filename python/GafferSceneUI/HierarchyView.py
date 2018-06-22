@@ -47,10 +47,10 @@ import _GafferSceneUI
 import ContextAlgo
 
 ##########################################################################
-# SceneHierarchy
+# HierarchyView
 ##########################################################################
 
-class SceneHierarchy( GafferUI.NodeSetEditor ) :
+class HierarchyView( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -58,8 +58,8 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
 
-		searchFilter = _GafferSceneUI._SceneHierarchySearchFilter()
-		setFilter = _GafferSceneUI._SceneHierarchySetFilter()
+		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
+		setFilter = _GafferSceneUI._HierarchyViewSetFilter()
 		setFilter.setEnabled( False )
 
 		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, setFilter ] )
@@ -87,7 +87,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 			# between SelectItems and SelectRows other than the speed.
 			#
 			# This workaround isn't going to be sufficient when we come to add
-			# additional columns to the SceneHierarchy. What _might_ work instead
+			# additional columns to the HierarchyView. What _might_ work instead
 			# is to override `QTreeView.setSelection()` in PathListingWidget.py,
 			# so that we manually expand the selected region to include full rows,
 			# and then don't have to pass the `QItemSelectionModel::Rows` flag to
@@ -109,7 +109,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 	def __repr__( self ) :
 
-		return "GafferSceneUI.SceneHierarchy( scriptNode )"
+		return "GafferSceneUI.HierarchyView( scriptNode )"
 
 	def _updateFromSet( self ) :
 
@@ -212,7 +212,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
-GafferUI.Editor.registerType( "SceneHierarchy", SceneHierarchy )
+GafferUI.Editor.registerType( "HierarchyView", HierarchyView )
 
 ##########################################################################
 # _SetFilterWidget

@@ -39,7 +39,7 @@ __import__( "GafferImageUI" )
 
 from _GafferSceneUI import *
 
-from SceneHierarchy import SceneHierarchy
+from HierarchyView import HierarchyView
 from SceneInspector import SceneInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
 from ScenePathPlugValueWidget import ScenePathPlugValueWidget
