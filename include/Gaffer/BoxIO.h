@@ -47,7 +47,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 IE_CORE_FORWARDDECLARE( Box )
 
 /// Utility node for representing plug promotion
-/// graphically in the NodeGraph. Note that this has
+/// graphically in the GraphEditor. Note that this has
 /// no special priviledges or meaning in the Box API;
 /// it is merely a convenience for the user.
 ///

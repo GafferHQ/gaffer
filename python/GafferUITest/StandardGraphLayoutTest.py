@@ -83,8 +83,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["add1"] = GafferTest.AddNode()
 		s["add2"] = GafferTest.AddNode()
 
-		ng = GafferUI.NodeGraph( s )
-		g = ng.graphGadget()
+		ge = GafferUI.GraphEditor( s )
+		g = ge.graphGadget()
 
 		# check we can connect to a top level plug
 		g.getLayout().connectNode( g, s["add2"], Gaffer.StandardSet( [ s["add1"] ] ) )
@@ -743,8 +743,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['top0'] = 0" )
 
-		ng = GafferUI.NodeGraph( s )
-		g = ng.graphGadget()
+		ge = GafferUI.GraphEditor( s )
+		g = ge.graphGadget()
 
 		g.getLayout().layoutNodes( g )
 
@@ -790,8 +790,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['left0'] = 0" )
 
-		ng = GafferUI.NodeGraph( s )
-		g = ng.graphGadget()
+		ge = GafferUI.GraphEditor( s )
+		g = ge.graphGadget()
 
 		g.getLayout().layoutNodes( g )
 
@@ -812,8 +812,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['top1'] = 0" )
 
-		ng = GafferUI.NodeGraph( s )
-		g = ng.graphGadget()
+		ge = GafferUI.GraphEditor( s )
+		g = ge.graphGadget()
 
 		g.getLayout().layoutNodes( g )
 
@@ -847,8 +847,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["e3"] = Gaffer.Expression()
 		s["e3"].setExpression( "parent['n']['left2'] = 0" )
 
-		ng = GafferUI.NodeGraph( s )
-		g = ng.graphGadget()
+		ge = GafferUI.GraphEditor( s )
+		g = ge.graphGadget()
 
 		g.getLayout().layoutNodes( g )
 
@@ -877,8 +877,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['i1']['left0'] = 0\nparent['i2']['left0'] = parent['o']['right0']" )
 
-		ng = GafferUI.NodeGraph( s )
-		g = ng.graphGadget()
+		ge = GafferUI.GraphEditor( s )
+		g = ge.graphGadget()
 
 		g.setNodePosition( s["i1"], imath.V2f( 20, 20 ) )
 		g.setNodePosition( s["i2"], imath.V2f( 20, -20 ) )

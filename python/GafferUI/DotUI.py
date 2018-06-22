@@ -127,14 +127,14 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# NodeGraph menus
+# GraphEditor menus
 ##########################################################################
 
 def __insertDot( menu, destinationPlug ) :
 
-	nodeGraph = menu.ancestor( GafferUI.NodeGraph )
-	gadgetWidget  = nodeGraph.graphGadgetWidget()
-	graphGadget = nodeGraph.graphGadget()
+	graphEditor = menu.ancestor( GafferUI.GraphEditor )
+	gadgetWidget  = graphEditor.graphGadgetWidget()
+	graphGadget = graphEditor.graphGadget()
 
 	with Gaffer.UndoScope( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
 
@@ -153,9 +153,9 @@ def __insertDot( menu, destinationPlug ) :
 
 		graphGadget.setNodePosition( node, imath.V2f( position.x, position.y ) )
 
-def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
+def __connectionContextMenu( graphEditor, destinationPlug, menuDefinition ) :
 
-	applicationRoot = nodeGraph.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	applicationRoot = graphEditor.scriptNode().ancestor( Gaffer.ApplicationRoot )
 	connected = False
 	with IECore.IgnoredExceptions( AttributeError ) :
 		connected = applicationRoot.__dotUIConnected
@@ -174,14 +174,14 @@ def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 		}
 	)
 
-__connectionContextMenuConnection = GafferUI.NodeGraph.connectionContextMenuSignal().connect( __connectionContextMenu )
+GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu, scoped = False )
 
 def __setPlugMetadata( plug, key, value ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerValue( plug, key, value )
 
-def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	if isinstance( plug.node(), Gaffer.Dot ) :
 
@@ -201,4 +201,4 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 				}
 			)
 
-__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )

@@ -65,7 +65,7 @@ IE_CORE_FORWARDDECLARE( GraphGadget );
 /// the GraphGadget. This simplifies GraphGadget implementation and makes it possible to
 /// implement different styles of layout for different scenarios.
 /// \todo This needs a method for laying out a whole bunch of nodes at once, and perhaps
-/// a mechanism of named operations which can be invoked by menu items in the NodeGraph.
+/// a mechanism of named operations which can be invoked by menu items in the GraphEditor.
 /// The StandardGraphLayout should then implement some variation of the Sugiyama algorithm
 /// and have named operations for snapping to grid, aligning etc.
 class GAFFERUI_API GraphLayout : public IECore::RunTimeTyped

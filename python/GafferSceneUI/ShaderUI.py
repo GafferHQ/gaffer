@@ -116,7 +116,7 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
-			# Add + button for showing and hiding parameters in the NodeGraph
+			# Add + button for showing and hiding parameters in the GraphEditor
 			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
 
 		],
@@ -144,7 +144,7 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
 
-			# Add + button for showing and hiding parameters in the NodeGraph
+			# Add + button for showing and hiding parameters in the GraphEditor
 			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
 
 		],
@@ -328,7 +328,7 @@ def __setPlugMetadata( plug, key, value ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerValue( plug, key, value )
 
-def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	if not isinstance( plug.node(), GafferScene.Shader ) :
 		return
@@ -357,4 +357,4 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 	)
 
-__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )

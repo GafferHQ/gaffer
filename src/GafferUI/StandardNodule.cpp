@@ -296,7 +296,7 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 {
 	// we handle the button press so we can get the dragBegin event,
 	// ignoring right clicks so that they can be used for context sensitive
-	// menus in NodeGraph.py.
+	// menus in GraphEditor.py.
 	if( event.buttons & ( ButtonEvent::LeftMiddle ) )
 	{
 		return true;

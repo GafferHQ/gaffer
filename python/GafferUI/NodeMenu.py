@@ -95,12 +95,12 @@ class NodeMenu( object ) :
 
 		def f( menu ) :
 
-			nodeGraph = menu.ancestor( GafferUI.NodeGraph )
-			assert( nodeGraph is not None )
-			gadgetWidget = nodeGraph.graphGadgetWidget()
-			graphGadget = nodeGraph.graphGadget()
+			graphEditor = menu.ancestor( GafferUI.GraphEditor )
+			assert( graphEditor is not None )
+			gadgetWidget = graphEditor.graphGadgetWidget()
+			graphGadget = graphEditor.graphGadget()
 
-			script = nodeGraph.scriptNode()
+			script = graphEditor.scriptNode()
 
 			commandArgs = []
 			with IECore.IgnoredExceptions( TypeError ) :
@@ -141,7 +141,7 @@ class NodeMenu( object ) :
 			script.selection().clear()
 			script.selection().add( node )
 
-			nodeGraph.frame( [ node ], extend = True )
+			graphEditor.frame( [ node ], extend = True )
 
 			if postCreator is not None :
 				postCreator( node, menu )

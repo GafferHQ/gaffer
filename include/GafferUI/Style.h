@@ -123,7 +123,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const = 0;
 		//@}
 
-		/// @name NodeGraph UI elements
+		/// @name GraphEditor UI elements
 		//////////////////////////////////////////////////////////////////////////
 		//@{
 		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;

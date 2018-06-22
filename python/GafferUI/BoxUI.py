@@ -58,14 +58,14 @@ Gaffer.Metadata.registerNode(
 	node.
 	""",
 
-	"nodeGraph:childrenViewable", True,
+	"graphEditor:childrenViewable", True,
 
 	# Add a + button for creating new plugs in the Settings tab.
 	"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
 	"layout:customWidget:addButton:section", "Settings",
 	"layout:customWidget:addButton:index", -2,
 
-	# Add + buttons for creating new plugs in the NodeGraph
+	# Add + buttons for creating new plugs in the GraphEditor
 	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.BoxUI.PlugAdder",
 	"noduleLayout:customGadget:addButtonTop:section", "top",
 	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.BoxUI.PlugAdder",
@@ -106,24 +106,24 @@ Gaffer.Metadata.registerNode(
 # for particular applications append it if it suits their purposes.
 def nodeMenuCreateCommand( menu ) :
 
-	nodeGraph = menu.ancestor( GafferUI.NodeGraph )
-	assert( nodeGraph is not None )
+	graphEditor = menu.ancestor( GafferUI.GraphEditor )
+	assert( graphEditor is not None )
 
-	script = nodeGraph.scriptNode()
-	graphGadget = nodeGraph.graphGadget()
+	script = graphEditor.scriptNode()
+	graphGadget = graphEditor.graphGadget()
 
 	box = Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
 	Gaffer.BoxIO.insert( box )
 	return box
 
-## \deprecated Use NodeGraph.appendSubGraphMenuDefinitions()
-def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
+## \deprecated Use GraphEditor.appendSubGraphMenuDefinitions()
+def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
 	if not isinstance( node, Gaffer.Box ) :
 		return
 
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Show Contents...", { "command" : functools.partial( __showContents, nodeGraph, node ) } )
+	menuDefinition.append( "/Show Contents...", { "command" : functools.partial( __showContents, graphEditor, node ) } )
 
 ## A callback suitable for use with NodeEditor.toolMenuSignal() - it provides
 # menu options specific to Boxes. We don't actually register it automatically,
@@ -142,9 +142,9 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		menuDefinition.append( "/UpgradeDivider", { "divider" : True } )
 		menuDefinition.append( "/Upgrade to use BoxIO", { "command" : functools.partial( __upgradeToUseBoxIO, node = node ) } )
 
-def __showContents( nodeGraph, box ) :
+def __showContents( graphEditor, box ) :
 
-	GafferUI.NodeGraph.acquire( box )
+	GafferUI.GraphEditor.acquire( box )
 
 def __exportForReferencing( menu, node ) :
 
@@ -278,7 +278,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
-# NodeGraph plug context menu
+# GraphEditor plug context menu
 ##########################################################################
 
 def __renamePlug( menu, plug ) :
@@ -297,9 +297,9 @@ def __setPlugMetadata( plug, key, value ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerValue( plug, key, value )
 
-def __edgePlugs( nodeGraph, plug ) :
+def __edgePlugs( graphEditor, plug ) :
 
-	nodeGadget = nodeGraph.graphGadget().nodeGadget( plug.node() )
+	nodeGadget = graphEditor.graphGadget().nodeGadget( plug.node() )
 	nodule = nodeGadget.nodule( plug )
 	return [ n.plug() for n in nodule.parent().children( GafferUI.Nodule ) ]
 
@@ -311,7 +311,7 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 		for index, plug in enumerate( plugs ) :
 			Gaffer.Metadata.registerValue( plug, "noduleLayout:index", index )
 
-def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	# The context menu might be showing for the child nodule
 	# of a CompoundNodule, but most of our operations only
@@ -348,7 +348,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 				}
 			)
 
-		edgePlugs = __edgePlugs( nodeGraph, parentPlug )
+		edgePlugs = __edgePlugs( graphEditor, parentPlug )
 		edgeIndex = edgePlugs.index( parentPlug )
 		menuDefinition.append(
 			"/Move " + ( "Up" if currentEdge in ( "left", "right" ) else "Left" ),
@@ -369,4 +369,4 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 	__appendPlugDeletionMenuItems( menuDefinition, parentPlug, readOnly )
 	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
 
-__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
