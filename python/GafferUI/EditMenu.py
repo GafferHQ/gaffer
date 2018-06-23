@@ -83,7 +83,8 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : selectionAvailable } )
 
-__Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "graphEditor" ] )
+## \todo: Remove nodeGraph fallback when all client code has been updated
+__Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "graphEditor", "nodeGraph" ] )
 
 ## Returns the scope in which an edit menu item should operate. The return
 # value has "scriptWindow", "script", "parent" and "graphEditor" attributes.
@@ -111,7 +112,7 @@ def scope( menu ) :
 	else :
 		parent = scriptWindow.scriptNode()
 
-	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, graphEditor )
+	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, graphEditor, graphEditor )
 
 ## Returns True if nodes are currently selected in the scope returned by scope().
 # This can be used for the "active" field in a menu item definition to disable
