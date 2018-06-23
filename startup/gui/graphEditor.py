@@ -99,28 +99,28 @@ Gaffer.Metadata.registerValue( GafferScene.Shader, "...", "nodule:color", __shad
 # Behaviour
 ##########################################################################
 
-def __nodeDoubleClick( nodeGraph, node ) :
+def __nodeDoubleClick( graphEditor, node ) :
 
 	GafferUI.NodeEditor.acquire( node, floating = True )
 
-GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick, scoped = False )
+GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick, scoped = False )
 
-def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
+def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : functools.partial( GafferUI.NodeEditor.acquire, node, floating = True ) } )
 
-	GafferUI.NodeGraph.appendEnabledPlugMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.NodeGraph.appendConnectionVisibilityMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferDispatchUI.DispatcherUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.NodeGraph.appendContentsMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.UIEditor.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
+	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferDispatchUI.DispatcherUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 
-GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeContextMenu, scoped = False )
+GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu, scoped = False )
 
-def __plugContextMenu( nodeGraph, node, menuDefinition ) :
+def __plugContextMenu( graphEditor, node, menuDefinition ) :
 
-	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( nodeGraph, node, menuDefinition )
+	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, node, menuDefinition )
 
-GafferUI.NodeGraph.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
