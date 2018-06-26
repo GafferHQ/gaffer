@@ -515,7 +515,7 @@ Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &tex
 	);
 }
 
-void StandardStyle::renderText( TextType textType, const std::string &text, State state ) const
+void StandardStyle::renderText( TextType textType, const std::string &text, State state, const Imath::Color3f *userColor ) const
 {
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
@@ -534,7 +534,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	/// automatically linearised before arriving in the shader.
 	glUniform1i( g_textureTypeParameter, 2 );
 
-	glColor( m_colors[ForegroundColor] );
+	glColor( colorForState( ForegroundColor, state, userColor ) );
 
 	glPushMatrix();
 

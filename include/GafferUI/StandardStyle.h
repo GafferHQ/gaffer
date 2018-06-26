@@ -81,7 +81,7 @@ class GAFFERUI_API StandardStyle : public Style
 
 		Imath::Box3f characterBound( TextType textType ) const override;
 		Imath::Box3f textBound( TextType type, const std::string &text ) const override;
-		void renderText( TextType type, const std::string &text, State state = NormalState ) const override;
+		void renderText( TextType type, const std::string &text, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const override;
 
 		void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const override;
