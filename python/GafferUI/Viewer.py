@@ -313,7 +313,7 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.tools.sort( key = lambda v : Gaffer.Metadata.nodeValue( v, "order" ) if Gaffer.Metadata.nodeValue( v, "order" ) is not None else 999 )
 
 			self.__toolPlugSetConnections = [
-				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet ) ) for t in self.tools
+				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet, fallbackResult = lambda plug : None ) ) for t in self.tools
 			]
 
 			with GafferUI.ListContainer( spacing = 1 ) as self.widgets :

@@ -89,6 +89,10 @@ class ScriptEditor( GafferUI.Editor ) :
 
 		return self.__inputWidget
 
+	def outputWidget( self ) :
+
+		return self.__outputWidget
+
 	def execute( self ) :
 
 		# decide what to execute
