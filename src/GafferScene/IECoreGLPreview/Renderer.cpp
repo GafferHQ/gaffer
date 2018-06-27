@@ -43,6 +43,7 @@
 #include "IECoreGL/FrameBuffer.h"
 #include "IECoreGL/GL.h"
 #include "IECoreGL/OrthographicCamera.h"
+#include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/State.h"
@@ -50,7 +51,9 @@
 
 #include "IECore/CompoundParameter.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/PathMatcherData.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/StringAlgo.h"
 #include "IECore/Writer.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -86,6 +89,18 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 
 	IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
 	return nullptr;
+}
+
+const IECoreGL::State &selectionState()
+{
+	static IECoreGL::StatePtr s;
+	if( !s )
+	{
+		s = new IECoreGL::State( false );
+		s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
+		s->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ), /* override = */ true );
+	}
+	return *s;
 }
 
 } // namespace
@@ -136,9 +151,10 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		OpenGLObject( const IECoreGL::ConstRenderablePtr &renderable )
+		OpenGLObject( const std::string &name, const IECoreGL::ConstRenderablePtr &renderable )
 			:	m_renderable( renderable )
 		{
+			IECore::StringAlgo::tokenize( name, '/', m_name );
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -157,7 +173,12 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			return true;
 		}
 
-		void render( IECoreGL::State *currentState )
+		bool selected( const IECore::PathMatcher &selection ) const
+		{
+			return selection.match( m_name ) & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch );
+		}
+
+		void render( IECoreGL::State *currentState, const IECore::PathMatcher &selection ) const
 		{
 			const bool haveTransform = m_transform != M44f();
 			if( haveTransform )
@@ -167,6 +188,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			IECoreGL::State::ScopedBinding scope( *m_attributes->state(), *currentState );
+			IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, selected( selection ) );
+
 			m_renderable->render( currentState );
 
 			if( haveTransform )
@@ -180,6 +203,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		M44f m_transform;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
+		vector<InternedString> m_name;
 
 };
 
@@ -294,6 +318,18 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				// We know what this means, we just have no use for it.
 				return;
 			}
+			else if( name == "gl:selection" )
+			{
+				if( value == nullptr )
+				{
+					m_selection.clear();
+				}
+				else if( auto d = reportedCast<const IECore::PathMatcherData>( value, "option", name ) )
+				{
+					m_selection = d->readable();
+				}
+				return;
+			}
 			else if( boost::contains( name.string(), ":" ) && !boost::starts_with( name.string(), "gl:" ) )
 			{
 				// Ignore options prefixed for some other renderer.
@@ -343,7 +379,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
-			OpenGLObjectPtr result = new OpenGLObject( renderable );
+			OpenGLObjectPtr result = new OpenGLObject( name, renderable );
 			result->attributes( attributes );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
@@ -491,7 +527,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		{
 			for( const auto &o : m_objects )
 			{
-				o->render( currentState );
+				o->render( currentState, m_selection );
 			}
 		}
 
@@ -536,6 +572,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		// Global options
 		RenderType m_renderType;
 		string m_camera;
+		IECore::PathMatcher m_selection;
 
 		// Queue used to pass edits from background threads to the render thread.
 		typedef std::function<void ()> Edit;
