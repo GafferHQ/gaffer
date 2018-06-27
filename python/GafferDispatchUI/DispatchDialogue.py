@@ -56,6 +56,8 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 	# Confirm : The dialogue remains open confirming success, with a button for returning to the editing state.
 	PostDispatchBehaviour = IECore.Enum.create( "Close", "Confirm" )
 
+	__dispatchDialogueMenuDefinition = None
+
 	def __init__( self, tasks, dispatchers, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
@@ -75,7 +77,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		# build tabs for all the node, dispatcher, and context settings
 		with GafferUI.ListContainer() as self.__settings :
 
-			mainMenu = GafferUI.MenuBar( self.menuDefinition( self.__script.applicationRoot() ) )
+			mainMenu = GafferUI.MenuBar( self.menuDefinition() )
 			mainMenu.setVisible( False )
 
 			with GafferUI.TabbedContainer() as self.__tabs :
@@ -155,27 +157,17 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		GafferUI.Window.setVisible( self, visible )
 
-	## Returns an IECore.MenuDefinition which is used to define the keyboard shortcuts for all DispatchDialogues
-	# created as part of the specified application. This can be edited at any time to modify subsequently
-	# created DispatchDialogues - typically editing would be done as part of gaffer startup. Note that
-	# this menu is never shown to users, but we need it in order to register keyboard shortcuts.
-	@staticmethod
-	def menuDefinition( applicationOrApplicationRoot ) :
+	## Returns an IECore.MenuDefinition which is used to define the keyboard shortcuts for all DispatchDialogues.
+	# This can be edited at any time to modify subsequently created DispatchDialogues.
+	# Typically editing would be done as part of gaffer startup. Note that this menu is never shown to users,
+	# but we need it in order to register keyboard shortcuts.
+	@classmethod
+	def menuDefinition( cls ) :
 
-		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
-			applicationRoot = applicationOrApplicationRoot.root()
-		else :
-			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
-			applicationRoot = applicationOrApplicationRoot
+		if cls.__dispatchDialogueMenuDefinition is None :
+			cls.__dispatchDialogueMenuDefinition = IECore.MenuDefinition()
 
-		menuDefinition = getattr( applicationRoot, "_dispatchDialogueMenuDefinition", None )
-		if menuDefinition :
-			return menuDefinition
-
-		menuDefinition = IECore.MenuDefinition()
-		applicationRoot._dispatchDialogueMenuDefinition = menuDefinition
-
-		return menuDefinition
+		return cls.__dispatchDialogueMenuDefinition
 
 	def __nodeEditor( self, node ) :
 

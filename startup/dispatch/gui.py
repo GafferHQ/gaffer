@@ -60,7 +60,7 @@ if application["gui"].getTypedValue() :
 		with IECore.IgnoredExceptions( ImportError ) :
 			__import__( module )
 
-	menu = GafferDispatchUI.DispatchDialogue.menuDefinition( application )
+	menu = GafferDispatchUI.DispatchDialogue.menuDefinition()
 	menu.append( "/Edit/Undo", {
 		"command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().undo(),
 		"shortCut" : "Ctrl+Z",
