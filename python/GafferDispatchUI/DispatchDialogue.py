@@ -127,12 +127,13 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__initiateSettings( self.__primaryButton )
 
 	@staticmethod
-	def createWithDefaultDispatchers( tasks, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def createWithDefaultDispatchers( tasks, defaultDispatcherType=None, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
-		defaultType = GafferDispatch.Dispatcher.getDefaultDispatcherType()
+		defaultType = defaultDispatcherType if defaultDispatcherType else GafferDispatch.Dispatcher.getDefaultDispatcherType()
 		dispatcherTypes = list(GafferDispatch.Dispatcher.registeredDispatchers())
-		dispatcherTypes.remove( defaultType )
-		dispatcherTypes.insert( 0, defaultType )
+		if defaultType and defaultType in dispatcherTypes :
+			dispatcherTypes.remove( defaultType )
+			dispatcherTypes.insert( 0, defaultType )
 
 		dispatchers = []
 		for key in dispatcherTypes :
