@@ -61,5 +61,13 @@ if application["gui"].getTypedValue() :
 			__import__( module )
 
 	menu = GafferDispatchUI.DispatchDialogue.menuDefinition( application )
-	menu.append( "/Edit/Undo", { "command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().undo(), "shortCut" : "Ctrl+Z" } )
-	menu.append( "/Edit/Redo", { "command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().redo(), "shortCut" : "Shift+Ctrl+Z" } )
+	menu.append( "/Edit/Undo", {
+		"command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().undo(),
+		"shortCut" : "Ctrl+Z",
+		"active" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().undoAvailable(),
+	} )
+	menu.append( "/Edit/Redo", {
+		"command" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().redo(),
+		"shortCut" : "Shift+Ctrl+Z",
+		"active" : lambda menu : menu.ancestor( GafferDispatchUI.DispatchDialogue ).scriptNode().redoAvailable(),
+	} )
