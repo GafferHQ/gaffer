@@ -38,13 +38,16 @@
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/ColorTexture.h"
+#include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/DepthTexture.h"
 #include "IECoreGL/Exception.h"
 #include "IECoreGL/FrameBuffer.h"
 #include "IECoreGL/GL.h"
 #include "IECoreGL/OrthographicCamera.h"
+#include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
+#include "IECoreGL/Selector.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/ToGLCameraConverter.h"
@@ -198,6 +201,11 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		Box3f transformedBound() const
 		{
 			return Imath::transform( m_renderable->bound(), m_transform );
+		}
+
+		const vector<InternedString> &name() const
+		{
+			return m_name;
 		}
 
 		bool selected( const IECore::PathMatcher &selection ) const
@@ -443,6 +451,10 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				return queryBound( parameters );
 			}
+			else if( name == "gl:querySelection" )
+			{
+				return querySelectedObjects( parameters );
+			}
 
 			throw IECore::Exception( "Unknown command" );
 		}
@@ -463,7 +475,34 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				StatePtr state = new State( /* complete = */ true );
 				state->bind();
 
-				renderObjects( state.get() );
+				if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+				{
+					// IECoreGL expects us to bind `selector->baseState()` here, so the
+					// selector can control a few specific parts of the state.
+					// That overrides _all_ of our own state though, including things that
+					// are crucial to accurate selection because they change the size of
+					// primitives on screen. So we need to bind the selection state and then
+					// rebind the crucial bits of our state back on top of it.
+					/// \todo Change IECoreGL::Selector so it provides a partial state object
+					/// containing only the things it needs to change.
+					IECoreGL::StatePtr shapeState = new IECoreGL::State( /* complete = */ false );
+					shapeState->add( state->get<IECoreGL::PointsPrimitive::UseGLPoints>() );
+					shapeState->add( state->get<IECoreGL::PointsPrimitive::GLPointWidth>() );
+					shapeState->add( state->get<IECoreGL::CurvesPrimitive::UseGLLines>() );
+					shapeState->add( state->get<IECoreGL::CurvesPrimitive::IgnoreBasis>() );
+					shapeState->add( state->get<IECoreGL::CurvesPrimitive::GLLineWidth>() );
+					IECoreGL::State::ScopedBinding selectorStateBinding(
+						*selector->baseState(), const_cast<IECoreGL::State &>( *state )
+					);
+					IECoreGL::State::ScopedBinding shapeStateBinding(
+						*shapeState, const_cast<IECoreGL::State &>( *state )
+					);
+					renderObjects( state.get() );
+				}
+				else
+				{
+					renderObjects( state.get() );
+				}
 
 			glPopAttrib();
 			glUseProgram( prevProgram );
@@ -562,8 +601,15 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderObjects( IECoreGL::State *currentState )
 		{
+			IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+
+			GLuint i = 1;
 			for( const auto &o : m_objects )
 			{
+				if( selector )
+				{
+					selector->loadName( i++ );
+				}
 				o->render( currentState, m_selection );
 			}
 		}
@@ -623,6 +669,28 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				result.extendBy( o->transformedBound() );
 			}
 			return new Box3fData( result );
+		}
+
+		DataPtr querySelectedObjects( const CompoundDataMap &parameters )
+		{
+			ConstUIntVectorDataPtr names;
+			CompoundDataMap::const_iterator it = parameters.find( "selection" );
+			if( it != parameters.end() )
+			{
+				names = runTimeCast<const UIntVectorData>( it->second );
+			}
+			if( !names )
+			{
+				throw InvalidArgumentException( "Expected UIntVectorData \"selection\" parameter" );
+			}
+
+			PathMatcher result;
+			for( auto i : names->readable() )
+			{
+				result.addPath( m_objects[i-1]->name() );
+			}
+
+			return new PathMatcherData( result );
 		}
 
 		// Global options
