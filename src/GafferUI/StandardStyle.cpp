@@ -834,12 +834,10 @@ void StandardStyle::renderCurveSegment( const Imath::V2f &start, const Imath::V2
 	glCallList( connectionDisplayList() );
 }
 
-void StandardStyle::renderKeyFrame( const Imath::V2f &position, State state, const Imath::Color3f *userColor ) const
+void StandardStyle::renderKeyFrame( const Imath::V2f &position, State state, float size, const Imath::Color3f *userColor ) const
 {
-	int keyFrameSize = 2;
-
 	glColor( colorForState( CurveColor, state, userColor ) );
-	renderSolidRectangle( Box2f( position - V2f( keyFrameSize ), position + V2f( keyFrameSize ) ) );
+	renderSolidRectangle( Box2f( position - V2f( size ), position + V2f( size ) ) );
 }
 
 void StandardStyle::renderBackdrop( const Imath::Box2f &box, State state, const Imath::Color3f *userColor ) const

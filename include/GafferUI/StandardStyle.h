@@ -77,7 +77,7 @@ class GAFFERUI_API StandardStyle : public Style
 		void renderSolidRectangle( const Imath::Box2f &box ) const override;
 		void renderRectangle( const Imath::Box2f &box ) const override;
 		void renderCurveSegment( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const override;
-		void renderKeyFrame( const Imath::V2f &position, State state, const Imath::Color3f *userColor = nullptr ) const override;
+		void renderKeyFrame( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const override;
 
 		Imath::Box3f characterBound( TextType textType ) const override;
 		Imath::Box3f textBound( TextType type, const std::string &text ) const override;

@@ -105,7 +105,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		virtual void renderSolidRectangle( const Imath::Box2f &box ) const = 0;
 		virtual void renderRectangle( const Imath::Box2f &box ) const = 0;
 		virtual void renderCurveSegment( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const = 0;
-		virtual void renderKeyFrame( const Imath::V2f &position, State state, const Imath::Color3f *userColor = nullptr ) const = 0;
+		virtual void renderKeyFrame( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const = 0;
 		//@}
 
 		/// @name Text drawing
