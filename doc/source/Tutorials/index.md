@@ -8,7 +8,7 @@ Tutorials
     :titlesonly:
     :maxdepth: 1
 
-    GettingStarted/index.md
+    BeginnerTutorial/index.md
     Scripting/index.md
     ManagingComplexity/index.md
 ```
