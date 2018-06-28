@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,19 @@
 #
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
-from ArnoldVDBTest import ArnoldVDBTest
-from ArnoldLightTest import ArnoldLightTest
-from ArnoldMeshLightTest import ArnoldMeshLightTest
-from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from ArnoldDisplacementTest import ArnoldDisplacementTest
-from LightToCameraTest import LightToCameraTest
-from IECoreArnoldPreviewTest import *
-from ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from ArnoldBackgroundTest import ArnoldBackgroundTest
-from ModuleTest import ModuleTest
+import GafferTest
+
+class ModuleTest( GafferTest.TestCase ) :
+
+	def testNamespacePollution( self ) :
+
+		import GafferArnold
+
+		self.assertRaises( AttributeError, getattr, GafferArnold, "IECoreArnold" )
+		self.assertRaises( AttributeError, getattr, GafferArnold, "Gaffer" )
+		self.assertRaises( AttributeError, getattr, GafferArnold, "GafferScene" )
+		self.assertRaises( AttributeError, getattr, GafferArnold, "sys" )
+		self.assertRaises( AttributeError, getattr, GafferArnold, "ctypes" )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
