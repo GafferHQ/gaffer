@@ -115,6 +115,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		void updateRenderer();
 		IECore::PathMatcher convertSelection( IECore::UIntVectorDataPtr ids ) const;
+		void visibilityChanged();
 
 		IECoreScenePreview::RendererPtr m_renderer;
 		mutable GafferScene::RenderController m_controller;

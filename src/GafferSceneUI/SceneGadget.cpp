@@ -87,6 +87,8 @@ SceneGadget::SceneGadget()
 		boost::bind( &SceneGadget::requestRender, this )
 	);
 
+	visibilityChangedSignal().connect( boost::bind( &SceneGadget::visibilityChanged, this ) );
+
 	setContext( new Context );
 }
 
@@ -313,4 +315,12 @@ void SceneGadget::updateRenderer()
 	};
 
 	m_updateTask = m_controller.updateInBackground( renderRequestCallback );
+}
+
+void SceneGadget::visibilityChanged()
+{
+	if( !visible() && m_updateTask )
+	{
+		m_updateTask->cancelAndWait();
+	}
 }
