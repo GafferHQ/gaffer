@@ -1,407 +1,499 @@
-Getting Started
-===============
+# Tutorial: Assembling the Gaffer Bot #
 
-This tutorial is intended to give new users a first taste of lighting and rendering in
-Gaffer. As such it will cover a lot of ground quickly and will necessarily gloss over
-some details. Our goal is to learn to make images as quickly as possible, and provide
-a minimal basis for further exploration using the rest of this guide. Hold on tight!
+In this tutorial, we will give you a first taste of Gaffer by covering its basic operations and concepts. The goal is for you to learn to make renders of a basic scene as quickly as possible, and provide a minimal basis to further explore the documentation. It will cover a lot of ground quickly, and some details will be glossed over.
 
-> Note : This tutorial uses the open source Appleseed renderer, as it is included with
-> Gaffer and is ready to run out of the box. The Appleseed specific nodes that are used
-> here can be substituted with direct equivalents for Arnold or 3delight, but we do
-> recommend that you complete the tutorial using Appleseed before flying solo with your
-> renderer of choice.
+By the end of this tutorial you will have built a basic scene with Gaffer's robot mascot, Gaffy, and render an output image. You will learn the following lessons, not necessarily in this order:
 
-Launching Gaffer
-----------------
+- Gaffer UI fundamentals
+- Creating and connecting nodes
+- Importing geometry
+- Constructing a basic scene hierarchy
+- Adding basic script settings
+- Importing textures
+- Building a simple shader
+- Applying a shader to geometry
+- Creating an environment light
+- Using an interactive renderer
 
-After completing the [installation chapter][1], launch Gaffer from a shell with the following
-command :
+> Note :
+> This tutorial uses the Appleseed renderer, as it is included with Gaffer. While the Appleseed-specific nodes described here can be substituted with equivalents from Arnold or 3Delight, we recommend that you complete this tutorial using Appleseed before moving on to your preferred renderer.
 
-```
-> gaffer
-```
 
-You should be presented with the default UI layout.
+## Starting a New Script ##
 
-![Default layout](images/defaultLayout.png)
+After [installing Gaffer](../InstallingGaffer/index.md), launch Gaffer [from its directory](../LaunchingGafferFirstTime/index.md), or using the ["gaffer" command](../SettingUpGafferCommand/index.md). Gaffer will start, and you will be presented with an empty graph in the default UI layout.
 
-Loading some geometry
----------------------
+![An empty graph in the default layout](images/mainDefaultLayout.png "An empty graph in the default layout")
 
-As Gaffer is primarily a lighting package, it is expected that modelling and animation will be performed in an external package and then imported into Gaffer in the form of an animation cache. Gaffer supports the popular Alembic and USD file formats, and also its own native SceneCache (.scc) format.
+> Note :
+> To avoid confusion between Gaffer files, its UI, and node graphs in general, we refer to the files you work on as **scripts**.
 
-Let's start by creating a [SceneReader][2] node to load some geometry :
 
-- Locate the [GraphEditor][3] editor in the lower left pane.
-- _Right-Click_ inside the GraphEditor to pop up a menu for creating nodes.
-- Create a SceneReader using the _/Scene/File/Reader_ menu item.
+## Importing a Geometry Scene Cache ##
 
-![Empty SceneReader](images/emptySceneReader.png)
+As Gaffer is a tool primarily designed for LookDev, lighting, and VFX process automation, we expect that your shot's modelling and animation will be created in an external tool like Maya, and then imported into Gaffer as a geometry/animation cache. Gaffer supports the standard Alembic (.abc) and USD (.usd) file formats, as well as its own native SceneCache (.scc) file format. Most scenes begin by importing geometry or images via one of the two types of Reader nodes: [SceneReader](../../Reference/NodeReference/GafferScene/SceneReader.md) or [ImageReader](../../Reference/NodeReference/GafferScene/ImageReader.md).
 
-The newly created node has been selected automatically, and each of the editor panes has been updated to show the selection. We haven't yet specified a cache to load though, so there's not much to see. Let's remedy that.
+First, load Gaffy's geometry cache with a SceneReader node:
 
-- Locate the NodeEditor in the top right pane.
-- Enter `${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc` into the **File Name** field.
-- Move the mouse into the [Viewer][4] in the top left pane and press 'f' to frame the full scene.
+1. In the _Graph Editor_ in the bottom-left panel, right-click. The node creation menu will appear.
 
-![SceneReader Bounding Box](images/sceneReaderBound.png)
+2. Using the drop-down menu, select _Scene_ > _File_ > _Reader_. The SceneReader node will appear in the _Graph Editor_ and be selected automatically.
+    
+    ![A new SceneReader node](images/mainSceneReaderNode.png "A new SceneReader node") <!-- TODO: add annotation? -->
 
-Something seems to be happening, but frankly not much. The HierarchyView in the bottom right pane has updated to show we have a "GAFFERBOT" located at the root of our scene, and the Viewer in the top left is showing a mysterious new bounding box. It seems that our SceneReader is loading _something_, but how do we find out what exactly?
+3. The _Node Editor_ in the top-right panel now reads _Node Editor : SceneReader_. Under its _Settings_ tab, in the File Name field, type `${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc`.
 
-> Tip : As mentioned above, by default the UI updates to view the currently selected node.
-> This can be confusing if you accidentally deselect a node, because the editors will go blank.
-> Later on we'll see various ways of managing which node is viewed, but for now it is enough
-> to know that you can reselect a node by _Left-Clicking_ on it in the GraphEditor.
+4. Hover the cursor over the background of the _Viewer_ (in the top panel), and hit <kbd>F</kbd>. The view will reframe to cover the whole scene.
+    
+    ![The bounding box of the selected SceneReader node](images/viewerSceneReaderBounding.png "The bounding box of the selected SceneReader node") <!-- TODO: add annotation -->
 
-Navigating the scene
---------------------
+The SceneReader node has loaded, and the _Viewer_ is showing a bounding box, but the geometry remains invisible. You can confirm that the scene has loaded by examining the _Scene Hierarchy_ in the bottom-right panel. It too has updated, and shows that you have _GAFFERBOT_ at the root of the scene. In order to view the geometry, you will need to expand the scene's locations down to their roots.
 
-One of the key features that allows Gaffer to deal with highly complex scenes is that it loads geometry lazily on demand, processing only the portions of the scene that have been requested by the user. Any geometry that has not yet been requested is displayed as a simple bounding box, like the one we're looking at. Let's find out what's in the box.
+> Important :
+> By default, the _Viewer_, _Node Editor_, and _Scene Hierarchy_ update to reflect the selected node, and go blank when no node is selected.
 
-- Locate the HierarchyView editor in the bottom right pane.
-- _Left-Click_ the triangle to the left of "GAFFERBOT". The "GAFFERBOT" location should expand to show a child named "C_torso_GRP".
-- _Left-Click_ the triangle to the left of "C_torso_GRP" to expand to show its children.
 
-We can now see the basic structure of the model coming into view.
+## The Scene Hierarchy ##
 
-![HierarchyView Expanded Two Levels](images/hierarchyViewExpandedTwoLevels.png)
+When you load a geometry cache, Gaffer only reads its scene hierarchy: at no point does it write to the file. This lets you manipulate the scene's locations without risk to the file.
 
-It would be tedious to expand the whole scene location by location like this, so let's speed things along a little :
+> Important :
+> Scenes hierarchies in Gaffer can have their locations non-destructively hidden, added to, changed, and deleted.
 
-- _Shift+Left-Click_ the triangle to the left of "C_head_GRP".
-- _Shift+Left-Click_ the triangle to the left of "L_legUpper_GRP".
+Further, Gaffer uses locations in the scene's hierarchy to selectively render the geometry you need: expanded locations have their geometry shown in the _Viewer_, while collapsed locations appear only as bounding boxes. This on-demand geometry loading allows Gaffer to handle highly complex scenes (we informally call it "lazy loading"). Currently, only a bounding box is visible in the _Viewer_.
 
-Shift clicking loads the entire scene below the location which was clicked, so we can now see all the geometry which is part of the head and left leg of our new mechanical friend.
+> Important :
+> Only geometry that has its parent locations expanded will show in the _Viewer_. Geometry that still has its parent locations collapsed will show as a bounding box.
 
-![Head and Leg Expanded](images/headAndLegExpanded.png)
 
-> Note : You may have noticed that the cache file used in this tutorial contains objects named using a
-> specific convention, with suffixes like "GRP", "CPT" and "REN". It should be noted that Gaffer places no
-> significance whatsoever in these names, and you are free to name your own creations however you see fit.
+### Navigating the Scene Using the _Scene Hierarchy_ ###
 
-Navigating using the Viewer
----------------------------
+Until you expand the scene's locations in the _Scene Hierarchy_, Gaffy's geometry will remain invisible.
 
-As we navigated the scene using the HierarchyView editor, the [Viewer][4] was loading the geometry we discovered and displaying it. We can also control this expansion process directly within the Viewer itself :
+Use the _Scene Hierarchy_ to show Gaffy's geometry:
 
-- _Left-Drag_ over the bounding box of the other leg to select it. It should highlight to show that you have been successful.
-- Press _Down-Arrow_ on the keyboard to expand it one level.
-- Press _Shift+Down-Arrow_ on the keyboard to expand it fully.
+1. If the SceneReader node is deselected, select it by clicking it.
 
-![Head and legs expanded](images/headAndLegsExpanded.png)
+2. In the _Scene Hierarchy_, click the triangle next to _GAFFERBOT_. The _GAFFERBOT_ location will expand to show a child location named *C_torso_GRP*.
 
-As you might have guessed, we can also collapse the selection to return to a bounding box view :
+3. Click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to *C_torso_GRP* to show its child locations.
 
-- Keeping the currently selected leg geometry, press _Up-Arrow_ to collapse it.
-- Press _Up-Arrow_ repeatedly until all the geometry is collapsed back into the root bounding box.
+    ![The scene hierarchy, expanded down two levels](images/hierarchySceneExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
 
-Navigating individual parts of a scene like this can be invaluable when dealing with very complex scenes, but we've already established that our mechanical friend is fairly lightweight and loads quickly, so it would be convenient to automatically keep the entire scene loaded at all times. This will also help in the rest of this tutorial as we switch between scenes and rearrange the hierarchy.
+> Note :
+> Gaffy's geometry cache contains primitive and location names with affixes like _C_, _R_, _L_, _GRP_, _CPT_ and _REN_. Gaffer places no significance whatsoever on these names, and you or your studio are free to use whichever naming conventions you see fit.
 
-- Locate the main toolbar at the top of the Viewer.
-- Locate the ![scene expansion menu](images/expansion.png) button and _Left-Click_ it to show the scene expansion popup menu.
-- Choose "Expand All".
+In the _Viewer_, you can now see the bounding boxes of multiple geometry primitives (or groups of primitives), revealing more of the scene's structure. However, it would be tedious to expand the whole scene, location-by-location, in this manner. Instead, you can expand a location, its children, and all its sub-children by <kbd>Shift</kbd> + clicking.
 
-![Fully Expanded](images/fullyExpanded.png)
+Expand Gaffy's head and left leg locations and their children:
 
-Finally, we can see our guy in all his vintage glory. Now would be a good time to get to grips with interactive camera movement within the viewer, so we can move around and get a better look at our guy. All movement is controlled by the mouse, but is accessed by holding down the _Alt_ key to the left of the space bar.
+1. In the _Scene Hierarchy_, <kbd>Shift</kbd> + click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to *C_head_GRP*. All the locations under *C_head_GRP* will expand. Now the _Viewer_ will show all of the geometry that comprises Gaffy's head.
 
-- Hold down _Alt_ and _Left-Drag_ to tumble around, and view the model from all angles.
-- Hold down _Alt_ and _Right-Drag_ to dolly in and out.
-- Hold down _Alt_ and _Middle-Drag_ to track from side to side.
+2. <kbd>Shift</kbd> + click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to *L_legUpper_GRP*. All the locations under *L_legUpper_GRP* will expand. Now the _Viewer_ will show all of the geometry that comprises Gaffy's left leg.
 
-Now we're familiar with the model we're going to be rendering, we can move on to the next steps.
+![The head and left leg geometry, expanded](images/mainHeadAndLeftLegExpanded.png "The head and left leg geometry, expanded")
 
-Making a camera
----------------
 
-Before we can render anything, we'll need a camera to render from. Just as we created a SceneReader node to load in the model, we'll create another node to generate a camera. You'll remember from the previous section that we can create nodes by making a _Right-Click_ inside the GraphEditor and finding the node we want in the menu that appears. This time though, we'll take a shortcut :
+### Navigating the Scene Using the _Viewer_ ###
 
-- Make sure the mouse is inside the GraphEditor.
-- Press _Tab_ to show the node menu, and note that it has a search field at the top, which already has the keyboard focus.
-- Type "Camera" into the search field. Note that a new submenu has appeared showing the search results.
-- Press _Return_ to activate the highlighted search result and create a Camera node.
+As you navigated the scene using the _Scene Hierarchy_, the _Viewer_ updated to show the geometry you expanded. The _Viewer_ also has the useful feature of letting you expand the scene by directly interacting with the geometry and bounding boxes it displays. Navigating discrete parts of a scene like this can be invaluable when dealing with very complex scenes.
 
-As before, our newly created node has been selected automatically, and the UI has updated to show the selection.
+Using the arrow keys, expand the scene hierarchy through the _Viewer:_
 
-![Camera](images/camera.png)
+1. In the _Viewer_, select Gaffy's right leg by click-dragging a marquee over its bounding box. The leg's bounding box will highlight.
 
-We appear to have a problem though - although we can see our new camera, our model has disappeared!
+2. Hit <kbd>↓</kbd> to expand the selection down one level. The highlighted bounding box will be replaced by two smaller bounding boxes, indicating that you have expanded the location and selected the right leg's children.
 
-> Note : Many users find that the _Tab_ node search shortcut makes them more productive, but
-> it can also be useful to browse the full menu to explore all the nodes that are available.
-> For the rest of this tutorial, we'll just say "Create a SceneReader node _(/Scene/File/Reader)_" and expect
-> you to make your own choice as to which method you use.
+3. Hit <kbd>Shift</kbd> + <kbd>↓</kbd> to fully expand all the right leg's locations.
 
-Grouping the camera with the model
-----------------------------------
+    ![The head and legs geometry, expanded](images/viewerHeadAndLegsExpanded.png "The head and legs geometry, expanded")
 
-Each node in Gaffer outputs an entire self contained scene. Our SceneReader node is outputting a robot scene, and our Camera node is outputting a scene containing a camera, but each of these are separate. By _Left-Clicking_ on each node in the GraphEditor we can select which scene we want to view and edit, but before we can render we need to combine them into a scene with both a robot _and_ a camera.
+You can also collapse the selection in a similar manner using the _Viewer:_
 
-Gaffer allows scenes to be modified by making connections between nodes so that input scenes flow into a node, are modified, and then flow out again. The inputs and outputs of nodes are called **plugs**, and are represented in the GraphEditor as circles on the edges of the nodes. Let's make a new node and connect it up so that it combines the robot and camera into a single scene.
+1. With the right leg geometry still selected, hit <kbd>↑</kbd>.
 
-- Deselect all nodes by _Left-Clicking_ in empty space in the GraphEditor.
-- Create a Group node _(/Scene/Hierarchy/Group)_.
-- Arrange the nodes by _Left-Dragging_ them into position.
-	- Place the SceneReader at the top left.
-	- Place the Camera at the top right.
-	- Place the Group below them.
-- _Left-Drag_ from the _output_ of the SceneReader onto the _input_ of the Group.
-  Note that a second input appears on the Group.
-- _Left-Drag_ from the _output_ of the Camera onto the second _input_ of the Group.
-- Select the Group node by _Left-Clicking_ on it.
+2. Keep hitting <kbd>↑</kbd> until all the geometry is collapsed back into the root bounding box.
 
-![Group](images/group.png)
+You may have noticed that when you expanded and collapsed parts of the scene using the _Viewer_, the locations and geometry were also highlighted and selected in the _Scene Hierarchy_. This is because:
 
-The Group node is generating a new scene which combines the input scenes by placing them both under a new parent called "group", as can be seen in the HierarchyView in the bottom right panel. Note that this is an entirely non-destructive process, and the upstream scenes from the SceneReader and Camera nodes are still available at any time simply by selecting the relevant node.
+> Important :
+> Manually selecting, expanding, and collapsing elements of the scene in the _Viewer_ is synonymous with using the _Scene Hierarchy_.
 
-Positioning the camera
-----------------------
 
-Next we need to position the camera so that it frames our subject :
+## Adjusting the View in the _Viewer_ ##
 
-- Select the Camera node by _Left-Clicking_ on it in the GraphEditor.
-- In the NodeEditor (top right panel), _Left-Click_ on the **Transform** tab to expose the transform settings.
-- Use the numeric widgets to set the camera position.
-	- Set **Translate** to `19, 13, 31`
-	- Set **Rotate** to `0, 30, 0`
-- Reselect the Group node in the GraphEditor to see the position of the camera
-  relative to the robot.
+Like in other 3D tools, you can adjust the _Viewer's_ angle, field of view, and the position of the virtual camera.
 
-![Group](images/cameraTransform.png)
+- To rotate/tumble, <kbd>Alt</kbd> + click and drag.
+- To zoom/dolly in and out, <kbd>Alt</kbd> + right click and drag, or scroll the middle mouse.
+- To track from side to side, <kbd>Alt</kbd> + middle click and drag.
 
-> Note : In the previous section we referred to the inputs and outputs of the nodes as **plugs**,
-> and connected them by dragging and dropping within the GraphEditor. But in fact, the **Translate**
-> and **Rotate** values we have just edited on the Camera node are _also_ **plugs** : they also
-> provide input to the node, and can also be connected together if needed. The GraphEditor and NodeEditor
-> each display only a subset of the available plugs for ease of use, and informally we may tend to
-> refer to them as "connections" or "settings" respectively, but more formally they are all **plugs**.
-> This fact will become more relevant in advanced tutorials involving expressions and scripting.
+> Tip :
+> If you lose sight of the scene and cannot find your place again, you can always refocus on the currently selected location by hovering the cursor over the _Viewer_ and hitting <kbd>F</kbd>.
 
-Rendering a first image
------------------------
 
-Now that we have the layout of our scene defined, we want to do a quick test render to check everything is
-working as expected. To do that we need to lay down some more nodes to define our render settings.
+## Creating and Setting Up a Camera ##
 
-- Select the Group node in the GraphEditor.
-- Create a StandardOptions node (_/Scene/Globals/StandardOptions_). Note that it has been automatically
-  connected to the output of the Group, and selected.
-- Create an AppleseedOptions node (_/Appleseed/Options_). Note that it has been automatically connected to
-  the output of the StandardOptions node and selected.
-- Create an Outputs node (_Scene/Globals/Outputs_). This too will be automatically added to the end of
-  the chain.
-- Create an InteractiveAppleseedRender node (_/Appleseed/InteractiveRender/_) to complete the chain.
-- Create a Catalogue node (_/Image/Utility/Catalogue_). This doesn't need any input connections - just
-  place it to one side of the InteractiveAppleseedRender node.
+Before you can start any rendering, you will need to create a render camera. Just like how you created a SceneReader node to load in the geometry, you will add another node to generate a camera.
 
-![Render settings](images/renderSettings.png)
+Earlier, you learned how to find a node by navigating the node creation menu in the _Graph Editor_. If you know the name of the node you wish to create, and do not feel like navigating the menu, you can instead use the menu's search feature:
 
-Even though we need only have one camera, we still need to tell Gaffer that we wish to render with it, rather than with a default camera :
+1. Hover the cursor over the background in the _Graph Editor_.
 
-- Select the StandardOptions node.
-- Use the NodeEditor to specify the camera.
-	- Open the Camera section by _Left-Clicking_ on it.
-	- _Left-Click_ the switch to enable the camera setting.
-	- Type `/group/camera` into the camera text field.
+2. Right-click. The node creation menu will open.
 
-Next we need to define what images we want to output :
+> Tip :
+> With the cursor hovering over the _Graph Editor_, you can also hit <kbd>Tab</kbd> to open the node creation menu.
 
-- Select the Outputs node.
-- Use the NodeEditor to add an output, by _Left-Clicking_ on the ![Plus icon](images/plus.png) and choosing the _/Interactive/Beauty_ item from the popup menu.
+3. Type `Camera`. A list of search results will appear. By default, _Camera_ will be highlighted.
 
-Now we can start the renderer :
+4. Hit <kbd>Enter</kbd> to create a new Camera node.
 
-- Select the InteractiveAppleseedRender node.
-- Use the NodeEditor to set the renderer state to running.
+    ![A new Camera node](images/mainCameraNode.png "A new Camera node")
 
-And finally we can view the result :
+As before, the newly created node will be selected automatically, and the _Viewer_, _Scene Hierarchy_, and _Node Editor_ will update to reflect this new selection.
 
-- Select the Catalogue node.
-- Move the mouse into the Viewer and press 'f' to frame the image.
 
-![First render](images/firstRender.png)
+## Nodes, Scenes, and Plugs ##
 
-It's hardly worthy of an Oscar, but we've successfully made our first image, and are in a good place to start adding some lighting and shading.
+So far, your script is set up as such: the SceneReader node is outputting a scene containing Gaffy's geometry, and the Camera node is outputting a scene containing a camera. Since neither node is connected, each scene remains separate. This is because each node in Gaffer outputs an entire self-contained scene hierarchy at its position in the graph. If they do not join somewhere later in the graph, the two scenes will never interface with each other. A key part to understand about the node graph is that:
 
-Organising the user interface
------------------------------
+> Important :
+> Each node contains either the scene that has been passed to it through a plug, or the scene that it creates.
 
-Before we dive into lighting and shading though, let's take a brief detour to reorganise the user interface a little better for our workflow. As we've already learned, editors such as the Viewer, NodeEditor and HierarchyView always show the currently selected node by default. This isn't always convenient, because often we want to edit one node while viewing the effects in another. This can be achieved by "pinning" specific nodes into an editor, so that they stay there regardless of the selection :
+In short, the scene is not a single hierarchy that exists in the background of the graph, but is instead carried by the nodes. You can test this by clicking the background of the _Graph Editor_, and observing that once the you have no node selected, the _Scene Hierarchy_ goes blank. This will become very relevant when you begin combining scenes together and selectively modifying a scene's locations.
 
-- Select the InteractiveAppleseedRender node by _Left-Clicking_ on it in the GraphEditor.
-- Locate the  pinning icon ![Pinning](images/targetNodesUnlocked.png) at the top right
-  of the Viewer panel, and _Left-Click_ to activate it.
-- Deselect the InteractiveAppleseedRender node by _Left-Clicking_ in empty space in the GraphEditor.
-- Note that the Viewer is still showing the pinned node.
+Gaffer allows scenes to be built and modified by creating connections between nodes. For most nodes, the scene flows into it through its input, is then modified by the node, and then flows out through it. A node's inputs and outputs are called **plugs**, and are represented in the _Graph Editor_ as colored circles around a node's edges.
 
-It'd be useful to pin the same node into the HierarchyView, so let's use a shortcut to do that :
+<!-- TODO: add close-up of node plugs ![A node's plug.](images/nodePlug.png) -->
 
-- _Middle-Drag_ the InteractiveAppleseedRender node from the GraphEditor panel into the
-  HierarchyView panel.
-- Note that the HierarchyView is now showing our node, and the pinning icon has highlighted
-  to notify us of the pinning ![Pinning](images/targetNodesLocked.png).
+For your two nodes to occupy the same scene (and later render together), you will need to combine them into a single scene at some point later in the graph. You can connect both of their output plugs to a Group node, and you can also rearrange the nodes to better represent the visual hierarchy.
 
-Now we're free to select any node we want to edit it in the NodeEditor, but will always be viewing the results
-downstream, in our final scene. It's a pity that we're no longer viewing our Catalogue node containing the rendered
-image though, so let's rectify that.
 
-- Locate the layout button ![Layout](images/layoutButton.png) in the top right of the Viewer panel, and _Left-Click_ to show the layout menu.
-- Choose the _Viewer_ menu item to add a new Viewer.
-- _Middle-Drag_ the Catalogue node into the new Viewer to pin it there.
+### Connecting Plugs ###
 
-This allows us to switch between the 3d scene and the rendered image using the tabs at the top of the viewer panel. Now we've
-got everything arranged to our liking, we're finally ready to go ahead and start shading some pixels.
+It's time to connect the SceneReader and Camera nodes to combine their scenes:
 
-Assigning a shader
-------------------
+1. Click the background of the _Graph Editor_ to deselect all nodes.
 
-> Tip : As we're about to add to our collection of nodes in the GraphEditor, we might need to move around
-> around and zoom in and out to navigate between them. This is achieved in the same way as navigating
-> in the Viewer, by holding down _Alt_ and _dragging_ :
->
-> - Hold down _Alt_ and _Left-Drag_ to move around.
-> - Hold down _Alt_ and _Right-Drag_ to zoom in and out.
-> - Alternatively, use the _scroll wheel_ to zoom in and out.
+2. Create a Group node (_Scene_ > _Hierarchy_ > _Group_).
 
-It makes sense to think of our node graph as being composed of three distinct phases - generating the geometry, applying the lighting and shading, and finally rendering. Let's create some empty space in the centre of the graph so that we have somewhere to insert the nodes for our lighting and shading phase.
+3. Click and drag the SceneReader node's _out_ plug (at the bottom; blue) onto the Group node's _in0_ plug (at the top; also blue). As you drag, a node connector will appear. Once you connect them, a second input plug (_in1_) will appear on the Group node, next to the first.
 
-- In the GraphEditor, _Left-Drag_ over the lower five nodes to select them.
-- _Left-Drag_ on one of the nodes to move them all down to leave some space in the middle.
-- Use the _scroll wheel_ or hold down _Alt_ and _Right-Drag_ to zoom out and frame the whole node graph.
+4. Click and drag the Camera node's _out_ plug onto the Group node's _in1_ plug.
 
-![Making space](images/renderSettingsWithGap.png)
+    ![A new Group node](images/mainGroupNode.png "A new Group node")
 
-Now we have some space we can drop our shading nodes into.
+The Group node is now generating a new scene combining the input scenes from the two nodes above it, under a new parent location called _group_. You can see this new hierarchy by selecting the Group node and examining the _Scene Hierarchy_.
 
-- Make a Disney material (_/Appleseed/Shader/Material/As_Disney_Material_)
-- Edit it using the NodeEditor
-	- Set the **Specular** to `0.6`
-	- Set the **Roughness** to `0.35`
-- Keeping the Disney material selected, create a ShaderAssignment (_/Scene/Attributes/ShaderAssignment_). Note that it has been automatically connected to the material.
-- _Left-Drag_ the ShaderAssignment onto the connection between the Group and StandardOptions nodes
-  to insert it into the stream.
+Only the combined scene at the Group node has been modified. The upstream nodes' scenes are unaffected. You can verify this by reselecting one of them and checking the _Scene Hierarchy_.
 
-![First shader assignment](images/firstShaderAssignment.png)
 
-Note that the inputs and outputs on the material node flow from left to right. In Gaffer, by convention, scene data flows from top to bottom and shading networks flow from left to right. The ShaderAssignment node takes the material flowing in from the left and assigns it to the geometry flowing in from the top. This hasn't done much to improve our render though - now that we have a proper material assigned, we need to to create a light so we can see it.
+### Navigating the _Graph Editor_ ###
 
-Creating a light
-----------------
+You may have noticed that you can intuitively click and drag the nodes around in the _Graph Editor_. You can also pan and zoom around the _Graph Editor_, just like in the _Viewer_.
 
-We'll use an environment light so that we can get up and running quickly without needing to spend a lot of time tuning multiple lights.
+- To pan the view, <kbd>Alt</kbd> + click and drag, or middle-click and drag.
+- To zoom in and out, <kbd>Alt</kbd> + right-click and drag, or scroll the middle mouse.
+- To focus on the currently selected node, hover the cursor over the _Graph Editor_ and hit <kbd>F</kbd>.
 
-- Create a PhysicalSky node (_/Appleseed/Environment/PhysicalSky_)
-- Edit it using the NodeEditor
-	- Set the **Sun Phi Angle** to `100`
-	- Set the **Luminance** to `2.5`
 
-This node outputs a new scene containing a single light. As we did before with the camera, we now need to add the light to the main scene so that it flows down to the render node. The quickest way of doing this would be to connect it in to the next available input on the Group node, but this time we'll take a different approach. Often when collaborating with others, you'll receive scenes which already contain the geometry and cameras, and it'll be inconvenient to use a Group node because it introduces a new level into the scene hierarchy. In these cases, we can use a Parent node to insert a new child anywhere in the input scene.
+## Positioning the Camera ##
 
-- Deselect the PhysicalSky node
-- Create a Parent node (_/Scene/Hierarchy/Parent_)
-- _Left-Drag_ it between the Group and ShaderAssignment nodes to insert it.
-- Enter `/` in the Parent field in the NodeEditor, so that we'll be parenting the light directly under the scene root.
-- Connect the output of the light node into the second (child) input of the Parent node.
+Next, you should reposition the camera so that it frames Gaffy.
 
-![Parenting Graph Editor](images/parentingGraphEditor.png)
+To set the camera's position:
 
-We should have successfully inserted the light into the scene hierarchy, without affecting the structure of the rest of the scene.
+1. Select the Camera node.
 
-![Parenting Hierarchy View](images/parentingHierarchyView.png)
+2. In the _Node Editor_, click the _Transform_ tab.
 
-Now we need to enable environment lighting in Appleseed for our light to take effect.
+3. Edit the position and rotation values:
+    - Set the Translate plug to `19` `13` `31`.
+    - Set the Rotate plug to `0` `30` `0`.
 
-- Edit the AppleseedOptions node in the NodeEditor
-- Open the Environment section
-- Turn on the **Environment Light** switch
-- Enter `/light` into the text field
+    ![The transform values](images/nodeEditorWindowCameraTransform.png "The transform values")
 
-Our render should now be in the process of updating with some basic lighting.
+4. Select the Group node.
 
-![First Lighting](images/firstLighting.png)
+5. Hover the cursor over the _Viewer_ and hit <kbd>F</kbd> to see Gaffy and the camera in the same frame.
 
-Adding some textures
---------------------
+> Note :
+> In the previous section, we referred to the inputs and outputs of the nodes as plugs, and connected them by dragging and dropping within the _Graph Editor_. In actuality, the Translate and Rotate values you just edited in the Camera node are also plugs: they are part of the node's input plug, and can also be connected to other plugs, if needed. For ease of use, by default nodes in _Graph Editor_ and _Node Editor_ each present only a subset of their available plugs.
 
-Our little chap is looking a bit monochrome, so let's assign some textures to cheer him up :
 
-- Create an Appleseed texture node (_/Appleseed/Shaders/Texture2d/As_color_texture_)
-- Edit it using the NodeEditor
-	- Enter `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_` into the **Filename** field.
-	- Set the **UDIM** field to `mari`.
-- Using the GraphEditor, Connect the **ColorOut** output into the **BaseColor** input of the disney material.
+## Rendering Your First Image ##
 
-![Textured](images/textures.png)
+Now that you have defined the layout of your scene, you should perform a quick test-render to check that everything is working as expected. In order to do that, you need to place some render-related nodes to define your script's render settings.
 
-The render should now be in the process of updating to show the results of our edit.
+Create the render settings nodes:
 
-Filtering a shader assignment
------------------------------
+1. Select the Group node.
 
-Everything is looking rather uniform right now, because so far we've used one material for everything. Let's assign a metallic material to a few objects to add some interest.
+2. Create a StandardOptions node (_Scene_ > _Globals_ > _StandardOptions_). It will automatically connect to the output of the Group node and become selected.
 
-- Make a Disney material as before (_/Appleseed/Shader/Material/As_Disney_Material_)
-- Edit it using the NodeEditor
-	- Set **Metallic** to `0.8`
-	- Set **Roughness** to `0.4`
-- Create a Shader assignment as before (_/Scene/Attributes/ShaderAssignment_), and make sure the
-  new material is connected into it.
-- Insert the new ShaderAssignment into the connection below the previous one.
+3. Create an AppleseedOptions node (_Appleseed_ > _Options_). It will connect automatically to the output of the StandardOptions node and become selected.
 
-![Second shader assignment](images/secondShaderAssignment.png)
+4. Create an Outputs node (_Scene_ > _Globals_ > _Outputs_). It will connect and become selected like the others.
 
-The viewer should update to show the new assignment.
+5. Create an InteractiveAppleseedRender node (_Appleseed_ > _InteractiveRender_).
 
-![Second shader assignment render](images/secondShaderAssignmentRender.png)
+6. Create a Catalogue node (_Image_ > _Utility_ > _Catalogue_). It does not need to be connected to anything. Instead, place it next to the InteractiveAppleseedRender node.
 
-Oops. Because the new ShaderAssignment is downstream from the first one, it has overridden the first assignment, and now _everything_ is chrome. We need a way of limiting the objects that the second ShaderAssignment is applied to - in Gaffer this is referred to as _filtering_ the ShaderAssignment, and it is done using special Filter nodes :
+    ![The render-related nodes](images/graphEditorRenderSettings.png "The render-related nodes")
 
-- Create a PathFilter node (_/Scene/Filters/PathFilter_). This chooses which objects to affect based on their names.
-- Use the NodeEditor to add `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN` to the **Paths**. This is the
-  full name of the left ear of the robot, as you see it listed in the HierarchyView.
-- Connect the output of the PathFilter into the filter input on the right hand side of the ShaderAssignment1 node.
+Briefly, here is the function of each of these nodes:
+- StandardOptions node: Determines the camera, resolution, and blur settings of the scene.
+- AppleseedOptions node: Determines the settings of the Appleseed renderer.
+- Outputs node: Determines what kind of output render will be created.
+- InteractiveAppleseedRender node: An instance of Appleseed's interactive (responsive) renderer.
+- Catalogue node: Global list of images/renders that you can preview within Gaffer. Renders you generate will appear in this node's list.
 
-![Filter connection](images/filterConnection.png)
+In keeping with what we said earlier about nodes passing scenes to other nodes: with the exception of the Catalogue node, each of these render options nodes only apply to the scene delivered to them through their input plugs. If you had another unconnected scene running in parallel, none of these render settings would apply to it.
 
-The render should now update, with the chrome shader applied only to the ear.
+Although the scene contains a camera, you will need to point the StandardOptions node to it:
 
-Editing the filter
-------------------
+1. Select the StandardOptions node.
 
-We might like to apply the chrome shader to more objects, but it'll be a bit tedious to continue entering object names manually as
-we just did. First, let's use Gaffer's pattern matching to pick both ears :
+2. Specify the camera using the _Node Editor:_
+	1. Click the _Camera_ section to expand it.
+	2. Toggle the switch next to the Camera plug to enable it.
+	3. Type `/group/camera` into the plug's field.
 
-- Select the PathFilter node to edit it in the NodeEditor
-- Delete `L_ear001_REN` at the end of the path we entered previously, and replace it with `*_ear*`
+Next, you need to add an image type to render:
 
-The `*` automatically matches any sequence of characters, so the filter will now match the left _and_ the right ears. We're still some way from chromifying everything we want to though, so let's take a look at using a more visual approach.
+1. Select the Outputs node.
 
-- In the Viewer panel, switch to the tab containing the 3d view.
-- Hold down _Alt_ and use the camera navigation controls to frame the face.
-- Select the eyebrows by _Left-Clicking_ on them.
-- Add the mouth to the selection by _Shift + Left-Clicking_ on it.
+2. In the _Node Editor_, click ![the plus button](images/plus.png "Plus") and select _Interactive_ > _Beauty_ from the drop-down menu.
 
-![Face selection](images/faceSelection.png)
+With all the settings complete, start the interactive renderer:
 
-- Start a _Left-Drag_ from the selected objects. The cursor should change to ![Objects Image](images/objects.png) to indicate you are dragging them.
-- Continue the drag into the GraphEditor and hover over the PathFilter node.
-- Hold _Shift_ to indicate that you wish to add to the PathFilter rather than replace the
-  existing contents. The cursor will change from ![Replace Objects](images/replaceObjects.png) to ![Add Objects](images/addObjects.png) to indicate this.
-- Finally, drop the objects to add them to the PathFilter.
+1. Select the InteractiveAppleseedRender node.
 
-Just as objects can be added by holding _Shift_, they can be removed by holding _Control_. With this in mind, we can add and remove objects from the shader assignment to taste, switching tabs to view the rendered image as it updates. After adding the grabbers and bolts to the filter, we should arrive at an image something like the following.
+2. In the _Node Editor_, click ![the play button](images/timelinePlay.png "Play") to start the renderer.
 
-![Final render](images/finalRender.png)
+3. Select the Catalogue node.
 
-Recap
------
+4. Hover the cursor over the _Viewer_ and hit <kbd>F</kbd> to frame the Catalogue node's live image of the interactive render.
 
-There is no doubt still a lot that could be done to improve our render, but alas, at this point your faithful author finds himself at the limits of his meagre artistic ability. We've seen how Gaffer allows caches to be loaded and navigated lazily on demand. We've seen how to create lights and cameras and combine them into a scene for rendering. We've demonstrated how to rearrange the UI for improved interaction, and we've seen how shading networks can be constructed and assigned.
+    ![The first render](images/mainRenderGrey.png "The first render")
 
-Hopefully this provides a solid basis for your own further exploration, which will no doubt be less creatively challenged. You might like to start by exploring the addition of more lights, found in the _/Appleseed/Lights_ node menu, or by creating more expansive shading networks using the shaders found in the _/Appleseed/Shaders_ node menu.
+Congratulations! You have successfully rendered your first image. Gaffy is currently lacking shading, lighting, and texturing. We will move on to those soon. First, you should adjust the UI to provide yourself a more optimal workflow.
 
-[1]: ../../Installation/index.md
-[2]: ../../Reference/NodeReference/GafferScene/SceneReader.md
-[3]: ../../Reference/UIReference/GraphEditor.md
-[4]: ../../Reference/UIReference/Viewer.md
+
+## Pinning an Editor to a Node ##
+
+As mentioned earlier, the _Viewer_, _Scene Hierarchy_, and _Node Editor_ (each an **editor**) show their respective outputs of the currently selected node. This is not always convenient, because often you will need to edit one node while viewing the output of another. You can solve this by **pinning** an editor while a node is selected, which keeps that editor focused on the node.
+
+To make switching between viewing Gaffy's geometry and the render easier, you can modify the UI so you're working with two Viewers. First, start by pinning the last node in the graph that contains the scene:
+
+1. Select the InteractiveAppleseedRender node.
+
+2. Click ![the pin button](images/targetNodesUnlocked.png "Pin button") at the top-right
+  of the top pane. The pin button will highlight: ![highlighted pin](images/targetNodesLocked.png "Highlighted pin").
+
+The _Viewer_ is now locked to the InteractiveAppleseedRender node's scene (which contains all of the parts from its upstream scenes), and will only show that scene, even if you deselect it or select a different node.
+
+Next, pin the same node to the _Scene Hierarchy_. This time, use the middle-click shortcut:
+
+1. Select the InteractiveAppleseedRender node.
+
+2. Middle-click and drag the InteractiveAppleseedRender node from the _Graph Editor_ into the
+  _Scene Hierarchy_.
+
+As with the _Viewer_, the _Scene Hierarchy_ will now remain locked to the output of InteractiveAppleseedRender, regardless of your selection. Now you are free to select any node for editing in the _Node Editor_, but you will always be viewing the final results of the last node in the graph.
+
+For the final adjustment to the UI, create another _Viewer_ in the top-left panel, and pin the Catalogue node to it:
+
+1. At the top-right of the top panel, click ![the layout menu button](images/layoutButton.png "Layout menu button") to open the layout menu.
+
+2. Select _Viewer_. A new _Viewer_ will appear on the panel next to the first one.
+
+3. Middle-click and drag the Catalogue node onto the new _Viewer_. That _Viewer_ is now pinned to that node.
+
+Now you can switch between the scene's geometry (first _Viewer_) and the rendered image (second _Viewer_). Now it is time to shade Gaffy.
+
+
+## Adding Shaders and Lighting ##
+
+It's time to add shaders and lighting. It will help to think of a graph as being composed of three distinct phases: generating the geometry, applying the lighting and shading, and rendering. Lights act like another scene object, so you can group one into the scene like the other nodes. The shaders, however, are different: in order for the render option nodes to apply to the geometry and to inherit the shaders, you will need to add them somewhere between the scene-creating nodes and render options nodes.
+
+
+### Making Some Space ###
+
+Since you will be adding shaders nodes between the scene nodes and the render options nodes, you will first need to add some space in the graph.
+
+To create some empty space in the centre of the graph:
+
+1. Select the lower five nodes by clicking and dragging a marquee over them.
+
+2. Click and drag the nodes to a lower position in the graph.
+
+    ![The graph with some added space](images/mainRenderSettingsWithGap.png "The graph with some added space")
+
+
+### Adding a Shader ###
+
+Now that you have more space, it's time to add some shading nodes:
+
+1. Below and to the left of the Group node, create a Disney Material node (_Appleseed_ > _Shader_ > _Material_ > *As_Disney_Material*).
+
+2. In the _Node Editor_, give the shader some reflective surface properties:
+	- Set the Specular plug to `0.6`.
+	- Set the Roughness plug to `0.35`.
+
+3. With the Disney Material node still selected, create a ShaderAssignment node (_Scene_ > _Attributes_ > _ShaderAssignment_).
+
+4. Click and drag the ShaderAssignment node onto the connector connecting the Group and StandardOptions nodes. The ShaderAssignment_node will be interjected between them.
+
+    ![The ShaderAssignment and Disney Material nodes](images/graphEditorFirstShaderNodes.png "The ShaderAssignment and Disney Material nodes")
+
+Note that the input and output plugs on the Disney Material node flow from left to right. This is because in Gaffer:
+
+> Important :
+> Scenes flow from top to bottom, and shaders flow from left to right.
+
+In your newly shaded graph, the ShaderAssignment node takes the material flowing in from the left and assigns it to Gaffy's geometry flowing in from the top. Now that Gaffy has received a proper material assignment, you will need to light the scene.
+
+
+### Adding an Environment Light ###
+
+Lights, like geometry and cameras, are objects that need to be combined with the main scene. For simplicity, you should add a global environment light:
+
+1. Create a PhysicalSky node (_Appleseed_ > _Environment_ > _PhysicalSky_).
+
+2. Place it next to the Camera node.
+
+3. In the _Node Editor_, adjust the node's angle and brightness:
+	- Set the Sun Phi Angle plug to `100`.
+	- Set the Luminance plug to `2.5`.
+
+4. Connect the PhysicalSky node's _out_ plug to the Group node's _in3_ plug.
+
+![A new environment light node](images/graphEditorEnvironmentLightNode.png "A new environment light node")
+
+For the light to take effect, you will need to enable environment lighting in the AppleseedOptions node:
+
+1. Select the AppleseedOptions node.
+
+2. In the _Node Editor_, expand the _Environment_ section.
+
+3. Toggle the switch next to the Environment Light plug to enable it.
+
+4. Type `/group/light` into the plug's field.
+
+The interactive render will now be in the process of updating, and you will be able to see Gaffy with some basic shaders and lighting.
+
+![The first render with a shader and lighting](images/viewerRenderOneShader.png "The first render with a shader and lighting")
+
+
+### Adding Textures ###
+
+As Gaffy is looking a bit bland, you should assign some textures to the shader:
+
+1. Create an Appleseed Color Texture node (_Appleseed_ > _Shader_ > _Texture2d_ > *As_color_texture*).
+
+2. In the _Node Editor_, point the node to the textures:
+	1. Type `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_` into the _Filename_ value's field.
+	2. Select `mari` from the _UDIM_ drop-down menu.
+
+3. In the _Graph Editor_, connect the AppleSeed Color Texture node's ColorOut plug to the Disney Material node's BaseColor plug. Gaffy's textures will now mix with the shader, and the render will update to show the combined results.
+
+    ![Gaffy with textures](images/viewerRenderTextures.png "Gaffy with textures")
+
+
+### Adding Another Shader ###
+
+With the textures assigned, the surface of all of Gaffy's geometry looks the same, because the material shader is applying to everything. To fix this, you should create an additional metallic shader and apply it selectively to different parts of the geometry.
+
+Begin by creating another shader:
+
+1. Create another Disney Material node.
+
+2. In the _Node Editor_, give the shader some metallic properties:
+	1. Set Metallic to `0.8`
+	2. Set Roughness to `0.4`
+
+3. With the new Disney Material node still selected, create another ShaderAssignment node
+
+4. Click and drag the new ShaderAssignment node onto the connector under the first ShaderAssignment node. The new ShaderAssignment node will come after the fist shader in the graph flow.
+
+    ![A second shader in the Graph Editor](images/graphEditorSecondShaderNodes.png "A second shader in the Graph Editor")
+
+The _Viewer_ will update to show the new shader.
+
+![The second shader, rendered](images/mainRenderTwoShaders.png "The second shader, rendered")
+
+You will immediately notice something is wrong: _all_ the geometry is metallic. The new shader has overridden the previous one. This is because:
+
+> Important :
+> The last ShaderAssignment node applied to geometry in a scene takes precedence over all others.
+
+### Filtering a Shader ###
+
+In order to selectively apply a shader to only certain parts of the scene's geometry, you will need to **filter** the shader assignment, using a filter node that selects parts of a scene by name:
+
+1. Create a PathFilter node (_Scene_ > _Filters_ > _PathFilter_).
+
+2. In the _Node Editor_, click ![the plus button](images/plus.png "Plus") next to _Paths_. This will add a new text field.
+
+3. Double-click the text field and type `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN`. This is the full path to Gaffy's left ear.
+
+4. Connect the PathFilter node's _out_ plug to the filter input on the right hand side of the ShaderAssignment1 node's filter plug (yellow; on the right).
+
+    ![The connected PathFilter node](images/graphEditorPathFilterNode.png "The connected PathFilter node")
+
+Now when you check the render, you will see that the chrome shader is only applied to Gaffy's left ear. There are many other parts of Gaffy that could use the chrome treatment, but it would be tedious for you to manually enter multiple locations. There are two ways you can more easily add geometry to the filter: using text wildcards, and interacting directly with the geometry.
+
+
+#### Filtering Using Wildcards ####
+
+A wildcard tells text interpreters to take a value of any length where there is an asterisk `*`. They are useful if you know part of a path, but don't want to have to look up or type it in its entirety. Earlier, you used `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN`, which only pointed to the left ear. You could apply the filter to _both_ ears by adding wildcards to the `/L_ear001_REN` location in the path.
+
+To use a wildcard in the path filter:
+
+1. Select the PathFilter node.
+
+2. In the _Node Editor_, double-click the path field you created earlier, and change it to `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/*_ear*`. The filter will now match the left and the right ears.
+
+
+#### Filtering by Dragging Selections ####
+
+As your final operation, add the metallic shader to the rest of the appropriate parts of Gaffy. This time, you can add to the path filter using a visual method:
+
+1. In the top panel, switch to the _Viewer_ containing the 3D geometry view.
+2. Zoom and pan to Gaffy's face.
+3. Click the eyebrows to select them.
+4. <kbd>Shift</kbd> + click the mouth to add it to the selection.
+
+    ![The face, with selection](images/viewerSelectionFace.png "The face, with selection")
+
+5. Click and drag the selection (the cursor will change to ![the "replace objects" icon](images/replaceObjects.png "Replace objects")), and hold it over the PathFilter node without releasing.
+
+6. While still dragging, hold <kbd>Shift</kbd> (the cursor will change to ![the "add objects" icon](images/addObjects.png "Add objects")). You are now adding to the path, rather than replacing it.
+
+7. Release the selection over the PathFilter node. This will add the geometry as new path fields to the node.
+
+Just as geometry can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Control</kbd> (the cursor will change to ![the "remove objects" icon](images/removeObjects.png "Remove objects")). With this in mind, you can add and remove geometry from path filter as you see fit. Remember to switch between the _Viewer_ editors to check the render output as it updates. After adding Gaffy's hands and bolts to the filter, you should achieve an image similar to this:
+
+![The final render](images/viewerRenderFinal.png "The final render")
+
+
+## Recap ##
+
+Congratulations! You've built and rendered your first scene in Gaffer.
+
+You should now have a basic understanding of Gaffer's interface, how a script should flow, how to manipulate the scene, and how to add geometry, lights, textures, and shaders.
+
+You should now have a solid basis for further learning and exploration.
+
+
+<!-- ## See Also ## -->
+
+<!-- TODO: - [Installing Gaffer](../GettingStarted/InstallingGaffer/index.md) -->
+<!-- TODO: - [Launching Gaffer for the first time]<!-- TODO: (../GettingStarted/LaunchingGafferFirstTime/index.md) -->
+<!-- TODO: - [Setting up the "Gaffer" command](../GettingStarted/SettingUpGafferCommand/index.md) -->
+<!-- TODO: - [Tutorial: LookDev](../IntermediateTutorial/index.md) -->
+<!-- TODO: - [Graph flow](../../UnderstandingTheNodeGraph/GraphFlow/NodeTypes/index.md) -->
+<!-- TODO: - [Node types](../../UnderstandingTheNodeGraph/GraphFlow/GraphFlow/index.md) -->
+<!-- TODO: - [Manipulating the scene hierarchy](../../WorkingWithScenes/ManipulatingSceneHierarchy/index.md) -->
