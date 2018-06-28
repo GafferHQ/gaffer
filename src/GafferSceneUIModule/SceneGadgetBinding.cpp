@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,23 +36,55 @@
 
 #include "boost/python.hpp"
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
 #include "SceneGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
 
-using namespace GafferSceneUIModule;
+#include "GafferSceneUI/SceneGadget.h"
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+#include "GafferUIBindings/GadgetBinding.h"
+
+using namespace boost::python;
+using namespace IECorePython;
+using namespace GafferSceneUI;
+
+namespace
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
+GafferScene::ScenePlugPtr getScene( SceneGadget &g )
+{
+	return const_cast<GafferScene::ScenePlug *>( g.getScene() );
+}
+
+IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegment3f &l )
+{
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
+	if( g.objectAt( l, result->writable() ) )
+	{
+		return result;
+	}
+	return nullptr;
+}
+
+} // namespace
+
+void GafferSceneUIModule::bindSceneGadget()
+{
+
+	GafferUIBindings::GadgetClass<SceneGadget>()
+		.def( init<>() )
+		.def( "setScene", &SceneGadget::setScene )
+		.def( "getScene", &getScene )
+		.def( "setContext", &SceneGadget::setContext )
+		.def( "getContext", (Gaffer::Context *(SceneGadget::*)())&SceneGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setExpandedPaths", &SceneGadget::setExpandedPaths )
+		.def( "getExpandedPaths", &SceneGadget::getExpandedPaths, return_value_policy<copy_const_reference>() )
+		.def( "setMinimumExpansionDepth", &SceneGadget::setMinimumExpansionDepth )
+		.def( "getMinimumExpansionDepth", &SceneGadget::getMinimumExpansionDepth )
+		.def( "baseState", &SceneGadget::baseState, return_value_policy<CastToIntrusivePtr>() )
+		.def( "objectAt", &objectAt )
+		.def( "objectsAt", &SceneGadget::objectsAt )
+		.def( "setSelection", &SceneGadget::setSelection )
+		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )
+		.def( "selectionBound", &SceneGadget::selectionBound )
+	;
 
 }
