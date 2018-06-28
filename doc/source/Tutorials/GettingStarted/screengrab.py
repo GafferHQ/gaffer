@@ -1,4 +1,4 @@
-# BuildTarget: images/defaultLayout.png
+# BuildTarget: images/mainDefaultLayout.png
 
 import os
 import time
@@ -14,84 +14,111 @@ import GafferUI
 import GafferSceneUI
 
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
-GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/defaultLayout.png" )
+viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
+graphEditor = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
+hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.SceneHierarchy )[0]
 
+# Delay for x seconds
+def __delay( delay ) :
+	endtime = time.time() + delay
+	while time.time() < endtime :
+		GafferUI.EventLoop.waitForIdle( 1 )
+
+# Default layout in main window
+GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainDefaultLayout.png" )
+
+# Empty SceneReader node in Viewer
 script["SceneReader"] = GafferScene.SceneReader()
-script.selection().add( script["SceneReader"] )
-GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/emptySceneReader.png" )
+readerNode = script["SceneReader"]
+script.selection().add( readerNode )
+GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainSceneReaderNode.png" )
 
 script["SceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
-viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
 viewer.view().viewportGadget().frame( script["SceneReader"]["out"].bound( "/" ) )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/sceneReaderBound.png" )
 
+# GafferBot bounding box in Viewer
+readerNode["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
+viewer.view().viewportGadget().frame( readerNode["out"].bound( "/" ) )
+GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/viewerSceneReaderBounding.png" )
+
+# GafferBot torso in Hierarchy View
 GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/GAFFERBOT", "/GAFFERBOT/C_torso_GRP" ] ) )
 hierarchy = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
-GafferUI.EventLoop.waitForIdle()
-GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/hierarchyViewExpandedTwoLevels.png" )
+__delay( 0.1 )
+GafferUI.WidgetAlgo.grab( widget = hierarchyView, imagePath = "images/hierarchySceneExpandedTwoLevels.png" )
 
+# GafferBot head and left leg in main window
 paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
+GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
-GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/headAndLegExpanded.png" )
+GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainHeadAndLeftLegExpanded.png" )
 
+# GafferBot head and both legs in Viewer
 paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/R_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
+GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
-GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/headAndLegsExpanded.png" )
+GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerHeadAndLegsExpanded.png" )
 
+# GafferBot full in main window
 paths = IECore.PathMatcher( [ "/" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
+GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "" ] ) )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/fullyExpanded.png" )
+#GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainSceneFullyExpanded.png" )
 
+# Camera and SceneReader node in main window
 script["Camera"] = GafferScene.Camera()
+cameraNode = script["Camera"]
 script.selection().clear()
 script.selection().add( script["Camera"] )
+script.selection().add( cameraNode )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
-GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/camera.png" )
+GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainCameraNode.png" )
 
+# Grouped nodes in Gaffer
 script["Group"] = GafferScene.Group()
-script["Group"]["in"][0].setInput( script["SceneReader"]["out"] )
-script["Group"]["in"][1].setInput( script["Camera"]["out"] )
+groupNode = script["Group"]
+groupNode["in"][0].setInput( readerNode["out"] )
+groupNode["in"][1].setInput( cameraNode["out"] )
 script.selection().clear()
-script.selection().add( script["Group"] )
+script.selection().add( groupNode )
 viewer.view()["minimumExpansionDepth"].setValue( 999 )
 GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
 paths = IECore.PathMatcher( [ "/group" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
-GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/group.png" )
+GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainGroupNode.png" )
 
-script['Camera']['transform']['translate'].setValue( imath.V3f( 19, 13, 31 ) )
-script['Camera']['transform']['rotate'].setValue( imath.V3f( 0, 30, 0 ) )
-cameraEditor = GafferUI.NodeEditor.acquire( script["Camera"], floating=True )
-GafferUI.PlugValueWidget.acquire( script['Camera']['transform'] )
-GafferUI.WidgetAlgo.grab( widget = cameraEditor, imagePath = "images/cameraTransform.png" )
-del cameraEditor
+# Camera node in Node Editor window
+cameraNode["transform"]["translate"].setValue( imath.V3f( 19, 13, 31 ) )
+cameraNode["transform"]["rotate"].setValue( imath.V3f( 0, 30, 0 ) )
+nodeEditorWindow = GafferUI.NodeEditor.acquire( cameraNode, floating=True )
+nodeEditorWindow._qtWidget().setFocus()
+GafferUI.PlugValueWidget.acquire( cameraNode["transform"] )
+GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/nodeEditorWindowCameraTransform.png" )
+del nodeEditorWindow
 
+# Render settings graph in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettings.gfr" ) )
 script.load()
 script.selection().add( script["Catalogue"] )
-graph = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
-graph.frame( script.children( Gaffer.Node ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/renderSettings.png" )
+graphEditor.frame( script.children( Gaffer.Node ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorRenderSettings.png" )
 
+# GafferBot render without lighting in main window
 def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 
 	script["variables"]["imageCataloguePort"]["value"].setValue( script["Catalogue"].displayDriverServer().portNumber() )
 	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Running )
-
-	# delay so it can render
-	t = time.time() + delay
-	while time.time() < t :
-		GafferUI.EventLoop.waitForIdle( 1 )
+	__delay( delay )
 
 	viewport = scriptWindow.getLayout().editors( GafferUI.Viewer )[0].view().viewportGadget()
 	viewport.frame( viewport.getPrimaryChild().bound() )
@@ -100,67 +127,73 @@ def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 	GafferUI.WidgetAlgo.grab( widget = widget, imagePath = imagePath )
 	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Stopped )
 
-__renderAndGrab( script, scriptWindow, "images/firstRender.png", delay = 1 )
+__renderAndGrab( script, scriptWindow, "images/mainRenderGrey.png", delay = 1 )
 
+# Render settings with gap in main window
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettingsWithGap.gfr" ) )
 script.load()
 script.selection().add( [ script["StandardOptions"], script["AppleseedOptions"], script["Outputs"], script["InteractiveAppleseedRender"], script["Catalogue"] ] )
-graph.frame( script.children( Gaffer.Node ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/renderSettingsWithGap.png" )
+graphEditor.frame( script.children( Gaffer.Node ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/mainRenderSettingsWithGap.png" )
 
+# First shader assignment in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/firstShaderAssignment.gfr" ) )
 script.load()
 script.selection().add( script["ShaderAssignment"] )
-graph.frame( script.children( Gaffer.Node ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/firstShaderAssignment.png" )
+graphEditor.frame( script.children( Gaffer.Node ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorFirstShaderNodes.png" )
 
+# Environment light in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/firstLight.gfr" ) )
 script.load()
-script.selection().add( script["Parent"] )
-graph.frame( Gaffer.StandardSet( [ script["Group"], script["Parent"], script["hosek_environment_edf"] ] ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/parentingGraphEditor.png" )
+script.selection().add( script["hosek_environment_edf"] )
+graphEditor.frame( Gaffer.StandardSet( [ script["Group"], script["hosek_environment_edf"] ] ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorEnvironmentLightNode.png" )
 
-paths = IECore.PathMatcher( [ "/", "/group" ] )
-GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/parentingHierarchyView.png" )
-
+# GafferBot render with lighting in Viewer
 script.selection().clear()
 script.selection().add( script["Catalogue"] )
-__renderAndGrab( script, viewer, "images/firstLighting.png" )
+__renderAndGrab( script, viewer, "images/viewerRenderOneShader.png" )
 
+# GafferBot render with lighting and textures in Viewer
 script["fileName"].setValue( os.path.abspath( "scripts/textures.gfr" ) )
 script.load()
 script.selection().add( script["Catalogue"] )
-__renderAndGrab( script, viewer, "images/textures.png" )
+__renderAndGrab( script, viewer, "images/viewerRenderTextures.png" )
 
+# Second shader assignment in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/secondShaderAssignment.gfr" ) )
 script.load()
 script.selection().add( script["ShaderAssignment1"] )
-graph.frame( Gaffer.StandardSet( [ script["as_disney_material"], script["as_disney_material1"], script["ShaderAssignment"], script["ShaderAssignment1"] ] ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/secondShaderAssignment.png" )
+graphEditor.frame( Gaffer.StandardSet( [ script["as_disney_material"], script["as_disney_material1"], script["ShaderAssignment"], script["ShaderAssignment1"] ] ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorSecondShaderNodes.png" )
 
+# GafferBot render with second shader assignment in main window
 script.selection().clear()
 script.selection().add( script["Catalogue"] )
-graph.frame( script.children( Gaffer.Node ) )
-__renderAndGrab( script, scriptWindow, "images/secondShaderAssignmentRender.png" )
+graphEditor.frame( script.children( Gaffer.Node ) )
+__renderAndGrab( script, scriptWindow, "images/mainRenderTwoShaders.png" )
 
+# PathFilter node in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/secondShaderAssignmentFiltered.gfr" ) )
 script.load()
 script.selection().add( script["PathFilter"] )
-graph.frame( Gaffer.StandardSet( [ script["PathFilter"], script["ShaderAssignment1"] ] ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/filterConnection.png" )
+graphEditor.frame( Gaffer.StandardSet( [ script["PathFilter"], script["ShaderAssignment1"] ] ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorPathFilterNode.png" )
 
+# GafferBot node and mouth selection in Viewer
 script.selection().clear()
 script.selection().add( script["ShaderAssignment1"] )
 paths = IECore.PathMatcher( [ "/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/C_browNose001_REN", "/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/C_mouthGrill001_REN" ] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
 GafferUI.EventLoop.waitForIdle()
 paths = IECore.PathMatcher( [ "/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT" ] )
-viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 viewer.view().frame( paths, direction = imath.V3f( -0.2, -0.2, -1 ) )
-GafferUI.EventLoop.waitForIdle( 10 )
-GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/faceSelection.png" )
+__delay( 0.1 )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
+GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerSelectionFace.png" )
 
+# GafferBot final render in Viewer
 script.selection().clear()
 script.selection().add( script["Catalogue"] )
-__renderAndGrab( script, viewer, "images/finalRender.png" )
+__renderAndGrab( script, viewer, "images/viewerRenderFinal.png" )
