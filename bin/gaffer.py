@@ -38,12 +38,8 @@
 
 import os
 import sys
-import ctypes
 import signal
 import warnings
-
-# Work around cross module rtti errors on linux.
-sys.setdlopenflags( sys.getdlopenflags() | ctypes.RTLD_GLOBAL )
 
 # Get rid of the annoying signal handler which turns Ctrl-C into a KeyboardInterrupt exception
 signal.signal( signal.SIGINT, signal.SIG_DFL )
