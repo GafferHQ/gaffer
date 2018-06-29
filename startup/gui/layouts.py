@@ -47,7 +47,6 @@ layouts.registerEditor( "GraphEditor" )
 layouts.registerEditor( "HierarchyView" )
 layouts.registerEditor( "SceneInspector" )
 layouts.registerEditor( "ScriptEditor" )
-layouts.registerEditor( "Browser" )
 layouts.registerEditor( "Timeline" )
 layouts.registerEditor( "UIEditor" )
 
