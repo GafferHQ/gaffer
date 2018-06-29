@@ -708,6 +708,7 @@ void ViewportGadget::setCameraTransform( const Imath::M44f &transform )
 	}
 	m_cameraController->setTransform( transform );
 	m_cameraChangedSignal( this );
+	requestRender();
 }
 
 ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
