@@ -56,7 +56,7 @@ class BrowserEditor( GafferUI.Editor ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 6 ) :
 
-				GafferUI.Label( "Location" )
+				GafferUI.Label( "Mode" )
 
 				modeMenu = GafferUI.MultiSelectionMenu(
 					allowMultipleSelection = False,
