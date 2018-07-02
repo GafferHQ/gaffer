@@ -1006,9 +1006,13 @@ void Instancer::instanceChildNamesHash( const ScenePath &parentPath, const Gaffe
 Instancer::InstanceScope::InstanceScope( const Gaffer::Context *context, const ScenePath &branchPath )
 	:	EditableScope( context )
 {
-	assert( branchPath.size() >= 3 );
-	ScenePath instancePath; instancePath.reserve( branchPath.size() - 2 );
+	assert( branchPath.size() >= 2 );
+	ScenePath instancePath;
+	instancePath.reserve( 1 + ( branchPath.size() > 3 ? branchPath.size() - 3 : 0 ) );
 	instancePath.push_back( branchPath[1] );
-	instancePath.insert( instancePath.end(), branchPath.begin() + 3, branchPath.end() );
+	if( branchPath.size() > 3 )
+	{
+		instancePath.insert( instancePath.end(), branchPath.begin() + 3, branchPath.end() );
+	}
 	set( ScenePlug::scenePathContextName, instancePath );
 }
