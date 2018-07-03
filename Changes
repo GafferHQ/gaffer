@@ -27,6 +27,7 @@ Features
 Improvements
 ------------
 
+- Documentation : Improved structure and presentation (#2612, #2613, #2616, #2619, #2625, #2628, #2631).
 - Appleseed (#2570) :
   - Added support for pixel_time AOV.
   - Added denoiser options to AppleseedOptions node.
@@ -49,9 +50,14 @@ Improvements
 Fixes
 -----
 
-- Metadata (#2582) :
-  - Fixed GIL management bug.
-  - Fixed crash if `None` is passed to `registerValue()`.
+- Viewer :
+  - Fixed display of nested lights in look-through menu (#2615).
+  - Fixed selection after expanding the selected locations (#2617).
+- Metadata :
+  - Fixed GIL management bug (#2582).
+  - Fixed crash if `None` is passed to `registerValue()` (#2582).
+  - Fixed bindings for change signals (#2610).
+- ContextAlgo : Fixed GIL management (#2618).
 - SubGraph : Fixed crash in `correspondingInput()`. This manifested itself as crashes in
   the NodeGraph when dragging a Box with an unconnected BoxOut node over a connection (#2583).
 - TractorDispatcher : Fixed bug handling nodes like TaskList and FrameMask nodes, that don't
@@ -65,6 +71,8 @@ Fixes
 - LocalDispatcher : Fixed exception handling during foreground dispatch. Exceptions from
   Tasks are now propagated back to the caller instead of being suppressed (#2588).
 - Appleseed : Disabled SPPM for interactive renders (#2570).
+- Catalogue : Fixed bug where orphaned Catalogue tried to save an image (#2621).
+- ViewportGadget : Fixed `setCameraTransform()` to trigger a rerender (#2639).
 
 API
 ---
@@ -74,11 +82,20 @@ API
   - Added `dispatchSignal()` (#2574).
   - Improved signal exception handling (#2574).
   - Added `deregisterDispatcher()` static method (#2588).
+  - Removed "frame" variable from TaskBatch contexts. This means it is no longer
+    available to PythonCommand code in sequence mode (#2608).
 - Outputs : Added `deregisterOutput()` method (#2581).
 - GafferUI : Added new BackgroundMethod decorator to assist in performing processing in
   background threads (#2578).
 - ShadingEngine : Added `hash()` method (#2586).
-- PlugLayout : Added `embedded` constructor argument (#2599).
+- PlugLayout :
+  - Added `embedded` constructor argument (#2599).
+  - Added "<layoutName>:width" metadata support
+- Editor : Added `instanceCreatedSignal()` method. This can be used to customise the
+  standard editors immediately after they've been created (#2605).
+- BusyWidget : Added `setBusy()` and `getBusy()` methods (#2604).
+- ImageGadget : Added `setPaused()/getPaused()` and `state()` methods (#2604).
+- ScriptEditor : Added `outputWidget()` accessor (#2622).
 
 Build
 -----
@@ -88,6 +105,7 @@ Build
 - Updated OpenShadingLanguage version to 1.9.9.
 - Updated GLEW version to 2.1.0.
 - Updated Cortex version to 10.0.0-a25.
+- Improved documentation build process (#2622).
 
 Breaking Changes
 ----------------
@@ -98,6 +116,8 @@ Breaking Changes
   - Added new arguments to constructor and `enact()`.
   - Added new data member.
   - Source compatibility is retained.
+- EditorWidget : Renamed to Editor (#2605).
+- BackgroundTask : Replaced `done()` method with `status()`.
 
 0.46.1.0
 ========
