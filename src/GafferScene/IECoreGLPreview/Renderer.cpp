@@ -36,6 +36,9 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
+#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/ColorTexture.h"
 #include "IECoreGL/CurvesPrimitive.h"
@@ -75,6 +78,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreGL;
+using namespace IECoreGLPreview;
 
 //////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -147,6 +151,15 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_state = static_pointer_cast<const State>(
 				CachedConverter::defaultCachedConverter()->convert( attributes )
 			);
+
+			IECoreGL::ConstStatePtr visualisationState;
+			m_visualisation = AttributeVisualiser::allVisualisations( attributes, visualisationState );
+			if( visualisationState )
+			{
+				StatePtr combinedState = new State( *m_state );
+				combinedState->add( const_cast<State *>( visualisationState.get() ) );
+				m_state = combinedState;
+			}
 		}
 
 		const State *state() const
@@ -154,9 +167,15 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_state.get();
 		}
 
+		const IECoreGL::Renderable *visualisation() const
+		{
+			return m_visualisation.get();
+		}
+
 	private :
 
 		ConstStatePtr m_state;
+		IECoreGL::ConstRenderablePtr m_visualisation;
 
 };
 
@@ -176,10 +195,29 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		OpenGLObject( const std::string &name, const IECoreGL::ConstRenderablePtr &renderable )
-			:	m_renderable( renderable )
+		OpenGLObject( const std::string &name, const IECore::Object *object )
 		{
 			IECore::StringAlgo::tokenize( name, '/', m_name );
+
+			if( object )
+			{
+				if( const ObjectVisualiser *visualiser = IECoreGLPreview::ObjectVisualiser::acquire( object->typeId() ) )
+				{
+					m_renderable = visualiser->visualise( object );
+				}
+				else
+				{
+					try
+					{
+						IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( object );
+						m_renderable = IECore::runTimeCast<const IECoreGL::Renderable>( glObject.get() );
+					}
+					catch( ... )
+					{
+						// Leave m_renderable as null
+					}
+				}
+			}
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -200,7 +238,22 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		Box3f transformedBound() const
 		{
-			return Imath::transform( m_renderable->bound(), m_transform );
+			Box3f b;
+			if( m_renderable )
+			{
+				b.extendBy( m_renderable->bound() );
+			}
+			if( m_attributes->visualisation() )
+			{
+				b.extendBy( m_attributes->visualisation()->bound() );
+			}
+
+			if( b.isEmpty() )
+			{
+				return b;
+			}
+
+			return Imath::transform( b, m_transform );
 		}
 
 		const vector<InternedString> &name() const
@@ -225,7 +278,15 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			IECoreGL::State::ScopedBinding scope( *m_attributes->state(), *currentState );
 			IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, selected( selection ) );
 
-			m_renderable->render( currentState );
+			if( m_renderable )
+			{
+				m_renderable->render( currentState );
+			}
+
+			if( m_attributes->visualisation() )
+			{
+				m_attributes->visualisation()->render( currentState );
+			}
 
 			if( haveTransform )
 			{
@@ -253,12 +314,13 @@ IE_CORE_FORWARDDECLARE( OpenGLObject )
 namespace
 {
 
-class OpenGLCamera : public IECoreScenePreview::Renderer::ObjectInterface
+class OpenGLCamera : public OpenGLObject
 {
 
 	public :
 
-		OpenGLCamera( const IECoreScene::Camera *camera )
+		OpenGLCamera( const std::string &name, const IECoreScene::Camera *camera )
+			:	OpenGLObject( name, camera )
 		{
 			if( camera )
 			{
@@ -273,18 +335,8 @@ class OpenGLCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const Imath::M44f &transform ) override
 		{
+			OpenGLObject::transform( transform );
 			m_camera->setTransform( transform );
-		}
-
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
-		{
-			transform( samples.front() );
-		}
-
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
-		{
-			m_attributes = static_cast<const OpenGLAttributes *>( attributes );
-			return true;
 		}
 
 		const IECoreGL::Camera *camera() const
@@ -295,7 +347,6 @@ class OpenGLCamera : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		IECoreGL::CameraPtr m_camera;
-		ConstOpenGLAttributesPtr m_attributes;
 
 };
 
@@ -393,28 +444,23 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
-			OpenGLCameraPtr result = new OpenGLCamera( camera );
+			OpenGLCameraPtr result = new OpenGLCamera( name, camera );
 			result->attributes( attributes );
-			m_editQueue.push( [this, result, name]() { m_cameras[name] = result; } );
+			m_editQueue.push( [this, result, name]() {
+				m_objects.push_back( result );
+				m_cameras[name] = result;
+			} );
 			return result;
 		}
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::light", "Lights are not implemented" );
-			return nullptr;
+			return this->object( name, object, attributes );
 		}
 
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			IECoreGL::ConstRenderablePtr renderable = runTimeCast<const IECoreGL::Renderable>(
-				CachedConverter::defaultCachedConverter()->convert( object )
-			);
-			if( !renderable )
-			{
-				return nullptr;
-			}
-			OpenGLObjectPtr result = new OpenGLObject( name, renderable );
+			OpenGLObjectPtr result = new OpenGLObject( name, object );
 			result->attributes( attributes );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
@@ -524,7 +570,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				camera = new OpenGLCamera( nullptr );
+				camera = new OpenGLCamera( "/defaultCamera", nullptr );
 			}
 
 			const V2i resolution = camera->camera()->getResolution();
