@@ -373,6 +373,15 @@ class _WindowEventFilter( QtCore.QObject ) :
 		elif type==QtCore.QEvent.Resize :
 			widget = GafferUI.Widget._owner( qObject )
 			widget._Window__sizeValid = True
+		elif type==QtCore.QEvent.Move :
+			widget = GafferUI.Widget._owner( qObject )
+			if hasattr( widget, "_lastPosition" ) and widget._lastPosition is not None :
+				widget.setPosition( widget._lastPosition )
+				widget._lastPosition = None
+		elif type==QtCore.QEvent.Hide :
+			widget = GafferUI.Widget._owner( qObject )
+			if widget :
+				widget._lastPosition = widget.getPosition()
 
 		return False
 
