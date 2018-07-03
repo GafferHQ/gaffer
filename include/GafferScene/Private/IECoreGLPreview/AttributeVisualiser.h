@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,62 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "VisualiserBinding.h"
+#ifndef IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
+#define IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
 
-#include "GafferSceneUI/LightVisualiser.h"
-#include "GafferSceneUI/StandardLightVisualiser.h"
+#include "GafferScene/Export.h"
 
-#include "IECorePython/RefCountedBinding.h"
+#include "IECoreGL/Renderable.h"
 
-using namespace GafferSceneUI;
+#include "IECore/CompoundObject.h"
 
-void GafferSceneUIModule::bindVisualisers()
+namespace IECoreGLPreview
 {
 
-	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
-		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )
-		.staticmethod( "registerLightVisualiser" )
-	;
+IE_CORE_FORWARDDECLARE( AttributeVisualiser )
 
-	IECorePython::RefCountedClass<StandardLightVisualiser, LightVisualiser>( "StandardLightVisualiser" )
-	;
+class GAFFERSCENE_API AttributeVisualiser : public IECore::RefCounted
+{
 
-}
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiser )
+		~AttributeVisualiser() override;
+
+		virtual IECoreGL::ConstRenderablePtr visualise(
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		) const = 0;
+
+		/// Registers an attribute visualiser
+		static void registerVisualiser( ConstAttributeVisualiserPtr visualiser );
+
+		/// Get all registered visualisations for the given attributes, by returning a renderable
+		/// group and some extra state. The return value value and/or the state may left null if
+		/// no registered visualisers do anything with these attributes
+		static IECoreGL::ConstRenderablePtr allVisualisations(
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		);
+
+	protected :
+
+		AttributeVisualiser();
+
+		template<typename VisualiserType>
+		struct AttributeVisualiserDescription
+		{
+
+			AttributeVisualiserDescription()
+			{
+				registerVisualiser( new VisualiserType );
+			}
+
+		};
+};
+
+IE_CORE_DECLAREPTR( AttributeVisualiser )
+
+} // namespace IECoreGLPreview
+
+#endif // IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "VisualiserBinding.h"
+#include "IECoreGLPreviewBinding.h"
 
-#include "GafferSceneUI/LightVisualiser.h"
-#include "GafferSceneUI/StandardLightVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 
 #include "IECorePython/RefCountedBinding.h"
 
-using namespace GafferSceneUI;
+using namespace IECoreGLPreview;
+using namespace boost::python;
 
-void GafferSceneUIModule::bindVisualisers()
+void GafferSceneModule::bindIECoreGLPreview()
 {
+	object module( borrowed( PyImport_AddModule( "GafferScene.IECoreScenePreview" ) ) );
+	scope().attr( "IECoreScenePreview" ) = module;
+	scope moduleScope( module );
 
-	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
-		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )
-		.staticmethod( "registerLightVisualiser" )
+	IECorePython::RefCountedClass<ObjectVisualiser, IECore::RefCounted>( "ObjectVisualiser" )
+		.def( "registerVisualiser", &ObjectVisualiser::registerVisualiser )
+		.staticmethod( "registerVisualiser" )
 	;
 
-	IECorePython::RefCountedClass<StandardLightVisualiser, LightVisualiser>( "StandardLightVisualiser" )
+	IECorePython::RefCountedClass<AttributeVisualiser, IECore::RefCounted>( "AttributeVisualiser" )
+		.def( "registerVisualiser", &AttributeVisualiser::registerVisualiser )
+		.staticmethod( "registerVisualiser" )
+		.def( "allVisualisations", &AttributeVisualiser::allVisualisations )
+		.staticmethod( "allVisualisations" )
 	;
-
 }

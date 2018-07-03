@@ -36,7 +36,7 @@
 
 #include "IECoreVDB/VDBObject.h"
 
-#include "GafferSceneUI/ObjectVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -51,7 +51,7 @@
 
 using namespace std;
 using namespace Imath;
-using namespace GafferSceneUI;
+using namespace IECoreGLPreview;
 using namespace IECoreScene;
 using namespace IECoreVDB;
 

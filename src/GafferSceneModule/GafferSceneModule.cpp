@@ -42,6 +42,7 @@
 #include "FilterBinding.h"
 #include "GlobalsBinding.h"
 #include "HierarchyBinding.h"
+#include "IECoreGLPreviewBinding.h"
 #include "IOBinding.h"
 #include "TweaksBinding.h"
 #include "MixinBinding.h"
@@ -82,5 +83,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindTweaks();
 	bindIO();
 	bindMixin();
+	bindIECoreGLPreview();
 
 }
