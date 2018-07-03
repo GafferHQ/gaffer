@@ -1533,7 +1533,7 @@ class _PlugEditor( GafferUI.Widget ) :
 							_Label( m.label )
 							self.__metadataWidgets[m.key] = m.metadataWidgetType( key = m.key )
 
-			with GafferUI.Collapsible( "Node Graph", collapsed = True ) :
+			with GafferUI.Collapsible( "Graph Editor", collapsed = True ) :
 
 				with GafferUI.ListContainer( spacing = 4 ) as self.__graphEditorSection :
 

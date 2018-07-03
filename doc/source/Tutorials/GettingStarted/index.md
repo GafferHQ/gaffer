@@ -65,7 +65,7 @@ One of the key features that allows Gaffer to deal with highly complex scenes is
 
 We can now see the basic structure of the model coming into view.
 
-![HierarchyView Expanded Two Levels](images/HierarchyViewExpandedTwoLevels.png)
+![HierarchyView Expanded Two Levels](images/hierarchyViewExpandedTwoLevels.png)
 
 It would be tedious to expand the whole scene location by location like this, so let's speed things along a little :
 
@@ -308,7 +308,7 @@ This node outputs a new scene containing a single light. As we did before with t
 
 We should have successfully inserted the light into the scene hierarchy, without affecting the structure of the rest of the scene.
 
-![Parenting Scene Hierarchy](images/parentingHierarchyView.png)
+![Parenting Hierarchy View](images/parentingHierarchyView.png)
 
 Now we need to enable environment lighting in Appleseed for our light to take effect.
 
