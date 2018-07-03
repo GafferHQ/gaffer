@@ -285,6 +285,9 @@ IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( 
 			case BoolDataTypeId :
 				color = Color3f( static_cast<const BoolData *>( attribute )->readable() );
 				break;
+			case Color3fDataTypeId :
+				color = static_cast<const Color3fData *>( attribute )->readable();
+				break;
 			default :
 				throw IECore::Exception( boost::str(
 					boost::format( "Unsupported attribute data type \"%s\"" ) % attribute->typeName()
