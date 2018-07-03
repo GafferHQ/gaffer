@@ -63,6 +63,45 @@ using namespace GafferScene;
 namespace
 {
 
+/// \todo Move to IECore module
+struct CompoundDataMapFromDict
+{
+
+	CompoundDataMapFromDict()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<IECore::CompoundDataMap>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		if( PyDict_Check( obj ) )
+		{
+			return obj;
+		}
+		return nullptr;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		void *storage = ( (converter::rvalue_from_python_storage<IECore::CompoundDataMap>*) data )->storage.bytes;
+		IECore::CompoundDataMap *map = new( storage ) IECore::CompoundDataMap();
+		data->convertible = storage;
+
+		dict d( borrowed( obj ) );
+		list items = d.items();
+		for( unsigned i = 0, e = boost::python::len( items ); i < e; ++i )
+		{
+			IECore::InternedString k = extract<IECore::InternedString>( items[i][0] );
+			(*map)[k] = extract<IECore::DataPtr>( items[i][1] );
+		}
+	}
+
+};
+
 ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 {
 	return r.getContext();
@@ -228,8 +267,11 @@ void GafferSceneModule::bindRender()
 
 			.def( "render", &Renderer::render )
 			.def( "pause", &Renderer::pause )
+			.def( "command", &Renderer::command )
 
 		;
+
+		CompoundDataMapFromDict();
 
 		IECorePython::RunTimeTypedClass<IECoreScenePreview::Procedural, ProceduralWrapper>()
 			.def( init<>() )

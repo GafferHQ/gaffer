@@ -36,6 +36,8 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
+#include "IECore/Exception.h"
+
 using namespace std;
 using namespace IECoreScenePreview;
 
@@ -75,6 +77,11 @@ Renderer::Renderer()
 Renderer::~Renderer()
 {
 
+}
+
+IECore::DataPtr Renderer::command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters )
+{
+	throw IECore::NotImplementedException( "Renderer::command" );
 }
 
 Renderer::AttributesInterface::~AttributesInterface()

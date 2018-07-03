@@ -266,6 +266,9 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// that edits may be made.
 		virtual void pause() = 0;
 
+		/// Performs an arbitrary renderer-specific action.
+		virtual IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() );
+
 	protected :
 
 		Renderer();
