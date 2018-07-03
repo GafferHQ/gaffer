@@ -73,6 +73,7 @@ using namespace GafferSceneUI;
 
 SceneGadget::SceneGadget()
 	:	Gadget( defaultName<SceneGadget>() ),
+		m_paused( false ),
 		m_renderer( IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ) ),
 		m_controller( nullptr, nullptr, m_renderer ),
 		m_renderRequestPending( false ),
@@ -137,6 +138,49 @@ void SceneGadget::setMinimumExpansionDepth( size_t depth )
 size_t SceneGadget::getMinimumExpansionDepth() const
 {
 	return m_controller.getMinimumExpansionDepth();
+}
+
+void SceneGadget::setPaused( bool paused )
+{
+	if( paused == m_paused )
+	{
+		return;
+	}
+
+	m_paused = paused;
+	if( m_paused )
+	{
+		if( m_updateTask )
+		{
+			m_updateTask->cancelAndWait();
+			m_updateTask.reset();
+		}
+		stateChangedSignal()( this );
+	}
+	else if( m_controller.updateRequired() )
+	{
+		requestRender();
+	}
+}
+
+bool SceneGadget::getPaused() const
+{
+	return m_paused;
+}
+
+SceneGadget::State SceneGadget::state() const
+{
+	if( m_paused )
+	{
+		return Paused;
+	}
+
+	return m_controller.updateRequired() ? Running : Complete;
+}
+
+SceneGadget::SceneGadgetSignal &SceneGadget::stateChangedSignal()
+{
+	return m_stateChangedSignal;
 }
 
 IECoreGL::State *SceneGadget::baseState()
@@ -286,6 +330,11 @@ void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 
 void SceneGadget::updateRenderer()
 {
+	if( m_paused )
+	{
+		return;
+	}
+
 	if( m_updateTask )
 	{
 		if( m_updateTask->status() == BackgroundTask::Running )
@@ -300,21 +349,34 @@ void SceneGadget::updateRenderer()
 		return;
 	}
 
-	auto renderRequestCallback = [this] {
-		if( refCount() && !m_renderRequestPending.exchange( true ) )
+	auto renderRequestCallback = [this] ( bool complete ) {
+		if( !refCount() )
+		{
+			return;
+		}
+		bool shouldRequestRender = !m_renderRequestPending.exchange( true );
+		if( shouldRequestRender || complete )
 		{
 			// Must hold a reference to stop us dying before our UI thread call is scheduled.
 			SceneGadgetPtr thisRef = this;
 			ParallelAlgo::callOnUIThread(
-				[thisRef] {
-					thisRef->m_renderRequestPending = false;
-					thisRef->requestRender();
+				[thisRef, shouldRequestRender, complete] {
+					if( complete )
+					{
+						thisRef->stateChangedSignal()( thisRef.get() );
+					}
+					if( shouldRequestRender )
+					{
+						thisRef->m_renderRequestPending = false;
+						thisRef->requestRender();
+					}
 				}
 			);
 		}
 	};
 
 	m_updateTask = m_controller.updateInBackground( renderRequestCallback );
+	stateChangedSignal()( this );
 }
 
 void SceneGadget::visibilityChanged()

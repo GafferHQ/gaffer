@@ -42,9 +42,12 @@
 
 #include "GafferUIBindings/GadgetBinding.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 using namespace boost::python;
 using namespace IECorePython;
 using namespace GafferSceneUI;
+using namespace GafferBindings;
 
 namespace
 {
@@ -53,6 +56,28 @@ GafferScene::ScenePlugPtr getScene( SceneGadget &g )
 {
 	return const_cast<GafferScene::ScenePlug *>( g.getScene() );
 }
+
+void setPaused( SceneGadget &g, bool paused )
+{
+	ScopedGILRelease gilRelease;
+	g.setPaused( paused );
+}
+
+struct SceneGadgetSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, SceneGadgetPtr g )
+	{
+		try
+		{
+			slot( g );
+		}
+		catch( const error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
 
 IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegment3f &l )
 {
@@ -69,7 +94,7 @@ IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegmen
 void GafferSceneUIModule::bindSceneGadget()
 {
 
-	GafferUIBindings::GadgetClass<SceneGadget>()
+	scope s = GafferUIBindings::GadgetClass<SceneGadget>()
 		.def( init<>() )
 		.def( "setScene", &SceneGadget::setScene )
 		.def( "getScene", &getScene )
@@ -79,6 +104,10 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "getExpandedPaths", &SceneGadget::getExpandedPaths, return_value_policy<copy_const_reference>() )
 		.def( "setMinimumExpansionDepth", &SceneGadget::setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &SceneGadget::getMinimumExpansionDepth )
+		.def( "getPaused", &SceneGadget::getPaused )
+		.def( "setPaused", &setPaused )
+		.def( "state", &SceneGadget::state )
+		.def( "stateChangedSignal", &SceneGadget::stateChangedSignal, return_internal_reference<1>() )
 		.def( "baseState", &SceneGadget::baseState, return_value_policy<CastToIntrusivePtr>() )
 		.def( "objectAt", &objectAt )
 		.def( "objectsAt", &SceneGadget::objectsAt )
@@ -86,5 +115,14 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )
 		.def( "selectionBound", &SceneGadget::selectionBound )
 	;
+
+	enum_<SceneGadget::State>( "State" )
+		.value( "Paused", SceneGadget::Paused )
+		.value( "Running", SceneGadget::Running )
+		.value( "Complete", SceneGadget::Complete )
+	;
+
+	SignalClass<SceneGadget::SceneGadgetSignal, DefaultSignalCaller<SceneGadget::SceneGadgetSignal>, SceneGadgetSlotCaller>( "ImageGadgetSignal" );
+
 
 }

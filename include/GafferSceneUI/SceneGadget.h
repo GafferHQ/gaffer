@@ -80,6 +80,21 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
 
+		void setPaused( bool paused );
+		bool getPaused() const;
+
+		enum State
+		{
+			Paused,
+			Running,
+			Complete
+		};
+
+		State state() const;
+
+		typedef boost::signal<void (SceneGadget *)> SceneGadgetSignal;
+		SceneGadgetSignal &stateChangedSignal();
+
 		/// Returns the IECoreGL::State object used as the base display
 		/// style for the Renderable. This may be modified freely to
 		/// change the display style.
@@ -116,6 +131,9 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void updateRenderer();
 		IECore::PathMatcher convertSelection( IECore::UIntVectorDataPtr ids ) const;
 		void visibilityChanged();
+
+		bool m_paused;
+		SceneGadgetSignal m_stateChangedSignal;
 
 		IECoreScenePreview::RendererPtr m_renderer;
 		mutable GafferScene::RenderController m_controller;
