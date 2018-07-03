@@ -90,7 +90,7 @@ API
 - ShadingEngine : Added `hash()` method (#2586).
 - PlugLayout :
   - Added `embedded` constructor argument (#2599).
-  - Added "<layoutName>:width" metadata support
+  - Added "<layoutName>:width" metadata support (#2604).
 - Editor : Added `instanceCreatedSignal()` method. This can be used to customise the
   standard editors immediately after they've been created (#2605).
 - BusyWidget : Added `setBusy()` and `getBusy()` methods (#2604).
