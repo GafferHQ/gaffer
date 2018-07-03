@@ -180,8 +180,7 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
-		## \todo: Remove nodeGraph fallback when all client code has been updated
-		if not Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) and not Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" ) :
+		if not GraphEditor.__childrenViewable( node ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
@@ -299,8 +298,7 @@ class GraphEditor( GafferUI.Editor ) :
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :
-				## \todo: Remove nodeGraph fallback when all client code has been updated
-				needsModifiers = not Gaffer.Metadata.value( selection[0], "graphEditor:childrenViewable" ) or not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
+				needsModifiers = not GraphEditor.__childrenViewable( selection[0] )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
 					( not needsModifiers and event.modifiers == event.modifiers.None )
@@ -514,5 +512,15 @@ class GraphEditor( GafferUI.Editor ) :
 
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.enabledPlug().setValue( value )
+
+	@staticmethod
+	def __childrenViewable( node ) :
+
+		viewable = Gaffer.Metadata.value( node, "graphEditor:childrenViewable" )
+		if viewable is not None :
+			return viewable
+
+		## \todo: Remove nodeGraph fallback when all client code has been updated
+		return Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" )
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
