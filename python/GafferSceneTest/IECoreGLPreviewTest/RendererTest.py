@@ -192,5 +192,35 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
+	def testQueryBound( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		cube = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -1 ), imath.V3f( 9 ) ) )
+
+		o = renderer.object(
+			"/cube",
+			cube,
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		o.transform(
+			imath.M44f().translate( imath.V3f( 1 ) )
+		)
+
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			IECore.Box3fData(
+				imath.Box3f(
+					cube.bound().min() + imath.V3f( 1 ),
+					cube.bound().max() + imath.V3f( 1 )
+				)
+			)
+		)
+
+		del o
+
 if __name__ == "__main__":
 	unittest.main()

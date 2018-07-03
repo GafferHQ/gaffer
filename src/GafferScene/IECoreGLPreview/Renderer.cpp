@@ -56,6 +56,8 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/Writer.h"
 
+#include "OpenEXR/ImathBoxAlgo.h"
+
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/format.hpp"
 
@@ -89,6 +91,26 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 
 	IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
 	return nullptr;
+}
+
+template<typename T>
+T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedString &name, const T &defaultValue )
+{
+	IECore::CompoundDataMap::const_iterator it = parameters.find( name );
+	if( it == parameters.end() )
+	{
+		return defaultValue;
+	}
+
+	typedef IECore::TypedData<T> DataType;
+	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
+	{
+		return d->readable();
+	}
+	else
+	{
+		return defaultValue;
+	}
 }
 
 const IECoreGL::State &selectionState()
@@ -171,6 +193,11 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			m_attributes = static_cast<const OpenGLAttributes *>( attributes );
 			return true;
+		}
+
+		Box3f transformedBound() const
+		{
+			return Imath::transform( m_renderable->bound(), m_transform );
 		}
 
 		bool selected( const IECore::PathMatcher &selection ) const
@@ -410,6 +437,16 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
+		virtual IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		{
+			if( name == "gl:queryBound" )
+			{
+				return queryBound( parameters );
+			}
+
+			throw IECore::Exception( "Unknown command" );
+		}
+
 	private :
 
 		void renderInteractive()
@@ -567,6 +604,25 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( namedOutput.second->getName() );
 				writer->write();
 			}
+		}
+
+		DataPtr queryBound( const CompoundDataMap &parameters )
+		{
+			const bool selected = parameter<bool>( parameters, "selection", false );
+
+			processQueue();
+			removeDeletedObjects();
+
+			Box3f result;
+			for( const auto &o : m_objects )
+			{
+				if( selected && !o->selected( m_selection ) )
+				{
+					continue;
+				}
+				result.extendBy( o->transformedBound() );
+			}
+			return new Box3fData( result );
 		}
 
 		// Global options
