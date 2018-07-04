@@ -95,10 +95,11 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		typedef boost::signal<void (SceneGadget *)> SceneGadgetSignal;
 		SceneGadgetSignal &stateChangedSignal();
 
-		/// Returns the IECoreGL::State object used as the base display
-		/// style for the Renderable. This may be modified freely to
-		/// change the display style.
-		IECoreGL::State *baseState();
+		/// Specifies options to control the OpenGL renderer. These are used
+		/// to specify wireframe/point drawing and colours etc. A copy of
+		/// `options` is taken.
+		void setOpenGLOptions( const IECore::CompoundObject *options );
+		const IECore::CompoundObject *getOpenGLOptions() const;
 
 		/// Finds the path of the frontmost object intersecting the specified line
 		/// through gadget space. Returns true on success and false if there is no
@@ -140,7 +141,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		mutable std::shared_ptr<Gaffer::BackgroundTask> m_updateTask;
 		std::atomic_bool m_renderRequestPending;
 
-		IECoreGL::StatePtr m_baseState;
+		IECore::ConstCompoundObjectPtr m_openGLOptions;
 		IECore::PathMatcher m_selection;
 
 };

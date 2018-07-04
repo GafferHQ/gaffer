@@ -77,12 +77,15 @@ SceneGadget::SceneGadget()
 		m_renderer( IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ) ),
 		m_controller( nullptr, nullptr, m_renderer ),
 		m_renderRequestPending( false ),
-		m_baseState( new IECoreGL::State( true ) )
 {
-
-	m_baseState->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
-	m_baseState->add( new IECoreGL::PointColorStateComponent( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) );
-	m_baseState->add( new IECoreGL::Primitive::PointWidth( 2.0f ) );
+	typedef CompoundObject::ObjectMap::value_type Option;
+	CompoundObjectPtr openGLOptions = new CompoundObject;
+	openGLOptions->members().insert( {
+		Option( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) ),
+		Option( "gl:primitive:pointColor", new Color4fData( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) ),
+		Option( "gl:primitive:pointWidth", new FloatData( 2.0f ) )
+	} );
+	setOpenGLOptions( openGLOptions.get() );
 
 	m_controller.updateRequiredSignal().connect(
 		boost::bind( &SceneGadget::requestRender, this )
@@ -183,9 +186,51 @@ SceneGadget::SceneGadgetSignal &SceneGadget::stateChangedSignal()
 	return m_stateChangedSignal;
 }
 
-IECoreGL::State *SceneGadget::baseState()
+void SceneGadget::setOpenGLOptions( const IECore::CompoundObject *options )
 {
-	return m_baseState.get();
+	if( m_openGLOptions && *m_openGLOptions == *options )
+	{
+		return;
+	}
+
+	// Output anything that has changed or was added
+
+	for( const auto &option : options->members() )
+	{
+		bool changedOrAdded = true;
+		if( m_openGLOptions )
+		{
+			if( const Object *previousOption = m_openGLOptions->member<Object>( option.first ) )
+			{
+				changedOrAdded = *previousOption != *option.second;
+			}
+		}
+		if( changedOrAdded )
+		{
+			m_renderer->option( option.first, option.second.get() );
+		}
+	}
+
+	// Remove anything that was removed
+
+	if( m_openGLOptions )
+	{
+		for( const auto &oldOption : m_openGLOptions->members() )
+		{
+			if( !options->member<Object>( oldOption.first ) )
+			{
+				m_renderer->option( oldOption.first, nullptr );
+			}
+		}
+	}
+
+	m_openGLOptions = options->copy();
+	requestRender();
+}
+
+const IECore::CompoundObject *SceneGadget::getOpenGLOptions() const
+{
+	return m_openGLOptions.get();
 }
 
 bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path ) const
