@@ -192,7 +192,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		m = IECore.MenuDefinition()
 
 		for n in ( "solid", "wireframe", "points" ) :
-			plug = self.getPlug()[n]["enabled"]
+			plug = self.getPlug()[n]
 			m.append(
 				"/" + IECore.CamelCase.toSpaced( n ),
 				{
@@ -204,7 +204,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
 		for n in ( "useGLLines", "interpolate" ) :
-			plug = self.getPlug()["curves"][n]["enabled"]
+			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(
 				"/Curves Primitives/" + IECore.CamelCase.toSpaced( n ),
 				{
@@ -213,7 +213,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
-		useGLPointsPlug = self.getPlug()["pointsPrimitives"]["useGLPoints"]["enabled"]
+		useGLPointsPlug = self.getPlug()["pointsPrimitive"]["useGLPoints"]
 		m.append(
 			"/Points Primitives/Use GL Points",
 			{

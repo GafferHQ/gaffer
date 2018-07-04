@@ -96,49 +96,20 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
 			m_view->addChild( drawingMode );
 
-			ValuePlugPtr solid = new ValuePlug( "solid" );
-			drawingMode->addChild( solid );
-			solid->addChild( new BoolPlug( "enabled", Plug::In, true ) );
-			solid->addChild( new BoolPlug( "override" ) );
+			drawingMode->addChild( new BoolPlug( "solid", Plug::In, true ) );
+			drawingMode->addChild( new BoolPlug( "wireframe" ) );
+			drawingMode->addChild( new BoolPlug( "points" ) );
 
-			ValuePlugPtr wireframe = new ValuePlug( "wireframe" );
-			drawingMode->addChild( wireframe );
-			wireframe->addChild( new BoolPlug( "enabled" ) );
-			wireframe->addChild( new BoolPlug( "override" ) );
-
-			ValuePlugPtr points = new ValuePlug( "points" );
-			drawingMode->addChild( points );
-			points->addChild( new BoolPlug( "enabled" ) );
-			points->addChild( new BoolPlug( "override" ) );
-
-			ValuePlugPtr bound = new ValuePlug( "bound" );
-			drawingMode->addChild( bound );
-			bound->addChild( new BoolPlug( "enabled" ) );
-			bound->addChild( new BoolPlug( "override" ) );
-
-			ValuePlugPtr curves = new ValuePlug( "curves" );
+			ValuePlugPtr curves = new ValuePlug( "curvesPrimitive" );
 			drawingMode->addChild( curves );
+			curves->addChild( new BoolPlug( "useGLLines", Plug::In, true ) );
+			curves->addChild( new BoolPlug( "interpolate" ) );
 
-			ValuePlugPtr curvesUseGLLines = new ValuePlug( "useGLLines" );
-			curves->addChild( curvesUseGLLines );
-			curvesUseGLLines->addChild( new BoolPlug( "enabled", Plug::In, /* defaultValue = */ true ) );
-			curvesUseGLLines->addChild( new BoolPlug( "override" ) );
+			ValuePlugPtr points = new ValuePlug( "pointsPrimitive" );
+			drawingMode->addChild( points );
+			points->addChild( new BoolPlug( "useGLPoints", Plug::In, true ) );
 
-			ValuePlugPtr curvesInterpolate = new ValuePlug( "interpolate" );
-			curves->addChild( curvesInterpolate );
-			curvesInterpolate->addChild( new BoolPlug( "enabled" ) );
-			curvesInterpolate->addChild( new BoolPlug( "override" ) );
-
-			ValuePlugPtr pointsPrimitives = new ValuePlug( "pointsPrimitives" );
-			drawingMode->addChild( pointsPrimitives );
-
-			ValuePlugPtr pointsPrimitivesUseGLPoints = new ValuePlug( "useGLPoints" );
-			pointsPrimitives->addChild( pointsPrimitivesUseGLPoints );
-
-			pointsPrimitivesUseGLPoints->addChild( new BoolPlug( "enabled", Plug::In, /* defaultValue = */ true ) );
-			pointsPrimitivesUseGLPoints->addChild( new BoolPlug( "override" ) );
-
-			updateBaseState();
+			updateOpenGLOptions();
 
 			view->plugSetSignal().connect( boost::bind( &DrawingMode::plugSet, this, ::_1 ) );
 		}
@@ -159,64 +130,31 @@ class SceneView::DrawingMode : public boost::signals::trackable
 		{
 			if( plug == drawingModePlug() )
 			{
-				updateBaseState();
+				updateOpenGLOptions();
 			}
 		}
 
-		void updateBaseState()
+		void updateOpenGLOptions()
 		{
-			IECoreGL::State *baseState = sceneGadget()->baseState();
+			IECore::CompoundObjectPtr options = sceneGadget()->getOpenGLOptions()->copy();
+			GraphComponent *curvesPlug = drawingModePlug()->getChild( "curvesPrimitive" );
+			GraphComponent *pointsPlug = drawingModePlug()->getChild( "pointsPrimitive" );
 
-			const ValuePlug *solid = drawingModePlug()->getChild<ValuePlug>( "solid" );
-			baseState->add(
-				new IECoreGL::Primitive::DrawSolid( solid->getChild<BoolPlug>( "enabled" )->getValue() ),
-				solid->getChild<BoolPlug>( "override" )->getValue()
+			options->members()["gl:primitive:solid"] = new BoolData( drawingModePlug()->getChild<BoolPlug>( "solid" )->getValue() );
+			options->members()["gl:primitive:wireframe"] = new BoolData( drawingModePlug()->getChild<BoolPlug>( "wireframe" )->getValue() );
+			options->members()["gl:primitive:points"] = new BoolData( drawingModePlug()->getChild<BoolPlug>( "points" )->getValue() );
+			options->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( curvesPlug->getChild<BoolPlug>( "useGLLines" )->getValue() );
+			/// \todo As a general rule we strive for a one-to-one mapping between cortex/gaffer/ui,
+			/// but in this case IgnoreBasis is far too technical a term. Consider changing the name
+			/// in Cortex.
+			options->members()["gl:curvesPrimitive:ignoreBasis"] = new BoolData( !curvesPlug->getChild<BoolPlug>( "interpolate" )->getValue() );
+			options->members()["gl:pointsPrimitive:useGLPoints"] = new StringData(
+				pointsPlug->getChild<BoolPlug>( "useGLPoints" )->getValue() ?
+				"forAll" :
+				"forGLPoints"
 			);
 
-			const ValuePlug *wireframe = drawingModePlug()->getChild<ValuePlug>( "wireframe" );
-			baseState->add(
-				new IECoreGL::Primitive::DrawWireframe( wireframe->getChild<BoolPlug>( "enabled" )->getValue() ),
-				wireframe->getChild<BoolPlug>( "override" )->getValue()
-			);
-
-			const ValuePlug *points = drawingModePlug()->getChild<ValuePlug>( "points" );
-			baseState->add(
-				new IECoreGL::Primitive::DrawPoints( points->getChild<BoolPlug>( "enabled" )->getValue() ),
-				points->getChild<BoolPlug>( "override" )->getValue()
-			);
-
-			const ValuePlug *bound = drawingModePlug()->getChild<ValuePlug>( "bound" );
-			baseState->add(
-				new IECoreGL::Primitive::DrawBound( bound->getChild<BoolPlug>( "enabled" )->getValue() ),
-				bound->getChild<BoolPlug>( "override" )->getValue()
-			);
-
-			const ValuePlug *curves = drawingModePlug()->getChild<ValuePlug>( "curves" );
-			const ValuePlug *curvesUseGLLines = curves->getChild<ValuePlug>( "useGLLines" );
-			baseState->add(
-				new IECoreGL::CurvesPrimitive::UseGLLines( curvesUseGLLines->getChild<BoolPlug>( "enabled" )->getValue() ),
-				curvesUseGLLines->getChild<BoolPlug>( "override" )->getValue()
-			);
-
-			const ValuePlug *curvesInterpolate = curves->getChild<ValuePlug>( "interpolate" );
-			baseState->add(
-				/// \todo As a general rule we strive for a one-to-one mapping between cortex/gaffer/ui,
-				/// but in this case IgnoreBasis is far too technical a term. Consider changing the name
-				/// in Cortex.
-				new IECoreGL::CurvesPrimitive::IgnoreBasis( !curvesInterpolate->getChild<BoolPlug>( "enabled" )->getValue() ),
-				curvesInterpolate->getChild<BoolPlug>( "override" )->getValue()
-			);
-
-			const ValuePlug *pointsPrimitives = drawingModePlug()->getChild<ValuePlug>( "pointsPrimitives" );
-			const ValuePlug *pointsPrimitivesUseGLPoints = pointsPrimitives->getChild<ValuePlug>( "useGLPoints" );
-			baseState->add(
-				new IECoreGL::PointsPrimitive::UseGLPoints(
-					pointsPrimitivesUseGLPoints->getChild<BoolPlug>( "enabled" )->getValue() ? IECoreGL::ForAll : IECoreGL::ForPointsOnly
-				),
-				pointsPrimitivesUseGLPoints->getChild<BoolPlug>( "override" )->getValue()
-			);
-
-			sceneGadget()->renderRequestSignal()( sceneGadget() );
+			sceneGadget()->setOpenGLOptions( options.get() );
 		}
 
 		SceneView *m_view;
@@ -370,14 +308,6 @@ class SceneView::Grid : public boost::signals::trackable
 
 			m_gadget->setMinimumExpansionDepth( 1 );
 			m_gadget->setScene( m_node->outPlug() );
-
-			// Turn off line smoothing because we're using MSAA in the
-			// viewer anyway, and line smoothing doesn't interact well
-			// with it on all drivers.
-			m_gadget->baseState()->add(
-				new IECoreGL::LineSmoothingStateComponent( false ),
-				/* override = */ true
-			);
 
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 
