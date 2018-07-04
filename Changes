@@ -27,6 +27,13 @@ Features
 Improvements
 ------------
 
+- Instancer : Replaced original proof-of-concept Instancer with a new version intended
+  to be suitable for production use (#2642) :
+  - Added support for orientation and scale primitive variables.
+  - Added support for index and id primitive variables.
+  - Added support for creating per-instance attributes.
+  - Added support for sets.
+  - Improved performance by removing `${instancer:id}` context variable.
 - Documentation : Improved structure and presentation (#2612, #2613, #2616, #2619, #2625, #2628, #2631).
 - Appleseed (#2570) :
   - Added support for pixel_time AOV.
@@ -46,6 +53,8 @@ Improvements
 - Application : Moved startup file execution before argument evaluation. This makes it
   possible for a startup file to manipulate application arguments if necessary (#2588).
 - Stats app : Added `-canceller` argument (#2586).
+- UI : Renamed Scene Hierarchy to Hierarchy View and Node Graph to Graph Editor.
+- AttributeVisualiser : Added support for visualising Color3f attributes #2641).
 
 Fixes
 -----
@@ -57,6 +66,8 @@ Fixes
   - Fixed GIL management bug (#2582).
   - Fixed crash if `None` is passed to `registerValue()` (#2582).
   - Fixed bindings for change signals (#2610).
+- UI : Fixed initial size and position of Preferences, Settings and Node Editor
+  windows (#2643).
 - ContextAlgo : Fixed GIL management (#2618).
 - SubGraph : Fixed crash in `correspondingInput()`. This manifested itself as crashes in
   the NodeGraph when dragging a Box with an unconnected BoxOut node over a connection (#2583).
@@ -73,6 +84,7 @@ Fixes
 - Appleseed : Disabled SPPM for interactive renders (#2570).
 - Catalogue : Fixed bug where orphaned Catalogue tried to save an image (#2621).
 - ViewportGadget : Fixed `setCameraTransform()` to trigger a rerender (#2639).
+- Arnold : Worked around clashes between Mesa drivers and libai.so (#2638).
 
 API
 ---
@@ -110,6 +122,7 @@ Build
 Breaking Changes
 ----------------
 
+- Instancer : Added and removed plugs, changed behaviour and structure of output scene (#2642).
 - Metadata : Changed function signatures for `GafferBindings::metadataModuleDependencies`
   and `GafferBindings::metadataModuleDependencies`. Source compatibility is retained (#2579).
 - Action (#2578) :
@@ -118,6 +131,8 @@ Breaking Changes
   - Source compatibility is retained.
 - EditorWidget : Renamed to Editor (#2605).
 - BackgroundTask : Replaced `done()` method with `status()`.
+- SceneHierarchy : Renamed to HierarchyView (#2640).
+- NodeGraph : Renamed to GraphEditor (#2640).
 
 0.46.1.0
 ========
