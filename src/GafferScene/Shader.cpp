@@ -139,6 +139,8 @@ struct CycleDetector
 
 };
 
+IECore::InternedString g_outPlugName( "out" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -571,12 +573,12 @@ Gaffer::Plug *Shader::outPlug()
 {
 	// not getting by index, because it is created by the
 	// derived classes in loadShader().
-	return getChild<Plug>( "out" );
+	return getChild<Plug>( g_outPlugName );
 }
 
 const Gaffer::Plug *Shader::outPlug() const
 {
-	return getChild<Plug>( "out" );
+	return getChild<Plug>( g_outPlugName );
 }
 
 Gaffer::BoolPlug *Shader::enabledPlug()
