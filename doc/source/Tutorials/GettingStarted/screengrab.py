@@ -26,8 +26,8 @@ viewer.view().viewportGadget().frame( script["SceneReader"]["out"].bound( "/" ) 
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/sceneReaderBound.png" )
 
 GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/GAFFERBOT", "/GAFFERBOT/C_torso_GRP" ] ) )
-hierarchy = scriptWindow.getLayout().editors( GafferSceneUI.SceneHierarchy )[0]
-GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/sceneHierarchyExpandedTwoLevels.png" )
+hierarchy = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
+GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/hierarchyViewExpandedTwoLevels.png" )
 
 paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
@@ -73,7 +73,7 @@ del cameraEditor
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettings.gfr" ) )
 script.load()
 script.selection().add( script["Catalogue"] )
-graph = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
+graph = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 graph.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/renderSettings.png" )
 
@@ -112,11 +112,11 @@ script["fileName"].setValue( os.path.abspath( "scripts/firstLight.gfr" ) )
 script.load()
 script.selection().add( script["Parent"] )
 graph.frame( Gaffer.StandardSet( [ script["Group"], script["Parent"], script["hosek_environment_edf"] ] ) )
-GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/parentingNodeGraph.png" )
+GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/parentingGraphEditor.png" )
 
 paths = IECore.PathMatcher( [ "/", "/group" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/parentingSceneHierarchy.png" )
+GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/parentingHierarchyView.png" )
 
 script.selection().clear()
 script.selection().add( script["Catalogue"] )

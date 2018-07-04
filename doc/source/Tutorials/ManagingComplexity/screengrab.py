@@ -11,7 +11,7 @@ scriptWindow = GafferUI.ScriptWindow.acquire( script )
 
 script["fileName"].setValue( os.path.abspath( "scripts/groupFirst.gfr" ) )
 script.load()
-graph = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
+graph = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 graph.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graph, imagePath = "images/groupFirst.png" )
 

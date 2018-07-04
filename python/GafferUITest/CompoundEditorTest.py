@@ -50,7 +50,7 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		s["n"] = GafferTest.AddNode()
 
 		c = GafferUI.CompoundEditor( s )
-		e = GafferUI.NodeGraph( s )
+		e = GafferUI.GraphEditor( s )
 		c.addEditor( e )
 
 		wc = weakref.ref( c )

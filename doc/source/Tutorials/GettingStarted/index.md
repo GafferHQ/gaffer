@@ -33,8 +33,8 @@ As Gaffer is primarily a lighting package, it is expected that modelling and ani
 
 Let's start by creating a [SceneReader][2] node to load some geometry :
 
-- Locate the [NodeGraph][3] editor in the lower left pane.
-- _Right-Click_ inside the NodeGraph to pop up a menu for creating nodes.
+- Locate the [GraphEditor][3] editor in the lower left pane.
+- _Right-Click_ inside the GraphEditor to pop up a menu for creating nodes.
 - Create a SceneReader using the _/Scene/File/Reader_ menu item.
 
 ![Empty SceneReader](images/emptySceneReader.png)
@@ -47,25 +47,25 @@ The newly created node has been selected automatically, and each of the editor p
 
 ![SceneReader Bounding Box](images/sceneReaderBound.png)
 
-Something seems to be happening, but frankly not much. The SceneHierarchy in the bottom right pane has updated to show we have a "GAFFERBOT" located at the root of our scene, and the Viewer in the top left is showing a mysterious new bounding box. It seems that our SceneReader is loading _something_, but how do we find out what exactly?
+Something seems to be happening, but frankly not much. The HierarchyView in the bottom right pane has updated to show we have a "GAFFERBOT" located at the root of our scene, and the Viewer in the top left is showing a mysterious new bounding box. It seems that our SceneReader is loading _something_, but how do we find out what exactly?
 
 > Tip : As mentioned above, by default the UI updates to view the currently selected node.
 > This can be confusing if you accidentally deselect a node, because the editors will go blank.
 > Later on we'll see various ways of managing which node is viewed, but for now it is enough
-> to know that you can reselect a node by _Left-Clicking_ on it in the NodeGraph.
+> to know that you can reselect a node by _Left-Clicking_ on it in the GraphEditor.
 
 Navigating the scene
 --------------------
 
 One of the key features that allows Gaffer to deal with highly complex scenes is that it loads geometry lazily on demand, processing only the portions of the scene that have been requested by the user. Any geometry that has not yet been requested is displayed as a simple bounding box, like the one we're looking at. Let's find out what's in the box.
 
-- Locate the SceneHierarchy editor in the bottom right pane.
+- Locate the HierarchyView editor in the bottom right pane.
 - _Left-Click_ the triangle to the left of "GAFFERBOT". The "GAFFERBOT" location should expand to show a child named "C_torso_GRP".
 - _Left-Click_ the triangle to the left of "C_torso_GRP" to expand to show its children.
 
 We can now see the basic structure of the model coming into view.
 
-![SceneHierarchy Expanded Two Levels](images/sceneHierarchyExpandedTwoLevels.png)
+![HierarchyView Expanded Two Levels](images/hierarchyViewExpandedTwoLevels.png)
 
 It would be tedious to expand the whole scene location by location like this, so let's speed things along a little :
 
@@ -83,7 +83,7 @@ Shift clicking loads the entire scene below the location which was clicked, so w
 Navigating using the Viewer
 ---------------------------
 
-As we navigated the scene using the SceneHierarchy editor, the [Viewer][4] was loading the geometry we discovered and displaying it. We can also control this expansion process directly within the Viewer itself :
+As we navigated the scene using the HierarchyView editor, the [Viewer][4] was loading the geometry we discovered and displaying it. We can also control this expansion process directly within the Viewer itself :
 
 - _Left-Drag_ over the bounding box of the other leg to select it. It should highlight to show that you have been successful.
 - Press _Down-Arrow_ on the keyboard to expand it one level.
@@ -115,9 +115,9 @@ Now we're familiar with the model we're going to be rendering, we can move on to
 Making a camera
 ---------------
 
-Before we can render anything, we'll need a camera to render from. Just as we created a SceneReader node to load in the model, we'll create another node to generate a camera. You'll remember from the previous section that we can create nodes by making a _Right-Click_ inside the NodeGraph and finding the node we want in the menu that appears. This time though, we'll take a shortcut :
+Before we can render anything, we'll need a camera to render from. Just as we created a SceneReader node to load in the model, we'll create another node to generate a camera. You'll remember from the previous section that we can create nodes by making a _Right-Click_ inside the GraphEditor and finding the node we want in the menu that appears. This time though, we'll take a shortcut :
 
-- Make sure the mouse is inside the NodeGraph.
+- Make sure the mouse is inside the GraphEditor.
 - Press _Tab_ to show the node menu, and note that it has a search field at the top, which already has the keyboard focus.
 - Type "Camera" into the search field. Note that a new submenu has appeared showing the search results.
 - Press _Return_ to activate the highlighted search result and create a Camera node.
@@ -136,11 +136,11 @@ We appear to have a problem though - although we can see our new camera, our mod
 Grouping the camera with the model
 ----------------------------------
 
-Each node in Gaffer outputs an entire self contained scene. Our SceneReader node is outputting a robot scene, and our Camera node is outputting a scene containing a camera, but each of these are separate. By _Left-Clicking_ on each node in the NodeGraph we can select which scene we want to view and edit, but before we can render we need to combine them into a scene with both a robot _and_ a camera.
+Each node in Gaffer outputs an entire self contained scene. Our SceneReader node is outputting a robot scene, and our Camera node is outputting a scene containing a camera, but each of these are separate. By _Left-Clicking_ on each node in the GraphEditor we can select which scene we want to view and edit, but before we can render we need to combine them into a scene with both a robot _and_ a camera.
 
-Gaffer allows scenes to be modified by making connections between nodes so that input scenes flow into a node, are modified, and then flow out again. The inputs and outputs of nodes are called **plugs**, and are represented in the NodeGraph as circles on the edges of the nodes. Let's make a new node and connect it up so that it combines the robot and camera into a single scene.
+Gaffer allows scenes to be modified by making connections between nodes so that input scenes flow into a node, are modified, and then flow out again. The inputs and outputs of nodes are called **plugs**, and are represented in the GraphEditor as circles on the edges of the nodes. Let's make a new node and connect it up so that it combines the robot and camera into a single scene.
 
-- Deselect all nodes by _Left-Clicking_ in empty space in the NodeGraph.
+- Deselect all nodes by _Left-Clicking_ in empty space in the GraphEditor.
 - Create a Group node _(/Scene/Hierarchy/Group)_.
 - Arrange the nodes by _Left-Dragging_ them into position.
 	- Place the SceneReader at the top left.
@@ -153,27 +153,27 @@ Gaffer allows scenes to be modified by making connections between nodes so that 
 
 ![Group](images/group.png)
 
-The Group node is generating a new scene which combines the input scenes by placing them both under a new parent called "group", as can be seen in the SceneHierarchy in the bottom right panel. Note that this is an entirely non-destructive process, and the upstream scenes from the SceneReader and Camera nodes are still available at any time simply by selecting the relevant node.
+The Group node is generating a new scene which combines the input scenes by placing them both under a new parent called "group", as can be seen in the HierarchyView in the bottom right panel. Note that this is an entirely non-destructive process, and the upstream scenes from the SceneReader and Camera nodes are still available at any time simply by selecting the relevant node.
 
 Positioning the camera
 ----------------------
 
 Next we need to position the camera so that it frames our subject :
 
-- Select the Camera node by _Left-Clicking_ on it in the NodeGraph.
+- Select the Camera node by _Left-Clicking_ on it in the GraphEditor.
 - In the NodeEditor (top right panel), _Left-Click_ on the **Transform** tab to expose the transform settings.
 - Use the numeric widgets to set the camera position.
 	- Set **Translate** to `19, 13, 31`
 	- Set **Rotate** to `0, 30, 0`
-- Reselect the Group node in the NodeGraph to see the position of the camera
+- Reselect the Group node in the GraphEditor to see the position of the camera
   relative to the robot.
 
 ![Group](images/cameraTransform.png)
 
 > Note : In the previous section we referred to the inputs and outputs of the nodes as **plugs**,
-> and connected them by dragging and dropping within the NodeGraph. But in fact, the **Translate**
+> and connected them by dragging and dropping within the GraphEditor. But in fact, the **Translate**
 > and **Rotate** values we have just edited on the Camera node are _also_ **plugs** : they also
-> provide input to the node, and can also be connected together if needed. The NodeGraph and NodeEditor
+> provide input to the node, and can also be connected together if needed. The GraphEditor and NodeEditor
 > each display only a subset of the available plugs for ease of use, and informally we may tend to
 > refer to them as "connections" or "settings" respectively, but more formally they are all **plugs**.
 > This fact will become more relevant in advanced tutorials involving expressions and scripting.
@@ -184,7 +184,7 @@ Rendering a first image
 Now that we have the layout of our scene defined, we want to do a quick test render to check everything is
 working as expected. To do that we need to lay down some more nodes to define our render settings.
 
-- Select the Group node in the NodeGraph.
+- Select the Group node in the GraphEditor.
 - Create a StandardOptions node (_/Scene/Globals/StandardOptions_). Note that it has been automatically
   connected to the output of the Group, and selected.
 - Create an AppleseedOptions node (_/Appleseed/Options_). Note that it has been automatically connected to
@@ -227,19 +227,19 @@ It's hardly worthy of an Oscar, but we've successfully made our first image, and
 Organising the user interface
 -----------------------------
 
-Before we dive into lighting and shading though, let's take a brief detour to reorganise the user interface a little better for our workflow. As we've already learned, editors such as the Viewer, NodeEditor and SceneHierarchy always show the currently selected node by default. This isn't always convenient, because often we want to edit one node while viewing the effects in another. This can be achieved by "pinning" specific nodes into an editor, so that they stay there regardless of the selection :
+Before we dive into lighting and shading though, let's take a brief detour to reorganise the user interface a little better for our workflow. As we've already learned, editors such as the Viewer, NodeEditor and HierarchyView always show the currently selected node by default. This isn't always convenient, because often we want to edit one node while viewing the effects in another. This can be achieved by "pinning" specific nodes into an editor, so that they stay there regardless of the selection :
 
-- Select the InteractiveAppleseedRender node by _Left-Clicking_ on it in the NodeGraph.
+- Select the InteractiveAppleseedRender node by _Left-Clicking_ on it in the GraphEditor.
 - Locate the  pinning icon ![Pinning](images/targetNodesUnlocked.png) at the top right
   of the Viewer panel, and _Left-Click_ to activate it.
-- Deselect the InteractiveAppleseedRender node by _Left-Clicking_ in empty space in the NodeGraph.
+- Deselect the InteractiveAppleseedRender node by _Left-Clicking_ in empty space in the GraphEditor.
 - Note that the Viewer is still showing the pinned node.
 
-It'd be useful to pin the same node into the SceneHierarchy, so let's use a shortcut to do that :
+It'd be useful to pin the same node into the HierarchyView, so let's use a shortcut to do that :
 
-- _Middle-Drag_ the InteractiveAppleseedRender node from the NodeGraph panel into the
-  SceneHierarchy panel.
-- Note that the SceneHierarchy is now showing our node, and the pinning icon has highlighted
+- _Middle-Drag_ the InteractiveAppleseedRender node from the GraphEditor panel into the
+  HierarchyView panel.
+- Note that the HierarchyView is now showing our node, and the pinning icon has highlighted
   to notify us of the pinning ![Pinning](images/targetNodesLocked.png).
 
 Now we're free to select any node we want to edit it in the NodeEditor, but will always be viewing the results
@@ -256,7 +256,7 @@ got everything arranged to our liking, we're finally ready to go ahead and start
 Assigning a shader
 ------------------
 
-> Tip : As we're about to add to our collection of nodes in the NodeGraph, we might need to move around
+> Tip : As we're about to add to our collection of nodes in the GraphEditor, we might need to move around
 > around and zoom in and out to navigate between them. This is achieved in the same way as navigating
 > in the Viewer, by holding down _Alt_ and _dragging_ :
 >
@@ -266,7 +266,7 @@ Assigning a shader
 
 It makes sense to think of our node graph as being composed of three distinct phases - generating the geometry, applying the lighting and shading, and finally rendering. Let's create some empty space in the centre of the graph so that we have somewhere to insert the nodes for our lighting and shading phase.
 
-- In the NodeGraph, _Left-Drag_ over the lower five nodes to select them.
+- In the GraphEditor, _Left-Drag_ over the lower five nodes to select them.
 - _Left-Drag_ on one of the nodes to move them all down to leave some space in the middle.
 - Use the _scroll wheel_ or hold down _Alt_ and _Right-Drag_ to zoom out and frame the whole node graph.
 
@@ -304,11 +304,11 @@ This node outputs a new scene containing a single light. As we did before with t
 - Enter `/` in the Parent field in the NodeEditor, so that we'll be parenting the light directly under the scene root.
 - Connect the output of the light node into the second (child) input of the Parent node.
 
-![Parenting Node Graph](images/parentingNodeGraph.png)
+![Parenting Graph Editor](images/parentingGraphEditor.png)
 
 We should have successfully inserted the light into the scene hierarchy, without affecting the structure of the rest of the scene.
 
-![Parenting Scene Hierarchy](images/parentingSceneHierarchy.png)
+![Parenting Hierarchy View](images/parentingHierarchyView.png)
 
 Now we need to enable environment lighting in Appleseed for our light to take effect.
 
@@ -330,7 +330,7 @@ Our little chap is looking a bit monochrome, so let's assign some textures to ch
 - Edit it using the NodeEditor
 	- Enter `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_` into the **Filename** field.
 	- Set the **UDIM** field to `mari`.
-- Using the NodeGraph, Connect the **ColorOut** output into the **BaseColor** input of the disney material.
+- Using the GraphEditor, Connect the **ColorOut** output into the **BaseColor** input of the disney material.
 
 ![Textured](images/textures.png)
 
@@ -359,7 +359,7 @@ Oops. Because the new ShaderAssignment is downstream from the first one, it has 
 
 - Create a PathFilter node (_/Scene/Filters/PathFilter_). This chooses which objects to affect based on their names.
 - Use the NodeEditor to add `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN` to the **Paths**. This is the
-  full name of the left ear of the robot, as you see it listed in the SceneHierarchy.
+  full name of the left ear of the robot, as you see it listed in the HierarchyView.
 - Connect the output of the PathFilter into the filter input on the right hand side of the ShaderAssignment1 node.
 
 ![Filter connection](images/filterConnection.png)
@@ -385,7 +385,7 @@ The `*` automatically matches any sequence of characters, so the filter will now
 ![Face selection](images/faceSelection.png)
 
 - Start a _Left-Drag_ from the selected objects. The cursor should change to ![Objects Image](images/objects.png) to indicate you are dragging them.
-- Continue the drag into the NodeGraph and hover over the PathFilter node.
+- Continue the drag into the GraphEditor and hover over the PathFilter node.
 - Hold _Shift_ to indicate that you wish to add to the PathFilter rather than replace the
   existing contents. The cursor will change from ![Replace Objects](images/replaceObjects.png) to ![Add Objects](images/addObjects.png) to indicate this.
 - Finally, drop the objects to add them to the PathFilter.
@@ -403,5 +403,5 @@ Hopefully this provides a solid basis for your own further exploration, which wi
 
 [1]: ../../Installation/index.md
 [2]: ../../Reference/NodeReference/GafferScene/SceneReader.md
-[3]: ../../Reference/UIReference/NodeGraph.md
+[3]: ../../Reference/UIReference/GraphEditor.md
 [4]: ../../Reference/UIReference/Viewer.md

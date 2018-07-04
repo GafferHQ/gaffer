@@ -331,20 +331,20 @@ def importFile( menu ) :
 		scope.script.selection().clear()
 		scope.script.selection().add( newNodes )
 
-		if scope.nodeGraph :
+		if scope.graphEditor :
 
-			fallbackPosition = scope.nodeGraph.bound().size() / 2
-			fallbackPosition = scope.nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
+			fallbackPosition = scope.graphEditor.bound().size() / 2
+			fallbackPosition = scope.graphEditor.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
 				imath.V2f( fallbackPosition.x, fallbackPosition.y ),
-				gadget = scope.nodeGraph.graphGadget()
+				gadget = scope.graphEditor.graphGadget()
 			).p0
 			fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
-			scope.nodeGraph.graphGadget().getLayout().positionNodes(
-				scope.nodeGraph.graphGadget(), scope.script.selection(), fallbackPosition
+			scope.graphEditor.graphGadget().getLayout().positionNodes(
+				scope.graphEditor.graphGadget(), scope.script.selection(), fallbackPosition
 			)
 
-			scope.nodeGraph.frame( scope.script.selection(), extend = True )
+			scope.graphEditor.frame( scope.script.selection(), extend = True )
 
 ## A function suitable as the command for a File/Settings... menu item.
 def showSettings( menu ) :

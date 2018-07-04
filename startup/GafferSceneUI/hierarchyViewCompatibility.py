@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,20 +34,6 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from HierarchyViewTest import HierarchyViewTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
-from RotateToolTest import RotateToolTest
-from ContextAlgoTest import ContextAlgoTest
-from CameraToolTest import CameraToolTest
+import GafferSceneUI
 
-if __name__ == "__main__":
-	unittest.main()
+GafferSceneUI.SceneHierarchy = GafferSceneUI.HierarchyView

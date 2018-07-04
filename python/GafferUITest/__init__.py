@@ -48,7 +48,7 @@ from LinearContainerTest import LinearContainerTest
 from NodeGadgetTest import NodeGadgetTest
 from GadgetTest import GadgetTest
 from TabbedContainerTest import TabbedContainerTest
-from NodeGraphTest import NodeGraphTest
+from GraphEditorTest import GraphEditorTest
 from WidgetSignalTest import WidgetSignalTest
 from EventLoopTest import EventLoopTest
 from TextWidgetTest import TextWidgetTest

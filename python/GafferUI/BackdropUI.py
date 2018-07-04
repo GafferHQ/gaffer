@@ -47,12 +47,12 @@ import GafferUI
 # for particular applications append it if it suits their purposes.
 def nodeMenuCreateCommand( menu ) :
 
-	nodeGraph = menu.ancestor( GafferUI.NodeGraph )
-	assert( nodeGraph is not None )
-	gadgetWidget = nodeGraph.graphGadgetWidget()
-	graphGadget = nodeGraph.graphGadget()
+	graphEditor = menu.ancestor( GafferUI.GraphEditor )
+	assert( graphEditor is not None )
+	gadgetWidget = graphEditor.graphGadgetWidget()
+	graphGadget = graphEditor.graphGadget()
 
-	script = nodeGraph.scriptNode()
+	script = graphEditor.scriptNode()
 
 	with Gaffer.UndoScope( script ) :
 

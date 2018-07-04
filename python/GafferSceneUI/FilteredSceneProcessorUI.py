@@ -94,7 +94,7 @@ def __nodeGadget( node ) :
 GafferUI.NodeGadget.registerNodeGadget( GafferScene.FilteredSceneProcessor, __nodeGadget )
 
 ##########################################################################
-# NodeGraph context menu
+# GraphEditor context menu
 ##########################################################################
 
 def __selectAffected( node, context ) :
@@ -121,13 +121,13 @@ def __selectAffected( node, context ) :
 
 	GafferSceneUI.ContextAlgo.setSelectedPaths( context, pathMatcher )
 
-def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
 	if not isinstance( node, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeGraph.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.getContext() ) } )
 
 ##########################################################################
 # NodeEditor tool menu

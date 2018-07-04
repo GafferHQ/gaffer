@@ -144,12 +144,12 @@ class screengrab( Gaffer.Application ) :
 				),
 
 				IECore.CompoundParameter(
-					name = "nodeGraph",
-					description = "Parameters that configure NodeGraphs.",
+					name = "graphEditor",
+					description = "Parameters that configure GraphEditors.",
 					members = [
 						IECore.StringVectorParameter(
 							name = "frame",
-							description = "The names of nodes to frame in the NodeGraph.",
+							description = "The names of nodes to frame in the GraphEditor.",
 							defaultValue = IECore.StringVectorData(),
 						),
 					],
@@ -161,17 +161,17 @@ class screengrab( Gaffer.Application ) :
 					members = [
 						IECore.StringVectorParameter(
 							name = "expandedPaths",
-							description = "A list of locations to expand in the Viewer and SceneHierarchy.",
+							description = "A list of locations to expand in the Viewer and HierarchyView.",
 							defaultValue = IECore.StringVectorData(),
 						),
 						IECore.StringVectorParameter(
 							name = "fullyExpandedPaths",
-							description = "A list of locations to expand fully in the Viewer and SceneHierarchy.",
+							description = "A list of locations to expand fully in the Viewer and HierarchyView.",
 							defaultValue = IECore.StringVectorData(),
 						),
 						IECore.StringVectorParameter(
 							name = "selectedPaths",
-							description = "A list of locations to select in the Viewer and SceneHierarchy.",
+							description = "A list of locations to select in the Viewer and HierarchyView.",
 							defaultValue = IECore.StringVectorData(),
 						),
 					]
@@ -278,11 +278,11 @@ class screengrab( Gaffer.Application ) :
 
 		GafferUI.EventLoop.waitForIdle()
 
-		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
-			if args["nodeGraph"]["frame"] :
-				nodeGraph.frame( [ script.descendant( n ) for n in args["nodeGraph"]["frame"] ] )
+		for graphEditor in scriptWindow.getLayout().editors( GafferUI.GraphEditor ) :
+			if args["graphEditor"]["frame"] :
+				graphEditor.frame( [ script.descendant( n ) for n in args["graphEditor"]["frame"] ] )
 			else :
-				nodeGraph.frame( script.children( Gaffer.Node ) )
+				graphEditor.frame( script.children( Gaffer.Node ) )
 
 		# Set up the NodeEditors as requested.
 

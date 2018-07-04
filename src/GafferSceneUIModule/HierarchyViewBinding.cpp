@@ -36,7 +36,7 @@
 
 #include "boost/python.hpp"
 
-#include "SceneHierarchyBinding.h"
+#include "HierarchyViewBinding.h"
 
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
@@ -63,25 +63,25 @@ namespace
 {
 
 //////////////////////////////////////////////////////////////////////////
-// SceneHierarchyFilter - base class for PathFilters which need a scene
-// and a context. Designed for internal use in the SceneHierarchy.
+// HierarchyViewFilter - base class for PathFilters which need a scene
+// and a context. Designed for internal use in the HierarchyView.
 //
 // \todo The "track dirtiness from a context and plug" behaviour implemented
 // here is common across many UI elements - perhaps it could be encapsulated
 // in a utility class at some point?
 // \todo Consider making these filters part of the public API at some point,
-// and also allowing the SceneHierarchy widget to be customised with
+// and also allowing the HierarchyView widget to be customised with
 // custom filters.
 //////////////////////////////////////////////////////////////////////////
 
-class SceneHierarchyFilter : public Gaffer::PathFilter
+class HierarchyViewFilter : public Gaffer::PathFilter
 {
 
 	public :
 
-		IE_CORE_DECLAREMEMBERPTR( SceneHierarchyFilter )
+		IE_CORE_DECLAREMEMBERPTR( HierarchyViewFilter )
 
-		SceneHierarchyFilter( IECore::CompoundDataPtr userData = nullptr )
+		HierarchyViewFilter( IECore::CompoundDataPtr userData = nullptr )
 			:	PathFilter( userData ), m_context( new Context )
 		{
 		}
@@ -105,7 +105,7 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 			if( node )
 			{
 				m_plugDirtiedConnection = node->plugDirtiedSignal().connect(
-					boost::bind( &SceneHierarchyFilter::plugDirtied, this, ::_1 )
+					boost::bind( &HierarchyViewFilter::plugDirtied, this, ::_1 )
 				);
 			}
 			else
@@ -130,7 +130,7 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 			if( m_context )
 			{
 				m_contextChangedConnection = const_cast<Context *>( m_context.get() )->changedSignal().connect(
-					boost::bind( &SceneHierarchyFilter::contextChanged, this, ::_2 )
+					boost::bind( &HierarchyViewFilter::contextChanged, this, ::_2 )
 				);
 			}
 			else
@@ -205,30 +205,30 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 
 // Wrapper functions
 
-ScenePlugPtr getScene( SceneHierarchyFilter &f )
+ScenePlugPtr getScene( HierarchyViewFilter &f )
 {
 	return const_cast<ScenePlug *>( f.getScene() );
 }
 
-ContextPtr getContext( SceneHierarchyFilter &f )
+ContextPtr getContext( HierarchyViewFilter &f )
 {
 	return const_cast<Context *>( f.getContext() );
 }
 
 //////////////////////////////////////////////////////////////////////////
-// SceneHierarchySetFilter - filters based on membership in a
+// HierarchyViewSetFilter - filters based on membership in a
 // list of sets.
 //////////////////////////////////////////////////////////////////////////
 
-class SceneHierarchySetFilter : public SceneHierarchyFilter
+class HierarchyViewSetFilter : public HierarchyViewFilter
 {
 
 	public :
 
-		IE_CORE_DECLAREMEMBERPTR( SceneHierarchySetFilter )
+		IE_CORE_DECLAREMEMBERPTR( HierarchyViewSetFilter )
 
-		SceneHierarchySetFilter( IECore::CompoundDataPtr userData = nullptr )
-			:	SceneHierarchyFilter( userData ), m_setsDirty( true )
+		HierarchyViewSetFilter( IECore::CompoundDataPtr userData = nullptr )
+			:	HierarchyViewFilter( userData ), m_setsDirty( true )
 		{
 		}
 
@@ -284,7 +284,7 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 				remove_if(
 					paths.begin(),
 					paths.end(),
-					boost::bind( &SceneHierarchySetFilter::remove, this, ::_1 )
+					boost::bind( &HierarchyViewSetFilter::remove, this, ::_1 )
 				),
 				paths.end()
 			);
@@ -341,14 +341,14 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 
 // Wrapper functions
 
-void setSetNames( SceneHierarchySetFilter &f, object pythonSetNames )
+void setSetNames( HierarchyViewSetFilter &f, object pythonSetNames )
 {
 	std::vector<InternedString> setNames;
 	boost::python::container_utils::extend_container( setNames, pythonSetNames );
 	f.setSetNames( setNames );
 }
 
-boost::python::list getSetNames( SceneHierarchySetFilter &f )
+boost::python::list getSetNames( HierarchyViewSetFilter &f )
 {
 	boost::python::list result;
 	const std::vector<InternedString> &s = f.getSetNames();
@@ -360,21 +360,21 @@ boost::python::list getSetNames( SceneHierarchySetFilter &f )
 }
 
 //////////////////////////////////////////////////////////////////////////
-// SceneHierarchySearchFilter - filters based on a match pattern. This
+// HierarchyViewSearchFilter - filters based on a match pattern. This
 // is different from MatchPatternPathFilter, because it performs a full
 // search of the entire scene, whereas MatchPatternPathFilter can only
 // match against leaf paths.
 //////////////////////////////////////////////////////////////////////////
 
-class SceneHierarchySearchFilter : public SceneHierarchyFilter
+class HierarchyViewSearchFilter : public HierarchyViewFilter
 {
 
 	public :
 
-		IE_CORE_DECLAREMEMBERPTR( SceneHierarchySearchFilter )
+		IE_CORE_DECLAREMEMBERPTR( HierarchyViewSearchFilter )
 
-		SceneHierarchySearchFilter( IECore::CompoundDataPtr userData = nullptr )
-			:	SceneHierarchyFilter( userData ), m_pathMatcherDirty( true )
+		HierarchyViewSearchFilter( IECore::CompoundDataPtr userData = nullptr )
+			:	HierarchyViewFilter( userData ), m_pathMatcherDirty( true )
 		{
 		}
 
@@ -427,7 +427,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 				remove_if(
 					paths.begin(),
 					paths.end(),
-					boost::bind( &SceneHierarchySearchFilter::remove, this, ::_1 )
+					boost::bind( &HierarchyViewSearchFilter::remove, this, ::_1 )
 				),
 				paths.end()
 			);
@@ -492,33 +492,33 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 
 } // namespace
 
-void GafferSceneUIModule::bindSceneHierarchy()
+void GafferSceneUIModule::bindHierarchyView()
 {
 
 	// Deliberately using RefCountedClass rather than RunTimeTypedClass
 	// to avoid having to register unique type ids and names for otherwise
 	// private classes.
 
-	RefCountedClass<SceneHierarchyFilter, PathFilter>( "_SceneHierarchyFilter" )
-		.def( "setScene", &SceneHierarchyFilter::setScene )
+	RefCountedClass<HierarchyViewFilter, PathFilter>( "_HierarchyViewFilter" )
+		.def( "setScene", &HierarchyViewFilter::setScene )
 		.def( "getScene", &getScene )
-		.def( "setContext", &SceneHierarchyFilter::setContext )
+		.def( "setContext", &HierarchyViewFilter::setContext )
 		.def( "getContext", &getContext )
 
 		.def( "setSetNames", &setSetNames )
 		.def( "getSetNames", &getSetNames )
 	;
 
-	RefCountedClass<SceneHierarchySetFilter, SceneHierarchyFilter>( "_SceneHierarchySetFilter" )
+	RefCountedClass<HierarchyViewSetFilter, HierarchyViewFilter>( "_HierarchyViewSetFilter" )
 		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
 		.def( "setSetNames", &setSetNames )
 		.def( "getSetNames", &getSetNames )
 	;
 
-	RefCountedClass<SceneHierarchySearchFilter, SceneHierarchyFilter>( "_SceneHierarchySearchFilter" )
+	RefCountedClass<HierarchyViewSearchFilter, HierarchyViewFilter>( "_HierarchyViewSearchFilter" )
 		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
-		.def( "setMatchPattern", &SceneHierarchySearchFilter::setMatchPattern )
-		.def( "getMatchPattern", &SceneHierarchySearchFilter::getMatchPattern, return_value_policy<copy_const_reference>() )
+		.def( "setMatchPattern", &HierarchyViewSearchFilter::setMatchPattern )
+		.def( "getMatchPattern", &HierarchyViewSearchFilter::getMatchPattern, return_value_policy<copy_const_reference>() )
 	;
 
 }

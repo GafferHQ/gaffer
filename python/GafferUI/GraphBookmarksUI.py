@@ -42,7 +42,7 @@ import Gaffer
 # Public methods
 ##########################################################################
 
-def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/GraphBookmarksDivider", { "divider" : True } )
@@ -56,13 +56,13 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 		}
 	)
 
-def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
+def appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition ) :
 
-	parent = nodeGraph.graphGadget().getRoot()
+	parent = graphEditor.graphGadget().getRoot()
 	dividerAdded = False
 	for bookmark in Gaffer.MetadataAlgo.bookmarks( parent ) :
 
-		nodeGadget = nodeGraph.graphGadget().nodeGadget( bookmark )
+		nodeGadget = graphEditor.graphGadget().nodeGadget( bookmark )
 		if nodeGadget is None :
 			continue
 

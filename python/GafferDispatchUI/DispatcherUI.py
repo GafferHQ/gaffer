@@ -172,7 +172,7 @@ def appendMenuDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Repeat Previous", { "command" : repeatPrevious, "shortCut" : "Ctrl+R", "active" : previousAvailable } )
 
-def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
 	if not hasattr( node, "execute" ) :
 		return

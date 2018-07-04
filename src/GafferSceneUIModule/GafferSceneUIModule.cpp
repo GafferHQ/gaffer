@@ -37,7 +37,7 @@
 #include "boost/python.hpp"
 
 #include "ContextAlgoBinding.h"
-#include "SceneHierarchyBinding.h"
+#include "HierarchyViewBinding.h"
 #include "ToolBinding.h"
 #include "ViewBinding.h"
 #include "VisualiserBinding.h"
@@ -98,7 +98,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 		.def( "selectionBound", &SceneGadget::selectionBound )
 	;
 
-	bindSceneHierarchy();
+	bindHierarchyView();
 	bindContextAlgo();
 
 }

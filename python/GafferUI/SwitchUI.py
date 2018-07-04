@@ -48,7 +48,7 @@ for nodeType in ( Gaffer.SwitchDependencyNode, Gaffer.SwitchComputeNode ) :
 		chosen input to the output.
 		""",
 
-		# Add + buttons for creating new plugs in the NodeGraph
+		# Add + buttons for creating new plugs in the GraphEditor
 		"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.SwitchUI.PlugAdder",
 		"noduleLayout:customGadget:addButtonTop:section", "top",
 		"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.SwitchUI.PlugAdder",

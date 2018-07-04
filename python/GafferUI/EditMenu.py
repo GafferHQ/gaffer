@@ -83,35 +83,36 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : selectionAvailable } )
 
-__Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "nodeGraph" ] )
+## \todo: Remove nodeGraph fallback when all client code has been updated
+__Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "graphEditor", "nodeGraph" ] )
 
 ## Returns the scope in which an edit menu item should operate. The return
-# value has "scriptWindow", "script", "parent" and "nodeGraph" attributes.
-# The "nodeGraph" attribute may be None if no NodeGraph can be found. Note
+# value has "scriptWindow", "script", "parent" and "graphEditor" attributes.
+# The "graphEditor" attribute may be None if no GraphEditor can be found. Note
 # that in many cases user expectation is that an operation will only apply
-# to nodes currently visible within the NodeGraph, and that nodes can be
-# filtered within the NodeGraph.
+# to nodes currently visible within the GraphEditor, and that nodes can be
+# filtered within the GraphEditor.
 def scope( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 
-	nodeGraph = None
+	graphEditor = None
 	## \todo Add public methods for querying focus.
 	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
 	if focusWidget is not None :
-		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
+		graphEditor = focusWidget.ancestor( GafferUI.GraphEditor )
 
-	if nodeGraph is None :
-		nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
-		if nodeGraphs :
-			nodeGraph = nodeGraphs[0]
+	if graphEditor is None :
+		graphEditors = scriptWindow.getLayout().editors( GafferUI.GraphEditor )
+		if graphEditors :
+			graphEditor = graphEditors[0]
 
-	if nodeGraph is not None :
-		parent = nodeGraph.graphGadget().getRoot()
+	if graphEditor is not None :
+		parent = graphEditor.graphGadget().getRoot()
 	else :
 		parent = scriptWindow.scriptNode()
 
-	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, nodeGraph )
+	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, graphEditor, graphEditor )
 
 ## Returns True if nodes are currently selected in the scope returned by scope().
 # This can be used for the "active" field in a menu item definition to disable
@@ -165,36 +166,36 @@ def paste( menu ) :
 		s.script.paste( s.parent, continueOnError = True )
 
 		# try to get the new nodes connected to the original selection
-		if s.nodeGraph is None :
+		if s.graphEditor is None :
 			return
 
-		s.nodeGraph.graphGadget().getLayout().connectNodes( s.nodeGraph.graphGadget(), s.script.selection(), originalSelection )
+		s.graphEditor.graphGadget().getLayout().connectNodes( s.graphEditor.graphGadget(), s.script.selection(), originalSelection )
 
 		# position the new nodes sensibly
 
-		bound = s.nodeGraph.bound()
+		bound = s.graphEditor.bound()
 		mousePosition = GafferUI.Widget.mousePosition()
 		if bound.intersects( mousePosition ) :
 			fallbackPosition = mousePosition - bound.min()
 		else :
 			fallbackPosition = bound.center() - bound.min()
 
-		fallbackPosition = s.nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
+		fallbackPosition = s.graphEditor.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
 			imath.V2f( fallbackPosition.x, fallbackPosition.y ),
-			gadget = s.nodeGraph.graphGadget()
+			gadget = s.graphEditor.graphGadget()
 		).p0
 		fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
 		# First position the nodes sensibly as a group, keeping their relative positions.
 		# Usually this is all we need to do, because typically they were laid out when they
 		# were cut/copied.
-		nodesNeedingLayout = [ x for x in s.script.selection() if not s.nodeGraph.graphGadget().hasNodePosition( x ) ]
-		s.nodeGraph.graphGadget().getLayout().positionNodes( s.nodeGraph.graphGadget(), s.script.selection(), fallbackPosition )
+		nodesNeedingLayout = [ x for x in s.script.selection() if not s.graphEditor.graphGadget().hasNodePosition( x ) ]
+		s.graphEditor.graphGadget().getLayout().positionNodes( s.graphEditor.graphGadget(), s.script.selection(), fallbackPosition )
 		# Second, do an auto-layout for any nodes which weren't laid out properly when they
 		# were cut/copied.
-		s.nodeGraph.graphGadget().getLayout().layoutNodes( s.nodeGraph.graphGadget(), Gaffer.StandardSet( nodesNeedingLayout ) )
+		s.graphEditor.graphGadget().getLayout().layoutNodes( s.graphEditor.graphGadget(), Gaffer.StandardSet( nodesNeedingLayout ) )
 
-		s.nodeGraph.frame( s.script.selection(), extend = True )
+		s.graphEditor.frame( s.script.selection(), extend = True )
 
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -225,10 +226,10 @@ def find( menu ) :
 def arrange( menu ) :
 
 	s = scope( menu )
-	if not s.nodeGraph :
+	if not s.graphEditor :
 		return
 
-	graph = s.nodeGraph.graphGadget()
+	graph = s.graphEditor.graphGadget()
 
 	nodes = s.script.selection()
 	if not nodes :
@@ -242,10 +243,10 @@ def arrange( menu ) :
 def selectAll( menu ) :
 
 	s = scope( menu )
-	if s.nodeGraph is None :
+	if s.graphEditor is None :
 		return
 
-	graphGadget = s.nodeGraph.graphGadget()
+	graphGadget = s.graphEditor.graphGadget()
 	for node in s.parent.children( Gaffer.Node ) :
 		if graphGadget.nodeGadget( node ) is not None :
 			s.script.selection().add( node )
@@ -313,12 +314,12 @@ def selectConnected( menu ) :
 def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 
 	s = scope( menu )
-	if s.nodeGraph is None :
+	if s.graphEditor is None :
 		return
 
 	connected = Gaffer.StandardSet()
 	for node in s.script.selection() :
-		connected.add( [ g.node() for g in s.nodeGraph.graphGadget().connectedNodeGadgets( node, direction, degreesOfSeparation ) ] )
+		connected.add( [ g.node() for g in s.graphEditor.graphGadget().connectedNodeGadgets( node, direction, degreesOfSeparation ) ] )
 
 	selection = s.script.selection()
 	if not add :

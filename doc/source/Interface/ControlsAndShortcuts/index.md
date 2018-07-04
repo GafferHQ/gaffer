@@ -3,10 +3,10 @@
 The following is a list of input device controls and shortcuts for manipulating the _Node Graph_, _Viewer_, and _Script Editor_.
 
 
-## _Node Graph_ ##
+## _Graph Editor_ ##
 
 > Note :
-> For the following controls and shortcuts, the cursor must hover over the _Node Graph_.
+> For the following controls and shortcuts, the cursor must hover over the _Graph Editor_.
 
 
 ### Navigation ###

@@ -42,7 +42,7 @@ import GafferUITest
 import GafferScene
 import GafferSceneUI
 
-class SceneHierarchyTest( GafferUITest.TestCase ) :
+class HierarchyViewTest( GafferUITest.TestCase ) :
 
 	def assertExpanded( self, context, path, expanded ) :
 
@@ -54,7 +54,7 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 
 	def testNoUnwantedExpansion( self ) :
 
-		# Make a small scene, and view it with a SceneHierarchy editor.
+		# Make a small scene, and view it with a HierarchyView editor.
 
 		script = Gaffer.ScriptNode()
 
@@ -62,7 +62,7 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["plane"]["out"] )
 
-		sceneHierarchy = GafferSceneUI.SceneHierarchy( script )
+		HierarchyView = GafferSceneUI.HierarchyView( script )
 		script.selection().add( script["group"] )
 
 		self.waitForIdle( 1000 )
@@ -96,11 +96,11 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		script["group"]["in"][0].setInput( script["plane"]["out"] )
 
 		with GafferUI.Window() as w :
-			sceneHierarchy = GafferSceneUI.SceneHierarchy( script )
+			HierarchyView = GafferSceneUI.HierarchyView( script )
 
 		w.setVisible( True )
 
-		sceneHierarchy.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
+		HierarchyView.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
 
 		groupPathMatcher = IECore.PathMatcher( [ "/group" ] )
 		planePathMatcher = IECore.PathMatcher( [ "/group/plane" ] )
@@ -122,10 +122,10 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 
 		assertExpectedState()
 
-		sceneHierarchy.setNodeSet( Gaffer.StandardSet() )
+		HierarchyView.setNodeSet( Gaffer.StandardSet() )
 		assertExpectedState()
 
-		sceneHierarchy.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
+		HierarchyView.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
 		assertExpectedState()
 
 if __name__ == "__main__":

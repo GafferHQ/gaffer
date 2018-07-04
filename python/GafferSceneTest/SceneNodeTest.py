@@ -55,7 +55,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		# or attributes. if we did, then there wouldn't be a sensible way of merging
 		# them (particularly transforms) when a Group node has multiple inputs.
 		# it's also pretty confusing to have stuff go on at the root level,
-		# particularly as the root isn't well represented in the SceneHierarchy editor,
+		# particularly as the root isn't well represented in the HierarchyView editor,
 		# and applications like maya don't have stuff happening at the root
 		# level either. we achieve this by having the SceneNode simply not
 		# call the various processing functions for the root.

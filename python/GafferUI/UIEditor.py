@@ -147,7 +147,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		return self.__plugTab
 
 	@classmethod
-	def appendNodeContextMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+	def appendNodeContextMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
 		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
 		menuDefinition.append(
@@ -1533,9 +1533,9 @@ class _PlugEditor( GafferUI.Widget ) :
 							_Label( m.label )
 							self.__metadataWidgets[m.key] = m.metadataWidgetType( key = m.key )
 
-			with GafferUI.Collapsible( "Node Graph", collapsed = True ) :
+			with GafferUI.Collapsible( "Graph Editor", collapsed = True ) :
 
-				with GafferUI.ListContainer( spacing = 4 ) as self.__nodeGraphSection :
+				with GafferUI.ListContainer( spacing = 4 ) as self.__graphEditorSection :
 
 					with _Row() :
 
@@ -1586,7 +1586,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		self.__updateWidgetSettings()
 		self.__updateGadgetMenuText()
 		self.__presetsEditor.setPlug( plug )
-		self.__nodeGraphSection.setEnabled( self.__plug is not None and self.__plug.parent().isSame( self.__plug.node() ) )
+		self.__graphEditorSection.setEnabled( self.__plug is not None and self.__plug.parent().isSame( self.__plug.node() ) )
 
 		self.setEnabled( self.__plug is not None )
 
