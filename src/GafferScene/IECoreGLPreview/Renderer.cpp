@@ -367,7 +367,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		OpenGLRenderer( RenderType renderType, const std::string &fileName )
-			:	m_renderType( renderType )
+			:	m_renderType( renderType ), m_baseStateOptions( new CompoundObject )
 		{
 			if( renderType == SceneDescription )
 			{
@@ -414,6 +414,24 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				{
 					m_selection = d->readable();
 				}
+				return;
+			}
+			else if(
+				boost::starts_with( name.string(), "gl:primitive:" ) ||
+				boost::starts_with( name.string(), "gl:pointsPrimitive:" ) ||
+				boost::starts_with( name.string(), "gl:curvesPrimitive:" ) ||
+				boost::starts_with( name.string(), "gl:smoothing:" )
+			)
+			{
+				if( value )
+				{
+					m_baseStateOptions->members()[name] = value->copy();
+				}
+				else
+				{
+					m_baseStateOptions->members().erase( name );
+				}
+				m_baseState = nullptr; // We'll update it lazily in `baseState()`
 				return;
 			}
 			else if( boost::contains( name.string(), ":" ) && !boost::starts_with( name.string(), "gl:" ) )
@@ -518,7 +536,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			glPushAttrib( GL_ALL_ATTRIB_BITS );
 
 				State::bindBaseState();
-				StatePtr state = new State( /* complete = */ true );
+				State *state = baseState();
 				state->bind();
 
 				if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
@@ -543,11 +561,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 					IECoreGL::State::ScopedBinding shapeStateBinding(
 						*shapeState, const_cast<IECoreGL::State &>( *state )
 					);
-					renderObjects( state.get() );
+					renderObjects( state );
 				}
 				else
 				{
-					renderObjects( state.get() );
+					renderObjects( state );
 				}
 
 			glPopAttrib();
@@ -592,12 +610,12 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 				State::bindBaseState();
-				StatePtr state = new State( /* complete = */ true );
+				State *state = baseState();
 				state->bind();
 
-				camera->camera()->render( state.get() );
+				camera->camera()->render( state );
 
-				renderObjects( state.get() );
+				renderObjects( state );
 
 				writeOutputs( frameBuffer.get() );
 
@@ -739,10 +757,25 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return new PathMatcherData( result );
 		}
 
+		IECoreGL::State *baseState()
+		{
+			if( !m_baseState )
+			{
+				m_baseState = new IECoreGL::State( /* complete = */ true );
+				IECoreGL::ConstStatePtr optionsState = static_pointer_cast<const State>(
+					CachedConverter::defaultCachedConverter()->convert( m_baseStateOptions.get() )
+				);
+				m_baseState->add( const_pointer_cast<State>( optionsState ) );
+			}
+			return m_baseState.get();
+		}
+
 		// Global options
 		RenderType m_renderType;
 		string m_camera;
 		IECore::PathMatcher m_selection;
+		IECore::CompoundObjectPtr m_baseStateOptions;
+		IECoreGL::StatePtr m_baseState;
 
 		// Queue used to pass edits from background threads to the render thread.
 		typedef std::function<void ()> Edit;
