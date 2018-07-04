@@ -123,6 +123,12 @@ def preferences( menu ) :
 
 		__preferencesWindows[application] = weakref.ref( window )
 
+		# The NodeUI builds lazily, so we force it to build now so we can
+		# resize the window to fit. Since the plugs are configured per
+		# application, we need to build them all.
+		for plug in application["preferences"].children( Gaffer.Plug ) :
+			window._getWidget().plugValueWidget( plug, lazy=False )
+		window.resizeToFitChild()
 		scriptWindow.addChildWindow( window )
 
 	window.setVisible( True )
