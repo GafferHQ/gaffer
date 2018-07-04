@@ -100,6 +100,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Diagnostic/Arnold/Refraction Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:refracted" } ),
 		( "Diagnostic/Arnold/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:diffuse" } ),
 		( "Diagnostic/Arnold/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:glossy" } ),
+		( "Diagnostic/Arnold/Matte", GafferScene.AttributeVisualiser, { "attributeName" : "ai:matte" } ),
+		( "Diagnostic/Arnold/Opaque", GafferScene.AttributeVisualiser, { "attributeName" : "ai:opaque" } ),
+		( "Diagnostic/Arnold/Receive Shadows", GafferScene.AttributeVisualiser, { "attributeName" : "ai:receive_shadows" } ),
+		( "Diagnostic/Arnold/Self Shadows", GafferScene.AttributeVisualiser, { "attributeName" : "ai:self_shadows" } ),
 
 	] )
 
