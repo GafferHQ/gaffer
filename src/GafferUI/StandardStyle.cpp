@@ -416,22 +416,22 @@ V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, c
 {
 	const float offset = 1.0;
 
-	float xT;
+	float xT = limits<float>::max();
 	if( v.x > 0 )
 	{
 		xT = ( offset + dstNodeFrame.max.x - p.x ) / v.x;
 	}
-	else
+	else if( v.x < 0 )
 	{
 		xT = ( offset + p.x - dstNodeFrame.min.x ) / -v.x;
 	}
 
-	float yT;
+	float yT = limits<float>::max();
 	if( v.y > 0 )
 	{
 		yT = ( offset + dstNodeFrame.max.y - p.y ) / v.y;
 	}
-	else
+	else if( v.y < 0 )
 	{
 		yT = ( offset + p.y - dstNodeFrame.min.y ) / -v.y;
 	}
