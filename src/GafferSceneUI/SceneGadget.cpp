@@ -76,7 +76,8 @@ SceneGadget::SceneGadget()
 		m_paused( false ),
 		m_renderer( IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ) ),
 		m_controller( nullptr, nullptr, m_renderer ),
-		m_renderRequestPending( false ),
+		m_updateErrored( false ),
+		m_renderRequestPending( false )
 {
 	typedef CompoundObject::ObjectMap::value_type Option;
 	CompoundObjectPtr openGLOptions = new CompoundObject;
@@ -238,7 +239,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
-		m_renderer->render();
+		renderScene();
 	}
 
 	if( !selection.size() )
@@ -261,7 +262,7 @@ size_t SceneGadget::objectsAt(
 	vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		m_renderer->render();
+		renderScene();
 	}
 
 	UIntVectorDataPtr ids = new UIntVectorData;
@@ -353,6 +354,10 @@ std::string SceneGadget::getToolTip( const IECore::LineSegment3f &line ) const
 
 Imath::Box3f SceneGadget::bound() const
 {
+	if( m_updateErrored )
+	{
+		return Box3f();
+	}
 	DataPtr d = m_renderer->command( "gl:queryBound" );
 	return static_cast<Box3fData *>( d.get() )->readable();
 }
@@ -370,7 +375,7 @@ void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	}
 
 	const_cast<SceneGadget *>( this )->updateRenderer();
-	m_renderer->render();
+	renderScene();
 }
 
 void SceneGadget::updateRenderer()
@@ -394,19 +399,29 @@ void SceneGadget::updateRenderer()
 		return;
 	}
 
-	auto renderRequestCallback = [this] ( bool complete ) {
+	auto progressCallback = [this] ( BackgroundTask::Status progress ) {
+
 		if( !refCount() )
 		{
 			return;
 		}
 		bool shouldRequestRender = !m_renderRequestPending.exchange( true );
-		if( shouldRequestRender || complete )
+		bool shouldEmitStateChange =
+			progress == BackgroundTask::Completed ||
+			progress == BackgroundTask::Errored
+		;
+
+		if( shouldRequestRender || shouldEmitStateChange )
 		{
 			// Must hold a reference to stop us dying before our UI thread call is scheduled.
 			SceneGadgetPtr thisRef = this;
 			ParallelAlgo::callOnUIThread(
-				[thisRef, shouldRequestRender, complete] {
-					if( complete )
+				[thisRef, shouldRequestRender, shouldEmitStateChange, progress] {
+					if( progress == BackgroundTask::Errored )
+					{
+						thisRef->m_updateErrored = true;
+					}
+					if( shouldEmitStateChange )
 					{
 						thisRef->stateChangedSignal()( thisRef.get() );
 					}
@@ -418,10 +433,21 @@ void SceneGadget::updateRenderer()
 				}
 			);
 		}
+
 	};
 
-	m_updateTask = m_controller.updateInBackground( renderRequestCallback );
+	m_updateErrored = false;
+	m_updateTask = m_controller.updateInBackground( progressCallback );
 	stateChangedSignal()( this );
+}
+
+void SceneGadget::renderScene() const
+{
+	if( m_updateErrored )
+	{
+		return;
+	}
+	m_renderer->render();
 }
 
 void SceneGadget::visibilityChanged()

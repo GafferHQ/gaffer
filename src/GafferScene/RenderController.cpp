@@ -576,7 +576,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			unsigned changedParentComponents,
 			const Context *context,
 			const ScenePlug::ScenePath &scenePath,
-			const UpdateCallback &callback
+			const ProgressCallback &callback
 		)
 			:	m_controller( controller ),
 				m_sceneGraph( sceneGraph ),
@@ -629,7 +629,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 			if( changedComponents && m_callback )
 			{
-				m_callback( /* complete = */ false );
+				m_callback( BackgroundTask::Running );
 			}
 
 			// Spawn subtasks to apply updates to each child.
@@ -702,7 +702,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		unsigned m_changedParentComponents;
 		const Context *m_context;
 		ScenePlug::ScenePath m_scenePath;
-		const UpdateCallback &m_callback;
+		const ProgressCallback &m_callback;
 
 };
 
@@ -714,6 +714,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 	:	m_renderer( renderer ),
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
+		m_updateRequested( false ),
 		m_dirtyComponents( SceneGraph::AllComponents ),
 		m_globals( new CompoundObject )
 {
@@ -891,35 +892,37 @@ void RenderController::contextChanged( const IECore::InternedString &name )
 
 void RenderController::requestUpdate()
 {
-	if( m_updateRequired )
-	{
-		// Already requested
-		return;
-	}
 	m_updateRequired = true;
-	updateRequiredSignal()( *this );
+	if( !m_updateRequested )
+	{
+		m_updateRequested = true;
+		updateRequiredSignal()( *this );
+	}
 }
 
-void RenderController::update( const UpdateCallback &callback )
+void RenderController::update( const ProgressCallback &callback )
 {
 	if( !m_scene || !m_context )
 	{
 		return;
 	}
 
+	m_updateRequested = false;
+
 	Context::EditableScope scopedContext( m_context.get() );
 	scopedContext.set( "scene:renderer", m_renderer->name().string() );
 
-	updateInternal();
+	updateInternal( callback );
 }
 
-std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( const UpdateCallback &callback )
+std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( const ProgressCallback &callback )
 {
 	if( !m_scene || !m_context )
 	{
 		return nullptr;
 	}
 
+	m_updateRequested = false;
 	cancelBackgroundTask();
 
 	Context::EditableScope scopedContext( m_context.get() );
@@ -936,54 +939,76 @@ std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( co
 	return m_backgroundTask;
 }
 
-void RenderController::updateInternal( const UpdateCallback &callback )
+void RenderController::updateInternal( const ProgressCallback &callback )
 {
-	bool cameraGlobalsChanged = false;
-	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
+	try
 	{
-		ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
-		RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
-		RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
-		cameraGlobalsChanged = ::cameraGlobalsChanged( globals.get(), m_globals.get() );
-		m_globals = globals;
-	}
-
-	if( m_dirtyComponents & SceneGraph::SetsComponent )
-	{
-		if( m_renderSets.update( m_scene.get() ) & RendererAlgo::RenderSets::RenderSetsChanged )
+		bool cameraGlobalsChanged = false;
+		if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 		{
-			m_dirtyComponents |= SceneGraph::RenderSetsComponent;
-		}
-	}
-
-	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
-	{
-		SceneGraph *sceneGraph = m_sceneGraphs[i].get();
-		if( i == SceneGraph::CameraType && cameraGlobalsChanged )
-		{
-			// Because the globals are applied to camera objects, we must update the object whenever
-			// the globals have changed, so we clear the scene graph and start again.
-			sceneGraph->clear();
+			ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
+			RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
+			RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
+			cameraGlobalsChanged = ::cameraGlobalsChanged( globals.get(), m_globals.get() );
+			m_globals = globals;
 		}
 
-		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-		SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
-			this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, Context::current(), ScenePlug::ScenePath(), callback
-		);
-		tbb::task::spawn_root_and_wait( *task );
+		if( m_dirtyComponents & SceneGraph::SetsComponent )
+		{
+			if( m_renderSets.update( m_scene.get() ) & RendererAlgo::RenderSets::RenderSetsChanged )
+			{
+				m_dirtyComponents |= SceneGraph::RenderSetsComponent;
+			}
+		}
+
+		for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
+		{
+			SceneGraph *sceneGraph = m_sceneGraphs[i].get();
+			if( i == SceneGraph::CameraType && cameraGlobalsChanged )
+			{
+				// Because the globals are applied to camera objects, we must update the object whenever
+				// the globals have changed, so we clear the scene graph and start again.
+				sceneGraph->clear();
+			}
+
+			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+			SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
+				this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, Context::current(), ScenePlug::ScenePath(), callback
+			);
+			tbb::task::spawn_root_and_wait( *task );
+		}
+
+		if( cameraGlobalsChanged )
+		{
+			updateDefaultCamera();
+		}
+
+		m_dirtyComponents = SceneGraph::NoComponent;
+		m_updateRequired = false;
+
+		if( callback )
+		{
+			callback( BackgroundTask::Completed );
+		}
 	}
-
-	if( cameraGlobalsChanged )
+	catch( const IECore::Cancelled &e )
 	{
-		updateDefaultCamera();
+		if( callback )
+		{
+			callback( BackgroundTask::Cancelled );
+		}
+		throw;
 	}
-
-	m_dirtyComponents = SceneGraph::NoComponent;
-	m_updateRequired = false;
-
-	if( callback )
+	catch( ... )
 	{
-		callback( /* complete = */ true );
+		// No point updating again, since it'll just repeat
+		// the same error.
+		m_updateRequired = false;
+		if( callback )
+		{
+			callback( BackgroundTask::Errored );
+		}
+		throw;
 	}
 }
 

@@ -79,10 +79,10 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 
 		bool updateRequired() const;
 
-		typedef std::function<void ( bool complete )> UpdateCallback;
+		typedef std::function<void ( Gaffer::BackgroundTask::Status progress )> ProgressCallback;
 
-		void update( const UpdateCallback &callback = UpdateCallback() );
-		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const UpdateCallback &callback = UpdateCallback() );
+		void update( const ProgressCallback &callback = ProgressCallback() );
+		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const ProgressCallback &callback = ProgressCallback() );
 
 	private :
 
@@ -90,7 +90,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		void contextChanged( const IECore::InternedString &name );
 		void requestUpdate();
 
-		void updateInternal( const UpdateCallback &callback = UpdateCallback() );
+		void updateInternal( const ProgressCallback &callback = ProgressCallback() );
 		void updateDefaultCamera();
 		void cancelBackgroundTask();
 
@@ -109,6 +109,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 
 		UpdateRequiredSignal m_updateRequiredSignal;
 		bool m_updateRequired;
+		bool m_updateRequested;
 
 		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		unsigned m_dirtyComponents;

@@ -130,6 +130,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 	private :
 
 		void updateRenderer();
+		void renderScene() const;
 		IECore::PathMatcher convertSelection( IECore::UIntVectorDataPtr ids ) const;
 		void visibilityChanged();
 
@@ -139,6 +140,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		IECoreScenePreview::RendererPtr m_renderer;
 		mutable GafferScene::RenderController m_controller;
 		mutable std::shared_ptr<Gaffer::BackgroundTask> m_updateTask;
+		bool m_updateErrored;
 		std::atomic_bool m_renderRequestPending;
 
 		IECore::ConstCompoundObjectPtr m_openGLOptions;
