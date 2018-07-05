@@ -268,6 +268,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		{
 		}
 
+		IECore::InternedString name() const override
+		{
+			return "OpenGL";
+		}
+
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			if( name == "camera" )

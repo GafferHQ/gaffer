@@ -60,6 +60,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create( "OpenGL" )
 		self.assertTrue( isinstance( r, GafferScene.Private.IECoreScenePreview.Renderer ) )
+		self.assertEqual( r.name(), "OpenGL" )
 
 	def testOtherRendererAttributes( self ) :
 

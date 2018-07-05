@@ -1000,6 +1000,11 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			NSIEnd( m_context );
 		}
 
+		IECore::InternedString name() const override
+		{
+			return "3Delight";
+		}
+
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			if( name == g_frameOptionName )

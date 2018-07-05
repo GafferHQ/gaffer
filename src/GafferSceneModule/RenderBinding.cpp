@@ -118,6 +118,11 @@ list rendererTypes()
 	return result;
 }
 
+const char *rendererName( Renderer &renderer )
+{
+	return renderer.name().c_str();
+}
+
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
 {
 	return renderer.object( name, object, attributes );
@@ -253,6 +258,8 @@ void GafferSceneModule::bindRender()
 			.staticmethod( "types" )
 			.def( "create", &Renderer::create, ( arg( "type" ), arg( "renderType" ) = Renderer::Batch, arg( "fileName" ) = "" ) )
 			.staticmethod( "create" )
+
+			.def( "name", &rendererName )
 
 			.def( "option", &Renderer::option )
 			.def( "output", &Renderer::output )
