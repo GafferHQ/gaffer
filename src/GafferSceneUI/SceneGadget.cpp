@@ -187,6 +187,15 @@ SceneGadget::SceneGadgetSignal &SceneGadget::stateChangedSignal()
 	return m_stateChangedSignal;
 }
 
+void SceneGadget::waitForCompletion()
+{
+	updateRenderer();
+	if( m_updateTask )
+	{
+		m_updateTask->wait();
+	}
+}
+
 void SceneGadget::setOpenGLOptions( const IECore::CompoundObject *options )
 {
 	if( m_openGLOptions && *m_openGLOptions == *options )

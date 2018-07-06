@@ -65,7 +65,10 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneGadget, SceneGadgetTypeId, Gadget );
 
-		Imath::Box3f bound() const override;
+		/// Scene
+		/// =====
+		///
+		/// These methods specify the scene and how it is drawn.
 
 		void setScene( GafferScene::ConstScenePlugPtr scene );
 		const GafferScene::ScenePlug *getScene() const;
@@ -79,6 +82,25 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
+
+		/// Returns the selection.
+		const IECore::PathMatcher &getSelection() const;
+		/// Sets the selection.
+		void setSelection( const IECore::PathMatcher &selection );
+
+		/// Specifies options to control the OpenGL renderer. These are used
+		/// to specify wireframe/point drawing and colours etc. A copy of
+		/// `options` is taken.
+		void setOpenGLOptions( const IECore::CompoundObject *options );
+		const IECore::CompoundObject *getOpenGLOptions() const;
+
+		/// Update process
+		/// ==============
+		///
+		/// The SceneGadget updates progressively by performing
+		/// all computations on background threads, displaying
+		/// results as they become available. These methods control
+		/// that process.
 
 		void setPaused( bool paused );
 		bool getPaused() const;
@@ -95,11 +117,19 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		typedef boost::signal<void (SceneGadget *)> SceneGadgetSignal;
 		SceneGadgetSignal &stateChangedSignal();
 
-		/// Specifies options to control the OpenGL renderer. These are used
-		/// to specify wireframe/point drawing and colours etc. A copy of
-		/// `options` is taken.
-		void setOpenGLOptions( const IECore::CompoundObject *options );
-		const IECore::CompoundObject *getOpenGLOptions() const;
+		/// Blocks until the update is completed. This is primarily of
+		/// use for the unit tests.
+		void waitForCompletion();
+
+		/// Scene queries
+		/// =============
+		///
+		/// These queries are performed against the current state of the scene,
+		/// which might still be being updated asynchronously. Call `waitForCompletion()`
+		/// first if you need a final answer and are willing to block the UI
+		/// waiting for it.
+
+		Imath::Box3f bound() const override;
 
 		/// Finds the path of the frontmost object intersecting the specified line
 		/// through gadget space. Returns true on success and false if there is no
@@ -113,10 +143,6 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 			IECore::PathMatcher &paths
 		) const;
 
-		/// Returns the selection.
-		const IECore::PathMatcher &getSelection() const;
-		/// Sets the selection.
-		void setSelection( const IECore::PathMatcher &selection );
 		/// Returns the bounding box of all the selected objects.
 		Imath::Box3f selectionBound() const;
 

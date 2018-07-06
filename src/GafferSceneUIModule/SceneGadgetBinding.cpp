@@ -63,6 +63,12 @@ void setPaused( SceneGadget &g, bool paused )
 	g.setPaused( paused );
 }
 
+void waitForCompletion( SceneGadget &g )
+{
+	ScopedGILRelease gilRelease;
+	g.waitForCompletion();
+}
+
 struct SceneGadgetSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, SceneGadgetPtr g )
@@ -113,6 +119,7 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "setPaused", &setPaused )
 		.def( "state", &SceneGadget::state )
 		.def( "stateChangedSignal", &SceneGadget::stateChangedSignal, return_internal_reference<1>() )
+		.def( "waitForCompletion", &waitForCompletion )
 		.def( "setOpenGLOptions", &SceneGadget::setOpenGLOptions )
 		.def( "getOpenGLOptions", &getOpenGLOptions )
 		.def( "objectAt", &objectAt )
