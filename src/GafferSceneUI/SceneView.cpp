@@ -326,12 +326,12 @@ class SceneView::Grid : public boost::signals::trackable
 			return m_view->getChild<Gaffer::ValuePlug>( "grid" );
 		}
 
-		Gadget *gadget()
+		SceneGadget *gadget()
 		{
 			return m_gadget.get();
 		}
 
-		const Gadget *gadget() const
+		const SceneGadget *gadget() const
 		{
 			return m_gadget.get();
 		}
@@ -1455,8 +1455,9 @@ Imath::Box3f SceneView::framingBound() const
 	}
 
 	b = m_sceneGadget->bound();
-	if( m_grid->gadget()->getVisible() )
+	if( b.isEmpty() && m_grid->gadget()->getVisible() )
 	{
+		m_grid->gadget()->waitForCompletion();
 		b.extendBy( m_grid->gadget()->bound() );
 	}
 
