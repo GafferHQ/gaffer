@@ -18,4 +18,8 @@ script["Herd"]["transform"]["rotate"].setValue( imath.V3f( 0, 45, 0 ) )
 script["Herd"]["in"].setInput( script["Cow"]["out"] )
 script.selection().add( script["Herd"] )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
+GafferUI.EventLoop.waitForIdle()
+sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
+sceneGadget.waitForCompletion()
+viewer.view().viewportGadget().frame( sceneGadget.bound() )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/herd.png" )
