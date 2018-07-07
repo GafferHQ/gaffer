@@ -1,130 +1,115 @@
-Adding a Menu Item
-==================
+# Tutorial: Adding a Menu Item #
 
-Introduction
-------------
+This tutorial addresses how to add menu items. It will cover:
 
-Rumour has it some other application has a feature for creating equestrian playthings on demand. Here we’ll
-address this deficiency in Gaffer while taking the opportunity to learn about adding menu items.
+- Adding an item to the main menu
+- Referencing the main application window
+- Using the undo context
 
-Creating our script
--------------------
+Before you begin, we recommend you complete the [Creating a Configuration File](../CreatingConfigurationFiles/index.md) tutorial.
 
-If you’ve already read the [Configuration Files Tutorial][1], then you’ll know we can add features to Gaffer by creating
-files it runs automatically on startup. We’ll create our script in the following file, and gaffer will load it each time it
-runs :
+> Tip :
+> This tutorial focuses on the main menu, but you can find examples for adding menu items to the _Graph Editor_, _Node Editor_, and more in [Gaffer's default configuration files](https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup/gui).
 
-`~/gaffer/startup/gui/iWantAPony.py`
 
-Creating the menu item
---------------------
+## Creating the Script ##
 
-We want our menu item to be easily accessible to the user, so we’ll put it in the main menu for the application,
-which is hosted in the script window.
+Through Gaffer's startup environment variable, you can create your own startup scripts in `~/gaffer/startup/gui/`. Before you begin, create a new file `insertCows.py` in that directory.
 
-```
-GafferUI.ScriptWindow.menuDefinition( application ).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
-```
 
-You’ll find that most user interfaces in Gaffer can be extended with similar ease. In this case we’ve simply
-specified the path to the menu item, and specified that it should run a python function called `__iWantAPony` - we’ll
-define that in the next section.
+## Writing the script ##
 
-> Tip : Here we're concentrating on the main menu, but you'll find examples for adding menu items to the GraphEditor,
-> NodeEditor and more in [Gaffer's own configuration files][2]
+Through this section, we will build the script piece by piece.
 
-Creating some nodes
--------------------
+First, the startup script needs an `__insertCows` function. Since Gaffer can have multiple scripts (files) open at once, you will first need to specify which script to access before the function can modify it. This can be easily determined based on which window the menu was invoked from using the `ancestor()` method:
 
-We want to get on with the business of creating some nodes, but first we have to know where to create them.
-Gaffer can have multiple files (scripts) open at once, so we need to determine which one to operate on right
-now. We’ll do that based on which window our menu was invoked from. Fortunately that turns out to be quite
-easy :
-
-```
-def __iWantAPony( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+```python
+    def __insertCows( menu ) :
+    	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+    	script = scriptWindow.scriptNode()
 ```
 
-We also want the action performed by the menu item to be undoable - looking after a pony is a big responsibility after all. We do this by using an UndoContext to wrap everything we do into a single undoable step.
+> Note :
+> Later, when the function is added to a menu, the `menu` variable that it implicitly takes as input will be passed by the parent menu.
 
-```
+Ideally, any function that modifies the scene should be undoable. To make the function's commands undoable, they should be wrapped in an `UndoContext()`:
+
+```python
 with Gaffer.UndoContext( script ) :
-
 	...
 ```
 
-Now we can create a SceneReader node to load a model, set the values of its plugs, and add it to the script.
+Now we can create a _SceneReader_ node to load the cow's geometry, and a _Duplicate_ node to copy and rotate it.
 
-```
-read = GafferScene.SceneReader( "Cow" )
-read["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
-script.addChild( read )
-```
-
-The astute reader may have noticed that the model looks suspiciously bovine, and may not quite fulfil the user’s
-request, but it will on the other hand provide a valuable lesson : you can’t always get what you want. Let's see
-if we can offset the disappointment by substituting quantity for quality.
-
-```
-duplicate = GafferScene.Duplicate( "Herd" )
-duplicate["target"].setValue( "/cow" )
-duplicate["copies"].setValue( 7 )
-duplicate["transform"]["translate"]["x"].setValue( 16 )
-duplicate["transform"]["rotate"]["y"].setValue( 45 )
-duplicate["in"].setInput( read["out"] )
-script.addChild( duplicate )
+```python
+	reader = GafferScene.SceneReader( "Cow" )
+	reader["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
+	script.addChild( reader )
+	duplicate = GafferScene.Duplicate( "Herd" )
+	duplicate["target"].setValue( "/cow" )
+	duplicate["copies"].setValue( 7 )
+	duplicate["transform"]["translate"]["x"].setValue( 16 )
+	duplicate["transform"]["rotate"]["y"].setValue( 45 )
+	duplicate["in"].setInput( reader["out"] )
+	script.addChild( duplicate )
 ```
 
-Finally, we can select the newly created scene so the user is plainly aware of their gift.
+Finally, the function should select the newly created scene, to signal to the user that their insert succeeded. The selection does not need to be undoable, so it will escape the scope of the `undoContext()`:
 
-```
+```python
 script.selection().clear()
 script.selection().add( duplicate )
 ```
 
-![Herd](images/herd.png)
+### Creating the menu item ###
 
-And there we have it. Perhaps not quite suitable for show jumping but nevertheless a valuable source of milk,
-cheese and finally meat.
+Now the function needs to be added to a menu. For simplicity, the startup script will add the new menu item to the application's main menu, which is hosted in the main script window:
 
-The whole script
-----------------
-
-Here’s the whole script in all its glory.
-
+```python
+GafferUI.ScriptWindow.menuDefinition( application ).append( "/Help/Insert Cows", { "command" : __insertCows } )
 ```
 
+Most user interfaces in Gaffer can be referenced and extended with similar ease. In this case, the code simply specified the `GafferUI.ScriptWindow` object, and called the `append()` method to add a path to a new menu item, with the result of executing the `__insertCows` function.
+
+Save the startup script, and launch Gaffer. The menu item will now produce this result in any script:
+
+![Circle of cows, in the Viewer](images/viewerCows.png "Circle of cows, in the Viewer")
+
+
+## The Final File ##
+
+Here is the final result of `~/gaffer/startup/gui/insertCows.py`:
+
+```python
 import Gaffer
 import GafferUI
 import GafferScene
 
-def __iWantAPony( menu ) :
-
+def __insertCows( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 
 	with Gaffer.UndoContext( script ) :
-
-		read = GafferScene.SceneReader( "Cow" )
-		read["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
-		script.addChild( read )
-
+		reader = GafferScene.SceneReader( "Cow" )
+		reader["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
+		script.addChild( reader )
 		duplicate = GafferScene.Duplicate( "Herd" )
 		duplicate["target"].setValue( "/cow" )
 		duplicate["copies"].setValue( 7 )
 		duplicate["transform"]["translate"]["x"].setValue( 16 )
 		duplicate["transform"]["rotate"]["y"].setValue( 45 )
-		duplicate["in"].setInput( read["out"] )
+		duplicate["in"].setInput( reader["out"] )
 		script.addChild( duplicate )
 
 	script.selection().clear()
 	script.selection().add( duplicate )
 
-GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
+GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/Insert Cows", { "command" : __insertCows } )
 ```
 
-[1]: ../CreatingConfigurationFiles/index.md
-[2]: https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup/gui
+
+## See Also ##
+
+- [Tutorial: Creating a Configuration File](../CreatingConfigurationFiles/index.md)
+
+<!-- - [Using the Script Editor](../UsingTheScriptEditor/index.md) -->
