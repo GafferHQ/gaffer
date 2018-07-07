@@ -1,152 +1,326 @@
-Getting Started
-===============
+# Tutorial: Scripting Basics #
 
-Gaffer's Python scripting API is fairly frugal, so learning a few fundamental concepts goes a long way. Here we'll take a quick tour through these fundamentals using Gaffer's [ScriptEditor][1]. We'll see how we can enter Python code within the ScriptEditor to create nodes and plugs, and edit their values and connections. We'll also see how we can use drag and drop to conveniently enter text into the ScriptEditor itself.
+In this tutorial, we will give you a first taste of Python scripting in Gaffer. Gaffer's Python scripting API is fairly frugal, so learning a few fundamental concepts will go a long way. Here we'll take a quick tour through these fundamentals using the [_Script Editor_](../../../Reference/UIReference/ScriptEditor/index.md) in the main Gaffer application. We will cover the following topics:
 
-The ScriptEditor
-----------------
+- Using the _Script Editor_
+- Dragging and dropping references and values into the _Script Editor_
+- Creating nodes and plugs in script
+- Referencing nodes in script
+- Editing node values and connections in script
 
-After launching Gaffer, the ScriptEditor can be found in its default location on a tab in the bottom right of the main window.
+> Note :
+> For this tutorial, we will assume you are familiar with scripting in Python.
 
-![ScriptEditor image](images/scriptEditor.png)
 
-The editor is broken into two sections. The bottom field is for entering python commands, and this functions much like any other basic text editor. We'll get started right away by entering the text `print "Hello World!", script`. We can then execute the code by pressing _Ctrl+Enter_.
+## "Hello, World!" and the _Script Editor_ ##
 
-The top field displays output from any commands executed, so we should see the greeting we printed along with the mysterious `script` variable that we printed with it. The `script` variable references the root node of a Gaffer file, and is our gateway to further exploration.
+Gaffer's _Script Editor_ lets you build and modify the node graph, edit and adjust the underlying code of your script (your project file), test expressions, and display results. By default, you can find the _Script Editor_ in the bottom-right panel, in a tab next to the _Scene Hierarchy_.
 
-> Tip : Small portions of the text input may be executed individually and kept around for later
-> editing by selecting them before hitting _Ctrl+Enter_. When there is no selection
-> _Ctrl+Enter_ executes everything and clears the contents of the input field, but the commands
-> can always be retrieved later by cutting and pasting them from the output field.
+![The Script Editor](images/scriptEditorEmpty.png "The Script Editor")
 
-Nodes and plugs
----------------
+The text field in the bottom-half is for inputting code, and behaves like a typical text editor: type, copy-paste, and enter new lines as you normally would. The top-half is a readout that displays the code you execute and any resulting output.
 
-The most important classes in the Gaffer API are the Nodes and Plugs which are connected together to make up a dependency graph. These are parented together in a hierarchy which nicely maps to python’s dictionary syntax. Plugs may be parented to nodes using Python's familiar dictionary notation :
+Try executing a "Hello, World!" command:
 
+1. Type `print "Hello, World!"` into the input field.
+
+2. Hit <kbd>Control</kbd> + <kbd>Enter</kbd> to execute the code.
+
+![The Script Editor with “Hello, World!”](images/scriptEditorHello.png "The Script Editor with “Hello, World!”")
+
+<!-- > Tip :-->
+<!-- > When you execute code, the contents of the input field will be erased. However, if you first highlight the code prior to executing it, the code you entered will remain in the field. -->
+
+
+## Scripting Basics with a Generic Node ##
+
+In this first section, we will cover the most basic operations for scripting nodes and plugs in Python, using a generic node as an example.
+
+
+### Creating a node ###
+
+Each node in the scripting API is a Python class.
+
+First, try creating a node of the generic node class:
+
+```python
+script.addChild( Gaffer.Node() )
 ```
-node = Gaffer.Node()
-node["firstPlug"] = Gaffer.IntPlug()
-node["secondPlug"] = Gaffer.FloatPlug()
+
+![Generic node in the Graph Editor](images/graphEditorGenericNode.png "Generic node in the Graph Editor")
+
+Notice that you added the node to the generic `script` variable.
+
+> Important :
+> The `script` variable is the root of, and primary context for, all Gaffer scripts. All nodes are added to it, and it contains all project-level variables.
+
+
+### Referencing nodes ###
+
+Since the above code did not assign a variable to your node, you do not yet have a convenient handle for referring to it. There is a simple way to retrieve the script reference to any existing node – dragging and dropping from the _Graph Editor:_
+
+1. Middle-click and drag the node from the _Graph Editor_. Your cursor will change to ![the node icon](images/nodeMiddleClick.png "The node icon").
+
+2. Drop the selection onto the input field of the _Script Editor_. The reference will be `script["Node"]`.
+
+3. Add a variable declaration to the beginning of the line: `myNode = script["Node"]`.
+
+4. Execute the code.
+
+The `myNode` variable will now reference your generic node.
+
+
+### Changing a node value ###
+
+Like any Python class, nodes have methods.
+
+Try using your variable in conjunction with the `setName()` method to changes its name:
+
+```python
+myNode.setName( "MyVeryFirstNode" )
 ```
 
-If you follow along by entering the code above in the ScriptEditor, you may wonder why our newly created node hasn't appeared in the NodeEditor or GraphEditor. This is because we haven't given it a parent yet, so it is not associated with any script. Let's add it to the `script` root, and select it so that it appears in the NodeEditor :
+![Renamed generic node in the Graph Editor](images/graphEditorGenericNodeRenamed.png "Renamed generic node in the Graph Editor")
 
+There are several other methods for manipulating nodes. A complete list can be found in the [Node Operations reference](../../../Reference/ScriptingReference/CommonOperations/index.md).
+
+
+### Adding a plug ###
+
+Plugs are also Python classes, and are added to nodes themselves using the same `addChild()` method.
+
+Try adding an integer plug and a floating point plug to your generic node:
+
+```python
+myNode.addChild( Gaffer.IntPlug() )
+myNode.addChild( Gaffer.FloatPlug() )
 ```
-script.addChild( node )
+
+In the _Graph Editor_, your node will now have two dots on top of its box, indicating it has two plugs.
+
+![MyVeryFirstNode with two plugs in the Graph Editor](images/graphEditorGenericNodeTwoPlugs.png "MyVeryFirstNode with two plugs in the Graph Editor")
+
+<!-- TODO: link to generic plug types reference, once it is created -->
+
+
+### Modifying the _Graph Editor_ selection ###
+
+Gaffer's API allows access, modification, and creation of its interface's objects and methods. One interface-related object that can be manipulated is the selection in the _Graph Editor_, referred to by the `script.selection()` object.
+
+Try selecting your generic node:
+
+```python
 script.selection().clear()
-script.selection().add( node )
+script.selection().add( myNode )
 ```
 
-![NodeEditor image](images/nodeEditor.png)
+The node is now selected, and you can see it in the _Node Editor_.
 
-It appeared! Exciting stuff! Nodes have a variety of methods to manipulate them after construction, so let's celebrate by using one of them to rename the node :
+![MyVeryFirstNode in the Node Editor](images/nodeEditorGenericNode.png "MyVeryFirstNode in the Node Editor")
 
+<!-- TODO: link to interface classes and methods reference (once the article is created) -->
+
+
+### Referencing plugs ###
+
+Like nodes, a reference to a plug can also be inserted into the _Script Editor_ by dragging and dropping.
+
+Try inserting a reference to your generic node's integer plug, and give it a variable:
+
+1. If your node is not selected, select it.
+
+2. Click and drag the _Int Plug's_ **label** (not its value field) from the _Node Editor_. Your cursor will change to ![a plug](images/plug.png "A plug").
+
+3. Drop the selection onto the input field of the _Script Editor_. The reference will be `script["Node"]["IntPlug"]`.
+
+4. Add a variable declaration to the beginning of the line: `myPlug = script["Node"]["IntPlug"]`.
+
+5. Execute the code.
+
+You will now be able to reference the integer plug with the `myPlug` variable.
+
+
+### Deleting nodes and plugs ###
+
+As with their method for creation, nodes and plugs have a complementary `removeChild()` method for deletion.
+
+Remove the integer plug from your generic node and delete its variable (just to be safe):
+
+```python
+myNode.removeChild( myPlug )
+del myPlug
 ```
-node.setName( "MyMostAwesomeNode" )
+
+The plug will disappear from the _Node Editor_, and there will be only one visible plug in the _Graph Editor_.
+
+![MyVeryFirstNode with one plug in the Graph Editor](images/graphEditorGenericNodeOnePlug.png "MyVeryFirstNode with one plug in the Graph Editor")
+
+Unfortunately, your generic node will not be of much use for the rest of the tutorial. Before continuing, delete it too:
+
+```python
+script.removeChild( myNode )
+del myNode
 ```
 
-> Tip : You may be wondering why we used dictionary syntax to parent the plugs into the node, but
-> we used the `addChild()` method to parent the node to the script. We could actually have used
-> either, but the `addChild()` method takes care of automatically renaming the child if it would
-> clash with an existing node in the script. If we used the dictionary syntax we would have been
-> replacing any existing node of the same name, which is often not what we want.
+That covers the most basic scripting tasks in Gaffer. Hopefully, you will be beginning to develop a sense of Gaffer's power and flexibility from the ability to accomplish all that you can in the interface through the scripting API.
 
-Editing plug values
--------------------
 
-Our humble node doesn't do anything particularly interesting, so let's create one that can actually generate a scene. Each node type in Gaffer is a different class in Python, and lives inside a module specific to the sort of processing it performs (a full list of modules and the nodes they provide is available in the [Node Reference][2]).
+## Brief Aside: On References and Dictionary Notation##
 
-For now we'll go ahead and make a Sphere :
+Before continuing, there's an important distinction that needs to be made with regards to referencing nodes. The previous code examples used mixed references, by using a variable to refer to nodes and Python dictionary notation to refer to plugs. They are effectively the same, but the mixed syntax might cause a great deal of confusion at first.
 
+Consider the previous section's node `MyVeryFirstNode` (and the `myNode` variable) with its plug `IntPlug` (and the `myPlug` variable). Referring to the node's variable and dictionary entry are one and the same:
+
+```python
+script["MyVeryFirstNode"] # Gaffer.Node( "MyVeryFirstNode" )
+myNode                    # Gaffer.Node( "MyVeryFirstNode" )
 ```
+
+This can become confusing when we mix them together, such as when we refer to the node's variable while using the plug's dictionary entry:
+
+```python
+script["MyVeryFirstNode"]["IntPlug"] # Gaffer.IntPlug( "IntPlug", defaultValue = 0, )
+myNode["IntPlug"]                    # Gaffer.IntPlug( "IntPlug", defaultValue = 0, )
+myPlug                               # Gaffer.IntPlug( "IntPlug", defaultValue = 0, )
+```
+
+In the next section of this tutorial, you will see several instances of mixed syntax, so bear in mind the distinction.
+
+
+## Scripting a Point Sphere Scene ##
+
+Next, we will demonstrate how to create nodes from imported modules, and connect them in script to build a very basic scene comprised of a point sphere.
+
+
+### Adding nodes from a module ##
+
+In the previous section we used a generic node which had no particular use. Useful nodes are sourced from one of Gaffer's [node modules](../../../Reference/NodeReference/index.md). When creating a node from a module in script, you will first need to `import` the module. Our new scene will contain a Sphere node, which requires the GafferScene module. 
+
+Start by importing the GafferScene module and creating a Sphere node:
+
+```python
 import GafferScene
-script.addChild( GafferScene.Sphere() )
+mySphere = GafferScene.Sphere()
+script.addChild( mySphere )
 ```
 
-This time we've added the node directly to the script without assigning it to a variable, so we don't yet have a convenient handle for the node. Fear not, we can always get an appropriate reference to a node by _Middle Dragging_ it from the GraphEditor and into the ScriptEditor. As you might guess, this gives us the familiar dictionary syntax of `script["Sphere"]`. We can do the same for plugs by _Left Dragging_ them from the NodeEditor. Get the plug for controlling the radius by dragging the "Radius" label from the NodeEditor, to insert the text `script["Sphere"]["radius"]`.
+![The Sphere node in the Viewer](images/viewerSphere.png "The Sphere node in the Viewer")
 
-Plugs are Python classes in the same way that nodes are, and have additional methods we can use for editing them. The `getValue()` method returns the current value of a plug, so we can use it to learn that the sphere has a radius of 1 :
+> Tip :
+> When using the _Script Editor_, modules only need to be imported once per session.
 
-![ScriptEditor getValue() image](images/scriptEditorGetValue.png)
 
-As you might have guessed, we can change the value using a matching `setValue()` method. Let's go ahead and set the values for a couple of the simplest plugs to demonstrate how this works :
+### Changing plug values ###
 
-```
-script["Sphere"]["radius"].setValue( 10.5 )
-script["Sphere"]["name"].setValue( "mySphere" )
-```
+A plug's value can be returned with the `getValue()` method and modified with the `setValue()` method.
 
-In the same way that nodes can have child plugs, plugs themselves can have children, and they are accessed using exactly the same dictionary syntax. Gaffer makes use of plugs nested in this way to represent more complex values, such as the xyz translate, rotate and scale of the sphere. This means we can either set the plugs individually, or set several at a time using the `setValue()` method on the parent plug :
+Use the output of the _Script Editor_ to test the Sphere node's current Radius plug value:
 
-```
-# Setting leaf plugs individually
-script["Sphere"]["transform"]["translate"]["x"].setValue( 1 )
-script["Sphere"]["transform"]["translate"]["y"].setValue( 2 )
-script["Sphere"]["transform"]["translate"]["z"].setValue( 3 )
-
-# Setting them all in one shot
-script["Sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+```python
+mySphere["radius"].getValue() # 1.0
 ```
 
-> Tip : The second form is often more convenient because it is shorter, and because the `V3f` class
-> provides lots of useful functionality for doing maths with vector values. As a newcomer to Gaffer
-> though, it's unlikely that we could have guessed the right syntax. Here drag and drop comes to our
-> rescue again - _Shift+Left Dragging_ the plug label from the NodeEditor and into the ScriptEditor
-> will enter the code for current value of the plug, providing a convenient syntax reference.
+Next, set the values of the sphere's Name, Radius, and Theta Max plugs:
 
-Making connections
-------------------
-
-As well as having values, plugs can be connected together so that values flow from one to another. We'll use the ScriptEditor to create a small node network to demonstrate this.
-
-```
-meshToPoints = GafferScene.MeshToPoints()
-meshToPoints["in"].setInput( script["Sphere"]["out"] )
-meshToPoints["type"].setValue( "sphere" )
-script.addChild( meshToPoints )
+```python
+mySphere["name"].setValue( "mySphere" )
+mySphere["radius"].setValue( 3 )
+mySphere["thetaMax"].setValue( 180 )
 ```
 
-As before, `meshToPoints["in"]` refers to a plug that is the child of a node, but instead of setting its value with the `setValue()` method, this time we have given it an input connection with the `setInput()` method.
+![The Sphere node with adjusted plugs in the Node Editor](images/nodeEditorSphere.png "The Sphere node with adjusted plugs in the Node Editor")
 
-![MeshToPoints Viewer](images/meshToPointsViewer.png)
-![MeshToPoints GraphEditor](images/meshToPointsGraphEditor.png)
+![The Sphere node with adjusted plugs in the Viewer](images/viewerSpherePlugs.png "The Sphere node with adjusted plugs in the Viewer")
 
-Now, let's create a Camera and group it with our funky sphere thing, so that we have the beginnings of a scene we could render.
+> Note :
+> A scene node's Name plug determines the name of the object as it will appear in the scene hierarchy.
 
+
+### Setting compound plug values ###
+
+When a plug has its own child plugs, it is called a **compound plug**. An example would be the sphere's Transform plug, which has Translate, Rotate, and Scale child plugs. Plugs with a list of values are also compound plugs. The Rotate plug, for instance, contains a list with 3 values, each for a different axis. You can either `setValue()` each list value individually, or all at once using the V3f type.
+
+> Note :
+> The V3f type requires the _imath_ module.
+
+First, increase the sphere's mesh division child plugs individually:
+
+```python
+# Editing a list one element at a time
+mySphere["divisions"]["x"].setValue( 80 )
+mySphere["divisions"]["y"].setValue( 160 )
 ```
-camera = GafferScene.Camera()
-script.addChild( camera )
-group = GafferScene.Group()
-script.addChild( group )
-# Note the use of list syntax
-group["in"][0].setInput( meshToPoints["out"] )
-group["in"][1].setInput( camera["out"] )
+
+![The Sphere node with double the divisions in the Viewer](images/viewerSphereDivisions.png "The Sphere node with double the divisions in the Viewer")
+
+Then, move the sphere closer to the camera by adjusting all of the Translate plug's children using a V3f type:
+
+```python
+# Editing a list all at once
+import imath
+mySphere["transform"]["translate"].setValue( imath.V3f( 2, 0, 2 ) )
 ```
 
-Until now, we've been accessing plugs and nodes by name, using Python's dictionary syntax. In the code snippet above you can see that we can also access children using Python's list syntax, and for the Group node this is particularly convenient. The Group can have any number of inputs, so the `group["in"]` plug behaves like an array, and we can access its first child with `group["in"][0]` and it's second child with `group["in"][1]`, and so on.
+![The Sphere node with a transform in the Viewer](images/viewerSphereTransform.png "The Sphere node with a transform in the Viewer")
 
-![MeshToPoints GraphEditor](images/group.png)
+As you can see, assigning the Translate plug's value using the V3f type declares each of its values at once, which spares you from having to type out each child plug.
 
-> Tip : The fact that some plugs are visible only in the NodeEditor and some plugs are visible only in the GraphEditor might give the false impression that only the plugs in the GraphEditor can be connected. In fact, this is not the case, and as a general rule almost any plug can be given an input connection.
-
-Recap
------
-
-We've seen that Gaffer's node graphs can be constructed using a minimal set of scripting commands, and that the ScriptEditor makes experimenting with these commands relatively easy by allowing nodes and plugs to be dragged and dropped directly into the code. The [Scripting Reference][3] and [ScriptEditor Reference][1] sections provide a useful reminder of all we've covered in this tutorial, and additional information useful for further exploration.
-
-> Tip : Gaffer's .gfr files are simply Python scripts which contain all the code necessary
-> to reconstruct the saved node network. If you're ever struggling to find a way of scripting
-> something in the documentation, it can be handy to construct a network by hand and then open
-> the .gfr file in a text editor for use as a cheat sheet. Similarly, you can use _Ctrl+C_
-> to copy a network from the GraphEditor, and paste it as code into the ScriptEditor with _Ctrl+V_.
->
-> Finally, since Gaffer is open source, you'll often find inspiration and examples in the
-> [source code itself][4].
+<!-- TODO: link to imath type reference, when it's made -->
 
 
+### Referencing plug types ###
 
-[1]: ../../../Reference/UIReference/ScriptEditor.md
-[2]: ../../../Reference/NodeReference/index.md
-[3]: ../../../Reference/ScriptingReference/index.md
-[4]: https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!
+The Translate plug does not indicate that is uses the V3f type (other than its having 3 numerical fields), so how could you have known? Drag and drop again comes to the rescue, with a very easy and convenient way to discover the built-in type and syntax for a plug's value(s): 
+
+> Tip : 
+> To see the current plug's value in its native type, <kbd>Shift</kbd> + click and drag the plug label from the _Node Editor_ and drop it onto the _Script Editor_ input field.
+
+
+### Connecting nodes ###
+
+In Gaffer, nodes themselves are not connected together. Rather, a node's _in_ plug is connected to another node's _out_ plug using the `setInput()` method. The receiving node's _in_ plug does not take a value, but rather a node's _out_ plug itself.
+
+Create a MeshToPoints node and connect it to the Sphere node, and set its point type:
+
+```python
+myMeshToPoints = GafferScene.MeshToPoints()
+script.addChild( myMeshToPoints )
+myMeshToPoints["in"].setInput( mySphere["out"] )
+myMeshToPoints["type"].setValue( "sphere" )
+```
+
+![MeshToPoints node in the Viewer](images/viewerMeshToPoints.png "MeshToPoints node in the Graph Editor")
+
+![MeshToPoints node in the Graph Editor](images/graphEditorMeshToPoints.png "MeshToPoints node in the Graph Editor")
+
+
+### Connecting nodes with multiple inputs ###
+
+Until now, you've been accessing plugs and nodes by name. Flexible, multi-input nodes like the Group node can have any number of inputs. To account for this, their _in_ plug behaves like an array, and its children are accessed using array indexing. The first child is accessed with `["in"][0]`, its second child with `["in"][1]`, and so on.
+
+Create a Camera node, a Group node, and group the whole scene together:
+
+```python
+myCamera = GafferScene.Camera()
+script.addChild( myCamera )
+myGroup = GafferScene.Group()
+script.addChild( myGroup )
+
+myGroup["in"][0].setInput( myMeshToPoints["out"] )
+myGroup["in"][1].setInput( myCamera["out"] )
+```
+
+![MeshToPoints and Camera grouped](images/graphEditorGroup.png "MeshToPoints and Camera grouped")
+
+You now have the beginnings of a scene, built entirely in script.
+
+
+## Recap ##
+
+You should now have a good fundamental understanding of scripting in Gaffer. We have shown how Gaffer's node graphs can be constructed using a minimal collection of scripting commands, and that the _Script Editor_ makes experimenting with these commands easy by allowing node and plug references and values to be dropped directly into the _Script Editor_.
+
+
+## See Also ##
+
+- [Node Reference](../../../Reference/NodeReference/index.md)
+- [_Script Editor_ Shorcuts](../../../Interface/ControlsAndShortcuts/index.html#script-editor)
