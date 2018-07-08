@@ -90,7 +90,7 @@ class GAFFER_API Expression : public ComputeNode
 		/// for use in the Expression node. All methods
 		/// are protected as Engines are for the internal
 		/// use of the Expression node only.
-		class Engine : public IECore::RefCounted
+		class GAFFER_API Engine : public IECore::RefCounted
 		{
 
 			public :

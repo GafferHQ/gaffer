@@ -43,7 +43,7 @@ namespace Gaffer
 {
 
 template<typename Base, typename T>
-class GAFFER_API Container : public Base
+class Container : public Base
 {
 
 	public :

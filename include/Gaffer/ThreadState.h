@@ -81,7 +81,7 @@ class GAFFER_API ThreadState
 		/// no active monitors, and a default constructed Context.
 		ThreadState();
 
-		class Scope : public boost::noncopyable
+		class GAFFER_API Scope : public boost::noncopyable
 		{
 
 			public :

@@ -104,7 +104,7 @@ class GAFFER_API Animation : public ComputeNode
 		IE_CORE_DECLAREPTR( Interpolator )
 
 		// Defines a tangent
-		class Tangent : private boost::noncopyable
+		class GAFFER_API Tangent : private boost::noncopyable
 		{
 			public:
 
@@ -199,7 +199,7 @@ class GAFFER_API Animation : public ComputeNode
 		};
 
 		/// Defines a single keyframe.
-		class Key : public IECore::RunTimeTyped
+		class GAFFER_API Key : public IECore::RunTimeTyped
 		{
 
 			public :
@@ -317,7 +317,7 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines a curve as a collection of keyframes and methods
 		/// for editing them. Provides methods for evaluating the
 		/// interpolated curve at arbitrary positions.
-		class CurvePlug : public ValuePlug
+		class GAFFER_API CurvePlug : public ValuePlug
 		{
 
 			public :
