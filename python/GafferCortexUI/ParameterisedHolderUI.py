@@ -226,7 +226,7 @@ def __plugPresetValues( plug ) :
 
 	# make sure to get the values in the same
 	# order that the names were given.
-	values = [ parameter.presets()[x] for x in parameter.presetNames() ]
+	values = [ parameter.getPresets()[x] for x in parameter.presetNames() ]
 	if isinstance( plug, Gaffer.StringPlug ) :
 		return IECore.StringVectorData( [ v.value for v in values ] )
 	elif isinstance( plug, Gaffer.BoolPlug ) :
