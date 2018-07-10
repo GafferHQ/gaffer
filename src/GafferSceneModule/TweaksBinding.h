@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_LIGHTTWEAKSBINDING_H
-#define GAFFERSCENEMODULE_LIGHTTWEAKSBINDING_H
+#ifndef GAFFERSCENEMODULE_TWEAKSBINDING_H
+#define GAFFERSCENEMODULE_TWEAKSBINDING_H
 
 namespace GafferSceneModule
 {
 
-void bindLightTweaks();
+void bindTweaks();
 
 } // namespace GafferSceneModule
 
-#endif // GAFFERSCENEMODULE_LIGHTTWEAKSBINDING_H
+#endif // GAFFERSCENEMODULE_TWEAKSBINDING_H

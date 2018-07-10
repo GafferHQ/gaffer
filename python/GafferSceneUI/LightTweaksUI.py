@@ -88,124 +88,9 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"tweaks.*.name" : [
-
-			"description",
-			"""
-			The name of the parameter to apply the tweak to.
-			"""
-
-		],
-
-		"tweaks.*.mode" : [
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Replace", GafferScene.LightTweaks.TweakPlug.Mode.Replace,
-			"preset:Add", GafferScene.LightTweaks.TweakPlug.Mode.Add,
-			"preset:Subtract", GafferScene.LightTweaks.TweakPlug.Mode.Subtract,
-			"preset:Multiply", GafferScene.LightTweaks.TweakPlug.Mode.Multiply,
-
-		],
-
 	}
 
 )
-
-class _TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, childPlug ) :
-
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
-
-
-		nameWidget = GafferUI.StringPlugValueWidget( childPlug["name"] )
-		nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-
-		self.__row.append( nameWidget,
-			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
-		)
-
-		self.__row.append(
-			GafferUI.BoolPlugValueWidget(
-				childPlug["enabled"],
-				displayMode = GafferUI.BoolWidget.DisplayMode.Switch
-			),
-			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
-		)
-
-		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["mode"] ) )
-		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ), expand = True )
-
-		self._updateFromPlug()
-
-	def setPlug( self, plug ) :
-
-		GafferUI.PlugValueWidget.setPlug( self, plug )
-
-		self.__row[0].setPlug( plug["name"] )
-		self.__row[1].setPlug( plug["enabled"] )
-		self.__row[2].setPlug( plug["mode"] )
-		self.__row[3].setPlug( plug["value"] )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
-
-		for w in self.__row :
-			if w.getPlug().isSame( childPlug ) :
-				return w
-
-		return None
-
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			w.setReadOnly( readOnly )
-
-	def _updateFromPlug( self ) :
-
-		with self.getContext() :
-			enabled = self.getPlug()["enabled"].getValue()
-
-		for i in ( 0, 2, 3 ) :
-			self.__row[i].setEnabled( enabled )
-
-
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ):
-
-	plug = plugValueWidget.getPlug()
-	parent = plug.parent()
-	node = plug.node()
-
-	if not isinstance( node, GafferScene.LightTweaks ) or not parent.parent().isSame( node["tweaks"] ) :
-		return
-
-	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append(
-		"/Delete",
-		{
-			"command" : functools.partial( __deletePlug, parent ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( parent )
-		}
-	)
-
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
-
-GafferUI.PlugValueWidget.registerType( GafferScene.LightTweaks.TweakPlug, _TweakPlugValueWidget )
 
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
@@ -231,6 +116,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		self.setEnabled( self._editable() )
 
+
+
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
@@ -251,6 +138,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		result.append( "/FromPathsDivider", { "divider" : True } )
 
+		# TODO - would be nice to share these default options with other users of TweakPlug
 		for item in [
 			Gaffer.BoolPlug,
 			Gaffer.FloatPlug,
@@ -372,9 +260,12 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addTweak( self, name, plugTypeOrValue ) :
 
 		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = GafferScene.LightTweaks.TweakPlug( name, plugTypeOrValue )
+			plug = GafferScene.TweakPlug( name, plugTypeOrValue )
 		else :
-			plug = GafferScene.LightTweaks.TweakPlug( name, plugTypeOrValue() )
+			plug = GafferScene.TweakPlug( name, plugTypeOrValue() )
+
+		if name:
+			plug.setName( "tweak_" + name )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )

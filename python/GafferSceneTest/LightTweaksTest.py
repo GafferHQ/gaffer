@@ -67,7 +67,7 @@ class LightTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( t["out"], l["out"] )
 		self.assertSceneHashesEqual( t["out"], l["out"] )
 
-		intensityTweak = t.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
+		intensityTweak = GafferScene.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
 		t["tweaks"].addChild( intensityTweak )
 
 		self.assertSceneValid( t["out"] )
@@ -99,8 +99,8 @@ class LightTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["t"] = GafferScene.LightTweaks()
-		s["t"]["tweaks"].addChild( GafferScene.LightTweaks.TweakPlug( "test", 1.0 ) )
-		s["t"]["tweaks"].addChild( GafferScene.LightTweaks.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
+		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", 1.0 ) )
+		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
 
 		ss = Gaffer.ScriptNode()
 		ss.execute( s.serialise() )

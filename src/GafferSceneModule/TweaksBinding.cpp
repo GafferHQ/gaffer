@@ -36,9 +36,10 @@
 
 #include "boost/python.hpp"
 
-#include "LightTweaksBinding.h"
+#include "TweaksBinding.h"
 
 #include "GafferScene/LightTweaks.h"
+#include "GafferScene/TweakPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -51,36 +52,22 @@ using namespace GafferScene;
 namespace
 {
 
-LightTweaks::TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstDataPtr tweakValue, bool enabled )
+TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstDataPtr tweakValue, bool enabled )
 {
-	return new LightTweaks::TweakPlug( tweakName, tweakValue.get(), enabled );
+	return new TweakPlug( tweakName, tweakValue.get(), enabled );
 }
-
-class TweakPlugSerialiser : public PlugSerialiser
-{
-
-	public :
-
-		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-		{
-			// If the parent is dynamic then all the children will need construction.
-			const Plug *parent = child->parent<Plug>();
-			return parent->getFlags( Gaffer::Plug::Dynamic );
-		}
-
-};
 
 } // namespace
 
-void GafferSceneModule::bindLightTweaks()
+void GafferSceneModule::bindTweaks()
 {
-	scope lightTweaksScope = DependencyNodeClass<LightTweaks>();
+	DependencyNodeClass<LightTweaks>();
 
-	scope tweakPlugScope = PlugClass<LightTweaks::TweakPlug>()
+	scope tweakPlugScope = PlugClass<TweakPlug>()
 		.def(
 			init<const char *, Plug::Direction, unsigned>(
 				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<LightTweaks::TweakPlug>(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<TweakPlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "flags" )=Plug::Default
 				)
@@ -109,15 +96,12 @@ void GafferSceneModule::bindLightTweaks()
 		)
 	;
 
-	tweakPlugScope.attr( "__qualname__" ) = "LightTweaks.TweakPlug";
-
-	enum_<LightTweaks::TweakPlug::Mode>( "Mode" )
-		.value( "Replace", LightTweaks::TweakPlug::Replace )
-		.value( "Add", LightTweaks::TweakPlug::Add )
-		.value( "Subtract", LightTweaks::TweakPlug::Subtract )
-		.value( "Multiply", LightTweaks::TweakPlug::Multiply )
+	enum_<TweakPlug::Mode>( "Mode" )
+		.value( "Replace", TweakPlug::Replace )
+		.value( "Add", TweakPlug::Add )
+		.value( "Subtract", TweakPlug::Subtract )
+		.value( "Multiply", TweakPlug::Multiply )
+		.value( "Remove", TweakPlug::Remove )
 	;
-
-	Serialisation::registerSerialiser( LightTweaks::TweakPlug::staticTypeId(), new TweakPlugSerialiser );
 
 }
