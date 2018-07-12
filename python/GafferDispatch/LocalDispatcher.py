@@ -274,7 +274,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			contextArgs = []
 			for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
 				if entry not in self.__context.keys() or taskContext[entry] != self.__context[entry] :
-					contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
+					contextArgs.extend( [ "-" + entry, IECore.repr( taskContext[entry] ) ] )
 
 			if contextArgs :
 				args.extend( [ "-context" ] + contextArgs )
