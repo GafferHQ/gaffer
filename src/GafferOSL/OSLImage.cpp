@@ -257,7 +257,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 		ImagePlug::ChannelDataScope c( context );
 		for( const auto &channelName : channelNamesData->readable() )
 		{
-			if( shadingEngine->needsAttribute( "", channelName ) )
+			if( shadingEngine->needsAttribute( channelName ) )
 			{
 				c.setChannelName( channelName );
 				inPlug()->channelDataPlug()->hash( h );
@@ -327,7 +327,7 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 		ImagePlug::ChannelDataScope c( context );
 		for( const auto &channelName : channelNamesData->readable() )
 		{
-			if( shadingEngine->needsAttribute( "", channelName ) )
+			if( shadingEngine->needsAttribute( channelName ) )
 			{
 				c.setChannelName( channelName );
 				shadingPoints->writable()[channelName] = boost::const_pointer_cast<FloatVectorData>(
