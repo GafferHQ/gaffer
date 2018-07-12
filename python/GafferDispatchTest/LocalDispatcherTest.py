@@ -39,7 +39,10 @@ import stat
 import shutil
 import unittest
 import time
+import inspect
 import functools
+
+import imath
 
 import IECore
 
@@ -494,7 +497,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2"]["preTasks"][0].setInput( s["n3"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
-		
+
 		# fails because n2 doesn't have a valid fileName
 		self.assertRaisesRegexp( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
 
@@ -792,6 +795,35 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertLess( time.clock() - t, 1 )
 
 		d.jobPool().waitForAll()
+
+	def testImathContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["t"] = GafferDispatchTest.TextWriter()
+		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.txt" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			c = context["c"]
+			parent["t"]["text"] = "{0} {1} {2}".format( *c )
+			"""
+		) )
+
+		s["v"] = GafferDispatch.TaskContextVariables()
+		s["v"]["variables"].addMember( "c", imath.Color3f( 0, 1, 2 ) )
+		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
+
+		d = GafferDispatch.LocalDispatcher.create( "LocalTest" )
+		d["executeInBackground"].setValue( True )
+		d.dispatch( [ s["v"] ] )
+		d.jobPool().waitForAll()
+
+		self.assertEqual(
+			open( s["t"]["fileName"].getValue() ).read(),
+			"0.0 1.0 2.0"
+		)
 
 	def tearDown( self ) :
 

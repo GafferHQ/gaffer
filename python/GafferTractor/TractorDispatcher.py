@@ -166,7 +166,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 			contextArgs = []
 			for entry in [ k for k in batch.context().keys() if k != "frame" and not k.startswith( "ui:" ) ] :
 				if entry not in scriptContext.keys() or batch.context()[entry] != scriptContext[entry] :
-					contextArgs.extend( [ "-" + entry, repr( batch.context()[entry] ) ] )
+					contextArgs.extend( [ "-" + entry, IECore.repr( batch.context()[entry] ) ] )
 
 			if contextArgs :
 				args.extend( [ "-context" ] + contextArgs )

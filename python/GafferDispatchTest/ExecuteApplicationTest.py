@@ -39,6 +39,7 @@ import os
 import subprocess32 as subprocess
 import unittest
 import glob
+import inspect
 import imath
 
 import IECore
@@ -304,6 +305,30 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.assertEqual(
 			glob.glob( self.temporaryDirectory() + "/test.*.txt" ),
 			[ self.temporaryDirectory() + "/test.0010.txt" ]
+		)
+
+	def testImathContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["t"] = GafferDispatchTest.TextWriter()
+		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.txt" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			c = context["c"]
+			parent["t"]["text"] = "{0} {1} {2}".format( *c )
+			"""
+		) )
+
+		s["fileName"].setValue(  self.temporaryDirectory() + "/test.gfr" )
+		s.save()
+
+		subprocess.check_call( [ "gaffer", "execute", s["fileName"].getValue(), "-context", "c", "imath.Color3f( 0, 1, 2 )" ] )
+
+		self.assertEqual(
+			open( s["t"]["fileName"].getValue() ).read(),
+			"0.0 1.0 2.0"
 		)
 
 if __name__ == "__main__":

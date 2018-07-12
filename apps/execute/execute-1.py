@@ -37,6 +37,8 @@
 
 import os, sys, traceback
 
+import imath
+
 import IECore
 
 import Gaffer
