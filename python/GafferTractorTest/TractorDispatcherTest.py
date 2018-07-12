@@ -36,6 +36,8 @@
 
 import os
 import unittest
+import inspect
+import imath
 
 import tractor.api.author as author
 
@@ -239,6 +241,32 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		systemCommandTask = taskListTask.subtasks[0]
 		self.assertEqual( systemCommandTask.title, "systemCommand 1" )
 		self.assertEqual( len( systemCommandTask.cmds ), 1 )
+
+	def testImathContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["t"] = GafferDispatchTest.TextWriter()
+		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.txt" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			c = context["c"]
+			parent["t"]["text"] = "{0} {1} {2}".format( *c )
+			"""
+		) )
+
+		s["v"] = GafferDispatch.TaskContextVariables()
+		s["v"]["variables"].addMember( "c", imath.Color3f( 0, 1, 2 ) )
+		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
+
+		job = self.__job( [ s["v" ] ] )
+		task = job.subtasks[0].subtasks[0]
+		self.assertIn(
+			"imath.Color3f( 0, 1, 2 )",
+			task.cmds[0].argv
+		)
 
 if __name__ == "__main__":
 	unittest.main()
