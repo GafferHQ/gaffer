@@ -119,3 +119,13 @@ fileSystemPath:extensionsLabel    Describe valid file types      "Web images"
 fileSystemPath:includeSequences   Display file sequences         True
 ================================= ============================== ====================
 ```
+
+### PresetsPlugValueWidget
+
+```eval_rst
+================================== =============================== ====================
+Name                               Purpose                         Example values
+================================== =============================== ====================
+presetsPlugValueWidget:allowCustom Allow values not in preset list True, False
+================================== =============================== ====================
+```
