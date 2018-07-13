@@ -26,6 +26,7 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
     Installation/index.md
     Tutorials/index.md
     Interface/index.md
+    NodeGraphScripting/index.md
 ```
 
 ```eval_rst
