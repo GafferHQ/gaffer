@@ -643,7 +643,8 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		{
 			for( auto it = m_cameras.begin(); it != m_cameras.end(); )
 			{
-				if( it->second->refCount() == 1 )
+				// Cameras are referenced by both m_cameras and m_objects
+				if( it->second->refCount() == 2 )
 				{
 					it = m_cameras.erase( it );
 				}
