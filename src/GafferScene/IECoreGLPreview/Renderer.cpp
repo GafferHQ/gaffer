@@ -399,9 +399,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( name == "frame" )
+			else if( name == "frame" || name == "sampleMotion" )
 			{
-				// We know what this means, we just have no use for it.
+				// We know what these mean, we just have no use for them.
 				return;
 			}
 			else if( name == "gl:selection" )
