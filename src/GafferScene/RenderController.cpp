@@ -1014,6 +1014,13 @@ void RenderController::updateInternal( const ProgressCallback &callback )
 
 void RenderController::updateDefaultCamera()
 {
+	if( m_renderer->name() == "OpenGL" )
+	{
+		// Don't need a default camera for OpenGL, because in interactive mode the
+		// renderer currently expects the camera to be provided externally.
+		return;
+	}
+
 	const StringData *cameraOption = m_globals->member<StringData>( g_cameraGlobalName );
 	m_defaultCamera = nullptr;
 	if( cameraOption && !cameraOption->readable().empty() )
