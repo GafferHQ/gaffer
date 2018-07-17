@@ -144,6 +144,7 @@ enum TypeId
 	CollectScenesTypeId = 110599,
 	CapsuleTypeId = 110600,
 	EncapsulateTypeId = 110601,
+	CollectPrimitiveVariablesTypeId = 110602,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

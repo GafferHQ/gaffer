@@ -127,6 +127,7 @@ from FilterPlugTest import FilterPlugTest
 from ReverseWindingTest import ReverseWindingTest
 from MeshDistortionTest import MeshDistortionTest
 from DeleteObjectTest import DeleteObjectTest
+from CollectPrimitiveVariablesTest import CollectPrimitiveVariablesTest
 
 from IECoreGLPreviewTest import *
 
