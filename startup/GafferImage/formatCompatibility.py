@@ -72,7 +72,7 @@ def __formatPlugSetValue( self, *args, **kwargs ) :
 # the same file twice if the same path has been included twice. That would cause
 # havoc for us, because injecting the methods twice means infinite recursion when
 # calling the "original" methods.
-if not hasattr( GafferImage.Format, "__originalRegisterFormat" ) :
+if not hasattr( GafferImage.FormatPlug, "__originalSetValue" ) :
 
 	GafferImage.AtomicFormatPlug.__originalSetValue = GafferImage.AtomicFormatPlug.setValue
 	GafferImage.AtomicFormatPlug.setValue = __formatPlugSetValue
