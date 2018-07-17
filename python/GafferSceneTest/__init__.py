@@ -129,6 +129,7 @@ from MeshDistortionTest import MeshDistortionTest
 from DeleteObjectTest import DeleteObjectTest
 from CopyAttributesTest import CopyAttributesTest
 from RenderControllerTest import RenderControllerTest
+from CollectPrimitiveVariablesTest import CollectPrimitiveVariablesTest
 
 from IECoreGLPreviewTest import *
 

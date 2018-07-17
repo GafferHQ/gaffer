@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,30 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_COLLECTPRIMITIVEVARIABLES_H
+#define GAFFERSCENE_COLLECTPRIMITIVEVARIABLES_H
 
-#include "PrimitiveVariablesBinding.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/MapOffset.h"
-#include "GafferScene/MapProjection.h"
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-#include "GafferScene/CollectPrimitiveVariables.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveVariables()
+namespace Gaffer
 {
 
-	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<MapProjection>();
-	GafferBindings::DependencyNodeClass<MapOffset>();
-	GafferBindings::DependencyNodeClass<CollectPrimitiveVariables>();
+IE_CORE_FORWARDDECLARE( StringPlug )
 
-}
+} // namespace Gaffer
+
+namespace GafferScene
+{
+
+class GAFFERSCENE_API CollectPrimitiveVariables : public SceneElementProcessor
+{
+
+	public :
+
+		CollectPrimitiveVariables( const std::string &name=defaultName<CollectPrimitiveVariables>() );
+		~CollectPrimitiveVariables() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CollectPrimitiveVariables, CollectPrimitiveVariablesTypeId, SceneElementProcessor );
+
+		Gaffer::StringPlug *primitiveVariablesPlug();
+		const Gaffer::StringPlug *primitiveVariablesPlug() const;
+
+		Gaffer::StringVectorDataPlug *suffixesPlug();
+		const Gaffer::StringVectorDataPlug *suffixesPlug() const;
+
+		Gaffer::StringPlug *suffixContextVariablePlug();
+		const Gaffer::StringPlug *suffixContextVariablePlug() const;
+
+		Gaffer::BoolPlug *requireVariationPlug();
+		const Gaffer::BoolPlug *requireVariationPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CollectPrimitiveVariables )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_COLLECTPRIMITIVEVARIABLES_H
