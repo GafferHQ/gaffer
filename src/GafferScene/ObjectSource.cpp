@@ -115,6 +115,7 @@ void ObjectSource::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::A
 	else if( transformPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
 	}
 	else if( input == setsPlug() )
 	{
