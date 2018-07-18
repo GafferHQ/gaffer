@@ -190,12 +190,16 @@ IE_CORE_DECLAREPTR( OpenGLAttributes )
 namespace
 {
 
+typedef std::function<void ()> Edit;
+typedef tbb::concurrent_queue<Edit> EditQueue;
+
 class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
 
-		OpenGLObject( const std::string &name, const IECore::Object *object )
+		OpenGLObject( const std::string &name, const IECore::Object *object, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
+			:	m_attributes( attributes ), m_editQueue( editQueue )
 		{
 			IECore::StringAlgo::tokenize( name, '/', m_name );
 
@@ -222,7 +226,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const Imath::M44f &transform ) override
 		{
-			m_transform = transform;
+			m_editQueue.push( [this, transform]() {
+				m_transform = transform;
+			} );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -232,7 +238,10 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			m_attributes = static_cast<const OpenGLAttributes *>( attributes );
+			ConstOpenGLAttributesPtr openGLAttributes = static_cast<const OpenGLAttributes *>( attributes );
+			m_editQueue.push( [this, openGLAttributes]() {
+				m_attributes = openGLAttributes;
+			} );
 			return true;
 		}
 
@@ -294,12 +303,20 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+	protected :
+
+		EditQueue &editQueue()
+		{
+			return m_editQueue;
+		}
+
 	private :
 
 		M44f m_transform;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
 		vector<InternedString> m_name;
+		EditQueue &m_editQueue;
 
 };
 
@@ -319,8 +336,8 @@ class OpenGLCamera : public OpenGLObject
 
 	public :
 
-		OpenGLCamera( const std::string &name, const IECoreScene::Camera *camera )
-			:	OpenGLObject( name, camera )
+		OpenGLCamera( const std::string &name, const IECoreScene::Camera *camera, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
+			:	OpenGLObject( name, camera, attributes, editQueue )
 		{
 			if( camera )
 			{
@@ -336,7 +353,9 @@ class OpenGLCamera : public OpenGLObject
 		void transform( const Imath::M44f &transform ) override
 		{
 			OpenGLObject::transform( transform );
-			m_camera->setTransform( transform );
+			editQueue().push( [this, transform]() {
+				m_camera->setTransform( transform );
+			} );
 		}
 
 		const IECoreGL::Camera *camera() const
@@ -462,8 +481,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
-			OpenGLCameraPtr result = new OpenGLCamera( name, camera );
-			result->attributes( attributes );
+			OpenGLCameraPtr result = new OpenGLCamera( name, camera, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result, name]() {
 				m_objects.push_back( result );
 				m_cameras[name] = result;
@@ -478,8 +496,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			OpenGLObjectPtr result = new OpenGLObject( name, object );
-			result->attributes( attributes );
+			OpenGLObjectPtr result = new OpenGLObject( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
 		}
@@ -588,7 +605,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				camera = new OpenGLCamera( "/defaultCamera", nullptr );
+				camera = new OpenGLCamera( "/defaultCamera", nullptr, nullptr, m_editQueue );
 			}
 
 			const V2i resolution = camera->camera()->getResolution();
@@ -779,8 +796,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		IECoreGL::StatePtr m_baseState;
 
 		// Queue used to pass edits from background threads to the render thread.
-		typedef std::function<void ()> Edit;
-		typedef tbb::concurrent_queue<Edit> EditQueue;
 		EditQueue m_editQueue;
 
 		// Render state. Updated on the render thread by processing Edits
