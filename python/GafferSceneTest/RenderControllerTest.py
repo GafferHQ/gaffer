@@ -65,5 +65,29 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( controller.getScene().isSame( cube["out"] ) )
 		self.assertTrue( controller.getContext().isSame( context2 ) )
 
+	def testBoundUpdate( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.update()
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			group["out"].bound( "/" )
+		)
+
+		sphere["transform"]["translate"]["x"].setValue( 1 )
+		controller.update()
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			group["out"].bound( "/" )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

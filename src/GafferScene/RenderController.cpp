@@ -267,7 +267,10 @@ class RenderController::SceneGraph
 				changedComponents |= ExpansionComponent;
 			}
 
-			if( changedComponents & ( ExpansionComponent | BoundComponent | ChildNamesComponent ) )
+			if(
+				( changedComponents & ( ExpansionComponent | ChildNamesComponent ) ) ||
+				( dirtyComponents & BoundComponent )
+			)
 			{
 				// Create bounding box if needed
 				m_boundInterface = nullptr;
