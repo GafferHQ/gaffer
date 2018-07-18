@@ -39,14 +39,16 @@ try :
 	# See comments in `GafferArnold/__init__.py`
 	import sys
 	import ctypes
-	originalDLOpenFlags = sys.getdlopenflags()
-	sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
+	if hasattr( sys, "getdlopenflags" ):
+		originalDLOpenFlags = sys.getdlopenflags()
+		sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
 
 	from ._IECoreArnold import *
 
 finally :
-
-	sys.setdlopenflags( originalDLOpenFlags )
-	del sys, ctypes, originalDLOpenFlags
+	if hasattr( sys, "getdlopenflags" ):
+		sys.setdlopenflags( originalDLOpenFlags )
+		del originalDLOpenFlags
+	del sys, ctypes
 
 from .UniverseBlock import UniverseBlock
