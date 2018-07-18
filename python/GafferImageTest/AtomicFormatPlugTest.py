@@ -46,14 +46,6 @@ import GafferImageTest
 
 class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 
-	def testOldFormatCompatibility( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/formatCompatibility-0.15.0.0.gfr" )
-		s.load()
-
-		self.assertEqual( s["c"]["format"].getValue(), GafferImage.Format( 1920, 1080, 1. ) )
-
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
