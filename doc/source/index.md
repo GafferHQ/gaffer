@@ -1,18 +1,30 @@
-Introduction
-============
+![Gaffer Logo](_static/GafferLogo.svg)
 
-Gaffer is a node based application for use in CG and VFX production, with a particular focus on lighting and look development. Scenes are generated procedurally via networks of nodes for loading caches, joining and partitioning, adding lights, assigning shaders and attributes and so on. Gaffer is not tied to any particular renderer, and currently provides out-of-the-box support for [3delight](http://www.3delight.com), [Arnold](https://www.solidangle.com/arnold) and [Appleseed](http://appleseedhq.net).
+# Introduction #
 
-Gaffer also provides basic 2D compositing functionality, suitable for use in lighting slapcomps and automated pipeline processes. Processing on a renderfarm is defined using graphs of tasks within Gaffer's node editor, with dispatch currently supported via [Tractor](https://renderman.pixar.com/tractor) or a built in local dispatcher.
+Welcome to the Gaffer user guide, API manual, and reference documentation.
 
-In addition to itself being highly extensible, Gaffer's underlying frameworks are designed to enable the rapid development of standalone custom tools, both command line and GUI.
+This document provides instructions for how to use Gaffer to complete tasks relevant to both enthusiasts and studios in the VFX domains of look development, lighting, and automated processing and QC. It specifies the Gaffer API and describes some of the application's underlying architecture. It also provide reference information for keyboard shortcuts, node types, and scripting commands.
 
-- [Installation](Installation/index.md)
-- [Tutorials](Tutorials/index.md)
-- [Interface](Interface/index.md)
-- [Reference](Reference/index.md)
-- [Release Notes](ReleaseNotes/index.md)
-- [Appendices](Appendices/index.md)
+To learn more about Gaffer, visit our website: [https://gafferhq.org](https://gafferhq.org)
+
+For the purposes of this document, we will assume you have intermediate knowledge of VFX, its terminology, its methods, and its processes. We will also assume you have at least basic familiarity with using Linux and programming paradigms.
+
+Gaffer is open source software hosted and maintained on GitHub: [https://github.com/gafferhq](https://github.com/gafferhq). We strive to keep Gaffer and its documentation bug-free and up-to-date. If you find any bugs with the software, or inaccuracies with this document, we would very much appreciate it if you report it to us on our [Issues page](https://github.com/gafferhq/gaffer/issues).
+
+
+## Start Using Gaffer ##
+
+To start, you should:
+
+* [Install Gaffer](Installation/index.md)
+* Complete the [Getting Started tutorial](Tutorials/GettingStarted/index.md)
+
+If you are are looking to automate VFX processes or develop with Gaffer's API, you should also:
+
+* Complete the [Getting Started in Scripting tutorial](Tutorials/Scripting/GettingStarted/index.md)
+* Complete the [Managing Complexity tutorial](Tutorials/ManagingComplexity/index.md)
+
 
 <!-- TOC -->
 
@@ -39,3 +51,4 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
     ReleaseNotes/index.md
     Appendices/index.md
 ```
+
