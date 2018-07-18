@@ -47,14 +47,23 @@ def __convertFormat( graphComponent, format ):
 	if scriptNode is None or not scriptNode.isExecuting() :
 		return format
 
-	gafferVersion = (
-		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:milestoneVersion" ),
-		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:majorVersion" ),
-		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:minorVersion" ),
-		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:patchVersion" )
-	)
+	parentNode = graphComponent.ancestor( Gaffer.Node )
+	while parentNode :
+		gafferVersion = (
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:milestoneVersion" ),
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:majorVersion" ),
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:minorVersion" ),
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:patchVersion" )
+		)
 
-	if gafferVersion < ( 0, 17, 0, 0 ) :
+		# only use the information if we have valid information from the node
+		if not filter( lambda x : x is None, gafferVersion ) :
+			break
+
+		gafferVersion = None
+		parentNode = parentNode.ancestor( Gaffer.Node )
+
+	if gafferVersion is not None and gafferVersion < ( 0, 17, 0, 0 ) :
 		displayWindow = format.getDisplayWindow()
 		displayWindow.setMax( displayWindow.max() + imath.V2i( 1 ) )
 		return GafferImage.Format( displayWindow, format.getPixelAspect() )
@@ -72,7 +81,7 @@ def __formatPlugSetValue( self, *args, **kwargs ) :
 # the same file twice if the same path has been included twice. That would cause
 # havoc for us, because injecting the methods twice means infinite recursion when
 # calling the "original" methods.
-if not hasattr( GafferImage.Format, "__originalRegisterFormat" ) :
+if not hasattr( GafferImage.FormatPlug, "__originalSetValue" ) :
 
 	GafferImage.AtomicFormatPlug.__originalSetValue = GafferImage.AtomicFormatPlug.setValue
 	GafferImage.AtomicFormatPlug.setValue = __formatPlugSetValue
