@@ -128,6 +128,7 @@ from ReverseWindingTest import ReverseWindingTest
 from MeshDistortionTest import MeshDistortionTest
 from DeleteObjectTest import DeleteObjectTest
 from CopyAttributesTest import CopyAttributesTest
+from RenderControllerTest import RenderControllerTest
 
 from IECoreGLPreviewTest import *
 
