@@ -212,11 +212,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEqual(
 			renderer.command( "gl:queryBound", {} ),
-			IECore.Box3fData(
-				imath.Box3f(
-					cube.bound().min() + imath.V3f( 1 ),
-					cube.bound().max() + imath.V3f( 1 )
-				)
+			imath.Box3f(
+				cube.bound().min() + imath.V3f( 1 ),
+				cube.bound().max() + imath.V3f( 1 )
 			)
 		)
 

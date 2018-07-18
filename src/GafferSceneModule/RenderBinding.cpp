@@ -47,6 +47,7 @@
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferBindings/DataBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Context.h"
@@ -137,6 +138,13 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &rend
 	container_utils::extend_container( times, pythonTimes );
 
 	return renderer.object( name, samples, times, attributes );
+}
+
+object rendererCommand( Renderer &renderer, const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() )
+{
+	return dataToPython(
+		renderer.command( name, parameters ).get()
+	);
 }
 
 void objectInterfaceTransform1( Renderer::ObjectInterface &objectInterface, const Imath::M44f &transform )
@@ -274,7 +282,7 @@ void GafferSceneModule::bindRender()
 
 			.def( "render", &Renderer::render )
 			.def( "pause", &Renderer::pause )
-			.def( "command", &Renderer::command )
+			.def( "command", &rendererCommand )
 
 		;
 
