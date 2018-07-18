@@ -57,7 +57,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 
 	public :
 
-		RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, IECoreScenePreview::RendererPtr &renderer );
+		RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer );
 		~RenderController();
 
 		IECoreScenePreview::Renderer *renderer();

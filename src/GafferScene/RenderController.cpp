@@ -710,7 +710,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 // RenderController
 //////////////////////////////////////////////////////////////////////////
 
-RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, IECoreScenePreview::RendererPtr &renderer )
+RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer )
 	:	m_renderer( renderer ),
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
@@ -744,6 +744,11 @@ RenderController::~RenderController()
 	m_renderer->pause();
 	m_sceneGraphs.clear();
 	m_defaultCamera.reset();
+}
+
+IECoreScenePreview::Renderer *RenderController::renderer()
+{
+	return m_renderer.get();
 }
 
 void RenderController::setScene( const ConstScenePlugPtr &scene )
