@@ -41,7 +41,8 @@
 #include "IECoreScene/Primitive.h"
 #include "IECoreScene/TransformOp.h"
 
-#include "IECore/DespatchTypedData.h"
+#include "IECore/DataAlgo.h"
+#include "IECore/TypeTraits.h"
 
 using namespace std;
 using namespace Imath;
@@ -239,7 +240,7 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 		vector<string> primVarNames;
 		for( PrimitiveVariableMap::const_iterator it = inputPrimitive->variables.begin(), eIt = inputPrimitive->variables.end(); it != eIt; ++it )
 		{
-			if( despatchTraitsTest<TypeTraits::IsFloatVec3VectorTypedData>( it->second.data.get() ) )
+			if( trait<TypeTraits::IsFloatVec3VectorTypedData>( it->second.data.get() ) )
 			{
 				primVarNames.push_back( it->first );
 			}
