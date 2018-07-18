@@ -375,16 +375,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.subdivType.value" : [
-
-			"preset:None", "none",
-			"preset:Linear", "linear",
-			"preset:Catclark", "catclark",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
 		"attributes.subdivIterations" : [
 
 			"description",
