@@ -74,13 +74,13 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 
 	// Subdivision parameters
 
-	attributes->addOptionalMember( "ai:polymesh:subdivide_polygons", new BoolPlug( "value" ), "subdividePolygons", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_iterations", new IntPlug( "value", Plug::In, 1, 1 ), "subdivIterations", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivAdaptiveError", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_space", new StringPlug( "value", Plug::In, "raster" ), "subdivAdaptiveSpace", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_uv_smoothing", new StringPlug( "value", Plug::In, "pin_corners" ), "subdivUVSmoothing", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_smooth_derivs", new BoolPlug( "value" ), "subdivSmoothDerivs", false );
+	attributes->addOptionalMember( "ai:polymesh:subdivide_polygons", new BoolPlug( "value" ), "subdividePolygons", false );
 
 	// Curves parameters
 
