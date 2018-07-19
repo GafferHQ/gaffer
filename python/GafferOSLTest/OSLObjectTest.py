@@ -66,18 +66,18 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		inPoint = GafferOSL.OSLShader()
 		inPoint.loadShader( "ObjectProcessing/InPoint" )
 
-		splitPoint = GafferOSL.OSLShader()
-		splitPoint.loadShader( "Utility/SplitPoint" )
-		splitPoint["parameters"]["p"].setInput( inPoint["out"]["value"] )
+		vectorToFloat = GafferOSL.OSLShader()
+		vectorToFloat.loadShader( "Conversion/VectorToFloat" )
+		vectorToFloat["parameters"]["p"].setInput( inPoint["out"]["value"] )
 
-		buildPoint = GafferOSL.OSLShader()
-		buildPoint.loadShader( "Utility/BuildPoint" )
-		buildPoint["parameters"]["x"].setInput( splitPoint["out"]["y"] )
-		buildPoint["parameters"]["y"].setInput( splitPoint["out"]["x"] )
+		floatToVector = GafferOSL.OSLShader()
+		floatToVector.loadShader( "Conversion/FloatToVector" )
+		floatToVector["parameters"]["x"].setInput( vectorToFloat["out"]["y"] )
+		floatToVector["parameters"]["y"].setInput( vectorToFloat["out"]["x"] )
 
 		outPoint = GafferOSL.OSLShader()
 		outPoint.loadShader( "ObjectProcessing/OutPoint" )
-		outPoint["parameters"]["value"].setInput( buildPoint["out"]["p"] )
+		outPoint["parameters"]["value"].setInput( floatToVector["out"]["p"] )
 
 		primVarShader = GafferOSL.OSLShader()
 		primVarShader.loadShader( "ObjectProcessing/OutObject" )
@@ -271,19 +271,19 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		s.addChild( inPoint )
 		inPoint.loadShader( "ObjectProcessing/InPoint" )
 
-		vectorAdd = GafferOSL.OSLShader( "VectorAdd" )
-		s.addChild( vectorAdd )
-		vectorAdd.loadShader( "Maths/VectorAdd" )
-		vectorAdd["parameters"]["b"].setValue( imath.V3f( 1, 2, 3 ) )
+		addVector = GafferOSL.OSLShader( "AddVector" )
+		s.addChild( addVector )
+		addVector.loadShader( "Maths/AddVector" )
+		addVector["parameters"]["b"].setValue( imath.V3f( 1, 2, 3 ) )
 
-		vectorAdd["parameters"]["a"].setInput( inPoint["out"]["value"] )
+		addVector["parameters"]["a"].setInput( inPoint["out"]["value"] )
 
 		outPoint = GafferOSL.OSLShader( "OutPoint" )
 		s.addChild( outPoint )
 		outPoint.loadShader( "ObjectProcessing/OutPoint" )
 		outPoint['parameters']['name'].setValue("P_copy")
 
-		outPoint["parameters"]["value"].setInput( vectorAdd["out"]["out"] )
+		outPoint["parameters"]["value"].setInput( addVector["out"]["out"] )
 
 		outObject = GafferOSL.OSLShader( "OutObject" )
 		s.addChild( outObject )

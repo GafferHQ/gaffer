@@ -62,15 +62,15 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		getBlue.loadShader( "ImageProcessing/InChannel" )
 		getBlue["parameters"]["channelName"].setValue( "B" )
 
-		buildColor = GafferOSL.OSLShader()
-		buildColor.loadShader( "Utility/BuildColor" )
-		buildColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
-		buildColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
-		buildColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
+		floatToColor = GafferOSL.OSLShader()
+		floatToColor.loadShader( "Conversion/FloatToColor" )
+		floatToColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
+		floatToColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
+		floatToColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
 
 		outRGB = GafferOSL.OSLShader()
 		outRGB.loadShader( "ImageProcessing/OutLayer" )
-		outRGB["parameters"]["layerColor"].setInput( buildColor["out"]["c"] )
+		outRGB["parameters"]["layerColor"].setInput( floatToColor["out"]["c"] )
 
 		imageShader = GafferOSL.OSLShader()
 		imageShader.loadShader( "ImageProcessing/OutImage" )
@@ -122,7 +122,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		del cs[:]
 
-		buildColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
+		floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
 
 		self.assertEqual( len( cs ), 5 )
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )

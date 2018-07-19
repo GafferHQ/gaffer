@@ -1415,20 +1415,20 @@ class RendererTest( GafferTest.TestCase ) :
 
 		network = IECore.ObjectVector( [
 			IECoreScene.Shader(
-				"Utility/SplitColor",
+				"Conversion/ColorToFloat",
 				"osl:shader",
 				{
 					"c" : imath.Color3f( 0.1, 0.2, 0.3 ),
-					"__handle" : "splitHandle"
+					"__handle" : "colorToFloatHandle"
 				}
 			),
 			IECoreScene.Shader(
-				"Utility/BuildColor",
+				"Conversion/FloatToColor",
 				"osl:shader",
 				{
-					"r" : "link:splitHandle.r",
-					"g" : "link:splitHandle.g",
-					"b" : "link:splitHandle.b",
+					"r" : "link:colorToFloatHandle.r",
+					"g" : "link:colorToFloatHandle.g",
+					"b" : "link:colorToFloatHandle.b",
 				}
 			)
 		] )
@@ -1447,28 +1447,27 @@ class RendererTest( GafferTest.TestCase ) :
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
-			build = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( build ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( build, "shadername" ), "Utility/BuildColor" )
+			floatToColor = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatToColor ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( floatToColor, "shadername" ), "Conversion/FloatToColor" )
 
-			splitR = arnold.AiNodeGetLink( build, "param_r" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splitR ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( splitR, "output" ), "r" )
-			self.assertEqual( arnold.AiNodeGetStr( splitR, "shadername" ), "Utility/SplitColor" )
-			self.assertEqual( arnold.AiNodeGetRGB( splitR, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			colorToFloatR = arnold.AiNodeGetLink( floatToColor, "param_r" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatR ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( colorToFloatR, "output" ), "r" )
+			self.assertEqual( arnold.AiNodeGetStr( colorToFloatR, "shadername" ), "Conversion/ColorToFloat" )
+			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatR, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
 
-			splitG = arnold.AiNodeGetLink( build, "param_g" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splitG ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( splitG, "output" ), "g" )
-			self.assertEqual( arnold.AiNodeGetStr( splitG, "shadername" ), "Utility/SplitColor" )
-			self.assertEqual( arnold.AiNodeGetRGB( splitG, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			colorToFloatG = arnold.AiNodeGetLink( floatToColor, "param_g" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatG ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( colorToFloatG, "output" ), "g" )
+			self.assertEqual( arnold.AiNodeGetStr( colorToFloatG, "shadername" ), "Conversion/ColorToFloat" )
+			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatG, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
 
-			splitB = arnold.AiNodeGetLink( build, "param_b" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splitB ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( splitB, "output" ), "b" )
-			self.assertEqual( arnold.AiNodeGetStr( splitB, "shadername" ), "Utility/SplitColor" )
-			self.assertEqual( arnold.AiNodeGetRGB( splitB, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
-
+			colorToFloatB = arnold.AiNodeGetLink( floatToColor, "param_b" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatB ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( colorToFloatB, "output" ), "b" )
+			self.assertEqual( arnold.AiNodeGetStr( colorToFloatB, "shadername" ), "Conversion/ColorToFloat" )
+			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatB, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
 
 	def testTraceSets( self ) :
 

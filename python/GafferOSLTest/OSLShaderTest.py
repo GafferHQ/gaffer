@@ -160,6 +160,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertRaises( RuntimeError, n.loadShader,  "nonexistent" )
 
 	def testSearchPaths( self ) :
+
 		standardShaderPaths = os.environ["OSL_SHADER_PATHS"]
 		try:
 			s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
@@ -171,23 +172,22 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
 		finally:
 			os.environ["OSL_SHADER_PATHS"] = standardShaderPaths
-			
 
 	def testNoConnectionToParametersPlug( self ) :
 
-		splitPoint = GafferOSL.OSLShader()
-		splitPoint.loadShader( "Utility/SplitPoint" )
+		vectorToFloat = GafferOSL.OSLShader()
+		vectorToFloat.loadShader( "Conversion/VectorToFloat" )
 
 		globals = GafferOSL.OSLShader()
 		globals.loadShader( "Utility/Globals" )
 
-		splitPoint["parameters"]["p"].setInput( globals["out"]["globalP"] )
+		vectorToFloat["parameters"]["p"].setInput( globals["out"]["globalP"] )
 
-		self.assertTrue( splitPoint["parameters"]["p"].getInput().isSame( globals["out"]["globalP"] ) )
-		self.assertTrue( splitPoint["parameters"]["p"][0].getInput().isSame( globals["out"]["globalP"][0] ) )
-		self.assertTrue( splitPoint["parameters"]["p"][1].getInput().isSame( globals["out"]["globalP"][1] ) )
-		self.assertTrue( splitPoint["parameters"]["p"][2].getInput().isSame( globals["out"]["globalP"][2] ) )
-		self.assertTrue( splitPoint["parameters"].getInput() is None )
+		self.assertTrue( vectorToFloat["parameters"]["p"].getInput().isSame( globals["out"]["globalP"] ) )
+		self.assertTrue( vectorToFloat["parameters"]["p"][0].getInput().isSame( globals["out"]["globalP"][0] ) )
+		self.assertTrue( vectorToFloat["parameters"]["p"][1].getInput().isSame( globals["out"]["globalP"][1] ) )
+		self.assertTrue( vectorToFloat["parameters"]["p"][2].getInput().isSame( globals["out"]["globalP"][2] ) )
+		self.assertTrue( vectorToFloat["parameters"].getInput() is None )
 
 	def testStructs( self ) :
 
@@ -241,14 +241,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		globals = GafferOSL.OSLShader()
 		globals.loadShader( "Utility/Globals" )
 
-		buildColor = GafferOSL.OSLShader()
-		buildColor.loadShader( "Utility/BuildColor" )
+		floatToColor = GafferOSL.OSLShader()
+		floatToColor.loadShader( "Conversion/FloatToColor" )
 
-		buildColor["parameters"]["r"].setInput( globals["out"]["globalU"] )
-		h1 = buildColor.attributesHash()
+		floatToColor["parameters"]["r"].setInput( globals["out"]["globalU"] )
+		h1 = floatToColor.attributesHash()
 
-		buildColor["parameters"]["r"].setInput( globals["out"]["globalV"] )
-		h2 = buildColor.attributesHash()
+		floatToColor["parameters"]["r"].setInput( globals["out"]["globalV"] )
+		h2 = floatToColor.attributesHash()
 
 		self.assertNotEqual( h1, h2 )
 
@@ -294,7 +294,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		inputClosure.loadShader( inputClosureShader )
 
 		outputColor = GafferOSL.OSLShader()
-		outputColor.loadShader( "Utility/VectorToColor" )
+		outputColor.loadShader( "Conversion/VectorToColor" )
 
 		self.assertTrue( inputClosure["parameters"]["i"].acceptsInput( outputClosure["out"]["c"] ) )
 		self.assertFalse( inputClosure["parameters"]["i"].acceptsInput( outputColor["out"]["c"] ) )
@@ -490,13 +490,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		globals.loadShader( "Utility/Globals" )
 
 		point = GafferOSL.OSLShader( "Point" )
-		point.loadShader( "Utility/BuildPoint" )
+		point.loadShader( "Conversion/FloatToVector" )
 
 		noise = GafferOSL.OSLShader( "Noise" )
 		noise.loadShader( "Pattern/Noise" )
 
 		color = GafferOSL.OSLShader( "Color" )
-		color.loadShader( "Utility/BuildColor" )
+		color.loadShader( "Conversion/FloatToColor" )
 
 		point["parameters"]["x"].setInput( globals["out"]["globalU"] )
 		point["parameters"]["y"].setInput( globals["out"]["globalV"] )
@@ -858,13 +858,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferOSL.OSLShader()
-		s["n1"].loadShader( "Maths/VectorAdd" )
+		s["n1"].loadShader( "Maths/AddVector" )
 
 		s["n2"] = GafferOSL.OSLShader()
-		s["n2"].loadShader( "Maths/VectorAdd" )
+		s["n2"].loadShader( "Maths/AddVector" )
 
 		s["n3"] = GafferOSL.OSLShader()
-		s["n3"].loadShader( "Maths/VectorAdd" )
+		s["n3"].loadShader( "Maths/AddVector" )
 
 		s["n2"]["parameters"]["a"].setInput( s["n1"]["out"]["out"] )
 		s["n3"]["parameters"]["a"].setInput( s["n2"]["out"]["out"] )
@@ -875,14 +875,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 	def testDisablingShader( self ) :
 
 		n1 = GafferOSL.OSLShader()
-		n1.loadShader( "Maths/VectorAdd" )
+		n1.loadShader( "Maths/AddVector" )
 		n1["parameters"]["a"].setValue( imath.V3f( 5, 7, 6 ) )
 
 		n2 = GafferOSL.OSLShader()
-		n2.loadShader( "Maths/VectorAdd" )
+		n2.loadShader( "Maths/AddVector" )
 
 		n3 = GafferOSL.OSLShader()
-		n3.loadShader( "Maths/VectorAdd" )
+		n3.loadShader( "Maths/AddVector" )
 
 		n2["parameters"]["a"].setInput( n1["out"]["out"] )
 		n3["parameters"]["a"].setInput( n2["out"]["out"] )
@@ -900,11 +900,11 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n1["user"]["v"].setValue( imath.V3f( 12, 11, 10 ) )
 
 		n2 = GafferOSL.OSLShader()
-		n2.loadShader( "Maths/VectorAdd" )
+		n2.loadShader( "Maths/AddVector" )
 		n2["parameters"]["a"].setInput( n1["user"]["v"] )
 
 		n3 = GafferOSL.OSLShader()
-		n3.loadShader( "Maths/VectorAdd" )
+		n3.loadShader( "Maths/AddVector" )
 		n3["parameters"]["a"].setInput( n2["parameters"]["a"] )
 
 		n2["enabled"].setValue( False )
@@ -983,7 +983,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
-		
+
 		self.assertEqual( s2['n2']['parameters']['scale'].getInput(), s2['n']['out']['n'] )
 
 	def testSplineParameterSerialisation( self ) :
