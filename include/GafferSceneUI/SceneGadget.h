@@ -168,6 +168,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		mutable std::shared_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateErrored;
 		std::atomic_bool m_renderRequestPending;
+		std::chrono::steady_clock::time_point m_synchroniseTimePoint;
 
 		IECore::ConstCompoundObjectPtr m_openGLOptions;
 		IECore::PathMatcher m_selection;

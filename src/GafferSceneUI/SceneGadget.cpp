@@ -193,6 +193,7 @@ void SceneGadget::waitForCompletion()
 	if( m_updateTask )
 	{
 		m_updateTask->wait();
+		m_renderer->command( "gl:synchronise" );
 	}
 }
 
@@ -414,25 +415,32 @@ void SceneGadget::updateRenderer()
 		{
 			return;
 		}
-		bool shouldRequestRender = !m_renderRequestPending.exchange( true );
-		bool shouldEmitStateChange =
+
+		const bool stateChanged =
 			progress == BackgroundTask::Completed ||
 			progress == BackgroundTask::Errored
 		;
 
-		if( shouldRequestRender || shouldEmitStateChange )
+		bool shouldRequestRender = false;
+		if( stateChanged || std::chrono::steady_clock::now() >= m_synchroniseTimePoint )
+		{
+			shouldRequestRender = !m_renderRequestPending.exchange( true );
+		}
+
+		if( shouldRequestRender || stateChanged )
 		{
 			// Must hold a reference to stop us dying before our UI thread call is scheduled.
 			SceneGadgetPtr thisRef = this;
 			ParallelAlgo::callOnUIThread(
-				[thisRef, shouldRequestRender, shouldEmitStateChange, progress] {
+				[thisRef, shouldRequestRender, stateChanged, progress] {
 					if( progress == BackgroundTask::Errored )
 					{
 						thisRef->m_updateErrored = true;
 					}
-					if( shouldEmitStateChange )
+					if( stateChanged )
 					{
 						thisRef->stateChangedSignal()( thisRef.get() );
+						thisRef->m_synchroniseTimePoint = std::chrono::steady_clock::now();
 					}
 					if( shouldRequestRender )
 					{
@@ -446,6 +454,10 @@ void SceneGadget::updateRenderer()
 	};
 
 	m_updateErrored = false;
+	// We don't show progressive updates until a small delay has elapsed. This
+	// avoids flickering partial updates when we can show the complete update
+	// in a reasonable period of time.
+	m_synchroniseTimePoint = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );;
 	m_updateTask = m_controller.updateInBackground( progressCallback );
 	stateChangedSignal()( this );
 }
@@ -456,6 +468,12 @@ void SceneGadget::renderScene() const
 	{
 		return;
 	}
+
+	if( std::chrono::steady_clock::now() >= m_synchroniseTimePoint )
+	{
+		m_renderer->command( "gl:synchronise" );
+	}
+
 	m_renderer->render();
 }
 

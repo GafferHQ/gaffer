@@ -536,6 +536,36 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				return querySelectedObjects( parameters );
 			}
+			else if( name == "gl:synchronise" )
+			{
+				// In interactive mode we need a way of allowing `render()`
+				// to be called before all edits have been completed, so we
+				// can show progressive results in Gaffer's SceneGadget.
+				// This doesn't really sit well in the current `pause()`/`render()`
+				// API, so we use this explicit synchronisation command to allow
+				// manual flushing of the edit queue. The downside is that a naive
+				// call to `render()` will appear to do nothing.
+				//
+				/// \todo Consider improving the base Renderer API as follows :
+				///
+				/// - Use an editBegin()/editEnd() pair to make it explicit when
+				///   all edits are completed. For the OpenGLRenderer, `editEnd()`
+				///   would perform the synchronisation.
+				/// - Make pause()/render() be purely about whether or not the renderer
+				///   is currently computing pixels, so it is OK to make edits without
+				///   calling `pause()` (provided `editBegin()` is called instead).
+				///
+				/// This would have the benefit that a naive client of OpenGLRenderer
+				/// gets the expected behaviour without needing to use custom commands.
+				/// Only if you wanted to preview edits-in-progress would you call
+				/// `command( "gl:synchronise" )` before the final `editEnd()`. It also
+				/// seems that this scheme might map better to other renderer APIs (pause/render
+				/// is very much based on Arnold).
+				processQueue();
+				removeDeletedObjects();
+				CachedConverter::defaultCachedConverter()->clearUnused();
+				return nullptr;
+			}
 
 			throw IECore::Exception( "Unknown command" );
 		}
@@ -544,10 +574,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderInteractive()
 		{
-			processQueue();
-			removeDeletedObjects();
-			CachedConverter::defaultCachedConverter()->clearUnused();
-
 			GLint prevProgram;
 			glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
 			glPushAttrib( GL_ALL_ATTRIB_BITS );
