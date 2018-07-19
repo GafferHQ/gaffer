@@ -36,9 +36,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DataBinding.h"
+#include "IECore/DataAlgo.h"
+#include "IECore/TypeTraits.h"
 
-#include "IECore/DespatchTypedData.h"
+#include "GafferBindings/DataBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -46,15 +47,29 @@ using namespace IECore;
 namespace
 {
 
-struct SimpleTypedDataGetter
+struct DataToPython
 {
-	typedef object ReturnType;
+
+	DataToPython( bool copy )
+		:	m_copy( copy )
+	{
+	}
 
 	template<typename T>
-	object operator()( T *data )
+	object operator()( const T *data, typename std::enable_if<TypeTraits::IsSimpleTypedData<T>::value>::type *enabler = nullptr )
 	{
 		return object( data->readable() );
 	}
+
+	object operator()( Data *data )
+	{
+		return object( m_copy ? data->copy() : DataPtr( data ) );
+	}
+
+	private :
+
+		bool m_copy;
+
 };
 
 boost::python::object dataToPythonInternal( IECore::Data *data, bool copy, boost::python::object nullValue )
@@ -64,23 +79,7 @@ boost::python::object dataToPythonInternal( IECore::Data *data, bool copy, boost
 		return nullValue;
 	}
 
-	try
-	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( data );
-	}
-	catch( const InvalidArgumentException &e )
-	{
-		// In an ideal world, we wouldn't be using exception handling to detect
-		// the cases where IsSimpleTypedData is false. We _could_ use a null error
-		// handler for the despatchTypedData() call, except for two annoying facts :
-		//
-		//	- Error handlers don't get to return a value
-		//  - The error handler isn't used if a totally unknown datatype is
-		//    found, and Gaffer adds new datatypes.
-		//
-		// It might be nice to fix that in Cortex.
-		return object( copy ? data->copy() : DataPtr( data ) );
-	}
+	return dispatch( data, DataToPython( copy ) );
 }
 
 } // namespace
