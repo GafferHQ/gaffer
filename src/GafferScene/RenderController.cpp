@@ -66,6 +66,8 @@ using namespace GafferScene::RendererAlgo;
 namespace
 {
 
+InternedString g_openGLRendererName( "OpenGL" );
+
 InternedString g_cameraGlobalName( "option:render:camera" );
 
 InternedString g_visibleAttributeName( "scene:visible" );
@@ -273,7 +275,6 @@ class RenderController::SceneGraph
 			)
 			{
 				// Create bounding box if needed
-				m_boundInterface = nullptr;
 				if( !m_expanded && m_children.size() )
 				{
 					const Box3f bound = controller->m_scene->boundPlug()->getValue();
@@ -283,8 +284,18 @@ class RenderController::SceneGraph
 					ScenePlug::pathToString( path, boundName );
 					boundName += "/__unexpandedChildren__";
 
+					if( controller->m_renderer->name() != g_openGLRendererName )
+					{
+						// See comments in `updateObject()`.
+						m_boundInterface = nullptr;
+					}
+
 					m_boundInterface = controller->m_renderer->object( boundName, boundCurves.get(), controller->m_boundAttributes.get() );
 					m_boundInterface->transform( m_fullTransform );
+				}
+				else
+				{
+					m_boundInterface = nullptr;
 				}
 			}
 			else if( m_boundInterface && ( changedComponents & TransformComponent ) )
@@ -440,15 +451,36 @@ class RenderController::SceneGraph
 				return false;
 			}
 
-			m_objectInterface = nullptr;
-
 			IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
 			m_objectHash = objectHash;
 
 			const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
 			if( (type != LightType) && nullObject )
 			{
+				m_objectInterface = nullptr;
 				return hadObjectInterface;
+			}
+
+			if( renderer->name() != g_openGLRendererName )
+			{
+				// Delete our current object interface before we potentially
+				// create a new one. This is essential for renderer backends
+				// which rely on object names being unique (typically because
+				// they use them as handles in the renderer they connect to).
+				// We avoid doing this for the OpenGL renderer though, because
+				// destroying the object before its replacement is ready can
+				// lead to the object flickering during progressive updates
+				// in Gaffer's viewport (the OpenGL renderer is designed such
+				// that it can draw concurrently with the updates we make,
+				// whereas other renderers must wait for all edits to be complete
+				// first).
+				//
+				/// \todo Consider ways of redesigning the Renderer API so this
+				/// is cleaner. Should there be an atomic way of swapping an
+				/// ObjectInterface? Or a way of updating geometry without creating
+				/// a new object? Perhaps the latter could allow a smart backend to make
+				/// more minimal edits?
+				m_objectInterface = nullptr;
 			}
 
 			std::string name;
@@ -460,6 +492,10 @@ class RenderController::SceneGraph
 					IECoreScene::CameraPtr cameraCopy = camera->copy();
 					RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
 					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
+				}
+				else
+				{
+					m_objectInterface = nullptr;
 				}
 			}
 			else if( type == LightType )
@@ -1022,7 +1058,7 @@ void RenderController::updateInternal( const ProgressCallback &callback )
 
 void RenderController::updateDefaultCamera()
 {
-	if( m_renderer->name() == "OpenGL" )
+	if( m_renderer->name() == g_openGLRendererName )
 	{
 		// Don't need a default camera for OpenGL, because in interactive mode the
 		// renderer currently expects the camera to be provided externally.
