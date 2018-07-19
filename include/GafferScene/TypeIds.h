@@ -130,7 +130,7 @@ enum TypeId
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
 	LightTweaksTypeId = 110587,
-	LightTweaksTweakPlugTypeId = 110588,
+	TweakPlugTypeId = 110588,
 	CopyOptionsTypeId = 110589,
 	LightToCameraTypeId = 110590,
 	FilterResultsTypeId = 110591,

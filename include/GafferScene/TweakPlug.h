@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,68 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LIGHTTWEAKS_H
-#define GAFFERSCENE_LIGHTTWEAKS_H
+#ifndef GAFFERSCENE_TWEAKPLUG_H
+#define GAFFERSCENE_TWEAKPLUG_H
 
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "GafferScene/TweakPlug.h"
 
 #include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API LightTweaks : public SceneElementProcessor
+/// Represents a "tweak" - an adjustment with a name, a mode, and a value,
+/// and an enable flag.  Can be used to add/subtract/multiply/replace or
+/// remove parameters, for example in the LightTweak or CameraTweak node.
+class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 {
 
 	public :
 
-		LightTweaks( const std::string &name=defaultName<LightTweaks>() );
-		~LightTweaks() override;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::Plug );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::LightTweaks, LightTweaksTypeId, SceneElementProcessor );
+		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr tweakValuePlug, bool enabled = true );
+		TweakPlug( const std::string &tweakName, const IECore::Data *tweakValue, bool enabled = true );
+		/// Primarily used for serialisation.
+		TweakPlug( const std::string &name=defaultName<TweakPlug>(), Direction direction=In, unsigned flags=Default );
 
-		Gaffer::StringPlug *typePlug();
-		const Gaffer::StringPlug *typePlug() const;
+		enum Mode
+		{
+			Replace,
+			Add,
+			Subtract,
+			Multiply,
+			Remove
+		};
 
-		Gaffer::Plug *tweaksPlug();
-		const Gaffer::Plug *tweaksPlug() const;
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		Gaffer::BoolPlug *enabledPlug();
+		const Gaffer::BoolPlug *enabledPlug() const;
 
-	protected :
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
 
-		bool processesAttributes() const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
+		template<typename T>
+		T *valuePlug();
+		template<typename T>
+		const T *valuePlug() const;
 
-		static size_t g_firstPlugIndex;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+
+		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false );
+
 
 };
 
-IE_CORE_DECLAREPTR( LightTweaks )
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TweakPlug> > TweakPlugIterator;
+
+IE_CORE_DECLAREPTR( TweakPlug )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_LIGHTTWEAKS_H
+#endif // GAFFERSCENE_TWEAKPLUG_H

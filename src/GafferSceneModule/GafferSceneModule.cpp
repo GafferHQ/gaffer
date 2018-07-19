@@ -43,7 +43,7 @@
 #include "GlobalsBinding.h"
 #include "HierarchyBinding.h"
 #include "IOBinding.h"
-#include "LightTweaksBinding.h"
+#include "TweaksBinding.h"
 #include "MixinBinding.h"
 #include "ObjectProcessorBinding.h"
 #include "OptionsBinding.h"
@@ -79,7 +79,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindHierarchy();
 	bindObjectProcessor();
 	bindPrimitiveVariables();
-	bindLightTweaks();
+	bindTweaks();
 	bindIO();
 	bindMixin();
 

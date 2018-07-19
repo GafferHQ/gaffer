@@ -169,7 +169,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __applyFormat( self, unused, fmt ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "standard", persistent = False )
+			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "standard" )
 			self.getPlug().setValue( fmt )
 
 	def __applyCustomFormat( self, unused ) :
@@ -190,7 +190,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# custom mode despite of this fact. We use metadata rather than
 			# a member variable so that undo will take us back to the non-custom
 			# state automatically.
-			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "custom", persistent = False )
+			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "custom" )
 
 	def __contextChanged( self, context, key ) :
 
