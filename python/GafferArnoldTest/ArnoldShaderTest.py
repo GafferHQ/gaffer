@@ -495,13 +495,13 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		utility = GafferArnold.ArnoldShader()
 		utility.loadShader( "utility" )
 
-		splitColor = GafferOSL.OSLShader()
-		splitColor.loadShader( "Utility/SplitColor" )
-		splitColor["parameters"]["c"].setInput( utility["out"] )
+		colorToFloat = GafferOSL.OSLShader()
+		colorToFloat.loadShader( "Conversion/ColorToFloat" )
+		colorToFloat["parameters"]["c"].setInput( utility["out"] )
 
 		colorSpline = GafferOSL.OSLShader()
 		colorSpline.loadShader( "Pattern/ColorSpline" )
-		colorSpline["parameters"]["x"].setInput( splitColor["out"]["r"] )
+		colorSpline["parameters"]["x"].setInput( colorToFloat["out"]["r"] )
 
 		flat = GafferArnold.ArnoldShader()
 		flat.loadShader( "flat" )
@@ -756,7 +756,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		arnoldOut.loadShader( "flat" )
 
 		oslOut = GafferOSL.OSLShader()
-		oslOut.loadShader( "Utility/SplitColor" )
+		oslOut.loadShader( "Conversion/ColorToFloat" )
 
 		arnoldOut["parameters"]["color"].setInput( switch1["out"] )
 		oslOut["parameters"]["c"].setInput( switch2["out"] )
@@ -773,7 +773,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( network2 ), 2 )
 
 			self.assertEqual( network1[1].name, "flat" )
-			self.assertEqual( network2[1].name, "Utility/SplitColor" )
+			self.assertEqual( network2[1].name, "Conversion/ColorToFloat" )
 
 			if i == 0 :
 
