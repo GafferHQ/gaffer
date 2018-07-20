@@ -45,9 +45,9 @@ from Qt import QtWidgets
 
 class BusyWidget( GafferUI.Widget ) :
 
-	def __init__( self, size = 50, **kw ) :
+	def __init__( self, size = 50, busy = True, **kw ) :
 
-		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), **kw )
+		GafferUI.Widget.__init__( self, _BusyWidget( None, size, busy ), **kw )
 
 	def setBusy( self, busy ) :
 
@@ -60,14 +60,14 @@ class BusyWidget( GafferUI.Widget ) :
 # qt implementation class
 class _BusyWidget( QtWidgets.QWidget ) :
 
-	def __init__( self, parent = None , size = 50 ) :
+	def __init__( self, parent = None , size = 50, busy = True ) :
 
 		QtWidgets.QWidget.__init__( self, parent )
 
 		self.__size = size
 		self.setFixedSize( size, size )
 		self.__timer = None
-		self.__busy = True
+		self.__busy = busy
 
 	def setBusy( self, busy ) :
 
