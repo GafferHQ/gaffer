@@ -1483,7 +1483,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
 
-		scrolledContainer = GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth = 8 )
+		scrolledContainer = GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrollMode.Never, borderWidth = 8 )
 		GafferUI.Widget.__init__( self, scrolledContainer, **kw )
 
 		self.__metadataWidgets = {}
