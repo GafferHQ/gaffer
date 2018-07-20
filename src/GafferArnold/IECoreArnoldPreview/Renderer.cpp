@@ -1317,7 +1317,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( velocityScale.get_value_or( 1.0f ) );
 			h.append( velocityFPS.get_value_or( 24.0f ) );
 			h.append( velocityOutlierThreshold.get_value_or( 0.001f ) );
-			h.append( stepSize.get_value_or( 1.0f ) );
+			h.append( stepSize.get_value_or( 0.0f ) );
 			h.append( stepScale.get_value_or( 1.0f ) );
 		}
 
@@ -1371,14 +1371,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			if ( stepSize )
 			{
-				AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.get() );
+				AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.get() * stepScale.get_value_or( 1.0f ) );
 			}
-
-			if ( stepScale )
+			else if ( stepScale )
 			{
 				AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.get() );
 			}
-
 		}
 	};
 

@@ -2170,7 +2170,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.option( "ai:background", None )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
 
-	def testVDBs( self ) :
+	def __testVDB( self, stepSize = None, stepScale = 1.0, expectedSize = 0.0, expectedScale = 1.0 ) :
 
 		import IECoreVDB
 
@@ -2186,8 +2186,13 @@ class RendererTest( GafferTest.TestCase ) :
 			"ai:volume:velocity_scale" : IECore.FloatData( 10 ),
 			"ai:volume:velocity_fps" : IECore.FloatData( 25 ),
 			"ai:volume:velocity_outlier_threshold" : IECore.FloatData( 0.5 ),
-			"ai:volume:step_size" : IECore.FloatData( 0.75 ), 
-			"ai:volume:step_scale" : IECore.FloatData( 1.25 ) } )
+		} )
+
+		if stepSize is not None:
+			attributes["ai:volume:step_size"] = IECore.FloatData( stepSize )
+
+		if stepScale is not None:
+			attributes["ai:volume:step_scale"] = IECore.FloatData( stepScale )
 
 		# Camera needs to be added first as it's being used for translating the VDB.
 		# We are doing the same when translating actual Gaffer scenes here:
@@ -2232,8 +2237,15 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "motion_start" ), 10.75 )
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "motion_end" ), 11.25 )
 
-			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "step_size"), 0.75 )
-			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "step_scale"), 1.25 )
+			self.assertAlmostEqual( arnold.AiNodeGetFlt( vdbShape, "step_size"), expectedSize, 7 )
+			self.assertAlmostEqual( arnold.AiNodeGetFlt( vdbShape, "step_scale"), expectedScale, 7 )
+
+	def testVDBs( self ) :
+
+		self.__testVDB( stepSize = None, stepScale = 0.25, expectedSize = 0.0, expectedScale = 0.25 )
+		self.__testVDB( stepSize = 0.1, stepScale = None, expectedSize = 0.1, expectedScale = 1.0 )
+		self.__testVDB( stepSize = None, stepScale = None, expectedSize = 0.0, expectedScale = 1.0 )
+		self.__testVDB( stepSize = 1.0, stepScale = 0.5, expectedSize = 0.5, expectedScale = 1.0 )
 
 	@staticmethod
 	def __m44f( m ) :
