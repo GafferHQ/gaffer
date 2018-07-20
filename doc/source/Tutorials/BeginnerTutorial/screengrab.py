@@ -65,21 +65,14 @@ GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerHeadAndLegsExpanded.png" )
 
-# GafferBot full in main window
-paths = IECore.PathMatcher( [ "/" ] )
-GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "" ] ) )
-viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
-GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/fullyExpanded.png" )
-#GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainSceneFullyExpanded.png" )
-
 # Camera and SceneReader node in main window
 script["Camera"] = GafferScene.Camera()
 cameraNode = script["Camera"]
 script.selection().clear()
 script.selection().add( script["Camera"] )
 script.selection().add( cameraNode )
+# Approximate the default viewport position
+viewer.view().viewportGadget().frame( imath.Box3f( imath.V3f( 0, -1.75, 0 ), imath.V3f( 5, 5, 5 ) ) )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainCameraNode.png" )
 
@@ -92,23 +85,45 @@ script.selection().clear()
 script.selection().add( groupNode )
 viewer.view()["minimumExpansionDepth"].setValue( 999 )
 GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
-paths = IECore.PathMatcher( [ "/group" ] )
-GafferSceneUI.ContextAlgo.expand( script.context(), paths )
+GafferSceneUI.ContextAlgo.expand( script.context(), IECore.PathMatcher( [ "/group" ] ) )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainGroupNode.png" )
 
-# Camera node in Node Editor window
+# Camera repositioned, with translate tool on, in Viewer
 cameraNode["transform"]["translate"].setValue( imath.V3f( 19, 13, 31 ) )
+viewer.view().viewportGadget().frame( groupNode["out"].bound( "/group" ) )
+GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/group/camera" ] ) )
+for i in viewer._Viewer__toolChooser.tools():
+	if type( i ) == GafferSceneUI.TranslateTool:
+		translateTool = i
+translateTool["active"].setValue( True )
+GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraRepositioned.png" )
+
+
+# Camera rotated, with rotate tool on, in Viewer
+translateTool["active"].setValue( False )
 cameraNode["transform"]["rotate"].setValue( imath.V3f( 0, 30, 0 ) )
+for i in viewer._Viewer__toolChooser.tools():
+	if type( i ) == GafferSceneUI.RotateTool:
+		rotateTool = i
+rotateTool["active"].setValue( True )
+GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraRotated.png" )
+
+# Camera node in Node Editor window
 nodeEditorWindow = GafferUI.NodeEditor.acquire( cameraNode, floating=True )
 nodeEditorWindow._qtWidget().setFocus()
 GafferUI.PlugValueWidget.acquire( cameraNode["transform"] )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/nodeEditorWindowCameraTransform.png" )
+
 del nodeEditorWindow
+del readerNode
+del groupNode
+del cameraNode
 
 # Render settings graph in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettings.gfr" ) )
 script.load()
+script.selection().clear()
 script.selection().add( script["Catalogue"] )
 graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorRenderSettings.png" )

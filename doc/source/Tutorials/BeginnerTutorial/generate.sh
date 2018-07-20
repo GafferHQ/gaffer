@@ -14,3 +14,5 @@ cp $GAFFER_ROOT/graphics/replaceObjects.png images
 cp $GAFFER_ROOT/graphics/collapsibleArrowRight.png images
 cp $GAFFER_ROOT/graphics/timelinePlay.png images
 cp $GAFFER_ROOT/graphics/removeObjects.png images
+cp $GAFFER_ROOT/graphics/gafferSceneUITranslateTool.png images
+cp $GAFFER_ROOT/graphics/gafferSceneUIRotateTool.png images
