@@ -175,7 +175,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				column = columns.get( registration.tab )
 				if column is None :
 					with tabbedContainer :
-						with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, parenting = { "label" : registration.tab } ) :
+						with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrollMode.Never, parenting = { "label" : registration.tab } ) :
 							column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 8 )
 							columns[registration.tab] = column
 				column.append( section )
