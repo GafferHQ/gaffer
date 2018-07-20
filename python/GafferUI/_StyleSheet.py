@@ -38,6 +38,44 @@
 import os
 import string
 
+from Qt import QtGui
+
+_styleColors = {
+	"backgroundDarkest" : (0, 0, 0),
+	"backgroundDark" : (60, 60, 60),
+	"backgroundDarkTransparent" : (60, 60, 60, 100),
+	"backgroundMid" : (76, 76, 76),
+	"backgroundLighter" : (108, 108, 108),
+	"backgroundLight" : (125, 125, 125),
+	"brightColor" : (119, 156, 189),
+	"brightColorTransparent" : (119, 156, 189, 100),
+	"foreground" : (224, 224, 224),
+	"foregroundFaded" : (153, 153, 153),
+	"alternateColor" : (69, 69, 69),
+	"errorColor" : (255, 85, 85),
+	"animatedColor" : (128, 152, 94),
+}
+
+substitutions = {
+	"GAFFER_ROOT" : os.environ["GAFFER_ROOT"]
+}
+
+for k, v in _styleColors.items() :
+	if len( v ) == 3 :
+		substitutions[k] = "rgb({0}, {1}, {2})".format( *v )
+	elif len( v ) == 4 :
+		substitutions[k] = "rgba({0}, {1}, {2}, {3})".format( *v )
+
+def styleColor( key ) :
+	color = _styleColors.get( key, (0, 0, 0,) )
+
+	if len( color ) == 3 :
+		return QtGui.QColor.fromRgb( *color )
+	elif len( color ) == 4 :
+		return QtGui.QColor.fromRgba( *color )
+
+	return QtGui.QColor()
+
 ## \todo Unify with GafferUI.Style for colours at least.
 _styleSheet = string.Template(
 
@@ -1070,21 +1108,4 @@ _styleSheet = string.Template(
 
 	"""
 
-).substitute( {
-
-	"GAFFER_ROOT" : os.environ["GAFFER_ROOT"],
-	"backgroundDarkest" : "rgb( 0, 0, 0 )",
-	"backgroundDark" : "rgb( 60, 60, 60 )",
-	"backgroundDarkTransparent" : "rgba( 60, 60, 60, 100 )",
-	"backgroundMid" : "rgb( 76, 76, 76 )",
-	"backgroundLighter" : "rgb( 108, 108, 108 )",
-	"backgroundLight" : "rgb( 125, 125, 125 )",
-	"brightColor" : "rgb( 119, 156, 189 )",
-	"brightColorTransparent" : "rgba( 119, 156, 189, 100 )",
-	"foreground" : "rgb( 224, 224, 224 )",
-	"foregroundFaded" : "rgb( 153, 153, 153 )",
-	"alternateColor" : "rgb( 69, 69, 69 )",
-	"errorColor" : "rgb( 255, 85, 85 )",
-	"animatedColor" : "rgb( 128, 152, 94 )",
-
-} )
+).substitute( substitutions )
