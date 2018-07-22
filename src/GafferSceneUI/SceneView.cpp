@@ -39,13 +39,13 @@
 
 #include "GafferSceneUI/ContextAlgo.h"
 
+#include "GafferScene/DeleteObject.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SetFilter.h"
-#include "GafferScene/StandardAttributes.h"
 #include "GafferScene/StandardOptions.h"
 
 #include "GafferUI/ImageGadget.h"
@@ -1119,7 +1119,7 @@ class SceneView::Camera : public boost::signals::trackable
 				m_view->viewportGadget()->setCameraTransform( m_originalCameraTransform );
 				m_view->viewportGadget()->setCenterOfInterest( m_originalCenterOfInterest );
 				m_view->viewportGadget()->setCameraEditable( true );
-				m_view->hideFilter()->pathsPlug()->setToDefault();
+				m_view->deleteObjectFilter()->pathsPlug()->setToDefault();
 				return;
 			}
 
@@ -1189,16 +1189,16 @@ class SceneView::Camera : public boost::signals::trackable
 			m_view->viewportGadget()->setCameraTransform( cameraTransform );
 
 			m_view->viewportGadget()->setCameraEditable( false );
-			m_view->hideFilter()->pathsPlug()->setToDefault();
+			m_view->deleteObjectFilter()->pathsPlug()->setToDefault();
 
-			// When looking through a camera, we hide the camera, since the overlay
+			// When looking through a camera, we delete the camera, since the overlay
 			// tells us everything we need to know about the camera. If looking through
 			// something else, such as a light, we may want to see the viewport
 			// visualisation of what we're looking through.
 			const bool isCamera = cameraSet->readable().match( cameraPathString );
 			if( isCamera )
 			{
-				m_view->hideFilter()->pathsPlug()->setValue(
+				m_view->deleteObjectFilter()->pathsPlug()->setValue(
 					new StringVectorData( { cameraPathString } )
 				);
 			}
@@ -1392,23 +1392,21 @@ SceneView::SceneView( const std::string &name )
 	ScenePlugPtr preprocessorInput = new ScenePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
 
-	// add a node for hiding things
+	// add a node for deleting objects
 
-	StandardAttributesPtr hide = new StandardAttributes( "hide" );
-	hide->attributesPlug()->getChild<ValuePlug>( "visibility" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-	hide->attributesPlug()->getChild<ValuePlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
+	DeleteObjectPtr deleteObject = new DeleteObject( "deleteObject" );
 
-	preprocessor->addChild( hide );
-	hide->inPlug()->setInput( preprocessorInput );
+	preprocessor->addChild( deleteObject );
+	deleteObject->inPlug()->setInput( preprocessorInput );
 
-	PathFilterPtr hideFilter = new PathFilter( "hideFilter" );
-	preprocessor->addChild( hideFilter );
-	hide->filterPlug()->setInput( hideFilter->outPlug() );
+	PathFilterPtr deleteObjectFilter = new PathFilter( "deleteObjectFilter" );
+	preprocessor->addChild( deleteObjectFilter );
+	deleteObject->filterPlug()->setInput( deleteObjectFilter->outPlug() );
 
 	// add in the node from the ShadingMode
 
 	preprocessor->addChild( m_shadingMode->preprocessor() );
-	m_shadingMode->preprocessor()->inPlug()->setInput( hide->outPlug() );
+	m_shadingMode->preprocessor()->inPlug()->setInput( deleteObject->outPlug() );
 
 	// make the output for the preprocessor
 
@@ -1468,14 +1466,14 @@ const Gaffer::ValuePlug *SceneView::gnomonPlug() const
 	return m_gnomon->plug();
 }
 
-GafferScene::PathFilter *SceneView::hideFilter()
+GafferScene::PathFilter *SceneView::deleteObjectFilter()
 {
-	return getPreprocessor()->getChild<PathFilter>( "hideFilter" );
+	return getPreprocessor()->getChild<PathFilter>( "deleteObjectFilter" );
 }
 
-const GafferScene::PathFilter *SceneView::hideFilter() const
+const GafferScene::PathFilter *SceneView::deleteObjectFilter() const
 {
-	return getPreprocessor()->getChild<PathFilter>( "hideFilter" );
+	return getPreprocessor()->getChild<PathFilter>( "deleteObjectFilter" );
 }
 
 void SceneView::setContext( Gaffer::ContextPtr context )
