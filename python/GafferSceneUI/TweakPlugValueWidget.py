@@ -35,23 +35,16 @@
 ##########################################################################
 
 import functools
-import imath
-
-import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
-import weakref
 
 # Widget for TweakPlug, which is used to build tweak nodes such as LightTweaks, CameraTweaks
 # and ShaderTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
 # or "Add"/"Subtract"/"Multiply" if the plug is numeric,
 # or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set
-
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
@@ -153,18 +146,18 @@ def __deletePlug( plug ) :
 def __plugPopupMenu( menuDefinition, plugValueWidget ):
 
 	plug = plugValueWidget.getPlug()
-	parent = plug.parent()
-	node = plug.node()
+	if not isinstance( plug, GafferScene.TweakPlug ) :
+		plug = plug.ancestor( GafferScene.TweakPlug )
 
-	if not isinstance( plug, TweakPlug ):
+	if not isinstance( plug, GafferScene.TweakPlug ):
 		return
 
 	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 	menuDefinition.append(
 		"/Delete",
 		{
-			"command" : functools.partial( __deletePlug, parent ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( parent )
+			"command" : functools.partial( __deletePlug, plug ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug.parent() )
 		}
 	)
 
