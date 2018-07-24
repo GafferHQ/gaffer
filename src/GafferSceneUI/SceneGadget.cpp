@@ -260,6 +260,16 @@ const IECore::CompoundObject *SceneGadget::getOpenGLOptions() const
 	return m_openGLOptions.get();
 }
 
+void SceneGadget::setSelectionMask( const IECore::StringVectorData *typeNames )
+{
+	m_selectionMask = typeNames ? typeNames->copy() : nullptr;
+}
+
+const IECore::StringVectorData *SceneGadget::getSelectionMask() const
+{
+	return m_selectionMask.get();
+}
+
 bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path ) const
 {
 	std::vector<IECoreGL::HitRecord> selection;
@@ -274,6 +284,11 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	}
 
 	PathMatcher paths = convertSelection( new UIntVectorData( { selection[0].name } ) );
+	if( paths.isEmpty() )
+	{
+		return false;
+	}
+
 	path = *PathMatcher::Iterator( paths.begin() );
 	return true;
 }
@@ -305,12 +320,16 @@ size_t SceneGadget::objectsAt(
 
 IECore::PathMatcher SceneGadget::convertSelection( IECore::UIntVectorDataPtr ids ) const
 {
+	CompoundDataMap parameters = { { "selection", ids } };
+	if( m_selectionMask )
+	{
+		parameters["mask"] = m_selectionMask;
+	}
+
 	auto pathsData = static_pointer_cast<PathMatcherData>(
 		m_renderer->command(
 			"gl:querySelection",
-			{
-				{ "selection", ids }
-			}
+			parameters
 		)
 	);
 

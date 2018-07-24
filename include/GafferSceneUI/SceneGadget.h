@@ -136,6 +136,12 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		Imath::Box3f bound() const override;
 
+		/// Specifies which object types are selectable via `objectAt()` and `objectsAt()`.
+		/// May be null, which means all object types are selectable. A copy of `typeNames`
+		/// is taken.
+		void setSelectionMask( const IECore::StringVectorData *typeNames );
+		const IECore::StringVectorData *getSelectionMask() const;
+
 		/// Finds the path of the frontmost object intersecting the specified line
 		/// through gadget space. Returns true on success and false if there is no
 		/// such object.
@@ -178,6 +184,8 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		IECore::ConstCompoundObjectPtr m_openGLOptions;
 		IECore::PathMatcher m_selection;
+
+		IECore::StringVectorDataPtr m_selectionMask;
 
 };
 

@@ -90,6 +90,12 @@ IECore::CompoundObjectPtr getOpenGLOptions( const SceneGadget &g )
 	return g.getOpenGLOptions()->copy();
 }
 
+IECore::StringVectorDataPtr getSelectionMask( const SceneGadget &g )
+{
+	const IECore::StringVectorData *d = g.getSelectionMask();
+	return d ? d->copy() : nullptr;
+}
+
 IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegment3f &l )
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
@@ -122,6 +128,8 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "waitForCompletion", &waitForCompletion )
 		.def( "setOpenGLOptions", &SceneGadget::setOpenGLOptions )
 		.def( "getOpenGLOptions", &getOpenGLOptions )
+		.def( "setSelectionMask", &SceneGadget::setSelectionMask )
+		.def( "getSelectionMask", &getSelectionMask )
 		.def( "objectAt", &objectAt )
 		.def( "objectsAt", &SceneGadget::objectsAt )
 		.def( "setSelection", &SceneGadget::setSelection )

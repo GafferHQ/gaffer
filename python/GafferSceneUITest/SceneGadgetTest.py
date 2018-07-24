@@ -389,6 +389,69 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.waitForCompletion()
 		self.assertEqual( sg.bound(), imath.Box3f() )
 
+	def testSelectionMaskAccessors( self ) :
+
+		sg = GafferSceneUI.SceneGadget()
+		self.assertEqual( sg.getSelectionMask(), None )
+
+		m = IECore.StringVectorData( [ "MeshPrimitive" ] )
+		sg.setSelectionMask( m )
+		self.assertEqual( sg.getSelectionMask(), m )
+
+		m.append( "Camera" )
+		self.assertNotEqual( sg.getSelectionMask(), m )
+		sg.setSelectionMask( m )
+		self.assertEqual( sg.getSelectionMask(), m )
+
+		sg.setSelectionMask( None )
+		self.assertEqual( sg.getSelectionMask(), None )
+
+	def testSelectionMask( self ) :
+
+		plane = GafferScene.Plane()
+		plane["dimensions"].setValue( imath.V2f( 10 ) )
+		plane["transform"]["translate"]["z"].setValue( 4 )
+
+		camera = GafferScene.Camera()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( camera["out"] )
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setScene( group["out"] )
+		sg.setMinimumExpansionDepth( 100 )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+		w.setVisible( True )
+		self.waitForIdle( 10000 )
+
+		sg.waitForCompletion()
+		gw.getViewportGadget().frame( sg.bound(), imath.V3f( 0, 0, -1 ) )
+		self.waitForIdle( 10000 )
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
+			[ "/group/plane", "/group/camera" ]
+		)
+
+		sg.setSelectionMask( IECore.StringVectorData( [ "MeshPrimitive" ] ) )
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
+			[ "/group/plane" ]
+		)
+
+		sg.setSelectionMask( IECore.StringVectorData( [ "Camera" ] ) )
+
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
+			[ "/group/camera" ]
+		)
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )
