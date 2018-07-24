@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,44 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_DELETEOBJECT_H
+#define GAFFERSCENE_DELETEOBJECT_H
 
-#include "ObjectProcessorBinding.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferScene/DeleteCurves.h"
-#include "GafferScene/DeleteFaces.h"
-#include "GafferScene/DeleteObject.h"
-#include "GafferScene/DeletePoints.h"
-#include "GafferScene/LightToCamera.h"
-#include "GafferScene/MeshDistortion.h"
-#include "GafferScene/MeshTangents.h"
-#include "GafferScene/MeshToPoints.h"
-#include "GafferScene/MeshType.h"
-#include "GafferScene/Parameters.h"
-#include "GafferScene/PointsType.h"
-#include "GafferScene/ReverseWinding.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindObjectProcessor()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
-	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshToPoints>();
-	GafferBindings::DependencyNodeClass<MeshType>();
-	GafferBindings::DependencyNodeClass<GafferScene::LightToCamera>();
-	GafferBindings::DependencyNodeClass<Parameters>();
-	GafferBindings::DependencyNodeClass<ReverseWinding>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshDistortion>();
-	GafferBindings::DependencyNodeClass<DeleteObject>();
+class GAFFERSCENE_API DeleteObject : public FilteredSceneProcessor
+{
 
-}
+	public :
+
+		DeleteObject( const std::string &name=defaultName<DeleteObject>() );
+		~DeleteObject() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteObject, DeleteObjectTypeId, FilteredSceneProcessor );
+
+		Gaffer::BoolPlug *adjustBoundsPlug();
+		const Gaffer::BoolPlug *adjustBoundsPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+
+		void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( DeleteObject )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_DELETEOBJECT_H

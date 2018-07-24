@@ -126,6 +126,7 @@ from EncapsulateTest import EncapsulateTest
 from FilterPlugTest import FilterPlugTest
 from ReverseWindingTest import ReverseWindingTest
 from MeshDistortionTest import MeshDistortionTest
+from DeleteObjectTest import DeleteObjectTest
 
 from IECoreGLPreviewTest import *
 

@@ -124,7 +124,7 @@ enum TypeId
 	DeleteSetsTypeId = 110579,
 	ParametersTypeId = 110580,
 	SceneFilterPathFilterTypeId = 110581,
-	PathMatcherDataPlugTypeId = 110582, // Obsolete - available for reuse
+	DeleteObjectTypeId = 110582,
 	AttributeVisualiserTypeId = 110583,
 	SceneLoopTypeId = 110584,
 	RenderTypeId = 110585,
