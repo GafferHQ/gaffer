@@ -31,17 +31,12 @@ To create the `ARNOLD_ROOT` environment variable in Linux:
 
 2. Add the line `export ARNOLD_ROOT=!ARNOLD_PATH_LINUX!` and save.
 
-3. In a terminal, reload the user configuration file, and then verify the variable is set:
+3. In a terminal, test that the variable is set:
     
     ```bash
-    user@desktop ~ $ source ~/.bash_profile
     user@desktop ~ $ echo $ARNOLD_ROOT
-    !ARNOLD_PATH_LINUX!
+    # !ARNOLD_PATH_LINUX!
     ```
-
-4. The next time you start Gaffer, the Arnold nodes will be available from the node creation menu.
-    
-    <!-- TODO: ![Arnold node menu](images/arnoldNodes.png) -->
 
 
 ### Arnold in OSX ###
@@ -55,17 +50,21 @@ To create the `ARNOLD_ROOT` environment variable in OSX:
 
 2. Add the line `export ARNOLD_ROOT=!ARNOLD_PATH_OSX!` and save.
 
-3. In a terminal (Finder > Go > Utilities > Terminal), reload the user configuration file, and then verify the variable is set:
+3. Open a terminal (Finder > Go > Utilities > Terminal).
+
+4. Test that the variable is set:
     
     ```bash
-    MacBook:~ user$ source ~/.bash_profile
     MacBook:~ user$ echo $ARNOLD_ROOT
-    !ARNOLD_PATH_OSX!
+    # !ARNOLD_PATH_OSX!
     ```
 
-4. The next time you start Gaffer, the Arnold nodes will be available from the node creation menu.
-    
-    <!-- TODO: ![Arnold node menu](images/arnoldNodes.png) -->
+
+### Verifying Arnold is loaded ###
+
+The next time you start Gaffer, the Arnold nodes will be available from the node creation menu (right-click inside the _Graph Editor_).
+
+<!-- TODO: ![Arnold node menu](images/arnoldNodes.png) -->
 
 
 ## Configuring Gaffer for 3Delight ##
@@ -84,17 +83,12 @@ To create the `DELIGHT` environment variable in Linux:
 
 2. Add the line `export DELIGHT=!DELIGHT_PATH_LINUX!` and save.
 
-3. In a terminal, reload the user configuration file, and then verify the variable is set:
+3. In a terminal, test that the variable is set:
     
     ```shell
-    user@desktop ~ $ source ~/.bash_profile
     user@desktop ~ $ echo $DELIGHT
-    !DELIGHT_PATH_LINUX!
+    # !DELIGHT_PATH_LINUX!
     ```
-
-4. The next time you start Gaffer, the 3Delight nodes will be available from the node creation menu.
-    
-    <!-- TODO: ![Delight node menu](images/delightNodes.png) -->
 
 
 ### 3Delight in OSX ###
@@ -108,17 +102,21 @@ To create the `DELIGHT` environment variable in OSX:
 
 2. Add the line `export DELIGHT=!DELIGHT_PATH_OSX!` and save.
 
-3. In a terminal (Finder > Go > Utilities > Terminal), reload the user configuration file, and then verify the variable is set:
+3. Open a terminal (Finder > Go > Utilities > Terminal).
+
+4. Test that the variable is set:
     
     ```bash
-    MacBook:~ user$ source ~/.bash_profile
     MacBook:~ user$ echo $DELIGHT
-    !DELIGHT_PATH_OSX!
+    # !DELIGHT_PATH_OSX!
     ```
 
-4. The next time you start Gaffer, the 3Delight nodes will be available from the node creation menu.
-    
-    <!-- TODO: ![Delight node menu](images/delightNodes.png) -->
+
+### Verifying 3Delight is loaded ###
+
+The next time you start Gaffer, the 3Delight nodes will be available from the node creation menu (right-click inside the _Graph Editor_).
+
+<!-- TODO: ![Delight node menu](images/delightNodes.png) -->
 
 
 ## Configuring Gaffer for Tractor ##
@@ -137,24 +135,15 @@ To add the Tractor python module to the `PYTHONPATH` environment variable in Lin
 
 2. Add the line `export PYTHONPATH=$PYTHONPATH\:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages` and save.
 
-3. In a terminal, reload the user configuration file, and then verify the variable is set:
+3. In a terminal, test that the variable is set:
     
     ```shell
-    user@desktop ~ $ source ~/.bash_profile
     user@desktop ~ $ echo $PYTHONPATH
-    /usr/bin/python2.7:/usr/lib/python2.7:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages
+    # /usr/bin/python2.7:/usr/lib/python2.7:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages
     ```
 
-    > Note :
-    > Depending on your system's configuration, your `PYTHONPATH` variable might not appear exactly as above. What's important is whether `:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages` appears in the path.
-
-4. The next time you start Gaffer, verify that Tractor is installed:
-
-    1. Create and select an AppleseedRender node.
-    2. With the AppleseedRender node selected, in the _Node Editor_, click _Execute_. The _Dispatcher_ window will open.
-    3. _Tractor_ should be available in the _Dispatcher_ drop-down menu.
-    
-    <!-- TODO: ![Tractor dispatch](images/tractorDispatch.png) -->
+> Note :
+> Depending on your system's configuration, your `PYTHONPATH` variable might not appear exactly as above. What's important is whether `:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages` appears in the path.
 
 
 ### Tractor in OSX ###
@@ -168,24 +157,32 @@ To add the Tractor python module to the `PYTHONPATH` environment variable in OSX
 
 2. Add the line `export PYTHONPATH=$PYTHONPATH\:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages` and save.
 
-3. In a terminal (Finder > Go > Utilities > Terminal), reload the user configuration file, and then verify the variable is set:
+3. Open a terminal (Finder > Go > Utilities > Terminal).
+
+4. Test that the variable is set:
     
     ```shell
-    MacBook:~ user$ source ~/.bash_profile
     MacBook:~ user$ echo $PYTHONPATH
-    /Library/Frameworks/Python.framework/Versions/2.7/bin:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages
+    # /Library/Frameworks/Python.framework/Versions/2.7/bin:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages
     ```
     
-    > Note :
-    > Depending on your system's configuration, your `PYTHONPATH` variable might not appear exactly as above. What's important is whether `:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages` appears in the path.
+> Note :
+> Depending on your system's configuration, your `PYTHONPATH` variable might not appear exactly as above. What's important is whether `:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages` appears in the path.
 
-4. The next time you start Gaffer, verify that Tractor is installed:
 
-    1. Create and select an AppleseedRender node.
-    2. With the ApplessedRender node selected, in the _Node Editor_, click _Execute_. The _Dispatcher_ window will open.
-    3. _Tractor_ should be available in the _Dispatcher_ drop-down menu.
-    
-    <!-- TODO: ![Tractor dispatch](images/tractorDispatch.png) -->
+### Verifying Tractor is loaded ###
+
+Once the tractor folder has been added to your `PYTHONPATH`, you can then verify that Tractor is loading correctly:
+
+1. Launch Gaffer.
+
+2. Create and select a SystemCommand node (_Dispatch_ > _SystemCommand_).
+
+3. In the _Node Editor_, click _Execute_. The _Dispatcher_ window will open.
+
+4. _Tractor_ will be available in the _Dispatcher_ drop-down menu.
+
+<!-- TODO: ![Tractor dispatch](images/tractorDispatch.png) -->
 
 
 ## See Also ##
