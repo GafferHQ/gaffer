@@ -9,7 +9,7 @@ The location of Gaffer's configuration files are specified by the `GAFFER_STARTU
 
 When launched, Gaffer automatically adds the `~/gaffer/startup` configuration directory to `GAFFER_STARTUP_PATHS`, to allow users to create their own config files without needing to make any changes to their environment. This user-level config is run last, allowing it to override studio-level configuration files.
 
-Within a startup directory, config files are stored in subdirectories, by application name. Each application executes the files in their appropriate directory. For example, the browser app executes any files in the `~/gaffer/startup/browser` directory.
+Within a startup directory, config files are stored in subdirectories, by application name. Each application executes the files in their appropriate directory. For example, the GUI app executes any files in the `~/gaffer/startup/gui` directory.
 
 
 ## See Also ##

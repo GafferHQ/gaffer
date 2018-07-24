@@ -20,20 +20,17 @@ Gaffer loads and saves files in the following formats:
 
 ### .gfr ###
 
-The “Gaffer” extension. Intended for scripts used as the main project file.
+The “Gaffer” extension. Intended for use as the main project file, or for adding to one. Created when saving a file or exporting a selection of nodes (_File_ > _Export Selection..._).
 
 
 ### .grf ###
 
-The “Gaffer reference” extension. Intended for scripts exported and imported from Reference and Box nodes.
-
-> Note :
-> The Reference and Box nodes will only import scripts with the .grf extension. To import a .gfr script into a Reference or Box node, change its extension to .grf. No additional conversion is necessary.
+The “Gaffer reference” extension. Intended for scripts exported and imported into Box nodes or imported into Reference nodes. Created when exporting a Box node.
 
 
 ## Sample Script File ##
 
-Below are the contents of a sample Gaffer file containing a SceneReader and Camera node connected to a Group node:
+Here are the contents of a sample Gaffer script, followed by a breakdown of the format:
 
 ```python
 import Gaffer
@@ -56,11 +53,10 @@ __children["Group"]["in"]["in1"].setInput( __children["Camera"]["out"] )
 del __children
 ```
 
-Here is a breakdown of the format:
 
 ### “import” commands ###
 
-When a script is saved or copied, the serializer automatically detects which [node modules](../NodeModules/index.md) are required to rebuild the node graph, and adds them as `import` commands at the beginning of the serialized code.
+When a script is saved or copied, the serializer automatically detects which [node modules](../NodeModules/index.md) are required to rebuild the node graph, and adds them as `import` commands.
 
 
 <!-- TODO: ? ### "Metadata" ### -->
@@ -68,12 +64,12 @@ When a script is saved or copied, the serializer automatically detects which [no
 
 ### “parent” variable ###
 
-Normally, nodes are added to the `script` variable. In serialized code, however, compatibility between different environments needs to be preserved, and node scope issues need to be avoided. Therefore, the ["parent" variable](../SpecialVariables/index.md) is used instead, to guarantee the nodes are added to the root script.
+In serialized code, compatibility between different graph environments needs to be preserved, and node scope issues need to be avoided. Therefore, instead of using the `script` variable (as you would in the _Script Editor_), the serializer uses the ["parent" variable](../SpecialVariables/index.md) to guarantee the nodes are added to the containing environment, whether it be the root script or a containing node.
 
 
 ### “__children” variable ###
 
-To avoid issues overwriting the `parent` variable's [dictionary](../DictionarySyntax/index.md) keys, serialized scripts also use the `addChild()` method, in conjunction with a temporary `__children` variable. This way, the serializer can add nodes to the dictionary without accidentally overwriting them, while also retaining their handles for later reference.
+To avoid issues overwriting the `parent` variable's [dictionary](../DictionarySyntax/index.md) keys, serialized scripts also use the `addChild()` method, in conjunction with a temporary `__children` variable. This way, the serializer can add nodes to the dictionary without accidentally overwriting existing nodes with identical names, while also retaining their handles for later reference.
 
 
 ## See Also ##
