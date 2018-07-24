@@ -426,6 +426,49 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( planeObject["out_foo"].data[7], 1)
 		self.assertEqual( planeObject["out_foo"].data[8], 1)
 
+	def testCanShadeIndexedPrimVar( self ) :
+
+		points = IECoreScene.PointsPrimitive( 4096 )
+
+		points["P"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V3fVectorData( [imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 )] ), IECore.IntVectorData( [1, 0] * 2048 ) )
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene['object'].setValue( points )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject['in'].setInput( objectToScene["out"] )
+
+		inPoint = GafferOSL.OSLShader( "InPoint" )
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
+
+		outPoint = GafferOSL.OSLShader( "OutPoint" )
+		outPoint.loadShader( "ObjectProcessing/OutPoint" )
+
+		outObject = GafferOSL.OSLShader( "OutObject" )
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+
+		oslObject["shader"].setInput( outObject["out"] )
+
+		outPoint["parameters"]["value"].setInput( inPoint["out"]["value"] )
+		outPoint["parameters"]["value"]["x"].setInput( inPoint["out"]["value"]["x"] )
+		outPoint["parameters"]["value"]["y"].setInput( inPoint["out"]["value"]["y"] )
+		outPoint["parameters"]["value"]["z"].setInput( inPoint["out"]["value"]["z"] )
+
+		outObject["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( ["/object"] ) )
+
+		oslObject["filter"].setInput( filter["out"] )
+
+		processedPoints = oslObject['out'].object( "/object" )
+
+		# currently the P should be expanded.
+		self.assertEqual( processedPoints["P"].data,
+			IECore.V3fVectorData( [imath.V3f( 4, 5, 6 ), imath.V3f( 1, 2, 3 )] * 2048, IECore.GeometricData.Interpretation.Point ) )
+		self.assertEqual( processedPoints["P"].indices, None )
+
 	def testTextureOrientation( self ) :
 
 		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"

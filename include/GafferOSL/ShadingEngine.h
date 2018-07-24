@@ -84,7 +84,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		void hash( IECore::MurmurHash &h ) const;
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
 
-		bool needsAttribute( const std::string &scope, const std::string &name ) const;
+		bool needsAttribute( const std::string &name ) const;
 
 	private :
 
@@ -95,7 +95,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		bool m_timeNeeded;
 		std::vector<IECore::InternedString> m_contextVariablesNeeded;
 
-		typedef boost::container::flat_set<std::pair<std::string, std::string> > AttributesNeededContainer;
+		typedef boost::container::flat_set<std::string> AttributesNeededContainer;
 		AttributesNeededContainer m_attributesNeeded;
 
 		// Set to true if the shader reads attributes who's name is not know at compile time
