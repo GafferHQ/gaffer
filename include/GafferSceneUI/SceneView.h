@@ -127,6 +127,8 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 		SceneGadgetPtr m_sceneGadget;
 
+		class SelectionMask;
+		std::unique_ptr<SelectionMask> m_selectionMask;
 		class DrawingMode;
 		std::unique_ptr<DrawingMode> m_drawingMode;
 		class ShadingMode;
