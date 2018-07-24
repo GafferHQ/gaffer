@@ -199,7 +199,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		OpenGLObject( const std::string &name, const IECore::Object *object, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
-			:	m_attributes( attributes ), m_editQueue( editQueue )
+			:	m_objectType( object ? object->typeId() : IECore::NullObjectTypeId ),
+				m_attributes( attributes ),
+				m_editQueue( editQueue )
 		{
 			IECore::StringAlgo::tokenize( name, '/', m_name );
 
@@ -303,6 +305,11 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+		IECore::TypeId objectType() const
+		{
+			return m_objectType;
+		}
+
 	protected :
 
 		EditQueue &editQueue()
@@ -312,6 +319,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
+		IECore::TypeId m_objectType;
 		M44f m_transform;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
@@ -792,10 +800,39 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				throw InvalidArgumentException( "Expected UIntVectorData \"selection\" parameter" );
 			}
 
+			vector<IECore::TypeId> maskTypeIds;
+			it = parameters.find( "mask" );
+			if( it != parameters.end() )
+			{
+				if( ConstStringVectorDataPtr typeNames = runTimeCast<const StringVectorData>( it->second ) )
+				{
+					for( const auto &n : typeNames->readable() )
+					{
+						maskTypeIds.push_back( RunTimeTyped::typeIdFromTypeName( n.c_str() ) );
+					}
+				}
+				else
+				{
+					throw InvalidArgumentException( "Expected StringVectorData for \"mask\" parameter" );
+				}
+			}
+			else
+			{
+				maskTypeIds.push_back( IECore::ObjectTypeId );
+			}
+
 			PathMatcher result;
 			for( auto i : names->readable() )
 			{
-				result.addPath( m_objects[i-1]->name() );
+				const OpenGLObject *o = m_objects[i-1].get();
+				for( auto t : maskTypeIds )
+				{
+					if( t == o->objectType() || RunTimeTyped::inheritsFrom( o->objectType(), t ) )
+					{
+						result.addPath( o->name() );
+						break;
+					}
+				}
 			}
 
 			return new PathMatcherData( result );
