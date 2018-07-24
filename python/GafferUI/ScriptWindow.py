@@ -57,8 +57,8 @@ class ScriptWindow( GafferUI.Window ) :
 
 		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot )
 		layouts = GafferUI.Layouts.acquire( applicationRoot ) if applicationRoot is not None else None
-		if layouts is not None and "Default" in layouts.names() :
-			self.setLayout( layouts.create( "Default", script ) )
+		if layouts is not None :
+			self.setLayout( layouts.createDefault( script ) )
 		else :
 			self.setLayout( GafferUI.CompoundEditor( script ) )
 
