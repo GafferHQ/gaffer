@@ -312,13 +312,13 @@ source_suffix = ['.rst', '.md']
 
 # Variables for string replacement functions
 
-arnold_version = '2018'
-arnold_path_linux = '/opt/solidangle/mtoa/{0}'.format( arnold_version )
-arnold_path_osx = '/opt/solidangle/mtoa/{0}'.format( arnold_version )
+arnold_version = '5.1.1.1'
+arnold_path_linux = '/opt/solidangle/arnold-{0}'.format( arnold_version )
+arnold_path_osx = '/opt/solidangle/arnold-{0}'.format( arnold_version )
 
-delight_version = '8.5.1'
-delight_path_linux = '/opt/3delightForMaya-{0}/Linux-x86_64'.format( delight_version )
-delight_path_osx = '/opt/3delightForMaya-{0}/Darwin'.format( delight_version )
+delight_version = '13.0.18'
+delight_path_linux = '/opt/3delight-{0}'.format( delight_version )
+delight_path_osx = '/opt/3delight-{0}'.format( delight_version )
 
 tractor_version = '2.2'
 tractor_path_linux = '/opt/pixar/Tractor-{0}'.format( tractor_version )
