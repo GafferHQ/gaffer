@@ -314,7 +314,7 @@ class RenderController::SceneGraph
 			return m_expanded;
 		}
 
-		const std::vector<SceneGraph *> &children()
+		const std::vector<std::unique_ptr<SceneGraph>> &children()
 		{
 			return m_children;
 		}
@@ -328,7 +328,7 @@ class RenderController::SceneGraph
 		// child updates having to write to the parent.
 		void clear()
 		{
-			clearChildren();
+			m_children.clear();
 			clearObject();
 			m_attributesHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
 			m_cleared = true;
@@ -542,23 +542,13 @@ class RenderController::SceneGraph
 			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
 			if( !existingChildNamesValid( childNames ) )
 			{
-				clearChildren();
+				m_children.clear();
 				for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
 				{
-					SceneGraph *child = new SceneGraph( *it, this );
-					m_children.push_back( child );
+					m_children.push_back( unique_ptr<SceneGraph>( new SceneGraph( *it, this ) ) );
 				}
 			}
 			return true;
-		}
-
-		void clearChildren()
-		{
-			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
-			{
-				delete *it;
-			}
-			m_children.clear();
 		}
 
 		bool existingChildNamesValid( const vector<IECore::InternedString> &childNames ) const
@@ -592,7 +582,7 @@ class RenderController::SceneGraph
 		Imath::M44f m_fullTransform;
 
 		IECore::MurmurHash m_childNamesHash;
-		std::vector<SceneGraph *> m_children;
+		std::vector<std::unique_ptr<SceneGraph>> m_children;
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_boundInterface;
 		bool m_expanded;
@@ -673,17 +663,17 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 			// Spawn subtasks to apply updates to each child.
 
-			const std::vector<SceneGraph *> &children = m_sceneGraph->children();
+			const auto &children = m_sceneGraph->children();
 			if( m_sceneGraph->expanded() && children.size() )
 			{
 				set_ref_count( 1 + children.size() );
 
 				ScenePlug::ScenePath childPath = m_scenePath;
 				childPath.push_back( IECore::InternedString() ); // space for the child name
-				for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
+				for( const auto &child : children )
 				{
-					childPath.back() = (*it)->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath, m_callback );
+					childPath.back() = child->name();
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath, m_callback );
 					spawn( *t );
 				}
 
