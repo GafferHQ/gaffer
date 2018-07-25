@@ -172,6 +172,22 @@ bool SceneGadget::getPaused() const
 	return m_paused;
 }
 
+void SceneGadget::setBlockingPaths( const IECore::PathMatcher &blockingPaths )
+{
+	if( m_updateTask )
+	{
+		m_updateTask->cancelAndWait();
+		m_updateTask.reset();
+	}
+	m_blockingPaths = blockingPaths;
+	requestRender();
+}
+
+const IECore::PathMatcher &SceneGadget::getBlockingPaths() const
+{
+	return m_blockingPaths;
+}
+
 SceneGadget::State SceneGadget::state() const
 {
 	if( m_paused )
@@ -452,6 +468,20 @@ void SceneGadget::updateRenderer()
 		}
 
 	};
+
+	if( !m_blockingPaths.isEmpty() )
+	{
+		try
+		{
+			m_controller.updateMatchingPaths( m_blockingPaths );
+		}
+		catch( std::exception &e )
+		{
+			// Leave it to the rest of the UI to report the error.
+			m_updateErrored = true;
+		}
+		m_renderer->command( "gl:synchronise" );
+	}
 
 	m_updateErrored = false;
 	// We don't show progressive updates until a small delay has elapsed. This

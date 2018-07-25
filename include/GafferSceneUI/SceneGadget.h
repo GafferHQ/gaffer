@@ -105,6 +105,11 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void setPaused( bool paused );
 		bool getPaused() const;
 
+		/// Specifies a set of paths that block drawing until they are
+		/// up to date. Use sparingly.
+		void setBlockingPaths( const IECore::PathMatcher &blockingPaths );
+		const IECore::PathMatcher &getBlockingPaths() const;
+
 		enum State
 		{
 			Paused,
@@ -161,6 +166,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void visibilityChanged();
 
 		bool m_paused;
+		IECore::PathMatcher m_blockingPaths;
 		SceneGadgetSignal m_stateChangedSignal;
 
 		IECoreScenePreview::RendererPtr m_renderer;
