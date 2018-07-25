@@ -919,6 +919,11 @@ class SceneView::Camera : public boost::signals::trackable
 			return plug()->getChild<StringPlug>( 3 );
 		}
 
+		SceneGadget *sceneGadget()
+		{
+			return static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+		}
+
 		void connectToViewContext()
 		{
 			m_contextChangedConnection = m_view->getContext()->changedSignal().connect( boost::bind( &Camera::contextChanged, this, ::_2 ) );
@@ -1050,6 +1055,7 @@ class SceneView::Camera : public boost::signals::trackable
 				m_view->viewportGadget()->setCenterOfInterest( m_originalCenterOfInterest );
 				m_view->viewportGadget()->setCameraEditable( true );
 				m_view->deleteObjectFilter()->pathsPlug()->setToDefault();
+				sceneGadget()->setBlockingPaths( IECore::PathMatcher() );
 				return;
 			}
 
@@ -1132,6 +1138,15 @@ class SceneView::Camera : public boost::signals::trackable
 					new StringVectorData( { cameraPathString } )
 				);
 			}
+
+			// Make sure that the camera and anything parented below it are always
+			// updated before drawing, rather than being updated asynchronously with
+			// the rest of the scene. This keeps the visualisations of lights in sync
+			// with the position of the look-through camera.
+
+			PathMatcher blockingPaths;
+			blockingPaths.addPath( cameraPathString );
+			sceneGadget()->setBlockingPaths( blockingPaths );
 
 			// Set up the static parts of the overlay. The parts that change when the
 			// viewport changes will be updated in updateViewportCameraAndOverlay().
