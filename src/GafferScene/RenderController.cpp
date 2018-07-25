@@ -529,7 +529,7 @@ class RenderController::SceneGraph
 
 		// Ensures that children() contains a child for every name specified
 		// by childNamesPlug(). This just ensures that the children exist - they
-		// will be subsequently be updated in parallel by the SceneGraphUpdateTask.
+		// will subsequently be updated in parallel by the SceneGraphUpdateTask.
 		bool updateChildren( const InternedStringVectorDataPlug *childNamesPlug )
 		{
 			const IECore::MurmurHash childNamesHash = childNamesPlug->hash();
@@ -540,30 +540,58 @@ class RenderController::SceneGraph
 
 			IECore::ConstInternedStringVectorDataPtr childNamesData = childNamesPlug->getValue( &childNamesHash );
 			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
-			if( !existingChildNamesValid( childNames ) )
-			{
-				m_children.clear();
-				for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
-				{
-					m_children.push_back( unique_ptr<SceneGraph>( new SceneGraph( *it, this ) ) );
-				}
-			}
-			return true;
-		}
+			m_childNamesHash = childNamesHash;
 
-		bool existingChildNamesValid( const vector<IECore::InternedString> &childNames ) const
-		{
-			if( m_children.size() != childNames.size() )
-			{
-				return false;
-			}
-			for( size_t i = 0, e = childNames.size(); i < e; ++i )
-			{
-				if( m_children[i]->m_name != childNames[i] )
+			// Our vector of children no longer matches `childNames`, but we may be
+			// able to reuse most of them (often only one has been added or removed).
+			// Move them to the side and sort them by name for quick lookups.
+
+			vector<unique_ptr<SceneGraph>> oldChildren;
+			oldChildren.swap( m_children );
+			sort(
+				oldChildren.begin(), oldChildren.end(),
+				[]( const unique_ptr<SceneGraph> &a, const unique_ptr<SceneGraph> &b )
 				{
-					return false;
+					return a->m_name < b->m_name;
+				}
+			);
+
+			// As we refill `m_children`, we're going to transfer ownership out of
+			// `oldChildren` as we go. This will leave nullptr gaps in `oldChildren`,
+			// breaking the sorting needed by `lower_bound()`. We therefore use this
+			// non-owning copy to perform the search.
+
+			vector<SceneGraph *> oldChildrenRaw;
+			oldChildrenRaw.reserve( oldChildren.size() );
+			for( const auto &c : oldChildren )
+			{
+				oldChildrenRaw.push_back( c.get() );
+			}
+
+			// Fill m_children with a combination of old and new children as necessary.
+
+			m_children.reserve( childNames.size() );
+			for( const auto &name : childNames )
+			{
+				auto it = lower_bound(
+					oldChildrenRaw.begin(), oldChildrenRaw.end(),
+					name,
+					[]( const SceneGraph *a, const InternedString &b )
+					{
+						return a->m_name < b;
+					}
+				);
+
+				if( it != oldChildrenRaw.end() && (*it)->m_name == name )
+				{
+					m_children.push_back( std::move( oldChildren[it-oldChildrenRaw.begin()] ) );
+				}
+				else
+				{
+					m_children.push_back( unique_ptr<SceneGraph>( new SceneGraph( name, this ) ) );
 				}
 			}
+
 			return true;
 		}
 
