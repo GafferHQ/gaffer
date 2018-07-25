@@ -36,6 +36,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferScene
 import GafferSceneTest
@@ -88,6 +90,83 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			renderer.command( "gl:queryBound", {} ),
 			group["out"].bound( "/" )
 		)
+
+	def testUpdateMatchingPaths( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 3 )
+		controller.update()
+
+		def bound( path ) :
+
+			renderer.option( "gl:selection", IECore.PathMatcherData( IECore.PathMatcher( [ path ] ) ) )
+			return renderer.command( "gl:queryBound", { "selection" : True } )
+
+		boundOrig = sphere["out"].bound( "/sphere" )
+		self.assertEqual( bound( "/group/sphere" ), boundOrig )
+		self.assertEqual( bound( "/group/sphere1" ), boundOrig )
+
+		sphere["radius"].setValue( 2 )
+
+		self.assertEqual( bound( "/group/sphere" ), boundOrig )
+		self.assertEqual( bound( "/group/sphere1" ), boundOrig )
+
+		controller.updateMatchingPaths( IECore.PathMatcher( [ "/group/sphere" ] ) )
+
+		boundUpdated = sphere["out"].bound( "/sphere" )
+		self.assertEqual( bound( "/group/sphere" ), boundUpdated )
+		self.assertEqual( bound( "/group/sphere1" ), boundOrig )
+
+		controller.update()
+
+		self.assertEqual( bound( "/group/sphere" ), boundUpdated )
+		self.assertEqual( bound( "/group/sphere1" ), boundUpdated )
+
+	def testUpdateMatchingPathsAndInheritedTransforms( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 3 )
+		controller.update()
+
+		def bound( path ) :
+
+			renderer.option( "gl:selection", IECore.PathMatcherData( IECore.PathMatcher( [ path ] ) ) )
+			return renderer.command( "gl:queryBound", { "selection" : True } )
+
+		untranslatedBound = group["out"].bound( "/group/sphere" ) * group["out"].fullTransform( "/group/sphere" )
+		self.assertEqual( bound( "/group/sphere" ), untranslatedBound )
+		self.assertEqual( bound( "/group/sphere1" ), untranslatedBound )
+
+		group["transform"]["translate"]["x"].setValue( 2 )
+		translatedBound = group["out"].bound( "/group/sphere" ) * group["out"].fullTransform( "/group/sphere" )
+
+		controller.updateMatchingPaths( IECore.PathMatcher( [ "/group/sphere" ] ) )
+
+		self.assertEqual( bound( "/group/sphere" ), translatedBound )
+		self.assertEqual( bound( "/group/sphere1" ), untranslatedBound )
+
+		controller.update()
+
+		self.assertEqual( bound( "/group/sphere" ), translatedBound )
+		self.assertEqual( bound( "/group/sphere1" ), translatedBound )
 
 if __name__ == "__main__":
 	unittest.main()

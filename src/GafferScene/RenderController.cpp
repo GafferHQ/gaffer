@@ -691,7 +691,8 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			unsigned changedGlobalComponents,
 			const Context *context,
 			const ScenePlug::ScenePath &scenePath,
-			const ProgressCallback &callback
+			const ProgressCallback &callback,
+			const PathMatcher *pathsToUpdate
 		)
 			:	m_controller( controller ),
 				m_sceneGraph( sceneGraph ),
@@ -699,12 +700,19 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				m_changedGlobalComponents( changedGlobalComponents ),
 				m_context( context ),
 				m_scenePath( scenePath ),
-				m_callback( callback )
+				m_callback( callback ),
+				m_pathsToUpdate( pathsToUpdate )
 		{
 		}
 
 		task *execute() override
 		{
+
+			const unsigned pathsToUpdateMatch = m_pathsToUpdate ? m_pathsToUpdate->match( m_scenePath ) : PathMatcher::EveryMatch;
+			if( !pathsToUpdateMatch )
+			{
+				return nullptr;
+			}
 
 			// Figure out if this location belongs in the type
 			// of scene graph we're constructing. If it doesn't
@@ -749,7 +757,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				for( const auto &child : children )
 				{
 					childPath.back() = child->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_changedGlobalComponents, m_context, childPath, m_callback );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_changedGlobalComponents, m_context, childPath, m_callback, m_pathsToUpdate );
 					spawn( *t );
 				}
 
@@ -812,6 +820,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		const Context *m_context;
 		ScenePlug::ScenePath m_scenePath;
 		const ProgressCallback &m_callback;
+		const PathMatcher *m_pathsToUpdate;
 
 };
 
@@ -1069,7 +1078,20 @@ std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( co
 	return m_backgroundTask;
 }
 
-void RenderController::updateInternal( const ProgressCallback &callback )
+void RenderController::updateMatchingPaths( const IECore::PathMatcher &pathsToUpdate, const ProgressCallback &callback )
+{
+	if( !m_scene || !m_context )
+	{
+		return;
+	}
+
+	Context::EditableScope scopedContext( m_context.get() );
+	scopedContext.set( "scene:renderer", m_renderer->name().string() );
+
+	updateInternal( callback, &pathsToUpdate );
+}
+
+void RenderController::updateInternal( const ProgressCallback &callback, const IECore::PathMatcher *pathsToUpdate )
 {
 	try
 	{
@@ -1116,7 +1138,7 @@ void RenderController::updateInternal( const ProgressCallback &callback )
 
 			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 			SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
-				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, Context::current(), ScenePlug::ScenePath(), callback
+				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, Context::current(), ScenePlug::ScenePath(), callback, pathsToUpdate
 			);
 			tbb::task::spawn_root_and_wait( *task );
 		}
@@ -1126,8 +1148,13 @@ void RenderController::updateInternal( const ProgressCallback &callback )
 			updateDefaultCamera();
 		}
 
-		m_changedGlobalComponents = NoGlobalComponent;
-		m_updateRequired = false;
+		if( !pathsToUpdate )
+		{
+			// Only clear `m_changedGlobalComponents` when we
+			// know our entire scene has been updated successfully.
+			m_changedGlobalComponents = NoGlobalComponent;
+			m_updateRequired = false;
+		}
 
 		if( callback )
 		{

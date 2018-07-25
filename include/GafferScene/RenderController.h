@@ -84,6 +84,8 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		void update( const ProgressCallback &callback = ProgressCallback() );
 		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const ProgressCallback &callback = ProgressCallback() );
 
+		void updateMatchingPaths( const IECore::PathMatcher &pathsToUpdate, const ProgressCallback &callback = ProgressCallback() );
+
 	private :
 
 		enum GlobalComponents
@@ -102,7 +104,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		void dirtyGlobals( unsigned components );
 		void dirtySceneGraphs( unsigned components );
 
-		void updateInternal( const ProgressCallback &callback = ProgressCallback() );
+		void updateInternal( const ProgressCallback &callback = ProgressCallback(), const IECore::PathMatcher *pathsToUpdate = nullptr );
 		void updateDefaultCamera();
 		void cancelBackgroundTask();
 

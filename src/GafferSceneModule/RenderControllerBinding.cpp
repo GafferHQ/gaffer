@@ -79,6 +79,12 @@ void update( RenderController &r )
 	r.update();
 }
 
+void updateMatchingPaths( RenderController &r, const IECore::PathMatcher &pathsToUpdate )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.updateMatchingPaths( pathsToUpdate );
+}
+
 } // namespace
 
 void GafferSceneModule::bindRenderController()
@@ -97,6 +103,7 @@ void GafferSceneModule::bindRenderController()
 		.def( "getMinimumExpansionDepth", &RenderController::getMinimumExpansionDepth )
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )
 		.def( "update", &update )
+		.def( "updateMatchingPaths", &updateMatchingPaths )
 	;
 
 	SignalClass<RenderController::UpdateRequiredSignal>( "UpdateRequiredSignal" );
