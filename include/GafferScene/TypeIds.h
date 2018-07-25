@@ -146,6 +146,7 @@ enum TypeId
 	EncapsulateTypeId = 110601,
 	CopyAttributesTypeId = 110602,
 	CollectPrimitiveVariablesTypeId = 110603,
+	PrimitiveVariableExistsTypeId = 110604,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
