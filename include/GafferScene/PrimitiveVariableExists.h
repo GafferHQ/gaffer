@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,32 +34,53 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_PRIMITIVEVARIABLEEXISTS_H
+#define GAFFERSCENE_PRIMITIVEVARIABLEEXISTS_H
 
-#include "PrimitiveVariablesBinding.h"
+#include "Gaffer/StringPlug.h"
 
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/MapOffset.h"
-#include "GafferScene/MapProjection.h"
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-#include "GafferScene/CollectPrimitiveVariables.h"
-#include "GafferScene/PrimitiveVariableExists.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/ScenePlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/ComputeNode.h"
 
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveVariables()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<MapProjection>();
-	GafferBindings::DependencyNodeClass<MapOffset>();
-	GafferBindings::DependencyNodeClass<CollectPrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariableExists>();
+class GAFFERSCENE_API PrimitiveVariableExists : public Gaffer::ComputeNode
+{
 
-}
+	public :
+
+		PrimitiveVariableExists( const std::string &name=defaultName<PrimitiveVariableExists>() );
+		~PrimitiveVariableExists() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariableExists, PrimitiveVariableExistsTypeId, Gaffer::ComputeNode );
+
+		ScenePlug *inPlug();
+		const ScenePlug *inPlug() const;
+
+		Gaffer::StringPlug *targetNamePlug();
+		const Gaffer::StringPlug *targetNamePlug() const;
+
+		Gaffer::BoolPlug *outPlug();
+		const Gaffer::BoolPlug *outPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( PrimitiveVariableExists )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_PRIMITIVEVARIABLEEXISTS_H
