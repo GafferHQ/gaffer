@@ -138,17 +138,14 @@ class RenderController::SceneGraph
 			AttributesComponent = 4,
 			ObjectComponent = 8,
 			ChildNamesComponent = 16,
-			GlobalsComponent = 32,
-			SetsComponent = 64,
-			RenderSetsComponent = 128, // Sets prefixed with "render:"
-			ExpansionComponent = 256,
-			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent | RenderSetsComponent | ExpansionComponent
+			ExpansionComponent = 32,
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | ExpansionComponent,
 		};
 
 		// Constructs the root of the scene graph.
 		// Children are constructed using updateChildren().
 		SceneGraph()
-			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject )
+			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject ), m_dirtyComponents( AllComponents ), m_changedComponents( NoComponent )
 		{
 			clear();
 		}
@@ -163,34 +160,47 @@ class RenderController::SceneGraph
 			return m_name;
 		}
 
-		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
-		// of the components which were changed.
-		unsigned update( const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, const RenderController *controller )
+		void dirty( unsigned components )
 		{
-			unsigned changedComponents = 0;
+			if( ( components & m_dirtyComponents ) == components )
+			{
+				return;
+			}
+			m_dirtyComponents |= components;
+			for( const auto &c : m_children )
+			{
+				c->dirty( components );
+			}
+		}
+
+		// Called by SceneGraphUpdateTask to update this location. Returns true if
+		// anything changed.
+		bool update( const ScenePlug::ScenePath &path, unsigned changedGlobals, Type type, const RenderController *controller )
+		{
+			const unsigned originalChangedComponents = m_changedComponents;
 
 			// Attributes
 
 			if( !m_parent )
 			{
 				// Root - get attributes from globals.
-				if( dirtyComponents & GlobalsComponent )
+				if( changedGlobals & GlobalsGlobalComponent )
 				{
 					if( updateAttributes( controller->m_globals.get() ) )
 					{
-						changedComponents |= AttributesComponent;
+						m_changedComponents |= AttributesComponent;
 					}
 				}
 			}
 			else
 			{
 				// Non-root - get attributes the standard way.
-				const bool parentAttributesChanged = changedParentComponents & AttributesComponent;
-				if( parentAttributesChanged || ( dirtyComponents & AttributesComponent ) )
+				const bool parentAttributesChanged = m_parent->m_changedComponents & AttributesComponent;
+				if( parentAttributesChanged || ( m_dirtyComponents & AttributesComponent ) )
 				{
 					if( updateAttributes( controller->m_scene->attributesPlug(), parentAttributesChanged ) )
 					{
-						changedComponents |= AttributesComponent;
+						m_changedComponents |= AttributesComponent;
 					}
 				}
 			}
@@ -198,7 +208,7 @@ class RenderController::SceneGraph
 			if( !::visible( m_fullAttributes.get() ) )
 			{
 				clear();
-				return changedComponents;
+				return originalChangedComponents != m_changedComponents;
 			}
 
 			// Render Sets. We must obviously update these if
@@ -206,34 +216,42 @@ class RenderController::SceneGraph
 			// update if the attributes have changed, because in
 			// that case we may have overwritten the sets attribute.
 
-			if( ( dirtyComponents & RenderSetsComponent ) || ( changedComponents & AttributesComponent ) )
+			if( ( changedGlobals & RenderSetsGlobalComponent ) || ( m_changedComponents & AttributesComponent ) )
 			{
 				if( updateRenderSets( path, controller->m_renderSets ) )
 				{
-					changedComponents |= AttributesComponent;
+					m_changedComponents |= AttributesComponent;
 				}
 			}
 
+			clean( AttributesComponent );
+
 			// Transform
 
-			if( ( dirtyComponents & TransformComponent ) && updateTransform( controller->m_scene->transformPlug(), changedParentComponents & TransformComponent ) )
+			const bool parentTransformChanged = m_parent && ( m_parent->m_changedComponents & TransformComponent );
+			if( ( m_dirtyComponents & TransformComponent ) || parentTransformChanged )
 			{
-				changedComponents |= TransformComponent;
+				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged ) )
+				{
+					m_changedComponents |= TransformComponent;
+				}
 			}
+
+			clean( TransformComponent );
 
 			// Object
 
-			if( ( dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
 			{
-				changedComponents |= ObjectComponent;
+				m_changedComponents |= ObjectComponent;
 			}
 
 			if( m_objectInterface )
 			{
-				if( !(changedComponents & ObjectComponent) )
+				if( !(m_changedComponents & ObjectComponent) )
 				{
 					// Apply attribute update to old object if necessary.
-					if( changedComponents & AttributesComponent )
+					if( m_changedComponents & AttributesComponent )
 					{
 						if( !m_objectInterface->attributes( attributesInterface( controller->m_renderer.get() ) ) )
 						{
@@ -241,7 +259,7 @@ class RenderController::SceneGraph
 							m_objectHash = MurmurHash();
 							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
 							{
-								changedComponents |= ObjectComponent;
+								m_changedComponents |= ObjectComponent;
 							}
 						}
 					}
@@ -249,29 +267,33 @@ class RenderController::SceneGraph
 
 				// If the transform has changed, or we have an entirely new object,
 				// the apply the transform.
-				if( changedComponents & ( ObjectComponent | TransformComponent ) )
+				if( m_changedComponents & ( ObjectComponent | TransformComponent ) )
 				{
 					m_objectInterface->transform( m_fullTransform );
 				}
 			}
 
+			clean( ObjectComponent );
+
 			// Children
 
-			if( ( dirtyComponents & ChildNamesComponent ) && updateChildren( controller->m_scene->childNamesPlug() ) )
+			if( ( m_dirtyComponents & ChildNamesComponent ) && updateChildren( controller->m_scene->childNamesPlug() ) )
 			{
-				changedComponents |= ChildNamesComponent;
+				m_changedComponents |= ChildNamesComponent;
 			}
+
+			clean( ChildNamesComponent );
 
 			// Expansion
 
-			if( ( dirtyComponents & ExpansionComponent ) && updateExpansion( path, controller->m_expandedPaths, controller->m_minimumExpansionDepth ) )
+			if( ( m_dirtyComponents & ExpansionComponent ) && updateExpansion( path, controller->m_expandedPaths, controller->m_minimumExpansionDepth ) )
 			{
-				changedComponents |= ExpansionComponent;
+				m_changedComponents |= ExpansionComponent;
 			}
 
 			if(
-				( changedComponents & ( ExpansionComponent | ChildNamesComponent ) ) ||
-				( dirtyComponents & BoundComponent )
+				( m_changedComponents & ( ExpansionComponent | ChildNamesComponent ) ) ||
+				( m_dirtyComponents & BoundComponent )
 			)
 			{
 				// Create bounding box if needed
@@ -298,15 +320,19 @@ class RenderController::SceneGraph
 					m_boundInterface = nullptr;
 				}
 			}
-			else if( m_boundInterface && ( changedComponents & TransformComponent ) )
+			else if( m_boundInterface && ( m_changedComponents & TransformComponent ) )
 			{
 				// Apply new transform to existing bounding box
 				m_boundInterface->transform( m_fullTransform );
 			}
 
+			clean( ExpansionComponent | BoundComponent );
+
 			m_cleared = false;
 
-			return changedComponents;
+			assert( m_dirtyComponents == NoComponent );
+
+			return originalChangedComponents != m_changedComponents;
 		}
 
 		bool expanded() const
@@ -317,6 +343,11 @@ class RenderController::SceneGraph
 		const std::vector<std::unique_ptr<SceneGraph>> &children()
 		{
 			return m_children;
+		}
+
+		void allChildrenUpdated()
+		{
+			m_changedComponents = NoComponent;
 		}
 
 		// Invalidates this location, removing any resources it
@@ -334,6 +365,7 @@ class RenderController::SceneGraph
 			m_cleared = true;
 			m_expanded = false;
 			m_boundInterface = nullptr;
+			m_dirtyComponents = AllComponents;
 		}
 
 		// Returns true if the location has not been finalised
@@ -595,6 +627,11 @@ class RenderController::SceneGraph
 			return true;
 		}
 
+		void clean( unsigned components )
+		{
+			m_dirtyComponents &= ~components;
+		}
+
 		IECore::InternedString m_name;
 
 		const SceneGraph *m_parent;
@@ -615,6 +652,28 @@ class RenderController::SceneGraph
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_boundInterface;
 		bool m_expanded;
 
+		// Tracks work which needs to be done on
+		// the next call to `update()`.
+		unsigned m_dirtyComponents;
+		// Tracks things that were changed on the last
+		// call to `update()`. This is needed in two
+		// scenarios :
+		//
+		//  - When `update()` is cancelled part way
+		//    through either through cancellation or
+		//    a computation error. In the next call to
+		//    `update()` we need to know what we
+		//    changed previously because we won't repeat
+		//    the part of the update that we completed before.
+		//  - From the `update()` call for our children.
+		//    The children need to know if the parent transform
+		//    or attributes changed so they can concatenate
+		//    them appropriately.
+		//
+		// We clear `m_changedComponents` once all children have
+		// been updated successfully, in `allChildrenUpdated()`.
+		unsigned m_changedComponents;
+
 		bool m_cleared;
 
 };
@@ -629,8 +688,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			const RenderController *controller,
 			SceneGraph *sceneGraph,
 			SceneGraph::Type sceneGraphType,
-			unsigned dirtyComponents,
-			unsigned changedParentComponents,
+			unsigned changedGlobalComponents,
 			const Context *context,
 			const ScenePlug::ScenePath &scenePath,
 			const ProgressCallback &callback
@@ -638,8 +696,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			:	m_controller( controller ),
 				m_sceneGraph( sceneGraph ),
 				m_sceneGraphType( sceneGraphType ),
-				m_dirtyComponents( dirtyComponents ),
-				m_changedParentComponents( changedParentComponents ),
+				m_changedGlobalComponents( changedGlobalComponents ),
 				m_context( context ),
 				m_scenePath( scenePath ),
 				m_callback( callback )
@@ -661,14 +718,6 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				return nullptr;
 			}
 
-			if( m_sceneGraph->cleared() )
-			{
-				// We cleared this location in the past, but now
-				// want it. So we need to start from scratch, and
-				// update everything.
-				m_dirtyComponents = SceneGraph::AllComponents;
-			}
-
 			// Set up a context to compute the scene at the right
 			// location.
 
@@ -676,15 +725,14 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 			// Update the scene graph at this location.
 
-			unsigned changedComponents = m_sceneGraph->update(
+			const bool changesMade = m_sceneGraph->update(
 				m_scenePath,
-				m_dirtyComponents,
-				m_changedParentComponents,
+				m_changedGlobalComponents,
 				sceneGraphMatch & IECore::PathMatcher::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
 				m_controller
 			);
 
-			if( changedComponents && m_callback )
+			if( changesMade && m_callback )
 			{
 				m_callback( BackgroundTask::Running );
 			}
@@ -701,7 +749,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				for( const auto &child : children )
 				{
 					childPath.back() = child->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath, m_callback );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_changedGlobalComponents, m_context, childPath, m_callback );
 					spawn( *t );
 				}
 
@@ -713,6 +761,11 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				{
 					child->clear();
 				}
+			}
+
+			if( pathsToUpdateMatch & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch ) )
+			{
+				m_sceneGraph->allChildrenUpdated();
 			}
 
 			return nullptr;
@@ -755,8 +808,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		const RenderController *m_controller;
 		SceneGraph *m_sceneGraph;
 		SceneGraph::Type m_sceneGraphType;
-		unsigned m_dirtyComponents;
-		unsigned m_changedParentComponents;
+		unsigned m_changedGlobalComponents;
 		const Context *m_context;
 		ScenePlug::ScenePath m_scenePath;
 		const ProgressCallback &m_callback;
@@ -772,7 +824,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_updateRequested( false ),
-		m_dirtyComponents( SceneGraph::AllComponents ),
+		m_dirtyGlobalComponents( NoGlobalComponent ),
 		m_globals( new CompoundObject )
 {
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
@@ -828,7 +880,8 @@ void RenderController::setScene( const ConstScenePlugPtr &scene )
 		boost::bind( &RenderController::plugDirtied, this, ::_1 )
 	);
 
-	m_dirtyComponents |= SceneGraph::AllComponents;
+	dirtyGlobals( AllGlobalComponents );
+	dirtySceneGraphs( SceneGraph::AllComponents );
 	requestUpdate();
 }
 
@@ -851,7 +904,8 @@ void RenderController::setContext( const Gaffer::ConstContextPtr &context )
 		boost::bind( &RenderController::contextChanged, this, ::_2 )
 	);
 
-	m_dirtyComponents |= SceneGraph::AllComponents;
+	dirtyGlobals( AllGlobalComponents );
+	dirtySceneGraphs( SceneGraph::AllComponents );
 	requestUpdate();
 }
 
@@ -865,7 +919,7 @@ void RenderController::setExpandedPaths( const IECore::PathMatcher &expandedPath
 	cancelBackgroundTask();
 
 	m_expandedPaths = expandedPaths;
-	m_dirtyComponents |= SceneGraph::ExpansionComponent;
+	dirtySceneGraphs( SceneGraph::ExpansionComponent );
 	requestUpdate();
 }
 
@@ -884,7 +938,7 @@ void RenderController::setMinimumExpansionDepth( size_t depth )
 	cancelBackgroundTask();
 
 	m_minimumExpansionDepth = depth;
-	m_dirtyComponents |= SceneGraph::ExpansionComponent;
+	dirtySceneGraphs( SceneGraph::ExpansionComponent );
 	requestUpdate();
 }
 
@@ -907,31 +961,31 @@ void RenderController::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == m_scene->boundPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::BoundComponent;
+		dirtySceneGraphs( SceneGraph::BoundComponent );
 	}
 	else if( plug == m_scene->transformPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::TransformComponent;
+		dirtySceneGraphs( SceneGraph::TransformComponent );
 	}
 	else if( plug == m_scene->attributesPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::AttributesComponent;
+		dirtySceneGraphs( SceneGraph::AttributesComponent );
 	}
 	else if( plug == m_scene->objectPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::ObjectComponent;
+		dirtySceneGraphs( SceneGraph::ObjectComponent );
 	}
 	else if( plug == m_scene->childNamesPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::ChildNamesComponent;
+		dirtySceneGraphs( SceneGraph::ChildNamesComponent );
 	}
 	else if( plug == m_scene->globalsPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::GlobalsComponent;
+		dirtyGlobals( GlobalsGlobalComponent );
 	}
 	else if( plug == m_scene->setPlug() )
 	{
-		m_dirtyComponents |= SceneGraph::SetsComponent;
+		dirtyGlobals( SetsGlobalComponent );
 	}
 	else if( plug == m_scene )
 	{
@@ -948,7 +1002,8 @@ void RenderController::contextChanged( const IECore::InternedString &name )
 
 	cancelBackgroundTask();
 
-	m_dirtyComponents |= SceneGraph::AllComponents;
+	dirtyGlobals( AllGlobalComponents );
+	dirtySceneGraphs( SceneGraph::AllComponents );
 	requestUpdate();
 }
 
@@ -959,6 +1014,19 @@ void RenderController::requestUpdate()
 	{
 		m_updateRequested = true;
 		updateRequiredSignal()( *this );
+	}
+}
+
+void RenderController::dirtyGlobals( unsigned components )
+{
+	m_dirtyGlobalComponents |= components;
+}
+
+void RenderController::dirtySceneGraphs( unsigned components )
+{
+	for( auto &sg : m_sceneGraphs )
+	{
+		sg->dirty( components );
 	}
 }
 
@@ -1005,47 +1073,60 @@ void RenderController::updateInternal( const ProgressCallback &callback )
 {
 	try
 	{
-		bool cameraGlobalsChanged = false;
-		if( m_dirtyComponents & SceneGraph::GlobalsComponent )
+		// Update globals
+
+		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
 			RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
 			RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
-			cameraGlobalsChanged = ::cameraGlobalsChanged( globals.get(), m_globals.get() );
+			if( !m_globals || *m_globals != *globals )
+			{
+				m_changedGlobalComponents |= GlobalsGlobalComponent;
+			}
+			if( cameraGlobalsChanged( globals.get(), m_globals.get() ) )
+			{
+				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
+			}
 			m_globals = globals;
 		}
 
-		if( m_dirtyComponents & SceneGraph::SetsComponent )
+		if( m_dirtyGlobalComponents & SetsGlobalComponent )
 		{
 			if( m_renderSets.update( m_scene.get() ) & RendererAlgo::RenderSets::RenderSetsChanged )
 			{
-				m_dirtyComponents |= SceneGraph::RenderSetsComponent;
+				m_changedGlobalComponents |= RenderSetsGlobalComponent;
 			}
 		}
+
+		m_dirtyGlobalComponents = NoGlobalComponent;
+
+		// Update scene graphs
 
 		for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 		{
 			SceneGraph *sceneGraph = m_sceneGraphs[i].get();
-			if( i == SceneGraph::CameraType && cameraGlobalsChanged )
+			if( i == SceneGraph::CameraType && ( m_changedGlobalComponents & CameraOptionsGlobalComponent ) )
 			{
 				// Because the globals are applied to camera objects, we must update the object whenever
 				// the globals have changed, so we clear the scene graph and start again.
+				/// \todo Can we do better here, by using m_changedGlobalComponents in `SceneGraph::update()`?
 				sceneGraph->clear();
 			}
 
 			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 			SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
-				this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, Context::current(), ScenePlug::ScenePath(), callback
+				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, Context::current(), ScenePlug::ScenePath(), callback
 			);
 			tbb::task::spawn_root_and_wait( *task );
 		}
 
-		if( cameraGlobalsChanged )
+		if( m_changedGlobalComponents & CameraOptionsGlobalComponent )
 		{
 			updateDefaultCamera();
 		}
 
-		m_dirtyComponents = SceneGraph::NoComponent;
+		m_changedGlobalComponents = NoGlobalComponent;
 		m_updateRequired = false;
 
 		if( callback )

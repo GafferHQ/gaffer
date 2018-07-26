@@ -86,9 +86,21 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 
 	private :
 
+		enum GlobalComponents
+		{
+			NoGlobalComponent = 0,
+			GlobalsGlobalComponent = 1,
+			SetsGlobalComponent = 2,
+			RenderSetsGlobalComponent = 4,
+			CameraOptionsGlobalComponent = 8,
+			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent
+		};
+
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( const IECore::InternedString &name );
 		void requestUpdate();
+		void dirtyGlobals( unsigned components );
+		void dirtySceneGraphs( unsigned components );
 
 		void updateInternal( const ProgressCallback &callback = ProgressCallback() );
 		void updateDefaultCamera();
@@ -112,7 +124,8 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		bool m_updateRequested;
 
 		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
-		unsigned m_dirtyComponents;
+		unsigned m_dirtyGlobalComponents;
+		unsigned m_changedGlobalComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
 		RendererAlgo::RenderSets m_renderSets;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
