@@ -538,9 +538,10 @@ static IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
 IE_CORE_DEFINERUNTIMETYPED( Shader );
 
 size_t Shader::g_firstPlugIndex = 0;
+const IECore::InternedString Shader::g_outputParameterContextName( "scene:shader:outputParameter" );
 
 Shader::Shader( const std::string &name )
-	:	DependencyNode( name )
+	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name", Gaffer::Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
@@ -551,6 +552,7 @@ Shader::Shader( const std::string &name )
 	addChild( new StringPlug( "__nodeName", Gaffer::Plug::In, name, Plug::Default & ~(Plug::Serialisable | Plug::AcceptsInputs), Context::NoSubstitutions ) );
 	addChild( new Color3fPlug( "__nodeColor", Gaffer::Plug::In, Color3f( 0.0f ) ) );
 	nodeColorPlug()->setFlags( Plug::Serialisable | Plug::AcceptsInputs, false );
+	addChild( new CompoundObjectPlug( "__outAttributes", Plug::Out, new IECore::CompoundObject ) );
 
 	nameChangedSignal().connect( boost::bind( &Shader::nameChanged, this ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &Shader::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
@@ -589,7 +591,6 @@ const Gaffer::StringPlug *Shader::attributeSuffixPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
-
 
 Gaffer::Plug *Shader::parametersPlug()
 {
@@ -643,21 +644,29 @@ const Gaffer::Color3fPlug *Shader::nodeColorPlug() const
 	return getChild<Color3fPlug>( g_firstPlugIndex + 6 );
 }
 
+Gaffer::CompoundObjectPlug *Shader::outAttributesPlug()
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 7 );
+}
+
+const Gaffer::CompoundObjectPlug *Shader::outAttributesPlug() const
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 7 );
+}
+
 IECore::MurmurHash Shader::attributesHash() const
 {
-	IECore::MurmurHash h;
-	attributesHash( h );
-	return h;
+	return outAttributesPlug()->hash();
 }
 
 void Shader::attributesHash( IECore::MurmurHash &h ) const
 {
-	attributesHash( outPlug(), h );
+	outAttributesPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr Shader::attributes() const
 {
-	return attributes( outPlug() );
+	return outAttributesPlug()->getValue();
 }
 
 void Shader::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
@@ -687,7 +696,7 @@ IECore::ConstCompoundObjectPtr Shader::attributes( const Gaffer::Plug *output ) 
 
 void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	DependencyNode::affects( input, outputs );
+	ComputeNode::affects( input, outputs );
 
 	if(
 		parametersPlug()->isAncestorOf( input ) ||
@@ -698,8 +707,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		input->parent<Plug>() == nodeColorPlug()
 	)
 	{
-		const Plug *out = outPlug();
-		if( out )
+		if( const Plug *out = outPlug() )
 		{
 			if( !out->children().empty() )
 			{
@@ -716,6 +724,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 				outputs.push_back( out );
 			}
 		}
+		outputs.push_back( outAttributesPlug() );
 	}
 }
 
@@ -735,6 +744,57 @@ void Shader::reloadShader()
 	// Sub-classes should take care of any necessary cache clearing before calling this
 
 	loadShader( namePlug()->getValue(), true );
+}
+
+void Shader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( output == outAttributesPlug() )
+	{
+		ComputeNode::hash( output, context, h );
+		const Plug *outputParameter = outPlug();
+		if( auto *name = context->get<IECore::StringData>( g_outputParameterContextName, nullptr ) )
+		{
+			outputParameter = outputParameter->descendant<Plug>( name->readable() );
+		}
+		attributesHash( outputParameter, h );
+		return;
+	}
+	else if( const Plug *o = outPlug() )
+	{
+		if( output == o || o->isAncestorOf( output ) )
+		{
+			ComputeNode::hash( output, context, h );
+			namePlug()->hash( h );
+			typePlug()->hash( h );
+			return;
+		}
+	}
+
+	ComputeNode::hash( output, context, h );
+}
+
+void Shader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == outAttributesPlug() )
+	{
+		const Plug *outputParameter = outPlug();
+		if( auto *name = context->get<IECore::StringData>( g_outputParameterContextName, nullptr ) )
+		{
+			outputParameter = outputParameter->descendant<Plug>( name->readable() );
+		}
+		static_cast<CompoundObjectPlug *>( output )->setValue( attributes( outputParameter ) );
+		return;
+	}
+	else if( const Plug *o = outPlug() )
+	{
+		if( output == o || o->isAncestorOf( output ) )
+		{
+			output->setToDefault();
+			return;
+		}
+	}
+
+	ComputeNode::compute( output, context );
 }
 
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const

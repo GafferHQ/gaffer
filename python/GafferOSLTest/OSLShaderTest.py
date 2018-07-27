@@ -322,16 +322,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		outputClosure["parameters"]["e"]["r"].setValue( 10 )
 
-		self.assertEqual(
-			set( [ x[0].relativeName( x[0].node() ) for x in cs ] ),
-			set( [
-				"parameters.e.r",
-				"parameters.e",
-				"parameters",
-				"out.c",
-				"out",
-			] )
-		)
+		self.assertTrue( outputClosure["out"] in [ x[0] for x in cs ] )
+		self.assertTrue( outputClosure["out"]["c"] in [ x[0] for x in cs ] )
 
 	def testRepeatability( self ) :
 
