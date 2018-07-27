@@ -305,6 +305,16 @@ Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, 
 	init( gadget, origin, axis0, axis1, dragBeginEvent );
 }
 
+const Imath::V3f &Handle::PlanarDrag::axis0() const
+{
+	return m_axis0;
+}
+
+const Imath::V3f &Handle::PlanarDrag::axis1() const
+{
+	return m_axis1;
+}
+
 Imath::V2f Handle::PlanarDrag::startPosition() const
 {
 	return m_dragBeginPosition;
@@ -336,6 +346,8 @@ Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
 
 void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
 {
+	m_axis0 = axis0;
+	m_axis1 = axis1;
 	m_gadget = gadget;
 	const M44f transform = gadget->fullTransform();
 	m_worldOrigin = origin * transform;
