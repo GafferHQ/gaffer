@@ -41,6 +41,7 @@
 #include "GafferUI/ViewportGadget.h"
 
 #include "IECoreGL/Camera.h"
+#include "IECoreGL/Selector.h"
 
 #include "IECore/Export.h"
 #include "IECore/NullObject.h"
@@ -68,7 +69,7 @@ using namespace GafferUI;
 IE_CORE_DEFINERUNTIMETYPED( Handle );
 
 Handle::Handle( const std::string &name )
-	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f )
+	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f ), m_visibleOnHover( false )
 {
 	enterSignal().connect( boost::bind( &Handle::enter, this ) );
 	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
@@ -98,6 +99,22 @@ float Handle::getRasterScale() const
 	return m_rasterScale;
 }
 
+void Handle::setVisibleOnHover( bool visibleOnHover )
+{
+	if( visibleOnHover == m_visibleOnHover )
+	{
+		return;
+	}
+
+	m_visibleOnHover = visibleOnHover;
+	renderRequestSignal()( this );
+}
+
+bool Handle::getVisibleOnHover() const
+{
+	return m_visibleOnHover;
+}
+
 Imath::Box3f Handle::bound() const
 {
 	// Having a raster scale makes our bound somewhat meaningless
@@ -113,6 +130,14 @@ bool Handle::hasLayer( Layer layer ) const
 
 void Handle::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( m_visibleOnHover )
+	{
+		if( !enabled() || (!m_hovering && !IECoreGL::Selector::currentSelector() ) )
+		{
+			return;
+		}
+	}
+
 	if( m_rasterScale > 0.0f )
 	{
 		// We want our handles to be a constant length in

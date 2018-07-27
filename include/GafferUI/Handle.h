@@ -58,6 +58,9 @@ class GAFFERUI_API Handle : public Gadget
 		void setRasterScale( float rasterScale );
 		float getRasterScale() const;
 
+		void setVisibleOnHover( bool visibleOnHover );
+		bool getVisibleOnHover() const;
+
 		Imath::Box3f bound() const override;
 
 	protected :
@@ -143,6 +146,7 @@ class GAFFERUI_API Handle : public Gadget
 
 		bool m_hovering;
 		float m_rasterScale;
+		bool m_visibleOnHover;
 
 };
 
