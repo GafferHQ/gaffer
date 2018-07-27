@@ -208,6 +208,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				_ImagesPath( self.__images(), [] ),
 				columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
+				allowMultipleSelection = True
 			)
 			self.__pathListing.setSortable( False )
 			self.__pathListing.setHeaderVisible( False )
@@ -281,7 +282,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		images = self.__images()
 		if len( images ) :
 			image = images[index % len( images )]
-			self.__pathListing.setSelection( IECore.PathMatcher( [ "/" + image.getName() ] ) )
+			indices = self.__indicesFromSelection()
+			if index not in indices :
+				self.__pathListing.setSelection( IECore.PathMatcher( [ "/" + image.getName() ] ) )
 			self.__descriptionWidget.setPlug( image["description"] )
 			self.__nameWidget.setGraphComponent( image )
 		else :
@@ -310,25 +313,25 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		return self.__catalogue()["images"].source()
 
-	def __indexFromSelection( self ) :
-
+	def __indicesFromSelection( self ) :
+		indices = []
 		selection = self.__pathListing.getSelection()
 		for i, image in enumerate( self.__images() ) :
 			if selection.match( "/" + image.getName() ) & selection.Result.ExactMatch :
-				return i
+				indices.append( i )
 
-		return None
+		return indices
 
 	def __pathListingSelectionChanged( self, pathListing ) :
 
-		index = self.__indexFromSelection()
+		indices = self.__indicesFromSelection()
 
-		self.__removeButton.setEnabled( index is not None )
-		self.__extractButton.setEnabled( index is not None )
-		self.__exportButton.setEnabled( index is not None )
-		self.__duplicateButton.setEnabled( index is not None )
+		self.__removeButton.setEnabled( bool( indices ) )
+		self.__extractButton.setEnabled( bool( indices ) )
+		self.__exportButton.setEnabled( len( indices ) == 1 )
+		self.__duplicateButton.setEnabled( bool( indices ) )
 
-		if index is None :
+		if not indices :
 			# No selection. This happens when the user renames
 			# an image, because the selection is name based.
 			# Calling _updateFromPlug() causes us to reselect
@@ -339,7 +342,8 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			# Deliberately not using an UndoScope as the user thinks
 			# of this as making a selection, not changing a plug value.
 			if self._editable() :
-				self.getPlug().setValue( index )
+				if self.getPlug().getValue() not in indices :
+					self.getPlug().setValue( indices[0] )
 
 	def __addClicked( self, *unused ) :
 
@@ -371,28 +375,33 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __removeClicked( self, *unused ) :
 
-		index = self.__indexFromSelection()
+		indices = self.__indicesFromSelection()
 
 		# If the user repeatedly clicks the delete button, we might end up in a
 		# state, where selection hasn't been restored yet. In that case we
 		# can't delete anything and will ignore the request.
-		if index is None :
+		if not indices :
 			return
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.__images().removeChild( self.__images()[index] )
-			self.getPlug().setValue( max( 0, index - 1 ) )
+			for i, index in enumerate( reversed( sorted( indices ) ) ) :
+				self.__images().removeChild( self.__images()[index] )
+			self.getPlug().setValue( max( 0, index-1 ) )
 
 	def __extractClicked( self, *unused ) :
 
-		index = self.__indexFromSelection()
-		image = self.__images()[index]
+		node = self.getPlug().node()
+		catalogue = self.__catalogue()
+		outPlug = next( p for p in node.children( GafferImage.ImagePlug ) if catalogue.isAncestorOf( p.source() ) )
 
-		extractNode = GafferImage.CatalogueSelect()
-		extractNode["in"].setInput( self.__catalogue()["out"] )
-		extractNode["imageName"].setValue( image.getName() )
+		for index in self.__indicesFromSelection() :
+			image = self.__images()[index]
 
-		self.__catalogue().parent().addChild( extractNode )
+			extractNode = GafferImage.CatalogueSelect()
+			extractNode["in"].setInput( outPlug )
+			extractNode["imageName"].setValue( image.getName() )
+
+			node.parent().addChild( extractNode )
 
 	def __exportClicked( self, *unused ) :
 
@@ -413,20 +422,22 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		if not path :
 			return
 
-		index = self.__indexFromSelection()
+		index = self.__indicesFromSelection()[0]  # button is disabled unless exactly one image is selected
 		with GafferUI.ErrorDialogue.ErrorHandler( parentWindow = self.ancestor( GafferUI.Window ) ) :
 			self.__images()[index].save( str( path ) )
 
 	def __duplicateClicked( self, *unused ) :
 
-		index = self.__indexFromSelection()
-		image = self.__images()[index]
+		indices = self.__indicesFromSelection()
 
-		imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.__images().addChild( imageCopy )
+			for index in indices :
+				image = self.__images()[index]
+				imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+				self.__images().addChild( imageCopy )
+				imageCopy.copyFrom( image )
+
 			self.getPlug().setValue( len( self.__images() ) - 1 )
-			imageCopy.copyFrom( image )
 
 	def __dropImage( self, eventData ) :
 
