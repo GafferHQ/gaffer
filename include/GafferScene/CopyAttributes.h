@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_COPYATTRIBUTES_H
+#define GAFFERSCENE_COPYATTRIBUTES_H
 
-#include "AttributesBinding.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
-#include "GafferScene/AttributeProcessor.h"
-#include "GafferScene/AttributeVisualiser.h"
-#include "GafferScene/Attributes.h"
-#include "GafferScene/CopyAttributes.h"
-#include "GafferScene/CustomAttributes.h"
-#include "GafferScene/DeleteAttributes.h"
-#include "GafferScene/EvaluateLightLinks.h"
-#include "GafferScene/OpenGLAttributes.h"
-#include "GafferScene/ShaderAssignment.h"
-#include "GafferScene/StandardAttributes.h"
+#include "Gaffer/StringPlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace GafferScene;
-
-void GafferSceneModule::bindAttributes()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<ShaderAssignment>();
-	GafferBindings::DependencyNodeClass<Attributes>();
-	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
-	GafferBindings::DependencyNodeClass<StandardAttributes>();
-	GafferBindings::DependencyNodeClass<CustomAttributes>();
-	GafferBindings::DependencyNodeClass<AttributeProcessor>();
-	GafferBindings::DependencyNodeClass<DeleteAttributes>();
-	GafferBindings::DependencyNodeClass<EvaluateLightLinks>();
-	GafferBindings::DependencyNodeClass<CopyAttributes>();
+class GAFFERSCENE_API CopyAttributes : public FilteredSceneProcessor
+{
 
-	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
+	public :
 
-	enum_<AttributeVisualiser::Mode>( "Mode" )
-		.value( "Color", AttributeVisualiser::Color )
-		.value( "FalseColor", AttributeVisualiser::FalseColor )
-		.value( "Random", AttributeVisualiser::Random )
-		.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
-	;
+		CopyAttributes( const std::string &name=defaultName<CopyAttributes>() );
+		~CopyAttributes() override;
 
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CopyAttributes, CopyAttributesTypeId, FilteredSceneProcessor );
+
+		Gaffer::StringPlug *attributesPlug();
+		const Gaffer::StringPlug *attributesPlug() const;
+
+		Gaffer::StringPlug *copyFromPlug();
+		const Gaffer::StringPlug *copyFromPlug() const;
+
+		Gaffer::BoolPlug *deleteExistingPlug();
+		const Gaffer::BoolPlug *deleteExistingPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CopyAttributes )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_COPYATTRIBUTES_H
