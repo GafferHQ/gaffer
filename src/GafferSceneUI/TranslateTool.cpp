@@ -68,16 +68,17 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 	:	TransformTool( view, name )
 {
 
-	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z };
-	static const char *handleNames[] = { "x", "y", "z" };
+	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z, Style::XY, Style::XZ, Style::YZ, Style::XYZ };
+	static const char *handleNames[] = { "x", "y", "z", "xy", "xz", "yz", "xyz" };
 
-	for( int i = 0; i < 3; ++i )
+	for( int i = 0; i < 7; ++i )
 	{
 		HandlePtr handle = new TranslateHandle( axes[i] );
 		handle->setRasterScale( 75 );
+		handle->setVisibleOnHover( axes[i] == Style::XY || axes[i] == Style::XZ || axes[i] == Style::YZ );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &TranslateTool::dragBegin, this, i ) );
+		handle->dragBeginSignal().connect( 0, boost::bind( &TranslateTool::dragBegin, this ) );
 		handle->dragMoveSignal().connect( boost::bind( &TranslateTool::dragMove, this, ::_1, ::_2 ) );
 		handle->dragEndSignal().connect( boost::bind( &TranslateTool::dragEnd, this ) );
 	}
@@ -125,25 +126,10 @@ void TranslateTool::updateHandles()
 	// of the target translation. For each handle, check to see
 	// if each of the plugs it effects are settable, and if not,
 	// disable the handle.
-	for( int i = 0; i < 3; ++i )
+	Translation translation( this );
+	for( TranslateHandleIterator it( handles() ); !it.done(); ++it )
 	{
-		V3f handleDirection( 0 );
-		handleDirection[i] = 1.0f;
-		Translation translation = createTranslation( handleDirection );
-		bool editable = true;
-		for( int j = 0; j < 3; ++j )
-		{
-			if( translation.direction[j] != 0.0f )
-			{
-				const ValuePlug *plug = selection().transformPlug->translatePlug()->getChild( j );
-				if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
-				{
-					editable = false;
-					break;
-				}
-			}
-		}
-		handles()->getChild<Gadget>( i )->setEnabled( editable );
+		(*it)->setEnabled( translation.canApply( (*it)->axisMask() ) );
 	}
 }
 
@@ -154,47 +140,12 @@ void TranslateTool::translate( const Imath::V3f &offset )
 		return;
 	}
 
-	Translation t = createTranslation( offset );
-	applyTranslation( t, 1.0f );
+	Translation( this ).apply( offset );
 }
 
-TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &directionInHandleSpace )
+IECore::RunTimeTypedPtr TranslateTool::dragBegin()
 {
-	Context::Scope scopedContext( view()->getContext() );
-	Translation result;
-
-	const Selection &selection = this->selection();
-	result.origin = selection.transformPlug->translatePlug()->getValue();
-
-	const M44f handlesTransform = orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) );
-	V3f worldSpaceDirection;
-	handlesTransform.multDirMatrix( directionInHandleSpace, worldSpaceDirection );
-
-	selection.sceneToTransformSpace().multDirMatrix( worldSpaceDirection, result.direction );
-
-	return result;
-}
-
-void TranslateTool::applyTranslation( const Translation &translation, float offset )
-{
-	const Selection &selection = this->selection();
-	for( int i = 0; i < 3; ++i )
-	{
-		if( translation.direction[i] != 0.0f )
-		{
-			selection.transformPlug->translatePlug()->getChild( i )->setValue(
-				translation.origin[i] + translation.direction[i] * offset
-			);
-		}
-	}
-}
-
-IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
-{
-	V3f handleVector( 0 );
-	handleVector[axis] = 1;
-	m_drag = createTranslation( handleVector );
-
+	m_drag = Translation( this );
 	TransformTool::dragBegin();
 	return nullptr; // let the handle start the drag with the event system
 }
@@ -202,8 +153,7 @@ IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
 bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const float offset = static_cast<const TranslateHandle *>( gadget )->translation( event );
-	applyTranslation( m_drag, offset );
+	m_drag.apply( static_cast<const TranslateHandle *>( gadget )->translation( event ) );
 	return true;
 }
 
@@ -211,4 +161,55 @@ bool TranslateTool::dragEnd()
 {
 	TransformTool::dragEnd();
 	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// TranslateTool::Translation
+//////////////////////////////////////////////////////////////////////////
+
+TranslateTool::Translation::Translation( const TranslateTool *tool )
+{
+	Context::Scope scopedContext( tool->view()->getContext() );
+
+	const Selection &selection = tool->selection();
+	m_plug = selection.transformPlug->translatePlug();
+	m_origin = m_plug->getValue();
+
+	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
+	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
+}
+
+bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
+{
+	V3f offsetInTransformSpace;
+	m_gadgetToTransform.multDirMatrix( offset, offsetInTransformSpace );
+
+	for( int i = 0; i < 3; ++i )
+	{
+		if( offsetInTransformSpace[i] != 0.0f )
+		{
+			const ValuePlug *plug = m_plug->getChild( i );
+			if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+void TranslateTool::Translation::apply( const Imath::V3f &offset ) const
+{
+	V3f offsetInTransformSpace;
+	m_gadgetToTransform.multDirMatrix( offset, offsetInTransformSpace );
+	for( int i = 0; i < 3; ++i )
+	{
+		if( offsetInTransformSpace[i] != 0.0f )
+		{
+			m_plug->getChild( i )->setValue(
+				m_origin[i] + offsetInTransformSpace[i]
+			);
+		}
+	}
 }
