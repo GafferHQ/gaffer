@@ -223,6 +223,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListingDropConnection = self.__pathListing.dropSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingDrop )
 			)
+			self.__pathListingKeyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
@@ -480,5 +481,13 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		GafferUI.Pointer.setCurrent( None )
 
 		return True
+
+	def __keyPress( self, imageListing, keyEvent ) :
+
+		if keyEvent.key in ['Delete', 'Backspace'] :
+			self.__removeClicked()
+			return True
+
+		return False
 
 GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )
