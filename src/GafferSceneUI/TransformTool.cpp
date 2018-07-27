@@ -540,7 +540,7 @@ void TransformTool::preRender()
 	}
 }
 
-Imath::M44f TransformTool::orientedTransform( Orientation orientation )
+Imath::M44f TransformTool::orientedTransform( Orientation orientation ) const
 {
 	const Selection &selection = this->selection();
 	Context::Scope scopedContext( selection.context.get() );

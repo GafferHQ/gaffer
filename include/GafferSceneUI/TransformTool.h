@@ -162,7 +162,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		virtual void updateHandles() = 0;
 
 		/// Utility that may be used from updateHandles().
-		Imath::M44f orientedTransform( Orientation orientation );
+		Imath::M44f orientedTransform( Orientation orientation ) const;
 
 		/// Must be called by derived classes when they begin
 		/// a drag.
