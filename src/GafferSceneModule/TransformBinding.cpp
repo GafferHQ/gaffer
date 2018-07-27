@@ -64,6 +64,14 @@ void GafferSceneModule::bindTransform()
 				)
 			)
 		)
+		.def( init<const std::string &, size_t, size_t>(
+				(
+					arg( "name" ),
+					arg( "minInputs" ),
+					arg( "maxInputs" ) = std::numeric_limits<size_t>::max()
+				)
+			)
+		)
 	;
 
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
