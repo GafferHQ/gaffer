@@ -145,6 +145,9 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 			X,
 			Y,
 			Z,
+			XY,
+			XZ,
+			YZ,
 			XYZ
 		};
 		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const = 0;
