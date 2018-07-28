@@ -91,5 +91,13 @@ class FormatDataTest( GafferImageTest.ImageTestCase ) :
 		d["f"] = f
 		self.assertEqual( d["f"], GafferImage.FormatData( f ) )
 
+	def testStoreInContext( self ) :
+
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 0.5 )
+		d = GafferImage.FormatData( f )
+		c = Gaffer.Context()
+		c["f"] = d
+		self.assertEqual( c["f"], d )
+
 if __name__ == "__main__":
 	unittest.main()
