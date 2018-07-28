@@ -1276,6 +1276,9 @@ void ViewportGadget::trackDragIdle()
 {
 	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 	std::chrono::duration<float> duration( now - m_dragTrackingTime );
+	// Avoid excessive movements if some other process causes a large delay
+	// between idle events.
+	duration = std::min( duration, std::chrono::duration<float>( 0.1 ) );
 
 	m_cameraController->motionStart( CameraController::Track, V2f( 0 ) );
 	m_cameraController->motionEnd( m_dragTrackingVelocity * duration.count() * 20.0f );
