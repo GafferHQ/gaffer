@@ -79,7 +79,18 @@ boost::python::object dataToPythonInternal( IECore::Data *data, bool copy, boost
 		return nullValue;
 	}
 
-	return dispatch( data, DataToPython( copy ) );
+	try
+	{
+		return dispatch( data, DataToPython( copy ) );
+	}
+	catch( ... )
+	{
+		// `dispatch()` doesn't know about our custom data types,
+		// so we deal with those here.
+		/// \todo Should `dispatch()` just call `Functor( Data * )`
+		/// for unknown types?
+		return object( DataPtr( data ) );
+	}
 }
 
 } // namespace
