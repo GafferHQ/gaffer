@@ -814,20 +814,17 @@ void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::
 
 	glColor( colorForState( AnimationCurveColor, state, userColor ) );
 
-	// \todo: The rendering interface here should probably eventually work on V2f's instead?
-	//        The function signature anticipates that eventual switch,
-	//        but that's easy enough to revert if not desired. For now, do a conversion...
-	Imath::V3f _start = Imath::V3f( start.x, start.y, 0 );
-	Imath::V3f _end = Imath::V3f( end.x, end.y, 0 );
-	Imath::V3f _startTangent = Imath::V3f( startTangent.x, startTangent.y, 0 );
-	Imath::V3f _endTangent = Imath::V3f( endTangent.x, endTangent.y, 0 );
+	const Imath::V3f start3 = Imath::V3f( start.x, start.y, 0 );
+	const Imath::V3f end3 = Imath::V3f( end.x, end.y, 0 );
+	const Imath::V3f startTangent3 = Imath::V3f( startTangent.x, startTangent.y, 0 );
+	const Imath::V3f endTangent3 = Imath::V3f( endTangent.x, endTangent.y, 0 );
 
-	V3f dir = ( _end - _start ).normalized();
+	const V3f dir = ( end3 - start3 ).normalized();
 
-	glUniform3fv( g_v0Parameter, 1, _start.getValue() );
-	glUniform3fv( g_v1Parameter, 1, _end.getValue() );
-	glUniform3fv( g_t0Parameter, 1, ( _startTangent != V3f( 0 ) ? _startTangent :  dir ).getValue() );
-	glUniform3fv( g_t1Parameter, 1, ( _endTangent != V3f( 0 ) ? _endTangent : -dir ).getValue() );
+	glUniform3fv( g_v0Parameter, 1, start3.getValue() );
+	glUniform3fv( g_v1Parameter, 1, end3.getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( startTangent3 != V3f( 0 ) ? startTangent3 :  dir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( endTangent3 != V3f( 0 ) ? endTangent3 : -dir ).getValue() );
 
 	glUniform1f( g_endPointSizeParameter, g_endPointSize );
 
