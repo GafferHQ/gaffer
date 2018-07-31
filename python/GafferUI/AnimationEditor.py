@@ -41,18 +41,6 @@ import GafferUI
 
 from Qt import QtWidgets
 
-def plugIsAnimated( plug ) :
-
-	input = plug.getInput()
-	if not input :
-		return False
-
-	if input.ancestor( Gaffer.Animation ) :
-		return True
-
-	return False
-
-
 # In order to have Widgets that depend on this filter update properly, we
 # conceptually treat all selected nodes as part of the filter. That makes sense
 # as the filtering result depends on the nodes' inputs. We can then emit the
@@ -80,12 +68,12 @@ class AnimationPathFilter( Gaffer.PathFilter ) :
 
 	def __hasAnimatedChild( self, graphComponent ) :
 
-		for child in graphComponent.children() :
+		for child in graphComponent.children( Gaffer.Plug ) :
 
-			if not isinstance( child, Gaffer.Plug ) :
-				continue
+			if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
+				return True
 
-			if plugIsAnimated( child ) or self.__hasAnimatedChild( child ) :
+			if self.__hasAnimatedChild( child ) :
 				return True
 
 		return False
@@ -114,7 +102,7 @@ class AnimationPathFilter( Gaffer.PathFilter ) :
 				if not isinstance( descendant, ( Gaffer.Node, Gaffer.Plug ) ) :
 					continue
 
-				if ( isinstance( descendant, Gaffer.Plug ) and plugIsAnimated( descendant ) ) or self.__hasAnimatedChild( descendant ) :
+				if ( isinstance( descendant, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( descendant ) ) or self.__hasAnimatedChild( descendant ) :
 
 					# If we show this component, we should be aware when its name is changes.
 					self.__nameChangedConnections.append( descendant.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
@@ -122,7 +110,6 @@ class AnimationPathFilter( Gaffer.PathFilter ) :
 					result.append( path )
 
 		return result
-
 
 class AnimationEditor( GafferUI.NodeSetEditor ) :
 
@@ -216,7 +203,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		for path in paths:
 			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
 			for child in graphComponent.children() :
-				if isinstance( child, Gaffer.Plug ) and plugIsAnimated( child ) :
+				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
 					plugList.append( child )
 
 		self.__visiblePlugs = set( plugList )
@@ -252,11 +239,11 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		for path in paths :
 			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
 
-			if isinstance( graphComponent, Gaffer.Plug ) and plugIsAnimated( graphComponent ) :
+			if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
 				plugList.append( graphComponent )
 
 			for child in graphComponent.children() :
-				if isinstance( child, Gaffer.Plug ) and plugIsAnimated( child ) :
+				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
 					plugList.append( child )
 
 		self.__editablePlugs = set( plugList )
@@ -293,7 +280,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			return
 
 		previousSelection = self.__curveList.getSelectedPaths()
-		newPath =  Gaffer.GraphComponentPath( self.__scriptNode, connected[0].relativeName( self.__scriptNode ).replace( '.', '/' ) ) 
+		newPath =  Gaffer.GraphComponentPath( self.__scriptNode, connected[0].relativeName( self.__scriptNode ).replace( '.', '/' ) )
 		previousSelection.append( newPath )
 
 	 	self.__curveList.setSelectedPaths( previousSelection )
@@ -301,6 +288,5 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 	def __repr__( self ) :
 
 		return "GafferUI.AnimationEditor( scriptNode )"
-
 
 GafferUI.Editor.registerType( "AnimationEditor", AnimationEditor )
