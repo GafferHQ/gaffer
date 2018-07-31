@@ -52,8 +52,10 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 					Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:setsLabel" )
 				)
 
+			scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
+
 			path = GafferScene.ScenePath(
-				plug.node()["in"],
+				plug.node().descendant( scenePlugName ),
 				plug.node().scriptNode().context(),
 				"/",
 				filter = filter
