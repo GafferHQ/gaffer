@@ -112,6 +112,7 @@ from NoduleLayoutTest import NoduleLayoutTest
 from ErrorDialogueTest import ErrorDialogueTest
 from WidgetAlgoTest import WidgetAlgoTest
 from BackupsTest import BackupsTest
+from LayoutsTest import LayoutsTest
 
 if __name__ == "__main__":
 	unittest.main()

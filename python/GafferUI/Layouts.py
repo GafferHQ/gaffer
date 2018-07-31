@@ -35,7 +35,10 @@
 #
 ##########################################################################
 
+import collections
+import os
 import re
+import weakref
 
 import Gaffer
 import GafferUI
@@ -49,11 +52,15 @@ import GafferUI
 # Layouts.acquire() method.
 class Layouts( object ) :
 
-	## Typically acquire() should be used in preference
-	# to this constructor.
-	def __init__( self ) :
+	__Layout = collections.namedtuple( "__Layout", [ "repr", "persistent"] )
 
-		self.__namedLayouts = {}
+	## Use acquire() in preference to this constructor.
+	def __init__( self, applicationRoot ) :
+
+		self.__applicationRoot = weakref.ref( applicationRoot )
+		self.__namedLayouts = collections.OrderedDict()
+		self.__default = None
+		self.__defaultPersistent = False
 		self.__registeredEditors = []
 
 	## Acquires the set of layouts for the specified application.
@@ -69,30 +76,44 @@ class Layouts( object ) :
 		try :
 			return applicationRoot.__layouts
 		except AttributeError :
-			pass
-
-		applicationRoot.__layouts = Layouts()
+			applicationRoot.__layouts = Layouts( applicationRoot )
 
 		return applicationRoot.__layouts
 
 	## Serialises the passed Editor and stores it using the given name. This
-	# layout can then be recreated using the create() method below.
-	def add( self, name, editor ) :
+	# layout can then be recreated using the create() method below. If
+	# `persistent` is `True`, then the layout will be saved in the application
+	# preferences and restored when the application next runs.
+	def add( self, name, editor, persistent = False ) :
 
 		if not isinstance( editor, basestring ) :
 			editor = repr( editor )
 
-		self.__namedLayouts[name] = editor
+		if name.startswith( "user:" ) :
+			# Backwards compatibility with old persistent layouts, which
+			# were differentiated by being prefixed with "user:".
+			persistent = True
+			name = name[5:]
+
+		self.__namedLayouts[name] = self.__Layout( editor, persistent )
+
+		if persistent :
+			self.__save()
 
 	## Removes a layout previously stored with add().
 	def remove( self, name ) :
 
-		del self.__namedLayouts[name]
+		l = self.__namedLayouts.pop( name )
+		if l.persistent :
+			self.__save()
 
 	## Returns a list of the names of currently defined layouts
-	def names( self ) :
+	def names( self, persistent = None ) :
 
-		return self.__namedLayouts.keys()
+		return [
+			item[0] for item in self.__namedLayouts.items()
+			if persistent is None or item[1].persistent == persistent
+		]
 
 	## Recreates a previously stored layout for the specified script,
 	# returning it in the form of a CompoundEditor.
@@ -104,39 +125,37 @@ class Layouts( object ) :
 		contextDict = { "scriptNode" : scriptNode }
 		imported = set()
 		classNameRegex = re.compile( "[a-zA-Z]*Gaffer[^(,]*\(" )
-		for className in classNameRegex.findall( layout ) :
+		for className in classNameRegex.findall( layout.repr ) :
 			moduleName = className.partition( "." )[0]
 			if moduleName not in imported :
 				exec( "import %s" % moduleName, contextDict, contextDict )
 				imported.add( moduleName )
 
-		return eval( layout, contextDict, contextDict )
+		return eval( layout.repr, contextDict, contextDict )
 
-	## Saves all layouts whose name matches the optional regular expression into the file object
-	# specified. If the file is later evaluated during application startup, it will reregister
-	# the layouts with the application.
-	## \todo Remove this method and follow the model in Bookmarks.py, where user bookmarks
-	# are saved automatically. This wasn't possible when Layouts.py was first introduced,
-	# because at that point in time, the Layouts class didn't have access to an application.
-	def save( self, fileObject, nameRegex = None ) :
+	def setDefault( self, name, persistent = False ) :
 
-		# decide what to write
-		namesToWrite = []
-		for name in self.names() :
-			if nameRegex.match( name ) or nameRegex is None :
-				namesToWrite.append( name )
+		if name == self.__default and persistent == self.__defaultPersistent :
+			return
 
-		# write the necessary import statement and acquire the layouts
-		fileObject.write( "import GafferUI\n\n" )
-		fileObject.write( "layouts = GafferUI.Layouts.acquire( application )\n\n" )
+		if name not in self.__namedLayouts :
+			raise KeyError( name )
 
-		# finally write out the layouts
-		for name in namesToWrite :
-			fileObject.write( "layouts.add( {0}, {1} )\n\n".format( repr( name ), repr( self.__namedLayouts[name] ) ) )
+		self.__default = name
+		self.__defaultPersistent = persistent
+		if persistent :
+			self.__save()
 
-		# tidy up by deleting the temporary variable, keeping the namespace clean for
-		# subsequently executed config files.
-		fileObject.write( "del layouts\n" )
+	def getDefault( self ) :
+
+		return self.__default
+
+	def createDefault( self, scriptNode ) :
+
+		if self.__default in self.__namedLayouts :
+			return self.create( self.__default, scriptNode )
+		else :
+			return GafferUI.CompoundEditor( scriptNode )
 
 	## The Editor factory provides access to every single registered subclass of
 	# editor, but specific applications may wish to only provide a subset of those
@@ -157,3 +176,19 @@ class Layouts( object ) :
 	def registeredEditors( self ) :
 
 		return self.__registeredEditors
+
+	def __save( self ) :
+
+		f = open( os.path.join( self.__applicationRoot().preferencesLocation(), "layouts.py" ), "w" )
+		f.write( "# This file was automatically generated by Gaffer.\n" )
+		f.write( "# Do not edit this file - it will be overwritten.\n\n" )
+
+		f.write( "import GafferUI\n\n" )
+		f.write( "layouts = GafferUI.Layouts.acquire( application )\n" )
+
+		for name, layout in self.__namedLayouts.items() :
+			if layout.persistent :
+				f.write( "layouts.add( {0}, {1}, persistent = True )\n".format( repr( name ), repr( layout.repr ) ) )
+
+		if self.__defaultPersistent and self.__default in self.__namedLayouts :
+			f.write( "layouts.setDefault( {0}, persistent = True )\n".format( repr( self.__default ) ) )
