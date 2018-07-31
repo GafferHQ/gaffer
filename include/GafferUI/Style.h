@@ -104,8 +104,6 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		virtual void renderLine( const IECore::LineSegment3f &line, float width=0.5, const Imath::Color3f *userColor = nullptr ) const = 0;
 		virtual void renderSolidRectangle( const Imath::Box2f &box ) const = 0;
 		virtual void renderRectangle( const Imath::Box2f &box ) const = 0;
-		virtual void renderCurveSegment( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const = 0;
-		virtual void renderKeyFrame( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const = 0;
 		//@}
 
 		/// @name Text drawing
@@ -152,6 +150,13 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const = 0;
 		virtual void renderRotateHandle( Axes axes, State state = NormalState ) const = 0;
 		virtual void renderScaleHandle( Axes axes, State state = NormalState ) const = 0;
+		//@}
+
+		/// @name Animation UI elements
+		//////////////////////////////////////////////////////////////////////////
+		//@{
+		virtual void renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const = 0;
+		virtual void renderAnimationKey( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const = 0;
 		//@}
 
 		typedef boost::signal<void (Style *)> UnarySignal;
