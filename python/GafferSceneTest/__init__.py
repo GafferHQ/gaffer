@@ -131,6 +131,7 @@ from CopyAttributesTest import CopyAttributesTest
 from RenderControllerTest import RenderControllerTest
 from CollectPrimitiveVariablesTest import CollectPrimitiveVariablesTest
 from PrimitiveVariableExistsTest import PrimitiveVariableExistsTest
+from CollectTransformsTest import CollectTransformsTest
 
 from IECoreGLPreviewTest import *
 

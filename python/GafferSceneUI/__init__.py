@@ -148,6 +148,7 @@ import DeleteObjectUI
 import CopyAttributesUI
 import CollectPrimitiveVariablesUI
 import PrimitiveVariableExistsUI
+import CollectTransformsUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
