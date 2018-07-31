@@ -48,7 +48,7 @@ from Qt import QtWidgets
 # filtered node.
 # We use the same mechanism to signal to Widgets that the name of a component
 # of a path has changed. That probably makes less sense and should be looked into. \todo
-class AnimationPathFilter( Gaffer.PathFilter ) :
+class _AnimationPathFilter( Gaffer.PathFilter ) :
 
 	def __init__( self, scriptNode, userData = {}, selection = None ) :
 
@@ -121,12 +121,13 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		GafferUI.NodeSetEditor.__init__( self, self.__main, self.__scriptNode, **kw )
 
 		# Set up widget for curve names on the left
-		self.__animationFilter = AnimationPathFilter( scriptNode )
+		self.__animationFilter = _AnimationPathFilter( scriptNode )
 		self.__curveList = GafferUI.PathListingWidget(
 			Gaffer.GraphComponentPath( scriptNode, '/', filter = self.__animationFilter ),
 			columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			allowMultipleSelection=True )
+			allowMultipleSelection=True
+		)
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )
 		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored )
