@@ -218,16 +218,13 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			if curvePlug :
 				visible.add( curvePlug )
 
-		# We don't want the following to trigger code in __editablePlugAdded
-		self.__editablePlugSignalsBlocked = True
+		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
 
-		editable.clear()
-		for plug in ( self.__editablePlugs or set() ) & self.__visiblePlugs :
-			curvePlug = self.connectedCurvePlug( plug )
-			if curvePlug :
-				editable.add( curvePlug )
-
-		self.__editablePlugSignalsBlocked = False
+			editable.clear()
+			for plug in ( self.__editablePlugs or set() ) & self.__visiblePlugs :
+				curvePlug = self.connectedCurvePlug( plug )
+				if curvePlug :
+					editable.add( curvePlug )
 
 	def __selectionChanged( self, pathListing ) :
 
@@ -251,25 +248,18 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		editable = self.__animationGadget.editablePlugs()
 
-		# We don't want the following to trigger code in __editablePlugAdded
-		# \todo: context manager for this one.
-		self.__editablePlugSignalsBlocked = True
+		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
 
-		editable.clear()
-		for plug in plugList :
-			if plug in editable :
-				continue
+			editable.clear()
+			for plug in plugList :
+				if plug in editable :
+					continue
 
-			curvePlug = self.connectedCurvePlug( plug )
-			if curvePlug :
-				editable.add( curvePlug )
-
-		self.__editablePlugSignalsBlocked = False
+				curvePlug = self.connectedCurvePlug( plug )
+				if curvePlug :
+					editable.add( curvePlug )
 
 	def __editablePlugAdded( self, standardSet, curvePlug ) :
-
-		if self.__editablePlugSignalsBlocked :
-			return
 
 		curves = curvePlug.children()
 		if not curves :
