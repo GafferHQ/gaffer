@@ -44,6 +44,8 @@
 
 #include "IECoreScene/Camera.h"
 
+#include <chrono>
+
 namespace GafferUI
 {
 
@@ -246,7 +248,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		DragDropEvent m_dragTrackingEvent;
 		float m_dragTrackingThreshold;
 		Imath::V2f m_dragTrackingVelocity;
-		double m_dragTrackingTime;
+		std::chrono::steady_clock::time_point m_dragTrackingTime;
 
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;

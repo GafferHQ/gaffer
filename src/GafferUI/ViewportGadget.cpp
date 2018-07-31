@@ -57,8 +57,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include <chrono>
 #include <cmath>
-#include <sys/time.h>
 
 using namespace Imath;
 using namespace IECore;
@@ -1198,13 +1198,6 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	return false;
 }
 
-static double currentTime()
-{
-	timeval t;
-	gettimeofday( &t, nullptr ) ;
-	return (double)t.tv_sec + (double)t.tv_usec / 1000000.0;
-}
-
 void ViewportGadget::trackDrag( const DragDropEvent &event )
 {
 	// early out if tracking is off for any reason, or
@@ -1269,7 +1262,7 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 		m_dragTrackingEvent = event;
 		if( !m_dragTrackingIdleConnection.connected() )
 		{
-			m_dragTrackingTime = currentTime();
+			m_dragTrackingTime = std::chrono::steady_clock::now();
 			m_dragTrackingIdleConnection = idleSignal().connect( boost::bind( &ViewportGadget::trackDragIdle, this ) );
 		}
 	}
@@ -1281,11 +1274,14 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 
 void ViewportGadget::trackDragIdle()
 {
-	double now = currentTime();
-	float duration = (float)(now - m_dragTrackingTime);
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	std::chrono::duration<float> duration( now - m_dragTrackingTime );
+	// Avoid excessive movements if some other process causes a large delay
+	// between idle events.
+	duration = std::min( duration, std::chrono::duration<float>( 0.1 ) );
 
 	m_cameraController->motionStart( CameraController::Track, V2f( 0 ) );
-	m_cameraController->motionEnd( m_dragTrackingVelocity * duration * 20.0f );
+	m_cameraController->motionEnd( m_dragTrackingVelocity * duration.count() * 20.0f );
 
 	m_dragTrackingTime = now;
 
