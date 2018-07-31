@@ -144,6 +144,8 @@ void GafferUIModule::bindStyle()
 			.value( "ForegroundColor", StandardStyle::ForegroundColor )
 			.value( "HighlightColor", StandardStyle::HighlightColor )
 			.value( "ConnectionColor", StandardStyle::ConnectionColor )
+			.value( "AuxiliaryConnectionColor", StandardStyle::AuxiliaryConnectionColor )
+			.value( "AnimationCurveColor", StandardStyle::AnimationCurveColor )
 			.value( "LastColor", StandardStyle::LastColor )
 		;
 	}
