@@ -467,7 +467,7 @@ StandardStyle::StandardStyle()
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
 	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
-	setColor( CurveColor, Color3f( 1.0, 1.0, 1.0 ) );
+	setColor( AnimationCurveColor, Color3f( 1.0, 1.0, 1.0 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -804,7 +804,7 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glEnd();
 }
 
-void StandardStyle::renderCurveSegment( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
+void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
@@ -812,7 +812,7 @@ void StandardStyle::renderCurveSegment( const Imath::V2f &start, const Imath::V2
 	glUniform1i( g_textureTypeParameter, 0 );
 	glUniform1f( g_lineWidthParameter, 3.0 );
 
-	glColor( colorForState( CurveColor, state, userColor ) );
+	glColor( colorForState( AnimationCurveColor, state, userColor ) );
 
 	// \todo: The rendering interface here should probably eventually work on V2f's instead?
 	//        The function signature anticipates that eventual switch,
@@ -834,9 +834,9 @@ void StandardStyle::renderCurveSegment( const Imath::V2f &start, const Imath::V2
 	glCallList( connectionDisplayList() );
 }
 
-void StandardStyle::renderKeyFrame( const Imath::V2f &position, State state, float size, const Imath::Color3f *userColor ) const
+void StandardStyle::renderAnimationKey( const Imath::V2f &position, State state, float size, const Imath::Color3f *userColor ) const
 {
-	glColor( colorForState( CurveColor, state, userColor ) );
+	glColor( colorForState( AnimationCurveColor, state, userColor ) );
 	renderSolidRectangle( Box2f( position - V2f( size ), position + V2f( size ) ) );
 }
 
