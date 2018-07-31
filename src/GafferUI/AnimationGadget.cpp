@@ -864,6 +864,11 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 
 bool AnimationGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
+	if( event.sourceGadget != this )
+	{
+		return false;
+	}
+
 	V3f i;
 	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
 	{
