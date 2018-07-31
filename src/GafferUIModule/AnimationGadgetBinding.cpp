@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017 Matti Gruener. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,56 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferUI
+#include "AnimationGadgetBinding.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferUI/AnimationGadget.h"
+
+#include "GafferBindings/SignalBinding.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
+
+using namespace boost::python;
+using namespace IECorePython;
+using namespace GafferUI;
+using namespace GafferUIBindings;
+using namespace GafferBindings;
+
+namespace
 {
 
-enum TypeId
+Gaffer::StandardSetPtr visiblePlugs( AnimationGadget &a )
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	AuxiliaryConnectionsGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	AuxiliaryNodeGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	ConnectionCreatorTypeId = 110272,
-	ObjectViewTypeId = 110273, // Obsolete - available for reuse
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
-	PlugAdderTypeId = 110283,
-	NoduleLayoutTypeId = 110284,
-	TranslateHandleTypeId = 110285,
-	ScaleHandleTypeId = 110286,
-	RotateHandleTypeId = 110287,
-	AnimationGadgetTypeId = 110288,
+	return a.visiblePlugs();
+}
 
-	LastTypeId = 110450
-};
+Gaffer::StandardSetPtr editablePlugs( AnimationGadget &a )
+{
+	return a.editablePlugs();
+}
 
-} // namespace GafferUI
+} // namespace
 
-#endif // GAFFERUI_TYPEIDS_H
+void GafferUIModule::bindAnimationGadget()
+{
+
+	scope s = GadgetClass<AnimationGadget>()
+		.def( init<>() )
+		.def( "visiblePlugs", &visiblePlugs )
+		.def( "editablePlugs", &editablePlugs )
+		.def( "setContext", &AnimationGadget::setContext )
+		;
+
+}
+

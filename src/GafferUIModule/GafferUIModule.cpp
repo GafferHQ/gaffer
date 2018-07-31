@@ -59,6 +59,7 @@
 #include "ViewBinding.h"
 #include "ViewportGadgetBinding.h"
 #include "WidgetSignalBinding.h"
+#include "AnimationGadgetBinding.h"
 
 using namespace GafferUIModule;
 
@@ -87,5 +88,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindPathListingWidget();
 	bindGLWidget();
 	bindPlugAdder();
+	bindAnimationGadget();
 
 }

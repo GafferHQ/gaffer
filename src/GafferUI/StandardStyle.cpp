@@ -467,6 +467,7 @@ StandardStyle::StandardStyle()
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
 	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
+	setColor( AnimationCurveColor, Color3f( 1.0, 1.0, 1.0 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -514,7 +515,7 @@ Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &tex
 	);
 }
 
-void StandardStyle::renderText( TextType textType, const std::string &text, State state ) const
+void StandardStyle::renderText( TextType textType, const std::string &text, State state, const Imath::Color3f *userColor ) const
 {
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
@@ -533,7 +534,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	/// automatically linearised before arriving in the shader.
 	glUniform1i( g_textureTypeParameter, 2 );
 
-	glColor( m_colors[ForegroundColor] );
+	glColor( colorForState( ForegroundColor, state, userColor ) );
 
 	glPushMatrix();
 
@@ -803,6 +804,39 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glEnd();
 }
 
+void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
+{
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1f( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 3.0 );
+
+	glColor( colorForState( AnimationCurveColor, state, userColor ) );
+
+	const Imath::V3f start3 = Imath::V3f( start.x, start.y, 0 );
+	const Imath::V3f end3 = Imath::V3f( end.x, end.y, 0 );
+	const Imath::V3f startTangent3 = Imath::V3f( startTangent.x, startTangent.y, 0 );
+	const Imath::V3f endTangent3 = Imath::V3f( endTangent.x, endTangent.y, 0 );
+
+	const V3f dir = ( end3 - start3 ).normalized();
+
+	glUniform3fv( g_v0Parameter, 1, start3.getValue() );
+	glUniform3fv( g_v1Parameter, 1, end3.getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( startTangent3 != V3f( 0 ) ? startTangent3 :  dir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( endTangent3 != V3f( 0 ) ? endTangent3 : -dir ).getValue() );
+
+	glUniform1f( g_endPointSizeParameter, g_endPointSize );
+
+	glCallList( connectionDisplayList() );
+}
+
+void StandardStyle::renderAnimationKey( const Imath::V2f &position, State state, float size, const Imath::Color3f *userColor ) const
+{
+	glColor( colorForState( AnimationCurveColor, state, userColor ) );
+	renderSolidRectangle( Box2f( position - V2f( size ), position + V2f( size ) ) );
+}
+
 void StandardStyle::renderBackdrop( const Imath::Box2f &box, State state, const Imath::Color3f *userColor ) const
 {
 	glColor( userColor ? *userColor : m_colors[RaisedColor] );
@@ -932,15 +966,23 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glPopAttrib();
 }
 
-void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
+
+void StandardStyle::renderLine( const IECore::LineSegment3f &line, float width, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	glUniform1f( g_lineWidthParameter, 0.5 );
+	glUniform1f( g_lineWidthParameter, width );
 
-	glColor( getColor( BackgroundColor ) );
+	if( userColor )
+	{
+		glColor( *userColor );
+	}
+	else
+	{
+		glColor( getColor( BackgroundColor ) );
+	}
 
 	V3f d = line.normalizedDirection();
 

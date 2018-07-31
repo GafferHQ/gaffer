@@ -68,7 +68,7 @@ class Timeline( GafferUI.Editor ) :
 			self.__sliderRangeStart.setToolTip( "Slider minimum" )
 			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
-			self.__slider = GafferUI.NumericSlider(
+			self.__slider = _TimelineSlider(
 				value = self.getContext().getFrame(),
 				min = float( scriptNode["frameRange"]["start"].getValue() ),
 				max = float( scriptNode["frameRange"]["end"].getValue() ),
@@ -249,3 +249,15 @@ class Timeline( GafferUI.Editor ) :
 		return "GafferUI.Timeline( scriptNode )"
 
 GafferUI.Editor.registerType( "Timeline", Timeline )
+
+class _TimelineSlider( GafferUI.NumericSlider ) :
+
+	def __init__( self, value=None, min=0, max=1, hardMin=None, hardMax=None, values=None, **kw ) :
+
+		GafferUI.NumericSlider.__init__( self, value, min, max, hardMin, hardMax, values, **kw )
+
+	def _drawPosition( self, painter, position, highlighted, opacity=1 ) :
+
+		size = self.size()
+		# \todo: make sure the TimelineSlider and the AnimationGadget always use the same color
+		painter.fillRect( int(position * size.x), 0, 2, size.y, QtGui.QColor( 240, 220, 40, 255 * opacity ) )

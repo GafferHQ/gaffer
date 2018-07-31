@@ -40,6 +40,10 @@
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
+#include "boost/multi_index/mem_fun.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index_container.hpp"
+
 namespace Gaffer
 {
 
@@ -54,10 +58,10 @@ class GAFFER_API Animation : public ComputeNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation, AnimationTypeId, ComputeNode );
 
-		/// Defines the type of a keyframe.
+		/// Defines the method used to interpolate
+		/// between a key and the previous one.
 		enum Type
 		{
-			Invalid,
 			Step,
 			Linear,
 			/// \todo Add Smooth, implemented as
@@ -65,33 +69,54 @@ class GAFFER_API Animation : public ComputeNode
 			/// tangents on each key.
 		};
 
+		class CurvePlug;
+
 		/// Defines a single keyframe.
-		class Key
+		class Key : public IECore::RefCounted
 		{
 
 			public :
 
-				/// Constructs a key with type == Invalid.
-				Key();
-				Key( float time, float value = 0.0f, Type type = Linear );
+				Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
 
-				float time;
-				float value;
-				/// The method used to interpolate between the
-				/// previous key and this one. An Invalid value
-				/// for type is used as a sentinel value to denote
-				/// an invalid key.
-				Type type;
+				IE_CORE_DECLAREMEMBERPTR( Key )
+
+				float getTime() const { return m_time; };
+				/// \undoable
+				void setTime( float time );
+
+				float getValue() const  { return m_value; };
+				/// \undoable
+				void setValue( float value );
+
+				Type getType() const { return m_type; };
+				/// \undoable
+				void setType( Type type );
 
 				bool operator == ( const Key &rhs ) const;
 				bool operator != ( const Key &rhs ) const;
-				/// Compares solely on the time value.
-				bool operator < ( const Key &rhs ) const;
-				/// Returns false if type == Invalid, true
-				/// otherwise.
-				operator bool() const;
+
+				CurvePlug *parent();
+				const CurvePlug *parent() const;
+
+			private :
+
+				friend class CurvePlug;
+
+				CurvePlug *m_parent;
+				float m_time;
+				float m_value;
+				Type m_type;
 
 		};
+
+		IE_CORE_DECLAREPTR( Key )
+
+		template<typename ValueType>
+		class KeyIteratorT;
+
+		typedef KeyIteratorT<Key> KeyIterator;
+		typedef KeyIteratorT<const Key> ConstKeyIterator;
 
 		/// Defines a curve as a collection of keyframes and methods
 		/// for editing them. Provides methods for evaluating the
@@ -106,18 +131,30 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
 
 				/// \undoable
-				void addKey( const Key &key );
+				void addKey( const KeyPtr &key );
 				bool hasKey( float time ) const;
-				Key getKey( float time ) const;
-				/// \undoable
-				void removeKey( float time );
+				Key *getKey( float time );
+				const Key *getKey( float time ) const;
+				// /// \undoable
+				void removeKey( const KeyPtr &key );
 
-				Key closestKey( float time ) const;
-				Key previousKey( float time ) const;
-				Key nextKey( float time ) const;
+				Key *closestKey( float time );
+				const Key *closestKey( float time ) const;
 
-				typedef std::set<Key> Keys;
-				const Keys &keys() const;
+				Key *closestKey( float time, float maxDistance );
+				const Key *closestKey( float time, float maxDistance ) const;
+
+				Key *previousKey( float time );
+				const Key *previousKey( float time ) const;
+
+				Key *nextKey( float time );
+				const Key *nextKey( float time ) const;
+
+				KeyIterator begin();
+				KeyIterator end();
+
+				ConstKeyIterator begin() const;
+				ConstKeyIterator end() const;
 
 				float evaluate( float time ) const;
 
@@ -129,7 +166,18 @@ class GAFFER_API Animation : public ComputeNode
 
 			private :
 
-				void addOrRemoveKeyInternal( const Key &key );
+				friend class Key;
+				friend KeyIterator;
+				friend ConstKeyIterator;
+
+				typedef boost::multi_index::multi_index_container<
+					KeyPtr,
+					boost::multi_index::indexed_by<
+						boost::multi_index::ordered_unique<
+							boost::multi_index::const_mem_fun<Key, float, &Key::getTime>
+						>
+					>
+				> Keys;
 
 				Keys m_keys;
 
@@ -175,6 +223,44 @@ class GAFFER_API Animation : public ComputeNode
 };
 
 IE_CORE_DECLAREPTR( Animation )
+
+template<typename ValueType>
+class Animation::KeyIteratorT : public boost::iterator_facade<Animation::KeyIteratorT<ValueType>, ValueType, boost::bidirectional_traversal_tag>
+{
+
+	private :
+
+		KeyIteratorT( Animation::CurvePlug::Keys::const_iterator it )
+			:	m_it( it )
+		{
+		}
+
+		friend class boost::iterator_core_access;
+		friend class Animation::CurvePlug;
+
+		void increment()
+		{
+			++m_it;
+		}
+
+		void decrement()
+		{
+			--m_it;
+		}
+
+		bool equal( const KeyIteratorT &other ) const
+		{
+			return m_it == other.m_it;
+		}
+
+		ValueType& dereference() const
+		{
+			return *(m_it->get());
+		}
+
+		Animation::CurvePlug::Keys::const_iterator m_it;
+
+};
 
 } // namespace Gaffer
 
