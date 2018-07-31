@@ -68,7 +68,7 @@ class Timeline( GafferUI.Editor ) :
 			self.__sliderRangeStart.setToolTip( "Slider minimum" )
 			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
-			self.__slider = TimelineSlider(
+			self.__slider = _TimelineSlider(
 				value = self.getContext().getFrame(),
 				min = float( scriptNode["frameRange"]["start"].getValue() ),
 				max = float( scriptNode["frameRange"]["end"].getValue() ),
@@ -250,8 +250,7 @@ class Timeline( GafferUI.Editor ) :
 
 GafferUI.Editor.registerType( "Timeline", Timeline )
 
-
-class TimelineSlider( GafferUI.NumericSlider ) :
+class _TimelineSlider( GafferUI.NumericSlider ) :
 
 	def __init__( self, value=None, min=0, max=1, hardMin=None, hardMax=None, values=None, **kw ) :
 
