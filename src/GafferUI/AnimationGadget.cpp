@@ -327,7 +327,7 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 				bool isHighlighted = m_highlightedKey && key == *m_highlightedKey;
 				bool isSelected = m_selectedKeys.count( Animation::KeyPtr( &key ) ) > 0;
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
-				style->renderKeyFrame( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
+				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
 			}
 		}
 		break;
@@ -407,7 +407,7 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 		if( m_keyPreview )
 		{
 			V2f keyPosition = viewportGadget->worldToRasterSpace( m_keyPreviewLocation );
-			style->renderKeyFrame( keyPosition, Style::HighlightedState, 3.0 );
+			style->renderAnimationKey( keyPosition, Style::HighlightedState, 3.0 );
 		}
 
 		break;
@@ -1090,7 +1090,7 @@ Animation::ConstKeyPtr AnimationGadget::keyAt( const IECore::LineSegment3f &posi
 				keys.emplace_back( &key );
 				selector->loadName( name++ );
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
-				style->renderKeyFrame( keyPosition, Style::NormalState, 4.0 ); // slightly bigger for easier selection
+				style->renderAnimationKey( keyPosition, Style::NormalState, 4.0 ); // slightly bigger for easier selection
 			}
 		}
 	}
@@ -1219,7 +1219,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 			if( key.getType() == Gaffer::Animation::Linear )
 			{
-				style->renderCurveSegment( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &userColor );
+				style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &userColor );
 			}
 			else if( key.getType() == Gaffer::Animation::Step )
 			{
