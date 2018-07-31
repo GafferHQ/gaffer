@@ -68,7 +68,7 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 
 	def __hasAnimatedChild( self, graphComponent ) :
 
-		for child in graphComponent.children( Gaffer.Plug ) :
+		for child in graphComponent.children() :
 
 			if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
 				return True
@@ -88,25 +88,22 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 		self.changedSignal()( self )
 
 	def _filter( self, paths ) :
-
 		result = []
 
 		for path in paths :
-			descendant = self.__scriptNode.descendant( str( path )[1:].replace('/', '.') )
+			candidateGraphComponent = self.__scriptNode.descendant( str( path )[1:].replace('/', '.') )
+
+			if not isinstance( candidateGraphComponent, ( Gaffer.Node, Gaffer.Plug ) ) :
+				continue
 
 			for selected in self.__selection :
 
-				if not descendant == selected and not selected.isAncestorOf( descendant ) :
+				if not candidateGraphComponent == selected and not selected.isAncestorOf( candidateGraphComponent ) and not candidateGraphComponent.isAncestorOf( selected ) :
 					continue
 
-				if not isinstance( descendant, ( Gaffer.Node, Gaffer.Plug ) ) :
-					continue
-
-				if ( isinstance( descendant, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( descendant ) ) or self.__hasAnimatedChild( descendant ) :
-
+				if ( isinstance( candidateGraphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( candidateGraphComponent ) ) or self.__hasAnimatedChild( candidateGraphComponent ) :
 					# If we show this component, we should be aware when its name is changes.
-					self.__nameChangedConnections.append( descendant.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
-
+					self.__nameChangedConnections.append( candidateGraphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
 					result.append( path )
 
 		return result
