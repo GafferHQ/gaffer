@@ -297,9 +297,14 @@ class RenderController::SceneGraph
 			)
 			{
 				// Create bounding box if needed
+				Box3f bound;
 				if( !m_expanded && m_children.size() )
 				{
-					const Box3f bound = controller->m_scene->boundPlug()->getValue();
+					bound = controller->m_scene->boundPlug()->getValue();
+				}
+
+				if( !bound.isEmpty() )
+				{
 					IECoreScene::CurvesPrimitivePtr boundCurves = IECoreScene::CurvesPrimitive::createBox( bound );
 
 					std::string boundName;

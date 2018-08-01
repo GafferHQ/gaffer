@@ -377,6 +377,18 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setScene( sphere["out"] )
 		self.assertEqual( sg.getScene(), sphere["out"] )
 
+	def testBoundOfUnexpandedEmptyChildren( self ) :
+
+		group1 = GafferScene.Group()
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( group1["out"] )
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setScene( group2["out"] )
+
+		sg.waitForCompletion()
+		self.assertEqual( sg.bound(), imath.Box3f() )
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )
