@@ -45,6 +45,8 @@
 #include "Gaffer/Plug.h"
 #include "Gaffer/VTuneMonitor.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "boost/format.hpp"
 
 using namespace boost::python;
@@ -56,11 +58,13 @@ namespace
 
 void enterScope( Monitor &m )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	m.setActive( true );
 }
 
 void exitScope( Monitor &m, object type, object value, object traceBack )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	m.setActive( false );
 }
 

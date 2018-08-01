@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,62 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
+#define IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "SceneGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
+#include "GafferScene/Export.h"
 
-using namespace GafferSceneUIModule;
+#include "IECoreGL/Renderable.h"
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+#include "IECore/CompoundObject.h"
+
+namespace IECoreGLPreview
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
+IE_CORE_FORWARDDECLARE( AttributeVisualiser )
 
-}
+class GAFFERSCENE_API AttributeVisualiser : public IECore::RefCounted
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiser )
+		~AttributeVisualiser() override;
+
+		virtual IECoreGL::ConstRenderablePtr visualise(
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		) const = 0;
+
+		/// Registers an attribute visualiser
+		static void registerVisualiser( ConstAttributeVisualiserPtr visualiser );
+
+		/// Get all registered visualisations for the given attributes, by returning a renderable
+		/// group and some extra state. The return value value and/or the state may left null if
+		/// no registered visualisers do anything with these attributes
+		static IECoreGL::ConstRenderablePtr allVisualisations(
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		);
+
+	protected :
+
+		AttributeVisualiser();
+
+		template<typename VisualiserType>
+		struct AttributeVisualiserDescription
+		{
+
+			AttributeVisualiserDescription()
+			{
+				registerVisualiser( new VisualiserType );
+			}
+
+		};
+};
+
+IE_CORE_DECLAREPTR( AttributeVisualiser )
+
+} // namespace IECoreGLPreview
+
+#endif // IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H

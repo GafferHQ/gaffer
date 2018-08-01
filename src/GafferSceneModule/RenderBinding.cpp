@@ -47,6 +47,7 @@
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferBindings/DataBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Context.h"
@@ -62,6 +63,45 @@ using namespace GafferScene;
 
 namespace
 {
+
+/// \todo Move to IECore module
+struct CompoundDataMapFromDict
+{
+
+	CompoundDataMapFromDict()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<IECore::CompoundDataMap>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		if( PyDict_Check( obj ) )
+		{
+			return obj;
+		}
+		return nullptr;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		void *storage = ( (converter::rvalue_from_python_storage<IECore::CompoundDataMap>*) data )->storage.bytes;
+		IECore::CompoundDataMap *map = new( storage ) IECore::CompoundDataMap();
+		data->convertible = storage;
+
+		dict d( borrowed( obj ) );
+		list items = d.items();
+		for( unsigned i = 0, e = boost::python::len( items ); i < e; ++i )
+		{
+			IECore::InternedString k = extract<IECore::InternedString>( items[i][0] );
+			(*map)[k] = extract<IECore::DataPtr>( items[i][1] );
+		}
+	}
+
+};
 
 ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 {
@@ -79,6 +119,11 @@ list rendererTypes()
 	return result;
 }
 
+const char *rendererName( Renderer &renderer )
+{
+	return renderer.name().c_str();
+}
+
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
 {
 	return renderer.object( name, object, attributes );
@@ -93,6 +138,13 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &rend
 	container_utils::extend_container( times, pythonTimes );
 
 	return renderer.object( name, samples, times, attributes );
+}
+
+object rendererCommand( Renderer &renderer, const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() )
+{
+	return dataToPython(
+		renderer.command( name, parameters ).get()
+	);
 }
 
 void objectInterfaceTransform1( Renderer::ObjectInterface &objectInterface, const Imath::M44f &transform )
@@ -215,6 +267,8 @@ void GafferSceneModule::bindRender()
 			.def( "create", &Renderer::create, ( arg( "type" ), arg( "renderType" ) = Renderer::Batch, arg( "fileName" ) = "" ) )
 			.staticmethod( "create" )
 
+			.def( "name", &rendererName )
+
 			.def( "option", &Renderer::option )
 			.def( "output", &Renderer::output )
 
@@ -228,8 +282,11 @@ void GafferSceneModule::bindRender()
 
 			.def( "render", &Renderer::render )
 			.def( "pause", &Renderer::pause )
+			.def( "command", &rendererCommand )
 
 		;
+
+		CompoundDataMapFromDict();
 
 		IECorePython::RunTimeTypedClass<IECoreScenePreview::Procedural, ProceduralWrapper>()
 			.def( init<>() )

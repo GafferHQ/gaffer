@@ -92,8 +92,9 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
 			# We ignore the childNames because it doesn't use any inputs to compute when
-			# the path is not "/".
-			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["childNames"] ] )
+			# the path is not "/". We ignore the bound plug because although it has a dependency
+			# on the transform plug, that is only relevant when the path is "/".
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["childNames"], p["out"]["bound"] ] )
 
 	def testBound( self ) :
 

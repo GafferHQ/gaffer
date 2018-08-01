@@ -34,60 +34,73 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
-#define GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
+#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 
-#include "GafferSceneUI/Export.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/State.h"
 
-#include "IECoreGL/Renderable.h"
+using namespace IECoreGLPreview;
 
-#include "IECore/CompoundObject.h"
-
-namespace GafferSceneUI
+namespace
 {
 
-IE_CORE_FORWARDDECLARE( AttributeVisualiser )
+typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
 
-
-class GAFFERSCENEUI_API AttributeVisualiser : public IECore::RefCounted
+AttributeVisualisers &visualisers()
 {
+	static AttributeVisualisers v;
+	return v;
+}
 
-	public :
+} // namespace
 
-		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiser )
-		~AttributeVisualiser() override;
+AttributeVisualiser::AttributeVisualiser()
+{
+}
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes,
-			IECoreGL::ConstStatePtr &state ) const = 0;
+AttributeVisualiser::~AttributeVisualiser()
+{
+}
 
-		/// Registers an attribute visualiser
-		static void registerVisualiser( ConstAttributeVisualiserPtr visualiser );
+IECoreGL::ConstRenderablePtr AttributeVisualiser::allVisualisations( const IECore::CompoundObject *attributes,
+	IECoreGL::ConstStatePtr &state )
+{
+	const AttributeVisualisers &v = visualisers();
 
-		/// Get all registered visualisations for the given attributes, by returning a renderable
-		/// group and some extra state. The return value value and/or the state may left null if
-		/// no registered visualisers do anything with these attributes
-		static IECoreGL::ConstRenderablePtr allVisualisations( const IECore::CompoundObject *attributes,
-			IECoreGL::ConstStatePtr &state );
+	IECoreGL::GroupPtr resultGroup = nullptr;
+	IECoreGL::StatePtr resultState = nullptr;
 
-	protected :
+	for( unsigned int i = 0; i < v.size(); i++ )
+	{
+		IECoreGL::ConstStatePtr curState = nullptr;
+		IECoreGL::ConstRenderablePtr curVis = v[i]->visualise( attributes, curState );
 
-		AttributeVisualiser();
-
-		template<typename VisualiserType>
-		struct AttributeVisualiserDescription
+		if( curVis )
 		{
-
-			AttributeVisualiserDescription()
+			if( !resultGroup )
 			{
-				registerVisualiser( new VisualiserType );
+				resultGroup = new IECoreGL::Group();
 			}
+			// resultGroup will be returned as const, so const-casting the children in order to add them
+			// is safe
+			resultGroup->addChild( const_cast<IECoreGL::Renderable*>( curVis.get() ) );
+		}
 
-		};
-};
+		if( curState )
+		{
+			if( !resultState )
+			{
+				resultState = new IECoreGL::State( false );
+			}
+			resultState->add( const_cast<IECoreGL::State*>( curState.get() ) );
+		}
+	}
 
+	state = resultState;
+	return resultGroup;
+}
 
-IE_CORE_DECLAREPTR( AttributeVisualiser )
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
+void AttributeVisualiser::registerVisualiser( ConstAttributeVisualiserPtr visualiser )
+{
+	visualisers().push_back( visualiser );
+}

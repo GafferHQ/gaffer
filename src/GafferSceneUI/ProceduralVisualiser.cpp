@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/ObjectVisualiser.h"
-
+#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
@@ -45,7 +44,7 @@
 
 using namespace std;
 using namespace Imath;
-using namespace GafferSceneUI;
+using namespace IECoreGLPreview;
 
 namespace
 {

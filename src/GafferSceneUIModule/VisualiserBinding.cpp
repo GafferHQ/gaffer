@@ -37,7 +37,6 @@
 #include "VisualiserBinding.h"
 
 #include "GafferSceneUI/LightVisualiser.h"
-#include "GafferSceneUI/ObjectVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "IECorePython/RefCountedBinding.h"
@@ -46,11 +45,6 @@ using namespace GafferSceneUI;
 
 void GafferSceneUIModule::bindVisualisers()
 {
-
-	IECorePython::RefCountedClass<ObjectVisualiser, IECore::RefCounted>( "ObjectVisualiser" )
-		.def( "registerVisualiser", &ObjectVisualiser::registerVisualiser )
-		.staticmethod( "registerVisualiser" )
-	;
 
 	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
 		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )

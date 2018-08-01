@@ -183,6 +183,11 @@ class AppleseedRendererBase : public IECoreScenePreview::Renderer
 
 		virtual ~AppleseedRendererBase() override;
 
+		IECore::InternedString name() const override
+		{
+			return "Appleseed";
+		}
+
 		AttributesInterfacePtr attributes( const CompoundObject *attributes ) override;
 
 		ObjectInterfacePtr object( const string &name, const Object *object, const AttributesInterface *attributes ) override;

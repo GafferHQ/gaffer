@@ -35,6 +35,7 @@ script.selection().add( script["MeshToPoints"] )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
 # delay so it can redraw
 GafferUI.EventLoop.waitForIdle()
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 viewer.view().viewportGadget().frame( script["MeshToPoints"]["out"].bound( "/sphere" ) )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/meshToPointsViewer.png" )
 

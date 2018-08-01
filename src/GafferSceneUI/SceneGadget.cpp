@@ -36,12 +36,11 @@
 
 #include "GafferSceneUI/SceneGadget.h"
 
-#include "GafferSceneUI/AttributeVisualiser.h"
-#include "GafferSceneUI/ObjectVisualiser.h"
-
 #include "GafferUI/ViewportGadget.h"
 
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/StringPlug.h"
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/CurvesPrimitive.h"
@@ -69,716 +68,204 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
-// IECore::Object -> IECoreGL::Renderable conversion
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-IECoreGL::ConstRenderablePtr objectToRenderable( const IECore::Object *object )
-{
-	if( const ObjectVisualiser *visualiser = ObjectVisualiser::acquire( object->typeId() ) )
-	{
-		return visualiser->visualise( object );
-	}
-
-	try
-	{
-		IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( object );
-		return IECore::runTimeCast<const IECoreGL::Renderable>( glObject.get() );
-	}
-	catch( ... )
-	{
-		return nullptr;
-	}
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Mechanism for deferred destruction of OpenGL resources.
-// We use threads to update our scene graph in parallel, and as part of
-// that we need to throw away IECoreGL objects that are no longer needed.
-// We can only actually destroy them on the main thread when the GL context
-// is active though, so we use this mechanism to defer the destruction till
-// an appropriate time.
-// \todo Similar ad-hoc mechanisms exist in IECoreGL (see removeObjectWalk
-// in IECoreGL/Renderer.cpp, IECoreGL::CachedConverter::clearUnused() and
-// IECoreGL::ShaderLoader::clearUnused()). Perhaps we could do this properly
-// once and for all in IECoreGL, at the same time as introducing proper
-// OpenGL context management?
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-tbb::concurrent_unordered_set<IECore::ConstRefCountedPtr> g_pendingReferenceRemovals;
-
-template<typename T>
-void deferReferenceRemoval( boost::intrusive_ptr<T> &o )
-{
-	// insert() can be called concurrently with other inserts.
-	g_pendingReferenceRemovals.insert( o );
-	o = nullptr;
-}
-
-void doPendingReferenceRemovals()
-{
-	// clear() cannot be called concurrently with inserts, but
-	// we only call this method from doRender(), which we know
-	// is single threaded.
-	g_pendingReferenceRemovals.clear();
-	IECoreGL::CachedConverter::defaultCachedConverter()->clearUnused();
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// SceneGraph implementation
-//
-// This is effectively a replacement for IECoreGL::Scene, tailored
-// specifically to work well with Gaffer. Our only good means of generating
-// IECoreGL::Scenes is to use IECoreGL::Renderer, which would mean regenerating
-// the entire scene for any change in Gaffer. By maintaining our own scene graph,
-// we are able to make in-place edits to minimally reflect changes in Gaffer,
-// yielding much improved performance.
-//
-// In the longer term, the following might be a good course of action :
-//
-// - Refactor SceneGraph into an IECoreGL::GLScene class which maps well
-//   to Gaffer, but doesn't have direct Gaffer dependencies. It seems
-//   promising to have this class implement IECore::SceneInterface, or
-//   a future version tailored a little for broader use cases such as this
-//   (the existing interface is a little file-specific).
-// - Refactor UpdateTask into a class which couples Gaffer to
-//   IECore::SceneInterfaces, performing minimal edits as necessary to
-//   reflect changes in Gaffer.
-// - Implement our renderer backends for RenderMan, Arnold etc as
-//   SceneInterfaces. This is the most challenging part of this approach,
-//   but the hope is that the SceneInterface is a better API for performing
-//   render edits for IPR, rather than the nasty RI style API we currently
-//   have.
-// - Reuse the new UpdateTask in the InteractiveRender node.
-//
-//////////////////////////////////////////////////////////////////////////
-
-class SceneGadget::SceneGraph
-{
-
-	public :
-
-		SceneGraph()
-			:	m_selected( false ), m_visible( true ), m_expanded( false )
-		{
-		}
-
-		~SceneGraph()
-		{
-			clear();
-		}
-
-		void render( IECoreGL::State *currentState, IECoreGL::Selector *selector = nullptr ) const
-		{
-			if( !m_visible || !valid() )
-			{
-				return;
-			}
-
-			const bool haveTransform = m_transform != M44f();
-			if( haveTransform )
-			{
-				glPushMatrix();
-				glMultMatrixf( m_transform.getValue() );
-			}
-
-				{
-					IECoreGL::State::ScopedBinding scope( *m_state, *currentState );
-					IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, m_selected );
-
-					if( selector )
-					{
-						m_selectionId = selector->loadName();
-					}
-
-					if( m_renderable )
-					{
-						m_renderable->render( currentState );
-					}
-
-					if( m_attributesRenderable )
-					{
-						m_attributesRenderable->render( currentState );
-					}
-
-					if( m_boundRenderable )
-					{
-						IECoreGL::State::ScopedBinding wireframeScope( wireframeState(), *currentState );
-						m_boundRenderable->render( currentState );
-					}
-
-					for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
-					{
-						(*it)->render( currentState, selector );
-					}
-				}
-
-			if( haveTransform )
-			{
-				glPopMatrix();
-			}
-		}
-
-		void applySelection( const PathMatcher &selection )
-		{
-			ScenePlug::ScenePath rootPath;
-			applySelectionWalk( selection, rootPath, true );
-		}
-
-		bool pathFromSelection( const IECoreGL::HitRecord &selection, ScenePlug::ScenePath &path ) const
-		{
-			path.clear();
-			const bool result = pathFromSelectionIdWalk( selection.name, path );
-			std::reverse( path.begin(), path.end() );
-			return result;
-		}
-
-		size_t pathsFromSelection( const vector<IECoreGL::HitRecord> &selection, PathMatcher &paths ) const
-		{
-			vector<GLuint> selectionIds;
-			selectionIds.reserve( selection.size() );
-			for( const auto &x : selection )
-			{
-				selectionIds.push_back( x.name );
-			}
-			sort( selectionIds.begin(), selectionIds.end() );
-
-			vector<GLuint>::const_iterator begin = selectionIds.begin();
-			paths.addPaths( pathsFromSelectionIdsWalk( begin, selectionIds.end() ) );
-			return selection.size();
-		}
-
-		const Box3f &bound() const
-		{
-			return m_bound;
-		}
-
-		Box3f selectionBound() const
-		{
-			if( m_selected )
-			{
-				return m_bound;
-			}
-			else
-			{
-				Box3f childSelectionBound;
-				for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
-				{
-					const Box3f childBound = transform( (*it)->selectionBound(), (*it)->m_transform );
-					childSelectionBound.extendBy( childBound );
-				}
-				return childSelectionBound;
-			}
-		}
-
-		bool valid() const
-		{
-			// Our m_state can be null if an exception occurred during update,
-			// in which case we're not valid.
-			return (bool)m_state;
-		}
-
-		void clear()
-		{
-			deferReferenceRemoval( m_state );
-			deferReferenceRemoval( m_renderable );
-			deferReferenceRemoval( m_boundRenderable );
-			deferReferenceRemoval( m_attributesRenderable );
-			clearChildren();
-			m_objectHash = m_attributesHash = IECore::MurmurHash();
-		}
-
-	private :
-
-		friend class UpdateTask;
-
-		void clearChildren()
-		{
-			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
-			{
-				delete *it;
-			}
-			m_children.clear();
-		}
-
-		void applySelectionWalk( const PathMatcher &selection, const ScenePlug::ScenePath &path, bool check )
-		{
-			const unsigned m = check ? selection.match( path ) : 0;
-
-			m_selected = m & PathMatcher::ExactMatch;
-
-			ScenePlug::ScenePath childPath = path;
-			childPath.push_back( IECore::InternedString() ); // space for the child name
-			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
-			{
-				childPath.back() = (*it)->m_name;
-				(*it)->applySelectionWalk( selection, childPath, m & PathMatcher::DescendantMatch );
-			}
-		}
-
-		bool pathFromSelectionIdWalk( GLuint selectionId, ScenePlug::ScenePath &path ) const
-		{
-			if( m_selectionId == selectionId )
-			{
-				path.push_back( m_name );
-				return true;
-			}
-			else
-			{
-				for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
-				{
-					/// \todo Should be able to prune recursion based on knowledge that child
-					/// selection ids are always greater than parent selection ids.
-					if( (*it)->pathFromSelectionIdWalk( selectionId, path ) )
-					{
-						if( m_name != IECore::InternedString() )
-						{
-							path.push_back( m_name );
-						}
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
-		PathMatcher pathsFromSelectionIdsWalk( vector<GLuint>::const_iterator &selectionBegin, vector<GLuint>::const_iterator selectionEnd ) const
-		{
-			PathMatcher result;
-			if( selectionBegin == selectionEnd )
-			{
-				// We've found all paths corresponding to the selection
-				return result;
-			}
-
-			vector<InternedString> namePath;
-			if( !m_name.string().empty() )
-			{
-				namePath.push_back( m_name );
-			}
-
-			// The m_selectionIds were assigned in increasing order
-			// during `render()`and here we are visiting them in the
-			// same order (depth first traversal). The begin/end range
-			// is likewise sorted in increasing order, so at each step
-			// we only have to look for the next id, `*selectionBegin`.
-			if( *selectionBegin == m_selectionId )
-			{
-				result.addPath( namePath );
-				// We are now searching for the next selection id.
-				selectionBegin++;
-			}
-
-			// Recurse to m_children.
-			for( const auto &child : m_children )
-			{
-				PathMatcher childPaths = child->pathsFromSelectionIdsWalk( selectionBegin, selectionEnd );
-				if( !childPaths.isEmpty() )
-				{
-					result.addPaths( childPaths, namePath );
-				}
-			}
-
-			return result;
-		}
-
-		static const IECoreGL::State &selectionState()
-		{
-			static IECoreGL::StatePtr s;
-			if( !s )
-			{
-				s = new IECoreGL::State( false );
-				s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
-				s->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ), /* override = */ true );
-			}
-			return *s;
-		}
-
-		static const IECoreGL::State &wireframeState()
-		{
-			static IECoreGL::StatePtr s;
-			if( !s )
-			{
-				s = new IECoreGL::State( false );
-				s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
-				s->add( new IECoreGL::Primitive::DrawSolid( false ), /* override = */ true );
-				s->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ), /* override = */ true );
-			}
-			return *s;
-		}
-
-		Imath::Box3f m_bound;
-		Imath::M44f m_transform;
-		IECore::InternedString m_name;
-		IECoreGL::ConstStatePtr m_state;
-		IECoreGL::ConstRenderablePtr m_renderable;
-		IECoreGL::ConstRenderablePtr m_boundRenderable;
-		IECoreGL::ConstRenderablePtr m_attributesRenderable;
-		std::vector<SceneGraph *> m_children;
-		mutable GLuint m_selectionId;
-		bool m_selected;
-		bool m_visible;
-		bool m_expanded;
-
-		IECore::MurmurHash m_objectHash;
-		IECore::MurmurHash m_attributesHash;
-
-};
-
-class SceneGadget::UpdateTask : public tbb::task
-{
-
-	public :
-
-		enum DirtyFlags
-		{
-			NothingDirty = 0,
-			BoundDirty = 1,
-			TransformDirty = 2,
-			AttributesDirty = 4,
-			ObjectDirty = 8,
-			ChildNamesDirty = 16,
-			ExpansionDirty = 32,
-			AllDirty = BoundDirty | TransformDirty | AttributesDirty | ObjectDirty | ChildNamesDirty | ExpansionDirty
-		};
-
-		UpdateTask( const SceneGadget *sceneGadget, SceneGraph *sceneGraph, unsigned dirtyFlags, const ScenePlug::ScenePath &scenePath )
-			:	m_sceneGadget( sceneGadget ),
-				m_sceneGraph( sceneGraph ),
-				m_dirtyFlags( dirtyFlags ),
-				m_scenePath( scenePath )
-		{
-		}
-
-		task *execute() override
-		{
-			ScenePlug::PathScope pathScope( m_sceneGadget->m_context.get(), m_scenePath );
-
-			// Update attributes, and compute visibility.
-
-			const bool previouslyVisible = m_sceneGraph->m_visible;
-			if( m_dirtyFlags & AttributesDirty )
-			{
-				const IECore::MurmurHash attributesHash = m_sceneGadget->m_scene->attributesPlug()->hash();
-				if( attributesHash != m_sceneGraph->m_attributesHash )
-				{
-					IECore::ConstCompoundObjectPtr attributes = m_sceneGadget->m_scene->attributesPlug()->getValue( &attributesHash );
-					const IECore::BoolData *visibilityData = attributes->member<IECore::BoolData>( "scene:visible" );
-					m_sceneGraph->m_visible = visibilityData ? visibilityData->readable() : true;
-
-					IECore::ConstRunTimeTypedPtr glStateCachedTyped = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
-					IECoreGL::ConstStatePtr glStateCached = IECore::runTimeCast<const IECoreGL::State>( glStateCachedTyped );
-
-
-
-					IECoreGL::ConstStatePtr visState = nullptr;
-
-					deferReferenceRemoval( m_sceneGraph->m_attributesRenderable );
-					m_sceneGraph->m_attributesRenderable = AttributeVisualiser::allVisualisations( attributes.get(), visState );
-
-					deferReferenceRemoval( m_sceneGraph->m_state );
-					if( visState )
-					{
-						IECoreGL::StatePtr glState = new IECoreGL::State( *glStateCached );
-						glState->add( const_cast< IECoreGL::State* >( visState.get() ) );
-
-						m_sceneGraph->m_state = glState;
-					}
-					else
-					{
-						m_sceneGraph->m_state = glStateCached;
-					}
-
-
-					m_sceneGraph->m_attributesHash = attributesHash;
-				}
-			}
-
-			if( !m_sceneGraph->m_visible )
-			{
-				// No need to update further since we're not visible.
-				return nullptr;
-			}
-			else if( !previouslyVisible )
-			{
-				// We didn't perform any updates when we were invisible,
-				// so we need to update everything now.
-				m_dirtyFlags = AllDirty;
-			}
-
-			// Update the object - converting it into an IECoreGL::Renderable
-
-			if( m_dirtyFlags & ObjectDirty )
-			{
-				const IECore::MurmurHash objectHash = m_sceneGadget->m_scene->objectPlug()->hash();
-				if( objectHash != m_sceneGraph->m_objectHash )
-				{
-					IECore::ConstObjectPtr object = m_sceneGadget->m_scene->objectPlug()->getValue( &objectHash );
-					deferReferenceRemoval( m_sceneGraph->m_renderable );
-					if( !object->isInstanceOf( IECore::NullObjectTypeId ) )
-					{
-						m_sceneGraph->m_renderable = objectToRenderable( object.get() );
-					}
-					m_sceneGraph->m_objectHash = objectHash;
-				}
-			}
-
-			// Update the transform and bound
-
-			if( m_dirtyFlags & TransformDirty )
-			{
-				m_sceneGraph->m_transform = m_sceneGadget->m_scene->transformPlug()->getValue();
-			}
-
-			m_sceneGraph->m_bound = m_sceneGraph->m_renderable ? m_sceneGraph->m_renderable->bound() : Box3f();
-
-			// Update the expansion state
-
-			const bool previouslyExpanded = m_sceneGraph->m_expanded;
-			if( m_dirtyFlags & ExpansionDirty )
-			{
-				m_sceneGraph->m_expanded = m_sceneGadget->m_minimumExpansionDepth >= m_scenePath.size();
-				if( !m_sceneGraph->m_expanded )
-				{
-					m_sceneGraph->m_expanded = m_sceneGadget->m_expandedPaths.match( m_scenePath ) & PathMatcher::ExactMatch;
-				}
-			}
-
-			// If we're not expanded, then we can early out after creating a bounding box.
-
-			deferReferenceRemoval( m_sceneGraph->m_boundRenderable );
-			if( !m_sceneGraph->m_expanded )
-			{
-				// We're not expanded, so we early out before updating the children.
-				// We do however need to see if we have any children, and arrange to
-				// draw their bounding box if we do.
-				bool haveChildren = m_sceneGraph->m_children.size();
-				if( m_dirtyFlags & ChildNamesDirty || !previouslyExpanded )
-				{
-					IECore::ConstInternedStringVectorDataPtr childNamesData = m_sceneGadget->m_scene->childNamesPlug()->getValue();
-					haveChildren = childNamesData->readable().size();
-				}
-
-				m_sceneGraph->clearChildren();
-
-				m_sceneGraph->m_bound.extendBy( m_sceneGadget->m_scene->boundPlug()->getValue() );
-
-				if( haveChildren )
-				{
-					IECoreScene::CurvesPrimitivePtr curvesBound = IECoreScene::CurvesPrimitive::createBox( m_sceneGraph->m_bound );
-					m_sceneGraph->m_boundRenderable = boost::static_pointer_cast<const IECoreGL::Renderable>(
-						IECoreGL::CachedConverter::defaultCachedConverter()->convert( curvesBound.get() )
-					);
-				}
-				return nullptr;
-			}
-
-			// We are expanded, so we need to visit all the children
-			// and update those too.
-
-			if( !previouslyExpanded )
-			{
-				m_dirtyFlags = AllDirty;
-			}
-
-			// Make sure we have a child for each child name
-
-			if( m_dirtyFlags & ChildNamesDirty )
-			{
-				IECore::ConstInternedStringVectorDataPtr childNamesData = m_sceneGadget->m_scene->childNamesPlug()->getValue();
-				const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
-				if( !existingChildNamesValid( childNames ) )
-				{
-					m_sceneGraph->clearChildren();
-
-					for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
-					{
-						SceneGraph *child = new SceneGraph();
-						child->m_name = *it;
-						m_sceneGraph->m_children.push_back( child );
-					}
-
-					m_dirtyFlags = AllDirty; // We've made brand new children, so they need a full update.
-				}
-			}
-
-			// And then update each child
-
-			if( m_sceneGraph->m_children.size() )
-			{
-				set_ref_count( 1 + m_sceneGraph->m_children.size() );
-
-				ScenePlug::ScenePath childPath = m_scenePath;
-				childPath.push_back( IECore::InternedString() ); // space for the child name
-				for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
-				{
-					childPath.back() = (*it)->m_name;
-					UpdateTask *t = new( allocate_child() ) UpdateTask( m_sceneGadget, *it, m_dirtyFlags, childPath );
-					spawn( *t );
-				}
-
-				wait_for_all();
-			}
-
-			// Finally compute our bound from the child bounds.
-
-			for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
-			{
-				const Box3f childBound = transform( (*it)->m_bound, (*it)->m_transform );
-				m_sceneGraph->m_bound.extendBy( childBound );
-			}
-
-			return nullptr;
-		}
-
-	private :
-
-		bool existingChildNamesValid( const vector<IECore::InternedString> &childNames )
-		{
-			if( m_sceneGraph->m_children.size() != childNames.size() )
-			{
-				return false;
-			}
-			for( size_t i = 0, e = childNames.size(); i < e; ++i )
-			{
-				if( m_sceneGraph->m_children[i]->m_name != childNames[i] )
-				{
-					return false;
-				}
-			}
-			return true;
-		}
-
-		const SceneGadget *m_sceneGadget;
-		SceneGraph *m_sceneGraph;
-		unsigned m_dirtyFlags;
-		ScenePlug::ScenePath m_scenePath;
-
-};
-
-//////////////////////////////////////////////////////////////////////////
 // SceneGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
 SceneGadget::SceneGadget()
 	:	Gadget( defaultName<SceneGadget>() ),
-		m_scene( nullptr ),
-		m_context( nullptr ),
-		m_dirtyFlags( UpdateTask::AllDirty ),
-		m_minimumExpansionDepth( 0 ),
-		m_baseState( new IECoreGL::State( true ) ),
-		m_sceneGraph( new SceneGraph )
+		m_paused( false ),
+		m_renderer( IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ) ),
+		m_controller( nullptr, nullptr, m_renderer ),
+		m_updateErrored( false ),
+		m_renderRequestPending( false )
 {
-	m_baseState->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
-	m_baseState->add( new IECoreGL::PointColorStateComponent( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) );
-	m_baseState->add( new IECoreGL::Primitive::PointWidth( 2.0f ) );
+	typedef CompoundObject::ObjectMap::value_type Option;
+	CompoundObjectPtr openGLOptions = new CompoundObject;
+	openGLOptions->members().insert( {
+		Option( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) ),
+		Option( "gl:primitive:pointColor", new Color4fData( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) ),
+		Option( "gl:primitive:pointWidth", new FloatData( 2.0f ) )
+	} );
+	setOpenGLOptions( openGLOptions.get() );
+
+	m_controller.updateRequiredSignal().connect(
+		boost::bind( &SceneGadget::requestRender, this )
+	);
+
+	visibilityChangedSignal().connect( boost::bind( &SceneGadget::visibilityChanged, this ) );
 
 	setContext( new Context );
 }
 
 SceneGadget::~SceneGadget()
 {
+	// Make sure background task completes before anything
+	// it relies on is destroyed.
+	m_updateTask.reset();
 }
 
 void SceneGadget::setScene( GafferScene::ConstScenePlugPtr scene )
 {
-	if( scene == m_scene )
-	{
-		return;
-	}
-
-	m_scene = scene;
-	if( Gaffer::Node *node = const_cast<Gaffer::Node *>( scene->node() ) )
-	{
-		m_plugDirtiedConnection = node->plugDirtiedSignal().connect( boost::bind( &SceneGadget::plugDirtied, this, ::_1 ) );
-	}
-	else
-	{
-		m_plugDirtiedConnection.disconnect();
-	}
-
-	m_dirtyFlags = UpdateTask::AllDirty;
-	requestRender();
+	m_controller.setScene( scene );
 }
 
 const GafferScene::ScenePlug *SceneGadget::getScene() const
 {
-	return m_scene.get();
+	return m_controller.getScene();
 }
 
-void SceneGadget::setContext( Gaffer::ContextPtr context )
+void SceneGadget::setContext( Gaffer::ConstContextPtr context )
 {
-	if( context == m_context )
-	{
-		return;
-	}
-
-	m_context = context;
-	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &SceneGadget::contextChanged, this, ::_2 ) );
-	requestRender();
-}
-
-Gaffer::Context *SceneGadget::getContext()
-{
-	return m_context.get();
+	m_controller.setContext( context );
 }
 
 const Gaffer::Context *SceneGadget::getContext() const
 {
-	return m_context.get();
+	return m_controller.getContext();
 }
 
 void SceneGadget::setExpandedPaths( const IECore::PathMatcher &expandedPaths )
 {
-	m_expandedPaths = expandedPaths;
-	m_dirtyFlags |= UpdateTask::ExpansionDirty;
-	requestRender();
+	m_controller.setExpandedPaths( expandedPaths );
 }
 
 const IECore::PathMatcher &SceneGadget::getExpandedPaths() const
 {
-	return m_expandedPaths;
+	return m_controller.getExpandedPaths();
 }
 
 void SceneGadget::setMinimumExpansionDepth( size_t depth )
 {
-	if( depth == m_minimumExpansionDepth )
-	{
-		return;
-	}
-	m_minimumExpansionDepth = depth;
-	m_dirtyFlags |= UpdateTask::ExpansionDirty;
-	requestRender();
+	m_controller.setMinimumExpansionDepth( depth );
 }
 
 size_t SceneGadget::getMinimumExpansionDepth() const
 {
-	return m_minimumExpansionDepth;
+	return m_controller.getMinimumExpansionDepth();
 }
 
-IECoreGL::State *SceneGadget::baseState()
+void SceneGadget::setPaused( bool paused )
 {
-	return m_baseState.get();
+	if( paused == m_paused )
+	{
+		return;
+	}
+
+	m_paused = paused;
+	if( m_paused )
+	{
+		if( m_updateTask )
+		{
+			m_updateTask->cancelAndWait();
+			m_updateTask.reset();
+		}
+		stateChangedSignal()( this );
+	}
+	else if( m_controller.updateRequired() )
+	{
+		requestRender();
+	}
+}
+
+bool SceneGadget::getPaused() const
+{
+	return m_paused;
+}
+
+void SceneGadget::setBlockingPaths( const IECore::PathMatcher &blockingPaths )
+{
+	if( m_updateTask )
+	{
+		m_updateTask->cancelAndWait();
+		m_updateTask.reset();
+	}
+	m_blockingPaths = blockingPaths;
+	requestRender();
+}
+
+const IECore::PathMatcher &SceneGadget::getBlockingPaths() const
+{
+	return m_blockingPaths;
+}
+
+SceneGadget::State SceneGadget::state() const
+{
+	if( m_paused )
+	{
+		return Paused;
+	}
+
+	return m_controller.updateRequired() ? Running : Complete;
+}
+
+SceneGadget::SceneGadgetSignal &SceneGadget::stateChangedSignal()
+{
+	return m_stateChangedSignal;
+}
+
+void SceneGadget::waitForCompletion()
+{
+	updateRenderer();
+	if( m_updateTask )
+	{
+		m_updateTask->wait();
+		m_renderer->command( "gl:synchronise" );
+	}
+}
+
+void SceneGadget::setOpenGLOptions( const IECore::CompoundObject *options )
+{
+	if( m_openGLOptions && *m_openGLOptions == *options )
+	{
+		return;
+	}
+
+	// Output anything that has changed or was added
+
+	for( const auto &option : options->members() )
+	{
+		bool changedOrAdded = true;
+		if( m_openGLOptions )
+		{
+			if( const Object *previousOption = m_openGLOptions->member<Object>( option.first ) )
+			{
+				changedOrAdded = *previousOption != *option.second;
+			}
+		}
+		if( changedOrAdded )
+		{
+			m_renderer->option( option.first, option.second.get() );
+		}
+	}
+
+	// Remove anything that was removed
+
+	if( m_openGLOptions )
+	{
+		for( const auto &oldOption : m_openGLOptions->members() )
+		{
+			if( !options->member<Object>( oldOption.first ) )
+			{
+				m_renderer->option( oldOption.first, nullptr );
+			}
+		}
+	}
+
+	m_openGLOptions = options->copy();
+	requestRender();
+}
+
+const IECore::CompoundObject *SceneGadget::getOpenGLOptions() const
+{
+	return m_openGLOptions.get();
 }
 
 bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path ) const
 {
-	updateSceneGraph();
-
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
-		renderSceneGraph();
+		renderScene();
 	}
 
 	if( !selection.size() )
@@ -786,7 +273,9 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 		return false;
 	}
 
-	return m_sceneGraph->pathFromSelection( selection[0], path );
+	PathMatcher paths = convertSelection( new UIntVectorData( { selection[0].name } ) );
+	path = *PathMatcher::Iterator( paths.begin() );
+	return true;
 }
 
 size_t SceneGadget::objectsAt(
@@ -795,15 +284,62 @@ size_t SceneGadget::objectsAt(
 	IECore::PathMatcher &paths
 ) const
 {
-	updateSceneGraph();
 
 	vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		renderSceneGraph();
+		renderScene();
 	}
 
-	return m_sceneGraph->pathsFromSelection( selection, paths );
+	UIntVectorDataPtr ids = new UIntVectorData;
+	std::transform(
+		selection.begin(), selection.end(), std::back_inserter( ids->writable() ),
+		[]( const IECoreGL::HitRecord &h ) { return h.name; }
+	);
+
+	PathMatcher selectedPaths = convertSelection( ids );
+	paths.addPaths( selectedPaths );
+
+	return selectedPaths.size();
+}
+
+IECore::PathMatcher SceneGadget::convertSelection( IECore::UIntVectorDataPtr ids ) const
+{
+	auto pathsData = static_pointer_cast<PathMatcherData>(
+		m_renderer->command(
+			"gl:querySelection",
+			{
+				{ "selection", ids }
+			}
+		)
+	);
+
+	PathMatcher result = pathsData->readable();
+
+	// Unexpanded locations are represented with
+	// objects named __unexpandedChildren__ to allow
+	// locations to have an object _and_ children.
+	// We want to replace any such locations with their
+	// parent location.
+	const InternedString unexpandedChildren = "__unexpandedChildren__";
+	vector<InternedString> parent;
+
+	PathMatcher toAdd;
+	PathMatcher toRemove;
+	for( PathMatcher::Iterator it = result.begin(), eIt = result.end(); it != eIt; ++it )
+	{
+		if( it->size() && it->back() == unexpandedChildren )
+		{
+			toRemove.addPath( *it );
+			parent.assign( it->begin(), it->end() - 1 );
+			toAdd.addPath( parent );
+		}
+	}
+
+	result.addPaths( toAdd );
+	result.removePaths( toRemove );
+
+	return result;
 }
 
 const IECore::PathMatcher &SceneGadget::getSelection() const
@@ -814,14 +350,15 @@ const IECore::PathMatcher &SceneGadget::getSelection() const
 void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 {
 	m_selection = selection;
-	m_sceneGraph->applySelection( m_selection );
+	ConstDataPtr d = new IECore::PathMatcherData( selection );
+	m_renderer->option( "gl:selection", d.get() );
 	requestRender();
 }
 
 Imath::Box3f SceneGadget::selectionBound() const
 {
-	updateSceneGraph();
-	return m_sceneGraph->selectionBound();
+	DataPtr d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( true ) } } );
+	return static_cast<Box3fData *>( d.get() )->readable();
 }
 
 std::string SceneGadget::getToolTip( const IECore::LineSegment3f &line ) const
@@ -843,8 +380,12 @@ std::string SceneGadget::getToolTip( const IECore::LineSegment3f &line ) const
 
 Imath::Box3f SceneGadget::bound() const
 {
-	updateSceneGraph();
-	return m_sceneGraph->bound();
+	if( m_updateErrored )
+	{
+		return Box3f();
+	}
+	DataPtr d = m_renderer->command( "gl:queryBound" );
+	return static_cast<Box3fData *>( d.get() )->readable();
 }
 
 void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) const
@@ -854,140 +395,122 @@ void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 		return;
 	}
 
-	if( !m_scene || IECoreGL::Selector::currentSelector() )
+	if( IECoreGL::Selector::currentSelector() )
 	{
 		return;
 	}
 
-	updateSceneGraph();
-	renderSceneGraph();
-
-	doPendingReferenceRemovals();
+	const_cast<SceneGadget *>( this )->updateRenderer();
+	renderScene();
 }
 
-void SceneGadget::plugDirtied( const Gaffer::Plug *plug )
+void SceneGadget::updateRenderer()
 {
-	if( plug == m_scene->boundPlug() )
-	{
-		m_dirtyFlags |= UpdateTask::BoundDirty;
-	}
-	else if( plug == m_scene->transformPlug() )
-	{
-		m_dirtyFlags |= UpdateTask::TransformDirty;
-	}
-	else if( plug == m_scene->attributesPlug() )
-	{
-		m_dirtyFlags |= UpdateTask::AttributesDirty;
-	}
-	else if( plug == m_scene->objectPlug() )
-	{
-		m_dirtyFlags |= UpdateTask::ObjectDirty;
-	}
-	else if( plug == m_scene->childNamesPlug() )
-	{
-		m_dirtyFlags |= UpdateTask::ChildNamesDirty;
-	}
-	else
+	if( m_paused )
 	{
 		return;
 	}
 
-	requestRender();
-}
-
-void SceneGadget::contextChanged( const IECore::InternedString &name )
-{
-	if( !boost::starts_with( name.string(), "ui:" ) )
+	if( m_updateTask )
 	{
-		m_dirtyFlags = UpdateTask::AllDirty;
-		requestRender();
-	}
-}
-
-void SceneGadget::updateSceneGraph() const
-{
-	if( !m_dirtyFlags )
-	{
-		return;
-	}
-
-	if( !m_sceneGraph->valid() )
-	{
-		// The previous attempt at an update failed - so
-		// we need to update everything this time.
-		m_dirtyFlags = UpdateTask::AllDirty;
-	}
-
-	try
-	{
-		UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
-		tbb::task::spawn_root_and_wait( *task );
-
-		if( m_dirtyFlags & ( UpdateTask::ChildNamesDirty | UpdateTask::ExpansionDirty ) )
+		if( m_updateTask->status() == BackgroundTask::Running )
 		{
-			m_sceneGraph->applySelection( m_selection );
+			return;
 		}
-	}
-	catch( const std::exception& e )
-	{
-		m_sceneGraph->clear();
-		IECore::msg( IECore::Msg::Error, "SceneGadget::updateSceneGraph", e.what() );
+		m_updateTask.reset();
 	}
 
-	// Even if an error occurred when updating the scene, we clear
-	// the dirty flags. This prevents us from repeating the same
-	// error over and over when nothing has been done to prevent it.
-	// When something is next dirtied we'll turn on all the dirty
-	// flags (see above) to ensure that the next update is a complete
-	// one.
-	m_dirtyFlags = UpdateTask::NothingDirty;
-}
-
-void SceneGadget::renderSceneGraph() const
-{
-	GLint prevProgram;
-	glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
-	glPushAttrib( GL_ALL_ATTRIB_BITS );
-
-	try
+	if( !m_controller.updateRequired() )
 	{
-		IECoreGL::State::bindBaseState();
-		m_baseState->bind();
+		return;
+	}
 
-		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+	auto progressCallback = [this] ( BackgroundTask::Status progress ) {
+
+		if( !refCount() )
 		{
-			// IECoreGL expects us to bind `selector->baseState()` here, so the
-			// selector can control a few specific parts of the state.
-			// That overrides _all_ of our own state though, including things that
-			// are crucial to accurate selection because they change the size of
-			// primitives on screen. So we need to bind the selection state and then
-			// rebind the crucial bits of our state back on top of it.
-			/// \todo Change IECoreGL::Selector so it provides a partial state object
-			/// containing only the things it needs to change.
-			IECoreGL::StatePtr shapeState = new IECoreGL::State( /* complete = */ false );
-			shapeState->add( m_baseState->get<IECoreGL::PointsPrimitive::UseGLPoints>() );
-			shapeState->add( m_baseState->get<IECoreGL::PointsPrimitive::GLPointWidth>() );
-			shapeState->add( m_baseState->get<IECoreGL::CurvesPrimitive::UseGLLines>() );
-			shapeState->add( m_baseState->get<IECoreGL::CurvesPrimitive::IgnoreBasis>() );
-			shapeState->add( m_baseState->get<IECoreGL::CurvesPrimitive::GLLineWidth>() );
-			IECoreGL::State::ScopedBinding selectorStateBinding(
-				*selector->baseState(), const_cast<IECoreGL::State &>( *m_baseState )
+			return;
+		}
+
+		const bool stateChanged =
+			progress == BackgroundTask::Completed ||
+			progress == BackgroundTask::Errored
+		;
+
+		bool shouldRequestRender = false;
+		if( stateChanged || std::chrono::steady_clock::now() >= m_synchroniseTimePoint )
+		{
+			shouldRequestRender = !m_renderRequestPending.exchange( true );
+		}
+
+		if( shouldRequestRender || stateChanged )
+		{
+			// Must hold a reference to stop us dying before our UI thread call is scheduled.
+			SceneGadgetPtr thisRef = this;
+			ParallelAlgo::callOnUIThread(
+				[thisRef, shouldRequestRender, stateChanged, progress] {
+					if( progress == BackgroundTask::Errored )
+					{
+						thisRef->m_updateErrored = true;
+					}
+					if( stateChanged )
+					{
+						thisRef->stateChangedSignal()( thisRef.get() );
+						thisRef->m_synchroniseTimePoint = std::chrono::steady_clock::now();
+					}
+					if( shouldRequestRender )
+					{
+						thisRef->m_renderRequestPending = false;
+						thisRef->requestRender();
+					}
+				}
 			);
-			IECoreGL::State::ScopedBinding shapeStateBinding(
-				*shapeState, const_cast<IECoreGL::State &>( *m_baseState )
-			);
-			m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ), selector );
 		}
-		else
-		{
-			m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ) );
-		}
-	}
-	catch( const std::exception& e )
+
+	};
+
+	if( !m_blockingPaths.isEmpty() )
 	{
-		IECore::msg( IECore::Msg::Error, "SceneGadget::renderSceneGraph", e.what() );
+		try
+		{
+			m_controller.updateMatchingPaths( m_blockingPaths );
+		}
+		catch( std::exception &e )
+		{
+			// Leave it to the rest of the UI to report the error.
+			m_updateErrored = true;
+		}
+		m_renderer->command( "gl:synchronise" );
 	}
 
-	glPopAttrib();
-	glUseProgram( prevProgram );
+	m_updateErrored = false;
+	// We don't show progressive updates until a small delay has elapsed. This
+	// avoids flickering partial updates when we can show the complete update
+	// in a reasonable period of time.
+	m_synchroniseTimePoint = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );;
+	m_updateTask = m_controller.updateInBackground( progressCallback );
+	stateChangedSignal()( this );
+}
+
+void SceneGadget::renderScene() const
+{
+	if( m_updateErrored )
+	{
+		return;
+	}
+
+	if( std::chrono::steady_clock::now() >= m_synchroniseTimePoint )
+	{
+		m_renderer->command( "gl:synchronise" );
+	}
+
+	m_renderer->render();
+}
+
+void SceneGadget::visibilityChanged()
+{
+	if( !visible() && m_updateTask )
+	{
+		m_updateTask->cancelAndWait();
+	}
 }

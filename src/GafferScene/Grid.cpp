@@ -299,7 +299,6 @@ IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePa
 		/// and consider removing GL line width plugs too.
 
 		result->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
-		result->members()["gl:smoothing:lines"] = new BoolData( true );
 
 		ShaderPtr shader = new Shader( "Constant", "gl:surface" );
 		shader->parameters()["Cs"] = new Color3fData( Color3f( 1 ) );

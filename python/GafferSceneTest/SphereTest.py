@@ -211,5 +211,10 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( s1["out"].childNames( "/" ), s2["out"].childNames( "/" ) )
 		self.assertTrue( s1["out"].childNames( "/sphere1", _copy=False ).isSame( s2["out"].childNames( "sphere2", _copy=False ) ) )
 
+	def testTransformAffectsBound( self ) :
+
+		s = GafferScene.Sphere()
+		self.assertTrue( s["out"]["bound"] in s.affects( s["transform"]["translate"]["x"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

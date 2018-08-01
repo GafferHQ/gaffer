@@ -34,66 +34,52 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_OBJECTVISUALISER_H
-#define GAFFERSCENEUI_OBJECTVISUALISER_H
+#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 
-#include "GafferSceneUI/Export.h"
+using namespace IECoreGLPreview;
 
-#include "IECoreGL/Renderable.h"
+ObjectVisualiser::ObjectVisualiser()
+{
+}
 
-#include "IECore/Object.h"
+ObjectVisualiser::~ObjectVisualiser()
+{
+}
 
-namespace GafferSceneUI
+//////////////////////////////////////////////////////////////////////////
+// Factory
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
 
-IE_CORE_FORWARDDECLARE( ObjectVisualiser )
+typedef std::map<IECore::TypeId, ConstObjectVisualiserPtr> ObjectVisualisers;
 
-/// Base class for providing OpenGL visualisations of otherwise
-/// non-renderable objects. For geometric objects such as meshes,
-/// the IECoreGL::ToGLConverter is sufficient for providing
-/// OpenGL rendering, but for non-geometric types such as cameras
-/// and lights, IECoreGL provides no visualisation capabilities.
-/// This class allows custom visualisers to be registered to
-/// perform an appropriate visualisation for any such type.
-class GAFFERSCENEUI_API ObjectVisualiser : public IECore::RefCounted
+ObjectVisualisers &objectVisualisers()
 {
+	static ObjectVisualisers v;
+	return v;
+}
 
-	public :
+} // namespace
 
-		IE_CORE_DECLAREMEMBERPTR( ObjectVisualiser )
-
-		~ObjectVisualiser() override;
-
-		/// Must be implemented by derived classes to return a suitable
-		/// visualisation of the object.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const = 0;
-
-		/// @name Factory
-		///////////////////////////////////////////////////////////////////
-		//@{
-		/// Acquires a visualiser for the specified Object type.
-		static const ObjectVisualiser *acquire( IECore::TypeId objectType );
-		/// Registers a visualiser to use for the specified object type.
-		static void registerVisualiser( IECore::TypeId objectType, ConstObjectVisualiserPtr visualiser );
-		//@}
-
-	protected :
-
-		ObjectVisualiser();
-
-		template<typename VisualiserType>
-		struct ObjectVisualiserDescription
+const ObjectVisualiser *ObjectVisualiser::acquire( IECore::TypeId objectType )
+{
+	const ObjectVisualisers &v = objectVisualisers();
+	while( objectType != IECore::InvalidTypeId )
+	{
+		ObjectVisualisers::const_iterator it = v.find( objectType );
+		if( it != v.end() )
 		{
+			return it->second.get();
+		}
+		objectType = IECore::RunTimeTyped::baseTypeId( objectType );
+	}
 
-			ObjectVisualiserDescription()
-			{
-				registerVisualiser( VisualiserType::ObjectType::staticTypeId(), new VisualiserType );
-			}
+	return nullptr;
+}
 
-		};
-
-};
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_VISUALISER_H
+void ObjectVisualiser::registerVisualiser( IECore::TypeId objectType, ConstObjectVisualiserPtr visualiser )
+{
+	objectVisualisers()[objectType] = visualiser;
+}

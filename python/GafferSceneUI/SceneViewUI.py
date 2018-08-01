@@ -50,6 +50,18 @@ Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SceneView,
 
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
+	"toolbarLayout:customWidget:LeftSpacer:section", "Top",
+	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
+	"toolbarLayout:customWidget:RightSpacer:section", "Top",
+	"toolbarLayout:customWidget:RightSpacer:index", -2,
+
+	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferSceneUI.SceneViewUI._StateWidget",
+	"toolbarLayout:customWidget:StateWidget:section", "Top",
+	"toolbarLayout:customWidget:StateWidget:index", -1,
+
 	plugs = {
 
 		"drawingMode" : [
@@ -180,7 +192,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		m = IECore.MenuDefinition()
 
 		for n in ( "solid", "wireframe", "points" ) :
-			plug = self.getPlug()[n]["enabled"]
+			plug = self.getPlug()[n]
 			m.append(
 				"/" + IECore.CamelCase.toSpaced( n ),
 				{
@@ -192,7 +204,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
 		for n in ( "useGLLines", "interpolate" ) :
-			plug = self.getPlug()["curves"][n]["enabled"]
+			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(
 				"/Curves Primitives/" + IECore.CamelCase.toSpaced( n ),
 				{
@@ -201,7 +213,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
-		useGLPointsPlug = self.getPlug()["pointsPrimitives"]["useGLPoints"]["enabled"]
+		useGLPointsPlug = self.getPlug()["pointsPrimitive"]["useGLPoints"]
 		m.append(
 			"/Points Primitives/Use GL Points",
 			{
@@ -662,3 +674,52 @@ def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
 	__appendClippingPlaneMenuItems( menuDefinition, "", node, plugValueWidget )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu, scoped = False )
+
+##########################################################################
+# _StateWidget
+##########################################################################
+
+class _Spacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 0 ) )
+
+class _StateWidget( GafferUI.Widget ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		with row :
+
+			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
+			self.__button = GafferUI.Button( hasFrame = False )
+
+		self.__sceneGadget = sceneView.viewportGadget().getPrimaryChild()
+
+		self.__buttonClickedConnection = self.__button.clickedSignal().connect(
+			Gaffer.WeakMethod( self.__buttonClick )
+		)
+
+		self.__stateChangedConnection = self.__sceneGadget.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__stateChanged )
+		)
+
+		self.__update()
+
+	def __stateChanged( self, sceneGadget ) :
+
+		self.__update()
+
+	def __buttonClick( self, button ) :
+
+		self.__sceneGadget.setPaused( not self.__sceneGadget.getPaused() )
+		self.__update()
+
+	def __update( self ) :
+
+		paused = self.__sceneGadget.getPaused()
+		self.__button.setImage( "timelinePause.png" if not paused else "timelinePlay.png" )
+		self.__busyWidget.setBusy( self.__sceneGadget.state() == self.__sceneGadget.State.Running )

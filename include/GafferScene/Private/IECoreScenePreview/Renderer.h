@@ -45,9 +45,6 @@
 namespace IECoreScenePreview
 {
 
-/// \todo Derive from RunTimeTyped - we're just avoiding doing that
-/// right now so we don't have to shuffle TypeIds between Gaffer and Cortex.
-///
 /// \todo Improve the API, particularly in terms of ownership
 /// semantics and the python bindings :
 ///
@@ -92,6 +89,9 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		static const std::vector<IECore::InternedString> &types();
 		/// Filename is only used if the renderType is SceneDescription.
 		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "" );
+
+		/// Returns the name of this renderer, for instance "OpenGL" or "Arnold".
+		virtual IECore::InternedString name() const = 0;
 
 		/// Sets a global option for the render. In interactive renders an option may
 		/// be unset by passing a null value.
@@ -266,6 +266,9 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// that edits may be made.
 		virtual void pause() = 0;
 
+		/// Performs an arbitrary renderer-specific action.
+		virtual IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() );
+
 	protected :
 
 		Renderer();
@@ -273,7 +276,6 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 
 		/// Construct a static instance of this to register a
 		/// renderer implementation.
-		/// \todo Derive this from RunTimeTyped::TypeDescription.
 		template<class T>
 		struct TypeDescription
 		{

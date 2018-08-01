@@ -23,33 +23,38 @@ GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/emptySceneR
 script["SceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
 viewer.view().viewportGadget().frame( script["SceneReader"]["out"].bound( "/" ) )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/sceneReaderBound.png" )
 
 GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/GAFFERBOT", "/GAFFERBOT/C_torso_GRP" ] ) )
 hierarchy = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
+GafferUI.EventLoop.waitForIdle()
 GafferUI.WidgetAlgo.grab( widget = hierarchy, imagePath = "images/hierarchyViewExpandedTwoLevels.png" )
 
 paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/headAndLegExpanded.png" )
 
 paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/R_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/headAndLegsExpanded.png" )
 
 paths = IECore.PathMatcher( [ "/" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "" ] ) )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/fullyExpanded.png" )
 
 script["Camera"] = GafferScene.Camera()
 script.selection().clear()
 script.selection().add( script["Camera"] )
-## \todo: reset viewer bound to grid
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/camera.png" )
 
 script["Group"] = GafferScene.Group()
@@ -61,6 +66,7 @@ viewer.view()["minimumExpansionDepth"].setValue( 999 )
 GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
 paths = IECore.PathMatcher( [ "/group" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/group.png" )
 
 script['Camera']['transform']['translate'].setValue( imath.V3f( 19, 13, 31 ) )
@@ -150,7 +156,9 @@ paths = IECore.PathMatcher( [ "/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CP
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
 GafferUI.EventLoop.waitForIdle()
 paths = IECore.PathMatcher( [ "/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT" ] )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 viewer.view().frame( paths, direction = imath.V3f( -0.2, -0.2, -1 ) )
+GafferUI.EventLoop.waitForIdle( 10 )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/faceSelection.png" )
 
 script.selection().clear()

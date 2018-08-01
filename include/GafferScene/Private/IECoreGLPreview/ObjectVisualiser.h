@@ -34,52 +34,66 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/ObjectVisualiser.h"
+#ifndef IECOREGLPREVIEW_OBJECTVISUALISER_H
+#define IECOREGLPREVIEW_OBJECTVISUALISER_H
 
-using namespace GafferSceneUI;
+#include "GafferScene/Export.h"
 
-ObjectVisualiser::ObjectVisualiser()
-{
-}
+#include "IECoreGL/Renderable.h"
 
-ObjectVisualiser::~ObjectVisualiser()
-{
-}
+#include "IECore/Object.h"
 
-//////////////////////////////////////////////////////////////////////////
-// Factory
-//////////////////////////////////////////////////////////////////////////
-
-namespace
+namespace IECoreGLPreview
 {
 
-typedef std::map<IECore::TypeId, ConstObjectVisualiserPtr> ObjectVisualisers;
+IE_CORE_FORWARDDECLARE( ObjectVisualiser )
 
-ObjectVisualisers &objectVisualisers()
+/// Base class for providing OpenGL visualisations of otherwise
+/// non-renderable objects. For geometric objects such as meshes,
+/// the IECoreGL::ToGLConverter is sufficient for providing
+/// OpenGL rendering, but for non-geometric types such as cameras
+/// and lights, IECoreGL provides no visualisation capabilities.
+/// This class allows custom visualisers to be registered to
+/// perform an appropriate visualisation for any such type.
+class GAFFERSCENE_API ObjectVisualiser : public IECore::RefCounted
 {
-	static ObjectVisualisers v;
-	return v;
-}
 
-} // namespace
+	public :
 
-const ObjectVisualiser *ObjectVisualiser::acquire( IECore::TypeId objectType )
-{
-	const ObjectVisualisers &v = objectVisualisers();
-	while( objectType != IECore::InvalidTypeId )
-	{
-		ObjectVisualisers::const_iterator it = v.find( objectType );
-		if( it != v.end() )
+		IE_CORE_DECLAREMEMBERPTR( ObjectVisualiser )
+
+		~ObjectVisualiser() override;
+
+		/// Must be implemented by derived classes to return a suitable
+		/// visualisation of the object.
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const = 0;
+
+		/// @name Factory
+		///////////////////////////////////////////////////////////////////
+		//@{
+		/// Acquires a visualiser for the specified Object type.
+		static const ObjectVisualiser *acquire( IECore::TypeId objectType );
+		/// Registers a visualiser to use for the specified object type.
+		static void registerVisualiser( IECore::TypeId objectType, ConstObjectVisualiserPtr visualiser );
+		//@}
+
+	protected :
+
+		ObjectVisualiser();
+
+		template<typename VisualiserType>
+		struct ObjectVisualiserDescription
 		{
-			return it->second.get();
-		}
-		objectType = IECore::RunTimeTyped::baseTypeId( objectType );
-	}
 
-	return nullptr;
-}
+			ObjectVisualiserDescription()
+			{
+				registerVisualiser( VisualiserType::ObjectType::staticTypeId(), new VisualiserType );
+			}
 
-void ObjectVisualiser::registerVisualiser( IECore::TypeId objectType, ConstObjectVisualiserPtr visualiser )
-{
-	objectVisualisers()[objectType] = visualiser;
-}
+		};
+
+};
+
+} // namespace IECoreGLPreview
+
+#endif // IECOREGLPREVIEW_OBJECTVISUALISER_H

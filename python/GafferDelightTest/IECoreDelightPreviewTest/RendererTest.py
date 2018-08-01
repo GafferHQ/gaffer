@@ -53,6 +53,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create( "3Delight" )
 		self.assertTrue( isinstance( r, GafferScene.Private.IECoreScenePreview.Renderer ) )
+		self.assertEqual( r.name(), "3Delight" )
 
 	def testSceneDescription( self ) :
 

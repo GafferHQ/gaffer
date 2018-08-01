@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEMODULE_IECOREGLPREVIEWBINDING_H
+#define GAFFERSCENEMODULE_IECOREGLPREVIEWBINDING_H
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "SceneGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
-
-using namespace GafferSceneUIModule;
-
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+namespace GafferSceneModule
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
+void bindIECoreGLPreview();
 
-}
+} // namespace GafferSceneModule
+
+#endif // GAFFERSCENEMODULE_IECOREGLPREVIEWBINDING_H

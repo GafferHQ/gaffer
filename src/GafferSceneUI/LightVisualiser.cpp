@@ -36,8 +36,9 @@
 
 #include "GafferSceneUI/LightVisualiser.h"
 
-#include "GafferSceneUI/AttributeVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
+
+#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -49,6 +50,7 @@
 
 using namespace std;
 using namespace Imath;
+using namespace IECoreGLPreview;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////

@@ -38,7 +38,7 @@
 #define GAFFERSCENE_INTERACTIVERENDER_H
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/RenderController.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Node.h"
@@ -104,27 +104,16 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::Node
 		const ScenePlug *adaptedInPlug() const;
 
 		void plugDirtied( const Gaffer::Plug *plug );
-		void contextChanged( const IECore::InternedString &name );
 
 		void update();
-		void updateEffectiveContext();
-		void updateDefaultCamera();
+		Gaffer::ConstContextPtr effectiveContext();
 		void stop();
 
-		class SceneGraph;
-		class SceneGraphUpdateTask;
-
-		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		IECoreScenePreview::RendererPtr m_renderer;
+		std::unique_ptr<RenderController> m_controller;
 		State m_state;
-		unsigned m_dirtyComponents;
-		IECore::ConstCompoundObjectPtr m_globals;
-		RendererAlgo::RenderSets m_renderSets;
-		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 
-		Gaffer::ContextPtr m_context; // Accessed with setContext()/getContext()
-		Gaffer::ContextPtr m_effectiveContext; // Base context actually used for rendering
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::ContextPtr m_context;
 
 		static size_t g_firstPlugIndex;
 

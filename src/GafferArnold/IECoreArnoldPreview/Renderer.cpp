@@ -328,6 +328,8 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 
 		~ArnoldRendererBase() override;
 
+		IECore::InternedString name() const override;
+
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
@@ -2824,6 +2826,11 @@ ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentN
 
 ArnoldRendererBase::~ArnoldRendererBase()
 {
+}
+
+IECore::InternedString ArnoldRendererBase::name() const
+{
+	return "Arnold";
 }
 
 ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const IECore::CompoundObject *attributes )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,74 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/AttributeVisualiser.h"
+#ifndef GAFFERSCENEUIMODULE_SCENEGADGETBINDING_H
+#define GAFFERSCENEUIMODULE_SCENEGADGETBINDING_H
 
-#include "IECoreGL/Group.h"
-#include "IECoreGL/State.h"
-
-using namespace GafferSceneUI;
-
-namespace
+namespace GafferSceneUIModule
 {
 
-typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
+void bindSceneGadget();
 
-AttributeVisualisers &visualisers()
-{
-	static AttributeVisualisers v;
-	return v;
-}
+} // namespace GafferSceneUIModule
 
-} // namespace
-
-AttributeVisualiser::AttributeVisualiser()
-{
-}
-
-AttributeVisualiser::~AttributeVisualiser()
-{
-}
-
-
-IECoreGL::ConstRenderablePtr AttributeVisualiser::allVisualisations( const IECore::CompoundObject *attributes,
-	IECoreGL::ConstStatePtr &state )
-{
-	const AttributeVisualisers &v = visualisers();
-
-	IECoreGL::GroupPtr resultGroup = nullptr;
-	IECoreGL::StatePtr resultState = nullptr;
-
-	for( unsigned int i = 0; i < v.size(); i++ )
-	{
-		IECoreGL::ConstStatePtr curState = nullptr;
-		IECoreGL::ConstRenderablePtr curVis = v[i]->visualise( attributes, curState );
-
-		if( curVis )
-		{
-			if( !resultGroup )
-			{
-				resultGroup = new IECoreGL::Group();
-			}
-			// resultGroup will be returned as const, so const-casting the children in order to add them
-			// is safe
-			resultGroup->addChild( const_cast<IECoreGL::Renderable*>( curVis.get() ) );
-		}
-
-		if( curState )
-		{
-			if( !resultState )
-			{
-				resultState = new IECoreGL::State( false );
-			}
-			resultState->add( const_cast<IECoreGL::State*>( curState.get() ) );
-		}
-	}
-
-	state = resultState;
-	return resultGroup;
-}
-
-void AttributeVisualiser::registerVisualiser( ConstAttributeVisualiserPtr visualiser )
-{
-	visualisers().push_back( visualiser );
-}
+#endif // GAFFERSCENEUIMODULE_SCENEGADGETBINDING_H
