@@ -116,7 +116,7 @@ class About :
 			{
 				"name" : "freetype",
 				"url" : "http://www.freetype.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/freetype",
+				"license" : "$GAFFER_ROOT/doc/licenses/FreeType",
 				"credit" : "Portions of this software are copyright (c) 2009 The FreeType Project (www.freetype.org). All rights reserved."
 			},
 
@@ -154,7 +154,7 @@ class About :
 			{
 				"name" : "python",
 				"url" : "http://python.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/python",
+				"license" : "$GAFFER_ROOT/doc/licenses/Python",
 			},
 
 			{
@@ -189,13 +189,13 @@ class About :
 			{
 				"name" : "HDF5",
 				"url" : "http://www.hdfgroup.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/hdf5",
+				"license" : "$GAFFER_ROOT/doc/licenses/HDF5",
 			},
 
 			{
 				"name" : "Alembic",
 				"url" : "http://www.alembic.io/",
-				"license" : "$GAFFER_ROOT/doc/licenses/alembic",
+				"license" : "$GAFFER_ROOT/doc/licenses/Alembic",
 			},
 
 			{
