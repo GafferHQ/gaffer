@@ -46,26 +46,24 @@ class AnimationTest( GafferTest.TestCase ) :
 	def testKey( self ) :
 
 		k = Gaffer.Animation.Key()
-		self.assertEqual( k.type, Gaffer.Animation.Type.Invalid )
-		self.assertFalse( k )
+		self.assertEqual( k.getTime(), 0 )
+		self.assertEqual( k.getValue(), 0 )
+		self.assertEqual( k.getType(), Gaffer.Animation.Type.Linear )
 
-		k = Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Type.Step )
-		self.assertTrue( k )
-		self.assertEqual( k.time, 0 )
-		self.assertEqual( k.value, 1 )
-		self.assertEqual( k.type, Gaffer.Animation.Type.Step )
+		k = Gaffer.Animation.Key( 1, 2, Gaffer.Animation.Type.Step )
+		self.assertEqual( k.getTime(), 1 )
+		self.assertEqual( k.getValue(), 2 )
+		self.assertEqual( k.getType(), Gaffer.Animation.Type.Step )
 
-		k.time = 1
-		k.value = 0
-		k.type = Gaffer.Animation.Type.Linear
-		self.assertEqual( k.time, 1 )
-		self.assertEqual( k.value, 0 )
-		self.assertEqual( k.type, Gaffer.Animation.Type.Linear )
+		self.assertEqual( k.parent(), None )
 
-		k2 = Gaffer.Animation.Key( k )
-		self.assertEqual( k, k2 )
-		k2.time = 10
-		self.assertNotEqual( k, k2 )
+		k.setTime( 2 )
+		k.setValue( 1 )
+		k.setType( Gaffer.Animation.Type.Linear )
+
+		self.assertEqual( k.getTime(), 2 )
+		self.assertEqual( k.getValue(), 1 )
+		self.assertEqual( k.getType(), Gaffer.Animation.Type.Linear )
 
 	def testKeyRepr( self ) :
 
@@ -146,12 +144,43 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 		key = Gaffer.Animation.Key( time = 10, value = 10 )
-		self.assertFalse( curve.hasKey( key.time ) )
+		self.assertFalse( curve.hasKey( key.getTime() ) )
 
 		curve.addKey( key )
-		self.assertTrue( curve.hasKey( key.time ) )
+		self.assertTrue( curve.hasKey( key.getTime() ) )
+		self.assertTrue( curve.getKey( key.getTime() ).isSame( key ) )
+		self.assertTrue( key.parent().isSame( curve ) )
 
-		self.assertEqual( curve.getKey( key.time ), key )
+	def testAddKeyWithExistingKey( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		k1 = Gaffer.Animation.Key( time = 1, value = 1 )
+		k2 = Gaffer.Animation.Key( time = 1, value = 2 )
+
+		curve.addKey( k1 )
+
+		with Gaffer.UndoScope( s ) :
+			curve.addKey( k2 )
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertTrue( k1.parent() is None )
+
+		s.undo()
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertTrue( k2.parent() is None )
+		self.assertTrue( k1.parent().isSame( curve ) )
+
+		s.redo()
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertTrue( k1.parent() is None )
 
 	def testClosestKey( self ) :
 
@@ -177,6 +206,12 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( curve.closestKey( 1 ), key1 )
 		self.assertEqual( curve.closestKey( 1.1 ), key1 )
 
+		self.assertEqual( curve.closestKey( -1, 1 ), key0 )
+		self.assertEqual( curve.closestKey( -1, 0.9 ), None )
+
+		self.assertEqual( curve.closestKey( 0.75, 1 ), key1 )
+		self.assertEqual( curve.closestKey( 0.75, 0.2 ), None )
+
 	def testRemoveKey( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -187,12 +222,14 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 		key = Gaffer.Animation.Key( time = 10, value = 10 )
 		curve.addKey( key )
-		self.assertEqual( curve.getKey( key.time ), key )
-		self.assertEqual( curve.closestKey( 0 ), key )
+		self.assertTrue( curve.getKey( key.getTime() ).isSame( key ) )
+		self.assertTrue( curve.closestKey( 0 ).isSame( key ) )
+		self.assertTrue( key.parent().isSame( curve ) )
 
-		curve.removeKey( key.time )
-		self.assertFalse( curve.getKey( key.time ) )
-		self.assertFalse( curve.closestKey( 0 ) )
+		curve.removeKey( key )
+		self.assertEqual( curve.getKey( key.getTime() ), None )
+		self.assertEqual( curve.closestKey( 0 ), None )
+		self.assertEqual( key.parent(), None )
 
 	def testSingleKey( self ) :
 
@@ -355,17 +392,20 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 		key = Gaffer.Animation.Key( 0, 0 )
 		curve.addKey( key )
-		self.assertEqual( curve.getKey( key.time ), key )
+		self.assertTrue( curve.getKey( key.getTime() ).isSame( key ) )
 
 		with Gaffer.UndoScope( s ) :
-			curve.removeKey( key.time )
-			self.assertFalse( curve.hasKey( key.time ) )
+			curve.removeKey( key )
+			self.assertFalse( curve.hasKey( key.getTime() ) )
+			self.assertEqual( key.parent(), None )
 
 		s.undo()
-		self.assertEqual( curve.getKey( key.time ), key )
+		self.assertEqual( curve.getKey( key.getTime() ), key )
+		self.assertTrue( key.parent().isSame( curve ) )
 
 		s.redo()
-		self.assertFalse( curve.hasKey( key.time ) )
+		self.assertFalse( curve.hasKey( key.getTime() ) )
+		self.assertEqual( key.parent(), None )
 
 	def testNextAndPreviousKeys( self ) :
 
@@ -441,6 +481,81 @@ class AnimationTest( GafferTest.TestCase ) :
 			self.assertEqual( s["r"]["sum"].getValue(), 2 )
 			c.setTime( 1 )
 			self.assertEqual( s["r"]["sum"].getValue(), 3 )
+
+	def testModifyKey( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		k = Gaffer.Animation.Key( time = 1, value = 2, type = Gaffer.Animation.Type.Linear )
+		curve.addKey( k )
+		curve.addKey( Gaffer.Animation.Key( 0.5 ) )
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k ) )
+
+		cs = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
+		with Gaffer.UndoScope( s ) :
+			k.setTime( 0 )
+
+		self.assertTrue( curve.getKey( 1 ) is None )
+		self.assertTrue( curve.getKey( 0 ).isSame( k ) )
+		self.assertEqual( k.getTime(), 0 )
+		self.assertIn( s["n"]["op1"], { x[0] for x in cs } )
+
+		del cs[:]
+		s.undo()
+
+		self.assertTrue( curve.getKey( 0 ) is None )
+		self.assertTrue( curve.getKey( 1 ).isSame( k ) )
+		self.assertEqual( k.getTime(), 1 )
+		self.assertIn( s["n"]["op1"], { x[0] for x in cs } )
+
+		del cs[:]
+		s.redo()
+
+		self.assertTrue( curve.getKey( 1 ) is None )
+		self.assertTrue( curve.getKey( 0 ).isSame( k ) )
+		self.assertEqual( k.getTime(), 0 )
+		self.assertIn( s["n"]["op1"], { x[0] for x in cs } )
+
+	def testModifyKeyReplacesExistingKey( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		k1 = Gaffer.Animation.Key( time = 1 )
+		k2 = Gaffer.Animation.Key( time = 2 )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertTrue( k2.parent().isSame( curve ) )
+
+		with Gaffer.UndoScope( s ) :
+			k2.setTime( 1 )
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertTrue( curve.getKey( 2 ) is None )
+		self.assertTrue( k1.parent() is None )
+		self.assertTrue( k2.parent().isSame( curve ) )
+
+		s.undo()
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertTrue( k2.parent().isSame( curve ) )
+
+		s.redo()
+
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertTrue( curve.getKey( 2 ) is None )
+		self.assertTrue( k1.parent() is None )
+		self.assertTrue( k2.parent().isSame( curve ) )
 
 if __name__ == "__main__":
 	unittest.main()

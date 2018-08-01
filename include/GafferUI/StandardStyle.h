@@ -73,13 +73,13 @@ class GAFFERUI_API StandardStyle : public Style
 		void bind( const Style *currentStyle=nullptr ) const override;
 
 		void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const override;
-		void renderLine( const IECore::LineSegment3f &line ) const override;
+		void renderLine( const IECore::LineSegment3f &line, float width=0.5, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderSolidRectangle( const Imath::Box2f &box ) const override;
 		void renderRectangle( const Imath::Box2f &box ) const override;
 
 		Imath::Box3f characterBound( TextType textType ) const override;
 		Imath::Box3f textBound( TextType type, const std::string &text ) const override;
-		void renderText( TextType type, const std::string &text, State state = NormalState ) const override;
+		void renderText( TextType type, const std::string &text, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const override;
 
 		void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const override;
@@ -99,6 +99,9 @@ class GAFFERUI_API StandardStyle : public Style
 		void renderRotateHandle( Axes axes, State state = NormalState ) const override;
 		void renderScaleHandle( Axes axes, State state = NormalState ) const override;
 
+		void renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const override;
+		void renderAnimationKey( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const override;
+
 		enum Color
 		{
 			BackgroundColor,
@@ -108,6 +111,7 @@ class GAFFERUI_API StandardStyle : public Style
 			HighlightColor,
 			ConnectionColor,
 			AuxiliaryConnectionColor,
+			AnimationCurveColor,
 			LastColor
 		};
 

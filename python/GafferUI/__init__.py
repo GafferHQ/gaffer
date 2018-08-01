@@ -285,6 +285,7 @@ import GraphBookmarksUI
 import DocumentationAlgo
 import _PlugAdder
 from Backups import Backups
+from AnimationEditor import AnimationEditor
 
 # and then specific node uis
 
