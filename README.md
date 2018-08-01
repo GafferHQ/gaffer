@@ -20,11 +20,55 @@ Compiled binary releases are available for download from the [releases page](htt
 
 [![Build Status](https://travis-ci.org/GafferHQ/gaffer.svg?branch=master)](https://travis-ci.org/GafferHQ/gaffer)
 
-Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, make sure you have the following prerequisites installed on your system, which will be used to perform the build itself:
+Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, make sure you have the following prerequisites installed on your system, which will be used to perform the build itself.
 
-- [SCons](https://www.scons.org)
-- [Inkscape](https://inkscape.org)
-- [Sphinx](https://www.sphinx-doc.org/) 1.4 or higher (optional)
+
+### Build Requirements ###
+
+From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
+
+> **Note:** Specific package names may differ depending on your Linux distribution and repository.
+
+
+#### Main Build Requirements ####
+
+> **Note:** Large Linux distros focused on usability, such as CentOS and Ubuntu, ship with many of these packages by default.
+
+Package Name | Minimum Version
+------------ |:--------------:
+**Build Dependencies** | -
+[gcc](https://gcc.gnu.org/index.html) | 6.3.1
+[cmake](https://cmake.org) | 3
+[scons](http://www.scons.org) |
+[doxygen](https://www.stack.nl/~dimitri/doxygen) |
+**OpenGL Dependencies** | -
+[libX11-devel](https://www.x.org) |
+[libXi-devel](https://www.x.org) |
+[libXmu-devel](https://www.x.org) |
+[mesa-libGL-devel](https://www.mesa3d.org) |
+[mesa-libGLU-devel](https://www.mesa3d.org) |
+**Image Format Dependencies** | -
+[nasm](https://www.nasm.us) |
+[zlib-devel](https://www.zlib.net) |
+
+
+#### Documentation Build Requirements ####
+
+> **Note:** Building the documentation is optional.
+
+Package Name | Minimum Version
+------------ |:--------------:
+[python2-pip](https://pypi.org/project/pip) |
+[sphinx](http://www.sphinx-doc.org/) | 1.4
+[inkscape](http://inkscape.org) |
+
+pip Module |
+---------- |
+sphinx_rtd_theme |
+recommonmark |
+
+
+### Build Process ###
 
 Gaffer also depends on a number of 3rd-party libraries and python modules, many of which are not entirely straightforward to build. We therefore recommend using the latest pre-built dependencies from the [Gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up-to-date with Gaffer's requirements.
 
