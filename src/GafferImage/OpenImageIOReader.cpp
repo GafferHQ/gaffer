@@ -185,7 +185,7 @@ class File
 					continue;
 				}
 
-				const string_view subImageName = currentSpec.get_string_attribute( "name", "" );
+				const OIIO::string_view subImageName = currentSpec.get_string_attribute( "name", "" );
 
 				for( const auto &n : currentSpec.channelnames )
 				{
