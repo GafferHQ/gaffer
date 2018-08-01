@@ -58,6 +58,7 @@
 
 #include "OpenEXR/ImathVecAlgo.h"
 
+#include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
 
 using namespace GafferUI;
@@ -86,6 +87,10 @@ Imath::Color4f colorForAxes( Style::Axes axes )
 			return Color4f( 0.2, 0.57, 0.2, 1.0f );
 		case Style::Z :
 			return Color4f( 0.2, 0.36, 0.74, 1.0f );
+		case Style::XY :
+		case Style::XZ :
+		case Style::YZ :
+			return Color4f( 0.75, 0.5, 0.2, 1.0f );
 		default :
 			return Color4f( 0.8, 0.8, 0.8, 0.0f );
 	}
@@ -274,62 +279,85 @@ IECoreGL::MeshPrimitivePtr cube()
 
 IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 {
-	if( axes < Style::X || axes > Style::Z )
+	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
+	if( handles[axes] )
 	{
-		throw Exception( "Unsupported axes" );
-	}
-	const int axis = (int)axes;
-
-	static IECoreGL::GroupPtr handles[3];
-	if( handles[axis] )
-	{
-		return handles[axis];
+		return handles[axes];
 	}
 
-	IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
-	coneGroup->addChild( cone() );
-	coneGroup->setTransform( M44f().scale( V3f( 0.25 ) ) * M44f().translate( V3f( 0, 1, 0 ) ) );
-
-	IECoreGL::GroupPtr group = new IECoreGL::Group;;
-
-	// Line ensures minimum width when very small on screen,
-	// like the corner gnomon in the SceneView.
-	group->addChild( line( V3f( 0 ), V3f( 0, 1, 0 ) ) );
-	// Cylinder provides a chunkier handle for picking when
-	// bigger on screen, like the TranslateHandle.
-	group->addChild( cylinder() );
-	group->addChild( coneGroup );
-
+	IECoreGL::GroupPtr group = new IECoreGL::Group;
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
 	);
 
-	if( axis == 0 )
+	if( axes == Style::X || axes == Style::Y || axes == Style::Z )
 	{
-		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+		IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
+		coneGroup->addChild( cone() );
+		coneGroup->setTransform( M44f().scale( V3f( 0.25 ) ) * M44f().translate( V3f( 0, 1, 0 ) ) );
+
+		// Line ensures minimum width when very small on screen,
+		// like the corner gnomon in the SceneView.
+		group->addChild( line( V3f( 0 ), V3f( 0, 1, 0 ) ) );
+		// Cylinder provides a chunkier handle for picking when
+		// bigger on screen, like the TranslateHandle.
+		group->addChild( cylinder() );
+		group->addChild( coneGroup );
+
+		if( axes == Style::X )
+		{
+			group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+		}
+		else if( axes == Style::Z )
+		{
+			group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		}
 	}
-	else if( axis == 2 )
+	else if( axes == Style::XY || axes == Style::XZ || axes == Style::YZ )
 	{
-		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
+		cubeGroup->setTransform( M44f().scale( V3f( 0.25, 0.25, 0.01 ) ) * M44f().translate( V3f( 0.5, 0.5, 0 ) ) );
+		cubeGroup->addChild( cube() );
+		group->addChild( cubeGroup );
+
+		if( axes == Style::XZ )
+		{
+			group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		}
+		else if( axes == Style::YZ )
+		{
+			group->setTransform( M44f().rotate( V3f( 0, -M_PI / 2.0f, 0 ) ) );
+		}
+	}
+	else if( axes == Style::XYZ )
+	{
+		IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
+		cubeGroup->setTransform( M44f().scale( V3f( 0.1 ) ) );
+		cubeGroup->addChild( cube() );
+		group->addChild( cubeGroup );
 	}
 
-	handles[axis] = group;
+	handles[axes] = group;
 	return group;
 }
 
 IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 {
-	if( axes < Style::X || axes > Style::Z )
+	switch( axes )
 	{
-		throw Exception( "Unsupported axes" );
+		case Style::X :
+		case Style::Y :
+		case Style::Z :
+			break;
+		default :
+			throw Exception( "Unsupported axes" );
 	}
-	const int axis = (int)axes;
 
-	static IECoreGL::GroupPtr handles[3];
-	if( handles[axis] )
+	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
+	if( handles[axes] )
 	{
-		return handles[axis];
+		return handles[axes];
 	}
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group;
@@ -340,27 +368,33 @@ IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
 	);
 
-	if( axis == 0 )
+	if( axes == Style::X )
 	{
 		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
 	}
-	else if( axis == 2 )
+	else if( axes == Style::Z )
 	{
 		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
 	}
 
-	handles[axis] = group;
+	handles[axes] = group;
 	return group;
 }
 
 IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
 {
-	if( axes < Style::X || axes > Style::XYZ )
+	switch( axes )
 	{
-		throw Exception( "Unsupported axes" );
+		case Style::X :
+		case Style::Y :
+		case Style::Z :
+		case Style::XYZ :
+			break;
+		default :
+			throw Exception( "Unsupported axes" );
 	}
 
-	static IECoreGL::GroupPtr handles[4];
+	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
 	if( handles[axes] )
 	{
 		return handles[axes];

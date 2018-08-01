@@ -58,6 +58,9 @@ class GAFFERUI_API Handle : public Gadget
 		void setRasterScale( float rasterScale );
 		float getRasterScale() const;
 
+		void setVisibleOnHover( bool visibleOnHover );
+		bool getVisibleOnHover() const;
+
 		Imath::Box3f bound() const override;
 
 	protected :
@@ -111,9 +114,13 @@ class GAFFERUI_API Handle : public Gadget
 			// Plane is parallel to the camera plane, centered on gadget, and with unit
 			// length axes in gadget space.
 			PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent );
-			// Position and axes are in gadget space. Axes are assumed to be orthogonal
+			// Origin and axes are in gadget space. Axes are assumed to be orthogonal
 			// but may have any length.
 			PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
+
+			// The axes of the plane in Gadget space.
+			const Imath::V3f &axis0() const;
+			const Imath::V3f &axis1() const;
 
 			// X coordinate are measured from 0 at origin to 1 at `origin + axis0`
 			// Y coordinates are measured from 0 at origin to 1 at `origin + axis1`
@@ -125,6 +132,10 @@ class GAFFERUI_API Handle : public Gadget
 				void init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
 
 				const Gadget *m_gadget;
+
+				Imath::V3f m_axis0;
+				Imath::V3f m_axis1;
+
 				Imath::V3f m_worldOrigin;
 				Imath::V3f m_worldAxis0;
 				Imath::V3f m_worldAxis1;
@@ -143,6 +154,7 @@ class GAFFERUI_API Handle : public Gadget
 
 		bool m_hovering;
 		float m_rasterScale;
+		bool m_visibleOnHover;
 
 };
 

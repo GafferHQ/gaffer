@@ -56,13 +56,18 @@ class GAFFERUI_API TranslateHandle : public Handle
 		void setAxes( Style::Axes axes );
 		Style::Axes getAxes() const;
 
+		// Returns a vector where each component is 0 or 1,
+		// indicating whether or not the handle will produce
+		// translation in that axis.
+		Imath::V3i axisMask() const;
+
 		// Translation is measured in the local space of the handle.
 		//
 		// > Note :
 		// > The use of a non-zero raster scale may make it appear
 		// > that a handle has no scaling applied, but that scaling
 		// > will still affect the results of `translation()`.
-		float translation( const DragDropEvent &event ) const;
+		Imath::V3f translation( const DragDropEvent &event ) const;
 
 	protected :
 
@@ -72,7 +77,8 @@ class GAFFERUI_API TranslateHandle : public Handle
 	private :
 
 		Style::Axes m_axes;
-		LinearDrag m_drag;
+		LinearDrag m_linearDrag;
+		PlanarDrag m_planarDrag;
 
 };
 

@@ -80,16 +80,24 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 		// method.
 		struct Translation
 		{
-			Imath::V3f origin;
-			Imath::V3f direction;
-		};
 
-		Translation createTranslation( const Imath::V3f &directionInHandleSpace );
-		void applyTranslation( const Translation &translation, float offset );
+			Translation() = default;
+			Translation( const TranslateTool *tool );
+
+			bool canApply( const Imath::V3f &offset ) const;
+			void apply( const Imath::V3f &offset ) const;
+
+			private :
+
+				Gaffer::V3fPlugPtr m_plug;
+				Imath::V3f m_origin;
+				Imath::M44f m_gadgetToTransform;
+
+		};
 
 		// Drag handling.
 
-		IECore::RunTimeTypedPtr dragBegin( int axis );
+		IECore::RunTimeTypedPtr dragBegin();
 		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 

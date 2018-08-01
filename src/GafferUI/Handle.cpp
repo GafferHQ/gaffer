@@ -41,6 +41,7 @@
 #include "GafferUI/ViewportGadget.h"
 
 #include "IECoreGL/Camera.h"
+#include "IECoreGL/Selector.h"
 
 #include "IECore/Export.h"
 #include "IECore/NullObject.h"
@@ -68,7 +69,7 @@ using namespace GafferUI;
 IE_CORE_DEFINERUNTIMETYPED( Handle );
 
 Handle::Handle( const std::string &name )
-	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f )
+	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f ), m_visibleOnHover( false )
 {
 	enterSignal().connect( boost::bind( &Handle::enter, this ) );
 	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
@@ -98,6 +99,22 @@ float Handle::getRasterScale() const
 	return m_rasterScale;
 }
 
+void Handle::setVisibleOnHover( bool visibleOnHover )
+{
+	if( visibleOnHover == m_visibleOnHover )
+	{
+		return;
+	}
+
+	m_visibleOnHover = visibleOnHover;
+	renderRequestSignal()( this );
+}
+
+bool Handle::getVisibleOnHover() const
+{
+	return m_visibleOnHover;
+}
+
 Imath::Box3f Handle::bound() const
 {
 	// Having a raster scale makes our bound somewhat meaningless
@@ -113,6 +130,14 @@ bool Handle::hasLayer( Layer layer ) const
 
 void Handle::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( m_visibleOnHover )
+	{
+		if( !enabled() || (!m_hovering && !IECoreGL::Selector::currentSelector() ) )
+		{
+			return;
+		}
+	}
+
 	if( m_rasterScale > 0.0f )
 	{
 		// We want our handles to be a constant length in
@@ -280,6 +305,16 @@ Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, 
 	init( gadget, origin, axis0, axis1, dragBeginEvent );
 }
 
+const Imath::V3f &Handle::PlanarDrag::axis0() const
+{
+	return m_axis0;
+}
+
+const Imath::V3f &Handle::PlanarDrag::axis1() const
+{
+	return m_axis1;
+}
+
 Imath::V2f Handle::PlanarDrag::startPosition() const
 {
 	return m_dragBeginPosition;
@@ -311,6 +346,8 @@ Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
 
 void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
 {
+	m_axis0 = axis0;
+	m_axis1 = axis1;
 	m_gadget = gadget;
 	const M44f transform = gadget->fullTransform();
 	m_worldOrigin = origin * transform;
