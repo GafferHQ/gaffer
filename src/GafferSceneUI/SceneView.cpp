@@ -82,6 +82,60 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
+// SceneView::SelectionMask implementation
+//////////////////////////////////////////////////////////////////////////
+
+class SceneView::SelectionMask : public boost::signals::trackable
+{
+
+	public :
+
+		SelectionMask( SceneView *view )
+			:	m_view( view )
+		{
+			view->addChild(
+				new StringVectorDataPlug(
+					"selectionMask",
+					Plug::In,
+					new StringVectorData( { "Renderable", "NullObject" } )
+				)
+			);
+
+			updateSelectionMask();
+
+			view->plugSetSignal().connect( boost::bind( &SelectionMask::plugSet, this, ::_1 ) );
+		}
+
+	private :
+
+		Gaffer::StringVectorDataPlug *selectionMaskPlug()
+		{
+			return m_view->getChild<StringVectorDataPlug>( "selectionMask" );
+		}
+
+		SceneGadget *sceneGadget()
+		{
+			return static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+		}
+
+		void plugSet( const Plug *plug )
+		{
+			if( plug == selectionMaskPlug() )
+			{
+				updateSelectionMask();
+			}
+		}
+
+		void updateSelectionMask()
+		{
+			sceneGadget()->setSelectionMask( selectionMaskPlug()->getValue().get() );
+		}
+
+		SceneView *m_view;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // SceneView::DrawingMode implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -1323,6 +1377,7 @@ SceneView::SceneView( const std::string &name )
 
 	m_sceneGadget->setContext( getContext() );
 
+	m_selectionMask.reset( new SelectionMask( this ) );
 	m_drawingMode.reset( new DrawingMode( this ) );
 	m_shadingMode.reset( new ShadingMode( this ) );
 	m_camera.reset( new Camera( this ) );

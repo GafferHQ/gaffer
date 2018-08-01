@@ -40,6 +40,7 @@ import functools
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -88,6 +89,17 @@ Gaffer.Metadata.registerNode(
 		"minimumExpansionDepth" : [
 
 			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget",
+
+		],
+
+		"selectionMask" : [
+
+			"description",
+			"""
+			Defines what types of objects are selectable in the viewport.
+			""",
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._SelectionMaskPlugValueWidget",
+
 			"toolbarLayout:divider", True,
 
 		],
@@ -308,6 +320,109 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __toggleMinimumExpansionDepth( self, *unused ) :
 
 		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
+
+##########################################################################
+# _SelectionMaskPlugValueWidget
+##########################################################################
+
+def _leafTypes( typeId ) :
+
+	if isinstance( typeId, str ) :
+		typeId = IECore.RunTimeTyped.typeIdFromTypeName( typeId )
+
+	derivedTypes = IECore.RunTimeTyped.derivedTypeIds( typeId )
+	if derivedTypes :
+		return set().union( *[ _leafTypes( t ) for t in derivedTypes ] )
+	else :
+		return { IECore.RunTimeTyped.typeNameFromTypeId( typeId ) }
+
+class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Selection Mask" )
+		self.__menuButton = GafferUI.MenuButton( menu=menu, image = "selectionMask.png", hasFrame=False )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+
+		self._updateFromPlug()
+
+	def hasLabel( self ) :
+
+		return True
+
+	def _updateFromPlug( self ) :
+
+		allTypes = set().union( *[ x[1] for x in self.__menuItems() if x[1] and not x[2] ] )
+		currentTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().getValue() ] )
+
+		self.__menuButton.setImage(
+			"selectionMaskOff.png" if currentTypes.issuperset( allTypes ) else "selectionMaskOn.png"
+		)
+
+	@staticmethod
+	def __menuItems() :
+
+		geometryTypes = _leafTypes( IECoreScene.VisibleRenderable.staticTypeId() )
+
+		result = [
+
+			# Label, types, invert
+
+			( "/Cameras", { "Camera" }, False ),
+			( "/Lights", { "NullObject" }, False ),
+			( "/Geometry/All", geometryTypes, False ),
+			( "/Geometry/None", geometryTypes, True ),
+			( "/Geometry/Divider", None, None ),
+			( "/Geometry/Meshes", { "MeshPrimitive" }, False ),
+			( "/Geometry/Curves", { "CurvesPrimitive" }, False ),
+			( "/Geometry/Points", { "PointsPrimitive" }, False ),
+			( "/Geometry/Volumes", { "IECoreVDB::VDBObject" }, False ),
+			( "/Geometry/Capsules", { "GafferScene::Capsule" }, False ),
+			( "/Geometry/Procedurals", { "ExternalProcedural" }, False ),
+			( "/Other/Coordinate Systems", { "CoordinateSystem" }, False ),
+			( "/Other/Clipping Planes", { "ClippingPlane" }, False ),
+
+		]
+
+		allTypes = set().union( *[ x[1] for x in result if x[1] and not x[2] ] )
+		result = [
+			( "/All", allTypes, False ),
+			( "/None", allTypes, True ),
+			( "/AllDivider", None, None ),
+		] + result
+
+		return result
+
+	def __menuDefinition( self ) :
+
+		currentTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().getValue() ] )
+
+		result = IECore.MenuDefinition()
+		for label, types, invert in self.__menuItems() :
+
+			if types is None :
+				result.append( label, { "divider" : True } )
+			else :
+				if invert :
+					checked = not currentTypes.intersection( types )
+					newTypes = currentTypes - types
+				else :
+					checked = currentTypes.issuperset( types )
+					newTypes = currentTypes | types if not checked else currentTypes - types
+
+				result.append(
+					label,
+					{
+						"command" : functools.partial(
+							self.getPlug().setValue,
+							IECore.StringVectorData( newTypes )
+						),
+						"checkBox" : checked
+					}
+				)
+
+		return result
 
 ##########################################################################
 # _CameraPlugValueWidget
