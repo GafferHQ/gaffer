@@ -341,7 +341,7 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __init__( self, plug, **kw ) :
 
 		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Selection Mask" )
-		self.__menuButton = GafferUI.MenuButton( menu=menu, image = "selectionMask.png", hasFrame=False )
+		self.__menuButton = GafferUI.MenuButton( menu=menu, image = "selectionMaskOff.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
