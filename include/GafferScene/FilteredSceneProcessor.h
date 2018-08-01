@@ -42,6 +42,8 @@
 #include "GafferScene/FilterPlug.h"
 #include "GafferScene/SceneProcessor.h"
 
+#include <limits>
+
 namespace GafferScene
 {
 
@@ -63,6 +65,11 @@ class GAFFERSCENE_API FilteredSceneProcessor : public SceneProcessor
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
+		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
+		/// convenience for accessing the first child in the array, and use
+		/// inPlugs() to access the array itself.
+		FilteredSceneProcessor( const std::string &name, size_t minInputs, size_t maxInputs = std::numeric_limits<size_t>::max() );
 
 		/// Convenience method for appending filterPlug() to a hash. This simply
 		/// calls filterPlug()->hash() using a FilterPlug::SceneScope. Note that

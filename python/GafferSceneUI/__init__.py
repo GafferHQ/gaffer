@@ -145,6 +145,7 @@ import CameraToolUI
 import ReverseWindingUI
 import MeshDistortionUI
 import DeleteObjectUI
+import CopyAttributesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
