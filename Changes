@@ -1,3 +1,142 @@
+0.48.0.0
+========
+
+Features
+--------
+
+- Viewer : The 3D viewer now updates asynchronously, keeping the UI responsive while the scene
+  is computed in the background (#2649).
+- AnimationEditor : Added a new editor to allow the graphical editing of animation
+  curves. This can be found on the tab next to the GraphEditor in the standard layouts (#2632).
+- DeleteObject node (#2694).
+- CopyAttributes node (#2710).
+
+Improvements
+------------
+
+- TranslateTool : Added handles for movement in the XY,XZ,YZ and camera planes (#2709).
+- Layouts menu (#51, #2698) :
+  - Added "Default/..." menu items to allow the default startup layout to be chosen.
+  - Added new "Save As/..." menu items to allow previously saved layouts to be replaced.
+- SceneInspector (#2607) :
+  - Added filter to sets sections.
+  - Moved set computations to background process, so they don't block the UI.
+- Shader : Improved performance (#2644).
+- ArnoldLightUI : Added support for "userDefault" parameter metadata. This matches
+  the format already in use for ArnoldShaderUI (#2646).
+- Viewer :
+  - Added selection mask, to choose which types of objects can be selected (#2696).
+  - Added more Arnold diagnostic shading modes (#2645)
+    - Matte
+    - Opaque
+    - Receive shadows
+    - Self shadows
+- ArnoldAttributes :
+  - Added `volumeStepScale`, `shapeStepSize` and `shapeStepScale` attributes (#2634).
+  - Clarified intended usage of subdividePolygons attribute (#2680).
+- FormatPlug : Made "Custom" mode persistent, so it is remembered across save and reload (#2660).
+- InteractiveRender : Removed unnecessary deletion and recreation of objects when `childNames`
+  changes (#2690, #2649).
+
+Fixes
+-----
+
+- GraphEditor :
+  - Fixed arrowheads on axis-aligned auxiliary connections (#2647, #2648).
+  - Fixed potential auto-scroll bug when dragging a node (#2705).
+- LocalDispatcher/TractorDispatcher : Fixed problems using `imath` context variables (#2653, #2654).
+- OSLObject : Fixed crashes caused by indexed primitive variables (#2655).
+- Viewer : Fixed visibility of children of look-through camera (#2694).
+- ObjectSource : Fixed transform.* -> out.bound dirty propagation (#2649).
+
+API
+---
+
+- SceneGadget :
+  - Added `setPaused()/getPaused()` and `state()` methods (#2649).
+  - Replaced `baseState()` with `set/getOpenGLOptions() methods (#2649).
+  - Added `waitForCompletion()` method (#2649).
+  - Added `set/getBlockingPaths()` methods (#2649).
+  - Added `set/getSelectionMask()` methods (#2696).
+- RenderController : Added new utility class for controlling interactive renders (#2649).
+- AnimationGadget : Added new Gadget for editing animation curves (#2632).
+- Animation (#2632) :
+  - Keys are now reference counted, so ownership can be shared between CurvePlugs and the
+    AnimationEditor.
+  - Keys may be edited in place with `key->setTime()` etc, and the CurvePlug automatically updates.
+  - `CurvePlug::keys()` has been replaced with `CurvePlug::begin()` and `CurvePlug::end()`.
+    This hides the internal choice of container while still providing iteration.
+  - Added optional `threshold` argument to `closestKey()`.
+- IECoreScenePreview::Renderer (#2649) :
+  - Added `command()` virtual method.
+  - Added `name()` virtual method.
+- IECoreGLPreview::OpenGLRenderer (#2649) :
+  - Made it possible to call `render()` concurrently with edits.
+  - Added support for highlighting selected objects.
+  - Added "gl:queryBound" command.
+  - Added "gl:querySelection" command.
+  - Added support for custom object and attribute visualisers.
+  - Added options for controlling base attributes.
+- PresetsPlugValueWidget : Added support for an optional "Custom" menu item, which allows the
+  user to enter an arbitary value. This is controlled by "presetsPlugValueWidget:allowCustom"
+  plug metadata (#2660).
+- BusyWidget : Added `busy` constructor argument (#2607).
+- LightTweaks (#2660) :
+  - Moved TweakPlug to the GafferScene namespace, so it can be reused by other
+    nodes.
+  - Added "Remove" mode.
+- Layouts (#2698) :
+  - Added `persistent` argument to `add()` method, mirroring the `Bookmarks.add()` API.
+    This automatically takes care of saving persistent layouts into the startup location.
+  - Added `setDefault()/getDefault()` and `createDefault()` methods to allow the management
+    of a default layout.
+- Handle (#2709) :
+  - Added `set/getVisibleOnHover()` methods.
+  - Added `PlanarDrag` axis accessors.
+- TranslateHandle (#2709) :
+  - Added `axisMask()` method.
+- FilteredSceneProcessor : Added constructor to allow array `inPlug()`.
+- Style :
+  - Added methods for rendering animation curves (#2632).
+  - Added `width` and `userColor` arguments to `renderLine()` (#2632).
+  - Added `userColor` argument to `renderText()` (#2632).
+  - Added XY/XZ/YZ Axes enum values (#2709).
+- ViewportGadget : Added `set/getVariableAspectZoom()` method (#2632).
+
+Build
+-----
+
+- ViewportGadget : Fixed compilation on Windows (#2705).
+- OpenImageIOReader : Fixed compilation with XCode 9.4 (#2712).
+- Updated Cortex to version 10.0.0-a28
+- Updated FreeType version 2.9.1
+- Updated Python to version 2.7.15
+- Updated Alembic to version 1.7.8
+
+Breaking Changes
+----------------
+
+- GafferSceneUI : Moved visualiser base classes to IECoreGLPreview (#2649).
+- ArnoldAttributes : Changed volume step attributes (#2634).
+- GafferImage : Removed FormatPlug compatibility for files saved in Gaffer 0.16 or older.
+  To migrate, resave the file in Gaffer 0.47 (#2682).
+- GafferOSL::ShadingEngine : Removed `scope` parameter from `needsAttribute()` (#2655).
+- Layouts (#2698) :
+  - Removed `save()` method. Use the `persistent` argument to `add()` and `setDefault()` instead.
+  - Added `applicationRoot` argument to constructor. You should use `acquire()` instead anyway.
+- LayoutMenu : Removed `delete()` method (#2698).
+- GUI config : Renamed standard layout from "Default" to "Standard" (#2698).
+- TranslateHandle : translation()` method now returns a V3f rather than a float (#2709).
+- TransformTool : Made `orientedTransform()` method const (#2709).
+- Style : Changed method signatures, enum values, and added virtual functions (#2632).
+- Animation : Refactored API. See API section for more details (#2632).
+- IECoreScenePreview::Renderer : Added virtual methods (#2649).
+- InteractiveRender : Added and removed private member data (ABI break) (#2649).
+- SceneGadget (#2649) :
+  - Added/removed private members (ABI break).
+  - Remove `baseState()`.
+- SceneView : Reorganised/simplified drawingMode plugs (#2649).
+
 0.47.0.0
 ========
 
