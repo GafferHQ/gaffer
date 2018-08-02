@@ -532,19 +532,40 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 		}
 	}
 
-	for( auto &key : m_selectedKeys )
+	V2f offset( xSnappingCurrentOffset - m_xSnappingPreviousOffset, currentDragPosition.y - m_lastDragPosition.y );
+
+	// When moving selected plugs, we need to make sure we're not temporarily
+	// dragging a plug over another selected plug (which would then lose its
+	// parent). To avoid that, we process Keys in an order such that we free up
+	// frames first.
+	std::vector<Animation::Key *> selectedKeys;
+	selectedKeys.reserve( m_selectedKeys.size() );
+	for( auto it = m_selectedKeys.begin(); it != m_selectedKeys.end(); ++it )
 	{
-		// Apply offset for key's value
-		if( m_moveAxis != MoveAxis::X )
+		selectedKeys.push_back( it->get() );
+	}
+	bool reverseOrder = offset.x >= 0;
+	std::sort( selectedKeys.begin(), selectedKeys.end(),
+						 [reverseOrder]( const Animation::Key *lhs, const Animation::Key *rhs ){
+							 if( reverseOrder )
+							 {
+								 return rhs->getTime() < lhs->getTime();
+							 }
+							 return lhs->getTime() < rhs->getTime();
+						 } );
+
+	for( auto it = selectedKeys.begin(); it != selectedKeys.end(); ++it )
+	{
+		Animation::Key *key = *it;
+
+		if( m_moveAxis != MoveAxis::X && offset.y != 0 )
 		{
-			key->setValue( key->getValue() + currentDragPosition.y - m_lastDragPosition.y );
+			key->setValue( key->getValue() + offset.y );
 		}
 
-		// Apply offset for key's time
-		if( m_moveAxis != MoveAxis::Y )
+		if( m_moveAxis != MoveAxis::Y && offset.x != 0 )
 		{
-			float dragStartPosition = key->getTime() - m_xSnappingPreviousOffset;
-			float newTime = dragStartPosition + xSnappingCurrentOffset;
+			float newTime = key->getTime() + offset.x;
 
 			// If a key already exists on the new frame, we overwrite it, but
 			// store it for reinserting should the drag continue and the frame
