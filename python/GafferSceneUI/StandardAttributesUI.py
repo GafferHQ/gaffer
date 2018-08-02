@@ -181,6 +181,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The lights to be linked to this object. Accepts a
 			set expression or a space separated list of lights.
+			Use __lights to refer to the set of all lights.
 			""",
 
 			"layout:section", "Light Linking",
