@@ -221,3 +221,38 @@ Execute and clear                     :kbd:`Ctrl` + :kbd:`Enter`
 Execute selection                     Select code, then :kbd:`Ctrl` + :kbd:`Enter`
 ===================================== =============================================
 ```
+
+
+## _Animation Editor_ Timeline ##
+
+> Note :
+> For the following controls and shortcuts, the cursor must hover over the timeline of the _Animation Editor_.
+
+```eval_rst
+=============================================== =============================================
+Action                                          Control or Shortcut
+=============================================== =============================================
+Pan                                             :kbd:`Alt` + click and drag
+Zoom                                            :kbd:`Alt` + right-click and drag
+
+                                                or
+                                                
+                                                Mouse wheel up or down
+Adjust frame range                              :kbd:`Alt` + :kbd:`Shift` + right-click and
+                                                drag left or right
+Adjust key value range                          :kbd:`Alt` + :kbd:`Shift` + right-click and
+                                                drag up or down
+Frame all curves (no selection)                 :kbd:`F`
+Frame selected key(s)                           :kbd:`F`
+Add key to a curve                              :kbd:`Ctrl` + click
+Add key to all selected curves at current frame :kbd:`I`
+Delete selected key(s)                          :kbd:`Delete`
+
+                                                or
+                                                
+                                                :kbd:`Backspace`
+Adjust selected key(s)                          Click and drag
+Adjust frame(s) of selected key(s)              :kbd:`Shift` + click and drag left or right
+Adjust value(s) of selected key(s)              :kbd:`Shift` + click and drag up or down
+=============================================== =============================================
+```
