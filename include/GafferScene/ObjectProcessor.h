@@ -66,7 +66,7 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.
-		ObjectProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
+		ObjectProcessor( const std::string &name, size_t minInputs, size_t maxInputs = std::numeric_limits<size_t>::max() );
 
 		/// Must be implemented by derived classes to return true if `input` is used
 		/// by `computeProcessedObject()`. Overrides must start by calling the base

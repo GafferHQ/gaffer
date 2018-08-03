@@ -70,7 +70,7 @@ class GAFFERSCENE_API Deformer : public ObjectProcessor
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.
-		Deformer( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
+		Deformer( const std::string &name, size_t minInputs, size_t maxInputs = std::numeric_limits<size_t>::max() );
 
 		/// Used to determine whether adjusted bounds need to be propagated up to
 		/// all ancestor locations. Default implementation checks the value of `adjustBoundsPlug()`

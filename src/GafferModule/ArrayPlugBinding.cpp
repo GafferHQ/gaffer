@@ -68,7 +68,7 @@ std::string repr( const ArrayPlug *plug )
 		result += boost::str( boost::format( "minSize = %d, " ) % plug->minSize() );
 	}
 
-	if( plug->maxSize() != Imath::limits<size_t>::max() )
+	if( plug->maxSize() != std::numeric_limits<size_t>::max() )
 	{
 		result += boost::str( boost::format( "maxSize = %d, " ) % plug->maxSize() );
 	}
@@ -144,7 +144,7 @@ void GafferModule::bindArrayPlug()
 						arg( "direction" ) = Plug::In,
 						arg( "element" ) = PlugPtr(),
 						arg( "minSize" ) = 1,
-						arg( "maxSize" ) = Imath::limits<size_t>::max(),
+						arg( "maxSize" ) = std::numeric_limits<size_t>::max(),
 						arg( "flags" ) = Plug::Default,
 						arg( "resizeWhenInputsChange" ) = true
 					)

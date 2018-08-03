@@ -91,7 +91,7 @@ void Switch::setup( const Plug *plug )
 		Plug::In,
 		inElement,
 		0,
-		Imath::limits<size_t>::max()
+		std::numeric_limits<size_t>::max()
 	);
 	addChild( in );
 
