@@ -2367,7 +2367,7 @@ InternedString g_environmentEDFName( "as:environment_edf" );
 InternedString g_environmentEDFBackground( "as:environment_edf_background" );
 InternedString g_logLevelOptionName( "as:log:level" );
 InternedString g_logFileNameOptionName( "as:log:filename" );
-InternedString g_renderPasses( "as:cfg:generic_frame_renderer:passes" );
+InternedString g_renderPasses( "as:cfg:passes" );
 InternedString g_ptMaxRayIntensity( "as:cfg:pt:max_ray_intensity" );
 InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mode" );
 InternedString g_searchPath( "as:searchpath" );
