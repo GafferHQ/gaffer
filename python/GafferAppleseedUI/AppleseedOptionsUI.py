@@ -226,7 +226,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			__getDescriptionString(
-				"generic_frame_renderer:passes",
+				"passes",
 				"""
 				When using photon mapping this is the number of
 				progressive refinement passes used.
@@ -640,7 +640,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Disabling this option will produce better results 
+			Disabling this option will produce better results
 			at the expense of slower processing time.
 			""",
 

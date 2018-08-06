@@ -47,7 +47,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 
 	// main
-	options->addOptionalMember( "as:cfg:generic_frame_renderer:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "qmc" ), "sampler", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), "lightingEngine", Gaffer::Plug::Default, false );
