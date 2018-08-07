@@ -73,12 +73,18 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 		// method.
 		struct Scale
 		{
-			Imath::V3f originalScale;
-			GafferUI::Style::Axes axes;
-		};
+			Scale() = default;
+			Scale( const ScaleTool *tool );
 
-		Scale createScale( GafferUI::Style::Axes axes );
-		void applyScale( const Scale &scale, float s );
+			bool canApply( const Imath::V3i &axisMask ) const;
+			void apply( const Imath::V3f &scale ) const;
+
+			private :
+
+				Gaffer::V3fPlugPtr m_plug;
+				Imath::V3f m_originalScale;
+
+		};
 
 		// Drag handling.
 
