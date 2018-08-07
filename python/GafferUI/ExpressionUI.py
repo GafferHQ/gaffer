@@ -337,12 +337,18 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 		return None
 
+	def __error( self, plug, source, error ) :
+
+		# Error signal can be emitted on any thread, but we need to be on the UI
+		# thread to display it.
+		GafferUI.EventLoop.executeOnUIThread( functools.partial( self.__displayError, error ) )
+
 	# An error in the expression could occur during a compute triggered by a repaint.
 	# ( For example, if a user uses an expression to drive Backdrop text )
 	# If we forced a repaint right away, this would be a recursive repaint which could cause
 	# a Qt crash, so we wait for idle.
 	@GafferUI.LazyMethod()
-	def __error( self, plug, source, error ) :
+	def __displayError( self, error ) :
 
 		self.__messageWidget.setVisible( True )
 		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Error, "Execution error", error )
