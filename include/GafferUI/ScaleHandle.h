@@ -56,7 +56,12 @@ class GAFFERUI_API ScaleHandle : public Handle
 		void setAxes( Style::Axes axes );
 		Style::Axes getAxes() const;
 
-		float scaling( const DragDropEvent &event ) const;
+		// Returns a vector where each component is 0 or 1,
+		// indicating whether or not the handle will produce
+		// scaling in that axis.
+		Imath::V3i axisMask() const;
+
+		Imath::V3f scaling( const DragDropEvent &event ) const;
 
 	protected :
 
