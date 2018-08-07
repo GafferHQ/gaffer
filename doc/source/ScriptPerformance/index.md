@@ -1,6 +1,6 @@
 # Script Performance #
 
-As with most VFX processes and software, Gaffer scripts – in both senses of your project files and the code that goes into them – are subject to performance considerations. If you're not careful, your graph can easily compute excessive recursion or unintendedly impactful processes, and the structure that brought about the drop in performance can be difficult to spot. Developing a basic understanding of how Gaffer evaluates graphs, and the complexity pitfalls users commonly encounter, can help you mitigate performance setbacks.
+As with most VFX processes and software, a Gaffer script is subject to performance considerations. Both its node graph stucture and the expressions and statements that go into it can result in undesirably slow evaluation. Since the cause(s) of a slow script might not be immediately apparent, developing a basic understanding of how Gaffer evaluates graphs, as well as the complexity pitfalls users commonly encounter, will help you ensure optimum performance.
 
 <!-- TOC 
     TODO: Multithreading/index.md
