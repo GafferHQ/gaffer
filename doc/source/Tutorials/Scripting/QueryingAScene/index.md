@@ -1,12 +1,11 @@
 # Tutorial: Querying a Scene #
 
-Gaffer's scripting flexibility allows you to query the scene's parameters and objects as it flows through the node graph. In this tutorial, we will demonstrate how to use Gaffer's API to reference various scene parameters and traverse the scene hierarchy. We will cover the following:
+Gaffer's scripting flexibility allows you to query the scene's properties and objects as it flows through the node graph. In this tutorial, we will demonstrate how to use Gaffer's API to reference various scene properties and traverse the scene hierarchy. We will cover the following:
 
 - The main `out` plug
 - Referencing the `globals` scene plug and its values
 - Using the utility methods for returning various scene properties:
     - `object()` method, for returning a scene object
-    - `parameters()` method, for returning an object's scene parameters
     - `transform()` method, for returning an object's local scene transform
     - `fullTransform()` method, for returning an object's global scene transform
     - `attributes()` method, for returning an object's scene attributes
@@ -64,9 +63,9 @@ print camera
 ![Camera's scene object, in the Script Editor's output](images/scriptOutputCameraObject.png "Camera's scene object, in the Script Editor's output")
 
 
-### Querying an object's parameters ###
+### Querying a camera's parameters ###
 
-An object's scene parameters are also a dictionary, with a key for each parameter. Once again, due to the extra work involved with accessing scene contexts, the best way to handle the dictionary is through a special method, this time the `parameters()` method. As before, its keys and values are accessed with standard Python syntax. Try the following:
+Cameras have special properties called _parameters_, which define camera-specific settings, like field of view. A camera's scene parameters are also a dictionary, with a key for each parameter. Once again, due to the extra work involved with accessing scene contexts, the best way to handle the parameters is through a special method, this time the `parameters()` method. As before, its keys and values are accessed with standard Python syntax. Try the following:
 
 ```python
 print camera.parameters().keys()
