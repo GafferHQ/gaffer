@@ -4,7 +4,8 @@ This tutorial addresses how to add menu items. It will cover:
 
 - Adding an item to the main menu
 - Referencing the main application window
-- Using the undo context
+- Creating undoable actions
+- Creating a small node network
 
 Before you begin, we recommend you complete the [Creating a Configuration File](../CreatingConfigurationFiles/index.md) tutorial.
 
@@ -14,7 +15,7 @@ Before you begin, we recommend you complete the [Creating a Configuration File](
 
 ## Creating the Script ##
 
-Through Gaffer's startup environment variable, you can create your own startup scripts in `~/gaffer/startup/gui/`. Before you begin, create a new file `insertCows.py` in that directory.
+You can create your own startup scripts in `~/gaffer/startup/gui/`, and they will be loaded during Gaffer's startup process. Before you begin, create a new file `insertCows.py` in that directory.
 
 
 ## Writing the script ##
@@ -32,10 +33,10 @@ First, the startup script needs an `__insertCows` function. Since Gaffer can hav
 > Note :
 > Later, when the function is added to a menu, the `menu` variable that it implicitly takes as input will be passed by the parent menu.
 
-Ideally, any function that modifies the scene should be undoable. To make the function's commands undoable, they should be wrapped in an `UndoContext()`:
+Ideally, any function that modifies the scene should be undoable. To make the function's commands undoable, they should be wrapped in an `UndoScope()`:
 
 ```python
-with Gaffer.UndoContext( script ) :
+with Gaffer.UndoScope( script ) :
 	...
 ```
 
@@ -54,7 +55,7 @@ Now we can create a _SceneReader_ node to load the cow's geometry, and a _Duplic
 	script.addChild( duplicate )
 ```
 
-Finally, the function should select the newly created scene, to signal to the user that their insert succeeded. The selection does not need to be undoable, so it will escape the scope of the `undoContext()`:
+Finally, the function should select the newly created scene, to signal to the user that their insert succeeded. The selection change does not need to be undoable, so it can reside outside the `UndoScope()`:
 
 ```python
 script.selection().clear()
@@ -89,7 +90,7 @@ def __insertCows( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 
-	with Gaffer.UndoContext( script ) :
+	with Gaffer.UndoScope( script ) :
 		reader = GafferScene.SceneReader( "Cow" )
 		reader["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
 		script.addChild( reader )
