@@ -383,47 +383,45 @@ IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 
 IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
 {
-	switch( axes )
-	{
-		case Style::X :
-		case Style::Y :
-		case Style::Z :
-		case Style::XYZ :
-			break;
-		default :
-			throw Exception( "Unsupported axes" );
-	}
-
 	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
 	if( handles[axes] )
 	{
 		return handles[axes];
 	}
 
-	IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
-	cubeGroup->addChild( cube() );
-	cubeGroup->setTransform( M44f().scale( V3f( 0.1 ) ) * M44f().translate( V3f( 0, axes == Style::XYZ ? 0 : 1, 0 ) ) );
+	IECoreGL::GroupPtr group;
 
-	IECoreGL::GroupPtr group = new IECoreGL::Group;;
-
-	if( axes <= Style::Z )
+	if( axes == Style::XY || axes == Style::XZ || axes == Style::YZ )
 	{
-		group->addChild( cylinder() );
+		group = translateHandle( axes );
 	}
-	group->addChild( cubeGroup );
-
-	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
-	);
-
-	if( axes == Style::X )
+	else
 	{
-		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
-	}
-	else if( axes == Style::Z )
-	{
-		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
+		cubeGroup->addChild( cube() );
+		cubeGroup->setTransform( M44f().scale( V3f( 0.1 ) ) * M44f().translate( V3f( 0, axes == Style::XYZ ? 0 : 1, 0 ) ) );
+
+		group = new IECoreGL::Group;
+
+		if( axes != Style::XYZ )
+		{
+			group->addChild( cylinder() );
+		}
+		group->addChild( cubeGroup );
+
+		group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
+		group->getState()->add(
+			new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+		);
+
+		if( axes == Style::X )
+		{
+			group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+		}
+		else if( axes == Style::Z )
+		{
+			group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		}
 	}
 
 	handles[axes] = group;
