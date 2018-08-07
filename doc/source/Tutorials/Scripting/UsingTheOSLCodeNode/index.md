@@ -1,6 +1,6 @@
 # Tutorial: Using The OSLCode Node #
 
-Using OSL to build shaders opens up a world of possibility for creating complex and customized looks, shading, and processing. Gaffer's built-in OSLCode node enables execution of arbitrary code in OSL. In this tutorial, we will demonstrate how to build a very rudimentary striped shader. We will cover the folling topics:
+Using OSL to build shaders opens up a world of possibility for creating complex and customized looks, shading, and processing. Gaffer's built-in OSLCode node enables execution of arbitrary code in OSL. In this tutorial, we will demonstrate how to build a very rudimentary striped shader. We will cover the following topics:
 
 - Inputting code into the OSLCode node
 - Adding input and output parameter plugs to the node
