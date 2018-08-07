@@ -772,7 +772,8 @@ class DiffRow( Row ) :
 			label = GafferUI.Label(
 				inspector.name(),
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-				verticalAlignment = GafferUI.Label.VerticalAlignment.Top
+				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
+				toolTip = inspector.name()
 			)
 			label._qtWidget().setFixedWidth( 150 )
 
