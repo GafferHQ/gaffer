@@ -52,7 +52,7 @@ script.addChild( Gaffer.Node() )
 Notice that you added the node to the generic `script` variable.
 
 > Important :
-> The `script` variable is the root of, and primary context for, all Gaffer scripts. All nodes are added to it, and it contains all project-level variables.
+> The `script` variable references the root of the node graph. All nodes are added to it.
 
 
 ### Referencing nodes ###
@@ -238,10 +238,10 @@ mySphere["thetaMax"].setValue( 180 )
 
 ### Setting compound plug values ###
 
-When a plug has its own child plugs, it is called a **compound plug**. An example would be the sphere's Transform plug, which has Translate, Rotate, and Scale child plugs. Plugs with a list of values are also compound plugs. The Rotate plug, for instance, contains a list with 3 values, each for a different axis. You can either `setValue()` each list value individually, or all at once using the V3f type.
+When a plug has its own child plugs, it is called a **compound plug**. An example would be the sphere's Transform plug, which has Translate, Rotate, and Scale child plugs. Plugs with multiple values are also compound plugs: they contain one child plug for each value. The Rotate plug, for instance, contains 3 child plugs, each with a float value for a different axis. You can either `setValue()` each child plug value individually, or all at once using the `V3f` type.
 
 > Note :
-> The V3f type requires the _imath_ module.
+> The `V3f` type requires the `imath` module.
 
 First, increase the sphere's mesh division child plugs individually:
 
@@ -253,7 +253,7 @@ mySphere["divisions"]["y"].setValue( 160 )
 
 ![The Sphere node with double the divisions in the Viewer](images/viewerSphereDivisions.png "The Sphere node with double the divisions in the Viewer")
 
-Then, move the sphere closer to the camera by adjusting all of the Translate plug's children using a V3f type:
+Then, move the sphere closer to the camera by adjusting all of the Translate plug's children using a `V3f` type:
 
 ```python
 # Editing a list all at once
@@ -263,14 +263,14 @@ mySphere["transform"]["translate"].setValue( imath.V3f( 2, 0, 2 ) )
 
 ![The Sphere node with a transform in the Viewer](images/viewerSphereTransform.png "The Sphere node with a transform in the Viewer")
 
-As you can see, assigning the Translate plug's value using the V3f type declares each of its values at once, which spares you from having to type out each child plug.
+As you can see, assigning the Translate plug's value using the `V3f` type declares each of its values at once, which spares you from having to type out each child plug.
 
 <!-- TODO: link to imath type reference, when it's made -->
 
 
 ### Referencing plug types ###
 
-The Translate plug does not indicate that is uses the V3f type (other than its having 3 numerical fields), so how could you have known? Drag and drop again comes to the rescue, with a very easy and convenient way to discover the built-in type and syntax for a plug's value(s): 
+The Translate plug does not indicate that is uses the `V3f` type (other than its having 3 numerical fields), so how could you have known? Drag and drop again comes to the rescue, with a very easy and convenient way to discover the built-in type and syntax for a plug's value(s): 
 
 > Tip : 
 > To see the current plug's value in its native type, <kbd>Shift</kbd> + click and drag the plug label from the _Node Editor_ and drop it onto the _Script Editor_ input field.
