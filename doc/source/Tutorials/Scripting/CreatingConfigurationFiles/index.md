@@ -6,9 +6,14 @@ Gaffer supports scripting configuration files that load when the application sta
 - Creating a file that could be useful in a studio environment
 
 
+## Startup Files ##
+
+The location of Gaffer’s configuration files are specified using the `GAFFER_STARTUP_PATHS` environment variable. This is a colon-separated list of paths to directories containing startup files (`~/gaffer/startup` is one of the defaults). Config directories at the end of the list are executed first, allowing them to be overridden by config directories earlier in the list. As such, you should prepend additional paths when when adding to `GAFFER_STARTUP_PATHS`.
+
+
 ## Trivia Script ##
 
-We will start with a tiny script that delivers number trivia to the terminal. The script will go in `~gaffer/gui`, which is where startup scripts main gaffer application should reside.
+We will start with a tiny script that delivers number trivia to the terminal. The script will go in `~/gaffer/startup/gui`, which is where startup scripts main gaffer application should reside.
 
 1. Create a new file `dateTrivia.py` in `~/gaffer/startup/gui/`.
 
