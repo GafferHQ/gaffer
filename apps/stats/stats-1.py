@@ -214,6 +214,8 @@ class stats( Gaffer.Application ) :
 			script.load( continueOnError = True )
 		self.__timers["Loading"] = loadingTimer
 
+		self.root()["scripts"].addChild( script )
+
 		self.__memory["Script"] = _Memory.maxRSS() - self.__memory["Application"]
 
 		if args["performanceMonitor"].value :
