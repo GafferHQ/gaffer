@@ -27,10 +27,12 @@ def __delay( delay ) :
 # Default layout in main window
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainDefaultLayout.png" )
 
-# Empty SceneReader node in Viewer
+# Empty SceneReader node in main window
 script["SceneReader"] = GafferScene.SceneReader()
 readerNode = script["SceneReader"]
 script.selection().add( readerNode )
+__delay( 0.1 )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainSceneReaderNode.png" )
 
 script["SceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
@@ -41,6 +43,7 @@ GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/sceneReader
 # GafferBot bounding box in Viewer
 readerNode["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
 viewer.view().viewportGadget().frame( readerNode["out"].bound( "/" ) )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/viewerSceneReaderBounding.png" )
 
 # GafferBot torso in Hierarchy View
@@ -97,6 +100,7 @@ for i in viewer._Viewer__toolChooser.tools():
 	if type( i ) == GafferSceneUI.TranslateTool:
 		translateTool = i
 translateTool["active"].setValue( True )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraRepositioned.png" )
 
 
@@ -107,6 +111,7 @@ for i in viewer._Viewer__toolChooser.tools():
 	if type( i ) == GafferSceneUI.RotateTool:
 		rotateTool = i
 rotateTool["active"].setValue( True )
+viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraRotated.png" )
 
 # Camera node in Node Editor window
