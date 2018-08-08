@@ -2,9 +2,13 @@
 
 # Gaffer #
 
-Gaffer is an open source application framework designed for creating tools for use in VFX production. It builds on top of the Cortex libraries, adding a flexible node-based computation framework and a user interface framework for editing and viewing node graphs. Gaffer ships with a number of sample modules and applications, not least of which is a module for the on-demand generation of procedural scenes for rendering.
+Gaffer is a VFX application that enables look developers, lighters, and compositors to easily build, tweak, iterate, and render scenes. Gaffer supports in-application scripting in Python and [OSL](https://github.com/imageworks/OpenShadingLanguage), so VFX artists and technical directors can design shaders, automate processes, and build production workflows.
 
-More information can be found on the [Gaffer homepage](https://gafferhq.org).
+An open-source project, Gaffer also provides an application framework for studios to design and create their own VFX production pipeline tools. Built using the [Cortex](https://github.com/ImageEngine/cortex) libraries, Gaffer ships with a multi-threaded, deferred evaluation engine and a flexible user interface framework.
+
+More information about Gaffer and its use in studios can be found at [GafferHQ](https://gafferhq.org).
+
+Users can learn how to use Gaffer through the [documentation](https://gafferhq.org/documentation).
 
 Developer notes are available on the [Gaffer developer wiki](https://github.com/GafferHQ/gaffer/wiki).
 
@@ -36,18 +40,17 @@ From time to time, this list may change. For a complete, accurate, and up-to-dat
 
 Package Name | Minimum Version
 ------------ |:--------------:
-**Build Dependencies** | -
+**General** | -
 [gcc](https://gcc.gnu.org/index.html) | 6.3.1
-[cmake](https://cmake.org) | 3
 [scons](http://www.scons.org) |
 [doxygen](https://www.stack.nl/~dimitri/doxygen) |
-**OpenGL Dependencies** | -
+**OpenGL** | -
 [libX11-devel](https://www.x.org) |
 [libXi-devel](https://www.x.org) |
 [libXmu-devel](https://www.x.org) |
 [mesa-libGL-devel](https://www.mesa3d.org) |
 [mesa-libGLU-devel](https://www.mesa3d.org) |
-**Image Format Dependencies** | -
+**Image Format** | -
 [nasm](https://www.nasm.us) |
 [zlib-devel](https://www.zlib.net) |
 
@@ -58,11 +61,12 @@ Package Name | Minimum Version
 
 Package Name | Minimum Version
 ------------ |:--------------:
-[python2-pip](https://pypi.org/project/pip) |
 [sphinx](http://www.sphinx-doc.org/) | 1.4
 [inkscape](http://inkscape.org) |
 
-pip Module |
+> **Note:** We recommend using [pip](https://pypi.org/project/pip) to manage Python modules.
+
+Python Module |
 ---------- |
 sphinx_rtd_theme |
 recommonmark |
