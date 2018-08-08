@@ -43,16 +43,12 @@ Package Name | Minimum Version
 **General** | -
 [gcc](https://gcc.gnu.org/index.html) | 6.3.1
 [scons](http://www.scons.org) |
-[doxygen](https://www.stack.nl/~dimitri/doxygen) |
 **OpenGL** | -
 [libX11-devel](https://www.x.org) |
 [libXi-devel](https://www.x.org) |
 [libXmu-devel](https://www.x.org) |
 [mesa-libGL-devel](https://www.mesa3d.org) |
 [mesa-libGLU-devel](https://www.mesa3d.org) |
-**Image Format** | -
-[nasm](https://www.nasm.us) |
-[zlib-devel](https://www.zlib.net) |
 
 
 #### Documentation Build Requirements ####
@@ -104,7 +100,7 @@ If there is a feature you would like to see in Gaffer, request it on the [Gaffer
 
 ## Contributions and Bugs Reports ##
 
-Please see the project's [Contributing](https://github.com/GafferHQ/gaffer/blob/master/CONTRIBUTING.md) guidelines.
+Please see the project's [contribution guidelines](https://github.com/GafferHQ/gaffer/blob/master/CONTRIBUTING.md).
 
 
 ## Copyright and License ##
