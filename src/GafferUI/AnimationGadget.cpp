@@ -232,7 +232,7 @@ std::string drivenPlugName( const Animation::CurvePlug *curvePlug )
 IE_CORE_DEFINERUNTIMETYPED( AnimationGadget );
 
 AnimationGadget::AnimationGadget()
-	: m_context( nullptr ), m_visiblePlugs( new StandardSet() ), m_editablePlugs( new StandardSet() ), m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( DragMode::None ), m_moveAxis( MoveAxis::Both ), m_snappingClosestKey( nullptr ), m_highlightedKey( nullptr ), m_highlightedCurve( nullptr ), m_mergeGroupId( 0 ), m_kKeyPressed( false ), m_keyPreview( false ), m_keyPreviewLocation( 0 ), m_xMargin( 60 ), m_yMargin( 20 ), m_textScale( 10 ), m_labelPadding( 5 )
+	: m_context( nullptr ), m_visiblePlugs( new StandardSet() ), m_editablePlugs( new StandardSet() ), m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( DragMode::None ), m_moveAxis( MoveAxis::Both ), m_snappingClosestKey( nullptr ), m_highlightedKey( nullptr ), m_highlightedCurve( nullptr ), m_mergeGroupId( 0 ), m_keyPreview( false ), m_keyPreviewLocation( 0 ), m_xMargin( 60 ), m_yMargin( 20 ), m_textScale( 10 ), m_labelPadding( 5 ), m_frameIndicatorPreviewFrame( boost::none )
 {
 	// parentChangedSignal().connect( boost::bind( &AnimationGadget::parentChanged, this, ::_1, ::_2 ) );
 
@@ -338,7 +338,12 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 		AxisDefinition xAxis, yAxis;
 		computeGrid( viewportGadget, xAxis, yAxis );
 
-		renderFrameIndicator( style );
+		if( m_frameIndicatorPreviewFrame )
+		{
+			renderFrameIndicator( m_frameIndicatorPreviewFrame.get(), style, /* preview = */ true );
+		}
+
+		renderFrameIndicator( static_cast<int>( m_context->getFrame() ), style );
 
 		// draw axes on top of everything.
 		Imath::Color4f axesColor( 60.0 / 255, 60.0 / 255, 60.0 / 255, 1.0 );
@@ -672,11 +677,10 @@ bool AnimationGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		return false;
 	}
 
-	// Move current frame
-	if( event.button == ButtonEvent::Left && m_kKeyPressed )
+	if( event.button == ButtonEvent::Left && m_frameIndicatorPreviewFrame )
 	{
-		m_context->setFrame( round( timeToFrame( i.x ) ) );
-		requestRender();
+		m_context->setFrame( m_frameIndicatorPreviewFrame.get() );
+		m_frameIndicatorPreviewFrame = boost::none;
 	}
 
 	return true;
@@ -772,6 +776,9 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	case ButtonEvent::Left :
 	{
+		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+		Imath::V2f mouseRasterPosition = viewportGadget->worldToRasterSpace( i );
+
 		if( Animation::KeyPtr key = keyAt( event.line ) )
 		{
 			// If dragging an unselected Key, the assumption is that only this Key
@@ -785,9 +792,10 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			m_selectedKeys.insert( key );
 			m_dragMode = DragMode::Moving;
 		}
-		else if( m_kKeyPressed || frameIndicatorUnderMouse( event.line ) )
+		else if( ( onTimeAxis( mouseRasterPosition.y ) && !onValueAxis( mouseRasterPosition.x ) ) || frameIndicatorUnderMouse( event.line ) )
 		{
 			m_dragMode = DragMode::MoveFrame;
+			m_frameIndicatorPreviewFrame = boost::none;
 		}
 		else // treating everything else as background and start selection
 		{
@@ -845,6 +853,18 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
 	{
 		return false;
+	}
+
+	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+	Imath::V2f mouseRasterPosition = viewportGadget->worldToRasterSpace( i );
+
+	if( onTimeAxis( mouseRasterPosition.y ) && !onValueAxis( mouseRasterPosition.x ) )
+	{
+		m_frameIndicatorPreviewFrame = static_cast<int>( round( timeToFrame( i.x ) ) );
+	}
+	else
+	{
+		m_frameIndicatorPreviewFrame = boost::none;
 	}
 
 	if( Animation::KeyPtr key = keyAt( event.line ) )
@@ -1039,12 +1059,6 @@ bool AnimationGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 		return true;
 	}
 
-	if( event.key == "K" )
-	{
-		m_kKeyPressed = true;
-		return true;
-	}
-
 	if( event.key == "Control" )
 	{
 		if( m_highlightedCurve )
@@ -1068,12 +1082,6 @@ bool AnimationGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 
 bool AnimationGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
 {
-
-	if( event.key == "K" )
-	{
-		m_kKeyPressed = false;
-	}
-
 	if( event.key == "Control" )
 	{
 		m_keyPreview = false;
@@ -1086,6 +1094,19 @@ bool AnimationGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
 std::string AnimationGadget::undoMergeGroup() const
 {
 	return boost::str( boost::format( "AnimationGadget%1%%2%" ) % this % m_mergeGroupId );
+}
+
+bool AnimationGadget::onTimeAxis( int y ) const
+{
+	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+	Imath::V2i resolution = viewportGadget->getViewport();
+
+	return y >= resolution.y - m_yMargin;
+}
+
+bool AnimationGadget::onValueAxis( int x ) const
+{
+	return x <= m_xMargin;
 }
 
 Animation::KeyPtr AnimationGadget::keyAt( const IECore::LineSegment3f &position )
@@ -1178,7 +1199,8 @@ bool AnimationGadget::frameIndicatorUnderMouse( const IECore::LineSegment3f &pos
 		GLuint name = 1; // Name 0 is invalid, so we start at 1
 
 		selector->loadName( name );
-		renderFrameIndicator( style, /* lineWidth = */ 4.0 );
+
+		renderFrameIndicator( static_cast<int>( m_context->getFrame() ), style, /* preview = */ false, /* lineWidth = */ 4.0 );
 	}
 
 	return !hits.empty();
@@ -1262,26 +1284,30 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	}
 }
 
-void AnimationGadget::renderFrameIndicator( const Style *style, float lineWidth ) const
+void AnimationGadget::renderFrameIndicator( int frame, const Style *style, bool preview, float lineWidth ) const
 {
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	Imath::V2i resolution = viewportGadget->getViewport();
 	ViewportGadget::RasterScope rasterScope( viewportGadget );
 
-	Imath::Color3f frameIndicatorColor( 240 / 255.0, 220 / 255.0, 40 / 255.0 );
-	Imath::Color3f frameLabelColor( 60.0 / 255, 60.0 / 255, 60.0 / 255 );
+	Imath::Color3f frameIndicatorColor = preview ? Imath::Color3f( 120 / 255.0 ) : Imath::Color3f( 240 / 255.0, 220 / 255.0, 40 / 255.0 );
 
-	int currentFrameRasterPosition = viewportGadget->worldToRasterSpace( V3f( m_context->getTime(), 0, 0 ) ).x;
+	int currentFrameRasterPosition = viewportGadget->worldToRasterSpace( V3f( frameToTime<float>( frame ), 0, 0 ) ).x;
 	style->renderLine( IECore::LineSegment3f( V3f( currentFrameRasterPosition, 0, 0 ), V3f( currentFrameRasterPosition, resolution.y, 0 ) ), lineWidth, &frameIndicatorColor );
 
-	Box3f frameLabelBound = style->textBound( Style::BodyText, std::to_string( static_cast<int>( m_context->getFrame() ) ) );
-	style->renderSolidRectangle( Box2f( V2f( currentFrameRasterPosition, resolution.y - m_yMargin ), V2f( currentFrameRasterPosition + frameLabelBound.size().x * m_textScale + 2*m_labelPadding, resolution.y - m_yMargin - frameLabelBound.size().y * m_textScale - 2*m_labelPadding ) ) );
+	if( !preview )
+	{
+		Imath::Color3f frameLabelColor( 60.0 / 255, 60.0 / 255, 60.0 / 255 );
 
-	glPushMatrix();
-		glTranslatef( currentFrameRasterPosition + m_labelPadding, resolution.y - m_yMargin - m_labelPadding, 0 ); // \todo
-		glScalef( m_textScale, -m_textScale, m_textScale );
-		style->renderText( Style::BodyText, std::to_string( static_cast<int>( m_context->getFrame() ) ), Style::NormalState, &frameLabelColor );
-	glPopMatrix();
+		Box3f frameLabelBound = style->textBound( Style::BodyText, std::to_string( frame ) );
+		style->renderSolidRectangle( Box2f( V2f( currentFrameRasterPosition, resolution.y - m_yMargin ), V2f( currentFrameRasterPosition + frameLabelBound.size().x * m_textScale + 2*m_labelPadding, resolution.y - m_yMargin - frameLabelBound.size().y * m_textScale - 2*m_labelPadding ) ) );
+
+		glPushMatrix();
+			glTranslatef( currentFrameRasterPosition + m_labelPadding, resolution.y - m_yMargin - m_labelPadding, 0 ); // \todo
+			glScalef( m_textScale, -m_textScale, m_textScale );
+			style->renderText( Style::BodyText, std::to_string( frame ), Style::NormalState, &frameLabelColor );
+		glPopMatrix();
+	}
 }
 
 bool AnimationGadget::plugSetAcceptor( const Set *s, const Set::Member *m )

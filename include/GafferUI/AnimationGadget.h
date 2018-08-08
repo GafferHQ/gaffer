@@ -42,6 +42,8 @@
 #include "Gaffer/Animation.h"
 #include "Gaffer/StandardSet.h"
 
+#include "boost/optional.hpp"
+
 namespace Gaffer
 {
 
@@ -118,12 +120,15 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		void editablePlugRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 
 		void renderCurve( const Gaffer::Animation::CurvePlug *curvePlug, const Style *style ) const;
-		void renderFrameIndicator( const Style *style, float lineWidth=2.0 ) const;
+		void renderFrameIndicator( int frame, const Style *style, bool preview=false, float lineWidth=2.0 ) const;
 
 		bool plugSetAcceptor( const Gaffer::Set *s, const Gaffer::Set::Member *m );
 		void updateKeyPreviewLocation( const Gaffer::Animation::CurvePlug *curvePlug, float time );
 
 		std::string undoMergeGroup() const;
+
+		bool onTimeAxis( int y ) const;
+		bool onValueAxis( int x ) const;
 
 		Gaffer::Context *m_context;
 
@@ -163,7 +168,6 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		std::set<std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::CurvePlugPtr> > m_overwrittenKeys;
 
 		int m_mergeGroupId;
-		bool m_kKeyPressed;
 
 		bool m_keyPreview;
 		Imath::V3f m_keyPreviewLocation;
@@ -173,6 +177,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		int m_yMargin;
 		int m_textScale;
 		int m_labelPadding;
+
+		boost::optional<int> m_frameIndicatorPreviewFrame;
 
 };
 
