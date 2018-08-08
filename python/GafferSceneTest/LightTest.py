@@ -140,5 +140,62 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].setHash( "nonexistent1" ), l["out"].setHash( "nonexistent2" ) )
 		self.assertTrue( l["out"].set( "nonexistent1", _copy = False ).isSame( l["out"].set( "nonexistent2", _copy = False ) ) )
 
+	def testTransformAffectsParentBound( self ) :
+
+		l = GafferSceneTest.TestLight()
+
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+
+		# No transform
+
+		self.assertEqual(
+			l["out"].bound( "/" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+		self.assertEqual(
+			l["out"].bound( "/light" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+
+		self.assertEqual(
+			g["out"].bound( "/" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+		self.assertEqual(
+			g["out"].bound( "/group" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+		self.assertEqual(
+			g["out"].bound( "/group/light" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+
+		# Transform
+
+		l["transform"]["translate"].setValue( imath.V3f( 1 ) )
+
+		self.assertEqual(
+			l["out"].bound( "/" ),
+			imath.Box3f( imath.V3f( 0.5 ), imath.V3f( 1.5 ) ),
+		)
+		self.assertEqual(
+			l["out"].bound( "/light" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+
+		self.assertEqual(
+			g["out"].bound( "/" ),
+			imath.Box3f( imath.V3f( 0.5 ), imath.V3f( 1.5 ) ),
+		)
+		self.assertEqual(
+			g["out"].bound( "/group" ),
+			imath.Box3f( imath.V3f( 0.5 ), imath.V3f( 1.5 ) ),
+		)
+		self.assertEqual(
+			g["out"].bound( "/group/light" ),
+			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
+		)
+
 if __name__ == "__main__":
 	unittest.main()
