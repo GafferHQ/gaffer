@@ -40,8 +40,11 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECore/SimpleTypedData.h"
+
+#include <boost/regex.hpp> 
 
 using namespace std;
 using namespace IECore;
@@ -52,6 +55,7 @@ namespace
 InternedString g_readOnlyName( "readOnly" );
 InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
 InternedString g_bookmarkedName( "bookmarked" );
+InternedString g_numericBookmarkBaseName( "numericBookmark" );
 
 size_t findNth( const std::string &s, char c, int n )
 {
@@ -78,6 +82,16 @@ void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IEC
 	{
 		Gaffer::Metadata::registerValue(dst, key, data, /* persistent =*/ true);
 	}
+}
+
+IECore::InternedString numericBookmarkMetadataName( int bookmark )
+{
+	if( bookmark < 1 || bookmark > 9 )
+	{
+		throw IECore::Exception( "Values for numeric bookmarks need to be in {1, ..., 9}." );
+	}
+
+	return g_numericBookmarkBaseName.string() + std::to_string( bookmark );
 }
 
 } // namespace
@@ -220,6 +234,61 @@ void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
 			bookmarks.push_back( *it );
 		}
 	}
+}
+
+void setNumericBookmark( ScriptNode *scriptNode, int bookmark, Node *node )
+{
+	// No other node can have the same bookmark value assigned
+	IECore::InternedString metadataName( numericBookmarkMetadataName( bookmark ) );
+	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, metadataName, /* instanceOnly = */ true ) )
+	{
+		Metadata::deregisterValue( nodeWithMetadata, metadataName );
+	}
+
+	if( !node )
+	{
+		return;
+	}
+
+	// Replace a potentially existing value with the one that is to be assigned.
+	int currentValue = numericBookmark( node );
+	if( currentValue )
+	{
+		Metadata::deregisterValue( node, numericBookmarkMetadataName( currentValue) );
+	}
+
+	Metadata::registerValue( node, metadataName, new BoolData( true ), /* persistent = */ false );
+}
+
+Node *getNumericBookmark( ScriptNode *scriptNode, int bookmark )
+{
+	// Return the first one we find. There should only ever be just one matching node.
+	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, numericBookmarkMetadataName( bookmark ), /* instanceOnly = */ true ) )
+	{
+		return nodeWithMetadata;
+	}
+
+	return nullptr;
+}
+
+int numericBookmark( const Node *node )
+{
+	// Return the first one we find. There should only ever be just one matching value.
+	for( int bookmark = 1; bookmark < 10; ++bookmark )
+	{
+		if( Metadata::value<BoolData>( node, numericBookmarkMetadataName( bookmark ) ) )
+		{
+			return bookmark;
+		}
+	}
+
+	return 0;
+}
+
+bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey )
+{
+	boost::regex expr{ g_numericBookmarkBaseName.string() + "[1-9]" };
+	return boost::regex_match( changedKey.string(), expr );
 }
 
 bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
