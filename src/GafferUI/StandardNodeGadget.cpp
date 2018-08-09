@@ -160,7 +160,7 @@ IECoreGL::Texture *bookmarkTexture()
 
 	if( !bookmarkTexture )
 	{
-		bookmarkTexture = ImageGadget::textureLoader()->load( "bookmark.png" );
+		bookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar2.png" );
 
 		IECoreGL::Texture::ScopedBinding binding( *bookmarkTexture );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
@@ -169,6 +169,23 @@ IECoreGL::Texture *bookmarkTexture()
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 	}
 	return bookmarkTexture.get();
+}
+
+IECoreGL::Texture *numericBookmarkTexture()
+{
+	static IECoreGL::TexturePtr numericBookmarkTexture;
+
+	if( !numericBookmarkTexture )
+	{
+		numericBookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar.png" );
+
+		IECoreGL::Texture::ScopedBinding binding( *numericBookmarkTexture );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+	}
+	return numericBookmarkTexture.get();
 }
 
 bool canConnect( const DragDropEvent &event, const ConnectionCreator *destination )
@@ -354,6 +371,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	updateNodeEnabled();
 	updateIcon();
 	updateShape();
+	updateNumericBookmark();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -400,22 +418,42 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 				m_userColor.get_ptr()
 			);
 
-			if( MetadataAlgo::getBookmarked( node() ) )
-			{
-				style->renderImage( Box2f( V2f( b.min.x + 1.125, b.max.y - 1.25 ), V2f( b.min.x + 1.875, b.max.y + 0.25 ) ), bookmarkTexture() );
-			}
-
 			break;
 		}
 		case GraphLayer::Overlay :
 		{
+			const Box3f b = bound();
+
 			if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
 			{
-				const Box3f b = bound();
 				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.
 				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
 			}
+
+			bool isBookmarked = MetadataAlgo::getBookmarked( node() );
+			if( isBookmarked )
+			{
+				style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), bookmarkTexture() );
+			}
+
+			if( m_numericBookmark )
+			{
+
+				if( !isBookmarked )
+				{
+					style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), numericBookmarkTexture() );
+				}
+
+				Box3f textBounds = style->textBound( Style::LabelText, *m_numericBookmark );
+
+				Imath::Color3f textColor( 1.0f );
+				glPushMatrix();
+				IECoreGL::glTranslate( V2f( b.min.x + 1.0 - textBounds.size().x * 0.5, b.max.y - textBounds.size().y * 0.5 - 0.7 ) );
+				style->renderText( Style::LabelText, *m_numericBookmark, Style::NormalState, &textColor );
+				glPopMatrix();
+			}
+
 			break;
 		}
 		default :
@@ -800,6 +838,13 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		requestRender();
 	}
+	else if( MetadataAlgo::numericBookmarkAffectedByChange( key ) )
+	{
+		if( updateNumericBookmark() )
+		{
+			requestRender();
+		}
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -912,6 +957,28 @@ bool StandardNodeGadget::updateShape()
 		return false;
 	}
 	m_oval = oval;
+	return true;
+}
+
+bool StandardNodeGadget::updateNumericBookmark()
+{
+	int cached = m_numericBookmark ? stoi( *m_numericBookmark ) : 0;
+	int bookmark = MetadataAlgo::numericBookmark( this->node() );
+
+	if( cached == bookmark )
+	{
+		return false;
+	}
+
+	if( bookmark )
+	{
+		m_numericBookmark = std::to_string( bookmark );
+	}
+	else
+	{
+		m_numericBookmark = boost::none;
+	}
+
 	return true;
 }
 
