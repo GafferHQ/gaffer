@@ -140,6 +140,12 @@ void GafferUIModule::bindViewportGadget()
 		.def( "preRenderSignal", &ViewportGadget::preRenderSignal, return_internal_reference<1>() )
 	;
 
+	enum_<ViewportGadget::DragTracking>( "DragTracking" )
+		.value( "NoDragTracking", ViewportGadget::NoDragTracking )
+		.value( "XDragTracking", ViewportGadget::XDragTracking )
+		.value( "YDragTracking", ViewportGadget::YDragTracking )
+	;
+
 	SignalClass<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, UnarySlotCaller>( "UnarySignal" );
 
 }
