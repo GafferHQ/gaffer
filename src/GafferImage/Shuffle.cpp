@@ -36,6 +36,8 @@
 
 #include "GafferImage/Shuffle.h"
 
+#include "GafferImage/ImageAlgo.h"
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -136,7 +138,7 @@ void Shuffle::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
-	else if( input == inPlug()->channelDataPlug() )
+	else if( input == inPlug()->channelDataPlug() || input == inPlug()->channelNamesPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -221,7 +223,15 @@ std::string Shuffle::inChannelName( const std::string &outChannelName ) const
 	{
 		if( (*it)->outPlug()->getValue() == outChannelName )
 		{
-			return (*it)->inPlug()->getValue();
+			const string inChannelName = (*it)->inPlug()->getValue();
+			if( inChannelName == "__white" || ImageAlgo::channelExists( inPlug(), inChannelName ) )
+			{
+				return inChannelName;
+			}
+			else
+			{
+				return "__black";
+			}
 		}
 	}
 	return outChannelName;

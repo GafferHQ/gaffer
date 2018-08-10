@@ -147,5 +147,25 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		s["channels"].addChild( s.ChannelPlug( "R", "G" ) )
 		self.assertEqual( s.affects( s["channels"][0]["out"] ), [ s["out"]["channelNames"], s["out"]["channelData"] ] )
 
+	def testMissingInputChannel( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		self.assertEqual( r["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R" ] ) )
+
+		s = GafferImage.Shuffle()
+		s["in"].setInput( r["out"] )
+		s["channels"].addChild( s.ChannelPlug( "R", "A" ) )
+		s["channels"].addChild( s.ChannelPlug( "G", "B" ) )
+		s["channels"].addChild( s.ChannelPlug( "B", "G" ) )
+		s["channels"].addChild( s.ChannelPlug( "A", "R" ) )
+
+		black = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+
+		self.assertEqual( s["out"].channelData( "R", imath.V2i( 0 ) ), black )
+		self.assertEqual( s["out"].channelData( "G", imath.V2i( 0 ) ), black )
+		self.assertEqual( s["out"].channelData( "B", imath.V2i( 0 ) ), black )
+		self.assertEqual( s["out"].channelData( "A", imath.V2i( 0 ) ), r["out"].channelData( "R", imath.V2i( 0 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
