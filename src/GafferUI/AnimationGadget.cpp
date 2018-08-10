@@ -255,7 +255,6 @@ AnimationGadget::AnimationGadget()
 	m_visiblePlugs->memberAcceptanceSignal().connect( boost::bind( &AnimationGadget::plugSetAcceptor, this, ::_1, ::_2 ) );
 	m_visiblePlugs->memberAddedSignal().connect( boost::bind( &AnimationGadget::visiblePlugAdded, this, ::_1, ::_2 ) );
 	m_visiblePlugs->memberRemovedSignal().connect( boost::bind( &AnimationGadget::visiblePlugRemoved, this, ::_1, ::_2 ) );
-
 }
 
 AnimationGadget::~AnimationGadget()
@@ -771,12 +770,13 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 		return nullptr;
 	}
 
+	ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+
 	switch ( event.buttons )
 	{
 
 	case ButtonEvent::Left :
 	{
-		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 		Imath::V2f mouseRasterPosition = viewportGadget->worldToRasterSpace( i );
 
 		if( Animation::KeyPtr key = keyAt( event.line ) )
@@ -817,7 +817,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	}
 
-	// There's different ways to initiate a drag, but we need to do some
+	// There's different ways to initiate dragging keys, but we need to do some
 	// additional work for all of them.
 	if( m_dragMode == DragMode::Moving )
 	{
@@ -839,6 +839,15 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 				continue;
 			}
 		}
+	}
+
+	if( m_dragMode == DragMode::MoveFrame )
+	{
+		viewportGadget->setDragTracking( ViewportGadget::DragTracking::XDragTracking );
+	}
+	else
+	{
+		viewportGadget->setDragTracking( ViewportGadget::DragTracking::XDragTracking | ViewportGadget::DragTracking::YDragTracking );
 	}
 
 	m_dragStartPosition = m_lastDragPosition = V2f( i.x, i.y );
@@ -991,7 +1000,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	switch (m_dragMode)
+	switch( m_dragMode )
 	{
 
 	case DragMode::Selecting :
