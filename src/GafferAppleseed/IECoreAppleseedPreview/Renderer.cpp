@@ -1165,9 +1165,9 @@ class AppleseedPrimitive : public AppleseedEntity
 		{
 			if( isInteractiveRender() )
 			{
+				clearMaterial();
 				removeAssemblyInstance( m_objectAssemblyInstance );
 				removeAssembly( m_objectAssembly );
-				clearMaterial();
 				return;
 			}
 
@@ -1301,6 +1301,21 @@ class AppleseedPrimitive : public AppleseedEntity
 			m_objectInstance->get_parameters().insert( "visibility", appleseedAttributes->m_visibilityDictionary );
 
 			// todo: support edits of smooth normals and tangents attribute.
+
+			if( isInteractiveRender() )
+			{
+				// We need to re-create object instances after edits.
+				asr::ObjectInstance *objI = m_objectAssembly->object_instances().get_by_name( m_objectInstance->get_name() );
+				asf::auto_release_ptr<asr::ObjectInstance> oi = m_objectAssembly->object_instances().remove( objI );
+
+				oi = asr::ObjectInstanceFactory::create( oi->get_name(), oi->get_parameters(), oi->get_object_name(), oi->get_transform(), oi->get_front_material_mappings(), oi->get_back_material_mappings() );
+				m_objectInstance = oi.get();
+				m_objectAssembly->object_instances().insert( oi );
+
+				// Tell appleseed that we updated the contents of the object assembly.
+				m_objectAssembly->bump_version_id();
+			}
+
 			return true;
 		}
 
@@ -1333,6 +1348,9 @@ class AppleseedPrimitive : public AppleseedEntity
 				removeMaterial( m_material );
 				m_material = nullptr;
 			}
+
+			m_objectInstance->clear_front_materials();
+			m_objectInstance->clear_back_materials();
 		}
 
 		void computeSmoothNormalsAndTangents( bool normals, bool tangents )
