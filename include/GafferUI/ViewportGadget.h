@@ -124,8 +124,15 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		/// When drag tracking is enabled, the camera will automatically
 		/// move to follow drags that would otherwise be exiting the viewport.
-		void setDragTracking( bool dragTracking );
-		bool getDragTracking() const;
+		enum DragTracking
+		{
+			NoDragTracking = 0,
+			XDragTracking = 1,
+			YDragTracking = 2
+		};
+
+		void setDragTracking( unsigned dragTracking );
+		unsigned getDragTracking() const;
 
 		/// When variable aspect zoom is enabled, the two axis can be scaled
 		/// independently when performing a 2D zoom.
@@ -248,7 +255,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		GadgetPtr m_lastButtonPressGadget;
 		GadgetPtr m_gadgetUnderMouse;
 
-		bool m_dragTracking;
+		unsigned m_dragTracking;
 		boost::signals::connection m_dragTrackingIdleConnection;
 		DragDropEvent m_dragTrackingEvent;
 		float m_dragTrackingThreshold;
