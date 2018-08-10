@@ -223,10 +223,10 @@ Execute selection                     Select code, then :kbd:`Ctrl` + :kbd:`Ente
 ```
 
 
-## _Animation Editor_ Timeline ##
+## _Animation Editor_ ##
 
 > Note :
-> For the following controls and shortcuts, the cursor must hover over the timeline of the _Animation Editor_.
+> For the following controls and shortcuts, the cursor must hover over the _Animation Editor_.
 
 ```eval_rst
 =============================================== =============================================
