@@ -140,25 +140,41 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 {
 	if( output == colorDataPlug() )
 	{
+		ConstStringVectorDataPtr channelNamesData;
+		{
+			ImagePlug::GlobalScope globalScope( context );
+			channelNamesData = inPlug()->channelNamesPlug()->getValue();
+		}
+		const vector<string> &channelNames = channelNamesData->readable();
+
 		const string &layerName = context->get<string>( g_layerNameKey );
 
-		FloatVectorDataPtr r, g, b;
+		FloatVectorDataPtr rgb[3];
 		{
 			ImagePlug::ChannelDataScope channelDataScope( context );
-			channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "R" ) );
-			r = inPlug()->channelDataPlug()->getValue()->copy();
-			channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "G" ) );
-			g = inPlug()->channelDataPlug()->getValue()->copy();
-			channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "B" ) );
-			b = inPlug()->channelDataPlug()->getValue()->copy();
+			int i = 0;
+			for( const auto &baseName : { "R", "G", "B" } )
+			{
+				string channelName = ImageAlgo::channelName( layerName, baseName );
+				if( ImageAlgo::channelExists( channelNames, channelName ) )
+				{
+					channelDataScope.setChannelName( channelName );
+					rgb[i] = inPlug()->channelDataPlug()->getValue()->copy();
+				}
+				else
+				{
+					rgb[i] = ImagePlug::blackTile()->copy();
+				}
+				i++;
+			}
 		}
 
-		processColorData( context, r.get(), g.get(), b.get() );
+		processColorData( context, rgb[0].get(), rgb[1].get(), rgb[2].get() );
 
 		ObjectVectorPtr result = new ObjectVector();
-		result->members().push_back( r );
-		result->members().push_back( g );
-		result->members().push_back( b );
+		result->members().push_back( rgb[0] );
+		result->members().push_back( rgb[1] );
+		result->members().push_back( rgb[2] );
 
 		static_cast<ObjectPlug *>( output )->setValue( result );
 		return;
@@ -218,18 +234,32 @@ IECore::ConstFloatVectorDataPtr ColorProcessor::computeChannelData( const std::s
 
 bool ColorProcessor::affectsColorData( const Gaffer::Plug *input ) const
 {
-	return input == inPlug()->channelDataPlug();
+	return input == inPlug()->channelDataPlug() || input == inPlug()->channelNamesPlug();
 }
 
 void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ConstStringVectorDataPtr channelNamesData;
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	}
+	const vector<string> &channelNames = channelNamesData->readable();
+
 	const string &layerName = context->get<string>( g_layerNameKey );
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
-	channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "R" ) );
-	inPlug()->channelDataPlug()->hash( h );
-	channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "G" ) );
-	inPlug()->channelDataPlug()->hash( h );
-	channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "B" ) );
-	inPlug()->channelDataPlug()->hash( h );
+	for( const auto &baseName : { "R", "G", "B" } )
+	{
+		string channelName = ImageAlgo::channelName( layerName, baseName );
+		if( ImageAlgo::channelExists( channelNames, channelName ) )
+		{
+			channelDataScope.setChannelName( channelName );
+			inPlug()->channelDataPlug()->hash( h );
+		}
+		else
+		{
+			ImagePlug::blackTile()->hash( h );
+		}
+	}
 }

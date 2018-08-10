@@ -231,5 +231,28 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		# check override produce expected output
 		self.assertImagesEqual( expected, context, ignoreMetadata = True )
 
+	def testSingleChannelImage( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		self.assertEqual( r["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R" ] ) )
+
+		s = GafferImage.Shuffle()
+		s["in"].setInput( r["out"] )
+		s["channels"].addChild( s.ChannelPlug( "G", "R" ) )
+		s["channels"].addChild( s.ChannelPlug( "B", "R" ) )
+
+		c1 = GafferImage.ColorSpace()
+		c1["in"].setInput( r["out"] )
+		c1["inputSpace"].setValue( "linear" )
+		c1["outputSpace"].setValue( "sRGB" )
+
+		c2 = GafferImage.ColorSpace()
+		c2["in"].setInput( s["out"] )
+		c2["inputSpace"].setValue( "linear" )
+		c2["outputSpace"].setValue( "sRGB" )
+
+		self.assertEqual( c2["out"].channelData( "R", imath.V2i( 0 ) ), c1["out"].channelData( "R", imath.V2i( 0 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
