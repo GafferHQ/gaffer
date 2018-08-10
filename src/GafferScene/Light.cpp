@@ -39,6 +39,7 @@
 #include "GafferScene/SceneNode.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TransformPlug.h"
 
 #include "IECoreScene/Shader.h"
 
@@ -132,9 +133,18 @@ IECore::ConstInternedStringVectorDataPtr Light::computeStandardSetNames() const
 void Light::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashBound( path, context, parent, h );
+	if( path.size() == 0 )
+	{
+		transformPlug()->hash( h );
+	}
 }
 
 Imath::Box3f Light::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return Imath::Box3f( Imath::V3f( -.5 ), Imath::V3f( .5 ) );
+	Imath::Box3f result = Imath::Box3f( Imath::V3f( -.5 ), Imath::V3f( .5 ) );
+	if( path.size() == 0 )
+	{
+		result = Imath::transform( result, transformPlug()->matrix() );
+	}
+	return result;
 }
