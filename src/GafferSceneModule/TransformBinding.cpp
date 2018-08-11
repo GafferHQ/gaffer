@@ -44,6 +44,7 @@
 #include "GafferScene/ParentConstraint.h"
 #include "GafferScene/PointConstraint.h"
 #include "GafferScene/Transform.h"
+#include "GafferScene/CollectTransforms.h"
 
 #include "GafferBindings/ComputeNodeBinding.h"
 
@@ -103,5 +104,7 @@ void GafferSceneModule::bindTransform()
 			.value( "ResetWorld", Transform::ResetWorld )
 		;
 	}
+
+	GafferBindings::DependencyNodeClass<GafferScene::CollectTransforms>();
 
 }
