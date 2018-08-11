@@ -1,3 +1,32 @@
+0.48.1.0
+========
+
+Features
+--------
+
+- CollectTransforms : Added a node for collecting transforms from different
+  contexts and storing them as attributes (#2708).
+- CollectPrimitiveVariables Added a node for collecting primitive variables
+  from different contexts (#2708).
+- PrimitiveVariableExists : Added utility node for querying the existence
+  of a primitive variable (#2708).
+
+Improvements
+------------
+
+- ArnoldLight : Improved performance (#2718).
+- SceneInspector : Added tooltips with the unabbreviated name of the item
+  being inspected (#2722).
+
+Fixes
+-----
+
+- Expression : Fixed threading bug in UI error handling (#2652, #2723).
+- ColorProcessor/Shuffle : Fixed bugs caused by attempted computation of non-existent
+ upstream channels (#2701, #2731).
+- Light : Fixed bounds computation (#2725).
+- AnimationGadget : Fixes crash caused by dragging keys on adjacent frames (#2720).
+
 0.48.0.0
 ========
 
