@@ -70,7 +70,8 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 
 		for child in graphComponent.children() :
 
-			if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
+			# \todo : shouldn't just work on floats
+			if isinstance( child, Gaffer.FloatPlug ) and Gaffer.Animation.isAnimated( child ) :
 				return True
 
 			if self.__hasAnimatedChild( child ) :
@@ -101,7 +102,8 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 				if not candidateGraphComponent == selected and not selected.isAncestorOf( candidateGraphComponent ) and not candidateGraphComponent.isAncestorOf( selected ) :
 					continue
 
-				if ( isinstance( candidateGraphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( candidateGraphComponent ) ) or self.__hasAnimatedChild( candidateGraphComponent ) :
+				# \todo : this shouldn't just work on floats
+				if ( isinstance( candidateGraphComponent, Gaffer.FloatPlug ) and Gaffer.Animation.isAnimated( candidateGraphComponent ) ) or self.__hasAnimatedChild( candidateGraphComponent ) :
 					# If we show this component, we should be aware when its name is changes.
 					self.__nameChangedConnections.append( candidateGraphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
 					result.append( path )
