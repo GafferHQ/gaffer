@@ -299,14 +299,22 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append( "/CopyPasteDivider", { "divider" : True } )
 
 		if self.getPlug().getInput() is not None :
-			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
-			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
-			menuDefinition.append(
-				"/Remove input", {
-					"command" : Gaffer.WeakMethod( self.__removeInput ),
-					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ),
-				}
-			)
+			if not Gaffer.Animation.isAnimated( self.getPlug() ) :
+				menuDefinition.append( "/Edit Input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
+				menuDefinition.append( "/EditInputDivider", { "divider" : True } )
+				menuDefinition.append(
+						"/Remove Input", {
+						"command" : Gaffer.WeakMethod( self.__removeInput ),
+						"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ),
+						}
+				)
+			else :
+				menuDefinition.append(
+						"/Remove Animation", {
+						"command" : Gaffer.WeakMethod( self.__removeAnimation ),
+						"active" : not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
+						}
+				)
 		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
 			menuDefinition.append(
 				"/Default", {
@@ -556,6 +564,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setInput( None )
+
+	def __removeAnimation( self ) :
+		curvePlug = Gaffer.Animation.acquire( self.getPlug() )
+		animationNode = curvePlug.node()
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().setInput( None )
+			if not curvePlug["out"].outputs() :
+				curvePlug.parent().removeChild( curvePlug )
+
+			if not animationNode["curves"].children() :
+				animationNode.parent().removeChild( animationNode )
 
 	def __applyUserDefault( self ) :
 
