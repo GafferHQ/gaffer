@@ -311,6 +311,8 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 			renderCurve( curvePlug, style );
 		}
 
+		renderFrameIndicator( style );
+
 		break;
 	}
 
@@ -337,8 +339,6 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 	{
 		AxisDefinition xAxis, yAxis;
 		computeGrid( viewportGadget, xAxis, yAxis );
-
-		renderFrameIndicator( style );
 
 		// draw axes on top of everything.
 		Imath::Color4f axesColor( 60.0 / 255, 60.0 / 255, 60.0 / 255, 1.0 );
