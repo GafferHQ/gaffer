@@ -43,7 +43,9 @@
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/UndoScope.h"
 
 #include "IECoreGL/Selector.h"
 
@@ -87,7 +89,7 @@ static IECore::InternedString g_colorKey( "nodeGadget:color" );
 BackdropNodeGadget::NodeGadgetTypeDescription<BackdropNodeGadget> BackdropNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Backdrop::staticTypeId() );
 
 BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
-	:	NodeGadget( node ), m_hovered( false ), m_horizontalDragEdge( 0 ), m_verticalDragEdge( 0 )
+	:	NodeGadget( node ), m_hovered( false ), m_horizontalDragEdge( 0 ), m_verticalDragEdge( 0 ), m_mergeGroupId( 0 )
 {
 	if( !runTimeCast<Backdrop>( node ) )
 	{
@@ -419,6 +421,8 @@ bool BackdropNodeGadget::dragMove( Gadget *gadget, const DragDropEvent &event )
 		b.max.y = std::max( event.line.p0.y, b.min.y + g_margin * 4.0f);
 	}
 
+	const std::string mergeGroup = boost::str( boost::format( "BackdropNodeGadget%1%%2%" ) % this % m_mergeGroupId );
+	UndoScope undoScope( node()->scriptNode(), UndoScope::Enabled, mergeGroup );
 	boundPlug()->setValue( b );
 	return true;
 }
@@ -426,6 +430,7 @@ bool BackdropNodeGadget::dragMove( Gadget *gadget, const DragDropEvent &event )
 bool BackdropNodeGadget::dragEnd( Gadget *gadget, const DragDropEvent &event )
 {
 	Pointer::setCurrent( "" );
+	m_mergeGroupId++;
 	return true;
 }
 
