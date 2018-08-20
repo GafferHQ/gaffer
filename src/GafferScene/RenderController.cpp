@@ -80,7 +80,7 @@ bool visible( const CompoundObject *attributes )
 	return d ? d->readable() : true;
 }
 
-bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *previousGlobals )
+bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *previousGlobals, const ScenePlug *scene )
 {
 	if( !previousGlobals )
 	{
@@ -88,8 +88,8 @@ bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *
 	}
 	CameraPtr camera1 = new Camera;
 	CameraPtr camera2 = new Camera;
-	RendererAlgo::applyCameraGlobals( camera1.get(), globals );
-	RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals );
+	RendererAlgo::applyCameraGlobals( camera1.get(), globals, scene );
+	RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals, scene );
 
 	return *camera1 != *camera2;
 }
@@ -241,7 +241,7 @@ class RenderController::SceneGraph
 
 			// Object
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -257,7 +257,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get() ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 							}
@@ -473,7 +473,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType )
@@ -527,7 +527,7 @@ class RenderController::SceneGraph
 				if( const IECoreScene::Camera *camera = runTimeCast<const IECoreScene::Camera>( object.get() ) )
 				{
 					IECoreScene::CameraPtr cameraCopy = camera->copy();
-					RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
+					RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals, scene );
 					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
 				}
 				else
@@ -1111,7 +1111,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;
 			}
-			if( cameraGlobalsChanged( globals.get(), m_globals.get() ) )
+			if( cameraGlobalsChanged( globals.get(), m_globals.get(), m_scene.get() ) )
 			{
 				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
 			}
@@ -1204,7 +1204,7 @@ void RenderController::updateDefaultCamera()
 	}
 
 	CameraPtr defaultCamera = new IECoreScene::Camera;
-	RendererAlgo::applyCameraGlobals( defaultCamera.get(), m_globals.get() );
+	RendererAlgo::applyCameraGlobals( defaultCamera.get(), m_globals.get(), m_scene.get() );
 	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( m_scene->attributesPlug()->defaultValue() );
 	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
