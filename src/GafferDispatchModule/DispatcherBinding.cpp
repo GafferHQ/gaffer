@@ -249,9 +249,9 @@ void dispatch( Dispatcher &dispatcher, object pythonNodes )
 	dispatcher.dispatch( nodes );
 }
 
-IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode *script, const Context *context )
+IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode &script, const Context &context )
 {
-	return n.Dispatcher::frameRange( script, context );
+	return n.Dispatcher::frameRange( &script, &context );
 }
 
 static void registerDispatcher( std::string type, object creator, object setupPlugsFn )

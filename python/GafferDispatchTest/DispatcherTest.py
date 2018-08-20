@@ -1609,5 +1609,19 @@ class DispatcherTest( GafferTest.TestCase ) :
 			self.assertNotIn( "frame", batch.context() )
 			self.assertEqual( batch.context(), batches[0].context() )
 
+	def testNullScriptInFrameRangeCall( self ) :
+
+		d = self.NullDispatcher()
+		d["framesMode"].setValue( d.FramesMode.FullRange )
+		with self.assertRaisesRegexp( Exception, "Python argument types in" ) :
+			d.frameRange( None, Gaffer.Context() )
+
+	def testNullContextInFrameRangeCall( self ) :
+
+		d = self.NullDispatcher()
+		d["framesMode"].setValue( d.FramesMode.CurrentFrame )
+		with self.assertRaisesRegexp( Exception, "Python argument types in" ) :
+			d.frameRange( Gaffer.ScriptNode(), None )
+
 if __name__ == "__main__":
 	unittest.main()
