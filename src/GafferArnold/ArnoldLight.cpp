@@ -88,7 +88,7 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 {
 	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		if( const Shader *shader = (*it)->source()->ancestor<Shader>() )
+		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
 		{
 			shader->attributesHash( h );
 		}
@@ -106,7 +106,7 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 	IECoreScene::ShaderPtr lightShader = new IECoreScene::Shader( shaderNamePlug()->getValue(), "ai:light" );
 	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		if( const Shader *shader = (*it)->source<Plug>()->ancestor<Shader>() )
+		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
 		{
 			/// \todo We should generalise Shader::NetworkBuilder so we can
 			/// use it directly to do the whole of the light generation, instead
