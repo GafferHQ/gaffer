@@ -127,8 +127,14 @@ def __curvesSummary( plug ) :
 def __volumeSummary( plug ) :
 
 	info = []
+	if plug["volumeStepScale"]["enabled"].getValue() :
+		info.append( "Volume Step Scale %s" % GafferUI.NumericWidget.valueToString( plug["volumeStepScale"]["value"].getValue() ) )
 	if plug["volumeStepSize"]["enabled"].getValue() :
-		info.append( "Step %s" % GafferUI.NumericWidget.valueToString( plug["volumeStepSize"]["value"].getValue() ) )
+		info.append( "Volume Step Size %s" % GafferUI.NumericWidget.valueToString( plug["volumeStepSize"]["value"].getValue() ) )
+	if plug["shapeStepScale"]["enabled"].getValue() :
+		info.append( "Shape Step Scale %s" % GafferUI.NumericWidget.valueToString( plug["shapeStepScale"]["value"].getValue() ) )
+	if plug["shapeStepSize"]["enabled"].getValue() :
+		info.append( "Shape Step Size %s" % GafferUI.NumericWidget.valueToString( plug["shapeStepSize"]["value"].getValue() ) )
 	if plug["volumePadding"]["enabled"].getValue() :
 		info.append( "Padding %s" % GafferUI.NumericWidget.valueToString( plug["volumePadding"]["value"].getValue() ) )
 	if plug["velocityScale"]["enabled"].getValue() :
@@ -584,18 +590,56 @@ Gaffer.Metadata.registerNode(
 
 		# Volume
 
+		"attributes.volumeStepScale" : [
+
+			"description",
+			"""
+			Raymarching step size is calculated using this value 
+			multiplied by the volume voxel size or volumeStepSize if set.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Volume Step Scale",
+
+		],
+
 		"attributes.volumeStepSize" : [
 
 			"description",
 			"""
-			The step size to take when raymarching volumes.
-			A non-zero value causes an object to be treated
-			as a volume container, and a value of 0 causes
-			an object to be treated as regular geometry.
+			Override the step size taken when raymarching volumes. 
+			If this value is disabled or zero then value is calculated from the voxel size.  
 			""",
 
 			"layout:section", "Volume",
-			"label", "Step Size",
+			"label", "Volume Step Size",
+
+		],
+
+		"attributes.shapeStepScale" : [
+
+			"description",
+			"""
+			Raymarching step size is calculated using this value 
+			multiplied by the shapeStepSize.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Shape Step Scale",
+
+		],
+
+		"attributes.shapeStepSize" : [
+
+			"description",
+			"""
+			A non-zero value causes an object to be treated
+			as a volume container, and a value of 0 causes
+			an object to be treated as regular geometry.  
+			""",
+
+			"layout:section", "Volume",
+			"label", "Shape Step Size",
 
 		],
 
