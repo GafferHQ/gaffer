@@ -1071,6 +1071,8 @@ void ShadingEngine::queryContextVariablesAndAttributesNeeded()
 			{
 				m_timeNeeded = true;
 			}
+
+			m_attributesNeeded.insert( globalsNames[i].string() );
 		}
 	}
 
@@ -1097,7 +1099,7 @@ void ShadingEngine::queryContextVariablesAndAttributesNeeded()
 			}
 			else
 			{
-				m_attributesNeeded.insert( std::make_pair( scopeNames[i].string(), attributeNames[i].string() ) );
+				m_attributesNeeded.insert( attributeNames[i].string()  );
 			}
 		}
 	}
@@ -1290,12 +1292,26 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	return results.results();
 }
 
-bool ShadingEngine::needsAttribute( const std::string &scope, const std::string &name ) const
+bool ShadingEngine::needsAttribute( const std::string &name ) const
 {
+	if( name == "P" )
+	{
+		return true;
+	}
+
+	if( name == "uv" )
+	{
+		if ( m_attributesNeeded.find( "u" ) != m_attributesNeeded.end() || m_attributesNeeded.find( "v" ) != m_attributesNeeded.end() )
+		{
+			return true;
+		}
+	}
+
 	if( m_unknownAttributesNeeded )
 	{
 		return true;
 	}
 
-	return m_attributesNeeded.find( std::make_pair( scope, name ) ) != m_attributesNeeded.end();
+
+	return m_attributesNeeded.find(  name  ) != m_attributesNeeded.end();
 }

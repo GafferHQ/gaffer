@@ -57,14 +57,23 @@ size_t OSLObject::g_firstPlugIndex;
 namespace
 {
 
-CompoundDataPtr prepareShadingPoints( const Primitive *primitive )
+CompoundDataPtr prepareShadingPoints( const Primitive *primitive, const ShadingEngine *shadingEngine )
 {
 	CompoundDataPtr shadingPoints = new CompoundData;
 	for( PrimitiveVariableMap::const_iterator it = primitive->variables.begin(), eIt = primitive->variables.end(); it != eIt; ++it )
 	{
-		// cast is ok - we're only using it to be able to reference the data from the shadingPoints,
-		// but nothing will modify the data itself.
-		shadingPoints->writable()[it->first] = boost::const_pointer_cast<Data>( it->second.data );
+		// todo: consider passing something like IndexedView to the ShadingEngine to avoid the expansion of indexed data.
+		if( shadingEngine->needsAttribute( it->first ) )
+		{
+			if( it->second.indices )
+			{
+				shadingPoints->writable()[it->first] = it->second.expandedData();
+			}
+			else
+			{
+				shadingPoints->writable()[it->first] = boost::const_pointer_cast<Data>( it->second.data );
+			}
+		}
 	}
 
 	return shadingPoints;
@@ -254,7 +263,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	PrimitiveVariable::Interpolation interpolation = static_cast<PrimitiveVariable::Interpolation>( interpolationPlug()->getValue() );
 
 	IECoreScene::ConstPrimitivePtr resampledObject = IECore::runTimeCast<const IECoreScene::Primitive>( resampledInPlug()->objectPlug()->getValue() );
-	CompoundDataPtr shadingPoints = prepareShadingPoints( resampledObject.get() );
+	CompoundDataPtr shadingPoints = prepareShadingPoints( resampledObject.get(), shadingEngine.get() );
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
@@ -311,7 +320,7 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				continue;
 			}
 
-			if( shadingEngine && !shadingEngine->needsAttribute( "", it->first ) )
+			if( shadingEngine && !shadingEngine->needsAttribute( it->first ) )
 			{
 				continue;
 			}
