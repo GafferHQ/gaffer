@@ -48,12 +48,14 @@ class ConfirmationDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton = self._addButton( confirmLabel )
 
 	## Causes the dialogue to enter a modal state, returning True if the confirm
-	# button was pressed, and False otherwise.
+	# button was pressed, False if the cancel button was pressed, and None if
+	# the user closed the dialogue.
 	def waitForConfirmation( self, **kw ) :
 
 		self.__confirmButton._qtWidget().setFocus()
 		button = self.waitForButton( **kw )
-		if button is self.__confirmButton :
-			return True
 
-		return False
+		if button is None :
+			return None
+		else :
+			return button is self.__confirmButton
