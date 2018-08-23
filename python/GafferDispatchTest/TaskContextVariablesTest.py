@@ -129,7 +129,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s["variables"]["preTasks"][0].setInput( s["variables"]["task"] )
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertRegexpMatches( mh.messages[0].message, "The graph must be a DAG" )
+		self.assertRegexpMatches( mh.messages[0].message, "Cycle detected between ScriptNode.variables.preTasks.preTask0 and ScriptNode.variables.task" )
 
 		d = self.__dispatcher()
 		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["variables"] ] )
