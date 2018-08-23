@@ -106,7 +106,10 @@ def __addScript( application, fileName, dialogueParentWindow = None ) :
 				confirmLabel = "Open Backup",
 				cancelLabel = "Open",
 			)
-			if not dialogue.waitForConfirmation( parentWindow = dialogueParentWindow ) :
+			useBackup = dialogue.waitForConfirmation( parentWindow = dialogueParentWindow )
+			if useBackup is None :
+				return
+			elif not useBackup :
 				recoveryFileName = None
 			dialogue.setVisible( False )
 
@@ -138,6 +141,8 @@ def __open( currentScript, fileName ) :
 	currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
 
 	script = __addScript( application, fileName, dialogueParentWindow = currentWindow )
+	if not script :
+		return
 
 	removeCurrentScript = False
 	if not currentScript["fileName"].getValue() and not currentScript["unsavedChanges"].getValue() :
