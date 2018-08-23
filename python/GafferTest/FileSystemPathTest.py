@@ -38,9 +38,10 @@
 import unittest
 import time
 import datetime
-import pwd
-import grp
 import os
+if os.name is not "nt":
+	import pwd
+	import grp
 
 import IECore
 
@@ -257,8 +258,9 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			if not os.path.isdir( str(x) ) :
 				self.assertTrue( x.isLeaf() )
 
-			self.assertEqual( x.property( "fileSystem:owner" ), pwd.getpwuid( os.stat( str( p ) ).st_uid ).pw_name )
-			self.assertEqual( x.property( "fileSystem:group" ), grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
+			self.assertEqual( x.property( "fileSystem:owner" ), self.getFileOwner( p.nativeString() ) )
+			if os.name is not "nt":
+				self.assertEqual( x.property( "fileSystem:group" ), grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
 			self.assertLess( (datetime.datetime.utcnow() - x.property( "fileSystem:modificationTime" )).total_seconds(), 2 )
 			if "###" not in str(x) :
 				self.assertFalse( x.isFileSequence() )
@@ -348,9 +350,21 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def tearDown( self ) :
 
+		os.chdir( self.__originalCWD )
+
 		GafferTest.TestCase.tearDown( self )
 
-		os.chdir( self.__originalCWD )
+	def getFileOwner( self, filepath ):
+
+		# Windows Python does not have a reliable native method to get the owner
+		# without installing the Win32 package. Since the files being tested
+		# are created within the test process, assume the current user is
+		# an acceptable standin for the file owner
+		if os.name is not "nt" :
+			return pwd.getpwuid( os.stat( filepath ).st_uid ).pw_name
+		else :
+			return os.environ["USERNAME"]
+
 
 if __name__ == "__main__":
 	unittest.main()

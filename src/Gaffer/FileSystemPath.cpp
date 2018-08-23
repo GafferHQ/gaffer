@@ -54,6 +54,12 @@
 #ifndef _MSC_VER
 	#include <grp.h>
 	#include <pwd.h>
+#else
+	#include <stdio.h>
+	#include <Windows.h>
+	#include <tchar.h>
+	#include "accctrl.h"
+	#include "aclapi.h"
 #endif
 
 #include <sys/stat.h>
@@ -64,6 +70,107 @@ using namespace boost::algorithm;
 using namespace boost::posix_time;
 using namespace IECore;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+std::string getFileOwner( const std::string &pathString )
+{
+	std::string value;
+#ifndef _MSC_VER
+	struct stat s;
+	stat(pathString.c_str(), &s);
+	struct passwd *pw = getpwuid(s.st_uid);
+	value = pw ? pw->pw_name : "";
+
+	return value;
+#else
+
+	/// \todo : There may be optimizations to be had by caching credentials such
+	/// as the results of `LookupAccountSid` to avoid costly Windows API calls.
+	PSID pSidOwner = NULL;
+	BOOL bRtnBool = TRUE;
+	LPTSTR AcctName = NULL;
+	LPTSTR DomainName = NULL;
+	DWORD dwAcctName = 1;
+	DWORD dwDomainName = 1;
+	SID_NAME_USE eUse = SidTypeUnknown;
+	PSECURITY_DESCRIPTOR pSD = NULL;
+
+	// First get the size of the data
+	DWORD dwSize;
+	if( GetFileSecurity( pathString.c_str(), OWNER_SECURITY_INFORMATION, pSD, 0, &dwSize ) )
+	{
+		return "";
+	}
+
+	pSD = ( PSECURITY_DESCRIPTOR ) malloc( dwSize );
+
+	if( pSD == NULL)
+	{
+		return "";
+	}
+
+	if( !GetFileSecurity( pathString.c_str(), OWNER_SECURITY_INFORMATION, pSD, dwSize, &dwSize ) )
+	{
+		free( pSD );
+		return "";
+	}
+
+	BOOL defaulted = false;
+	GetSecurityDescriptorOwner( pSD, &pSidOwner, &defaulted);
+	if( defaulted )
+	{
+		free( pSD );
+		return "";
+	}
+
+	// First call to LookupAccountSid to get the buffer sizes.
+	bRtnBool = LookupAccountSid(NULL, pSidOwner, AcctName, (LPDWORD)&dwAcctName, DomainName, (LPDWORD)&dwDomainName, &eUse);
+
+	// Reallocate memory for the buffers.
+	AcctName = (LPTSTR)GlobalAlloc(GMEM_FIXED, dwAcctName);
+
+	// Check GetLastError for GlobalAlloc error condition.
+	if (AcctName == NULL) {
+		free( pSD );
+		return "";
+	}
+
+	DomainName = (LPTSTR)GlobalAlloc(GMEM_FIXED, dwDomainName);
+
+	// Check GetLastError for GlobalAlloc error condition.
+	if (DomainName == NULL) {
+		free( pSD );
+		return "";
+	}
+
+	// Second call to LookupAccountSid to get the account name.
+	bRtnBool = LookupAccountSid(NULL, pSidOwner, AcctName, (LPDWORD)&dwAcctName, DomainName, (LPDWORD)&dwDomainName, &eUse);
+
+	if (bRtnBool == FALSE) {
+		free( pSD );
+		return "";
+	}
+
+	free( pSD );
+	value = AcctName;
+
+	return value;
+
+#endif
+
+}
+
+}  // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// FileSystemPath implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( FileSystemPath );
 
@@ -189,14 +296,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
 					IECore::Canceller::check( canceller );
-					struct stat s;
-					stat( it->c_str(), &s );
-#ifndef _MSC_VER
-					struct passwd *pw = getpwuid( s.st_uid );
-					std::string value = pw ? pw->pw_name : "";
-#else
-					std::string value = "";
-#endif
+					std::string value = getFileOwner( it->c_str() );
 					std::pair<std::map<std::string,size_t>::iterator,bool> oIt = ownerCounter.insert( std::pair<std::string,size_t>( value, 0 ) );
 					oIt.first->second++;
 					if( oIt.first->second > maxCount )
@@ -210,14 +310,8 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 		}
 
 		std::string n = this->string();
-		struct stat s;
-		stat( n.c_str(), &s );
-#ifndef _MSC_VER
-		struct passwd *pw = getpwuid( s.st_uid );
-		return new StringData( pw ? pw->pw_name : "" );
-#else
-		return new StringData( "" );
-#endif
+
+		return new StringData( getFileOwner( n.c_str() ) );
 	}
 	else if( name == g_groupPropertyName )
 	{
