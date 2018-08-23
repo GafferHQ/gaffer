@@ -1,3 +1,29 @@
+0.47.1.0
+========
+
+**Warning this release contains breaking changes from 0.47.0.0**
+
+Features
+--------
+
+Improvements
+------------
+
+- Shader : Improved performance (#2644, #2743).
+- ArnoldLight : Improved performance (#2718, #2742).
+- ArnoldAttributes : Added volumeStepScale, shapeStepSize and shapeStepScale attributes (#2634, #2740).
+
+Fixes
+-----
+
+- OSLObject : Fixed crashes caused by indexed primitive variables (#2655, #2741).
+
+Breaking Changes
+----------------
+
+- ArnoldAttributes : Changed volume step attributes (#2634, #2740).
+- GafferOSL::ShadingEngine : Removed scope parameter from needsAttribute() (#2655, #2741).
+
 0.47.0.0
 ========
 
