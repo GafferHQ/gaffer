@@ -137,6 +137,8 @@ Gaffer.Metadata.registerNode(
 
 class _ImagesPath( Gaffer.Path ) :
 
+	indexMetadataName = 'image:index'
+
 	def __init__( self, images, path, root = "/", filter = None ) :
 
 		Gaffer.Path.__init__( self, path, root, filter )
@@ -151,6 +153,9 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return len( self ) > 0
 
+	def _orderedImages( self ) :
+		return sorted( self.__images.children(), key=lambda x : Gaffer.Metadata.value( x, _ImagesPath.indexMetadataName ) or 0 )
+
 	def _children( self ) :
 
 		if len( self ) != 0 :
@@ -158,7 +163,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return [
 			self.__class__( self.__images, [ image.getName() ], self.root(), self.getFilter() )
-			for image in self.__images
+			for image in self._orderedImages()
 		]
 
 	def _pathChangedSignalCreated( self ) :
@@ -179,6 +184,8 @@ class _ImagesPath( Gaffer.Path ) :
 
 		assert( parent.isSame( self.__images ) )
 		self.__nameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+		if not Gaffer.Metadata.value( child, _ImagesPath.indexMetadataName ) :
+			Gaffer.Metadata.registerValue( child, _ImagesPath.indexMetadataName, len( parent.children() ) -1 )
 		self._emitPathChanged()
 
 	def __childRemoved( self, parent, child ) :
@@ -220,6 +227,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			)
 			self.__pathListingDragLeaveConnection = self.__pathListing.dragLeaveSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingDragLeave )
+			)
+			self.__pathListingMoveConnection = self.__pathListing.dragMoveSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDragMove )
 			)
 			self.__pathListingDropConnection = self.__pathListing.dropSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingDrop )
@@ -373,6 +383,11 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__images().addChild( GafferImage.Catalogue.Image.load( str( path ) ) )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
 
+	def __metadataIndexToGraphComponentIndex( self, index ) :
+		for i, image in enumerate( self.__images() ) :
+			if index == Gaffer.Metadata.value( image, _ImagesPath.indexMetadataName ) :
+				return i
+
 	def __removeClicked( self, *unused ) :
 
 		indices = self.__indicesFromSelection()
@@ -384,9 +399,17 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			for i, index in enumerate( reversed( sorted( indices ) ) ) :
+			for index in reversed( sorted( indices ) ) :
+				metadataIndex = Gaffer.Metadata.value( self.__images()[index], _ImagesPath.indexMetadataName )
 				self.__images().removeChild( self.__images()[index] )
-			self.getPlug().setValue( max( 0, index-1 ) )
+
+			# Figure out new selection
+			if not metadataIndex :
+				selectionIndex = index - 1
+			else:
+				selectionIndex = self.__metadataIndexToGraphComponentIndex( metadataIndex - 1 )
+
+			self.getPlug().setValue( max( 0, selectionIndex ) )
 
 	def __extractClicked( self, *unused ) :
 
@@ -455,6 +478,11 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __pathListingDragEnter( self, widget, event ) :
 
+		if isinstance( event.data, IECore.StringVectorData ) :
+			# Allow reordering of images
+			self.__moveToPath = None
+			return True
+
 		if self.__dropImage( event.data ) is None :
 			return False
 
@@ -468,6 +496,65 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		self.__pathListing.setHighlighted( False )
 		GafferUI.Pointer.setCurrent( None )
 		return True
+
+	def __pathListingDragMove( self, listing, event ) :
+
+		if not event.data or not isinstance( event.data, IECore.StringVectorData ) :
+			return
+
+		targetPath = self.__pathListing.pathAt( event.line.p0 )
+		if targetPath and targetPath == self.__moveToPath :
+			# We have done the work already, the mouse is just still over the same path
+			return
+		self.__moveToPath = targetPath
+
+		images = sorted( self.__images(), key = lambda x : Gaffer.Metadata.value( x, _ImagesPath.indexMetadataName ) or -1 )
+		imagesToMove = [image for image in images if '/'+image.getName() in event.data]
+
+		# Because of multi-selection it's possible to move the mouse over a selected image.
+		# That's not a valid image we want to replace with the current selection - do nothing.
+		if str( targetPath )[1:] in [image.getName() for image in imagesToMove] :
+			return
+
+		imageToReplace = None
+
+		if targetPath is not None :
+			targetName = str( targetPath )[1:]
+			for image in images :
+				if not image.getName() == targetName :
+					continue
+
+				imageToReplace = image
+				break
+		else :
+			# Drag has gone above or below all listed items. Use closest image.
+			imageToReplace = images[0] if event.line.p0.y < 1 else images[-1]
+
+		if not imageToReplace or imageToReplace in imagesToMove :
+			return
+
+		# Reorder images and reassign indices accordingly.
+		previous = None
+		for image in imagesToMove :
+
+			currentIndex = images.index( image )
+			images[currentIndex] = None  # Add placeholder so we don't mess with indices
+
+			if previous :
+				# Just insert after previous image to preserve odering of selected images
+				newIndex = images.index( previous ) + 1
+			else :
+				newIndex = images.index( imageToReplace )
+				if currentIndex < newIndex :  # Make up for the placeholder
+					newIndex += 1
+
+			images.insert( newIndex, image )
+			previous = image
+
+		for idx, image in enumerate( [image for image in images if image ] ) :
+			Gaffer.Metadata.registerValue( image, _ImagesPath.indexMetadataName, idx )
+
+		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 
 	def __pathListingDrop( self, widget, event ) :
 
