@@ -192,16 +192,16 @@ set( GAFFER_PYTHON_NAMES
 foreach( GAFFER_LIB ${GAFFER_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}_CXX_FILES  ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}/*.cpp )
-  file( GLOB ${_GAFFER_LIB}_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}/*.h include/${GAFFER_LIB}/*.inl )
+  file( GLOB ${_GAFFER_LIB}_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}/*.inl )
   file( GLOB ${_GAFFER_LIB}_CXX_MODULE_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.cpp )
-  file( GLOB ${_GAFFER_LIB}_H_MODULE_FILES  ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.h src/${GAFFER_LIB}Module/*.inl )
+  file( GLOB ${_GAFFER_LIB}_H_MODULE_FILES  ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.h ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.inl )
 endforeach()
 
 # Get test lists of files
 foreach( GAFFER_LIB ${GAFFERTEST_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}TEST_CXX_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Test/*.cpp )
-  file( GLOB ${_GAFFER_LIB}TEST_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.h include/${GAFFER_LIB}Test/*.inl )
+  file( GLOB ${_GAFFER_LIB}TEST_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.inl )
   set( ${_GAFFER_LIB}TEST_CXX_MODULE_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}TestModule/${GAFFER_LIB}TestModule.cpp)
 endforeach()
 
@@ -209,7 +209,7 @@ endforeach()
 foreach( GAFFER_LIB ${GAFFERBINDINGS_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}BINDINGS_CXX_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Bindings/*.cpp )
-  file( GLOB ${_GAFFER_LIB}BINDINGS_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Bindings/*.h include/${GAFFER_LIB}Bindings/*.inl )
+  file( GLOB ${_GAFFER_LIB}BINDINGS_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Bindings/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Bindings/*.inl )
 endforeach()
 
 # Get python list of files
@@ -570,7 +570,7 @@ foreach( GAFFER_LIB ${GAFFERBINDINGS_LIB_NAMES} )
   install( TARGETS ${GAFFER_LIB}Bindings
            DESTINATION lib/ )
   install( FILES ${${_GAFFER_LIB}BINDINGS_H_FILES}
-           DESTINATION include/${GAFFER_LIB} )
+           DESTINATION include/${GAFFER_LIB}Bindings )
 endforeach()
 
 # Install Gaffer Files
