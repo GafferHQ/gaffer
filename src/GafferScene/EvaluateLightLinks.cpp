@@ -89,9 +89,9 @@ void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Co
 	ConstStringDataPtr expressionData = attributes->member<StringData>( m_lightLinkAttrName );
 	if( !expressionData )
 	{
-    // Pass through.
-    h = inputHash;
-    return;
+		// Pass through.
+		h = inputHash;
+		return;
 	}
 
 	SceneProcessor::hashAttributes( path, context, parent, h );
