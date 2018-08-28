@@ -404,7 +404,7 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
 		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
-		const int m = filterPlug()->getValue() || setsToKeep.match( *pIt );
+		const int m = filterPlug()->getValue() | setsToKeep.match( *pIt );
 		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{
 			// We want to keep everything below this point, so
