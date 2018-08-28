@@ -48,7 +48,7 @@
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/graph/adjacency_list.hpp"
-#include "boost/graph/topological_sort.hpp"
+#include "boost/graph/depth_first_search.hpp"
 #include "boost/unordered_map.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
@@ -811,12 +811,13 @@ class Plug::DirtyPlugs
 		// We use this graph structure to keep track of the dirty propagation.
 		// Vertices in the graph represent plugs which have been dirtied, and
 		// edges represent the relationships that caused the dirtying - an
-		// edge U,V indicates that U was dirtied by V. We do a topological
-		// sort on the graph to give us an appropriate order to emit the dirty
+		// edge U,V indicates that U was dirtied by V. We do a depth_first_search
+		// on the graph to give us an appropriate order to emit the dirty
 		// signals in, so that dirtiness is only signalled for an affected plug
 		// after it has been signalled for all upstream dirty plugs.
 		typedef boost::adjacency_list<vecS, vecS, directedS, PlugPtr> Graph;
 		typedef Graph::vertex_descriptor VertexDescriptor;
+		typedef Graph::edge_descriptor EdgeDescriptor;
 
 		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
 
@@ -869,6 +870,30 @@ class Plug::DirtyPlugs
 			return InsertedVertex( result, true );
 		}
 
+		struct EmitVisitor : public default_dfs_visitor
+		{
+
+			void back_edge( const EdgeDescriptor &e, const Graph &graph )
+			{
+				throw IECore::Exception( boost::str(
+					boost::format( "Cycle detected between %1% and %2%" ) %
+					graph[boost::target( e, graph )]->fullName() %
+					graph[boost::source( e, graph )]->fullName()
+				) );
+			}
+
+			void finish_vertex( const VertexDescriptor &u, const Graph &graph )
+			{
+				Plug *plug = graph[u].get();
+				plug->dirty();
+				if( Node *node = plug->node() )
+				{
+					node->plugDirtiedSignal()( plug );
+				}
+			}
+
+		};
+
 		void emit()
 		{
 			// Because we hold a reference to the plugs via m_graph,
@@ -893,24 +918,13 @@ class Plug::DirtyPlugs
 
 			ScopedAssignment<bool> scopedAssignment( m_emitting, true );
 
-			std::vector<VertexDescriptor> sorted;
 			try
 			{
-				topological_sort( m_graph, std::back_inserter( sorted ) );
+				depth_first_search( m_graph, visitor( EmitVisitor() ) );
 			}
 			catch( const std::exception &e )
 			{
 				IECore::msg( IECore::Msg::Error, "Plug dirty propagation", e.what() );
-			}
-
-			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
-			{
-				Plug *plug = m_graph[*it].get();
-				plug->dirty();
-				if( Node *node = plug->node() )
-				{
-					node->plugDirtiedSignal()( plug );
-				}
 			}
 
 			m_graph.clear();
