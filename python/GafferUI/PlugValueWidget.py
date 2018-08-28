@@ -140,7 +140,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		inputText = ""
 		if input is not None :
-			inputText = " &lt;- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent.staticTypeId() ) )
+			inputText = " &lt;- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent ) )
 
 		result = "<h3>" + plug.relativeName( plug.node() ) + inputText + "</h3>"
 		description = Gaffer.Metadata.plugDescription( plug )
@@ -463,7 +463,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
 			self.__plugFlagsChangedConnection = plug.node().plugFlagsChangedSignal().connect( Gaffer.WeakMethod( self.__plugFlagsChanged ) )
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
+			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode )
 			if scriptNode is not None :
 				context = scriptNode.context()
 		else :
@@ -537,7 +537,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __setValue( self, value ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( value )
 
 	def __editInput( self ) :
@@ -554,12 +554,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __removeInput( self ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setInput( None )
 
 	def __applyUserDefault( self ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
 
 	def __presetsSubMenu( self ) :
@@ -581,12 +581,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyPreset( self, presetName, *unused ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
 
 	def __applyReadOnly( self, readOnly ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.MetadataAlgo.setReadOnly( self.getPlug(), readOnly )
 
 	# drag and drop stuff
