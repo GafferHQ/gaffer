@@ -164,7 +164,7 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addItem( self, name, value ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addOptionalMember( name, value, enabled=True )
 
 class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
