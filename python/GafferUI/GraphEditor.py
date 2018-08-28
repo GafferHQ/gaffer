@@ -144,19 +144,23 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
+		readOnly = Gaffer.MetadataAlgo.readOnly( node )
+
 		menuDefinition.append( "/ConnectionVisibilityDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Show Input Connections",
 			{
 				"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
-				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node )
+				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
+				"active" : not readOnly,
 			}
 		)
 		menuDefinition.append(
 			"/Show Output Connections",
 			{
 				"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
-				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node )
+				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
+				"active" : not readOnly
 			}
 		)
 
