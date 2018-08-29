@@ -54,6 +54,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 
 	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:shadow_group", new IECore::StringData( "" ), "shadowGroup", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:diffuse_reflect", new IECore::BoolData( true ), "diffuseReflectionVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:specular_reflect", new IECore::BoolData( true ), "specularReflectionVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:diffuse_transmit", new IECore::BoolData( true ), "diffuseTransmissionVisibility", Gaffer::Plug::Default, false );
@@ -62,6 +63,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:visibility:subsurface", new IECore::BoolData( true ), "subsurfaceVisibility", Gaffer::Plug::Default, false );
 
 	// Transform parameters
+
 	attributes->addOptionalMember( "ai:transform_type", new StringPlug( "value", Plug::In, "rotate_about_center" ), "transformType", false );
 
 	// Shading parameters
