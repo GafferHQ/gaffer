@@ -452,5 +452,34 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection().path, "/plane" )
 		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
 
+	def testPivotExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["plane"]["transform"]["pivot"]["x"] = context["x"]
+			"""
+		) )
+
+		script["variables"] = GafferScene.SceneContextVariables()
+		script["variables"]["in"].setInput( script["plane"]["out"] )
+		script["variables"]["variables"].addMember( "x", 1.0 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["variables"]["out"] )
+		view.setContext( script.context() )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.selection().path, "/plane" )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
