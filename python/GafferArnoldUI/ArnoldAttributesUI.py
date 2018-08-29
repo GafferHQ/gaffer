@@ -61,6 +61,9 @@ def __visibilitySummary( plug ) :
 		if plug[childName+"Visibility"]["enabled"].getValue() :
 			info.append( label + ( " On" if plug[childName+"Visibility"]["value"].getValue() else " Off" ) )
 
+	if plug["shadowGroup"]["enabled"].getValue() :
+		info.append( "ShadowGroup Applied" )
+
 	return ", ".join( info )
 
 __transformTypeEnumNames = { "linear" : "Linear", "rotate_about_origin" : "RotateAboutOrigin",
@@ -199,6 +202,20 @@ Gaffer.Metadata.registerNode(
 			"label", "Shadow",
 
 		],
+
+		"attributes.shadowGroup" : [
+
+			"description",
+			"""
+			The lights that cause this object to cast shadows.
+			Accepts a set expression or a space separated list of
+			lights. Use __lights to refer to the set of all lights.
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Shadow Group",
+		],
+
 		"attributes.diffuseReflectionVisibility" : [
 
 			"description",
