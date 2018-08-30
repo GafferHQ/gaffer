@@ -49,6 +49,7 @@
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/ShaderStateComponent.h"
+#include "IECoreGL/SpherePrimitive.h"
 #include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/ToGLMeshConverter.h"
 #include "IECoreGL/TypedStateComponent.h"
@@ -57,6 +58,7 @@
 #include "IECoreScene/MeshPrimitive.h"
 
 #include "OpenEXR/ImathVecAlgo.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
 
 #include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
@@ -180,8 +182,8 @@ IECoreGL::MeshPrimitivePtr torus()
 	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 	vector<V3f> &p = pData->writable();
 
-	const float radiusI = 1;
 	const float radiusJ = 0.03;
+	const float radiusI = 1 + radiusJ;
 
 	const int numDivisionsI = 30;
 	const int numDivisionsJ = 15;
@@ -344,16 +346,6 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 
 IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 {
-	switch( axes )
-	{
-		case Style::X :
-		case Style::Y :
-		case Style::Z :
-			break;
-		default :
-			throw Exception( "Unsupported axes" );
-	}
-
 	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
 	if( handles[axes] )
 	{
@@ -361,24 +353,52 @@ IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 	}
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group;
-	group->addChild( torus() );
-
-	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
-	);
-
-	if( axes == Style::X )
+	if( axes == Style::X || axes == Style::Y || axes == Style::Z )
 	{
-		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+		group->addChild( torus() );
+
+		group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
+		group->getState()->add(
+			new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+		);
+
+		if( axes == Style::X )
+		{
+			group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+		}
+		else if( axes == Style::Z )
+		{
+			group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		}
 	}
-	else if( axes == Style::Z )
+	else if( axes == Style::XYZ )
 	{
-		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+		group->addChild( new IECoreGL::SpherePrimitive() );
+	}
+	else
+	{
+		throw Exception( "Unsupported axes" );
 	}
 
 	handles[axes] = group;
 	return group;
+}
+
+const IECoreGL::Group *rotateHandleXYZHighlight()
+{
+	static IECoreGL::GroupPtr group;
+	if( group )
+	{
+		return group.get();
+	}
+
+	group = new IECoreGL::Group();
+	group->addChild( new SpherePrimitive( 1.03f, 0.99 ) );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+	);
+
+	return group.get();
 }
 
 IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
@@ -944,13 +964,29 @@ void StandardStyle::renderTranslateHandle( Axes axes, State state ) const
 	translateHandle( axes )->render( glState );
 }
 
-void StandardStyle::renderRotateHandle( Axes axes, State state ) const
+void StandardStyle::renderRotateHandle( Axes axes, State state, const Imath::V3f &highlightVector ) const
 {
 	IECoreGL::State::bindBaseState();
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
+
+	if( !IECoreGL::Selector::currentSelector() && axes == XYZ )
+	{
+		// XYZ sphere holds out other handles, but does not draw.
+		glColorMask( false, false, false, false );
+	}
 	rotateHandle( axes )->render( glState );
+	glColorMask( true, true, true, true );
+
+	if( state == HighlightedState && axes == XYZ )
+	{
+		glPushMatrix();
+		const M44f m = rotationMatrix( V3f( 0, 0, 1 ), highlightVector );
+		glMultMatrixf( m.getValue() );
+		rotateHandleXYZHighlight()->render( glState );
+		glPopMatrix();
+	}
 }
 
 void StandardStyle::renderScaleHandle( Axes axes, State state ) const

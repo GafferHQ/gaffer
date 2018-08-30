@@ -151,7 +151,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 			XYZ
 		};
 		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const = 0;
-		virtual void renderRotateHandle( Axes axes, State state = NormalState ) const = 0;
+		virtual void renderRotateHandle( Axes axes, State state = NormalState, const Imath::V3f &highlightVector = Imath::V3f( 0 ) ) const = 0;
 		virtual void renderScaleHandle( Axes axes, State state = NormalState ) const = 0;
 		//@}
 

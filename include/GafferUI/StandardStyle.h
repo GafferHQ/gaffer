@@ -96,7 +96,7 @@ class GAFFERUI_API StandardStyle : public Style
 		void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 
 		void renderTranslateHandle( Axes axes, State state = NormalState ) const override;
-		void renderRotateHandle( Axes axes, State state = NormalState ) const override;
+		void renderRotateHandle( Axes axes, State state = NormalState, const Imath::V3f &highlightVector = Imath::V3f( 0 ) ) const override;
 		void renderScaleHandle( Axes axes, State state = NormalState ) const override;
 
 		void renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const override;
