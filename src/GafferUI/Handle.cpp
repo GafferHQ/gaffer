@@ -40,7 +40,6 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
-#include "IECoreGL/Camera.h"
 #include "IECoreGL/Selector.h"
 
 #include "IECore/Export.h"
@@ -138,41 +137,52 @@ void Handle::doRenderLayer( Layer layer, const Style *style ) const
 		}
 	}
 
-	if( m_rasterScale > 0.0f )
-	{
-		// We want our handles to be a constant length in
-		// raster space. Two things get in our way :
-		//
-		//  1. The distance from camera.
-		//  2. Scaling applied to our transform.
-
-		const ViewportGadget *viewport = ancestor<ViewportGadget>();
-
-		// Scale factor to address 1.
-		const V2f p1 = viewport->gadgetToRasterSpace( V3f( 0.0f ), this );
-		const V2f p2 = viewport->gadgetToRasterSpace( IECoreGL::Camera::upInObjectSpace(), this );
-		const float s1 = m_rasterScale / ( p1 - p2 ).length();
-
-		// Scale factor to address 2. We use fabs because we don't
-		// want to lose the change of orientation brought about by
-		// negative scaling.
-		V3f s2;
-		extractScaling( fullTransform(), s2 );
-		s2 = V3f( 1.0f / fabs( s2.x ), 1.0f / fabs( s2.y ), 1.0f / fabs( s2.z ) );
-
-		glPushMatrix();
-		glScalef( s1 * s2.x, s1 * s2.y, s1 * s2.z );
-	}
+	glPushMatrix();
+	const V3f scale = rasterScaleFactor();
+	glScalef( scale.x, scale.y, scale.z );
 
 	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
 	state = !enabled() ? Style::DisabledState : state;
 
 	renderHandle( style, state );
 
-	if( m_rasterScale > 0.0f )
+	glPopMatrix();
+}
+
+Imath::V3f Handle::rasterScaleFactor() const
+{
+	if( m_rasterScale <= 0.0f )
 	{
-		glPopMatrix();
+		return V3f( 1 );
 	}
+
+	// We want our handles to be a constant length in
+	// raster space. Two things get in our way :
+	//
+	//  1. The distance from camera.
+	//  2. Scaling applied to our transform.
+
+	const ViewportGadget *viewport = ancestor<ViewportGadget>();
+	const M44f fullTransform = this->fullTransform();
+
+	// Scale factor to address 1.
+
+	const M44f cameraToGadget = viewport->getCameraTransform() * fullTransform.inverse();
+	V3f cameraUpInGadgetSpace = V3f( 0, 1, 0 );
+	cameraToGadget.multDirMatrix( cameraUpInGadgetSpace, cameraUpInGadgetSpace );
+
+	const V2f p1 = viewport->gadgetToRasterSpace( V3f( 0.0f ), this );
+	const V2f p2 = viewport->gadgetToRasterSpace( cameraUpInGadgetSpace, this );
+	const float s1 = m_rasterScale / ( p1 - p2 ).length();
+
+	// Scale factor to address 2. We use fabs because we don't
+	// want to lose the change of orientation brought about by
+	// negative scaling.
+	V3f s2;
+	extractScaling( fullTransform, s2 );
+	s2 = V3f( 1.0f / fabs( s2.x ), 1.0f / fabs( s2.y ), 1.0f / fabs( s2.z ) );
+
+	return s1 * s2;
 }
 
 void Handle::enter()
