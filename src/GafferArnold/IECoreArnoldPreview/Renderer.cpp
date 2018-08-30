@@ -244,6 +244,7 @@ const AtString g_filtersArnoldString( "filters" );
 const AtString g_funcPtrArnoldString( "funcptr" );
 const AtString g_ginstanceArnoldString( "ginstance" );
 const AtString g_lightGroupArnoldString( "light_group" );
+const AtString g_shadowGroupArnoldString( "shadow_group" );
 const AtString g_linearArnoldString( "linear" );
 const AtString g_matrixArnoldString( "matrix" );
 const AtString g_matteArnoldString( "matte" );
@@ -288,6 +289,7 @@ const AtString g_traceSetsArnoldString( "trace_sets" );
 const AtString g_transformTypeArnoldString( "transform_type" );
 const AtString g_thickArnoldString( "thick" );
 const AtString g_useLightGroupArnoldString( "use_light_group" );
+const AtString g_useShadowGroupArnoldString( "use_shadow_group" );
 const AtString g_userPtrArnoldString( "userptr" );
 const AtString g_visibilityArnoldString( "visibility" );
 const AtString g_volumeArnoldString("volume");
@@ -695,6 +697,7 @@ IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
 
 IECore::InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
 IECore::InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
+IECore::InternedString g_shadowGroup( "ai:visibility:shadow_group" );
 IECore::InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
 IECore::InternedString g_specularReflectVisibilityAttributeName( "ai:visibility:specular_reflect" );
 IECore::InternedString g_diffuseTransmitVisibilityAttributeName( "ai:visibility:diffuse_transmit" );
@@ -791,6 +794,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_volumePadding = attributeValue<float>( g_shapeVolumePaddingAttributeName, attributes, 0.0f );
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
+			m_shadowGroup = attribute<IECore::StringVectorData>( g_shadowGroup, attributes );
 			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
@@ -1064,25 +1068,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( m_linkedLights )
 				{
-					// NOTE : There is an awful lot of AtString conversion and AiNodeLookUpByName
-					// happening here if we have lots lights.  It seems like it would be great if there
-					// was some way of caching the evaluation of light expressions as a vector of node
-					// pointers, instead of a vector of strings - this might be tricky with how the
-					// baking of expressions currently happens in the EvaluateLightLinks node?
-					const std::vector<std::string> &lightNames = m_linkedLights->readable();
+					std::vector<AtNode*> lightNodes;
+					lightNamesToNodes( m_linkedLights->readable(), lightNodes );
 
-					std::vector<AtNode*> lightNodesVector;
-					for ( IECore::StringVectorData::ValueType::const_iterator it = lightNames.begin(); it != lightNames.end(); ++it )
-					{
-						std::string lightName = "light:" + *(it);
-						AtNode *lightNode = AiNodeLookUpByName( AtString( lightName.c_str() ) );
-						if( lightNode )
-						{
-							lightNodesVector.push_back( lightNode );
-						}
-					}
-
-					AtArray *linkedLightNodes = AiArrayConvert( lightNodesVector.size(), 1, AI_TYPE_NODE, lightNodesVector.data() );
+					AtArray *linkedLightNodes = AiArrayConvert( lightNodes.size(), 1, AI_TYPE_NODE, lightNodes.data() );
 					AiNodeSetArray( node, g_lightGroupArnoldString, linkedLightNodes );
 					AiNodeSetBool( node, g_useLightGroupArnoldString, true );
 				}
@@ -1090,6 +1079,21 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					AiNodeResetParameter( node, g_lightGroupArnoldString );
 					AiNodeResetParameter( node, g_useLightGroupArnoldString );
+				}
+
+				if( m_shadowGroup )
+				{
+					std::vector<AtNode*> lightNodes;
+					lightNamesToNodes( m_shadowGroup->readable(), lightNodes );
+
+					AtArray *linkedLightNodes = AiArrayConvert( lightNodes.size(), 1, AI_TYPE_NODE, lightNodes.data() );
+					AiNodeSetArray( node, g_shadowGroupArnoldString, linkedLightNodes );
+					AiNodeSetBool( node, g_useShadowGroupArnoldString, true );
+				}
+				else
+				{
+					AiNodeResetParameter( node, g_shadowGroupArnoldString );
+					AiNodeResetParameter( node, g_useShadowGroupArnoldString );
 				}
 			}
 
@@ -1489,6 +1493,25 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
+		void lightNamesToNodes( const std::vector<std::string> &lightNames, std::vector<AtNode*> &lightNodes ) const
+		{
+			// NOTE : There is an awful lot of AtString conversion and AiNodeLookUpByName
+			// happening here if we have lots lights.  It seems like it would be great if there
+			// was some way of caching the evaluation of light expressions as a vector of node
+			// pointers, instead of a vector of strings - this might be tricky with how the
+			// baking of expressions currently happens in the EvaluateLightLinks node?
+
+			for ( IECore::StringVectorData::ValueType::const_iterator it = lightNames.begin(); it != lightNames.end(); ++it )
+			{
+				std::string lightName = "light:" + *(it);
+				AtNode *lightNode = AiNodeLookUpByName( AtString( lightName.c_str() ) );
+				if( lightNode )
+				{
+					lightNodes.push_back( lightNode );
+				}
+			}
+		}
+
 		unsigned char m_visibility;
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
@@ -1505,6 +1528,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Curves m_curves;
 		Volume m_volume;
 		IECore::ConstStringVectorDataPtr m_linkedLights;
+		IECore::ConstStringVectorDataPtr m_shadowGroup;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;

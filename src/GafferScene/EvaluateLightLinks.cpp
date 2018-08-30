@@ -49,6 +49,24 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( EvaluateLightLinks );
 
 IECore::InternedString m_lightLinkAttrName = "linkedLights";
+IECore::InternedString m_shadowGroupAttrName = "ai:visibility:shadow_group";
+
+namespace{
+
+IECore::StringVectorDataPtr expressionToLightNames( const std::string &expression, const ScenePlug *in, const PathMatcher &allLights )
+{
+	IECore::StringVectorDataPtr lightNames = new IECore::StringVectorData();
+	std::vector<std::string> &lightNamesWritable = lightNames->writable();
+
+	PathMatcher linkedIlluminationSet = SetAlgo::evaluateSetExpression( expression, in );
+	linkedIlluminationSet = linkedIlluminationSet.intersection( allLights );
+	linkedIlluminationSet.paths( lightNamesWritable );
+
+	return lightNames;
+}
+
+} // namespace
+
 
 EvaluateLightLinks::EvaluateLightLinks( const std::string &name )
 	:	SceneProcessor( name )
@@ -86,24 +104,38 @@ void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Co
 {
 	const MurmurHash inputHash = inPlug()->attributesPlug()->hash();
 	ConstCompoundObjectPtr attributes = inPlug()->attributesPlug()->getValue( & inputHash );
-	ConstStringDataPtr expressionData = attributes->member<StringData>( m_lightLinkAttrName );
-	if( !expressionData )
+
+	ConstStringDataPtr illuminationExpressionData = attributes->member<StringData>( m_lightLinkAttrName );
+	ConstStringDataPtr shadowExpressionData = attributes->member<StringData>( m_shadowGroupAttrName );
+
+	if( !illuminationExpressionData && !shadowExpressionData )
 	{
-    // Pass through.
-    h = inputHash;
-    return;
+		// Pass through.
+		h = inputHash;
+		return;
 	}
 
 	SceneProcessor::hashAttributes( path, context, parent, h );
 	h.append( inputHash );
-	h.append( SetAlgo::setExpressionHash( expressionData->readable(), inPlug() ) );
+	if( illuminationExpressionData )
+	{
+		h.append( SetAlgo::setExpressionHash( illuminationExpressionData->readable(), inPlug() ) );
+	}
+
+	if( shadowExpressionData )
+	{
+		h.append( SetAlgo::setExpressionHash( shadowExpressionData->readable(), inPlug() ) );
+	}
 }
 
 IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstCompoundObjectPtr inputAttributes = inPlug()->attributesPlug()->getValue();
-	ConstStringDataPtr expressionData = inputAttributes->member<StringData>( m_lightLinkAttrName );
-	if(!expressionData)
+
+	ConstStringDataPtr illuminationExpressionData = inputAttributes->member<StringData>( m_lightLinkAttrName );
+	ConstStringDataPtr shadowExpressionData = inputAttributes->member<StringData>( m_shadowGroupAttrName );
+
+	if( !illuminationExpressionData && !shadowExpressionData )
 	{
 		// Pass through
 		return inputAttributes;
@@ -112,12 +144,18 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 	CompoundObjectPtr result = new CompoundObject;
 	result->members() = inputAttributes->members();
 
-	IECore::StringVectorDataPtr lightNames = new IECore::StringVectorData();
-	std::vector<std::string> &lightNamesWritable = lightNames->writable();
-	PathMatcher linkedlightsSet = SetAlgo::evaluateSetExpression( expressionData->readable(), inPlug() );
-	linkedlightsSet = linkedlightsSet.intersection( inPlug()->set( "__lights" )->readable() );
-	linkedlightsSet.paths( lightNamesWritable );
-	result->members()[ m_lightLinkAttrName ] = lightNames;
+	ConstPathMatcherDataPtr lightsSetData = inPlug()->set( "__lights" );
+	const PathMatcher &lightsSet = lightsSetData->readable();
+
+	if( illuminationExpressionData )
+	{
+		result->members()[ m_lightLinkAttrName ] = expressionToLightNames( illuminationExpressionData->readable(), inPlug(), lightsSet );
+	}
+
+	if( shadowExpressionData )
+	{
+		result->members()[ m_shadowGroupAttrName ] = expressionToLightNames( shadowExpressionData->readable(), inPlug(), lightsSet );
+	}
 
 	return result;
 }
