@@ -103,7 +103,7 @@ IE_CORE_DEFINERUNTIMETYPED( CollectScenes );
 size_t CollectScenes::g_firstPlugIndex = 0;
 
 CollectScenes::CollectScenes( const std::string &name )
-	:	SceneProcessor( name, 1 )
+	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
