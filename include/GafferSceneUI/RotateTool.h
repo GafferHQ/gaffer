@@ -41,6 +41,10 @@
 
 #include "GafferUI/Style.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathEuler.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
 namespace GafferSceneUI
 {
 
@@ -59,10 +63,10 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 		Gaffer::IntPlug *orientationPlug();
 		const Gaffer::IntPlug *orientationPlug() const;
 
-		/// Rotates the current selection as if the specified
-		/// handle had been dragged interactively. Exists mainly
+		/// Rotates the current selection as if the handles
+		/// had been dragged interactively. Exists mainly
 		/// for use in the unit tests.
-		void rotate( int axis, float degrees );
+		void rotate( const Imath::Eulerf &degrees );
 
 	protected :
 
@@ -76,17 +80,26 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 		// method.
 		struct Rotation
 		{
-			Imath::V3f originalRotation;
-			Imath::V3f axis;
-		};
 
-		Rotation createRotation( int axis );
-		Imath::V3f rotation( const Rotation &rotation, float radians ) const;
-		void applyRotation( const Rotation &rotation, float radians );
+			Rotation() = default;
+			Rotation( const RotateTool *tool );
+
+			bool canApply( const Imath::V3i &axisMask ) const;
+			void apply( const Imath::Eulerf &rotation ) const;
+
+			private :
+
+				Imath::V3f updatedRotateValue( const Imath::Eulerf &rotation, Imath::V3f *currentValue = nullptr ) const;
+
+				Gaffer::V3fPlugPtr m_plug;
+				Imath::Eulerf m_originalRotation; // Radians
+				Imath::M44f m_gadgetToTransform;
+
+		};
 
 		// Drag handling.
 
-		IECore::RunTimeTypedPtr dragBegin( int axis );
+		IECore::RunTimeTypedPtr dragBegin();
 		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 

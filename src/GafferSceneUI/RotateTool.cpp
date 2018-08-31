@@ -70,16 +70,16 @@ size_t RotateTool::g_firstPlugIndex = 0;
 RotateTool::RotateTool( SceneView *view, const std::string &name )
 	:	TransformTool( view, name )
 {
-	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z };
-	static const char *handleNames[] = { "x", "y", "z" };
+	static Style::Axes axes[] = { Style::XYZ, Style::X, Style::Y, Style::Z, };
+	static const char *handleNames[] = { "xyz", "x", "y", "z" };
 
-	for( int i = 0; i < 3; ++i )
+	for( int i = 0; i < 4; ++i )
 	{
 		RotateHandlePtr handle = new RotateHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &RotateTool::dragBegin, this, i ) );
+		handle->dragBeginSignal().connect( 0, boost::bind( &RotateTool::dragBegin, this ) );
 		handle->dragMoveSignal().connect( boost::bind( &RotateTool::dragMove, this, ::_1, ::_2 ) );
 		handle->dragEndSignal().connect( boost::bind( &RotateTool::dragEnd, this ) );
 	}
@@ -103,10 +103,10 @@ const Gaffer::IntPlug *RotateTool::orientationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-void RotateTool::rotate( int axis, float degrees )
+void RotateTool::rotate( const Imath::Eulerf &degrees )
 {
-	Rotation r = createRotation( axis );
-	applyRotation( r, degreesToRadians( degrees ) );
+	const Rotation r( this );
+	r.apply( degreesToRadians( V3f( degrees ) ) );
 }
 
 bool RotateTool::affectsHandles( const Gaffer::Plug *input ) const
@@ -126,81 +126,16 @@ void RotateTool::updateHandles()
 	handles()->setTransform(
 		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
 	);
-	for( int i = 0; i < 3; ++i )
+	Rotation rotation( this );
+	for( RotateHandleIterator it( handles() ); !it.done(); ++it )
 	{
-		const Rotation rotation = createRotation( i );
-		const V3f r = this->rotation( rotation, M_PI / 4.0 );
-		bool editable = true;
-		for( int j = 0; j < 3; ++j )
-		{
-			if( r[j] != rotation.originalRotation[j] )
-			{
-				ValuePlug *plug = selection().transformPlug->rotatePlug()->getChild( j );
-				if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
-				{
-					editable = false;
-					break;
-				}
-			}
-		}
-		handles()->getChild<Gadget>( i )->setEnabled( editable );
+		(*it)->setEnabled( rotation.canApply( (*it)->axisMask() ) );
 	}
 }
 
-RotateTool::Rotation RotateTool::createRotation( int axis )
+IECore::RunTimeTypedPtr RotateTool::dragBegin()
 {
-	Context::Scope scopedContext( view()->getContext() );
-
-	const Selection &selection = this->selection();
-
-	Rotation result;
-	result.originalRotation = selection.transformPlug->rotatePlug()->getValue();
-
-	V3f handleSpaceAxis( 0.0f );
-	handleSpaceAxis[axis] = 1.0f;
-	const M44f handlesTransform = orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) );
-	V3f worldSpaceAxis;
-	handlesTransform.multDirMatrix( handleSpaceAxis, worldSpaceAxis );
-
-	selection.sceneToTransformSpace().multDirMatrix( worldSpaceAxis, result.axis );
-
-	return result;
-}
-
-Imath::V3f RotateTool::rotation( const Rotation &rotation, float radians ) const
-{
-	const Selection &selection = this->selection();
-
-	// Compose our new rotation with the original
-	Quatf q; q.setAxisAngle( rotation.axis, radians );
-	M44f m = q.toMatrix44();
-	m.rotate( degreesToRadians( rotation.originalRotation ) );
-
-	// Convert to the euler angles closest to
-	// those we currently have.
-	Eulerf e; e.extract( m );
-	e.makeNear( degreesToRadians( selection.transformPlug->rotatePlug()->getValue() ) );
-
-	return V3f( e );
-}
-
-void RotateTool::applyRotation( const Rotation &rotation, float radians )
-{
-	const Selection &selection = this->selection();
-	const V3f r = radiansToDegrees( this->rotation( rotation, radians ) );
-	for( int i = 0; i < 3; ++i )
-	{
-		FloatPlug *p = selection.transformPlug->rotatePlug()->getChild( i );
-		if( p->settable() && !MetadataAlgo::readOnly( p ) )
-		{
-			p->setValue( r[i] );
-		}
-	}
-}
-
-IECore::RunTimeTypedPtr RotateTool::dragBegin( int axis )
-{
-	m_drag = createRotation( axis );
+	m_drag = Rotation( this );
 	TransformTool::dragBegin();
 	return nullptr; // Let the handle start the drag.
 }
@@ -208,8 +143,7 @@ IECore::RunTimeTypedPtr RotateTool::dragBegin( int axis )
 bool RotateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const float r = static_cast<const RotateHandle *>( gadget )->rotation( event );
-	applyRotation( m_drag, r );
+	m_drag.apply( static_cast<const RotateHandle *>( gadget )->rotation( event ) );
 	return true;
 }
 
@@ -217,4 +151,83 @@ bool RotateTool::dragEnd()
 {
 	TransformTool::dragEnd();
 	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// RotateTool::Rotation
+//////////////////////////////////////////////////////////////////////////
+
+RotateTool::Rotation::Rotation( const RotateTool *tool )
+{
+	Context::Scope scopedContext( tool->view()->getContext() );
+
+	const Selection &selection = tool->selection();
+
+	m_plug = selection.transformPlug->rotatePlug();
+	m_originalRotation = degreesToRadians( m_plug->getValue() );
+
+	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
+	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
+}
+
+bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
+{
+	Imath::V3f current;
+	const Imath::V3f updated = updatedRotateValue( V3f( axisMask ), &current );
+	for( int i = 0; i < 3; ++i )
+	{
+		if( updated[i] == current[i] )
+		{
+			continue;
+		}
+
+		FloatPlug *p = m_plug->getChild( i );
+		if( !p->settable() || MetadataAlgo::readOnly( p ) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void RotateTool::Rotation::apply( const Imath::Eulerf &rotation ) const
+{
+	const Imath::V3f e = updatedRotateValue( rotation );
+	for( int i = 0; i < 3; ++i )
+	{
+		FloatPlug *p = m_plug->getChild( i );
+		if( p->settable() && !MetadataAlgo::readOnly( p ) )
+		{
+			p->setValue( e[i] );
+		}
+	}
+}
+
+Imath::V3f RotateTool::Rotation::updatedRotateValue( const Imath::Eulerf &rotation, Imath::V3f *currentValue ) const
+{
+	// Convert the rotation into the space of the
+	// upstream transform.
+	Quatf q = rotation.toQuat();
+	V3f transformSpaceAxis;
+	m_gadgetToTransform.multDirMatrix( q.axis(), transformSpaceAxis );
+	q.setAxisAngle( transformSpaceAxis, q.angle() );
+
+	// Compose it with the original.
+
+	M44f m = q.toMatrix44();
+	m.rotate( m_originalRotation );
+
+	// Convert to the euler angles closest to
+	// those we currently have.
+
+	const V3f current = m_plug->getValue();
+	if( currentValue )
+	{
+		*currentValue = current;
+	}
+
+	Eulerf e; e.extract( m );
+	e.makeNear( degreesToRadians( current ) );
+
+	return radiansToDegrees( V3f( e ) );
 }
