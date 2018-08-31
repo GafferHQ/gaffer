@@ -90,9 +90,11 @@ Imath::Color4f colorForAxes( Style::Axes axes )
 		case Style::Z :
 			return Color4f( 0.2, 0.36, 0.74, 1.0f );
 		case Style::XY :
+			return ( colorForAxes( Style::X ) + colorForAxes( Style::Y ) ) * 0.5;
 		case Style::XZ :
+			return ( colorForAxes( Style::X ) + colorForAxes( Style::Z ) ) * 0.5;
 		case Style::YZ :
-			return Color4f( 0.75, 0.5, 0.2, 1.0f );
+			return ( colorForAxes( Style::Y ) + colorForAxes( Style::Z ) ) * 0.5;
 		default :
 			return Color4f( 0.8, 0.8, 0.8, 0.0f );
 	}
@@ -319,7 +321,7 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 	else if( axes == Style::XY || axes == Style::XZ || axes == Style::YZ )
 	{
 		IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
-		cubeGroup->setTransform( M44f().scale( V3f( 0.25, 0.25, 0.01 ) ) * M44f().translate( V3f( 0.5, 0.5, 0 ) ) );
+		cubeGroup->setTransform( M44f().scale( V3f( 0.1, 0.1, 0.01 ) ) * M44f().translate( V3f( 0.5, 0.5, 0 ) ) );
 		cubeGroup->addChild( cube() );
 		group->addChild( cubeGroup );
 

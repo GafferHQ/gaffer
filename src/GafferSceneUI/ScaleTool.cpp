@@ -102,7 +102,6 @@ ScaleTool::ScaleTool( SceneView *view, const std::string &name )
 	{
 		ScaleHandlePtr handle = new ScaleHandle( axes[i] );
 		handle->setRasterScale( 75 );
-		handle->setVisibleOnHover( axes[i] == Style::XY || axes[i] == Style::XZ || axes[i] == Style::YZ );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
 		handle->dragBeginSignal().connect( 0, boost::bind( &ScaleTool::dragBegin, this, axes[i] ) );
