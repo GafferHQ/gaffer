@@ -144,21 +144,44 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
+		def plugDirectionsWalk( gadget ) :
+
+			result = set()
+			if isinstance( gadget, GafferUI.Nodule ) :
+				result.add( gadget.plug().direction() )
+
+			for c in gadget.children() :
+				result |= plugDirectionsWalk( c )
+
+			return result
+
+		plugDirections = plugDirectionsWalk( graphEditor.graphGadget().nodeGadget( node ) )
+		if not plugDirections :
+			return
+
+		readOnly = Gaffer.MetadataAlgo.readOnly( node )
+
 		menuDefinition.append( "/ConnectionVisibilityDivider", { "divider" : True } )
-		menuDefinition.append(
-			"/Show Input Connections",
-			{
-				"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
-				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node )
-			}
-		)
-		menuDefinition.append(
-			"/Show Output Connections",
-			{
-				"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
-				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node )
-			}
-		)
+
+		if Gaffer.Plug.Direction.In in plugDirections :
+			menuDefinition.append(
+				"/Show Input Connections",
+				{
+					"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
+					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
+					"active" : not readOnly,
+				}
+			)
+
+		if Gaffer.Plug.Direction.Out in plugDirections :
+			menuDefinition.append(
+				"/Show Output Connections",
+				{
+					"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
+					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
+					"active" : not readOnly
+				}
+			)
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install a
 	# standard menu item for modifying the enabled state of a node.
