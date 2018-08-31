@@ -1,53 +1,112 @@
-Gaffer
-======
+![Gaffer Logo](resources/GafferLogo.svg)
 
-Gaffer is an open source application framework designed specifically for creating tools for use in visual effects production. It builds on top of the Cortex libraries, adding a flexible node-based computation framework and a user interface framework for editing and viewing node graphs. Gaffer ships with a number of sample modules and applications, not least of which is a module for the on-demand generation of procedural scenes for rendering.
+# Gaffer #
 
-More information can be found on the [project homepage](http://gafferhq.org).
+Gaffer is a VFX application that enables look developers, lighters, and compositors to easily build, tweak, iterate, and render scenes. Gaffer supports in-application scripting in Python and [OSL](https://github.com/imageworks/OpenShadingLanguage), so VFX artists and technical directors can design shaders, automate processes, and build production workflows.
 
-Developer notes are available on the [project wiki](https://github.com/GafferHQ/gaffer/wiki).
+An open-source project, Gaffer also provides an application framework for studios to design and create their own VFX production pipeline tools. Built using the [Cortex](https://github.com/ImageEngine/cortex) libraries, Gaffer ships with a multi-threaded, deferred evaluation engine and a flexible user interface framework.
 
-Downloading
-===========
+More information about Gaffer and its use in studios can be found at [GafferHQ](https://gafferhq.org).
+
+Users can learn how to use Gaffer through the [documentation](https://gafferhq.org/documentation).
+
+Developer notes are available on the [Gaffer developer wiki](https://github.com/GafferHQ/gaffer/wiki).
+
+Participating in the Gaffer community requires abiding by the project's [Code of Conduct](https://github.com/GafferHQ/gaffer/blob/master/CODE_OF_CONDUCT.md).
+
+
+## Download ##
 
 Compiled binary releases are available for download from the [releases page](https://github.com/GafferHQ/gaffer/releases).
 
-Building
-========
+
+## Building ##
 
 [![Build Status](https://travis-ci.org/GafferHQ/gaffer.svg?branch=master)](https://travis-ci.org/GafferHQ/gaffer)
 
-Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, you'll want to make sure you have the following prerequisites installed on your system - these will be used to perform the build itself :
+Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, make sure you have the following prerequisites installed on your system, which will be used to perform the build itself.
 
-- [SCons](http://www.scons.org)
-- [Inkscape](http://inkscape.org)
-- [Sphinx](http://www.sphinx-doc.org/) (optional, minimum version 1.3)
 
-Gaffer also depends on a number of 3rd party libraries and python modules, many of which are not entirely straightforward to build. We therefore recommend using the latest prebuilt dependencies from the [gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up to date with Gaffer's requirements.
+### Build Requirements ###
 
-Once you've downloaded the dependencies, you'll want to unpack them and move/rename them to the directory in which you want to make your Gaffer build. We'll refer to this location as `<BUILD_DIR>` in the instructions below - before continuing make sure the dependencies are unpacked as `<BUILD_DIR>/include`, `<BUILD_DIR>/lib` etc.
+From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
 
-Next, get yourself a clone of the Gaffer source and change into that directory :
+> **Note:** Specific package names may differ depending on your Linux distribution and repository.
 
-```
+
+#### Main Build Requirements ####
+
+> **Note:** Large Linux distros focused on usability, such as CentOS and Ubuntu, ship with many of these packages by default.
+
+Package Name | Minimum Version
+------------ |:--------------:
+**General** | -
+[gcc](https://gcc.gnu.org/index.html) | 6.3.1
+[scons](http://www.scons.org) |
+**OpenGL** | -
+[libX11-devel](https://www.x.org) |
+[libXi-devel](https://www.x.org) |
+[libXmu-devel](https://www.x.org) |
+[mesa-libGL-devel](https://www.mesa3d.org) |
+[mesa-libGLU-devel](https://www.mesa3d.org) |
+
+
+#### Documentation Build Requirements ####
+
+> **Note:** Building the documentation is optional.
+
+Package Name | Minimum Version
+------------ |:--------------:
+[sphinx](http://www.sphinx-doc.org/) | 1.4
+[inkscape](http://inkscape.org) |
+
+> **Note:** We recommend using [pip](https://pypi.org/project/pip) to manage Python modules.
+
+Python Module |
+---------- |
+sphinx_rtd_theme |
+recommonmark |
+
+
+### Build Process ###
+
+Gaffer also depends on a number of 3rd-party libraries and python modules, many of which are not entirely straightforward to build. We therefore recommend using the latest pre-built dependencies from the [Gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up-to-date with Gaffer's requirements.
+
+Once you've downloaded the dependencies, unpack them and move/rename them to the directory in which you want to make your Gaffer build. We'll refer to this location as `<BUILD_DIR>` in the instructions below. Before continuing, make sure the dependencies are unpacked as `<BUILD_DIR>/include`, `<BUILD_DIR>/lib`, etc.
+
+Next, clone the Gaffer source and `cd` into its directory:
+
+```bash
 git clone https://github.com/GafferHQ/gaffer.git
 cd gaffer
 ```
 
-You can then build Gaffer itself as follows :
+You can then build Gaffer with `scons`:
 
-```
+```bash
 scons BUILD_DIR=<BUILD_DIR> build
 ```
 
-If you encounter any problems, please get in touch via [the developer mailing list](https://groups.google.com/forum/#!forum/gaffer-dev) and we'll do our best to help get you up and running.
 
-Contributing
-============
+## Questions and Troubleshooting ##
 
-Contributions to Gaffer are welcome. For small fixes we suggest just going ahead and making a pull request - for anything larger we recommend dicussing it on the [developer list](https://groups.google.com/forum/#!forum/gaffer-dev) first, to avoid duplication of effort and to ensure that your whizz-bang ideas fit in with the general direction of the project.
+If you have any questions about using Gaffer, or encounter problems setting it up, feel free to ask on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). Our users and contributors are happy to help.
 
-Copyright and License
-=====================
 
-© 2013, Image Engine Design Inc. © 2013, John Haddon under [the BSD license](https://github.com/GafferHQ/gaffer/blob/master/LICENSE)
+## Requesting Features ##
+
+If there is a feature you would like to see in Gaffer, request it on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). Do not create an Issue for it on GitHub.
+
+
+## Contributions and Bugs Reports ##
+
+Please see the project's [contribution guidelines](https://github.com/GafferHQ/gaffer/blob/master/CONTRIBUTING.md).
+
+
+## Copyright and License ##
+
+© 2018 John Haddon. All rights reserved.
+
+© 2018 Image Engine Design Inc. All rights reserved.
+
+Distributed under the [BSD license](https://github.com/GafferHQ/gaffer/blob/master/LICENSE).
