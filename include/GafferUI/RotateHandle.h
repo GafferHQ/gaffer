@@ -39,6 +39,10 @@
 
 #include "GafferUI/Handle.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "OpenEXR/ImathEuler.h"
+IECORE_POP_DEFAULT_VISIBILITY
+
 namespace GafferUI
 {
 
@@ -55,8 +59,13 @@ class GAFFERUI_API RotateHandle : public Handle
 		void setAxes( Style::Axes axes );
 		Style::Axes getAxes() const;
 
+		// Returns a vector where each component is 0 or 1,
+		// indicating whether or not the handle will produce
+		// rotation in that axis.
+		Imath::V3i axisMask() const;
+
 		// Measured in radians
-		float rotation( const DragDropEvent &event ) const;
+		Imath::Eulerf rotation( const DragDropEvent &event ) const;
 
 	protected :
 
@@ -66,10 +75,17 @@ class GAFFERUI_API RotateHandle : public Handle
 	private :
 
 		bool dragMove( const DragDropEvent &event );
+		bool mouseMove( const ButtonEvent &event );
+		Imath::V3f pointOnSphere( const IECore::LineSegment3f &line ) const;
 
 		Style::Axes m_axes;
+		// For X, Y and Z handles.
 		PlanarDrag m_drag;
 		float m_rotation;
+		// For XYZ handle.
+		Imath::M44f m_dragBeginWorldTransform;
+		Imath::V3f m_dragBeginPointOnSphere;
+		Imath::V3f m_highlightVector;
 
 };
 
