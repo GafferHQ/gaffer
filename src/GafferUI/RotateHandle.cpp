@@ -41,6 +41,8 @@
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathEuler.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathSphere.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind.hpp"
@@ -75,6 +77,7 @@ RotateHandle::RotateHandle( Style::Axes axes )
 {
 	setAxes( axes );
 	dragMoveSignal().connect( boost::bind( &RotateHandle::dragMove, this, ::_2 ) );
+	mouseMoveSignal().connect( boost::bind( &RotateHandle::mouseMove, this, ::_2 ) );
 }
 
 RotateHandle::~RotateHandle()
@@ -88,9 +91,15 @@ void RotateHandle::setAxes( Style::Axes axes )
 		return;
 	}
 
-	if( axes > Style::Z )
+	switch( axes )
 	{
-		throw IECore::Exception( "Unsupported axes" );
+		case Style::X :
+		case Style::Y :
+		case Style::Z :
+		case Style::XYZ :
+			break;
+		default :
+			throw IECore::Exception( "Unsupported axes" );
 	}
 
 	m_axes = axes;
@@ -102,32 +111,114 @@ Style::Axes RotateHandle::getAxes() const
 	return m_axes;
 }
 
-float RotateHandle::rotation( const DragDropEvent &event ) const
+Imath::V3i RotateHandle::axisMask() const
 {
-	return closestRotation( m_drag.position( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f );
+	switch( m_axes )
+	{
+		case Style::X :
+			return V3i( 1, 0, 0 );
+		case Style::Y :
+			return V3i( 0, 1, 0 );
+		case Style::Z :
+			return V3i( 0, 0, 1 );
+		case Style::XYZ :
+			return V3i( 1, 1, 1 );
+		default :
+			// Checks in `setAxes()` prevent us getting here
+			return V3i( 0 );
+	}
+}
+
+Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event ) const
+{
+	if( m_axes == Style::XYZ )
+	{
+		const LineSegment3f line = event.line * fullTransform() * m_dragBeginWorldTransform.inverse();
+		const M44f m = rotationMatrix( m_dragBeginPointOnSphere, pointOnSphere( line ) );
+		Eulerf e; e.extract( m );
+		return e;
+	}
+
+	const float r = closestRotation( m_drag.position( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f );
+	switch( m_axes )
+	{
+		case Style::X :
+			return Eulerf( V3f( r, 0, 0 ) );
+		case Style::Y :
+			return Eulerf( V3f( 0, r, 0 ) );
+		case Style::Z :
+			return Eulerf( V3f( 0, 0, r ) );
+		default :
+			// Checks in `setAxes()` prevent us getting here
+			return Eulerf();
+	}
 }
 
 void RotateHandle::renderHandle( const Style *style, Style::State state ) const
 {
-	style->renderRotateHandle( m_axes, state );
+	style->renderRotateHandle( m_axes, state, m_highlightVector );
 }
 
 void RotateHandle::dragBegin( const DragDropEvent &event )
 {
-	V3f axis0( 0.0f );
-	V3f axis1( 0.0f );
-	axis0[(m_axes+1)%3] = 1.0f;
-	axis1[(m_axes+2)%3] = 1.0f;
-	m_drag = PlanarDrag( this, V3f( 0 ), axis0, axis1, event );
-	m_rotation = closestRotation( m_drag.position( event ), 0.0f );
+	switch( m_axes )
+	{
+		case Style::X :
+			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 0, 1, 0 ), V3f( 0, 0, 1 ), event );
+			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			break;
+		case Style::Y :
+			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 0, 0, 1 ), V3f( 1, 0, 0 ), event );
+			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			break;
+		case Style::Z :
+			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 1, 0 ), event );
+			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			break;
+		case Style::XYZ :
+			m_dragBeginWorldTransform = fullTransform();
+			m_dragBeginPointOnSphere = pointOnSphere( event.line );
+			break;
+		default :
+			// Checks in `setAxes()` prevent us getting here
+			break;
+	}
 }
 
 bool RotateHandle::dragMove( const DragDropEvent &event )
 {
-	// We can only recover an angle in the range -PI, PI from the 2d position
-	// that our drag gives us, but we want to be able to support continuous
-	// values and multiple revolutions. Here we keep track of the current rotation
-	// position so that we can adjust correctly in `RotateHandle::rotation()`.
-	m_rotation = closestRotation( m_drag.position( event ), m_rotation );
+	if( m_axes == Style::XYZ )
+	{
+		m_highlightVector = pointOnSphere( event.line );
+		requestRender();
+	}
+	else
+	{
+		// We can only recover an angle in the range -PI, PI from the 2d position
+		// that our drag gives us, but we want to be able to support continuous
+		// values and multiple revolutions. Here we keep track of the current rotation
+		// position so that we can adjust correctly in `RotateHandle::rotation()`.
+		m_rotation = closestRotation( m_drag.position( event ), m_rotation );
+	}
 	return false;
+}
+
+bool RotateHandle::mouseMove( const ButtonEvent &event )
+{
+	m_highlightVector = pointOnSphere( event.line );
+	requestRender();
+	return true;
+}
+
+Imath::V3f RotateHandle::pointOnSphere( const IECore::LineSegment3f &line ) const
+{
+	const LineSegment3f scaledLine = line * M44f().scale( V3f( 1 ) / rasterScaleFactor() );
+	const Imath::Sphere3f sphere( V3f( 0 ), 1.0f );
+	V3f result;
+	if( !sphere.intersect( Line3f( scaledLine.p0, scaledLine.p1 ), result ) )
+	{
+		result = scaledLine.closestPointTo( V3f( 0 ) );
+		result.normalize();
+	}
+	return result;
 }

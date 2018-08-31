@@ -58,7 +58,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 
 		for i in range( 0, 6 ) :
-			tool.rotate( 1, 90 )
+			tool.rotate( imath.Eulerf( 0, 90, 0 ) )
 			self.assertEqual( script["cube"]["transform"]["rotate"]["y"].getValue(), (i + 1) * 90 )
 
 	def testInteractionWithGroupRotation( self ) :
@@ -83,7 +83,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		# rotate about the X axis in world space, because the
 		# handle orientation has been affected by the group
 		# transform (because default orientation is Parent).
-		tool.rotate( 2, 90 )
+		tool.rotate( imath.Eulerf( 0, 0, 90 ) )
 
 		# We expect this to have aligned the cube's local X axis onto
 		# the Y axis in world space, and the local Y axis onto the world
@@ -124,7 +124,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Local )
 
 		with Gaffer.UndoScope( script ) :
-			tool.rotate( 2, 90 )
+			tool.rotate( imath.Eulerf( 0, 0, 90 ) )
 
 		self.assertTrue(
 			imath.V3f( 0, 1, 0 ).equalWithAbsError(
@@ -139,7 +139,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Parent )
 
 		with Gaffer.UndoScope( script ) :
-			tool.rotate( 0, 90 )
+			tool.rotate( imath.Eulerf( 90, 0, 0 ) )
 
 		self.assertTrue(
 			imath.V3f( 0, 1, 0 ).equalWithAbsError(
@@ -154,7 +154,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.World )
 
 		with Gaffer.UndoScope( script ) :
-			tool.rotate( 2, 90 )
+			tool.rotate( imath.Eulerf( 0, 0, 90 ) )
 
 		self.assertTrue(
 			imath.V3f( 0, -1, 0 ).equalWithAbsError(
@@ -184,7 +184,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.RotateTool( view )
 		tool["active"].setValue( True )
 
-		tool.rotate( 0, 90 )
+		tool.rotate( imath.Eulerf( 90, 0, 0 ) )
 
 		self.assertTrue(
 			imath.V3f( 0, 1, 0 ).equalWithAbsError(

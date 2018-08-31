@@ -143,6 +143,10 @@ class GAFFERUI_API Handle : public Gadget
 
 		};
 
+		// Returns the current scale factor needed to keep the handles
+		// at the requested size in raster space.
+		Imath::V3f rasterScaleFactor() const;
+
 	private :
 
 		void enter();

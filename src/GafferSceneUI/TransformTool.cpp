@@ -558,7 +558,7 @@ Imath::M44f TransformTool::orientedTransform( Orientation orientation ) const
 				if( selection.path.size() )
 				{
 					const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-					result = scenePlug()->fullTransform( parentPath );
+					result = selection.scene->fullTransform( parentPath );
 				}
 				break;
 			case World :
@@ -570,6 +570,8 @@ Imath::M44f TransformTool::orientedTransform( Orientation orientation ) const
 	result = sansScaling( result );
 
 	// And reset the translation to put it where the pivot is
+
+	Context::Scope upstreamScope( selection.upstreamContext.get() );
 
 	const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
 	const V3f translate = selection.transformPlug->translatePlug()->getValue();
