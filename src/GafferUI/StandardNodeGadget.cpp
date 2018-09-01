@@ -718,6 +718,10 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	connect( event, m_dragDestination );
 
 	m_dragDestination->setHighlighted( false );
+	for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+	{
+		(*it)->setLabelVisible( false );
+	}
 	m_dragDestination = nullptr;
 	return true;
 }
