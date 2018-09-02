@@ -205,6 +205,11 @@ bool getBookmarked( const Node *node )
 	return d ? d->readable() : false;
 }
 
+bool bookmarkedAffectedByChange( const IECore::InternedString &changedKey )
+{
+	return changedKey == g_bookmarkedName || changedKey == g_oldBookmarkedName;
+}
+
 void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
 {
 	bookmarks.clear();
