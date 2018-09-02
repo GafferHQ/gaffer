@@ -56,6 +56,8 @@ Gaffer.Metadata.registerNode(
 	node and then export it for referencing.
 	""",
 
+	"icon", "referenceNode.png",
+
 	"graphEditor:childrenViewable", True,
 	"childNodesAreReadOnly", True,
 
