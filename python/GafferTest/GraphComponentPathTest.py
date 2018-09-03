@@ -65,9 +65,13 @@ class GraphComponentPathTest( GafferTest.TestCase ) :
 		r["d"] = Gaffer.GraphComponent()
 
 		p = Gaffer.GraphComponentPath( r, "/d" )
-		self.assertEqual( p.propertyNames(), [ "name", "fullName" ] )
+		self.assertEqual( p.propertyNames(), [ "name", "fullName", "graphComponent:graphComponent" ] )
 		self.assertEqual( p.property( "name" ), "d" )
 		self.assertEqual( p.property( "fullName" ), "/d" )
+		self.assertEqual( p.property( "graphComponent:graphComponent" ), r["d"] )
+
+		p[:] = [ "non", "existent" ]
+		self.assertEqual( p.property( "graphComponent:graphComponent" ), None )
 
 	def testChildrenInheritFilter( self ) :
 
