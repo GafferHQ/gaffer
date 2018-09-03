@@ -61,10 +61,10 @@ using namespace GafferUIBindings;
 namespace
 {
 
-void setRoot( GraphGadget &graphGadget, Gaffer::NodePtr root, Gaffer::SetPtr filter )
+void setRoot( GraphGadget &graphGadget, Gaffer::Node &root, Gaffer::SetPtr filter )
 {
 	ScopedGILRelease gilRelease;
-	graphGadget.setRoot( root, filter );
+	graphGadget.setRoot( &root, filter );
 }
 
 void setFilter( GraphGadget &graphGadget, Gaffer::SetPtr filter )

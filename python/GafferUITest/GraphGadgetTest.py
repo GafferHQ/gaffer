@@ -555,6 +555,9 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodeGadget( s["b"]["n"] ) )
 		self.assertFalse( g.nodeGadget( s["b"] ) )
 
+		with self.assertRaises( TypeError ) :
+			g.setRoot( None )
+
 	def testRootChangedSignal( self ) :
 
 		s = Gaffer.ScriptNode()
