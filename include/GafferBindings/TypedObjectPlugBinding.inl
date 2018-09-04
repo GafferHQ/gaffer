@@ -53,6 +53,7 @@ namespace Detail
 template<typename T>
 void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true )
 {
+	IECorePython::ScopedGILRelease r;
 	if( !v )
 	{
 		throw std::invalid_argument( "Value must not be None." );
