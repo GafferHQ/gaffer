@@ -89,10 +89,10 @@ void matchingPathsWrapper3( const PathMatcher &filter, const ScenePlug *scene, P
 	SceneAlgo::matchingPaths( filter, scene, paths );
 }
 
-Imath::V2f shutterWrapper( const IECore::CompoundObject *globals )
+Imath::V2f shutterWrapper( const IECore::CompoundObject *globals, const ScenePlug *scene )
 {
 	IECorePython::ScopedGILRelease r;
-	return SceneAlgo::shutter( globals );
+	return SceneAlgo::shutter( globals, scene );
 }
 
 bool setExistsWrapper( const ScenePlug *scene, const IECore::InternedString &setName )

@@ -137,8 +137,8 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 /// Returns just the global attributes from the globals (everything prefixed with "attribute:").
 GAFFERSCENE_API IECore::ConstCompoundObjectPtr globalAttributes( const IECore::CompoundObject *globals );
 
-/// Calculates the shutter specified by the globals.
-GAFFERSCENE_API Imath::V2f shutter( const IECore::CompoundObject *globals );
+/// Calculates the shutter specified by the globals ( potentially overridden by a camera )
+GAFFERSCENE_API Imath::V2f shutter( const IECore::CompoundObject *globals, const ScenePlug *scene );
 
 /// Returns true if the specified set exists within the scene, and false otherwise.
 /// This simply searches for the set name in the result of scene->setNamesPlug()->getValue().
