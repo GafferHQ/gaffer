@@ -75,17 +75,21 @@ namespace AnimationLayer
 	constexpr Gadget::Layer Overlay = Gadget::Layer::Front;
 };
 
-// \todo: Use actual fps setting. For now, we always use 24 fps
 template<typename T>
-T frameToTime( T frame )
+T frameToTime( float fps, T frame )
 {
-	return frame / 24.0;
+	return frame / fps;
 }
 
 template<typename T>
-T timeToFrame( T time )
+T timeToFrame( float fps, T time )
 {
-	return time * 24.0;
+	return time * fps;
+}
+
+float snapTimeToFrame( float fps, float time )
+{
+	return frameToTime( fps, round( timeToFrame( fps, time ) ) );
 }
 
 // \todo: Consider making the colorForAxes function in StandardStyle public?
@@ -120,7 +124,7 @@ struct AxisDefinition
 	std::vector<float> secondary;
 };
 
-void computeGrid( const ViewportGadget *viewportGadget, AxisDefinition &x, AxisDefinition &y )
+void computeGrid( const ViewportGadget *viewportGadget, float fps, AxisDefinition &x, AxisDefinition &y )
 {
 	Imath::V2i resolution = viewportGadget->getViewport();
 
@@ -129,7 +133,7 @@ void computeGrid( const ViewportGadget *viewportGadget, AxisDefinition &x, AxisD
 	max = viewportGadget->rasterToWorldSpace( V2f( resolution.x, resolution.y ) );
 	Imath::Box2f viewportBounds = Box2f( V2f( min.p0.x, min.p0.y ), V2f( max.p0.x, max.p0.y ) );
 
-	Box2f viewportBoundsFrames( timeToFrame( viewportBounds.min ), timeToFrame( viewportBounds.max ) );
+	Box2f viewportBoundsFrames( timeToFrame( fps, viewportBounds.min ), timeToFrame( fps, viewportBounds.max ) );
 	V2i labelMinSize( 50, 20 );
 	int xStride = 1;
 	float yStride = 1;
@@ -185,10 +189,10 @@ void computeGrid( const ViewportGadget *viewportGadget, AxisDefinition &x, AxisD
 	int upperBoundX = std::ceil( viewportBoundsFrames.max.x );
 	for( int i = lowerBoundX; i < upperBoundX; i += xStride )
 	{
-		float time = frameToTime( static_cast<float>( i ) );
+		float time = frameToTime( fps, static_cast<float>( i ) );
 		x.main.push_back( std::make_pair( viewportGadget->worldToRasterSpace( V3f( time, 0, 0 ) ).x, i ) );
 
-		float subStride = frameToTime( xStride / 5.0 );
+		float subStride = frameToTime( fps, xStride / 5.0 );
 		for( int s = 1; s < 5; ++s )
 		{
 			x.secondary.push_back( viewportGadget->worldToRasterSpace( V3f( time + s * subStride, 0, 0 ) ).x );
@@ -279,7 +283,7 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 	case AnimationLayer::Grid :
 	{
 		AxisDefinition xAxis, yAxis;
-		computeGrid( viewportGadget, xAxis, yAxis );
+		computeGrid( viewportGadget, m_context->getFramesPerSecond(), xAxis, yAxis );
 
 		Imath::Color3f axesColor( 60.0 / 255, 60.0 / 255, 60.0 / 255 );
 
@@ -336,7 +340,7 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 	case AnimationLayer::Axes :
 	{
 		AxisDefinition xAxis, yAxis;
-		computeGrid( viewportGadget, xAxis, yAxis );
+		computeGrid( viewportGadget, m_context->getFramesPerSecond(), xAxis, yAxis );
 
 		renderFrameIndicator( style );
 
@@ -463,7 +467,7 @@ void AnimationGadget::insertKeyframe( Animation::CurvePlug *curvePlug, float tim
 	ScriptNode *scriptNode = curvePlug->ancestor<ScriptNode>();
 	UndoScope undoEnabled( scriptNode, UndoScope::Enabled, undoMergeGroup() );
 
-	float snappedTime = frameToTime( round( timeToFrame( time ) ) );
+	float snappedTime = snapTimeToFrame( m_context->getFramesPerSecond(), time );
 
 	if( !curvePlug->closestKey( snappedTime, 0.004 ) ) // \todo: use proper ticks
 	{
@@ -527,8 +531,8 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 		xSnappingCurrentOffset = dragOffset;
 		if( m_snappingClosestKey )
 		{
-			float unsnappedFrame = timeToFrame( m_snappingClosestKey->getTime() + xSnappingCurrentOffset );
-			xSnappingCurrentOffset = frameToTime( round( unsnappedFrame ) ) - m_snappingClosestKey->getTime();
+			float time = m_snappingClosestKey->getTime() + xSnappingCurrentOffset;
+			xSnappingCurrentOffset = snapTimeToFrame( m_context->getFramesPerSecond(), time ) - m_snappingClosestKey->getTime();
 		}
 	}
 
@@ -675,7 +679,7 @@ bool AnimationGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	// Move current frame
 	if( event.button == ButtonEvent::Left && m_kKeyPressed )
 	{
-		m_context->setFrame( round( timeToFrame( i.x ) ) );
+		m_context->setFrame( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
 		requestRender();
 	}
 
@@ -954,7 +958,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( m_dragMode == DragMode::MoveFrame )
 	{
-			m_context->setFrame( round( timeToFrame( i.x ) ) );
+		m_context->setFrame( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
 	}
 
 	m_lastDragPosition = V2f( i.x, i.y );
@@ -1303,7 +1307,7 @@ void AnimationGadget::updateKeyPreviewLocation( const Gaffer::Animation::CurvePl
 		return;
 	}
 
-	float snappedTime = frameToTime( round( timeToFrame( time ) ) );
+	float snappedTime = snapTimeToFrame( m_context->getFramesPerSecond(), time );
 	float value = curvePlug->evaluate( snappedTime );
 	m_keyPreviewLocation = V3f( snappedTime, value, 0 );
 }
