@@ -409,6 +409,7 @@ target_link_libraries( GafferVDBUI ${BASE_LIBS} Gaffer GafferVDB GafferSceneUI $
 # GafferVDBUI Python Module
 add_library( _GafferVDBUI MODULE ${GAFFERVDBUI_CXX_MODULE_FILES} )
 target_link_libraries( _GafferVDBUI GafferVDBUI )
+set_target_properties(_GafferVDBUI PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
 
 # GafferAppleseed
 file( GLOB IECOREAPPLESEED_PREVIEW_CXX_FILES ${GAFFER_SOURCE_DIR}/src/GafferAppleseed/IECoreAppleseedPreview/*.cpp )
