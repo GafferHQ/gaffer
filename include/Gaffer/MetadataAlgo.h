@@ -109,6 +109,7 @@ GAFFER_API bool readOnlyAffectedByChange( const IECore::InternedString &changedK
 
 GAFFER_API void setBookmarked( Node *node, bool bookmarked, bool persistent = true );
 GAFFER_API bool getBookmarked( const Node *node );
+GAFFER_API bool bookmarkedAffectedByChange( const IECore::InternedString &changedKey );
 GAFFER_API void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks );
 
 /// Utilities

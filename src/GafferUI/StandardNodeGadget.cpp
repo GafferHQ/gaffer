@@ -792,6 +792,10 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 			requestRender();
 		}
 	}
+	else if( MetadataAlgo::bookmarkedAffectedByChange( key ) )
+	{
+		requestRender();
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()

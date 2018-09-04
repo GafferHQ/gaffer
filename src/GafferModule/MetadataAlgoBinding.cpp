@@ -95,6 +95,7 @@ void GafferModule::bindMetadataAlgo()
 
 	def( "setBookmarked", &setBookmarked, ( arg( "graphComponent" ), arg( "bookmarked"), arg( "persistent" ) = true ) );
 	def( "getBookmarked", &getBookmarked );
+	def( "bookmarkedAffectedByChange", &bookmarkedAffectedByChange );
 	def( "bookmarks", &bookmarksWrapper );
 	def(
 		"affectedByChange",
