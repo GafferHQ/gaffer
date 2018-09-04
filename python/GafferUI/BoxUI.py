@@ -58,6 +58,8 @@ Gaffer.Metadata.registerNode(
 	node.
 	""",
 
+	"icon", "boxNode.png",
+
 	"graphEditor:childrenViewable", True,
 
 	# Add a + button for creating new plugs in the Settings tab.
