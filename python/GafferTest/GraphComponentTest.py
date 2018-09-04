@@ -800,5 +800,19 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertRaises( TypeError, g.__contains__, None )
 		self.assertRaises( TypeError, g.setName, None )
 
+	def testDelItemByIndex( self ) :
+
+		g = Gaffer.GraphComponent()
+		a = Gaffer.GraphComponent( "a" )
+		b = Gaffer.GraphComponent( "b" )
+		g["a"] = a
+		g["b"] = b
+		self.assertEqual( a.parent(), g )
+		self.assertEqual( b.parent(), g )
+
+		del g[0]
+		self.assertEqual( a.parent(), None )
+		self.assertEqual( b.parent(), g )
+
 if __name__ == "__main__":
 	unittest.main()
