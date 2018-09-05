@@ -523,20 +523,15 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	ScriptNode *scriptNode = IECore::runTimeCast<Animation::CurvePlug>( first )->ancestor<ScriptNode>();
 	UndoScope undoEnabled( scriptNode, UndoScope::Enabled, undoMergeGroup() );
 
+	V2f globalOffset = currentDragPosition - m_dragStartPosition;
+
 	// Compute snapping offset used for all keys
-	float xSnappingCurrentOffset = 0;
 	if( m_moveAxis != MoveAxis::Y )
 	{
-		float dragOffset = currentDragPosition.x - m_dragStartPosition.x;
-		xSnappingCurrentOffset = dragOffset;
-		if( m_snappingClosestKey )
-		{
-			float time = m_snappingClosestKey->getTime() + xSnappingCurrentOffset;
-			xSnappingCurrentOffset = snapTimeToFrame( m_context->getFramesPerSecond(), time ) - m_snappingClosestKey->getTime();
-		}
+		// Update offset to make sure that the closest key ends up on an integer frame
+		float originalTime = m_originalKeyValues[m_snappingClosestKey.get()].first;
+		globalOffset.x = snapTimeToFrame( m_context->getFramesPerSecond(), originalTime + globalOffset.x ) - originalTime;
 	}
-
-	const V2f offset( xSnappingCurrentOffset - m_xSnappingPreviousOffset, currentDragPosition.y - m_lastDragPosition.y );
 
 	// When moving selected plugs, we need to make sure we're not temporarily
 	// dragging a plug over another selected plug (which would then lose its
@@ -548,7 +543,7 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	{
 		selectedKeys.push_back( it->get() );
 	}
-	const bool reverseOrder = offset.x >= 0;
+	const bool reverseOrder = globalOffset.x >= 0;
 	std::sort(
 		selectedKeys.begin(), selectedKeys.end(),
 		[reverseOrder]( const Animation::Key *lhs, const Animation::Key *rhs ) {
@@ -564,15 +559,14 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	{
 		Animation::Key *key = *it;
 
-		if( m_moveAxis != MoveAxis::X && offset.y != 0 )
+		if( m_moveAxis != MoveAxis::X )
 		{
-			key->setValue( key->getValue() + offset.y );
+			key->setValue( m_originalKeyValues[key].second + globalOffset.y );
 		}
 
-		if( m_moveAxis != MoveAxis::Y && offset.x != 0 )
+		float newTime = m_originalKeyValues[key].first + globalOffset.x;
+		if( m_moveAxis != MoveAxis::Y && newTime != key->getTime() )
 		{
-			float newTime = key->getTime() + offset.x;
-
 			// If a key already exists on the new frame, we overwrite it, but
 			// store it for reinserting should the drag continue and the frame
 			// free up again.
@@ -601,11 +595,6 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 			it->second->addKey( it->first );
 			it = m_overwrittenKeys.erase( it );
 		}
-	}
-
-	if( m_moveAxis != MoveAxis::Y )
-	{
-		m_xSnappingPreviousOffset = xSnappingCurrentOffset;
 	}
 }
 
@@ -824,9 +813,10 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 		}
 
 		m_snappingClosestKey = nullptr;
-		m_xSnappingPreviousOffset = 0;
 
-		// Clean up selection so that we operate on valid Keys only
+		// Clean up selection so that we operate on valid Keys only. Also, store
+		// current positions so that updating during drag can be done without many
+		// small incremental updates.
 		for( auto &key : m_selectedKeys )
 		{
 			if( !key->parent() )
@@ -834,6 +824,8 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 				m_selectedKeys.erase( key );
 				continue;
 			}
+
+			m_originalKeyValues[key.get()] = std::make_pair( key->getTime(), key->getValue() );
 		}
 	}
 
@@ -1009,6 +1001,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	case DragMode::Moving :
 	{
 		m_overwrittenKeys.clear();
+		m_originalKeyValues.clear();
 		m_mergeGroupId++;
 		break;
 	}

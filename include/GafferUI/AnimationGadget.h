@@ -131,6 +131,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::StandardSetPtr m_editablePlugs;
 
 		std::set<Gaffer::Animation::KeyPtr> m_selectedKeys;
+		std::map<const Gaffer::Animation::Key*, std::pair<float, float> > m_originalKeyValues;
 
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
@@ -159,7 +160,6 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::Animation::KeyPtr m_highlightedKey;
 		Gaffer::Animation::CurvePlugPtr m_highlightedCurve;
 
-		double m_xSnappingPreviousOffset;
 		std::set<std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::CurvePlugPtr> > m_overwrittenKeys;
 
 		int m_mergeGroupId;
