@@ -322,13 +322,21 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 	{
 		Imath::Color3f black( 0, 0, 0 );
 
+		bool selecting = m_dragMode == DragMode::Selecting;
+		Box2f b;
+		if( selecting )
+		{
+			b.extendBy( V2f( m_dragStartPosition.x, m_dragStartPosition.y ) );
+			b.extendBy( V2f( m_lastDragPosition.x, m_lastDragPosition.y ) );
+		}
+
 		for( auto &runtimeTyped : *m_editablePlugs )
 		{
 			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped );
 
 			for( Animation::Key &key : *curvePlug )
 			{
-				bool isHighlighted = m_highlightedKey && key == *m_highlightedKey;
+				bool isHighlighted = ( m_highlightedKey && key == *m_highlightedKey ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ));
 				bool isSelected = m_selectedKeys.count( Animation::KeyPtr( &key ) ) > 0;
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
@@ -802,11 +810,12 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	}
 
+	bool shiftHeld = event.modifiers & DragDropEvent::Shift;
+
 	// There's different ways to initiate a drag, but we need to do some
 	// additional work for all of them.
 	if( m_dragMode == DragMode::Moving )
 	{
-		bool shiftHeld = event.modifiers & DragDropEvent::Shift;
 		if( shiftHeld )
 		{
 			m_moveAxis = MoveAxis::Undefined;
@@ -826,6 +835,14 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			}
 
 			m_originalKeyValues[key.get()] = std::make_pair( key->getTime(), key->getValue() );
+		}
+	}
+
+	if( m_dragMode == DragMode::Selecting )
+	{
+		if( !shiftHeld )
+		{
+			m_selectedKeys.clear();
 		}
 	}
 
@@ -976,12 +993,6 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		Box2f b;
 		b.extendBy( V2f( m_dragStartPosition.x, m_dragStartPosition.y ) );
 		b.extendBy( V2f( m_lastDragPosition.x, m_lastDragPosition.y ) );
-
-		bool shiftHeld = event.modifiers & ButtonEvent::Shift;
-		if( !shiftHeld )
-		{
-			m_selectedKeys.clear();
-		}
 
 		for( auto &member : *m_editablePlugs )
 		{
