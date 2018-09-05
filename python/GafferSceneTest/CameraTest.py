@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import math
 import imath
 
 import IECore
@@ -69,8 +70,10 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		o = p["out"].object( "/camera" )
 		self.failUnless( isinstance( o, IECoreScene.Camera ) )
-		self.assertEqual( o.parameters()["projection"].value, "perspective" )
-		self.assertEqual( o.parameters()["projection:fov"].value, 45 )
+		self.assertEqual( o.getProjection(), "perspective" )
+
+		self.assertEqual( o.getAperture(), imath.V2f( 1.0 ) )
+		self.assertAlmostEqual( o.getFocalLength(), 1.0 / ( 2.0 * math.tan( IECore.degreesToRadians( 0.5 * 45 ) ) ), places = 6 )
 
 		self.assertSceneValid( p["out"] )
 
@@ -79,6 +82,9 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Camera()
 		p["projection"].setValue( "perspective" )
 		p["fieldOfView"].setValue( 45 )
+
+		for i in p['renderSettingOverrides']:
+			i["enabled"].setValue( True )
 
 		c = Gaffer.Context()
 		with c :
@@ -173,6 +179,31 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		c["clippingPlanes"]["x"].setValue( 100 )
 		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
 		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
+
+	def testFrustum( self ) :
+
+		c = GafferScene.Camera()
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, 2.0 * math.tan( 0.5 * math.radians( c["fieldOfView"].getValue() ) ), places = 6 )
+		c["fieldOfView"].setValue( 100 )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, 2.0 * math.tan( 0.5 * math.radians( c["fieldOfView"].getValue() ) ), places = 6 )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[1] * 2.0, 2.0 * math.tan( 0.5 * math.radians( c["fieldOfView"].getValue() ) ), places = 6 )
+		c["apertureAspectRatio"].setValue( 3 )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, 2.0 * math.tan( 0.5 * math.radians( c["fieldOfView"].getValue() ) ), places = 6 )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[1] * 2.0, 2.0 / 3.0 * math.tan( 0.5 * math.radians( c["fieldOfView"].getValue() ) ), places = 6 )
+
+		c["perspectiveMode"].setValue( GafferScene.Camera.PerspectiveMode.ApertureFocalLength )
+		self.assertNotAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, 2.0 * math.tan( 0.5 * math.radians( c["fieldOfView"].getValue() ) ), places = 6 )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, c["aperture"].getValue()[0] / c["focalLength"].getValue(), places = 6 )
+		c["aperture"].setValue( imath.V2f( 100 ) )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, c["aperture"].getValue()[0] / c["focalLength"].getValue(), places = 6 )
+		c["focalLength"].setValue( 200 )
+		self.assertAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, c["aperture"].getValue()[0] / c["focalLength"].getValue(), places = 6 )
+
+		c["projection"].setValue( "orthographic" )
+		self.assertNotAlmostEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max()[0] * 2.0, c["aperture"].getValue()[0] / c["focalLength"].getValue(), places = 6 )
+		self.assertEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max() * 2.0, c["orthographicAperture"].getValue() )
+		c["orthographicAperture"].setValue( imath.V2f( 0.1, 12 ) )
+		self.assertEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max() * 2.0, c["orthographicAperture"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()
