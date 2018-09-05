@@ -44,6 +44,7 @@
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/Transform.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Monitor.h"
@@ -365,6 +366,7 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 	scenePlug()->setInput( view->inPlug<ScenePlug>() );
 
 	view->viewportGadget()->preRenderSignal().connect( boost::bind( &TransformTool::preRender, this ) );
+	view->viewportGadget()->keyPressSignal().connect( boost::bind( &TransformTool::keyPress, this, ::_2 ) );
 	plugDirtiedSignal().connect( boost::bind( &TransformTool::plugDirtied, this, ::_1 ) );
 
 	connectToViewContext();
@@ -600,3 +602,36 @@ std::string TransformTool::undoMergeGroup() const
 	return boost::str( boost::format( "TransformTool%1%%2%" ) % this % m_mergeGroupId );
 }
 
+bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
+{
+	if( !activePlug()->getValue() )
+	{
+		return false;
+	}
+
+	if( event.key == "S" && !event.modifiers )
+	{
+		const Selection &selection = this->selection();
+		if( !selection.transformPlug )
+		{
+			return false;
+		}
+
+		UndoScope undoScope( selection.transformPlug->ancestor<ScriptNode>() );
+		Context::Scope contextScope( selection.context.get() );
+		for( RecursiveFloatPlugIterator it( selection.transformPlug.get() ); !it.done(); ++it )
+		{
+			FloatPlug *plug = it->get();
+			if( Animation::canAnimate( plug ) )
+			{
+				const float value = plug->getValue();
+				Animation::CurvePlug *curve = Animation::acquire( plug );
+				curve->addKey( new Animation::Key( selection.context->getTime(), value ) );
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}

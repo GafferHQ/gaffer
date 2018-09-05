@@ -42,6 +42,8 @@
 
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferUI/KeyEvent.h"
+
 #include "Gaffer/TransformPlug.h"
 
 namespace GafferSceneUI
@@ -182,6 +184,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		void metadataChanged( IECore::InternedString key );
 		void updateSelection() const;
 		void preRender();
+		bool keyPress( const GafferUI::KeyEvent &event );
 
 		boost::signals::scoped_connection m_contextChangedConnection;
 
