@@ -7,19 +7,32 @@ set (CMAKE_CXX_STANDARD 11)
 project( Gaffer )
 
 # Declare the version
-set( GAFFER_MILESTONE_VERSION 0 )
-set( GAFFER_MAJOR_VERSION 45 )
-set( GAFFER_MINOR_VERSION 0 )
-set( GAFFER_PATCH_VERSION 0 )
 
-add_definitions( -DGAFFER_MILESTONE_VERSION=${GAFFER_MILESTONE_VERSION}
-                 -DGAFFER_MAJOR_VERSION=${GAFFER_MAJOR_VERSION}
-                 -DGAFFER_MINOR_VERSION=${GAFFER_MINOR_VERSION}
-                 -DGAFFER_PATCH_VERSION=${GAFFER_PATCH_VERSION} )
 
 option( WITH_TESTS "Compile tests" OFF )
 
 set( GAFFER_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../.. )
+
+file( READ  ${GAFFER_SOURCE_DIR}/SConstruct SCONSTRUCT)
+
+string( REGEX MATCH "gafferMilestoneVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_MILESTONE_VERSION ${CMAKE_MATCH_1} )
+
+string( REGEX MATCH "gafferMajorVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_MAJOR_VERSION ${CMAKE_MATCH_1} )
+
+string( REGEX MATCH "gafferMinorVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_MINOR_VERSION ${CMAKE_MATCH_1} )
+
+string( REGEX MATCH "gafferPatchVersion = ([0-9]+)" ${SCONSTRUCT} )
+set( GAFFER_PATCH_VERSION ${CMAKE_MATCH_1} )
+
+message(STATUS "Configuring Gaffer : " ${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION})
+
+add_definitions( -DGAFFER_MILESTONE_VERSION=${GAFFER_MILESTONE_VERSION}
+        -DGAFFER_MAJOR_VERSION=${GAFFER_MAJOR_VERSION}
+        -DGAFFER_MINOR_VERSION=${GAFFER_MINOR_VERSION}
+        -DGAFFER_PATCH_VERSION=${GAFFER_PATCH_VERSION} )
 #-******************************************************************************
 #-******************************************************************************
 # PLATFORM SPECIFIC
@@ -49,12 +62,12 @@ endif()
 IF ( "${CMAKE_BUILD_TYPE}" MATCHES "Debug" )
   ADD_DEFINITIONS( -DDEBUG=1 -UNDEBUG )
   IF ( NOT WINDOWS )
-    ADD_DEFINITIONS( -pipe -Wall -O0  -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized)
+    ADD_DEFINITIONS( -pipe -Wall -O0  -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized -Wno-deprecated)
   ENDIF()
 ELSEIF ( "${CMAKE_BUILD_TYPE}" MATCHES "Release" )
   ADD_DEFINITIONS( -DNDEBUG=1 -UDEBUG )
   IF ( NOT WINDOWS )
-    ADD_DEFINITIONS( -pipe -Wall -Werror -O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized ) #-Wno-return-type )
+    ADD_DEFINITIONS( -pipe -Wall  -O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized -Wno-strict-overflow) #-Wno-return-type )
   ENDIF()
 ENDIF()
 
@@ -76,7 +89,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake )
 
 find_package( TBB REQUIRED )
 find_package( PythonLibs 2.7 REQUIRED )
-find_package( Boost REQUIRED COMPONENTS signals iostreams filesystem date_time wave regex system chrono python )
+find_package( Boost REQUIRED COMPONENTS signals iostreams filesystem date_time wave regex system chrono python timer)
 find_package( IlmBase REQUIRED )
 find_package( OpenEXR REQUIRED )
 find_package( Cortex REQUIRED )
@@ -114,6 +127,7 @@ add_definitions( -DBOOST_PYTHON_MAX_ARITY=20 )
 
 # Base libs to link to
 set( BASE_LIBS
+     ${Cortex_IECORE_LIBRARY}
      ${Boost_SIGNALS_LIBRARY}
      ${Boost_IOSTREAMS_LIBRARY}
      ${Boost_FILESYSTEM_LIBRARY}
@@ -123,6 +137,7 @@ set( BASE_LIBS
      ${Boost_REGEX_LIBRARY}
      ${Boost_SYSTEM_LIBRARY}
      ${Boost_CHRONO_LIBRARY}
+     ${Boost_TIMER_LIBRARY}
      ${TBB_LIBRARIES}
      ${Ilmbase_HALF_LIBRARY}
      ${Ilmbase_IEX_LIBRARY}
@@ -130,7 +145,7 @@ set( BASE_LIBS
      ${Ilmbase_ILMTHREAD_LIBRARY}
      ${Ilmbase_IMATH_LIBRARY}
      ${Openexr_ILMIMF_LIBRARY}
-     ${Cortex_IECORE_LIBRARY})
+     )
 
 set( BASE_PYTHON_LIBS
      ${PYTHON_LIBRARIES}
@@ -192,16 +207,16 @@ set( GAFFER_PYTHON_NAMES
 foreach( GAFFER_LIB ${GAFFER_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}_CXX_FILES  ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}/*.cpp )
-  file( GLOB ${_GAFFER_LIB}_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}/*.h include/${GAFFER_LIB}/*.inl )
+  file( GLOB ${_GAFFER_LIB}_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}/*.inl )
   file( GLOB ${_GAFFER_LIB}_CXX_MODULE_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.cpp )
-  file( GLOB ${_GAFFER_LIB}_H_MODULE_FILES  ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.h src/${GAFFER_LIB}Module/*.inl )
+  file( GLOB ${_GAFFER_LIB}_H_MODULE_FILES  ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.h ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Module/*.inl )
 endforeach()
 
 # Get test lists of files
 foreach( GAFFER_LIB ${GAFFERTEST_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}TEST_CXX_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Test/*.cpp )
-  file( GLOB ${_GAFFER_LIB}TEST_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.h include/${GAFFER_LIB}Test/*.inl )
+  file( GLOB ${_GAFFER_LIB}TEST_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.inl )
   set( ${_GAFFER_LIB}TEST_CXX_MODULE_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}TestModule/${GAFFER_LIB}TestModule.cpp)
 endforeach()
 
@@ -209,7 +224,7 @@ endforeach()
 foreach( GAFFER_LIB ${GAFFERBINDINGS_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}BINDINGS_CXX_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Bindings/*.cpp )
-  file( GLOB ${_GAFFER_LIB}BINDINGS_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Bindings/*.h include/${GAFFER_LIB}Bindings/*.inl )
+  file( GLOB ${_GAFFER_LIB}BINDINGS_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Bindings/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Bindings/*.inl )
 endforeach()
 
 # Get python list of files
@@ -394,6 +409,7 @@ target_link_libraries( GafferVDBUI ${BASE_LIBS} Gaffer GafferVDB GafferSceneUI $
 # GafferVDBUI Python Module
 add_library( _GafferVDBUI MODULE ${GAFFERVDBUI_CXX_MODULE_FILES} )
 target_link_libraries( _GafferVDBUI GafferVDBUI )
+set_target_properties(_GafferVDBUI PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
 
 # GafferAppleseed
 file( GLOB IECOREAPPLESEED_PREVIEW_CXX_FILES ${GAFFER_SOURCE_DIR}/src/GafferAppleseed/IECoreAppleseedPreview/*.cpp )
@@ -440,6 +456,17 @@ foreach( GAFFER_LIB ${GAFFER_LIB_NAMES} )
     set_target_properties( _${GAFFER_LIB} PROPERTIES SUFFIX ".pyd" )
   else()
     set_target_properties( _${GAFFER_LIB} PROPERTIES PREFIX "" )
+  endif()
+endforeach()
+
+foreach( GAFFER_LIB ${GAFFERTEST_LIB_NAMES} )
+  if( DARWIN )
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES SUFFIX ".so" )
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES PREFIX "" )
+    elif( WINDOWS )
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES SUFFIX ".pyd" )
+  else()
+    set_target_properties( _${GAFFER_LIB}Test PROPERTIES PREFIX "" )
   endif()
 endforeach()
 
@@ -570,7 +597,7 @@ foreach( GAFFER_LIB ${GAFFERBINDINGS_LIB_NAMES} )
   install( TARGETS ${GAFFER_LIB}Bindings
            DESTINATION lib/ )
   install( FILES ${${_GAFFER_LIB}BINDINGS_H_FILES}
-           DESTINATION include/${GAFFER_LIB} )
+           DESTINATION include/${GAFFER_LIB}Bindings )
 endforeach()
 
 # Install Gaffer Files
