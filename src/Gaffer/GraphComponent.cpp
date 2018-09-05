@@ -214,13 +214,13 @@ void GraphComponent::addChild( GraphComponentPtr child )
 			if( child->m_parent->isInstanceOf( (IECore::TypeId)ScriptNodeTypeId ) )
 			{
 				// use raw pointer to avoid circular reference between script and undo queue
-				undoFn = boost::bind( &GraphComponent::addChildInternal, child->m_parent, child );
+				undoFn = boost::bind( &GraphComponent::addChildInternal, child->m_parent, child, child->index() );
 			}
 			else
 			{
 				// use smart pointer to ensure parent remains alive, even if something unscrupulous
 				// messes it with non-undoable actions that aren't stored in the undo queue.
-				undoFn = boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( child->m_parent ), child );
+				undoFn = boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( child->m_parent ), child, child->index() );
 			}
 		}
 		else
@@ -232,7 +232,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 		Action::enact(
 			this,
 			// ok to use raw pointer for this - lifetime of subject guaranteed.
-			boost::bind( &GraphComponent::addChildInternal, this, child ),
+			boost::bind( &GraphComponent::addChildInternal, this, child, m_children.size() ),
 			undoFn
 		);
 	}
@@ -241,7 +241,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 		// we have no references to us - chances are we're in construction still. adding ourselves to an
 		// undo queue is impossible, and creating temporary smart pointers to ourselves (as above) will
 		// cause our destruction before construction completes. just do the work directly.
-		addChildInternal( child );
+		addChildInternal( child, m_children.size() );
 	}
 }
 
@@ -291,7 +291,7 @@ void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild 
 	}
 }
 
-void GraphComponent::addChildInternal( GraphComponentPtr child )
+void GraphComponent::addChildInternal( GraphComponentPtr child, size_t index )
 {
 	child->parentChanging( this );
 	GraphComponent *previousParent = child->m_parent;
@@ -302,7 +302,8 @@ void GraphComponent::addChildInternal( GraphComponentPtr child )
 		// changed signal with the new parent.
 		previousParent->removeChildInternal( child, false );
 	}
-	m_children.push_back( child );
+
+	m_children.insert( m_children.begin() + min( index, m_children.size() ), child );
 	child->m_parent = this;
 	child->setName( child->m_name.value() ); // to force uniqueness
 	childAddedSignal()( this, child.get() );
@@ -325,7 +326,7 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 			// ok to bind raw pointers to this, because enact() guarantees
 			// the lifetime of the subject.
 			boost::bind( &GraphComponent::removeChildInternal, this, child, true ),
-			boost::bind( &GraphComponent::addChildInternal, this, child )
+			boost::bind( &GraphComponent::addChildInternal, this, child, child->index() )
 		);
 	}
 	else
@@ -372,6 +373,13 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	{
 		child->parentChangedSignal()( child.get(), this );
 	}
+}
+
+size_t GraphComponent::index() const
+{
+	assert( m_parent );
+	const ChildContainer &c = m_parent->m_children;
+	return std::find( c.begin(), c.end(), this ) - c.begin();
 }
 
 const GraphComponent::ChildContainer &GraphComponent::children() const

@@ -116,7 +116,7 @@ GadgetPtr createCustomGadget( const InternedString &gadgetType, GraphComponentPt
 
 // Custom gadget metadata accessors. These affect the layout of custom gadgets
 
-int index( const GraphComponent *parent, const InternedString &gadgetName, int defaultValue )
+int layoutIndex( const GraphComponent *parent, const InternedString &gadgetName, int defaultValue )
 {
 	ConstIntDataPtr i = Metadata::value<IntData>( parent, "noduleLayout:customGadget:" + gadgetName.string() + ":index" );
 	return i ? i->readable() : defaultValue;
@@ -147,7 +147,7 @@ bool visible( const GraphComponent *parent, const InternedString &gadgetName, IE
 
 typedef boost::variant<const Gaffer::Plug *, IECore::InternedString> GadgetKey;
 
-int index( const Plug *plug, int defaultValue )
+int layoutIndex( const Plug *plug, int defaultValue )
 {
 	ConstIntDataPtr i = Metadata::value<IntData>( plug, g_indexKey );
 	if( !i )
@@ -576,7 +576,7 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 			continue;
 		}
 
-		toSort.push_back( SortItem( index( plug, toSort.size() ), plug ) );
+		toSort.push_back( SortItem( layoutIndex( plug, toSort.size() ), plug ) );
 	}
 
 	// Then any custom gadgets specified by the metadata
@@ -597,7 +597,7 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 			continue;
 		}
 
-		toSort.push_back( SortItem( index( m_parent.get(), name, toSort.size() ), name ) );
+		toSort.push_back( SortItem( layoutIndex( m_parent.get(), name, toSort.size() ), name ) );
 	}
 
 	// Sort and return the result
