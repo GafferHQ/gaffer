@@ -81,7 +81,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testPrimVars( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "OpenGL" )
-		renderer.output( "test", IECoreScene.Output( self.temporaryDirectory() + "/testPrimVars.tif", "tiff", "rgba", {} ) )
+		renderer.output( "test", IECoreScene.Output( self.temporaryDirectory() + "/testPrimVars.exr", "exr", "rgba", {} ) )
 
 		fragmentSource = """
 		uniform float red;
@@ -137,7 +137,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
-		image = IECore.Reader.create(  self.temporaryDirectory() + "/testPrimVars.tif" ).read()
+		image = IECore.Reader.create(  self.temporaryDirectory() + "/testPrimVars.exr" ).read()
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )
 		index = dimensions.x * int( dimensions.y * 0.5 )
 		self.assertEqual( image["R"][index], 0 )
@@ -157,7 +157,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testShaderParameters( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "OpenGL" )
-		renderer.output( "test", IECoreScene.Output( self.temporaryDirectory() + "/testShaderParameters.tif", "tiff", "rgba", {} ) )
+		renderer.output( "test", IECoreScene.Output( self.temporaryDirectory() + "/testShaderParameters.exr", "exr", "rgba", {} ) )
 
 		fragmentSource = """
 		uniform vec3 colorValue;
