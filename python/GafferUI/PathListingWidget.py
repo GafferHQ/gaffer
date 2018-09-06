@@ -544,6 +544,12 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragBegin( self, widget, event ) :
 
 		self.__borrowedButtonPress = None
+
+		# nothing to drag if there's no valid list entry under the pointer
+		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+		if not index.isValid() :
+			return None
+
 		selection = self.getSelection()
 		if not( selection.isEmpty() ) :
 			GafferUI.Pointer.setCurrent( self.__dragPointer )
