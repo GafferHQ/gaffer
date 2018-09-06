@@ -113,7 +113,7 @@ bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 		input == scenePlug()->transformPlug();
 }
 
-void TranslateTool::updateHandles()
+void TranslateTool::updateHandles( float rasterScale )
 {
 	handles()->setTransform(
 		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
@@ -129,6 +129,7 @@ void TranslateTool::updateHandles()
 	for( TranslateHandleIterator it( handles() ); !it.done(); ++it )
 	{
 		(*it)->setEnabled( translation.canApply( (*it)->axisMask() ) );
+		(*it)->setRasterScale( rasterScale );
 	}
 }
 

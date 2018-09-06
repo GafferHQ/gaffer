@@ -124,7 +124,7 @@ bool ScaleTool::affectsHandles( const Gaffer::Plug *input ) const
 	return input == scenePlug()->transformPlug();
 }
 
-void ScaleTool::updateHandles()
+void ScaleTool::updateHandles( float rasterScale )
 {
 	const Selection &selection = this->selection();
 
@@ -150,6 +150,7 @@ void ScaleTool::updateHandles()
 	for( ScaleHandleIterator it( handles() ); !it.done(); ++it )
 	{
 		(*it)->setEnabled( scale.canApply( (*it)->axisMask() ) );
+		(*it)->setRasterScale( rasterScale );
 	}
 }
 

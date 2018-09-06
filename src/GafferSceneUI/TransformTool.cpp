@@ -363,6 +363,8 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new ScenePlug( "__scene", Plug::In ) );
+	addChild( new FloatPlug( "size", Plug::In, 1.0f, 0.0f ) );
+
 	scenePlug()->setInput( view->inPlug<ScenePlug>() );
 
 	view->viewportGadget()->preRenderSignal().connect( boost::bind( &TransformTool::preRender, this ) );
@@ -396,7 +398,7 @@ Imath::M44f TransformTool::handlesTransform()
 
 	if( m_handlesDirty )
 	{
-		updateHandles();
+		updateHandles( sizePlug()->getValue() * 75 );
 		m_handlesDirty = false;
 	}
 
@@ -413,6 +415,16 @@ const GafferScene::ScenePlug *TransformTool::scenePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
+Gaffer::FloatPlug *TransformTool::sizePlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::FloatPlug *TransformTool::sizePlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
 GafferUI::Gadget *TransformTool::handles()
 {
 	return m_handles.get();
@@ -425,7 +437,7 @@ const GafferUI::Gadget *TransformTool::handles() const
 
 bool TransformTool::affectsHandles( const Gaffer::Plug *input ) const
 {
-	return false;
+	return input == sizePlug();
 }
 
 void TransformTool::connectToViewContext()
@@ -455,6 +467,13 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 	{
 		m_selectionDirty = true;
 		m_handlesDirty = true;
+	}
+	else if( plug == sizePlug() )
+	{
+		m_handlesDirty = true;
+		view()->viewportGadget()->renderRequestSignal()(
+			view()->viewportGadget()
+		);
 	}
 
 	if( affectsHandles( plug ) )
@@ -537,7 +556,7 @@ void TransformTool::preRender()
 
 	if( m_handlesDirty )
 	{
-		updateHandles();
+		updateHandles( sizePlug()->getValue() * 75 );
 		m_handlesDirty = false;
 	}
 }
@@ -631,6 +650,14 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 		}
 
 		return true;
+	}
+	else if( event.key == "Plus" || event.key == "Equal" )
+	{
+		sizePlug()->setValue( sizePlug()->getValue() + 0.2 );
+	}
+	else if( event.key == "Minus" || event.key == "Underscore" )
+	{
+		sizePlug()->setValue( max( sizePlug()->getValue() - 0.2, 0.2 ) );
 	}
 
 	return false;

@@ -64,7 +64,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 	protected :
 
 		bool affectsHandles( const Gaffer::Plug *input ) const override;
-		void updateHandles() override;
+		void updateHandles( float rasterScale ) override;
 
 	private :
 

@@ -121,7 +121,7 @@ bool RotateTool::affectsHandles( const Gaffer::Plug *input ) const
 		input == scenePlug()->transformPlug();
 }
 
-void RotateTool::updateHandles()
+void RotateTool::updateHandles( float rasterScale )
 {
 	handles()->setTransform(
 		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
@@ -130,6 +130,7 @@ void RotateTool::updateHandles()
 	for( RotateHandleIterator it( handles() ); !it.done(); ++it )
 	{
 		(*it)->setEnabled( rotation.canApply( (*it)->axisMask() ) );
+		(*it)->setRasterScale( rasterScale );
 	}
 }
 

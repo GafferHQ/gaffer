@@ -67,6 +67,9 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			World
 		};
 
+		Gaffer::FloatPlug *sizePlug();
+		const Gaffer::FloatPlug *sizePlug() const;
+
 		struct Selection
 		{
 
@@ -161,7 +164,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		/// handles appropriately. Typically this means setting their
 		/// transform and matching their enabled state to the editability
 		/// of the selection.
-		virtual void updateHandles() = 0;
+		virtual void updateHandles( float rasterScale ) = 0;
 
 		/// Utility that may be used from updateHandles().
 		Imath::M44f orientedTransform( Orientation orientation ) const;
