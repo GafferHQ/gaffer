@@ -217,6 +217,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
 				allowMultipleSelection = True
 			)
+			self.__pathListing.setDragPointer( "" )
 			self.__pathListing.setSortable( False )
 			self.__pathListing.setHeaderVisible( False )
 			self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
