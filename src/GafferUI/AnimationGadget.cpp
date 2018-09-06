@@ -826,12 +826,18 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 		// Clean up selection so that we operate on valid Keys only. Also, store
 		// current positions so that updating during drag can be done without many
 		// small incremental updates.
-		for( auto &key : m_selectedKeys )
+		for( auto it = m_selectedKeys.begin(); it != m_selectedKeys.end(); )
 		{
+			auto key = (*it);
+
 			if( !key->parent() )
 			{
-				m_selectedKeys.erase( key );
+				it = m_selectedKeys.erase( it );
 				continue;
+			}
+			else
+			{
+				++it;
 			}
 
 			m_originalKeyValues[key.get()] = std::make_pair( key->getTime(), key->getValue() );
