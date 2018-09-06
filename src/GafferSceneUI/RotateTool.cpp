@@ -168,6 +168,8 @@ RotateTool::Rotation::Rotation( const RotateTool *tool )
 
 	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
+
+	m_time = tool->view()->getContext()->getTime();
 }
 
 bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
@@ -181,8 +183,7 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 			continue;
 		}
 
-		FloatPlug *p = m_plug->getChild( i );
-		if( !p->settable() || MetadataAlgo::readOnly( p ) )
+		if( !canSetValueOrAddKey( m_plug->getChild( i ) ) )
 		{
 			return false;
 		}
@@ -196,9 +197,9 @@ void RotateTool::Rotation::apply( const Imath::Eulerf &rotation ) const
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *p = m_plug->getChild( i );
-		if( p->settable() && !MetadataAlgo::readOnly( p ) )
+		if( canSetValueOrAddKey( p ) )
 		{
-			p->setValue( e[i] );
+			setValueOrAddKey( p, m_time, e[i] );
 		}
 	}
 }

@@ -635,3 +635,26 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 
 	return false;
 }
+
+bool TransformTool::canSetValueOrAddKey( const Gaffer::FloatPlug *plug )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		return !MetadataAlgo::readOnly( plug->source() );
+	}
+
+	return plug->settable() && !MetadataAlgo::readOnly( plug );
+}
+
+void TransformTool::setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		Animation::CurvePlug *curve = Animation::acquire( plug );
+		curve->addKey( new Animation::Key( time, value ) );
+	}
+	else
+	{
+		plug->setValue( value );
+	}
+}

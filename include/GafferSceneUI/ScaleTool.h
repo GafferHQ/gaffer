@@ -83,6 +83,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 
 				Gaffer::V3fPlugPtr m_plug;
 				Imath::V3f m_originalScale;
+				float m_time;
 
 		};
 

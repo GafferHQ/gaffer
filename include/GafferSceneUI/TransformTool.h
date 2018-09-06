@@ -176,6 +176,10 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		/// derived classes.
 		std::string undoMergeGroup() const;
 
+		/// Utilities to help derived classes update plug values.
+		static bool canSetValueOrAddKey( const Gaffer::FloatPlug *plug );
+		static void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value );
+
 	private :
 
 		void connectToViewContext();

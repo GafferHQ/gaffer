@@ -94,6 +94,7 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 				Gaffer::V3fPlugPtr m_plug;
 				Imath::Eulerf m_originalRotation; // Radians
 				Imath::M44f m_gadgetToTransform;
+				float m_time;
 
 		};
 

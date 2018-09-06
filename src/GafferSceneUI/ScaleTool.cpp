@@ -187,19 +187,16 @@ ScaleTool::Scale::Scale( const ScaleTool *tool )
 	Context::Scope scopedContext( tool->view()->getContext() );
 	m_plug = tool->selection().transformPlug->scalePlug();
 	m_originalScale = m_plug->getValue();
+	m_time = tool->view()->getContext()->getTime();
 }
 
 bool ScaleTool::Scale::canApply( const Imath::V3i &axisMask ) const
 {
 	for( int i = 0; i < 3; ++i )
 	{
-		if( axisMask[i] )
+		if( axisMask[i] && !canSetValueOrAddKey( m_plug->getChild( i ) ) )
 		{
-			const ValuePlug *plug = m_plug->getChild( i );
-			if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
-			{
-				return false;
-			}
+			return false;
 		}
 	}
 
@@ -211,9 +208,9 @@ void ScaleTool::Scale::apply( const Imath::V3f &scale ) const
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *plug = m_plug->getChild( i );
-		if( plug->settable() && !MetadataAlgo::readOnly( plug ) )
+		if( canSetValueOrAddKey( plug ) )
 		{
-			plug->setValue( m_originalScale[i] * scale[i] );
+			setValueOrAddKey( plug, m_time, m_originalScale[i] * scale[i] );
 		}
 	}
 }
