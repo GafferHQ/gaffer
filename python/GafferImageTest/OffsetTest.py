@@ -174,5 +174,23 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertTrue( o["out"]["dataWindow"] in { x[0] for x in cs } )
 
+	def testOffsetEmpty( self ) :
+
+		c = GafferImage.Text()
+		c["text"].setValue( "" )
+
+		self.assertTrue( c["out"]["dataWindow"].getValue().isEmpty() )
+
+		o = GafferImage.Offset()
+		o["in"].setInput( c["out"] )
+		o["offset"].setValue( imath.V2i( 100, 100 ) )
+
+		self.assertTrue( o["out"]["dataWindow"].getValue().isEmpty() )
+
+		o["offset"].setValue( imath.V2i( -100, -100 ) )
+
+		self.assertTrue( o["out"]["dataWindow"].getValue().isEmpty() )
+
+
 if __name__ == "__main__":
 	unittest.main()
