@@ -295,7 +295,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		def cameraContains( scene, objectPath ) :
 
 			camera = view.viewportGadget().getCamera()
-			screen = imath.Box2f( imath.V2f( 0 ), imath.V2f( camera.parameters()["resolution"].value ) )
+			screen = imath.Box2f( imath.V2f( 0 ), imath.V2f( camera.getResolution() ) )
 
 			worldBound = scene.bound( objectPath ) * scene.fullTransform( objectPath )
 
@@ -334,7 +334,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
-	def testClippingsPlanesAndFOV( self ) :
+	def testClippingPlanesAndFOV( self ) :
 
 		script = Gaffer.ScriptNode()
 		script["camera"] = GafferScene.Camera()
@@ -350,9 +350,9 @@ class SceneViewTest( GafferUITest.TestCase ) :
 				view["camera"]["clippingPlanes"].getValue(),
 				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
 			)
-			self.assertEqual(
+			self.assertAlmostEqual(
 				view["camera"]["fieldOfView"].getValue(),
-				view.viewportGadget().getCamera().parameters()["projection:fov"].value
+				view.viewportGadget().getCamera().calculateFieldOfView()[0], places = 5
 			)
 
 		assertDefaultCamera()
@@ -372,11 +372,15 @@ class SceneViewTest( GafferUITest.TestCase ) :
 				script["camera"]["clippingPlanes"].getValue(),
 				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
 			)
-			self.assertEqual(
+			self.assertAlmostEqual(
 				script["camera"]["fieldOfView"].getValue(),
-				view.viewportGadget().getCamera().parameters()["projection:fov"].value
+				view.viewportGadget().getCamera().calculateFieldOfView()[0], places = 5
 			)
 
+		# Quick hack - in order to compare FOV, we don't want the 40 border pixels added to the viewport
+		# camera to be a significant part of the FOV.  Just set the resolution to be enormous so that the
+		# border is insignificant
+		view.viewportGadget().setViewport( imath.V2i( 10000000000000 ) )
 		view["camera"]["lookThroughCamera"].setValue( "/camera" )
 		view["camera"]["lookThroughEnabled"].setValue( True )
 
