@@ -118,9 +118,12 @@ void Offset::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer:
 Imath::Box2i Offset::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
-	const V2i offset = offsetPlug()->getValue();
-	dataWindow.min += offset;
-	dataWindow.max += offset;
+	if( !dataWindow.isEmpty() )
+	{
+		const V2i offset = offsetPlug()->getValue();
+		dataWindow.min += offset;
+		dataWindow.max += offset;
+	}
 	return dataWindow;
 }
 
