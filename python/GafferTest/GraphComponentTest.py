@@ -800,5 +800,109 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertRaises( TypeError, g.__contains__, None )
 		self.assertRaises( TypeError, g.setName, None )
 
+	def testDelItemByIndex( self ) :
+
+		g = Gaffer.GraphComponent()
+		a = Gaffer.GraphComponent( "a" )
+		b = Gaffer.GraphComponent( "b" )
+		g["a"] = a
+		g["b"] = b
+		self.assertEqual( a.parent(), g )
+		self.assertEqual( b.parent(), g )
+
+		del g[0]
+		self.assertEqual( a.parent(), None )
+		self.assertEqual( b.parent(), g )
+
+	def testRemoveChildUndoIndices( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+
+		a = Gaffer.Plug( "a" )
+		b = Gaffer.Plug( "b" )
+		c = Gaffer.Plug( "c" )
+
+		s["n"]["user"].addChild( a )
+		s["n"]["user"].addChild( b )
+		s["n"]["user"].addChild( c )
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( s["n"]["user"] ), 3 )
+			self.assertEqual( s["n"]["user"][0], a )
+			self.assertEqual( s["n"]["user"][1], b )
+			self.assertEqual( s["n"]["user"][2], c )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( s ) :
+
+			del s["n"]["user"]["b"]
+
+		def assertPostConditions() :
+
+			self.assertEqual( len( s["n"]["user"] ), 2 )
+			self.assertEqual( s["n"]["user"][0], a )
+			self.assertEqual( s["n"]["user"][1], c )
+
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
+	def testMoveChildUndoIndices( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		a = Gaffer.Plug( "a" )
+		b = Gaffer.Plug( "b" )
+		c = Gaffer.Plug( "c" )
+
+		s["n1"]["user"].addChild( a )
+		s["n1"]["user"].addChild( b )
+		s["n1"]["user"].addChild( c )
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( s["n1"]["user"] ), 3 )
+			self.assertEqual( s["n1"]["user"][0], a )
+			self.assertEqual( s["n1"]["user"][1], b )
+			self.assertEqual( s["n1"]["user"][2], c )
+			self.assertEqual( len( s["n2"]["user"] ), 0 )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( s ) :
+
+			s["n2"]["user"].addChild( s["n1"]["user"]["b"] )
+
+		def assertPostConditions() :
+
+			self.assertEqual( len( s["n1"]["user"] ), 2 )
+			self.assertEqual( s["n1"]["user"][0], a )
+			self.assertEqual( s["n1"]["user"][1], c )
+			self.assertEqual( len( s["n2"]["user"] ), 1 )
+			self.assertEqual( s["n2"]["user"][0], b )
+
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
 if __name__ == "__main__":
 	unittest.main()

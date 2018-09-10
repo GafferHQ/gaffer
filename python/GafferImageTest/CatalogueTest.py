@@ -609,5 +609,108 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		with self.assertRaisesRegexp( RuntimeError, "Could not open file" ) :
 			s["c"]["out"].image()
 
+	def testDeleteKeepsOrder( self ) :
+
+		# Send 4 images to a Catalogue : red, green, blue, yellow
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+
+		script["red"] = GafferImage.Constant()
+		script["red"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+		script["red"]["color"]["r"].setValue( 1 )
+		self.sendImage( script["red"]["out"], script["catalogue"] )
+		script["catalogue"]["images"][-1].setName( "Red" )
+
+		script["green"] = GafferImage.Constant()
+		script["green"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+		script["green"]["color"]["g"].setValue( 1 )
+		self.sendImage( script["green"]["out"], script["catalogue"] )
+		script["catalogue"]["images"][-1].setName( "Green" )
+
+		script["blue"] = GafferImage.Constant()
+		script["blue"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+		script["blue"]["color"]["b"].setValue( 1 )
+		self.sendImage( script["blue"]["out"], script["catalogue"] )
+		script["catalogue"]["images"][-1].setName( "Blue" )
+
+		script["yellow"] = GafferImage.Constant()
+		script["yellow"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+		script["yellow"]["color"].setValue( imath.Color4f( 1, 1, 0, 1 ) )
+		self.sendImage( script["yellow"]["out"], script["catalogue"] )
+		script["catalogue"]["images"][-1].setName( "Yellow" )
+
+		script["fileName"].setValue( "/tmp/ttt.gfr" )
+		script.save()
+
+		# Check it worked
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( script["catalogue"]["images"] ), 4 )
+			self.assertEqual( script["catalogue"]["images"][0].getName(), "Red" )
+			self.assertEqual( script["catalogue"]["images"][1].getName(), "Green" )
+			self.assertEqual( script["catalogue"]["images"][2].getName(), "Blue" )
+			self.assertEqual( script["catalogue"]["images"][3].getName(), "Yellow" )
+
+			script["catalogue"]["imageIndex"].setValue( 0 )
+			self.assertImagesEqual( script["catalogue"]["out"], script["red"]["out"], ignoreMetadata = True )
+			script["catalogue"]["imageIndex"].setValue( 1 )
+			self.assertImagesEqual( script["catalogue"]["out"], script["green"]["out"], ignoreMetadata = True )
+			script["catalogue"]["imageIndex"].setValue( 2 )
+			self.assertImagesEqual( script["catalogue"]["out"], script["blue"]["out"], ignoreMetadata = True )
+			script["catalogue"]["imageIndex"].setValue( 3 )
+			self.assertImagesEqual( script["catalogue"]["out"], script["yellow"]["out"], ignoreMetadata = True )
+
+			with Gaffer.Context( script.context() ) as c :
+				c["catalogue:imageName"] = "Red"
+				self.assertImagesEqual( script["catalogue"]["out"], script["red"]["out"], ignoreMetadata = True )
+				c["catalogue:imageName"] = "Green"
+				self.assertImagesEqual( script["catalogue"]["out"], script["green"]["out"], ignoreMetadata = True )
+				c["catalogue:imageName"] = "Blue"
+				self.assertImagesEqual( script["catalogue"]["out"], script["blue"]["out"], ignoreMetadata = True )
+				c["catalogue:imageName"] = "Yellow"
+				self.assertImagesEqual( script["catalogue"]["out"], script["yellow"]["out"], ignoreMetadata = True )
+
+		assertPreconditions()
+
+		# Delete green, then blue, then yellow
+
+		script["catalogue"]["imageIndex"].setValue( 0 )
+
+		with Gaffer.UndoScope( script ) :
+			del script["catalogue"]["images"][1]
+			del script["catalogue"]["images"][1]
+			del script["catalogue"]["images"][1]
+
+		# Check it worked
+
+		def assertPostConditions() :
+
+			self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+			self.assertEqual( script["catalogue"]["images"][0].getName(), "Red" )
+
+			script["catalogue"]["imageIndex"].setValue( 0 )
+			self.assertImagesEqual( script["catalogue"]["out"], script["red"]["out"], ignoreMetadata = True )
+
+			with Gaffer.Context( script.context() ) as c :
+				c["catalogue:imageName"] = "Red"
+				self.assertImagesEqual( script["catalogue"]["out"], script["red"]["out"], ignoreMetadata = True )
+
+
+		assertPostConditions()
+
+		# Check that undo and redo work
+
+		script.undo()
+		assertPreconditions()
+
+		script.redo()
+		assertPostConditions()
+
+		script.undo()
+		assertPreconditions()
+
 if __name__ == "__main__":
 	unittest.main()

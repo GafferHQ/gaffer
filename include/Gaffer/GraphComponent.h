@@ -245,8 +245,9 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 
 		void throwIfChildRejected( const GraphComponent *potentialChild ) const;
 		void setNameInternal( const IECore::InternedString &name );
-		void addChildInternal( GraphComponentPtr child );
+		void addChildInternal( GraphComponentPtr child, size_t index );
 		void removeChildInternal( GraphComponentPtr child, bool emitParentChanged );
+		size_t index() const;
 
 		/// \todo The memory overhead of all these signals may become too great.
 		/// At this point we need to reimplement the signal returning functions to

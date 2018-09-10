@@ -194,6 +194,13 @@ void delItem( GraphComponent &g, const IECore::InternedString &n )
 	throwKeyError( g, n );
 }
 
+void delItem( GraphComponent &g, long index )
+{
+	GraphComponentPtr c = getItem( g, index );
+	IECorePython::ScopedGILRelease gilRelease;
+	g.removeChild( c );
+}
+
 int length( GraphComponent &g )
 {
 	return g.children().size();
@@ -285,7 +292,8 @@ void GafferModule::bindGraphComponent()
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const IECore::InternedString & ))&getItem )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, long ))&getItem )
 		.def( "__setitem__", &setChild )
-		.def( "__delitem__", delItem )
+		.def( "__delitem__", (void (*)( GraphComponent &, const IECore::InternedString & ))delItem )
+		.def( "__delitem__", (void (*)( GraphComponent &, long ))&delItem )
 		.def( "__contains__", contains )
 		.def( "__len__", &length )
 		.def( "__nonzero__", &nonZero )
