@@ -735,6 +735,12 @@ class Inspector( object ) :
 
 		return False
 
+	## Should return True if the Inspector's result is
+	# a shader that can be inspected further
+	def supportsShaderParameters( self, target ) :
+
+		return False
+
 	## Must be implemented to inspect the target and return
 	# a value to be displayed. When supportsInheritance()==True,
 	# this method must accept an ignoreInheritance keyword
@@ -963,6 +969,15 @@ class DiffRow( Row ) :
 					}
 				)
 
+			if self.__inspector.supportsShaderParameters( target ) :
+
+				m.append(
+					"/Show Shader Parameters",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__showShaderParameters ), target )
+					}
+				)
+
 		return m
 
 	def __showInheritance( self, target ) :
@@ -982,6 +997,18 @@ class DiffRow( Row ) :
 			target.scene.node().getName() + " : " + self.__label().getText(),
 			_HistorySection( self.__inspector, self.__diffCreator ),
 			target
+		)
+
+		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
+		w.setVisible( True )
+
+	def __showShaderParameters( self, target ) :
+
+		w = _SectionWindow(
+			target.scene.node().getName() + " : " + self.__label().getText(),
+			_ShaderParameterSection( self.__label().getText(), self.__inspector, self.__diffCreator ),
+			target,
+			nodes = target.scene.ancestor( Gaffer.ScriptNode ).selection()
 		)
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
@@ -1182,13 +1209,16 @@ SceneInspector.LocationSection = LocationSection
 
 class _SectionWindow( GafferUI.Window ) :
 
-	def __init__( self, title, section, target ) :
+	def __init__( self, title, section, target, nodes = None ) :
 
 		GafferUI.Window.__init__( self, title, borderWidth = 4 )
 
 		editor = SceneInspector( target.scene.ancestor( Gaffer.ScriptNode ), sections = [ section ] )
 		editor.setTargetPaths( [ target.path ] )
-		editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
+		if nodes and isinstance( nodes, Gaffer.StandardSet ) :
+			editor.setNodeSet( nodes )
+		else:
+			editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
 
 		self.setChild( editor )
 
@@ -1307,6 +1337,70 @@ class _InheritanceSection( Section ) :
 
 		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
 		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ label.getText() ] ) )
+
+class _ShaderParameterSection( LocationSection ) :
+
+	class __Inspector( Inspector ) :
+
+		def __init__( self, shaderAttribute, parameterName = None ) :
+
+			Inspector.__init__( self )
+
+			self.__shaderAttribute = shaderAttribute
+			self.__parameterName = parameterName
+
+		def name( self ) :
+
+			return self.__parameterName
+
+		def __call__( self, target ) :
+
+			parameters = self.__parameters( target )
+			if parameters is None :
+				return None
+
+			return parameters.get( self.__parameterName )
+
+		def children( self, target ) :
+
+			parameters = self.__parameters( target )
+			if parameters is None :
+				return []
+
+			return [ self.__class__( self.__shaderAttribute, parameterName = p ) for p in parameters.keys() ]
+
+		def __parameters( self, target ) :
+
+			if target.path is None :
+				return None
+
+			attributes = target.attributes()
+
+			shaders = attributes[self.__shaderAttribute]
+
+			if not shaders :
+				return None
+
+			shader = shaders[0]  # only the first one is supported
+
+			return shader.parameters
+
+	def __init__( self, shaderAttribute, inspector, diffCreator = TextDiff, **kw ) :
+
+		LocationSection.__init__( self, collapsed = None, **kw )
+
+		self.__shaderAttribute = shaderAttribute
+		self.__diffCreator = diffCreator
+
+		with self._mainColumn() :
+
+			self.__diffColumn = DiffColumn( self.__Inspector( self.__shaderAttribute ), label = "Parameters", filterable = True, diffCreator = self.__diffCreator )
+
+	def update( self, targets ) :
+
+		LocationSection.update( self, targets )
+
+		self.__diffColumn.update( targets )
 
 ##########################################################################
 # History section
@@ -1674,6 +1768,12 @@ class __AttributesSection( LocationSection ) :
 		def supportsInheritance( self ) :
 
 			return True
+
+		def supportsShaderParameters( self, target ) :
+
+			attributeValue = self( target, True )
+
+			return isinstance( attributeValue, IECore.ObjectVector ) and isinstance( attributeValue[0], IECoreScene.Shader )
 
 		def __call__( self, target, ignoreInheritance = False ) :
 
