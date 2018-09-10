@@ -50,16 +50,11 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 	# made by GafferUI.EventLoop.
 	class ExpectedUIThreadCall( object ) :
 
-		__conditionStack = []
-
 		def __enter__( self ) :
 
 			self.__condition = threading.Condition()
 			self.__condition.toCall = None
-			self.__conditionStack.append( self.__condition )
-
-			if len( self.__conditionStack ) == 1 :
-				self.__callOnUIThreadConnection = Gaffer.ParallelAlgo.callOnUIThreadSignal().connect( self.__callOnUIThread )
+			self.__pushCondition( self.__condition )
 
 		def __exit__( self, type, value, traceBack ) :
 
@@ -71,14 +66,32 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 				self.__condition.toCall()
 				self.__condition.toCall = None
 
-			self.__callOnUIThreadConnection = None
-			self.__conditionStack.pop()
+		__conditionStack = []
+		__conditionMutex = threading.Lock()
+		@classmethod
+		def __pushCondition( cls, condition ) :
+
+			with cls.__conditionMutex :
+				if len( cls.__conditionStack ) == 0 :
+					cls.__callOnUIThreadConnection = Gaffer.ParallelAlgo.callOnUIThreadSignal().connect( cls.__callOnUIThread )
+				cls.__conditionStack.append( condition )
+
+		@classmethod
+		def __popCondition( cls ) :
+
+			with cls.__conditionMutex :
+				result = cls.__conditionStack.pop()
+				if len( cls.__conditionStack ) == 0 :
+					cls.__callOnUIThreadConnection = None
+
+			return result
 
 		@classmethod
 		def __callOnUIThread( cls, f ) :
 
-			condition = cls.__conditionStack[-1]
+			condition = cls.__popCondition()
 			with condition :
+				assert( condition.toCall is None )
 				condition.toCall = f
 				condition.notify()
 
