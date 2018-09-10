@@ -113,7 +113,7 @@ bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 		input == scenePlug()->transformPlug();
 }
 
-void TranslateTool::updateHandles()
+void TranslateTool::updateHandles( float rasterScale )
 {
 	handles()->setTransform(
 		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
@@ -129,6 +129,7 @@ void TranslateTool::updateHandles()
 	for( TranslateHandleIterator it( handles() ); !it.done(); ++it )
 	{
 		(*it)->setEnabled( translation.canApply( (*it)->axisMask() ) );
+		(*it)->setRasterScale( rasterScale );
 	}
 }
 
@@ -176,6 +177,8 @@ TranslateTool::Translation::Translation( const TranslateTool *tool )
 
 	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
+
+	m_time = tool->view()->getContext()->getTime();
 }
 
 bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
@@ -187,8 +190,7 @@ bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
 	{
 		if( offsetInTransformSpace[i] != 0.0f )
 		{
-			const ValuePlug *plug = m_plug->getChild( i );
-			if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
+			if( !canSetValueOrAddKey( m_plug->getChild( i ) ) )
 			{
 				return false;
 			}
@@ -204,9 +206,12 @@ void TranslateTool::Translation::apply( const Imath::V3f &offset ) const
 	m_gadgetToTransform.multDirMatrix( offset, offsetInTransformSpace );
 	for( int i = 0; i < 3; ++i )
 	{
-		if( offsetInTransformSpace[i] != 0.0f )
+		FloatPlug *plug = m_plug->getChild( i );
+		if( canSetValueOrAddKey( plug ) )
 		{
-			m_plug->getChild( i )->setValue(
+			setValueOrAddKey(
+				plug,
+				m_time,
 				m_origin[i] + offsetInTransformSpace[i]
 			);
 		}

@@ -69,7 +69,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 	protected :
 
 		bool affectsHandles( const Gaffer::Plug *input ) const override;
-		void updateHandles() override;
+		void updateHandles( float rasterScale ) override;
 
 	private :
 
@@ -92,6 +92,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 				Gaffer::V3fPlugPtr m_plug;
 				Imath::V3f m_origin;
 				Imath::M44f m_gadgetToTransform;
+				float m_time;
 
 		};
 

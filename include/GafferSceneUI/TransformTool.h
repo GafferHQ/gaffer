@@ -42,6 +42,8 @@
 
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferUI/KeyEvent.h"
+
 #include "Gaffer/TransformPlug.h"
 
 namespace GafferSceneUI
@@ -64,6 +66,9 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			Parent,
 			World
 		};
+
+		Gaffer::FloatPlug *sizePlug();
+		const Gaffer::FloatPlug *sizePlug() const;
 
 		struct Selection
 		{
@@ -159,7 +164,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		/// handles appropriately. Typically this means setting their
 		/// transform and matching their enabled state to the editability
 		/// of the selection.
-		virtual void updateHandles() = 0;
+		virtual void updateHandles( float rasterScale ) = 0;
 
 		/// Utility that may be used from updateHandles().
 		Imath::M44f orientedTransform( Orientation orientation ) const;
@@ -174,6 +179,10 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		/// derived classes.
 		std::string undoMergeGroup() const;
 
+		/// Utilities to help derived classes update plug values.
+		static bool canSetValueOrAddKey( const Gaffer::FloatPlug *plug );
+		static void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value );
+
 	private :
 
 		void connectToViewContext();
@@ -182,6 +191,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		void metadataChanged( IECore::InternedString key );
 		void updateSelection() const;
 		void preRender();
+		bool keyPress( const GafferUI::KeyEvent &event );
 
 		boost::signals::scoped_connection m_contextChangedConnection;
 
