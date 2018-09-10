@@ -310,6 +310,20 @@ source_parsers = {
 
 source_suffix = ['.rst', '.md']
 
+# Variables for string replacement functions
+
+arnold_version = '5.1.1.1'
+arnold_path_linux = '/opt/solidangle/arnold-{0}'.format( arnold_version )
+arnold_path_osx = '/opt/solidangle/arnold-{0}'.format( arnold_version )
+
+delight_version = '13.0.18'
+delight_path_linux = '/opt/3delight-{0}'.format( delight_version )
+delight_path_osx = '/opt/3delight-{0}'.format( delight_version )
+
+tractor_version = '2.2'
+tractor_path_linux = '/opt/pixar/Tractor-{0}'.format( tractor_version )
+tractor_path_osx = '/Applications/pixar/Tractor-{0}'.format( tractor_version )
+
 ## \Todo See if the recommonmark folks would accept a patch with this
 #  functionality.
 class GafferTransform( recommonmark.transform.AutoStructify ) :
@@ -377,6 +391,18 @@ def gafferSourceSubstitutions( app, docName, source ) :
     source[0] = source[0].replace( "!GAFFER_MINOR_VERSION!", str( Gaffer.About.minorVersion() ) )
     source[0] = source[0].replace( "!GAFFER_PATCH_VERSION!", str( Gaffer.About.patchVersion() ) )
 
+def thirdPartySourceSubtitutions( app, docName, source) :
+
+    source[0] = source[0].replace( "!ARNOLD_VERSION!", arnold_version )
+    source[0] = source[0].replace( "!ARNOLD_PATH_LINUX!", arnold_path_linux )
+    source[0] = source[0].replace( "!ARNOLD_PATH_OSX!", arnold_path_osx )
+    source[0] = source[0].replace( "!DELIGHT_VERSION!", delight_version )
+    source[0] = source[0].replace( "!DELIGHT_PATH_LINUX!", delight_path_linux )
+    source[0] = source[0].replace( "!DELIGHT_PATH_OSX!", delight_path_osx )
+    source[0] = source[0].replace( "!TRACTOR_VERSION!", tractor_version )
+    source[0] = source[0].replace( "!TRACTOR_PATH_LINUX!", tractor_path_linux )
+    source[0] = source[0].replace( "!TRACTOR_PATH_OSX!", tractor_path_osx )
+
 def setup( app ) :
 
     app.add_config_value(
@@ -392,6 +418,7 @@ def setup( app ) :
     app.add_transform( GafferTransform )
 
     app.connect( "source-read", gafferSourceSubstitutions )
+    app.connect( "source-read", thirdPartySourceSubtitutions )
     
     # Add the custom stylesheet; used in all .md and .rst files in source
     app.add_stylesheet( 'gaffer.css' )

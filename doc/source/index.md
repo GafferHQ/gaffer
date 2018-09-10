@@ -35,7 +35,7 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
     :maxdepth: 1
     :caption: User Documentation
 
-    Installation/index.md
+    GettingStarted/index.md
     Tutorials/index.md
     Interface/index.md
     ScriptPerformance/index.md
