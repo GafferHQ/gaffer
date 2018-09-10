@@ -715,7 +715,7 @@ class LayoutEngine
 			Direction idealDirection;
 
 			// True if edge is representing an auxiliary connection
-			bool auxiliary;
+			bool auxiliary = false;
 		};
 
 		typedef boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS, Vertex, Edge> Graph;
