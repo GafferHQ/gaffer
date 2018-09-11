@@ -262,7 +262,6 @@ class LayoutEngine
 					m_graph[e].sourceTangent = direction( srcNoduleTangent );
 					m_graph[e].targetTangent = direction( dstNoduleTangent );
 					m_graph[e].idealDirection = direction( srcNoduleTangent - dstNoduleTangent );
-					m_graph[e].auxiliary = false;
 				}
 			}
 
@@ -713,9 +712,6 @@ class LayoutEngine
 			Direction sourceTangent;
 			Direction targetTangent;
 			Direction idealDirection;
-
-			// True if edge is representing an auxiliary connection
-			bool auxiliary;
 		};
 
 		typedef boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS, Vertex, Edge> Graph;
@@ -1078,7 +1074,6 @@ class LayoutEngine
 			m_graph[e].idealDirection = idealDirection;
 			m_graph[e].sourceOffset = V2f( srcOffset.x, srcOffset.y );
 			m_graph[e].targetOffset = V2f( dstOffset.x, dstOffset.y );
-			m_graph[e].auxiliary = true;
 		}
 
 		// Defaulting to putting auxiliary nodes to the left, unless there are nodules
