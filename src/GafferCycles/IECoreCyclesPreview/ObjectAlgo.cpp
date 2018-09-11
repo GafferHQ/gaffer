@@ -32,11 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <unordered_map>
+#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECore/MessageHandler.h"
 
-#include "GafferCycles/IECoreCyclesPreview/NodeAlgo.h"
+#include <unordered_map>
+
+// Cycles (for ustring)
+#include "util/util_param.h"
 
 using namespace std;
 using namespace IECore;
@@ -69,8 +72,8 @@ using namespace IECoreCycles;
 struct Converters
 {
 
-	NodeAlgo::Converter converter;
-	NodeAlgo::MotionConverter motionConverter;
+	ObjectAlgo::Converter converter;
+	ObjectAlgo::MotionConverter motionConverter;
 
 };
 
@@ -216,85 +219,42 @@ void convertPrimitiveVariable( std::string &name, const IECoreScene::PrimitiveVa
 namespace IECoreCycles
 {
 
-namespace NodeAlgo
+namespace ObjectAlgo
 {
 
-ccl::Camera *convert( const IECore::Object *object, const std::string &nodeName )
+ccl::Object *convert( const IECore::Object *object, const std::string &nodeName )
 {
-	Registry &r = registry();
-	auto it = r.find( object->typeId() );
+	const Registry &r = registry();
+	Registry::const_iterator it = r.find( object->typeId() );
 	if( it == r.end() )
 	{
-		return false;
+		return nullptr;
 	}
 	return it->second.converter( object, nodeName );
 }
 
-ccl::Camera *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName )
+ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName )
 {
-	Registry &r = registry();
-	auto it = r.find( samples.front()->typeId() );
-	if( it == r.end() )
+	if( samples.empty() )
 	{
-		return false;
+		return nullptr;
 	}
-	if( it->second.motionConverter )
-	{
-		return it->second.motionConverter( samples, nodeName );
-	}
-	else
-	{
-		return it->second.converter( samples.front(), nodeName );
-	}
-}
 
-ccl::Light *convert( const IECore::Object *object, const std::string &nodeName )
-{
-	Registry &r = registry();
-	auto it = r.find( object->typeId() );
-	if( it == r.end() )
+	const IECore::Object *firstSample = samples.front();
+	const IECore::TypeId firstSampleTypeId = firstSample->typeId();
+	for( std::vector<const IECore::Object *>::const_iterator it = samples.begin()+1, eIt = samples.end(); it != eIt; ++it )
 	{
-		return false;
+		if( (*it)->typeId() != firstSampleTypeId )
+		{
+			throw IECore::Exception( "Inconsistent object types." );
+		}
 	}
-	return it->second.converter( object, nodeName );
-}
 
-ccl::Light *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName )
-{
-	Registry &r = registry();
-	auto it = r.find( samples.front()->typeId() );
+	const Registry &r = registry();
+	Registry::const_iterator it = r.find( firstSampleTypeId );
 	if( it == r.end() )
 	{
-		return false;
-	}
-	if( it->second.motionConverter )
-	{
-		return it->second.motionConverter( samples, nodeName );
-	}
-	else
-	{
-		return it->second.converter( samples.front(), nodeName );
-	}
-}
-
-ccl::Mesh *convert( const IECore::Object *object, const std::string &nodeName )
-{
-	Registry &r = registry();
-	auto it = r.find( object->typeId() );
-	if( it == r.end() )
-	{
-		return false;
-	}
-	return it->second.converter( object, nodeName );
-}
-
-ccl::Mesh *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName )
-{
-	Registry &r = registry();
-	auto it = r.find( samples.front()->typeId() );
-	if( it == r.end() )
-	{
-		return false;
+		return nullptr;
 	}
 	if( it->second.motionConverter )
 	{
@@ -308,9 +268,9 @@ ccl::Mesh *convert( const std::vector<const IECore::Object *> &samples, const st
 
 void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
 {
-	registry()[fromType] = { converter, motionConverter };
+	registry().insert( Registry::value_type( fromType, Converters( converter, motionConverter ) ) );
 }
 
-} // namespace NodeAlgo
+} // namespace ObjectAlgo
 
 } // namespace IECoreCycles

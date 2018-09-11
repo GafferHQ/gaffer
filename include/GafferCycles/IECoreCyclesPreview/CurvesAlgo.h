@@ -32,34 +32,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_SOCKETALGO_H
-#define IECORECYCLES_SOCKETALGO_H
+#ifndef IECORECYCLES_CURVESALGO_H
+#define IECORECYCLES_CURVESALGO_H
 
 //#include "IECoreCycles/Export.h"
 #define IECORECYCLES_API
 
-#include "IECore/CompoundData.h"
+#include "IECoreScene/CurvesPrimitive.h"
+
+#include <vector>
 
 // Cycles
-#include "graph/node.h"
-#include "graph/node_type.h"
+#include "render/mesh.h"
 
 namespace IECoreCycles
 {
 
-namespace SocketAlgo
+namespace CurvesAlgo
 {
 
-IECORECYCLES_API void setSocket( const ccl::Node *node, const std::string &input, const IECore::Data *value );
-IECORECYCLES_API void setSocket( const ccl::Node *node, const ccl::SocketType &input, const IECore::Data *value );
-IECORECYCLES_API void setSockets( const ccl::Node *node, const IECore::CompoundDataMap &values );
+/// Converts the specified IECoreScene::CurvesPrimitive into a ccl::Object.
+IECORECYCLES_API ccl::Object *convert( const IECoreScene::CurvesPrimitive *mesh, const std::string &nodeName );
+/// As above, but converting a moving object. If no motion converter
+/// is available, the first sample is converted instead.
+IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::string &nodeName );
 
-IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const std::string &input, const IECore::Data *value );
-IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType &input, const IECore::Data *value );
-IECORECYCLES_API void getSockets( const ccl::Node *node, const std::string &input, const IECore::CompoundDataMap &values );
-
-} // namespace SocketAlgo
+} // namespace CurvesAlgo
 
 } // namespace IECoreCycles
 
-#endif // IECORECYCLES_SOCKETALGO_H
+#endif // IECORECYCLES_CURVESALGO_H

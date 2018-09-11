@@ -37,10 +37,10 @@
 #ifndef GAFFERCYCLES_INTERACTIVECYCLESRENDER_H
 #define GAFFERCYCLES_INTERACTIVECYCLESRENDER_H
 
-#include "GafferScene/InteractiveRender.h"
-
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
+
+#include "GafferScene/InteractiveRender.h"
 
 namespace GafferCycles
 {

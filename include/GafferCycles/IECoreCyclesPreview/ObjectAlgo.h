@@ -32,91 +32,69 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_NODEALGO_H
-#define IECORECYCLES_NODEALGO_H
+#ifndef IECORECYCLES_OBJECTALGO_H
+#define IECORECYCLES_OBJECTALGO_H
+
+//#include "IECoreCycles/Export.h"
+#define IECORECYCLES_API
+
+#include "IECore/Object.h"
 
 #include <vector>
 
 // Cycles
-#include "render/camera.h"
-#include "render/mesh.h"
 #include "render/object.h"
-#include "render/light.h"
-
-#include "IECoreScene/Camera.h"
-
-#include "IECore/Object.h"
-
-// Change this to "IECoreCycles/Export.h" and remove the define when it goes into Cortex.
-#include "GafferCycles/Export.h"
-#define IECORECYCLES_API GAFFERCYCLES_API
 
 namespace IECoreCycles
 {
 
-namespace NodeAlgo
+namespace ObjectAlgo
 {
 
 /// A Cycles 'Object' is not necessarily a global thing for all objects, hence why Camera and Lights
 /// are treated separately. They all however subclass from ccl::Node so they all are compatible with
 /// Cycles' internal Node/Socket API to form connections or apply parameters.
 
-/// Converts the specified IECoreScene::Camera into a ccl::Camera.
-IECORECYCLES_API ccl::Camera *convert( const IECore::Object *object, const std::string &nodeName );
+/// Converts the specified IECore::Object into a ccl::Object.
+IECORECYCLES_API ccl::Object *convert( const IECore::Object *object, const std::string &nodeName );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Camera *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
-
-/// Converts the specified IECoreScene::Light into a ccl::Light.
-IECORECYCLES_API ccl::Light  *convert( const IECore::Object *object, const std::string &nodeName );
-/// As above, but converting a moving object. If no motion converter
-/// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Light  *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
-
-/// Converts the specified IECoreScene::MeshPrimitive or CurvesPrimitive into a ccl::Mesh.
-IECORECYCLES_API ccl::Mesh   *convert( const IECore::Object *object, const std::string &nodeName );
-/// As above, but converting a moving object. If no motion converter
-/// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Mesh   *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
+IECORECYCLES_API ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
 
 /// Signature of a function which can convert into a Cycles Object/Node.
-typedef ccl::Camera * (*Converter)( const IECore::Object *, const std::string &nodeName );
-typedef ccl::Camera * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
-typedef ccl::Light  * (*Converter)( const IECore::Object *, const std::string &nodeName );
-typedef ccl::Light  * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
-typedef ccl::Mesh   * (*Converter)( const IECore::Object *, const std::string &nodeName );
-typedef ccl::Mesh   * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
+typedef ccl::Object * (*Converter)( const IECore::Object *, const std::string &nodeName );
+typedef ccl::Object * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
 /// this, since it provides additional type safety.
 IECORECYCLES_API void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter = nullptr );
 
-/// Class which registers a converter for type U to type T automatically
+/// Class which registers a converter for type T automatically
 /// when instantiated.
-template<typename T, U>
+template<typename T>
 class ConverterDescription
 {
 
 	public :
 
 		/// Type-specific conversion functions.
-		typedef T * (*Converter)( const U *, const std::string& );
-		typedef T * (*MotionConverter)( const std::vector<const U *> &, const std::string& );
+		typedef ccl::Object * (*Converter)( const T *, const std::string& );
+		typedef ccl::Object * (*MotionConverter)( const std::vector<const T *> &, const std::string& );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{
 			registerConverter(
-				U::staticTypeId(),
-				reinterpret_cast<NodeAlgo::Converter>( converter ),
-				reinterpret_cast<NodeAlgo::MotionConverter>( motionConverter )
+				T::staticTypeId(),
+				reinterpret_cast<ObjectAlgo::Converter>( converter ),
+				reinterpret_cast<ObjectAlgo::MotionConverter>( motionConverter )
 			);
 		}
 
 };
 
-} // namespace NodeAlgo
+} // namespace ObjectAlgo
 
 } // namespace IECoreCycles
 
-#endif // IECORECYCLES_NODEALGO_H
+#endif // IECORECYCLES_OBJECTALGO_H

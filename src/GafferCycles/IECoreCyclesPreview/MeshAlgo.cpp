@@ -32,13 +32,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Cycles
-#include "render/mesh.h"
-#include "util/util_types.h"
+#include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
+
+#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 
-#include "GafferCycles/IECoreDelightPreview/NodeAlgo.h"
+// Cycles
+#include "render/mesh.h"
+#include "util/util_param.h"
+#include "util/util_types.h"
 
 using namespace std;
 using namespace IECore;
@@ -228,21 +231,30 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	return cmesh;
 }
 
-ccl::Mesh *convertStatic( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
-{
-	ccl::Mesh *result = ::convertCommon(mesh);
-	result->name = nodeName.c_str();
+ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( MeshAlgo::convert, MeshAlgo::convert )
 
-	return result;
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of public API
+//////////////////////////////////////////////////////////////////////////
+
+ccl::Object *MeshAlgo::convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
+{
+	ccl::Mesh *cmesh = convertCommon(mesh);
+
+	ccl::Object *cobject = new ccl::Object();
+	cobject->mesh = &cmesh;
+	cobject->name = ustring(nodeName.c_str());
+	return cobject;
 }
 
-ccl::Mesh *convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector &sampleTimes const std::string &nodeName )
+ccl::Object *MeshAlgo::convert( const vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector &sampleTimes const std::string &nodeName )
 {
-	ccl::Mesh *result = ::convertCommon(meshes[0]);
-	result->name = nodeName.c_str();
+	ccl::Mesh *cmesh = convertCommon(meshes[0]);
 
 	// Add the motion position/normal attributes
-	result->mesh.motion_steps = meshes.size();
+	cmesh->mesh.motion_steps = meshes.size();
 	ccl::Attribute *attr_mP = attributes.add( "motion_P", ATTR_STD_MOTION_VERTEX_POSITION );
 	ccl::Attribute *attr_mN = attributes.add( "motion_N", ATTR_STD_MOTION_VERTEX_NORMAL );
 	float3 *mP = attr_mP->data_float3();
@@ -314,9 +326,8 @@ ccl::Mesh *convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &me
 	mP = attr_mP->data_float3();
 	mN = attr_mN->data_float3();
 
-	return result;
+	ccl::Object *cobject = new ccl::Object();
+	cobject->mesh = &cmesh;
+	cobject->name = ustring(nodeName.c_str());
+	return cobject;
 }
-
-NodeAlgo::ConverterDescription<ccl::Mesh, MeshPrimitive> g_description( convertStatic, convertAnimated );
-
-} // namespace

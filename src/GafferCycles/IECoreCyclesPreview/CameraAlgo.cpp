@@ -32,14 +32,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Cycles
-#include "render/camera.h"
+#include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
 
-#include "IECore/SimpleTypedData.h"
+#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+
 #include "IECoreScene/Camera.h"
 
-#include "GafferCycles/IECoreCyclesPreview/NodeAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "IECore/SimpleTypedData.h"
+
+// Cycles
+#include "render/camera.h"
 
 using namespace std;
 using namespace Imath;
@@ -50,7 +52,7 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::Camera *convertStatic( const IECoreScene::Camera *camera, const std::string &nodeName )
+ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
 	CameraPtr cameraCopy = camera->copy();
 	cameraCopy->addStandardParameters();
@@ -118,12 +120,19 @@ ccl::Camera *convertStatic( const IECoreScene::Camera *camera, const std::string
 	return cclCamera;
 }
 
-ccl::Camera *convertAnimated( const IECoreScene::Camera *camera, const std::string &nodeName )
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of public API
+//////////////////////////////////////////////////////////////////////////
+
+ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
-	// Not sure if Cortex can even do motion blurred cameras?
-	return convertStatic( camera[0], &nodeName );
+	return convertCommon( camera, &nodeName );
 }
 
-NodeAlgo::ConverterDescription<ccl::Camera, Camera> g_description( convertStatic, convertAnimated );
-
-} // namespace
+ccl::Camera *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, const std::string &nodeName )
+{
+	// Not sure if Cortex can even do motion blurred cameras?
+	return convertCommon( camera[0], &nodeName );
+}

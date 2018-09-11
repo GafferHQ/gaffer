@@ -32,13 +32,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Cycles
-#include "render/mesh.h"
+#include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
 
-#include "IECore/MessageHandler.h"
+#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+
 #include "IECoreScene/CurvesPrimitive.h"
 
-#include "GafferCycles/IECoreCyclesPreview/NodeAlgo.h"
+#include "IECore/MessageHandler.h"
+
+// Cycles
+#include "render/mesh.h"
 
 using namespace std;
 using namespace IECore;
@@ -93,7 +96,15 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	return cmesh;
 }
 
-ccl::Mesh *convertStatic( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
+ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( CurvesAlgo::convert, CurvesAlgo::convert );
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of public API
+//////////////////////////////////////////////////////////////////////////
+
+ccl::Mesh *CurvesAlgo::convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
 {
 	ccl::Mesh *result = ::convertCommon(mesh);
 	result->name = nodeName.c_str();
@@ -101,7 +112,7 @@ ccl::Mesh *convertStatic( const IECoreScene::CurvesPrimitive *curve, const std::
 	return result;
 }
 
-ccl::Mesh *convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
+ccl::Mesh *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
 {
 	ccl::Mesh *result = ::convertCommon(mesh);
 	result->name = nodeName.c_str();
@@ -146,7 +157,3 @@ ccl::Mesh *convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &
 
 	return result;
 }
-
-NodeAlgo::ConverterDescription<ccl::Mesh, CurvesPrimitive> g_description( convertStatic, convertAnimated );
-
-} // namespace

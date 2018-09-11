@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferCycles/CyclesAttributes.h"
+
+#include "Gaffer/StringPlug.h"
 
 using namespace Gaffer;
 using namespace GafferCycles;

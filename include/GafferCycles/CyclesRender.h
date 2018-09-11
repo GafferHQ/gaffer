@@ -37,10 +37,10 @@
 #ifndef GAFFERCYCLES_CYCLESRENDER_H
 #define GAFFERCYCLES_CYCLESRENDER_H
 
-#include "GafferScene/Render.h"
-
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
+
+#include "GafferScene/Render.h"
 
 namespace GafferCycles
 {
