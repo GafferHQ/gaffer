@@ -18,7 +18,7 @@ Gaffer is open source software hosted and maintained on GitHub: [https://github.
 To start, you should:
 
 * [Install Gaffer](Installation/index.md)
-* Complete the [Getting Started tutorial](Tutorials/GettingStarted/index.md)
+* Complete the [Getting Started tutorial](Tutorials/BeginnerTutorial/index.md)
 
 If you are are looking to automate VFX processes or develop with Gaffer's API, you should also:
 
