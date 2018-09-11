@@ -390,16 +390,52 @@ void redo( ScriptNode &s )
 	s.redo();
 }
 
+void cut( ScriptNode &s, Node *parent, const Set *filter )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.cut( parent, filter );
+}
+
+void paste( ScriptNode &s, Node *parent, bool continueOnError )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.paste( parent, continueOnError );
+}
+
 void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect )
 {
 	IECorePython::ScopedGILRelease r;
 	s.deleteNodes( parent, filter, reconnect );
 }
 
+bool executeWrapper( ScriptNode &s, const std::string &serialisation, Node *parent, bool continueOnError )
+{
+	IECorePython::ScopedGILRelease r;
+	return s.execute( serialisation, parent, continueOnError );
+}
+
+bool executeFile( ScriptNode &s, const std::string &fileName, Node *parent, bool continueOnError )
+{
+	IECorePython::ScopedGILRelease r;
+	return s.executeFile( fileName, parent, continueOnError );
+}
+
+bool load( ScriptNode &s, bool continueOnError )
+{
+	IECorePython::ScopedGILRelease r;
+	return s.load( continueOnError );
+}
+
 void save( ScriptNode &s )
 {
 	IECorePython::ScopedGILRelease r;
 	s.save();
+}
+
+bool importFile( ScriptNode &s, const std::string &fileName, Node *parent, bool continueOnError )
+{
+	IECorePython::ScopedGILRelease r;
+	return s.importFile( fileName, parent, continueOnError );
 }
 
 struct ActionSlotCaller
@@ -471,18 +507,18 @@ void GafferModule::bindScriptNode()
 		.def( "actionSignal", &ScriptNode::actionSignal, boost::python::return_internal_reference<1>() )
 		.def( "undoAddedSignal", &ScriptNode::undoAddedSignal, boost::python::return_internal_reference<1>() )
 		.def( "copy", &ScriptNode::copy, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
-		.def( "cut", &ScriptNode::cut, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
-		.def( "paste", &ScriptNode::paste, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
+		.def( "cut", &cut, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
+		.def( "paste", &paste, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "deleteNodes", &deleteNodes, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object(), boost::python::arg( "reconnect" ) = true ) )
-		.def( "execute", &ScriptNode::execute, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
-		.def( "executeFile", &ScriptNode::executeFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
+		.def( "execute", &executeWrapper, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
+		.def( "executeFile", &executeFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "isExecuting", &ScriptNode::isExecuting )
 		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, boost::python::return_internal_reference<1>() )
 		.def( "serialise", &ScriptNode::serialise, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "save", &save )
-		.def( "load", &ScriptNode::load, ( boost::python::arg( "continueOnError" ) = false ) )
-		.def( "importFile", &ScriptNode::importFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
+		.def( "load", &load, ( boost::python::arg( "continueOnError" ) = false ) )
+		.def( "importFile", &importFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "context", &context )
 	;
 
