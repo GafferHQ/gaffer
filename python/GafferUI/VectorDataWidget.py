@@ -81,6 +81,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		columnToolTips=None,
 		sizeEditable=True,
 		columnEditability=None,
+		horizontalScrollMode = GafferUI.ScrollMode.Never,
+		verticalScrollMode = GafferUI.ScrollMode.Automatic,
 		**kw
 	) :
 
@@ -99,8 +101,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		QtCompat.setSectionResizeMode( self.__tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
 		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
 
-		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
+		self.__tableView.setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
+		self.__tableView.setVerticalScrollBarPolicy( GafferUI.ScrollMode._toQt( verticalScrollMode ) )
 
 		self.__tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectItems )
 		self.__tableView.setCornerButtonEnabled( False )
