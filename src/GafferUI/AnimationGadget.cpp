@@ -845,10 +845,6 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 	{
 		viewportGadget->setDragTracking( ViewportGadget::DragTracking::XDragTracking );
 	}
-	else
-	{
-		viewportGadget->setDragTracking( ViewportGadget::DragTracking::XDragTracking | ViewportGadget::DragTracking::YDragTracking );
-	}
 
 	m_dragStartPosition = m_lastDragPosition = V2f( i.x, i.y );
 
@@ -945,15 +941,19 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 		if( m_moveAxis == MoveAxis::Undefined )
 		{
+			ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+
 			if( abs( i.x - m_dragStartPosition.x ) >= abs ( i.y - m_dragStartPosition.y ) )
 			{
 				m_moveAxis = MoveAxis::X;
 				Pointer::setCurrent( "moveHorizontally" );
+				viewportGadget->setDragTracking( ViewportGadget::DragTracking::XDragTracking );
 			}
 			else
 			{
 				m_moveAxis = MoveAxis::Y;
 				Pointer::setCurrent( "moveVertically" );
+				viewportGadget->setDragTracking( ViewportGadget::DragTracking::YDragTracking );
 			}
 		}
 
@@ -1042,6 +1042,9 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		break;
 
 	}
+
+	ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+	viewportGadget->setDragTracking( ViewportGadget::DragTracking::XDragTracking | ViewportGadget::DragTracking::YDragTracking );
 
 	m_dragMode = DragMode::None;
 	m_moveAxis = MoveAxis::Both;
