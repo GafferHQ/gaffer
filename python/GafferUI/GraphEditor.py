@@ -63,7 +63,7 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__frame( scriptNode.selection() )
 
 		self.__buttonPressConnection = self.__gadgetWidget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__keyPressConnection = self.__gadgetWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__keyPressConnection = self.__gadgetWidget.getViewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonDoubleClickConnection = self.__gadgetWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.__dragEnterConnection = self.__gadgetWidget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dropConnection = self.__gadgetWidget.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
@@ -203,7 +203,7 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
-		if not GraphEditor.__childrenViewable( node ) :
+		if not _childrenViewable( node ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
@@ -321,7 +321,7 @@ class GraphEditor( GafferUI.Editor ) :
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :
-				needsModifiers = not GraphEditor.__childrenViewable( selection[0] )
+				needsModifiers = not _childrenViewable( selection[0] )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
 					( not needsModifiers and event.modifiers == event.modifiers.None )
@@ -536,14 +536,172 @@ class GraphEditor( GafferUI.Editor ) :
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.enabledPlug().setValue( value )
 
-	@staticmethod
-	def __childrenViewable( node ) :
-
-		viewable = Gaffer.Metadata.value( node, "graphEditor:childrenViewable" )
-		if viewable is not None :
-			return viewable
-
-		## \todo: Remove nodeGraph fallback when all client code has been updated
-		return Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" )
-
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
+
+def _childrenViewable( node ) :
+
+	viewable = Gaffer.Metadata.value( node, "graphEditor:childrenViewable" )
+	if viewable is not None :
+		return viewable
+
+	## \todo: Remove nodeGraph fallback when all client code has been updated
+	return Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" )
+
+class _NodeFilter( Gaffer.PathFilter ) :
+
+	def __init__( self, userData = {} ) :
+
+		Gaffer.PathFilter.__init__( self, userData )
+
+	def _filter( self, paths ) :
+
+		result = []
+		for path in paths :
+			graphComponent = path.property( "graphComponent:graphComponent" )
+			if not isinstance( graphComponent, Gaffer.Node ) :
+				continue
+			result.append( path )
+
+		return result
+
+class RootWidget( GafferUI.ListContainer ) :
+
+	def __init__( self, graphEditor, **kw ) :
+
+		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth = 8, **kw )
+
+		with self :
+
+			self.__visibilityButton = GafferUI.Button(
+				image = "timeline1.png", hasFrame = False,
+				parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top },
+				toolTip = "Show/hide root widget"
+			)
+			self.__visibilityButton.clickedSignal().connect( Gaffer.WeakMethod( self.__visibilityButtonClicked ), scoped = False )
+			self.__useDefaultVisibility = True
+
+			self.__bookmarksButton = GafferUI.MenuButton(
+				image = "bookmarks.png", hasFrame = False,
+				parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top },
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = "Bookmarks" ),
+				toolTip = "Bookmarks"
+			)
+
+			self.__pathWidget = GafferUI.PathWidget(
+				Gaffer.GraphComponentPath( graphEditor.scriptNode(), "/", filter = _NodeFilter() ),
+				parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top },
+				toolTip = "Root node",
+			)
+			self.__pathWidget.setVisible( False )
+			self.__pathChangedConnection = self.__pathWidget.getPath().pathChangedSignal().connect(
+				Gaffer.WeakMethod( self.__pathChanged )
+			)
+			self.__pathWidget.editingFinishedSignal().connect(
+				Gaffer.WeakMethod( self.__pathWidgetEditingFinished ), scoped = False
+			)
+
+			self.__spacer = GafferUI.Spacer(
+				size = imath.V2i( 0 ),
+				parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top, "expand" : True }
+			)
+
+		graphEditor.graphGadget().rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ), scoped = False )
+
+	def __graphEditor( self ) :
+
+		return self.parent().parent()
+
+	def __updatePath( self, *unused ) :
+
+		root = self.__graphEditor().graphGadget().getRoot()
+		script = root.scriptNode()
+		with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+			if root == script :
+				self.__pathWidget.getPath()[:] = []
+			else :
+				self.__pathWidget.getPath()[:] = root.relativeName( root.scriptNode() ).split( "." )
+
+	def __rootChanged( self, graphGadget, previousRoot ) :
+
+		self.__nameChangedConnections = []
+		node = graphGadget.getRoot()
+		scriptNode = self.__graphEditor().scriptNode()
+		while node != scriptNode :
+			self.__nameChangedConnections.append(
+				node.nameChangedSignal().connect( Gaffer.WeakMethod( self.__updatePath ) )
+			)
+			node = node.parent()
+
+		if self.__useDefaultVisibility :
+			self.__setPathWidgetVisible( graphGadget.getRoot() != scriptNode )
+
+		self.__updatePath()
+
+	def __pathChanged( self, path ) :
+
+		pathCopy = path.copy()
+		pathCopy.truncateUntilValid()
+
+		nodeToFrame = None
+		root = pathCopy.property( "graphComponent:graphComponent" )
+		while not _childrenViewable( root ) :
+			nodeToFrame = root
+			del pathCopy[-1]
+			root = pathCopy.property( "graphComponent:graphComponent" )
+
+		self.__graphEditor().graphGadget().setRoot( root )
+		if nodeToFrame is not None :
+			self.__frameNode( nodeToFrame )
+
+	def __pathWidgetEditingFinished( self, widget ) :
+
+		# The user may have entered an invalid path, or entered a path
+		# to a node to frame, which is not the root. Revert the path
+		# to match the root.
+		self.__updatePath()
+
+	def __visibilityButtonClicked( self, button ) :
+
+		visible = not self.__pathWidget.getVisible()
+		self.__setPathWidgetVisible( visible )
+
+		root = self.__graphEditor().graphGadget().getRoot()
+		scriptNode = self.__graphEditor().scriptNode()
+		self.__useDefaultVisibility = visible == (root != scriptNode )
+
+		return True
+
+	def __setPathWidgetVisible( self, visible ) :
+
+		if visible :
+			self.__pathWidget.setVisible( True )
+			self.__spacer.setVisible( False )
+			self.__visibilityButton.setImage( "timeline2.png" )
+		else :
+			self.__pathWidget.setVisible( False )
+			self.__spacer.setVisible( True )
+			self.__visibilityButton.setImage( "timeline1.png" )
+
+	def __frameNode( self, node ) :
+
+		self.__graphEditor().frame( [ node ] )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		bookmarks = Gaffer.MetadataAlgo.bookmarks( self.__graphEditor().graphGadget().getRoot() )
+		if bookmarks :
+			for bookmark in sorted( bookmarks, key = lambda b : b.getName() ) :
+				result.append(
+					"/" + bookmark.getName(),
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__frameNode ), bookmark ),
+					}
+				)
+		else :
+			result.append( "/No Bookmarks Available", { "active" : False } )
+
+		return result
+
+GraphEditor.RootWidget = RootWidget
