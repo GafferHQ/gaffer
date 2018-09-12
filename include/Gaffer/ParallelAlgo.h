@@ -55,7 +55,7 @@ namespace ParallelAlgo
 
 /// Runs the specified function asynchronously on the main UI thread.
 ///
-/// > Note : This function does nothing unless the GafferUI module has
+/// > Note : This function will throw unless the GafferUI module has
 /// > been imported.
 ///
 /// > Caution : If calling a member function, you _must_ guarantee that
@@ -64,14 +64,14 @@ namespace ParallelAlgo
 typedef std::function<void ()> UIThreadFunction;
 GAFFER_API void callOnUIThread( const UIThreadFunction &function );
 
-/// Signal used to request the calling of a function on the UI thread.
-/// We service these requests in GafferUI.EventLoop.py.
+/// Registers a handler to service requests made to `callOnUIThread()`. We
+/// register the default handler in GafferUI.EventLoop.py.
 ///
 /// > Note : This is an implementation detail. It is only exposed to allow
 /// > emulation of the UI in unit tests, and theoretically to allow an
 /// > alternative UI framework to be connected.
-typedef boost::signal<void ( UIThreadFunction )> CallOnUIThreadSignal;
-GAFFER_API CallOnUIThreadSignal &callOnUIThreadSignal();
+typedef std::function<void ( const UIThreadFunction & )> UIThreadCallHandler;
+GAFFER_API void registerUIThreadCallHandler( const UIThreadCallHandler &handler );
 
 /// Runs the specified function asynchronously on a background thread,
 /// using a copy of the current Context from the calling thread. This

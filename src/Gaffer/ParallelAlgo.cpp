@@ -41,17 +41,40 @@
 
 #include "boost/make_unique.hpp"
 
+#include <mutex>
+
 using namespace Gaffer;
+
+namespace
+{
+
+std::unique_lock<std::mutex> lockUIThreadCallHandler( ParallelAlgo::UIThreadCallHandler *&handler )
+{
+	static std::mutex g_mutex;
+	static ParallelAlgo::UIThreadCallHandler g_handler;
+	handler = &g_handler;
+	return std::unique_lock<std::mutex>( g_mutex );
+}
+
+} // namespace
 
 void ParallelAlgo::callOnUIThread( const UIThreadFunction &function )
 {
-	callOnUIThreadSignal()( function );
+	UIThreadCallHandler *handler = nullptr;
+	auto lock = lockUIThreadCallHandler( handler );
+	(*handler)( function );
 }
 
-ParallelAlgo::CallOnUIThreadSignal &ParallelAlgo::callOnUIThreadSignal()
+void ParallelAlgo::registerUIThreadCallHandler( const UIThreadCallHandler &handler )
 {
-	static CallOnUIThreadSignal s;
-	return s;
+	UIThreadCallHandler *h = nullptr;
+	auto lock = lockUIThreadCallHandler( h );
+
+	if( *h && handler )
+	{
+		throw IECore::Exception( "Replacing the handler is not allowed" );
+	}
+	*h = handler;
 }
 
 GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread( const Plug *subject, BackgroundFunction function )
