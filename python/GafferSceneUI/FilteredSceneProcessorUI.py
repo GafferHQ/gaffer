@@ -114,6 +114,8 @@ def __selectAffected( node, context ) :
 
 		walkOutputs( filter["out"] )
 
+	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+
 	pathMatcher = IECore.PathMatcher()
 	with context :
 		for scene in scenes :
