@@ -50,6 +50,8 @@ Gaffer.Metadata.registerNode(
 
 	"layout:visibilityActivator:hidden", lambda node : False,
 
+	"graphEditor:childrenViewable", True,
+
 	plugs = {
 
 		"fileName" : (
