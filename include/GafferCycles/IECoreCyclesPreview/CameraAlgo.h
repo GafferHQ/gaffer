@@ -35,8 +35,7 @@
 #ifndef IECORECYCLES_CAMERAALGO_H
 #define IECORECYCLES_CAMERAALGO_H
 
-//#include "IECoreCycles/Export.h"
-#define IECORECYCLES_API
+#include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECoreScene/Camera.h"
 

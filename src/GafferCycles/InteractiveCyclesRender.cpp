@@ -46,7 +46,3 @@ InteractiveCyclesRender::InteractiveCyclesRender( const std::string &name )
 	:	InteractiveRender( "Cycles", name )
 {
 }
-
-InteractiveCyclesRender::~InteractiveCyclesRender()
-{
-}

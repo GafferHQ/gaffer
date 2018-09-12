@@ -34,35 +34,43 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <unordered_map>
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-// The important headers in Cycles
-//#include "device/device.h"
-//#include "graph/node.h"
-//#include "graph/node_type.h"
-//#include "render/buffers.h"
-//#include "render/osl.h"
-//#include "render/scene.h"
-//#include "render/session.h"
+#include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/InstancingConverter.h"
+#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
-#include "tbb/concurrent_hash_map.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/Shader.h"
+#include "IECoreScene/SpherePrimitive.h"
+#include "IECoreScene/Transform.h"
+
+#include "IECore/LRUCache.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/ObjectVector.h"
+#include "IECore/SearchPath.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/StringAlgo.h"
+#include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/MessageHandler.h"
-#include "IECore/ObjectVector.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/SearchPath.h"
-#include "IECore/LRUCache.h"
-#include "IECoreScene/Shader.h"
+#include "tbb/concurrent_hash_map.h"
 
-#include "Gaffer/StringAlgo.h"
+#include <unordered_map>
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-
-#include "GafferCycles/IECoreCyclesPreview/ParameterAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+// Cycles
+#include "device/device.h"
+#include "graph/node.h"
+#include "graph/node_type.h"
+#include "render/buffers.h"
+#include "render/osl.h"
+#include "render/scene.h"
+#include "render/session.h"
 
 using namespace std;
 using namespace Imath;
@@ -151,108 +159,6 @@ ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 namespace
 {
-
-class DelightHandle
-{
-
-	public :
-
-		enum Ownership
-		{
-			Unowned,
-			Owned,
-		};
-
-		DelightHandle()
-			: 	m_context( NSI_BAD_CONTEXT ), m_ownership( Unowned )
-		{
-		}
-
-		DelightHandle( NSIContext_t context, const std::string &name, Ownership ownership )
-			:	m_context( context ), m_name( name ), m_ownership( ownership )
-		{
-		}
-
-		DelightHandle(
-			NSIContext_t context,
-			const std::string &name,
-			Ownership ownership,
-			const char *type,
-			const ParameterList &parameters = ParameterList()
-		)	: DelightHandle( context, name, ownership )
-		{
-			NSICreate( context, m_name.c_str(), type, 0, nullptr );
-			if( parameters.size() )
-			{
-				NSISetAttribute( context, m_name.c_str(), parameters.size(), parameters.data() );
-			}
-		}
-
-		DelightHandle( DelightHandle &&h )
-			:	DelightHandle()
-		{
-			m_context = h.m_context;
-			m_name = h.m_name;
-			m_ownership = h.m_ownership;
-			h.release();
-		}
-
-		~DelightHandle()
-		{
-			reset();
-		}
-
-		DelightHandle &operator=( DelightHandle &&h )
-		{
-			m_context = h.m_context;
-			m_name = h.m_name;
-			m_ownership = h.m_ownership;
-			h.release();
-			return *this;
-		}
-
-		NSIContext_t context() const
-		{
-			return m_context;
-		}
-
-		const char *name() const
-		{
-			return m_name.c_str();
-		}
-
-		Ownership ownership() const
-		{
-			return m_ownership;
-		}
-
-		void reset()
-		{
-			if( m_ownership == Owned && m_context != NSI_BAD_CONTEXT )
-			{
-				NSIDelete( m_context, m_name.c_str(), 0, nullptr );
-			}
-			release();
-		}
-
-	private :
-
-		void release()
-		{
-			m_context = NSI_BAD_CONTEXT;
-			m_name = "";
-			m_ownership = Unowned;
-		}
-
-		NSIContext_t m_context;
-		std::string m_name;
-		Ownership m_ownership;
-
-};
-
-typedef std::shared_ptr<DelightHandle> DelightHandleSharedPtr;
-typedef std::weak_ptr<DelightHandle> DelightHandleWeakPtr;
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////

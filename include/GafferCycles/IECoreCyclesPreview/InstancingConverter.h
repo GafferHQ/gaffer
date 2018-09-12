@@ -35,11 +35,11 @@
 #ifndef IECORECYCLES_INSTANCINGCONVERTER_H
 #define IECORECYCLES_INSTANCINGCONVERTER_H
 
-//#include "IECoreCycles/Export.h"
-#define IECORECYCLES_API
+#include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECoreScene/Primitive.h"
 
+// Cycles
 #include "render/object.h"
 
 namespace IECoreCycles

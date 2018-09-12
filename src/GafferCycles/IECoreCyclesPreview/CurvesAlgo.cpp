@@ -34,6 +34,7 @@
 
 #include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
 
+#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECoreScene/CurvesPrimitive.h"
@@ -44,6 +45,7 @@
 #include "render/mesh.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreCycles;
@@ -53,45 +55,45 @@ namespace
 
 ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 {
-	ccl::Mesh cmesh = new ccl::Mesh();
+	ccl::Mesh *cmesh = new ccl::Mesh();
 
-	size_t numCurves = mesh->numCurves();
+	size_t numCurves = curve->numCurves();
 	size_t numKeys = 0;
 
-	const IntVectorData *v = mesh->verticesPerCurve();
-	const vector<int> &verticesPerCurve = mesh->verticesPerCurve()->readable();
-	for( i = 0; i < verticesPerCurve.size(); ++i )
+	const IntVectorData *v = curve->verticesPerCurve();
+	const vector<int> &verticesPerCurve = curve->verticesPerCurve()->readable();
+	for( int i = 0; i < verticesPerCurve.size(); ++i )
 		numKeys += verticesPerCurve[i];
 
 	cmesh->reserve_curves( numCurves, numKeys );
 
-	const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	const V3fVectorData *p = curve->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
 
 	vector<float> *width = nullptr;
-	PrimitiveVariableMap::const_iterator wIt = mesh->variables.find( "width" );
-	if( wIt != triangulatedMeshPrimPtr->variables.end() )
+	PrimitiveVariableMap::const_iterator wIt = curve->variables.find( "width" );
+	if( wIt != curve->variables.end() )
 	{
-		const FloatData *w = mesh->variableData<FloatData>( "width", PrimitiveVariable::Vertex );
+		const FloatData *w = curve->variableData<FloatData>( "width", PrimitiveVariable::Vertex );
 		&width = w->readable();
 	}
 
 	size_t key = 0;
 	for( size_t i = 0; i < numCurves; ++i )
 	{
-		for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key; )
-			cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y points[key].z ), (width) ? width[key] : 1.0 );
+		for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
+			cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), (width) ? (float)width[key] : 1.0f );
 
 		cmesh->add_curve( i, 0 );
 	}
 
 	// Convert primitive variables.
-	PrimitiveVariableMap variablesToConvert = mesh->variables;
+	PrimitiveVariableMap variablesToConvert = curve->variables;
 	variablesToConvert.erase( "P" );
 	variablesToConvert.erase( "width" );
 
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
-		NodeAlgo::convertPrimitiveVariable( it->first, it->second, cmesh->attributes );
+		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, cmesh->attributes );
 
 	return cmesh;
 }
@@ -104,29 +106,28 @@ ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( CurvesAlgo::con
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
-ccl::Mesh *CurvesAlgo::convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
+ccl::Object *CurvesAlgo::convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
 {
-	ccl::Mesh *result = ::convertCommon(mesh);
-	result->name = nodeName.c_str();
-
-	return result;
+	ccl::Object *cobject = new ccl::Object();
+	cobject->mesh = convertCommon(curve);
+	cobject->name = ccl::ustring(nodeName.c_str());
+	return cobject;
 }
 
-ccl::Mesh *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
+ccl::Object *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
 {
-	ccl::Mesh *result = ::convertCommon(mesh);
-	result->name = nodeName.c_str();
+	ccl::Mesh *cmesh = convertCommon(curves[0]);
 
 	// Add the motion position/normal attributes
-	mesh->motion_steps = meshes.size();
-	ccl::Attribute *attr_mP = attributes.add( "motion_P", ATTR_STD_MOTION_VERTEX_POSITION );
-	float3 *mP = attr_mP->data_float3();
+	cmesh->motion_steps = curves.size();
+	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
+	ccl::float3 *mP = attr_mP->data_float3();
 
 	// First sample has already been obtained
-	for( size_t i = 1; i < samples.size(); ++i )
+	for( size_t i = 1; i < curves.size(); ++i )
 	{
-		PrimitiveVariableMap::const_iterator pIt = meshes[i]->variables.find( "P" );
-		if( pIt != meshes[i]->variables.end() )
+		PrimitiveVariableMap::const_iterator pIt = curves[i]->variables.find( "P" );
+		if( pIt != curves[i]->variables.end() )
 		{
 			const V3fVectorData *p = runTimeCast<const V3fVectorData>( pIt->second.data.get() );
 			if( p )
@@ -135,7 +136,7 @@ ccl::Mesh *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitive 
 				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
 				{
 					// Vertex positions
-					const V3fVectorData *p = meshes[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+					const V3fVectorData *p = curves[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 					const std::vector<V3f> &points = p->readable();
 					size_t numVerts = p->readable().size();
 
@@ -144,16 +145,21 @@ ccl::Mesh *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitive 
 				}
 				else
 				{
-					msg( Msg::Warning, "MeshAlgo::doConversion", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
+					msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
+					cmesh->attributes.remove(attr_mP);
 				}
 			}
 			else
 			{
-				msg( Msg::Warning, "MeshAlgo::doConversion", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % tIt->second.data->typeName() );
+				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
+				cmesh->attributes.remove(attr_mP);
 			}
 		}
 	}
 	mP = attr_mP->data_float3();
 
-	return result;
+	ccl::Object *cobject = new ccl::Object();
+	cobject->mesh = cmesh;
+	cobject->name = ccl::ustring(nodeName.c_str());
+	return cobject;
 }

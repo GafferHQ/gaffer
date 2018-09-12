@@ -37,15 +37,15 @@
 #ifndef GAFFERCYCLES_EXPORT_H
 #define GAFFERCYCLES_EXPORT_H
 
-#include "Gaffer/Export.h"
+#include "IECore/Export.h"
 
 // define GAFFERCYCLES_API macro based on whether or not we are compiling
 // GafferCycles, or including headers for linking to it. the GAFFERCYCLES_API
 // macro is the one that is used in the class definitions.
 #ifdef GafferCycles_EXPORTS
-  #define GAFFERCYCLES_API GAFFER_EXPORT
+  #define GAFFERCYCLES_API IECORE_EXPORT
 #else
-  #define GAFFERCYCLES_API GAFFER_IMPORT
+  #define GAFFERCYCLES_API IECORE_IMPORT
 #endif
 
 #endif // #ifndef GAFFERCYCLES_EXPORT_H

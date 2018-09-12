@@ -36,6 +36,8 @@
 
 #include "IECore/MessageHandler.h"
 
+#include "IECoreScene/PrimitiveVariable.h"
+
 #include <unordered_map>
 
 // Cycles (for ustring)
@@ -83,131 +85,6 @@ Registry &registry()
 {
 	static Registry r;
 	return r;
-}
-
-void convertPrimitiveVariable( std::string &name, const IECoreScene::PrimitiveVariable &value, ccl::AttributeSet &attributes )
-{
-	// Work out what kind of attribute it needs to be
-	const VectorData *data = value.data.get();
-	ccl::Attribute *attr = nullptr;
-	bool exists = false;
-	if( name == "N" )
-	{
-		attr = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
-		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, name.c_str() );
-		else
-			exists = true;
-	}
-	else if( name == "uv" )
-	{
-		attr = attributes.find( ccl::ATTR_STD_UV );
-		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_UV, name.c_str() );
-		else
-			exists = true;
-	}
-	else if( name == "uTangent" )
-	{
-		attr = attributes.find( ccl::ATTR_STD_UV_TANGENT );
-		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_UV_TANGENT, name.c_str() );
-		else
-			exists = true;
-	}
-	else
-	{
-		GeometricData::Interpretation interp = data->getInterpretation();
-		TypeDesc ctype = TypeDesc::TypePoint;
-		ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
-		bool isUV = false;
-		switch( interp )
-		{
-			case GeometricData::Numeric:
-				type = TypeDesc::TypeFloat;
-				break;
-			case GeometricData::Point :
-				type = TypeDesc::TypePoint;
-				break;
-			case GeometricData::Normal :
-				type = TypeDesc::TypeNormal;
-				break;
-			case GeometricData::Vector :
-				type = TypeDesc::TypeVector;
-				break;
-			case GeometricData::Color :
-				type = TypeDesc::TypeColor;
-				break;
-			case GeometricData::UV :
-				type = TypeDesc::TypePoint;
-				break;
-			default :
-				break;
-		}
-		switch( value.interpolation )
-		{
-			case PrimitiveVariable::Constant :
-				elem = ATTR_ELEMENT_MESH;
-				break;
-			case PrimitiveVariable::Vertex :
-				elem = ATTR_ELEMENT_VERTEX;
-				break;
-			case PrimitiveVariable::Varying :
-			case PrimitiveVariable::FaceVarying :
-				elem = ATTR_ELEMENT_CORNER;
-				break;
-			case PrimitiveVariable::Uniform :
-				elem = ATTR_ELEMENT_FACE;
-				break;
-			default :
-				break;
-		}
-		attr = attributes.find( name.c_str() );
-		if( !attr )
-			attr = attributes.add( name.c_str(), type, elem );
-		else
-			exists = true;
-	}
-
-	if( interp == GeometricData::Numeric )
-	{
-		const FloatVectorData *data = runTimeCast<const FloatVectorData>( value.data.get() );
-		if( data )
-		{
-			const std::vector<float> &floatData = data->readable();
-
-			size_t num = floatData->readable().size();
-			float *cdata = attr->data_float();
-
-			for( size_t i = 0; i < num; ++i, ++cdata; )
-				*cdata = attr->make_float( floatData[i] );
-			cdata = attr->data_float();
-		}
-		else
-		{
-			msg( Msg::Warning, "IECoreCyles::NodeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData)." ) % name % value.data->typeName() );
-			attributes.remove( name );
-		}
-	}
-	else
-	{
-		const V3fVectorData *data = runTimeCast<const V3fVectorData>( value.data.get() );
-		if( data )
-		{
-			const std::vector<V3f> &v3fData = data->readable();
-			size_t num = v3fData->readable().size();
-			float3 *cdata = attr->data_float3();
-
-			for( size_t i = 0; i < num; ++i, ++cdata; )
-				*cdata = ccl::make_float3( v3fData[i].x, v3fData[i].y, v3fData[i].z );
-			cdata = attr->data_float3();
-		}
-		else
-		{
-			msg( Msg::Warning, "IECoreCyles::NodeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData)." ) % name % value.data->typeName() );
-			attributes.remove( name );
-		}
-	}
 }
 
 } // namespace
@@ -268,7 +145,7 @@ ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const 
 
 void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
 {
-	registry().insert( Registry::value_type( fromType, Converters( converter, motionConverter ) ) );
+	registry()[fromType] = { converter, motionConverter };
 }
 
 } // namespace ObjectAlgo

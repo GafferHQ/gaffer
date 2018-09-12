@@ -32,32 +32,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_CURVESALGO_H
-#define IECORECYCLES_CURVESALGO_H
+#ifndef IECORECYCLES_ATTRIBUTEALGO_H
+#define IECORECYCLES_ATTRIBUTEALGO_H
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
-#include "IECoreScene/CurvesPrimitive.h"
-
-#include <vector>
+#include "IECoreScene/Primitive.h"
 
 // Cycles
-#include "render/object.h"
+#include "render/attribute.h"
 
 namespace IECoreCycles
 {
 
-namespace CurvesAlgo
+namespace AttributeAlgo
 {
 
-/// Converts the specified IECoreScene::CurvesPrimitive into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECoreScene::CurvesPrimitive *mesh, const std::string &nodeName );
-/// As above, but converting a moving object. If no motion converter
-/// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::string &nodeName );
+/// Converts a primitive variable to a ccl::Attribute inside of a ccl::AttributeSet
+IECORECYCLES_API void convertPrimitiveVariable( std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes );
 
-} // namespace CurvesAlgo
+} // namespace AttributeAlgo
 
 } // namespace IECoreCycles
 
-#endif // IECORECYCLES_CURVESALGO_H
+#endif // IECORECYCLES_ATTRIBUTEALGO_H

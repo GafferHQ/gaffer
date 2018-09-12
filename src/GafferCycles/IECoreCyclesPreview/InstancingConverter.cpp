@@ -81,8 +81,8 @@ ccl::Object *InstancingConverter::convert( const IECoreScene::Primitive *primiti
 		if( a->second )
 		{
 			ccl::Object *cobject = new ccl::Object();
-			cobject->mesh = &(a->second->mesh);
-			cobject->name = ustring(nodeName.c_str());
+			cobject->mesh = a->second->mesh;
+			cobject->name = ccl::ustring(nodeName.c_str());
 			return cobject;
 		}
 	}
@@ -116,8 +116,8 @@ ccl::Object *InstancingConverter::convert( const std::vector<const IECoreScene::
 		if( a->second )
 		{
 			ccl::Object *cobject = new ccl::Object();
-			cobject->mesh = &(a->second->mesh);
-			cobject->name = ustring(nodeName.c_str());
+			cobject->mesh = a->second->mesh;
+			cobject->name = ccl::ustring(nodeName.c_str());
 			return cobject;
 		}
 	}

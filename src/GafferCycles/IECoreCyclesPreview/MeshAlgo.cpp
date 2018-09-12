@@ -34,16 +34,21 @@
 
 #include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
 
+#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/TriangulateOp.h"
 
 // Cycles
+#include "kernel/kernel_types.h"
 #include "render/mesh.h"
+#include "subd/subd_dice.h"
 #include "util/util_param.h"
 #include "util/util_types.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreCycles;
@@ -51,7 +56,7 @@ using namespace IECoreCycles;
 namespace
 {
 
-void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitve *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs )
+void convertUVSet( const char *uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs )
 {
 	const V2fVectorData *uvData = runTimeCast<V2fVectorData>( uvVariable.data.get() );
 
@@ -80,15 +85,15 @@ void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable
 	const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
 
 	// Default UVs are named "uv"
-	Attribute *uv_attr = nullptr;
+	ccl::Attribute *uv_attr = nullptr;
 	if( uvSet == "uv" )
-		uv_attr = attributes.add( ATTR_STD_UV, uvSet.c_str() );
+		uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
 	else
-		uv_attr = attributes.add( uvSet.c_str(), TypeDesc::TypePoint, ATTR_ELEMENT_CORNER );
-	float3 *fdata = uv_attr->data_float3();
+		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeDesc::TypePoint, ccl::ATTR_ELEMENT_CORNER );
+	ccl::float3 *fdata = uv_attr->data_float3();
 
 	if( subdivision_uvs )
-		uv_attr->flags |= ATTR_SUBDIVIDED;
+		uv_attr->flags |= ccl::ATTR_SUBDIVIDED;
 
 	// We need to know how many verts there are
 	const vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
@@ -98,17 +103,17 @@ void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable
 	{
 		if( indices )
 		{
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex; )
+			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				*(fdata++) = ccl::make_float3(uvs[indices[vertex]].x, uvs[indices[vertex]].y, 0.0);
 		}
-		else if( uvVarialble == PrimitiveVariable::FaceVarying )
+		else if( uvVariable.interpolation == PrimitiveVariable::FaceVarying )
 		{
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex; )
+			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				*(fdata++) = ccl::make_float3(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y, 0.0);
 		}
 		else
 		{
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex; )
+			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				*(fdata++) = ccl::make_float3(uvs[vertex].x, uvs[vertex].y, 0.0);
 		}
 	}
@@ -116,7 +121,7 @@ void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable
 
 ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 {
-	ccl::Mesh cmesh = new ccl::Mesh();
+	ccl::Mesh *cmesh = new ccl::Mesh();
 
 	size_t numFaces = mesh->numFaces();
 	size_t numVerts = mesh->variableSize(PrimitiveVariable::Vertex);
@@ -134,12 +139,12 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	if( ( mesh->interpolation() == "catmullClark" ) || !triangles )
 	{
 		subdivision = true;
-		cmesh->subdivision_type = (mesh->interpolation() == "catmullClark") ? ccl::SUBDIVISION_CATMULL_CLARK : ccl::SUBDIVISION_LINEAR;
+		cmesh->subdivision_type = (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR;
 
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ngons = 0;
 		size_t ncorners = 0;
-		for( i = 0; i < vertsPerFace.size(); ++i )
+		for( int i = 0; i < vertsPerFace.size(); ++i )
 		{
 			ngons += ( vertsPerFace[i] == 4 ) ? 0 : 1;
 			ncorners += vertsPerFace[i];
@@ -147,14 +152,15 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		cmesh->reserve_subd_faces(numFaces, ngons, ncorners);
 
 		for( size_t i = 0; i < numVerts; ++i )
-			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y points[i].z ) );
+			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
 		for( size_t i = 0; i < numFaces; ++i )
-			cmesh->add_subd_face( vertexIds[i*vertsPerFace], vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
+			cmesh->add_subd_face( vertexIds[i*vertsPerFace[i]], vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
 
 		// TODO: Cycles supports edge creases, but I am not sure if Cortex does?
-
-		SubdParams& sdparams = *cmesh->subd_params;
+		if(!cmesh->subd_params)
+			cmesh->subd_params = new ccl::SubdParams(cmesh);
+		ccl::SubdParams& sdparams = *cmesh->subd_params;
 		const float &dicing_rate = mesh->parametersData()->member<FloatData>( "ccl:dicing_rate", 0.0 )->readable();
 		sdparams.dicing_rate = max(0.1f, dicing_rate);
 		const int &max_level = mesh->parametersData()->member<IntData>( "ccl:max_level", 1 )->readable();
@@ -162,11 +168,11 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	}
 	else
 	{
-		cmesh->subdivision_type = (mesh->interpolation() == "linear") ? ccl::SUBDIVISION_LINEAR : ccl::SUBDIVISION_NONE;
+		cmesh->subdivision_type = (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE;
 		cmesh->reserve_mesh(numVerts, numFaces);
 
 		for( size_t i = 0; i < numVerts; ++i )
-			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y points[i].z ) );
+			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
 		if( !triangles )
 		{
@@ -226,12 +232,12 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	// Finally, do a generic conversion of anything that remains.
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
-		NodeAlgo::convertPrimitiveVariable( it->first, it->second, attributes );
+		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, attributes );
 
 	return cmesh;
 }
 
-ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( MeshAlgo::convert, MeshAlgo::convert )
+ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( MeshAlgo::convert, MeshAlgo::convert );
 
 } // namespace
 
@@ -241,27 +247,25 @@ ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( MeshAlgo::convert
 
 ccl::Object *MeshAlgo::convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
 {
-	ccl::Mesh *cmesh = convertCommon(mesh);
-
 	ccl::Object *cobject = new ccl::Object();
-	cobject->mesh = &cmesh;
-	cobject->name = ustring(nodeName.c_str());
+	cobject->mesh = convertCommon(mesh);
+	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
 
-ccl::Object *MeshAlgo::convert( const vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector &sampleTimes const std::string &nodeName )
+ccl::Object *MeshAlgo::convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::string &nodeName )
 {
 	ccl::Mesh *cmesh = convertCommon(meshes[0]);
 
 	// Add the motion position/normal attributes
-	cmesh->mesh.motion_steps = meshes.size();
-	ccl::Attribute *attr_mP = attributes.add( "motion_P", ATTR_STD_MOTION_VERTEX_POSITION );
-	ccl::Attribute *attr_mN = attributes.add( "motion_N", ATTR_STD_MOTION_VERTEX_NORMAL );
-	float3 *mP = attr_mP->data_float3();
-	float3 *mN = attr_mN->data_float3();
+	cmesh->motion_steps = meshes.size();
+	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
+	ccl::Attribute *attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_NORMAL, ccl::ustring("motion_N") );
+	ccl::float3 *mP = attr_mP->data_float3();
+	ccl::float3 *mN = attr_mN->data_float3();
 
 	// First sample has already been obtained
-	for( size_t i = 1; i < samples.size(); ++i )
+	for( size_t i = 1; i < meshes.size(); ++i )
 	{
 		PrimitiveVariableMap::const_iterator pIt = meshes[i]->variables.find( "P" );
 		if( pIt != meshes[i]->variables.end() )
@@ -283,13 +287,13 @@ ccl::Object *MeshAlgo::convert( const vector<const IECoreScene::MeshPrimitive *>
 				else
 				{
 					msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					attributes.remove("motion_P");
+					cmesh->attributes.remove(attr_mP);
 				}
 			}
 			else
 			{
-				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % tIt->second.data->typeName() );
-				attributes.remove("motion_P");
+				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
+				cmesh->attributes.remove(attr_mP);
 			}
 		}
 
@@ -312,14 +316,14 @@ ccl::Object *MeshAlgo::convert( const vector<const IECoreScene::MeshPrimitive *>
 				}
 				else
 				{
-					msg( Msg::Warning, "IECoreCyles::MeshAlgo::convertAnimated", "Variable \"Normal\" has unsupported interpolation type - not generating sampled Position." );
-					attributes.remove("motion_N");
+					msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"Normal\" has unsupported interpolation type - not generating sampled Position." );
+					cmesh->attributes.remove(attr_mN);
 				}
 			}
 			else
 			{
-				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convertAnimated", boost::format( "Variable \"Normal\" has unsupported type \"%s\" (expected V3fVectorData)." ) % tIt->second.data->typeName() );
-				attributes.remove("motion_N");
+				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", boost::format( "Variable \"Normal\" has unsupported type \"%s\" (expected V3fVectorData)." ) % nIt->second.data->typeName() );
+				cmesh->attributes.remove(attr_mN);
 			}
 		}
 	}
@@ -327,7 +331,7 @@ ccl::Object *MeshAlgo::convert( const vector<const IECoreScene::MeshPrimitive *>
 	mN = attr_mN->data_float3();
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->mesh = &cmesh;
-	cobject->name = ustring(nodeName.c_str());
+	cobject->mesh = cmesh;
+	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }

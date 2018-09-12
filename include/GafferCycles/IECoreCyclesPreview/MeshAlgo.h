@@ -35,15 +35,14 @@
 #ifndef IECORECYCLES_MESHALGO_H
 #define IECORECYCLES_MESHALGO_H
 
-//#include "IECoreCycles/Export.h"
-#define IECORECYCLES_API
+#include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 
 #include <vector>
 
 // Cycles
-#include "render/mesh.h"
+#include "render/object.h"
 
 namespace IECoreCycles
 {

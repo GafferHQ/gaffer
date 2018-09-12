@@ -52,7 +52,7 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName )
+ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
 	CameraPtr cameraCopy = camera->copy();
 	cameraCopy->addStandardParameters();
@@ -72,7 +72,7 @@ ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::
 		ccam->type = ccl::CAMERA_PERSPECTIVE;
 
 	// FOV
-	const string &fov = cameraCopy->parametersData()->member<FloatData>( "projection:fov", true )->readable();
+	const float &fov = cameraCopy->parametersData()->member<FloatData>( "projection:fov", true )->readable();
 	ccam->fov = fov;
 
 	// Screen window/resolution TODO: full_ might be something to do with cropping?
@@ -84,7 +84,7 @@ ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::
 	ccam->full_width = resolution[0];
 	ccam->full_height = resolution[1];
 	ccam->viewplane.left = screenWindow.min.x;
-	ccam->viewplane.right = screenWidnow.max.x;
+	ccam->viewplane.right = screenWindow.max.x;
 	ccam->viewplane.top = screenWindow.min.y;
 	ccam->viewplane.bottom = screenWindow.max.y;
 	ccam->aperture_ratio = pixelAspectRatio; // This is more for the bokeh, maybe it should be a separate parameter?
@@ -98,26 +98,26 @@ ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::
 	const V2d shutter = cameraCopy->parametersData()->member<V2fData>( "shutter", true )->readable();
 	if ((shutter[0] > 0.0) && (shutter[1] > 0.0))
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_START;
+		ccam->motion_position = ccl::Camera::MOTION_POSITION_START;
 		ccam->shuttertime = shutter[0] + shutter[1];
 	}
 	else if ((shutter[0] < 0.0) && (shutter[1] > 0.0))
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_CENTER;
+		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
 		ccam->shuttertime = abs(shutter[0]) + shutter[1];
 	}
 	else if ((shutter[0] < 0.0) && (shutter[1] <= 0.0))
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_END;
+		ccam->motion_position = ccl::Camera::MOTION_POSITION_END;
 		ccam->shuttertime = abs(shutter[0]) + abs(shutter[1]);
 	}
 	else
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_CENTER;
+		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
 		ccam->shuttertime = 1.0;
 	}
 
-	return cclCamera;
+	return ccam;
 }
 
 } // namespace
@@ -128,11 +128,11 @@ ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::
 
 ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
-	return convertCommon( camera, &nodeName );
+	return convertCommon( camera, nodeName );
 }
 
 ccl::Camera *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, const std::string &nodeName )
 {
 	// Not sure if Cortex can even do motion blurred cameras?
-	return convertCommon( camera[0], &nodeName );
+	return convertCommon( samples[0], nodeName );
 }

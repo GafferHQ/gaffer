@@ -35,8 +35,7 @@
 #ifndef IECORECYCLES_OBJECTALGO_H
 #define IECORECYCLES_OBJECTALGO_H
 
-//#include "IECoreCycles/Export.h"
-#define IECORECYCLES_API
+#include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECore/Object.h"
 
@@ -61,8 +60,10 @@ IECORECYCLES_API ccl::Object *convert( const IECore::Object *object, const std::
 /// is available, the first sample is converted instead.
 IECORECYCLES_API ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
 
-/// Signature of a function which can convert into a Cycles Object/Node.
+/// Signature of a function which can convert into a Cycles Object.
 typedef ccl::Object * (*Converter)( const IECore::Object *, const std::string &nodeName );
+/// Signature of a function which can convert a series of IECore::Object
+/// samples into a moving Cycles object.
 typedef ccl::Object * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
 
 /// Registers a converter for a specific type.
@@ -79,8 +80,8 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		typedef ccl::Object * (*Converter)( const T *, const std::string& );
-		typedef ccl::Object * (*MotionConverter)( const std::vector<const T *> &, const std::string& );
+		typedef ccl::Object *(*Converter)( const T *, const std::string& );
+		typedef ccl::Object *(*MotionConverter)( const std::vector<const T *> &, const std::string& );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{

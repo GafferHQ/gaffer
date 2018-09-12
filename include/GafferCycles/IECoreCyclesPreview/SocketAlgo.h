@@ -35,8 +35,7 @@
 #ifndef IECORECYCLES_SOCKETALGO_H
 #define IECORECYCLES_SOCKETALGO_H
 
-//#include "IECoreCycles/Export.h"
-#define IECORECYCLES_API
+#include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECore/CompoundData.h"
 
