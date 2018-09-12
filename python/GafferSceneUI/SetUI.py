@@ -150,6 +150,19 @@ def __downstreamNodes( plug ) :
 
 	return result
 
+def __scenePlugs( node ) :
+
+	result = []
+	for plug in node.children( Gaffer.Plug ) :
+		if plug.direction() != plug.Direction.In :
+			continue
+		if isinstance( plug, Gaffer.ArrayPlug ) and len( plug ) :
+			plug = plug[0]
+		if isinstance( plug, GafferScene.ScenePlug ) :
+			result.append( plug )
+
+	return result
+
 def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
@@ -188,11 +201,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	setNames = set()
 	with plugValueWidget.getContext() :
 		for node in nodes :
-			for scenePlug in node.children( GafferScene.ScenePlug ) :
-
-				if scenePlug.direction() != scenePlug.Direction.In :
-					continue
-
+			for scenePlug in __scenePlugs( node ) :
 				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() ] )
 
 	if not setNames :
