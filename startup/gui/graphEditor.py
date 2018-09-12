@@ -124,3 +124,9 @@ def __plugContextMenu( graphEditor, node, menuDefinition ) :
 	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, node, menuDefinition )
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
+
+def __instanceCreated( graphEditor ) :
+
+	graphEditor.graphGadgetWidget().addOverlay( GafferUI.GraphEditor.RootWidget( graphEditor ) )
+
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __instanceCreated, scoped = False )
