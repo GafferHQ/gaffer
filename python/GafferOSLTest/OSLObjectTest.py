@@ -698,6 +698,56 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		)
 		self.assertEqual( mesh["uv"].indices, None )
 
+	def testColor4fInput( self ) :
+
+		# PointsPrimitive with Color4fVectorData primitive variable
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0 ), imath.V3f( 1 ) ] ) )
+		points["myColor4"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color4fVectorData( [ imath.Color4f( 1, 2, 3, 4 ), imath.Color4f( 5, 6, 7, 8 ) ] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		self.assertSceneValid( objectToScene["out"] )
+
+		# Shading network to read primitive variable in and copy to Color3fVectorData Cs
+
+		inColor = GafferOSL.OSLShader()
+		inColor.loadShader( "ObjectProcessing/InColor" )
+		inColor["parameters"]["name"].setValue( "myColor4" )
+
+		outColor = GafferOSL.OSLShader()
+		outColor.loadShader( "ObjectProcessing/OutColor" )
+		outColor["parameters"]["value"].setInput( inColor["out"]["value"] )
+
+		outObject = GafferOSL.OSLShader()
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outColor["out"]["primitiveVariable"] )
+
+		# OSLObject node to apply network
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( objectToScene["out"] )
+		oslObject["filter"].setInput( filter["out"] )
+		oslObject["shader"].setInput( outObject["out"] )
+
+		# Assertions
+
+		outPoints = oslObject["out"].object( "/object" )
+
+		self.assertIn( "Cs", outPoints )
+		self.assertEqual( outPoints["Cs"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex )
+		self.assertEqual(
+			outPoints["Cs"].data,
+			IECore.Color3fVectorData( [ imath.Color3f( 1, 2, 3 ), imath.Color3f( 5, 6, 7 ) ] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
 

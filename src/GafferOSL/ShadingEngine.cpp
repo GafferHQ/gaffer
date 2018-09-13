@@ -216,11 +216,14 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 		srcType.arraylen = 2;
 	}
 
-	if( dstType.aggregate == TypeDesc::VEC2 && srcType.aggregate == TypeDesc::VEC3 )
+	if(
+		( dstType.aggregate == TypeDesc::VEC2 || dstType.aggregate == TypeDesc::VEC3 ) &&
+		srcType.aggregate > dstType.aggregate && srcType.aggregate <= TypeDesc::VEC4
+	)
 	{
-		// OSL doesn't know how to convert VEC3->VEC2, so we encourage it
-		// by truncating srcType.
-		srcType.aggregate = TypeDesc::VEC2;
+		// OSL doesn't know how to do truncating vector conversions, so we
+		// encourage it by truncating srcType.
+		srcType.aggregate = dstType.aggregate;
 	}
 
 	if( ShadingSystem::convert_value( dst, dstType, src, srcType ) )
