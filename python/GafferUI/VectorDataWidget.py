@@ -921,11 +921,18 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	def data( self, index, role ) :
 
+		column = self.__columns[index.column()]
+		if role == QtCore.Qt.BackgroundColorRole :
+
+			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
+				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("backgroundMid")  )
+			else:
+				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("alternateColor") )
+
 		if (
 			role == QtCore.Qt.DisplayRole or
 			role == QtCore.Qt.EditRole
 		) :
-			column = self.__columns[index.column()]
 			return column.accessor.getElement( index.row(), column.relativeColumnIndex )
 
 		return GafferUI._Variant.toVariant( None )
