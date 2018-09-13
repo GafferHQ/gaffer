@@ -1022,8 +1022,31 @@ class _CompoundDataAccessor( _DataAccessor ) :
 
 		return GafferUI._Variant.toVariant( self.data()[rowIndex][columnIndex] )
 
+class _QuatDataAccessor( _CompoundDataAccessor ) :
+
+	def __init__( self, data, heading = "" ) :
+
+		_CompoundDataAccessor.__init__( self, data, heading = heading )
+
+	def numColumns( self ) :
+
+		return 4
+
+	def getElement( self, rowIndex, columnIndex ) :
+
+		v = self.data()[rowIndex]
+		if columnIndex == 0:
+			return GafferUI._Variant.toVariant( v.v()[0] )
+		if columnIndex == 1:
+			return GafferUI._Variant.toVariant( v.v()[1] )
+		if columnIndex == 2:
+			return GafferUI._Variant.toVariant( v.v()[2] )
+		if columnIndex == 3:
+			return GafferUI._Variant.toVariant( v.r() )
+
 _DataAccessor.registerType( IECore.Color3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.Color4fVectorData.staticTypeId(), _CompoundDataAccessor )
+
 _DataAccessor.registerType( IECore.V2iVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V2fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V2dVectorData.staticTypeId(), _CompoundDataAccessor )
@@ -1031,7 +1054,10 @@ _DataAccessor.registerType( IECore.V2dVectorData.staticTypeId(), _CompoundDataAc
 _DataAccessor.registerType( IECore.V3iVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3dVectorData.staticTypeId(), _CompoundDataAccessor )
-_DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
+
+_DataAccessor.registerType( IECore.QuatfVectorData.staticTypeId(), _QuatDataAccessor )
+_DataAccessor.registerType( IECore.QuatdVectorData.staticTypeId(), _QuatDataAccessor )
+
 
 class _BoxDataAccessor ( _CompoundDataAccessor ):
 	def __init__( self, data, heading = "" ) :
