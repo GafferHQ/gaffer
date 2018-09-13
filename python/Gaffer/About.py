@@ -135,14 +135,14 @@ class About :
 			{
 				"name" : "libjpeg-turbo",
 				"url" : "https://libjpeg-turbo.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/libjpeg-turbo",
+				"license" : "$GAFFER_ROOT/doc/licenses/LibJPEG-Turbo",
 				"credit" : "This software is based in part on the work of the Independent JPEG Group.",
 			},
 
 			{
 				"name" : "libpng",
 				"url" : "http://www.libpng.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/libpng",
+				"license" : "$GAFFER_ROOT/doc/licenses/LibPNG",
 			},
 
 			{
@@ -165,13 +165,13 @@ class About :
 			{
 				"name" : "libtiff",
 				"url" : "http://www.libtiff.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/libtiff",
+				"license" : "$GAFFER_ROOT/doc/licenses/LibTIFF",
 			},
 
 			{
 				"name" : "tbb",
 				"url" : "http://threadingbuildingblocks.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/tbb",
+				"license" : "$GAFFER_ROOT/doc/licenses/TBB",
 			},
 
 			{
