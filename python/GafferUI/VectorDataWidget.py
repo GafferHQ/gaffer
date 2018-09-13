@@ -369,30 +369,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# componentIndex will be -1.
 	def columnToDataIndex( self, columnIndex ) :
 
-		c = 0
-		for dataIndex, accessor in enumerate( self.__model.vectorDataAccessors() ) :
-			nc = accessor.numColumns()
-			if c + nc > columnIndex :
-				if nc == 1 :
-					return ( dataIndex, -1 )
-				else :
-					return ( dataIndex, columnIndex - c )
-			c += nc
-
-		raise IndexError( columnIndex )
+		return self.__model.columnToDataIndex( columnIndex )
 
 	## Performs the reverse of columnToDataIndex.
 	def dataToColumnIndex( self, dataIndex, componentIndex ) :
 
-		accessors = self.__model.vectorDataAccessors()
-		if dataIndex < 0 or dataIndex >= len( accessors ) :
-			raise IndexError( dataIndex )
+		return self.__model.dataToColumnIndex( dataIndex, componentIndex )
 
-		columnIndex = 0
-		for d in range( 0, dataIndex ) :
-			columnIndex += accessors[d].numColumns()
-
-		return columnIndex + max( 0, componentIndex )
 
 	## Returns a signal which is emitted whenever the data is edited.
 	# The signal is /not/ emitted when setData() is called.
@@ -840,6 +823,32 @@ class _Model( QtCore.QAbstractTableModel ) :
 	def vectorData( self ) :
 
 		return self.__data
+
+	def columnToDataIndex( self, columnIndex ) :
+
+		c = 0
+		for dataIndex, accessor in enumerate( self.vectorDataAccessors() ) :
+			nc = accessor.numColumns()
+			if c + nc > columnIndex :
+				if nc == 1 :
+					return ( dataIndex, -1 )
+				else :
+					return ( dataIndex, columnIndex - c )
+			c += nc
+
+		raise IndexError( columnIndex )
+
+	def dataToColumnIndex( self, dataIndex, componentIndex ) :
+
+		accessors = self.vectorDataAccessors()
+		if dataIndex < 0 or dataIndex >= len( accessors ) :
+			raise IndexError( dataIndex )
+
+		columnIndex = 0
+		for d in range( 0, dataIndex ) :
+			columnIndex += accessors[d].numColumns()
+
+		return columnIndex + max( 0, componentIndex )
 
 	def vectorDataAccessors( self ) :
 
