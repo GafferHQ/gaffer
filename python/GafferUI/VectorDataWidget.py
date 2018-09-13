@@ -84,6 +84,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		horizontalScrollMode = GafferUI.ScrollMode.Never,
 		verticalScrollMode = GafferUI.ScrollMode.Automatic,
 		overrideStretch = False,
+		extendColumnToolTipsToData = True,
 		**kw
 	) :
 
@@ -174,6 +175,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__headerOverride = None
 
 		self.__overrideStretch = overrideStretch
+		self.__extendColumnToolTipsToData  = extendColumnToolTipsToData
 		self.__columnToolTips = columnToolTips
 		self.__columnEditability = columnEditability
 
@@ -210,7 +212,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips, self.__columnEditability )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips, self.__columnEditability,
+				headerPrefix = self.__headerPrefix,
+				extendColumnToolTipsToData = self.__extendColumnToolTipsToData )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
@@ -799,7 +803,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	__addValueText = "Add..."
 
-	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None, columnEditability=None ) :
+	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None, columnEditability=None, headerPrefix=None, extendColumnToolTipsToData = True) :
 
 		QtCore.QAbstractTableModel.__init__( self, parent )
 
@@ -822,6 +826,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 			assert( len( self.__columns ) == len( self.__columnToolTips ) )
 		if self.__columnEditability is not None :
 			assert( len( self.__columns ) == len( self.__columnEditability ) )
+
+		self.__extendColumnToolTipsToData = extendColumnToolTipsToData
 
 	## Methods specific to this model first
 
@@ -932,7 +938,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 		) :
 			column = self.__columns[index.column()]
 			return column.accessor.getElement( index.row(), column.relativeColumnIndex )
-		elif role == QtCore.Qt.ToolTipRole and self.__columnToolTips is not None :
+		elif role == QtCore.Qt.ToolTipRole and self.__columnToolTips is not None and self.__extendColumnToolTipsToData:
 			return GafferUI._Variant.toVariant( self.__columnToolTips[index.column()] )
 
 		return GafferUI._Variant.toVariant( None )
