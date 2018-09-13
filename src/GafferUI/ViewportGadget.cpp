@@ -608,7 +608,7 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	  m_cameraController( new CameraController( new IECoreScene::Camera ) ),
 	  m_cameraInMotion( false ),
 	  m_cameraEditable( true ),
-	  m_dragTracking( false ),
+	  m_dragTracking( DragTracking::NoDragTracking ),
 	  m_variableAspectZoom( false )
 {
 	// Viewport visibility is managed by GadgetWidgets,
@@ -863,12 +863,12 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 	requestRender();
 }
 
-void ViewportGadget::setDragTracking( bool dragTracking )
+void ViewportGadget::setDragTracking( unsigned dragTracking )
 {
 	m_dragTracking = dragTracking;
 }
 
-bool ViewportGadget::getDragTracking() const
+unsigned ViewportGadget::getDragTracking() const
 {
 	return m_dragTracking;
 }
@@ -1267,7 +1267,7 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 	// the drag didn't originate from within the viewport.
 
 	if(
-		!getDragTracking() ||
+		getDragTracking() == DragTracking::NoDragTracking ||
 		!getCameraEditable() ||
 		!this->isAncestorOf( event.sourceGadget.get() )
 	)
@@ -1295,7 +1295,10 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 	if( !viewportBox.intersects( event.line.p0 ) )
 	{
 		const V3f offset3 = event.line.p0 - closestPointOnBox( event.line.p0, viewportBox );
-		offset = V2f( offset3.x, offset3.y );
+		offset = V2f(
+			getDragTracking() & DragTracking::XDragTracking ? offset3.x : 0,
+			getDragTracking() & DragTracking::YDragTracking ? offset3.y : 0
+		);
 	}
 
 	const float offsetLength = clamp( offset.length(), 0.0f, borderWidth );
