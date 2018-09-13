@@ -47,9 +47,14 @@ namespace IECoreCycles
 
 namespace AttributeAlgo
 {
+IECORECYCLES_API ccl::TypeDesc typeDesc( IECore::TypeId dataType );
+IECORECYCLES_API ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType );
 
 /// Converts a primitive variable to a ccl::Attribute inside of a ccl::AttributeSet
-IECORECYCLES_API void convertPrimitiveVariable( std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes );
+IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes );
+
+///
+IECORECYCLES_API int typeDesc(  );
 
 } // namespace AttributeAlgo
 

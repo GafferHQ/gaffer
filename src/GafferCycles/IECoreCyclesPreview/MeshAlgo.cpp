@@ -40,6 +40,8 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/TriangulateOp.h"
 
+#include "IECore/SimpleTypedData.h"
+
 // Cycles
 #include "kernel/kernel_types.h"
 #include "render/mesh.h"
@@ -56,8 +58,9 @@ using namespace IECoreCycles;
 namespace
 {
 
-void convertUVSet( const char *uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs )
+void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs )
 {
+	size_t numFaces = mesh->numFaces();
 	const V2fVectorData *uvData = runTimeCast<V2fVectorData>( uvVariable.data.get() );
 
 	if( !uvData )
@@ -77,11 +80,7 @@ void convertUVSet( const char *uvSet, const IECoreScene::PrimitiveVariable &uvVa
 	const vector<Imath::V2f> &uvs = uvData->readable();
 
 	// See if there's any indices
-	const vector<int> *indices = nullptr;
-	if( uvVariable.indices )
-	{
-		indices = &uvVariable.indices->readable();
-	}
+	const vector<int> &indices = uvVariable.indices->readable();
 	const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
 
 	// Default UVs are named "uv"
@@ -101,7 +100,7 @@ void convertUVSet( const char *uvSet, const IECoreScene::PrimitiveVariable &uvVa
 	size_t vertex = 0;
 	for( size_t i = 0; i < numFaces; ++i )
 	{
-		if( indices )
+		if( uvVariable.indices )
 		{
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				*(fdata++) = ccl::make_float3(uvs[indices[vertex]].x, uvs[indices[vertex]].y, 0.0);
@@ -124,11 +123,11 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	ccl::Mesh *cmesh = new ccl::Mesh();
 
 	size_t numFaces = mesh->numFaces();
-	size_t numVerts = mesh->variableSize(PrimitiveVariable::Vertex);
 
 	const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
 	const vector<int> &vertexIds = mesh->vertexIds()->readable();
+	size_t numVerts = points.size();
 
 	bool subdivision = false;
 	bool triangles = ( mesh->maxVerticesPerFace() == 3 ) ? true : false;
@@ -144,20 +143,25 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ngons = 0;
 		size_t ncorners = 0;
-		for( int i = 0; i < vertsPerFace.size(); ++i )
+		for( int i = 0; i < vertsPerFace.size(); i++ )
 		{
 			ngons += ( vertsPerFace[i] == 4 ) ? 0 : 1;
 			ncorners += vertsPerFace[i];
 		}
 		cmesh->reserve_subd_faces(numFaces, ngons, ncorners);
 
-		for( size_t i = 0; i < numVerts; ++i )
+		for( size_t i = 0; i < numVerts; i++ )
 			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
-		for( size_t i = 0; i < numFaces; ++i )
-			cmesh->add_subd_face( vertexIds[i*vertsPerFace[i]], vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
+		int index_offset = 0;
+		for( size_t i = 0; i < vertsPerFace.size(); i++ )
+		{
+			cmesh->add_subd_face( const_cast<int*>(&vertexIds[index_offset]), vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
+			index_offset += vertsPerFace[i];
+		}
 
 		// TODO: Cycles supports edge creases, but I am not sure if Cortex does?
+		/*
 		if(!cmesh->subd_params)
 			cmesh->subd_params = new ccl::SubdParams(cmesh);
 		ccl::SubdParams& sdparams = *cmesh->subd_params;
@@ -165,13 +169,14 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		sdparams.dicing_rate = max(0.1f, dicing_rate);
 		const int &max_level = mesh->parametersData()->member<IntData>( "ccl:max_level", 1 )->readable();
 		sdparams.max_level = max_level;
+		*/
 	}
 	else
 	{
 		cmesh->subdivision_type = (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE;
 		cmesh->reserve_mesh(numVerts, numFaces);
 
-		for( size_t i = 0; i < numVerts; ++i )
+		for( size_t i = 0; i < numVerts; i++ )
 			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
 		if( !triangles )
@@ -187,12 +192,14 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			}
 			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
 
-			for( size_t i = 0; i < triVertexIds.size(); ++i )
+			for( size_t i = 0; i < triVertexIds.size(); i+= 3 )
 				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
 		}
 		else
-			for( size_t i = 0; i < vertexIds.size(); ++i )
+		{
+			for( size_t i = 0; i < vertexIds.size(); i+= 3 )
 				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
+		}
 	}
 
 	// Primitive Variables are Attributes in Cycles
@@ -216,7 +223,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 				if ( subdivision || triangles )
 					::convertUVSet( it->first, it->second, mesh, attributes, subdivision );
 				else
-					::convertUVSet( it->first, it->second, trimesh, attributes, subdivision );
+					::convertUVSet( it->first, it->second, trimesh.get(), attributes, subdivision );
 				it = variablesToConvert.erase( it );
 			}
 			else
@@ -232,8 +239,9 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	// Finally, do a generic conversion of anything that remains.
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
+	{
 		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, attributes );
-
+	}
 	return cmesh;
 }
 
@@ -264,7 +272,7 @@ ccl::Object *MeshAlgo::convert( const std::vector<const IECoreScene::MeshPrimiti
 	ccl::float3 *mP = attr_mP->data_float3();
 	ccl::float3 *mN = attr_mN->data_float3();
 
-	// First sample has already been obtained
+	// First sample has already been obtained, so we start at 1
 	for( size_t i = 1; i < meshes.size(); ++i )
 	{
 		PrimitiveVariableMap::const_iterator pIt = meshes[i]->variables.find( "P" );
@@ -327,8 +335,6 @@ ccl::Object *MeshAlgo::convert( const std::vector<const IECoreScene::MeshPrimiti
 			}
 		}
 	}
-	mP = attr_mP->data_float3();
-	mN = attr_mN->data_float3();
 
 	ccl::Object *cobject = new ccl::Object();
 	cobject->mesh = cmesh;

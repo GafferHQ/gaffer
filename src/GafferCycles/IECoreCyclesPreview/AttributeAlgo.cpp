@@ -32,11 +32,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
-#include "IECoreScene/MeshPrimitive.h"
+#include "IECore/SimpleTypedData.h"
 
 // Cycles
 #include "kernel/kernel_types.h"
@@ -50,22 +50,66 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreCycles;
 
+namespace
+{
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
-void AttributeAlgo::convertPrimitiveVariable( const char *name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
+ccl::TypeDesc AttributeAlgo::typeDesc( IECore::TypeId dataType )
 {
-	// Work out what kind of attribute it needs to be
-	const VectorData *data = primitiveVariable.data.get();
-	GeometricData::Interpretation interp = data->getInterpretation();
+	switch( dataType )
+	{
+		case FloatVectorDataTypeId :
+			return ccl::TypeDesc::TypeFloat;
+		case Color3fVectorDataTypeId :
+		case Color4fVectorDataTypeId :
+			return ccl::TypeDesc::TypeColor;
+		case V2fVectorDataTypeId :
+		case V2iVectorDataTypeId :
+		case V3fVectorDataTypeId :
+		case V3iVectorDataTypeId :
+			return ccl::TypeDesc::TypeVector;
+		case M44fVectorDataTypeId :
+			return ccl::TypeDesc::TypeMatrix;
+		default :
+			return ccl::TypeDesc::TypeVector;
+	}
+}
+
+ccl::TypeDesc AttributeAlgo::typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType )
+{
+	switch( dataType )
+	{
+		case GeometricData::Numeric:
+			return ccl::TypeDesc::TypeFloat;
+		case GeometricData::Point :
+			return ccl::TypeDesc::TypePoint;
+		case GeometricData::Normal :
+			return ccl::TypeDesc::TypeNormal;
+		case GeometricData::Vector :
+			return ccl::TypeDesc::TypeVector;
+		case GeometricData::Color :
+			return ccl::TypeDesc::TypeColor;
+		case GeometricData::UV :
+			return ccl::TypeDesc::TypePoint;
+		default :
+			return ccl::TypeDesc::TypeVector;
+	}
+}
+
+void AttributeAlgo::convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
+{
+	ccl::TypeDesc ctype = typeDesc( primitiveVariable.data.get()->typeId() );
 	ccl::Attribute *attr = nullptr;
 	bool exists = false;
 	if( name == "N" )
 	{
 		attr = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
 		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring(name) );
+			attr = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring(name.c_str()) );
 		else
 			exists = true;
 	}
@@ -73,7 +117,7 @@ void AttributeAlgo::convertPrimitiveVariable( const char *name, const IECoreScen
 	{
 		attr = attributes.find( ccl::ATTR_STD_UV );
 		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(name) );
+			attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(name.c_str()) );
 		else
 			exists = true;
 	}
@@ -81,38 +125,21 @@ void AttributeAlgo::convertPrimitiveVariable( const char *name, const IECoreScen
 	{
 		attr = attributes.find( ccl::ATTR_STD_UV_TANGENT );
 		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_UV_TANGENT, ccl::ustring(name) );
+			attr = attributes.add( ccl::ATTR_STD_UV_TANGENT, ccl::ustring(name.c_str()) );
 		else
 			exists = true;
 	}
 	else
 	{
-		ccl::TypeDesc ctype = ccl::TypeDesc::TypePoint;
+		if( ctype != ccl::TypeDesc::TypeFloat )
+		{
+			// We need to determine what kind of vector it is
+			const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
+			if( data )
+				ctype = typeFromGeometricDataInterpretation( data->getInterpretation() );
+		}
 		ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
 		bool isUV = false;
-		switch( interp )
-		{
-			case GeometricData::Numeric:
-				ctype = ccl::TypeDesc::TypeFloat;
-				break;
-			case GeometricData::Point :
-				ctype = ccl::TypeDesc::TypePoint;
-				break;
-			case GeometricData::Normal :
-				ctype = ccl::TypeDesc::TypeNormal;
-				break;
-			case GeometricData::Vector :
-				ctype = ccl::TypeDesc::TypeVector;
-				break;
-			case GeometricData::Color :
-				ctype = ccl::TypeDesc::TypeColor;
-				break;
-			case GeometricData::UV :
-				ctype = ccl::TypeDesc::TypePoint;
-				break;
-			default :
-				break;
-		}
 		switch( primitiveVariable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
@@ -131,40 +158,40 @@ void AttributeAlgo::convertPrimitiveVariable( const char *name, const IECoreScen
 			default :
 				break;
 		}
-		attr = attributes.find( ccl::ustring(name) );
+		attr = attributes.find( ccl::ustring(name.c_str()) );
 		if( !attr )
-			attr = attributes.add( ccl::ustring(name), ctype, celem );
+			attr = attributes.add( ccl::ustring(name.c_str()), ctype, celem );
 		else
 			exists = true;
 	}
 
-	if( interp == GeometricData::Numeric )
+	if( ctype == ccl::TypeDesc::TypeFloat )
 	{
-		const FloatVectorData *data = runTimeCast<const FloatVectorData>( value.data.get() );
+		const FloatVectorData *data = runTimeCast<const FloatVectorData>( primitiveVariable.data.get() );
 		if( data )
 		{
 			const std::vector<float> &floatData = data->readable();
 
-			size_t num = floatData->readable().size();
+			size_t num = floatData.size();
 			float *cdata = attr->data_float();
 
 			for( size_t i = 0; i < num; ++i, ++cdata )
-				*cdata = attr->make_float( floatData[i] );
+				*cdata = floatData[i];
 			cdata = attr->data_float();
 		}
 		else
 		{
-			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData)." ) % name % value.data->typeName() );
+			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData)." ) % name % primitiveVariable.data->typeName() );
 			attributes.remove( attr );
 		}
 	}
 	else
 	{
-		const V3fVectorData *data = runTimeCast<const V3fVectorData>( value.data.get() );
+		const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
 		if( data )
 		{
 			const std::vector<V3f> &v3fData = data->readable();
-			size_t num = v3fData->readable().size();
+			size_t num = v3fData.size();
 			ccl::float3 *cdata = attr->data_float3();
 
 			for( size_t i = 0; i < num; ++i, ++cdata )
@@ -173,7 +200,7 @@ void AttributeAlgo::convertPrimitiveVariable( const char *name, const IECoreScen
 		}
 		else
 		{
-			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData)." ) % name % value.data->typeName() );
+			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData)." ) % name % primitiveVariable.data->typeName() );
 			attributes.remove( attr );
 		}
 	}

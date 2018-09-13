@@ -40,6 +40,7 @@
 #include "IECoreScene/CurvesPrimitive.h"
 
 #include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
 
 // Cycles
 #include "render/mesh.h"
@@ -70,21 +71,32 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	const V3fVectorData *p = curve->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
 
-	vector<float> *width = nullptr;
+	vector<float> width;
 	PrimitiveVariableMap::const_iterator wIt = curve->variables.find( "width" );
 	if( wIt != curve->variables.end() )
 	{
-		const FloatData *w = curve->variableData<FloatData>( "width", PrimitiveVariable::Vertex );
-		&width = w->readable();
+		const FloatVectorData *w = curve->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex );
+		const vector<float> &width = w->readable();
+
+		size_t key = 0;
+		for( size_t i = 0; i < numCurves; ++i )
+		{
+			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
+				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] );
+
+			cmesh->add_curve( i, 0 );
+		}
 	}
-
-	size_t key = 0;
-	for( size_t i = 0; i < numCurves; ++i )
+	else
 	{
-		for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
-			cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), (width) ? (float)width[key] : 1.0f );
+		size_t key = 0;
+		for( size_t i = 0; i < numCurves; ++i )
+		{
+			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
+				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), 1.0f );
 
-		cmesh->add_curve( i, 0 );
+			cmesh->add_curve( i, 0 );
+		}
 	}
 
 	// Convert primitive variables.
@@ -93,8 +105,9 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	variablesToConvert.erase( "width" );
 
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
+	{
 		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, cmesh->attributes );
-
+	}
 	return cmesh;
 }
 
