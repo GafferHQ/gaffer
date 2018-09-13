@@ -1,3 +1,125 @@
+0.49.0.0
+========
+
+Improvements
+------------
+
+- ArnoldAttributes : Added `shadowGroup` attribute for performing shadow linking
+  (#2754).
+- ScaleTool : Added handles for scaling in the XY, XZ and YZ planes (#2760, #2664).
+- RotateTool : Added support for free rotation by dragging on a virtual
+  sphere (#2760, #2664).
+- TranslateTool : Made XY, YX and YZ handles more visible (#2760, #2664).
+- Translate/Rotate/Scale tools :
+  - Added support for animation (#2721).
+  - Added control over the size of the handle via the `+` and `-` keys (#2671, #2769).
+- Catalogue (#2702) :
+  - Multiple images may now be selected.
+  - The selected images can now be deleted via the `Delete` and `Backspace`
+    keys.
+  - Images can now be reordered using drag and drop.
+- OSLObject/OSLImage : Added support for more vector type conversions. Among other
+  things, this allows Color4fData primitive variables to be read as `color` values
+  in OSLObject, by discarding the alpha channel (#2759).
+- GraphEditor : Added icons for Box and Reference nodes (#2762).
+- Improved error message when a dependency cycle is detected. The error now
+  includes the names of the plugs involved (#2745).
+- AnimationEditor :
+  - Keyframes are now pre-highlighted during drag-select (#2768).
+  - The current frame can be set by clicking/dragging on the time axis (#2724).
+  - When dragging keyframes in a single axis only, the viewport auto-scroll
+    is now constrained to that axis (#2724).
+- SceneReader/SceneWriter (Cortex 10.0.0-a29) :
+  - Added support for scalar attributes in Alembic files.
+  - Added support for quaternion primitive variables in Alembic files.
+- MeshTangents : Added support for non-triangular faces (Cortex 10.0.0-a30).
+- VDB : Added support for float and double metadata (Cortex 10.0.0-a31).
+
+Fixes
+-----
+
+- TypedObjectPlug : Fixed GIL management bug that could result in the
+  application hanging during operations such as choosing AOVs in the
+  image viewer (#2765).
+- ScriptNode : Fixed GIL management bug that could result in the
+  application hanging during operations such as cut & paste (#2780).
+- GraphEditor :
+  - Fixed connection visibility context menu items so that they
+    respect the read-only status of nodes (#2757).
+  - Omitted connection visibility context menu items from the menu
+    for auxiliary nodes, since such nodes do not have hideable connections
+    (#2752, #2757).
+  - Fixed bookmark drawing update bug (#2763).
+  - Fixed plug label visibility bug (#2761).
+- AnimationEditor (#2768) :
+  - Fixed bugs with framerates other than 24fps.
+  - Fixed selection management bug.
+  - Improved numerical precision of keyframe dragging.
+- Backdrop : Made resizing undoable (#2734).
+- FileMenu : Closing a backup confirmation dialogue now aborts loading
+  completely (#2749).
+- Isolate : Fixed filter matching bug in set computation (#2748).
+- Translate/Rotate/Scale tools : Fixed context management bug (#2760).
+- CollectScenes : Replaced bogus ArrayPlug input with ScenePlug (#2726).
+- Catalogue :
+  - Fixed bug that caused CatalogueSelect nodes to be parented
+    at the wrong level, if a nested Catalogue was promoted to the next level
+    (#2702).
+  - Fixed bug whereby image order changed if image deletion was undone (#2767).
+- Offset : Fixed hangs caused by empty data windows (#2770).
+- VDB : Fixed crashes caused by thread-safety bug. This manifested most
+  commonly when instancing VDB objects (Cortex 10.0.0-a30).
+- Seeds : Fixed cancellation bug (Cortex 10.0.0-a31).
+- SceneReader : Fixed crashes caused by thread-safety bug in AlembicScene
+  (Cortex 10.0.0-a32).
+
+API
+---
+
+- Dispatcher : Fixed crashes caused by passing `None` to `frameRange()` method
+  in Python (#2716).
+- Added AttributeVisualiser.h to installation (#2744).
+- ConfirmationDialogue : `waitForConfirmation()` now returns `None` if the user
+  closes the dialogue (#2749).
+- StandardStyle (#2760) :
+  - Added support for XY,XZ and YZ axes in `renderScaleHandle()`.
+  - Added support for XYZ rotation handle in `renderRotateHandle()`.
+- Handle : Added `rasterScaleFactor()` protected method (#2760).
+- MetadataAlgo : Added `bookmarkedAffectedByChange()` method (#2763).
+- GraphComponent (#2767) :
+  - Added python binding for `del graphComponent[childIndex]`.
+  - The original child order is now restored when undoing
+    calls to `removeChild()`.
+- DependencyNode : Fixed crashes caused by Python derived classes returning
+  `None` from `affects()` overrides (#2771).
+- ViewportGadget : Added support for enabling/disabling drag tracking separately
+  in each axis (#2724).
+
+Documentation
+-------------
+
+- Added guidelines for contributing (#2713).
+- Added code of conduct (#2713).
+- Reworked the "Managing Complexity" section (#2623).
+- Improved installation and configuration sections (#2624).
+- Improved "Getting Started" tutorial (#2629).
+
+Breaking Changes
+----------------
+
+- ScaleHandle : `scaling()` method now returns a `V3f` (#2760).
+- RotateHandle (#2760) :
+  - Changed signature of `rotation()` method.
+  - Added private member data.
+- RotateTool (#2760) :
+  - Added private member data.
+  - Changed signature of `rotate()` method.
+- Style : Added `highlightVector` argument to `renderRotateHandle()` method (#2760).
+- TransformTool : Added argument to `updateHandles()` method (#2671, #2769).
+- ViewportGadget (#2724) :
+  - Changed function signatures for `setDragTracking()` and `getDragTracking()` methods.
+  - Changed private member variables.
+
 0.48.1.0
 ========
 
