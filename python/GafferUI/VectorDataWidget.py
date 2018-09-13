@@ -1300,6 +1300,26 @@ _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate 
 _Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V2fVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.V3iVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V2iVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.Box2iVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Box2fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Box2dVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.Box3iVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Box3fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Box3dVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.QuatfVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.QuatdVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.M33fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.M33dVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.M44fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.M44dVectorData.staticTypeId(), _NumericDelegate )
 
 class _BoolDelegate( _Delegate ) :
 
