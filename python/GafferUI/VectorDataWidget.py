@@ -1025,6 +1025,48 @@ class _CompoundDataAccessor( _DataAccessor ) :
 _DataAccessor.registerType( IECore.Color3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.Color4fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
+class _MatrixDataAccessor ( _DataAccessor ) :
+	def __init__( self, data, heading = "" ) :
+
+		_DataAccessor.__init__( self, data, heading = heading )
+
+	def numColumns( self ) :
+
+		scalarType = IECore.DataTraits.valueTypeFromSequenceType( type ( self.data() ) )()
+		if isinstance(scalarType, imath.M33f) or isinstance(scalarType, imath.M33d) :
+			return 9
+		elif isinstance(scalarType, imath.M44f) or isinstance(scalarType, imath.M44d) :
+			return 16
+
+
+	def headerLabel( self, columnIndex ) :
+
+		return "{0}[{1}]".format(self.heading, columnIndex)
+
+	def setElement( self, rowIndex, columnIndex, value ) :
+
+		element = self.data()[rowIndex]
+		element[columnIndex] = GafferUI._Variant.fromVariant( value )
+		self.data()[rowIndex] = element
+
+	def getElement( self, rowIndex, columnIndex ) :
+
+		if self.numColumns() == 16:
+			dimension = 4
+		else:
+			dimension = 3
+
+		y = columnIndex % dimension
+		x = (columnIndex - y) / dimension
+		item = self.data()[rowIndex]
+
+		return GafferUI._Variant.toVariant( item[x][y] )
+
+
+_DataAccessor.registerType( IECore.M33fVectorData.staticTypeId(), _MatrixDataAccessor )
+_DataAccessor.registerType( IECore.M33dVectorData.staticTypeId(), _MatrixDataAccessor )
+_DataAccessor.registerType( IECore.M44fVectorData.staticTypeId(), _MatrixDataAccessor )
+_DataAccessor.registerType( IECore.M44dVectorData.staticTypeId(), _MatrixDataAccessor )
 
 class _StringDataAccessor( _DataAccessor ) :
 
