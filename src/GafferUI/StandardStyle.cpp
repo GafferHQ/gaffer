@@ -858,7 +858,7 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glEnd();
 }
 
-void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
+void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, Gaffer::Animation::Type type, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
@@ -870,19 +870,43 @@ void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::
 
 	const Imath::V3f start3 = Imath::V3f( start.x, start.y, 0 );
 	const Imath::V3f end3 = Imath::V3f( end.x, end.y, 0 );
-	const Imath::V3f startTangent3 = Imath::V3f( startTangent.x, startTangent.y, 0 );
-	const Imath::V3f endTangent3 = Imath::V3f( endTangent.x, endTangent.y, 0 );
 
-	const V3f dir = ( end3 - start3 ).normalized();
+	if( type == Gaffer::Animation::Linear )
+	{
+		const Imath::V3f startTangent3 = Imath::V3f( startTangent.x, startTangent.y, 0 );
+		const Imath::V3f endTangent3 = Imath::V3f( endTangent.x, endTangent.y, 0 );
 
-	glUniform3fv( g_v0Parameter, 1, start3.getValue() );
-	glUniform3fv( g_v1Parameter, 1, end3.getValue() );
-	glUniform3fv( g_t0Parameter, 1, ( startTangent3 != V3f( 0 ) ? startTangent3 :  dir ).getValue() );
-	glUniform3fv( g_t1Parameter, 1, ( endTangent3 != V3f( 0 ) ? endTangent3 : -dir ).getValue() );
+		const V3f dir = ( end3 - start3 ).normalized();
 
-	glUniform1f( g_endPointSizeParameter, g_endPointSize );
+		glUniform3fv( g_v0Parameter, 1, start3.getValue() );
+		glUniform3fv( g_v1Parameter, 1, end3.getValue() );
+		glUniform3fv( g_t0Parameter, 1, ( startTangent3 != V3f( 0 ) ? startTangent3 :  dir ).getValue() );
+		glUniform3fv( g_t1Parameter, 1, ( endTangent3 != V3f( 0 ) ? endTangent3 : -dir ).getValue() );
 
-	glCallList( connectionDisplayList() );
+		glUniform1f( g_endPointSizeParameter, g_endPointSize );
+
+		glCallList( connectionDisplayList() );
+	}
+	else if( type == Gaffer::Animation::Step )
+	{
+		const Imath::V3f mid3( end3.x, start3.y, 0 );
+
+		glUniform3fv( g_v0Parameter, 1, start3.getValue() );
+		glUniform3fv( g_v1Parameter, 1, mid3.getValue() );
+		glUniform3fv( g_t0Parameter, 1, V3f( 1, 0, 0 ).getValue() );
+		glUniform3fv( g_t1Parameter, 1, V3f( -1, 0, 0 ).getValue() );
+
+		glCallList( connectionDisplayList() );
+
+		const V3f dir = ( end3 - mid3 ).normalized();
+
+		glUniform3fv( g_v0Parameter, 1, mid3.getValue() );
+		glUniform3fv( g_v1Parameter, 1, end3.getValue() );
+		glUniform3fv( g_t0Parameter, 1, dir.getValue() );
+		glUniform3fv( g_t1Parameter, 1, (-dir).getValue() );
+
+		glCallList( connectionDisplayList() );
+	}
 }
 
 void StandardStyle::renderAnimationKey( const Imath::V2f &position, State state, float size, const Imath::Color3f *userColor ) const

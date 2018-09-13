@@ -66,17 +66,18 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 
 		self.changedSignal()( self )
 
-	def __hasAnimatedChild( self, graphComponent ) :
+	def __getAnimatedChild( self, graphComponent ) :
 
 		for child in graphComponent.children() :
 
 			if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
-				return True
+				return child
 
-			if self.__hasAnimatedChild( child ) :
-				return True
+			animatedChild = self.__getAnimatedChild( child )
+			if animatedChild :
+				return animatedChild
 
-		return False
+		return None
 
 	def __plugInputChanged( self, plug ) :
 		# TODO: We can be a bit more selective here and only trigger updates
@@ -96,15 +97,35 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 			if not isinstance( candidateGraphComponent, ( Gaffer.Node, Gaffer.Plug ) ) :
 				continue
 
+			isAnimatedPlug = isinstance( candidateGraphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( candidateGraphComponent )
+			animatedComponent = candidateGraphComponent if isAnimatedPlug else self.__getAnimatedChild( candidateGraphComponent )
+
+			if not isAnimatedPlug and not animatedComponent :
+				continue
+
+			# The remaining paths are of valid type and are either animated or
+			# have an animated child. We only show those that are chosen via
+			# current node selection.
+
+			keepPath = False
+
 			for selected in self.__selection :
+				if candidateGraphComponent == selected or selected.isAncestorOf( candidateGraphComponent ) or candidateGraphComponent.isAncestorOf( selected ) :
+					keepPath = True
+					break
 
-				if not candidateGraphComponent == selected and not selected.isAncestorOf( candidateGraphComponent ) and not candidateGraphComponent.isAncestorOf( selected ) :
-					continue
+			# It's possible that we're looking at unselected
+			# GraphComponents that need adding because the user selected
+			# the respective Animation node.
 
-				if ( isinstance( candidateGraphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( candidateGraphComponent ) ) or self.__hasAnimatedChild( candidateGraphComponent ) :
-					# If we show this component, we should be aware when its name is changes.
-					self.__nameChangedConnections.append( candidateGraphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
-					result.append( path )
+			animationNode = animatedComponent.getInput().ancestor( Gaffer.Animation )
+			if animationNode and animationNode in self.__selection :
+				keepPath = True
+
+			if keepPath :
+				# If we show this component, we should be aware when its name is changed.
+				self.__nameChangedConnections.append( candidateGraphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
+				result.append( path )
 
 		return result
 

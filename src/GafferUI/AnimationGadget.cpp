@@ -315,6 +315,8 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 			renderCurve( curvePlug, style );
 		}
 
+		renderFrameIndicator( style );
+
 		break;
 	}
 
@@ -349,8 +351,6 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 	{
 		AxisDefinition xAxis, yAxis;
 		computeGrid( viewportGadget, m_context->getFramesPerSecond(), xAxis, yAxis );
-
-		renderFrameIndicator( style );
 
 		// draw axes on top of everything.
 		Imath::Color4f axesColor( 60.0 / 255, 60.0 / 255, 60.0 / 255, 1.0 );
@@ -1253,22 +1253,11 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 		if( previousKey )
 		{
-			// \todo: needs tangent computation/hand-off as soon as we support more interpolation modes
-			//        consider passing interpolation into renderCurveSegment to handle all drawing there
-
 			Imath::Color3f userColor( 1.0 ); // curves render white per default
 			colorFromName( drivenPlugName( curvePlug ), userColor );
 
-			if( key.getType() == Gaffer::Animation::Linear )
-			{
-				style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &userColor );
-			}
-			else if( key.getType() == Gaffer::Animation::Step )
-			{
-				// \todo: replace with linear curve segment to get highlighting
-				style->renderLine( IECore::LineSegment3f( V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, previousKeyPosition.y, 0) ), 0.5, &userColor );
-				style->renderLine( IECore::LineSegment3f( V3f( keyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ), 0.5, &userColor );
-			}
+			// \todo: needs tangent computation/hand-off as soon as we support more interpolation modes
+			style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), key.getType(), isHighlighted ? Style::HighlightedState : Style::NormalState, &userColor );
 		}
 
 		previousKey = &key;
