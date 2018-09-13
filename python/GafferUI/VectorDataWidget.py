@@ -1025,6 +1025,51 @@ class _CompoundDataAccessor( _DataAccessor ) :
 _DataAccessor.registerType( IECore.Color3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.Color4fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
+
+class _BoxDataAccessor ( _CompoundDataAccessor ):
+	def __init__( self, data, heading = "" ) :
+
+		_DataAccessor.__init__( self, data, heading = heading )
+
+	def numColumns( self ) :
+
+		v = IECore.DataTraits.valueTypeFromSequenceType( type( self.data() ) )
+		return v().min().dimensions() * 2
+
+	def headerLabel( self, columnIndex ) :
+
+		if self.numColumns() == 4:
+			return [ self.heading + ".minX", self.heading + ".minY", self.heading + ".maxX", self.heading + ".maxY"][columnIndex]
+		else:
+			return [ self.heading + ".minX", self.heading + ".minY", self.heading + ".minZ", self.heading + ".maxX", self.heading + ".maxY", self.heading + ".maxZ"][columnIndex]
+
+	def setElement( self, rowIndex, columnIndex, value ) :
+
+		element = self.data()[rowIndex]
+		element[columnIndex] = GafferUI._Variant.fromVariant( value )
+		self.data()[rowIndex] = element
+
+	def getElement( self, rowIndex, columnIndex ) :
+
+		dimension = self.numColumns() / 2
+
+		index = columnIndex % dimension
+		minMax = (columnIndex - index) / dimension
+		item = self.data()[rowIndex]
+		if minMax == 0:
+			return GafferUI._Variant.toVariant( item.min()[index] )
+		else:
+			return GafferUI._Variant.toVariant( item.max()[index] )
+
+_DataAccessor.registerType( IECore.Box2iVectorData.staticTypeId(), _BoxDataAccessor )
+_DataAccessor.registerType( IECore.Box2fVectorData.staticTypeId(), _BoxDataAccessor )
+_DataAccessor.registerType( IECore.Box2dVectorData.staticTypeId(), _BoxDataAccessor )
+
+_DataAccessor.registerType( IECore.Box3iVectorData.staticTypeId(), _BoxDataAccessor )
+_DataAccessor.registerType( IECore.Box3fVectorData.staticTypeId(), _BoxDataAccessor )
+_DataAccessor.registerType( IECore.Box3dVectorData.staticTypeId(), _BoxDataAccessor )
+
+
 class _MatrixDataAccessor ( _DataAccessor ) :
 	def __init__( self, data, heading = "" ) :
 
