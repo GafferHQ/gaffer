@@ -59,7 +59,7 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( graphGadget )
-		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
+		self.__gadgetWidget.getViewportGadget().setDragTracking( GafferUI.ViewportGadget.DragTracking.XDragTracking | GafferUI.ViewportGadget.DragTracking.YDragTracking )
 		self.__frame( scriptNode.selection() )
 
 		self.__buttonPressConnection = self.__gadgetWidget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )

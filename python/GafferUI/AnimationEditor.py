@@ -144,7 +144,6 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				  GafferUI.GLWidget.BufferOptions.Double, ] ), )
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( self.__animationGadget )
-		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
 		self.__gadgetWidget.getViewportGadget().setVariableAspectZoom( True )
 
 		# Assemble UI
