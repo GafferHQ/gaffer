@@ -275,6 +275,22 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return self.__model.vectorData()
 
+	def setColumnToolTips( self, columnToolTips ) :
+
+		self.__columnToolTips = columnToolTips
+
+	def getColumnToolTips( self ):
+
+		return self.__columnToolTips
+
+	def setHeaderPrefix( self, prefix ):
+
+		self.__headerPrefix = prefix
+
+	def getHeaderPrefix( self ):
+
+		return self.__headerPrefix
+
 	def setEditable( self, editable ) :
 
 		# set object name so stylesheet can differentiate editable from
