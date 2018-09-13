@@ -76,6 +76,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		data=None,
 		editable=True,
 		header=False,
+		headerPrefix=None,
 		showIndices=True,
 		minimumVisibleRows=8,
 		columnToolTips=None,
@@ -173,6 +174,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__headerOverride = header
 		else :
 			self.__headerOverride = None
+
+		self.__headerPrefix = headerPrefix
 
 		self.__overrideStretch = overrideStretch
 		self.__extendColumnToolTipsToData  = extendColumnToolTipsToData
@@ -810,16 +813,30 @@ class _Model( QtCore.QAbstractTableModel ) :
 		self.__data = data
 		self.__editable = editable
 		self.__header = header
-		self.__columnToolTips = columnToolTips
+		self.__columnToolTips = None
 		self.__columnEditability = columnEditability
+
 
 		self.__columns = []
 		self.__accessors = []
-		for d in self.__data :
-			accessor = _DataAccessor.create( d )
+		index = 0
+		if not headerPrefix:
+			headerPrefixes = [None] * len( self.__data )
+		else:
+			headerPrefixes = headerPrefix
+
+		if columnToolTips:
+			self.__columnToolTips = []
+
+		for d, header in zip(self.__data, headerPrefixes) :
+			accessor = _DataAccessor.create( d, name = header )
 			assert( accessor is not None )
 			for i in range( 0, accessor.numColumns() ) :
 				self.__columns.append( IECore.Struct( accessor=accessor, relativeColumnIndex=i ) )
+				if columnToolTips :
+					self.__columnToolTips.append( columnToolTips[index] )
+
+			index += 1
 			self.__accessors.append( accessor )
 
 		if self.__columnToolTips is not None :
@@ -960,9 +977,10 @@ class _Model( QtCore.QAbstractTableModel ) :
 # Qt (QVariant) representation.
 class _DataAccessor( object ) :
 
-	def __init__( self, data ) :
+	def __init__( self, data, heading = ''  ) :
 
 		self.__data = data
+		self.heading = heading
 
 	def data( self ) :
 
@@ -974,7 +992,10 @@ class _DataAccessor( object ) :
 
 	def headerLabel( self, columnIndex ) :
 
-		return [ "X", "Y", "Z" ][columnIndex]
+		if self.heading:
+			return self.heading
+
+		return "value"
 
 	def defaultElement( self ) :
 
@@ -993,13 +1014,13 @@ class _DataAccessor( object ) :
 	#################################
 
 	@classmethod
-	def create( cls, data ) :
+	def create( cls, data, name = "" ) :
 
 		typeIds = [ data.typeId() ] + IECore.RunTimeTyped.baseTypeIds( data.typeId() )
 		for typeId in typeIds :
 			creator = cls.__typesToCreators.get( typeId, None )
 			if creator is not None :
-				return creator( data )
+				return creator( data, heading = name )
 
 		return None
 
@@ -1025,21 +1046,34 @@ _DataAccessor.registerType( IECore.UInt64VectorData.staticTypeId(), _DataAccesso
 
 class _CompoundDataAccessor( _DataAccessor ) :
 
-	def __init__( self, data ) :
+	def __init__( self, data, heading = "" ) :
 
-		_DataAccessor.__init__( self, data )
+		_DataAccessor.__init__( self, data, heading = heading )
 
 	def numColumns( self ) :
 
 		v = IECore.DataTraits.valueTypeFromSequenceType( type( self.data() ) )
 		return v.dimensions()
 
-	def headerLabel( self, columnIndex ) :
+	def headings( self ):
 
 		if isinstance( self.data(), ( IECore.Color3fVectorData, IECore.Color4fVectorData ) ) :
-			return [ "R", "G", "B", "A" ][columnIndex]
+			_headings = ["R", "G", "B", "A"]
 		else :
-			return [ "X", "Y", "Z", "W" ][columnIndex]
+			_headings = ["X", "Y", "Z", "W"]
+
+		if self.heading :
+			return [ self.heading + "." + i for i in _headings]
+
+		return _headings
+
+	def headerLabel( self, columnIndex ) :
+
+		headings = self.headings()
+		if len( headings ) == 1:
+			return "value"
+		else:
+			return headings[columnIndex]
 
 	def setElement( self, rowIndex, columnIndex, value ) :
 
@@ -1177,9 +1211,9 @@ _DataAccessor.registerType( IECore.M44dVectorData.staticTypeId(), _MatrixDataAcc
 
 class _StringDataAccessor( _DataAccessor ) :
 
-	def __init__( self, data ) :
+	def __init__( self, data, heading = "" ) :
 
-		_DataAccessor.__init__( self, data )
+		_DataAccessor.__init__( self, data, heading = heading )
 
 	def defaultElement( self ) :
 
@@ -1189,9 +1223,9 @@ _DataAccessor.registerType( IECore.StringVectorData.staticTypeId(), _StringDataA
 
 class _InternedStringDataAccessor( _StringDataAccessor ) :
 
-	def __init__( self, data ) :
+	def __init__( self, data, heading = "" ) :
 
-		_DataAccessor.__init__( self, data )
+		_DataAccessor.__init__( self, data, heading = heading )
 
 	def getElement( self, rowIndex, columnIndex ) :
 
@@ -1282,7 +1316,7 @@ class _Delegate( QtWidgets.QStyledItemDelegate ) :
 		return None
 
 	@classmethod
-	def create( cls, data ) :
+	def create( cls, data, name = "" ) :
 
 		typeIds = [ data.typeId() ] + IECore.RunTimeTyped.baseTypeIds( data.typeId() )
 		for typeId in typeIds :
