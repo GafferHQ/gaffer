@@ -46,11 +46,22 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
+namespace
+{
+
+void setup( Dot &dot, const Plug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	dot.setup( &plug );
+}
+
+} // namespace
+
 void GafferModule::bindDot()
 {
 
 	scope s = DependencyNodeClass<Dot>()
-		.def( "setup", &Dot::setup )
+		.def( "setup", &setup )
 	;
 
 	enum_<Dot::LabelType>( "LabelType" )
