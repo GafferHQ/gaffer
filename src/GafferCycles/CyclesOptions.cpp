@@ -58,11 +58,11 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:background", new IECore::BoolData( false ), "useBackground", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "progressive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:progressive", new IECore::StringData( "path" ), "integrator", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "experimental", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:samples", new IECore::IntData( 128 ), "samples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), "tileSize", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:tile_order", new IECore::StringData( "tileCenter" ), "tileOrder", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:tile_order", new IECore::StringData( "tile_center" ), "tileOrder", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:start_resolution", new IECore::IntData( 64 ), "startResolution", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:pixel_size", new IECore::IntData( 64 ), "pixelSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
@@ -124,14 +124,13 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:integrator:seed", new IECore::IntData( 0 ), "seed", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), "sampleClampDirect", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), "sampleClampDirect", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:motion_blur", new IECore::BoolData( false ), "motionBlur", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:integrator:aa_samples", new IECore::IntData( 0 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:diffuse_samples", new IECore::IntData( 1 ), "diffuseSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:glossy_samples", new IECore::IntData( 1 ), "glossySamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:transmission_samples", new IECore::IntData( 1 ), "transmissionSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:ao_samples", new IECore::IntData( 1 ), "aoSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:mesh_light_samples", new IECore::IntData( 1 ), "meshLightSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:integrator:mesh_light_samples", new IECore::IntData( 1 ), "meshlightSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:subsurface_samples", new IECore::IntData( 1 ), "subsurfaceSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:volume_samples", new IECore::IntData( 1 ), "volumeSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:start_sample", new IECore::IntData( 0 ), "startSample", Gaffer::Plug::Default, false );

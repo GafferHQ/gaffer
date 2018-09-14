@@ -53,9 +53,6 @@ IECORECYCLES_API ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::Geom
 /// Converts a primitive variable to a ccl::Attribute inside of a ccl::AttributeSet
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes );
 
-///
-IECORECYCLES_API int typeDesc(  );
-
 } // namespace AttributeAlgo
 
 } // namespace IECoreCycles
