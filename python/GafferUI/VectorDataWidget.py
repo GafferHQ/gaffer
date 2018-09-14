@@ -272,6 +272,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 	## Returns the data being displayed. This is always returned as a list of
 	# VectorData instances, even if only one instance was passed to setData().
 	def getData( self ) :
+		if not self.__model:
+			return []
 
 		return self.__model.vectorData()
 
