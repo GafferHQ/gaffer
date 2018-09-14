@@ -130,6 +130,8 @@ class GAFFER_API Metadata
 		static void deregisterValue( IECore::InternedString target, IECore::InternedString key );
 		static void deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedString key );
 		static void deregisterValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
+
+		/// \undoable
 		static void deregisterValue( GraphComponent *target, IECore::InternedString key );
 
 		/// Utilities
