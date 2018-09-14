@@ -167,12 +167,40 @@ typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
 }
 
 template<typename T>
+void setValue( T &plug, const typename T::ValueType &value )
+{
+	IECorePython::ScopedGILRelease r;
+	return plug.setValue( value );
+}
+
+template<typename T>
 typename T::ValueType getValue( const T &plug )
 {
 	// Must release GIL in case computation spawns threads which need
 	// to reenter Python.
 	IECorePython::ScopedGILRelease r;
 	return plug.getValue();
+}
+
+template<typename T>
+unsigned addPoint( T &plug )
+{
+	IECorePython::ScopedGILRelease r;
+	return plug.addPoint();
+}
+
+template<typename T>
+void removePoint( T &plug, unsigned pointIndex )
+{
+	IECorePython::ScopedGILRelease r;
+	plug.removePoint( pointIndex );
+}
+
+template<typename T>
+void clearPoints( T &plug )
+{
+	IECorePython::ScopedGILRelease r;
+	plug.clearPoints();
 }
 
 template<typename T>
@@ -189,12 +217,12 @@ void bind()
 			)
 		)
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
-		.def( "setValue", &T::setValue )
+		.def( "setValue", &setValue<T> )
 		.def( "getValue", &getValue<T> )
 		.def( "numPoints", &T::numPoints )
-		.def( "addPoint", &T::addPoint )
-		.def( "removePoint", &T::removePoint )
-		.def( "clearPoints", &T::clearPoints )
+		.def( "addPoint", &addPoint<T> )
+		.def( "removePoint", &removePoint<T> )
+		.def( "clearPoints", &clearPoints<T> )
 		.def( "pointPlug",  &pointPlug<T> )
 		.def( "pointXPlug", &pointXPlug<T> )
 		.def( "pointYPlug", &pointYPlug<T> )
