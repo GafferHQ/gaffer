@@ -121,6 +121,12 @@ class BoxIOSerialiser : public NodeSerialiser
 
 };
 
+void setup( BoxIO &b, const Plug *plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	b.setup( plug );
+}
+
 PlugPtr plug( BoxIO &b )
 {
 	return b.plug();
@@ -196,7 +202,7 @@ void GafferModule::bindSubGraph()
 	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
 
 	NodeClass<BoxIO>( nullptr, no_init )
-		.def( "setup", &BoxIO::setup, ( arg( "plug" ) = object() ) )
+		.def( "setup", &setup, ( arg( "plug" ) = object() ) )
 		.def( "plug", &plug )
 		.def( "promotedPlug", &promotedPlug )
 		.def( "promote", &BoxIO::promote, return_value_policy<CastToIntrusivePtr>() )
