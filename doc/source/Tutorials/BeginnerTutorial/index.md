@@ -86,9 +86,9 @@ In the _Viewer_, you can now see the bounding boxes of the objects at several lo
 
 1. In the _Hierarchy View_, <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *C_head_GRP*. All of the children of *C_head_GRP* will expand. Now the _Viewer_ shows all of the geometry that comprises Gaffy's head.
 
-2. <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *L_legUpper_GRP*. All the locations under *L_legUpper_GRP* will expand. Now the _Viewer_ also shows all of the geometry that comprises Gaffy's left leg.
+2. <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *R_legUpper_GRP*. All the locations under *R_legUpper_GRP* will expand. Now the _Viewer_ also shows all of the geometry that comprises Gaffy's right leg.
 
-![The head and left leg geometry, expanded](images/mainHeadAndLeftLegExpanded.png "The head and left leg geometry, expanded")
+![The geometry of the head and right leg, expanded](images/mainHeadAndLeftLegExpanded.png "The geometry of the head and right leg, expanded")
 
 
 ### Navigating the scene using the _Viewer_ ###
@@ -97,19 +97,19 @@ As you explored the scene using the _Hierarchy View_, the _Viewer_ updated to sh
 
 You can expand the scene hierarchy using the arrow keys and the _Viewer:_
 
-1. In the _Viewer_, select Gaffy's right leg by click-dragging a marquee over its bounding box. The leg's bounding box will highlight.
+1. In the _Viewer_, click-drag and release a marquee over the bounding box for Gaffy's left leg.
 
-2. Hit <kbd>↓</kbd> to expand the selection down one level. The highlighted bounding box will be replaced by two smaller bounding boxes, indicating that you have expanded the location and selected the right leg's children.
+2. Hit <kbd>↓</kbd> to expand the selection down one level. The highlighted bounding box will be replaced by two smaller bounding boxes, indicating that you have expanded the location's children.
 
-3. Hit <kbd>Shift</kbd> + <kbd>↓</kbd> to fully expand all the right leg's locations.
+3. Hit <kbd>Shift</kbd> + <kbd>↓</kbd> to fully expand all the left leg's child locations.
 
-    ![The head and legs geometry, expanded](images/viewerHeadAndLegsExpanded.png "The head and legs geometry, expanded")
+    ![The head and leg geometry, expanded](images/viewerHeadAndLegsExpanded.png "The head and leg geometry, expanded")
 
-You can also collapse the selection in a similar manner through the _Viewer:_
+You can also collapse locations in a similar manner through the _Viewer:_
 
-1. With the right leg geometry still selected, hover the mouse inside the _Viewer_.
+1. With the geometry of the left leg still selected, hover the mouse inside the _Viewer_.
 
-2. Hit <kbd>↑</kbd>. The leg geometry will collapse into its bounding boxes.
+2. Hit <kbd>↑</kbd>. The geometry will collapse into its bounding boxes.
 
 3. Keep hitting <kbd>↑</kbd> until all of Gaffy's geometry is collapsed back into the root bounding box.
 

@@ -53,7 +53,7 @@ __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = hierarchyView, imagePath = "images/hierarchySceneExpandedTwoLevels.png" )
 
 # GafferBot head and left leg in main window
-paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
+paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/R_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
@@ -61,7 +61,7 @@ viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainHeadAndLeftLegExpanded.png" )
 
 # GafferBot head and both legs in Viewer
-paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/R_legUpper_GRP" ] )
+paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
