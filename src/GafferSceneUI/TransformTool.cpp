@@ -42,6 +42,7 @@
 #include "GafferScene/Group.h"
 #include "GafferScene/ObjectSource.h"
 #include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SceneReader.h"
 #include "GafferScene/Transform.h"
 
 #include "Gaffer/Animation.h"
@@ -216,6 +217,15 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 					break;
 			}
 			selection.transformSpace = transform->inPlug()->fullTransform( spacePath );
+		}
+	}
+	else if( const GafferScene::SceneReader *sceneReader = runTimeCast<const GafferScene::SceneReader>( node ) )
+	{
+		const ScenePlug::ScenePath &path = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		if( path.size() == 1 )
+		{
+			selection.transformPlug = const_cast<TransformPlug *>( sceneReader->transformPlug() );
+			selection.transformSpace = M44f();
 		}
 	}
 
