@@ -92,7 +92,7 @@ viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainGroupNode.png" )
 
 # Camera repositioned, with translate tool on, in Viewer
-cameraNode["transform"]["translate"].setValue( imath.V3f( 19, 13, 31 ) )
+cameraNode["transform"]["translate"].setValue( imath.V3f( 16, 13, 31 ) )
 viewer.view().viewportGadget().frame( groupNode["out"].bound( "/group" ) )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/group/camera" ] ) )
 for i in viewer._Viewer__toolChooser.tools():
