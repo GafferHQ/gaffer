@@ -1068,24 +1068,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					else if( name == g_tileOrderOptionName )
 					{
-						if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-						{
-							const string optionName& = data->readable();
-							if( optionName == "center" )
-								new_session_params.tile_order = TILE_CENTER;
-							else if( optionName == "right_To_left" )
-								new_session_params.tile_order = TILE_RIGHT_TO_LEFT;
-							else if( optionName == "left_to_right" )
-								new_session_params.tile_order = TILE_LEFT_TO_RIGHT;
-							else if( optionName == "top_to_bottom" )
-								new_session_params.tile_order = TILE_TOP_TO_BOTTOM;
-							else if( optionName == "bottom_to_top" )
-								new_session_params.tile_order = TILE_BOTTOM_TO_TOP;
-							else if( optionName == "hilbert_spiral" )
-								new_session_params.tile_order = TILE_HILBERT_SPIRAL;
-							else
-								IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % optionName.string(), name.string() );
-						}
+						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+							new_session_params.tile_order = (ccl::TileOrder)data->readable();
 					}
 					else if( name == g_startResolutionOptionName )
 					{

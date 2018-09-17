@@ -43,6 +43,24 @@ def __renderingSummary( plug ) :
 
 	info = []
 
+	if plug["device"]["enabled"].getValue() :
+		info.append( "Device {}".format( plug["device"]["value"].getValue() ) )
+
+	if plug["featureSet"]["enabled"].getValue() :
+		if plug["featureSet"]["value"].getValue() :
+			info.append( "Experimental Features" )
+		else :
+			info.append( "Standard Features" )
+
+	if plug["shadingSystem"]["enabled"].getValue() :
+		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
+
+	if plug["method"]["enabled"].getValue() :
+		if plug["method"]["value"].getValue() == 0 :
+			info.append( "Branched-Path Integrator" )
+		elif plug["method"]["value"].getValue() == 1 :
+			info.append( "Path Integrator" )
+
 	if plug["numThreads"]["enabled"].getValue() :
 		info.append( "Threads {}".format( plug["numThreads"]["value"].getValue() ) )
 
@@ -67,6 +85,21 @@ def __samplingSummary( plug ) :
 				"{} {}".format( sampleType, plug[childName]["value"].getValue() )
 			)
 
+	if plug["samplingPattern"]["enabled"].getValue() :
+		info.append( "Sampling Pattern {}".format( plug["samplingPattern"]["value"].getValue() ) )
+
+	if plug["samplingAllLightsDirect"]["enabled"].getValue() :
+		info.append( "All Lights Direct {}".format( plug["samplingAllLightsDirect"]["value"].getValue() ) )
+
+	if plug["samplingAllLightsIndirect"]["enabled"].getValue() :
+		info.append( "All Lights Indirect {}".format( plug["samplingAllLightsIndirect"]["value"].getValue() ) )
+
+	if plug["lightSamplingThreshold"]["enabled"].getValue() :
+		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
+
+	if plug["blurGlossy"]["enabled"].getValue() :
+		info.append( "Blur Glossy {}".format( plug["blurGlossy"]["value"].getValue() ) )
+
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
@@ -77,7 +110,7 @@ def __rayDepthSummary( plug ) :
 		info.append( "Max Bounces {}".format( plug["maxBounces"]["value"].getValue() ) )
 
 	for rayType in ( "Diffuse", "Glossy", "Transmission", "Volume" ) :
-		childName = "max%sBounce" + rayType
+		childName = "max%sBounce" % rayType
 		if plug[childName]["enabled"].getValue() :
 			info.append(
 				"{} {}".format( rayType, plug[childName]["value"].getValue() )
@@ -85,6 +118,98 @@ def __rayDepthSummary( plug ) :
 
 	if plug["transparentMaxBounce"]["enabled"].getValue() :
 		info.append( "Transparency {}".format( plug["transparentMaxBounce"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
+def __volumesSummary( plug ) :
+
+	info = []
+
+	if plug["volumeStepSize"]["enabled"].getValue() :
+		info.append( "Step Size {}".format( plug["volumeStepSize"]["value"].getValue() ) )
+
+	if plug["volumeMaxSteps"]["enabled"].getValue() :
+		info.append( "Max Steps {}".format( plug["volumeMaxSteps"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
+def __causticsSummary( plug ) :
+
+	info = []
+
+	if plug["causticsReflective"]["enabled"].getValue() :
+		info.append( "Reflective Caustics {}".format( plug["causticsReflective"]["value"].getValue() ) )
+
+	if plug["causticsRefractive"]["enabled"].getValue() :
+		info.append( "Refractive Caustics {}".format( plug["causticsRefractive"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
+def __subdivisionSummary( plug ) :
+
+	info = []
+
+	if plug["dicingRate"]["enabled"].getValue() :
+		info.append( "Dicing Rate {}".format( plug["dicingRate"]["value"].getValue() ) )
+
+	if plug["maxSubdivisions"]["enabled"].getValue() :
+		info.append( "Max Subdivisions {}".format( plug["maxSubdivisions"]["value"].getValue() ) )
+
+	if plug["dicingCamera"]["enabled"].getValue() :
+		info.append( "Dicing Camera {}".format( plug["dicingCamera"]["value"].getValue() ) )
+
+	if plug["offscreenDicingScale"]["enabled"].getValue() :
+		info.append( "Offscreen Dicing Scale {}".format( plug["offscreenDicingScale"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
+def __filmSummary( plug ) :
+
+	info = []
+
+	if plug["exposure"]["enabled"].getValue() :
+		info.append( "Exposure {}".format( plug["exposure"]["value"].getValue() ) )
+
+	if plug["transparent"]["enabled"].getValue() :
+		info.append( "Transparent {}".format( plug["transparent"]["value"].getValue() ) )
+
+	if plug["transparentGlass"]["enabled"].getValue() :
+		info.append( "Transparent Glass {}".format( plug["transparentGlass"]["value"].getValue() ) )
+
+	if plug["transparentRoughness"]["enabled"].getValue() :
+		info.append( "Transparent Roughness {}".format( plug["transparentRoughness"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
+def __denoisingSummary( plug ) :
+
+	info = []
+
+	if plug["useDenoising"]["enabled"].getValue() :
+		info.append( "Use Denoising {}".format( plug["useDenoising"]["value"].getValue() ) )
+
+	for rayType in ( "Diffuse", "Glossy", "Transmission", "Subsurface" ) :
+		for dirType in ( "Direct", "Indirect") :
+			childName = "denoise%s%s" % ( rayType, dirType )
+			if plug[childName]["enabled"].getValue() :
+				info.append(
+					"{} {} {}".format( rayType, dirType, plug[childName]["value"].getValue() )
+				)
+
+	if plug["denoisingStrength"]["enabled"].getValue() :
+		info.append( "Strength {}".format( plug["denoisingStrength"]["value"].getValue() ) )
+
+	if plug["denoisingFeatureStrength"]["enabled"].getValue() :
+		info.append( "Feature Strength {}".format( plug["denoisingFeatureStrength"]["value"].getValue() ) )
+
+	if plug["denoisingRadius"]["enabled"].getValue() :
+		info.append( "Radius {}".format( plug["denoisingRadius"]["value"].getValue() ) )
+
+	if plug["denoisingRelativePca"]["enabled"].getValue() :
+		info.append( "Relative Filter {}".format( plug["denoisingRelativePca"]["value"].getValue() ) )
+
+	if plug["denoisingStorePasses"]["enabled"].getValue() :
+		info.append( "Store Passes {}".format( plug["denoisingStorePasses"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -117,6 +242,11 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
+			"layout:section:Volumes:summary", __volumesSummary,
+			"layout:section:Caustics:summary", __causticsSummary,
+			"layout:section:Subdivision:summary", __subdivisionSummary,
+			"layout:section:Film:summary", __filmSummary,
+			"layout:section:Denoising:summary", __denoisingSummary,
 			"layout:section:Texturing:summary", __texturingSummary,
 
 		],
@@ -160,8 +290,8 @@ Gaffer.Metadata.registerNode(
 
 		"options.featureSet.value" : [
 
-			"preset:Supported", "supported",
-			"preset:Experimental", "experimental",
+			"preset:Supported", False,
+			"preset:Experimental", True,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -190,7 +320,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.integrator" : [
+		"options.method" : [
 
 			"description",
 			"""
@@ -203,13 +333,14 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Rendering",
+			"label", "Integrator",
 
 		],
 
-		"options.integrator.value" : [
+		"options.method.value" : [
 
-			"preset:BranchedPath", "branchedPath",
-			"preset:Path", "path",
+			"preset:BranchedPath", False,
+			"preset:Path", True,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -247,12 +378,12 @@ Gaffer.Metadata.registerNode(
 
 		"options.tileOrder.value" : [
 
-			"preset:Center", "center",
-			"preset:Right to Left", "rightToLeft",
-			"preset:Left to Right", "leftToRight",
-			"preset:Top to Bottom", "topToBottom",
-			"preset:Bottom to Top", "bottomToTop",
-			"preset:Hilbert Spiral", "hilbertSpiral",
+			"preset:Center", 0,
+			"preset:Right to Left", 1,
+			"preset:Left to Right", 2,
+			"preset:Top to Bottom", 3,
+			"preset:Bottom to Top", 4,
+			"preset:Hilbert Spiral", 5,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -264,7 +395,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Number of samples to render for each pixel.
+			Number of samples to render for each pixel. This is for the
+			path integrator, use the other sampling parameters for the 
+			branched-path integrator.
 			""",
 
 			"layout:section", "Sampling",
@@ -381,16 +514,64 @@ Gaffer.Metadata.registerNode(
 			Random sampling pattern used by the integrator.
 			""",
 
-			"layout:section", "Sampling",
+			"layout:section", "Rendering",
 
 		],
 
 		"options.samplingPattern.value" : [
 
-			"preset:Sobol", "sobol",
-			"preset:Correlated Multi Jitter", "correlatedMultiJitter",
+			"preset:Sobol", 0,
+			"preset:Correlated Multi-Jitter", 1,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.samplingAllLightsDirect" : [
+
+			"description",
+			"""
+			Sample all lights (for direct samples), rather than randomly picking one.
+			""",
+
+			"layout:section", "Rendering",
+
+		],
+
+		"options.samplingAllLightsIndirect" : [
+
+			"description",
+			"""
+			Sample all lights (for indirect samples), rather than randomly picking one.
+			""",
+
+			"layout:section", "Rendering",
+
+		],
+
+		"options.lightSamplingThreshold" : [
+
+			"description",
+			"""
+			Probabilistically terminate light samples when the light
+			contribution is below this threshold (more noise but faster
+			rendering). "
+            "Zero disables the test and never ignores lights.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
+		"options.blurGlossy" : [
+
+			"description",
+			"""
+			Adaptively blur glossy shaders after blurry bounces, to reduce
+			noise at the cost of accuracy.
+			""",
+
+			"layout:section", "Sampling",
 
 		],
 
@@ -468,6 +649,339 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Ray Depth",
 			"label", "Transparency",
+
+		],
+
+		# Volumes
+
+		"options.volumeStepSize" : [
+
+			"description",
+			"""
+			Distance between volume shader samples when rendering the volume
+            (lower values give more accurate and detailed results, but also
+			increases render time).
+			""",
+
+			"layout:section", "Volumes",
+
+		],
+
+		"options.volumeMaxSteps" : [
+
+			"description",
+			"""
+			Maximum number of steps through the volume before giving up,
+            to avoid extremely long render times with big objects or small step
+			sizes.
+			""",
+
+			"layout:section", "Volumes",
+
+		],
+
+		# Caustics
+
+		"options.causticsReflective" : [
+
+			"description",
+			"""
+			Use reflective caustics, resulting in a brighter image 
+			(more noise but added realism).
+			""",
+
+			"layout:section", "Caustics",
+			"label", "Reflective Caustics",
+
+		],
+
+		"options.causticsRefractive" : [
+
+			"description",
+			"""
+			Use refractive caustics, resulting in a brighter image 
+			(more noise but added realism).
+			""",
+
+			"layout:section", "Caustics",
+			"label", "Refractive Caustics",
+
+		],
+
+		# Subdivision
+
+		"options.dicingRate" : [
+
+			"description",
+			"""
+			Size of a micropolygon in pixels.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		"options.maxSubdivisions" : [
+
+			"description",
+			"""
+			Stop subdividing when this level is reached even if the dice rate
+			would produce finer tessellation.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		"options.dicingCamera" : [
+
+			"description",
+			"""
+			Camera to use as reference point when subdividing geometry, useful
+			to avoid crawling artifacts in animations when the scene camera is
+			moving.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		"options.offscreenDicingScale" : [
+
+			"description",
+			"""
+			Multiplier for dicing rate of geometry outside of the camera view. 
+			The dicing rate of objects is gradually increased the further they 
+			are outside the camera view. Lower values provide higher quality 
+			reflections and shadows for off screen objects, while higher values
+			use less memory.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		# Film
+
+		"options.exposure" : [
+
+			"description",
+			"""
+			Image brightness scale.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.transparent" : [
+
+			"description",
+			"""
+			World background is transparent, for compositing the render over
+			another background.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.transparentGlass" : [
+
+			"description",
+			"""
+			Render transmissive surfaces as transparent, for compositing glass
+			over another background.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.transparentRoughness" : [
+
+			"description",
+			"""
+			For transparent transmission, keep surfaces with roughness above
+			the threshold opaque.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		# Denoising
+
+		"options.useDenoising" : [
+
+			"description",
+			"""
+			Denoise the rendered image. This is Cycles' built-in denoising.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Use Denoising",
+
+		],
+
+		"options.denoisingDiffuseDirect" : [
+
+			"description",
+			"""
+			Denoise the direct diffuse lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Diffuse Direct",
+
+		],
+
+		"options.denoisingDiffuseIndirect" : [
+
+			"description",
+			"""
+			Denoise the indirect diffuse lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Diffuse Indirect",
+
+		],
+
+		"options.denoisingGlossyDirect" : [
+
+			"description",
+			"""
+			Denoise the direct glossy lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Glossy Direct",
+
+		],
+
+		"options.denoisingGlossyIndirect" : [
+
+			"description",
+			"""
+			Denoise the indirect glossy lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Glossy Indirect",
+
+		],
+
+		"options.denoisingTransmissionDirect" : [
+
+			"description",
+			"""
+			Denoise the direct transmission lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Transmission Direct",
+
+		],
+
+		"options.denoisingTransmissionIndirect" : [
+
+			"description",
+			"""
+			Denoise the indirect transmission lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Transmission Indirect",
+
+		],
+
+		"options.denoisingSubsurfaceDirect" : [
+
+			"description",
+			"""
+			Denoise the direct subsurface lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Subsurface Direct",
+
+		],
+
+		"options.denoisingSubsurfaceIndirect" : [
+
+			"description",
+			"""
+			Denoise the indirect subsurface lighting.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Subsurface Indirect",
+
+		],
+
+		"options.denoisingStrength" : [
+
+			"description",
+			"""
+			Controls neighbor pixel weighting for the denoising filter
+			(lower values preserve more detail, but aren't as smooth).
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Denoising Strength",
+
+		],
+
+		"options.denoisingFeatureStrength" : [
+
+			"description",
+			"""
+			Controls removal of noisy image feature passes 
+			(lower values preserve more detail, but aren't as smooth).
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Denoising Feature Strength",
+
+		],
+
+		"options.denoisingRadius" : [
+
+			"description",
+			"""
+			Size of the image area that's used to denoise a pixel 
+			(higher values are smoother, but might lose detail and are slower).
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Denoising Radius",
+
+		],
+
+		"options.denoisingRelativePca" : [
+
+			"description",
+			"""
+			When removing pixels that don't carry information, use a relative
+			threshold instead of an absolute one (can help to reduce artifacts,
+			but might cause detail loss around edges).
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Denoising Relative Filter",
+
+		],
+
+		"options.denoisingStorePasses" : [
+
+			"description",
+			"""
+			Store the denoising feature passes and the noisy image.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Store Denoising Passes",
 
 		],
 

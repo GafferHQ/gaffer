@@ -58,11 +58,11 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:background", new IECore::BoolData( false ), "useBackground", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:session:progressive", new IECore::StringData( "path" ), "integrator", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "integrator", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "experimental", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:samples", new IECore::IntData( 128 ), "samples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), "tileSize", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:tile_order", new IECore::StringData( "tile_center" ), "tileOrder", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:tile_order", new IECore::IntData( 0 ), "tileOrder", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:start_resolution", new IECore::IntData( 64 ), "startResolution", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:pixel_size", new IECore::IntData( 64 ), "pixelSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
@@ -139,9 +139,9 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:integrator:sample_all_lights_indirect", new IECore::BoolData( true ), "sampleAllLightsIndirect", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:light_sampling_threshold", new IECore::FloatData( 0.05f ), "lightSamplingThreshold", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:integrator:method", new IECore::StringData( "pathTracing" ), "integratorMethod", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:integrator:method", new IECore::IntData( 0 ), "method", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:integrator:sampling_pattern", new IECore::StringData( "sobol" ), "samplingPattern", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:integrator:sampling_pattern", new IECore::IntData( 0 ), "samplingPattern", Gaffer::Plug::Default, false );
 
 }
 
