@@ -895,7 +895,7 @@ class SceneView::Camera : public boost::signals::trackable
 		Camera( SceneView *view )
 			:	m_view( view ),
 				m_framed( false ),
-				m_standardOptions( new StandardOptions ),
+				m_lightToCamera( new LightToCamera ),
 				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
 				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
 				m_originalCenterOfInterest( m_view->viewportGadget()->getCenterOfInterest() ),
@@ -939,19 +939,10 @@ class SceneView::Camera : public boost::signals::trackable
 			SetFilterPtr lightFilter = new SetFilter;
 			lightFilter->setExpressionPlug()->setValue( "__lights" );
 
-			LightToCameraPtr lightConverter = new LightToCamera;
-			lightConverter->inPlug()->setInput( view->inPlug<ScenePlug>() );
-			lightConverter->filterPlug()->setInput( lightFilter->outPlug() );
+			m_lightToCamera->inPlug()->setInput( view->inPlug<ScenePlug>() );
+			m_lightToCamera->filterPlug()->setInput( lightFilter->outPlug() );
 
 			m_internalNodes.push_back( lightFilter );
-			m_internalNodes.push_back( lightConverter );
-
-			// We use a standard options node to disable overscan because we don't want it applied
-			// by RendererAlgo::applyCameraGlobals.
-
-			m_standardOptions->inPlug()->setInput( lightConverter->outPlug() );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->enabledPlug()->setValue( true );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->valuePlug<BoolPlug>()->setValue( false );
 
 			// Set up our gadgets
 
@@ -960,7 +951,7 @@ class SceneView::Camera : public boost::signals::trackable
 
 			// Connect to the signals we need
 
-			m_standardOptions->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
+			m_lightToCamera->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
 			m_plugSetConnection = view->plugSetSignal().connect( boost::bind( &Camera::plugSet, this, ::_1 ) );
 			view->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
 			view->viewportGadget()->preRenderSignal().connect( boost::bind( &Camera::preRender, this ) );
@@ -993,7 +984,7 @@ class SceneView::Camera : public boost::signals::trackable
 
 		const GafferScene::ScenePlug *scenePlug() const
 		{
-			return m_standardOptions->outPlug();
+			return m_lightToCamera->outPlug();
 		}
 
 		Gaffer::FloatPlug *fieldOfViewPlug()
@@ -1381,7 +1372,7 @@ class SceneView::Camera : public boost::signals::trackable
 		SceneView *m_view;
 		bool m_framed;
 
-		StandardOptionsPtr m_standardOptions;
+		LightToCameraPtr m_lightToCamera;
 
 		/// Nodes used in an internal processing network.
 		/// Don't need to do anything with them once their set up, but need to hold onto a pointer
