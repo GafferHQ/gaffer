@@ -20,9 +20,7 @@ By the end of this tutorial you will have built a basic scene with Gaffer's robo
 
 ## Starting a New Script ##
 
-<!-- TODO: After [installing Gaffer](../InstallingGaffer/index.md), launch Gaffer [from its directory](../LaunchingGafferFirstTime/index.md) or by using the ["gaffer" command](../SettingUpGafferCommand/index.md). Gaffer will start, and-->
-
-To begin, [install and launch Gaffer](../../Installation/index.md). You will be presented with an empty script in the default UI layout.
+After [installing Gaffer](../../GettingStarted/InstallingGaffer/index.md), launch Gaffer [from its directory](../../GettingStarted/LaunchingGafferFirstTime/index.md) or by using the ["gaffer" command](../../GettingStarted/SettingUpGafferCommand/index.md). Gaffer will start, and you will be presented with an empty script in the default UI layout.
 
 ![An empty script in the default layout](images/mainDefaultLayout.png "An empty script in the default layout")
 
