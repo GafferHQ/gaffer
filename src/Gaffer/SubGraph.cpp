@@ -120,6 +120,11 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 	}
 
 	const Plug *input = internalInput->getInput();
+	if( !input )
+	{
+		return nullptr;
+	}
+
 	if( const BoxIn *boxIn = input->parent<BoxIn>() )
 	{
 		input = boxIn->promotedPlug();
