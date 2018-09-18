@@ -43,6 +43,8 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 using namespace boost::python;
 using namespace Gaffer;
 using namespace Gaffer::MetadataAlgo;
@@ -50,7 +52,25 @@ using namespace Gaffer::MetadataAlgo;
 namespace
 {
 
-static boost::python::list bookmarksWrapper( const Node *node )
+void setReadOnlyWrapper( GraphComponent &graphComponent, bool readOnly, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setReadOnly( &graphComponent, readOnly, persistent );
+}
+
+void setChildNodesAreReadOnlyWrapper( Node &node, bool readOnly, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setChildNodesAreReadOnly( &node, readOnly, persistent );
+}
+
+void setBookmarkedWrapper( Node &node, bool bookmarked, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setBookmarked( &node, bookmarked, persistent );
+}
+
+boost::python::list bookmarksWrapper( const Node *node )
 {
 	std::vector<NodePtr> bookmarks;
 	MetadataAlgo::bookmarks( node, bookmarks );
@@ -64,6 +84,18 @@ static boost::python::list bookmarksWrapper( const Node *node )
 	return result;
 }
 
+void copyWrapper( const GraphComponent &from, GraphComponent &to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	copy( &from, &to, exclude, persistentOnly, persistent );
+}
+
+void copyColorsWrapper( const Gaffer::Plug &srcPlug, Gaffer::Plug &dstPlug, bool overwrite )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	copyColors( &srcPlug, &dstPlug, overwrite );
+}
+
 } // namespace
 
 void GafferModule::bindMetadataAlgo()
@@ -72,9 +104,9 @@ void GafferModule::bindMetadataAlgo()
 	scope().attr( "MetadataAlgo" ) = module;
 	scope moduleScope( module );
 
-	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
+	def( "setReadOnly", &setReadOnlyWrapper, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );
-	def( "setChildNodesAreReadOnly", &setChildNodesAreReadOnly, ( arg( "node" ), arg( "readOnly"), arg( "persistent" ) = true ) );
+	def( "setChildNodesAreReadOnly", &setChildNodesAreReadOnlyWrapper, ( arg( "node" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getChildNodesAreReadOnly", &getChildNodesAreReadOnly );
 	def( "readOnly", &readOnly );
 	def(
@@ -93,7 +125,7 @@ void GafferModule::bindMetadataAlgo()
 		( arg( "changedKey" ) )
 	);
 
-	def( "setBookmarked", &setBookmarked, ( arg( "graphComponent" ), arg( "bookmarked"), arg( "persistent" ) = true ) );
+	def( "setBookmarked", &setBookmarkedWrapper, ( arg( "graphComponent" ), arg( "bookmarked"), arg( "persistent" ) = true ) );
 	def( "getBookmarked", &getBookmarked );
 	def( "bookmarkedAffectedByChange", &bookmarkedAffectedByChange );
 	def( "bookmarks", &bookmarksWrapper );
@@ -131,8 +163,8 @@ void GafferModule::bindMetadataAlgo()
 		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
 	);
 
-	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
+	def( "copy", &copyWrapper, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
 
-	def( "copyColors", &copyColors,  (arg( "srcPlug" ), arg( "dstPlug" ), arg( "overwrite") ));
+	def( "copyColors", &copyColorsWrapper,  (arg( "srcPlug" ), arg( "dstPlug" ), arg( "overwrite") ));
 
 }

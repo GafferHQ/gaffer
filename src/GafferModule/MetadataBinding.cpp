@@ -322,6 +322,12 @@ void registerInstanceValue( GraphComponent &instance, InternedString key, ConstD
 	Metadata::registerValue( &instance, key, value, persistent );
 }
 
+void deregisterInstanceValue( GraphComponent &target, IECore::InternedString key )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	Metadata::deregisterValue( &target, key );
+}
+
 list keysToList( const std::vector<InternedString> &keys )
 {
 	list result;
@@ -434,7 +440,7 @@ void GafferModule::bindMetadata()
 		.def( "deregisterValue", (void (*)( IECore::InternedString, IECore::InternedString ) )&Metadata::deregisterValue )
 		.def( "deregisterValue", (void (*)( IECore::TypeId, IECore::InternedString ) )&Metadata::deregisterValue )
 		.def( "deregisterValue", (void (*)( IECore::TypeId, const StringAlgo::MatchPattern &, IECore::InternedString ) )&Metadata::deregisterValue )
-		.def( "deregisterValue", (void (*)( GraphComponent *, IECore::InternedString ) )&Metadata::deregisterValue )
+		.def( "deregisterValue", &deregisterInstanceValue )
 		.staticmethod( "deregisterValue" )
 
 		.def( "registerNodeValue", &registerNodeValue )

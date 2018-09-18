@@ -160,6 +160,24 @@ list unpositionedNodeGadgets( GraphGadget &graphGadget )
 	return l;
 }
 
+void setNodePosition( GraphGadget &graphGadget, Gaffer::Node &node, const Imath::V2f &position )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	graphGadget.setNodePosition( &node, position );
+}
+
+void setNodeInputConnectionsMinimised( GraphGadget &graphGadget, Gaffer::Node &node, bool minimised )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	graphGadget.setNodeInputConnectionsMinimised( &node, minimised );
+}
+
+void setNodeOutputConnectionsMinimised( GraphGadget &graphGadget, Gaffer::Node &node, bool minimised )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	graphGadget.setNodeOutputConnectionsMinimised( &node, minimised );
+}
+
 tuple connectionAt( AuxiliaryConnectionsGadget &g, IECore::LineSegment3f position )
 {
 	auto nodeGadgets = g.connectionAt( position );
@@ -187,12 +205,12 @@ void GafferUIModule::bindGraphGadget()
 			.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 			.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 			.def( "unpositionedNodeGadgets", &unpositionedNodeGadgets )
-			.def( "setNodePosition", &GraphGadget::setNodePosition )
+			.def( "setNodePosition", &setNodePosition )
 			.def( "getNodePosition", &GraphGadget::getNodePosition )
 			.def( "hasNodePosition", &GraphGadget::hasNodePosition )
-			.def( "setNodeInputConnectionsMinimised", &GraphGadget::setNodeInputConnectionsMinimised )
+			.def( "setNodeInputConnectionsMinimised", &setNodeInputConnectionsMinimised )
 			.def( "getNodeInputConnectionsMinimised", &GraphGadget::getNodeInputConnectionsMinimised )
-			.def( "setNodeOutputConnectionsMinimised", &GraphGadget::setNodeOutputConnectionsMinimised )
+			.def( "setNodeOutputConnectionsMinimised", &setNodeOutputConnectionsMinimised )
 			.def( "getNodeOutputConnectionsMinimised", &GraphGadget::getNodeOutputConnectionsMinimised )
 			.def( "setLayout", &GraphGadget::setLayout )
 			.def( "getLayout", (GraphLayout *(GraphGadget::*)())&GraphGadget::getLayout, return_value_policy<CastToIntrusivePtr>() )

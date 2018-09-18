@@ -80,12 +80,14 @@ namespace MetadataAlgo
 /// > hosted inside a Reference (because the index may be promoted). In this scenario, the API
 /// > must allow edits, although the UI should not.
 
+/// \undoable
 GAFFER_API void setReadOnly( GraphComponent *graphComponent, bool readOnly, bool persistent = true );
 GAFFER_API bool getReadOnly( const GraphComponent *graphComponent );
 
 /// The "childNodesAreReadOnly" metadata is similar to the "readOnly" metadata
 /// but only indicates the read-only-ness to the internal nodes of a node, and not its own plugs.
 
+/// \undoable
 GAFFER_API void setChildNodesAreReadOnly( Node *node, bool readOnly, bool persistent = true );
 GAFFER_API bool getChildNodesAreReadOnly( const Node *node );
 
@@ -107,6 +109,7 @@ GAFFER_API bool readOnlyAffectedByChange( const IECore::InternedString &changedK
 /// This metadata may be fetched by client code in order to provide convenient mechanisms for
 /// accessing the node and/or its plugs.
 
+/// \undoable
 GAFFER_API void setBookmarked( Node *node, bool bookmarked, bool persistent = true );
 GAFFER_API bool getBookmarked( const Node *node );
 GAFFER_API bool bookmarkedAffectedByChange( const IECore::InternedString &changedKey );
@@ -127,10 +130,12 @@ GAFFER_API bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId chang
 GAFFER_API bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 
 /// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
+/// \undoable
 GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
 
 /// Copy nodule and noodle color meta data from srcPlug to dstPlug
-GAFFER_API void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, bool overwrite );
+/// \undoable
+GAFFER_API void copyColors( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool overwrite );
 
 } // namespace MetadataAlgo
 

@@ -58,6 +58,7 @@ namespace
 
 const char *setName( GraphComponent &c, const IECore::InternedString &name )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return c.setName( name ).c_str();
 }
 
@@ -129,6 +130,12 @@ void removeChild( GraphComponent &g, GraphComponentPtr c )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	g.removeChild( c );
+}
+
+void clearChildren( GraphComponent &g )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.clearChildren();
 }
 
 GraphComponentPtr getChild( GraphComponent &g, const IECore::InternedString &n )
@@ -285,7 +292,7 @@ void GafferModule::bindGraphComponent()
 		.def( "nameChangedSignal", &GraphComponent::nameChangedSignal, return_internal_reference<1>() )
 		.def( "addChild", &addChild )
 		.def( "removeChild", &removeChild )
-		.def( "clearChildren", &GraphComponent::clearChildren )
+		.def( "clearChildren", &clearChildren )
 		.def( "setChild", &setChild )
 		.def( "getChild", &getChild )
 		.def( "descendant", &descendant )

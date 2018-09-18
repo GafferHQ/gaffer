@@ -51,10 +51,17 @@ namespace
 {
 
 template<typename T>
+void setup( T &s, const Plug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.setup( &plug );
+}
+
+template<typename T>
 void bind()
 {
 	DependencyNodeClass<T>()
-		.def( "setup", &T::setup )
+		.def( "setup", &setup<T> )
 		.def( "activeInPlug", (Plug *(T::*)())&T::activeInPlug, return_value_policy<CastToIntrusivePtr>() )
 	;
 }

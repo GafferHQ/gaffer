@@ -53,6 +53,13 @@ namespace
 {
 
 template<typename T>
+void setValue( T &plug, const typename T::ValueType &value )
+{
+	IECorePython::ScopedGILRelease r;
+	plug.setValue( value );
+}
+
+template<typename T>
 typename T::ValueType getValue( const T *plug )
 {
 	// Must release GIL in case computation spawns threads which need
@@ -94,7 +101,7 @@ void bind()
 		.def( "hasMaxValue", &T::hasMaxValue )
 		.def( "minValue", &T::minValue )
 		.def( "maxValue", &T::maxValue )
-		.def( "setValue", &T::setValue )
+		.def( "setValue", &setValue<T> )
 		.def( "getValue", &getValue<T> )
 	;
 }

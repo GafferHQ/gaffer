@@ -73,6 +73,18 @@ NodePtr node( Plug &p )
 	return p.node();
 }
 
+void setFlags1( Plug &p, unsigned flags )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	p.setFlags( flags );
+}
+
+void setFlags2( Plug &p, unsigned flags, bool enable )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	p.setFlags( flags, enable );
+}
+
 PlugPtr getInput( Plug &p )
 {
 	return p.getInput();
@@ -122,8 +134,8 @@ void GafferModule::bindPlug()
 		.def( "direction", &Plug::direction )
 		.def( "getFlags", (unsigned (Plug::*)() const )&Plug::getFlags )
 		.def( "getFlags", (bool (Plug::*)( unsigned ) const )&Plug::getFlags )
-		.def( "setFlags", (void (Plug::*)( unsigned ) )&Plug::setFlags )
-		.def( "setFlags", (void (Plug::*)( unsigned, bool ) )&Plug::setFlags )
+		.def( "setFlags", &setFlags1 )
+		.def( "setFlags", &setFlags2 )
 		.def( "getInput", &getInput )
 		.def( "source", &source )
 		.def( "removeOutputs", &Plug::removeOutputs )
