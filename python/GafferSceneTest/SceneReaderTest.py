@@ -500,5 +500,15 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		r["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
 		self.assertSceneValid( r["out"] )
 
+	def testTransform( self ) :
+
+		r = GafferScene.SceneReader()
+		r["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/groupedPlane.abc" )
+		self.assertEqual( r["out"].transform( "/group" ), imath.M44f() )
+
+		r["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( r["out"].transform( "/group" ), r["transform"].matrix() )
+		self.assertSceneValid( r["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

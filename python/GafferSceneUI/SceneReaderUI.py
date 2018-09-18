@@ -102,6 +102,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"transform" : [
+
+			"description",
+			"""
+			The transform used to position the cache. This is applied to
+			all children of the cache root.
+			""",
+
+			"layout:section", "Transform",
+
+		],
+
 	}
 
 )

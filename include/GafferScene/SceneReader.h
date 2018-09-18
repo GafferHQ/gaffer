@@ -47,6 +47,7 @@ namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( TransformPlug )
 
 } // namespace Gaffer
 
@@ -73,6 +74,9 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 
 		Gaffer::StringPlug *tagsPlug();
 		const Gaffer::StringPlug *tagsPlug() const;
+
+		Gaffer::TransformPlug *transformPlug();
+		const Gaffer::TransformPlug *transformPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

@@ -38,6 +38,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TransformPlug.h"
 
 #include "IECoreScene/SceneCache.h"
 #include "IECoreScene/SharedSceneInterfaces.h"
@@ -73,6 +74,7 @@ SceneReader::SceneReader( const std::string &name )
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new StringPlug( "tags" ) );
+	addChild( new TransformPlug( "transform" ) );
 	plugSetSignal().connect( boost::bind( &SceneReader::plugSet, this, ::_1 ) );
 }
 
@@ -110,6 +112,16 @@ const Gaffer::StringPlug *SceneReader::tagsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::TransformPlug *SceneReader::transformPlug()
+{
+	return getChild<TransformPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::TransformPlug *SceneReader::transformPlug() const
+{
+	return getChild<TransformPlug>( g_firstPlugIndex + 3 );
+}
+
 void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneNode::affects( input, outputs );
@@ -129,6 +141,11 @@ void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	else if( input == tagsPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
+	}
+	else if( transformPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
 	}
 }
 
@@ -159,6 +176,11 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 		fileNamePlug()->hash( h );
 		h.append( &path.front(), path.size() );
 	}
+
+	if( path.size() == 0 )
+	{
+		transformPlug()->hash( h );
+	}
 }
 
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -169,6 +191,7 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 		return Box3f();
 	}
 
+	Box3f result;
 	if( s->hasBound() )
 	{
 		const Box3d b = s->readBound( context->getTime() );
@@ -176,12 +199,19 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 		{
 			return Box3f();
 		}
-		return Box3f( b.min, b.max );
+		result = Box3f( b.min, b.max );
 	}
 	else
 	{
-		return unionOfTransformedChildBounds( path, parent );
+		result = unionOfTransformedChildBounds( path, parent );
 	}
+
+	if( path.size() == 0 && !result.isEmpty() )
+	{
+		result = Imath::transform( result, transformPlug()->matrix() );
+	}
+
+	return result;
 }
 
 void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -196,6 +226,11 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 
 	refreshCountPlug()->hash( h );
 	s->hash( SceneInterface::TransformHash, context->getTime(), h );
+
+	if( path.size() == 1 )
+	{
+		transformPlug()->hash( h );
+	}
 }
 
 Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -206,14 +241,19 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 		return M44f();
 	}
 
-	M44d t = s->readTransformAsMatrix( context->getTime() );
-
-	return M44f(
+	const M44d t = s->readTransformAsMatrix( context->getTime() );
+	M44f result = M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
 		t[1][0], t[1][1], t[1][2], t[1][3],
 		t[2][0], t[2][1], t[2][2], t[2][3],
 		t[3][0], t[3][1], t[3][2], t[3][3]
 	);
+
+	if( path.size() == 1 )
+	{
+		result = result * transformPlug()->matrix();
+	}
+	return result;
 }
 
 void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
