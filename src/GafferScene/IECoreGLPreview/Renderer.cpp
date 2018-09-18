@@ -619,6 +619,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				camera = new OpenGLCamera( "/defaultCamera", nullptr, nullptr, m_editQueue );
 			}
 
+			// We don't want to render the visualiser of the camera we're looking through.  For the viewport,
+			// we do this using SceneView::deleteObjectFilter, but here, instead of setting up a filter,
+			// we just delete the camera from the list of things to render.
+			m_objects.erase( std::remove( m_objects.begin(), m_objects.end(), camera), m_objects.end() );
+
 			const V2i resolution = camera->camera()->getResolution();
 			IECoreGL::FrameBufferPtr frameBuffer = new FrameBuffer;
 			frameBuffer->setColor( new ColorTexture( resolution.x, resolution.y ) );
