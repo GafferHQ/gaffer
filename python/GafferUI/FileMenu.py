@@ -265,9 +265,23 @@ def saveAs( menu ) :
 def revertToSaved( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
 
-	script.load()
+	dialogue = GafferUI.ConfirmationDialogue(
+		title = "Discard Unsaved Changes?",
+		message = "There are unsaved changes which will be lost."
+			"Discard them and revert?",
+		confirmLabel = "Revert",
+		cancelLabel = "Cancel",
+	)
+	if not dialogue.waitForConfirmation( parentWindow = scriptWindow ) :
+		return
+
+	with GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Errors Occurred During Loading",
+		closeLabel = "Oy vey",
+		parentWindow = scriptWindow
+	) :
+		scriptWindow.scriptNode().load( continueOnError = True )
 
 def __revertToSavedAvailable( menu ) :
 
