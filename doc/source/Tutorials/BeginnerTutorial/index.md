@@ -77,7 +77,7 @@ You can use the _Hierarchy View_ to expand the scene's locations:
 
 3. Click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to *C_torso_GRP* to show its child locations.
 
-    ![The scene hierarchy, expanded down two levels](images/hierarchySceneExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
+    ![The scene hierarchy, expanded down two levels](images/hierarchyViewExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
 
 > Note :
 > Gaffy's geometry cache contains location names with affixes like _C_, _R_, _L_, _GRP_, _CPT_ and _REN_. Gaffer places no significance whatsoever on these names, and you are free to use whichever naming conventions you see fit.
