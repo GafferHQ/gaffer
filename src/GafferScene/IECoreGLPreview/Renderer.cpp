@@ -54,6 +54,7 @@
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/ToGLCameraConverter.h"
+#include "IECoreGL/IECoreGL.h"
 
 #include "IECore/CompoundParameter.h"
 #include "IECore/MessageHandler.h"
@@ -599,6 +600,8 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderBatch()
 		{
+			IECoreGL::init();
+
 			processQueue();
 			CachedConverter::defaultCachedConverter()->clearUnused();
 
