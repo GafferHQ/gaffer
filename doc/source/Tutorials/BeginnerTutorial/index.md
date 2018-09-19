@@ -20,9 +20,7 @@ By the end of this tutorial you will have built a basic scene with Gaffer's robo
 
 ## Starting a New Script ##
 
-<!-- TODO: After [installing Gaffer](../InstallingGaffer/index.md), launch Gaffer [from its directory](../LaunchingGafferFirstTime/index.md) or by using the ["gaffer" command](../SettingUpGafferCommand/index.md). Gaffer will start, and-->
-
-To begin, [install and launch Gaffer](../../Installation/index.md). You will be presented with an empty script in the default UI layout.
+After [installing Gaffer](../../GettingStarted/InstallingGaffer/index.md), launch Gaffer [from its directory](../../GettingStarted/LaunchingGafferFirstTime/index.md) or by using the ["gaffer" command](../../GettingStarted/SettingUpGafferCommand/index.md). Gaffer will start, and you will be presented with an empty script in the default UI layout.
 
 ![An empty script in the default layout](images/mainDefaultLayout.png "An empty script in the default layout")
 
@@ -69,9 +67,9 @@ Further, Gaffer uses locations in the scene hierarchy to selectively render the 
 
 ### Navigating the scene using the _Hierarchy View_ ###
 
-Until you expand the scene's locations in the _Hierarchy View_, Gaffy's geometry will remain invisible.
+Until you expand Gaffy's scene's locations, all geometry will remain a bounding box.
 
-Use the _Hierarchy View_ to reveal Gaffy's geometry:
+You can use the _Hierarchy View_ to expand the scene's locations:
 
 1. If the SceneReader node is deselected, select it by clicking it in the _Graph Editor_.
 
@@ -79,41 +77,41 @@ Use the _Hierarchy View_ to reveal Gaffy's geometry:
 
 3. Click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to *C_torso_GRP* to show its child locations.
 
-    ![The scene hierarchy, expanded down two levels](images/hierarchySceneExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
+    ![The scene hierarchy, expanded down two levels](images/hierarchyViewExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
 
 > Note :
 > Gaffy's geometry cache contains location names with affixes like _C_, _R_, _L_, _GRP_, _CPT_ and _REN_. Gaffer places no significance whatsoever on these names, and you are free to use whichever naming conventions you see fit.
 
-In the _Viewer_, you can now see the bounding boxes of the objects at several locations, revealing more of the scene's structure. However, it would be tedious to expand the whole scene, location-by-location, in this manner. Instead, you can expand a location, its children, and all its sub-children at once:
+In the _Viewer_, you can now see the bounding boxes of the objects at several locations, revealing more of the scene's structure. However, it would be tedious to expand the whole scene, location-by-location, in this manner. Instead, you can expand a location, its children, and all its sub-children at once with a shortcut:
 
 1. In the _Hierarchy View_, <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *C_head_GRP*. All of the children of *C_head_GRP* will expand. Now the _Viewer_ shows all of the geometry that comprises Gaffy's head.
 
-2. <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *L_legUpper_GRP*. All the locations under *L_legUpper_GRP* will expand. Now the _Viewer_ also shows all of the geometry that comprises Gaffy's left leg.
+2. <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *R_legUpper_GRP*. All the locations under *R_legUpper_GRP* will expand. Now the _Viewer_ also shows all of the geometry that comprises Gaffy's right leg.
 
-![The head and left leg geometry, expanded](images/mainHeadAndLeftLegExpanded.png "The head and left leg geometry, expanded")
+![The geometry of the head and right leg, expanded](images/mainHeadAndLeftLegExpanded.png "The geometry of the head and right leg, expanded")
 
 
 ### Navigating the scene using the _Viewer_ ###
 
 As you explored the scene using the _Hierarchy View_, the _Viewer_ updated to show the geometry you expanded. The _Viewer_ also permits scene navigation through direct interaction with the geometry and bounding boxes in its viewport. This provides a more intuitive method for scene traversal, which can be invaluable when handling very complex scenes.
 
-Using the arrow keys, expand the scene hierarchy through the _Viewer:_
+You can expand the scene hierarchy using the arrow keys and the _Viewer:_
 
-1. In the _Viewer_, select Gaffy's right leg by click-dragging a marquee over its bounding box. The leg's bounding box will highlight.
+1. In the _Viewer_, click-drag and release a marquee over the bounding box for Gaffy's left leg.
 
-2. Hit <kbd>↓</kbd> to expand the selection down one level. The highlighted bounding box will be replaced by two smaller bounding boxes, indicating that you have expanded the location and selected the right leg's children.
+2. Hit <kbd>↓</kbd> to expand the selection down one level. The highlighted bounding box will be replaced by two smaller bounding boxes, indicating that you have expanded the location's children.
 
-3. Hit <kbd>Shift</kbd> + <kbd>↓</kbd> to fully expand all the right leg's locations.
+3. Hit <kbd>Shift</kbd> + <kbd>↓</kbd> to fully expand all the left leg's child locations.
 
-    ![The head and legs geometry, expanded](images/viewerHeadAndLegsExpanded.png "The head and legs geometry, expanded")
+    ![The head and leg geometry, expanded](images/viewerHeadAndLegsExpanded.png "The head and leg geometry, expanded")
 
-You can also collapse the selection in a similar manner through the _Viewer:_
+You can also collapse locations in a similar manner through the _Viewer:_
 
-1. With the right leg geometry still selected, hover the mouse inside the _Viewer_.
+1. With the geometry of the left leg still selected, hover the mouse inside the _Viewer_.
 
-2. Hit <kbd>↑</kbd>. The leg geometry will collapse into its bounding boxes.
+2. Hit <kbd>↑</kbd>. The geometry will collapse into its bounding boxes.
 
-3. Keep hitting <kbd>↑</kbd> until all the geometry is collapsed back into the root bounding box.
+3. Keep hitting <kbd>↑</kbd> until all of Gaffy's geometry is collapsed back into the root bounding box.
 
 You may have noticed that when you expanded and collapsed parts of the scene using the _Viewer_, the locations and geometry were also highlighted and selected in the _Hierarchy View_.
 
@@ -158,7 +156,7 @@ As before, the newly created node will be selected automatically, and the _Viewe
 So far, your script is as such: the SceneReader node is outputting a scene with Gaffy's geometry, and the Camera node is outputting a camera object. In fact, the Camera node is outputting a _whole scene_ containing a camera object. As such, any node that sends or receives scene data is classified as a **scene node**. This paradigm may be a bit confusing compared to other DCCs, but it is one of Gaffer's strengths.
 
 > Important :
-> When queried, a scene node will provide a scene based on the 3D data and values it is provided.
+> When a scene node is queried, such as when you select it, it will dynamically compute a scene based on the input values and data it is provided.
 
 
 ### Scenes ###

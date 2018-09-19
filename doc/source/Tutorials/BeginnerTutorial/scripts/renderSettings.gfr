@@ -28,7 +28,7 @@ __children["SceneReader"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue
 __children["SceneReader"]["__uiPosition"].setValue( IECore.V2f( 2.41041756, 6.85139799 ) )
 __children["Camera"] = GafferScene.Camera( "Camera" )
 parent.addChild( __children["Camera"] )
-__children["Camera"]["transform"]["translate"].setValue( IECore.V3f( 19, 13, 31 ) )
+__children["Camera"]["transform"]["translate"].setValue( IECore.V3f( 16, 13, 31 ) )
 __children["Camera"]["transform"]["rotate"].setValue( IECore.V3f( 0, 30, 0 ) )
 __children["Camera"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Camera"]["__uiPosition"].setValue( IECore.V2f( 15.4104176, 6.85139799 ) )

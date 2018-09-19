@@ -16,7 +16,7 @@ import GafferSceneUI
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
 graphEditor = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
-hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.SceneHierarchy )[0]
+hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
 
 # Delay for x seconds
 def __delay( delay ) :
@@ -48,12 +48,11 @@ GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/viewerScene
 
 # GafferBot torso in Hierarchy View
 GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/GAFFERBOT", "/GAFFERBOT/C_torso_GRP" ] ) )
-hierarchy = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
 __delay( 0.1 )
-GafferUI.WidgetAlgo.grab( widget = hierarchyView, imagePath = "images/hierarchySceneExpandedTwoLevels.png" )
+GafferUI.WidgetAlgo.grab( widget = hierarchyView, imagePath = "images/hierarchyViewExpandedTwoLevels.png" )
 
 # GafferBot head and left leg in main window
-paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
+paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/C_head_GRP", "/GAFFERBOT/C_torso_GRP/R_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
@@ -61,7 +60,7 @@ viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainHeadAndLeftLegExpanded.png" )
 
 # GafferBot head and both legs in Viewer
-paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/R_legUpper_GRP" ] )
+paths = IECore.PathMatcher( [ "/GAFFERBOT/C_torso_GRP/L_legUpper_GRP" ] )
 GafferSceneUI.ContextAlgo.expand( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, readerNode["out"] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
@@ -93,7 +92,7 @@ viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/mainGroupNode.png" )
 
 # Camera repositioned, with translate tool on, in Viewer
-cameraNode["transform"]["translate"].setValue( imath.V3f( 19, 13, 31 ) )
+cameraNode["transform"]["translate"].setValue( imath.V3f( 16, 13, 31 ) )
 viewer.view().viewportGadget().frame( groupNode["out"].bound( "/group" ) )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/group/camera" ] ) )
 for i in viewer._Viewer__toolChooser.tools():
@@ -102,7 +101,6 @@ for i in viewer._Viewer__toolChooser.tools():
 translateTool["active"].setValue( True )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraRepositioned.png" )
-
 
 # Camera rotated, with rotate tool on, in Viewer
 translateTool["active"].setValue( False )
