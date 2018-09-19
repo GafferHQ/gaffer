@@ -344,4 +344,4 @@ class _UIThreadExecutor( QtCore.QObject ) :
 		return False
 
 # Service the requests made to `ParallelAlgo::callOnUIThread()`.
-Gaffer.ParallelAlgo.callOnUIThreadSignal().connect( EventLoop.executeOnUIThread, scoped = False )
+Gaffer.ParallelAlgo.registerUIThreadCallHandler( EventLoop.executeOnUIThread )
