@@ -134,9 +134,10 @@ GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
 
 void frame( BackdropNodeGadget &b, object nodes )
 {
-	IECorePython::ScopedGILRelease gilRelease;
 	std::vector<Node *> n;
 	boost::python::container_utils::extend_container( n, nodes );
+
+	IECorePython::ScopedGILRelease gilRelease;
 	b.frame( n );
 }
 
