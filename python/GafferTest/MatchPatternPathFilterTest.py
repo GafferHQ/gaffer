@@ -37,6 +37,8 @@
 import unittest
 import itertools
 
+import IECore
+
 import Gaffer
 import GafferTest
 
@@ -112,6 +114,30 @@ class MatchPatternPathFilterTest( GafferTest.TestCase ) :
 
 		f.setMatchPatterns( [ "c*", "d*" ] )
 		self.assertEqual( f.getMatchPatterns(), [ "c*", "d*" ] )
+
+	def testExceptionSafety( self ) :
+
+		p = Gaffer.DictPath(
+			{
+				"a" : "aardvark",
+				"b" : 10,
+			},
+			"/"
+		)
+
+		f = Gaffer.MatchPatternPathFilter( [ "a*" ], "dict:value" )
+		p.setFilter( f )
+
+		with IECore.CapturingMessageHandler() as mh :
+			c = p.children()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "MatchPatternPathFilter" )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( mh.messages[0].message, "Expected StringData" )
+
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( str( c[0] ), "/a" )
 
 if __name__ == "__main__":
 	unittest.main()
