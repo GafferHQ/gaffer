@@ -73,8 +73,8 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 		// method.
 		struct Scale
 		{
-			Scale() = default;
-			Scale( const ScaleTool *tool );
+
+			Scale( const Selection &selection );
 
 			bool canApply( const Imath::V3i &axisMask ) const;
 			void apply( const Imath::V3f &scale ) const;
@@ -93,7 +93,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 
-		Scale m_drag;
+		std::vector<Scale> m_drag;
 
 		static ToolDescription<ScaleTool, SceneView> g_toolDescription;
 

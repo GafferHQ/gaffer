@@ -81,8 +81,7 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 		struct Rotation
 		{
 
-			Rotation() = default;
-			Rotation( const RotateTool *tool );
+			Rotation( const Selection &selection, Orientation orientation );
 
 			bool canApply( const Imath::V3i &axisMask ) const;
 			void apply( const Imath::Eulerf &rotation ) const;
@@ -104,7 +103,7 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 
-		Rotation m_drag;
+		std::vector<Rotation> m_drag;
 
 		static ToolDescription<RotateTool, SceneView> g_toolDescription;
 		static size_t g_firstPlugIndex;

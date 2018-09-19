@@ -137,7 +137,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 		};
 
-		const Selection &selection() const;
+		const std::vector<Selection> &selection() const;
 
 		/// Returns the transform of the handles. Throws
 		/// if the selection is invalid because then the
@@ -196,7 +196,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		GafferUI::GadgetPtr m_handles;
-		mutable Selection m_selection;
+		mutable std::vector<Selection> m_selection;
 		mutable bool m_selectionDirty;
 		bool m_handlesDirty;
 

@@ -115,8 +115,9 @@ bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 
 void TranslateTool::updateHandles( float rasterScale )
 {
+	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
 	handles()->setTransform(
-		selection().orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
+		selection().back().orientedTransform( orientation )
 	);
 
 	// Because we provide multiple orientations, the handles
@@ -125,35 +126,51 @@ void TranslateTool::updateHandles( float rasterScale )
 	// of the target translation. For each handle, check to see
 	// if each of the plugs it effects are settable, and if not,
 	// disable the handle.
-	Translation translation( this );
 	for( TranslateHandleIterator it( handles() ); !it.done(); ++it )
 	{
-		(*it)->setEnabled( translation.canApply( (*it)->axisMask() ) );
+		bool enabled = true;
+		for( const auto &s : selection() )
+		{
+			if( !Translation( s, orientation ).canApply( (*it)->axisMask() ) )
+			{
+				enabled = false;
+				break;
+			}
+		}
+		(*it)->setEnabled( enabled );
 		(*it)->setRasterScale( rasterScale );
 	}
 }
 
 void TranslateTool::translate( const Imath::V3f &offset )
 {
-	if( !selection().transformPlug )
+	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
+	for( const auto &s : selection() )
 	{
-		return;
+		Translation( s, orientation ).apply( offset );
 	}
-
-	Translation( this ).apply( offset );
 }
 
 IECore::RunTimeTypedPtr TranslateTool::dragBegin()
 {
-	m_drag = Translation( this );
+	m_drag.clear();
+	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
+	for( const auto &s : selection() )
+	{
+		m_drag.push_back( Translation( s, orientation ) );
+	}
 	TransformTool::dragBegin();
 	return nullptr; // let the handle start the drag with the event system
 }
 
 bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	m_drag.apply( static_cast<const TranslateHandle *>( gadget )->translation( event ) );
+	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	const V3f translation = static_cast<const TranslateHandle *>( gadget )->translation( event );
+	for( const auto &t : m_drag )
+	{
+		t.apply( translation );
+	}
 	return true;
 }
 
@@ -167,18 +184,17 @@ bool TranslateTool::dragEnd()
 // TranslateTool::Translation
 //////////////////////////////////////////////////////////////////////////
 
-TranslateTool::Translation::Translation( const TranslateTool *tool )
+TranslateTool::Translation::Translation( const Selection &selection, Orientation orientation )
 {
-	Context::Scope scopedContext( tool->view()->getContext() );
+	Context::Scope scopedContext( selection.context.get() );
 
-	const Selection &selection = tool->selection();
 	m_plug = selection.transformPlug->translatePlug();
 	m_origin = m_plug->getValue();
 
-	const M44f handlesTransform = selection.orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
+	const M44f handlesTransform = selection.orientedTransform( orientation );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 
-	m_time = tool->view()->getContext()->getTime();
+	m_time = selection.context->getTime();
 }
 
 bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const

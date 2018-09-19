@@ -69,40 +69,41 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		self.assertTrue( tool.selection().transformPlug is None )
+		self.assertEqual( len( tool.selection() ), 0 )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
-		self.assertEqual( tool.selection().path, "/group/plane" )
-		self.assertEqual( tool.selection().context, view.getContext() )
-		self.assertTrue( tool.selection().upstreamScene.isSame( script["plane"]["out"] ) )
-		self.assertEqual( tool.selection().upstreamPath, "/plane" )
-		self.assertTrue( tool.selection().transformPlug.isSame( script["plane"]["transform"] ) )
-		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].path, "/group/plane" )
+		self.assertEqual( tool.selection()[0].context, view.getContext() )
+		self.assertTrue( tool.selection()[0].upstreamScene.isSame( script["plane"]["out"] ) )
+		self.assertEqual( tool.selection()[0].upstreamPath, "/plane" )
+		self.assertTrue( tool.selection()[0].transformPlug.isSame( script["plane"]["transform"] ) )
+		self.assertEqual( tool.selection()[0].transformSpace, imath.M44f() )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group" ] ) )
-		self.assertEqual( tool.selection().path, "/group" )
-		self.assertEqual( tool.selection().context, view.getContext() )
-		self.assertTrue( tool.selection().upstreamScene.isSame( script["group"]["out"] ) )
-		self.assertEqual( tool.selection().upstreamPath, "/group" )
-		self.assertTrue( tool.selection().transformPlug.isSame( script["group"]["transform"] ) )
-		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
+		self.assertEqual( tool.selection()[0].path, "/group" )
+		self.assertEqual( tool.selection()[0].context, view.getContext() )
+		self.assertTrue( tool.selection()[0].upstreamScene.isSame( script["group"]["out"] ) )
+		self.assertEqual( tool.selection()[0].upstreamPath, "/group" )
+		self.assertTrue( tool.selection()[0].transformPlug.isSame( script["group"]["transform"] ) )
+		self.assertEqual( tool.selection()[0].transformSpace, imath.M44f() )
 
 		script["transformFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
-		self.assertTrue( tool.selection().transformPlug.isSame( script["transform"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].transformPlug.isSame( script["transform"]["transform"] ) )
 
 		script["transformFilter"]["enabled"].setValue( False )
-		self.assertTrue( tool.selection().transformPlug.isSame( script["group"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].transformPlug.isSame( script["group"]["transform"] ) )
 
 		script["transformFilter"]["enabled"].setValue( True )
-		self.assertEqual( tool.selection().path, "/group" )
-		self.assertEqual( tool.selection().context, view.getContext() )
-		self.assertTrue( tool.selection().upstreamScene.isSame( script["transform"]["out"] ) )
-		self.assertEqual( tool.selection().upstreamPath, "/group" )
-		self.assertTrue( tool.selection().transformPlug.isSame( script["transform"]["transform"] ) )
-		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
+		self.assertEqual( tool.selection()[0].path, "/group" )
+		self.assertEqual( tool.selection()[0].context, view.getContext() )
+		self.assertTrue( tool.selection()[0].upstreamScene.isSame( script["transform"]["out"] ) )
+		self.assertEqual( tool.selection()[0].upstreamPath, "/group" )
+		self.assertTrue( tool.selection()[0].transformPlug.isSame( script["transform"]["transform"] ) )
+		self.assertEqual( tool.selection()[0].transformSpace, imath.M44f() )
 
 		script["transform"]["enabled"].setValue( False )
-		self.assertTrue( tool.selection().transformPlug.isSame( script["group"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].transformPlug.isSame( script["group"]["transform"] ) )
 
 	def testTranslate( self ) :
 
@@ -449,8 +450,8 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		self.assertEqual( tool.selection().path, "/plane" )
-		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
+		self.assertEqual( tool.selection()[0].path, "/plane" )
+		self.assertEqual( tool.selection()[0].transformSpace, imath.M44f() )
 
 	def testPivotExpression( self ) :
 
@@ -478,8 +479,42 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		self.assertEqual( tool.selection().path, "/plane" )
+		self.assertEqual( tool.selection()[0].path, "/plane" )
 		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+
+	def testMultipleSelection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["rotate"]["y"].setValue( 90 )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+		script["group"]["in"][1].setInput( script["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane", "/group/sphere" ] ) )
+
+		selection = tool.selection()
+		self.assertEqual( len( selection ), 2 )
+		self.assertEqual( { s.transformPlug for s in selection }, { script["plane"]["transform"], script["sphere"]["transform"] } )
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		tool.translate( imath.V3f( 1, 0, 0 ) )
+
+		self.assertEqual( script["plane"]["transform"]["translate"].getValue(), imath.V3f( 1, 0, 0 ) )
+		self.assertTrue(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
+				script["sphere"]["transform"]["translate"].getValue(), 0.000001
+			)
+		)
 
 if __name__ == "__main__":
 	unittest.main()

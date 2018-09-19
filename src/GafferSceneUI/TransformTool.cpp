@@ -435,7 +435,7 @@ TransformTool::~TransformTool()
 {
 }
 
-const TransformTool::Selection &TransformTool::selection() const
+const std::vector<TransformTool::Selection> &TransformTool::selection() const
 {
 	updateSelection();
 	return m_selection;
@@ -444,7 +444,7 @@ const TransformTool::Selection &TransformTool::selection() const
 Imath::M44f TransformTool::handlesTransform()
 {
 	updateSelection();
-	if( !m_selection.transformPlug )
+	if( m_selection.empty() )
 	{
 		throw IECore::Exception( "Selection not valid" );
 	}
@@ -563,7 +563,7 @@ void TransformTool::updateSelection() const
 	}
 
 	// Clear the selection.
-	m_selection = Selection();
+	m_selection.clear();
 	m_selectionDirty = false;
 
 	// If we're not active, then there's
@@ -573,15 +573,20 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
-	// If there's a single path selected, then
-	// update our selection from it.
+	// Otherwise we need to populate our selection from
+	// the scene selection.
 	const PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
-	if( !selectedPaths.isEmpty() )
+	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		const PathMatcher::Iterator it = selectedPaths.begin();
-		if( std::next( it ) == selectedPaths.end() )
+		Selection selection( scenePlug(), *it, view()->getContext() );
+		if( selection.transformPlug )
 		{
-			m_selection = Selection( scenePlug(), *it, view()->getContext() );
+			m_selection.push_back( selection );
+		}
+		else
+		{
+			m_selection.clear();
+			break;
 		}
 	}
 }
@@ -599,7 +604,7 @@ void TransformTool::preRender()
 		updateSelection();
 	}
 
-	if( !m_selection.transformPlug )
+	if( m_selection.empty() )
 	{
 		m_handles->setVisible( false );
 		return;
@@ -639,25 +644,26 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 
 	if( event.key == "S" && !event.modifiers )
 	{
-		const Selection &selection = this->selection();
-		if( !selection.transformPlug )
+		if( selection().empty() )
 		{
 			return false;
 		}
 
-		UndoScope undoScope( selection.transformPlug->ancestor<ScriptNode>() );
-		Context::Scope contextScope( selection.context.get() );
-		for( RecursiveFloatPlugIterator it( selection.transformPlug.get() ); !it.done(); ++it )
+		UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>() );
+		for( const auto &s : selection() )
 		{
-			FloatPlug *plug = it->get();
-			if( Animation::canAnimate( plug ) )
+			Context::Scope contextScope( s.context.get() );
+			for( RecursiveFloatPlugIterator it( s.transformPlug.get() ); !it.done(); ++it )
 			{
-				const float value = plug->getValue();
-				Animation::CurvePlug *curve = Animation::acquire( plug );
-				curve->addKey( new Animation::Key( selection.context->getTime(), value ) );
+				FloatPlug *plug = it->get();
+				if( Animation::canAnimate( plug ) )
+				{
+					const float value = plug->getValue();
+					Animation::CurvePlug *curve = Animation::acquire( plug );
+					curve->addKey( new Animation::Key( s.context->getTime(), value ) );
+				}
 			}
 		}
-
 		return true;
 	}
 	else if( event.key == "Plus" || event.key == "Equal" )
