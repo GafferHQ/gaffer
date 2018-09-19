@@ -1,3 +1,27 @@
+0.49.1.0
+========
+
+Improvements
+------------
+
+- SceneReader : Added transform plug, allowing caches to be positioned without needing a
+  separate Transform node (#2792).
+
+Fixes
+-----
+
+- SubGraph : Fixed crash bug in `correspondingInput()`. This typically manifested itself
+  as a crash when trying to delete or cut a box (#2796).
+- FileMenu : Added confirmation dialogue for "Revert to Saved", and added proper error
+  reporting for loading errors (#2735, #2794).
+- SetUI/FilteredSceneProcessorUI : Fixed bugs dealing with ArrayPlug inputs. These were
+  most visible as errors when working with the CopyAttributes node (#2785).
+
+Documentation
+-------------
+
+- Added "Anatomy of a Scene" article (#2787).
+
 0.49.0.1
 ========
 
