@@ -39,6 +39,7 @@
 
 #include "Gaffer/Path.h"
 
+#include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
 #include "boost/bind.hpp"
@@ -122,38 +123,46 @@ bool MatchPatternPathFilter::invert( bool b ) const
 
 bool MatchPatternPathFilter::remove( PathPtr path ) const
 {
-	if( m_leafOnly && !path->isLeaf() )
+	try
 	{
-		return false;
-	}
+		if( m_leafOnly && !path->isLeaf() )
+		{
+			return false;
+		}
 
-	IECore::ConstStringDataPtr propertyData;
-	const std::string *propertyValue = nullptr;
-	if( m_propertyName == g_namePropertyName )
-	{
-		if( !path->names().size() )
+		IECore::ConstStringDataPtr propertyData;
+		const std::string *propertyValue = nullptr;
+		if( m_propertyName == g_namePropertyName )
 		{
-			return invert( true );
+			if( !path->names().size() )
+			{
+				return invert( true );
+			}
+			// quicker to retrieve the value from the path than as a property
+			propertyValue = &(path->names().back().string());
 		}
-		// quicker to retrieve the value from the path than as a property
-		propertyValue = &(path->names().back().string());
-	}
-	else
-	{
-		propertyData = IECore::runTimeCast<const IECore::StringData>( path->property( m_propertyName ) );
-		if( !propertyData )
+		else
 		{
-			throw IECore::Exception( "Expected StringData" );
+			propertyData = IECore::runTimeCast<const IECore::StringData>( path->property( m_propertyName ) );
+			if( !propertyData )
+			{
+				throw IECore::Exception( "Expected StringData" );
+			}
+			propertyValue = &propertyData->readable();
 		}
-		propertyValue = &propertyData->readable();
-	}
 
-	for( std::vector<IECore::StringAlgo::MatchPattern>::const_iterator it = m_patterns.begin(), eIt = m_patterns.end(); it != eIt; ++it )
-	{
-		if( IECore::StringAlgo::match( propertyValue->c_str(), *it ) )
+		for( std::vector<IECore::StringAlgo::MatchPattern>::const_iterator it = m_patterns.begin(), eIt = m_patterns.end(); it != eIt; ++it )
 		{
-			return invert( false );
+			if( IECore::StringAlgo::match( propertyValue->c_str(), *it ) )
+			{
+				return invert( false );
+			}
 		}
+		return invert( true );
 	}
-	return invert( true );
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::Msg::Error, "MatchPatternPathFilter", e.what() );
+		return true;
+	}
 }
