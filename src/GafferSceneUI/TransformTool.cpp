@@ -61,6 +61,7 @@
 #include "tbb/spin_mutex.h"
 
 #include <memory>
+#include <unordered_set>
 
 using namespace std;
 using namespace Imath;
@@ -576,15 +577,23 @@ void TransformTool::updateSelection() const
 	// Otherwise we need to populate our selection from
 	// the scene selection.
 	const PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
+	std::unordered_set<Gaffer::TransformPlug *> transformPlugs;
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
 		Selection selection( scenePlug(), *it, view()->getContext() );
 		if( selection.transformPlug )
 		{
-			m_selection.push_back( selection );
+			// Selection is editable, but it's possible that we've already added it
+			// (multiple paths may originate from the same node). We use the `transformPlugs`
+			// set to ensure we only include any plug in the selection once.
+			if( transformPlugs.insert( selection.transformPlug.get() ).second )
+			{
+				m_selection.push_back( selection );
+			}
 		}
 		else
 		{
+			// Selection is not editable - give up.
 			m_selection.clear();
 			break;
 		}

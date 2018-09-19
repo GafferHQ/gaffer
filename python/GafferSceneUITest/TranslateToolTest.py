@@ -516,5 +516,31 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	def testMultipleSelectionDoesntPickSamePlugTwice( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+		script["group"]["in"][1].setInput( script["plane"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane", "/group/plane1" ] ) )
+
+		# Even though there are two selected paths, there should only be
+		# one thing in the tool's selection, because both paths are generated
+		# by the same upstream node.
+
+		selection = tool.selection()
+		self.assertEqual( len( selection ), 1 )
+		self.assertEqual( selection[0].transformPlug, script["plane"]["transform"] )
+
 if __name__ == "__main__":
 	unittest.main()
