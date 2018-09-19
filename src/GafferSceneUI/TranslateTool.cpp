@@ -116,7 +116,7 @@ bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 void TranslateTool::updateHandles( float rasterScale )
 {
 	handles()->setTransform(
-		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
+		selection().orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
 	);
 
 	// Because we provide multiple orientations, the handles
@@ -175,7 +175,7 @@ TranslateTool::Translation::Translation( const TranslateTool *tool )
 	m_plug = selection.transformPlug->translatePlug();
 	m_origin = m_plug->getValue();
 
-	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
+	const M44f handlesTransform = selection.orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 
 	m_time = tool->view()->getContext()->getTime();

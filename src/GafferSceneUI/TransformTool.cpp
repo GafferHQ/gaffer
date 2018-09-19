@@ -352,6 +352,49 @@ Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace.inverse();
 }
 
+Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation ) const
+{
+	Context::Scope scopedContext( context.get() );
+
+	// Get a matrix with the orientation we want
+
+	M44f result;
+	{
+		switch( orientation )
+		{
+			case Local :
+				result = scene->fullTransform( path );
+				break;
+			case Parent :
+				if( path.size() )
+				{
+					const ScenePlug::ScenePath parentPath( path.begin(), path.end() - 1 );
+					result = scene->fullTransform( parentPath );
+				}
+				break;
+			case World :
+				result = M44f();
+				break;
+		}
+	}
+
+	result = sansScaling( result );
+
+	// And reset the translation to put it where the pivot is
+
+	Context::Scope upstreamScope( upstreamContext.get() );
+
+	const V3f pivot = transformPlug->pivotPlug()->getValue();
+	const V3f translate = transformPlug->translatePlug()->getValue();
+	const V3f downstreamWorldPivot = (pivot + translate) * sceneToTransformSpace().inverse();
+
+	result[3][0] = downstreamWorldPivot[0];
+	result[3][1] = downstreamWorldPivot[1];
+	result[3][2] = downstreamWorldPivot[2];
+
+	return result;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // TransformTool
 //////////////////////////////////////////////////////////////////////////
@@ -569,50 +612,6 @@ void TransformTool::preRender()
 		updateHandles( sizePlug()->getValue() * 75 );
 		m_handlesDirty = false;
 	}
-}
-
-Imath::M44f TransformTool::orientedTransform( Orientation orientation ) const
-{
-	const Selection &selection = this->selection();
-	Context::Scope scopedContext( selection.context.get() );
-
-	// Get a matrix with the orientation we want
-
-	M44f result;
-	{
-		switch( orientation )
-		{
-			case Local :
-				result = selection.scene->fullTransform( selection.path );
-				break;
-			case Parent :
-				if( selection.path.size() )
-				{
-					const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-					result = selection.scene->fullTransform( parentPath );
-				}
-				break;
-			case World :
-				result = M44f();
-				break;
-		}
-	}
-
-	result = sansScaling( result );
-
-	// And reset the translation to put it where the pivot is
-
-	Context::Scope upstreamScope( selection.upstreamContext.get() );
-
-	const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
-	const V3f translate = selection.transformPlug->translatePlug()->getValue();
-	const V3f downstreamWorldPivot = (pivot + translate) * selection.sceneToTransformSpace().inverse();
-
-	result[3][0] = downstreamWorldPivot[0];
-	result[3][1] = downstreamWorldPivot[1];
-	result[3][2] = downstreamWorldPivot[2];
-
-	return result;
 }
 
 void TransformTool::dragBegin()

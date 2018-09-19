@@ -124,7 +124,7 @@ bool RotateTool::affectsHandles( const Gaffer::Plug *input ) const
 void RotateTool::updateHandles( float rasterScale )
 {
 	handles()->setTransform(
-		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
+		selection().orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
 	);
 	Rotation rotation( this );
 	for( RotateHandleIterator it( handles() ); !it.done(); ++it )
@@ -167,7 +167,7 @@ RotateTool::Rotation::Rotation( const RotateTool *tool )
 	m_plug = selection.transformPlug->rotatePlug();
 	m_originalRotation = degreesToRadians( m_plug->getValue() );
 
-	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
+	const M44f handlesTransform = selection.orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 
 	m_time = tool->view()->getContext()->getTime();

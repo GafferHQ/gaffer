@@ -131,6 +131,9 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// Returns a matrix which converts from world
 			/// space in `scene` to `transformSpace`.
 			Imath::M44f sceneToTransformSpace() const;
+			/// Returns a matrix suitable for positioning
+			/// transform handles in `scene's` world space.
+			Imath::M44f orientedTransform( Orientation orientation ) const;
 
 		};
 
@@ -165,9 +168,6 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		/// transform and matching their enabled state to the editability
 		/// of the selection.
 		virtual void updateHandles( float rasterScale ) = 0;
-
-		/// Utility that may be used from updateHandles().
-		Imath::M44f orientedTransform( Orientation orientation ) const;
 
 		/// Must be called by derived classes when they begin
 		/// a drag.
