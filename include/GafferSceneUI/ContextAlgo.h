@@ -108,7 +108,6 @@ GAFFERSCENEUI_API void clearExpansion( Gaffer::Context *context );
 /// Similarly to Path Expansion, the UI components coordinate with each other
 /// to perform scene selection, again using the Context to store paths to the
 /// currently selected locations within the scene.
-
 GAFFERSCENEUI_API void setSelectedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
 GAFFERSCENEUI_API IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context );
 
@@ -116,6 +115,19 @@ GAFFERSCENEUI_API IECore::PathMatcher getSelectedPaths( const Gaffer::Context *c
 /// This can be used from `Context::changedSignal()` to determine if the selection has been
 /// changed.
 GAFFERSCENEUI_API bool affectsSelectedPaths( const IECore::InternedString &name );
+
+/// When multiple paths are selected, it can be useful to know which was the last path to be
+/// added. Because `PathMatcher` is unordered, this must be specified separately.
+///
+/// > Note : The last selected path is synchronised automatically with the list of selected
+/// > paths. When `setLastSelectedPath()` is called, it adds the path to the main selection list.
+/// > When `setSelectedPaths()` is called, an arbitrary path becomes the last selected path.
+/// >
+/// > Note : An empty path is considered to mean that there is no last selected path, _not_
+/// > that the scene root is selected.
+GAFFERSCENEUI_API void setLastSelectedPath( Gaffer::Context *context, const std::vector<IECore::InternedString> &path );
+GAFFERSCENEUI_API std::vector<IECore::InternedString> getLastSelectedPath( const Gaffer::Context *context );
+GAFFERSCENEUI_API bool affectsLastSelectedPath( const IECore::InternedString &name );
 
 } // namespace ContextAlgo
 

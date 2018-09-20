@@ -155,7 +155,7 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( c, IECore.PathMatcher( [ "/A" ] ) )
 
-		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( len( cs ), 2 )
 		self.assertTrue( GafferSceneUI.ContextAlgo.affectsSelectedPaths( cs[0][1] ) )
 
 		self.assertFalse( GafferSceneUI.ContextAlgo.affectsSelectedPaths( "frame" ) )
@@ -193,6 +193,23 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		e.addPath( "/a/b" )
 		self.assertNotEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), e )
+
+	def testLastSelectedPath( self ) :
+
+		c = Gaffer.Context()
+		self.assertEqual( GafferSceneUI.ContextAlgo.getLastSelectedPath( c ), "" )
+
+		s = IECore.PathMatcher( [ "/a", "/b" ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( c, s )
+		self.assertTrue( s.match( GafferSceneUI.ContextAlgo.getLastSelectedPath( c ) ) & s.Result.ExactMatch )
+
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( c, "/c" )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getLastSelectedPath( c ), "/c" )
+		s = GafferSceneUI.ContextAlgo.getSelectedPaths( c )
+		self.assertEqual( s, IECore.PathMatcher( [ "/a", "/b", "/c" ] ) )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( c, IECore.PathMatcher() )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getLastSelectedPath( c ), "" )
 
 if __name__ == "__main__":
 	unittest.main()
