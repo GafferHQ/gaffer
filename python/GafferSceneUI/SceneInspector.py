@@ -466,7 +466,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
 		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
 			return self.__formatValues( [ v.value for v in values ] )
-		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i ) ) :
+		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i, imath.Color4f ) ) :
 			return self.__formatVectors( values )
 		elif isinstance( values[0], ( imath.M44f, imath.M44d ) ) :
 			return self.__formatMatrices( values )
