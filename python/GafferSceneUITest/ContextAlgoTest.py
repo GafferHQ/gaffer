@@ -122,43 +122,6 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 	def testSelectedPaths( self ) :
 
-		# A
-		# |__B
-		#    |__D
-		#    |__E
-		# |__C
-		#    |__F
-		#    |__G
-
-		G = GafferScene.Sphere()
-		G["name"].setValue( "G" )
-
-		F = GafferScene.Sphere()
-		F["name"].setValue( "F" )
-
-		D = GafferScene.Sphere()
-		D["name"].setValue( "D" )
-
-		E = GafferScene.Sphere()
-		E["name"].setValue( "E" )
-
-		C = GafferScene.Group()
-		C["name"].setValue( "C" )
-
-		C["in"][0].setInput( F["out"] )
-		C["in"][1].setInput( G["out"] )
-
-		B = GafferScene.Group()
-		B["name"].setValue( "B" )
-
-		B["in"][0].setInput( D["out"] )
-		B["in"][1].setInput( E["out"] )
-
-		A = GafferScene.Group()
-		A["name"].setValue( "A" )
-		A["in"][0].setInput( B["out"] )
-		A["in"][1].setInput( C["out"] )
-
 		context = Gaffer.Context()
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/" ] ) )
