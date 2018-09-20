@@ -735,12 +735,6 @@ class Inspector( object ) :
 
 		return False
 
-	## Should return True if the Inspector's result is
-	# a shader that can be inspected further
-	def supportsShaderParameters( self, target ) :
-
-		return False
-
 	## Must be implemented to inspect the target and return
 	# a value to be displayed. When supportsInheritance()==True,
 	# this method must accept an ignoreInheritance keyword
@@ -944,6 +938,9 @@ class DiffRow( Row ) :
 
 		m = IECore.MenuDefinition()
 
+		attribute = targets[0].attributes().get( self.__label().getText() )
+		shaderInspectionSupported = isinstance( attribute, IECore.ObjectVector ) and isinstance( attribute[-1], IECoreScene.Shader )
+
 		for i, target in enumerate( targets ) :
 
 			if len( targets ) == 2 :
@@ -969,23 +966,30 @@ class DiffRow( Row ) :
 					}
 				)
 
-			if self.__inspector.supportsShaderParameters( target ) :
-
+			if shaderInspectionSupported :
 				m.append(
-					"/Show Shader Parameters",
+					"/Show Shader Parameters" + labelSuffix,
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__showShaderParameters ), target )
+						"command" : functools.partial( Gaffer.WeakMethod( self.__showShaderParameters ), [ target ] )
 					}
 				)
+
+		if len( targets ) > 1 and shaderInspectionSupported :
+			m.append(
+				"/Show Shader Parameters/Compare A and B",
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__showShaderParameters ), targets )
+				}
+			)
 
 		return m
 
 	def __showInheritance( self, target ) :
 
 		w = _SectionWindow(
-			target.scene.node().getName() + " : " + self.__label().getText(),
+			self.__label().getText(),
 			_InheritanceSection( self.__inspector, self.__diffCreator ),
-			target
+			[ target ]
 		)
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
@@ -994,21 +998,20 @@ class DiffRow( Row ) :
 	def __showHistory( self, target ) :
 
 		w = _SectionWindow(
-			target.scene.node().getName() + " : " + self.__label().getText(),
+			self.__label().getText(),
 			_HistorySection( self.__inspector, self.__diffCreator ),
-			target
+			[ target ]
 		)
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
 		w.setVisible( True )
 
-	def __showShaderParameters( self, target ) :
+	def __showShaderParameters( self, targets ) :
 
 		w = _SectionWindow(
-			target.scene.node().getName() + " : " + self.__label().getText(),
-			_ShaderParameterSection( self.__label().getText(), self.__inspector, self.__diffCreator ),
-			target,
-			nodes = target.scene.ancestor( Gaffer.ScriptNode ).selection()
+			self.__label().getText(),
+			_ShaderParameterSection( self.__inspector, self.__diffCreator ),
+			targets
 		)
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
@@ -1209,18 +1212,21 @@ SceneInspector.LocationSection = LocationSection
 
 class _SectionWindow( GafferUI.Window ) :
 
-	def __init__( self, title, section, target, nodes = None ) :
+	def __init__( self, label, section, targets ) :
+
+		title = ' '.join( [ target.scene.node().getName() for target in targets ] ) + " : " + label
 
 		GafferUI.Window.__init__( self, title, borderWidth = 4 )
 
-		editor = SceneInspector( target.scene.ancestor( Gaffer.ScriptNode ), sections = [ section ] )
-		editor.setTargetPaths( [ target.path ] )
-		if nodes and isinstance( nodes, Gaffer.StandardSet ) :
-			editor.setNodeSet( nodes )
-		else:
-			editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
+		container = GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never )
 
-		self.setChild( editor )
+		with container :
+
+			editor = SceneInspector( targets[0].scene.ancestor( Gaffer.ScriptNode ), sections = [ section ] )
+			editor.setTargetPaths( [ target.path for target in targets ] )
+			editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() for target in targets ] ) )
+
+		self.setChild( container )
 
 		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
 
@@ -1342,11 +1348,11 @@ class _ShaderParameterSection( LocationSection ) :
 
 	class __Inspector( Inspector ) :
 
-		def __init__( self, shaderAttribute, parameterName = None ) :
+		def __init__( self, inspector, parameterName = None ) :
 
 			Inspector.__init__( self )
 
-			self.__shaderAttribute = shaderAttribute
+			self.__inspector = inspector
 			self.__parameterName = parameterName
 
 		def name( self ) :
@@ -1367,34 +1373,28 @@ class _ShaderParameterSection( LocationSection ) :
 			if parameters is None :
 				return []
 
-			return [ self.__class__( self.__shaderAttribute, parameterName = p ) for p in parameters.keys() ]
+			return [ self.__class__( self.__inspector, parameterName = p ) for p in parameters.keys() if not p == '__handle' ]
 
 		def __parameters( self, target ) :
 
 			if target.path is None :
 				return None
 
-			attributes = target.attributes()
-
-			shaders = attributes[self.__shaderAttribute]
-
+			shaders = self.__inspector( target )
 			if not shaders :
 				return None
 
-			shader = shaders[0]  # only the first one is supported
+			return shaders[-1].parameters  # only the last one is supported
 
-			return shader.parameters
-
-	def __init__( self, shaderAttribute, inspector, diffCreator = TextDiff, **kw ) :
+	def __init__( self, inspector, diffCreator = TextDiff, **kw ) :
 
 		LocationSection.__init__( self, collapsed = None, **kw )
 
-		self.__shaderAttribute = shaderAttribute
 		self.__diffCreator = diffCreator
 
 		with self._mainColumn() :
 
-			self.__diffColumn = DiffColumn( self.__Inspector( self.__shaderAttribute ), label = "Parameters", filterable = True, diffCreator = self.__diffCreator )
+			self.__diffColumn = DiffColumn( self.__Inspector( inspector ), label = "Parameters", filterable = True, diffCreator = self.__diffCreator )
 
 	def update( self, targets ) :
 
@@ -1768,12 +1768,6 @@ class __AttributesSection( LocationSection ) :
 		def supportsInheritance( self ) :
 
 			return True
-
-		def supportsShaderParameters( self, target ) :
-
-			attributeValue = self( target, True )
-
-			return isinstance( attributeValue, IECore.ObjectVector ) and isinstance( attributeValue[0], IECoreScene.Shader )
 
 		def __call__( self, target, ignoreInheritance = False ) :
 
