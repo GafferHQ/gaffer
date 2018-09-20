@@ -542,5 +542,32 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( selection ), 1 )
 		self.assertEqual( selection[0].transformPlug, script["plane"]["transform"] )
 
+	def testHandesFollowLastSelected( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 1 ) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+		script["group"]["in"][1].setInput( script["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/plane" )
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere" )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( script["sphere"]["transform"]["translate"].getValue() ) )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+
 if __name__ == "__main__":
 	unittest.main()

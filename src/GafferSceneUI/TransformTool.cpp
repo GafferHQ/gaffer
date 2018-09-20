@@ -503,6 +503,7 @@ void TransformTool::contextChanged( const IECore::InternedString &name )
 {
 	if(
 		ContextAlgo::affectsSelectedPaths( name ) ||
+		ContextAlgo::affectsLastSelectedPath( name ) ||
 		!boost::starts_with( name.string(), "ui:" )
 	)
 	{
@@ -576,7 +577,17 @@ void TransformTool::updateSelection() const
 
 	// Otherwise we need to populate our selection from
 	// the scene selection.
+
 	const PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
+	if( selectedPaths.isEmpty() )
+	{
+		return;
+	}
+
+	const ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	assert( selectedPaths.match( lastSelectedPath ) & IECore::PathMatcher::ExactMatch );
+
+	Selection lastSelection;
 	std::unordered_set<Gaffer::TransformPlug *> transformPlugs;
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
@@ -588,16 +599,27 @@ void TransformTool::updateSelection() const
 			// set to ensure we only include any plug in the selection once.
 			if( transformPlugs.insert( selection.transformPlug.get() ).second )
 			{
-				m_selection.push_back( selection );
+				if( *it != lastSelectedPath )
+				{
+					m_selection.push_back( selection );
+				}
+				else
+				{
+					// We'll push this back last, outside the loop
+					lastSelection = selection;
+				}
 			}
 		}
 		else
 		{
 			// Selection is not editable - give up.
 			m_selection.clear();
-			break;
+			return;
 		}
 	}
+
+	assert( lastSelection.transformPlug );
+	m_selection.push_back( lastSelection );
 }
 
 void TransformTool::preRender()
