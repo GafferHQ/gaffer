@@ -115,7 +115,7 @@ enum TypeId
 	ArrayPlugTypeId = 110068,
 	BackdropTypeId = 110069,
 	SwitchComputeNodeTypeId = 110070,
-	SwitchDependencyNodeTypeId = 110071,
+	SwitchDependencyNodeTypeId = 110071, // obsolete - available for reuse
 	PathMatcherDataPlugTypeId = 110072,
 	SubGraphTypeId = 110073,
 	DotTypeId = 110074,

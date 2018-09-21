@@ -273,17 +273,6 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 		return true;
 	}
 
-	if( !isInstanceOf( ComputeNode::staticTypeId() ) && ( plug == enabledPlug() || plug == indexPlug() ) )
-	{
-		// we're not a compute node, so we have to implement the switching by making an internal connection
-		// from an input to the output. this means the index must be a constant value, which means that it
-		// cannot be the output of a ComputeNode, which could vary according to the Context.
-		if( variesWithContext( inputPlug ) )
-		{
-			return false;
-		}
-	}
-
 	if( plug->direction() == Plug::In )
 	{
 		if( const Plug *opposite = oppositePlug( plug ) )
@@ -301,13 +290,6 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 template<typename BaseType>
 void Switch<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	hashInternal<BaseType>( output, context, h );
-}
-
-template<typename BaseType>
-template<typename T>
-void Switch<BaseType>::hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
-{
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
 	{
 		h = input->hash();
@@ -318,23 +300,7 @@ void Switch<BaseType>::hashInternal( const ValuePlug *output, const Context *con
 }
 
 template<typename BaseType>
-template<typename T>
-void Switch<BaseType>::hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
-{
-	// not a ComputeNode - no need for hashing
-}
-
-template<typename BaseType>
 void Switch<BaseType>::compute( ValuePlug *output, const Context *context ) const
-{
-	// defer to computeInternal(), which is implemented appropriately for
-	// ComputeNode and DependencyNode types.
-	computeInternal<BaseType>( output, context );
-}
-
-template<typename BaseType>
-template<typename T>
-void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
 {
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
 	{
@@ -343,13 +309,6 @@ void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *contex
 	}
 
 	BaseType::compute( output, context );
-}
-
-template<typename BaseType>
-template<typename T>
-void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
-{
-	// not a ComputeNode - no need for computation
 }
 
 template<typename BaseType>
@@ -472,7 +431,6 @@ void Switch<BaseType>::updateInternalConnection()
 		// We can't use an internal connection to implement the switch,
 		// because the index might vary from context to context. We must
 		// therefore implement switching via hash()/compute().
-		assert( this->isInstanceOf( ComputeNode::staticTypeId() ) );
 		out->setInput( nullptr );
 		return;
 	}

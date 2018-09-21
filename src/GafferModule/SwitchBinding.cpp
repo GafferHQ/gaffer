@@ -70,6 +70,5 @@ void bind()
 
 void GafferModule::bindSwitch()
 {
-	bind<SwitchDependencyNode>();
 	bind<SwitchComputeNode>();
 }

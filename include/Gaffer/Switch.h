@@ -40,8 +40,6 @@
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
-#include "boost/utility/enable_if.hpp"
-
 namespace Gaffer
 {
 
@@ -71,12 +69,11 @@ class IECORE_EXPORT Switch : public BaseType
 		Switch( const std::string &name=GraphComponent::defaultName<Switch>() );
 		~Switch() override;
 
-		/// Sets up a SwitchComputeNode or SwitchDependencyNode
-		/// to work with the specified plug type. The passed plug
-		/// is used as a template, but will not be referenced by the
-		/// Switch itself - typically you will pass a plug
+		/// Sets up the switch to work with the specified plug type.
+		/// The passed plug is used as a template, but will not be
+		/// referenced by the Switch itself - typically you will pass a plug
 		/// which you will connect to the Switch after calling
-		/// setup().
+		/// `setup()`.
 		/// \undoable
 		void setup( const Plug *plug );
 
@@ -98,47 +95,19 @@ class IECORE_EXPORT Switch : public BaseType
 
 	protected :
 
-		// Implemented to reject ComputeNode inputs to "index" and "enabled" if we ourselves
-		// are not a ComputeNode, and to reject input branches inputs if they wouldn't
-		// be accepted by the output.
+		// Implemented to reject input branches inputs if they wouldn't be accepted by the output.
 		bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const override;
-
-#ifdef __clang__
-// Because BaseType is sometimes ComputeNode and sometimes DependencyNode,
-// the methods below are sometimes overrides and sometimes not. We must disable
-// Clangs's warnings so that we don't get a compilation error when they are.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winconsistent-missing-override"
-#endif
 
 		// The hash() and compute() methods are implemented to pass through the results from
 		// the input branch specified by indexPlug(). They operate via the hashInternal() and
 		// computeInternal() methods, which are specialised for the cases where we do and do
 		// not inherit from ComputeNode.
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		virtual void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 
 		void init( bool expectBaseClassPlugs );
-
-		// The internal implementation for hash(). Does nothing when BaseType is not a ComputeNode,
-		// and passes through the hash from the appropriate input when it is.
-		template<typename T>
-		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
-		template<typename T>
-		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
-
-		// The internal implementation for compute(). Does nothing when BaseType is not a ComputeNode,
-		// and passes through the value from the appropriate input when it is.
-		template<typename T>
-		void computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
-		template<typename T>
-		void computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
 
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
@@ -179,10 +148,8 @@ struct SwitchTraits
 
 };
 
-typedef Switch<DependencyNode> SwitchDependencyNode;
 typedef Switch<ComputeNode> SwitchComputeNode;
 
-IE_CORE_DECLAREPTR( SwitchDependencyNode );
 IE_CORE_DECLAREPTR( SwitchComputeNode );
 
 } // namespace Gaffer

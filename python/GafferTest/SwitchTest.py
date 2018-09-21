@@ -245,9 +245,9 @@ class SwitchTest( GafferTest.TestCase ) :
 		# been removed.
 		self.assertTrue( script["s"]["out"].getInput() is not None )
 
-	def testDependencyNodeSwitch( self ) :
+	def testPassThroughWhenIndexConstant( self ) :
 
-		n = Gaffer.SwitchDependencyNode()
+		n = Gaffer.SwitchComputeNode()
 		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
@@ -281,7 +281,6 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testIndexInputAcceptance( self ) :
 
 		cs = Gaffer.SwitchComputeNode()
-		ds = Gaffer.SwitchDependencyNode()
 
 		a = GafferTest.AddNode()
 		a["boolInput"] = Gaffer.BoolPlug()
@@ -290,18 +289,12 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertTrue( cs["index"].acceptsInput( a["op1"] ) )
 		self.assertTrue( cs["index"].acceptsInput( a["sum"] ) )
 
-		self.assertTrue( ds["index"].acceptsInput( a["op1"] ) )
-		self.assertFalse( ds["index"].acceptsInput( a["sum"] ) )
-
 		self.assertTrue( cs["enabled"].acceptsInput( a["boolInput"] ) )
 		self.assertTrue( cs["enabled"].acceptsInput( a["boolOutput"] ) )
 
-		self.assertTrue( ds["enabled"].acceptsInput( a["boolInput"] ) )
-		self.assertFalse( ds["enabled"].acceptsInput( a["boolOutput"] ) )
+	def testConnectedIndex( self ) :
 
-	def testDependencyNodeConnectedIndex( self ) :
-
-		n = Gaffer.SwitchDependencyNode()
+		n = Gaffer.SwitchComputeNode()
 		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
@@ -328,15 +321,15 @@ class SwitchTest( GafferTest.TestCase ) :
 		indexInput.setValue( 3 )
 		self.assertTrue( n["out"].source().isSame( input0 ) )
 
-	def testDependencyNodeAcceptsNoneInputs( self ) :
+	def testAcceptsNoneInputs( self ) :
 
-		n = Gaffer.SwitchDependencyNode()
+		n = Gaffer.SwitchComputeNode()
 		self.assertTrue( n["enabled"].acceptsInput( None ) )
 		self.assertTrue( n["index"].acceptsInput( None ) )
 
 	def testIndirectInputsToIndex( self ) :
 
-		n = Gaffer.SwitchDependencyNode()
+		n = Gaffer.SwitchComputeNode()
 		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
