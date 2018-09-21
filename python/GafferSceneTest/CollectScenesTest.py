@@ -187,7 +187,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"]["sets"].setValue( "sphereSet" )
 
 		script["group"] = GafferScene.Group()
-		script["group"]["in"].setInput( script["sphere"]["out"] )
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
 
 		script["cube"] = GafferScene.Cube()
 		script["cube"]["sets"].setValue( "cubeSet" )

@@ -144,24 +144,6 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["planeSet"]["paths"].setValue( IECore.StringVectorData( [ "/group", "/group/plane" ] ) )
 		self.assertTrue( script["attributes"]["out"]["attributes"] in [ c[0] for c in cs ] )
 
-	def testFileCompatibilityWithVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/filterSwitchVersion-0.15.0.0.gfr" )
-		s.load()
-
-		self.assertTrue( len( s["FilterSwitch"]["in"] ), 4 )
-		self.assertTrue( s["FilterSwitch"]["in"][0].getInput().isSame( s["PathFilter"]["out"] ) )
-		self.assertTrue( s["FilterSwitch"]["in"][1].getInput().isSame( s["PathFilter1"]["out"] ) )
-		self.assertTrue( s["FilterSwitch"]["in"][2].getInput().isSame( s["PathFilter2"]["out"] ) )
-		self.assertTrue( s["FilterSwitch"]["out"].getInput().isSame( s["FilterSwitch"]["in"][0] ) )
-
-		self.assertTrue( len( s["FilterSwitch1"]["in"] ), 4 )
-		self.assertTrue( s["FilterSwitch1"]["in"][0].getInput().isSame( s["PathFilter"]["out"] ) )
-		self.assertTrue( s["FilterSwitch1"]["in"][1].getInput().isSame( s["PathFilter1"]["out"] ) )
-		self.assertTrue( s["FilterSwitch1"]["in"][2].getInput().isSame( s["PathFilter2"]["out"] ) )
-		self.assertTrue( s["FilterSwitch1"]["out"].getInput().isSame( s["FilterSwitch1"]["in"][1] ) )
-
 	def testSwitchConnectionSerializationProblem( self ):
 
 		s = Gaffer.ScriptNode()

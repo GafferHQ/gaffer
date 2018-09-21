@@ -208,16 +208,6 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["p"].setInput( s["f"]["out"] )
 
-	def testFileCompatibilityWithVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/unionFilterVersion-0.15.0.0.gfr" )
-		s.load()
-
-		self.assertTrue( s["UnionFilter"]["in"][0].getInput().isSame( s["PathFilter"]["out"] ) )
-		self.assertTrue( s["UnionFilter"]["in"][1].getInput().isSame( s["PathFilter1"]["out"] ) )
-		self.assertTrue( s["UnionFilter"]["in"][2].getInput().isSame( s["PathFilter2"]["out"] ) )
-
 	def testDisabling( self ) :
 
 		pathFilterA = GafferScene.PathFilter()

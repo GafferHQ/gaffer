@@ -55,7 +55,7 @@ class CollectTransformsTest( GafferSceneTest.SceneTestCase ) :
 
 		script["Cube"] = GafferScene.Cube( "Cube" )
 		script["Group"] = GafferScene.Group( "Group" )
-		script["Group"]["in"].setInput( script["Cube"]["out"] )
+		script["Group"]["in"][0].setInput( script["Cube"]["out"] )
 		script["Group"]["transform"]["translate"].setValue( imath.V3f( 30 ) )
 		script["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
 		script["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/group/cube' ] ) )

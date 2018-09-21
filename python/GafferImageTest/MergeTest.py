@@ -253,24 +253,6 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( m["out"]["format"].getValue(), d["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
 
-	def testFileCompatibilityWithVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/mergeVersion-0.15.0.0.gfr" )
-		with IECore.CapturingMessageHandler() as mh :
-			s.load( continueOnError = True )
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( "registerFormat" in mh.messages[0].message )
-
-		self.assertTrue( s["m"]["in"][0].getInput().isSame( s["c1"]["out"] ) )
-		self.assertTrue( s["m"]["in"][1].getInput().isSame( s["c2"]["out"] ) )
-
-		self.assertTrue( "in1" not in s["m"] )
-		self.assertTrue( "in2" not in s["m"] )
-
-		with s.context() :
-			self.assertEqual( s["m"]["out"].channelData( "R", imath.V2i( 0 ) )[0], 0.75 )
-
 	def testSmallDataWindowOverLarge( self ) :
 
 		b = GafferImage.Constant()
