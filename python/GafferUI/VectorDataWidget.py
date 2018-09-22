@@ -57,7 +57,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# of identical length.
 	#
 	# header may be False for no header, True for a default header, or a list of
-	# strings to specify a custom header per column.
+	# strings to specify a custom header per column. If the VectorDataWidget data is set to
+	# [V3fVectorData] then a list of three column headings is required.
+	#
+	# If a headerPrefix defines the prefix for each set of columns from the same data
+	# For example [V3fVectorData, V3fVectorData] would require 5 elements if using headers or
+	# only 2 using headerPrefix.  if headerPrefix = ['first', 'second'] then the following column
+	# names would appear in the table: [ 'first.x', 'first.y', 'first.z', 'second.x', 'second.y' ]
 	#
 	# minimumVisibleRows specifies a number of rows after which a vertical scroll bar
 	# may become visible - before this all rows should be directly visible with no need
