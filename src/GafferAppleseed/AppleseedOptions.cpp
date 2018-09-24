@@ -93,7 +93,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:searchpath", new IECore::StringData( "" ), "searchPath", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:rendering_threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:progressive_frame_renderer:max_fps", new IECore::FloatData( 5.0f ), "interactiveRenderFps", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:texture_store:max_size", new IECore::IntData( 1024 * 1024 * 1024 ), "textureMem", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:texture_store:max_size", new IECore::IntData( 1024 ), "textureMem", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "spiral" ), "tileOrdering", Gaffer::Plug::Default, false );
 
 	// logging
