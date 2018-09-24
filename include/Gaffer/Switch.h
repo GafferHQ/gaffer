@@ -37,6 +37,7 @@
 #ifndef GAFFER_SWITCH_H
 #define GAFFER_SWITCH_H
 
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -76,6 +77,14 @@ class IECORE_EXPORT Switch : public BaseType
 		/// `setup()`.
 		/// \undoable
 		void setup( const Plug *plug );
+
+		/// Will return null unless `setup()` has been called.
+		ArrayPlug *inPlugs();
+		const ArrayPlug *inPlugs() const;
+
+		/// Will return null unless `setup()` has been called.
+		Plug *outPlug();
+		const Plug *outPlug() const;
 
 		/// Returns the input plug which will be passed through
 		/// by the switch in the current context.

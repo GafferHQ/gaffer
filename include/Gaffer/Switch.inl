@@ -86,7 +86,7 @@ void Switch<BaseType>::init( bool expectBaseClassPlugs )
 	{
 		// We need to react to addition/removal of inputs, so connect to
 		// the childAdded signal on our input array.
-		ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in");
+		ArrayPlug *inPlugs = this->inPlugs();
 		inPlugs->childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	}
 	else
@@ -109,11 +109,11 @@ Switch<BaseType>::~Switch()
 template<typename BaseType>
 void Switch<BaseType>::setup( const Plug *plug )
 {
-	if( BaseType::template getChild<Plug>( "in") )
+	if( inPlugs() )
 	{
 		throw IECore::Exception( "Switch already has an \"in\" plug." );
 	}
-	if( BaseType::template getChild<Plug>( "out" ) )
+	if( outPlug() )
 	{
 		throw IECore::Exception( "Switch already has an \"out\" plug." );
 	}
@@ -138,9 +138,33 @@ void Switch<BaseType>::setup( const Plug *plug )
 }
 
 template<typename BaseType>
+ArrayPlug *Switch<BaseType>::inPlugs()
+{
+	return BaseType::template getChild<ArrayPlug>( "in" );
+}
+
+template<typename BaseType>
+const ArrayPlug *Switch<BaseType>::inPlugs() const
+{
+	return BaseType::template getChild<ArrayPlug>( "in" );
+}
+
+template<typename BaseType>
+Plug *Switch<BaseType>::outPlug()
+{
+	return BaseType::template getChild<Plug>( "out" );
+}
+
+template<typename BaseType>
+const Plug *Switch<BaseType>::outPlug() const
+{
+	return BaseType::template getChild<Plug>( "out" );
+}
+
+template<typename BaseType>
 Plug *Switch<BaseType>::activeInPlug()
 {
-	ArrayPlug *inputs = BaseType::template getChild<ArrayPlug>( "in" );
+	ArrayPlug *inputs = inPlugs();
 	if( !inputs )
 	{
 		return nullptr;
@@ -196,7 +220,7 @@ void Switch<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugs
 		input == indexPlug()
 	)
 	{
-		if( const Plug *out = BaseType::template getChild<Plug>( "out" ) )
+		if( const Plug *out = outPlug() )
 		{
 			if( out->children().size() )
 			{
@@ -226,7 +250,7 @@ void Switch<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugs
 template<typename BaseType>
 void Switch<BaseType>::childAdded( GraphComponent *child )
 {
-	ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in" );
+	ArrayPlug *inPlugs = this->inPlugs();
 	if( child->parent<Plug>() == inPlugs )
 	{
 		// Because inputIndex() wraps on the number of children,
@@ -240,7 +264,7 @@ void Switch<BaseType>::childAdded( GraphComponent *child )
 		updateInternalConnection();
 		inPlugs->childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	}
-	else if( child == BaseType::template getChild<Plug>( "out" ) )
+	else if( child == outPlug() )
 	{
 		// Our "out" plug has just been added. Make sure it has
 		// an appropriate internal connection.
@@ -332,7 +356,7 @@ void Switch<BaseType>::plugInputChanged( Plug *plug )
 template<typename BaseType>
 size_t Switch<BaseType>::inputIndex( const Context *context ) const
 {
-	const ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in" );
+	const ArrayPlug *inPlugs = this->inPlugs();
 	if( enabledPlug()->getValue() && inPlugs && inPlugs->children().size() > 1 )
 	{
 		size_t index = 0;
@@ -357,8 +381,8 @@ size_t Switch<BaseType>::inputIndex( const Context *context ) const
 template<typename BaseType>
 const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex ) const
 {
-	const ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in" );
-	const Plug *outPlug = BaseType::template getChild<Plug>( "out" );
+	const ArrayPlug *inPlugs = this->inPlugs();
+	const Plug *outPlug = this->outPlug();
 	if( !inPlugs || !outPlug )
 	{
 		return nullptr;
@@ -420,7 +444,7 @@ bool Switch<BaseType>::variesWithContext( const Plug *plug ) const
 template<typename BaseType>
 void Switch<BaseType>::updateInternalConnection()
 {
-	Plug *out = BaseType::template getChild<Plug>( "out" );
+	Plug *out = outPlug();
 	if( !out )
 	{
 		return;
