@@ -2390,6 +2390,7 @@ InternedString g_ptMaxRayIntensity( "as:cfg:pt:max_ray_intensity" );
 InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mode" );
 InternedString g_searchPath( "as:searchpath" );
 InternedString g_maxInteractiveRenderSamples( "as:cfg:progressive_frame_renderer:max_samples" );
+InternedString g_textureCacheSize( "as:cfg:texture_store:max_size" ) ;
 
 /// The full renderer implementation as presented to the outside world.
 class AppleseedRenderer final : public AppleseedRendererBase
@@ -2557,6 +2558,22 @@ class AppleseedRenderer final : public AppleseedRendererBase
 						m_maxInteractiveRenderSamples = d->readable();
 					}
 					return;
+				}
+
+				if ( name == g_textureCacheSize )
+				{
+					if ( value == nullptr )
+					{
+						// Reset texture cache size.
+						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
+						m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
+					}
+					else if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
+					{
+						const uint64_t size = static_cast<uint64_t>( d->readable() ) * 1024 * 1024;
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), size );
+						m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), size );
+					}
 				}
 
 				// PT and SPPM per ray type bounces.
