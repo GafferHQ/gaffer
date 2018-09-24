@@ -189,6 +189,7 @@ const TransformTool::Selection &CameraTool::cameraSelection()
 		);
 	}
 
+	m_cameraSelectionDirty = false;
 	return m_cameraSelection;
 }
 
