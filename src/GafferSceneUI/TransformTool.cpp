@@ -61,6 +61,7 @@
 #include "tbb/spin_mutex.h"
 
 #include <memory>
+#include <unordered_set>
 
 using namespace std;
 using namespace Imath;
@@ -352,6 +353,49 @@ Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace.inverse();
 }
 
+Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation ) const
+{
+	Context::Scope scopedContext( context.get() );
+
+	// Get a matrix with the orientation we want
+
+	M44f result;
+	{
+		switch( orientation )
+		{
+			case Local :
+				result = scene->fullTransform( path );
+				break;
+			case Parent :
+				if( path.size() )
+				{
+					const ScenePlug::ScenePath parentPath( path.begin(), path.end() - 1 );
+					result = scene->fullTransform( parentPath );
+				}
+				break;
+			case World :
+				result = M44f();
+				break;
+		}
+	}
+
+	result = sansScaling( result );
+
+	// And reset the translation to put it where the pivot is
+
+	Context::Scope upstreamScope( upstreamContext.get() );
+
+	const V3f pivot = transformPlug->pivotPlug()->getValue();
+	const V3f translate = transformPlug->translatePlug()->getValue();
+	const V3f downstreamWorldPivot = (pivot + translate) * sceneToTransformSpace().inverse();
+
+	result[3][0] = downstreamWorldPivot[0];
+	result[3][1] = downstreamWorldPivot[1];
+	result[3][2] = downstreamWorldPivot[2];
+
+	return result;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // TransformTool
 //////////////////////////////////////////////////////////////////////////
@@ -392,7 +436,7 @@ TransformTool::~TransformTool()
 {
 }
 
-const TransformTool::Selection &TransformTool::selection() const
+const std::vector<TransformTool::Selection> &TransformTool::selection() const
 {
 	updateSelection();
 	return m_selection;
@@ -401,7 +445,7 @@ const TransformTool::Selection &TransformTool::selection() const
 Imath::M44f TransformTool::handlesTransform()
 {
 	updateSelection();
-	if( !m_selection.transformPlug )
+	if( m_selection.empty() )
 	{
 		throw IECore::Exception( "Selection not valid" );
 	}
@@ -459,6 +503,7 @@ void TransformTool::contextChanged( const IECore::InternedString &name )
 {
 	if(
 		ContextAlgo::affectsSelectedPaths( name ) ||
+		ContextAlgo::affectsLastSelectedPath( name ) ||
 		!boost::starts_with( name.string(), "ui:" )
 	)
 	{
@@ -520,7 +565,7 @@ void TransformTool::updateSelection() const
 	}
 
 	// Clear the selection.
-	m_selection = Selection();
+	m_selection.clear();
 	m_selectionDirty = false;
 
 	// If we're not active, then there's
@@ -530,17 +575,51 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
-	// If there's a single path selected, then
-	// update our selection from it.
+	// Otherwise we need to populate our selection from
+	// the scene selection.
+
 	const PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
-	if( !selectedPaths.isEmpty() )
+	if( selectedPaths.isEmpty() )
 	{
-		const PathMatcher::Iterator it = selectedPaths.begin();
-		if( std::next( it ) == selectedPaths.end() )
+		return;
+	}
+
+	const ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	assert( selectedPaths.match( lastSelectedPath ) & IECore::PathMatcher::ExactMatch );
+
+	Selection lastSelection;
+	std::unordered_set<Gaffer::TransformPlug *> transformPlugs;
+	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
+	{
+		Selection selection( scenePlug(), *it, view()->getContext() );
+		if( selection.transformPlug )
 		{
-			m_selection = Selection( scenePlug(), *it, view()->getContext() );
+			// Selection is editable, but it's possible that we've already added it
+			// (multiple paths may originate from the same node). We use the `transformPlugs`
+			// set to ensure we only include any plug in the selection once.
+			if( transformPlugs.insert( selection.transformPlug.get() ).second )
+			{
+				if( *it != lastSelectedPath )
+				{
+					m_selection.push_back( selection );
+				}
+				else
+				{
+					// We'll push this back last, outside the loop
+					lastSelection = selection;
+				}
+			}
+		}
+		else
+		{
+			// Selection is not editable - give up.
+			m_selection.clear();
+			return;
 		}
 	}
+
+	assert( lastSelection.transformPlug );
+	m_selection.push_back( lastSelection );
 }
 
 void TransformTool::preRender()
@@ -556,7 +635,7 @@ void TransformTool::preRender()
 		updateSelection();
 	}
 
-	if( !m_selection.transformPlug )
+	if( m_selection.empty() )
 	{
 		m_handles->setVisible( false );
 		return;
@@ -569,50 +648,6 @@ void TransformTool::preRender()
 		updateHandles( sizePlug()->getValue() * 75 );
 		m_handlesDirty = false;
 	}
-}
-
-Imath::M44f TransformTool::orientedTransform( Orientation orientation ) const
-{
-	const Selection &selection = this->selection();
-	Context::Scope scopedContext( selection.context.get() );
-
-	// Get a matrix with the orientation we want
-
-	M44f result;
-	{
-		switch( orientation )
-		{
-			case Local :
-				result = selection.scene->fullTransform( selection.path );
-				break;
-			case Parent :
-				if( selection.path.size() )
-				{
-					const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-					result = selection.scene->fullTransform( parentPath );
-				}
-				break;
-			case World :
-				result = M44f();
-				break;
-		}
-	}
-
-	result = sansScaling( result );
-
-	// And reset the translation to put it where the pivot is
-
-	Context::Scope upstreamScope( selection.upstreamContext.get() );
-
-	const V3f pivot = selection.transformPlug->pivotPlug()->getValue();
-	const V3f translate = selection.transformPlug->translatePlug()->getValue();
-	const V3f downstreamWorldPivot = (pivot + translate) * selection.sceneToTransformSpace().inverse();
-
-	result[3][0] = downstreamWorldPivot[0];
-	result[3][1] = downstreamWorldPivot[1];
-	result[3][2] = downstreamWorldPivot[2];
-
-	return result;
 }
 
 void TransformTool::dragBegin()
@@ -640,25 +675,26 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 
 	if( event.key == "S" && !event.modifiers )
 	{
-		const Selection &selection = this->selection();
-		if( !selection.transformPlug )
+		if( selection().empty() )
 		{
 			return false;
 		}
 
-		UndoScope undoScope( selection.transformPlug->ancestor<ScriptNode>() );
-		Context::Scope contextScope( selection.context.get() );
-		for( RecursiveFloatPlugIterator it( selection.transformPlug.get() ); !it.done(); ++it )
+		UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>() );
+		for( const auto &s : selection() )
 		{
-			FloatPlug *plug = it->get();
-			if( Animation::canAnimate( plug ) )
+			Context::Scope contextScope( s.context.get() );
+			for( RecursiveFloatPlugIterator it( s.transformPlug.get() ); !it.done(); ++it )
 			{
-				const float value = plug->getValue();
-				Animation::CurvePlug *curve = Animation::acquire( plug );
-				curve->addKey( new Animation::Key( selection.context->getTime(), value ) );
+				FloatPlug *plug = it->get();
+				if( Animation::canAnimate( plug ) )
+				{
+					const float value = plug->getValue();
+					Animation::CurvePlug *curve = Animation::acquire( plug );
+					curve->addKey( new Animation::Key( s.context->getTime(), value ) );
+				}
 			}
 		}
-
 		return true;
 	}
 	else if( event.key == "Plus" || event.key == "Equal" )

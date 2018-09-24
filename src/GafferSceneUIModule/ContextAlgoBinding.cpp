@@ -83,6 +83,25 @@ void setSelectedPathsWrapper( Context &context, const IECore::PathMatcher &paths
 	setSelectedPaths( &context, paths );
 }
 
+void setLastSelectedPathWrapper( Gaffer::Context *context, const std::vector<IECore::InternedString> &path )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setLastSelectedPath( context, path );
+}
+
+std::string getLastSelectedPathWrapper( const Gaffer::Context *context )
+{
+	std::vector<InternedString> path = getLastSelectedPath( context );
+	if( path.empty() )
+	{
+		return "";
+	}
+
+	std::string result;
+	ScenePlug::pathToString( path, result );
+	return result;
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindContextAlgo()
@@ -94,6 +113,9 @@ void GafferSceneUIModule::bindContextAlgo()
 	def( "setExpandedPaths", &setExpandedPathsWrapper );
 	def( "getExpandedPaths", &getExpandedPaths );
 	def( "affectsExpandedPaths", &affectsExpandedPaths );
+	def( "setLastSelectedPath", &setLastSelectedPathWrapper );
+	def( "getLastSelectedPath", &getLastSelectedPathWrapper );
+	def( "affectsLastSelectedPath", &affectsLastSelectedPath );
 	def( "expand", &expandWrapper, ( arg( "expandAncestors" ) = true ) );
 	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
 	def( "clearExpansion", &clearExpansionWrapper );

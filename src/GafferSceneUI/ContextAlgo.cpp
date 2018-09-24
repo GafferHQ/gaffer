@@ -51,6 +51,7 @@ namespace
 
 InternedString g_expandedPathsName( "ui:scene:expandedPaths" );
 InternedString g_selectedPathsName( "ui:scene:selectedPaths" );
+InternedString g_lastSelectedPathName( "ui:scene:lastSelectedPath" );
 
 bool expandWalk( const ScenePlug::ScenePath &path, const ScenePlug *scene, size_t depth, PathMatcher &expanded, PathMatcher &leafPaths )
 {
@@ -192,6 +193,20 @@ void clearExpansion( Gaffer::Context *context )
 void setSelectedPaths( Context *context, const IECore::PathMatcher &paths )
 {
 	context->set( g_selectedPathsName, paths );
+
+	if( paths.isEmpty() )
+	{
+		context->remove( g_lastSelectedPathName );
+	}
+	else
+	{
+		std::vector<IECore::InternedString> lastSelectedPath = getLastSelectedPath( context );
+		if( !(paths.match( lastSelectedPath ) & PathMatcher::ExactMatch) )
+		{
+			const PathMatcher::Iterator it = paths.begin();
+			context->set( g_lastSelectedPathName, *it );
+		}
+	}
 }
 
 IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context )
@@ -202,6 +217,33 @@ IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context )
 bool affectsSelectedPaths( const IECore::InternedString &name )
 {
 	return name == g_selectedPathsName;
+}
+
+void setLastSelectedPath( Gaffer::Context *context, const std::vector<IECore::InternedString> &path )
+{
+	if( path.empty() )
+	{
+		context->remove( g_lastSelectedPathName );
+	}
+	else
+	{
+		PathMatcher selectedPaths = getSelectedPaths( context );
+		if( selectedPaths.addPath( path ) )
+		{
+			context->set( g_selectedPathsName, selectedPaths );
+		}
+		context->set( g_lastSelectedPathName, path );
+	}
+}
+
+std::vector<IECore::InternedString> getLastSelectedPath( const Gaffer::Context *context )
+{
+	return context->get<std::vector<IECore::InternedString>>( g_lastSelectedPathName, {} );
+}
+
+bool affectsLastSelectedPath( const IECore::InternedString &name )
+{
+	return name == g_lastSelectedPathName;
 }
 
 } // namespace ContextAlgo

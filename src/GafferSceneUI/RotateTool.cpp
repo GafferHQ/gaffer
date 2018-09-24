@@ -105,8 +105,11 @@ const Gaffer::IntPlug *RotateTool::orientationPlug() const
 
 void RotateTool::rotate( const Imath::Eulerf &degrees )
 {
-	const Rotation r( this );
-	r.apply( degreesToRadians( V3f( degrees ) ) );
+	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
+	for( const auto &s : selection() )
+	{
+		Rotation( s, orientation ).apply( degreesToRadians( V3f( degrees ) ) );
+	}
 }
 
 bool RotateTool::affectsHandles( const Gaffer::Plug *input ) const
@@ -123,28 +126,49 @@ bool RotateTool::affectsHandles( const Gaffer::Plug *input ) const
 
 void RotateTool::updateHandles( float rasterScale )
 {
+	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
 	handles()->setTransform(
-		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
+		selection().back().orientedTransform( orientation )
 	);
-	Rotation rotation( this );
+
 	for( RotateHandleIterator it( handles() ); !it.done(); ++it )
 	{
-		(*it)->setEnabled( rotation.canApply( (*it)->axisMask() ) );
+		bool enabled = true;
+		for( const auto &s : selection() )
+		{
+			if( !Rotation( s, orientation ).canApply( (*it)->axisMask() ) )
+			{
+				enabled = false;
+				break;
+			}
+		}
+
+		(*it)->setEnabled( enabled );
 		(*it)->setRasterScale( rasterScale );
 	}
 }
 
 IECore::RunTimeTypedPtr RotateTool::dragBegin()
 {
-	m_drag = Rotation( this );
+	m_drag.clear();
+	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
+	for( const auto &s : selection() )
+	{
+		m_drag.push_back( Rotation( s, orientation ) );
+	}
+
 	TransformTool::dragBegin();
 	return nullptr; // Let the handle start the drag.
 }
 
 bool RotateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	m_drag.apply( static_cast<const RotateHandle *>( gadget )->rotation( event ) );
+	UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	const V3f rotation = static_cast<const RotateHandle *>( gadget )->rotation( event );
+	for( const auto &r : m_drag )
+	{
+		r.apply( rotation );
+	}
 	return true;
 }
 
@@ -158,19 +182,17 @@ bool RotateTool::dragEnd()
 // RotateTool::Rotation
 //////////////////////////////////////////////////////////////////////////
 
-RotateTool::Rotation::Rotation( const RotateTool *tool )
+RotateTool::Rotation::Rotation( const Selection &selection, Orientation orientation )
 {
-	Context::Scope scopedContext( tool->view()->getContext() );
-
-	const Selection &selection = tool->selection();
+	Context::Scope scopedContext( selection.context.get() );
 
 	m_plug = selection.transformPlug->rotatePlug();
 	m_originalRotation = degreesToRadians( m_plug->getValue() );
 
-	const M44f handlesTransform = tool->orientedTransform( static_cast<Orientation>( tool->orientationPlug()->getValue() ) );
+	const M44f handlesTransform = selection.orientedTransform( orientation );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 
-	m_time = tool->view()->getContext()->getTime();
+	m_time = selection.context->getTime();
 }
 
 bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const

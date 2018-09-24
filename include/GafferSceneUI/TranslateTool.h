@@ -81,8 +81,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 		struct Translation
 		{
 
-			Translation() = default;
-			Translation( const TranslateTool *tool );
+			Translation( const Selection &selection, Orientation orientation );
 
 			bool canApply( const Imath::V3f &offset ) const;
 			void apply( const Imath::V3f &offset ) const;
@@ -102,7 +101,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 
-		Translation m_drag;
+		std::vector<Translation> m_drag;
 
 		static ToolDescription<TranslateTool, SceneView> g_toolDescription;
 		static size_t g_firstPlugIndex;

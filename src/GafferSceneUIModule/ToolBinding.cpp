@@ -60,6 +60,22 @@ using namespace GafferSceneUI;
 namespace
 {
 
+boost::python::list selection( const TransformTool &tool )
+{
+	vector<TransformTool::Selection> selection;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		selection = tool.selection();
+	}
+
+	boost::python::list result;
+	for( const auto &s : selection )
+	{
+		result.append( s );
+	}
+	return result;
+}
+
 ScenePlugPtr scene( const TransformTool::Selection &s )
 {
 	return boost::const_pointer_cast<ScenePlug>( s.scene );
@@ -109,7 +125,7 @@ void GafferSceneUIModule::bindTools()
 
 	{
 		scope s = GafferBindings::NodeClass<TransformTool>( nullptr, no_init )
-			.def( "selection", &TransformTool::selection, return_value_policy<copy_const_reference>() )
+			.def( "selection", &selection )
 			.def( "handlesTransform", &TransformTool::handlesTransform )
 		;
 

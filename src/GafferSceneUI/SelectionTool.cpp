@@ -197,7 +197,6 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	PathMatcher selection = sg->getSelection();
 
 	const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
-	bool selectionChanged = false;
 	if( !objectUnderMouse.size() )
 	{
 		// background click - clear the selection unless
@@ -205,8 +204,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 		// a drag to add more.
 		if( !shiftHeld )
 		{
-			selection.clear();
-			selectionChanged = true;
+			ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
 		}
 	}
 	else
@@ -218,23 +216,17 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 			if( shiftHeld )
 			{
 				selection.removePath( objectUnderMouse );
-				selectionChanged = true;
+				ContextAlgo::setSelectedPaths( view()->getContext(), selection );
 			}
 		}
 		else
 		{
 			if( !shiftHeld )
 			{
-				selection.clear();
+				ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
 			}
-			selection.addPath( objectUnderMouse );
-			selectionChanged = true;
+			ContextAlgo::setLastSelectedPath( view()->getContext(), objectUnderMouse );
 		}
-	}
-
-	if( selectionChanged )
-	{
-		ContextAlgo::setSelectedPaths( view()->getContext(), selection );
 	}
 
 	return true;
