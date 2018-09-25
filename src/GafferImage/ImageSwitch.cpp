@@ -46,14 +46,6 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageSwitch, GafferImage::ImageSwitchTypeId )
 
-template<>
-struct SwitchTraits<GafferImage::ImageProcessor>
-{
-
-	typedef ImagePlug::GlobalScope IndexContext;
-
-};
-
 }
 
 // explicit instantiation

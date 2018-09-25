@@ -36,6 +36,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextAlgo.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Switch.h"
 
@@ -44,18 +45,6 @@
 
 namespace Gaffer
 {
-
-namespace Detail
-{
-
-struct IdentityContext
-{
-	IdentityContext( const Context *context )
-	{
-	}
-};
-
-};
 
 template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<Switch<BaseType> > Switch<BaseType>::g_typeDescription;
@@ -363,7 +352,7 @@ size_t Switch<BaseType>::inputIndex( const Context *context ) const
 		const IntPlug *indexPlug = this->indexPlug();
 		if( variesWithContext( indexPlug ) )
 		{
-			typename SwitchTraits<BaseType>::IndexContext indexContext( context );
+			ContextAlgo::GlobalScope indexScope( context, inPlugs->getChild<Plug>( 0 ) );
 			index = indexPlug->getValue();
 		}
 		else

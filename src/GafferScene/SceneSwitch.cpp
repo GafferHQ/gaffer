@@ -43,14 +43,6 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneSwitch, GafferScene::SceneSwitchTypeId )
 
-template<>
-struct SwitchTraits<GafferScene::SceneProcessor>
-{
-
-	typedef GafferScene::ScenePlug::GlobalScope IndexContext;
-
-};
-
 } // namespace Gaffer
 
 // explicit instantiation

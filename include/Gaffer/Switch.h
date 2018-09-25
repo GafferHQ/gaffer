@@ -136,27 +136,6 @@ class IECORE_EXPORT Switch : public BaseType
 
 };
 
-namespace Detail
-{
-
-struct IdentityContext;
-
-} // namespace Detail
-
-/// May be specialised to control the behaviour of
-/// Switch<BaseType>.
-template<typename BaseType>
-struct SwitchTraits
-{
-
-	/// A class which will be instantiated as
-	/// `IndexContext indexContext( Context::current() )`
-	/// to modify the context when evaluating the switch index.
-	/// \todo Rename to IndexScope.
-	typedef Detail::IdentityContext IndexContext;
-
-};
-
 typedef Switch<ComputeNode> SwitchComputeNode;
 
 IE_CORE_DECLAREPTR( SwitchComputeNode );
