@@ -1,3 +1,30 @@
+0.50.0.0
+========
+
+Improvements
+------------
+
+- TransformTools : Added support for multiple selection (#2665, #2803).
+
+Fixes
+-----
+
+- CameraTool/TransformTool (#2807, #2808) : Mitigated against crashes during Catalogue
+  image saving.
+
+API
+---
+
+- GafferSceneUI::ContextAlgo : Added `set/getLastSelectedPath()` functions, used for
+  specifying the last location to have been selected (#2803).
+
+Breaking Changes
+----------------
+
+- TransformTool (#2803) :
+  - Moved `orientedTransform()` method to `Selection` class.
+  - Changed `selection()` return type.
+
 0.49.1.0
 ========
 
@@ -27,7 +54,7 @@ Documentation
 API
 ---
 
-- ParallelAlgo : Refactor `callOnUIThread()` internals (#2786).
+- ParallelAlgo : Refactored `callOnUIThread()` internals (#2786).
 
 0.49.0.1
 ========
