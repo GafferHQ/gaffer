@@ -85,7 +85,7 @@ enum TypeId
 	ImageContextProcessorTypeId = 110789,
 	ImageTimeWarpTypeId = 110790,
 	ImageContextVariablesTypeId = 110791,
-	ImageSwitchTypeId = 110792,
+	ImageSwitchTypeId = 110792, // Obsolete - available for reuse
 	ImageSamplerTypeId = 110793,
 	MetadataProcessorTypeId = 110794,
 	ImageMetadataTypeId = 110795,

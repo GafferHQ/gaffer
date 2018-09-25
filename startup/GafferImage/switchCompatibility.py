@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,30 +37,11 @@
 import Gaffer
 import GafferImage
 
-Gaffer.Metadata.registerNode(
+class ImageSwitch( Gaffer.SwitchComputeNode ) :
 
-	GafferImage.ImageSwitch,
+	def __init__( self, name = "ImageSwitch" ) :
 
-	"description",
-	"""
-	Chooses between multiple input images, passing through the
-	chosen input to the output.
-	""",
+		Gaffer.SwitchComputeNode.__init__( self, name )
+		self.setup( GafferImage.ImagePlug() )
 
-	plugs = {
-
-		"index" : [
-
-			"description",
-			"""
-			The index of the input which is passed through. A value
-			of 0 chooses the first input, 1 the second and so on. Values
-			larger than the number of available inputs wrap back around to
-			the beginning.
-			"""
-
-		]
-
-	}
-
-)
+GafferImage.ImageSwitch = ImageSwitch

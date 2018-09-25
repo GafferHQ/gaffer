@@ -371,7 +371,6 @@ nodeMenu.append( "/Image/Filter/Erode", GafferImageUI.ErodeUI.nodeMenuCreateComm
 nodeMenu.append( "/Image/Filter/Dilate", GafferImageUI.DilateUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Mix", GafferImage.Mix )
-nodeMenu.append( "/Image/Merge/Switch", GafferImage.ImageSwitch, searchText = "ImageSwitch" )
 nodeMenu.append( "/Image/Transform/Resize", GafferImage.Resize )
 nodeMenu.append( "/Image/Transform/Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
 nodeMenu.append( "/Image/Transform/Crop", GafferImage.Crop, postCreator = GafferImageUI.CropUI.postCreate )

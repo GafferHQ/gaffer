@@ -43,6 +43,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Switch.h"
 #include "Gaffer/Transform2DPlug.h"
 
 using namespace std;
@@ -94,7 +95,8 @@ Shape::Shape( const std::string &name )
 	shadowMerge->inPlugs()->getChild<ImagePlug>( 1 )->setInput( shadowTransform->outPlug() );
 	shadowMerge->operationPlug()->setValue( Merge::Over );
 
-	ImageSwitchPtr shadowSwitch = new ImageSwitch( "__shadowSwitch" );
+	SwitchComputeNodePtr shadowSwitch = new SwitchComputeNode( "__shadowSwitch" );
+	shadowSwitch->setup( outPlug() );
 	addChild( shadowSwitch );
 	shadowSwitch->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inPlug() );
 	shadowSwitch->inPlugs()->getChild<ImagePlug>( 1 )->setInput( shadowMerge->outPlug() );
