@@ -73,7 +73,6 @@ import CustomAttributesUI
 import CustomOptionsUI
 import SceneViewUI
 import ShaderViewUI
-import ShaderSwitchUI
 import ShaderAssignmentUI
 import ParentConstraintUI
 import ParentUI

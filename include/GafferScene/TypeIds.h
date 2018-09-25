@@ -106,7 +106,7 @@ enum TypeId
 	DeleteAttributesTypeId = 110561,
 	UnionFilterTypeId = 110562,
 	SceneSwitchTypeId = 110563, // Obsolete, available for reuse
-	ShaderSwitchTypeId = 110564,
+	ShaderSwitchTypeId = 110564, // Obsolete, available for reuse
 	ParentConstraintTypeId = 110565,
 	ParentTypeId = 110566,
 	PrimitiveVariablesTypeId = 110567,

@@ -45,3 +45,18 @@ class SceneSwitch( Gaffer.SwitchComputeNode ) :
 		self.setup( GafferScene.ScenePlug() )
 
 GafferScene.SceneSwitch = SceneSwitch
+
+class ShaderSwitch( Gaffer.SwitchComputeNode ) :
+
+	def __init__( self, name = "ShaderSwitch" ) :
+
+		Gaffer.SwitchComputeNode.__init__( self, name )
+
+	def __getitem__( self, key ) :
+
+		if key in ( "in", "out" ) and key not in self :
+			self.setup( Gaffer.Plug() )
+
+		return Gaffer.SwitchComputeNode.__getitem__( self, key )
+
+GafferScene.ShaderSwitch = ShaderSwitch
