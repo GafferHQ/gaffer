@@ -230,6 +230,8 @@ std::string readFile( const std::string &fileName )
 
 const IECore::InternedString g_scriptName( "script:name" );
 const IECore::InternedString g_frame( "frame" );
+const IECore::InternedString g_frameStart( "frameRange:start" );
+const IECore::InternedString g_frameEnd( "frameRange:end" );
 const IECore::InternedString g_framesPerSecond( "framesPerSecond" );
 
 } // namespace
@@ -270,6 +272,8 @@ ScriptNode::ScriptNode( const std::string &name )
 	addChild( new CompoundDataPlug( "variables" ) );
 
 	m_context->set( g_scriptName, std::string( "" ) );
+	m_context->set( g_frameStart, 1 );
+	m_context->set( g_frameEnd, 100 );
 
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
@@ -797,10 +801,12 @@ void ScriptNode::plugSet( Plug *plug )
 	if( plug == frameStartPlug() )
 	{
 		frameEndPlug()->setValue( std::max( frameEndPlug()->getValue(), frameStartPlug()->getValue() ) );
+		context()->set( g_frameStart, frameStartPlug()->getValue() );
 	}
 	else if( plug == frameEndPlug() )
 	{
 		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );
+		context()->set( g_frameEnd, frameEndPlug()->getValue() );
 	}
 	else if( plug == framePlug() )
 	{
