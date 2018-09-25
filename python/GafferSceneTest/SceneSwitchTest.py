@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import inspect
 import unittest
 
@@ -160,6 +161,15 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		s2 = GafferScene.Sphere()
 		self.assertTrue( switches[0]["in"][0].acceptsInput( s2["out"] ) )
+
+	def testLoadFileFromVersion0_49( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/sceneSwitch-0.49.1.0.gfr" )
+		s.load()
+
+		self.assertEqual( s["SceneSwitch"]["in"][0].getInput(), s["Plane"]["out"] )
+		self.assertEqual( s["SceneSwitch"]["in"][1].getInput(), s["Sphere"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

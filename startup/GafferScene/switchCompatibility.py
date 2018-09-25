@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,35 +35,13 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+class SceneSwitch( Gaffer.SwitchComputeNode ) :
 
-	GafferScene.SceneSwitch,
+	def __init__( self, name = "SceneSwitch" ) :
 
-	"description",
-	"""
-	Chooses between multiple input scene, passing through the
-	chosen input to the output.
-	""",
+		Gaffer.SwitchComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	plugs = {
-
-		"index" : [
-
-			"description",
-			"""
-			The index of the input which is passed through. A value
-			of 0 chooses the first input, 1 the second and so on. Values
-			larger than the number of available inputs wrap back around to
-			the beginning.
-			""",
-
-			"plugValueWidget:type", "GafferUI.NumericPlugValueWidget",
-
-		]
-
-	}
-
-)
+GafferScene.SceneSwitch = SceneSwitch

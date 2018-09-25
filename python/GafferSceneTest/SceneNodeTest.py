@@ -89,11 +89,11 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 
-		self.assertTypeNamesArePrefixed( GafferScene, namesToIgnore = set( ( "PathMatcherData", "Gaffer::PathMatcherDataPlug" ) ) )
+		self.assertTypeNamesArePrefixed( GafferScene, namesToIgnore = { "PathMatcherData", "Gaffer::PathMatcherDataPlug", "Gaffer::SwitchComputeNode" } )
 
 	def testDefaultNames( self ) :
 
-		self.assertDefaultNamesAreCorrect( GafferScene )
+		self.assertDefaultNamesAreCorrect( GafferScene, namesToIgnore = { "SceneSwitch" } )
 
 	def testRootAttributes( self ) :
 
