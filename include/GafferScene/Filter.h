@@ -70,8 +70,6 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 		const FilterPlug *outPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-		/// Use `FilterPlug::sceneAffectsMatch()` instead.
-		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 		/// \deprecated Use FilterPlug::SceneScope instead.
 		static void setInputScene( Gaffer::Context *context, const ScenePlug *scenePlug );
@@ -86,6 +84,8 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		/// Implemented to call computeMatch() below when computing the value of outPlug().
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 		/// Hash method for outPlug(). A derived class must either :
 		///
@@ -110,6 +110,8 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
 
 	private :
+
+		friend class FilterPlug;
 
 		static size_t g_firstPlugIndex;
 

@@ -60,3 +60,12 @@ class ShaderSwitch( Gaffer.SwitchComputeNode ) :
 		return Gaffer.SwitchComputeNode.__getitem__( self, key )
 
 GafferScene.ShaderSwitch = ShaderSwitch
+
+class FilterSwitch( Gaffer.SwitchComputeNode ) :
+
+	def __init__( self, name = "FilterSwitch" ) :
+
+		Gaffer.SwitchComputeNode.__init__( self, name )
+		self.setup( GafferScene.FilterPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Cacheable ) )
+
+GafferScene.FilterSwitch = FilterSwitch

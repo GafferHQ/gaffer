@@ -44,6 +44,7 @@
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/Switch.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -135,9 +136,25 @@ bool FilterPlug::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValueP
 		return false;
 	}
 
-	if( const Filter *filter = runTimeCast<const Filter>( source->node() ) )
+	const Node *sourceNode = source->node();
+	if( const Filter *filter = runTimeCast<const Filter>( sourceNode ) )
 	{
 		return filter->sceneAffectsMatch( scene, child );
+	}
+	else if( const Switch *switchNode = runTimeCast<const Switch>( sourceNode ) )
+	{
+		if( source == switchNode->outPlug() )
+		{
+			// Switch with context-varying input. Any input branch could be
+			// relevant.
+			for( InputFilterPlugIterator it( switchNode->inPlugs() ); !it.done(); ++it )
+			{
+				if( (*it)->sceneAffectsMatch( scene, child ) )
+				{
+					return true;
+				}
+			}
+		}
 	}
 	return false;
 }

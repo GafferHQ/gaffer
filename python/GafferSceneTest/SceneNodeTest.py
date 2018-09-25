@@ -93,7 +93,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDefaultNames( self ) :
 
-		self.assertDefaultNamesAreCorrect( GafferScene, namesToIgnore = { "SceneSwitch", "ShaderSwitch" } )
+		self.assertDefaultNamesAreCorrect( GafferScene, namesToIgnore = { "SceneSwitch", "ShaderSwitch", "FilterSwitch" } )
 
 	def testRootAttributes( self ) :
 

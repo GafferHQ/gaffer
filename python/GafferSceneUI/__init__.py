@@ -92,7 +92,6 @@ import CameraUI
 import SetUI
 import ClippingPlaneUI
 import FilterUI
-import FilterSwitchUI
 import PointsTypeUI
 import ParametersUI
 import TextUI
