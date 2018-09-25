@@ -228,6 +228,10 @@ std::string readFile( const std::string &fileName )
 	return s;
 }
 
+const IECore::InternedString g_scriptName( "script:name" );
+const IECore::InternedString g_frame( "frame" );
+const IECore::InternedString g_framesPerSecond( "framesPerSecond" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -265,7 +269,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	addChild( new FloatPlug( "framesPerSecond", Plug::In, 24.0f, 0.0f ) );
 	addChild( new CompoundDataPlug( "variables" ) );
 
-	m_context->set( "script:name", std::string( "" ) );
+	m_context->set( g_scriptName, std::string( "" ) );
 
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
@@ -818,7 +822,7 @@ void ScriptNode::plugSet( Plug *plug )
 	else if( plug == fileNamePlug() )
 	{
 		const boost::filesystem::path fileName( fileNamePlug()->getValue() );
-		context()->set( "script:name", fileName.stem().string() );
+		context()->set( g_scriptName, fileName.stem().string() );
 		MetadataAlgo::setReadOnly(
 			this,
 			boost::filesystem::exists( fileName ) && 0 != access( fileName.c_str(), W_OK ),
@@ -829,11 +833,11 @@ void ScriptNode::plugSet( Plug *plug )
 
 void ScriptNode::contextChanged( const Context *context, const IECore::InternedString &name )
 {
-	if( name == "frame" )
+	if( name == g_frame )
 	{
 		framePlug()->setValue( context->getFrame() );
 	}
-	else if( name == "framesPerSecond" )
+	else if( name == g_framesPerSecond )
 	{
 		framesPerSecondPlug()->setValue( context->getFramesPerSecond() );
 	}
