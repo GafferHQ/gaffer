@@ -1,4 +1,4 @@
-# BuildTarget: images/performanceMonitor.png
+# BuildTarget: images/nodeEditorWindowPerformanceMonitor.png
 
 import Gaffer
 import GafferScene

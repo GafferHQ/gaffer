@@ -1,4 +1,4 @@
-# BuildTarget: images/groupFirst.png
+# BuildTarget: images/graphEditorGroupFirst.png
 
 import os
 
