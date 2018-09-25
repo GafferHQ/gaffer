@@ -46,6 +46,9 @@
 
 using namespace Gaffer;
 
+static IECore::InternedString g_inPlugsName( "in" );
+static IECore::InternedString g_outPlugName( "out" );
+
 IE_CORE_DEFINERUNTIMETYPED( Switch );
 
 size_t Switch::g_firstPlugIndex = 0;
@@ -82,7 +85,7 @@ void Switch::setup( const Plug *plug )
 	MetadataAlgo::copyColors( plug , inElement.get() , /* overwrite = */ false  );
 	inElement->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	ArrayPlugPtr in = new ArrayPlug(
-		"in",
+		g_inPlugsName,
 		Plug::In,
 		inElement,
 		0,
@@ -91,7 +94,7 @@ void Switch::setup( const Plug *plug )
 	);
 	addChild( in );
 
-	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
+	PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
 	addChild( out );
@@ -99,22 +102,22 @@ void Switch::setup( const Plug *plug )
 
 ArrayPlug *Switch::inPlugs()
 {
-	return getChild<ArrayPlug>( "in" );
+	return getChild<ArrayPlug>( g_inPlugsName );
 }
 
 const ArrayPlug *Switch::inPlugs() const
 {
-	return getChild<ArrayPlug>( "in" );
+	return getChild<ArrayPlug>( g_inPlugsName );
 }
 
 Plug *Switch::outPlug()
 {
-	return getChild<Plug>( "out" );
+	return getChild<Plug>( g_outPlugName );
 }
 
 const Plug *Switch::outPlug() const
 {
-	return getChild<Plug>( "out" );
+	return getChild<Plug>( g_outPlugName );
 }
 
 Plug *Switch::activeInPlug()
