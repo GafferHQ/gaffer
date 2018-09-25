@@ -57,8 +57,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		shader2["parameters"]["i"].setValue( 2 )
 
 		switch = GafferScene.ShaderSwitch()
-		switch["in"].setInput( shader1["out"] )
-		switch["in1"].setInput( shader2["out"] )
+		switch["in"][0].setInput( shader1["out"] )
+		switch["in"][1].setInput( shader2["out"] )
 
 		assignment = GafferScene.ShaderAssignment()
 		assignment["shader"].setInput( switch["out"] )
@@ -85,16 +85,16 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["shader2"]["parameters"]["i"].setValue( 2 )
 
 		script["switch"] = GafferScene.ShaderSwitch()
-		script["switch"]["in"].setInput( script["shader1"]["out"] )
-		script["switch"]["in1"].setInput( script["shader2"]["out"] )
+		script["switch"]["in"][0].setInput( script["shader1"]["out"] )
+		script["switch"]["in"][1].setInput( script["shader2"]["out"] )
 
 		script2 = Gaffer.ScriptNode()
 
 		script2.execute( script.serialise() )
 
 		self.assertTrue( script2["switch"]["in"][0].getInput().isSame( script2["shader1"]["out"] ) )
-		self.assertTrue( script2["switch"]["in1"].getInput().isSame( script2["shader2"]["out"] ) )
-		self.assertTrue( script2["switch"]["in2"].getInput() is None )
+		self.assertTrue( script2["switch"]["in"][1].getInput().isSame( script2["shader2"]["out"] ) )
+		self.assertTrue( script2["switch"]["in"][2].getInput() is None )
 		self.assertFalse( "in3" in script2["switch"] )
 		self.assertTrue( script2["switch"]["out"].source().isSame( script2["shader1"]["out"] ) )
 

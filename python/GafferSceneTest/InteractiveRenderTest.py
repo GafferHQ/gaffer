@@ -286,7 +286,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["s"] = GafferScene.Sphere()
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["s"]["out"] )
+		s["g"]["in"][0].setInput( s["s"]["out"] )
 
 		s["f"] = GafferScene.PathFilter()
 
@@ -370,7 +370,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["s"] = GafferScene.Sphere()
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["s"]["out"] )
+		s["g"]["in"][0].setInput( s["s"]["out"] )
 
 		s["f"] = GafferScene.PathFilter()
 
@@ -1208,7 +1208,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["s"] = GafferScene.Sphere()
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["s"]["out"] )
+		s["g"]["in"][0].setInput( s["s"]["out"] )
 
 		s["a"] = GafferScene.StandardAttributes()
 		s["a"]["in"].setInput( s["g"]["out"] )
@@ -1264,7 +1264,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["s"] = GafferScene.Sphere()
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["s"]["out"] )
+		s["g"]["in"][0].setInput( s["s"]["out"] )
 
 		s["a"] = GafferScene.CustomAttributes()
 		s["a"]["in"].setInput( s["g"]["out"] )

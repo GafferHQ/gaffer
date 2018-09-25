@@ -746,25 +746,12 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( g2["out"].setHash( "set" ), h )
 		self.assertEqual( g2["out"].set( "set" ).value.paths(), [ "/group/group/cube" ] )
 
-	def testFileCompatibilityWithVersion0_15( self ) :
+	def testConnectingGroupDoesNotCopyColorMetadata( self ) :
 
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/groupVersion-0.15.0.0.gfr" )
-		s.load()
-
-		self.assertTrue( s["g"]["in"][0].getInput().isSame( s["p"]["out"] ) )
-		self.assertTrue( s["g"]["in"][1].getInput().isSame( s["s"]["out"] ) )
-
-		self.assertTrue( "in1" not in s["g"] )
-		self.assertTrue( "in2" not in s["g"] )
-
-		self.assertEqual( s["g"]["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane", "sphere" ] ) )
-
-	def testConnectingGroupDoesNotCopyColorMetadata( self ):
 		p = GafferScene.Plane()
 		g = GafferScene.Group()
 
-		g["in"].setInput( p["out"] )
+		g["in"][0].setInput( p["out"] )
 
 		noduleColor = Gaffer.Metadata.value( p, "nodule:color", instanceOnly = True )
 		connectionColor = Gaffer.Metadata.value( p, "connectionGadget:color", instanceOnly = True )

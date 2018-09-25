@@ -163,7 +163,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		s["sets"].setValue( "set" )
 
 		g = GafferScene.Group()
-		g["in"].setInput( s["out"] )
+		g["in"][0].setInput( s["out"] )
 
 		d = GafferScene.Duplicate()
 		d["in"].setInput( g["out"] )

@@ -275,7 +275,7 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 		g = GafferScene.Group()
-		g["in"].setInput( p["out"] )
+		g["in"][0].setInput( p["out"] )
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/group/plain" ] ) )
