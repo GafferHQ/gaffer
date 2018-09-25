@@ -56,7 +56,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		shader1["parameters"]["i"].setValue( 1 )
 		shader2["parameters"]["i"].setValue( 2 )
 
-		switch = GafferScene.ShaderSwitch()
+		switch = Gaffer.Switch()
+		switch.setup( shader1["out"] )
 		switch["in"][0].setInput( shader1["out"] )
 		switch["in"][1].setInput( shader2["out"] )
 
@@ -84,7 +85,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["shader1"]["parameters"]["i"].setValue( 1 )
 		script["shader2"]["parameters"]["i"].setValue( 2 )
 
-		script["switch"] = GafferScene.ShaderSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( script["shader1"]["out"] )
 		script["switch"]["in"][0].setInput( script["shader1"]["out"] )
 		script["switch"]["in"][1].setInput( script["shader2"]["out"] )
 
@@ -100,7 +102,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 	def testCorrespondingInput( self ) :
 
-		s = GafferScene.ShaderSwitch()
+		s = Gaffer.Switch()
+		s.setup( Gaffer.Color3fPlug() )
 		self.assertTrue( s.correspondingInput( s["out"] ).isSame( s["in"][0] ) )
 
 	def testSetup( self ) :
@@ -111,7 +114,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		shader1["parameters"]["c"].setValue( imath.Color3f( 0 ) )
 		shader2["parameters"]["c"].setValue( imath.Color3f( 1 ) )
 
-		switch = GafferScene.ShaderSwitch()
+		switch = Gaffer.Switch()
 		switch.setup( shader1["parameters"]["c"] )
 
 		switch["in"][0].setInput( shader1["out"] )
@@ -143,7 +146,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		s["n3"]["parameters"]["i"].setValue( 3 )
 		s["n3"]["type"].setValue( "test:surface" )
 
-		s["switch"] = GafferScene.ShaderSwitch()
+		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n3"]["parameters"]["c"] )
 
 		s["switch"]["in"][0].setInput( s["n1"]["out"] )

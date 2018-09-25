@@ -37,20 +37,20 @@
 import Gaffer
 import GafferScene
 
-class SceneSwitch( Gaffer.SwitchComputeNode ) :
+class SceneSwitch( Gaffer.Switch ) :
 
 	def __init__( self, name = "SceneSwitch" ) :
 
-		Gaffer.SwitchComputeNode.__init__( self, name )
+		Gaffer.Switch.__init__( self, name )
 		self.setup( GafferScene.ScenePlug() )
 
 GafferScene.SceneSwitch = SceneSwitch
 
-class ShaderSwitch( Gaffer.SwitchComputeNode ) :
+class ShaderSwitch( Gaffer.Switch ) :
 
 	def __init__( self, name = "ShaderSwitch" ) :
 
-		Gaffer.SwitchComputeNode.__init__( self, name )
+		Gaffer.Switch.__init__( self, name )
 
 	def __getitem__( self, key ) :
 
@@ -61,11 +61,11 @@ class ShaderSwitch( Gaffer.SwitchComputeNode ) :
 
 GafferScene.ShaderSwitch = ShaderSwitch
 
-class FilterSwitch( Gaffer.SwitchComputeNode ) :
+class FilterSwitch( Gaffer.Switch ) :
 
 	def __init__( self, name = "FilterSwitch" ) :
 
-		Gaffer.SwitchComputeNode.__init__( self, name )
+		Gaffer.Switch.__init__( self, name )
 		self.setup( GafferScene.FilterPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Cacheable ) )
 
 GafferScene.FilterSwitch = FilterSwitch

@@ -38,7 +38,7 @@ import Gaffer
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.SwitchComputeNode,
+	Gaffer.Switch,
 
 	"description",
 	"""

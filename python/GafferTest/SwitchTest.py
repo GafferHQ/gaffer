@@ -45,14 +45,14 @@ class SwitchTest( GafferTest.TestCase ) :
 
 	def intSwitch( self ) :
 
-		result = Gaffer.SwitchComputeNode()
+		result = Gaffer.Switch()
 		result.setup( Gaffer.IntPlug() )
 
 		return result
 
 	def colorSwitch( self ) :
 
-		result = Gaffer.SwitchComputeNode()
+		result = Gaffer.Switch()
 		result.setup( Gaffer.Color3fPlug() )
 
 		return result
@@ -247,7 +247,7 @@ class SwitchTest( GafferTest.TestCase ) :
 
 	def testPassThroughWhenIndexConstant( self ) :
 
-		n = Gaffer.SwitchComputeNode()
+		n = Gaffer.Switch()
 		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
@@ -280,7 +280,7 @@ class SwitchTest( GafferTest.TestCase ) :
 
 	def testIndexInputAcceptance( self ) :
 
-		cs = Gaffer.SwitchComputeNode()
+		cs = Gaffer.Switch()
 
 		a = GafferTest.AddNode()
 		a["boolInput"] = Gaffer.BoolPlug()
@@ -294,7 +294,7 @@ class SwitchTest( GafferTest.TestCase ) :
 
 	def testConnectedIndex( self ) :
 
-		n = Gaffer.SwitchComputeNode()
+		n = Gaffer.Switch()
 		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
@@ -323,13 +323,13 @@ class SwitchTest( GafferTest.TestCase ) :
 
 	def testAcceptsNoneInputs( self ) :
 
-		n = Gaffer.SwitchComputeNode()
+		n = Gaffer.Switch()
 		self.assertTrue( n["enabled"].acceptsInput( None ) )
 		self.assertTrue( n["index"].acceptsInput( None ) )
 
 	def testIndirectInputsToIndex( self ) :
 
-		n = Gaffer.SwitchComputeNode()
+		n = Gaffer.Switch()
 		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
@@ -417,7 +417,7 @@ class SwitchTest( GafferTest.TestCase ) :
 
 		s["n1"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
 
-		s["switch"] = Gaffer.SwitchComputeNode()
+		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n1"]["sum"] )
 
 		s["switch"]["in"][0].setInput( s["n1"]["sum"] )
@@ -434,7 +434,7 @@ class SwitchTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferTest.AddNode()
-		s["s"] = Gaffer.SwitchComputeNode()
+		s["s"] = Gaffer.Switch()
 
 		plug = s["n1"]["op1"]
 

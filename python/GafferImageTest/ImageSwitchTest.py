@@ -47,14 +47,10 @@ import GafferImageTest
 
 class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 
-	def testDefaultName( self ) :
-
-		s = GafferImage.ImageSwitch()
-		self.assertEqual( s.getName(), "ImageSwitch" )
-
 	def testEnabledPlug( self ) :
 
-		s = GafferImage.ImageSwitch()
+		s = Gaffer.Switch()
+		s.setup( GafferImage.ImagePlug() )
 		self.assertTrue( isinstance( s["enabled"], Gaffer.BoolPlug ) )
 		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
 		self.assertFalse( "enabled1" in s )
@@ -64,7 +60,8 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 		in0 = GafferImage.Constant()
 		in1 = GafferImage.Constant()
 
-		switch = GafferImage.ImageSwitch()
+		switch = Gaffer.Switch()
+		switch.setup( GafferImage.ImagePlug() )
 		switch["in"][0].setInput( in0["out"] )
 		switch["in"][1].setInput( in1["out"] )
 
@@ -99,7 +96,8 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 		in1["format"].setValue( GafferImage.Format( 100, 100, 1.0 ) )
 		in0["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
-		switch = GafferImage.ImageSwitch()
+		switch = Gaffer.Switch()
+		switch.setup( GafferImage.ImagePlug() )
 		switch["in"][0].setInput( in0["out"] )
 		switch["in"][1].setInput( in1["out"] )
 
@@ -120,7 +118,8 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["switch"] = GafferImage.ImageSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( GafferImage.ImagePlug() )
 		script["in0"] = GafferImage.Constant()
 		script["in1"] = GafferImage.Constant()
 
@@ -143,7 +142,8 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["switch"] = GafferImage.ImageSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( GafferImage.ImagePlug() )
 		script["in0"] = GafferImage.Constant()
 		script["in0"]["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
 		script["in1"] = GafferImage.Constant()

@@ -495,7 +495,7 @@ nodeMenu.append( "/Utility/BoxOut", Gaffer.BoxOut )
 nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateCommand )
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
-nodeMenu.append( "/Utility/Switch", functools.partial( Gaffer.SwitchComputeNode, "Switch" ) )
+nodeMenu.append( "/Utility/Switch", Gaffer.Switch )
 
 ## Miscellaneous UI
 ###########################################################################

@@ -37,11 +37,11 @@
 import Gaffer
 import GafferImage
 
-class ImageSwitch( Gaffer.SwitchComputeNode ) :
+class ImageSwitch( Gaffer.Switch ) :
 
 	def __init__( self, name = "ImageSwitch" ) :
 
-		Gaffer.SwitchComputeNode.__init__( self, name )
+		Gaffer.Switch.__init__( self, name )
 		self.setup( GafferImage.ImagePlug() )
 
 GafferImage.ImageSwitch = ImageSwitch

@@ -256,7 +256,8 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["a"] = GafferScene.ShaderAssignment()
-		script["s"] = GafferScene.ShaderSwitch()
+		script["s"] = Gaffer.Switch()
+		script["s"].setup( Gaffer.Plug() )
 
 		script.execute( """script["a"]["shader"].setInput( script["s"]["out"] )""" )
 		self.assertTrue( script["a"]["shader"].getInput().isSame( script["s"]["out"] ) )

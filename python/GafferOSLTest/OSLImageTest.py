@@ -158,7 +158,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["image"] = GafferOSL.OSLImage()
-		script["switch"] = GafferScene.ShaderSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( Gaffer.Plug() )
 
 		# We're testing a backwards compatibility special case that is
 		# only enabled when loading a script, hence the use of `execute()`.
@@ -169,7 +170,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["image"] = GafferOSL.OSLImage()
-		script["switch"] = GafferScene.ShaderSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( Gaffer.Plug() )
 		script["dot"] = Gaffer.Dot()
 		script["dot"].setup( script["switch"]["out"] )
 
