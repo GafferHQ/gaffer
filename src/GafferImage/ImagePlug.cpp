@@ -42,6 +42,7 @@
 #include "GafferImage/ImageAlgo.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextAlgo.h"
 
 using namespace std;
 using namespace tbb;
@@ -112,6 +113,11 @@ class CopyTile
 
 const IECore::InternedString ImagePlug::channelNameContextName = "image:channelName";
 const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigin";
+
+static ContextAlgo::GlobalScope::Registration g_globalScopeRegistration(
+	ImagePlug::staticTypeId(),
+	{ ImagePlug::channelNameContextName, ImagePlug::tileOriginContextName }
+);
 
 size_t ImagePlug::g_firstPlugIndex = 0;
 

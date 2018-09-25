@@ -40,6 +40,7 @@
 #include "GafferScene/Filter.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextAlgo.h"
 
 #include "IECore/NullObject.h"
 #include "IECore/StringAlgo.h"
@@ -51,6 +52,11 @@ IE_CORE_DEFINERUNTIMETYPED( ScenePlug );
 
 const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
 const IECore::InternedString ScenePlug::setNameContextName( "scene:setName" );
+
+static ContextAlgo::GlobalScope::Registration g_globalScopeRegistration(
+	ScenePlug::staticTypeId(),
+	{ ScenePlug::scenePathContextName, ScenePlug::setNameContextName }
+);
 
 ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )

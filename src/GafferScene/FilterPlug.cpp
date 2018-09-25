@@ -37,8 +37,10 @@
 #include "GafferScene/FilterPlug.h"
 
 #include "GafferScene/Filter.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/ContextAlgo.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
@@ -50,6 +52,11 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( FilterPlug );
 
 const IECore::InternedString FilterPlug::inputSceneContextName( "scene:filter:inputScene" );
+
+static ContextAlgo::GlobalScope::Registration g_globalScopeRegistration(
+	ScenePlug::staticTypeId(),
+	{ FilterPlug::inputSceneContextName }
+);
 
 FilterPlug::FilterPlug( const std::string &name, Direction direction, unsigned flags )
 	:	IntPlug( name, direction, IECore::PathMatcher::NoMatch, IECore::PathMatcher::NoMatch, IECore::PathMatcher::EveryMatch, flags )
