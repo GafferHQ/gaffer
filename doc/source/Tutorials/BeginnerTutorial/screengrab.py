@@ -15,7 +15,7 @@ import GafferSceneUI
 
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
-graphEditor = scriptWindow.getLayout().editors( GafferUI.NodeGraph )[0]
+graphEditor = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
 
 # Delay for x seconds
