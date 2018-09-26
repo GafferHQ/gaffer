@@ -856,7 +856,7 @@ class DiffRow( Row ) :
 			# pending call.
 			self.__lazyBackgroundUpdate()
 		elif isinstance( backgroundResult, Exception ) :
-			# Computation error. For now we leave it to the NodeGraph
+			# Computation error. For now we leave it to the GraphEditor
 			# to display this.
 			pass
 		else :
