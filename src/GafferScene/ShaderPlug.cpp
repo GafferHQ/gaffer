@@ -119,7 +119,7 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 	return
 		runTimeCast<const SubGraph>( sourceNode ) ||
-		runTimeCast<const SwitchComputeNode>( sourceNode ) ||
+		runTimeCast<const Switch>( sourceNode ) ||
 		runTimeCast<const Dot>( sourceNode ) ||
 		runTimeCast<const BoxIO>( sourceNode )
 	;

@@ -124,8 +124,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::AtomicCompoundDataPlug *mappingPlug();
 		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
 
-		Gaffer::SwitchComputeNode *imageSwitch();
-		const Gaffer::SwitchComputeNode *imageSwitch() const;
+		Gaffer::Switch *imageSwitch();
+		const Gaffer::Switch *imageSwitch() const;
 
 		IE_CORE_FORWARDDECLARE( InternalImage );
 		static InternalImage *imageNode( Image *image );

@@ -57,7 +57,7 @@ class SwitchPlugAdder : public PlugAdder
 
 	public :
 
-		SwitchPlugAdder( SwitchComputeNodePtr node )
+		SwitchPlugAdder( SwitchPtr node )
 			:	m_switch( node )
 		{
 			node->childAddedSignal().connect( boost::bind( &SwitchPlugAdder::childAdded, this ) );
@@ -112,7 +112,7 @@ class SwitchPlugAdder : public PlugAdder
 			setVisible( m_switch->getChild<ArrayPlug>( "in" ) == nullptr );
 		}
 
-		SwitchComputeNodePtr m_switch;
+		SwitchPtr m_switch;
 
 };
 
@@ -128,10 +128,10 @@ struct Registration
 
 		static GadgetPtr create( GraphComponentPtr parent )
 		{
-			SwitchComputeNodePtr switchNode = runTimeCast<SwitchComputeNode>( parent );
+			SwitchPtr switchNode = runTimeCast<Switch>( parent );
 			if( !switchNode )
 			{
-				throw Exception( "SwitchPlugAdder requires a SwitchComputeNode" );
+				throw Exception( "SwitchPlugAdder requires a Switch" );
 			}
 
 			return new SwitchPlugAdder( switchNode );

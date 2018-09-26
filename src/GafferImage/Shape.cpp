@@ -95,7 +95,7 @@ Shape::Shape( const std::string &name )
 	shadowMerge->inPlugs()->getChild<ImagePlug>( 1 )->setInput( shadowTransform->outPlug() );
 	shadowMerge->operationPlug()->setValue( Merge::Over );
 
-	SwitchComputeNodePtr shadowSwitch = new SwitchComputeNode( "__shadowSwitch" );
+	SwitchPtr shadowSwitch = new Switch( "__shadowSwitch" );
 	shadowSwitch->setup( outPlug() );
 	addChild( shadowSwitch );
 	shadowSwitch->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inPlug() );

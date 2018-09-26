@@ -218,7 +218,7 @@ class Shader::NetworkBuilder
 					assert( isInputParameter( parameterPlug ) );
 					const Gaffer::Plug *source = parameterPlug->source<Gaffer::Plug>();
 
-					if( const SwitchComputeNode *switchNode = source->parent<SwitchComputeNode>() )
+					if( const Switch *switchNode = source->parent<Switch>() )
 					{
 						// Special case for switches with context-varying index values.
 						// Query the active input for this context, and manually traverse

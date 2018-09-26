@@ -107,7 +107,7 @@ bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
 	const Node *node = input->node();
 	return
 		runTimeCast<const SubGraph>( node ) ||
-		runTimeCast<const SwitchComputeNode>( node ) ||
+		runTimeCast<const Switch>( node ) ||
 		runTimeCast<const Dot>( node )
 	;
 }
