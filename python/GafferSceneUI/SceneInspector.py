@@ -938,10 +938,12 @@ class DiffRow( Row ) :
 
 		m = IECore.MenuDefinition()
 
-		attribute = targets[0].attributes().get( self.__label().getText() )
-		shaderInspectionSupported = isinstance( attribute, IECore.ObjectVector ) and isinstance( attribute[-1], IECoreScene.Shader )
+		targetsAreShaders = []
 
 		for i, target in enumerate( targets ) :
+
+			attribute = self.__inspector( target )
+			targetsAreShaders.append( isinstance( attribute, IECore.ObjectVector ) and isinstance( attribute[-1], IECoreScene.Shader ) )
 
 			if len( targets ) == 2 :
 				labelSuffix = "/For " + ( "A", "B" )[i]
@@ -966,7 +968,7 @@ class DiffRow( Row ) :
 					}
 				)
 
-			if shaderInspectionSupported :
+			if targetsAreShaders[i] :
 				m.append(
 					"/Show Shader Parameters" + labelSuffix,
 					{
@@ -974,7 +976,7 @@ class DiffRow( Row ) :
 					}
 				)
 
-		if len( targets ) > 1 and shaderInspectionSupported :
+		if len( targetsAreShaders ) == 2 and all( targetsAreShaders ) :
 			m.append(
 				"/Show Shader Parameters/Compare A and B",
 				{
