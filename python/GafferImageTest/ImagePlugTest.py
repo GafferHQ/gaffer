@@ -132,7 +132,7 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 
-		self.assertTypeNamesArePrefixed( GafferImage, namesToIgnore = { "Gaffer::SwitchComputeNode" } )
+		self.assertTypeNamesArePrefixed( GafferImage, namesToIgnore = { "Gaffer::Switch" } )
 		self.assertTypeNamesArePrefixed( GafferImageTest )
 
 	def testDefaultNames( self ) :

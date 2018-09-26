@@ -44,28 +44,12 @@
 namespace Gaffer
 {
 
-/// The Switch provides a generic base class to implement nodes which choose
-/// between many input branches, feeding only one of them to the output.
-/// The series of input branches are represented by an ArrayPlug called "in",
-/// and the output is a plug named "out".
-///
-/// Switches can be instantiated in either of two ways :
-///
-/// - By instantiating Switch<BaseType> where BaseType creates an "in" and
-///   and "out" plug during construction. This is the method used to create
-///   the SceneSwitch and ImageSwitch.
-///
-/// - By adding "in" and "out" plugs to a generic Switch node after
-///   construction, using the `Switch::setup()`. This method can be seen
-///   in the GafferTest.SwitchTest
-///   test cases.
-template<typename BaseType>
-class IECORE_EXPORT Switch : public BaseType
+class IECORE_EXPORT Switch : public ComputeNode
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( Switch<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Switch, SwitchTypeId, ComputeNode );
 
 		Switch( const std::string &name=GraphComponent::defaultName<Switch>() );
 		~Switch() override;
@@ -131,14 +115,15 @@ class IECORE_EXPORT Switch : public BaseType
 
 		void updateInternalConnection();
 
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
 		static size_t g_firstPlugIndex;
 
 };
 
-typedef Switch<ComputeNode> SwitchComputeNode;
+IE_CORE_DECLAREPTR( Switch );
 
-IE_CORE_DECLAREPTR( SwitchComputeNode );
+typedef Switch SwitchComputeNode;
+typedef SwitchPtr SwitchComputeNodePtr;
+typedef ConstSwitchPtr ConstSwitchComputeNodePtr;
 
 } // namespace Gaffer
 
