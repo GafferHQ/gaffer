@@ -104,10 +104,9 @@ const Gaffer::ArrayPlug *FilterProcessor::inPlugs() const
 
 bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
 {
-	for( InputIntPlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( InputFilterPlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source()->node() );
-		if( filter && filter != this && filter->sceneAffectsMatch( scene, child ) )
+		if( (*it)->sceneAffectsMatch( scene, child ) )
 		{
 			return true;
 		}

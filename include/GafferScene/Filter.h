@@ -70,6 +70,7 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 		const FilterPlug *outPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		/// Use `FilterPlug::sceneAffectsMatch()` instead.
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 		/// \deprecated Use FilterPlug::SceneScope instead.

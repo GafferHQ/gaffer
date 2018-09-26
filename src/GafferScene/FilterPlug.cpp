@@ -126,6 +126,22 @@ Gaffer::PlugPtr FilterPlug::createCounterpart( const std::string &name, Directio
 	return new FilterPlug( name, direction, defaultValue(), minValue(), maxValue(), getFlags() );
 }
 
+bool FilterPlug::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
+{
+	const Plug *source = this->source();
+	if( source == this )
+	{
+		// No input
+		return false;
+	}
+
+	if( const Filter *filter = runTimeCast<const Filter>( source->node() ) )
+	{
+		return filter->sceneAffectsMatch( scene, child );
+	}
+	return false;
+}
+
 FilterPlug::SceneScope::SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug )
 	:	EditableScope( context )
 {

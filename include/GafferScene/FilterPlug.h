@@ -81,6 +81,8 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 		bool acceptsInput( const Gaffer::Plug *input ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
+		bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
+
 		/// Name of a context variable used to provide the input
 		/// scene to the filter
 		static const IECore::InternedString inputSceneContextName;

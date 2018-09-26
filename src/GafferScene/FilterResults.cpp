@@ -98,8 +98,7 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	const ScenePlug *scenePlug = input->parent<ScenePlug>();
 	if( scenePlug && scenePlug == this->scenePlug() )
 	{
-		const Filter *filter = runTimeCast<const Filter>( filterPlug()->source()->node() );
-		if( filter && filter->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
+		if( filterPlug()->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
 		{
 			outputs.push_back( filterPlug() );
 		}
