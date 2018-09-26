@@ -1038,7 +1038,7 @@ class DiffColumn( GafferUI.Widget ) :
 
 		with outerColumn :
 			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) as self.__header :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					if label is not None :
 						l = GafferUI.Label(
 							"<b>" + label + "</b>",
@@ -1346,6 +1346,51 @@ class _InheritanceSection( Section ) :
 
 class _ShaderParameterSection( LocationSection ) :
 
+	class __NameAndTypeInspector( Inspector ) :
+
+		Name, Type = range( 2 )
+
+		def __init__( self, inspector, mode = None ) :
+
+			self.__inspector = inspector
+			self.__mode = mode
+
+			Inspector.__init__( self )
+
+		def name( self ) :
+
+			if self.__mode == self.Name :
+				return 'Shader Name'
+
+			elif self.__mode == self.Type :
+				return 'Shader Type'
+
+		def children( self, target ) :
+
+			if self.__mode is not None :
+				return []
+
+			result = [ self.__class__( self.__inspector, mode = self.Name ),
+					   self.__class__( self.__inspector, mode = self.Type ) ]
+
+			return result
+
+		def __call__( self, target ) :
+
+			shaders = self.__inspector( target )
+			if not shaders or not isinstance( shaders, IECore.ObjectVector ) :
+				return None
+
+			shader = shaders[-1]
+			if not shader or not isinstance( shader, IECoreScene.Shader ) :
+				return None
+
+			if self.__mode == self.Name :
+				return shader.name
+
+			elif self.__mode == self.Type :
+				return shader.type
+
 	class __Inspector( Inspector ) :
 
 		def __init__( self, inspector, parameterName = None ) :
@@ -1394,12 +1439,14 @@ class _ShaderParameterSection( LocationSection ) :
 
 		with self._mainColumn() :
 
+			self.__nameTypeDiffColumn = DiffColumn( self.__NameAndTypeInspector( inspector ), label = "Shader Information", filterable = False, diffCreator = self.__diffCreator )
 			self.__diffColumn = DiffColumn( self.__Inspector( inspector ), label = "Parameters", filterable = True, diffCreator = self.__diffCreator )
 
 	def update( self, targets ) :
 
 		LocationSection.update( self, targets )
 
+		self.__nameTypeDiffColumn.update( targets )
 		self.__diffColumn.update( targets )
 
 ##########################################################################
