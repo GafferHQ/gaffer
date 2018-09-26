@@ -270,13 +270,19 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 			assert( len( self.__scenePlugs ) <= 2 )
 
+			paths = [ None ]
 			if self.__targetPaths is not None :
 				paths = self.__targetPaths
 			else :
-				paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
-			paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
-			if not paths :
-				paths = [ None ]
+				lastSelectedPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+				if lastSelectedPath :
+					paths = [ lastSelectedPath ]
+					selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+					if len( selectedPaths ) > 1 :
+						paths.insert( 0, next( p for p in selectedPaths if p != lastSelectedPath ) )
+
+			if len( self.__scenePlugs ) > 1 :
+				paths = [ paths[-1] ]
 
 			targets = []
 			for scene in self.__scenePlugs :
