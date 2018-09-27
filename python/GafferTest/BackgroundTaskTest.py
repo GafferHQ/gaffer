@@ -212,5 +212,26 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 
 		self.assertEqual( operations, [ "requesting explicit cancellation", "cancellation received" ] )
 
+	def testWaitFor( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		def f( canceller ) :
+
+			while True :
+				try :
+					IECore.Canceller.check( canceller )
+				except IECore.Cancelled :
+					return
+
+		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
+
+		startTime = time.time()
+		self.assertFalse( t.waitFor( 0.2 ) )
+		self.assertGreaterEqual( time.time(), startTime + 0.2 )
+
+		t.cancelAndWait()
+
 if __name__ == "__main__":
 	unittest.main()
