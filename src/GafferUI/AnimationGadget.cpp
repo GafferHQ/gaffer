@@ -87,9 +87,12 @@ T timeToFrame( float fps, T time )
 	return time * fps;
 }
 
-float snapTimeToFrame( float fps, float time )
+float snapTimeToFrame( float fps, float time, float threshold=std::numeric_limits<float>::max() )
 {
-	return frameToTime( fps, round( timeToFrame( fps, time ) ) );
+	float frame = timeToFrame( fps, time );
+	float rounded = round( frame );
+
+	return frameToTime( fps, std::abs( frame - rounded ) > threshold ? frame : rounded );
 }
 
 // \todo: Consider making the colorForAxes function in StandardStyle public?
@@ -576,7 +579,12 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 			key->setValue( m_originalKeyValues[key].second + globalOffset.y );
 		}
 
+		// Compute new time and make sure that we eliminate floating point precision
+		// issues that could cause keys landing a little bit off integer frames for
+		// keys that are meant to snap to frames.
 		float newTime = m_originalKeyValues[key].first + globalOffset.x;
+		newTime = snapTimeToFrame( m_context->getFramesPerSecond(), newTime, 0.004 );
+
 		if( m_moveAxis != MoveAxis::Y && newTime != key->getTime() )
 		{
 			// If a key already exists on the new frame, we overwrite it, but
