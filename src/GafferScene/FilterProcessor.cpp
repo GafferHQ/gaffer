@@ -104,14 +104,21 @@ const Gaffer::ArrayPlug *FilterProcessor::inPlugs() const
 
 bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
 {
-	for( InputFilterPlugIterator it( inPlugs() ); !it.done(); ++it )
+	if( const ArrayPlug *arrayIn = this->inPlugs() )
 	{
-		if( (*it)->sceneAffectsMatch( scene, child ) )
+		for( InputFilterPlugIterator it( arrayIn ); !it.done(); ++it )
 		{
-			return true;
+			if( (*it)->sceneAffectsMatch( scene, child ) )
+			{
+				return true;
+			}
 		}
+		return false;
 	}
-	return false;
+	else
+	{
+		return inPlug()->sceneAffectsMatch( scene, child );
+	}
 }
 
 Gaffer::Plug *FilterProcessor::correspondingInput( const Gaffer::Plug *output )
