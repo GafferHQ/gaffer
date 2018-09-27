@@ -96,12 +96,6 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return true;
 	}
-	// Likewise, we must do the same for old FilterProcessor nodes, which used to
-	// use IntPlugs nd now use FilterPlugs.
-	if( children()[0]->isInstanceOf( "GafferScene::FilterPlug" ) && potentialChild->typeId() == (IECore::TypeId)IntPlugTypeId )
-	{
-		return true;
-	}
 
 	return false;
 }
