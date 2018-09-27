@@ -496,6 +496,14 @@ void SceneGadget::updateRenderer()
 	m_updateErrored = false;
 	m_updateTask = m_controller.updateInBackground( progressCallback );
 	stateChangedSignal()( this );
+
+	// Give ourselves a 0.1s grace period in which we block
+	// the UI while our updates occur. This means that for reasonably
+	// interactive animation or manipulation, we only show the final
+	// result, rathen than a series of partial intermediate results.
+	// It also prevents a "cancellation storm" where new UI events
+	// cancel our background updates faster than we can show them.
+	m_updateTask->waitFor( 0.1 );
 }
 
 void SceneGadget::renderScene() const
