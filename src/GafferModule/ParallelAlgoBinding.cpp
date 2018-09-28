@@ -90,6 +90,12 @@ void backgroundTaskWait( BackgroundTask &b )
 	b.wait();
 }
 
+bool backgroundTaskWaitFor( BackgroundTask &b, float seconds )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return b.waitFor( seconds );
+}
+
 void backgroundTaskCancelAndWait( BackgroundTask &b )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -236,6 +242,7 @@ void GafferModule::bindParallelAlgo()
 			.def( "__init__", make_constructor( &backgroundTaskConstructor, default_call_policies() ) )
 			.def( "cancel", &backgroundTaskCancel )
 			.def( "wait", &backgroundTaskWait )
+			.def( "waitFor", &backgroundTaskWaitFor )
 			.def( "cancelAndWait", &backgroundTaskCancelAndWait )
 			.def( "status", &backgroundTaskStatus )
 		;
