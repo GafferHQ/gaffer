@@ -143,8 +143,8 @@ void computeGrid( const ViewportGadget *viewportGadget, float fps, AxisDefinitio
 
 	// \todo the box's size() is unrealiable because it considers the box empty for the inverted coords we seem to have here
 	V2f pxPerUnit = V2f(
-		resolution.x / abs( viewportBoundsFrames.min.x - viewportBoundsFrames.max.x ),
-		resolution.y / abs( viewportBounds.min.y - viewportBounds.max.y ) );
+		resolution.x / std::abs( viewportBoundsFrames.min.x - viewportBoundsFrames.max.x ),
+		resolution.y / std::abs( viewportBounds.min.y - viewportBounds.max.y ) );
 
 	// Compute the stride to use for the time dimension.
 	if( pxPerUnit.x < labelMinSize.x )
@@ -970,7 +970,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
-			if( abs( i.x - m_dragStartPosition.x ) >= abs ( i.y - m_dragStartPosition.y ) )
+			if( std::abs( i.x - m_dragStartPosition.x ) >= std::abs ( i.y - m_dragStartPosition.y ) )
 			{
 				m_moveAxis = MoveAxis::X;
 				Pointer::setCurrent( "moveHorizontally" );
@@ -1001,7 +1001,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 			else
 			{
 				auto leftIt = std::prev( rightIt );
-				m_snappingClosestKey = fabs( i.x - (*leftIt)->getTime() ) < fabs( i.x - (*rightIt)->getTime() ) ? *leftIt : *rightIt;
+				m_snappingClosestKey = std::abs( i.x - (*leftIt)->getTime() ) < std::abs( i.x - (*rightIt)->getTime() ) ? *leftIt : *rightIt;
 			}
 		}
 
