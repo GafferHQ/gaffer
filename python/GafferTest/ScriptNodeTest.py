@@ -1216,6 +1216,34 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["frame"].getValue(), 4.0 )
 		self.assertEqual( s2.context().getFrame(), 4.0 )
 
+	def testFrameRange( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertEqual( s["frameRange"]["start"].getValue(), 1 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
+		self.assertEqual( s.context().get( "frameRange:start" ), 1 )
+		self.assertEqual( s.context().get( "frameRange:end" ), 100 )
+
+		s["frameRange"]["start"].setValue( 20 )
+		s["frameRange"]["end"].setValue( 50 )
+		self.assertEqual( s.context().get( "frameRange:start" ), 20 )
+		self.assertEqual( s.context().get( "frameRange:end" ), 50 )
+
+		# frame range remains valid
+		s["frameRange"]["end"].setValue( 15 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 15 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 15 )
+		self.assertEqual( s.context().get( "frameRange:start" ), 15 )
+		self.assertEqual( s.context().get( "frameRange:end" ), 15 )
+		
+		s["frameRange"]["end"].setValue( 150 )
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["frameRange"]["start"].getValue(), 15 )
+		self.assertEqual( s2["frameRange"]["end"].getValue(), 150 )
+		self.assertEqual( s2.context().get( "frameRange:start" ), 15 )
+		self.assertEqual( s2.context().get( "frameRange:end" ), 150 )
+
 	def testLineNumberForExecutionSyntaxError( self ) :
 
 		s = Gaffer.ScriptNode()
