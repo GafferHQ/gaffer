@@ -209,7 +209,7 @@ class GraphEditor( GafferUI.Editor ) :
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
 		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
 
-	__nodeDoubleClickSignal = Gaffer.Signal2()
+	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
 	# Slots should have the signature ( graphEditor, node ).
 	@classmethod
