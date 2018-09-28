@@ -102,6 +102,7 @@ Gaffer.Metadata.registerValue( GafferScene.Shader, "...", "nodule:color", __shad
 def __nodeDoubleClick( graphEditor, node ) :
 
 	GafferUI.NodeEditor.acquire( node, floating = True )
+	return True
 
 GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick, scoped = False )
 
