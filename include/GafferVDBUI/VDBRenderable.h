@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,62 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef GAFFERVDB_VDBRENDERABLE_H
+#define GAFFERVDB_VDBRENDERABLE_H
+
 #include "IECoreVDB/VDBObject.h"
 
-#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
+#include "IECoreGL/Renderable.h"
 
-#include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
-#include "IECoreGL/PointsPrimitive.h"
 
-#include "GafferVDBUI/VDBRenderable.h"
-
-#include "openvdb/openvdb.h"
-#include "openvdb/points/PointConversion.h"
-#include "openvdb/points/PointCount.h"
-
-#include "boost/mpl/for_each.hpp"
-#include "boost/mpl/list.hpp"
-
-using namespace std;
-using namespace Imath;
-using namespace IECoreGLPreview;
-using namespace IECoreScene;
-using namespace IECoreVDB;
-
-namespace
+namespace GafferVDBUI
 {
 
-
-
-class VDBVisualiser : public ObjectVisualiser
+class VDBRenderable : public IECoreGL::Renderable
 {
+public:
+    VDBRenderable( const IECoreVDB::VDBObject *vdbObject ) : m_vdbObject( vdbObject ) {}
 
-	public :
+    void render( IECoreGL::State *currentState ) const override;
+    Imath::Box3f bound()  const override;
+private:
+    IECoreVDB::ConstVDBObjectPtr m_vdbObject;
 
-		typedef VDBObject ObjectType;
-
-		VDBVisualiser()
-		{
-		}
-
-		virtual ~VDBVisualiser()
-		{
-		}
-
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const
-		{
-			const IECoreVDB::VDBObject* vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( object );
-
-			return new GafferVDBUI::VDBRenderable( vdbObject );
-		}
-
-	protected :
-
-		static ObjectVisualiserDescription<VDBVisualiser> g_visualiserDescription;
-
+    mutable IECoreGL::GroupPtr m_group;
 };
 
-ObjectVisualiser::ObjectVisualiserDescription<VDBVisualiser> VDBVisualiser::g_visualiserDescription;
+} // namespace GafferVDB
 
-} // namespace
+#endif // GAFFERVDB_VDBRENDERABLE_H
+
