@@ -478,7 +478,7 @@ class RenderController::SceneGraph
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType )
 			{
-				m_objectInterface = nullptr;
+				clearObject();
 				return hadObjectInterface;
 			}
 
