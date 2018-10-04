@@ -41,7 +41,7 @@
 
 #include "GafferScene/Shader.h"
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreArnold/UniverseBlock.h"
@@ -133,7 +133,7 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 		}
 		else if( ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() ) )
 		{
-			lightShader->parameters()[valuePlug->getName()] = CompoundDataPlug::extractDataFromPlug( valuePlug );
+			lightShader->parameters()[valuePlug->getName()] = PlugAlgo::extractDataFromPlug( valuePlug );
 		}
 	}
 

@@ -36,7 +36,7 @@
 
 #include "GafferAppleseed/AppleseedLight.h"
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/Shader.h"
@@ -119,7 +119,7 @@ IECore::ObjectVectorPtr AppleseedLight::computeLight( const Gaffer::Context *con
 	IECoreScene::ShaderPtr result = new IECoreScene::Shader( modelPlug()->getValue(), "as:light" );
 	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
+		result->parameters()[(*it)->getName()] = PlugAlgo::extractDataFromPlug( it->get() );
 	}
 
 	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();

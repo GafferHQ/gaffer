@@ -37,7 +37,7 @@
 
 #include "GafferScene/Shader.h"
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/ScriptNode.h"
@@ -722,7 +722,7 @@ IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) cons
 {
 	if( const Gaffer::ValuePlug *valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
 	{
-		return Gaffer::CompoundDataPlug::extractDataFromPlug( valuePlug );
+		return Gaffer::PlugAlgo::extractDataFromPlug( valuePlug );
 	}
 
 	return nullptr;
