@@ -38,9 +38,17 @@
 #include "Gaffer/PlugAlgo.h"
 
 #include "Gaffer/Box.h"
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/SplinePlug.h"
+#include "Gaffer/TransformPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
+
+#include "IECore/SplineData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
@@ -148,6 +156,314 @@ void replacePlug( Gaffer::GraphComponent *parent, PlugPtr plug )
 			(*oIt)->setInput( it->plug );
 		}
 	}
+}
+
+} // namespace PlugAlgo
+
+} // namespace Gaffer
+
+//////////////////////////////////////////////////////////////////////////
+// Convert to/from Data
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+template<typename T>
+ValuePlugPtr boxValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	return new BoxPlug<typename T::ValueType>(
+		name,
+		direction,
+		value->readable(),
+		flags
+	);
+}
+
+template<typename T>
+ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	typedef typename T::ValueType ValueType;
+	typedef typename ValueType::BaseType BaseType;
+	typedef CompoundNumericPlug<ValueType> PlugType;
+
+	typename PlugType::Ptr result = new PlugType(
+		name,
+		direction,
+		value->readable(),
+		ValueType( Imath::limits<BaseType>::min() ),
+		ValueType( Imath::limits<BaseType>::max() ),
+		flags
+	);
+
+	return result;
+}
+
+template<typename T>
+ValuePlugPtr geometricCompoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	typedef typename T::ValueType ValueType;
+	typedef typename ValueType::BaseType BaseType;
+	typedef CompoundNumericPlug<ValueType> PlugType;
+
+	typename PlugType::Ptr result = new PlugType(
+		name,
+		direction,
+		value->readable(),
+		ValueType( Imath::limits<BaseType>::min() ),
+		ValueType( Imath::limits<BaseType>::max() ),
+		flags,
+		value->getInterpretation()
+	);
+
+	return result;
+}
+
+template<typename T>
+ValuePlugPtr typedObjectValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	typename TypedObjectPlug<T>::Ptr result = new TypedObjectPlug<T>(
+		name,
+		direction,
+		value,
+		flags
+	);
+
+	return result;
+}
+
+}
+
+namespace Gaffer
+{
+
+namespace PlugAlgo
+{
+
+ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value )
+{
+	switch( value->typeId() )
+	{
+		case FloatDataTypeId :
+		{
+			FloatPlugPtr valuePlug = new FloatPlug(
+				name,
+				direction,
+				static_cast<const FloatData *>( value )->readable(),
+				Imath::limits<float>::min(),
+				Imath::limits<float>::max(),
+				flags
+			);
+			return valuePlug;
+		}
+		case IntDataTypeId :
+		{
+			IntPlugPtr valuePlug = new IntPlug(
+				name,
+				direction,
+				static_cast<const IntData *>( value )->readable(),
+				Imath::limits<int>::min(),
+				Imath::limits<int>::max(),
+				flags
+			);
+			return valuePlug;
+		}
+		case StringDataTypeId :
+		{
+			StringPlugPtr valuePlug = new StringPlug(
+				name,
+				direction,
+				static_cast<const StringData *>( value )->readable(),
+				flags
+			);
+			return valuePlug;
+		}
+		case BoolDataTypeId :
+		{
+			BoolPlugPtr valuePlug = new BoolPlug(
+				name,
+				direction,
+				static_cast<const BoolData *>( value )->readable(),
+				flags
+			);
+			return valuePlug;
+		}
+		case V2iDataTypeId :
+		{
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V2iData *>( value ) );
+		}
+		case V3iDataTypeId :
+		{
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V3iData *>( value ) );
+		}
+		case V2fDataTypeId :
+		{
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V2fData *>( value ) );
+		}
+		case V3fDataTypeId :
+		{
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V3fData *>( value ) );
+		}
+		case Color3fDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color3fData *>( value ) );
+		}
+		case Color4fDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color4fData *>( value ) );
+		}
+		case Box2fDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box2fData *>( value ) );
+		}
+		case Box2iDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box2iData *>( value ) );
+		}
+		case Box3fDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box3fData *>( value ) );
+		}
+		case Box3iDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box3iData *>( value ) );
+		}
+		case M44fDataTypeId :
+		{
+			M44fPlugPtr valuePlug = new M44fPlug(
+				name,
+				direction,
+				static_cast<const M44fData *>( value )->readable(),
+				flags
+			);
+		}
+		case FloatVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const FloatVectorData *>( value ) );
+		}
+		case IntVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const IntVectorData *>( value ) );
+		}
+		case StringVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const StringVectorData *>( value ) );
+		}
+		case InternedStringVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const InternedStringVectorData *>( value ) );
+		}
+		case BoolVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const BoolVectorData *>( value ) );
+		}
+		case V2iVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const V2iVectorData *>( value ) );
+		}
+		case V3fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const V3fVectorData *>( value ) );
+		}
+		case Color3fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const Color3fVectorData *>( value ) );
+		}
+		case M44fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const M44fVectorData *>( value ) );
+		}
+		default :
+			throw IECore::Exception(
+				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
+			);
+	}
+}
+
+IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
+{
+	switch( static_cast<Gaffer::TypeId>(plug->typeId()) )
+	{
+		case FloatPlugTypeId :
+			return new FloatData( static_cast<const FloatPlug *>( plug )->getValue() );
+		case IntPlugTypeId :
+			return new IntData( static_cast<const IntPlug *>( plug )->getValue() );
+		case StringPlugTypeId :
+			return new StringData( static_cast<const StringPlug *>( plug )->getValue() );
+		case BoolPlugTypeId :
+			return new BoolData( static_cast<const BoolPlug *>( plug )->getValue() );
+		case V2iPlugTypeId :
+		{
+			const V2iPlug *v2iPlug = static_cast<const V2iPlug *>( plug );
+			V2iDataPtr data = new V2iData( v2iPlug->getValue() );
+			data->setInterpretation( v2iPlug->interpretation() );
+			return data;
+		}
+		case V3iPlugTypeId :
+		{
+			const V3iPlug *v3iPlug = static_cast<const V3iPlug *>( plug );
+			V3iDataPtr data = new V3iData( v3iPlug->getValue() );
+			data->setInterpretation( v3iPlug->interpretation() );
+			return data;
+		}
+		case V2fPlugTypeId :
+		{
+			const V2fPlug *v2fPlug = static_cast<const V2fPlug *>( plug );
+			V2fDataPtr data = new V2fData( v2fPlug->getValue() );
+			data->setInterpretation( v2fPlug->interpretation() );
+			return data;
+		}
+		case V3fPlugTypeId :
+		{
+			const V3fPlug *v3fPlug = static_cast<const V3fPlug *>( plug );
+			V3fDataPtr data = new V3fData( v3fPlug->getValue() );
+			data->setInterpretation( v3fPlug->interpretation() );
+			return data;
+		}
+		case Color3fPlugTypeId :
+			return new Color3fData( static_cast<const Color3fPlug *>( plug )->getValue() );
+		case Color4fPlugTypeId :
+			return new Color4fData( static_cast<const Color4fPlug *>( plug )->getValue() );
+		case Box2fPlugTypeId :
+			return new Box2fData( static_cast<const Box2fPlug *>( plug )->getValue() );
+		case Box2iPlugTypeId :
+			return new Box2iData( static_cast<const Box2iPlug *>( plug )->getValue() );
+		case Box3fPlugTypeId :
+			return new Box3fData( static_cast<const Box3fPlug *>( plug )->getValue() );
+		case Box3iPlugTypeId :
+			return new Box3iData( static_cast<const Box3iPlug *>( plug )->getValue() );
+		case FloatVectorDataPlugTypeId :
+			return static_cast<const FloatVectorDataPlug *>( plug )->getValue()->copy();
+		case IntVectorDataPlugTypeId :
+			return static_cast<const IntVectorDataPlug *>( plug )->getValue()->copy();
+		case StringVectorDataPlugTypeId :
+			return static_cast<const StringVectorDataPlug *>( plug )->getValue()->copy();
+		case InternedStringVectorDataPlugTypeId :
+			return static_cast<const InternedStringVectorDataPlug *>( plug )->getValue()->copy();
+		case BoolVectorDataPlugTypeId :
+			return static_cast<const BoolVectorDataPlug *>( plug )->getValue()->copy();
+		case V2iVectorDataPlugTypeId :
+			return static_cast<const V2iVectorDataPlug *>( plug )->getValue()->copy();
+		case V3fVectorDataPlugTypeId :
+			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();
+		case Color3fVectorDataPlugTypeId :
+			return static_cast<const Color3fVectorDataPlug *>( plug )->getValue()->copy();
+		case M44fVectorDataPlugTypeId :
+			return static_cast<const M44fVectorDataPlug *>( plug )->getValue()->copy();
+		case SplineffPlugTypeId :
+			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue().spline() );
+		case SplinefColor3fPlugTypeId :
+			return new SplinefColor3fData( static_cast<const SplinefColor3fPlug *>( plug )->getValue().spline() );
+		case TransformPlugTypeId :
+			return new M44fData( static_cast<const TransformPlug *>( plug )->matrix() );
+		case M44fPlugTypeId :
+			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
+		default :
+			throw IECore::Exception(
+				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
+			);
+	}
+
 }
 
 } // namespace PlugAlgo
