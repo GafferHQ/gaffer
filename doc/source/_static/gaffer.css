@@ -1,8 +1,33 @@
-/* ===================================
-CSS overrides for Gaffer documentation
-==================================== */
+/* ========================================
+    CSS overrides for Gaffer documentation
+======================================== */
 
-/* Match regular nav background to Gaffer brand colors */
+/* As of 2019, the most up-to-date reset */
+@import url("normalize.css");
+
+body {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    background-color: #fff;
+}
+
+/* ========================================
+    Navigation sidebar
+======================================== */
+
+/* Remove nav link dotted outline */
+.wy-menu-vertical a {
+    outline: none;
+}
+
+/* Remove on-click active link BG colour */
+.wy-menu-vertical a:active {
+    background-color: initial;
+}
+
+/* Match nav main BG to Gaffer brand colors */
 .wy-side-nav-search {
     background-color: #343131;
 }
@@ -12,7 +37,7 @@ CSS overrides for Gaffer documentation
     background-color: #b92227;
 }
 
-/* Increase nav version color visibility */
+/* Increase nav version text color visibility */
 .wy-side-nav-search > div.version {
     color: inherit;
 }
@@ -37,9 +62,32 @@ CSS overrides for Gaffer documentation
     background-color: white;
 }
 
-/* Make nav button color red on click */
-.wy-menu-vertical a:active {
-    background-color:#b92227;
+/* Give all nav links a highlight on hover */
+.wy-menu-vertical li.current a:hover {
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    transition: background-color 0.1s linear;
+}
+
+/* Make all unrolled nav links the same color */
+.wy-menu-vertical li.toctree-l1.current li.toctree-l2 > a,
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a,
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a {
+    background-color: #dddddd;
+    border: none;
+}
+
+/* Active nav links: adjust text weight, make duller, remove unnecessary border */
+.wy-menu-vertical li.on a,
+.wy-menu-vertical li.current > a {
+    font-weight: bolder;
+    background-color: #dddddd !important;
+    border: none;
+}
+
+/* Current nav link: make same colour as article BG */
+.wy-menu-vertical li.on a[href="#"],
+.wy-menu-vertical li.current > a[href="#"] {
+    background-color: rgb(252, 252, 252) !important;
 }
 
 /* Increase font size for mobile header title */
@@ -55,26 +103,153 @@ CSS overrides for Gaffer documentation
     top: 15px;
 }
 
+/* ========================================
+    Links
+======================================== */
+
 /* Add icon after external links */
 a[href^="http"]:after {
-    content: " " url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);
-    color: #2980B9;
+    content: "\a0\f08e";
+    font-family: FontAwesome;
+    font-size: 0.625em;
 }
 
-/* Fix fallback image text vertically alignment when inline */
-img {
-    vertical-align: initial;
+/* ========================================
+    Headings
+======================================== */
+
+/* Restyle headings. Objectives are:
+  1. Keep font sizes as small as possible.
+  2. Avoid Roboto-Slab (inappropriate as a heading font).
+  3. Make H2-H4 (most common) easily distinguishable without being distracting.
+  4. Make H5-H6 distinct, but assume they'll be used rarely (if ever).
+  */
+h1, h2, h3, h4, h5, h6 {
+    font-family: inherit;
+    font-weight: bolder;
+    margin: 2rem 0 0.5rem;
 }
 
-/* Make nested and serial headers more distinguishable */
+h1 {
+    font-size: 2rem;
+}
+
 h2 {
-    margin-top: 2em;
-    padding-bottom: 0.25em;
+    margin-bottom: 1rem;
     border-bottom: 1px solid #e1e4e5;
+    font-size: 1.5rem;
 }
 
 h3 {
-    font-size: 100%;
+    font-size: 1.25rem;
+}
+
+h4 {
+    font-size: 1rem;
+}
+
+h5, h6 {
+    color: #808080;
+}
+
+h5 {
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+h6 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* ========================================
+    Paragraphs
+======================================== */
+
+/* Override paragraph settings to conform to body */
+.rst-content p {
+    font-size: inherit;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+/* ========================================
+    Lists
+======================================== */
+
+/* Balance spacing of lists, nested lists, and their contents. Objectives are:
+  1. The same 1.5rem spacing between two <p>s before and after a top-level list (but not nested lists).
+  2. Consistent margins for images inside lists. Unfortunately, all images in Markdown are inline, making it impossible to distinguish between large and small images in pure CSS.
+  3. Small but noticeable spacing between each <li>.
+  4. Make line-height consistent with <body>.
+  */
+.rst-content .section ol,
+.rst-content .section ul {
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.rst-content .section ol ol, .rst-content .section ol ul,
+.rst-content .section ul ul, .rst-content .section ul ol {
+    margin-bottom: 0;
+}
+
+.rst-content .section ol p,
+.rst-content .section ul p {
+    margin-bottom: 0.5rem;
+}
+
+.rst-content .section ol li,
+.rst-content .section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.rst-content .section ol > li:first-of-type,
+.rst-content .section ul > li:first-of-type {
+    margin-top: 0.5rem;
+}
+
+/* Adjust margins of admonitions inside lists */
+.rst-content .section ol .admonition,
+.rst-content .section ul .admonition {
+    margin-bottom: 0;
+}
+
+/* ========================================
+    Images
+======================================== */
+
+/* Conform reST figure bottom margin */
+.rst-content div.figure {
+    margin-bottom: 1.5rem;
+}
+
+/* Add border to figures */
+.rst-content .figure img {
+    border: 1px solid #e8e8e8;
+    border-radius: 2px;
+}
+
+/* Shrink caption text, adjust line height */
+p.caption {
+    margin-top: 0.5rem;
+    font-size: 0.875em;
+    line-height: 1.4em;
+}
+
+/* ========================================
+    Tables
+======================================== */
+
+/* Conform table font size */
+.wy-table td,
+.rst-content table.docutils td,
+.rst-content table.field-list td,
+.wy-table th,
+.rst-content table.docutils th,
+.rst-content table.field-list th {
+    font-size: 0.9375em;
 }
 
 /* Enable word-wrapping and multiple lines for table cells */
@@ -86,7 +261,7 @@ table.docutils td {
 /* Fix font size and spacing with multi-line table cells */
 table.docutils td p {
     font-size: inherit;
-    margin-bottom: 12px;
+    margin-bottom: 0.75rem;
 }
 
 /* Fix erroneous black middle borders in table headers */
@@ -94,16 +269,61 @@ table.docutils th.head {
     border-color: #e1e4e5;
 }
 
-/* Add custom keystroke class */
-kbd, code.kbd {
-    font-size: 0.9em;
-    border: 1px solid #888888;
-    border-radius: 3px;
-    background: #f5f5f5;
-    padding: 0 3px 1px 3px;
-    font-family: inherit;
+/* ========================================
+    Code formatting
+======================================== */
+
+/* Adjust code block */
+div[class^='highlight'] pre {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875em;
+}
+
+/* Adjust inline code */
+code.literal {
     color: #404040 !important;
 }
+
+/* Make inline code text dark with slightly dark bg */
+.rst-content code {
+    border: none;
+    background-color: rgba(255, 128, 128, 0.1);
+    padding: 2px 2px 1px 2px;
+    line-height: 0;
+    border-radius: 1px;
+    font-size: 0.875em;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Add custom keystroke class */
+kbd, code.kbd {
+    display: inline-block;
+    line-height: 1.25;
+    font-size: 0.875em;
+    border: 1px solid #a0a0a0;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    background-color: #fcfcfc;
+    padding: 0 3px 1px;
+    min-width: 1.5em;
+    font-family: inherit;
+    color: #404040 !important;
+    vertical-align: text-bottom;
+    text-align: center;
+}
+
+/* Since we've made <kbd> inline-block, force the text to stick to the baseline */
+kbd > *, code.kbd > * {
+    vertical-align: baseline;
+}
+
+.rst-content .tip, .rst-content .note, .rst-content .important, .rst-content .caution,  .rst-content .warning {
+    margin-bottom: 1.5rem;
+}
+
+/* ========================================
+    Admonitions
+======================================== */
 
 /* Change icon of "Note" admonition to paperclip */
 .admonition.note p.first.admonition-title::before {
