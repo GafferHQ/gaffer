@@ -39,6 +39,7 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
     Tutorials/index.md
     Interface/index.md
     WorkingWithScenes/index.md
+    WorkingWithImages/index.md
     ScriptPerformance/index.md
 ```
 
