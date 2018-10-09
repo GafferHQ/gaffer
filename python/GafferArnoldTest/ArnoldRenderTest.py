@@ -583,8 +583,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			# Since Arnold doesn't support empty regions, we default to one pixel in the corner
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), 0 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 0 )
-			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 0 )
-			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 479 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Apply Overscan
 		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
@@ -609,8 +609,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), -192 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 640 + 255 )
-			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), -96 )
-			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 480 + 47 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), -48 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 480 + 95 )
 
 	def testMissingCameraRaises( self ) :
 

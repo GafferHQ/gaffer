@@ -133,8 +133,13 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["imageStats"]["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		script["imageStats"]["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 640, 480 ) ) )
 
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["filmFit"]["enabled"].setValue( True )
+		script["options"]["options"]["filmFit"]["value"].setValue( IECoreScene.Camera.FilmFit.Fit )
+
 		script["render"] = self._createInteractiveRender()
-		script["render"]["in"].setInput( script["outputs"]["out"] )
+		script["render"]["in"].setInput( script["options"]["out"] )
 
 		# Render the cube with one level of subdivision. Check we get roughly the
 		# alpha coverage we expect.
