@@ -38,18 +38,13 @@
 
 #include "RenderControllerBinding.h"
 
-// #include "GafferScene/InteractiveRender.h"
-// #include "GafferScene/OpenGLRender.h"
-// #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
-// #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
-// #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/RenderController.h"
-
-#include "GafferDispatchBindings/TaskNodeBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Context.h"
+
+#include "IECorePython/RefCountedBinding.h"
 
 using namespace boost::python;
 
@@ -57,7 +52,6 @@ using namespace Imath;
 using namespace IECoreScenePreview;
 using namespace Gaffer;
 using namespace GafferBindings;
-using namespace GafferDispatchBindings;
 using namespace GafferScene;
 
 namespace
