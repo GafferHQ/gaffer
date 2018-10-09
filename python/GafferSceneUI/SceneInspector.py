@@ -614,6 +614,11 @@ class TextDiff( SideBySideDiff ) :
 			s += " " + value.data.typeName()
 			if hasattr( value.data, "getInterpretation" ) :
 				s += " (" + str( value.data.getInterpretation() ) + ")"
+
+			if value.indices :
+				numElements = len( value.data )
+				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
+
 			result.append( s )
 
 		return result
