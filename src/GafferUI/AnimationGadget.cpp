@@ -87,9 +87,12 @@ T timeToFrame( float fps, T time )
 	return time * fps;
 }
 
-float snapTimeToFrame( float fps, float time )
+float snapTimeToFrame( float fps, float time, float threshold=std::numeric_limits<float>::max() )
 {
-	return frameToTime( fps, round( timeToFrame( fps, time ) ) );
+	float frame = timeToFrame( fps, time );
+	float rounded = round( frame );
+
+	return frameToTime( fps, std::abs( frame - rounded ) > threshold ? frame : rounded );
 }
 
 // \todo: Consider making the colorForAxes function in StandardStyle public?
@@ -140,8 +143,8 @@ void computeGrid( const ViewportGadget *viewportGadget, float fps, AxisDefinitio
 
 	// \todo the box's size() is unrealiable because it considers the box empty for the inverted coords we seem to have here
 	V2f pxPerUnit = V2f(
-		resolution.x / abs( viewportBoundsFrames.min.x - viewportBoundsFrames.max.x ),
-		resolution.y / abs( viewportBounds.min.y - viewportBounds.max.y ) );
+		resolution.x / std::abs( viewportBoundsFrames.min.x - viewportBoundsFrames.max.x ),
+		resolution.y / std::abs( viewportBounds.min.y - viewportBounds.max.y ) );
 
 	// Compute the stride to use for the time dimension.
 	if( pxPerUnit.x < labelMinSize.x )
@@ -576,7 +579,12 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 			key->setValue( m_originalKeyValues[key].second + globalOffset.y );
 		}
 
+		// Compute new time and make sure that we eliminate floating point precision
+		// issues that could cause keys landing a little bit off integer frames for
+		// keys that are meant to snap to frames.
 		float newTime = m_originalKeyValues[key].first + globalOffset.x;
+		newTime = snapTimeToFrame( m_context->getFramesPerSecond(), newTime, 0.004 );
+
 		if( m_moveAxis != MoveAxis::Y && newTime != key->getTime() )
 		{
 			// If a key already exists on the new frame, we overwrite it, but
@@ -962,7 +970,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
-			if( abs( i.x - m_dragStartPosition.x ) >= abs ( i.y - m_dragStartPosition.y ) )
+			if( std::abs( i.x - m_dragStartPosition.x ) >= std::abs ( i.y - m_dragStartPosition.y ) )
 			{
 				m_moveAxis = MoveAxis::X;
 				Pointer::setCurrent( "moveHorizontally" );
@@ -993,7 +1001,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 			else
 			{
 				auto leftIt = std::prev( rightIt );
-				m_snappingClosestKey = fabs( i.x - (*leftIt)->getTime() ) < fabs( i.x - (*rightIt)->getTime() ) ? *leftIt : *rightIt;
+				m_snappingClosestKey = std::abs( i.x - (*leftIt)->getTime() ) < std::abs( i.x - (*rightIt)->getTime() ) ? *leftIt : *rightIt;
 			}
 		}
 
