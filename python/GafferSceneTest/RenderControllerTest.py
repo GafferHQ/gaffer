@@ -168,5 +168,40 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( bound( "/group/sphere" ), translatedBound )
 		self.assertEqual( bound( "/group/sphere1" ), translatedBound )
 
+	def testUpdateRemoveFromLightSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		lightSet = GafferScene.Set()
+		lightSet["in"].setInput( sphere["out"] )
+		lightSet["name"].setValue( '__lights' )
+		lightSet["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+		controller = GafferScene.RenderController( sphere["out"], Gaffer.Context(), renderer )
+		controller.update()
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			lightSet["out"].bound( "/" )
+		)
+
+		controller.setScene( lightSet["out"] )
+		controller.update()
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			lightSet["out"].bound( "/" )
+		)
+
+		# While doing this exact same thing worked the first time, there was a bug where
+		# rendering geo that had previously been rendered in the lights pass would fail.
+		controller.setScene( sphere["out"] )
+		controller.update()
+		self.assertEqual(
+			renderer.command( "gl:queryBound", {} ),
+			lightSet["out"].bound( "/" )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
