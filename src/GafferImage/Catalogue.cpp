@@ -805,6 +805,16 @@ const Catalogue::InternalImage *Catalogue::imageNode( const Image *image )
 				result = internalImage;
 			}
 		}
+
+		if( !it->isInstanceOf( StringPlug::staticTypeId() ) )
+		{
+			// We only want to follow the chain leading to the name plug of the InternalImage,
+			// we don't want to follow off into some other output network that could be costly
+			// to spider ( If we follow the output image of the InternalImage off into a large
+			// comp network, this could get extraordinarily costly, due to DownstreamIterator
+			// not pruning when revisiting nodes ).
+			it.prune();
+		}
 	}
 
 	if( !result )
