@@ -234,6 +234,12 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 	if box is None :
 		return
 
+	parentLabel = {
+		Gaffer.ArrayPlug : "Array",
+		Gaffer.TransformPlug : "Transform",
+		Gaffer.Transform2DPlug : "Transform",
+	}.get( type( plug.parent() ) )
+
 	if Gaffer.PlugAlgo.canPromote( plug ) :
 
 		if len( menuDefinition.items() ) :
@@ -244,8 +250,8 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 			"active" : not readOnly,
 		} )
 
-		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and Gaffer.PlugAlgo.canPromote( plug.parent() ) :
-			menuDefinition.append( "/Promote %s array to %s" % ( plug.parent().getName(), box.getName() ), {
+		if parentLabel and Gaffer.PlugAlgo.canPromote( plug.parent() ) :
+			menuDefinition.append( "/Promote %s to %s" % ( parentLabel, box.getName() ), {
 				"command" : functools.partial( __promote, plug.parent() ),
 				"active" : not readOnly,
 			} )
@@ -257,14 +263,15 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
-		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and Gaffer.PlugAlgo.isPromoted( plug.parent() ) :
-			menuDefinition.append( "/Unpromote %s array from %s" % ( plug.parent().getName(), box.getName() ), {
+		if parentLabel and Gaffer.PlugAlgo.isPromoted( plug.parent() ) :
+			menuDefinition.append( "/Unpromote %s from %s" % ( parentLabel, box.getName() ), {
 				"command" : functools.partial( __unpromote, plug.parent() ),
 				"active" : not readOnly,
 			} )
 		else :
-			# we dont want to allow unpromoting for children of promoted arrays as it
-			# causes unpredicted behaviour, and it doesn't seem useful in general.
+			# We dont want to allow unpromoting for individual children of promoted
+			# parents because that would lead to ArrayPlugs and TransformPlugs with
+			# the unexpected number of children, which would cause crashes.
 			menuDefinition.append( "/Unpromote from %s" % box.getName(), {
 				"command" : functools.partial( __unpromote, plug ),
 				"active" : not readOnly,
