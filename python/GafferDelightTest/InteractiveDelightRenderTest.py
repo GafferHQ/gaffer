@@ -77,8 +77,8 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def _createMatteShader( self ) :
 
 		shader = GafferOSL.OSLShader()
-		shader.loadShader( "matte" )
-		return shader, shader["parameters"]["Cs"]
+		shader.loadShader( "maya/osl/lambert" )
+		return shader, shader["parameters"]["i_color"]
 
 	def _createPointLight( self ) :
 
