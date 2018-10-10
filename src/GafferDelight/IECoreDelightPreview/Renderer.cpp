@@ -1138,9 +1138,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// Store the camera for later use in updateCamera().
 			{
 				tbb::spin_mutex::scoped_lock lock( m_camerasMutex );
-				CameraPtr cameraCopy = camera->copy();
-				cameraCopy->addStandardParameters();
-				m_cameras[objectHandle] = cameraCopy;
+				m_cameras[objectHandle] = camera;
 			}
 
 			DelightHandleSharedPtr cameraHandle(
@@ -1323,8 +1321,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				}
 
 				CameraPtr defaultCamera = new Camera;
-				defaultCamera->parameters()["projection"] = new StringData( "orthographic" );
-				defaultCamera->addStandardParameters();
 				camera = defaultCamera;
 
 				cameraHandle = "ieCoreDelight:defaultCamera";
@@ -1360,14 +1356,14 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				{ "oversampling", &m_oversampling, NSITypeInteger, 0, 1 }
 			};
 
-			const V2i &resolution = camera->parametersData()->member<V2iData>( "resolution", true )->readable();
+			const V2i &resolution = camera->getResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
 
-			const Box2f &screenWindow = camera->parametersData()->member<Box2fData>( "screenWindow", true )->readable();
+			const Box2f &screenWindow = camera->frustum();
 			const Box2d screenWindowD( screenWindow.min, screenWindow.max );
 			screeenParameters.add( { "screenwindow", screenWindowD.min.getValue(), NSITypeDouble, 2, 2, NSIParamIsArray } );
 
-			const float pixelAspectRatio = camera->parametersData()->member<FloatData>( "pixelAspectRatio", true )->readable();
+			const float pixelAspectRatio = camera->getPixelAspectRatio();
 			screeenParameters.add( { "pixelaspectratio", &pixelAspectRatio, NSITypeFloat, 0, 1, 0 } );
 
 			NSISetAttribute( m_context, g_screenHandle, screeenParameters.size(), screeenParameters.data() );
