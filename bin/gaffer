@@ -258,13 +258,13 @@ if [[ -n $DELIGHT ]] ; then
 	fi
 
 	appendToPath "$DELIGHT/bin" PATH
-	appendToPath "$DELIGHT/python2.7" PYTHONPATH
+	appendToPath "$DELIGHT/python" PYTHONPATH
 	appendToPath "$DELIGHT/shaders" DL_SHADERS_PATH
 	appendToPath "$DELIGHT/displays" DL_DISPLAYS_PATH
 
 	appendToPath "$DELIGHT" OSL_SHADER_PATHS
 
-	appendToPath "$GAFFER_ROOT/renderMan/displayDrivers" DL_DISPLAYS_PATH
+	appendToPath "$GAFFER_ROOT/renderMan/displayDrivers" DL_RESOURCES_PATH
 
 fi
 

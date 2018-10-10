@@ -133,7 +133,7 @@ if moduleSearchPath.find( "arnold" ) :
 
 # 3delight nodes
 
-if moduleSearchPath.find( "nsi.so" ) and moduleSearchPath.find( "GafferDelight" ) :
+if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" ) :
 
 	try :
 

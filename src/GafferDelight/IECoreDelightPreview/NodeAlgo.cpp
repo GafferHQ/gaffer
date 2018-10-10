@@ -135,7 +135,6 @@ void addPrimitiveVariableParameters( const char *name, const IECoreScene::Primit
 
 	if( indices )
 	{
-		p.flags |= NSIParamIndirect;
 		if( indicesParameterList )
 		{
 			const string indicesName = name + string( ".indices" );

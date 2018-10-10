@@ -67,23 +67,11 @@ bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const cha
 		parameters.add( "fov", cameraCopy->parametersData()->member<FloatData>( "projection:fov", true ) );
 	}
 
-	const V2i &resolution = cameraCopy->parametersData()->member<V2iData>( "resolution", true )->readable();
-	parameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
-
-	const Box2f &screenWindow = cameraCopy->parametersData()->member<Box2fData>( "screenWindow", true )->readable();
-	const Box2d screenWindowD( screenWindow.min, screenWindow.max );
-	parameters.add( { "screenWindow", screenWindowD.min.getValue(), NSITypeDouble, 2, 2, NSIParamIsArray } );
-
-	const float pixelAspectRatio = cameraCopy->parametersData()->member<FloatData>( "pixelAspectRatio", true )->readable();
-	parameters.add( { "pixelaspectratio", &pixelAspectRatio, NSITypeFloat, 0, 1, 0 } );
-
 	const V2d clippingPlanes = cameraCopy->parametersData()->member<V2fData>( "clippingPlanes", true )->readable();
 	parameters.add( { "clippingrange", clippingPlanes.getValue(), NSITypeDouble, 0, 2, 0 } );
 
 	const V2d shutter = cameraCopy->parametersData()->member<V2fData>( "shutter", true )->readable();
 	parameters.add( { "shutterrange", shutter.getValue(), NSITypeDouble, 0, 2, 0 } );
-
-	/// \todo Support renderRegion
 
 	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
 
