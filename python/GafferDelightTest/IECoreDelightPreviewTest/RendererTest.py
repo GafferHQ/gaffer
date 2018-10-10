@@ -410,7 +410,7 @@ class RendererTest( GafferTest.TestCase ) :
 				parameters = {
 					"resolution" : imath.V2i( 2000, 1000 ),
 					"projection" : "perspective",
-					"perspective:fov" : 40,
+					"projection:fov" : 40.0,
 					"clippingPlanes" : imath.V2f( 0.25, 10 ),
 					"shutter" : imath.V2f( 0, 1 ),
 				}
@@ -425,7 +425,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		nsi = self.__parse( self.temporaryDirectory() + "/test.nsi" )
 
-		self.__assertInNSI( '"fov" "float" 1 90', nsi )
+		self.__assertInNSI( '"fov" "float" 1 40', nsi )
 		self.__assertInNSI( '"resolution" "int[2]" 1 [ 2000 1000 ]', nsi )
 		self.__assertInNSI( '"screenwindow" "double[2]" 2 [ -2 -1 2 1 ]', nsi )
 		self.__assertInNSI( '"pixelaspectratio" "float" 1 1', nsi )
