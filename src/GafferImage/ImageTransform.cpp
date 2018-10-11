@@ -46,10 +46,16 @@
 
 #include "IECore/AngleConversion.h"
 
+#include "OpenEXR/ImathMatrixAlgo.h"
+
+#include "boost/bind.hpp"
+
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+
+static InternedString g_transformChainContextName( "__imageTransform:trainsformChain" );
 
 //////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -106,6 +112,10 @@ ImageTransform::ImageTransform( const std::string &name )
 	// from the intermediate result in computeChannelData().
 
 	addChild( new M33fPlug( "__resampleMatrix", Plug::Out ) );
+
+	addChild( new M33fPlug( "__inTransform", Plug::In ) );
+	addChild( new M33fPlug( "__outTransform", Plug::Out ) );
+
 	addChild( new ImagePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	ResamplePtr resample = new Resample( "__resample" );
@@ -120,6 +130,10 @@ ImageTransform::ImageTransform( const std::string &name )
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
+
+	m_plugInputChangedConnection = plugInputChangedSignal().connect( boost::bind( &ImageTransform::plugInputChanged, this, ::_1 ) );
+
+
 }
 
 ImageTransform::~ImageTransform()
@@ -156,24 +170,44 @@ const Gaffer::M33fPlug *ImageTransform::resampleMatrixPlug() const
 	return getChild<M33fPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::M33fPlug *ImageTransform::inTransformPlug()
+{
+	return getChild<M33fPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::M33fPlug *ImageTransform::inTransformPlug() const
+{
+	return getChild<M33fPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::M33fPlug *ImageTransform::outTransformPlug()
+{
+	return getChild<M33fPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::M33fPlug *ImageTransform::outTransformPlug() const
+{
+	return getChild<M33fPlug>( g_firstPlugIndex + 4 );
+}
+
 ImagePlug *ImageTransform::resampledInPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
 }
 
 const ImagePlug *ImageTransform::resampledInPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
 }
 
 Resample *ImageTransform::resample()
 {
-	return getChild<Resample>( g_firstPlugIndex + 4 );
+	return getChild<Resample>( g_firstPlugIndex + 6 );
 }
 
 const Resample *ImageTransform::resample() const
 {
-	return getChild<Resample>( g_firstPlugIndex + 4 );
+	return getChild<Resample>( g_firstPlugIndex + 6 );
 }
 
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -183,7 +217,8 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	if(
 		input->parent<Plug>() == transformPlug()->translatePlug() ||
 		input->parent<Plug>() == transformPlug()->scalePlug() ||
-		input->parent<Plug>() == transformPlug()->pivotPlug()
+		input->parent<Plug>() == transformPlug()->pivotPlug() ||
+		input == inTransformPlug()
 	)
 	{
 		outputs.push_back( resampleMatrixPlug() );
@@ -192,7 +227,8 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	if(
 		input == inPlug()->dataWindowPlug() ||
 		input == resampledInPlug()->dataWindowPlug() ||
-		transformPlug()->isAncestorOf( input )
+		transformPlug()->isAncestorOf( input ) ||
+		input == inTransformPlug()
 	)
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
@@ -202,24 +238,54 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 		input == inPlug()->channelDataPlug() ||
 		input == inPlug()->dataWindowPlug() ||
 		input == resampledInPlug()->channelDataPlug() ||
-		transformPlug()->isAncestorOf( input )
+		transformPlug()->isAncestorOf( input ) ||
+		input == inTransformPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+
+	if(
+		transformPlug()->isAncestorOf( input ) ||
+		input == inTransformPlug() ||
+		input == enabledPlug()
+	)
+	{
+		outputs.push_back( outTransformPlug() );
 	}
 
 }
 
 void ImageTransform::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( output, context, h );
 
 	if( output == resampleMatrixPlug() )
 	{
 		transformPlug()->translatePlug()->hash( h );
 		transformPlug()->scalePlug()->hash( h );
 		transformPlug()->pivotPlug()->hash( h );
+		inTransformPlug()->hash( h );
 	}
+
+	if( output == outTransformPlug() )
+	{
+		enabledPlug()->hash( h );
+
+		if( inTransformPlug()->getInput() )
+		{
+			inTransformPlug()->hash( h );
+		}
+
+		if( enabledPlug()->getValue() )
+		{
+			transformPlug()->translatePlug()->hash( h );
+			transformPlug()->scalePlug()->hash( h );
+			transformPlug()->pivotPlug()->hash( h );
+			transformPlug()->rotatePlug()->hash( h );
+		}
+	}
+
+	ImageProcessor::hash( output, context, h );
 }
 
 void ImageTransform::compute( ValuePlug *output, const Context *context ) const
@@ -232,107 +298,196 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
+	if( output == outTransformPlug() )
+	{
+		M33f finalTransform;
+		finalTransform.makeIdentity();
+
+		if( inTransformPlug()->getInput() )
+		{
+			finalTransform *= inTransformPlug()->getValue();
+		}
+
+		if( enabledPlug()->getValue() )
+		{
+			finalTransform *= transformPlug()->matrix();
+
+		}
+		static_cast<M33fPlug *>( output )->setValue( finalTransform );
+		return;
+	}
+
 	ImageProcessor::compute( output, context );
 }
 
 void ImageTransform::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	M33f matrix, resampleMatrix;
-	const unsigned op = operation( matrix, resampleMatrix );
-	if( !(op & Rotate) )
-	{
-		h = resampledInPlug()->dataWindowPlug()->hash();
-	}
-	else
+	int transformChain = context->get<int>( g_transformChainContextName, 0 );
+	h.append( transformChain );
+	if( transformChain )
 	{
 		ImageProcessor::hashDataWindow( parent, context, h );
 		inPlug()->dataWindowPlug()->hash( h );
-		h.append( matrix );
+
+	}
+	else
+	{
+		M33f matrix, resampleMatrix;
+		const unsigned op = operation( matrix, resampleMatrix );
+		if( !(op & Rotate) )
+		{
+			h = resampledInPlug()->dataWindowPlug()->hash();
+		}
+		else
+		{
+			ImageProcessor::hashDataWindow( parent, context, h );
+			inPlug()->dataWindowPlug()->hash( h );
+			h.append( matrix );
+		}
 	}
 }
 
 Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	M33f matrix, resampleMatrix;
-	const unsigned op = operation( matrix, resampleMatrix );
-	if( !(op & Rotate) )
+	// inside a transform chain just return the inPlug->channelData
+	Context::EditableScope editableScope( context );
+	if( context->get<int>( g_transformChainContextName, 0 ) )
 	{
-		return resampledInPlug()->dataWindowPlug()->getValue();
+		if( !inTransformPlug()->getInput() )
+		{
+			editableScope.remove( g_transformChainContextName );		
+		}
+		return inPlug()->dataWindowPlug()->getValue();
+
 	}
-	else
+	else 
 	{
-		const Box2i in = inPlug()->dataWindowPlug()->getValue();
-		return box2fToBox2i( transform( Box2f( V2f( in.min ), V2f( in.max ) ), matrix ) );
+		if( inTransformPlug()->getInput() )
+		{
+			editableScope.set<int>( g_transformChainContextName, 1 );
+		}
+
+		M33f matrix, resampleMatrix;
+		const unsigned op = operation( matrix, resampleMatrix );
+		if( !(op & Rotate) )
+		{
+			return resampledInPlug()->dataWindowPlug()->getValue();
+		}
+		else
+		{
+			const Box2i in = inPlug()->dataWindowPlug()->getValue();
+			return box2fToBox2i( transform( Box2f( V2f( in.min ), V2f( in.max ) ), matrix ) );
+		}
 	}
 }
 
 void ImageTransform::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	M33f matrix, resampleMatrix;
-	const unsigned op = operation( matrix, resampleMatrix );
-	if( !(op & Rotate) )
+	// inside a transform chain just return the inPlug->channelDataPlug->hash
+	Context::EditableScope editableScope( context );
+	int transformChain = context->get<int>( g_transformChainContextName, 0 );
+	h.append( transformChain );
+	if( transformChain )
 	{
-		h = resampledInPlug()->channelDataPlug()->hash();
+		if( !inTransformPlug()->getInput() )
+		{
+			editableScope.remove( g_transformChainContextName );		
+		}
+		ImageProcessor::hashChannelData( parent, context, h );
+		inPlug()->channelDataPlug()->hash( h );
+
 	}
 	else
 	{
-		// Rotation of either the input or the resampled input.
+		if( inTransformPlug()->getInput() )
 		{
-			ImagePlug::GlobalScope c( context );
-			ImageTransform::hashDataWindow( parent, context, h );
+			editableScope.set<int>( g_transformChainContextName, 1 );
 		}
+		M33f matrix, resampleMatrix;
+		const unsigned op = operation( matrix, resampleMatrix );
+		if( !(op & Rotate) )
+		{
+			h = resampledInPlug()->channelDataPlug()->hash();
+		}
+		else
+		{
+			// Rotation of either the input or the resampled input.
+			{
+				ImagePlug::GlobalScope c( context );
+				ImageTransform::hashDataWindow( parent, context, h );
+			}
 
-		const ImagePlug *samplerImage; M33f samplerMatrix;
-		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
+			const ImagePlug *samplerImage; M33f samplerMatrix;
+			const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
 
-		Sampler sampler(
-			samplerImage,
-			context->get<std::string>( ImagePlug::channelNameContextName ),
-			samplerRegion
-		);
-		sampler.hash( h );
+			Sampler sampler(
+				samplerImage,
+				context->get<std::string>( ImagePlug::channelNameContextName ),
+				samplerRegion
+			);
+			sampler.hash( h );
 
-		h.append( samplerMatrix );
+			h.append( samplerMatrix );
+		}
 	}
 }
 
 IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	M33f matrix, resampleMatrix;
-	const unsigned op = operation( matrix, resampleMatrix );
-	if( !(op & Rotate) )
+	// inside a transform chain just return the inPlug->channelData
+	Context::EditableScope editableScope( context );
+	if( context->get<int>( g_transformChainContextName, 0 ) )
 	{
-		return resampledInPlug()->channelDataPlug()->getValue();
-	}
-	else
-	{
-		// Rotation of either the input or the resampled input.
-
-		const ImagePlug *samplerImage; M33f samplerMatrix;
-		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
-
-		Sampler sampler(
-			samplerImage,
-			channelName,
-			samplerRegion
-		);
-
-		FloatVectorDataPtr resultData = new FloatVectorData;
-		resultData->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-		std::vector<float>::iterator pIt = resultData->writable().begin();
-
-		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		V2i oP;
-		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
+		if( !inTransformPlug()->getInput() )
 		{
-			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
-			{
-				V2f iP = V2f( oP.x + 0.5, oP.y + 0.5 ) * samplerMatrix;
-				*pIt++ = sampler.sample( iP.x, iP.y );
-			}
+			editableScope.remove( g_transformChainContextName );		
 		}
+		return inPlug()->channelDataPlug()->getValue();
 
-		return resultData;
+	}
+	else 
+	{
+		if( inTransformPlug()->getInput() )
+		{
+			editableScope.set<int>( g_transformChainContextName, 1 );
+		}
+	
+		M33f matrix, resampleMatrix;
+		const unsigned op = operation( matrix, resampleMatrix );
+		if( !(op & Rotate) )
+		{
+			return resampledInPlug()->channelDataPlug()->getValue();
+		}
+		else
+		{
+			// Rotation of either the input or the resampled input.
+
+			const ImagePlug *samplerImage; M33f samplerMatrix;
+			const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
+
+			Sampler sampler(
+				samplerImage,
+				channelName,
+				samplerRegion
+			);
+
+			FloatVectorDataPtr resultData = new FloatVectorData;
+			resultData->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+			std::vector<float>::iterator pIt = resultData->writable().begin();
+
+			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+			V2i oP;
+			for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
+			{
+				for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
+				{
+					V2f iP = V2f( oP.x + 0.5, oP.y + 0.5 ) * samplerMatrix;
+					*pIt++ = sampler.sample( iP.x, iP.y );
+				}
+			}
+
+			return resultData;
+		}
 	}
 }
 
@@ -350,20 +505,35 @@ unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMa
 	M33f translateMatrix; translateMatrix.setTranslation( translate );
 	M33f scaleMatrix; scaleMatrix.setScale( scale );
 	M33f rotateMatrix; rotateMatrix.setRotation( degreesToRadians( rotate ) );
+	M33f inTransform; inTransform.makeIdentity();
 
-	matrix = pivotInverseMatrix * scaleMatrix * rotateMatrix * pivotMatrix * translateMatrix;
-	resampleMatrix = pivotInverseMatrix * scaleMatrix * pivotMatrix * translateMatrix;
+	if( inTransformPlug()->getInput() )
+	{
+		 inTransform = inTransformPlug()->getValue();
+	}
+
+	matrix = inTransform * pivotInverseMatrix * scaleMatrix * rotateMatrix  * pivotMatrix * translateMatrix;
+
+	M33f resampledScaleMatrix;
+	M33f resampledTranslateMatrix;
+	V2f s, t;
+	float h, r = 0;
+	extractSHRT( matrix, s, h, r, t, true );
+	resampledTranslateMatrix.setTranslation( t );
+	resampledScaleMatrix.setScale( s );
+
+	resampleMatrix = resampledScaleMatrix * resampledTranslateMatrix; 	
 
 	unsigned op = 0;
-	if( translate != V2f( 0 ) )
+	if( t != V2f( 0 ) )
 	{
 		op |= Translate;
 	}
-	if( scale != V2f( 1 ) )
+	if( s != V2f( 1 ) )
 	{
 		op |= Scale;
 	}
-	if( rotate != 0 )
+	if( r != 0 )
 	{
 		op |= Rotate;
 	}
@@ -389,3 +559,29 @@ Imath::Box2i ImageTransform::sampler( unsigned op, const Imath::M33f &matrix, co
 	const Box2f tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	return box2fToBox2i( transform( tileBound, samplerMatrix ) );
 }
+
+void ImageTransform::plugInputChanged( Gaffer::Plug *plug )
+{
+	if( plug == inPlug() )
+	{
+		if ( plug->getInput() )
+		{
+			Node* source = plug->source()->node();
+			if( ImageTransform* imageTransform = runTimeCast< ImageTransform >( source ) )
+			{
+				inTransformPlug()->setInput( imageTransform->outTransformPlug() );
+			}
+			// inPlug is connected but not to an imageTransform node.
+			else
+			{
+				inTransformPlug()->setInput( NULL );
+			}
+		}
+		// inPlug is not connected.
+		else
+		{
+			inTransformPlug()->setInput( NULL );
+		}
+	}
+}
+

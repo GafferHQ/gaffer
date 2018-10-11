@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import inspect
 import random
 import os
 import imath
@@ -297,6 +298,90 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( sampler.sample( 1, 0 ), 1 )
 		self.assertEqual( sampler.sample( 0, 1 ), 1 )
 		self.assertEqual( sampler.sample( 1, 1 ), 0 )
+
+	def testConcatenation( self ):
+		m = imath.M33f()
+		m.makeIdentity()
+
+		t1 = GafferImage.ImageTransform()
+		t2 = GafferImage.ImageTransform()
+
+		t1["transform"]["scale"]["x"].setValue( .5 )
+		t2["transform"]["scale"]["x"].setValue( 2 )
+
+		self.assertNotEqual( t2["__outTransform"].getValue(), m )
+
+		t2["in"].setInput( t1["out"] )
+
+		self.assertEqual( t2["__outTransform"].getValue(), m )
+
+	def testNoContextLeakage( self ):
+
+		script = Gaffer.ScriptNode()
+
+		c1 = GafferImage.Constant()
+		script.addChild( c1 )
+		c1["color"]["r"].setValue( 1 )
+		c2 = GafferImage.Constant()
+		script.addChild( c2 )
+		c2["color"]["g"].setValue( 1 )
+		c3 = GafferImage.Constant()
+		script.addChild( c3 )
+		c2["color"]["b"].setValue( 1 )
+
+		switch = GafferImage.ImageSwitch()
+		script.addChild( switch )
+		switch["in0"].setInput( c1["out"] )
+		switch["in1"].setInput( c2["out"] )
+		switch["in2"].setInput( c3["out"] )
+
+		t1 = GafferImage.ImageTransform()
+		script.addChild( t1 )
+		t1["in"].setInput( switch["out"] )
+		t2 = GafferImage.ImageTransform()
+		script.addChild( t2 )
+		t2["in"].setInput( t1["out"] )
+
+		contextVar = GafferImage.ImageContextVariables()
+		script.addChild( contextVar )
+		contextVar["in"].setInput( t2["out"] )
+
+		contextVar["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "member1" ) )
+		contextVar["variables"]["member1"].addChild( Gaffer.StringPlug( "name" ) )
+		contextVar["variables"]["member1"].addChild( Gaffer.IntPlug( "value" ) )
+		contextVar["variables"]["member1"].addChild( Gaffer.BoolPlug( "enabled", defaultValue=True ) )
+		contextVar["variables"]["member1"]["name"].setValue( "__imageTransform:trainsformChain" )
+		contextVar["variables"]["member1"]["value"].setValue( 2 )
+
+		e = Gaffer.Expression()
+		script.addChild( e )
+		e.setExpression( inspect.cleandoc( """
+		parent["{}"]["index"] = context.get( "__imageTransform:trainsformChain", 1)
+		""".format( switch.getName() ) ), "python" )
+
+		sampler = GafferImage.ImageSampler()
+		script.addChild( sampler )
+		sampler["pixel"].setValue( imath.V2f( 0.5, 0.5 ) )
+		sampler["image"].setInput( contextVar["out"] )
+
+		self.assertNotEqual( sampler["color"].getValue(), c3["color"].getValue() )
+
+		t1["enabled"].setValue( False )
+		t2["enabled"].setValue( False )
+
+		self.assertEqual( sampler["color"].getValue(), c3["color"].getValue() )
+
+	def testMatrixPlugConnection( self ):
+
+		t1 = GafferImage.ImageTransform()
+		t2 = GafferImage.ImageTransform()
+		t2["in"].setInput( t1["out"] )
+
+		self.assertTrue( t2["__inTransform"].getInput() == t1["__outTransform"] )
+
+		t2["in"].setInput( None )
+
+		self.assertFalse( t2["__inTransform"].getInput() == t1["__outTransform"] )
 
 if __name__ == "__main__":
 	unittest.main()
