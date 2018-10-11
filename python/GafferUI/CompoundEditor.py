@@ -38,6 +38,8 @@
 import functools
 import collections
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -270,6 +272,8 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 # when appropriate, and keeping a track of the pinning of nodes.
 class _TabbedContainer( GafferUI.TabbedContainer ) :
 
+	__DropMode = IECore.Enum.create( "None", "Add", "Remove", "Replace" )
+
 	def __init__( self, cornerWidget=None, **kw ) :
 
 		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
@@ -287,8 +291,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__pinningButtonClickedConnection = self.__pinningButton.clickedSignal().connect( Gaffer.WeakMethod( self.__pinningButtonClicked ) )
 		self.__currentTabChangedConnection = self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.__originalDragPointer = None
 
 	def addEditor( self, nameOrEditor ) :
 
@@ -409,48 +415,77 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			nodeSet = selectionSet
 		editor.setNodeSet( nodeSet )
 
-	def __dragEnter( self, tabbedContainer, event ) :
+	def __dropSet( self, event ) :
+
+		if isinstance( event.data, Gaffer.Node ) :
+			return Gaffer.StandardSet( [ event.data ] )
+		elif isinstance( event.data, Gaffer.Set ) :
+			s = Gaffer.StandardSet( [ x for x in event.data if isinstance( x, Gaffer.Node ) ] )
+			if len( s ) :
+				return s
+
+		return None
+
+	def __dropMode( self, event ) :
 
 		currentEditor = self.getCurrent()
 		if not isinstance( currentEditor, GafferUI.NodeSetEditor ) :
-			return False
+			return self.__DropMode.None
 
 		if currentEditor.isAncestorOf( event.sourceWidget ) :
+			return self.__DropMode.None
+
+		if self.__dropSet( event ) is None :
+			return self.__DropMode.None
+
+		if event.modifiers & event.Modifiers.Shift :
+			return self.__DropMode.Add
+		elif event.modifiers & event.Modifiers.Control :
+			return self.__DropMode.Remove
+		else :
+			return self.__DropMode.Replace
+
+	def __dragEnter( self, tabbedContainer, event ) :
+
+		dropMode = self.__dropMode( event )
+		if dropMode == self.__DropMode.None :
 			return False
 
-		result = False
-		if isinstance( event.data, Gaffer.Node ) :
-			result = True
-		elif isinstance( event.data, Gaffer.Set ) :
-			if event.data.size() and isinstance( event.data[0], Gaffer.Node ) :
-				result = True
+		self.setHighlighted( True )
+		self.__pinningButton.setHighlighted( True )
+		if self.__originalDragPointer is None :
+			self.__originalDragPointer = GafferUI.Pointer.getCurrent()
 
-		if result :
-			self.setHighlighted( True )
-			self.__pinningButton.setHighlighted( True )
+		return True
 
-		return result
+	def __dragMove( self, tabbedContainer, event ) :
+
+		GafferUI.Pointer.setCurrent( str( self.__dropMode( event ) ).lower() + "Nodes" )
+		return True
 
 	def __dragLeave( self, tabbedContainer, event ) :
 
 		self.setHighlighted( False )
 		self.__pinningButton.setHighlighted( False )
+		GafferUI.Pointer.setCurrent( self.__originalDragPointer )
+		self.__originalDragPointer = None
 
 	def __drop( self, tabbedContainer, event ) :
 
-		if isinstance( event.data, Gaffer.Node ) :
-			nodeSet = Gaffer.StandardSet( [ event.data ] )
-		else :
-			nodeSet = Gaffer.StandardSet( [ x for x in event.data if isinstance( x, Gaffer.Node ) ] )
+		dropSet = self.__dropSet( event )
+		dropMode = self.__dropMode( event )
 
-		if event.modifiers & event.Modifiers.Shift :
-			currentEditor = self.getCurrent()
-			newEditor = currentEditor.__class__( currentEditor.scriptNode() )
-			newEditor.setNodeSet( nodeSet )
-			self.insert( 0, newEditor )
-			self.setCurrent( newEditor )
-		else :
-			self.getCurrent().setNodeSet( nodeSet )
+		newSet = Gaffer.StandardSet( list( self.getCurrent().getNodeSet() ) )
+		if dropMode == self.__DropMode.Replace :
+			newSet = dropSet
+		elif dropMode == self.__DropMode.Add :
+			for node in dropSet :
+				newSet.add( node )
+		elif dropMode == self.__DropMode.Remove :
+			for node in dropSet :
+				newSet.remove( node )
+
+		self.getCurrent().setNodeSet( newSet )
 
 		self.setHighlighted( False )
 		self.__pinningButton.setHighlighted( False )
@@ -460,3 +495,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def __removeCurrentTab( self ) :
 
 		self.remove( self.getCurrent() )
+
+GafferUI.Pointer.registerPointer( "addNodes", GafferUI.Pointer( "addNodes.png", imath.V2i( 30, 8 ) ) )
+GafferUI.Pointer.registerPointer( "removeNodes", GafferUI.Pointer( "removeNodes.png", imath.V2i( 30, 8 ) ) )
+GafferUI.Pointer.registerPointer( "replaceNodes", GafferUI.Pointer( "replaceNodes.png", imath.V2i( 30, 8 ) ) )
