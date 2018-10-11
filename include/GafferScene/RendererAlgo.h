@@ -148,7 +148,7 @@ GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::Compoun
 GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
-GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals );
+GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene );
 
 } // namespace RendererAlgo
 
