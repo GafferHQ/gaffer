@@ -1359,6 +1359,36 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const V2i &resolution = camera->getResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
 
+			Box2i renderRegion = camera->renderRegion();
+
+			// I can't find any support in 3delight for overscan - and if crop goes outside 0 - 1,
+			// it ignores crop.  So we clamp it.
+			renderRegion.min.x = std::max( 0, renderRegion.min.x );
+			renderRegion.max.x = std::min( resolution.x, renderRegion.max.x );
+			renderRegion.min.y = std::max( 0, renderRegion.min.y );
+			renderRegion.max.y = std::min( resolution.y, renderRegion.max.y );
+
+			if(
+				renderRegion.min.x >= renderRegion.max.x ||
+				renderRegion.min.y >= renderRegion.max.y
+			)
+			{
+				// 3delight doesn't support an empty crop, so just render as little as possible
+				renderRegion = Box2i( V2i( 0 ), V2i( 1 ) );
+			}
+
+			const Box2f crop( 
+				V2f(
+					renderRegion.min.x / float( resolution.x ),
+					1 - renderRegion.max.y / float( resolution.y )
+				),
+				V2f(
+					renderRegion.max.x / float( resolution.x ),
+					1 - renderRegion.min.y / float( resolution.y )
+				)
+			);
+			screeenParameters.add( { "crop", crop.min.getValue(), NSITypeFloat, 2, 2, NSIParamIsArray } );
+
 			const Box2f &screenWindow = camera->frustum();
 			const Box2d screenWindowD( screenWindow.min, screenWindow.max );
 			screeenParameters.add( { "screenwindow", screenWindowD.min.getValue(), NSITypeDouble, 2, 2, NSIParamIsArray } );
@@ -1368,7 +1398,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			NSISetAttribute( m_context, g_screenHandle, screeenParameters.size(), screeenParameters.data() );
 
-			/// \todo Support renderRegion
+			/// \todo Support overscan somehow ( this would currently require modifying the screenwindow
+			/// and explicitly overriding the display window metadata on the output image? )
 
 		}
 
