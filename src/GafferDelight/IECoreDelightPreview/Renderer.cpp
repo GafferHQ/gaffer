@@ -1365,7 +1365,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			const Box2f &screenWindow = camera->parametersData()->member<Box2fData>( "screenWindow", true )->readable();
 			const Box2d screenWindowD( screenWindow.min, screenWindow.max );
-			screeenParameters.add( { "screenWindow", screenWindowD.min.getValue(), NSITypeDouble, 2, 2, NSIParamIsArray } );
+			screeenParameters.add( { "screenwindow", screenWindowD.min.getValue(), NSITypeDouble, 2, 2, NSIParamIsArray } );
 
 			const float pixelAspectRatio = camera->parametersData()->member<FloatData>( "pixelAspectRatio", true )->readable();
 			screeenParameters.add( { "pixelaspectratio", &pixelAspectRatio, NSITypeFloat, 0, 1, 0 } );

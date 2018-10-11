@@ -427,7 +427,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.__assertInNSI( '"fov" "float" 1 90', nsi )
 		self.__assertInNSI( '"resolution" "int[2]" 1 [ 2000 1000 ]', nsi )
-		self.__assertInNSI( '"screenWindow" "double[2]" 2 [ -2 -1 2 1 ]', nsi )
+		self.__assertInNSI( '"screenwindow" "double[2]" 2 [ -2 -1 2 1 ]', nsi )
 		self.__assertInNSI( '"pixelaspectratio" "float" 1 1', nsi )
 		self.__assertInNSI( '"clippingrange" "double" 2 [ 0.25 10 ]', nsi )
 		self.__assertInNSI( '"shutterrange" "double" 2 [ 0 1 ]', nsi )
