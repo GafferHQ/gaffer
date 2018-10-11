@@ -113,6 +113,18 @@ void frame( SceneView &view, PathMatcher &filter, Imath::V3f &direction )
 	view.frame( filter, direction );
 }
 
+void expandSelection( SceneView &view, size_t depth )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	view.expandSelection( depth );
+}
+
+void collapseSelection( SceneView &view )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	view.collapseSelection();
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -235,8 +247,8 @@ void GafferSceneUIModule::bindViews()
 
 	GafferBindings::NodeClass<SceneView>()
 		.def( "frame", &frame, ( boost::python::arg_( "filter" ), boost::python::arg_( "direction" ) = Imath::V3f( -0.64, -0.422, -0.64 ) ) )
-		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
-		.def( "collapseSelection", &SceneView::collapseSelection )
+		.def( "expandSelection", &expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
+		.def( "collapseSelection", &collapseSelection )
 		.def( "registerShadingMode", &registerShadingMode )
 		.staticmethod( "registerShadingMode" )
 		.def( "registeredShadingModes", &registeredShadingModes )
