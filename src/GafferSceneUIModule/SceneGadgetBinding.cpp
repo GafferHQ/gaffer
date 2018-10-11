@@ -46,15 +46,41 @@
 
 using namespace boost::python;
 using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneUI;
 using namespace GafferBindings;
 
 namespace
 {
 
+void setScene( SceneGadget &g, ScenePlug &scene )
+{
+	ScopedGILRelease gilRelease;
+	g.setScene( &scene );
+}
+
 GafferScene::ScenePlugPtr getScene( SceneGadget &g )
 {
 	return const_cast<GafferScene::ScenePlug *>( g.getScene() );
+}
+
+void setContext( SceneGadget &g, Context &context )
+{
+	ScopedGILRelease gilRelease;
+	g.setContext( &context );
+}
+
+void setExpandedPaths( SceneGadget &g, const IECore::PathMatcher &expandedPaths )
+{
+	ScopedGILRelease gilRelease;
+	g.setExpandedPaths( expandedPaths );
+}
+
+void setMinimumExpansionDepth( SceneGadget &g, size_t depth )
+{
+	ScopedGILRelease gilRelease;
+	g.setMinimumExpansionDepth( depth );
 }
 
 void setPaused( SceneGadget &g, bool paused )
@@ -113,13 +139,13 @@ void GafferSceneUIModule::bindSceneGadget()
 
 	scope s = GafferUIBindings::GadgetClass<SceneGadget>()
 		.def( init<>() )
-		.def( "setScene", &SceneGadget::setScene )
+		.def( "setScene", &setScene )
 		.def( "getScene", &getScene )
-		.def( "setContext", &SceneGadget::setContext )
+		.def( "setContext", &setContext )
 		.def( "getContext", (Gaffer::Context *(SceneGadget::*)())&SceneGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setExpandedPaths", &SceneGadget::setExpandedPaths )
+		.def( "setExpandedPaths", &setExpandedPaths )
 		.def( "getExpandedPaths", &SceneGadget::getExpandedPaths, return_value_policy<copy_const_reference>() )
-		.def( "setMinimumExpansionDepth", &SceneGadget::setMinimumExpansionDepth )
+		.def( "setMinimumExpansionDepth", &setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &SceneGadget::getMinimumExpansionDepth )
 		.def( "getPaused", &SceneGadget::getPaused )
 		.def( "setPaused", &setPaused )

@@ -38,18 +38,13 @@
 
 #include "RenderControllerBinding.h"
 
-// #include "GafferScene/InteractiveRender.h"
-// #include "GafferScene/OpenGLRender.h"
-// #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
-// #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
-// #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/RenderController.h"
-
-#include "GafferDispatchBindings/TaskNodeBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Context.h"
+
+#include "IECorePython/RefCountedBinding.h"
 
 using namespace boost::python;
 
@@ -57,20 +52,43 @@ using namespace Imath;
 using namespace IECoreScenePreview;
 using namespace Gaffer;
 using namespace GafferBindings;
-using namespace GafferDispatchBindings;
 using namespace GafferScene;
 
 namespace
 {
+
+void setScene( RenderController &r, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.setScene( &scene );
+}
 
 ScenePlugPtr getScene( RenderController &r )
 {
 	return const_cast<ScenePlug *>( r.getScene() );
 }
 
+void setContext( RenderController &r, Gaffer::Context &c )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.setContext( &c );
+}
+
 ContextPtr getContext( RenderController &r )
 {
 	return const_cast<Context *>( r.getContext() );
+}
+
+void setExpandedPaths( RenderController &r, const IECore::PathMatcher &expandedPaths )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.setExpandedPaths( expandedPaths );
+}
+
+void setMinimumExpansionDepth( RenderController &r, size_t depth )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.setMinimumExpansionDepth( depth );
 }
 
 void update( RenderController &r )
@@ -93,13 +111,13 @@ void GafferSceneModule::bindRenderController()
 	scope s = class_<RenderController, boost::noncopyable>( "RenderController", no_init )
 		.def( init<ConstScenePlugPtr, ConstContextPtr, RendererPtr>() )
 		.def( "renderer", &RenderController::renderer, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "setScene", &RenderController::setScene )
+		.def( "setScene", &setScene )
 		.def( "getScene", &getScene )
-		.def( "setContext", &RenderController::setContext )
+		.def( "setContext", &setContext )
 		.def( "getContext", &getContext )
-		.def( "setExpandedPaths", &RenderController::setExpandedPaths )
+		.def( "setExpandedPaths", &setExpandedPaths )
 		.def( "getExpandedPaths", &RenderController::getExpandedPaths, return_value_policy<copy_const_reference>() )
-		.def( "setMinimumExpansionDepth", &RenderController::setMinimumExpansionDepth )
+		.def( "setMinimumExpansionDepth", &setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &RenderController::getMinimumExpansionDepth )
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )
 		.def( "update", &update )
