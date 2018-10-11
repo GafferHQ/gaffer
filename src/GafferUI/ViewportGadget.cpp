@@ -794,7 +794,7 @@ void ViewportGadget::setOrthographic3D( bool orthographic3D )
 	m_cameraController->setOrthographic3D( orthographic3D );
 }
 
-const bool ViewportGadget::getOrthographic3D() const
+bool ViewportGadget::getOrthographic3D() const
 {
 	return m_cameraController->getOrthographic3D();
 }

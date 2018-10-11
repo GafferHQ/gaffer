@@ -114,7 +114,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// constrained to the image plane during Alt+drag interaction.
 		/// To allow full 3D movement call `setOrthographic3D( true )`.
 		void setOrthographic3D( bool orthographic3D );
-		const bool getOrthographic3D() const;
+		bool getOrthographic3D() const;
 
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,

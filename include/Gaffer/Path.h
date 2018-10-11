@@ -91,7 +91,7 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 		const IECore::InternedString &root() const;
 
 		/// Returns true if this path is empty.
-		const bool isEmpty() const;
+		bool isEmpty() const;
 
 		/// Returns true if this path is valid - ie references something
 		/// which actually exists.

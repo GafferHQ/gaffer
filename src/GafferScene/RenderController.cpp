@@ -713,7 +713,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		task *execute() override
 		{
 
-			const unsigned pathsToUpdateMatch = m_pathsToUpdate ? m_pathsToUpdate->match( m_scenePath ) : PathMatcher::EveryMatch;
+			const unsigned pathsToUpdateMatch = m_pathsToUpdate ? m_pathsToUpdate->match( m_scenePath ) : (unsigned)PathMatcher::EveryMatch;
 			if( !pathsToUpdateMatch )
 			{
 				return nullptr;
@@ -792,7 +792,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		}
 
 		/// \todo Fast path for when sets were not dirtied.
-		const unsigned sceneGraphMatch() const
+		unsigned sceneGraphMatch() const
 		{
 			switch( m_sceneGraphType )
 			{

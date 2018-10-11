@@ -95,7 +95,7 @@ const IECore::InternedString &Path::root() const
 	return m_root;
 }
 
-const bool Path::isEmpty() const
+bool Path::isEmpty() const
 {
 	return m_names.empty() && m_root.string().empty();
 }
