@@ -3064,10 +3064,10 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			// Note that we have to flip Y and subtract 1 from the max value, because
 			// renderRegion is stored in Gaffer image format ( +Y up and an exclusive upper bound )
 			asf::AABB2u crop;
-			crop.min[0] = asf::clamp( renderRegion.min.x, 0, res[0] - 1 );
-			crop.min[1] = asf::clamp( res[1] - renderRegion.max.y, 0, res[1] - 1 );
-			crop.max[0] = asf::clamp( renderRegion.max.x - 1, 0, res[0] - 1 );
-			crop.max[1] = asf::clamp( res[1] - renderRegion.min.y - 1, 0, res[1] - 1 );
+			crop.min[0] = std::max( renderRegion.min.x, 0 );
+			crop.min[1] = std::max( res[1] - renderRegion.max.y, 0 );
+			crop.max[0] = std::min( renderRegion.max.x - 1, res[0] - 1 );
+			crop.max[1] = std::min( res[1] - renderRegion.min.y - 1, res[1] - 1 );
 
 			frame->set_crop_window( crop );
 
