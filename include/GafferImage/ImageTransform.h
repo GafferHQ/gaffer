@@ -72,10 +72,16 @@ class GAFFERIMAGE_API ImageTransform : public FlatImageProcessor
 		Gaffer::BoolPlug *invertPlug();
 		const Gaffer::BoolPlug *invertPlug() const;
 
+		Gaffer::BoolPlug *concatenatePlug();
+		const Gaffer::BoolPlug *concatenatePlug() const;
+
 	protected :
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		void hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		bool computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 		void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const override;
@@ -99,6 +105,16 @@ class GAFFERIMAGE_API ImageTransform : public FlatImageProcessor
 		Resample *resample();
 		const Resample *resample() const;
 
+		// Plugs used to concatenate transforms through a
+		// chain of connected ImageTransforms.
+		Gaffer::M33fPlug *inTransformPlug();
+		const Gaffer::M33fPlug *inTransformPlug() const;
+		Gaffer::M33fPlug *outTransformPlug();
+		const Gaffer::M33fPlug *outTransformPlug() const;
+
+		class ChainingScope;
+		class CleanScope;
+
 		enum Operation
 		{
 			Identity = 0,
@@ -108,6 +124,7 @@ class GAFFERIMAGE_API ImageTransform : public FlatImageProcessor
 		};
 
 		unsigned operation( Imath::M33f &matrix, Imath::M33f &resampleMatrix ) const;
+		void plugInputChanged( Gaffer::Plug *plug );
 
 		static size_t g_firstPlugIndex;
 
