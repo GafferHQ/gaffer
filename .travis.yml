@@ -36,10 +36,6 @@ install:
     - ./config/travis/installDependencies.sh
     - ./config/travis/installDelight.sh
     - export DELIGHT=`pwd`/3delight
-    - export LD_LIBRARY_PATH=$DELIGHT/lib:$LD_LIBRARY_PATH
-    - export DL_SHADERS_PATH=$DELIGHT/shaders
-    - export DL_DISPLAYS_PATH=$DELIGHT/displays
-    - export PATH=$DELIGHT/bin:$PATH
     - $COMPILER --version
 
 script:
