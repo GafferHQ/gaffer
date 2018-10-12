@@ -569,5 +569,24 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 		self.assertEqual( tool.handlesTransform(), imath.M44f() )
 
+	def testPromotedPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["box"] = Gaffer.Box()
+		script["box"]["sphere"] = GafferScene.Sphere()
+		Gaffer.PlugAlgo.promote( script["box"]["sphere"]["transform"] )
+		Gaffer.PlugAlgo.promote( script["box"]["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["box"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/sphere" )
+
+		self.assertEqual( tool.selection()[0].transformPlug, script["box"]["transform"] )
+
 if __name__ == "__main__":
 	unittest.main()

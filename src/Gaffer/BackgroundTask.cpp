@@ -251,6 +251,38 @@ void BackgroundTask::wait()
 	activeTasks().erase( this );
 }
 
+bool BackgroundTask::waitFor( float seconds )
+{
+	using namespace std::chrono;
+
+	// `wait_for( duration<float> )` seems to be unreliable,
+	// so we cast to milliseconds first.
+	milliseconds timeoutDuration = duration_cast<milliseconds>( duration<float>( seconds ) );
+
+	std::unique_lock<std::mutex> lock( m_taskData->mutex );
+	const bool completed = m_taskData->conditionVariable.wait_for(
+		lock,
+		timeoutDuration,
+		[this]{
+			switch( this->m_taskData->status )
+			{
+				case Completed :
+				case Cancelled :
+				case Errored :
+					return true;
+				default :
+					return false;
+			}
+		}
+	);
+
+	if( completed )
+	{
+		activeTasks().erase( this );
+	}
+	return completed;
+}
+
 void BackgroundTask::cancelAndWait()
 {
 	cancel();

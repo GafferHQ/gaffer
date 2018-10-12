@@ -249,6 +249,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 
 	if( selection.transformPlug )
 	{
+		selection.transformPlug = selection.transformPlug->source<TransformPlug>();
 		selection.upstreamScene = scenePlug;
 		selection.upstreamPath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		selection.upstreamContext = process->context;

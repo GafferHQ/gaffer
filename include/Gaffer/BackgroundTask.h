@@ -91,6 +91,9 @@ class GAFFER_API BackgroundTask : public boost::noncopyable
 		/// Blocks until the background call returns, either through
 		/// cancellation or running to completion.
 		void wait();
+		/// As above, but times out after the specified number of
+		/// seconds. Returns true on success, and false on timeout.
+		bool waitFor( float seconds );
 		/// Utility to call `cancel()` then `wait()`.
 		void cancelAndWait();
 

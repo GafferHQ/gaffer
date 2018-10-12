@@ -580,48 +580,35 @@ OSL::ShadingSystem *shadingSystem()
 		g_textureSystem
 	);
 
-	struct ClosureDefinition{
-		const char *name;
-		int id;
-		ClosureParam parameters[32];
-		PrepareClosureFunc prepare;
+	ClosureParam emissionParams[] = {
+		CLOSURE_FINISH_PARAM( EmissionParameters ),
+	};
+	
+
+	ClosureParam debugParams[] = {
+		CLOSURE_STRING_PARAM( DebugParameters, name ),
+		CLOSURE_STRING_KEYPARAM( DebugParameters, type, "type" ),
+		CLOSURE_COLOR_KEYPARAM( DebugParameters, value, "value" ),
+		CLOSURE_MATRIX_KEYPARAM( DebugParameters, matrixValue, "matrixValue"),
+		CLOSURE_STRING_KEYPARAM( DebugParameters, stringValue, "stringValue"),
+		CLOSURE_FINISH_PARAM( DebugParameters )
 	};
 
-	ClosureDefinition closureDefinitions[] = {
-		{
-			"emission",
-			EmissionClosureId,
-			{
-				CLOSURE_FINISH_PARAM( EmissionParameters )
-			}
-		},
-		{
-			"debug",
-			DebugClosureId,
-			{
-				CLOSURE_STRING_PARAM( DebugParameters, name ),
-				CLOSURE_STRING_KEYPARAM( DebugParameters, type, "type" ),
-				CLOSURE_COLOR_KEYPARAM( DebugParameters, value, "value" ),
-				CLOSURE_MATRIX_KEYPARAM( DebugParameters, matrixValue, "matrixValue"),
-				CLOSURE_STRING_KEYPARAM( DebugParameters, stringValue, "stringValue"),
-				CLOSURE_FINISH_PARAM( DebugParameters )
-			},
-			DebugParameters::prepare
-		},
-		// end marker
-		{ nullptr, 0, {} }
-	};
+	g_shadingSystem->register_closure(
+		/* name */ "emission",
+		/* id */ EmissionClosureId,
+		/* params */ emissionParams,
+		/* prepare */ nullptr,
+		/* setup */ nullptr
+	);
 
-	for( int i = 0; closureDefinitions[i].name; ++i )
-	{
-		g_shadingSystem->register_closure(
-			closureDefinitions[i].name,
-			closureDefinitions[i].id,
-			closureDefinitions[i].parameters,
-			closureDefinitions[i].prepare,
-			nullptr
-		);
-	}
+	g_shadingSystem->register_closure(
+		/* name */ "debug",
+		/* id */ DebugClosureId,
+		/* params */ debugParams,
+		/* prepare */ DebugParameters::prepare,
+		/* setup */ nullptr
+	);
 
 	if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 	{

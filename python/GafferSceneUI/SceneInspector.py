@@ -270,13 +270,19 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 			assert( len( self.__scenePlugs ) <= 2 )
 
+			paths = [ None ]
 			if self.__targetPaths is not None :
 				paths = self.__targetPaths
 			else :
-				paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
-			paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
-			if not paths :
-				paths = [ None ]
+				lastSelectedPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+				if lastSelectedPath :
+					paths = [ lastSelectedPath ]
+					selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+					if len( selectedPaths ) > 1 :
+						paths.insert( 0, next( p for p in selectedPaths if p != lastSelectedPath ) )
+
+			if len( self.__scenePlugs ) > 1 :
+				paths = [ paths[-1] ]
 
 			targets = []
 			for scene in self.__scenePlugs :
@@ -466,7 +472,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
 		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
 			return self.__formatValues( [ v.value for v in values ] )
-		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i ) ) :
+		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i, imath.Color4f ) ) :
 			return self.__formatVectors( values )
 		elif isinstance( values[0], ( imath.M44f, imath.M44d ) ) :
 			return self.__formatMatrices( values )
@@ -608,6 +614,11 @@ class TextDiff( SideBySideDiff ) :
 			s += " " + value.data.typeName()
 			if hasattr( value.data, "getInterpretation" ) :
 				s += " (" + str( value.data.getInterpretation() ) + ")"
+
+			if value.indices :
+				numElements = len( value.data )
+				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
+
 			result.append( s )
 
 		return result
@@ -856,7 +867,7 @@ class DiffRow( Row ) :
 			# pending call.
 			self.__lazyBackgroundUpdate()
 		elif isinstance( backgroundResult, Exception ) :
-			# Computation error. For now we leave it to the NodeGraph
+			# Computation error. For now we leave it to the GraphEditor
 			# to display this.
 			pass
 		else :
@@ -938,7 +949,12 @@ class DiffRow( Row ) :
 
 		m = IECore.MenuDefinition()
 
+		targetsAreShaders = []
+
 		for i, target in enumerate( targets ) :
+
+			attribute = self.__inspector( target )
+			targetsAreShaders.append( isinstance( attribute, IECore.ObjectVector ) and isinstance( attribute[-1], IECoreScene.Shader ) )
 
 			if len( targets ) == 2 :
 				labelSuffix = "/For " + ( "A", "B" )[i]
@@ -963,14 +979,30 @@ class DiffRow( Row ) :
 					}
 				)
 
+			if targetsAreShaders[i] :
+				m.append(
+					"/Show Shader" + labelSuffix,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__showShader ), [ target ] )
+					}
+				)
+
+		if len( targetsAreShaders ) == 2 and all( targetsAreShaders ) :
+			m.append(
+				"/Show Shader/Compare A and B",
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__showShader ), targets )
+				}
+			)
+
 		return m
 
 	def __showInheritance( self, target ) :
 
 		w = _SectionWindow(
-			target.scene.node().getName() + " : " + self.__label().getText(),
+			self.__label().getText(),
 			_InheritanceSection( self.__inspector, self.__diffCreator ),
-			target
+			[ target ]
 		)
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
@@ -979,9 +1011,20 @@ class DiffRow( Row ) :
 	def __showHistory( self, target ) :
 
 		w = _SectionWindow(
-			target.scene.node().getName() + " : " + self.__label().getText(),
+			self.__label().getText(),
 			_HistorySection( self.__inspector, self.__diffCreator ),
-			target
+			[ target ]
+		)
+
+		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
+		w.setVisible( True )
+
+	def __showShader( self, targets ) :
+
+		w = _SectionWindow(
+			self.__label().getText(),
+			_ShaderSection( self.__inspector, self.__diffCreator ),
+			targets
 		)
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
@@ -1008,7 +1051,7 @@ class DiffColumn( GafferUI.Widget ) :
 
 		with outerColumn :
 			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) as self.__header :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					if label is not None :
 						l = GafferUI.Label(
 							"<b>" + label + "</b>",
@@ -1182,15 +1225,25 @@ SceneInspector.LocationSection = LocationSection
 
 class _SectionWindow( GafferUI.Window ) :
 
-	def __init__( self, title, section, target ) :
+	def __init__( self, label, section, targets ) :
+
+		title = ' '.join( [ target.scene.node().getName() for target in targets ] ) + " : " + label
 
 		GafferUI.Window.__init__( self, title, borderWidth = 4 )
 
-		editor = SceneInspector( target.scene.ancestor( Gaffer.ScriptNode ), sections = [ section ] )
-		editor.setTargetPaths( [ target.path ] )
-		editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
+		container = GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never )
 
-		self.setChild( editor )
+		with container :
+
+			editor = SceneInspector( targets[0].scene.ancestor( Gaffer.ScriptNode ), sections = [ section ] )
+			editor.setTargetPaths( [ target.path for target in targets ] )
+			editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() for target in targets ] ) )
+
+		self.setChild( container )
+
+		## \todo Drive the size by the sized needed by the section. This is
+		# tricky because sections resize lazily when they are first shown.
+		self._qtWidget().resize( 400, 250 )
 
 		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
 
@@ -1307,6 +1360,116 @@ class _InheritanceSection( Section ) :
 
 		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
 		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ label.getText() ] ) )
+
+
+##########################################################################
+# Shader section
+##########################################################################
+
+class _ShaderSection( LocationSection ) :
+
+	class __NameAndTypeInspector( Inspector ) :
+
+		Name, Type = range( 2 )
+
+		def __init__( self, inspector, mode = None ) :
+
+			self.__inspector = inspector
+			self.__mode = mode
+
+			Inspector.__init__( self )
+
+		def name( self ) :
+
+			if self.__mode == self.Name :
+				return "Name"
+
+			elif self.__mode == self.Type :
+				return "Type"
+
+		def children( self, target ) :
+
+			if self.__mode is not None :
+				return []
+
+			result = [ self.__class__( self.__inspector, mode = self.Name ),
+					   self.__class__( self.__inspector, mode = self.Type ) ]
+
+			return result
+
+		def __call__( self, target ) :
+
+			shaders = self.__inspector( target )
+			if not shaders or not isinstance( shaders, IECore.ObjectVector ) :
+				return None
+
+			shader = shaders[-1]
+			if not shader or not isinstance( shader, IECoreScene.Shader ) :
+				return None
+
+			if self.__mode == self.Name :
+				return shader.name
+
+			elif self.__mode == self.Type :
+				return shader.type
+
+	class __Inspector( Inspector ) :
+
+		def __init__( self, inspector, parameterName = None ) :
+
+			Inspector.__init__( self )
+
+			self.__inspector = inspector
+			self.__parameterName = parameterName
+
+		def name( self ) :
+
+			return self.__parameterName
+
+		def __call__( self, target ) :
+
+			parameters = self.__parameters( target )
+			if parameters is None :
+				return None
+
+			return parameters.get( self.__parameterName )
+
+		def children( self, target ) :
+
+			parameters = self.__parameters( target )
+			if parameters is None :
+				return []
+
+			return [ self.__class__( self.__inspector, parameterName = p ) for p in parameters.keys() if not p == '__handle' ]
+
+		def __parameters( self, target ) :
+
+			if target.path is None :
+				return None
+
+			shaders = self.__inspector( target )
+			if not shaders :
+				return None
+
+			return shaders[-1].parameters  # only the last one is supported
+
+	def __init__( self, inspector, diffCreator = TextDiff, **kw ) :
+
+		LocationSection.__init__( self, collapsed = None, **kw )
+
+		self.__diffCreator = diffCreator
+
+		with self._mainColumn() :
+
+			self.__nameTypeDiffColumn = DiffColumn( self.__NameAndTypeInspector( inspector ), label = "Shader", filterable = False, diffCreator = self.__diffCreator )
+			self.__diffColumn = DiffColumn( self.__Inspector( inspector ), label = "Parameters", filterable = True, diffCreator = self.__diffCreator )
+
+	def update( self, targets ) :
+
+		LocationSection.update( self, targets )
+
+		self.__nameTypeDiffColumn.update( targets )
+		self.__diffColumn.update( targets )
 
 ##########################################################################
 # History section

@@ -248,6 +248,13 @@ class GAFFER_API ScriptNode : public Node
 		/// > expression - always use `context.getFrame()` instead.
 		FloatPlug *framePlug();
 		const FloatPlug *framePlug() const;
+		/// The ScriptNode defines the valid frame range using two numeric plugs.
+		/// These drive the "frameRange:start" and "frameRange:end" variables
+		/// in the context.
+		IntPlug *frameStartPlug();
+		const IntPlug *frameStartPlug() const;
+		IntPlug *frameEndPlug();
+		const IntPlug *frameEndPlug() const;
 		/// Drives the framesPerSecond variable in the context.
 		FloatPlug *framesPerSecondPlug();
 		const FloatPlug *framesPerSecondPlug() const;
@@ -255,18 +262,6 @@ class GAFFER_API ScriptNode : public Node
 		/// in the context.
 		CompoundDataPlug *variablesPlug();
 		const CompoundDataPlug *variablesPlug() const;
-		//@}
-
-		//! @name Frame range
-		/// The ScriptNode defines the valid frame range using two numeric plugs.
-		/// \todo Perhaps these should also drive context variables? It might
-		/// be useful to use the frame range in expressions etc.
-		////////////////////////////////////////////////////////////////////
-		//@{
-		IntPlug *frameStartPlug();
-		const IntPlug *frameStartPlug() const;
-		IntPlug *frameEndPlug();
-		const IntPlug *frameEndPlug() const;
 		//@}
 
 	protected :
