@@ -34,16 +34,10 @@ install:
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install doxygen; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew cask install inkscape; fi
     - ./config/travis/installDependencies.sh
-    - ./config/travis/installDelight.sh
-    - export DELIGHT=`pwd`/3delight
-    - export LD_LIBRARY_PATH=$DELIGHT/lib:$LD_LIBRARY_PATH
-    - export DL_SHADERS_PATH=$DELIGHT/shaders
-    - export DL_DISPLAYS_PATH=$DELIGHT/displays
-    - export PATH=$DELIGHT/bin:$PATH
     - $COMPILER --version
 
 script:
-    - scons -j 2 install CXX=$COMPILER CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH DELIGHT_ROOT=$DELIGHT BUILD_CACHEDIR=sconsCache
+    - scons -j 2 install CXX=$COMPILER CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH BUILD_CACHEDIR=sconsCache
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
@@ -61,8 +55,6 @@ script:
     - source ./config/travis/runGafferTest GafferOSLUITest
     - source ./config/travis/runGafferTest GafferAppleseedTest
     - source ./config/travis/runGafferTest GafferAppleseedUITest
-    - source ./config/travis/runGafferTest GafferDelightTest
-    - source ./config/travis/runGafferTest GafferDelightUITest
     - source ./config/travis/runGafferTest GafferVDBTest
     - source ./config/travis/runGafferTest GafferVDBUITest
     - ./config/travis/printTestResults
