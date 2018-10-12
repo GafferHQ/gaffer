@@ -550,30 +550,27 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
-	if( !event.modifiers )
+	if( event.key == "F" && !event.modifiers )
 	{
-		if( event.key == "F" )
+		const Box3f b = m_imageGadget->bound();
+		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
 		{
-			const Box3f b = m_imageGadget->bound();
-			if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
-			{
-				viewportGadget()->frame( b );
-				return true;
-			}
-		}
-		else if( event.key == "Home" )
-		{
-			V2i viewport = viewportGadget()->getViewport();
-			V3f halfViewportSize(viewport.x / 2, viewport.y / 2, 0);
-			V3f imageCenter = m_imageGadget->bound().center();
-			viewportGadget()->frame(
-				Box3f(
-					V3f(imageCenter.x - halfViewportSize.x, imageCenter.y - halfViewportSize.y, 0),
-					V3f(imageCenter.x + halfViewportSize.x, imageCenter.y + halfViewportSize.y, 0)
-				)
-			);
+			viewportGadget()->frame( b );
 			return true;
 		}
+	}
+	else if( event.key == "Home" && !event.modifiers )
+	{
+		V2i viewport = viewportGadget()->getViewport();
+		V3f halfViewportSize(viewport.x / 2, viewport.y / 2, 0);
+		V3f imageCenter = m_imageGadget->bound().center();
+		viewportGadget()->frame(
+			Box3f(
+				V3f(imageCenter.x - halfViewportSize.x, imageCenter.y - halfViewportSize.y, 0),
+				V3f(imageCenter.x + halfViewportSize.x, imageCenter.y + halfViewportSize.y, 0)
+			)
+		);
+		return true;
 	}
 
 	return false;
