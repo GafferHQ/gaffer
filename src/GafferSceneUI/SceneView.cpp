@@ -1566,6 +1566,10 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 			viewportGadget()->fitClippingPlanes( framingBound() );
 		}
 	}
+	else if( event.key == "Escape" )
+	{
+		m_sceneGadget->setPaused( true );
+	}
 
 	return false;
 }

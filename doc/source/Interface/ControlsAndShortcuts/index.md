@@ -137,6 +137,7 @@ Zoom/dolly                            :kbd:`Alt` + right-click and drag
                                       
                                       Mouse wheel up/down
 Frame view to contents                :kbd:`F`
+Pause processing                      :kbd:`Escape`
 ===================================== =============================================
 ```
 
