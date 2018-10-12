@@ -572,6 +572,10 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 		);
 		return true;
 	}
+	else if( event.key == "Escape" )
+	{
+		m_imageGadget->setPaused( true );
+	}
 
 	return false;
 }
