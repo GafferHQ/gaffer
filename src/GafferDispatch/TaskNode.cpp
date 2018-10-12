@@ -388,7 +388,7 @@ void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
 	for( PlugIterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
 	{
 		Plug *source = (*cIt)->source();
-		if( source != *cIt )
+		if( source != *cIt && source->direction() == Plug::Out )
 		{
 			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
 			{
@@ -403,7 +403,7 @@ void TaskNode::postTasks( const Context *context, Tasks &tasks ) const
 	for( PlugIterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
 	{
 		Plug *source = (*cIt)->source();
-		if( source != *cIt )
+		if( source != *cIt && source->direction() == Plug::Out )
 		{
 			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
 			{
