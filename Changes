@@ -1,3 +1,62 @@
+0.51.0.0
+========
+
+Improvements
+------------
+
+- Viewer : Improved interactivity when using transform tools or scrubbing animation
+ (#2818).
+- SceneInspector :
+  - Added inspection of light and shader parameters (#2797).
+  - Added annotation for indexed primitive variables (#2824).
+- ScriptNode : Added "frameRange:start" and "frameRange:end" context variables (#2811).
+
+Fixes
+-----
+
+- SceneInspector :
+  - The order in which diffs are displayed now matches the order
+    in which objects are selected in the Viewer (#2814).
+  - Fixed formatting of Color4f values (#2797).
+- GraphEditor : Fixed problems with `nodeDoubleClickSignal()` (#2821)
+    - The signal didn't respect slot return values, so a slot couldn't return True
+      to signify that it had handled the event, and block other slots.
+    - The default slot wasn't returning True.
+- Catalogue : Fixed delay when adding image with downsteam network (#2827).
+- AnimationEditor : Fixed numerical imprecision when snapping keys to whole frames
+  (#2820).
+- RenderController :
+  - Fixed bug where objects failed to render after being removed from
+    the lights set (#2825).
+  - Fixed GIL management bugs (#2830).
+- SceneView : Fixed bugs that could lead to a hang in the viewer
+  when expanding or collapsing the current selection (#2830).
+- SceneGadget : Fixed GIL management bugs (#2830).
+- Houdini : Fixed compilation with default build flags for Houdini 17 (#2829).
+- TransformTools : Fixed bug which prevented the editing of promoted transform
+  plugs (#2831).
+- ImageGadget : Fixed bug which prevented non-default dataWindow maximum coordinates
+  from being annotated in the Viewer (#2840).
+
+API
+---
+
+- BackgroundTask : Added `waitFor()` method (#2818).
+- Added MAKE_GAFFER_COMPATIBILITY_VERSION macro (#2819).
+
+Breaking Changes
+----------------
+
+- Removed compatibility for loading files from Gaffer 0.15.0.0 and earlier.
+  Resave the file in a more recent version before loading in the current
+  version. Note that this can also expose bugs in custom scripts : if a script
+  incorrectly attempts to connect to an ArrayPlug instead of a child element,
+  this will now fail instead of being silently corrected (#2805).
+- SceneGadget : Removed private member variable. Source compatibility is retained
+  (#2818).
+- 3Delight : Removed compatibility for older versions. At the time of writing
+  3Delight 1.1.7 is the latest tested version (#2836).
+
 0.50.0.0
 ========
 
