@@ -49,6 +49,18 @@ import GafferTest
 import GafferScene
 
 class RendererTest( GafferTest.TestCase ) :
+	
+	def assertReferSameNode( self, a, b ):
+		if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+			self.assertEqual( a, b )
+		else:
+			self.assertEqual( arnold.addressof( a.contents ), arnold.addressof( b.contents ) )
+
+	def assertReferDifferentNode( self, a, b ):
+		if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+			self.assertNotEqual( a, b )
+		else:
+			self.assertNotEqual( arnold.addressof( a.contents ), arnold.addressof( b.contents ) )
 
 	# \todo - delete all calls to this once we no longer need to support Arnold < 5.2
 	def arnoldCompat( self, a ):
@@ -1086,8 +1098,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertTrue( arnold.AiNodeIs( plane2, "ginstance" ) )
 			self.assertTrue( arnold.AiNodeIs( plane3, "ginstance" ) )
 
-			self.assertEqual( arnold.AiNodeGetPtr( plane1, "node" ), arnold.AiNodeGetPtr( plane2, "node" ) )
-			self.assertNotEqual( arnold.AiNodeGetPtr( plane2, "node" ), arnold.AiNodeGetPtr( plane3, "node" ) )
+			self.assertReferSameNode( arnold.AiNodeGetPtr( plane1, "node" ), arnold.AiNodeGetPtr( plane2, "node" ) )
+			self.assertReferDifferentNode( arnold.AiNodeGetPtr( plane2, "node" ), arnold.AiNodeGetPtr( plane3, "node" ) )
 
 			polymesh1 = self.arnoldCompat( arnold.AiNodeGetPtr( plane1, "node" ) )
 			polymesh2 = self.arnoldCompat( arnold.AiNodeGetPtr( plane3, "node" ) )
@@ -1095,7 +1107,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertTrue( arnold.AiNodeIs( polymesh1, "polymesh" ) )
 			self.assertTrue( arnold.AiNodeIs( polymesh2, "polymesh" ) )
 
-			self.assertEqual( arnold.AiNodeGetPtr( polymesh1, "disp_map" ), arnold.AiNodeGetPtr( polymesh2, "disp_map" ) )
+			self.assertReferSameNode( arnold.AiNodeGetPtr( polymesh1, "disp_map" ), arnold.AiNodeGetPtr( polymesh2, "disp_map" ) )
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_height" ), 0.25 )
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh2, "disp_height" ), 0.5 )
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_padding" ), 2.5 )
@@ -1229,7 +1241,12 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( lights ), 1 )
 			light = lights[0]
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( light ) ), "mesh_light" )
-			self.assertEqual( arnold.AiNodeGetPtr( light, "mesh" ), ctypes.addressof( instance.contents ) )
+			if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+				# \todo : We're comparing a raw pointer to a node reference, so we need to convert.
+				# After Arnold 5.2, AiNodeGetPtr returns a reference the same as everything else
+				self.assertEqual( arnold.AiNodeGetPtr( light, "mesh" ), ctypes.addressof( instance.contents ) )
+			else:
+				self.assertReferSameNode( arnold.AiNodeGetPtr( light, "mesh" ), instance )
 
 	def testMeshLightsWithSharedShaders( self ) :
 
@@ -1277,7 +1294,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance1 ) ), "ginstance" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance2 ) ), "ginstance" )
 
-			self.assertEqual( arnold.AiNodeGetPtr( instance1, "node" ), arnold.AiNodeGetPtr( instance2, "node" ) )
+			self.assertReferSameNode( arnold.AiNodeGetPtr( instance1, "node" ), arnold.AiNodeGetPtr( instance2, "node" ) )
 
 			mesh = self.arnoldCompat( arnold.AiNodeGetPtr( instance1, "node" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
@@ -2283,7 +2300,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
 
 			nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
-			self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
+			self.assertReferSameNode( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
 			self.assertEqual( arnold.AiNodeGetByte( self.arnoldCompat( nodePtr ), "visibility" ), 0 )
 
 	def __assertNotInstanced( self, *names ) :
