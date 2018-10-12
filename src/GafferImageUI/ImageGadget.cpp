@@ -914,6 +914,10 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 		if( dataWindow.min != displayWindow.min )
 		{
 			renderText( lexical_cast<string>( dataWindow.min ), dataWindowF.min, V2f( 1, 1.5 ), style );
+		}
+
+		if( dataWindow.max != displayWindow.max )
+		{
 			renderText( lexical_cast<string>( dataWindow.max ), dataWindowF.max, V2f( 0, -0.5 ), style );
 		}
 	}
