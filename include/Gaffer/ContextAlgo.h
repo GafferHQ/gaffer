@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/FilterSwitch.h"
+#ifndef GAFFER_CONTEXTALGO_H
+#define GAFFER_CONTEXTALGO_H
 
-#include "Gaffer/Switch.inl"
+#include "Gaffer/Context.h"
+
+#include <initializer_list>
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::FilterSwitch, GafferScene::FilterSwitchTypeId )
+class Plug;
 
-}
+namespace ContextAlgo
+{
 
-// explicit instantiation
-template class Gaffer::Switch<GafferScene::FilterProcessor>;
+/// Utility class for generic access to the equivalent of
+/// `ScenePlug::GlobalScope`, `ImagePlug::GlobalScope` and others.
+/// This allows utility nodes such as the Switch to avoid "leaking"
+/// context variables when evaluating their inputs (the index in the
+/// case of the Switch).
+class GAFFER_API GlobalScope : boost::noncopyable
+{
+
+	public :
+
+		GlobalScope( const Context *context, const Plug *plug );
+		~GlobalScope();
+
+		struct Registration
+		{
+			Registration( IECore::TypeId plugTypeId, const std::initializer_list<IECore::InternedString> &variablesToRemove );
+		};
+
+	private :
+
+		boost::optional<Context::EditableScope> m_scope;
+
+};
+
+} // namespace ContextAlgo
+
+} // namespace Gaffer
+
+#endif // GAFFER_CONTEXTALGO_H

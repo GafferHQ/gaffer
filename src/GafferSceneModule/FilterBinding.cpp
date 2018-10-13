@@ -42,7 +42,6 @@
 #include "GafferScene/FilterPlug.h"
 #include "GafferScene/FilterProcessor.h"
 #include "GafferScene/FilterResults.h"
-#include "GafferScene/FilterSwitch.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SetFilter.h"
@@ -102,7 +101,6 @@ void GafferSceneModule::bindFilter()
 	GafferBindings::DependencyNodeClass<FilterProcessor>();
 	GafferBindings::DependencyNodeClass<UnionFilter>();
 	GafferBindings::DependencyNodeClass<SetFilter>();
-	GafferBindings::DependencyNodeClass<GafferScene::FilterSwitch>();
 	GafferBindings::DependencyNodeClass<FilterResults>();
 
 }

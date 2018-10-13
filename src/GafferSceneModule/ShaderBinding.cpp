@@ -41,7 +41,6 @@
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
-#include "GafferScene/ShaderSwitch.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -153,8 +152,6 @@ void GafferSceneModule::bindShader()
 	;
 
 	GafferBindings::Serialisation::registerSerialiser( Shader::staticTypeId(), new ShaderSerialiser() );
-
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
 
 	PlugClass<ShaderPlug>()
 		.def( init<const std::string &, Plug::Direction, unsigned>(

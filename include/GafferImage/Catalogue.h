@@ -38,10 +38,10 @@
 #define GAFFERIMAGE_CATALOGUE_H
 
 #include "GafferImage/ImageNode.h"
-#include "GafferImage/ImageSwitch.h"
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Switch.h"
 
 #include "IECoreImage/DisplayDriver.h"
 #include "IECoreImage/DisplayDriverServer.h"
@@ -124,8 +124,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::AtomicCompoundDataPlug *mappingPlug();
 		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
 
-		ImageSwitch *imageSwitch();
-		const ImageSwitch *imageSwitch() const;
+		Gaffer::Switch *imageSwitch();
+		const Gaffer::Switch *imageSwitch() const;
 
 		IE_CORE_FORWARDDECLARE( InternalImage );
 		static InternalImage *imageNode( Image *image );

@@ -62,7 +62,9 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		script["group"]["in"][0].setInput( script["sphere"]["out"] )
 		script["group"]["in"][1].setInput( script["cube"]["out"] )
 
-		script["switch"] = GafferScene.SceneSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( GafferScene.ScenePlug() )
+
 		script["switch"]["in"][0].setInput( script["sphere"]["out"] )
 		script["switch"]["in"][1].setInput( script["cube"]["out"] )
 		script["switch"]["in"][2].setInput( script["group"]["out"] )
@@ -192,7 +194,9 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		script["cube"] = GafferScene.Cube()
 		script["cube"]["sets"].setValue( "cubeSet" )
 
-		script["switch"] = GafferScene.SceneSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( GafferScene.ScenePlug() )
+
 		script["switch"]["in"][0].setInput( script["group"]["out"] )
 		script["switch"]["in"][1].setInput( script["cube"]["out"] )
 

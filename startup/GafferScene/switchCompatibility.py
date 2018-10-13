@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,32 +35,37 @@
 ##########################################################################
 
 import Gaffer
-import GafferImage
+import GafferScene
 
-Gaffer.Metadata.registerNode(
+class SceneSwitch( Gaffer.Switch ) :
 
-	GafferImage.ImageSwitch,
+	def __init__( self, name = "SceneSwitch" ) :
 
-	"description",
-	"""
-	Chooses between multiple input images, passing through the
-	chosen input to the output.
-	""",
+		Gaffer.Switch.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	plugs = {
+GafferScene.SceneSwitch = SceneSwitch
 
-		"index" : [
+class ShaderSwitch( Gaffer.Switch ) :
 
-			"description",
-			"""
-			The index of the input which is passed through. A value
-			of 0 chooses the first input, 1 the second and so on. Values
-			larger than the number of available inputs wrap back around to
-			the beginning.
-			"""
+	def __init__( self, name = "ShaderSwitch" ) :
 
-		]
+		Gaffer.Switch.__init__( self, name )
 
-	}
+	def __getitem__( self, key ) :
 
-)
+		if key in ( "in", "out" ) and key not in self :
+			self.setup( Gaffer.Plug() )
+
+		return Gaffer.SwitchComputeNode.__getitem__( self, key )
+
+GafferScene.ShaderSwitch = ShaderSwitch
+
+class FilterSwitch( Gaffer.Switch ) :
+
+	def __init__( self, name = "FilterSwitch" ) :
+
+		Gaffer.Switch.__init__( self, name )
+		self.setup( GafferScene.FilterPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Cacheable ) )
+
+GafferScene.FilterSwitch = FilterSwitch

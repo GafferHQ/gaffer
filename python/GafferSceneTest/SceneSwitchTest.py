@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import inspect
 import unittest
 
@@ -46,14 +47,11 @@ import GafferSceneTest
 
 class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
-	def testDefaultName( self ) :
-
-		s = GafferScene.SceneSwitch()
-		self.assertEqual( s.getName(), "SceneSwitch" )
-
 	def testEnabledPlug( self ) :
 
-		s = GafferScene.SceneSwitch()
+		s = Gaffer.Switch()
+		s.setup( GafferScene.ScenePlug() )
+
 		self.assertTrue( isinstance( s["enabled"], Gaffer.BoolPlug ) )
 		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
 		self.assertFalse( "enabled1" in s )
@@ -63,7 +61,9 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 		sphere = GafferScene.Sphere()
 
-		switch = GafferScene.SceneSwitch()
+		switch = Gaffer.Switch()
+		switch.setup( GafferScene.ScenePlug() )
+
 		switch["in"][0].setInput( plane["out"] )
 		switch["in"][1].setInput( sphere["out"] )
 
@@ -84,7 +84,9 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 		sphere = GafferScene.Sphere()
 
-		switch = GafferScene.SceneSwitch()
+		switch = Gaffer.Switch()
+		switch.setup( GafferScene.ScenePlug() )
+
 		switch["in"][0].setInput( plane["out"] )
 		switch["in"][1].setInput( sphere["out"] )
 
@@ -105,7 +107,9 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["switch"] = GafferScene.SceneSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( GafferScene.ScenePlug() )
+
 		script["plane"] = GafferScene.Plane()
 		script["sphere"] = GafferScene.Sphere()
 
@@ -131,7 +135,8 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["plane"] = GafferScene.Plane()
 		script["sphere"] = GafferScene.Sphere()
 
-		script["switch"] = GafferScene.SceneSwitch()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( GafferScene.ScenePlug() )
 		script["switch"]["in"][0].setInput( script["plane"]["out"] )
 		script["switch"]["in"][1].setInput( script["sphere"]["out"] )
 
@@ -152,7 +157,8 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		switches = []
 		for i in range( 0, 10 ) :
-			switch = GafferScene.SceneSwitch()
+			switch = Gaffer.Switch()
+			switch.setup( GafferScene.ScenePlug() )
 			for i in range( 0, 10 ) :
 				switch["in"][i].setInput( lastPlug )
 			switches.append( switch )
@@ -160,6 +166,15 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		s2 = GafferScene.Sphere()
 		self.assertTrue( switches[0]["in"][0].acceptsInput( s2["out"] ) )
+
+	def testLoadFileFromVersion0_49( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/sceneSwitch-0.49.1.0.gfr" )
+		s.load()
+
+		self.assertEqual( s["SceneSwitch"]["in"][0].getInput(), s["Plane"]["out"] )
+		self.assertEqual( s["SceneSwitch"]["in"][1].getInput(), s["Sphere"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

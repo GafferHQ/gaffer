@@ -37,48 +37,38 @@
 #ifndef GAFFER_SWITCH_H
 #define GAFFER_SWITCH_H
 
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
-
-#include "boost/utility/enable_if.hpp"
 
 namespace Gaffer
 {
 
-/// The Switch provides a generic base class to implement nodes which choose
-/// between many input branches, feeding only one of them to the output.
-/// The series of input branches are represented by an ArrayPlug called "in",
-/// and the output is a plug named "out".
-///
-/// Switches can be instantiated in either of two ways :
-///
-/// - By instantiating Switch<BaseType> where BaseType creates an "in" and
-///   and "out" plug during construction. This is the method used to create
-///   the SceneSwitch and ImageSwitch.
-///
-/// - By adding "in" and "out" plugs to a generic Switch node after
-///   construction, using the `Switch::setup()`. This method can be seen
-///   in the GafferTest.SwitchTest
-///   test cases.
-template<typename BaseType>
-class IECORE_EXPORT Switch : public BaseType
+class IECORE_EXPORT Switch : public ComputeNode
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( Switch<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Switch, SwitchTypeId, ComputeNode );
 
 		Switch( const std::string &name=GraphComponent::defaultName<Switch>() );
 		~Switch() override;
 
-		/// Sets up a SwitchComputeNode or SwitchDependencyNode
-		/// to work with the specified plug type. The passed plug
-		/// is used as a template, but will not be referenced by the
-		/// Switch itself - typically you will pass a plug
+		/// Sets up the switch to work with the specified plug type.
+		/// The passed plug is used as a template, but will not be
+		/// referenced by the Switch itself - typically you will pass a plug
 		/// which you will connect to the Switch after calling
-		/// setup().
+		/// `setup()`.
 		/// \undoable
 		void setup( const Plug *plug );
+
+		/// Will return null unless `setup()` has been called.
+		ArrayPlug *inPlugs();
+		const ArrayPlug *inPlugs() const;
+
+		/// Will return null unless `setup()` has been called.
+		Plug *outPlug();
+		const Plug *outPlug() const;
 
 		/// Returns the input plug which will be passed through
 		/// by the switch in the current context.
@@ -98,47 +88,19 @@ class IECORE_EXPORT Switch : public BaseType
 
 	protected :
 
-		// Implemented to reject ComputeNode inputs to "index" and "enabled" if we ourselves
-		// are not a ComputeNode, and to reject input branches inputs if they wouldn't
-		// be accepted by the output.
+		// Implemented to reject input branches inputs if they wouldn't be accepted by the output.
 		bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const override;
-
-#ifdef __clang__
-// Because BaseType is sometimes ComputeNode and sometimes DependencyNode,
-// the methods below are sometimes overrides and sometimes not. We must disable
-// Clangs's warnings so that we don't get a compilation error when they are.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winconsistent-missing-override"
-#endif
 
 		// The hash() and compute() methods are implemented to pass through the results from
 		// the input branch specified by indexPlug(). They operate via the hashInternal() and
 		// computeInternal() methods, which are specialised for the cases where we do and do
 		// not inherit from ComputeNode.
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		virtual void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 
 		void init( bool expectBaseClassPlugs );
-
-		// The internal implementation for hash(). Does nothing when BaseType is not a ComputeNode,
-		// and passes through the hash from the appropriate input when it is.
-		template<typename T>
-		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
-		template<typename T>
-		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
-
-		// The internal implementation for compute(). Does nothing when BaseType is not a ComputeNode,
-		// and passes through the value from the appropriate input when it is.
-		template<typename T>
-		void computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
-		template<typename T>
-		void computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
 
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
@@ -153,37 +115,15 @@ class IECORE_EXPORT Switch : public BaseType
 
 		void updateInternalConnection();
 
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
 		static size_t g_firstPlugIndex;
 
 };
 
-namespace Detail
-{
+IE_CORE_DECLAREPTR( Switch );
 
-struct IdentityContext;
-
-} // namespace Detail
-
-/// May be specialised to control the behaviour of
-/// Switch<BaseType>.
-template<typename BaseType>
-struct SwitchTraits
-{
-
-	/// A class which will be instantiated as
-	/// `IndexContext indexContext( Context::current() )`
-	/// to modify the context when evaluating the switch index.
-	/// \todo Rename to IndexScope.
-	typedef Detail::IdentityContext IndexContext;
-
-};
-
-typedef Switch<DependencyNode> SwitchDependencyNode;
-typedef Switch<ComputeNode> SwitchComputeNode;
-
-IE_CORE_DECLAREPTR( SwitchDependencyNode );
-IE_CORE_DECLAREPTR( SwitchComputeNode );
+typedef Switch SwitchComputeNode;
+typedef SwitchPtr SwitchComputeNodePtr;
+typedef ConstSwitchPtr ConstSwitchComputeNodePtr;
 
 } // namespace Gaffer
 

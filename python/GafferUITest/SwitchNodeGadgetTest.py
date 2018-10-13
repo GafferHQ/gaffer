@@ -48,7 +48,7 @@ class SwitchNodeGadgetTest( GafferUITest.TestCase ) :
 	def testPythonBinding( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.SwitchComputeNode()
+		s["n"] = Gaffer.Switch()
 
 		g = GafferUI.NodeGadget.create( s["n"] )
 		self.assertTrue( isinstance( g, GafferUI.StandardNodeGadget ) )

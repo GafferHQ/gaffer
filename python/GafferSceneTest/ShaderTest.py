@@ -195,7 +195,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		n3 = GafferSceneTest.TestShader()
 		n3["type"].setValue( "test:surface" )
 
-		switch = Gaffer.SwitchComputeNode()
+		switch = Gaffer.Switch()
 		switch.setup( n3["parameters"]["c"] )
 
 		switch["in"][0].setInput( n1["out"] )
@@ -227,7 +227,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["n3"]["parameters"]["i"].setValue( 3 )
 		s["n3"]["type"].setValue( "test:surface" )
 
-		s["switch"] = Gaffer.SwitchComputeNode()
+		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n3"]["parameters"]["c"] )
 
 		s["switch"]["in"][0].setInput( s["n1"]["out"] )

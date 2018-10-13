@@ -73,8 +73,6 @@ import CustomAttributesUI
 import CustomOptionsUI
 import SceneViewUI
 import ShaderViewUI
-import SceneSwitchUI
-import ShaderSwitchUI
 import ShaderAssignmentUI
 import ParentConstraintUI
 import ParentUI
@@ -94,7 +92,6 @@ import CameraUI
 import SetUI
 import ClippingPlaneUI
 import FilterUI
-import FilterSwitchUI
 import PointsTypeUI
 import ParametersUI
 import TextUI

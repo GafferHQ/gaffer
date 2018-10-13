@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,65 +35,5 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
-import GafferScene
 
-Gaffer.Metadata.registerNode(
-
-	GafferScene.ShaderSwitch,
-
-	"description",
-	"""
-	Chooses between multiple input shaders, passing through the
-	chosen shader to the output. The switching is resolved
-	before rendering begins, so no per-sample overhead is
-	incurred during shading.
-	""",
-
-	"nodeGadget:minWidth", 0.0,
-
-	# Disable the + buttons on the top and bottom, because
-	# shaders always flow horizontally.
-
-	"noduleLayout:customGadget:addButtonTop:visible", False,
-	"noduleLayout:customGadget:addButtonBottom:visible", False,
-
-	plugs = {
-
-		"in" : [
-
-			"description",
-			"""
-			The input shaders - the index plug decides
-			which of these is passed through to the output.
-			""",
-
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-
-		],
-
-		"out" : [
-
-			"description",
-			"""
-			The output shader.
-			""",
-
-			"noduleLayout:section", "right",
-			"plugValueWidget:type", "",
-
-		],
-
-		"index" : [
-
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.NumericPlugValueWidget",
-
-		],
-
-	},
-
-)
+Gaffer.SwitchComputeNode = Gaffer.Switch

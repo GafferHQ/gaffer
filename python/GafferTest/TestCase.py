@@ -169,7 +169,7 @@ class TestCase( unittest.TestCase ) :
 
 		self.assertEqual( incorrectTypeNames, [] )
 
-	def assertDefaultNamesAreCorrect( self, module ) :
+	def assertDefaultNamesAreCorrect( self, module, namesToIgnore = () ) :
 
 		for name in dir( module ) :
 
@@ -180,6 +180,9 @@ class TestCase( unittest.TestCase ) :
 			try :
 				instance = cls()
 			except :
+				continue
+
+			if instance.getName() in namesToIgnore :
 				continue
 
 			self.assertEqual( instance.getName(), cls.staticTypeName().rpartition( ":" )[2] )

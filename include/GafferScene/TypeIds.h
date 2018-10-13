@@ -105,8 +105,8 @@ enum TypeId
 	AttributeProcessorTypeId = 110560,
 	DeleteAttributesTypeId = 110561,
 	UnionFilterTypeId = 110562,
-	SceneSwitchTypeId = 110563,
-	ShaderSwitchTypeId = 110564,
+	SceneSwitchTypeId = 110563, // Obsolete, available for reuse
+	ShaderSwitchTypeId = 110564, // Obsolete, available for reuse
 	ParentConstraintTypeId = 110565,
 	ParentTypeId = 110566,
 	PrimitiveVariablesTypeId = 110567,
@@ -120,7 +120,7 @@ enum TypeId
 	ExternalProceduralTypeId = 110575,
 	ScenePathTypeId = 110576,
 	MeshToPointsTypeId = 110577,
-	FilterSwitchTypeId = 110578,
+	FilterSwitchTypeId = 110578, // Obsolete, available for reuse
 	DeleteSetsTypeId = 110579,
 	ParametersTypeId = 110580,
 	SceneFilterPathFilterTypeId = 110581,

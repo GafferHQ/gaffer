@@ -113,7 +113,8 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		metadata2["in"].setInput( constant2["out"] )
 		metadata2["metadata"].addMember( "test", 2 )
 
-		switch = GafferImage.ImageSwitch()
+		switch = Gaffer.Switch()
+		switch.setup( GafferImage.ImagePlug() )
 		switch["in"][0].setInput( metadata1["out"] )
 		switch["in"][1].setInput( metadata2["out"] )
 

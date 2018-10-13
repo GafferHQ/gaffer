@@ -128,7 +128,8 @@ class Catalogue::InternalImage : public ImageNode
 
 			// Switches between the loaded image and the
 			// live Displays.
-			addChild( new ImageSwitch() );
+			addChild( new Switch() );
+			imageSwitch()->setup( outPlug() );
 			imageSwitch()->inPlugs()->getChild<ImagePlug>( 0 )->setInput( imageReader()->outPlug() );
 			imageSwitch()->inPlugs()->getChild<ImagePlug>( 1 )->setInput( text()->outPlug() );
 
@@ -366,14 +367,14 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<Text>( g_firstChildIndex + 4 );
 		}
 
-		ImageSwitch *imageSwitch()
+		Switch *imageSwitch()
 		{
-			return getChild<ImageSwitch>( g_firstChildIndex + 5 );
+			return getChild<Switch>( g_firstChildIndex + 5 );
 		}
 
-		const ImageSwitch *imageSwitch() const
+		const Switch *imageSwitch() const
 		{
-			return getChild<ImageSwitch>( g_firstChildIndex + 5 );
+			return getChild<Switch>( g_firstChildIndex + 5 );
 		}
 
 		ImageMetadata *imageMetadata()
@@ -680,7 +681,8 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( new AtomicCompoundDataPlug( "__mapping", Plug::In, new CompoundData() ) );
 
 	// Switch used to choose which image to output
-	addChild( new ImageSwitch( "__switch" ) );
+	addChild( new Switch( "__switch" ) );
+	imageSwitch()->setup( outPlug() );
 	imageSwitch()->indexPlug()->setInput( internalImageIndexPlug() );
 
 	// Switch and constant used to implement disabled output
@@ -688,7 +690,8 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( disabled );
 	disabled->enabledPlug()->setValue( false );
 
-	ImageSwitchPtr enabler = new ImageSwitch( "__enabler" );
+	SwitchPtr enabler = new Switch( "__enabler" );
+	enabler->setup( outPlug() );
 	addChild( enabler );
 	enabler->inPlugs()->getChild<ImagePlug>( 0 )->setInput( disabled->outPlug() );
 	enabler->inPlugs()->getChild<ImagePlug>( 1 )->setInput( imageSwitch()->outPlug() );
@@ -768,14 +771,14 @@ const Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug() const
 	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
 }
 
-ImageSwitch *Catalogue::imageSwitch()
+Switch *Catalogue::imageSwitch()
 {
-	return getChild<ImageSwitch>( g_firstPlugIndex + 6 );
+	return getChild<Switch>( g_firstPlugIndex + 6 );
 }
 
-const ImageSwitch *Catalogue::imageSwitch() const
+const Switch *Catalogue::imageSwitch() const
 {
-	return getChild<ImageSwitch>( g_firstPlugIndex + 6 );
+	return getChild<Switch>( g_firstPlugIndex + 6 );
 }
 
 Catalogue::InternalImage *Catalogue::imageNode( Image *image )

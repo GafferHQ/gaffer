@@ -726,7 +726,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
-		s["s"] = Gaffer.SwitchComputeNode()
+		s["s"] = Gaffer.Switch()
 
 		g = GafferUI.GraphGadget( s )
 		g.getLayout().connectNode( g, s["s"], Gaffer.StandardSet( [ s["n"] ] ) )

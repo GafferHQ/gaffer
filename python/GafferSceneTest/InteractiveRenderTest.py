@@ -234,7 +234,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"] = GafferScene.Group()
 		s["g"]["name"].setValue( "thing" )
 
-		s["switch"] = GafferScene.SceneSwitch()
+		s["switch"] = Gaffer.Switch()
+		s["switch"].setup( GafferScene.ScenePlug() )
 		s["switch"]["in"][0].setInput( s["s"]["out"] )
 		s["switch"]["in"][1].setInput( s["g"]["out"] )
 

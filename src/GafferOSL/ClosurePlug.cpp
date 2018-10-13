@@ -36,11 +36,10 @@
 
 #include "GafferOSL/ClosurePlug.h"
 
-#include "GafferScene/ShaderSwitch.h"
-
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/Switch.h"
 
 #include "IECore/MurmurHash.h"
 
@@ -108,7 +107,7 @@ bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
 	const Node *node = input->node();
 	return
 		runTimeCast<const SubGraph>( node ) ||
-		runTimeCast<const GafferScene::ShaderSwitch>( node ) ||
+		runTimeCast<const Switch>( node ) ||
 		runTimeCast<const Dot>( node )
 	;
 }

@@ -1290,7 +1290,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			dot->setup( outputPlugs.front() );
 		}
 	}
-	else if( SwitchComputeNode *switchNode = runTimeCast<SwitchComputeNode>( node ) )
+	else if( Switch *switchNode = runTimeCast<Switch>( node ) )
 	{
 		if( !switchNode->getChild<Plug>( "in" ) )
 		{

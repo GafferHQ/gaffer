@@ -36,68 +36,68 @@
 
 import Gaffer
 
-for nodeType in ( Gaffer.SwitchDependencyNode, Gaffer.SwitchComputeNode ) :
+Gaffer.Metadata.registerNode(
 
-	Gaffer.Metadata.registerNode(
+	Gaffer.Switch,
 
-		nodeType,
+	"description",
+	"""
+	Chooses between multiple input connections, passing through the
+	chosen input to the output.
+	""",
 
-		"description",
-		"""
-		Chooses between multiple input connections, passing through the
-		chosen input to the output.
-		""",
+	# Add + buttons for creating new plugs in the GraphEditor
+	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.SwitchUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonTop:section", "top",
+	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.SwitchUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonBottom:section", "bottom",
+	"noduleLayout:customGadget:addButtonLeft:gadgetType", "GafferUI.SwitchUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonLeft:section", "left",
+	"noduleLayout:customGadget:addButtonRight:gadgetType", "GafferUI.SwitchUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonRight:section", "right",
 
-		# Add + buttons for creating new plugs in the GraphEditor
-		"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.SwitchUI.PlugAdder",
-		"noduleLayout:customGadget:addButtonTop:section", "top",
-		"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.SwitchUI.PlugAdder",
-		"noduleLayout:customGadget:addButtonBottom:section", "bottom",
-		"noduleLayout:customGadget:addButtonLeft:gadgetType", "GafferUI.SwitchUI.PlugAdder",
-		"noduleLayout:customGadget:addButtonLeft:section", "left",
-		"noduleLayout:customGadget:addButtonRight:gadgetType", "GafferUI.SwitchUI.PlugAdder",
-		"noduleLayout:customGadget:addButtonRight:section", "right",
+	plugs = {
 
-		plugs = {
+		"index" : [
 
-			"index" : [
+			"description",
+			"""
+			The index of the input which is passed through. A value
+			of 0 chooses the first input, 1 the second and so on. Values
+			larger than the number of available inputs wrap back around to
+			the beginning.
+			""",
 
-				"description",
-				"""
-				The index of the input which is passed through. A value
-				of 0 chooses the first input, 1 the second and so on. Values
-				larger than the number of available inputs wrap back around to
-				the beginning.
-				""",
+			"nodule:type", "",
 
-				"nodule:type", "",
+		],
 
-			],
+		"in" : [
 
-			"in" : [
+			"description",
+			"""
+			The array of inputs to choose from. One of these is chosen
+			by the index plug to be passed through to the output.
+			""",
 
-				"description",
-				"""
-				The array of inputs to choose from. One of these is chosen
-				by the index plug to be passed through to the output.
-				""",
+			"nodule:type", "GafferUI::CompoundNodule",
+			"plugValueWidget:type", "",
 
-				"nodule:type", "GafferUI::CompoundNodule",
-				"plugValueWidget:type", "",
+			"noduleLayout:spacing", lambda plug : 2.0 if Gaffer.Metadata.value( plug, "noduleLayout:section" ) in ( "Top", "Bottom", None ) else 0.25,
 
-			],
+		],
 
-			"out" : [
+		"out" : [
 
-				"description",
-				"""
-				Outputs the input specified by the index.
-				""",
+			"description",
+			"""
+			Outputs the input specified by the index.
+			""",
 
-				"plugValueWidget:type", "",
+			"plugValueWidget:type", "",
 
-			],
+		],
 
-		}
+	}
 
-	)
+)

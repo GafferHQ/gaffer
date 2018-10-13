@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,31 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERSWITCH_H
-#define GAFFERSCENE_SHADERSWITCH_H
+#include "Gaffer/ContextAlgo.h"
 
-#include "GafferScene/Export.h"
-#include "GafferScene/TypeIds.h"
+#include "Gaffer/Plug.h"
 
-#include "Gaffer/Switch.h"
+#include "boost/container/flat_map.hpp"
 
-namespace GafferScene
+using namespace std;
+using namespace IECore;
+using namespace Gaffer;
+using namespace Gaffer::ContextAlgo;
+
+namespace
 {
 
-class GAFFERSCENE_API ShaderSwitch : public Gaffer::SwitchComputeNode
+typedef boost::container::flat_map<IECore::TypeId, vector<InternedString>> GlobalScopeMap;
+GlobalScopeMap &globalScopeMap()
 {
+	static GlobalScopeMap g_m;
+	return g_m;
+}
 
-	public :
+} // namespace
 
-		ShaderSwitch( const std::string &name=defaultName<ShaderSwitch>() );
-		~ShaderSwitch() override;
+GlobalScope::GlobalScope( const Context *context, const Plug *plug )
+{
+	const GlobalScopeMap &m = globalScopeMap();
+	auto it = m.find( plug->typeId() );
+	if( it != m.end() )
+	{
+		m_scope.emplace( context );
+		for( const auto &n : it->second )
+		{
+			m_scope->remove( n );
+		}
+	}
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderSwitch, ShaderSwitchTypeId, Gaffer::SwitchComputeNode );
+GlobalScope::~GlobalScope()
+{
+}
 
-};
-
-IE_CORE_DECLAREPTR( ShaderSwitch )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_SHADERSWITCH_H
+GlobalScope::Registration::Registration( IECore::TypeId plugTypeId, const std::initializer_list<IECore::InternedString> &variablesToErase )
+{
+	vector<InternedString> &v = globalScopeMap()[plugTypeId];
+	v.insert( v.end(), variablesToErase );
+}

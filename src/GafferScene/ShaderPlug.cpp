@@ -37,12 +37,12 @@
 #include "GafferScene/ShaderPlug.h"
 
 #include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
 
 #include "Gaffer/BoxIO.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/Switch.h"
 
 #include "IECore/MurmurHash.h"
 
@@ -119,7 +119,7 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 	return
 		runTimeCast<const SubGraph>( sourceNode ) ||
-		runTimeCast<const ShaderSwitch>( sourceNode ) ||
+		runTimeCast<const Switch>( sourceNode ) ||
 		runTimeCast<const Dot>( sourceNode ) ||
 		runTimeCast<const BoxIO>( sourceNode )
 	;

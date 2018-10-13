@@ -38,7 +38,6 @@
 #define GAFFERIMAGE_SHAPE_H
 
 #include "GafferImage/ImageProcessor.h"
-#include "GafferImage/ImageSwitch.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 
