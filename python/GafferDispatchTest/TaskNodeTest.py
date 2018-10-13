@@ -538,5 +538,48 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		self.assertIn( n["nothingToDoWithTask"], { x[0] for x in cs } )
 		self.assertNotIn( n["task"], { x[0] for x in cs } )
 
+	def testSubclassAndBuildInternalNetwork( self ) :
+
+		class TaskSubnet( GafferDispatch.TaskNode ) :
+
+			def __init__( self, name = "TaskSubnet", log = None ) :
+
+				GafferDispatch.TaskNode.__init__( self, name )
+
+				self["internalTask"] = GafferDispatchTest.LoggingTaskNode( log = log )
+				self["internalTask"]["preTasks"].setInput( self["preTasks"] )
+				self["internalTask"]["postTasks"].setInput( self["postTasks"] )
+
+				self["task"].setInput( self["internalTask"]["task"] )
+
+		log = []
+
+		# n1
+		# |
+		# n3-n2
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+
+		s["n2"] = GafferDispatchTest.LoggingTaskNode( log = log )
+
+		s["n3"] = TaskSubnet( log = log )
+		s["n3"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["n3"]["postTasks"][0].setInput( s["n2"]["task"] )
+
+		preTasks = s["n3"]["task"].preTasks()
+		self.assertEqual( len( preTasks ), 1 )
+		self.assertEqual( preTasks[0].node(), s["n1"] )
+
+		postTasks = s["n3"]["task"].postTasks()
+		self.assertEqual( len( postTasks ), 1 )
+		self.assertEqual( postTasks[0].node(), s["n2"] )
+
+		dispatcher = GafferDispatchTest.DispatcherTest.TestDispatcher()
+		dispatcher.dispatch( [ s["n3"] ] )
+
+		self.assertEqual( len( log ), 3 )
+		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n3"]["internalTask"], s["n2"] ] )
+
 if __name__ == "__main__":
 	unittest.main()
