@@ -7,6 +7,11 @@
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 #include "IECoreGL/PointsPrimitive.h"
+#include "IECoreGL/SpherePrimitive.h"
+
+#include "IECore/SplineData.h"
+
+
 //#include "IECoreGL/State.h"
 
 using namespace std;
@@ -50,10 +55,30 @@ public:
         }
     }
 
+    void collectVectors(  openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline )
+    {
+        static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr, const IECore::Splineff& spline)> > collectors =
+                {
+                        { openvdb::typeNameAsString<openvdb::Vec3d>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline ) { collector.collectTypedVector<openvdb::Vec3DGrid>( grid, spline ); } },
+                        { openvdb::typeNameAsString<openvdb::Vec3f>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline ) { collector.collectTypedVector<openvdb::Vec3SGrid>( grid, spline  ); } },
+                };
+
+        const auto it = collectors.find( grid->valueType() );
+        if( it != collectors.end() )
+        {
+            it->second( *this, grid, spline );
+        }
+        else
+        {
+            throw IECore::InvalidArgumentException( boost::str( boost::format( "VDBVisualiser: Incompatible Grid found name: '%1%' type: '%2' " ) % grid->valueType() % grid->getName() ) );
+        }
+    }
+
     std::vector<IECore::V3fVectorDataPtr>  positions;
     std::vector<IECore::IntVectorDataPtr>  vertsPerCurve;
 
     std::vector<IECore::V3fVectorDataPtr> points;
+
 
 private:
 
@@ -80,6 +105,32 @@ private:
 
             addBox( grid.get(), iter.getDepth(), min, max );
         }
+    }
+
+    template<typename GridType>
+    void collectTypedVector( openvdb::GridBase::ConstPtr baseGrid, const IECore::Splineff& spline )
+    {
+        typename GridType::ConstPtr grid = openvdb::GridBase::constGrid<GridType>( baseGrid );
+
+        if ( !grid )
+        {
+            return;
+        }
+
+        for (typename GridType::ValueOnCIter iter = grid->cbeginValueOn(); iter.test(); ++iter)
+        {
+            const typename GridType::TreeType::ValueType& value = *iter;
+
+            openvdb::CoordBBox bbox;
+            iter.getBoundingBox(bbox);
+
+            float length = value.length();
+            float newLength = spline( value.length() );
+
+            addLine(0, grid->indexToWorld( bbox.getCenter()),  grid->indexToWorld( bbox.getCenter() + value * (newLength / length) ) );
+
+        }
+
     }
 
     void collectPoints( openvdb::GridBase::ConstPtr baseGrid )
@@ -117,6 +168,34 @@ private:
     void addPoints(IECore::V3fVectorDataPtr _points)
     {
         points.push_back(_points);
+    }
+
+    template<typename GridValueType>
+    void addLine(openvdb::Index64 depth, const GridValueType& min, const GridValueType& max)
+    {
+        if (depth >= positions.size())
+        {
+            positions.resize(depth + 1);
+            vertsPerCurve.resize(depth + 1);
+
+            for (size_t i = 0; i <= depth; ++i)
+            {
+                if (!positions[i])
+                {
+                    positions[i] = new IECore::V3fVectorData();
+                    vertsPerCurve[i] = new IECore::IntVectorData();
+                }
+            }
+        }
+
+        std::vector<V3f> &depthPositions = positions[depth]->writable();
+        std::vector<int> &depthVertsPerCurve = vertsPerCurve[depth]->writable();
+
+        depthVertsPerCurve.push_back(2);
+
+        depthPositions.push_back( V3f(min[0], min[1], min[2]) );
+        depthPositions.push_back( V3f(max[0], max[1], max[2]) );
+
     }
 
     template<typename GridType>
@@ -237,6 +316,7 @@ namespace GafferVDBUI
 void VDBRenderable::render( IECoreGL::State *currentState ) const
 {
     const IECoreVDB::VDBObject* vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( m_vdbObject.get() );
+
     if ( !vdbObject )
     {
         return;
@@ -249,79 +329,159 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
         return;
     }
 
-    openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( names[0] );
+    std::string gridName = names[0];
 
-    if ( m_group )
+    IECoreGL::VolumeGridStateComponent *volumeGridStateComponent = currentState->get<IECoreGL::VolumeGridStateComponent>();
+
+    if ( volumeGridStateComponent )
+    {
+        gridName = volumeGridStateComponent->value();
+    }
+
+    openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
+
+    if ( !grid )
+    {
+        return;
+    }
+
+    IECoreGL::VolumeScalarRampStateComponent *volumeScalarRampStateComponent = currentState->get<IECoreGL::VolumeScalarRampStateComponent>();
+
+    IECore::Splineff spline;
+
+    IECore::MurmurHash hash;
+
+    if ( volumeScalarRampStateComponent )
+    {
+        spline = volumeScalarRampStateComponent->value();
+    }
+
+    IECore::SplineffDataPtr splineData = new IECore::SplineffData(spline);
+    splineData->hash( hash );
+
+    IECoreGL::VolumeTypeStateComponent* volumeTypeStateComponent = currentState->get<IECoreGL::VolumeTypeStateComponent>();
+    int renderType = 0;
+    if ( volumeTypeStateComponent )
+    {
+        renderType = volumeTypeStateComponent->value();
+    }
+
+    if ( m_group && m_renderType == renderType && m_gridName == gridName && m_hash == hash)
     {
         m_group->render( currentState );
         return;
     }
 
+    m_renderType = renderType;
+    m_gridName = gridName;
+    m_hash = hash;
+
+
     m_group = new IECoreGL::Group();
 
-    m_group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-    m_group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-    m_group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-    m_group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
-    m_group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
-
-    IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-    vector<V3f> &p = pData->writable();
-    p.reserve( 6 );
-    p.push_back( V3f( 0 ) );
-    p.push_back( V3f( 1, 0, 0 ) );
-    p.push_back( V3f( 0 ) );
-    p.push_back( V3f( 0, 1, 0 ) );
-    p.push_back( V3f( 0 ) );
-    p.push_back( V3f( 0, 0, 1 ) );
-
-    IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
-    vertsPerCurve->writable().resize( 3, 2 );
-
-    IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-    curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-    m_group->addChild( curves );
-
-    // todo can these colors go into a config?
-    static std::array<Color4f, 4> colors = { { Color4f( 0.56, 0.06, 0.2, 0.2 ), Color4f( 0.06, 0.56, 0.2, 0.2 ), Color4f( 0.06, 0.2, 0.56, 0.2 ), Color4f( 0.55, 0.55, 0.55, 0.5 ) } };
-
-    GeometryCollector collector;
-    collector.collect( grid );
-
-    // todo options to define what to visualise (tree, values)
-    openvdb::Index64 depth = collector.positions.size() - 1;
-    if ( !collector.positions.empty() && !collector.positions[depth]->readable().empty()  )
+    if ( m_renderType == 0 )
     {
-        IECoreGL::Group *group = new IECoreGL::Group();
 
-        group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-        group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-        group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-        group->getState()->add( new IECoreGL::WireframeColorStateComponent( colors[depth % colors.size()] ) );
-        group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+        m_group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+        m_group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+        m_group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+        m_group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
+        m_group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
 
-        IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, collector.vertsPerCurve[depth] );
-        curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.positions[depth] ) );
-        group->addChild( curves );
+        IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+        vector<V3f> &p = pData->writable();
+        p.reserve( 6 );
+        p.push_back( V3f( 0 ) );
+        p.push_back( V3f( 1, 0, 0 ) );
+        p.push_back( V3f( 0 ) );
+        p.push_back( V3f( 0, 1, 0 ) );
+        p.push_back( V3f( 0 ) );
+        p.push_back( V3f( 0, 0, 1 ) );
 
-        m_group->addChild( group );
+        IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
+        vertsPerCurve->writable().resize( 3, 2 );
+
+        IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+        curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+        m_group->addChild( curves );
+
+        // todo can these colors go into a config?
+        static std::array<Color4f, 4> colors = { { Color4f( 0.56, 0.06, 0.2, 0.2 ), Color4f( 0.06, 0.56, 0.2, 0.2 ), Color4f( 0.06, 0.2, 0.56, 0.2 ), Color4f( 0.55, 0.55, 0.55, 0.5 ) } };
+
+        GeometryCollector collector;
+        collector.collect( grid );
+
+        // todo options to define what to visualise (tree, values)
+        openvdb::Index64 depth = collector.positions.size() - 1;
+        if ( !collector.positions.empty() && !collector.positions[depth]->readable().empty()  )
+        {
+            IECoreGL::Group *group = new IECoreGL::Group();
+
+            group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+            group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+            group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+            group->getState()->add( new IECoreGL::WireframeColorStateComponent( colors[depth % colors.size()] ) );
+            group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+
+            IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, collector.vertsPerCurve[depth] );
+            curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.positions[depth] ) );
+            group->addChild( curves );
+
+            m_group->addChild( group );
+        }
+
+        for(auto pointsData : collector.points )
+        {
+            IECoreGL::Group *pointsGroup = new IECoreGL::Group();
+
+            pointsGroup->getState()->add( new IECoreGL::Primitive::DrawPoints( true ) );
+            pointsGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+            pointsGroup->getState()->add( new IECoreGL::PointColorStateComponent( Color4f( 0.8, 0.8, 0.8, 1 ) ) );
+            pointsGroup->getState()->add( new IECoreGL::PointsPrimitive::GLPointWidth( 2.0 ) );
+
+            IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
+            points->addPrimitiveVariable("P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pointsData ) );
+            pointsGroup->addChild( points );
+
+            m_group->addChild( pointsGroup );
+        }
+
+    }
+    else if ( m_renderType == 1 )
+    {
+        m_group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+        m_group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+        m_group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+        m_group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
+        m_group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
+
+        GeometryCollector collector;
+        collector.collectVectors( grid, spline);
+
+        openvdb::Index64 depth = 0;
+
+        if ( !collector.positions.empty() && !collector.positions[depth]->readable().empty()  )
+        {
+            IECoreGL::Group *group = new IECoreGL::Group();
+
+            group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+            group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+            group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+            group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 1, 0, 0, 1 ) ) );
+            group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+
+            IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, collector.vertsPerCurve[depth] );
+            curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.positions[depth] ) );
+            group->addChild( curves );
+
+            m_group->addChild( group );
+        }
+    }
+    else
+    {
+        m_group->addChild( new IECoreGL::SpherePrimitive( 100.0f ) );
     }
 
-    for(auto pointsData : collector.points )
-    {
-        IECoreGL::Group *pointsGroup = new IECoreGL::Group();
-
-        pointsGroup->getState()->add( new IECoreGL::Primitive::DrawPoints( true ) );
-        pointsGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-        pointsGroup->getState()->add( new IECoreGL::PointColorStateComponent( Color4f( 0.8, 0.8, 0.8, 1 ) ) );
-        pointsGroup->getState()->add( new IECoreGL::PointsPrimitive::GLPointWidth( 2.0 ) );
-
-        IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
-        points->addPrimitiveVariable("P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pointsData ) );
-        pointsGroup->addChild( points );
-
-        m_group->addChild( pointsGroup );
-    }
 
     m_group->render( currentState );
 
@@ -329,6 +489,7 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
 
 Imath::Box3f VDBRenderable::bound() const
 {
+    //todo return the correct bounding box
     return Imath::Box3f();
 }
 

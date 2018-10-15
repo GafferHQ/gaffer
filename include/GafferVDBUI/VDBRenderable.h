@@ -43,13 +43,15 @@
 
 #include "IECoreGL/Group.h"
 
+#include "IECore/MurmurHash.h"
+
 namespace GafferVDBUI
 {
 
 class VDBRenderable : public IECoreGL::Renderable
 {
 public:
-    VDBRenderable( const IECoreVDB::VDBObject *vdbObject ) : m_vdbObject( vdbObject ) {}
+    VDBRenderable( const IECoreVDB::VDBObject *vdbObject ) : m_vdbObject( vdbObject ), m_renderType( 0 ) {}
 
     void render( IECoreGL::State *currentState ) const override;
     Imath::Box3f bound()  const override;
@@ -57,6 +59,9 @@ private:
     IECoreVDB::ConstVDBObjectPtr m_vdbObject;
 
     mutable IECoreGL::GroupPtr m_group;
+    mutable int m_renderType;
+    mutable std::string m_gridName;
+    mutable IECore::MurmurHash m_hash;
 };
 
 } // namespace GafferVDB
