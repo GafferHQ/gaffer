@@ -139,6 +139,9 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 		const std::vector<Selection> &selection() const;
 
+		using SelectionChangedSignal = boost::signal<void (TransformTool &)>;
+		SelectionChangedSignal &selectionChangedSignal();
+
 		/// Returns the transform of the handles. Throws
 		/// if the selection is invalid because then the
 		/// transform would be meaningless. This is
@@ -196,9 +199,11 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		GafferUI::GadgetPtr m_handles;
+		bool m_handlesDirty;
+
 		mutable std::vector<Selection> m_selection;
 		mutable bool m_selectionDirty;
-		bool m_handlesDirty;
+		SelectionChangedSignal m_selectionChangedSignal;
 
 		bool m_dragging;
 		int m_mergeGroupId;
@@ -206,6 +211,8 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		static size_t g_firstPlugIndex;
 
 };
+
+IE_CORE_DECLAREPTR( TransformTool )
 
 } // namespace GafferSceneUI
 

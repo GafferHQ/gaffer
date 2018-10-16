@@ -42,6 +42,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUITest
 import GafferScene
 import GafferSceneUI
@@ -587,6 +588,22 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/sphere" )
 
 		self.assertEqual( tool.selection()[0].transformPlug, script["box"]["transform"] )
+
+	def testSelectionChangedSignal( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		cs = GafferTest.CapturingSlot( tool.selectionChangedSignal() )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		self.assertTrue( len( cs ) )
+		self.assertEqual( cs[0][0], tool )
 
 if __name__ == "__main__":
 	unittest.main()
