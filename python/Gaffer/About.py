@@ -213,7 +213,7 @@ class About :
 			{
 				"name" : "USD",
 				"url" : "http://http://graphics.pixar.com/usd",
-				"license" : "$GAFFER_ROOT/doc/licenses/usd",
+				"license" : "$GAFFER_ROOT/doc/licenses/USD",
 			},
 
 			{

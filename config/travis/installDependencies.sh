@@ -54,7 +54,7 @@ buildDir="build/gaffer-$gafferMilestoneVersion.$gafferMajorVersion.$gafferMinorV
 
 # Get the prebuilt dependencies package and unpack it into the build directory
 
-dependenciesVersion="0.49.0.0"
+dependenciesVersion="0.51.0.0"
 dependenciesFileName="gafferDependencies-$dependenciesVersion-$platform.tar.gz"
 downloadURL="https://github.com/GafferHQ/dependencies/releases/download/$dependenciesVersion/$dependenciesFileName"
 
