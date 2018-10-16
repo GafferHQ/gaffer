@@ -1,15 +1,37 @@
 0.51.0.0
 ========
 
+This release provides support for the latest versions of Arnold and 3Delight (5.2 and 1.1.7
+respectively), along with the usual mix of improvements and bug fixes.
+
+> Caution : The specialised switch nodes such as SceneSwitch and ImageSwitch have been replaced
+> with a single all-purpose Switch node. Compatibility for old files is provided by converting
+> nodes during loading, but files saved from Gaffer 0.51 will not be useable in prior versions.
+> This can be worked around with a config file in the previous version which does
+> `Gaffer.Switch = Gaffer.SwitchComputeNode`.
+
+Features
+--------
+
+- Arnold : Added support for Arnold 5.2. Please note that Arnold 5.2 is not compatible with
+  earlier Arnold versions, so if you wish to use Gaffer 0.51 with an earlier version, you
+  will need to compile Gaffer yourself.
+- 3Delight : Updated to support version 1.1.7. Please note that earlier versions are no
+  longer supported.
+
 Improvements
 ------------
 
-- Viewer : Improved interactivity when using transform tools or scrubbing animation
- (#2818).
+- Viewer :
+  - Improved interactivity when using transform tools or scrubbing animation
+    (#2818).
+  - Added "Escape" hotkey to pause processing (#2838, #2843).
 - SceneInspector :
   - Added inspection of light and shader parameters (#2797).
   - Added annotation for indexed primitive variables (#2824).
 - ScriptNode : Added "frameRange:start" and "frameRange:end" context variables (#2811).
+- Documentation : Added "Anatomy of an Image" article (#2832).
+- Switch (#2123, #2812) : Replaced specialised nodes with a single all-purpose Switch node.
 
 Fixes
 -----
@@ -37,12 +59,22 @@ Fixes
   plugs (#2831).
 - ImageGadget : Fixed bug which prevented non-default dataWindow maximum coordinates
   from being annotated in the Viewer (#2840).
+- TaskNode : Fixed bugs preventing implementation via internal network (#2846).
+- OpenGLRender (#2799) :
+  - Fixed crash when trying to use `gaffer execute` with OpenGLRender nodes.
+  - Fixed bug whereby the visualisation of the main render camera was visible.
+- Arnold : Fixed tests for API changes in Arnold 5.2 (#2841).
 
 API
 ---
 
 - BackgroundTask : Added `waitFor()` method (#2818).
 - Added MAKE_GAFFER_COMPATIBILITY_VERSION macro (#2819).
+- ContextAlgo : Added GlobalScope utility class (#2812).
+- Switch :
+  - Added `inPlugs()` and `outPlug()` methods (#2812).
+- FilterPlug : Add `sceneAffectsMatch()` method (#2812).
+- TransformTool : Add `selectionChangedSignal()` (#2848).
 
 Breaking Changes
 ----------------
@@ -51,11 +83,19 @@ Breaking Changes
   Resave the file in a more recent version before loading in the current
   version. Note that this can also expose bugs in custom scripts : if a script
   incorrectly attempts to connect to an ArrayPlug instead of a child element,
-  this will now fail instead of being silently corrected (#2805).
-- SceneGadget : Removed private member variable. Source compatibility is retained
-  (#2818).
+  this will now fail instead of being silently corrected (#2805, #2812).
+- Switch (#2812) :
+  - Removed SwitchDependencyNode, SwitchComputeNode, SceneSwitch, ShaderSwitch, FilterSwitch,
+    and ImageSwitch nodes. Use Switch node instead. Backwards compatibility for old files is
+    provided by converting to Switches during loading.
 - 3Delight : Removed compatibility for older versions. At the time of writing
   3Delight 1.1.7 is the latest tested version (#2836).
+- SceneGadget : Removed private member variable. Source compatibility is retained
+  (#2818).
+- Filter : Made `sceneAffectsMatch()` protected. Use the new `FilterPlug::sceneAffectsMatch()`
+  method instead (#2812).
+- UnionFilter : Removed compatibility for nodes created prior to version 0.28.0.0 (#2812).
+- TransformTool : Added private member data (#2848).
 
 0.50.0.0
 ========
