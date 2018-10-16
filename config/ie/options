@@ -147,6 +147,8 @@ else :
 	if not compilerVersion :
 		compilerVersion = platformReg.get( "toolsCompilerVersion", platformReg["compilerVersion"] )
 
+CXXSTD = targetAppReg.get( "cxxStd", cortexReg.get( "cxxStd", "c++11" ) )
+
 pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
 arnoldVersion = getOption( "ARNOLD_VERSION", os.environ.get( "ARNOLD_VERSION", "" ) )
