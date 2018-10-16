@@ -54,6 +54,7 @@
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/ToGLCameraConverter.h"
+#include "IECoreGL/IECoreGL.h"
 
 #include "IECore/CompoundParameter.h"
 #include "IECore/MessageHandler.h"
@@ -599,6 +600,8 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderBatch()
 		{
+			IECoreGL::init();
+
 			processQueue();
 			CachedConverter::defaultCachedConverter()->clearUnused();
 
@@ -615,6 +618,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				camera = new OpenGLCamera( "/defaultCamera", nullptr, nullptr, m_editQueue );
 			}
+
+			// We don't want to render the visualiser of the camera we're looking through.  For the viewport,
+			// we do this using SceneView::deleteObjectFilter, but here, instead of setting up a filter,
+			// we just delete the camera from the list of things to render.
+			m_objects.erase( std::remove( m_objects.begin(), m_objects.end(), camera), m_objects.end() );
 
 			const V2i resolution = camera->camera()->getResolution();
 			IECoreGL::FrameBufferPtr frameBuffer = new FrameBuffer;
