@@ -425,8 +425,8 @@ size_t TransformTool::g_firstPlugIndex = 0;
 TransformTool::TransformTool( SceneView *view, const std::string &name )
 	:	SelectionTool( view, name ),
 		m_handles( new HandlesGadget() ),
-		m_selectionDirty( true ),
 		m_handlesDirty( true ),
+		m_selectionDirty( true ),
 		m_dragging( false ),
 		m_mergeGroupId( 0 )
 {
@@ -458,6 +458,11 @@ const std::vector<TransformTool::Selection> &TransformTool::selection() const
 {
 	updateSelection();
 	return m_selection;
+}
+
+TransformTool::SelectionChangedSignal &TransformTool::selectionChangedSignal()
+{
+	return m_selectionChangedSignal;
 }
 
 Imath::M44f TransformTool::handlesTransform()
@@ -526,6 +531,7 @@ void TransformTool::contextChanged( const IECore::InternedString &name )
 	)
 	{
 		m_selectionDirty = true;
+		selectionChangedSignal()( *this );
 		m_handlesDirty = true;
 	}
 }
@@ -539,6 +545,13 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 	)
 	{
 		m_selectionDirty = true;
+		if( !m_dragging )
+		{
+			// See associated comment in `preRender()`, and
+			// `dragEnd()` where we emit to complete the
+			// deferral started here.
+			selectionChangedSignal()( *this );
+		}
 		m_handlesDirty = true;
 	}
 	else if( plug == sizePlug() )
@@ -677,6 +690,7 @@ void TransformTool::dragEnd()
 {
 	m_dragging = false;
 	m_mergeGroupId++;
+	selectionChangedSignal()( *this );
 }
 
 std::string TransformTool::undoMergeGroup() const

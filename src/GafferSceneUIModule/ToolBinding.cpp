@@ -48,8 +48,11 @@
 #include "GafferUI/Gadget.h"
 
 #include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Context.h"
+
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace std;
 using namespace boost::python;
@@ -75,6 +78,22 @@ boost::python::list selection( const TransformTool &tool )
 	}
 	return result;
 }
+
+struct SelectionChangedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, TransformTool &t )
+	{
+		try
+		{
+			slot( TransformToolPtr( &t ) );
+		}
+		catch( const error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
 
 ScenePlugPtr scene( const TransformTool::Selection &s )
 {
@@ -126,6 +145,7 @@ void GafferSceneUIModule::bindTools()
 	{
 		scope s = GafferBindings::NodeClass<TransformTool>( nullptr, no_init )
 			.def( "selection", &selection )
+			.def( "selectionChangedSignal", &TransformTool::selectionChangedSignal, return_internal_reference<1>() )
 			.def( "handlesTransform", &TransformTool::handlesTransform )
 		;
 
@@ -149,6 +169,8 @@ void GafferSceneUIModule::bindTools()
 			.value( "Parent", TransformTool::Parent )
 			.value( "World", TransformTool::World )
 		;
+
+		GafferBindings::SignalClass<TransformTool::SelectionChangedSignal, GafferBindings::DefaultSignalCaller<TransformTool::SelectionChangedSignal>, SelectionChangedSlotCaller>( "SelectionChangedSignal" );
 	}
 
 	GafferBindings::NodeClass<TranslateTool>( nullptr, no_init )
