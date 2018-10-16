@@ -122,28 +122,8 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 		/// As above but fills a CompoundObjectMap instead.
 		void fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const;
 
-		/// Creates an appropriate plug to hold the specified data.
-		/// \todo This is exposed so it may be reused elsewhere, but is there a better place for it? What about PlugAlgo.h?
-		static ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value );
-		/// Extracts a Data value from a plug previously created with createPlugFromData().
-		static IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
-
 		IECore::MurmurHash hash() const override;
 		void hash( IECore::MurmurHash &h ) const;
-
-	private :
-
-		template<typename T>
-		static ValuePlugPtr boxValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
-
-		template<typename T>
-		static ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
-
-		template<typename T>
-		static ValuePlugPtr geometricCompoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
-
-		template<typename T>
-		static ValuePlugPtr typedObjectValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
 
 };
 
