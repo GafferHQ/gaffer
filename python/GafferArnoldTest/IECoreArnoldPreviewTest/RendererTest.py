@@ -49,6 +49,25 @@ import GafferTest
 import GafferScene
 
 class RendererTest( GafferTest.TestCase ) :
+	
+	def assertReferSameNode( self, a, b ):
+		if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+			self.assertEqual( a, b )
+		else:
+			self.assertEqual( arnold.addressof( a.contents ), arnold.addressof( b.contents ) )
+
+	def assertReferDifferentNode( self, a, b ):
+		if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+			self.assertNotEqual( a, b )
+		else:
+			self.assertNotEqual( arnold.addressof( a.contents ), arnold.addressof( b.contents ) )
+
+	# \todo - delete all calls to this once we no longer need to support Arnold < 5.2
+	def arnoldCompat( self, a ):
+		if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+			return arnold.AtNode.from_address( a )
+		else:
+			return a
 
 	def testFactory( self ) :
 
@@ -289,22 +308,22 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreArnold.UniverseBlock( writable = True ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
-			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarColor" ), "shader" ) )
+			target = self.arnoldCompat( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarColor" ), "shader" ) )
 			source = arnold.AiNodeGetLink( target, "Kd_color" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
 
-			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarNode" ), "shader" ) )
+			target = self.arnoldCompat( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarNode" ), "shader" ) )
 			sourcePtr = arnold.AiNodeGetPtr( target, "filtermap" )
-			source = arnold.AtNode.from_address( sourcePtr )
+			source = self.arnoldCompat( sourcePtr )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "gobo" )
 
-			#target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_vectorColor" ), "shader" ) )
+			#target = self.arnoldCompat( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_vectorColor" ), "shader" ) )
 			#source = arnold.AiNodeGetLink( target, "color[0]" )
 			#self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
 
-			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_vectorNode" ), "shader" ) )
-			sourcePtr = arnold.AiNodeGetPtr( target, "filters" )
-			source = arnold.AtNode.from_address( sourcePtr )
+			target = self.arnoldCompat( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_vectorNode" ), "shader" ) )
+			sourcePtr = self.arnoldCompat( arnold.AiNodeGetPtr( target, "filters" ) )
+			source = sourcePtr
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "gobo" )
 
 	def testLightNames( self ) :
@@ -1079,16 +1098,16 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertTrue( arnold.AiNodeIs( plane2, "ginstance" ) )
 			self.assertTrue( arnold.AiNodeIs( plane3, "ginstance" ) )
 
-			self.assertEqual( arnold.AiNodeGetPtr( plane1, "node" ), arnold.AiNodeGetPtr( plane2, "node" ) )
-			self.assertNotEqual( arnold.AiNodeGetPtr( plane2, "node" ), arnold.AiNodeGetPtr( plane3, "node" ) )
+			self.assertReferSameNode( arnold.AiNodeGetPtr( plane1, "node" ), arnold.AiNodeGetPtr( plane2, "node" ) )
+			self.assertReferDifferentNode( arnold.AiNodeGetPtr( plane2, "node" ), arnold.AiNodeGetPtr( plane3, "node" ) )
 
-			polymesh1 = arnold.AtNode.from_address( arnold.AiNodeGetPtr( plane1, "node" ) )
-			polymesh2 = arnold.AtNode.from_address( arnold.AiNodeGetPtr( plane3, "node" ) )
+			polymesh1 = self.arnoldCompat( arnold.AiNodeGetPtr( plane1, "node" ) )
+			polymesh2 = self.arnoldCompat( arnold.AiNodeGetPtr( plane3, "node" ) )
 
 			self.assertTrue( arnold.AiNodeIs( polymesh1, "polymesh" ) )
 			self.assertTrue( arnold.AiNodeIs( polymesh2, "polymesh" ) )
 
-			self.assertEqual( arnold.AiNodeGetPtr( polymesh1, "disp_map" ), arnold.AiNodeGetPtr( polymesh2, "disp_map" ) )
+			self.assertReferSameNode( arnold.AiNodeGetPtr( polymesh1, "disp_map" ), arnold.AiNodeGetPtr( polymesh2, "disp_map" ) )
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_height" ), 0.25 )
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh2, "disp_height" ), 0.5 )
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_padding" ), 2.5 )
@@ -1137,7 +1156,7 @@ class RendererTest( GafferTest.TestCase ) :
 					instance = arnold.AiNodeLookUpByName( interpolation + "-" + str( subdividePolygons ) )
 					self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
-					mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+					mesh = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 					self.assertTrue( arnold.AiNodeIs( mesh, "polymesh" ) )
 
 					if subdividePolygons and interpolation == "linear" :
@@ -1179,7 +1198,7 @@ class RendererTest( GafferTest.TestCase ) :
 				instance = arnold.AiNodeLookUpByName( "mesh-" + ( uvSmoothing or "default" ) )
 				self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
-				mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+				mesh = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 				self.assertTrue( arnold.AiNodeIs( mesh, "polymesh" ) )
 
 				self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_uv_smoothing" ), uvSmoothing or "pin_corners" )
@@ -1215,14 +1234,19 @@ class RendererTest( GafferTest.TestCase ) :
 
 			instance = arnold.AiNodeLookUpByName( "myLight" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance ) ), "ginstance" )
-			mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+			mesh = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
 
 			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 1 )
 			light = lights[0]
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( light ) ), "mesh_light" )
-			self.assertEqual( arnold.AiNodeGetPtr( light, "mesh" ), ctypes.addressof( instance.contents ) )
+			if not arnold.AiCheckAPIVersion( "5", "2", "0" ):
+				# \todo : We're comparing a raw pointer to a node reference, so we need to convert.
+				# After Arnold 5.2, AiNodeGetPtr returns a reference the same as everything else
+				self.assertEqual( arnold.AiNodeGetPtr( light, "mesh" ), ctypes.addressof( instance.contents ) )
+			else:
+				self.assertReferSameNode( arnold.AiNodeGetPtr( light, "mesh" ), instance )
 
 	def testMeshLightsWithSharedShaders( self ) :
 
@@ -1270,9 +1294,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance1 ) ), "ginstance" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance2 ) ), "ginstance" )
 
-			self.assertEqual( arnold.AiNodeGetPtr( instance1, "node" ), arnold.AiNodeGetPtr( instance2, "node" ) )
+			self.assertReferSameNode( arnold.AiNodeGetPtr( instance1, "node" ), arnold.AiNodeGetPtr( instance2, "node" ) )
 
-			mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance1, "node" ) )
+			mesh = self.arnoldCompat( arnold.AiNodeGetPtr( instance1, "node" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
 
 			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
@@ -1349,7 +1373,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
-			add = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			add = self.arnoldCompat( arnold.AiNodeGetPtr( n, "shader" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( add ) ), "add" )
 
 			spline = arnold.AiNodeGetLink( add, "input1" )
@@ -1402,7 +1426,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
-			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			noise = self.arnoldCompat( arnold.AiNodeGetPtr( n, "shader" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 
@@ -1448,7 +1472,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
-			floatToColor = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			floatToColor = self.arnoldCompat( arnold.AiNodeGetPtr( n, "shader" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatToColor ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( floatToColor, "shadername" ), "Conversion/FloatToColor" )
 
@@ -1612,7 +1636,7 @@ class RendererTest( GafferTest.TestCase ) :
 				instance = arnold.AiNodeLookUpByName( name )
 				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance ) ), "ginstance" )
 
-				shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+				shape = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 				self.assertEqual( arnold.AiNodeGetFlt( shape, "min_pixel_width" ), minPixelWidth )
 				self.assertEqual( arnold.AiNodeGetStr( shape, "mode" ), mode )
 
@@ -1772,7 +1796,7 @@ class RendererTest( GafferTest.TestCase ) :
 				for an, a in attributes.items() :
 
 					instance = arnold.AiNodeLookUpByName( pn + "_" + an )
-					shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+					shape = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 
 					stepSize = a.get( "ai:shape:step_size" )
 					stepSize = stepSize.value if stepSize is not None else 0
@@ -1872,7 +1896,7 @@ class RendererTest( GafferTest.TestCase ) :
 				for an, a in attributes.items() :
 
 					instance = arnold.AiNodeLookUpByName( pn + "_" + an )
-					shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+					shape = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 
 					volumePadding = a.get( "ai:shape:volume_padding" )
 					volumePadding = volumePadding.value if volumePadding is not None else 0
@@ -1926,7 +1950,7 @@ class RendererTest( GafferTest.TestCase ) :
 			instance = arnold.AiNodeLookUpByName( "test" )
 			self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
-			shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+			shape = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 			self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
 			self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), 0.25 )
 
@@ -2138,7 +2162,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.ObjectVector( [ IECoreScene.Shader( "atmosphere_volume", "ai:shader" ) ] )
 		)
 
-		shader = arnold.AtNode.from_address( arnold.AiNodeGetPtr( options, "atmosphere" ) )
+		shader = self.arnoldCompat( arnold.AiNodeGetPtr( options, "atmosphere" ) )
 		self.assertEqual(
 			arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( shader ) ),
 			"atmosphere_volume",
@@ -2162,7 +2186,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.ObjectVector( [ IECoreScene.Shader( "flat", "ai:shader" ) ] )
 		)
 
-		shader = arnold.AtNode.from_address( arnold.AiNodeGetPtr( options, "background" ) )
+		shader = self.arnoldCompat( arnold.AiNodeGetPtr( options, "background" ) )
 		self.assertEqual(
 			arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( shader ) ),
 			"flat",
@@ -2228,7 +2252,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numVDBs, 1 )
 
 			vdbInstance = arnold.AiNodeLookUpByName( "test_vdb" )
-			vdbShape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( vdbInstance, "node" ) )
+			vdbShape = self.arnoldCompat( arnold.AiNodeGetPtr( vdbInstance, "node" ) )
 
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "velocity_scale" ), 10 )
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "velocity_fps" ), 25 )
@@ -2276,8 +2300,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
 
 			nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
-			self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
-			self.assertEqual( arnold.AiNodeGetByte( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
+			self.assertReferSameNode( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
+			self.assertEqual( arnold.AiNodeGetByte( self.arnoldCompat( nodePtr ), "visibility" ), 0 )
 
 	def __assertNotInstanced( self, *names ) :
 
