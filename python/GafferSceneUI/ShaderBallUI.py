@@ -46,6 +46,8 @@ Gaffer.Metadata.registerNode(
 	Generates scenes suitable for rendering shader balls.
 	""",
 
+	"childNodesAreReadOnly", True,
+
 	plugs = {
 
 		"shader" : [
