@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferScene
 import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
@@ -162,7 +163,13 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 		else :
 
-			if selectedPaths.isEmpty() :
+			validSelectedPaths = IECore.PathMatcher()
+			with self.context() :
+				GafferScene.SceneAlgo.matchingPaths(
+					selectedPaths, self.__tool.view()["in"], validSelectedPaths
+				)
+
+			if validSelectedPaths.isEmpty() :
 				self.__infoRow.setVisible( True )
 				self.__warningRow.setVisible( False )
 				self.__infoLabel.setText( "Select something to transform" )
