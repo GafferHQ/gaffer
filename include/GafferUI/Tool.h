@@ -80,6 +80,9 @@ class GAFFERUI_API Tool : public Gaffer::Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Tool, ToolTypeId, Gaffer::Node );
 
+		View *view();
+		const View *view() const;
+
 		/// Plug to define whether or not this tool
 		/// is currently active.
 		Gaffer::BoolPlug *activePlug();
@@ -101,9 +104,6 @@ class GAFFERUI_API Tool : public Gaffer::Node
 	protected :
 
 		Tool( View *view, const std::string &name = defaultName<Tool>() );
-
-		View *view();
-		const View *view() const;
 
 		template<typename ToolType, typename ViewType>
 		struct ToolDescription
