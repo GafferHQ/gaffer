@@ -2729,8 +2729,7 @@ class ArnoldGlobals
 			{
 				if( !m_defaultCamera )
 				{
-					IECoreScene::CameraPtr defaultCortexCamera = new IECoreScene::Camera();
-					defaultCortexCamera->addStandardParameters();
+					IECoreScene::ConstCameraPtr defaultCortexCamera = new IECoreScene::Camera();
 					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
 					m_defaultCamera = SharedAtNodePtr(
 						CameraAlgo::convert( defaultCortexCamera.get(), "ieCoreArnold:defaultCamera", nullptr ),
@@ -2742,46 +2741,34 @@ class ArnoldGlobals
 			}
 			AiNodeSetPtr( options, g_cameraArnoldString, arnoldCamera );
 
-			const IECore::V2iData *resolution = cortexCamera->parametersData()->member<IECore::V2iData>( "resolution" );
-			AiNodeSetInt( options, g_xresArnoldString, resolution->readable().x );
-			AiNodeSetInt( options, g_yresArnoldString, resolution->readable().y );
+			Imath::V2i resolution = cortexCamera->renderResolution();
+			Imath::Box2i renderRegion = cortexCamera->renderRegion();
 
-			const IECore::FloatData *pixelAspectRatio = cortexCamera->parametersData()->member<IECore::FloatData>( "pixelAspectRatio" );
-			AiNodeSetFlt( options, g_pixelAspectRatioArnoldString, pixelAspectRatio->readable() );
+			AiNodeSetInt( options, g_xresArnoldString, resolution.x );
+			AiNodeSetInt( options, g_yresArnoldString, resolution.y );
 
-			const IECore::Box2iData *renderRegion = cortexCamera->parametersData()->member<IECore::Box2iData>( "renderRegion" );
+			AiNodeSetFlt( options, g_pixelAspectRatioArnoldString, cortexCamera->getPixelAspectRatio() );
 
-			if( renderRegion )
+			if(
+				renderRegion.min.x >= renderRegion.max.x ||
+				renderRegion.min.y >= renderRegion.max.y
+			)
 			{
-				if( renderRegion->readable().isEmpty() )
-				{
-					// Arnold does not permit empty render regions.  The user intent of an empty render
-					// region is probably to render as little as possible ( it could happen if you
-					// built a tool to crop to an object which passed out of frame ).
-					// We just pick one pixel in the corner
-
-					AiNodeSetInt( options, g_regionMinXArnoldString, 0 );
-					AiNodeSetInt( options, g_regionMinYArnoldString, 0 );
-					AiNodeSetInt( options, g_regionMaxXArnoldString, 0 );
-					AiNodeSetInt( options, g_regionMaxYArnoldString, 0 );
-				}
-				else
-				{
-					AiNodeSetInt( options, g_regionMinXArnoldString, renderRegion->readable().min.x );
-					AiNodeSetInt( options, g_regionMinYArnoldString, renderRegion->readable().min.y );
-					AiNodeSetInt( options, g_regionMaxXArnoldString, renderRegion->readable().max.x );
-					AiNodeSetInt( options, g_regionMaxYArnoldString, renderRegion->readable().max.y );
-				}
-			}
-			else
-			{
-				AiNodeResetParameter( options, g_regionMinXArnoldString );
-				AiNodeResetParameter( options, g_regionMinYArnoldString );
-				AiNodeResetParameter( options, g_regionMaxXArnoldString );
-				AiNodeResetParameter( options, g_regionMaxYArnoldString );
+				// Arnold does not permit empty render regions.  The user intent of an empty render
+				// region is probably to render as little as possible ( it could happen if you
+				// built a tool to crop to an object which passed out of frame ).
+				// We just pick one pixel in the corner
+				renderRegion = Imath::Box2i( Imath::V2i( 0 ), Imath::V2i( 1 ) );
 			}
 
-			Imath::V2f shutter = cortexCamera->parametersData()->member<IECore::V2fData>( "shutter", true )->readable();
+			// Note that we have to flip Y and subtract 1 from the max value, because
+			// renderRegion is stored in Gaffer image format ( +Y up and an exclusive upper bound )
+			AiNodeSetInt( options, g_regionMinXArnoldString, renderRegion.min.x );
+			AiNodeSetInt( options, g_regionMinYArnoldString, resolution.y - renderRegion.max.y );
+			AiNodeSetInt( options, g_regionMaxXArnoldString, renderRegion.max.x - 1 );
+			AiNodeSetInt( options, g_regionMaxYArnoldString, resolution.y - renderRegion.min.y - 1 );
+
+			Imath::V2f shutter = cortexCamera->getShutter();
 			if( m_sampleMotion.get_value_or( true ) )
 			{
 				AiNodeSetFlt( arnoldCamera, g_shutterStartArnoldString, shutter[0] );
@@ -2864,9 +2851,6 @@ ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
 {
-	IECoreScene::CameraPtr cameraCopy = camera->copy();
-	cameraCopy->addStandardParameters();
-
 	Instance instance = m_instanceCache->get( camera, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
@@ -2936,9 +2920,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
-			IECoreScene::CameraPtr cameraCopy = camera->copy();
-			cameraCopy->addStandardParameters();
-			m_globals->camera( name, cameraCopy.get() );
+			m_globals->camera( name, camera );
 			return ArnoldRendererBase::camera( name, camera, attributes );
 		}
 

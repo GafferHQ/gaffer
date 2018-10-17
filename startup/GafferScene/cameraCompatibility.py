@@ -1,4 +1,3 @@
-#! /bin/bash
 ##########################################################################
 #
 #  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
@@ -35,31 +34,44 @@
 #
 ##########################################################################
 
-set -e
+import IECore
+import IECoreScene
 
-# Figure out where we'll be making the build
+import Gaffer
+import GafferScene
 
-gafferMilestoneVersion=`grep "gafferMilestoneVersion = " SConstruct | cut -d" " -f 3`
-gafferMajorVersion=`grep "gafferMajorVersion = " SConstruct | cut -d" " -f 3`
-gafferMinorVersion=`grep "gafferMinorVersion = " SConstruct | cut -d" " -f 3`
-gafferPatchVersion=`grep "gafferPatchVersion = " SConstruct | cut -d" " -f 3`
+def __compatibilityFunc( node, oldParent ):
+	parentNode = node.ancestor( Gaffer.Node )
+	while parentNode :
+		gafferVersion = (
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:milestoneVersion" ),
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:majorVersion" ),
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:minorVersion" ),
+			Gaffer.Metadata.nodeValue( parentNode, "serialiser:patchVersion" )
+		)
 
-if [[ `uname` = "Linux" ]] ; then
-	platform=linux
-else
-	platform=osx
-fi
+		# only use the information if we have valid information from the node
+		if not filter( lambda x : x is None, gafferVersion ) :
+			break
 
-buildDir="build/gaffer-$gafferMilestoneVersion.$gafferMajorVersion.$gafferMinorVersion.$gafferPatchVersion-$platform"
+		gafferVersion = None
+		parentNode = parentNode.ancestor( Gaffer.Node )
 
-# Get the prebuilt dependencies package and unpack it into the build directory
+	if gafferVersion is not None and gafferVersion < ( 0, 52, 0, 0 ) :
+		# The old Gaffer implicitly used a film fit of "Fit".  This was usually undesirable
+		# ( It resulted in usually getting a vertical fit, whereas artists expect horizontal ),
+		# but for compatibility's sake we set up old cameras so that they will continue to do this
 
-dependenciesVersion="0.52.0.0"
-dependenciesFileName="gafferDependencies-$dependenciesVersion-$platform.tar.gz"
-downloadURL="https://github.com/GafferHQ/dependencies/releases/download/$dependenciesVersion/$dependenciesFileName"
+		node["renderSettingOverrides"]["filmFit"]["enabled"].setValue( True )
+		node["renderSettingOverrides"]["filmFit"]["value"].setValue( IECoreScene.Camera.FilmFit.Fit )
 
-echo "Downloading dependencies \"$downloadURL\""
-curl -L $downloadURL > $dependenciesFileName
+def __initWrapper( originalInit, defaultName ):
 
-mkdir -p $buildDir
-tar xf $dependenciesFileName -C $buildDir --strip-components=1
+	def init( self, name = defaultName ):
+		originalInit( self, name )
+		self.__compatibilityCallback = self.parentChangedSignal().connect( __compatibilityFunc )
+
+	return init
+
+GafferScene.Camera.__init__ = __initWrapper( GafferScene.Camera.__init__, "Camera" )
+

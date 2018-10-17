@@ -282,7 +282,18 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 		return false;
 	}
 
-	PathMatcher paths = convertSelection( new UIntVectorData( { selection[0].name } ) );
+	float depthMin = selection[0].depthMin;
+	unsigned int name = selection[0].name;
+	for( const auto &i : selection )
+	{
+		if( i.depthMin < depthMin )
+		{
+			depthMin = i.depthMin;
+			name = i.name;
+		}
+	}
+
+	PathMatcher paths = convertSelection( new UIntVectorData( { name } ) );
 	if( paths.isEmpty() )
 	{
 		return false;

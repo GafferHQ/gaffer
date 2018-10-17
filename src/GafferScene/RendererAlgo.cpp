@@ -501,7 +501,7 @@ IECore::InternedString optionName( const IECore::InternedString &globalsName )
 struct LocationOutput
 {
 
-	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
+	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
 		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets ), m_root( root )
 	{
 		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
@@ -510,7 +510,7 @@ struct LocationOutput
 		const BoolData *deformationBlurData = globals->member<BoolData>( g_deformationBlurOptionName );
 		m_options.deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
 
-		m_options.shutter = SceneAlgo::shutter( globals );
+		m_options.shutter = SceneAlgo::shutter( globals, scene );
 
 		m_transformSamples.push_back( M44f() );
 	}
@@ -729,8 +729,8 @@ struct LocationOutput
 struct CameraOutput : public LocationOutput
 {
 
-	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
-		:	LocationOutput( renderer, globals, renderSets, root ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
+	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
 	{
 	}
 
@@ -749,7 +749,7 @@ struct CameraOutput : public LocationOutput
 			{
 				IECoreScene::CameraPtr cameraCopy = camera->copy();
 
-				GafferScene::RendererAlgo::applyCameraGlobals( cameraCopy.get(), m_globals );
+				GafferScene::RendererAlgo::applyCameraGlobals( cameraCopy.get(), m_globals, scene );
 
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->camera(
 					name( path ),
@@ -774,8 +774,8 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
-		:	LocationOutput( renderer, globals, renderSets, root ), m_lightSet( renderSets.lightsSet() )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
 
@@ -810,8 +810,8 @@ struct LightOutput : public LocationOutput
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
-		:	LocationOutput( renderer, globals, renderSets, root ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
 
@@ -1017,13 +1017,13 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 
 	const ScenePlug::ScenePath root;
-	CameraOutput output( renderer, globals, renderSets, root );
+	CameraOutput output( renderer, globals, renderSets, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 
 	if( !cameraOption || cameraOption->readable().empty() )
 	{
 		CameraPtr defaultCamera = new IECoreScene::Camera;
-		RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals );
+		RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals, scene );
 		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() );
 		ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 		renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
@@ -1034,120 +1034,87 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
 	const ScenePlug::ScenePath root;
-	LightOutput output( renderer, globals, renderSets, root );
+	LightOutput output( renderer, globals, renderSets, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
 void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
 {
-	ObjectOutput output( renderer, globals, renderSets, root );
+	ObjectOutput output( renderer, globals, renderSets, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output, root );
 }
 
-void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals )
+void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene )
 {
-
-	// apply the resolution, aspect ratio and crop window
-
-	V2i resolution( 640, 480 );
-
-	const V2iData *resolutionOverrideData = camera->parametersData()->member<V2iData>( "resolutionOverride" );
-	if( resolutionOverrideData )
+	// Set any camera-relevant render globals that haven't been overridden on the camera
+	const IntData *filmFitData = globals->member<IntData>( "option:render:filmFit" );
+	if( !camera->hasFilmFit() && filmFitData )
 	{
-		// We allow a parameter on the camera to override the resolution from the globals - this
-		// is useful when defining secondary cameras for doing texture projections.
-		/// \todo Consider how this might fit in as part of a more comprehensive camera setup.
-		/// Perhaps we might actually want a specific Camera subclass for such things?
-		resolution = resolutionOverrideData->readable();
-	}
-	else
-	{
-		if( const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" ) )
-		{
-			resolution = resolutionData->readable();
-		}
-
-		if( const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" ) )
-		{
-			resolution.x = int((float)resolution.x * resolutionMultiplierData->readable());
-			resolution.y = int((float)resolution.y * resolutionMultiplierData->readable());
-		}
-
-		const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
-		if( pixelAspectRatioData )
-		{
-			camera->parameters()["pixelAspectRatio"] = pixelAspectRatioData->copy();
-		}
+		camera->setFilmFit( (IECoreScene::Camera::FilmFit)filmFitData->readable() );
 	}
 
-	camera->parameters()["resolution"] = new V2iData( resolution );
+	const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" );
+	if( !camera->hasResolution() && resolutionData )
+	{
+		camera->setResolution( resolutionData->readable() );
+	}
 
-	// calculate an appropriate screen window
+	const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" );
+	if( !camera->hasResolutionMultiplier() && resolutionMultiplierData )
+	{
+		camera->setResolutionMultiplier( resolutionMultiplierData->readable() );
+	}
 
-	camera->addStandardParameters();
-
-	// apply overscan
-
-
-	Box2i renderRegion( V2i( 0 ), resolution - V2i( 1 ) );
+	const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
+	if( !camera->hasPixelAspectRatio() && pixelAspectRatioData )
+	{
+		camera->setPixelAspectRatio( pixelAspectRatioData->readable() );
+	}
 
 	const BoolData *overscanData = globals->member<BoolData>( "option:render:overscan" );
-	if( overscanData && overscanData->readable() )
+	bool overscan = overscanData && overscanData->readable();
+	if( camera->hasOverscan() ) overscan = camera->getOverscan();
+	if( overscan )
 	{
-		// get offsets for each corner of image (as a multiplier of the image width)
-		V2f minOffset( 0.1 ), maxOffset( 0.1 );
-		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanLeft" ) )
+		if( !camera->hasOverscan() )
 		{
-			minOffset.x = overscanValueData->readable();
+			camera->setOverscan( true );
 		}
-		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanRight" ) )
+		const FloatData *overscanLeftData = globals->member<FloatData>( "option:render:overscanLeft" );
+		if( !camera->hasOverscanLeft() && overscanLeftData )
 		{
-			maxOffset.x = overscanValueData->readable();
+			camera->setOverscanLeft( overscanLeftData->readable() );
 		}
-		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanBottom" ) )
+		const FloatData *overscanRightData = globals->member<FloatData>( "option:render:overscanRight" );
+		if( !camera->hasOverscanRight() && overscanRightData )
 		{
-			minOffset.y = overscanValueData->readable();
+			camera->setOverscanRight( overscanRightData->readable() );
 		}
-		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanTop" ) )
+		const FloatData *overscanTopData = globals->member<FloatData>( "option:render:overscanTop" );
+		if( !camera->hasOverscanTop() && overscanTopData )
 		{
-			maxOffset.y = overscanValueData->readable();
+			camera->setOverscanTop( overscanTopData->readable() );
 		}
-
-		// convert those offsets into pixel values and apply them to the render region
-		renderRegion.min -= V2i(
-			int(minOffset.x * (float)resolution.x),
-			int(minOffset.y * (float)resolution.y)
-		);
-
-		renderRegion.max += V2i(
-			int(maxOffset.x * (float)resolution.x),
-			int(maxOffset.y * (float)resolution.y)
-		);
+		const FloatData *overscanBottomData = globals->member<FloatData>( "option:render:overscanBottom" );
+		if( !camera->hasOverscanBottom() && overscanBottomData )
+		{
+			camera->setOverscanBottom( overscanBottomData->readable() );
+		}
 	}
-
 
 	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
-	if( cropWindowData )
+	if( !camera->hasCropWindow() && cropWindowData )
 	{
-		const Box2f &cropWindow = cropWindowData->readable();
-		Box2i cropRegion(
-			V2i( (int)( round( resolution.x * cropWindow.min.x ) ),
-			     (int)( round( resolution.y * cropWindow.min.y ) ) ),
-			V2i( (int)( round( resolution.x * cropWindow.max.x ) ) - 1,
-			     (int)( round( resolution.y * cropWindow.max.y ) ) - 1 ) );
-
-		renderRegion.min.x = std::max( renderRegion.min.x, cropRegion.min.x );
-		renderRegion.max.x = std::min( renderRegion.max.x, cropRegion.max.x );
-		renderRegion.min.y = std::max( renderRegion.min.y, cropRegion.min.y );
-		renderRegion.max.y = std::min( renderRegion.max.y, cropRegion.max.y );
-
+		camera->setCropWindow( cropWindowData->readable() );
 	}
 
-	camera->parameters()["renderRegion"] = new Box2iData( renderRegion );
-
-	// apply the shutter
-
-	camera->parameters()["shutter"] = new V2fData( SceneAlgo::shutter( globals ) );
+	// Bake the shutter from the globals into the camera before passing it to the renderer backend
+	//
+	// Before this bake, the shutter is an optional render setting override, with the shutter start
+	// and end relative to the current frame.  After baking, the shutter is currently an absolute
+	// shutter, with the frame added on.  Feels like it might be more consistent if we switched to
+	// always storing a relative shutter in camera->setShutter()
+	camera->setShutter( SceneAlgo::shutter( globals, scene ) );
 
 }
 

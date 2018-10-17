@@ -52,25 +52,35 @@ namespace
 
 bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const char *handle )
 {
-	CameraPtr cameraCopy = camera->copy();
-	cameraCopy->addStandardParameters();
-
-	const string &projection = cameraCopy->parametersData()->member<StringData>( "projection", true )->readable();
+	const string &projection = camera->getProjection();
 	const string nodeType = projection + "camera";
 
 	NSICreate( context, handle, nodeType.c_str(), 0, nullptr );
 
 	ParameterList parameters;
 
+	const float fov = 90.0f;
+	const int dofEnable = 1;
+	const double fStop = camera->getFStop();
+	const double focalLength = camera->getFocalLength() * camera->getFocalLengthWorldScale();
+	const double focusDistance = camera->getFocusDistance();
+
 	if( projection == "perspective" )
 	{
-		parameters.add( "fov", cameraCopy->parametersData()->member<FloatData>( "projection:fov", true ) );
+		parameters.add( { "fov", &fov, NSITypeFloat, 0, 1, 0 } );
+		if( camera->getFStop() > 0.0f )
+        {
+			parameters.add( { "depthoffield.enable", &dofEnable, NSITypeInteger, 0, 1, 0 } );
+			parameters.add( { "depthoffield.fstop", &fStop, NSITypeDouble, 0, 1, 0 } );
+			parameters.add( { "depthoffield.focallength", &focalLength, NSITypeDouble, 0, 1, 0 } );
+			parameters.add( { "depthoffield.focaldistance", &focusDistance, NSITypeDouble, 0, 1, 0 } );
+		}
 	}
 
-	const V2d clippingPlanes = cameraCopy->parametersData()->member<V2fData>( "clippingPlanes", true )->readable();
+	const V2d clippingPlanes = camera->getClippingPlanes();
 	parameters.add( { "clippingrange", clippingPlanes.getValue(), NSITypeDouble, 0, 2, 0 } );
 
-	const V2d shutter = cameraCopy->parametersData()->member<V2fData>( "shutter", true )->readable();
+	const V2d shutter = camera->getShutter();
 	parameters.add( { "shutterrange", shutter.getValue(), NSITypeDouble, 0, 2, 0 } );
 
 	NSISetAttribute( context, handle, parameters.size(), parameters.data() );

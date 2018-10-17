@@ -124,6 +124,7 @@ import MeshToPointsUI
 import RenderUI
 import ShaderBallUI
 import LightTweaksUI
+import CameraTweaksUI
 import LightToCameraUI
 import FilterResultsUI
 import TranslateToolUI

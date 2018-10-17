@@ -40,13 +40,13 @@
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 
 #include "IECoreGL/CachedConverter.h"
+#include "IECoreGL/Camera.h"
 #include "IECoreGL/ColorTexture.h"
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/DepthTexture.h"
 #include "IECoreGL/Exception.h"
 #include "IECoreGL/FrameBuffer.h"
 #include "IECoreGL/GL.h"
-#include "IECoreGL/OrthographicCamera.h"
 #include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
@@ -352,10 +352,12 @@ class OpenGLCamera : public OpenGLObject
 			{
 				ToGLCameraConverterPtr converter = new ToGLCameraConverter( camera );
 				m_camera = static_pointer_cast<IECoreGL::Camera>( converter->convert() );
+				m_resolution = camera->getResolution();
 			}
 			else
 			{
-				m_camera = new IECoreGL::OrthographicCamera;
+				m_camera = new IECoreGL::Camera;
+				m_resolution = V2i( 640, 480 );
 			}
 		}
 
@@ -372,9 +374,16 @@ class OpenGLCamera : public OpenGLObject
 			return m_camera.get();
 		}
 
+		const V2i getResolution() const
+		{
+			return m_resolution;
+		}
+
 	private :
 
 		IECoreGL::CameraPtr m_camera;
+		ConstOpenGLAttributesPtr m_attributes;
+		V2i m_resolution;
 
 };
 
@@ -624,7 +633,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			// we just delete the camera from the list of things to render.
 			m_objects.erase( std::remove( m_objects.begin(), m_objects.end(), camera), m_objects.end() );
 
-			const V2i resolution = camera->camera()->getResolution();
+			const V2i resolution = camera->getResolution();
 			IECoreGL::FrameBufferPtr frameBuffer = new FrameBuffer;
 			frameBuffer->setColor( new ColorTexture( resolution.x, resolution.y ) );
 			IECoreGL::Exception::throwIfError();

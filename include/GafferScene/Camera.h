@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_CAMERA_H
 #define GAFFERSCENE_CAMERA_H
 
+#include "Gaffer/CompoundDataPlug.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
@@ -56,11 +57,47 @@ class GAFFERSCENE_API Camera : public ObjectSource
 		Gaffer::StringPlug *projectionPlug();
 		const Gaffer::StringPlug *projectionPlug() const;
 
+		enum PerspectiveMode
+		{
+			FieldOfView,
+			ApertureFocalLength
+		};
+
+		Gaffer::IntPlug *perspectiveModePlug();
+		const Gaffer::IntPlug *perspectiveModePlug() const;
+
 		Gaffer::FloatPlug *fieldOfViewPlug();
 		const Gaffer::FloatPlug *fieldOfViewPlug() const;
 
+		Gaffer::FloatPlug *apertureAspectRatioPlug();
+		const Gaffer::FloatPlug *apertureAspectRatioPlug() const;
+
+		Gaffer::V2fPlug *aperturePlug();
+		const Gaffer::V2fPlug *aperturePlug() const;
+
+		Gaffer::FloatPlug *focalLengthPlug();
+		const Gaffer::FloatPlug *focalLengthPlug() const;
+
+		Gaffer::V2fPlug *orthographicAperturePlug();
+		const Gaffer::V2fPlug *orthographicAperturePlug() const;
+
+		Gaffer::V2fPlug *apertureOffsetPlug();
+		const Gaffer::V2fPlug *apertureOffsetPlug() const;
+
+		Gaffer::FloatPlug *fStopPlug();
+		const Gaffer::FloatPlug *fStopPlug() const;
+
+		Gaffer::FloatPlug *focalLengthWorldScalePlug();
+		const Gaffer::FloatPlug *focalLengthWorldScalePlug() const;
+
+		Gaffer::FloatPlug *focusDistancePlug();
+		const Gaffer::FloatPlug *focusDistancePlug() const;
+
 		Gaffer::V2fPlug *clippingPlanesPlug();
 		const Gaffer::V2fPlug *clippingPlanesPlug() const;
+
+		Gaffer::CompoundDataPlug *renderSettingOverridesPlug();
+		const Gaffer::CompoundDataPlug *renderSettingOverridesPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

@@ -164,7 +164,7 @@ IECore::ConstCompoundObjectPtr GafferScene::SceneAlgo::globalAttributes( const I
 	return result;
 }
 
-Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *globals )
+Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *globals, const ScenePlug *scene )
 {
 	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
 	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
@@ -178,8 +178,28 @@ Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *global
 	V2f shutter( Context::current()->getFrame() );
 	if( cameraBlur || transformBlur || deformationBlur )
 	{
-		const V2fData *shutterData = globals->member<V2fData>( "option:render:shutter" );
-		const V2f relativeShutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
+		ConstCameraPtr camera = nullptr;
+		const StringData *cameraOption = globals->member<StringData>( "option:render:camera" );
+		if( cameraOption && !cameraOption->readable().empty() )
+		{
+			ScenePlug::ScenePath cameraPath;
+			ScenePlug::stringToPath( cameraOption->readable(), cameraPath );
+			if( SceneAlgo::exists( scene, cameraPath ) )
+			{
+				camera = runTimeCast< const Camera>( scene->object( cameraPath ).get() );
+			}
+		}
+
+		V2f relativeShutter;
+		if( camera && camera->hasShutter() )
+		{
+			relativeShutter = camera->getShutter();
+		}
+		else
+		{
+			const V2fData *shutterData = globals->member<V2fData>( "option:render:shutter" );
+			relativeShutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
+		}
 		shutter += relativeShutter;
 	}
 

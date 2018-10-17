@@ -90,9 +90,20 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// a call to setViewport().
 		UnarySignal &viewportChangedSignal();
 
-		const IECoreScene::Camera *getCamera() const;
+		/// Sets whether the Viewport is in planar movement mode.
+		/// ( used for 2D UIs with a scale pixel that doesn't change with
+		/// the viewport width, such as the Node Graph )
+		void setPlanarMovement( bool planarMovement );
+		/// Return whether the viewport is currently in planar movement mode
+		bool getPlanarMovement() const;
+
+		/// Return the camera currently used to render the viewport.
+		/// This bakes in aperture and clipping planes based on tweaks
+		/// made using the ViewportGadget.
+		IECoreScene::ConstCameraPtr getCamera() const;
 		/// A copy is taken.
-		void setCamera( const IECoreScene::Camera *camera );
+		void setCamera( IECoreScene::CameraPtr camera );
+
 		const Imath::M44f &getCameraTransform() const;
 		void setCameraTransform( const Imath::M44f &transform );
 		/// A signal emitted when the camera is changed, either by
@@ -109,12 +120,6 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// of a pivot about which the Alt+drag camera motion operates.
 		void setCenterOfInterest( float centerOfInterest );
 		float getCenterOfInterest();
-
-		/// By default, the motion of orthographic cameras is
-		/// constrained to the image plane during Alt+drag interaction.
-		/// To allow full 3D movement call `setOrthographic3D( true )`.
-		void setOrthographic3D( bool orthographic3D );
-		bool getOrthographic3D() const;
 
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,

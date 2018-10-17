@@ -85,21 +85,23 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 
 		v = GafferUI.ViewportGadget()
 		v.setViewport( imath.V2i( 200, 100 ) )
+		v.setPlanarMovement( False )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
 				"resolution" : imath.V2i( 200, 100 ),
 				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
 				"projection" : "perspective",
+				"projection:fov" : 90.0,
 			} )
 		)
 
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
 
 		v.setViewport( imath.V2i( 200, 200 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) ) )
 
 		v.setViewport( imath.V2i( 200, 100 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
 
 	def testChangeResolutionOrthographic( self ) :
 
@@ -113,13 +115,13 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			} )
 		)
 
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
 
 		v.setViewport( imath.V2i( 100, 100 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
 
 		v.setViewport( imath.V2i( 100, 200 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1, -2 ), imath.V2f( 1, 2 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -1, -2 ), imath.V2f( 1, 2 ) ) )
 
 	def testChangeResolutionOffsetOrthographic( self ) :
 
@@ -133,13 +135,13 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			} )
 		)
 
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 0, 0 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 0, 0 ) ) )
 
 		v.setViewport( imath.V2i( 100, 100 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1.5, -1 ), imath.V2f( -0.5, 0 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -1.5, -1 ), imath.V2f( -0.5, 0 ) ) )
 
 		v.setViewport( imath.V2i( 100, 200 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1.5, -1.5 ), imath.V2f( -0.5, 0.5 ) ) )
+		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -1.5, -1.5 ), imath.V2f( -0.5, 0.5 ) ) )
 
 	def testRasterToWorldOrthographic( self ) :
 
@@ -173,12 +175,13 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 
 		v = GafferUI.ViewportGadget()
 		v.setViewport( imath.V2i( 500, 250 ) )
+		v.setPlanarMovement( False )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
 				"resolution" : imath.V2i( 500, 250 ),
 				"screenWindow" : imath.Box2f( imath.V2f( -1, -.5 ), imath.V2f( 1, .5 ) ),
 				"projection" : "perspective",
-				"projection:fox" : 90.0,
+				"projection:fov" : 90.0,
 				"clippingPlanes" : imath.V2f( .1, 10 ),
 			} )
 		)

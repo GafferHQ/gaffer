@@ -163,16 +163,19 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 	M44f objectMatrix = inPlug()->fullTransform( path );
 	M44f objectToCamera = objectMatrix * cameraMatrix.inverse();
 
-	CameraPtr camera = constCamera->copy();
-	camera->addStandardParameters();
-	float tanFOV = -1;
-	if( camera->parametersData()->member<StringData>( "projection" )->readable() == "perspective" )
-	{
-		const float fov = camera->parametersData()->member<FloatData>( "projection:fov" )->readable();
-		tanFOV = tan( degreesToRadians( fov / 2.0f ) ); // camera x coordinate at screen window x==1
-	}
+	bool perspective = constCamera->getProjection() == "perspective";
 
-	const Box2f &screenWindow = camera->parametersData()->member<Box2fData>( "screenWindow" )->readable();
+	Box2f normalizedScreenWindow;
+	if( constCamera->hasResolution() )
+	{
+		normalizedScreenWindow = constCamera->frustum();
+	}
+	else
+	{
+		// We don't know what resolution the camera is meant to render with, so take the whole aperture
+		// as the screen window
+		normalizedScreenWindow = constCamera->frustum( Camera::Distort );
+	}
 
 	// do the work
 
@@ -190,22 +193,15 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 	for( size_t i = 0, e = p.size(); i < e; ++i )
 	{
 		V3f pCamera = p[i] * objectToCamera;
-		V2f pScreen;
-		if( tanFOV > 0.0f )
+		V2f pScreen = V2f( pCamera.x, pCamera.y );
+		if( perspective )
 		{
-			// perspective
-			const float d = -pCamera.z * tanFOV;
-			pScreen = V2f( pCamera.x / d, pCamera.y / d );
-		}
-		else
-		{
-			// orthographic
-			pScreen = V2f( pCamera.x, pCamera.y );
+			pScreen /= -pCamera.z;
 		}
 		uv.push_back(
 			V2f(
-				lerpfactor( pScreen.x, screenWindow.min.x, screenWindow.max.x ),
-				lerpfactor( pScreen.y, screenWindow.min.y, screenWindow.max.y )
+				lerpfactor( pScreen.x, normalizedScreenWindow.min.x, normalizedScreenWindow.max.x ),
+				lerpfactor( pScreen.y, normalizedScreenWindow.min.y, normalizedScreenWindow.max.y )
 			)
 		);
 	}

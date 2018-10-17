@@ -253,6 +253,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		with GafferUI.Window() as w :
 			gw = GafferUI.GadgetWidget( sg )
+			gw.getViewportGadget().setPlanarMovement( False )
 			gw.getViewportGadget().setCamera(
 				IECoreScene.Camera( parameters = { "projection" : "perspective", } )
 			)

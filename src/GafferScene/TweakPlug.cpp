@@ -36,7 +36,7 @@
 
 #include "GafferScene/TweakPlug.h"
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/SplinePlug.h"
 
 #include "IECore/DataAlgo.h"
@@ -68,7 +68,7 @@ TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePl
 }
 
 TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, bool enabled )
-	:	TweakPlug( tweakName, CompoundDataPlug::createPlugFromData( "value", In, Default | Dynamic, value ), enabled )
+	:	TweakPlug( tweakName, PlugAlgo::createPlugFromData( "value", In, Default | Dynamic, value ), enabled )
 {
 }
 
@@ -272,7 +272,7 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists
 
 
 	Data *parameterValue = parameters->member<Data>( name );
-	DataPtr newData = CompoundDataPlug::extractDataFromPlug( valuePlug<ValuePlug>() );
+	DataPtr newData = PlugAlgo::extractDataFromPlug( valuePlug<ValuePlug>() );
 	if( !newData )
 	{
 		throw IECore::Exception(

@@ -39,6 +39,7 @@
 #include "TweaksBinding.h"
 
 #include "GafferScene/LightTweaks.h"
+#include "GafferScene/CameraTweaks.h"
 #include "GafferScene/TweakPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -62,6 +63,7 @@ TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstData
 void GafferSceneModule::bindTweaks()
 {
 	DependencyNodeClass<LightTweaks>();
+	DependencyNodeClass<CameraTweaks>();
 
 	scope tweakPlugScope = PlugClass<TweakPlug>()
 		.def(

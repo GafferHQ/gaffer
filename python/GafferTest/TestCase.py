@@ -148,6 +148,11 @@ class TestCase( unittest.TestCase ) :
 
 				self.assertNotEqual( outputPlug.hash(), hash, outputPlug.fullName() + " hash not affected by " + inputPlug.fullName() )
 
+				# Set value back to the input value
+				# ( The calling code may have set up plugs in a specific state, because some plugs may
+				# have no affect in certain states )
+				inputPlug.setValue( value )
+
 				numTests += 1
 
 		self.failUnless( numTests > 0 )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,58 +34,43 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LIGHTTOCAMERA_H
-#define GAFFERSCENE_LIGHTTOCAMERA_H
+#ifndef GAFFERSCENE_CAMERATWEAKS_H
+#define GAFFERSCENE_CAMERATWEAKS_H
 
 #include "GafferScene/SceneElementProcessor.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
+class GAFFERSCENE_API CameraTweaks : public SceneElementProcessor
 {
 
 	public :
 
-		LightToCamera( const std::string &name=defaultName<LightToCamera>() );
-		~LightToCamera() override;
+		CameraTweaks( const std::string &name=defaultName<CameraTweaks>() );
+		~CameraTweaks() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::LightToCamera, LightToCameraTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CameraTweaks, CameraTweaksTypeId, SceneElementProcessor );
 
-		Gaffer::IntPlug *filmFitPlug();
-		const Gaffer::IntPlug *filmFitPlug() const;
+		Gaffer::Plug *tweaksPlug();
+		const Gaffer::Plug *tweaksPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 	protected :
 
-		bool processesAttributes() const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
-
 		bool processesObject() const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
-
-		bool processesTransform() const override;
-		void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const override;
-
-		void hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
-		void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
-
-		IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const override;
-		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
-
-	private :
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputAttributes ) const override;
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( LightToCamera )
+IE_CORE_DECLAREPTR( CameraTweaks )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_LIGHTTOCAMERA_H
+#endif // GAFFERSCENE_CAMERATWEAKS_H

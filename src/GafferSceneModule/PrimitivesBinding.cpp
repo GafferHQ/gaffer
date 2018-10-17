@@ -114,7 +114,15 @@ void GafferSceneModule::bindPrimitives()
 	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
-	GafferBindings::DependencyNodeClass<Camera>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<Camera>();
+		enum_<Camera::PerspectiveMode>( "PerspectiveMode" )
+			.value( "FieldOfView", Camera::FieldOfView )
+			.value( "ApertureFocalLength", Camera::ApertureFocalLength )
+		;
+	}
+
 	GafferBindings::DependencyNodeClass<ClippingPlane>();
 	GafferBindings::DependencyNodeClass<CoordinateSystem>();
 	GafferBindings::DependencyNodeClass<ExternalProcedural>();

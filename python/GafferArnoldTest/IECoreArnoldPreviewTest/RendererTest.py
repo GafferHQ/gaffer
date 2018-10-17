@@ -116,7 +116,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECoreScene.Camera(
 				parameters = {
 					"resolution" : imath.V2i( 2000, 1000 ),
-					"renderRegion" : imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 749 ) ),
+					"cropWindow" : imath.Box2f( imath.V2f( 0 ), imath.V2f( 1, 0.75 ) ),
 				}
 			),
 			r.attributes( IECore.CompoundObject() )
