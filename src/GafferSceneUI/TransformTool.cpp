@@ -644,7 +644,14 @@ void TransformTool::updateSelection() const
 	std::unordered_set<Gaffer::TransformPlug *> transformPlugs;
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		Selection selection( scenePlug(), *it, view()->getContext() );
+		ScenePlug::ScenePath path = *it;
+		Selection selection;
+		while( path.size() && !selection.transformPlug )
+		{
+			selection = Selection( scenePlug(), path, view()->getContext() );
+			path.pop_back();
+		}
+
 		if( selection.transformPlug )
 		{
 			// Selection is editable, but it's possible that we've already added it
