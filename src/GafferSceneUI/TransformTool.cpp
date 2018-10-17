@@ -78,6 +78,20 @@ using namespace GafferSceneUI;
 namespace
 {
 
+bool ancestorMakesChildNodesReadOnly( const Node *node )
+{
+	node = node->parent<Node>();
+	while( node )
+	{
+		if( MetadataAlgo::getChildNodesAreReadOnly( node ) )
+		{
+			return true;
+		}
+		node = node->parent<Node>();
+	}
+	return false;
+}
+
 struct CapturedProcess
 {
 
@@ -250,6 +264,14 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 	if( selection.transformPlug )
 	{
 		selection.transformPlug = selection.transformPlug->source<TransformPlug>();
+		if( ancestorMakesChildNodesReadOnly( selection.transformPlug->node() ) )
+		{
+			// Inside a Reference node or similar. Unlike a regular read-only
+			// status, the user has no chance of unlocking this node, so don't
+			// tease them with an unusable selection.
+			selection.transformPlug = nullptr;
+			return false;
+		}
 		selection.upstreamScene = scenePlug;
 		selection.upstreamPath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		selection.upstreamContext = process->context;
