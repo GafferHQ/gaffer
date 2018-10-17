@@ -605,5 +605,23 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( len( cs ) )
 		self.assertEqual( cs[0][0], tool )
 
+	def testEditAncestorIfSelectionNotTransformable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["sceneReader"] = GafferScene.SceneReader()
+		script["sceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/alembicFiles/groupedPlane.abc" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["sceneReader"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
+		selection = tool.selection()
+		self.assertEqual( len( selection ), 1 )
+		self.assertEqual( selection[0].transformPlug, script["sceneReader"]["transform"] )
+		self.assertEqual( selection[0].path, "/group" )
+
 if __name__ == "__main__":
 	unittest.main()
