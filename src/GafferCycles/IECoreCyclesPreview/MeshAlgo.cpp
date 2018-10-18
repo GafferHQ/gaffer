@@ -78,9 +78,6 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 	}
 
 	const vector<Imath::V2f> &uvs = uvData->readable();
-
-	// See if there's any indices
-	const vector<int> &indices = uvVariable.indices->readable();
 	const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
 
 	// Default UVs are named "uv"
@@ -102,6 +99,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 	{
 		if( uvVariable.indices )
 		{
+			const vector<int> &indices = uvVariable.indices->readable();
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				*(fdata++) = ccl::make_float3(uvs[indices[vertex]].x, uvs[indices[vertex]].y, 0.0);
 		}
@@ -221,9 +219,9 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			if( data->getInterpretation() == GeometricData::UV )
 			{
 				if ( subdivision || triangles )
-					::convertUVSet( it->first, it->second, mesh, attributes, subdivision );
+					convertUVSet( it->first, it->second, mesh, attributes, subdivision );
 				else
-					::convertUVSet( it->first, it->second, trimesh.get(), attributes, subdivision );
+					convertUVSet( it->first, it->second, trimesh.get(), attributes, subdivision );
 				it = variablesToConvert.erase( it );
 			}
 			else

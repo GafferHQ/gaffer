@@ -180,7 +180,7 @@ class CyclesOutput : public IECore::RefCounted
 
 	public :
 
-		CyclesOutput( ccl::Session *session, const std::string &name, const IECoreScenePreview::Renderer::Output *output )
+		CyclesOutput( ccl::Session *session, const std::string &name, const IECoreScene::Output *output )
 			:	m_session( session )
 		{
 			// Driver
@@ -929,6 +929,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			new_session_params = m_session_params;
 			ccl::SessionParams new_scene_params = ccl::SceneParams();
 			new_scene_params = m_scene_params;
+			ccl::Integrator *integrator = m_scene->integrator;
+			ccl::Integrator previntegrator = *integrator;
 
 			if( name == g_frameOptionName )
 			{
@@ -965,7 +967,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_sampleMotionOptionName )
 			{
-				ccl::Integrator *integrator = m_scene->integrator;
+				//ccl::Integrator *integrator = m_scene->integrator;
 				ccl::SocketType *input = integrator->node_type->find_input( "motion_blur" );
 				if( value && input )
 				{
@@ -1230,7 +1232,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:integrator:" ) )
 			{
-				ccl::Integrator *integrator = m_scene->integrator;
+				//ccl::Integrator *integrator = m_scene->integrator;
 				ccl::SocketType *input = integrator->node_type->find_input( name.c_str() + 15 );
 				if( value && input )
 				{
@@ -1277,6 +1279,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_scene_params_dirty = true;
 				m_scene_params = new_scene_params;
 			}
+
+			if( m_session->params.modified( new_session_params ) ||
+				m_scene->params.modified( new_scene_params ) )
+			{
+				free_session();
+				create_session();
+				session->start();
+			}
+
+			if( integrator->modified( previntegrator ) )
+				integrator->tag_update( m_scene );
 		}
 
 		void output( const IECore::InternedString &name, const Output *output ) override
