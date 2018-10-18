@@ -53,9 +53,8 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		s["w"] = Gaffer.TimeWarpComputeNode()
-		s["w"]["in"] = Gaffer.IntPlug()
+		s["w"].setup( Gaffer.IntPlug() )
 		s["w"]["in"].setInput( s["m"]["product"] )
-		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )
 		s["w"]["speed"].setValue( 2 )
 
@@ -82,9 +81,8 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		s["w"] = Gaffer.TimeWarpComputeNode()
-		s["w"]["in"] = Gaffer.IntPlug()
+		s["w"].setup( Gaffer.IntPlug() )
 		s["w"]["in"].setInput( s["m"]["product"] )
-		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )
 
 		for i in range( 0, 10 ) :
@@ -102,8 +100,7 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 	def testAffects( self ) :
 
 		w = Gaffer.TimeWarpComputeNode()
-		w["in"] = Gaffer.IntPlug()
-		w["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		w.setup( Gaffer.IntPlug() )
 
 		cs = GafferTest.CapturingSlot( w.plugDirtiedSignal() )
 
@@ -124,9 +121,8 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		s["w"] = Gaffer.TimeWarpComputeNode()
-		s["w"]["in"] = Gaffer.IntPlug()
+		s["w"].setup( Gaffer.IntPlug() )
 		s["w"]["in"].setInput( s["m"]["product"] )
-		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )
 
 		# test that enabledPlug() and correspondingInput() are implemented
