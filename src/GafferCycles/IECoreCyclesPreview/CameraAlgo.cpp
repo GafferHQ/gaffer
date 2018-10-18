@@ -54,62 +54,67 @@ namespace
 
 ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
-	CameraPtr cameraCopy = camera->copy();
-	cameraCopy->addStandardParameters();
-
 	ccl::Camera *ccam = new ccl::Camera();
-	ccam->name = nodeName.c_str();
+	ccam->name = ccl::ustring(nodeName.c_str());
 
 	// Projection type
-	const string &projection = cameraCopy->parametersData()->member<StringData>( "projection", true )->readable();
+	const string &projection = camera->getProjection();
 	if( projection == "perspective" )
+	{
 		ccam->type = ccl::CAMERA_PERSPECTIVE;
+		if( camera->getFStop() > 0.0f )
+		{
+			ccam->aperturesize = camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop();
+			ccam->focaldistance = camera->getFocusDistance();
+		}
+	}
 	else if( projection == "orthographic" )
+	{
 		ccam->type = ccl::CAMERA_ORTHOGRAPHIC;
+	}
 	else if( projection == "panorama" )
+	{
 		ccam->type = ccl::CAMERA_PANORAMA;
+		// TODO: Spec out panorama data
+	}
 	else
 		ccam->type = ccl::CAMERA_PERSPECTIVE;
 
-	// FOV
-	const float &fov = cameraCopy->parametersData()->member<FloatData>( "projection:fov", true )->readable();
-	ccam->fov = fov;
-
 	// Screen window/resolution TODO: full_ might be something to do with cropping?
-	const Imath::Box2f &screenWindow = cameraCopy->parametersData()->member<Box2fData>( "screenWindow", true )->readable();
-	const V2i &resolution = cameraCopy->parametersData()->member<V2iData>( "resolution", true )->readable();
-	const float pixelAspectRatio = cameraCopy->parametersData()->member<FloatData>( "pixelAspectRatio", true )->readable();
+	const Imath::Box2f &frustum = camera->frustum();
+	const Imath::V2i &resolution = camera->getResolution();
+	const float pixelAspectRatio = camera->getPixelAspectRatio();
 	ccam->width = resolution[0];
 	ccam->height = resolution[1];
 	ccam->full_width = resolution[0];
 	ccam->full_height = resolution[1];
-	ccam->viewplane.left = screenWindow.min.x;
-	ccam->viewplane.right = screenWindow.max.x;
-	ccam->viewplane.top = screenWindow.min.y;
-	ccam->viewplane.bottom = screenWindow.max.y;
+	ccam->viewplane.left = frustum.min.x;
+	ccam->viewplane.right = frustum.max.x;
+	ccam->viewplane.bottom = frustum.min.y;
+	ccam->viewplane.top = frustum.max.y;
 	ccam->aperture_ratio = pixelAspectRatio; // This is more for the bokeh, maybe it should be a separate parameter?
 
 	// Clipping planes
-	const Imath::V2f &clippingPlanes = cameraCopy->parametersData()->member<V2fData>( "clippingPlanes", true )->readable();
-	ccam->nearclip = clippingPlanes[0];
-	ccam->farclip = clippingPlanes[1];
+	const Imath::V2f &clippingPlanes = camera->getClippingPlanes();
+	ccam->nearclip = clippingPlanes.x;
+	ccam->farclip = clippingPlanes.y;
 
 	// Shutter TODO: Need to see if this is correct or not, cycles also has a shutter curve...
-	const V2d shutter = cameraCopy->parametersData()->member<V2fData>( "shutter", true )->readable();
-	if ((shutter[0] > 0.0) && (shutter[1] > 0.0))
+	const Imath::V2f &shutter = camera->getShutter();
+	if ((shutter.x > 0.0) && (shutter.y > 0.0))
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_START;
-		ccam->shuttertime = shutter[0] + shutter[1];
+		ccam->shuttertime = shutter.x + shutter.y;
 	}
-	else if ((shutter[0] < 0.0) && (shutter[1] > 0.0))
+	else if ((shutter.x < 0.0) && (shutter.y > 0.0))
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
-		ccam->shuttertime = abs(shutter[0]) + shutter[1];
+		ccam->shuttertime = abs(shutter.x) + shutter.y;
 	}
-	else if ((shutter[0] < 0.0) && (shutter[1] <= 0.0))
+	else if ((shutter.x < 0.0) && (shutter.y <= 0.0))
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_END;
-		ccam->shuttertime = abs(shutter[0]) + abs(shutter[1]);
+		ccam->shuttertime = abs(shutter.x) + abs(shutter.y);
 	}
 	else
 	{
