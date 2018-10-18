@@ -138,8 +138,7 @@ def conditionPrimvar( primvar ) :
 
 class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode, sections = None, **kw ) :
-		self.__scenPlug = None
+	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8, spacing = 8 )
 
