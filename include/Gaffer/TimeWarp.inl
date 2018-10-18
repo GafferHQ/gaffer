@@ -35,23 +35,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextAlgo.h"
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/ContextProcessor.inl"
 
 namespace Gaffer
 {
-
-namespace Detail
-{
-
-struct IdentityScope
-{
-	IdentityScope( const Context *context )
-	{
-	}
-};
-
-};
 
 template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<TimeWarp<BaseType> > TimeWarp<BaseType>::g_typeDescription;
@@ -105,7 +94,7 @@ void TimeWarp<BaseType>::processContext( Context::EditableScope &context ) const
 	float frame;
 	{
 		const Context *c = Context::current();
-		typename TimeWarpTraits<BaseType>::TimeScope timeScope( c );
+		ContextAlgo::GlobalScope globalScope( c, ContextProcessor<BaseType>::inPlug() );
 		frame = c->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue();
 	}
 	context.setFrame( frame );

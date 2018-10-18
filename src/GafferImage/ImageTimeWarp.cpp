@@ -45,14 +45,6 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageTimeWarp, ImageTimeWarpTypeId )
 
-template<>
-struct TimeWarpTraits<GafferImage::ImageProcessor>
-{
-
-	typedef GafferImage::ImagePlug::GlobalScope TimeScope;
-
-};
-
 }
 
 // explicit instantiation

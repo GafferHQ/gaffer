@@ -68,26 +68,6 @@ class IECORE_EXPORT TimeWarp : public ContextProcessor<BaseType>
 
 };
 
-namespace Detail
-{
-
-struct IdentityScope;
-
-} // namespace Detail
-
-/// May be specialised to control the behaviour of
-/// TimeWarp<BaseType>.
-template<typename BaseType>
-struct TimeWarpTraits
-{
-
-   /// A class which will be instantiated as
-   /// `TimeScope timeScope( Context::current() )`
-   /// to modify the context when evaluating the time
-   typedef Detail::IdentityScope TimeScope;
-
-};
-
 typedef TimeWarp<ComputeNode> TimeWarpComputeNode;
 IE_CORE_DECLAREPTR( TimeWarpComputeNode );
 
