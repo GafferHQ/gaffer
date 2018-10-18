@@ -90,7 +90,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 		columnEditability=None,
 		horizontalScrollMode = GafferUI.ScrollMode.Never,
 		verticalScrollMode = GafferUI.ScrollMode.Automatic,
-		overrideStretch = False,
 		**kw
 	) :
 
@@ -182,7 +181,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.__headerPrefix = headerPrefix
 
-		self.__overrideStretch = overrideStretch
 		self.__columnToolTips = columnToolTips
 		self.__columnEditability = columnEditability
 
@@ -246,21 +244,18 @@ class VectorDataWidget( GafferUI.Widget ) :
 				self.__tableView.horizontalHeader(),
 				QtWidgets.QHeaderView.ResizeToContents if haveResizeableContents else QtWidgets.QHeaderView.Fixed
 			)
+
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
-			if self.__overrideStretch:
-				self.__tableView.setSizePolicy(
-					QtWidgets.QSizePolicy(
-						QtWidgets.QSizePolicy.Expanding,
-						QtWidgets.QSizePolicy.Expanding
-					)
+			horizontalSizePolicy = QtWidgets.QSizePolicy.Expanding
+			if self.__tableView.horizontalScrollMode() == QtCore.Qt.ScrollBarAlwaysOff and not canStretch :
+				horizontalSizePolicy = QtWidgets.QSizePolicy.Fixed
+
+			self.__tableView.setSizePolicy(
+				QtWidgets.QSizePolicy(
+					horizontalSizePolicy,
+					QtWidgets.QSizePolicy.Maximum
 				)
-			else:
-				self.__tableView.setSizePolicy(
-					QtWidgets.QSizePolicy(
-						QtWidgets.QSizePolicy.Expanding if canStretch else QtWidgets.QSizePolicy.Fixed,
-						QtWidgets.QSizePolicy.Maximum
-					)
-				)
+			)
 
 			selectionModel = self.__tableView.selectionModel()
 			selectionModel.selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
