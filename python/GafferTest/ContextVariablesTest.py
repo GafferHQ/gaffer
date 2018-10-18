@@ -175,5 +175,17 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 			c.setFrame( 4 )
 			self.assertEqual( s["c"]["out"].getValue(), "ABC" )
 
+	def testEnabledPlugAffectsOutput( self ) :
+
+		c = Gaffer.ContextVariablesComputeNode()
+		c["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["enabled"].setValue( False )
+
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( { x[0] for x in cs }, { c["enabled"], c["out"] } )
+
 if __name__ == "__main__":
 	unittest.main()

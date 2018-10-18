@@ -124,7 +124,7 @@ void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::Aff
 		}
 	}
 
-	if( affectsContext( input ) )
+	if( input == enabledPlug() || affectsContext( input ) )
 	{
 		Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
 		for( OutputPlugIterator it( n ); !it.done(); ++it )
