@@ -192,8 +192,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 			"editable" : False, "header" : True,
 			"horizontalScrollMode" : GafferUI.ScrollMode.Automatic,
 			"verticalScrollMode" : GafferUI.ScrollMode.Automatic,
-			"overrideStretch" : True,
-			"extendColumnToolTipsToData" : False
+			"overrideStretch" : True
 		}
 
 		self.__dataWidgets[IECoreScene.PrimitiveVariable.Interpolation.Constant] = GafferUI.VectorDataWidget( **vectorDataWidgetOptions )
