@@ -485,7 +485,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
 		{
-			return new OpenGLAttributes( attributes );
+			OpenGLAttributesPtr result = new OpenGLAttributes( attributes );
+			m_editQueue.push( [ this, result ]() { m_attributes.push_back( result ); } );
+			return result;
 		}
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
@@ -695,6 +697,15 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				),
 				m_objects.end()
 			);
+
+			m_attributes.erase(
+				remove_if(
+					m_attributes.begin(),
+					m_attributes.end(),
+					[]( const OpenGLAttributesPtr &a ) { return a->refCount() == 1; }
+				),
+				m_attributes.end()
+			);
 		}
 
 		void renderObjects( IECoreGL::State *currentState )
@@ -852,6 +863,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		typedef std::vector<OpenGLObjectPtr> OpenGLObjectVector;
 		OpenGLObjectVector m_objects;
+
+		typedef std::vector<OpenGLAttributesPtr> OpenGLAttributesVector;
+		OpenGLAttributesVector m_attributes;
 
 		// Registration with factory
 		static Renderer::TypeDescription<OpenGLRenderer> g_typeDescription;
