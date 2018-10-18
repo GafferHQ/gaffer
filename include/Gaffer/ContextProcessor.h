@@ -59,6 +59,15 @@ class IECORE_EXPORT ContextProcessor : public BaseType
 		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
 		~ContextProcessor() override;
 
+		/// \undoable
+		void setup( const ValuePlug *plug );
+
+		ValuePlug *inPlug();
+		const ValuePlug *inPlug() const;
+
+		ValuePlug *outPlug();
+		const ValuePlug *outPlug() const;
+
 		BoolPlug *enabledPlug() override;
 		const BoolPlug *enabledPlug() const override;
 

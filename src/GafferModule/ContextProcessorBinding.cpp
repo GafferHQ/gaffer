@@ -49,10 +49,24 @@ using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 
+namespace
+{
+
+void setup( ContextProcessorComputeNode &n, const ValuePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	n.setup( &plug );
+}
+
+} // namespace
+
 void GafferModule::bindContextProcessor()
 {
 
-	DependencyNodeClass<ContextProcessorComputeNode>();
+	DependencyNodeClass<ContextProcessorComputeNode>()
+		.def( "setup", &setup )
+	;
+
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();
 	DependencyNodeClass<DeleteContextVariablesComputeNode>();

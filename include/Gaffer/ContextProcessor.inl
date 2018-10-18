@@ -37,6 +37,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
@@ -65,6 +66,53 @@ ContextProcessor<BaseType>::ContextProcessor( const std::string &name )
 template<typename BaseType>
 ContextProcessor<BaseType>::~ContextProcessor()
 {
+}
+
+template<typename BaseType>
+void ContextProcessor<BaseType>::setup( const ValuePlug *plug )
+{
+	if( inPlug() )
+	{
+		throw IECore::Exception( "ContextProcessor already has an \"in\" plug." );
+	}
+	if( outPlug() )
+	{
+		throw IECore::Exception( "ContextProcessor already has an \"out\" plug." );
+	}
+
+	PlugPtr in = plug->createCounterpart( "in", Plug::In );
+	MetadataAlgo::copyColors( plug , in.get() , /* overwrite = */ false  );
+	in->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	BaseType::addChild( in );
+
+	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
+	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
+	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	BaseType::addChild( out );
+}
+
+template<typename BaseType>
+ValuePlug *ContextProcessor<BaseType>::inPlug()
+{
+	return BaseType::template getChild<ValuePlug>( "in" );
+}
+
+template<typename BaseType>
+const ValuePlug *ContextProcessor<BaseType>::inPlug() const
+{
+	return BaseType::template getChild<ValuePlug>( "in" );
+}
+
+template<typename BaseType>
+ValuePlug *ContextProcessor<BaseType>::outPlug()
+{
+	return BaseType::template getChild<ValuePlug>( "out" );
+}
+
+template<typename BaseType>
+const ValuePlug *ContextProcessor<BaseType>::outPlug() const
+{
+	return BaseType::template getChild<ValuePlug>( "out" );
 }
 
 template<typename BaseType>
@@ -126,23 +174,21 @@ void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::Aff
 
 	if( input == enabledPlug() || affectsContext( input ) )
 	{
-		Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
-		for( OutputPlugIterator it( n ); !it.done(); ++it )
+		if( const Plug *out = outPlug() )
 		{
-			const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
-			if( 0 == valuePlug->getName().string().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
+			if( out->children().size() )
 			{
-				if( valuePlug->children().size() )
+				for( RecursiveOutputPlugIterator it( out ); !it.done(); ++it )
 				{
-					for( ValuePlugIterator cIt( valuePlug ); !cIt.done(); ++cIt )
+					if( !(*it)->children().size() )
 					{
-						outputs.push_back( cIt->get() );
+						outputs.push_back( it->get() );
 					}
 				}
-				else
-				{
-					outputs.push_back( valuePlug );
-				}
+			}
+			else
+			{
+				outputs.push_back( out );
 			}
 		}
 	}
@@ -232,11 +278,8 @@ const ValuePlug *ContextProcessor<BaseType>::correspondingDescendant( const Valu
 template<typename BaseType>
 const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug ) const
 {
-	const static IECore::InternedString inName( "in" );
-	const static IECore::InternedString outName( "out" );
-
-	const ValuePlug *inPlug = BaseType::template getChild<ValuePlug>( inName );
-	const ValuePlug *outPlug = BaseType::template getChild<ValuePlug>( outName );
+	const ValuePlug *inPlug = this->inPlug();
+	const ValuePlug *outPlug = this->outPlug();
 
 	if( !( outPlug && inPlug ) )
 	{
