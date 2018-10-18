@@ -57,13 +57,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# of identical length.
 	#
 	# header may be False for no header, True for a default header, or a list of
-	# strings to specify a custom header per column. If the VectorDataWidget data is set to
-	# [V3fVectorData] then a list of three column headings is required.
-	#
-	# If a headerPrefix defines the prefix for each set of columns from the same data
-	# For example [V3fVectorData, V3fVectorData] would require 5 elements if using headers or
-	# only 2 using headerPrefix.  if headerPrefix = ['first', 'second'] then the following column
-	# names would appear in the table: [ 'first.x', 'first.y', 'first.z', 'second.x', 'second.y' ]
+	# strings to specify a custom header per data.
 	#
 	# minimumVisibleRows specifies a number of rows after which a vertical scroll bar
 	# may become visible - before this all rows should be directly visible with no need
@@ -82,7 +76,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 		data=None,
 		editable=True,
 		header=False,
-		headerPrefix=None,
 		showIndices=True,
 		minimumVisibleRows=8,
 		columnToolTips=None,
@@ -174,12 +167,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
 		self.__editSignal = Gaffer.Signal3()
 
-		if isinstance( header, list ) :
-			self.__headerOverride = header
-		else :
-			self.__headerOverride = None
-
-		self.__headerPrefix = headerPrefix
+		self.__headerOverride  = None
+		self.setHeader( header )
 
 		self.__columnToolTips = columnToolTips
 		self.__columnEditability = columnEditability
@@ -217,8 +206,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips, self.__columnEditability,
-				headerPrefix = self.__headerPrefix )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips, self.__columnEditability )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
@@ -283,9 +271,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return self.__columnToolTips
 
-	def setHeaderPrefix( self, prefix ):
-
-		self.__headerPrefix = prefix
+	def setHeader( self, header ):
+		if isinstance( header, list ) :
+			self.__headerOverride = header
+		else :
+			self.__headerOverride = None
 
 	def getHeaderPrefix( self ):
 
@@ -822,7 +812,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	__addValueText = "Add..."
 
-	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None, columnEditability=None, headerPrefix=None) :
+	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None, columnEditability=None ) :
 
 		QtCore.QAbstractTableModel.__init__( self, parent )
 
@@ -836,10 +826,10 @@ class _Model( QtCore.QAbstractTableModel ) :
 		self.__columns = []
 		self.__accessors = []
 		index = 0
-		if not headerPrefix:
+		if not header:
 			headerPrefixes = [None] * len( self.__data )
 		else:
-			headerPrefixes = headerPrefix
+			headerPrefixes = header
 
 		if columnToolTips:
 			self.__columnToolTips = []
@@ -934,11 +924,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
-				if self.__header is not None :
-					return GafferUI._Variant.toVariant( self.__header[section] )
-				else :
-					column = self.__columns[section]
-					return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
+				column = self.__columns[section]
+				return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
 			else :
 				return GafferUI._Variant.toVariant( section )
 		elif role == QtCore.Qt.ToolTipRole :

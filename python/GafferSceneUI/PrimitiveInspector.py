@@ -327,7 +327,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 								"{0} ({1})".format( str( interpolation ), len( pv ) ) )
 
 							self.__dataWidgets[interpolation].setColumnToolTips( t )
-							self.__dataWidgets[interpolation].setHeaderPrefix( h )
+							self.__dataWidgets[interpolation].setHeader( h )
 							self.__dataWidgets[interpolation].setData( pv )
 			else:
 
