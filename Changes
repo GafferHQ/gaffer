@@ -1,3 +1,15 @@
+0.51.0.1
+========
+
+Fixes
+-----
+
+- Restore FilterSwitch/UnionFilter compatibility for pre-0.29 gaffer scripts.
+- SceneElementProcessor : Fix over-zealous dirty propagation.
+- ImageNode : Fix over-zealous dirty propagation.
+- OpenGLRenderer : Fix GL resource management threading bug
+- Docs : Fix "Script Performance" link in index.md
+
 0.51.0.0
 ========
 

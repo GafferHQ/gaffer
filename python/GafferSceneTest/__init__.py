@@ -132,6 +132,7 @@ from RenderControllerTest import RenderControllerTest
 from CollectPrimitiveVariablesTest import CollectPrimitiveVariablesTest
 from PrimitiveVariableExistsTest import PrimitiveVariableExistsTest
 from CollectTransformsTest import CollectTransformsTest
+from FilterProcessorTest import FilterProcessorTest
 
 from IECoreGLPreviewTest import *
 

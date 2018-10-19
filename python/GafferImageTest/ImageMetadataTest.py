@@ -191,5 +191,12 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 				self.assertEqual( i["out"]["channelData"].hash(), m["out"]["channelData"].hash() )
 				self.assertEqual( i["out"]["channelData"].getValue(), m["out"]["channelData"].getValue() )
 
+	def testEnabledOnlyAffectsMetadata( self ) :
+
+		m = GafferImage.ImageMetadata()
+		cs = GafferTest.CapturingSlot( m.plugDirtiedSignal() )
+		m["enabled"].setValue( False )
+		self.assertEqual( { x[0] for x in cs }, { m["enabled"], m["out"]["metadata"], m["out"] } )
+
 if __name__ == "__main__":
 	unittest.main()

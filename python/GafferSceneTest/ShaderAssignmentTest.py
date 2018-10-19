@@ -376,5 +376,26 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( box["n2"]["in"].source().isSame( s["n1"]["out"] ) )
 		self.assertTrue( s["n3"]["in"].source().isSame( box["n2"]["out"] ) )
 
+	def testFilterOnlyAffectsAttributes( self ) :
+
+		f = GafferScene.PathFilter()
+		s = GafferScene.ShaderAssignment()
+		s["filter"].setInput( f["out"] )
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		f["enabled"].setValue( False )
+		self.assertEqual( { x[0] for x in cs }, { s["filter"], s["out"]["attributes"], s["out"] } )
+
+	def testPassThroughsDontDeclareDependency( self ) :
+
+		s = GafferScene.ShaderAssignment()
+		for inChild in s["in"] :
+			outChild = s["out"].getChild( inChild.getName() )
+			if outChild.getInput() is not None :
+				self.assertNotIn( outChild, s.affects( inChild ) )
+			else :
+				self.assertEqual( outChild.getName(), "attributes" )
+				self.assertIn( outChild, s.affects( inChild ) )
+
 if __name__ == "__main__":
 	unittest.main()
