@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,38 +37,29 @@
 import Gaffer
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+class SceneContextVariables( Gaffer.ContextVariablesComputeNode ) :
 
-	GafferScene.SceneTimeWarp,
+	def __init__( self, name = "SceneContextVariables" ) :
 
-	"description",
-	"""
-	Changes the time at which upstream nodes are evaluated using
-	the following formula :
+		Gaffer.ContextVariablesComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	`upstreamFrame = frame * speed + offset`
-	""",
+GafferScene.SceneContextVariables = SceneContextVariables
 
-	plugs = {
+class DeleteSceneContextVariables( Gaffer.DeleteContextVariablesComputeNode ) :
 
-		"speed" : [
+	def __init__( self, name = "DeleteSceneContextVariables" ) :
 
-			"description",
-			"""
-			Multiplies the current frame value.
-			"""
+		Gaffer.DeleteContextVariablesComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-		],
+GafferScene.DeleteSceneContextVariables = DeleteSceneContextVariables
 
-		"offset" : [
+class SceneTimeWarp( Gaffer.TimeWarpComputeNode ) :
 
-			"description",
-			"""
-			Adds to the current frame value (after multiplication with speed).
-			"""
+	def __init__( self, name = "SceneTimeWarp" ) :
 
-		],
+		Gaffer.TimeWarpComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	}
-
-)
+GafferScene.SceneTimeWarp = SceneTimeWarp

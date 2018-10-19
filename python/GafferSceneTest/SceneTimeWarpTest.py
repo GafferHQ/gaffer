@@ -56,22 +56,6 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["n"]["speed"].getValue(), 1 )
 		self.assertEqual( s["n"]["offset"].getValue(), 0 )
 
-	def testRunTimeTyped( self ) :
-
-		n = GafferScene.SceneTimeWarp()
-		self.failUnless( n.isInstanceOf( GafferScene.SceneTimeWarp.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( GafferScene.SceneContextProcessor.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( GafferScene.SceneProcessor.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( GafferScene.SceneNode.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
-
-		baseTypeIds = IECore.RunTimeTyped.baseTypeIds( n.typeId() )
-
-		self.failUnless( GafferScene.SceneContextProcessor.staticTypeId() in baseTypeIds )
-		self.failUnless( GafferScene.SceneProcessor.staticTypeId() in baseTypeIds )
-		self.failUnless( GafferScene.SceneNode.staticTypeId() in baseTypeIds )
-		self.failUnless( Gaffer.Node.staticTypeId() in baseTypeIds )
-
 	def testAffects( self ) :
 
 		n = GafferScene.SceneTimeWarp()
