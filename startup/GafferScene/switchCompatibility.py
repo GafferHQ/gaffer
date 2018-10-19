@@ -34,8 +34,14 @@
 #
 ##########################################################################
 
+import types
+
 import Gaffer
 import GafferScene
+
+##########################################################################
+# Simple stubs for the old specialised Switch nodes.
+##########################################################################
 
 class SceneSwitch( Gaffer.Switch ) :
 
@@ -69,3 +75,33 @@ class FilterSwitch( Gaffer.Switch ) :
 		self.setup( GafferScene.FilterPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Cacheable ) )
 
 GafferScene.FilterSwitch = FilterSwitch
+
+##########################################################################
+# Code to auto-convert old IntPlugs to FilterPlugs when adding
+# children to FilterProcessor.in. This maintains compatibility with
+# files prior to version 0.28.0.0.
+##########################################################################
+
+def __filterProcessorAddChild( self, child ) :
+
+	if type( child ) == Gaffer.IntPlug :
+		scriptNode = self.ancestor( Gaffer.ScriptNode )
+		if scriptNode is not None and scriptNode.isExecuting() :
+			child = GafferScene.FilterPlug( name = child.getName(), direction = child.direction(), flags = child.getFlags() )
+
+	self.__class__.addChild( self, child )
+
+def __filterProcessorGetItemWrapper( originalGetItem ) :
+
+	def getItem( self, key ) :
+
+		result = originalGetItem( self, key )
+		if key == "in" and isinstance( result, Gaffer.ArrayPlug ) :
+			result.addChild = types.MethodType( __filterProcessorAddChild, result )
+
+		return result
+
+	return getItem
+
+GafferScene.FilterSwitch.__getitem__ = __filterProcessorGetItemWrapper( GafferScene.FilterSwitch.__getitem__ )
+GafferScene.FilterProcessor.__getitem__ = __filterProcessorGetItemWrapper( GafferScene.FilterProcessor.__getitem__ )
