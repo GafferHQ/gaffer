@@ -164,7 +164,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		s["paths"].setValue( IECore.StringVectorData( [ "/pla*" ] ) )
 
-		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
+		self.assertTrue( a["out"]["set"] in set( [ c[0] for c in cs ] ) )
 		self.assertTrue( a["out"]["attributes"] in set( [ c[0] for c in cs ] ) )
 
 	def testAcceptsDots( self ) :
