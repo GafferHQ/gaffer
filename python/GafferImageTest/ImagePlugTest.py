@@ -135,9 +135,9 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertTypeNamesArePrefixed(
 			GafferImage,
 			namesToIgnore = {
-				"Gaffer::Switch", "Gaffer::ContextVariablesComputeNode",
-				"Gaffer::DeleteContextVariablesComputeNode",
-				"Gaffer::TimeWarpComputeNode"
+				"Gaffer::Switch", "Gaffer::ContextVariables",
+				"Gaffer::DeleteContextVariables",
+				"Gaffer::TimeWarp"
 			}
 		)
 		self.assertTypeNamesArePrefixed( GafferImageTest )

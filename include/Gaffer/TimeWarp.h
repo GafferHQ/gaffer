@@ -43,14 +43,12 @@
 namespace Gaffer
 {
 
-template<typename BaseType>
-class IECORE_EXPORT TimeWarp : public ContextProcessor<BaseType>
+class IECORE_EXPORT TimeWarp : public ContextProcessor
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TimeWarp<BaseType>, ContextProcessor<BaseType> );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TimeWarp<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::TimeWarp, TimeWarpTypeId, ContextProcessor );
 
 		TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
 		~TimeWarp() override;
@@ -66,10 +64,13 @@ class IECORE_EXPORT TimeWarp : public ContextProcessor<BaseType>
 		bool affectsContext( const Plug *input ) const override;
 		void processContext( Context::EditableScope &context ) const override;
 
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
 
-typedef TimeWarp<ComputeNode> TimeWarpComputeNode;
-IE_CORE_DECLAREPTR( TimeWarpComputeNode );
+IE_CORE_DECLAREPTR( TimeWarp );
 
 } // namespace Gaffer
 

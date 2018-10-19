@@ -52,7 +52,7 @@ using namespace GafferBindings;
 namespace
 {
 
-void setup( ContextProcessorComputeNode &n, const ValuePlug &plug )
+void setup( ContextProcessor &n, const ValuePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	n.setup( &plug );
@@ -63,12 +63,12 @@ void setup( ContextProcessorComputeNode &n, const ValuePlug &plug )
 void GafferModule::bindContextProcessor()
 {
 
-	DependencyNodeClass<ContextProcessorComputeNode>()
+	DependencyNodeClass<ContextProcessor>()
 		.def( "setup", &setup )
 	;
 
-	DependencyNodeClass<TimeWarpComputeNode>();
-	DependencyNodeClass<ContextVariablesComputeNode>();
-	DependencyNodeClass<DeleteContextVariablesComputeNode>();
+	DependencyNodeClass<TimeWarp>();
+	DependencyNodeClass<ContextVariables>();
+	DependencyNodeClass<DeleteContextVariables>();
 
 }

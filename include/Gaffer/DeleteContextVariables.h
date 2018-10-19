@@ -44,14 +44,12 @@
 namespace Gaffer
 {
 
-template<typename BaseType>
-class IECORE_EXPORT DeleteContextVariables : public ContextProcessor<BaseType>
+class IECORE_EXPORT DeleteContextVariables : public ContextProcessor
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( DeleteContextVariables<BaseType>, ContextProcessor<BaseType> );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( DeleteContextVariables<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::DeleteContextVariables, DeleteContextVariablesTypeId, ContextProcessor );
 
 		DeleteContextVariables( const std::string &name=GraphComponent::defaultName<DeleteContextVariables>() );
 		~DeleteContextVariables() override;
@@ -70,8 +68,7 @@ class IECORE_EXPORT DeleteContextVariables : public ContextProcessor<BaseType>
 
 };
 
-typedef DeleteContextVariables<ComputeNode> DeleteContextVariablesComputeNode;
-IE_CORE_DECLAREPTR( DeleteContextVariablesComputeNode );
+IE_CORE_DECLAREPTR( DeleteContextVariables );
 
 } // namespace Gaffer
 

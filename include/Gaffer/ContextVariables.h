@@ -44,14 +44,12 @@
 namespace Gaffer
 {
 
-template<typename BaseType>
-class IECORE_EXPORT ContextVariables : public ContextProcessor<BaseType>
+class IECORE_EXPORT ContextVariables : public ContextProcessor
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextVariables<BaseType>, ContextProcessor<BaseType> );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextVariables<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ContextVariables, ContextVariablesTypeId, ContextProcessor );
 
 		ContextVariables( const std::string &name=GraphComponent::defaultName<ContextVariables>() );
 		~ContextVariables() override;
@@ -73,8 +71,7 @@ class IECORE_EXPORT ContextVariables : public ContextProcessor<BaseType>
 
 };
 
-typedef ContextVariables<ComputeNode> ContextVariablesComputeNode;
-IE_CORE_DECLAREPTR( ContextVariablesComputeNode );
+IE_CORE_DECLAREPTR( ContextVariables );
 
 } // namespace Gaffer
 

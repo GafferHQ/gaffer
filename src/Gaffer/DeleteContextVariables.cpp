@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextVariables.inl"
+#include "Gaffer/DeleteContextVariables.h"
 
-namespace Gaffer
+#include "Gaffer/Context.h"
+
+#include "IECore/SimpleTypedData.h"
+
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( DeleteContextVariables );
+
+size_t DeleteContextVariables::g_firstPlugIndex;
+
+DeleteContextVariables::DeleteContextVariables( const std::string &name )
+	:	ContextProcessor( name )
 {
-
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ContextVariablesComputeNode, ContextVariablesComputeNodeTypeId )
-
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "variables" ) );
 }
 
-// explicit instantiation
-template class Gaffer::ContextVariables<Gaffer::ComputeNode>;
+DeleteContextVariables::~DeleteContextVariables()
+{
+}
+
+StringPlug *DeleteContextVariables::variablesPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *DeleteContextVariables::variablesPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+bool DeleteContextVariables::affectsContext( const Plug *input ) const
+{
+	return input == variablesPlug();
+}
+
+void DeleteContextVariables::processContext( Context::EditableScope &context ) const
+{
+	context.removeMatching( variablesPlug()->getValue() );
+}

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TimeWarp.inl"
+#include "Gaffer/TimeWarp.h"
 
-namespace Gaffer
+#include "Gaffer/Context.h"
+#include "Gaffer/ContextAlgo.h"
+
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( TimeWarp );
+
+size_t TimeWarp::g_firstPlugIndex;
+
+TimeWarp::TimeWarp( const std::string &name )
+	:	ContextProcessor( name )
 {
-
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::TimeWarpComputeNode, TimeWarpComputeNodeTypeId )
-
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new FloatPlug( "speed", Plug::In, 1.0f ) );
+	addChild( new FloatPlug( "offset" ) );
 }
 
-// explicit instantiation
-template class Gaffer::TimeWarp<Gaffer::ComputeNode>;
+TimeWarp::~TimeWarp()
+{
+}
+
+FloatPlug *TimeWarp::speedPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex );
+}
+
+const FloatPlug *TimeWarp::speedPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex );
+}
+
+FloatPlug *TimeWarp::offsetPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
+const FloatPlug *TimeWarp::offsetPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
+bool TimeWarp::affectsContext( const Plug *input ) const
+{
+	return input == speedPlug() || input == offsetPlug();
+}
+
+void TimeWarp::processContext( Context::EditableScope &context ) const
+{
+	float frame;
+	{
+		const Context *c = Context::current();
+		ContextAlgo::GlobalScope globalScope( c, inPlug() );
+		frame = c->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue();
+	}
+	context.setFrame( frame );
+}

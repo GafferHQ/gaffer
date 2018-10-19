@@ -284,7 +284,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		ColorInspector( ImageView *view )
 			:	m_view( view ),
 				m_pixel( new V2fContextVariable ),
-				m_deleteContextVariables( new DeleteContextVariablesComputeNode ),
+				m_deleteContextVariables( new DeleteContextVariables ),
 				m_sampler( new ImageSampler )
 		{
 			PlugPtr plug = new Plug( "colorInspector" );
@@ -341,7 +341,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 
 		ImageView *m_view;
 		V2fContextVariablePtr m_pixel;
-		DeleteContextVariablesComputeNodePtr m_deleteContextVariables;
+		DeleteContextVariablesPtr m_deleteContextVariables;
 		ImageSamplerPtr m_sampler;
 
 };
