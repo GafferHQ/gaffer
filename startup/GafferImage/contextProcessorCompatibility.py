@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,41 +37,29 @@
 import Gaffer
 import GafferImage
 
-Gaffer.Metadata.registerNode(
+class ImageContextVariables( Gaffer.ContextVariablesComputeNode ) :
 
-	GafferImage.ImageTimeWarp,
+	def __init__( self, name = "ImageContextVariables" ) :
 
-	"description",
-	"""
-	Changes the time at which upstream nodes are evaluated using
-	the following formula :
+		Gaffer.ContextVariablesComputeNode.__init__( self, name )
+		self.setup( GafferImage.ImagePlug() )
 
-	`upstreamFrame = frame * speed + offset`
+GafferImage.ImageContextVariables = ImageContextVariables
 
-	Note that this node does not perform frame blending of any sort -
-	it is the responsibility of nodes upstream to do this.
-	""",
+class DeleteImageContextVariables( Gaffer.DeleteContextVariablesComputeNode ) :
 
-	plugs = {
+	def __init__( self, name = "DeleteImageContextVariables" ) :
 
-		"speed" : [
+		Gaffer.DeleteContextVariablesComputeNode.__init__( self, name )
+		self.setup( GafferImage.ImagePlug() )
 
-			"description",
-			"""
-			Multiplies the current frame value.
-			"""
+GafferImage.DeleteImageContextVariables = DeleteImageContextVariables
 
-		],
+class ImageTimeWarp( Gaffer.TimeWarpComputeNode ) :
 
-		"offset" : [
+	def __init__( self, name = "ImageTimeWarp" ) :
 
-			"description",
-			"""
-			Adds to the current frame value (after multiplication with speed).
-			"""
+		Gaffer.TimeWarpComputeNode.__init__( self, name )
+		self.setup( GafferImage.ImagePlug() )
 
-		],
-
-	}
-
-)
+GafferImage.ImageTimeWarp = ImageTimeWarp
