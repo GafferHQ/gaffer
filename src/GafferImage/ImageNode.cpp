@@ -281,6 +281,13 @@ void ImageNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	{
 		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
+			if( (*it)->getInput() )
+			{
+				// If the output gets its value from an input connection.
+				// there will be no compute for it, so we shouldn't declare
+				// a dependency.
+				continue;
+			}
 			outputs.push_back( it->get() );
 		}
 	}
