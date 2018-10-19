@@ -40,7 +40,6 @@
 #include "GafferImageUI/ImageGadget.h"
 
 #include "GafferImage/Clamp.h"
-#include "GafferImage/DeleteImageContextVariables.h"
 #include "GafferImage/Format.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/ImagePlug.h"
@@ -52,6 +51,7 @@
 #include "GafferUI/Style.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreGL/IECoreGL.h"
@@ -284,7 +284,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		ColorInspector( ImageView *view )
 			:	m_view( view ),
 				m_pixel( new V2fContextVariable ),
-				m_deleteContextVariables( new DeleteImageContextVariables ),
+				m_deleteContextVariables( new DeleteContextVariablesComputeNode ),
 				m_sampler( new ImageSampler )
 		{
 			PlugPtr plug = new Plug( "colorInspector" );
@@ -302,6 +302,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			// And we use a DeleteContextVariables node to make sure that our
 			// private context variable doesn't become visible to the upstream
 			// graph.
+			m_deleteContextVariables->setup( view->inPlug<ImagePlug>() );
 			m_deleteContextVariables->variablesPlug()->setValue( "colorInspector:pixel" );
 
 			// We want to sample the image before the display transforms
@@ -340,7 +341,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 
 		ImageView *m_view;
 		V2fContextVariablePtr m_pixel;
-		DeleteImageContextVariablesPtr m_deleteContextVariables;
+		DeleteContextVariablesComputeNodePtr m_deleteContextVariables;
 		ImageSamplerPtr m_sampler;
 
 };
