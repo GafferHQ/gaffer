@@ -71,19 +71,28 @@ SceneElementProcessor::~SceneElementProcessor()
 
 void SceneElementProcessor::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	/// \todo Our base classes will say that enabledPlug() affects all children of outPlug() - perhaps
-	/// we can do better by affecting only the plugs we know we're going to process?
 	FilteredSceneProcessor::affects( input, outputs );
 
 	const ScenePlug *in = inPlug();
 	if( input->parent<ScenePlug>() == in )
 	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+		const ValuePlug *output = outPlug()->getChild<ValuePlug>( input->getName() );
+		if( !output->getInput() )
+		{
+			outputs.push_back( output );
+		}
 	}
 	else if( input == filterPlug() )
 	{
 		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
+			if( (*it)->getInput() )
+			{
+				// If the output has been connected as a pass-through,
+				// then it clearly can't be affected by the filter plug,
+				// because there won't even be a compute() call for it.
+				continue;
+			}
 			outputs.push_back( it->get() );
 		}
 	}
