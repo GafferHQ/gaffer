@@ -40,7 +40,7 @@ import unittest
 import Gaffer
 import GafferTest
 
-class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
+class TimeWarpTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 

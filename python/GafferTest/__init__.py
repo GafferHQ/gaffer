@@ -88,7 +88,7 @@ from NodeBindingTest import NodeBindingTest
 from DictPathTest import DictPathTest
 from ExpressionTest import ExpressionTest
 from BlockedConnectionTest import BlockedConnectionTest
-from TimeWarpComputeNodeTest import TimeWarpComputeNodeTest
+from TimeWarpTest import TimeWarpTest
 from TransformPlugTest import TransformPlugTest
 from Transform2DPlugTest import Transform2DPlugTest
 from SequencePathTest import SequencePathTest
