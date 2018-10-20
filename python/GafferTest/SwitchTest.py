@@ -131,10 +131,24 @@ class SwitchTest( GafferTest.TestCase ) :
 		n["in"][0].setInput( self.intPlug( 0 ) )
 		n["in"][1].setInput( self.intPlug( 0 ) )
 
-		for plug in [ n["enabled"], n["index"], n["in"][0], n["in"][1] ] :
+		for plug in [ n["enabled"], n["index"] ] :
 			a = n.affects( plug )
 			self.assertEqual( len( a ), 1 )
 			self.assertTrue( a[0].isSame( n["out"] ) )
+
+		# Because the constant-index case is optimised
+		# via a pass-through connection, the inputs should
+		# not affect the output (dependency is carried by
+		# the connection instead).
+		for plug in [ n["in"][0], n["in"][1] ] :
+			self.assertEqual( n.affects( plug ), [] )
+
+		# Now the index is computed, the dependencies
+		# must be declared.
+		a = GafferTest.AddNode()
+		n["index"].setInput( a["sum"] )
+		for plug in [ n["in"][0], n["in"][1] ] :
+			self.assertEqual( n.affects( plug ), [ n["out"] ] )
 
 		self.assertEqual( n.affects( n["out"] ), [] )
 
@@ -451,6 +465,26 @@ class SwitchTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( s["s"]["out"], "connectionGadget:color" ), connectionColor )
 		self.assertEqual( Gaffer.Metadata.value( s["s"]["out"], "nodule:color" ), noodleColor )
+
+	def testInactiveInputsDontPropagateDirtiness( self ) :
+
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+
+		s = Gaffer.Switch()
+		s.setup( n1["sum"] )
+		s["in"][0].setInput( n1["sum"] )
+		s["in"][1].setInput( n2["sum"] )
+
+		# Because the index is constant, the switch should
+		# have a direct pass-through connection.
+		self.assertEqual( s["out"].source(), n1["sum"] )
+
+		# Which means that the inactive inputs should not
+		# affect the output of the switch at all.
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		n2["op1"].setValue( 10 )
+		self.assertNotIn( s["out"], { x[0] for x in cs } )
 
 	def setUp( self ) :
 
