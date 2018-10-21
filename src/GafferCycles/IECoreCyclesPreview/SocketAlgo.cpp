@@ -59,12 +59,12 @@ void convert( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data
 	}
 }
 
-template<typename T, typename U, typename V>
+template<typename T, typename U>
 void dataToArray( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )
 {
-	if( const V *data = static_cast<const V *>( value ) )
+	if( const U *data = static_cast<const U *>( value ) )
 	{
-		const vector<U> &vector = data->readable();
+		const auto &vector = data->readable();
 		ccl::array<T> array( vector.size() );
 		memcpy((void*)array.data(), &vector[0], vector.size() * sizeof(T) );
 		node->set( *socket, array );
@@ -227,21 +227,21 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			}
 			break;
 		case ccl::SocketType::FLOAT_ARRAY:
-			dataToArray<float, float, FloatVectorData>( node, socket, value );
+			dataToArray<float, FloatVectorData>( node, socket, value );
 			break;
 		case ccl::SocketType::INT_ARRAY:
-			dataToArray<int, int, IntVectorData>( node, socket, value );
+			dataToArray<int, IntVectorData>( node, socket, value );
 			break;
 		case ccl::SocketType::COLOR_ARRAY:
-			dataToArray<ccl::float3, Color3f, Color3fVectorData>( node, socket, value );
+			dataToArray<ccl::float3, Color3fVectorData>( node, socket, value );
 			break;
 		case ccl::SocketType::VECTOR_ARRAY:
 		case ccl::SocketType::POINT_ARRAY:
 		case ccl::SocketType::NORMAL_ARRAY:
-			dataToArray<ccl::float3, V3f, V3fVectorData>( node, socket, value );
+			dataToArray<ccl::float3, V3fVectorData>( node, socket, value );
 			break;
 		case ccl::SocketType::POINT2_ARRAY:
-			dataToArray<ccl::float2, V2f, V2fVectorData>( node, socket, value );
+			dataToArray<ccl::float2, V2fVectorData>( node, socket, value );
 		case ccl::SocketType::STRING_ARRAY:
 			if( const StringVectorData *data = static_cast<const StringVectorData *>( value ) )
 			{

@@ -62,6 +62,7 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	if( projection == "perspective" )
 	{
 		ccam->type = ccl::CAMERA_PERSPECTIVE;
+		ccam->fov = M_PI_2;
 		if( camera->getFStop() > 0.0f )
 		{
 			ccam->aperturesize = camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop();
@@ -78,7 +79,10 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 		// TODO: Spec out panorama data
 	}
 	else
+	{
 		ccam->type = ccl::CAMERA_PERSPECTIVE;
+		ccam->fov = M_PI_2;
+	}
 
 	// Screen window/resolution TODO: full_ might be something to do with cropping?
 	const Imath::Box2f &frustum = camera->frustum();
