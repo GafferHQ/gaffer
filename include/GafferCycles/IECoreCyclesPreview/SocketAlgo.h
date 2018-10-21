@@ -49,13 +49,12 @@ namespace IECoreCycles
 namespace SocketAlgo
 {
 
-IECORECYCLES_API void setSocket( const ccl::Node *node, const std::string &input, const IECore::Data *value );
-IECORECYCLES_API void setSocket( const ccl::Node *node, const ccl::SocketType &input, const IECore::Data *value );
-IECORECYCLES_API void setSockets( const ccl::Node *node, const IECore::CompoundDataMap &values );
+IECORECYCLES_API void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value );
+IECORECYCLES_API void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value );
+IECORECYCLES_API void setSockets( ccl::Node *node, const IECore::CompoundDataMap &values );
 
-IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const std::string &input, const IECore::Data *value );
-IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType &input, const IECore::Data *value );
-IECORECYCLES_API void getSockets( const ccl::Node *node, const std::string &input, const IECore::CompoundDataMap &values );
+IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket );
+IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name );
 
 } // namespace SocketAlgo
 
