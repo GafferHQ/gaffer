@@ -79,6 +79,17 @@ def __samplingSummary( plug ) :
 		info.append( "Clamp AOVs {0}".format( "On" if plug["aaSampleClampAffectsAOVs"]["value"].getValue() else "Off" ) )
 	return ", ".join( info )
 
+def __adaptiveSamplingSummary( plug ) :
+
+	info = []
+	if plug["enableAdaptiveSampling"]["enabled"].getValue() :
+		info.append( "Enable %d" % plug["enableAdaptiveSampling"]["value"].getValue() )
+	if plug["aaSamplesMax"]["enabled"].getValue() :
+		info.append( "AA Max %d" % plug["aaSamplesMax"]["value"].getValue() )
+	if plug["aaAdaptiveThreshold"]["enabled"].getValue() :
+		info.append( "Threshold %d" % plug["aaAdaptiveThreshold"]["value"].getValue() )
+	return ", ".join( info )
+
 def __rayDepthSummary( plug ) :
 
 	info = []
@@ -194,6 +205,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
+			"layout:section:Adaptive Sampling:summary", __adaptiveSamplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Texturing:summary", __texturingSummary,
@@ -297,11 +309,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Controls the number of rays per pixel
-			for the first low quality pass of
-			progressive rendering.  -4 will start
-			with large squares, 1 will start one
-			sample for every pixel.
+			Controls the number of rays per pixel for the first low quality pass of
+			progressive rendering.  Used for interactive renders.  -4 will start with
+			large squares, 1 will start one sample for every pixel.
 			""",
 
 			"layout:section", "Sampling",
@@ -437,6 +447,51 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "Indirect Sample Clamp",
+
+		],
+
+		"options.enableAdaptiveSampling" : [
+
+			"description",
+			"""
+			If adaptive sampling is enabled, Arnold will take a minimum
+			of ( aaSamples * aaSamples ) samples per pixel, and will then
+			take up to ( aaSamplesMax * aaSamplesMax ) samples per pixel,
+			or until the remaining estimated noise gets lower than
+			aaAdaptiveThreshold.
+
+			NOTE:  Arnold's adaptive sampling won't do anything if aaSamples == 1 : you need to set aaSamples to at least 2.
+			""",
+
+			"layout:section", "Adaptive Sampling",
+			"label", "Enable Adaptive Sampling",
+
+		],
+
+		"options.aaSamplesMax" : [
+
+			"description",
+			"""
+			The maximum sampling rate during adaptive sampling.  Like
+			aaSamples, this value is squared.  So aaSamplesMax == 6 means up to 36 samples per pixel.
+			""",
+
+			"layout:section", "Adaptive Sampling",
+			"label", "AA Samples Max",
+
+		],
+
+		"options.aaAdaptiveThreshold" : [
+
+			"description",
+			"""
+			How much leftover noise is acceptable when terminating adaptive sampling.  Higher values
+			accept more noise, lower values keep rendering longer to achieve smaller amounts of
+			noise.
+			""",
+
+			"layout:section", "Adaptive Sampling",
+			"label", "AA Adaptive Threshold",
 
 		],
 
