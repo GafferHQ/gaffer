@@ -843,6 +843,51 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( image.blindData()["worldtocamera"].value, 
 			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
 
+	def testCameraMesh( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {} ) )
+		)
+
+		r.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"projection" : "uv_camera",
+					"mesh" : "testPlane"
+				}
+			),
+			r.attributes( IECore.CompoundObject() )
+		)
+
+		r.option( "camera", IECore.StringData( "testCamera" ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+
+			camera = arnold.AiNodeGetPtr( options, "camera" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( camera ) ), "uv_camera" )
+			mesh = arnold.AiNodeGetPtr( camera, "mesh" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
+			self.assertEqual( 
+				arnold.AiNodeGetName( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane" ), "node" ) ),
+				arnold.AiNodeGetName( mesh )
+			)
+
 	def testExrMetadata( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

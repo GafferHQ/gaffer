@@ -2562,7 +2562,7 @@ class ArnoldGlobals
 
 		void render()
 		{
-
+			updateCameraMeshes();
 
 			AiNodeSetInt(
 				AiUniverseGetOptions(), g_aaSeedArnoldString,
@@ -2823,6 +2823,47 @@ class ArnoldGlobals
 				AiNodeSetFlt( arnoldCamera, g_shutterEndArnoldString, shutter[0] );
 			}
 		}
+
+		void updateCameraMeshes()
+		{
+			for( const auto &it : m_cameras )
+			{
+				IECoreScene::ConstCameraPtr cortexCamera = it.second;
+
+				std::string meshPath = parameter( cortexCamera->parameters(), "mesh", std::string("") );
+				if( !meshPath.size() )
+				{
+					continue;
+				}
+
+				AtNode *arnoldCamera = AiNodeLookUpByName( AtString( it.first.c_str() ) );
+				if( !arnoldCamera )
+				{
+					continue;
+				}
+				
+				AtNode *meshNode = AiNodeLookUpByName( AtString( meshPath.c_str() ) );
+				if( meshNode )
+				{
+					AtString meshType = AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( meshNode ) );
+					if( meshType == g_ginstanceArnoldString )
+					{
+						AiNodeSetPtr( arnoldCamera, g_meshArnoldString, AiNodeGetPtr( meshNode, g_nodeArnoldString ) );
+						AiNodeSetMatrix( arnoldCamera, g_matrixArnoldString, AiNodeGetMatrix( meshNode, g_matrixArnoldString ) );
+						continue;
+					}
+					else if( meshType == g_polymeshArnoldString )
+					{
+						AiNodeSetPtr( arnoldCamera, g_meshArnoldString, meshNode );
+						AiNodeSetMatrix( arnoldCamera, g_matrixArnoldString, AiM4Identity() );
+						continue;
+					}
+				}
+
+				throw IECore::Exception( boost::str( boost::format( "While outputting camera \"%s\", could not find target mesh at \"%s\"" ) % it.first % meshPath ) );
+			}
+		}
+
 
 		// Members used by all render types
 
