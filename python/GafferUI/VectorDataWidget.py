@@ -927,8 +927,6 @@ class _Model( QtCore.QAbstractTableModel ) :
 		) :
 			column = self.__columns[index.column()]
 			return column.accessor.getElement( index.row(), column.relativeColumnIndex )
-		elif role == QtCore.Qt.ToolTipRole and self.__columnToolTips is not None :
-			return GafferUI._Variant.toVariant( self.__columnToolTips[index.column()] )
 
 		return GafferUI._Variant.toVariant( None )
 
