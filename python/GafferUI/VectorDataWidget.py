@@ -57,7 +57,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# of identical length.
 	#
 	# header may be False for no header, True for a default header, or a list of
-	# strings to specify a custom header per column.
+	# strings to specify a custom header per data.
 	#
 	# minimumVisibleRows specifies a number of rows after which a vertical scroll bar
 	# may become visible - before this all rows should be directly visible with no need
@@ -167,10 +167,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
 		self.__editSignal = Gaffer.Signal3()
 
-		if isinstance( header, list ) :
-			self.__headerOverride = header
-		else :
-			self.__headerOverride = None
+		self.setHeader( header )
 
 		self.__columnToolTips = columnToolTips
 		self.__columnEditability = columnEditability
@@ -208,7 +205,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips, self.__columnEditability )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__header, self.__columnToolTips, self.__columnEditability )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
@@ -264,6 +261,17 @@ class VectorDataWidget( GafferUI.Widget ) :
 			return []
 
 		return self.__model.vectorData()
+
+	def setHeader( self, header ) :
+
+		if isinstance( header, list ) :
+			self.__header = header
+		else :
+			self.__header = None
+
+	def getHeader( self ):
+
+		return self.__header
 
 	def setEditable( self, editable ) :
 
@@ -894,11 +902,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
+				column = self.__columns[section]
 				if self.__header is not None :
-					return GafferUI._Variant.toVariant( self.__header[section] )
+					result = self.__header[self.columnToDataIndex(section)[0]]
+					if column.accessor.numColumns() > 1 :
+						result += "." + column.accessor.headerLabel( column.relativeColumnIndex )
 				else :
-					column = self.__columns[section]
-					return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
+					result = column.accessor.headerLabel( column.relativeColumnIndex )
+				return GafferUI._Variant.toVariant( result )
 			else :
 				return GafferUI._Variant.toVariant( section )
 		elif role == QtCore.Qt.ToolTipRole :
