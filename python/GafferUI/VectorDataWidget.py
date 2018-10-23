@@ -1038,6 +1038,31 @@ _DataAccessor.registerType( IECore.V3iVectorData.staticTypeId(), _CompoundDataAc
 _DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3dVectorData.staticTypeId(), _CompoundDataAccessor )
 
+class _QuatDataAccessor( _CompoundDataAccessor ) :
+
+	def __init__( self, data, heading = "" ) :
+
+		_CompoundDataAccessor.__init__( self, data, heading = heading )
+
+	def numColumns( self ) :
+
+		return 4
+
+	def getElement( self, rowIndex, columnIndex ) :
+
+		v = self.data()[rowIndex]
+		if columnIndex == 0:
+			return GafferUI._Variant.toVariant( v.v()[0] )
+		if columnIndex == 1:
+			return GafferUI._Variant.toVariant( v.v()[1] )
+		if columnIndex == 2:
+			return GafferUI._Variant.toVariant( v.v()[2] )
+		if columnIndex == 3:
+			return GafferUI._Variant.toVariant( v.r() )
+
+_DataAccessor.registerType( IECore.QuatfVectorData.staticTypeId(), _QuatDataAccessor )
+_DataAccessor.registerType( IECore.QuatdVectorData.staticTypeId(), _QuatDataAccessor )
+
 class _BoxDataAccessor( _CompoundDataAccessor ) :
 
 	def __init__( self, data, heading = "" ) :
@@ -1300,6 +1325,9 @@ _Delegate.registerType( IECore.Box2dVectorData.staticTypeId(), _NumericDelegate 
 _Delegate.registerType( IECore.Box3iVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.Box3fVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.Box3dVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.QuatfVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.QuatdVectorData.staticTypeId(), _NumericDelegate )
 
 class _BoolDelegate( _Delegate ) :
 
