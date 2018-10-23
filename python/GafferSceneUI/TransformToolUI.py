@@ -108,7 +108,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 					GafferUI.Image( "warningSmall.png" )
 					self.__warningLabel = GafferUI.Label( "" )
 
-		self.__tool.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__update ), scoped = False )
+		self.__tool.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ), scoped = False )
 
 		self.__update()
 
@@ -137,6 +137,12 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __update( self, *unused ) :
+
+		if not self.__tool["active"].getValue() :
+			# We're about to be made invisible so all our update
+			# would do is cause unnecessary flickering in Qt's
+			# redraw.
+			return
 
 		toolSelection = self.__tool.selection()
 		selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.context() )
