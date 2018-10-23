@@ -319,6 +319,8 @@ class Instance;
 IE_CORE_FORWARDDECLARE( ShaderCache );
 IE_CORE_FORWARDDECLARE( InstanceCache );
 
+typedef tbb::concurrent_hash_map<std::string, AtNode *> BakeMeshDict;
+
 /// This class implements the basics of outputting attributes
 /// and objects to Arnold, but is not a complete implementation
 /// of the renderer interface. It is subclassed to provide concrete
@@ -347,6 +349,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		NodeDeleter m_nodeDeleter;
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
+		BakeMeshDict m_bakeMeshDict;
 
 	private :
 
@@ -2561,6 +2564,13 @@ class ArnoldGlobals
 			}
 		}
 
+		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
+
+		const CameraMap &cameraMap()
+		{
+			return m_cameras;
+		}
+
 	private :
 
 		void throwError( int errorCode )
@@ -2749,6 +2759,7 @@ class ArnoldGlobals
 			}
 		}
 
+
 		// Members used by all render types
 
 		IECoreScenePreview::Renderer::RenderType m_renderType;
@@ -2765,7 +2776,6 @@ class ArnoldGlobals
 		ArnoldShaderPtr m_background;
 
 		std::string m_cameraName;
-		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		SharedAtNodePtr m_defaultCamera;
 
@@ -2820,6 +2830,17 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
+
+	auto i = camera->parameters().find( "ai:mesh" );
+	if( i != camera->parameters().end() )
+	{
+		const IECore::StringData *meshPath = IECore::runTimeCast<const IECore::StringData>( i->second.get() );
+		if( meshPath )
+		{
+			BakeMeshDict::accessor a;
+			m_bakeMeshDict.insert( a, meshPath->readable() );
+		}
+	}
 	return result;
 }
 
@@ -2836,14 +2857,30 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::st
 	Instance instance = m_instanceCache->get( object, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
+
+	BakeMeshDict::accessor a;
+	if( m_bakeMeshDict.find( a, name ) )
+	{
+		a->second = instance.node();
+	}
+
 	return result;
 }
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 {
+	
+
 	Instance instance = m_instanceCache->get( samples, times, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
+
+	BakeMeshDict::accessor a;
+	if( m_bakeMeshDict.find( a, name ) )
+	{
+		a->second = instance.node();
+	}
+
 	return result;
 }
 
@@ -2893,6 +2930,9 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		{
 			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
+
+			updateCameraMeshes();
+
 			m_globals->render();
 		}
 
@@ -2902,6 +2942,55 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		}
 
 	private :
+
+		void updateCameraMeshes()
+		{
+			for( const auto &it : m_globals->cameraMap() )
+			{
+				IECoreScene::ConstCameraPtr cortexCamera = it.second;
+				auto i = cortexCamera->parameters().find( "ai:mesh" );
+				if( i == cortexCamera->parameters().end() )
+				{
+					continue;
+				}
+
+				const IECore::StringData *meshPath = IECore::runTimeCast<const IECore::StringData>( i->second.get() );
+				if( !meshPath )
+				{
+					continue;
+				}
+
+				AtNode *arnoldCamera = AiNodeLookUpByName( AtString( it.first.c_str() ) );
+				if( !arnoldCamera )
+				{
+					continue;
+				}
+
+				BakeMeshDict::accessor a;
+				if( m_bakeMeshDict.find( a, meshPath->readable() ) )
+				{
+					AtString meshType = AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( a->second ) );
+					if( meshType == g_ginstanceArnoldString )
+					{
+						AiNodeSetPtr( arnoldCamera, g_meshArnoldString, AiNodeGetPtr( a->second, g_nodeArnoldString ) );
+						AiNodeSetMatrix( arnoldCamera, g_matrixArnoldString, AiNodeGetMatrix( a->second, g_matrixArnoldString ) );
+					}
+					else if( meshType == g_polymeshArnoldString )
+					{
+						AiNodeSetPtr( arnoldCamera, g_meshArnoldString, a->second );
+						AiNodeSetMatrix( arnoldCamera, g_matrixArnoldString, AiM4Identity() );
+					}
+					else
+					{
+						// TODO error
+					}
+				}
+				else
+				{
+					// TODO assert?
+				}
+			}
+		}
 
 		std::unique_ptr<ArnoldGlobals> m_globals;
 
