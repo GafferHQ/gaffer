@@ -1029,7 +1029,14 @@ class _CompoundDataAccessor( _DataAccessor ) :
 
 _DataAccessor.registerType( IECore.Color3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.Color4fVectorData.staticTypeId(), _CompoundDataAccessor )
+
+_DataAccessor.registerType( IECore.V2iVectorData.staticTypeId(), _CompoundDataAccessor )
+_DataAccessor.registerType( IECore.V2fVectorData.staticTypeId(), _CompoundDataAccessor )
+_DataAccessor.registerType( IECore.V2dVectorData.staticTypeId(), _CompoundDataAccessor )
+
+_DataAccessor.registerType( IECore.V3iVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
+_DataAccessor.registerType( IECore.V3dVectorData.staticTypeId(), _CompoundDataAccessor )
 
 class _StringDataAccessor( _DataAccessor ) :
 
@@ -1184,7 +1191,14 @@ _Delegate.registerType( IECore.UInt64VectorData.staticTypeId(), _NumericDelegate
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.V2iVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V2fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V2dVectorData.staticTypeId(), _NumericDelegate )
+
+_Delegate.registerType( IECore.V3iVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V3dVectorData.staticTypeId(), _NumericDelegate )
 
 class _BoolDelegate( _Delegate ) :
 
