@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import sys
+
 import imath
 
 import IECore
@@ -83,6 +85,11 @@ class _RightSpacer( GafferUI.Spacer ) :
 
 def _boldFormatter( graphComponents ) :
 
+	with IECore.IgnoredExceptions( ValueError ) :
+		## \todo Should the NameLabel ignore ScriptNodes and their ancestors automatically?
+		scriptNodeIndex = [ isinstance( g, Gaffer.ScriptNode ) for g in graphComponents ].index( True )
+		graphComponents = graphComponents[scriptNodeIndex+1:]
+
 	return "<b>" + ".".join( g.getName() for g in graphComponents ) + "</b>"
 
 class _SelectionWidget( GafferUI.Frame ) :
@@ -100,7 +107,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__infoRow :
 					self.__infoLabel = GafferUI.Label( "" )
-					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = 2 )
+					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = sys.maxint )
 					self.__nameLabel.setFormatter( _boldFormatter )
 					self.__nameLabel.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 
