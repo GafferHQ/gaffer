@@ -64,7 +64,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# for scrolling.
 	#
 	# columnToolTips may be specified as a list of strings to provide a tooltip for
-	# each column.
+	# each data. Note that the `column` part of the name is misleading.
 	#
 	# sizeEditable specifies whether or not items may be added and removed
 	# from the data (assuming it is editable).
@@ -169,7 +169,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.setHeader( header )
 
-		self.__columnToolTips = columnToolTips
+		self.__toolTips = columnToolTips
 		self.__columnEditability = columnEditability
 
 		self.__propagatingDataChangesToSelection = False
@@ -205,7 +205,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__header, self.__columnToolTips, self.__columnEditability )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__header, self.__toolTips, self.__columnEditability )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
@@ -272,6 +272,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def getHeader( self ):
 
 		return self.__header
+
+	def setToolTips( self, toolTips ) :
+
+		self.__toolTips = toolTips
+
+	def getToolTips( self ):
+
+		return self.__toolTips
 
 	def setEditable( self, editable ) :
 
@@ -804,14 +812,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	__addValueText = "Add..."
 
-	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None, columnEditability=None ) :
+	def __init__( self, data, parent=None, editable=True, header=None, toolTips=None, columnEditability=None ) :
 
 		QtCore.QAbstractTableModel.__init__( self, parent )
 
 		self.__data = data
 		self.__editable = editable
 		self.__header = header
-		self.__columnToolTips = columnToolTips
+		self.__toolTips = toolTips
 		self.__columnEditability = columnEditability
 
 		self.__columns = []
@@ -823,8 +831,6 @@ class _Model( QtCore.QAbstractTableModel ) :
 				self.__columns.append( IECore.Struct( accessor=accessor, relativeColumnIndex=i ) )
 			self.__accessors.append( accessor )
 
-		if self.__columnToolTips is not None :
-			assert( len( self.__columns ) == len( self.__columnToolTips ) )
 		if self.__columnEditability is not None :
 			assert( len( self.__columns ) == len( self.__columnEditability ) )
 
@@ -913,8 +919,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 			else :
 				return GafferUI._Variant.toVariant( section )
 		elif role == QtCore.Qt.ToolTipRole :
-			if orientation == QtCore.Qt.Horizontal and self.__columnToolTips is not None :
-				return GafferUI._Variant.toVariant( self.__columnToolTips[section] )
+			if orientation == QtCore.Qt.Horizontal and self.__toolTips is not None :
+				return GafferUI._Variant.toVariant( self.__toolTips[self.columnToDataIndex(section)[0]] )
 
 		return GafferUI._Variant.toVariant( None )
 
