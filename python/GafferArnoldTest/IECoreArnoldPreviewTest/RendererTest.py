@@ -44,6 +44,7 @@ import imath
 import IECore
 import IECoreScene
 import IECoreArnold
+import IECoreImage
 
 import GafferTest
 import GafferScene
@@ -785,6 +786,62 @@ class RendererTest( GafferTest.TestCase ) :
 				"ieCoreArnold:lpe:test C.*D.*",
 				"ieCoreArnold:lpe:testWithAlpha C.*D.*"
 			] ) )
+
+	def testMultipleCameras( self ) :
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		for i in range( 3 ):
+			c = r.camera(
+				"testCamera%i"%i,
+				IECoreScene.Camera(
+					parameters = {
+						"projection" : "orthographic"
+					}
+				),
+				r.attributes( IECore.CompoundObject() )
+			)
+			c.transform( imath.M44f().translate( imath.V3f( i, 0, 0 ) ) )
+
+			r.output(
+				"testBeauty%i"%i,
+				IECoreScene.Output(
+					self.temporaryDirectory() + "/beauty%i.exr"%i,
+					"exr",
+					"rgba",
+					{
+						"camera" : "testCamera%i"%i
+					}
+				)
+			)
+
+		r.output(
+			"testDiffuse2",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/diffuse2.exr",
+				"exr",
+				"diffuse RGBA",
+				{
+					"camera" : "testCamera2"
+				}
+			)
+		)
+
+		r.option( "camera", IECore.StringData( "testCamera2" ) )
+
+		r.render()
+
+
+		for i in range( 3 ):
+			image = IECoreImage.ImageReader( self.temporaryDirectory() + "/beauty%i.exr"%i ).read()
+			self.assertEqual( image.blindData()["worldtocamera"].value, 
+				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
+
+		image = IECoreImage.ImageReader( self.temporaryDirectory() + "/diffuse2.exr" ).read()
+		self.assertEqual( image.blindData()["worldtocamera"].value, 
+			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
 
 	def testExrMetadata( self ) :
 

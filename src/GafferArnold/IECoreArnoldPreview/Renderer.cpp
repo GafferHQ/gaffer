@@ -426,6 +426,15 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 				}
 
+				if( it->first.string() == "camera" )
+				{
+					if( const IECore::StringData *d = IECore::runTimeCast<const IECore::StringData>( it->second.get() ) )
+					{
+						m_cameraOverride = d->readable();
+						continue;
+					}
+				}
+
 				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get() );
 			}
 
@@ -526,6 +535,11 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 		}
 
+		const std::string &cameraOverride()
+		{
+			return m_cameraOverride;
+		}
+
 	private :
 
 		SharedAtNodePtr m_driver;
@@ -533,6 +547,7 @@ class ArnoldOutput : public IECore::RefCounted
 		std::string m_data;
 		std::string m_lpeName;
 		std::string m_lpeValue;
+		std::string m_cameraOverride;
 
 };
 
@@ -2535,15 +2550,6 @@ class ArnoldGlobals
 				}
 			}
 
-			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
-			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
-			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
-			{
-				it->second->append( outputs->writable(), lpes->writable() );
-			}
-
-			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "outputs", outputs.get() );
-			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "light_path_expressions", lpes.get() );
 		}
 
 		// Some of Arnold's globals come from camera parameters, so the
@@ -2556,11 +2562,13 @@ class ArnoldGlobals
 
 		void render()
 		{
-			updateCamera();
+
+
 			AiNodeSetInt(
 				AiUniverseGetOptions(), g_aaSeedArnoldString,
 				m_aaSeed.get_value_or( m_frame.get_value_or( 1 ) )
 			);
+
 
 			// Do the appropriate render based on
 			// m_renderType.
@@ -2568,18 +2576,37 @@ class ArnoldGlobals
 			{
 				case IECoreScenePreview::Renderer::Batch :
 				{
-					const int result = AiRender( AI_RENDER_MODE_CAMERA );
-					if( result != AI_SUCCESS )
+					// Loop through all cameras referenced by any current outputs,
+					// and do a render for each
+					std::set<std::string> cameraOverrides;
+					for( const auto &it : m_outputs )
 					{
-						throwError( result );
+						cameraOverrides.insert( it.second->cameraOverride() );
+					}
+
+					for( const auto &cameraOverride : cameraOverrides )
+					{
+						updateCamera( cameraOverride.size() ? cameraOverride : m_cameraName );
+						const int result = AiRender( AI_RENDER_MODE_CAMERA );
+						if( result != AI_SUCCESS )
+						{
+							throwError( result );
+						}
 					}
 					break;
 				}
 				case IECoreScenePreview::Renderer::SceneDescription :
+					// An ASS file can only contain options to render from one camera,
+					// so just use the default camera
+					updateCamera( m_cameraName );
 					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
 					break;
 				case IECoreScenePreview::Renderer::Interactive :
+					// If we want to use Arnold's progressive refinement, we can't be constantly switching
+					// the camera around, so just use the default camera
+					updateCamera( m_cameraName );
 					m_interactiveRenderController.setRendering( true );
+
 					break;
 			}
 		}
@@ -2710,15 +2737,35 @@ class ArnoldGlobals
 			return true;
 		}
 
-		void updateCamera()
+		void updateCamera( const std::string &cameraName )
 		{
 			AtNode *options = AiUniverseGetOptions();
 
+			// Set the global output list in the options to all outputs matching the current camera
+			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
+			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
+			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
+			{
+				std::string outputCamera = it->second->cameraOverride();
+				if( outputCamera == "" )
+				{
+					outputCamera = m_cameraName;
+				}
+
+				if( outputCamera == cameraName )
+				{
+					it->second->append( outputs->writable(), lpes->writable() );
+				}
+			}
+			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
+			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
+
+
 			const IECoreScene::Camera *cortexCamera;
-			AtNode *arnoldCamera = AiNodeLookUpByName( AtString( m_cameraName.c_str() ) );
+			AtNode *arnoldCamera = AiNodeLookUpByName( AtString( cameraName.c_str() ) );
 			if( arnoldCamera )
 			{
-				cortexCamera = m_cameras[m_cameraName].get();
+				cortexCamera = m_cameras[cameraName].get();
 				m_defaultCamera = nullptr;
 			}
 			else
