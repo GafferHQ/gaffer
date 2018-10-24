@@ -45,9 +45,9 @@ from Qt import QtWidgets
 
 class ScrolledContainer( GafferUI.ContainerWidget ) :
 
-	ScrollMode = IECore.Enum.create( "Never", "Always", "Automatic" )
+	ScrollMode = GafferUI.Enums.ScrollMode
 
-	def __init__( self, horizontalMode=ScrollMode.Automatic, verticalMode=ScrollMode.Automatic, borderWidth=0, **kw ) :
+	def __init__( self, horizontalMode=GafferUI.ScrollMode.Automatic, verticalMode=GafferUI.ScrollMode.Automatic, borderWidth=0, **kw ) :
 
 		GafferUI.ContainerWidget.__init__( self, _ScrollArea(), **kw )
 
@@ -93,42 +93,30 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 
 		return self.__child
 
-	__modesToPolicies = {
-		ScrollMode.Never : QtCore.Qt.ScrollBarAlwaysOff,
-		ScrollMode.Always : QtCore.Qt.ScrollBarAlwaysOn,
-		ScrollMode.Automatic : QtCore.Qt.ScrollBarAsNeeded,
-	}
-
-	__policiesToModes = {
-		QtCore.Qt.ScrollBarAlwaysOff : ScrollMode.Never,
-		QtCore.Qt.ScrollBarAlwaysOn : ScrollMode.Always,
-		QtCore.Qt.ScrollBarAsNeeded : ScrollMode.Automatic,
-	}
-
 	def setHorizontalMode( self, mode ) :
 
-		self._qtWidget().setHorizontalScrollBarPolicy( self.__modesToPolicies[mode] )
+		self._qtWidget().setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( mode ) )
 
 	def getHorizontalMode( self ) :
 
 		p = self._qtWidget().horizontalScrollBarPolicy()
-		return self.__policiesToModes[p[0]]
+		return GafferUI.ScrollMode._fromQt( p[0] )
 
 	def setVerticalMode( self, mode ) :
 
-		self._qtWidget().setVerticalScrollBarPolicy( self.__modesToPolicies[mode] )
+		self._qtWidget().setVerticalScrollBarPolicy( GafferUI.ScrollMode._toQt( mode ) )
 
 	def getVerticalMode( self ) :
 
 		p = self._qtWidget().verticalScrollBarPolicy()
-		return self.__policiesToModes[p[1]]
+		return GafferUI.ScrollMode._fromQt( p[1] )
 
 	def _revealDescendant( self, descendant ) :
 
 		self._qtWidget().ensureWidgetVisible( descendant._qtWidget() )
 
 # Private implementation - a QScrollArea derived class which is a bit more
-# forceful aboout claiming size - it always asks for enough to completely show
+# forceful about claiming size - it always asks for enough to completely show
 # the contained widget.
 class _ScrollArea( QtWidgets.QScrollArea ) :
 
