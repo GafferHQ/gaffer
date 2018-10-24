@@ -36,7 +36,6 @@
 
 #include "Gaffer/SubGraph.h"
 
-#include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
 
 using namespace IECore;
@@ -138,20 +137,14 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 	}
 
 	const Plug *input = internalInput->getInput();
-	if( !input )
+	while( input )
 	{
-		return nullptr;
+		if( input->node() == this )
+		{
+			return input;
+		}
+		input = input->getInput();
 	}
 
-	if( const BoxIn *boxIn = input->parent<BoxIn>() )
-	{
-		input = boxIn->promotedPlug();
-	}
-
-	if( !input || input->node() != this )
-	{
-		return nullptr;
-	}
-
-	return input;
+	return nullptr;
 }
