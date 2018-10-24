@@ -44,6 +44,8 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( SubGraph );
 
+static IECore::InternedString g_enabledName( "enabled" );
+
 SubGraph::SubGraph( const std::string &name )
 	:	DependencyNode( name )
 {
@@ -60,12 +62,12 @@ void SubGraph::affects( const Plug *input, AffectedPlugsContainer &outputs ) con
 
 BoolPlug *SubGraph::enabledPlug()
 {
-	return getChild<BoolPlug>( "enabled" );
+	return getChild<BoolPlug>( g_enabledName );
 }
 
 const BoolPlug *SubGraph::enabledPlug() const
 {
-	return getChild<BoolPlug>( "enabled" );
+	return getChild<BoolPlug>( g_enabledName );
 }
 
 Plug *SubGraph::correspondingInput( const Plug *output )
