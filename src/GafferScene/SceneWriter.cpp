@@ -118,7 +118,7 @@ struct LocationWriter
 			m_output->writeAttribute( it->first, it->second.get(), m_time );
 		}
 
-		if( globals )
+		if( globals && !globals->members().empty() )
 		{
 			m_output->writeAttribute( "gaffer:globals", globals.get(), m_time );
 		}
@@ -135,7 +135,10 @@ struct LocationWriter
 			m_output->writeTransform( transformData.get(), m_time );
 		}
 
-		m_output->writeTags( locationSets );
+		if( !locationSets.empty() )
+		{
+			m_output->writeTags( locationSets );
+		}
 
 		return true;
 	}

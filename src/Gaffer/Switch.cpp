@@ -186,7 +186,10 @@ void Switch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer 
 	{
 		if( const Plug *output = oppositePlug( input ) )
 		{
-			outputs.push_back( output );
+			if( !output->getInput() )
+			{
+				outputs.push_back( output );
+			}
 		}
 	}
 }

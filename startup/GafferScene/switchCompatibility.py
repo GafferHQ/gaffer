@@ -97,11 +97,12 @@ def __filterProcessorGetItemWrapper( originalGetItem ) :
 
 		result = originalGetItem( self, key )
 		if key == "in" and isinstance( result, Gaffer.ArrayPlug ) :
-			result.addChild = types.MethodType( __filterProcessorAddChild, result )
+			if len( result ) and isinstance( result[0], GafferScene.FilterPlug ) :
+				result.addChild = types.MethodType( __filterProcessorAddChild, result )
 
 		return result
 
 	return getItem
 
-GafferScene.FilterSwitch.__getitem__ = __filterProcessorGetItemWrapper( GafferScene.FilterSwitch.__getitem__ )
+Gaffer.Switch.__getitem__ = __filterProcessorGetItemWrapper( Gaffer.Switch.__getitem__ )
 GafferScene.FilterProcessor.__getitem__ = __filterProcessorGetItemWrapper( GafferScene.FilterProcessor.__getitem__ )

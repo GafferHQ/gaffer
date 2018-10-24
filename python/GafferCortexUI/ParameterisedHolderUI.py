@@ -84,7 +84,7 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 					toolButton.plugValueWidget().setReadOnly( readOnly )
 					_InfoButton( node )
 
-			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
+			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrollMode.Never, borderWidth=4 ) :
 				self.__parameterValueWidget = GafferCortexUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
 
 		self.setReadOnly( readOnly )

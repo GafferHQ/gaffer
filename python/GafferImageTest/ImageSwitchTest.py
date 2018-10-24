@@ -65,6 +65,9 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 		switch["in"][0].setInput( in0["out"] )
 		switch["in"][1].setInput( in1["out"] )
 
+		add = GafferTest.AddNode()
+		switch["index"].setInput( add["sum"] )
+
 		for p in [ switch["in"][0], switch["in"][1] ] :
 			for n in [ "format", "dataWindow", "metadata", "channelNames", "channelData" ] :
 				a = switch.affects( p[n] )

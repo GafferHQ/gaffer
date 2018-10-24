@@ -1,3 +1,42 @@
+0.51.1.0
+========
+
+Features
+--------
+
+- Added PrimitiveInspector for inspecting the values of all primitive variables
+  associated with the object at the selected location (#2863).
+
+Improvements
+------------
+
+- VectorDataWidget :
+  - Fixed various issues with the header and tooltips.
+  - Restricted column tooltips to the header.
+  - Now alternating the column background colour.
+  - Added support for many new data types (eg vectors, matrices, boxes, quats,
+    char, short)
+
+Fixes
+-----
+
+- Fixed FilterSwitch compatibility within boxes (#2866).
+- Switch : Fixed overzealous dirty propagation. These could cause unnecessary
+  viewer and/or interactive render updates (#2859).
+- SceneWriter : Prevent unnecessary messages about unsupported features from
+  the Alembic writer.
+
+API
+---
+
+- GafferUI : Moved ScrollMode enum from ScrolledContainer to Enums (backwards
+  compatibility is provided).
+- Stylesheet : Added query of style colors.
+- VectorDataWidget :
+  - Added `horizontal/verticalScrollMode` arguments.
+  - Added `set/getHeader()` accessors.
+  
+
 0.51.0.1
 ========
 

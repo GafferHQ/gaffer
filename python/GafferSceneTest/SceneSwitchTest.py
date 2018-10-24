@@ -67,6 +67,9 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch["in"][0].setInput( plane["out"] )
 		switch["in"][1].setInput( sphere["out"] )
 
+		add = GafferTest.AddNode()
+		switch["index"].setInput( add["sum"] )
+
 		for p in [ switch["in"][0], switch["in"][1] ] :
 			for n in p.keys() :
 				a = switch.affects( p[n] )
@@ -175,6 +178,59 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["SceneSwitch"]["in"][0].getInput(), s["Plane"]["out"] )
 		self.assertEqual( s["SceneSwitch"]["in"][1].getInput(), s["Sphere"]["out"] )
+
+	def testNoUnnecessaryDirtyPropagationCrossTalk( self ) :
+
+		#           plane
+		#             |
+		#     primitiveVariables
+		#            / \
+		#            | deleteFaces
+		#            | |
+		#            | |
+		#           switch
+
+		plane = GafferScene.Plane()
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( plane["out"] )
+		pv = primitiveVariables["primitiveVariables"].addMember( "test", IECore.IntData( 0 ) )
+
+		# DeleteFaces has a dependency between the object and the
+		# bound, so dirtying the input object also dirties the
+		# output bound. There is cross-talk between the plugs.
+		deleteFaces = GafferScene.DeleteFaces()
+		deleteFaces["in"].setInput( primitiveVariables["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( primitiveVariables["out"] )
+		switch["in"][0].setInput( primitiveVariables["out"] )
+		switch["in"][1].setInput( deleteFaces["out"] )
+
+		# When the Switch index is constant 0, we know that DeleteFaces
+		# is not the active branch. So we don't expect dirtying the input
+		# object to dirty the output bound.
+		cs = GafferTest.CapturingSlot( switch.plugDirtiedSignal() )
+		pv["value"].setValue( 1 )
+		self.assertIn( switch["out"]["object"], { x[0] for x in cs } )
+		self.assertNotIn( switch["out"]["bound"], { x[0] for x in cs } )
+
+		# When the Switch index is constant 1, we know that DeleteFaces
+		# is the active branch, so we do expect crosstalk.
+		switch["index"].setValue( 1 )
+		del cs[:]
+		pv["value"].setValue( 2 )
+		self.assertIn( switch["out"]["object"], { x[0] for x in cs } )
+		self.assertIn( switch["out"]["bound"], { x[0] for x in cs } )
+
+		# And when the Switch index is computed (indeterminate during
+		# dirty propagation) we also expect crosstalk.
+		add = GafferTest.AddNode()
+		switch["index"].setInput( add["sum"] )
+		del cs[:]
+		pv["value"].setValue( 3 )
+		self.assertIn( switch["out"]["object"], { x[0] for x in cs } )
+		self.assertIn( switch["out"]["bound"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()
