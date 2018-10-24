@@ -237,5 +237,18 @@ class BoxOutTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["b"][promotedPlug.getName()].source().isSame( s2["b"]["a"]["sum"] ) )
 
+	def testSerialisationUsesSetup( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.BoxOut()
+		s["b"].setup( Gaffer.IntPlug() )
+
+		ss = s.serialise()
+		self.assertIn( "setup", ss )
+		self.assertNotIn( "setInput", ss )
+		self.assertNotIn( "__out", ss )
+		self.assertEqual( ss.count( "addChild" ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

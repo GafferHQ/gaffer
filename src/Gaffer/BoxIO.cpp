@@ -210,7 +210,6 @@ void BoxIO::setup( const Plug *plug )
 	addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
 	inPlugInternal()->setFlags( Plug::Serialisable, true );
-	outPlugInternal()->setFlags( Plug::Serialisable, true );
 	applyDynamicFlag( inPlugInternal() );
 	applyDynamicFlag( outPlugInternal() );
 	outPlugInternal()->setInput( inPlugInternal() );
@@ -228,7 +227,15 @@ void BoxIO::setup( const Plug *plug )
 
 	if( parent<Box>() )
 	{
-		setupPromotedPlug();
+		// We also want to set up our promoted plug.  But if we're
+		// being created from a script execution, we don't need to
+		// do that ourselves because it'll have been serialised into
+		// the script.
+		ScriptNode *script = scriptNode();
+		if( !script || !script->isExecuting() )
+		{
+			setupPromotedPlug();
+		}
 	}
 }
 

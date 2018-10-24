@@ -442,5 +442,18 @@ class BoxInTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
 			b.setup()
 
+	def testSerialisationUsesSetup( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.BoxIn()
+		s["b"].setup( Gaffer.IntPlug() )
+
+		ss = s.serialise()
+		self.assertIn( "setup", ss )
+		self.assertNotIn( "setInput", ss )
+		self.assertNotIn( "__in", ss )
+		self.assertEqual( ss.count( "addChild" ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
