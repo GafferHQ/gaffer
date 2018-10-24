@@ -83,42 +83,58 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 		return nullptr;
 	}
 
+	const Plug *internalInput = nullptr;
 	if( const BoxOut *boxOut = internalOutput->parent<BoxOut>() )
 	{
-		internalOutput = boxOut->plug()->getInput();
-		if( !internalOutput )
+		if( boxOut->passThroughPlug()->getInput() )
 		{
-			return nullptr;
+			internalInput = boxOut->passThroughPlug();
+		}
+		else
+		{
+			// Prepare for legacy branch below
+			internalOutput = boxOut->plug()->getInput();
+			if( !internalOutput )
+			{
+				return nullptr;
+			}
 		}
 	}
 
-	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
-	if( !node )
-	{
-		return nullptr;
-	}
-
-	const BoolPlug *externalEnabledPlug = enabledPlug();
-	if( !externalEnabledPlug )
-	{
-		return nullptr;
-	}
-
-	const BoolPlug *internalEnabledPlug = node->enabledPlug();
-	if( !internalEnabledPlug )
-	{
-		return nullptr;
-	}
-
-	if( internalEnabledPlug->getInput() != externalEnabledPlug )
-	{
-		return nullptr;
-	}
-
-	const Plug *internalInput = node->correspondingInput( internalOutput );
 	if( !internalInput )
 	{
-		return nullptr;
+		// Legacy code path for networks made before BoxOut had pass-through support.
+		// These used Switch nodes wired up manually - this is the `node` referred to
+		// below.
+
+		const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
+		if( !node )
+		{
+			return nullptr;
+		}
+
+		const BoolPlug *externalEnabledPlug = enabledPlug();
+		if( !externalEnabledPlug )
+		{
+			return nullptr;
+		}
+
+		const BoolPlug *internalEnabledPlug = node->enabledPlug();
+		if( !internalEnabledPlug )
+		{
+			return nullptr;
+		}
+
+		if( internalEnabledPlug->getInput() != externalEnabledPlug )
+		{
+			return nullptr;
+		}
+
+		internalInput = node->correspondingInput( internalOutput );
+		if( !internalInput )
+		{
+			return nullptr;
+		}
 	}
 
 	const Plug *input = internalInput->getInput();

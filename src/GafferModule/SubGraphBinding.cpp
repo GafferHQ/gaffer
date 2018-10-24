@@ -107,7 +107,7 @@ class BoxIOSerialiser : public NodeSerialiser
 	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		const BoxIO *boxIO = child->parent<BoxIO>();
-		if( child == boxIO->inPlugInternal() || child == boxIO->outPlugInternal() )
+		if( child == boxIO->inPlugInternal() || child == boxIO->outPlugInternal() || child == boxIO->passThroughPlugInternal() )
 		{
 			// We'll serialise a `setup()` call to construct these.
 			return false;

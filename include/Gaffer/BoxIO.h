@@ -39,6 +39,7 @@
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace GafferModule
 {
@@ -53,6 +54,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( StringPlug )
 IE_CORE_FORWARDDECLARE( Box )
+IE_CORE_FORWARDDECLARE( Switch )
 
 /// Utility node for representing plug promotion
 /// graphically in the GraphEditor. Note that this has
@@ -143,6 +145,12 @@ class GAFFER_API BoxIO : public Node
 		Gaffer::Plug *outPlugInternal();
 		const Gaffer::Plug *outPlugInternal() const;
 
+		Gaffer::Plug *passThroughPlugInternal();
+		const Gaffer::Plug *passThroughPlugInternal() const;
+
+		BoolPlug *enabledPlugInternal();
+		const BoolPlug *enabledPlugInternal() const;
+
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 	private :
@@ -151,6 +159,9 @@ class GAFFER_API BoxIO : public Node
 
 		IECore::InternedString inPlugName() const;
 		IECore::InternedString outPlugName() const;
+
+		Gaffer::Switch *switchInternal();
+		const Gaffer::Switch *switchInternal() const;
 
 		Plug::Direction m_direction;
 
