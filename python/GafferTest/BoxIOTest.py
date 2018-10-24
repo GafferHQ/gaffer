@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import os
 
 import Gaffer
 import GafferTest
@@ -123,6 +124,38 @@ class BoxIOTest( GafferTest.TestCase ) :
 
 		self.assertIsInstance( s2["b"]["sum"].getInput().node(), Gaffer.BoxOut )
 		self.assertTrue( s2["b"]["sum"].source().isSame( s2["b"]["a"]["sum"] ) )
+
+	def testLoadOutsideBoxVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/boxIOOutsideBoxVersion-0.52.0.0.gfr" )
+		s.load()
+
+		self.assertIsInstance( s["BoxIn"], Gaffer.BoxIn )
+		self.assertIsInstance( s["BoxOut"], Gaffer.BoxOut )
+
+	def testImportIntoBoxVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+
+		s.executeFile( os.path.dirname( __file__ ) + "/scripts/boxIOOutsideBoxVersion-0.52.0.0.gfr", parent = s["b"] )
+		self.assertIn( "in", s["b"] )
+		self.assertIn( "out", s["b"] )
+
+	def testCopyBareNodesIntoNewBox( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b1"] = Gaffer.Box()
+		s["b1"]["i"] = Gaffer.BoxIn()
+		s["b1"]["o"] = Gaffer.BoxOut()
+
+		s["b2"] = Gaffer.Box()
+		s.execute( s.serialise( parent = s["b1"] ), parent = s["b2"] )
+
+		self.assertEqual( s["b2"].keys(), s["b1"].keys() )
+		self.assertEqual( s["b2"]["i"].keys(), s["b1"]["i"].keys() )
+		self.assertEqual( s["b2"]["o"].keys(), s["b1"]["o"].keys() )
 
 if __name__ == "__main__":
 	unittest.main()
