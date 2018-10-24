@@ -114,5 +114,29 @@ class SubGraphTest( GafferTest.TestCase ) :
 
 		self.assertIsNone( b.correspondingInput( b["out"] ) )
 
+	def testCorrespondingInputWithBoxOutAndDots( self ) :
+
+		b = Gaffer.Box()
+		b["n"] = GafferTest.AddNode()
+
+		b["i"] = Gaffer.BoxIn()
+		b["i"].setup( b["n"]["sum"] )
+		b["n"]["op1"].setInput( b["i"]["out"] )
+
+		b["d1"] = Gaffer.Dot()
+		b["d1"].setup( b["n"]["sum"] )
+		b["d1"]["in"].setInput( b["i"]["out"] )
+
+		b["d2"] = Gaffer.Dot()
+		b["d2"].setup( b["n"]["sum"] )
+		b["d2"]["in"].setInput( b["d1"]["out"] )
+
+		b["o"] = Gaffer.BoxOut()
+		b["o"].setup( b["n"]["sum"] )
+		b["o"]["in"].setInput( b["n"]["sum"] )
+		b["o"]["passThrough"].setInput( b["d2"]["out"] )
+
+		self.assertEqual( b.correspondingInput( b["o"].promotedPlug() ), b["i"].promotedPlug() )
+
 if __name__ == "__main__":
 	unittest.main()
