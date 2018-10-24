@@ -84,47 +84,10 @@ class BoxSerialiser : public NodeSerialiser
 // BoxIO
 // =====
 
-class BoxIOSerialiser : public NodeSerialiser
-{
-
-	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
-	{
-		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
-
-		const BoxIO *boxIO = static_cast<const BoxIO *>( graphComponent );
-		if( !boxIO->plug() )
-		{
-			// BoxIO::setup() hasn't been called yet.
-			return result;
-		}
-
-		const Plug *promoted = boxIO->promotedPlug();
-		if( promoted && serialisation.identifier( promoted ) != "" )
-		{
-			return result;
-		}
-
-		// The BoxIO node has been set up, but its promoted plug isn't
-		// being serialised (for instance, because someone is copying a
-		// selection from inside a box). Add a setup() call to the
-		// serialisation so that the promoted plug will be created upon
-		// pasting into another box.
-
-		if( !result.empty() )
-		{
-			result += "\n";
-		}
-		result += identifier + ".setup()\n";
-
-		return result;
-	}
-
-};
-
-void setup( BoxIO &b, const Plug *plug )
+void setup( BoxIO &b, const Plug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	b.setup( plug );
+	b.setup( &plug );
 }
 
 PlugPtr plug( BoxIO &b )
@@ -212,8 +175,6 @@ void GafferModule::bindSubGraph()
 		.def( "canInsert", &BoxIO::canInsert )
 		.staticmethod( "canInsert" )
 	;
-
-	Serialisation::registerSerialiser( BoxIO::staticTypeId(), new BoxIOSerialiser );
 
 	NodeClass<BoxIn>();
 	NodeClass<BoxOut>();

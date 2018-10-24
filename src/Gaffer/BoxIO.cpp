@@ -182,10 +182,8 @@ BoxIO::BoxIO( Plug::Direction direction, const std::string &name )
 	{
 		plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );
 	}
-	else
-	{
-		parentChangedSignal().connect( boost::bind( &BoxIO::parentChanged, this, ::_2 ) );
-	}
+
+	parentChangedSignal().connect( boost::bind( &BoxIO::parentChanged, this, ::_2 ) );
 }
 
 BoxIO::~BoxIO()
@@ -204,44 +202,52 @@ const StringPlug *BoxIO::namePlug() const
 
 void BoxIO::setup( const Plug *plug )
 {
-	if( plug )
+	if( inPlugInternal() )
 	{
-		if( inPlugInternal() )
-		{
-			throw IECore::Exception( "Plugs already set up" );
-		}
-		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
-		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
-
-		inPlugInternal()->setFlags( Plug::Serialisable, true );
-		outPlugInternal()->setFlags( Plug::Serialisable, true );
-		applyDynamicFlag( inPlugInternal() );
-		applyDynamicFlag( outPlugInternal() );
-		outPlugInternal()->setInput( inPlugInternal() );
-
-		MetadataAlgo::copy(
-			plug,
-			m_direction == Plug::In ? inPlugInternal() : outPlugInternal(),
-			/* exclude = */ "layout:*"
-		);
-
-		setupNoduleSectionMetadata(
-			m_direction == Plug::In ? outPlugInternal() : inPlugInternal(),
-			plug
-		);
+		throw IECore::Exception( "Plugs already set up" );
 	}
+	addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
+	addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
-	if( promotedPlug() )
-	{
-		throw IECore::Exception( "Promoted plug already set up" );
-	}
+	inPlugInternal()->setFlags( Plug::Serialisable, true );
+	outPlugInternal()->setFlags( Plug::Serialisable, true );
+	applyDynamicFlag( inPlugInternal() );
+	applyDynamicFlag( outPlugInternal() );
+	outPlugInternal()->setInput( inPlugInternal() );
+
+	MetadataAlgo::copy(
+		plug,
+		m_direction == Plug::In ? inPlugInternal() : outPlugInternal(),
+		/* exclude = */ "layout:*"
+	);
+
+	setupNoduleSectionMetadata(
+		m_direction == Plug::In ? outPlugInternal() : inPlugInternal(),
+		plug
+	);
 
 	if( parent<Box>() )
 	{
-		Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
-		Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
-		namePlug()->setValue( promoted->getName() );
+		setupPromotedPlug();
 	}
+}
+
+void BoxIO::setupPromotedPlug()
+{
+	Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
+	Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
+	namePlug()->setValue( promoted->getName() );
+}
+
+void BoxIO::scriptExecuted( ScriptNode *script )
+{
+	if( inPlugInternal() && !promotedPlug() )
+	{
+		setupPromotedPlug();
+	}
+	script->scriptExecutedSignal().disconnect(
+		boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
+	);
 }
 
 Plug::Direction BoxIO::direction() const
@@ -343,6 +349,23 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 		box->plugInputChangedSignal().connect(
 			boost::bind( &BoxIO::plugInputChanged, this, ::_1 )
 		);
+	}
+
+	// If we're being parented during a script execution, it
+	// could be that we're being cut+pasted into a new Box. In
+	// that case we need to set up our promoted plug, but we
+	// won't know if we're a cut+paste or a regular load until
+	// execution is complete. So we defer until then.
+
+	if( parent<Box>() )
+	{
+		ScriptNode *script = scriptNode();
+		if( script && script->isExecuting() )
+		{
+			script->scriptExecutedSignal().connect(
+				boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
+			);
+		}
 	}
 }
 

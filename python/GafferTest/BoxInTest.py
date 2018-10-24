@@ -430,5 +430,17 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["b"]["n"]["in"].source().isSame( s2["b"]["in"] ) )
 
+	def testSetupNone( self ) :
+
+		b = Gaffer.BoxIn()
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			b.setup( None )
+
+	def testSetupNoArgument( self ) :
+
+		b = Gaffer.BoxIn()
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			b.setup()
+
 if __name__ == "__main__":
 	unittest.main()
