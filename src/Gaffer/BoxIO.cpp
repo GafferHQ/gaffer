@@ -45,6 +45,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Switch.h"
 
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/bind.hpp"
@@ -64,6 +65,9 @@ InternedString g_inName( "in" );
 InternedString g_inNamePrivate( "__in" );
 InternedString g_outName( "out" );
 InternedString g_outNamePrivate( "__out" );
+InternedString g_passThroughName( "passThrough" );
+InternedString g_enabledName( "enabled" );
+InternedString g_switchName( "__switch" );
 InternedString g_sectionName( "noduleLayout:section" );
 
 std::string oppositeSection( const std::string &section )
@@ -225,6 +229,19 @@ void BoxIO::setup( const Plug *plug )
 		plug
 	);
 
+	if( m_direction == Plug::Out )
+	{
+		addChild( plug->createCounterpart( g_passThroughName, Plug::In ) );
+		addChild( new BoolPlug( g_enabledName, Plug::In, true ) );
+		addChild( new Switch( g_switchName ) );
+		switchInternal()->setup( plug );
+		switchInternal()->enabledPlug()->setInput( enabledPlugInternal() );
+		switchInternal()->inPlugs()->getChild<Plug>( 0 )->setInput( passThroughPlugInternal() );
+		switchInternal()->inPlugs()->getChild<Plug>( 1 )->setInput( inPlugInternal() );
+		switchInternal()->indexPlug()->setValue( 1 );
+		outPlugInternal()->setInput( switchInternal()->outPlug() );
+	}
+
 	if( parent<Box>() )
 	{
 		// We also want to set up our promoted plug.  But if we're
@@ -244,6 +261,19 @@ void BoxIO::setupPromotedPlug()
 	Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
 	Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
 	namePlug()->setValue( promoted->getName() );
+
+	if( m_direction == Plug::Out )
+	{
+		Box *box = parent<Box>();
+		BoolPlug *boxEnabledPlug = box->enabledPlug();
+		if( !boxEnabledPlug )
+		{
+			BoolPlugPtr p = new BoolPlug( g_enabledName, Plug::In, true, Plug::Default | Plug::Dynamic );
+			box->addChild( p );
+			boxEnabledPlug = p.get();
+		}
+		enabledPlugInternal()->setInput( boxEnabledPlug );
+	}
 }
 
 void BoxIO::scriptExecuted( ScriptNode *script )
@@ -280,6 +310,36 @@ Gaffer::Plug *BoxIO::outPlugInternal()
 const Gaffer::Plug *BoxIO::outPlugInternal() const
 {
 	return getChild<Plug>( outPlugName() );
+}
+
+Gaffer::Plug *BoxIO::passThroughPlugInternal()
+{
+	return getChild<Plug>( g_passThroughName );
+}
+
+const Gaffer::Plug *BoxIO::passThroughPlugInternal() const
+{
+	return getChild<Plug>( g_passThroughName );
+}
+
+Gaffer::Switch *BoxIO::switchInternal()
+{
+	return getChild<Switch>( g_switchName );
+}
+
+const Gaffer::Switch *BoxIO::switchInternal() const
+{
+	return getChild<Switch>( g_switchName );
+}
+
+BoolPlug *BoxIO::enabledPlugInternal()
+{
+	return getChild<BoolPlug>( g_enabledName );
+}
+
+const BoolPlug *BoxIO::enabledPlugInternal() const
+{
+	return getChild<BoolPlug>( g_enabledName );
 }
 
 void BoxIO::parentChanging( Gaffer::GraphComponent *newParent )

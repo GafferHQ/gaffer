@@ -250,5 +250,30 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertNotIn( "__out", ss )
 		self.assertEqual( ss.count( "addChild" ), 1 )
 
+	def testPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"].setup( s["b"]["a"]["op1"] )
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"].setup( s["b"]["a"]["op1"] )
+		self.assertTrue( isinstance( s["b"]["o"]["passThrough"], Gaffer.IntPlug ) )
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["a"]["sum"] ) )
+
+		s["b"]["a"]["op1"].setInput( s["b"]["i"]["out"] )
+		s["b"]["o"]["in"].setInput( s["b"]["a"]["sum"] )
+		s["b"]["o"]["passThrough"].setInput( s["b"]["i"]["out"] )
+
+		self.assertTrue( "enabled" in s["b"] )
+		self.assertEqual( s["b"]["out"].source(), s["b"]["a"]["sum"] )
+		s["b"]["enabled"].setValue( False )
+		self.assertEqual( s["b"]["out"].source(), s["b"]["in"] )
+
+		self.assertEqual( s["b"].correspondingInput( s["b"]["out"] ), s["b"]["in"] )
+
 if __name__ == "__main__":
 	unittest.main()

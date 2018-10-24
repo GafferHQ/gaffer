@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,38 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXOUT_H
-#define GAFFER_BOXOUT_H
-
-#include "Gaffer/BoxIO.h"
+#ifndef GAFFER_BOXOUT_INL
+#define GAFFER_BOXOUT_INL
 
 namespace Gaffer
 {
 
-class GAFFER_API BoxOut : public BoxIO
+template<typename T>
+T *BoxOut::passThroughPlug()
 {
+	return IECore::runTimeCast<T>(
+		passThroughPlugInternal()
+	);
+}
 
-	public :
-
-		BoxOut( const std::string &name=defaultName<BoxOut>() );
-		~BoxOut() override;
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::BoxOut, BoxOutTypeId, BoxIO );
-
-		template<typename T=Plug>
-		T *passThroughPlug();
-		template<typename T=Plug>
-		const T *passThroughPlug() const;
-
-};
-
-IE_CORE_DECLAREPTR( BoxOut )
-
-typedef FilteredChildIterator<TypePredicate<BoxOut> > BoxOutIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<BoxOut> > RecursiveBoxOutIterator;
+template<typename T>
+const T *BoxOut::passThroughPlug() const
+{
+	return IECore::runTimeCast<const T>(
+		passThroughPlugInternal()
+	);
+}
 
 } // namespace Gaffer
 
-#include "Gaffer/BoxOut.inl"
-
-#endif // GAFFER_BOXOUT_H
+#endif // GAFFER_BOXOUT_INL
