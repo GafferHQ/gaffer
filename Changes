@@ -1,3 +1,60 @@
+0.52.0.0
+========
+
+This release brings a major overhaul to Gaffer's camera definition, bringing more
+flexibility and improved compatibility with USD and Alembic. Note that if you were
+previously using a Parameters node to add a "screenWindow" parameter, you should
+now manipulate the standard aperture and film fit settings instead.
+
+Features
+--------
+
+- Camera : Adopted new camera definition (#2816)
+  - Added perspectiveMode, with "Field of View" and "Aperture and Focal Length"
+    modes.
+  - Added aperture settings.
+  - Added depth of field settings.
+  - Added optional render overrides that override the StandardOptions settings on
+    a per-camera basis.
+  - Improved compatibility with USD and Alembic.
+- CameraTweaks : Added new node to apply downstream edits to camera parameters (#2816).
+- StandardOptions : Added filmFit render option (#2816).
+
+Fixes
+-----
+
+- Restored FilterSwitch/UnionFilter compatibility for files from version 0.27.0.0 (#2854).
+- SceneGadget : Fixed depth sorting for `objectAt()` when used with some legacy
+  graphics drivers (#2816).
+- Fixed overzealous dirty propagation in several nodes. These could cause unnecessary
+  viewer and/or interactive render updates.
+    - SceneElementProcessor (#2855)
+    - ImageNode (#2855)
+    - Switch (#2859)
+- OpenGLRenderer : Fixed GL resource management threading bug. This was the cause of
+  rare crashes when collapsing locations in the viewer (#2851).
+- Documentation : Fixed broken link (#2857).
+
+API
+---
+
+- PlugAlgo : Added `createPlugFromData()` and `extractDataFromPlug()` methods (#2816).
+- ViewportGadget : Added `set/getPlanarMovement()` methods (#2816).
+- Packaged IECorePreview and IECoreScenePreview headers. Note that these are subject to
+  change without notice (#2862).
+
+Breaking Changes
+----------------
+
+- CompoundDataPlug : Removed `createPlugFromData()` and `extractDataFromPlug()` methods (#2816).
+  Use PlugAlgo instead (#2816).
+- RendererAlgo : Added `scene` argument to `applyCameraGlobals()` (#2816).
+- ViewportGadget : Removed `set/getOrthographic3D()` methods. Use `set/getPlanarMovement()`
+  instead (#2816).
+- SceneAlgo : Added `scene` argument to `shutter()` method (#2816).
+- Camera : Adopted new camera definition (#2816). In particular, if you were using a "screenWindow"
+  parameter, you will now need to use aperture and/or filmFit instead.
+
 0.51.0.0
 ========
 
