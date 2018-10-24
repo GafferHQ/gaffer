@@ -40,6 +40,14 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
 
+namespace GafferModule
+{
+
+// Forward declaration to enable friend declaration
+struct BoxIOSerialiser;
+
+} // namespace GafferModule
+
 namespace Gaffer
 {
 
@@ -138,6 +146,8 @@ class GAFFER_API BoxIO : public Node
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 	private :
+
+		friend class GafferModule::BoxIOSerialiser;
 
 		IECore::InternedString inPlugName() const;
 		IECore::InternedString outPlugName() const;
