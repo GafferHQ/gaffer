@@ -36,7 +36,41 @@
 
 #include "Gaffer/BoxOut.h"
 
+#include "Gaffer/BoxIn.h"
+#include "Gaffer/Dot.h"
+
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+const Dot *dotChainSource( const Plug *plug )
+{
+	const Dot *result = nullptr;
+	while( plug )
+	{
+		if( const Dot *dot = IECore::runTimeCast<const Dot>( plug->node() ) )
+		{
+			result = dot;
+		}
+		else
+		{
+			break;
+		}
+		plug = plug->getInput();
+	}
+	return result;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// BoxOut
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( BoxOut )
 
@@ -47,4 +81,72 @@ BoxOut::BoxOut( const std::string &name )
 
 BoxOut::~BoxOut()
 {
+}
+
+bool BoxOut::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug != passThroughPlugInternal() )
+	{
+		return true;
+	}
+
+	// The only input we _really_ want to get into
+	// our passThrough plug is from a BoxIn with the
+	// same parent as us.
+
+	const BoxIn *boxIn = inputPlug->parent<BoxIn>();
+	if(
+		boxIn &&
+		boxIn->parent() == parent() &&
+		inputPlug == boxIn->plug()
+	)
+	{
+		return true;
+	}
+
+	// But `acceptsInput()` is also called when connections
+	// are being made to the BoxIn's promoted plug (on the
+	// outside of the Box), so we just have to suck it up
+	// and accept that too.
+
+	const Node *inputNode = inputPlug->node();
+	if( sourceBoxIn( passThroughPlug() ) && inputNode->parent() != parent() )
+	{
+		return true;
+	}
+
+	// And we also want to accept Dots, provided they're
+	// either not connected to anything, or just to other
+	// dots.
+
+	if( const Dot *dot = dotChainSource( inputPlug ) )
+	{
+		if( !dot->inPlug()->getInput() || sourceBoxIn( dot->inPlug() ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const BoxIn *BoxOut::sourceBoxIn( const Plug *plug ) const
+{
+	while( plug )
+	{
+		if( const BoxIn *boxIn = IECore::runTimeCast<const BoxIn>( plug->node() ) )
+		{
+			if( plug == boxIn->plug() && boxIn->parent() == parent() )
+			{
+				return boxIn;
+			}
+		}
+		plug = plug->getInput();
+	}
+	return nullptr;
 }

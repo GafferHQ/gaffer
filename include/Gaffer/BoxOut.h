@@ -42,6 +42,8 @@
 namespace Gaffer
 {
 
+class BoxIn;
+
 class GAFFER_API BoxOut : public BoxIO
 {
 
@@ -56,6 +58,14 @@ class GAFFER_API BoxOut : public BoxIO
 		T *passThroughPlug();
 		template<typename T=Plug>
 		const T *passThroughPlug() const;
+
+	protected :
+
+		bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const override;
+
+	private :
+
+		const BoxIn *sourceBoxIn( const Plug *plug ) const;
 
 };
 
