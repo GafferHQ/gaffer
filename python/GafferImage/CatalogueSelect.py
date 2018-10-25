@@ -47,7 +47,8 @@ class CatalogueSelect( GafferImage.ImageProcessor ) :
 
 		self["imageName"] = Gaffer.StringPlug()
 
-		self["__context"] = GafferImage.ImageContextVariables()
+		self["__context"] = Gaffer.ContextVariables()
+		self["__context"].setup( self["in"] )
 		self["__context"]["variables"].addMember( "catalogue:imageName", "", "imageNameMember" )
 		self["__context"]["variables"]["imageNameMember"]["value"].setInput( self["imageName"] )
 

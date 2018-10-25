@@ -47,21 +47,18 @@ import GafferImageTest
 
 class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 
-	def testDefaultName( self ) :
-
-		t = GafferImage.ImageTimeWarp()
-		self.assertEqual( t.getName(), "ImageTimeWarp" )
-
 	def testEnabledPlug( self ) :
 
-		t = GafferImage.ImageTimeWarp()
+		t = Gaffer.TimeWarp()
+		t.setup( GafferImage.ImagePlug() )
 		self.assertTrue( isinstance( t["enabled"], Gaffer.BoolPlug ) )
 		self.assertTrue( t["enabled"].isSame( t.enabledPlug() ) )
 		self.assertFalse( "enabled1" in t )
 
 	def testAffects( self ) :
 
-		timeWarp = GafferImage.ImageTimeWarp()
+		timeWarp = Gaffer.TimeWarp()
+		timeWarp.setup( GafferImage.ImagePlug() )
 
 		for n in [ "format", "dataWindow", "metadata", "channelNames", "channelData" ] :
 			a = timeWarp.affects( timeWarp["in"][n] )
@@ -86,7 +83,8 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( 'parent["constant"]["color"]["r"] = context["frame"]' )
 
-		script["timeWarp"] = GafferImage.ImageTimeWarp()
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( GafferImage.ImagePlug() )
 		script["timeWarp"]["offset"].setValue( 1 )
 		script["timeWarp"]["in"].setInput( script["constant"]["out"] )
 
@@ -109,6 +107,7 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 			self.assertNotEqual( c0Hash, c1Hash )
 
 	def testTimeContext( self ) :
+
 		script = Gaffer.ScriptNode()
 		script["constant"] = GafferImage.Constant()
 		script["constant"]["format"].setValue( GafferImage.Format( 1, 1, 1.0 ) )
@@ -116,7 +115,8 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 		script["e"] = Gaffer.Expression()
 		script["e"].setExpression( 'parent["constant"]["color"] = imath.Color4f( context["frame"] )' )
 
-		script["timeWarp"] = GafferImage.ImageTimeWarp()
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( GafferImage.ImagePlug() )
 		script["timeWarp"]["in"].setInput( script["constant"]["out"] )
 		script["timeWarp"]["speed"].setValue( 0 )
 		script["timeWarp"]["offset"].setValue( 3 )
@@ -147,7 +147,9 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( 'parent["constant"]["color"]["r"] = context["frame"]' )
 
-		script["timeWarp"] = GafferImage.ImageTimeWarp()
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( GafferImage.ImagePlug() )
+
 		script["timeWarp"]["offset"].setValue( 1 )
 		script["timeWarp"]["in"].setInput( script["constant"]["out"] )
 
