@@ -42,6 +42,9 @@
 
 using namespace Gaffer;
 
+static IECore::InternedString g_inPlugName( "in" );
+static IECore::InternedString g_outPlugName( "out" );
+
 IE_CORE_DEFINERUNTIMETYPED( ContextProcessor );
 
 size_t ContextProcessor::g_firstPlugIndex = 0;
@@ -68,12 +71,12 @@ void ContextProcessor::setup( const ValuePlug *plug )
 		throw IECore::Exception( "ContextProcessor already has an \"out\" plug." );
 	}
 
-	PlugPtr in = plug->createCounterpart( "in", Plug::In );
+	PlugPtr in = plug->createCounterpart( g_inPlugName, Plug::In );
 	MetadataAlgo::copyColors( plug , in.get() , /* overwrite = */ false  );
 	in->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	addChild( in );
 
-	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
+	PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
 	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	addChild( out );
@@ -81,22 +84,22 @@ void ContextProcessor::setup( const ValuePlug *plug )
 
 ValuePlug *ContextProcessor::inPlug()
 {
-	return getChild<ValuePlug>( "in" );
+	return getChild<ValuePlug>( g_inPlugName );
 }
 
 const ValuePlug *ContextProcessor::inPlug() const
 {
-	return getChild<ValuePlug>( "in" );
+	return getChild<ValuePlug>( g_inPlugName );
 }
 
 ValuePlug *ContextProcessor::outPlug()
 {
-	return getChild<ValuePlug>( "out" );
+	return getChild<ValuePlug>( g_outPlugName );
 }
 
 const ValuePlug *ContextProcessor::outPlug() const
 {
-	return getChild<ValuePlug>( "out" );
+	return getChild<ValuePlug>( g_outPlugName );
 }
 
 BoolPlug *ContextProcessor::enabledPlug()
