@@ -38,7 +38,7 @@ import Gaffer
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.TimeWarpComputeNode,
+	Gaffer.TimeWarp,
 
 	"description",
 	"""
@@ -55,7 +55,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Multiplies the current frame value.
-			"""
+			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -64,7 +66,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Adds to the current frame value (after multiplication with speed).
-			"""
+			""",
+
+			"nodule:type", "",
 
 		],
 

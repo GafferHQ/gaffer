@@ -38,11 +38,11 @@ import Gaffer
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.DeleteContextVariablesComputeNode,
+	Gaffer.DeleteContextVariables,
 
 	"description",
 	"""
-	Removes variables from the context so that they won't be visible to upstream expressions.
+	Removes variables from the context so that they won't be visible to upstream nodes.
 	""",
 
 	plugs = {
@@ -52,7 +52,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The variables to be deleted.
-			"""
+			""",
+
+			"nodule:type", "",
 
 		]
 
