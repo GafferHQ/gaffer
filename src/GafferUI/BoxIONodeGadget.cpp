@@ -40,6 +40,7 @@
 #include "GafferUI/TextGadget.h"
 
 #include "Gaffer/BoxIO.h"
+#include "Gaffer/BoxOut.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -93,6 +94,10 @@ class BoxIOPlugAdder : public PlugAdder
 			m_boxIO->setup( endpoint );
 
 			applyEdgeMetadata( m_boxIO->plug() );
+			if( BoxOut *boxOut = runTimeCast<BoxOut>( m_boxIO.get() ) )
+			{
+				applyEdgeMetadata( boxOut->passThroughPlug() );
+			}
 			if( m_boxIO->promotedPlug() )
 			{
 				applyEdgeMetadata( m_boxIO->promotedPlug(), /* opposite = */ true );
