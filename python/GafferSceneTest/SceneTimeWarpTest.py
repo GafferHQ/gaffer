@@ -51,14 +51,16 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 	def testConstruct( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = GafferScene.SceneTimeWarp()
+		s["n"] = Gaffer.TimeWarp()
+		s["n"].setup( GafferScene.ScenePlug() )
 
 		self.assertEqual( s["n"]["speed"].getValue(), 1 )
 		self.assertEqual( s["n"]["offset"].getValue(), 0 )
 
 	def testAffects( self ) :
 
-		n = GafferScene.SceneTimeWarp()
+		n = Gaffer.TimeWarp()
+		n.setup( GafferScene.ScenePlug() )
 
 		c = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 		n["speed"].setValue( 2 )
@@ -80,7 +82,8 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 	def testNoExtraInputs( self ) :
 
 		p = GafferScene.Plane()
-		n = GafferScene.SceneTimeWarp()
+		n = Gaffer.TimeWarp()
+		n.setup( GafferScene.ScenePlug() )
 		n["in"].setInput( p["out"] )
 
 		self.assertTrue( "in1" not in n )
@@ -94,7 +97,8 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( 'parent["cube"]["dimensions"] = imath.V3f( context["frame"] )' )
 
-		s["n"] = GafferScene.SceneTimeWarp()
+		s["n"] = Gaffer.TimeWarp()
+		s["n"].setup( GafferScene.ScenePlug() )
 		s["n"]["in"].setInput( s["cube"]["out"] )
 		s["n"]["speed"].setValue( 0 )
 		s["n"]["offset"].setValue( 3 )

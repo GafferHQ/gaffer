@@ -53,7 +53,8 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 		a["in"].setInput( p["out"] )
 		a["attributes"].addMember( "user:something", IECore.StringData( "$a" ) )
 
-		c = GafferScene.SceneContextVariables()
+		c = Gaffer.ContextVariables()
+		c.setup( GafferScene.ScenePlug() )
 		c["in"].setInput( a["out"] )
 		c["variables"].addMember( "a", IECore.StringData( "aardvark" ) )
 
@@ -64,7 +65,8 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 
-		c = GafferScene.SceneContextVariables()
+		c = Gaffer.ContextVariables()
+		c.setup( GafferScene.ScenePlug() )
 		c["in"].setInput( p["out"] )
 		c["variables"].addMember( "", IECore.StringData( "aardvark" ) )
 

@@ -47,7 +47,7 @@ Gaffer.Metadata.registerNode(
 	names of the attributes being collected are provided as a context variable,
 	which can be used to vary the transforms that are collected.
 
-	By combining this with a SceneTimeWarp, you can create copies of
+	By combining this with a TimeWarp, you can create copies of
 	the transform at different times, useful for creating trail
 	effects.
 	""",
@@ -73,7 +73,7 @@ Gaffer.Metadata.registerNode(
 			in upstream expressions and string substitutions to vary
 			the transform.
 
-			For example, you could drive a SceneTimeWarp with this
+			For example, you could drive a TimeWarp with this
 			variable in order create copies of the transform at
 			different times.
 			""",
