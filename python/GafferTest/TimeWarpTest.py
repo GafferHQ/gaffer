@@ -52,7 +52,7 @@ class TimeWarpTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
-		s["w"] = Gaffer.TimeWarpComputeNode()
+		s["w"] = Gaffer.TimeWarp()
 		s["w"].setup( Gaffer.IntPlug() )
 		s["w"]["in"].setInput( s["m"]["product"] )
 		s["w"]["offset"].setValue( 2 )
@@ -80,7 +80,7 @@ class TimeWarpTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
-		s["w"] = Gaffer.TimeWarpComputeNode()
+		s["w"] = Gaffer.TimeWarp()
 		s["w"].setup( Gaffer.IntPlug() )
 		s["w"]["in"].setInput( s["m"]["product"] )
 		s["w"]["offset"].setValue( 2 )
@@ -99,7 +99,7 @@ class TimeWarpTest( GafferTest.TestCase ) :
 
 	def testAffects( self ) :
 
-		w = Gaffer.TimeWarpComputeNode()
+		w = Gaffer.TimeWarp()
 		w.setup( Gaffer.IntPlug() )
 
 		cs = GafferTest.CapturingSlot( w.plugDirtiedSignal() )
@@ -120,7 +120,7 @@ class TimeWarpTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
-		s["w"] = Gaffer.TimeWarpComputeNode()
+		s["w"] = Gaffer.TimeWarp()
 		s["w"].setup( Gaffer.IntPlug() )
 		s["w"]["in"].setInput( s["m"]["product"] )
 		s["w"]["offset"].setValue( 2 )

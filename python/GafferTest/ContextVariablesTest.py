@@ -49,7 +49,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		n = GafferTest.StringInOutNode()
 		self.assertHashesValid( n )
 
-		c = Gaffer.ContextVariablesComputeNode()
+		c = Gaffer.ContextVariables()
 		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( n["out"] )
 
@@ -63,7 +63,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 		n = GafferTest.StringInOutNode()
 
-		c = Gaffer.ContextVariablesComputeNode()
+		c = Gaffer.ContextVariables()
 		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( n["out"] )
 
@@ -87,7 +87,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.StringInOutNode()
 
-		s["c"] = Gaffer.ContextVariablesComputeNode()
+		s["c"] = Gaffer.ContextVariables()
 		s["c"].setup( Gaffer.StringPlug() )
 		s["c"]["in"].setInput( s["n"]["out"] )
 
@@ -108,7 +108,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.StringInOutNode()
 
-		s["c"] = Gaffer.ContextVariablesComputeNode()
+		s["c"] = Gaffer.ContextVariables()
 		s["c"].setup( Gaffer.StringPlug() )
 		s["c"]["in"].setInput( s["n"]["out"] )
 
@@ -134,7 +134,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.StringInOutNode()
 
-		s["c"] = Gaffer.ContextVariablesComputeNode()
+		s["c"] = Gaffer.ContextVariables()
 		s["c"].setup( Gaffer.StringPlug() )
 		s["c"]["in"].setInput( s["n"]["out"] )
 
@@ -172,7 +172,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 	def testEnabledPlugAffectsOutput( self ) :
 
-		c = Gaffer.ContextVariablesComputeNode()
+		c = Gaffer.ContextVariables()
 		c.setup( Gaffer.StringPlug() )
 
 		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )

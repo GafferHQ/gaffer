@@ -47,11 +47,11 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 
 		n = GafferTest.StringInOutNode()
 
-		d = Gaffer.DeleteContextVariablesComputeNode()
+		d = Gaffer.DeleteContextVariables()
 		d.setup( Gaffer.StringPlug() )
 		d["in"].setInput( n["out"] )
 
-		c = Gaffer.ContextVariablesComputeNode()
+		c = Gaffer.ContextVariables()
 		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( d["out"] )
 
@@ -69,11 +69,11 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 		n = GafferTest.StringInOutNode()
 		self.assertHashesValid( n )
 
-		d = Gaffer.DeleteContextVariablesComputeNode()
+		d = Gaffer.DeleteContextVariables()
 		d.setup( Gaffer.StringPlug() )
 		d["in"].setInput( n["out"] )
 
-		c = Gaffer.ContextVariablesComputeNode()
+		c = Gaffer.ContextVariables()
 		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( d["out"] )
 
@@ -97,7 +97,7 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 
 		n = GafferTest.StringInOutNode()
 
-		d = Gaffer.DeleteContextVariablesComputeNode()
+		d = Gaffer.DeleteContextVariables()
 		d.setup( Gaffer.StringPlug() )
 		d["in"].setInput( n["out"] )
 
