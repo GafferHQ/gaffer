@@ -275,5 +275,52 @@ class BoxOutTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["b"].correspondingInput( s["b"]["out"] ), s["b"]["in"] )
 
+	def testPassThroughInputAcceptance( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = GafferTest.AddNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"].setup( s["b"]["a"]["op1"] )
+
+		# Don't accept input from any old node
+
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["a"]["sum"] ) )
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["a"]["sum"] ) )
+
+		# Do accept input from BoxIn
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"].setup( s["b"]["a"]["op1"] )
+
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["i"]["out"] ) )
+
+		# Do accept input from unconnected Dot
+
+		s["b"]["d"] = Gaffer.Dot()
+		s["b"]["d"].setup( s["b"]["a"]["op1"] )
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+		# And Dot connected to BoxIn
+
+		s["b"]["d"]["in"].setInput( s["b"]["i"]["out"] )
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+		# And Dot connected to unconnected Dot
+
+		s["b"]["d2"] = Gaffer.Dot()
+		s["b"]["d2"].setup( s["b"]["a"]["op1"] )
+		s["b"]["d"]["in"].setInput( s["b"]["d2"]["out"] )
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+		# But not Dot connected to something else
+
+		s["b"]["d"]["in"].setInput( s["b"]["a"]["sum"] )
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
