@@ -48,5 +48,41 @@ Gaffer.Metadata.registerNode(
 
 	"icon", "boxOutNode.png",
 
+	plugs = {
+
+		"passThrough" : (
+
+			"description",
+			"""
+			May be connected to a BoxIn node to define
+			an input that is passed through when the Box
+			is disabled. Defining a pass-through also
+			activates the following behaviours :
+
+			- If the Box is deleted, the input and output
+			  nodes are reconnected automatically.
+			- The Box can be dragged onto an existing connection
+			  to insert it.
+			""",
+
+			"plugValueWidget:type", "",
+
+		),
+
+		"enabled" : (
+
+			"description",
+			"""
+			Automatically connected to the Box.enabled plugs
+			to control the pass-through behaviour.
+			""",
+
+			"plugValueWidget:type", "",
+			"nodule:type", "",
+
+		),
+
+	}
+
 )
 
