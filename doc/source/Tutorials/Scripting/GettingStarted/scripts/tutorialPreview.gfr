@@ -1,0 +1,37 @@
+import Gaffer
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 50, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["Sphere"] = GafferScene.Sphere( "Sphere" )
+parent.addChild( __children["Sphere"] )
+__children["Group"] = GafferScene.Group( "Group" )
+parent.addChild( __children["Group"] )
+__children["Camera"] = GafferScene.Camera( "Camera" )
+parent.addChild( __children["Camera"] )
+__children["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
+parent.addChild( __children["ShaderAssignment"] )
+__children["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+parent.addChild( __children["PathFilter"] )
+__children["OpenGLShader"] = GafferScene.OpenGLShader( "OpenGLShader" )
+parent.addChild( __children["OpenGLShader"] )
+__children["OpenGLShader"].loadShader( "Constant" )
+__children["OpenGLShader"]["parameters"].addChild( Gaffer.Color3fPlug( "Cs", defaultValue = imath.Color3f( 0, 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"]["in0"].setInput( __children["ShaderAssignment"]["out"] )
+__children["Group"]["in"]["in1"].setInput( __children["Camera"]["out"] )
+__children["Camera"]["transform"]["translate"].setValue( imath.V3f( 0, 0, 10 ) )
+__children["ShaderAssignment"]["in"].setInput( __children["Sphere"]["out"] )
+__children["ShaderAssignment"]["filter"].setInput( __children["PathFilter"]["out"] )
+__children["ShaderAssignment"]["shader"].setInput( __children["OpenGLShader"]["out"] )
+__children["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+__children["OpenGLShader"]["parameters"]["Cs"].setValue( imath.Color3f( 0.75, 0.25, 0.75 ) )
+__children["Sphere"]["radius"].setValue( 4.0 )
+
+del __children
