@@ -70,5 +70,30 @@ class FilterProcessorTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["ShaderAssignment"]["filter"].getInput(), s["UnionFilter"]["out"] )
 
+	def testLoadBoxedFromVersion0_27( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/filterProcessorBoxed-0.27.0.0.gfr" )
+		s.load()
+
+		self.assertEqual( len( s["Box"]["FilterSwitch"]["in"] ), 3 )
+		for c in s["Box"]["FilterSwitch"]["in"] :
+			self.assertIsInstance( c, GafferScene.FilterPlug )
+
+		self.assertEqual( len( s["Box"]["UnionFilter"]["in"] ), 3 )
+		for c in s["Box"]["UnionFilter"]["in"] :
+			self.assertIsInstance( c, GafferScene.FilterPlug )
+
+		self.assertEqual( s["Box"]["FilterSwitch"]["in"][0].getInput(), s["Box"]["PathFilter"]["out"] )
+		self.assertEqual( s["Box"]["FilterSwitch"]["in"][1].getInput(), s["Box"]["PathFilter1"]["out"] )
+		self.assertEqual( s["Box"]["FilterSwitch"]["in"][2].getInput(), None )
+
+		self.assertEqual( s["Box"]["UnionFilter"]["in"][0].getInput(), s["Box"]["FilterSwitch"]["out"] )
+		self.assertEqual( s["Box"]["UnionFilter"]["in"][1].getInput(), s["Box"]["PathFilter2"]["out"] )
+		self.assertEqual( s["Box"]["UnionFilter"]["in"][2].getInput(), None )
+		self.assertEqual( s["Box"]["UnionFilter"]["in"][2].getValue(), IECore.PathMatcher.Result.NoMatch )
+
+		self.assertEqual( s["Box"]["ShaderAssignment"]["filter"].getInput(), s["Box"]["UnionFilter"]["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

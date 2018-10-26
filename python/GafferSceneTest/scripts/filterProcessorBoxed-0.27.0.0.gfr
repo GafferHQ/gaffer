@@ -1,0 +1,48 @@
+import Gaffer
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 49, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 1, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["Box"] = Gaffer.Box( "Box" )
+parent.addChild( __children["Box"] )
+__children["Box"].addChild( GafferScene.FilterSwitch( "FilterSwitch" ) )
+__children["Box"]["FilterSwitch"]["in"].addChild( Gaffer.IntPlug( "in1", defaultValue = 0, minValue = 0, maxValue = 7, flags = ( Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) & ~Gaffer.Plug.Flags.Cacheable, ) )
+__children["Box"]["FilterSwitch"]["in"].addChild( Gaffer.IntPlug( "in2", defaultValue = 0, minValue = 0, maxValue = 7, flags = ( Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) & ~Gaffer.Plug.Flags.Cacheable, ) )
+__children["Box"]["FilterSwitch"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"].addChild( GafferScene.UnionFilter( "UnionFilter" ) )
+__children["Box"]["UnionFilter"]["in"].addChild( Gaffer.IntPlug( "in1", defaultValue = 0, minValue = 0, maxValue = 7, flags = ( Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) & ~Gaffer.Plug.Flags.Cacheable, ) )
+__children["Box"]["UnionFilter"]["in"].addChild( Gaffer.IntPlug( "in2", defaultValue = 0, minValue = 0, maxValue = 7, flags = ( Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) & ~Gaffer.Plug.Flags.Cacheable, ) )
+__children["Box"]["UnionFilter"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"].addChild( GafferScene.PathFilter( "PathFilter" ) )
+__children["Box"]["PathFilter"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"].addChild( GafferScene.PathFilter( "PathFilter1" ) )
+__children["Box"]["PathFilter1"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"].addChild( GafferScene.PathFilter( "PathFilter2" ) )
+__children["Box"]["PathFilter2"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"].addChild( GafferScene.ShaderAssignment( "ShaderAssignment" ) )
+__children["Box"]["ShaderAssignment"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Box"]["FilterSwitch"]["out"].setInput( __children["Box"]["FilterSwitch"]["in"]["in0"] )
+__children["Box"]["FilterSwitch"]["in"]["in0"].setInput( __children["Box"]["PathFilter"]["out"] )
+__children["Box"]["FilterSwitch"]["in"]["in1"].setInput( __children["Box"]["PathFilter1"]["out"] )
+__children["Box"]["FilterSwitch"]["__uiPosition"].setValue( imath.V2f( -21.050106, 0.49101162 ) )
+__children["Box"]["UnionFilter"]["in"]["in0"].setInput( __children["Box"]["FilterSwitch"]["out"] )
+__children["Box"]["UnionFilter"]["in"]["in1"].setInput( __children["Box"]["PathFilter2"]["out"] )
+__children["Box"]["UnionFilter"]["__uiPosition"].setValue( imath.V2f( -13.0502367, -8.67304993 ) )
+__children["Box"]["PathFilter"]["__uiPosition"].setValue( imath.V2f( -29.0498962, 9.65507889 ) )
+__children["Box"]["PathFilter1"]["__uiPosition"].setValue( imath.V2f( -16.0498962, 9.65507317 ) )
+__children["Box"]["PathFilter2"]["__uiPosition"].setValue( imath.V2f( -8.050107, 0.492721558 ) )
+__children["Box"]["ShaderAssignment"]["filter"].setInput( __children["Box"]["UnionFilter"]["out"] )
+__children["Box"]["ShaderAssignment"]["__uiPosition"].setValue( imath.V2f( -24.8232021, -15.7550812 ) )
+__children["Box"]["__uiPosition"].setValue( imath.V2f( 1.89942265, -8.6056385 ) )
+
+
+del __children
+

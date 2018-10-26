@@ -103,8 +103,8 @@ class AboutWindow( GafferUI.Window ) :
 
 					license = "".join( open( os.path.expandvars( about.license() ) ).readlines() )
 					with GafferUI.ScrolledContainer(
-						horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never,
-						verticalMode=GafferUI.ScrolledContainer.ScrollMode.Automatic,
+						horizontalMode=GafferUI.ScrollMode.Never,
+						verticalMode=GafferUI.ScrollMode.Automatic,
 						borderWidth = 5
 					) :
 						self.__label( "<pre>" + license + "</pre>" )
@@ -120,8 +120,8 @@ class AboutWindow( GafferUI.Window ) :
 					) :
 
 						with GafferUI.ScrolledContainer(
-							horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never,
-							verticalMode=GafferUI.ScrolledContainer.ScrollMode.Always,
+							horizontalMode=GafferUI.ScrollMode.Never,
+							verticalMode=GafferUI.ScrollMode.Always,
 							borderWidth = 5
 						) :
 

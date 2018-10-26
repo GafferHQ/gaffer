@@ -40,7 +40,7 @@ import GafferUI
 from Qt import QtCore
 
 ## \todo Move other enums here - ListContainer.Orientation for instance.
-__all__ = [ "HorizontalAlignment", "VerticalAlignment", "Edge" ]
+__all__ = [ "HorizontalAlignment", "VerticalAlignment", "Edge", "ScrollMode" ]
 
 # HorizontalAlignment
 
@@ -113,3 +113,30 @@ VerticalAlignment._toQt = __verticalToQt
 # Edge
 
 Edge = IECore.Enum.create( "Top", "Bottom", "Left", "Right" )
+
+# Scroll Mode
+
+ScrollMode = IECore.Enum.create( "Never", "Always", "Automatic" )
+
+__modesToPolicies = {
+	ScrollMode.Never : QtCore.Qt.ScrollBarAlwaysOff,
+	ScrollMode.Always : QtCore.Qt.ScrollBarAlwaysOn,
+	ScrollMode.Automatic : QtCore.Qt.ScrollBarAsNeeded,
+}
+
+__policiesToModes = {
+	QtCore.Qt.ScrollBarAlwaysOff : ScrollMode.Never,
+	QtCore.Qt.ScrollBarAlwaysOn : ScrollMode.Always,
+	QtCore.Qt.ScrollBarAsNeeded : ScrollMode.Automatic,
+}
+
+@staticmethod
+def __scrollModeToQt ( a ):
+	return __modesToPolicies[a]
+
+@staticmethod
+def __scrollModeFromQt ( a ):
+	return __policiesToModes[a]
+
+ScrollMode._fromQt = __scrollModeFromQt
+ScrollMode._toQt = __scrollModeToQt
