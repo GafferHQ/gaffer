@@ -39,7 +39,7 @@ install:
     - $COMPILER --version
 
 script:
-    - scons -j 2 install CXX=$COMPILER CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH DELIGHT_ROOT=$DELIGHT BUILD_CACHEDIR=sconsCache
+    - scons -j 2 install CXX=$COMPILER CXXSTD=$CXXSTD BUILD_TYPE=$BUILD_TYPE ENV_VARS_TO_IMPORT=PATH DELIGHT_ROOT=$DELIGHT BUILD_CACHEDIR=sconsCache
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
@@ -81,10 +81,10 @@ matrix:
     # We can then simply list the exact builds we want.
     include:
         - os: linux
-          env: COMPILER=g++-4.8 CXXSTD=c++11 DEBUG=0
+          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=RELEASE
         - os: linux
-          env: COMPILER=g++-4.8 CXXSTD=c++11 DEBUG=1
+          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=DEBUG
         - os: linux
-          env: COMPILER=g++-6 CXXSTD=c++14 DEBUG=0
+          env: COMPILER=g++-6 CXXSTD=c++14 BUILD_TYPE=RELEASE
         - os: osx
-          env: COMPILER=clang++ CXXSTD=c++11 DEBUG=0
+          env: COMPILER=clang++ CXXSTD=c++11 BUILD_TYPE=RELEASE
