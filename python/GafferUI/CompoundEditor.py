@@ -173,6 +173,7 @@ class CompoundEditor( GafferUI.Editor ) :
 			tabbedContainer = GafferUI.Widget.widgetAt( GafferUI.Widget.mousePosition(), _TabbedContainer )
 			if tabbedContainer is not None :
 				tabbedContainer.setTabsVisible( not tabbedContainer.getTabsVisible() )
+				return True
 
 		return False
 
