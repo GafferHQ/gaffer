@@ -1077,9 +1077,9 @@ _DataAccessor.registerType( IECore.V3dVectorData.staticTypeId(), _CompoundDataAc
 
 class _QuatDataAccessor( _CompoundDataAccessor ) :
 
-	def __init__( self, data, heading = "" ) :
+	def __init__( self, data  ) :
 
-		_CompoundDataAccessor.__init__( self, data, heading = heading )
+		_CompoundDataAccessor.__init__( self, data )
 
 	def numColumns( self ) :
 
@@ -1102,9 +1102,9 @@ _DataAccessor.registerType( IECore.QuatdVectorData.staticTypeId(), _QuatDataAcce
 
 class _BoxDataAccessor( _CompoundDataAccessor ) :
 
-	def __init__( self, data, heading = "" ) :
+	def __init__( self, data ) :
 
-		_DataAccessor.__init__( self, data, heading = heading )
+		_DataAccessor.__init__( self, data  )
 
 	def numColumns( self ) :
 
@@ -1146,9 +1146,9 @@ _DataAccessor.registerType( IECore.Box3dVectorData.staticTypeId(), _BoxDataAcces
 
 class _MatrixDataAccessor( _DataAccessor ) :
 
-	def __init__( self, data, heading = "" ) :
+	def __init__( self, data ) :
 
-		_DataAccessor.__init__( self, data, heading = heading )
+		_DataAccessor.__init__( self, data )
 
 	def numColumns( self ) :
 
