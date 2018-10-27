@@ -201,6 +201,7 @@ class Menu( GafferUI.Widget ) :
 			self.__searchMenu = _Menu( self._qtWidget(), "" )
 			self.__searchMenu.aboutToShow.connect( Gaffer.WeakMethod( self.__searchMenuShow ) )
 			self.__searchLine = QtWidgets.QLineEdit()
+			self.__searchLine.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
 			self.__searchLine.setObjectName( "search" )
