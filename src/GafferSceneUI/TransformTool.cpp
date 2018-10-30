@@ -628,6 +628,17 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
+	// If there's no input scene, then there's no need to
+	// do anything. Our `scenePlug()` receives its input
+	// from the View's input, but that doesn't count.
+	const ScenePlug *scene = scenePlug()->getInput<ScenePlug>();
+	scene = scene ? scene->getInput<ScenePlug>() : scene;
+	if( !scene )
+	{
+		return;
+	}
+
+
 	// Otherwise we need to populate our selection from
 	// the scene selection.
 
@@ -648,7 +659,7 @@ void TransformTool::updateSelection() const
 		Selection selection;
 		while( path.size() && !selection.transformPlug )
 		{
-			selection = Selection( scenePlug(), path, view()->getContext() );
+			selection = Selection( scene, path, view()->getContext() );
 			path.pop_back();
 		}
 
