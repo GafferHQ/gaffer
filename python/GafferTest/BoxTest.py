@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import os
 
 import IECore
 
@@ -1003,6 +1004,29 @@ class BoxTest( GafferTest.TestCase ) :
 			box = Gaffer.Box.create( scriptNode, setOfNodesToBox )
 		except RuntimeError, e :
 			self.assertTrue( False, msg = "boxing should not raise an exception here" )
+
+	def testPassThroughCreatedInVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/boxPassThroughVersion-0.52.0.0.gfr" )
+		s.load()
+
+		def assertPassThrough( script ) :
+
+			self.assertEqual( script["AddTen"]["op1"].getValue(), 0 )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 10 )
+			self.assertEqual( script["AddTen"].correspondingInput( script["AddTen"]["sum"] ), script["AddTen"]["op1"] )
+
+			script["AddTen"]["enabled"].setValue( False )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 0 )
+
+		assertPassThrough( s )
+
+		s["AddTen"]["enabled"].setValue( True )
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertPassThrough( s2 )
 
 if __name__ == "__main__":
 	unittest.main()
