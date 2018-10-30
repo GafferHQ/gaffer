@@ -92,6 +92,15 @@ def _boldFormatter( graphComponents ) :
 
 	return "<b>" + ".".join( g.getName() for g in graphComponents ) + "</b>"
 
+def _distance( ancestor, descendant ) :
+
+	result = 0
+	while descendant is not None and descendant != ancestor :
+		result += 1
+		descendant = descendant.parent()
+
+	return result
+
 class _SelectionWidget( GafferUI.Frame ) :
 
 	def __init__( self, tool, **kw ) :
@@ -161,6 +170,13 @@ class _SelectionWidget( GafferUI.Frame ) :
 			self.__infoRow.setVisible( True )
 			if len( toolSelection ) == 1 :
 				self.__infoLabel.setText( "Editing " )
+				numComponents = _distance(
+					toolSelection[0].transformPlug.commonAncestor( toolSelection[0].scene ),
+					toolSelection[0].transformPlug,
+				)
+				if toolSelection[0].scene.node().isAncestorOf( toolSelection[0].transformPlug ) :
+					numComponents += 1
+				self.__nameLabel.setNumComponents( numComponents )
 				self.__nameLabel.setGraphComponent( toolSelection[0].transformPlug )
 			else :
 				self.__infoLabel.setText( "Editing {0} transforms".format( len( toolSelection ) ) )
