@@ -232,7 +232,26 @@ ValuePlugPtr typedObjectValuePlug( const std::string &name, Plug::Direction dire
 	return result;
 }
 
+template<typename T>
+ValuePlugPtr splineValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+
+	typename Gaffer::SplineDefinition<typename T::ValueType>::PointContainer points;
+
+	points.insert( std::make_pair( 0.0f, typename T::ValueType::YType(0.0f) ) );
+	points.insert( std::make_pair( 0.1f, typename T::ValueType::YType(0.1f) ) );
+	points.insert( std::make_pair( 0.9f, typename T::ValueType::YType(0.9f) ) );
+	points.insert( std::make_pair( 1.0f, typename T::ValueType::YType(1.0f) ) );
+
+	return new SplinePlug<SplineDefinition<typename T::ValueType>>(
+			name,
+			direction,
+			Gaffer::SplineDefinition<typename T::ValueType>( points , Gaffer::SplineDefinitionInterpolationLinear ),
+			flags
+	);
 }
+
+} // namespace
 
 namespace Gaffer
 {
@@ -372,6 +391,14 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		case M44fVectorDataTypeId :
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const M44fVectorData *>( value ) );
+		}
+		case SplineffDataTypeId :
+		{
+			return splineValuePlug( name, direction, flags, static_cast<const SplineffData*>( value ) );
+		}
+		case SplinefColor3fDataTypeId :
+		{
+			return splineValuePlug( name, direction, flags, static_cast<const SplinefColor3fData*>( value ) );
 		}
 		default :
 			throw IECore::Exception(
