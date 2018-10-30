@@ -45,6 +45,7 @@
 
 using namespace std;
 using namespace boost::python;
+using namespace IECorePython;
 using namespace GafferUI;
 
 static boost::python::list registeredTools( IECore::TypeId viewType )
@@ -62,6 +63,7 @@ static boost::python::list registeredTools( IECore::TypeId viewType )
 void GafferUIModule::bindTool()
 {
 	GafferBindings::NodeClass<Tool>( nullptr, no_init )
+		.def( "view", (View *(Tool::*)())&Tool::view, return_value_policy<CastToIntrusivePtr>() )
 		.def( "create", &Tool::create )
 		.staticmethod( "create" )
 		.def( "registeredTools", &registeredTools )
