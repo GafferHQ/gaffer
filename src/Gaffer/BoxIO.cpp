@@ -231,15 +231,7 @@ void BoxIO::setup( const Plug *plug )
 
 	if( m_direction == Plug::Out )
 	{
-		addChild( plug->createCounterpart( g_passThroughName, Plug::In ) );
-		addChild( new BoolPlug( g_enabledName, Plug::In, true ) );
-		addChild( new Switch( g_switchName ) );
-		switchInternal()->setup( plug );
-		switchInternal()->enabledPlug()->setInput( enabledPlugInternal() );
-		switchInternal()->inPlugs()->getChild<Plug>( 0 )->setInput( passThroughPlugInternal() );
-		switchInternal()->inPlugs()->getChild<Plug>( 1 )->setInput( inPlugInternal() );
-		switchInternal()->indexPlug()->setValue( 1 );
-		outPlugInternal()->setInput( switchInternal()->outPlug() );
+		setupPassThrough();
 	}
 
 	if( parent<Box>() )
@@ -254,6 +246,19 @@ void BoxIO::setup( const Plug *plug )
 			setupPromotedPlug();
 		}
 	}
+}
+
+void BoxIO::setupPassThrough()
+{
+	addChild( inPlugInternal()->createCounterpart( g_passThroughName, Plug::In ) );
+	addChild( new BoolPlug( g_enabledName, Plug::In, true ) );
+	addChild( new Switch( g_switchName ) );
+	switchInternal()->setup( inPlugInternal() );
+	switchInternal()->enabledPlug()->setInput( enabledPlugInternal() );
+	switchInternal()->inPlugs()->getChild<Plug>( 0 )->setInput( passThroughPlugInternal() );
+	switchInternal()->inPlugs()->getChild<Plug>( 1 )->setInput( inPlugInternal() );
+	switchInternal()->indexPlug()->setValue( 1 );
+	outPlugInternal()->setInput( switchInternal()->outPlug() );
 }
 
 void BoxIO::setupPromotedPlug()
@@ -278,10 +283,18 @@ void BoxIO::setupPromotedPlug()
 
 void BoxIO::scriptExecuted( ScriptNode *script )
 {
-	if( inPlugInternal() && !promotedPlug() )
+	if( m_direction == Plug::Out && inPlugInternal() && !passThroughPlugInternal() )
+	{
+		// We're loading an old script from the times before the pass
+		// through plug.
+		setupPassThrough();
+	}
+
+	if( parent<Box>() && inPlugInternal() && !promotedPlug() )
 	{
 		setupPromotedPlug();
 	}
+
 	script->scriptExecutedSignal().disconnect(
 		boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
 	);
@@ -422,18 +435,18 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 	// could be that we're being cut+pasted into a new Box. In
 	// that case we need to set up our promoted plug, but we
 	// won't know if we're a cut+paste or a regular load until
-	// execution is complete. So we defer until then.
+	// execution is complete. So we defer until then. We use the
+	// same mechanism to automatically add the pass-through
+	// mechanism to old BoxOuts that were serialised without it.
 
-	if( parent<Box>() )
+	ScriptNode *script = scriptNode();
+	if( script && script->isExecuting() )
 	{
-		ScriptNode *script = scriptNode();
-		if( script && script->isExecuting() )
-		{
-			script->scriptExecutedSignal().connect(
-				boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
-			);
-		}
+		script->scriptExecutedSignal().connect(
+			boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
+		);
 	}
+
 }
 
 void BoxIO::plugInputChanged( Plug *plug )

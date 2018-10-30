@@ -168,6 +168,7 @@ class GAFFER_API BoxIO : public Node
 		boost::signals::scoped_connection m_promotedPlugNameChangedConnection;
 		boost::signals::scoped_connection m_promotedPlugParentChangedConnection;
 
+		void setupPassThrough();
 		void setupPromotedPlug();
 		void scriptExecuted( ScriptNode *script );
 		void plugSet( Plug *plug );

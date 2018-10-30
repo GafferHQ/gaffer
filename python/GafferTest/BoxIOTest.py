@@ -133,6 +133,7 @@ class BoxIOTest( GafferTest.TestCase ) :
 
 		self.assertIsInstance( s["BoxIn"], Gaffer.BoxIn )
 		self.assertIsInstance( s["BoxOut"], Gaffer.BoxOut )
+		self.assertIn( "passThrough", s["BoxOut"] )
 
 	def testImportIntoBoxVersion0_52( self ) :
 
@@ -142,6 +143,7 @@ class BoxIOTest( GafferTest.TestCase ) :
 		s.executeFile( os.path.dirname( __file__ ) + "/scripts/boxIOOutsideBoxVersion-0.52.0.0.gfr", parent = s["b"] )
 		self.assertIn( "in", s["b"] )
 		self.assertIn( "out", s["b"] )
+		self.assertIn( "passThrough", s["b"]["BoxOut"] )
 
 	def testCopyBareNodesIntoNewBox( self ) :
 
