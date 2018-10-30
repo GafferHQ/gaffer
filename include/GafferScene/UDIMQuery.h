@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,62 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_UDIMQUERY_H
+#define GAFFERSCENE_UDIMQUERY_H
 
-#include "ObjectProcessorBinding.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
 
-#include "GafferScene/DeleteCurves.h"
-#include "GafferScene/DeleteFaces.h"
-#include "GafferScene/DeleteObject.h"
-#include "GafferScene/DeletePoints.h"
-#include "GafferScene/LightToCamera.h"
-#include "GafferScene/MeshDistortion.h"
-#include "GafferScene/MeshTangents.h"
-#include "GafferScene/MeshToPoints.h"
-#include "GafferScene/MeshType.h"
-#include "GafferScene/Parameters.h"
-#include "GafferScene/PointsType.h"
-#include "GafferScene/ReverseWinding.h"
-#include "GafferScene/UDIMQuery.h"
+#include "GafferScene/FilterPlug.h"
+#include "GafferScene/ScenePlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/StringPlug.h"
 
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindObjectProcessor()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
-	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshToPoints>();
-	GafferBindings::DependencyNodeClass<MeshType>();
-	GafferBindings::DependencyNodeClass<GafferScene::LightToCamera>();
-	GafferBindings::DependencyNodeClass<Parameters>();
-	GafferBindings::DependencyNodeClass<ReverseWinding>();
-	GafferBindings::DependencyNodeClass<GafferScene::MeshDistortion>();
-	GafferBindings::DependencyNodeClass<DeleteObject>();
-	GafferBindings::DependencyNodeClass<UDIMQuery>();
+class GAFFERSCENE_API UDIMQuery : public Gaffer::ComputeNode
+{
 
-}
+	public :
+
+		UDIMQuery( const std::string &name=defaultName<UDIMQuery>() );
+		~UDIMQuery() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::UDIMQuery, UDIMQueryTypeId, Gaffer::ComputeNode );
+
+		GafferScene::ScenePlug *inPlug();
+		const GafferScene::ScenePlug *inPlug() const;
+
+		Gaffer::StringPlug *uvSetPlug();
+		const Gaffer::StringPlug *uvSetPlug() const;
+
+		Gaffer::StringPlug *attributesPlug();
+		const Gaffer::StringPlug *attributesPlug() const;
+
+		GafferScene::FilterPlug *filterPlug();
+		const GafferScene::FilterPlug *filterPlug() const;
+
+		Gaffer::CompoundObjectPlug *outPlug();
+		const Gaffer::CompoundObjectPlug *outPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( UDIMQuery );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_UDIMQUERY_H
