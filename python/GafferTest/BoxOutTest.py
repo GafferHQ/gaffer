@@ -322,5 +322,31 @@ class BoxOutTest( GafferTest.TestCase ) :
 		s["b"]["d"]["in"].setInput( s["b"]["a"]["sum"] )
 		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
 
+	def testInsertAndPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a1"] = GafferTest.AddNode()
+
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["a1"]["sum"] )
+		s["a2"]["op2"].setValue( 10 )
+
+		s["a3"] = GafferTest.AddNode()
+		s["a3"]["op1"].setInput( s["a2"]["sum"] )
+
+		Gaffer.Metadata.registerValue( s["a2"]["op1"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( s["a2"]["sum"], "nodule:type", "GafferUI::StandardNodule" )
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a2"] ] ) )
+		Gaffer.BoxIO.insert( b )
+
+		b["BoxOut"]["passThrough"].setInput( b["BoxIn"]["out"] )
+		self.assertIn( "enabled", b )
+
+		self.assertEqual( b["sum"].getValue(), 10 )
+		b["enabled"].setValue( False )
+		self.assertEqual( b["sum"].getValue(), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

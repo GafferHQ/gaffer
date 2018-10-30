@@ -244,6 +244,7 @@ void BoxIO::setup( const Plug *plug )
 		if( !script || !script->isExecuting() )
 		{
 			setupPromotedPlug();
+			setupBoxEnabledPlug();
 		}
 	}
 }
@@ -266,19 +267,24 @@ void BoxIO::setupPromotedPlug()
 	Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
 	Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
 	namePlug()->setValue( promoted->getName() );
+}
 
-	if( m_direction == Plug::Out )
+void BoxIO::setupBoxEnabledPlug()
+{
+	if( m_direction != Plug::Out )
 	{
-		Box *box = parent<Box>();
-		BoolPlug *boxEnabledPlug = box->enabledPlug();
-		if( !boxEnabledPlug )
-		{
-			BoolPlugPtr p = new BoolPlug( g_enabledName, Plug::In, true, Plug::Default | Plug::Dynamic );
-			box->addChild( p );
-			boxEnabledPlug = p.get();
-		}
-		enabledPlugInternal()->setInput( boxEnabledPlug );
+		return;
 	}
+
+	Box *box = parent<Box>();
+	BoolPlug *boxEnabledPlug = box->enabledPlug();
+	if( !boxEnabledPlug )
+	{
+		BoolPlugPtr p = new BoolPlug( g_enabledName, Plug::In, true, Plug::Default | Plug::Dynamic );
+		box->addChild( p );
+		boxEnabledPlug = p.get();
+	}
+	enabledPlugInternal()->setInput( boxEnabledPlug );
 }
 
 void BoxIO::scriptExecuted( ScriptNode *script )
@@ -293,6 +299,7 @@ void BoxIO::scriptExecuted( ScriptNode *script )
 	if( parent<Box>() && inPlugInternal() && !promotedPlug() )
 	{
 		setupPromotedPlug();
+		setupBoxEnabledPlug();
 	}
 
 	script->scriptExecutedSignal().disconnect(
@@ -632,7 +639,7 @@ bool BoxIO::canInsert( const Box *box )
 			const Plug::OutputContainer &outputs = plug->outputs();
 			for( Plug::OutputContainer::const_iterator oIt = outputs.begin(), oeIt = outputs.end(); oIt != oeIt; ++oIt )
 			{
-				if( hasNodule( *oIt ) && !runTimeCast<BoxIn>( (*oIt)->node() ) )
+				if( hasNodule( *oIt ) && !runTimeCast<BoxIO>( (*oIt)->node() ) )
 				{
 					return true;
 				}
@@ -641,7 +648,7 @@ bool BoxIO::canInsert( const Box *box )
 		else
 		{
 			const Plug *input = plug->getInput();
-			if( input && hasNodule( input ) && !runTimeCast<const BoxOut>( input->node() ) )
+			if( input && hasNodule( input ) && !runTimeCast<const BoxIO>( input->node() ) )
 			{
 				return true;
 			}
@@ -665,7 +672,7 @@ void BoxIO::insert( Box *box )
 			const Plug::OutputContainer &outputs = plug->outputs();
 			for( Plug::OutputContainer::const_iterator oIt = outputs.begin(), oeIt = outputs.end(); oIt != oeIt; ++oIt )
 			{
-				if( hasNodule( *oIt ) && !runTimeCast<BoxIn>( (*oIt)->node() ) )
+				if( hasNodule( *oIt ) && !runTimeCast<BoxIO>( (*oIt)->node() ) )
 				{
 					outputsNeedingBoxIn.push_back( *oIt );
 				}
@@ -692,7 +699,7 @@ void BoxIO::insert( Box *box )
 			// Output plug
 
 			Plug *input = plug->getInput();
-			if( !input || !hasNodule( input ) || runTimeCast<BoxOut>( input->node() ) )
+			if( !input || !hasNodule( input ) || runTimeCast<BoxIO>( input->node() ) )
 			{
 				continue;
 			}
@@ -704,6 +711,7 @@ void BoxIO::insert( Box *box )
 
 			boxOut->plug()->setInput( input );
 			plug->setInput( boxOut->outPlugInternal() );
+			boxOut->setupBoxEnabledPlug();
 		}
 	}
 

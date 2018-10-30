@@ -170,6 +170,7 @@ class GAFFER_API BoxIO : public Node
 
 		void setupPassThrough();
 		void setupPromotedPlug();
+		void setupBoxEnabledPlug();
 		void scriptExecuted( ScriptNode *script );
 		void plugSet( Plug *plug );
 		void parentChanged( GraphComponent *oldParent );
