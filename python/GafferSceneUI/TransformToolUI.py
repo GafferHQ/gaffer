@@ -106,6 +106,8 @@ class _SelectionWidget( GafferUI.Frame ) :
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 ) :
 
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__infoRow :
+					GafferUI.Image( "infoSmall.png" )
+					GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 					self.__infoLabel = GafferUI.Label( "" )
 					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = sys.maxint )
 					self.__nameLabel.setFormatter( _boldFormatter )
