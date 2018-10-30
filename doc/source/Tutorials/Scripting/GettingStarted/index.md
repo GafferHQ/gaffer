@@ -1,14 +1,14 @@
 Getting Started
 ===============
 
-Gaffer's Python scripting API is fairly frugal, so learning a few fundamental concepts goes a long way. Here we'll take a quick tour through these fundamentals using Gaffer's [ScriptEditor][1]. We'll see how we can enter Python code within the ScriptEditor to create nodes and plugs, and edit their values and connections. We'll also see how we can use drag and drop to conveniently enter text into the ScriptEditor itself.
+Gaffer's Python scripting API is fairly frugal, so learning a few fundamental concepts goes a long way. Here we'll take a quick tour through these fundamentals using Gaffer's [PythonEditor][1]. We'll see how we can enter Python code within the PythonEditor to create nodes and plugs, and edit their values and connections. We'll also see how we can use drag and drop to conveniently enter text into the PythonEditor itself.
 
-The ScriptEditor
+The PythonEditor
 ----------------
 
-After launching Gaffer, the ScriptEditor can be found in its default location on a tab in the bottom right of the main window.
+After launching Gaffer, the PythonEditor can be found in its default location on a tab in the bottom right of the main window.
 
-![ScriptEditor image](images/scriptEditor.png)
+![PythonEditor image](images/pythonEditor.png)
 
 The editor is broken into two sections. The bottom field is for entering python commands, and this functions much like any other basic text editor. We'll get started right away by entering the text `print "Hello World!", script`. We can then execute the code by pressing _Ctrl+Enter_.
 
@@ -30,7 +30,7 @@ node["firstPlug"] = Gaffer.IntPlug()
 node["secondPlug"] = Gaffer.FloatPlug()
 ```
 
-If you follow along by entering the code above in the ScriptEditor, you may wonder why our newly created node hasn't appeared in the NodeEditor or GraphEditor. This is because we haven't given it a parent yet, so it is not associated with any script. Let's add it to the `script` root, and select it so that it appears in the NodeEditor :
+If you follow along by entering the code above in the PythonEditor, you may wonder why our newly created node hasn't appeared in the NodeEditor or GraphEditor. This is because we haven't given it a parent yet, so it is not associated with any script. Let's add it to the `script` root, and select it so that it appears in the NodeEditor :
 
 ```
 script.addChild( node )
@@ -64,11 +64,11 @@ import GafferScene
 script.addChild( GafferScene.Sphere() )
 ```
 
-This time we've added the node directly to the script without assigning it to a variable, so we don't yet have a convenient handle for the node. Fear not, we can always get an appropriate reference to a node by _Middle Dragging_ it from the GraphEditor and into the ScriptEditor. As you might guess, this gives us the familiar dictionary syntax of `script["Sphere"]`. We can do the same for plugs by _Left Dragging_ them from the NodeEditor. Get the plug for controlling the radius by dragging the "Radius" label from the NodeEditor, to insert the text `script["Sphere"]["radius"]`.
+This time we've added the node directly to the script without assigning it to a variable, so we don't yet have a convenient handle for the node. Fear not, we can always get an appropriate reference to a node by _Middle Dragging_ it from the GraphEditor and into the PythonEditor. As you might guess, this gives us the familiar dictionary syntax of `script["Sphere"]`. We can do the same for plugs by _Left Dragging_ them from the NodeEditor. Get the plug for controlling the radius by dragging the "Radius" label from the NodeEditor, to insert the text `script["Sphere"]["radius"]`.
 
 Plugs are Python classes in the same way that nodes are, and have additional methods we can use for editing them. The `getValue()` method returns the current value of a plug, so we can use it to learn that the sphere has a radius of 1 :
 
-![ScriptEditor getValue() image](images/scriptEditorGetValue.png)
+![PythonEditor getValue() image](images/pythonEditorGetValue.png)
 
 As you might have guessed, we can change the value using a matching `setValue()` method. Let's go ahead and set the values for a couple of the simplest plugs to demonstrate how this works :
 
@@ -92,13 +92,13 @@ script["Sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 > Tip : The second form is often more convenient because it is shorter, and because the `V3f` class
 > provides lots of useful functionality for doing maths with vector values. As a newcomer to Gaffer
 > though, it's unlikely that we could have guessed the right syntax. Here drag and drop comes to our
-> rescue again - _Shift+Left Dragging_ the plug label from the NodeEditor and into the ScriptEditor
+> rescue again - _Shift+Left Dragging_ the plug label from the NodeEditor and into the PythonEditor
 > will enter the code for current value of the plug, providing a convenient syntax reference.
 
 Making connections
 ------------------
 
-As well as having values, plugs can be connected together so that values flow from one to another. We'll use the ScriptEditor to create a small node network to demonstrate this.
+As well as having values, plugs can be connected together so that values flow from one to another. We'll use the PythonEditor to create a small node network to demonstrate this.
 
 ```
 meshToPoints = GafferScene.MeshToPoints()
@@ -133,20 +133,20 @@ Until now, we've been accessing plugs and nodes by name, using Python's dictiona
 Recap
 -----
 
-We've seen that Gaffer's node graphs can be constructed using a minimal set of scripting commands, and that the ScriptEditor makes experimenting with these commands relatively easy by allowing nodes and plugs to be dragged and dropped directly into the code. The [Scripting Reference][3] and [ScriptEditor Reference][1] sections provide a useful reminder of all we've covered in this tutorial, and additional information useful for further exploration.
+We've seen that Gaffer's node graphs can be constructed using a minimal set of scripting commands, and that the PythonEditor makes experimenting with these commands relatively easy by allowing nodes and plugs to be dragged and dropped directly into the code. The [Scripting Reference][3] and [PythonEditor Reference][1] sections provide a useful reminder of all we've covered in this tutorial, and additional information useful for further exploration.
 
 > Tip : Gaffer's .gfr files are simply Python scripts which contain all the code necessary
 > to reconstruct the saved node network. If you're ever struggling to find a way of scripting
 > something in the documentation, it can be handy to construct a network by hand and then open
 > the .gfr file in a text editor for use as a cheat sheet. Similarly, you can use _Ctrl+C_
-> to copy a network from the GraphEditor, and paste it as code into the ScriptEditor with _Ctrl+V_.
+> to copy a network from the GraphEditor, and paste it as code into the PythonEditor with _Ctrl+V_.
 >
 > Finally, since Gaffer is open source, you'll often find inspiration and examples in the
 > [source code itself][4].
 
 
 
-[1]: ../../../Reference/UIReference/ScriptEditor.md
+[1]: ../../../Reference/UIReference/PythonEditor.md
 [2]: ../../../Reference/NodeReference/index.md
 [3]: ../../../Reference/ScriptingReference/index.md
 [4]: https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!

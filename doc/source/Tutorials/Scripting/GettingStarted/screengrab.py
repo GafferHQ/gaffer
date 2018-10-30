@@ -1,4 +1,4 @@
-# BuildTarget: images/scriptEditor.png
+# BuildTarget: images/pythonEditor.png
 
 import Gaffer
 import GafferScene
@@ -6,12 +6,12 @@ import GafferScene
 import GafferUI
 
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
-scriptEditor = scriptWindow.getLayout().editors( GafferUI.ScriptEditor )[0]
-scriptEditor.inputWidget().setText( 'print "Hello World!", script' )
-scriptEditor.inputWidget()._qtWidget().selectAll()
-scriptEditor.execute()
-scriptEditor.reveal()
-GafferUI.WidgetAlgo.grab( widget = scriptEditor.parent(), imagePath = "images/scriptEditor.png" )
+pythonEditor = scriptWindow.getLayout().editors( GafferUI.PythonEditor )[0]
+pythonEditor.inputWidget().setText( 'print "Hello World!", script' )
+pythonEditor.inputWidget()._qtWidget().selectAll()
+pythonEditor.execute()
+pythonEditor.reveal()
+GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditor.png" )
 
 script["Node"] = Gaffer.Node( "Node" )
 script["Node"]["firstPlug"] = Gaffer.IntPlug( defaultValue = 0 )
@@ -20,12 +20,12 @@ GafferUI.WidgetAlgo.grab( widget = GafferUI.NodeEditor.acquire( script["Node"], 
 del script["Node"]
 
 script["Sphere"] = GafferScene.Sphere()
-scriptEditor.inputWidget().setText( 'script["Sphere"]["radius"].getValue()' )
-scriptEditor.inputWidget()._qtWidget().selectAll()
-scriptEditor.outputWidget().setText( '' )
-scriptEditor.execute()
-scriptEditor.reveal()
-GafferUI.WidgetAlgo.grab( widget = scriptEditor.parent(), imagePath = "images/scriptEditorGetValue.png" )
+pythonEditor.inputWidget().setText( 'script["Sphere"]["radius"].getValue()' )
+pythonEditor.inputWidget()._qtWidget().selectAll()
+pythonEditor.outputWidget().setText( '' )
+pythonEditor.execute()
+pythonEditor.reveal()
+GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditorGetValue.png" )
 
 script["Sphere"]["radius"].setValue( 10.5 )
 script["MeshToPoints"] = GafferScene.MeshToPoints( "MeshToPoints" )
