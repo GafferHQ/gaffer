@@ -6,7 +6,7 @@ Gaffer has a simple API for querying the scenes that are output from nodes. In t
 Making a scene
 --------------
 
-First off, we'll create a simple scene using a network of basic nodes. Cut and paste the following into the ScriptEditor and execute it to build the network. There's no need to worry about the details of this part - it's just a convenient way to create the network we need for the tutorial. If you do take a look though, you'll see examples of the commands needed to create nodes, set values and make connections.
+First off, we'll create a simple scene using a network of basic nodes. Cut and paste the following into the PythonEditor and execute it to build the network. There's no need to worry about the details of this part - it's just a convenient way to create the network we need for the tutorial. If you do take a look though, you'll see examples of the commands needed to create nodes, set values and make connections.
 
 ```
 import Gaffer
@@ -198,7 +198,7 @@ del __children
 Our first scene queries
 -----------------------
 
-Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the ScriptEditor, we can either type a reference to it in directly, or middle-mouse drag it from the GraphEditor to the ScriptEditor. To query the output of the StandardOptions node we'll be using the following :
+Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the PythonEditor, we can either type a reference to it in directly, or middle-mouse drag it from the GraphEditor to the PythonEditor. To query the output of the StandardOptions node we'll be using the following :
 
 ```
 script["StandardOptions"]["out"]
