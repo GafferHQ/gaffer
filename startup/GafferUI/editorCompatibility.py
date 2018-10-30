@@ -38,3 +38,4 @@ import GafferUI
 
 GafferUI.EditorWidget = GafferUI.Editor
 GafferUI.NodeGraph = GafferUI.GraphEditor
+GafferUI.ScriptEditor = GafferUI.PythonEditor
