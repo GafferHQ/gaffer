@@ -623,5 +623,28 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection[0].transformPlug, script["sceneReader"]["transform"] )
 		self.assertEqual( selection[0].path, "/group" )
 
+	def testSelectionRefersToFirstPublicPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		view = GafferSceneUI.SceneView()
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		self.assertEqual( tool.selection(), [] )
+
+		view["in"].setInput( script["plane"]["out"] )
+		self.assertEqual( tool.selection(), [] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].scene, script["plane"]["out"] )
+
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( [ script["plane"] ] ) )
+		Gaffer.PlugAlgo.promote( box["plane"]["out"] )
+		view["in"].setInput( box["out"] )
+		self.assertEqual( tool.selection()[0].scene, box["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
