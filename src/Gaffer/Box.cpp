@@ -36,7 +36,7 @@
 
 #include "Gaffer/Box.h"
 
-#include "Gaffer/BoxIO.h"
+#include "Gaffer/BoxOut.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
@@ -45,8 +45,49 @@
 
 #include "boost/regex.hpp"
 
+#include <unordered_set>
+
 using namespace std;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+std::unordered_set<const Node *> boxOutPassThroughSources( const Node *parent )
+{
+	std::unordered_set<const Node *> result;
+	for( BoxOutIterator it( parent ); !it.done(); ++it )
+	{
+		Plug *plug = (*it)->passThroughPlug();
+		while( plug )
+		{
+			if( const Node *node = plug->node() )
+			{
+				if( node->parent() != parent )
+				{
+					break;
+				}
+				else
+				{
+					result.insert( node );
+				}
+			}
+			plug = plug->getInput();
+		}
+	}
+	return result;
+}
+
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Box
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( Box );
 
@@ -143,8 +184,9 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	// unfortunately nodes will be removed from the selection as we reparent
 	// them, so we have to make a copy of childNodes so our iteration isn't befuddled by
 	// the changing contents. We can use this opportunity to weed out anything in childNodes
-	// which isn't a direct child of parent though, and also to skip over BoxIO nodes
+	// which isn't a direct child of parent though, and also to skip over BoxIO nodes and pass-throughs
 	// which should remain where they are.
+	std::unordered_set<const Node *> boxOutPassThroughSources = ::boxOutPassThroughSources( parent );
 	StandardSetPtr verifiedChildNodes = new StandardSet();
 	for( NodeIterator nodeIt( parent ); !nodeIt.done(); ++nodeIt )
 	{
@@ -153,6 +195,10 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 			continue;
 		}
 		if( IECore::runTimeCast<BoxIO>( *nodeIt ) )
+		{
+			continue;
+		}
+		if( boxOutPassThroughSources.find( nodeIt->get() ) != boxOutPassThroughSources.end() )
 		{
 			continue;
 		}
