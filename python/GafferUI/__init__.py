@@ -299,6 +299,7 @@ import BackdropUI
 import DotUI
 import SubGraphUI
 import SwitchUI
+import ContextProcessorUI
 import ContextVariablesUI
 import DeleteContextVariablesUI
 import TimeWarpUI
