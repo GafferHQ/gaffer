@@ -46,6 +46,7 @@
 #include "GafferUI/Nodule.h"
 
 #include "Gaffer/BoxOut.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/Plug.h"
@@ -1281,8 +1282,13 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		return false;
 	}
 
-	// If we're trying to connect a Dot, Switch or BoxOut, then we may need
-	// to give it plugs first.
+	// If we're trying to connect a Dot, Switch, BoxOut, or ContextProcessor,
+	// then we may need to give it plugs first.
+	/// \todo We should be able to do this by talking to PlugAdders instead of
+	/// doing the work ourselves. In fact, because PlugAdders and Nodules are
+	/// both derived from ConnectionCreator, we should only need to consider
+	/// ConnectionCreators, and shouldn't need to know anything about what's
+	/// happening behind the scenes.
 	if( Dot *dot = runTimeCast<Dot>( node ) )
 	{
 		if( !dot->inPlug() )
@@ -1302,6 +1308,16 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		if( !boxOut->plug() )
 		{
 			boxOut->setup( outputPlugs.front() );
+		}
+	}
+	else if( ContextProcessor *contextProcessor = runTimeCast<ContextProcessor>( node ) )
+	{
+		if( !contextProcessor->inPlug() )
+		{
+			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputPlugs.front() ) )
+			{
+				contextProcessor->setup( valuePlug );
+			}
 		}
 	}
 
