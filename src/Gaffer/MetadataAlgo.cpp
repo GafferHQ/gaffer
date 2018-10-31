@@ -52,8 +52,6 @@ namespace
 InternedString g_readOnlyName( "readOnly" );
 InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
 InternedString g_bookmarkedName( "bookmarked" );
-/// \todo: remove when we're no longer concerned with compatibility
-InternedString g_oldBookmarkedName( "graphBookmarks:bookmarked" );
 
 size_t findNth( const std::string &s, char c, int n )
 {
@@ -203,18 +201,12 @@ void setBookmarked( Node *node, bool bookmarked, bool persistent /* = true */ )
 bool getBookmarked( const Node *node )
 {
 	ConstBoolDataPtr d = Metadata::value<BoolData>( node, g_bookmarkedName );
-	if( !d )
-	{
-		/// \todo: remove when we're no longer concerned with compatibility
-		d = Metadata::value<BoolData>( node, g_oldBookmarkedName );
-	}
-
 	return d ? d->readable() : false;
 }
 
 bool bookmarkedAffectedByChange( const IECore::InternedString &changedKey )
 {
-	return changedKey == g_bookmarkedName || changedKey == g_oldBookmarkedName;
+	return changedKey == g_bookmarkedName;
 }
 
 void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
