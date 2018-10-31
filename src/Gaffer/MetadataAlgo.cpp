@@ -190,7 +190,14 @@ bool readOnlyAffectedByChange( const IECore::InternedString &changedKey )
 
 void setBookmarked( Node *node, bool bookmarked, bool persistent /* = true */ )
 {
-	Metadata::registerValue( node, g_bookmarkedName, new BoolData( bookmarked ), persistent );
+	if( bookmarked )
+	{
+		Metadata::registerValue( node, g_bookmarkedName, new BoolData( true ), persistent );
+	}
+	else
+	{
+		Metadata::deregisterValue( node, g_bookmarkedName );
+	}
 }
 
 bool getBookmarked( const Node *node )
