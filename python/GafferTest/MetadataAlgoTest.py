@@ -35,6 +35,8 @@
 ##########################################################################
 
 import unittest
+import os
+
 import imath
 
 import IECore
@@ -407,6 +409,31 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b2"], True )
 		self.assertEqual( len( affected ), 5 )
 		self.assertEqual( affected[-1], set() )
+
+	def testUnbookmarkedNodesDontHaveMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+
+		Gaffer.MetadataAlgo.setBookmarked( s["n"], True )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 1 )
+
+		Gaffer.MetadataAlgo.setBookmarked( s["n"], False )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+
+	def testLoadLegacyBookmarks( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyBookmarks.gfr" )
+		s.load()
+
+		self.assertTrue( Gaffer.MetadataAlgo.getBookmarked( s["Bookmarked"] ) )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["Bookmarked"], instanceOnly = True ) ), 1 )
+		self.assertFalse( Gaffer.MetadataAlgo.getBookmarked( s["Unbookmarked"] ) )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["Unbookmarked"], instanceOnly = True ) ), 0 )
+		self.assertTrue( Gaffer.MetadataAlgo.getBookmarked( s["OldBookmarked"] ) )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["OldBookmarked"], instanceOnly = True ) ), 1 )
 
 	def tearDown( self ) :
 
