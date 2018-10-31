@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,40 +35,25 @@
 ##########################################################################
 
 import Gaffer
-import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.SceneTimeWarp,
+	Gaffer.ContextProcessor,
 
 	"description",
 	"""
-	Changes the time at which upstream nodes are evaluated using
-	the following formula :
-
-	`upstreamFrame = frame * speed + offset`
+	Base class for nodes which allow the user to make modifications to
+	the upstream evaluation context.
 	""",
 
-	plugs = {
-
-		"speed" : [
-
-			"description",
-			"""
-			Multiplies the current frame value.
-			"""
-
-		],
-
-		"offset" : [
-
-			"description",
-			"""
-			Adds to the current frame value (after multiplication with speed).
-			"""
-
-		],
-
-	}
+	# Add + buttons for creating new plugs in the GraphEditor
+	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.ContextProcessorUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonTop:section", "top",
+	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.ContextProcessorUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonBottom:section", "bottom",
+	"noduleLayout:customGadget:addButtonLeft:gadgetType", "GafferUI.ContextProcessorUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonLeft:section", "left",
+	"noduleLayout:customGadget:addButtonRight:gadgetType", "GafferUI.ContextProcessorUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonRight:section", "right",
 
 )

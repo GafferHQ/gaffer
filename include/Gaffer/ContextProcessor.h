@@ -45,19 +45,25 @@ namespace Gaffer
 
 /// The ContextProcessor provides a base class to simplify the creation of nodes
 /// which evaluate their inputs using a modified context to that provided for the output
-/// evaluation - time warps being one good example. The ContextProcessor adds no plugs
-/// of it's own, but will automatically map all in* plugs to their out* equivalents.
-template<typename BaseType>
-class IECORE_EXPORT ContextProcessor : public BaseType
+/// evaluation - time warps being one good example.
+class IECORE_EXPORT ContextProcessor : public ComputeNode
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextProcessor<BaseType>, BaseType );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextProcessor<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ContextProcessor, ContextProcessorTypeId, ComputeNode );
 
 		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
 		~ContextProcessor() override;
+
+		/// \undoable
+		void setup( const ValuePlug *plug );
+
+		ValuePlug *inPlug();
+		const ValuePlug *inPlug() const;
+
+		ValuePlug *outPlug();
+		const ValuePlug *outPlug() const;
 
 		BoolPlug *enabledPlug() override;
 		const BoolPlug *enabledPlug() const override;
@@ -91,8 +97,7 @@ class IECORE_EXPORT ContextProcessor : public BaseType
 
 };
 
-typedef ContextProcessor<ComputeNode> ContextProcessorComputeNode;
-IE_CORE_DECLAREPTR( ContextProcessorComputeNode );
+IE_CORE_DECLAREPTR( ContextProcessor );
 
 } // namespace Gaffer
 

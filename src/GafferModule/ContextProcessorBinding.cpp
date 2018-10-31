@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,26 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/ImageTimeWarp.h"
+#include "boost/python.hpp"
 
-#include "Gaffer/TimeWarp.inl"
+#include "ContextProcessorBinding.h"
 
-using namespace GafferImage;
+#include "GafferBindings/DependencyNodeBinding.h"
 
-namespace Gaffer
+#include "Gaffer/ContextVariables.h"
+#include "Gaffer/DeleteContextVariables.h"
+#include "Gaffer/TimeWarp.h"
+
+using namespace boost::python;
+using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferBindings;
+
+namespace
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageTimeWarp, ImageTimeWarpTypeId )
-
-template<>
-struct TimeWarpTraits<GafferImage::ImageProcessor>
+void setup( ContextProcessor &n, const ValuePlug &plug )
 {
-
-	typedef GafferImage::ImagePlug::GlobalScope TimeScope;
-
-};
-
+	IECorePython::ScopedGILRelease gilRelease;
+	n.setup( &plug );
 }
 
-// explicit instantiation
-template class Gaffer::TimeWarp<ImageProcessor>;
+} // namespace
+
+void GafferModule::bindContextProcessor()
+{
+
+	DependencyNodeClass<ContextProcessor>()
+		.def( "setup", &setup )
+	;
+
+	DependencyNodeClass<TimeWarp>();
+	DependencyNodeClass<ContextVariables>();
+	DependencyNodeClass<DeleteContextVariables>();
+
+}

@@ -54,8 +54,8 @@ enum TypeId
 	DeletePrimitiveVariablesTypeId = 110509,
 	GroupTypeId = 110510,
 	ShaderPlugTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
+	SceneContextProcessorTypeId = 110512, // Obsolete, available for reuse
+	SceneTimeWarpTypeId = 110513, // Obsolete, available for reuse
 	ObjectSourceTypeId = 110514,
 	PlaneTypeId = 110515,
 	SeedsTypeId = 110516,
@@ -73,7 +73,7 @@ enum TypeId
 	AttributesTypeId = 110528,
 	GlobalShaderTypeId = 110529,
 	ClippingPlaneTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
+	SceneContextVariablesTypeId = 110531, // Obsolete, available for reuse
 	StandardOptionsTypeId = 110532,
 	SubTreeTypeId = 110533,
 	OpenGLAttributesTypeId = 110534,
@@ -140,7 +140,7 @@ enum TypeId
 	DeleteFacesTypeId = 110595,
 	DeleteCurvesTypeId = 110596,
 	DeletePointsTypeId = 110597,
-	DeleteSceneContextVariablesTypeId = 110598,
+	DeleteSceneContextVariablesTypeId = 110598, // Obsolete, available for reuse
 	CollectScenesTypeId = 110599,
 	CapsuleTypeId = 110600,
 	EncapsulateTypeId = 110601,

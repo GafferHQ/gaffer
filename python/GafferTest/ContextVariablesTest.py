@@ -49,9 +49,8 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		n = GafferTest.StringInOutNode()
 		self.assertHashesValid( n )
 
-		c = Gaffer.ContextVariablesComputeNode()
-		c["in"] = Gaffer.StringPlug()
-		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		c = Gaffer.ContextVariables()
+		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( n["out"] )
 
 		n["in"].setValue( "$a" )
@@ -64,9 +63,8 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 		n = GafferTest.StringInOutNode()
 
-		c = Gaffer.ContextVariablesComputeNode()
-		c["in"] = Gaffer.StringPlug()
-		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		c = Gaffer.ContextVariables()
+		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( n["out"] )
 
 		# adding a variable should dirty the output:
@@ -89,9 +87,8 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.StringInOutNode()
 
-		s["c"] = Gaffer.ContextVariablesComputeNode()
-		s["c"]["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["c"]["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"] = Gaffer.ContextVariables()
+		s["c"].setup( Gaffer.StringPlug() )
 		s["c"]["in"].setInput( s["n"]["out"] )
 
 		s["n"]["in"].setValue( "$a" )
@@ -111,9 +108,8 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.StringInOutNode()
 
-		s["c"] = Gaffer.ContextVariablesComputeNode()
-		s["c"]["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["c"]["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"] = Gaffer.ContextVariables()
+		s["c"].setup( Gaffer.StringPlug() )
 		s["c"]["in"].setInput( s["n"]["out"] )
 
 		s["n"]["in"].setValue( "$a" )
@@ -138,9 +134,8 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.StringInOutNode()
 
-		s["c"] = Gaffer.ContextVariablesComputeNode()
-		s["c"]["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["c"]["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"] = Gaffer.ContextVariables()
+		s["c"].setup( Gaffer.StringPlug() )
 		s["c"]["in"].setInput( s["n"]["out"] )
 
 		s["n"]["in"].setValue( "$a$b$c" )
@@ -174,6 +169,17 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 			c.setFrame( 4 )
 			self.assertEqual( s["c"]["out"].getValue(), "ABC" )
+
+	def testEnabledPlugAffectsOutput( self ) :
+
+		c = Gaffer.ContextVariables()
+		c.setup( Gaffer.StringPlug() )
+
+		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["enabled"].setValue( False )
+
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( { x[0] for x in cs }, { c["enabled"], c["out"] } )
 
 if __name__ == "__main__":
 	unittest.main()

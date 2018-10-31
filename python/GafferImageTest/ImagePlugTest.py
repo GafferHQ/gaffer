@@ -132,12 +132,24 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 
-		self.assertTypeNamesArePrefixed( GafferImage, namesToIgnore = { "Gaffer::Switch" } )
+		self.assertTypeNamesArePrefixed(
+			GafferImage,
+			namesToIgnore = {
+				"Gaffer::Switch", "Gaffer::ContextVariables",
+				"Gaffer::DeleteContextVariables",
+				"Gaffer::TimeWarp"
+			}
+		)
 		self.assertTypeNamesArePrefixed( GafferImageTest )
 
 	def testDefaultNames( self ) :
 
-		self.assertDefaultNamesAreCorrect( GafferImage, namesToIgnore = { "ImageSwitch" } )
+		self.assertDefaultNamesAreCorrect(
+			GafferImage,
+			namesToIgnore = {
+				"ImageSwitch", "ImageContextVariables", "DeleteImageContextVariables", "ImageTimeWarp"
+			}
+		)
 		self.assertDefaultNamesAreCorrect( GafferImageTest )
 
 	def testImageHash( self ) :

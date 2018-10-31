@@ -44,6 +44,7 @@
 #include "CompoundNumericPlugBinding.h"
 #include "ConnectionBinding.h"
 #include "ContextBinding.h"
+#include "ContextProcessorBinding.h"
 #include "DirtyPropagationScopeBinding.h"
 #include "DotBinding.h"
 #include "ExpressionBinding.h"
@@ -77,10 +78,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/Backdrop.h"
-#include "Gaffer/ContextVariables.h"
-#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/Loop.h"
-#include "Gaffer/TimeWarp.h"
 
 #include "tbb/tbb.h"
 
@@ -216,13 +214,10 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSwitch();
 	bindPlugAlgo();
 	bindParallelAlgo();
+	bindContextProcessor();
 
 	NodeClass<Backdrop>();
 
-	DependencyNodeClass<ContextProcessorComputeNode>();
-	DependencyNodeClass<TimeWarpComputeNode>();
-	DependencyNodeClass<ContextVariablesComputeNode>();
-	DependencyNodeClass<DeleteContextVariablesComputeNode>();
 	DependencyNodeClass<LoopComputeNode>();
 
 	def( "isDebug", &isDebug );

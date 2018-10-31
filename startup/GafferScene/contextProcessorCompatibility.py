@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,29 +35,31 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
-import GafferImage
+import GafferScene
 
-Gaffer.Metadata.registerNode(
+class SceneContextVariables( Gaffer.ContextVariablesComputeNode ) :
 
-	GafferImage.DeleteImageContextVariables,
+	def __init__( self, name = "SceneContextVariables" ) :
 
-	"description",
-	"""
-	Removes variables from the context so that they won't be visible to upstream expressions.
-	""",
+		Gaffer.ContextVariablesComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	plugs = {
+GafferScene.SceneContextVariables = SceneContextVariables
 
-		"variables" : [
+class DeleteSceneContextVariables( Gaffer.DeleteContextVariablesComputeNode ) :
 
-			"description",
-			"""
-			The variables to be deleted.
-			""",
+	def __init__( self, name = "DeleteSceneContextVariables" ) :
 
-		],
+		Gaffer.DeleteContextVariablesComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	}
+GafferScene.DeleteSceneContextVariables = DeleteSceneContextVariables
 
-)
+class SceneTimeWarp( Gaffer.TimeWarpComputeNode ) :
+
+	def __init__( self, name = "SceneTimeWarp" ) :
+
+		Gaffer.TimeWarpComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
+
+GafferScene.SceneTimeWarp = SceneTimeWarp

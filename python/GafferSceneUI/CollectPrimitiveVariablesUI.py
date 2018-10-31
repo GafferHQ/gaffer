@@ -46,7 +46,7 @@ Gaffer.Metadata.registerNode(
 	Make copies of target primitive variables with different suffixes,
 	where the new suffixed copies come from different contexts.
 
-	By combining this with a SceneTimeWarp, you can create copies of
+	By combining this with a TimeWarp, you can create copies of
 	primitive variables at different times, useful for creating trail
 	effects.
 	""",
@@ -81,7 +81,7 @@ Gaffer.Metadata.registerNode(
 			in upstream expressions and string substitutions to vary
 			the object while creating the primvar copies.
 
-			For example, you could drive a SceneTimeWarp with this
+			For example, you could drive a TimeWarp with this
 			variable in order create copies of a primitive variable at
 			different times.
 			""",

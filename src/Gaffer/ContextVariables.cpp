@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,63 +34,70 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DELETECONTEXTVARIABLES_INL
-#define GAFFER_DELETECONTEXTVARIABLES_INL
+#include "Gaffer/ContextVariables.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/DeleteContextVariables.h"
 
 #include "IECore/SimpleTypedData.h"
-#include "Gaffer/ContextProcessor.inl"
 
-namespace Gaffer
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( ContextVariables );
+
+size_t ContextVariables::g_firstPlugIndex;
+
+ContextVariables::ContextVariables( const std::string &name )
+	:	ContextProcessor( name )
 {
-
-template<typename BaseType>
-const IECore::RunTimeTyped::TypeDescription<DeleteContextVariables<BaseType> > DeleteContextVariables<BaseType>::g_typeDescription;
-
-template<typename BaseType>
-size_t DeleteContextVariables<BaseType>::g_firstPlugIndex;
-
-template<typename BaseType>
-DeleteContextVariables<BaseType>::DeleteContextVariables( const std::string &name )
-	:	ContextProcessor<BaseType>( name )
-{
-	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
-	ContextProcessor<BaseType>::addChild(
-		new StringPlug( "variables" )
-	);
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new CompoundDataPlug( "variables" ) );
+	addChild( new AtomicCompoundDataPlug( "extraVariables", Plug::In, new IECore::CompoundData ) );
 }
 
-template<typename BaseType>
-DeleteContextVariables<BaseType>::~DeleteContextVariables()
+ContextVariables::~ContextVariables()
 {
 }
 
-template<typename BaseType>
-StringPlug *DeleteContextVariables<BaseType>::variablesPlug()
+CompoundDataPlug *ContextVariables::variablesPlug()
 {
-	return ContextProcessor<BaseType>::template getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
-template<typename BaseType>
-const StringPlug *DeleteContextVariables<BaseType>::variablesPlug() const
+const CompoundDataPlug *ContextVariables::variablesPlug() const
 {
-	return ContextProcessor<BaseType>::template getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
-template<typename BaseType>
-bool DeleteContextVariables<BaseType>::affectsContext( const Plug *input ) const
+AtomicCompoundDataPlug *ContextVariables::extraVariablesPlug()
 {
-	return input == variablesPlug();
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 1 );
 }
 
-template<typename BaseType>
-void DeleteContextVariables<BaseType>::processContext( Context::EditableScope &context ) const
+const AtomicCompoundDataPlug *ContextVariables::extraVariablesPlug() const
 {
-	context.removeMatching( variablesPlug()->getValue() );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 1 );
 }
 
-} // namespace Gaffer
+bool ContextVariables::affectsContext( const Plug *input ) const
+{
+	return variablesPlug()->isAncestorOf( input ) || input == extraVariablesPlug();
+}
 
-#endif // GAFFER_DELETECONTEXTVARIABLES_INL
+void ContextVariables::processContext( Context::EditableScope &context ) const
+{
+	std::string name;
+	for( CompoundDataPlug::MemberPlugIterator it( variablesPlug() ); !it.done(); ++it )
+	{
+		IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
+		if( data )
+		{
+			context.set( name, data.get() );
+		}
+	}
+	IECore::ConstCompoundDataPtr extraVariablesData = extraVariablesPlug()->getValue();
+	const IECore::CompoundDataMap &extraVariables = extraVariablesData->readable();
+	for( IECore::CompoundDataMap::const_iterator it = extraVariables.begin(), eIt = extraVariables.end(); it != eIt; ++it )
+	{
+		context.set( it->first, it->second.get() );
+	}
+}

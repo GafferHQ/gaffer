@@ -47,16 +47,13 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 
 		n = GafferTest.StringInOutNode()
 
-		d = Gaffer.DeleteContextVariablesComputeNode()
-		d["in"] = Gaffer.StringPlug()
-		d["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		d = Gaffer.DeleteContextVariables()
+		d.setup( Gaffer.StringPlug() )
 		d["in"].setInput( n["out"] )
 
-		c = Gaffer.ContextVariablesComputeNode()
-		c["in"] = Gaffer.StringPlug()
-		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		c = Gaffer.ContextVariables()
+		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( d["out"] )
-
 
 		n["in"].setValue( "$a" )
 		self.assertEqual( c["out"].getValue(), "" )
@@ -72,14 +69,12 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 		n = GafferTest.StringInOutNode()
 		self.assertHashesValid( n )
 
-		d = Gaffer.DeleteContextVariablesComputeNode()
-		d["in"] = Gaffer.StringPlug()
-		d["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		d = Gaffer.DeleteContextVariables()
+		d.setup( Gaffer.StringPlug() )
 		d["in"].setInput( n["out"] )
 
-		c = Gaffer.ContextVariablesComputeNode()
-		c["in"] = Gaffer.StringPlug()
-		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		c = Gaffer.ContextVariables()
+		c.setup( Gaffer.StringPlug() )
 		c["in"].setInput( d["out"] )
 
 
@@ -98,22 +93,18 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 
 		self.assertEqual( c["out"].getValue(), "__B1_B2__" )
 
-
-
 	def testDirtyPropagation( self ) :
 
 		n = GafferTest.StringInOutNode()
 
-		d = Gaffer.DeleteContextVariablesComputeNode()
-		d["in"] = Gaffer.StringPlug()
-		d["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		d = Gaffer.DeleteContextVariables()
+		d.setup( Gaffer.StringPlug() )
 		d["in"].setInput( n["out"] )
 
 		# deleting a variable should dirty the output:
 		dirtied = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
 		d["variables"].setValue( "a" )
 		self.failUnless( d["out"] in [ p[0] for p in dirtied ] )
-
 
 if __name__ == "__main__":
 	unittest.main()

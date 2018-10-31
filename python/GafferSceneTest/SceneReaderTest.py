@@ -237,7 +237,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( "/tmp/test.scc" )
 		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
 
-		t = GafferScene.SceneTimeWarp()
+		t = Gaffer.TimeWarp()
+		t.setup( GafferScene.ScenePlug() )
 		t["in"].setInput( s["out"] )
 		t["offset"].setValue( 1 )
 
@@ -270,7 +271,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( "/tmp/test.scc" )
 		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
 
-		t = GafferScene.SceneTimeWarp()
+		t = Gaffer.TimeWarp()
+		t.setup( GafferScene.ScenePlug() )
 		t["in"].setInput( s["out"] )
 		t["offset"].setValue( 1 )
 

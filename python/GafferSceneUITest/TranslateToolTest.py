@@ -467,7 +467,8 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			"""
 		) )
 
-		script["variables"] = GafferScene.SceneContextVariables()
+		script["variables"] = Gaffer.ContextVariables()
+		script["variables"].setup( GafferScene.ScenePlug() )
 		script["variables"]["in"].setInput( script["plane"]["out"] )
 		script["variables"]["variables"].addMember( "x", 1.0 )
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,29 +35,8 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
-import GafferScene
 
-Gaffer.Metadata.registerNode(
-
-	GafferScene.DeleteSceneContextVariables,
-
-	"description",
-	"""
-	Removes variables from the context so that they won't be visible to upstream expressions.
-	""",
-
-	plugs = {
-
-		"variables" : [
-
-			"description",
-			"""
-			The variables to be deleted.
-			"""
-
-		]
-
-	}
-
-)
+Gaffer.ContextProcessorComputeNode = Gaffer.ContextProcessor
+Gaffer.ContextVariablesComputeNode = Gaffer.ContextVariables
+Gaffer.DeleteContextVariablesComputeNode = Gaffer.DeleteContextVariables
+Gaffer.TimeWarpComputeNode = Gaffer.TimeWarp
