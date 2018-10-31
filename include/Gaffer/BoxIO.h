@@ -45,7 +45,7 @@ namespace GafferModule
 {
 
 // Forward declaration to enable friend declaration
-struct BoxIOSerialiser;
+class BoxIOSerialiser;
 
 } // namespace GafferModule
 
