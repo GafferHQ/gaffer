@@ -209,7 +209,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The lights that cause this object to cast shadows.
 			Accepts a set expression or a space separated list of
-			lights. Use __lights to refer to the set of all lights.
+			lights. Use \"defaultLights\" to refer to all lights that
+			contribute to illumination by default.
 			""",
 
 			"layout:section", "Visibility",
