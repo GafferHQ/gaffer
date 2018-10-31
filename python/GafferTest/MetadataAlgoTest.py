@@ -408,6 +408,18 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( len( affected ), 5 )
 		self.assertEqual( affected[-1], set() )
 
+	def testUnbookmarkedNodesDontHaveMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+
+		Gaffer.MetadataAlgo.setBookmarked( s["n"], True )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 1 )
+
+		Gaffer.MetadataAlgo.setBookmarked( s["n"], False )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :
