@@ -116,7 +116,6 @@ import ConstraintUI
 import PlaneUI
 import CubeUI
 import AttributeVisualiserUI
-import SceneLoopUI
 import FilterProcessorUI
 import MeshToPointsUI
 import RenderUI

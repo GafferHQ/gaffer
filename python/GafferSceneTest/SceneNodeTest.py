@@ -93,7 +93,8 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene,
 			namesToIgnore = {
 				"PathMatcherData", "Gaffer::PathMatcherDataPlug", "Gaffer::Switch",
-				"Gaffer::ContextVariables", "Gaffer::DeleteContextVariables", "Gaffer::TimeWarp"
+				"Gaffer::ContextVariables", "Gaffer::DeleteContextVariables", "Gaffer::TimeWarp",
+				"Gaffer::LoopComputeNode",
 			}
 		)
 
@@ -103,7 +104,8 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene,
 			namesToIgnore = {
 				"SceneSwitch", "ShaderSwitch", "FilterSwitch",
-				"DeleteSceneContextVariables", "SceneContextVariables", "SceneTimeWarp"
+				"DeleteSceneContextVariables", "SceneContextVariables", "SceneTimeWarp",
+				"SceneLoop",
 			}
 		)
 
