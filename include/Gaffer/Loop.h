@@ -61,6 +61,15 @@ class IECORE_EXPORT Loop : public BaseType
 		Loop( const std::string &name=GraphComponent::defaultName<Loop>() );
 		~Loop() override;
 
+		/// \undoable
+		void setup( const ValuePlug *plug );
+
+		ValuePlug *inPlug();
+		const ValuePlug *inPlug() const;
+
+		ValuePlug *outPlug();
+		const ValuePlug *outPlug() const;
+
 		ValuePlug *nextPlug();
 		const ValuePlug *nextPlug() const;
 
@@ -94,12 +103,6 @@ class IECORE_EXPORT Loop : public BaseType
 
 		void childAdded();
 		bool setupPlugs();
-
-		ValuePlug *inPlugInternal();
-		const ValuePlug *inPlugInternal() const;
-
-		ValuePlug *outPlugInternal();
-		const ValuePlug *outPlugInternal() const;
 
 		void addAffectedPlug( const ValuePlug *output, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		const ValuePlug *ancestorPlug( const ValuePlug *plug, std::vector<IECore::InternedString> &relativeName ) const;

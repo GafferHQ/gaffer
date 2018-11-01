@@ -36,6 +36,8 @@
 
 #include "Gaffer/Loop.h"
 
+#include "Gaffer/MetadataAlgo.h"
+
 #include "boost/bind.hpp"
 
 namespace Gaffer
@@ -74,6 +76,53 @@ Loop<BaseType>::Loop( const std::string &name )
 template<typename BaseType>
 Loop<BaseType>::~Loop()
 {
+}
+
+template<typename BaseType>
+void Loop<BaseType>::setup( const ValuePlug *plug )
+{
+	if( inPlug() )
+	{
+		throw IECore::Exception( "Loop already has an \"in\" plug." );
+	}
+	if( outPlug() )
+	{
+		throw IECore::Exception( "Loop already has an \"out\" plug." );
+	}
+
+	PlugPtr in = plug->createCounterpart( "in", Plug::In );
+	MetadataAlgo::copyColors( plug , in.get() , /* overwrite = */ false  );
+	in->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	BaseType::addChild( in );
+
+	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
+	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
+	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	BaseType::addChild( out );
+}
+
+template<typename BaseType>
+ValuePlug *Loop<BaseType>::inPlug()
+{
+	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : nullptr;
+}
+
+template<typename BaseType>
+const ValuePlug *Loop<BaseType>::inPlug() const
+{
+	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : nullptr;
+}
+
+template<typename BaseType>
+ValuePlug *Loop<BaseType>::outPlug()
+{
+	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : nullptr;
+}
+
+template<typename BaseType>
+const ValuePlug *Loop<BaseType>::outPlug() const
+{
+	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
@@ -151,7 +200,7 @@ Gaffer::Plug *Loop<BaseType>::correspondingInput( const Gaffer::Plug *output )
 	{
 		return p;
 	}
-	return output == outPlugInternal() ? inPlugInternal() : nullptr;
+	return output == outPlug() ? inPlug() : nullptr;
 }
 
 template<typename BaseType>
@@ -161,7 +210,7 @@ const Gaffer::Plug *Loop<BaseType>::correspondingInput( const Gaffer::Plug *outp
 	{
 		return p;
 	}
-	return output == outPlugInternal() ? inPlugInternal() : nullptr;
+	return output == outPlug() ? inPlug() : nullptr;
 }
 
 template<typename BaseType>
@@ -171,23 +220,23 @@ void Loop<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsCo
 
 	if( input == iterationsPlug() )
 	{
-		addAffectedPlug( outPlugInternal(), outputs );
+		addAffectedPlug( outPlug(), outputs );
 	}
 	else if(
 		input == indexVariablePlug() ||
 		input == enabledPlug()
 	)
 	{
-		addAffectedPlug( outPlugInternal(), outputs );
+		addAffectedPlug( outPlug(), outputs );
 		addAffectedPlug( previousPlug(), outputs );
 	}
 	else if( const ValuePlug *inputValuePlug = IECore::runTimeCast<const ValuePlug>( input ) )
 	{
 		std::vector<IECore::InternedString> relativeName;
 		const ValuePlug *ancestor = ancestorPlug( inputValuePlug, relativeName );
-		if( ancestor == inPlugInternal() || ancestor == nextPlug() )
+		if( ancestor == inPlug() || ancestor == nextPlug() )
 		{
-			outputs.push_back( descendantPlug( outPlugInternal(), relativeName ) );
+			outputs.push_back( descendantPlug( outPlug(), relativeName ) );
 			outputs.push_back( descendantPlug( previousPlug(), relativeName ) );
 		}
 	}
@@ -296,30 +345,6 @@ bool Loop<BaseType>::setupPlugs()
 }
 
 template<typename BaseType>
-ValuePlug *Loop<BaseType>::inPlugInternal()
-{
-	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : nullptr;
-}
-
-template<typename BaseType>
-const ValuePlug *Loop<BaseType>::inPlugInternal() const
-{
-	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : nullptr;
-}
-
-template<typename BaseType>
-ValuePlug *Loop<BaseType>::outPlugInternal()
-{
-	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : nullptr;
-}
-
-template<typename BaseType>
-const ValuePlug *Loop<BaseType>::outPlugInternal() const
-{
-	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : nullptr;
-}
-
-template<typename BaseType>
 void Loop<BaseType>::addAffectedPlug( const ValuePlug *output, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	if( output->children().size() )
@@ -389,10 +414,10 @@ const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Cont
 		}
 		else
 		{
-			return descendantPlug( inPlugInternal(), relativeName );
+			return descendantPlug( inPlug(), relativeName );
 		}
 	}
-	else if( ancestor == outPlugInternal() )
+	else if( ancestor == outPlug() )
 	{
 		const int iterations = iterationsPlug()->getValue();
 		if( iterations > 0 && enabledPlug()->getValue() )
@@ -402,7 +427,7 @@ const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Cont
 		}
 		else
 		{
-			return descendantPlug( inPlugInternal(), relativeName );
+			return descendantPlug( inPlug(), relativeName );
 		}
 	}
 

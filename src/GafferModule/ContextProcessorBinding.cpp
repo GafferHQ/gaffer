@@ -43,6 +43,7 @@
 #include "Gaffer/ContextVariables.h"
 #include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/TimeWarp.h"
+#include "Gaffer/Loop.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -52,7 +53,8 @@ using namespace GafferBindings;
 namespace
 {
 
-void setup( ContextProcessor &n, const ValuePlug &plug )
+template<typename T>
+void setup( T &n, const ValuePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	n.setup( &plug );
@@ -63,8 +65,12 @@ void setup( ContextProcessor &n, const ValuePlug &plug )
 void GafferModule::bindContextProcessor()
 {
 
+	DependencyNodeClass<LoopComputeNode>()
+		.def( "setup", &setup<LoopComputeNode> )
+	;
+
 	DependencyNodeClass<ContextProcessor>()
-		.def( "setup", &setup )
+		.def( "setup", &setup<ContextProcessor> )
 	;
 
 	DependencyNodeClass<TimeWarp>();

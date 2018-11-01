@@ -94,7 +94,7 @@ class LoopTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 + 4 )
 
 		# Make sure the loop index is undefined when pulling the input, instead of leaking out upstream
-	
+
 		s["e2"] = Gaffer.Expression()
 		s["e2"].setExpression( 'parent["n"]["in"] = context.get( "loop:index", -100 )' )
 
@@ -184,6 +184,22 @@ class LoopTest( GafferTest.TestCase ) :
 		self.assertEqual( n["out"].getValue(), 0 )
 
 		self.assertTrue( n.correspondingInput( n["out"] ).isSame( n["in"] ) )
+
+	def testSetup( self ) :
+
+		n = Gaffer.LoopComputeNode()
+
+		self.assertNotIn( "in", n )
+		self.assertNotIn( "out", n )
+		self.assertNotIn( "previous", n )
+		self.assertNotIn( "next", n )
+
+		n.setup( Gaffer.StringPlug() )
+
+		self.assertIsInstance( n["in"], Gaffer.StringPlug )
+		self.assertIsInstance( n["out"], Gaffer.StringPlug )
+		self.assertIsInstance( n["previous"], Gaffer.StringPlug )
+		self.assertIsInstance( n["next"], Gaffer.StringPlug )
 
 if __name__ == "__main__":
 	unittest.main()
