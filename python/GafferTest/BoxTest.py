@@ -1064,9 +1064,54 @@ class BoxTest( GafferTest.TestCase ) :
 			script["AddTen"]["enabled"].setValue( False )
 			self.assertEqual( script["AddTen"]["sum"].getValue(), 0 )
 
+			script["AddTen"]["op1"].setValue( 1 )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 1 )
+
+			script["AddTen"]["enabled"].setValue( True )
+			script["AddTen"]["op1"].setValue( 0 )
+
 		assertPassThrough( s )
 
-		s["AddTen"]["enabled"].setValue( True )
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertPassThrough( s2 )
+
+	def testAddPassThroughToBoxFromVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/boxVersion-0.52.0.0.gfr" )
+		s.load()
+
+		# The original Box had no pass-through behaviour defined,
+		# and no "enabled" plug. We don't want that to change without
+		# user interaction.
+
+		self.assertNotIn( "enabled", s["AddTen"] )
+		self.assertEqual( s["AddTen"]["sum"].getValue(), 10 )
+
+		# When the user defines a pass-through for the first time,
+		# only then do we want to create the enabled plug and hook
+		# everything up.
+
+		s["AddTen"]["BoxOut"]["passThrough"].setInput( s["AddTen"]["BoxIn"]["out"] )
+
+		def assertPassThrough( script ) :
+
+			self.assertIn( "enabled", script["AddTen"] )
+			self.assertEqual( script["AddTen"]["enabled"].getValue(), True )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 10 )
+			script["AddTen"]["enabled"].setValue( False )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 0 )
+
+			script["AddTen"]["op1"].setValue( 1 )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 1 )
+
+			script["AddTen"]["enabled"].setValue( True )
+			script["AddTen"]["op1"].setValue( 0 )
+
+		assertPassThrough( s )
+
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 

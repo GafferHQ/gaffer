@@ -182,10 +182,7 @@ BoxIO::BoxIO( Plug::Direction direction, const std::string &name )
 	// Connect to the signals we need to syncronise the namePlug() value
 	// with the name of the promotedPlug().
 	plugSetSignal().connect( boost::bind( &BoxIO::plugSet, this, ::_1 ) );
-	if( direction == Plug::In )
-	{
-		plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );
-	}
+	plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );
 
 	parentChangedSignal().connect( boost::bind( &BoxIO::parentChanged, this, ::_2 ) );
 }
@@ -244,7 +241,6 @@ void BoxIO::setup( const Plug *plug )
 		if( !script || !script->isExecuting() )
 		{
 			setupPromotedPlug();
-			setupBoxEnabledPlug();
 		}
 	}
 }
@@ -277,6 +273,11 @@ void BoxIO::setupBoxEnabledPlug()
 	}
 
 	Box *box = parent<Box>();
+	if( !box )
+	{
+		return;
+	}
+
 	BoolPlug *boxEnabledPlug = box->enabledPlug();
 	if( !boxEnabledPlug )
 	{
@@ -299,7 +300,6 @@ void BoxIO::scriptExecuted( ScriptNode *script )
 	if( parent<Box>() && inPlugInternal() && !promotedPlug() )
 	{
 		setupPromotedPlug();
-		setupBoxEnabledPlug();
 	}
 
 	script->scriptExecutedSignal().disconnect(
@@ -480,6 +480,14 @@ void BoxIO::plugInputChanged( Plug *plug )
 		m_promotedPlugParentChangedConnection = promoted->parentChangedSignal().connect(
 			boost::bind( &BoxIO::promotedPlugParentChanged, this, ::_1 )
 		);
+	}
+
+	// If a connection has been made to our passThrough plug
+	// for the first time, then we also want to create an enabled
+	// plug for the Box and connect to it.
+	if( plug == passThroughPlugInternal() && passThroughPlugInternal()->getInput() )
+	{
+		setupBoxEnabledPlug();
 	}
 }
 
@@ -711,7 +719,6 @@ void BoxIO::insert( Box *box )
 
 			boxOut->plug()->setInput( input );
 			plug->setInput( boxOut->outPlugInternal() );
-			boxOut->setupBoxEnabledPlug();
 		}
 	}
 
