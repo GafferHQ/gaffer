@@ -6,7 +6,7 @@ Gaffer has a simple API for querying the scenes that are output from nodes. In t
 Making a scene
 --------------
 
-First off, we'll create a simple scene using a network of basic nodes. Cut and paste the following into the PythonEditor and execute it to build the network. There's no need to worry about the details of this part - it's just a convenient way to create the network we need for the tutorial. If you do take a look though, you'll see examples of the commands needed to create nodes, set values and make connections.
+First off, we'll create a simple scene using a network of basic nodes. Cut and paste the following into the GraphEditor to build the network. There's no need to worry about the details of this part - it's just a convenient way to create the network we need for the tutorial. If you do take a look though, you'll see examples of the commands needed to create nodes, set values and make connections.
 
 ```
 import Gaffer
@@ -83,8 +83,6 @@ __children["Group"]["__uiPosition"]["y"].setValue( 1.615199089050293 )
 __children["Group"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["Group"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Group"]["__uiPosition1"]["y"].setValue( 0.0 )
-__children["Group"].addChild( GafferScene.ScenePlug( "in1", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
-__children["Group"].addChild( GafferScene.ScenePlug( "in2", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["Camera"] = GafferScene.Camera( "Camera" )
 parent.addChild( __children["Camera"] )
 __children["Camera"]["enabled"].setValue( True )
@@ -127,8 +125,6 @@ __children["Group1"]["__uiPosition"]["y"].setValue( -9.591415405273438 )
 __children["Group1"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["Group1"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Group1"]["__uiPosition1"]["y"].setValue( 0.0 )
-__children["Group1"].addChild( GafferScene.ScenePlug( "in1", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
-__children["Group1"].addChild( GafferScene.ScenePlug( "in2", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["StandardOptions"] = GafferScene.StandardOptions( "StandardOptions" )
 parent.addChild( __children["StandardOptions"] )
 __children["StandardOptions"]["enabled"].setValue( True )
@@ -183,13 +179,13 @@ __children["PathFilter"]["__uiPosition"]["y"].setValue( -9.495070457458496 )
 __children["PathFilter"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["PathFilter"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["PathFilter"]["__uiPosition1"]["y"].setValue( 0.0 )
-__children["Group"]["in"].setInput( __children["Plane"]["out"] )
-__children["Group"]["in1"].setInput( __children["Sphere"]["out"] )
-__children["Group1"]["in"].setInput( __children["Group"]["out"] )
-__children["Group1"]["in1"].setInput( __children["Camera"]["out"] )
+__children["Group"]["in"][0].setInput( __children["Plane"]["out"] )
+__children["Group"]["in"][1].setInput( __children["Sphere"]["out"] )
+__children["Group1"]["in"][0].setInput( __children["Group"]["out"] )
+__children["Group1"]["in"][1].setInput( __children["Camera"]["out"] )
 __children["StandardOptions"]["in"].setInput( __children["CustomAttributes"]["out"] )
 __children["CustomAttributes"]["in"].setInput( __children["Group1"]["out"] )
-__children["CustomAttributes"]["filter"].setInput( __children["PathFilter"]["match"] )
+__children["CustomAttributes"]["filter"].setInput( __children["PathFilter"]["out"] )
 
 
 del __children
