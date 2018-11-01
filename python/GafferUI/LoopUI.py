@@ -38,11 +38,83 @@ import Gaffer
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.LoopComputeNode,
+	Gaffer.Loop,
 
 	"description",
 	"""
 	Applies a node network to an input iteratively.
 	""",
+
+	# Add + buttons for creating new plugs in the GraphEditor
+	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.LoopUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonTop:section", "top",
+	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.LoopUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonBottom:section", "bottom",
+
+	plugs = {
+
+		"in" : [
+
+			"description",
+			"The initial starting point for the loop."
+
+		],
+
+		"out" : [
+
+			"description",
+			"The final result of the loop.",
+
+		],
+
+		"previous" : [
+
+			"description",
+			"""
+			The result from the previous iteration of the loop, or
+			the primary input if no iterations have been performed yet.
+			The content of the loop is defined by feeding this previous
+			result through the processing nodes of choice and back
+			around into the next plug.
+			""",
+
+		],
+
+		"next" : [
+
+			"description",
+			"""
+			The input to be used as the start of the next iteration of
+			the loop.
+			""",
+
+		],
+
+		"iterations" : [
+
+			"description",
+			"""
+			The number of times the loop is applied to form the output.
+			""",
+
+			"nodule:type", "",
+
+		],
+
+		"indexVariable" : [
+
+			"description",
+			"""
+			The name of a context variable used to specify the index
+			of the current iteration. This can be referenced from
+			expressions within the loop network to modify the operations
+			performed during each iteration of the loop.
+			""",
+
+			"nodule:type", "",
+
+		],
+
+	}
 
 )
