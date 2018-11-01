@@ -33,11 +33,11 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-import imath
 
 import Gaffer
-import GafferScene
 import GafferUI
+
+import imath
 
 from Qt import QtWidgets
 
