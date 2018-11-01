@@ -1141,7 +1141,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 			self.assertEqual(
 				set( s["r"].keys() ),
-				set( [ "in", "out", "user", "a", "i", "o", "enabled" ] ),
+				set( [ "in", "out", "user", "a", "i", "o" ] ),
 			)
 
 		assertReferenceConnections()

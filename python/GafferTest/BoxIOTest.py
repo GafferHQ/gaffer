@@ -81,7 +81,7 @@ class BoxIOTest( GafferTest.TestCase ) :
 			self.assertFalse( "n2" in s )
 			self.assertTrue( "n3" in s )
 
-			self.assertEqual( set( s["Box"].keys() ), { "user", "n2", "BoxIn", "BoxOut", "op1", "sum", "enabled" } )
+			self.assertEqual( set( s["Box"].keys() ), { "user", "n2", "BoxIn", "BoxOut", "op1", "sum" } )
 
 			self.assertIsInstance( s["Box"]["n2"]["op1"].getInput().node(), Gaffer.BoxIn )
 			self.assertTrue( s["Box"]["n2"]["op1"].source().isSame( s["n1"]["sum"] ) )
