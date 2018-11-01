@@ -36,27 +36,23 @@
 
 import unittest
 import imath
+import inspect
 
 import IECore
 
 import Gaffer
 import GafferScene
 import GafferSceneTest
-import inspect
 
 class SceneLoopTest( GafferSceneTest.SceneTestCase ) :
-
-	def testDefaultName( self ) :
-
-		s = GafferScene.SceneLoop()
-		self.assertEqual( s.getName(), "SceneLoop" )
 
 	def testLoop( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["sphere"] = GafferScene.Sphere()
-		script["loop"] = GafferScene.SceneLoop()
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( GafferScene.ScenePlug() )
 		script["loop"]["in"].setInput( script["sphere"]["out"] )
 
 		script["filter"] = GafferScene.PathFilter()
@@ -88,7 +84,8 @@ class SceneLoopTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["sphere"] = GafferScene.Sphere()
-		script["loop"] = GafferScene.SceneLoop()
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( GafferScene.ScenePlug() )
 		script["loop"]["in"].setInput( script["sphere"]["out"] )
 
 		script["filter"] = GafferScene.PathFilter()
@@ -116,7 +113,8 @@ class SceneLoopTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["sphere"] = GafferScene.Sphere()
-		script["loop"] = GafferScene.SceneLoop()
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( GafferScene.ScenePlug() )
 		script["loop"]["in"].setInput( script["sphere"]["out"] )
 
 		script["filter"] = GafferScene.PathFilter()
