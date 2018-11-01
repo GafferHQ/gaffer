@@ -36,25 +36,13 @@
 
 #include "Gaffer/Loop.h"
 
+#include "Gaffer/ContextAlgo.h"
 #include "Gaffer/MetadataAlgo.h"
 
 #include "boost/bind.hpp"
 
 namespace Gaffer
 {
-
-namespace Detail
-{
-
-struct IdentityScope
-{
-	IdentityScope( const Context *context )
-	{
-	}
-};
-
-};
-
 
 template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<Loop<BaseType> > Loop<BaseType>::g_typeDescription;
@@ -397,7 +385,7 @@ const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Cont
 {
 	sourceLoopIndex = -1;
 
-	typename LoopTraits<BaseType>::IterationsScope iterationsScope( context );
+	ContextAlgo::GlobalScope globalScope( context, inPlug() );
 
 	indexVariable = indexVariablePlug()->getValue();
 

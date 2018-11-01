@@ -113,27 +113,6 @@ class IECORE_EXPORT Loop : public BaseType
 
 };
 
-namespace Detail
-{
-
-struct IdentityScope;
-
-} // namespace Detail
-
-/// May be specialised to control the behaviour of
-/// Loop<BaseType>.
-template<typename BaseType>
-struct LoopTraits
-{
-
-	/// A class which will be instantiated as
-	/// `IterationsScope iterationsScope( Context::current() )`
-	/// to modify the context when evaluating the number of loop iterations.
-	typedef Detail::IdentityScope IterationsScope;
-
-};
-
-
 typedef Loop<ComputeNode> LoopComputeNode;
 
 } // namespace Gaffer
