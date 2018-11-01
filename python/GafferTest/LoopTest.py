@@ -43,7 +43,7 @@ class LoopTest( GafferTest.TestCase ) :
 
 	def intLoop( self ) :
 
-		result = Gaffer.LoopComputeNode()
+		result = Gaffer.Loop()
 		result.setup( Gaffer.IntPlug() )
 		return result
 
@@ -185,7 +185,7 @@ class LoopTest( GafferTest.TestCase ) :
 
 	def testSetup( self ) :
 
-		n = Gaffer.LoopComputeNode()
+		n = Gaffer.Loop()
 
 		self.assertNotIn( "in", n )
 		self.assertNotIn( "out", n )
