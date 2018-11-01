@@ -81,8 +81,7 @@ class PythonEditor( GafferUI.Editor ) :
 			"IECore" : IECore,
 			"Gaffer" : Gaffer,
 			"GafferUI" : GafferUI,
-			"script" : scriptNode,
-			"parent" : scriptNode
+			"root" : scriptNode,
 		}
 
 	def inputWidget( self ) :
@@ -146,7 +145,7 @@ class PythonEditor( GafferUI.Editor ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
 			if self.scriptNode().isAncestorOf( dragData ) :
-				return "script['" + dragData.relativeName( self.scriptNode() ).replace( ".", "']['" ) + "']"
+				return "root['" + dragData.relativeName( self.scriptNode() ).replace( ".", "']['" ) + "']"
 		elif isinstance( dragData, Gaffer.Set ) :
 			if len( dragData ) == 1 :
 				return self.__dropText( widget, dragData[0] )
