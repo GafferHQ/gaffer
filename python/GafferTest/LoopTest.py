@@ -44,9 +44,7 @@ class LoopTest( GafferTest.TestCase ) :
 	def intLoop( self ) :
 
 		result = Gaffer.LoopComputeNode()
-		result["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
-		result["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-
+		result.setup( Gaffer.IntPlug() )
 		return result
 
 	def test( self ) :
