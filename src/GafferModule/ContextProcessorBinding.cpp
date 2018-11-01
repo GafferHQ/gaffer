@@ -65,8 +65,8 @@ void setup( T &n, const ValuePlug &plug )
 void GafferModule::bindContextProcessor()
 {
 
-	DependencyNodeClass<LoopComputeNode>()
-		.def( "setup", &setup<LoopComputeNode> )
+	DependencyNodeClass<Loop>()
+		.def( "setup", &setup<Loop> )
 	;
 
 	DependencyNodeClass<ContextProcessor>()
