@@ -69,7 +69,6 @@ import ImageProcessorUI
 import ImageMetadataUI
 import DeleteImageMetadataUI
 import CopyImageMetadataUI
-import ImageLoopUI
 import ShuffleUI
 import PremultiplyUI
 import UnpremultiplyUI
