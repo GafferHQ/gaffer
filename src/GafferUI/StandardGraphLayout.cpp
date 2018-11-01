@@ -49,6 +49,7 @@
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Dot.h"
+#include "Gaffer/Loop.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Switch.h"
@@ -1282,8 +1283,8 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		return false;
 	}
 
-	// If we're trying to connect a Dot, Switch, BoxOut, or ContextProcessor,
-	// then we may need to give it plugs first.
+	// If we're trying to connect a Dot, Switch, BoxOut, ContextProcessor
+	// or Loop, then we may need to give it plugs first.
 	/// \todo We should be able to do this by talking to PlugAdders instead of
 	/// doing the work ourselves. In fact, because PlugAdders and Nodules are
 	/// both derived from ConnectionCreator, we should only need to consider
@@ -1317,6 +1318,16 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputPlugs.front() ) )
 			{
 				contextProcessor->setup( valuePlug );
+			}
+		}
+	}
+	else if( Loop *loop = runTimeCast<Loop>( node ) )
+	{
+		if( !loop->inPlug() )
+		{
+			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputPlugs.front() ) )
+			{
+				loop->setup( valuePlug );
 			}
 		}
 	}
