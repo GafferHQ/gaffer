@@ -1,3 +1,77 @@
+0.53.0.0
+========
+
+Features
+--------
+
+- PrimitiveInspector : Added a new panel for inspecting the values of all primitive variables
+  associated with the selected object (#2863).
+
+Improvements
+------------
+
+- Bookmarks (#2873) :
+  - Added Ctrl+B shortcut to quickly navigate to a bookmark in any editor.
+  - Added bookmarks to pinning icon context menu.
+- TransformTool (#2850) :
+  - Added status widget with information about what is being edited (#2753).
+  - Added support for transforming an ancestor location if the selected location
+    is not movable. This is particularly convenient for transforming the output of
+    a SceneReader node.
+- Wrapper : Added GAFFER_EXTENSION_PATHS environment variable for easy configuration of 3rd
+  party extensions (#2868).
+
+Fixes
+-----
+
+- FilterSwitch : Fixed compatibility for loading old files with FilterSwitches in
+  Boxes (#2866).
+- USD : Fixed python errors due to clashing symbols (#2837).
+- SceneWriter : Fixed unnecessary messages about unsupported features from
+  the Alembic writer (#2865).
+- TransformTool (#2850) :
+  - Fixed attempts to edit read-only plugs inside References.
+  - Fixed `Selection::scene` so that it doesn't refer to internal plugs of
+    the tool.
+- Menus : Fixed search widget focus styling on Mac (#2873).
+- Clipboard : Fixed bug that meant Gaffer's clipboard was not synchronised with
+  the system clipboard on startup (#2878).
+
+API
+---
+
+- GafferUI : Moved ScrollMode enum from ScrolledContainer to Enums (backwards
+  compatibility is provided) (#2863).
+- VectorDataWidget (#2863) :
+  - Added `horizontal/verticalScrollMode` constructor arguments.
+  - Added `set/getHeader()` accessors.
+  - Fixed various issues with the header and tooltips.
+  - Restricted column tooltips to the header.
+  - Added alternating column background colours.
+  - Added support for many new data types (eg vectors, matrices, boxes, quats,
+    char, short).
+- Tool : Make `view()` method public (#2850).
+- GraphComponent : Added default value for `commonAncestor()` type (#2850).
+- Menu : Fixed position of search widget when menu has title (#2873).
+- Editor : Editors now grab keyboard focus on enter. This makes it easier to add
+  custom shortcuts from extension code (#2873).
+- CompoundEditor : Added `nodeSetMenuSignal()`, used for customising the context
+  menu for the pinning icon (#2873).
+- ContextProcessor : Added `setup()`, `inPlug()` and `outPlug()` methods.
+
+Build
+-----
+
+- Replaced DEBUG option with BUILD_TYPE, with values of DEBUG, RELEASE or RELWITHDEBINFO (#2593).
+
+Breaking Changes
+----------------
+
+- ContextProcessors : Removed SceneContextVariables, DeleteSceneContextVariables,
+  SceneTimeWarp, ImageContextVariables, DeleteImageContextVariables and ImageTimeWarp nodes.
+  Use the generic equivalents instead. Compatibility with old scripts is provided by
+  converting them automatically on loading (#2880).
+
 0.52.0.0
 ========
 
