@@ -592,10 +592,13 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			indexedInstanceChildNames.push_back( &instanceChildNames->writable() );
 		}
 
-		for( size_t i = 0, e = engine->numPoints(); i < e; ++i )
+		if( indexedInstanceChildNames.size() )
 		{
-			size_t instanceIndex = engine->instanceIndex( i ) % indexedInstanceChildNames.size();
-			indexedInstanceChildNames[instanceIndex]->push_back( InternedString( engine->instanceId( i ) ) );
+			for( size_t i = 0, e = engine->numPoints(); i < e; ++i )
+			{
+				size_t instanceIndex = engine->instanceIndex( i ) % indexedInstanceChildNames.size();
+				indexedInstanceChildNames[instanceIndex]->push_back( InternedString( engine->instanceId( i ) ) );
+			}
 		}
 
 		static_cast<AtomicCompoundDataPlug *>( output )->setValue( result );
