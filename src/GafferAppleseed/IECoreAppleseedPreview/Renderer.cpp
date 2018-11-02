@@ -1769,7 +1769,11 @@ class AppleseedAreaLight : public AppleseedLight
 
 				// Create an object instance for the light.
 				string objectInstanceName = name() + "_instance";
-				EntityPtr<asr::ObjectInstance> objectInstance( asr::ObjectInstanceFactory::create( objectInstanceName.c_str(), asr::ParamArray(), name().c_str(), m_transform, frontMaterialMappings, backMaterialMappings ) );
+
+				asr::ParamArray params;
+				params.insert( "visibility", m_visibilityDictionary );
+
+				EntityPtr<asr::ObjectInstance> objectInstance( asr::ObjectInstanceFactory::create( objectInstanceName.c_str(), params, name().c_str(), m_transform, frontMaterialMappings, backMaterialMappings ) );
 				insertObjectInstance( objectInstance );
 			}
 		}
@@ -1804,6 +1808,7 @@ class AppleseedAreaLight : public AppleseedLight
 
 			// Create a new light.
 			const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
+			m_visibilityDictionary = appleseedAttributes->m_visibilityDictionary;
 
 			if( appleseedAttributes && appleseedAttributes->m_lightShader )
 			{
@@ -1867,8 +1872,12 @@ class AppleseedAreaLight : public AppleseedLight
 
 					// Create an object instance for the light.
 					string objectInstanceName = name() + "_instance";
+
+					asr::ParamArray params;
+					params.insert( "visibility", m_visibilityDictionary );
+
 					asf::auto_release_ptr<asr::ObjectInstance> objectInstance;
-					objectInstance = asr::ObjectInstanceFactory::create( objectInstanceName.c_str(), asr::ParamArray(), name().c_str(), asf::Transformd::identity(), frontMaterialMappings, backMaterialMappings );
+					objectInstance = asr::ObjectInstanceFactory::create( objectInstanceName.c_str(), params, name().c_str(), asf::Transformd::identity(), frontMaterialMappings, backMaterialMappings );
 					m_assembly->object_instances().insert( objectInstance );
 				}
 				else
@@ -1919,6 +1928,7 @@ class AppleseedAreaLight : public AppleseedLight
 
 		IECoreScenePreview::Renderer::RenderType m_renderType;
 		asf::Transformd m_transform;
+		asr::ParamArray m_visibilityDictionary;
 
 		EntityPtr<asr::EDF> m_edf;
 		EntityPtr<asr::Material> m_material;
