@@ -945,5 +945,17 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+	def testUnconnectedInstanceInput( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+		plane["divisions"].setValue( imath.V2i( 1, 500 ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["parent"].setValue( "/plane" )
+
+		self.assertEqual( instancer["out"].set( "A" ).value.paths(), [ "/plane" ] )
+
 if __name__ == "__main__":
 	unittest.main()
