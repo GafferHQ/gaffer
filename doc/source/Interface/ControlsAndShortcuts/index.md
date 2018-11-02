@@ -1,6 +1,6 @@
 # Controls and Shortcuts #
 
-The following is a list of input device controls and shortcuts for manipulating the _Node Graph_, _Viewer_, and _Script Editor_.
+The following is a list of input device controls and shortcuts for manipulating the _Node Graph_, _Viewer_, and _Python Editor_.
 
 
 ## _Graph Editor_ ##
@@ -182,28 +182,28 @@ Center image at 1:1 scale             :kbd:`Home`
 ```
 
 
-## _Script Editor_ ##
+## _Python Editor_ ##
 
 
 ### Text Entry ###
 
 > Note :
-> When using the following drag and drop controls and shortcuts, drop the UI element onto the _Script Editor's_ text input field.
+> When using the following drag and drop controls and shortcuts, drop the UI element onto the input field of the _Python Editor_.
 
 ```eval_rst
 ================================================== ================================================
 Action                                             Control or Shortcut
 ================================================== ================================================
-Drop node into *Script Editor*                     Middle-click and drag node from *Node Graph*
-Drop plug into *Script Editor*                     Middle-click and drag plug from *Node Graph* 
+Drop node into *Python Editor*                     Middle-click and drag node from *Node Graph*
+Drop plug into *Python Editor*                     Middle-click and drag plug from *Node Graph* 
                                       
                                                    or
                                       
                                                    Click and drag plug label from *Node Editor*
-Drop plug value into *Script Editor*               :kbd:`Shift` + click and drag plug label from
+Drop plug value into *Python Editor*               :kbd:`Shift` + click and drag plug label from
                                                    *Node Editor*
-Drop color value into *Script Editor*              Click and drag a pixel from *Viewer*
-Drop scene location path(s) into *Script Editor*   Click and drag selection from *Viewer* or 
+Drop color value into *Python Editor*              Click and drag a pixel from *Viewer*
+Drop scene location path(s) into *Python Editor*   Click and drag selection from *Viewer* or 
                                                    *Scene Hierarchy*
 ================================================== ================================================
 ```
@@ -212,7 +212,7 @@ Drop scene location path(s) into *Script Editor*   Click and drag selection from
 ### Execution ###
 
 > Note :
-> For the following controls and shortcuts, the _Script Editor's_ text input field must be in focus.
+> For the following controls and shortcuts, the input field of the _Python Editor_ must be in focus.
 
 ```eval_rst
 ===================================== =============================================
