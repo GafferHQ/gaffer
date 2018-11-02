@@ -126,6 +126,7 @@ void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Co
 	{
 		h.append( SetAlgo::setExpressionHash( shadowExpressionData->readable(), inPlug() ) );
 	}
+	h.append( inPlug()->setHash( "__lights" ) );
 }
 
 IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
