@@ -753,6 +753,13 @@
 	[attr coat_affect_roughness]
 		page STRING "Coat"
 
+	[attr sheen]
+		page STRING "Sheen"
+	[attr sheen_color]
+		page STRING "Sheen"
+	[attr sheen_roughness]
+		page STRING "Sheen"
+
 	[attr emission]
 		page STRING "Emission"
 	[attr emission_color]
@@ -871,8 +878,41 @@
 		page STRING "Advanced"
 	[attr extra_depth]
 		page STRING "Advanced"
+	[attr extra_samples]
+		page STRING "Advanced"
 
-
+	[attr aov_id1]
+		page STRING "AOV"
+	[attr aov_id2]
+		page STRING "AOV"
+	[attr aov_id3]
+		page STRING "AOV"
+	[attr aov_id4]
+		page STRING "AOV"
+	[attr aov_id5]
+		page STRING "AOV"
+	[attr aov_id6]
+		page STRING "AOV"
+	[attr aov_id7]
+		page STRING "AOV"
+	[attr aov_id8]
+		page STRING "AOV"
+	[attr id1]
+		page STRING "AOV"
+	[attr id2]
+		page STRING "AOV"
+	[attr id3]
+		page STRING "AOV"
+	[attr id4]
+		page STRING "AOV"
+	[attr id5]
+		page STRING "AOV"
+	[attr id6]
+		page STRING "AOV"
+	[attr id7]
+		page STRING "AOV"
+	[attr id8]
+		page STRING "AOV"
 
 [node standard_volume]
 
