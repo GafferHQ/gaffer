@@ -269,6 +269,12 @@ bool Loop::setupPlugs()
 	nextPlug()->setFlags( Plug::Dynamic, false );
 	previousPlug()->setFlags( Plug::Dynamic, false );
 
+	// Copy styling over from main plugs.
+	/// \todo It would be much better if colours could be registered once by
+	/// Plug TypeId, and then we wouldn't need to do this.
+	MetadataAlgo::copyColors( inPlug(), nextPlug() , /* overwrite = */ false  );
+	MetadataAlgo::copyColors( inPlug(), previousPlug() , /* overwrite = */ false  );
+
 	// Because we're a loop, our affects() implementation specifies a cycle
 	// between nextPlug() and previousPlug(), so we must ask nicely for leniency
 	// during dirty propagation. The cycles aren't an issue when it comes to
