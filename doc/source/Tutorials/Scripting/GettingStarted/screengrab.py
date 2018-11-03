@@ -12,7 +12,7 @@ import GafferUI
 import GafferSceneUI
 
 mainWindow = GafferUI.ScriptWindow.acquire( script )
-scriptEditor = mainWindow.getLayout().editors( GafferUI.ScriptEditor )[0]
+pythonEditor = mainWindow.getLayout().editors( GafferUI.PythonEditor )[0]
 graphEditor = mainWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 nodeEditor = mainWindow.getLayout().editors( GafferUI.NodeEditor )[0]
 viewer = mainWindow.getLayout().editors( GafferUI.Viewer )[0]
@@ -25,18 +25,18 @@ def __delay( delay ) :
 		GafferUI.EventLoop.waitForIdle( 1 )
 
 # "Hello World" in Python Editor
-scriptEditor.reveal()
-scriptEditor.inputWidget().setText( 'print "Hello World!"' )
-scriptEditor.execute()
-GafferUI.WidgetAlgo.grab( widget = scriptEditor.parent(), imagePath = "images/pythonEditorHelloWorld.png" )
+pythonEditor.reveal()
+pythonEditor.inputWidget().setText( 'print "Hello World!"' )
+pythonEditor.execute()
+GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditorHelloWorld.png" )
 
 # Sphere node added by the Python Editor in the main window
-scriptEditor.inputWidget().setText( """import GafferScene
+pythonEditor.inputWidget().setText( """import GafferScene
 mySphere = GafferScene.Sphere()
-script.addChild( mySphere )""" )
-scriptEditor.execute()
+root.addChild( mySphere )""" )
+pythonEditor.execute()
 GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/mainWindowSphereNode.png" )
-scriptEditor.outputWidget().setText( "" )
+pythonEditor.outputWidget().setText( "" )
 
 # All nodes, unconnected, in Graph Editor
 script.addChild( GafferScene.OpenGLShader() )
@@ -49,30 +49,30 @@ graphEditor.frame( Gaffer.StandardSet( [ script["Sphere"], script["OpenGLShader"
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorAllNodes.png" )
 
 # Node reference in Python Editor
-scriptEditor.inputWidget().setText( "script['Sphere']" )
-scriptEditor.execute()
-scriptEditor.inputWidget().setText( "\n\nmySphere" )
-scriptEditor.execute()
-GafferUI.WidgetAlgo.grab( widget = scriptEditor.parent(), imagePath = "images/pythonEditorNodeReference.png" )
-scriptEditor.outputWidget().setText( "" )
+pythonEditor.inputWidget().setText( "root['Sphere']" )
+pythonEditor.execute()
+pythonEditor.inputWidget().setText( "\n\nmySphere" )
+pythonEditor.execute()
+GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditorNodeReference.png" )
+pythonEditor.outputWidget().setText( "" )
 
 # Plug reference in Python Editor
-scriptEditor.inputWidget().setText( "script['Sphere']['radius']" )
-scriptEditor.execute()
-GafferUI.WidgetAlgo.grab( widget = scriptEditor.parent(), imagePath = "images/pythonEditorPlugReference.png" )
-scriptEditor.outputWidget().setText( "" )
+pythonEditor.inputWidget().setText( "root['Sphere']['radius']" )
+pythonEditor.execute()
+GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditorPlugReference.png" )
+pythonEditor.outputWidget().setText( "" )
 
 # Plug value reference in Python Editor
-scriptEditor.inputWidget().setText( "Color3f(0, 0, 0)" )
-GafferUI.WidgetAlgo.grab( widget = scriptEditor.parent(), imagePath = "images/pythonEditorPlugValueReference.png" )
-scriptEditor.inputWidget().setText( "" )
+pythonEditor.inputWidget().setText( "Color3f(0, 0, 0)" )
+GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditorPlugValueReference.png" )
+pythonEditor.inputWidget().setText( "" )
 
 # Sphere with increased radius in Viewer
-scriptEditor.inputWidget().setText( "script['Sphere']['radius'].setValue( 4 )" )
-scriptEditor.execute()
+pythonEditor.inputWidget().setText( "root['Sphere']['radius'].setValue( 4 )" )
+pythonEditor.execute()
 script.selection().add( script["Sphere"] )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerSphereRadius.png" )
-scriptEditor.outputWidget().setText( "" )
+pythonEditor.outputWidget().setText( "" )
 script.selection().clear()
 
 # OpenGL node with constant plug in Node Editor
