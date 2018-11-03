@@ -16,7 +16,7 @@ import IECore
 __children = {}
 
 __children["Sphere"] = GafferScene.Sphere( "Sphere" )
-parent.addChild( __children["Sphere"] )
+root.addChild( __children["Sphere"] )
 __children["Sphere"]["enabled"].setValue( True )
 __children["Sphere"]["name"].setValue( 'sphere' )
 __children["Sphere"]["transform"]["translate"]["x"].setValue( 0.0 )
@@ -42,7 +42,7 @@ __children["Sphere"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.P
 __children["Sphere"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Sphere"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["Plane"] = GafferScene.Plane( "Plane" )
-parent.addChild( __children["Plane"] )
+root.addChild( __children["Plane"] )
 __children["Plane"]["enabled"].setValue( True )
 __children["Plane"]["name"].setValue( 'plane' )
 __children["Plane"]["transform"]["translate"]["x"].setValue( 0.0 )
@@ -65,7 +65,7 @@ __children["Plane"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.Pl
 __children["Plane"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Plane"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["Group"] = GafferScene.Group( "Group" )
-parent.addChild( __children["Group"] )
+root.addChild( __children["Group"] )
 __children["Group"]["enabled"].setValue( True )
 __children["Group"]["name"].setValue( 'geometry' )
 __children["Group"]["transform"]["translate"]["x"].setValue( 0.0 )
@@ -84,7 +84,7 @@ __children["Group"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.Pl
 __children["Group"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Group"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["Camera"] = GafferScene.Camera( "Camera" )
-parent.addChild( __children["Camera"] )
+root.addChild( __children["Camera"] )
 __children["Camera"]["enabled"].setValue( True )
 __children["Camera"]["name"].setValue( 'camera' )
 __children["Camera"]["transform"]["translate"]["x"].setValue( 0.0 )
@@ -107,7 +107,7 @@ __children["Camera"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.P
 __children["Camera"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Camera"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["Group1"] = GafferScene.Group( "Group1" )
-parent.addChild( __children["Group1"] )
+root.addChild( __children["Group1"] )
 __children["Group1"]["enabled"].setValue( True )
 __children["Group1"]["name"].setValue( 'world' )
 __children["Group1"]["transform"]["translate"]["x"].setValue( 0.0 )
@@ -126,7 +126,7 @@ __children["Group1"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags = Gaffer.P
 __children["Group1"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["Group1"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["StandardOptions"] = GafferScene.StandardOptions( "StandardOptions" )
-parent.addChild( __children["StandardOptions"] )
+root.addChild( __children["StandardOptions"] )
 __children["StandardOptions"]["enabled"].setValue( True )
 __children["StandardOptions"]["options"]["renderCamera"]["name"].setValue( 'render:camera' )
 __children["StandardOptions"]["options"]["renderCamera"]["value"].setValue( '/world/camera' )
@@ -155,7 +155,7 @@ __children["StandardOptions"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags =
 __children["StandardOptions"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["StandardOptions"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["CustomAttributes"] = GafferScene.CustomAttributes( "CustomAttributes" )
-parent.addChild( __children["CustomAttributes"] )
+root.addChild( __children["CustomAttributes"] )
 __children["CustomAttributes"]["enabled"].setValue( True )
 __children["CustomAttributes"]["attributes"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "member1", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["CustomAttributes"]["attributes"]["member1"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
@@ -171,7 +171,7 @@ __children["CustomAttributes"].addChild( Gaffer.V2fPlug( "__uiPosition1", flags 
 __children["CustomAttributes"]["__uiPosition1"]["x"].setValue( 0.0 )
 __children["CustomAttributes"]["__uiPosition1"]["y"].setValue( 0.0 )
 __children["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
-parent.addChild( __children["PathFilter"] )
+root.addChild( __children["PathFilter"] )
 __children["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ "/world/geometry/sphere" ] ) )
 __children["PathFilter"].addChild( Gaffer.V2fPlug( "__uiPosition", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["PathFilter"]["__uiPosition"]["x"].setValue( 3.9433956146240234 )
@@ -197,13 +197,13 @@ Our first scene queries
 Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the PythonEditor, we can either type a reference to it in directly, or middle-mouse drag it from the GraphEditor to the PythonEditor. To query the output of the StandardOptions node we'll be using the following :
 
 ```
-script["StandardOptions"]["out"]
+root["StandardOptions"]["out"]
 ```
 
 Note that we're just using Python dictionary syntax to access a Node by name and then to access a named Plug within it. This plug is the gateway to our queries, so let's make our first query by getting the global settings from within the scene - these are settings created by the various Options nodes.
 
 ```
-g = script["StandardOptions"]["out"]["globals"].getValue()
+g = root["StandardOptions"]["out"]["globals"].getValue()
 print type( g )
 print g.keys()
 print g["option:render:camera"].value
@@ -215,23 +215,23 @@ There are a couple of things to note here. Firstly, although the `out` plug appe
 The `"option:render:camera"` globals entry tells us that the user wants to render through a camera called `"/world/camera"`, so let's try to retrieve the object representing the camera. Just as the globals within the scene were represented by a `globals` plug, the objects are represented by an `object` plug. Maybe we can get the camera out using a simple getValue() call as before?
 
 ```
-g = script["StandardOptions"]["out"]["object"].getValue()
+g = root["StandardOptions"]["out"]["object"].getValue()
 RuntimeError : line 1 : Exception : Context has no entry named "scene:path"
 ```
 
 That didn't work out so well did it? The problem is that whereas the globals are _global_, different objects are potentially available at each point in the scene hierarchy - we need to say which part of the hierarchy we want the object from. We do that as follows :
 
 ```
-with Gaffer.Context( script.context() ) as context :
+with Gaffer.Context( root.context() ) as context :
 	context["scene:path"] = IECore.InternedStringVectorData( [ 'world', 'camera' ] )
-	camera = script["StandardOptions"]["out"]["object"].getValue()
+	camera = root["StandardOptions"]["out"]["object"].getValue()
 	print camera
 ```
 
 The Context class is central to the way Gaffer works - a single plug can output entirely different values depending on the context in which getValue() is called. Here we provided a context as a path within the scene, but for an image node we'd provide a context with a tile location and channel name. Contexts allow Gaffer to multithread efficiently - each thread uses it's own Context so each thread can be querying a different part of the scene or a different location in an image. That was a bit wordy though wasn't it? For now let's pretend we didn't even take this detour and let's use a utility method that does the same thing instead :
 
 ```
-camera = script["StandardOptions"]["out"].object( "/world/camera" )
+camera = root["StandardOptions"]["out"].object( "/world/camera" )
 ```
 
 Much better. Let's take a look at what we got :
@@ -251,7 +251,7 @@ Further queries
 Having our camera is all well and good, but we don't know where it is located spatially. It might come as no surprise to find that transforms are represented as another child plug alongside `globals` and `object`, and that we can query it in the same way. This time we'll skip that pesky Context stuff entirely, and use another utility method :
 
 ```
-transform = script["StandardOptions"]["out"].transform( "/world/camera" )
+transform = root["StandardOptions"]["out"].transform( "/world/camera" )
 print transform
 ```
 
@@ -260,14 +260,14 @@ That gave us the local transform for the camera in the form of a matrix - we cou
 That's about all we want to know about the camera, but what about that sphere? Does it have any properties we might be interested in? We should be able to guess by now that we can get at the object and transform in the same way as we did for the camera :
 
 ```
-sphereObject = script["StandardOptions"]["out"].object( "/world/geometry/sphere" )
-sphereTransform = script["StandardOptions"]["out"].transform( "/world/geometry/sphere" )
+sphereObject = root["StandardOptions"]["out"].object( "/world/geometry/sphere" )
+sphereTransform = root["StandardOptions"]["out"].transform( "/world/geometry/sphere" )
 ```
 
 But what about the CustomAttributes node that was applied to the sphere? How can we query what that did? Not surprisingly, the attributes of the sphere are retrieved via an `attributes` plug, or for the lazy Context dodgers amongst us, an `attributes()` utility method :
 
 ```
-a = script["StandardOptions"]["out"].attributes( "/world/geometry/sphere" )
+a = root["StandardOptions"]["out"].attributes( "/world/geometry/sphere" )
 print a.keys()
 print a["myString"].value
 ```
@@ -280,8 +280,8 @@ Traversing the hierarchy
 One of the key features of the queries above was that they were random access - we could query any location in the scene at any time, without needing to query the parent locations first. That's all well and good, but until now we've been using prior knowledge of the scene structure to decide what to query. In a real situation, our code doesn't know that `"/world/geometry/sphere"` even exists. We need a means of querying the structure of the scene first, so that we can then query the contents at each location. Oddly enough, the structure is just communicated with another plug alongside the others - this time one called `"childNames"`. And oddly enough, there's a utility method to help us get its value in context. Let's start at the root and see what we can find :
 
 ```
-print script["StandardOptions"]["out"].childNames( "/" )
-print script["StandardOptions"]["out"].childNames( "/world" )
+print root["StandardOptions"]["out"].childNames( "/" )
+print root["StandardOptions"]["out"].childNames( "/world" )
 ```
 
 Rather than continue this manual exploration, let's write a simple recursive function to traverse the scene and print what it finds :
@@ -299,7 +299,7 @@ def visit( scene, path ) :
 	for childName in scene.childNames( path ) :
 		visit( scene, os.path.join( path, str( childName )  ) )
 
-visit( script["StandardOptions"]["out"], "/" )
+visit( root["StandardOptions"]["out"], "/" )
 ```
 
 That's pretty much all there is to it. There's a little more to learn in terms of the APIs for the particular Cortex objects that might be returned by a query, but the above examples hopefully provide a good starting point for exploration.

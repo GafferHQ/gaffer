@@ -44,12 +44,12 @@ Since the scene will require a sphere primitive, import the [GafferScene](../../
 ```python
 import GafferScene
 mySphere = GafferScene.Sphere()
-script.addChild( mySphere )
+root.addChild( mySphere )
 ```
 
 ![A new Sphere node in the main window](images/mainWindowSphereNode.png "A new Sphere node in the main window")
 
-Notice that the node was added with the `addChild()` method to the `script` variable. The `addChild()` method is the core method for adding nodes and plugs to the node graph. The `script` variable references the root of the node graph. All nodes in the graph are ultimately children of the root. If you declared the node variable without adding it to the `script` variable, it would exist in memory (all variables in Python are objects), but it would not yet be part of the graph.
+Notice that the node was added with the `addChild()` method to the `root` variable. The `addChild()` method is the core method for adding nodes and plugs to the node graph. The `root` variable references the root of the node graph. All nodes in the graph are ultimately children of the root. If you declared the node variable without adding it to the `root` variable, it would exist in memory (all variables in Python are objects), but it would not yet be part of the graph.
 
 Helpfully, once you import a module, it will remain loaded in that _Python Editor_ (however, if you open a new _Python Editor_, you will need to import it again). The rest of the nodes you will need for this graph also come from the `GafferScene` module, so add them next:
 
@@ -59,11 +59,11 @@ myAssignment = GafferScene.ShaderAssignment()
 myFilter = GafferScene.PathFilter()
 myCamera = GafferScene.Camera()
 myGroup = GafferScene.Group()
-script.addChild( myShader )
-script.addChild( myAssignment )
-script.addChild( myFilter )
-script.addChild( myCamera )
-script.addChild( myGroup )
+root.addChild( myShader )
+root.addChild( myAssignment )
+root.addChild( myFilter )
+root.addChild( myCamera )
+root.addChild( myGroup )
 ```
 
 ![All nodes in the Graph Editor, unconnected](images/graphEditorAllNodes.png "All nodes in the Graph Editor, unconnected")
@@ -88,7 +88,7 @@ myShader.loadShader( 'Constant' )
 
 ## Referencing Plugs ##
 
-Since a node's default plugs are created automatically, they have no assigned variables, so you will need to reference them another way. In the API, plugs in the graph (and also, in fact, the nodes and the `script` variable) can each be treated like a Python dictionary, with key-value pairs. When editing plug values, it is usually necessary to first reference them in dictionary syntax.
+Since a node's default plugs are created automatically, they have no assigned variables, so you will need to reference them another way. In the API, plugs in the graph (and also, in fact, the nodes and the `root` variable) can each be treated like a Python dictionary, with key-value pairs. When editing plug values, it is usually necessary to first reference them in dictionary syntax.
 
 For example, you could reference the radius plug of the Sphere node like this:
 
@@ -99,7 +99,7 @@ mySphere['radius']
 ![A plug reference in the Python Editor](images/pythonEditorPlugReference.png "A plug reference in the Python Editor")
 
 > Caution :
-> Because Python dictionaries do not have built-in overwrite protection, you can accidentally and irrecoverably replace nodes and plugs with assignments that use existing node names, like `script['Sphere'] = ...`. Use dictionary syntax with care.
+> Because Python dictionaries do not have built-in overwrite protection, you can accidentally and irrecoverably replace nodes and plugs with assignments that use existing node names, like `root['Sphere'] = ...`. Use dictionary syntax with care.
 
 Just like with nodes, you can insert a reference to a plug by dragging. Try inserting a reference to radius plug of the Sphere node:
  
@@ -107,7 +107,7 @@ Just like with nodes, you can insert a reference to a plug by dragging. Try inse
 2. Click and drag the **label** of the radius plug from the _Node Editor_ (the cursor will change to ![a plug](images/plug.png "A plug")).
 3. Release it onto the input field of the _Python Editor_.
 
-A reference to `script['Sphere']['radius']` will be inserted. This is identical to `mySphere['radius']` from earlier. Notice how when you drag and drop plugs, the reference is formatted in dictionary syntax.
+A reference to `root['Sphere']['radius']` will be inserted. This is identical to `mySphere['radius']` from earlier. Notice how when you drag and drop plugs, the reference is formatted in dictionary syntax.
 
 > Important :
 > Dragging and dropping plugs is a core technique when using the _Python Editor_. It can speed up your node graph editing and inspecting considerably.
@@ -221,7 +221,7 @@ As you probably noticed, the graph looks tangled up, but that's a consequence of
 Much better!
 
 > Tip :
-> When creating a node graph using Python, if you add the nodes, declare variables for them, connect them, and **then** add them to `script` all at once, they will automatically and evenly lay themselves out. In fact, that is essentially what Gaffer scripts do when loaded.
+> When creating a node graph using Python, if you add the nodes, declare variables for them, connect them, and **then** add them to `root` all at once, they will automatically and evenly lay themselves out. In fact, that is essentially what Gaffer scripts do when loaded.
 
 Here is the final graph:
 
@@ -233,7 +233,7 @@ Here is the final graph:
 There's one final common operation you may want to perform on nodes using Python: deletion. Nodes and plugs both have a `removeChild()` method. Try removing the Sphere node: 
 
 ```python
-script.removeChild( mySphere )
+root.removeChild( mySphere )
 ```
 
 

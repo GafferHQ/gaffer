@@ -9,7 +9,7 @@ Node Graphs
 ```
 import GafferScene
 node = GafferScene.Sphere()
-script.addChild( node )
+root.addChild( node )
 ```
 
 ### Rename a node
@@ -42,58 +42,55 @@ destinationNode["destinationPlugName"].setInput( sourceNode["sourceNode"] )
 node["plugName"].setInput( None )
 ```
 
-Script nodes
-------------
-
 ### Get a node by name
 
 ```
-node = script["nodeName"]
+node = root["nodeName"]
 ```
 
 ### Loop over all nodes
 
 ```
-for node in script.children( Gaffer.Node ) :
+for node in root.children( Gaffer.Node ) :
 	...
 ```
 
 ### Get the current filename
 
 ```
-script["fileName"].getValue()
+root["fileName"].getValue()
 ```
 
-### Save a copy
+### Serialize the node graph to file
 
 ```
-script.serialiseToFile( "/path/to/file.gfr" )
+root.serialiseToFile( "/path/to/file.gfr" )
 ```
 
 ### Query a script variable
 
 ```
-script.context()["project:rootDirectory"]
+root.context()["project:rootDirectory"]
 ```
 
 ### Select a node
 
 ```
-script.selection().clear()
-script.selection().add( script["nodeName"] )
+root.selection().clear()
+root.selection().add( root["nodeName"] )
 ```
 
 ### Get the frame range
 
 ```
-start = script['frameRange']['start'].getValue()
-end = script['frameRange']['end'].getValue()
+start = root['frameRange']['start'].getValue()
+end = root['frameRange']['end'].getValue()
 ```
 
 ### Set the current frame
 
 ```
-script.context().setFrame( frame )
+root.context().setFrame( frame )
 ```
 
 Metadata
