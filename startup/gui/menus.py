@@ -235,22 +235,7 @@ if "APPLESEED" in os.environ :
 		import GafferOSL
 		import GafferOSLUI
 
-		def __shaderNodeCreator( nodeName, shaderName ) :
-
-			node = GafferOSL.OSLShader( nodeName )
-			node.loadShader( shaderName )
-
-			return node
-
-		GafferSceneUI.ShaderUI.appendShaders(
-			nodeMenu.definition(), "/Appleseed/Shader",
-			os.environ["APPLESEED_SEARCHPATH"].split( ":" ),
-			[ "oso" ],
-			__shaderNodeCreator,
-			# Show only the OSL shaders from the Appleseed shader
-			# library.
-			matchExpression = re.compile( "(^|.*/)as_[^/]*$")
-		)
+		GafferAppleseedUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
 		GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )
 
