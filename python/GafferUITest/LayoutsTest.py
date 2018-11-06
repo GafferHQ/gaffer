@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import os
+
 import Gaffer
 import GafferUI
 import GafferUITest
@@ -79,6 +81,39 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		self.assertEqual( l.names(), [ "JustTheGraphEditor", "JustTheNodeEditor" ] )
 		self.assertEqual( l.names( persistent = False ), [ "JustTheGraphEditor" ] )
 		self.assertEqual( l.names( persistent = True ), [ "JustTheNodeEditor" ] )
+
+	def testNoPersistentLayoutsInDefaultConfigs( self ) :
+
+		class TestApp( Gaffer.Application ) :
+
+			def __init__( self ) :
+
+				Gaffer.Application.__init__( self, "Test" )
+
+			def _run( self, args ) :
+
+				# Load the standard gui config files
+				self._executeStartupFiles( "gui" )
+
+				return 0
+
+		app = TestApp()
+
+		# Load the GUI config, making sure we only use the standard
+		# startup files, and not any others from the current environment
+		# (the user running these tests may have their own personal configs).
+		startupPaths = os.environ["GAFFER_STARTUP_PATHS"]
+		try :
+			os.environ["GAFFER_STARTUP_PATHS"] = os.path.expandvars( "$GAFFER_ROOT/startup" )
+			app.run()
+		finally :
+			os.environ["GAFFER_STARTUP_PATHS"] = startupPaths
+
+		self.assertEqual( os.environ["GAFFER_STARTUP_PATHS"], startupPaths )
+
+		layouts = GafferUI.Layouts.acquire( app )
+		self.assertEqual( layouts.names( persistent = True ), [] )
+		self.assertGreater( len( layouts.names() ), 0 )
 
 if __name__ == "__main__":
 	unittest.main()
