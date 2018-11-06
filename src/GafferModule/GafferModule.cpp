@@ -78,7 +78,6 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/Backdrop.h"
-#include "Gaffer/Loop.h"
 
 #include "tbb/tbb.h"
 
@@ -217,8 +216,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindContextProcessor();
 
 	NodeClass<Backdrop>();
-
-	DependencyNodeClass<LoopComputeNode>();
 
 	def( "isDebug", &isDebug );
 

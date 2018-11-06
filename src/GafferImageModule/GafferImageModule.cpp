@@ -47,7 +47,6 @@
 #include "ImageAlgoBinding.h"
 #include "ImageProcessorBinding.h"
 #include "MetadataBinding.h"
-#include "MixinBinding.h"
 #include "OpenColorIOTransformBinding.h"
 #include "ShapeBinding.h"
 #include "TransformBinding.h"
@@ -70,7 +69,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	bindFilters();
 	bindOpenColorIOTransform();
 	bindChannelDataProcessor();
-	bindMixin();
 	bindUtilityNodes();
 	bindCatalogue();
 	bindImageAlgo();

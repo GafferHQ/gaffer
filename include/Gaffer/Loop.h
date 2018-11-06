@@ -45,21 +45,24 @@
 namespace Gaffer
 {
 
-/// A generic mixin class for creating loops in computation - it
-/// can be used for any ValuePlug type and even for compound plug
-/// types.  It is expected that either the BaseType provides plugs named
-/// "in" and "out" already, or that it doesn't and they will be
-/// added dynamically following construction of the node.
-template<typename BaseType>
-class IECORE_EXPORT Loop : public BaseType
+class IECORE_EXPORT Loop : public ComputeNode
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( Loop<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Loop, LoopTypeId, ComputeNode );
 
 		Loop( const std::string &name=GraphComponent::defaultName<Loop>() );
 		~Loop() override;
+
+		/// \undoable
+		void setup( const ValuePlug *plug );
+
+		ValuePlug *inPlug();
+		const ValuePlug *inPlug() const;
+
+		ValuePlug *outPlug();
+		const ValuePlug *outPlug() const;
 
 		ValuePlug *nextPlug();
 		const ValuePlug *nextPlug() const;
@@ -95,43 +98,14 @@ class IECORE_EXPORT Loop : public BaseType
 		void childAdded();
 		bool setupPlugs();
 
-		ValuePlug *inPlugInternal();
-		const ValuePlug *inPlugInternal() const;
-
-		ValuePlug *outPlugInternal();
-		const ValuePlug *outPlugInternal() const;
-
 		void addAffectedPlug( const ValuePlug *output, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		const ValuePlug *ancestorPlug( const ValuePlug *plug, std::vector<IECore::InternedString> &relativeName ) const;
 		const ValuePlug *descendantPlug( const ValuePlug *plug, const std::vector<IECore::InternedString> &relativeName ) const;
 		const ValuePlug *sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex, IECore::InternedString &indexVariable ) const;
 
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Loop<BaseType> );
-
 };
 
-namespace Detail
-{
-
-struct IdentityScope;
-
-} // namespace Detail
-
-/// May be specialised to control the behaviour of
-/// Loop<BaseType>.
-template<typename BaseType>
-struct LoopTraits
-{
-
-	/// A class which will be instantiated as
-	/// `IterationsScope iterationsScope( Context::current() )`
-	/// to modify the context when evaluating the number of loop iterations.
-	typedef Detail::IdentityScope IterationsScope;
-
-};
-
-
-typedef Loop<ComputeNode> LoopComputeNode;
+IE_CORE_DECLAREPTR( Loop )
 
 } // namespace Gaffer
 

@@ -47,17 +47,13 @@ import GafferImageTest
 
 class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 
-	def testDefaultName( self ) :
-
-		l = GafferImage.ImageLoop()
-		self.assertEqual( l.getName(), "ImageLoop" )
-
 	def testLoop( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["c"] = GafferImage.Constant()
-		script["loop"] = GafferImage.ImageLoop()
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( GafferImage.ImagePlug() )
 		script["loop"]["in"].setInput( script["c"]["out"] )
 
 		script["grade"] = GafferImage.Grade()
@@ -93,7 +89,8 @@ class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["c"] = GafferImage.Constant()
-		script["loop"] = GafferImage.ImageLoop()
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( GafferImage.ImagePlug() )
 		script["loop"]["in"].setInput( script["c"]["out"] )
 
 		script["grade"] = GafferImage.Grade()

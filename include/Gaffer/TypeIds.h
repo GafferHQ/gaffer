@@ -125,7 +125,7 @@ enum TypeId
 	LeafPathFilterTypeId = 110078,
 	MatchPatternPathFilterTypeId = 110079,
 	FileSystemPathTypeId = 110080,
-	LoopComputeNodeTypeId = 110081,
+	LoopTypeId = 110081,
 	FileSequencePathFilterTypeId = 110082,
 	M44fVectorDataPlugTypeId = 110083,
 	V2iVectorDataPlugTypeId = 110084,

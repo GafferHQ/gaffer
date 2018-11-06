@@ -126,7 +126,7 @@ enum TypeId
 	SceneFilterPathFilterTypeId = 110581,
 	DeleteObjectTypeId = 110582,
 	AttributeVisualiserTypeId = 110583,
-	SceneLoopTypeId = 110584,
+	SceneLoopTypeId = 110584, // Obsolete, available for reuse
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
 	LightTweaksTypeId = 110587,

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,68 +35,13 @@
 ##########################################################################
 
 import Gaffer
-import GafferImage
+import GafferScene
 
-Gaffer.Metadata.registerNode(
+class SceneLoop( Gaffer.LoopComputeNode ) :
 
-	GafferImage.ImageLoop,
+	def __init__( self, name = "SceneLoop" ) :
 
-	"description",
-	"""
-	Applies a user defined processing loop to an image. The content
-	of the loop is defined by the node network placed between the
-	previous and next plugs. The input image is sent around this
-	loop for a set number of iterations and then emerges as the
-	output image.
-	""",
+		Gaffer.LoopComputeNode.__init__( self, name )
+		self.setup( GafferScene.ScenePlug() )
 
-	plugs = {
-
-		"previous" : [
-
-			"description",
-			"""
-			The result from the previous iteration of the loop, or
-			the input image if no iterations have been performed yet.
-			The content of the loop is defined by feeding this previous
-			result through the image processing nodes of choice and back
-			around into the next plug.
-			""",
-
-		],
-
-		"next" : [
-
-			"description",
-			"""
-			The image to be used as the start of the next iteration of
-			the loop.
-			""",
-
-		],
-
-		"iterations" : [
-
-			"description",
-			"""
-			The number of times the loop is applied to form the output
-			image.
-			""",
-
-		],
-
-		"indexVariable" : [
-
-			"description",
-			"""
-			The name of a context variable used to specify the index
-			of the current iteration. This can be referenced from
-			expressions within the loop network to modify the operations
-			performed during each iteration of the loop.
-			"""
-
-		],
-
-	}
-
-)
+GafferScene.SceneLoop = SceneLoop

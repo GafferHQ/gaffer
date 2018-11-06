@@ -45,7 +45,6 @@
 #include "IECoreGLPreviewBinding.h"
 #include "IOBinding.h"
 #include "TweaksBinding.h"
-#include "MixinBinding.h"
 #include "ObjectProcessorBinding.h"
 #include "OptionsBinding.h"
 #include "PrimitiveVariablesBinding.h"
@@ -84,7 +83,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindPrimitiveVariables();
 	bindTweaks();
 	bindIO();
-	bindMixin();
 	bindIECoreGLPreview();
 
 }

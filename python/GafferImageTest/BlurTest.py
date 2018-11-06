@@ -154,7 +154,8 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 		loopInit = GafferImage.Constant()
 		loopInit["format"].setValue( GafferImage.Format( 5, 5, 1.000 ) )
 
-		imageLoop = GafferImage.ImageLoop()
+		imageLoop = Gaffer.Loop()
+		imageLoop.setup( GafferImage.ImagePlug() )
 		imageLoop["in"].setInput( loopInit["out"] )
 
 		merge = GafferImage.Merge()

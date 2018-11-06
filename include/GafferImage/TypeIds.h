@@ -91,7 +91,7 @@ enum TypeId
 	ImageMetadataTypeId = 110795,
 	DeleteImageMetadataTypeId = 110796,
 	CopyImageMetadataTypeId = 110797,
-	ImageLoopTypeId = 110798,
+	ImageLoopTypeId = 110798, // Obsolete - available for reuse
 	PremultiplyTypeId = 110799,
 	CropTypeId = 110800,
 	ResampleTypeId = 110801,
