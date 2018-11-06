@@ -317,6 +317,7 @@ class ArnoldGlobals;
 class Instance;
 IE_CORE_FORWARDDECLARE( ShaderCache );
 IE_CORE_FORWARDDECLARE( InstanceCache );
+IE_CORE_FORWARDDECLARE( LightListCache );
 
 /// This class implements the basics of outputting attributes
 /// and objects to Arnold, but is not a complete implementation
@@ -346,6 +347,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		NodeDeleter m_nodeDeleter;
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
+		LightListCachePtr m_lightListCache;
 
 	private :
 
@@ -678,6 +680,55 @@ class ShaderCache : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( ShaderCache )
 
+// The LightListCache stores std::vectors of AtNode pointers to lights.
+// We rely on lights getting handled before other objects and if
+// that were to change, we couldn't look up lights by name anymore.
+class LightListCache : public IECore::RefCounted
+{
+
+	public :
+
+		const std::vector<AtNode *> &get( const IECore::StringVectorData *nodeNamesData )
+		{
+			IECore::MurmurHash h = nodeNamesData->Object::hash();
+
+			Cache::accessor a;
+			m_cache.insert( a, h );
+
+			if( a->second.empty() )
+			{
+				const std::vector<string> &nodeNames = nodeNamesData->readable();
+				a->second.reserve( nodeNames.size() );
+
+				for( const std::string &name : nodeNames )
+				{
+					std::string nodeName = "light:" + name;
+					AtNode *node = AiNodeLookUpByName( AtString( nodeName.c_str() ) );
+					if( node )
+					{
+						a->second.push_back( node );
+					}
+				}
+
+				a->second.shrink_to_fit();
+			}
+
+			return a->second;
+		}
+
+		void clear()
+		{
+			m_cache.clear();
+		}
+
+	private :
+
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, std::vector<AtNode *>> Cache;
+		Cache m_cache;
+};
+
+IE_CORE_DECLAREPTR( LightListCache )
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -753,8 +804,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 	public :
 
-		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes )
+		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache, LightListCache *lightLinkCache )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes ), m_lightListCache( lightLinkCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -1068,11 +1119,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( m_linkedLights )
 				{
-					std::vector<AtNode*> lightNodes;
-					lightNamesToNodes( m_linkedLights->readable(), lightNodes );
+					const std::vector<AtNode *> &linkedLightNodes = m_lightListCache->get( m_linkedLights.get() );
 
-					AtArray *linkedLightNodes = AiArrayConvert( lightNodes.size(), 1, AI_TYPE_NODE, lightNodes.data() );
-					AiNodeSetArray( node, g_lightGroupArnoldString, linkedLightNodes );
+					AiNodeSetArray( node, g_lightGroupArnoldString, AiArrayConvert( linkedLightNodes.size(), 1, AI_TYPE_NODE, linkedLightNodes.data() ) );
 					AiNodeSetBool( node, g_useLightGroupArnoldString, true );
 				}
 				else
@@ -1083,11 +1132,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( m_shadowGroup )
 				{
-					std::vector<AtNode*> lightNodes;
-					lightNamesToNodes( m_shadowGroup->readable(), lightNodes );
+					const std::vector<AtNode *> &linkedLightNodes = m_lightListCache->get( m_linkedLights.get() );
 
-					AtArray *linkedLightNodes = AiArrayConvert( lightNodes.size(), 1, AI_TYPE_NODE, lightNodes.data() );
-					AiNodeSetArray( node, g_shadowGroupArnoldString, linkedLightNodes );
+					AiNodeSetArray( node, g_shadowGroupArnoldString, AiArrayConvert( linkedLightNodes.size(), 1, AI_TYPE_NODE, linkedLightNodes.data() ) );
 					AiNodeSetBool( node, g_useShadowGroupArnoldString, true );
 				}
 				else
@@ -1493,25 +1540,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
-		void lightNamesToNodes( const std::vector<std::string> &lightNames, std::vector<AtNode*> &lightNodes ) const
-		{
-			// NOTE : There is an awful lot of AtString conversion and AiNodeLookUpByName
-			// happening here if we have lots lights.  It seems like it would be great if there
-			// was some way of caching the evaluation of light expressions as a vector of node
-			// pointers, instead of a vector of strings - this might be tricky with how the
-			// baking of expressions currently happens in the EvaluateLightLinks node?
-
-			for ( IECore::StringVectorData::ValueType::const_iterator it = lightNames.begin(); it != lightNames.end(); ++it )
-			{
-				std::string lightName = "light:" + *(it);
-				AtNode *lightNode = AiNodeLookUpByName( AtString( lightName.c_str() ) );
-				if( lightNode )
-				{
-					lightNodes.push_back( lightNode );
-				}
-			}
-		}
-
 		unsigned char m_visibility;
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
@@ -1535,6 +1563,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		IECore::ConstStringDataPtr m_sssSetName;
 
+		LightListCache *m_lightListCache;
 };
 
 IE_CORE_DECLAREPTR( ArnoldAttributes )
@@ -2844,6 +2873,7 @@ ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentN
 	:	m_nodeDeleter( nodeDeleter ),
 		m_shaderCache( new ShaderCache( nodeDeleter, parentNode ) ),
 		m_instanceCache( new InstanceCache( nodeDeleter, parentNode ) ),
+		m_lightListCache( new LightListCache() ),
 		m_parentNode( parentNode )
 {
 }
@@ -2859,7 +2889,7 @@ IECore::InternedString ArnoldRendererBase::name() const
 
 ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const IECore::CompoundObject *attributes )
 {
-	return new ArnoldAttributes( attributes, m_shaderCache.get() );
+	return new ArnoldAttributes( attributes, m_shaderCache.get(), m_lightListCache.get() );
 }
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
@@ -2946,6 +2976,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		{
 			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
+			m_lightListCache->clear();
 			m_globals->render();
 		}
 
