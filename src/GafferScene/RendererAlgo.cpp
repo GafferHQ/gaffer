@@ -1109,9 +1109,27 @@ void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObje
 	}
 
 	const BoolData *depthOfFieldData = globals->member<BoolData>( "option:render:depthOfField" );
-	bool depthOfField = depthOfFieldData && depthOfFieldData->readable();
+	/*if( !camera->hasDepthOfField() && depthOfFieldData )
+	{
+		camera->setDepthOfField( depthOfFieldData->readable() );
+	}*/
+	// \todo - switch to the form above once we have officially added the depthOfField parameter to Cortex.
+	// The plan then would be that the renderer backends should respect camera->getDepthOfField.
+	// For the moment we bake into fStop instead
+	bool depthOfField = false;	
+	if( depthOfFieldData )
+	{
+		// First set from render globals
+		depthOfField = depthOfFieldData->readable();
+	}
+	if( const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" ) )
+	{
+		// Override based on camera setting
+		depthOfField = d->readable();
+	}
 	if( !depthOfField )
 	{
+		// If there is no depth of field, bake that into the fStop
 		camera->setFStop( 0.0f );
 	}
 
