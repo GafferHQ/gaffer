@@ -448,6 +448,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"renderSettingOverrides.depthOfField" : [
+
+			"description",
+			"""
+			Override the "depthOfField" render option.  Forces depth of field to always ( or never )
+			be rendered.  To get depth of field, you must also set an appropriate f-stop on this
+			camera.
+			""",
+
+		],
+
 
 	}
 

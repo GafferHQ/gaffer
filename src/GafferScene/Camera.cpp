@@ -85,6 +85,7 @@ Camera::Camera( const std::string &name )
 	renderSettingOverridesPlug()->addOptionalMember( "overscanTop", new FloatData( 0.0f ), "overscanTop", Plug::Default );
 	renderSettingOverridesPlug()->addOptionalMember( "overscanBottom", new FloatData( 0.0f ), "overscanBottom", Plug::Default );
 	renderSettingOverridesPlug()->addOptionalMember( "cropWindow", new Box2fData( Box2f( V2f(0.0f), V2f(1.0f) ) ), "cropWindow", Plug::Default );
+	renderSettingOverridesPlug()->addOptionalMember( "depthOfField", new BoolData( false ), "depthOfField", Plug::Default );
 }
 
 Camera::~Camera()
