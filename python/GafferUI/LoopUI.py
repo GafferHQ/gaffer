@@ -46,6 +46,10 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Applies a node network to an input iteratively.
+
+	> Caution : This should _not_ be your first choice of tool.
+	> For many use cases the Instancer, CollectScenes and CollectImages
+	> nodes are more suitable and offer _significantly_ better performance.
 	""",
 
 	# Add + buttons for creating new plugs in the GraphEditor
