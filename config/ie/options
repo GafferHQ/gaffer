@@ -135,6 +135,9 @@ if targetApp :
 			LINKFLAGS = targetAppLinkFlags
 
 	qtVersion = targetAppReg.get( "qtVersion", qtVersion )
+	
+	if targetApp == "houdini" :
+		VDB_LIB_SUFFIX = "_sesi"
 
 else :
 
@@ -231,14 +234,7 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 ]
 
 if targetAppVersion :
-	## \todo: We should probably be doing this for all targetApps,
-	# but we're limiting ourselves to the only known problem case
-	# for now. Reconsider this decision when we have fewer active
-	# app versions (and ideally more conforming to VFX Platform).
-	if targetApp == "maya" and targetAppMajorVersion == "2016" :
-		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
-	else :
-		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+	LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
 
 LOCATE_DEPENDENCY_CPPPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "include" ),
@@ -271,7 +267,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "PySide", pysideVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( OSLHOME, "lib64" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), "cortex", cortexMajorVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "cortex", cortexMajorVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python{0}".format( pythonVersion ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), "lib" ),
@@ -286,7 +282,7 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "python", pythonVersion, compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "openexr", exrVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "boost", boostVersion, "lib64", "python" + pythonVersion, "site-packages" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "lib", "python" + pythonVersion, "site-packages" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), "cortex", cortexMajorVersion, "lib", "python" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "cortex", cortexMajorVersion, "lib", "python" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python" + pythonVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "PySide", pysideVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "python" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "sip", "4" ),
