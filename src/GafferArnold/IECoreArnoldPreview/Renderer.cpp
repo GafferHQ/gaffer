@@ -36,7 +36,7 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
+#include "GafferArnold/Private/IECoreArnoldPreview/ShaderNetworkAlgo.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
@@ -57,7 +57,6 @@
 #include "IECoreVDB/TypeIds.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/ObjectVector.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
 #include "IECore/VectorTypedData.h"
@@ -553,10 +552,10 @@ class ArnoldShader : public IECore::RefCounted
 
 	public :
 
-		ArnoldShader( const IECore::ObjectVector *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix, const AtNode *parentNode )
+		ArnoldShader( const IECoreScene::ShaderNetwork *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix, const AtNode *parentNode )
 			:	m_nodeDeleter( nodeDeleter )
 		{
-			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix, parentNode );
+			m_nodes = ShaderNetworkAlgo::convert( shaderNetwork, namePrefix, parentNode );
 		}
 
 		~ArnoldShader() override
@@ -597,25 +596,13 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		ArnoldShaderPtr get( const IECore::ObjectVector *shader )
+		ArnoldShaderPtr get( const IECoreScene::ShaderNetwork *shader )
 		{
-			// Rehashing shaders is expensive, so we keep a map of ObjectVector addresses
-			// to hash values.  In order to ensure there isn't a tiny risk of freeing one
-			// of these addresses and constructing a different ObjectVector at the same
-			// location, the hash keys are shared pointers which will keep these
-			// ObjectVectors alive.  We clear them out before the render starts in clearUnused()
-			HashCache::accessor ha;
-			m_hashCache.insert( ha, shader );
-			if( ha->second == IECore::MurmurHash() )
-			{
-				ha->second = shader->Object::hash();
-			}
-
 			Cache::accessor a;
-			m_cache.insert( a, ha->second );
+			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
-				const std::string namePrefix = "shader:" + ha->second.toString() + ":";
+				const std::string namePrefix = "shader:" + a->first.toString() + ":";
 				a->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
 			}
 			return a->second;
@@ -624,23 +611,6 @@ class ShaderCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			vector<IECore::ConstObjectVectorPtr> toEraseHash;
-			for( HashCache::iterator it = m_hashCache.begin(), eIt = m_hashCache.end(); it != eIt; ++it )
-			{
-				if( it->first->refCount() == 1 )
-				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// object vector we're keeping alive to match
-					// the shader hash.
-					toEraseHash.push_back( it->first );
-				}
-			}
-			for( vector<IECore::ConstObjectVectorPtr>::const_iterator it = toEraseHash.begin(), eIt = toEraseHash.end(); it != eIt; ++it )
-			{
-				m_hashCache.erase( *it );
-			}
-
 			vector<IECore::MurmurHash> toErase;
 			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
@@ -670,9 +640,6 @@ class ShaderCache : public IECore::RefCounted
 
 		NodeDeleter m_nodeDeleter;
 		AtNode *m_parentNode;
-
-		typedef tbb::concurrent_hash_map<IECore::ConstObjectVectorPtr, IECore::MurmurHash> HashCache;
-		HashCache m_hashCache;
 
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr> Cache;
 		Cache m_cache;
@@ -826,17 +793,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			updateShadingFlag( g_arnoldOpaqueAttributeName, Opaque, attributes );
 			updateShadingFlag( g_arnoldMatteAttributeName, Matte, attributes );
 
-			const IECore::ObjectVector *surfaceShaderAttribute = attribute<IECore::ObjectVector>( g_arnoldSurfaceShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_oslSurfaceShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_oslShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_surfaceShaderAttributeName, attributes );
+			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_surfaceShaderAttributeName, attributes );
 			if( surfaceShaderAttribute )
 			{
 				m_surfaceShader = shaderCache->get( surfaceShaderAttribute );
 			}
 
-			m_lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
-			m_lightShader = m_lightShader ? m_lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
+			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
+			m_lightShader = m_lightShader ? m_lightShader : attribute<IECoreScene::ShaderNetwork>( g_lightShaderAttributeName, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
@@ -859,7 +826,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 				if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
 				{
-					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() ) );
+					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it->second.get() ) );
 					m_lightFilterShaders.push_back( filter );
 				}
 			}
@@ -1147,7 +1114,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		const IECore::ObjectVector *lightShader() const
+		const IECoreScene::ShaderNetwork *lightShader() const
 		{
 			return m_lightShader.get();
 		}
@@ -1245,7 +1212,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			Displacement( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
 			{
-				if( const IECore::ObjectVector *mapAttribute = attribute<IECore::ObjectVector>( g_dispMapAttributeName, attributes ) )
+				if( const IECoreScene::ShaderNetwork *mapAttribute = attribute<IECoreScene::ShaderNetwork>( g_dispMapAttributeName, attributes ) )
 				{
 					map = shaderCache->get( mapAttribute );
 				}
@@ -1544,7 +1511,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
-		IECore::ConstObjectVectorPtr m_lightShader;
+		IECoreScene::ConstShaderNetworkPtr m_lightShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
 		IECore::ConstStringDataPtr m_transformType;
@@ -2448,7 +2415,7 @@ class ArnoldGlobals
 				m_atmosphere = nullptr;
 				if( value )
 				{
-					if( const IECore::ObjectVector *d = reportedCast<const IECore::ObjectVector>( value, "option", name ) )
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 					{
 						m_atmosphere = m_shaderCache->get( d );
 					}
@@ -2461,7 +2428,7 @@ class ArnoldGlobals
 				m_background = nullptr;
 				if( value )
 				{
-					if( const IECore::ObjectVector *d = reportedCast<const IECore::ObjectVector>( value, "option", name ) )
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 					{
 						m_background = m_shaderCache->get( d );
 					}
@@ -2474,7 +2441,7 @@ class ArnoldGlobals
 				m_aovShaders.erase( name );
 				if( value )
 				{
-					if( const IECore::ObjectVector *d = reportedCast<const IECore::ObjectVector>( value, "option", name ) )
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 					{
 						m_aovShaders[name] = m_shaderCache->get( d );
 					}

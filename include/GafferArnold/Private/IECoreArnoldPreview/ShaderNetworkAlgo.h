@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLDPREVIEW_SHADERALGO_H
-#define IECOREARNOLDPREVIEW_SHADERALGO_H
+#ifndef IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
+#define IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
 
-#include "IECore/ObjectVector.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 #include "ai.h"
 
@@ -46,13 +46,13 @@
 namespace IECoreArnoldPreview
 {
 
-namespace ShaderAlgo
+namespace ShaderNetworkAlgo
 {
 
-std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "", const AtNode *parentNode = nullptr );
+std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix = "", const AtNode *parentNode = nullptr );
 
-} // namespace ShaderAlgo
+} // namespace ShaderNetworkAlgo
 
 } // namespace IECoreArnoldPreview
 
-#endif // IECOREARNOLDPREVIEW_SHADERALGO_H
+#endif // IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
