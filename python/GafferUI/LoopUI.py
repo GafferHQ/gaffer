@@ -34,7 +34,10 @@
 #
 ##########################################################################
 
+import functools
+
 import Gaffer
+import GafferUI
 
 Gaffer.Metadata.registerNode(
 
@@ -118,3 +121,59 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+def __createLoop( node ) :
+
+	edges = [ "top", "right", "bottom", "left" ]
+
+	def opposite( edge ) :
+		return edges[ ( edges.index( edge ) + 2 ) % 4 ]
+
+	def rotate( edge ) :
+		return edges[ ( edges.index( edge ) + 1 ) % 4 ]
+
+	with Gaffer.UndoContext( node.scriptNode() ) :
+
+		plug = node["previous"]
+		edge = Gaffer.Metadata.value( plug, "noduleLayout:section" ) or "bottom"
+
+		for i in range( 0, 4 ) :
+
+			dot = Gaffer.Dot()
+			dot.setup( plug )
+			dot["in"].setInput( plug )
+			node.parent().addChild( dot )
+
+			edge = opposite( edge )
+			Gaffer.Metadata.registerValue( dot["in"], "noduleLayout:section", edge )
+
+			edge = rotate( edge )
+			Gaffer.Metadata.registerValue( dot["out"], "noduleLayout:section", edge )
+
+			plug = dot["out"]
+
+		node["next"].setInput( plug )
+
+def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
+
+	node = plug.node()
+	if not isinstance( node, Gaffer.Loop ) :
+		return
+
+	if plug not in { node["previous"], node["next"] } :
+		return
+
+	menuDefinition.append(
+		"/Connect to {0}".format( "Previous" if plug == node["next"] else "Next" ),
+		{
+			"command" : functools.partial( __createLoop, node = node ),
+			"active" : (
+				node["next"].getInput() is None
+				and len( node["previous"].outputs() ) == 0
+				and Gaffer.MetadataAlgo.readOnly( node["next"] ) == False
+				and Gaffer.MetadataAlgo.readOnly( node["previous"] ) == False
+			)
+		}
+	)
+
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
