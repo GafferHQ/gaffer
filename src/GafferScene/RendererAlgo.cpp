@@ -1108,6 +1108,13 @@ void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObje
 		camera->setCropWindow( cropWindowData->readable() );
 	}
 
+	const BoolData *depthOfFieldData = globals->member<BoolData>( "option:render:depthOfField" );
+	bool depthOfField = depthOfFieldData && depthOfFieldData->readable();
+	if( !depthOfField )
+	{
+		camera->setFStop( 0.0f );
+	}
+
 	// Bake the shutter from the globals into the camera before passing it to the renderer backend
 	//
 	// Before this bake, the shutter is an optional render setting override, with the shutter start
