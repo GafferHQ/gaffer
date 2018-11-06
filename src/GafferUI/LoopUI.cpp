@@ -91,6 +91,8 @@ class LoopPlugAdder : public PlugAdder
 
 			applyEdgeMetadata( m_node->inPlug(), inOpposite );
 			applyEdgeMetadata( m_node->outPlug(), !inOpposite );
+			applyEdgeMetadata( m_node->nextPlug(), inOpposite );
+			applyEdgeMetadata( m_node->previousPlug(), !inOpposite );
 		}
 
 	private :
