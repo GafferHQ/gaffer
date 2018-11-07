@@ -109,12 +109,12 @@ class screengrab( Gaffer.Application ) :
 				),
 
 				IECore.CompoundParameter(
-					name = "scriptEditor",
-					description = "Parameters that configure ScriptEditors.",
+					name = "pythonEditor",
+					description = "Parameters that configure PythonEditors.",
 					members = [
 						IECore.StringParameter(
 							name = "execute",
-							description = "Some python code to execute in the script editor.",
+							description = "Some python code to execute in the editor.",
 							defaultValue = "",
 						),
 					]
@@ -297,14 +297,14 @@ class screengrab( Gaffer.Application ) :
 					grabWidget = GafferUI.PlugValueWidget.acquire( script.descendant( args["nodeEditor"]["grab"].value ) )
 				self.setGrabWidget( grabWidget )
 
-		# Set up the ScriptEditors as requested.
+		# Set up the PythonEditors as requested.
 
-		for scriptEditor in scriptWindow.getLayout().editors( GafferUI.ScriptEditor ) :
+		for pythonEditor in scriptWindow.getLayout().editors( GafferUI.PythonEditor ) :
 
-			if args["scriptEditor"]["execute"].value :
-				scriptEditor.inputWidget().setText( args["scriptEditor"]["execute"].value )
-				scriptEditor.inputWidget()._qtWidget().selectAll()
-				scriptEditor.execute()
+			if args["pythonEditor"]["execute"].value :
+				pythonEditor.inputWidget().setText( args["pythonEditor"]["execute"].value )
+				pythonEditor.inputWidget()._qtWidget().selectAll()
+				pythonEditor.execute()
 
 		# Set up the Viewers as requested.
 

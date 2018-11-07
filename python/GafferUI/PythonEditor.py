@@ -52,7 +52,7 @@ from Qt import QtCore
 ## \todo Standard way for users to customise all menus
 ## \todo Tab completion and popup help. rlcompleter module should be useful for tab completion. Completer( dict ) constructs a completer
 # that works in a specific namespace.
-class ScriptEditor( GafferUI.Editor ) :
+class PythonEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -81,8 +81,7 @@ class ScriptEditor( GafferUI.Editor ) :
 			"IECore" : IECore,
 			"Gaffer" : Gaffer,
 			"GafferUI" : GafferUI,
-			"script" : scriptNode,
-			"parent" : scriptNode
+			"root" : scriptNode,
 		}
 
 	def inputWidget( self ) :
@@ -133,7 +132,7 @@ class ScriptEditor( GafferUI.Editor ) :
 
 	def __repr__( self ) :
 
-		return "GafferUI.ScriptEditor( scriptNode )"
+		return "GafferUI.PythonEditor( scriptNode )"
 
 	def __activated( self, widget ) :
 
@@ -146,7 +145,7 @@ class ScriptEditor( GafferUI.Editor ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
 			if self.scriptNode().isAncestorOf( dragData ) :
-				return "script['" + dragData.relativeName( self.scriptNode() ).replace( ".", "']['" ) + "']"
+				return "root['" + dragData.relativeName( self.scriptNode() ).replace( ".", "']['" ) + "']"
 		elif isinstance( dragData, Gaffer.Set ) :
 			if len( dragData ) == 1 :
 				return self.__dropText( widget, dragData[0] )
@@ -191,7 +190,7 @@ class ScriptEditor( GafferUI.Editor ) :
 			# up till the end.
 			QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
 
-GafferUI.Editor.registerType( "ScriptEditor", ScriptEditor )
+GafferUI.Editor.registerType( "PythonEditor", PythonEditor )
 
 class _MessageHandler( IECore.MessageHandler ) :
 

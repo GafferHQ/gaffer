@@ -233,7 +233,7 @@ from FileSystemPathVectorDataPlugValueWidget import FileSystemPathVectorDataPlug
 from PlugWidget import PlugWidget
 from PlugLayout import PlugLayout
 from Editor import Editor
-from ScriptEditor import ScriptEditor
+from PythonEditor import PythonEditor
 from GadgetWidget import GadgetWidget
 from GraphEditor import GraphEditor
 from ScriptWindow import ScriptWindow

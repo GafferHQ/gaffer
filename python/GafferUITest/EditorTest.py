@@ -96,19 +96,19 @@ class EditorTest( GafferUITest.TestCase ) :
 			editorsCreated.append( editor )
 		editorCreatedConnection = GafferUI.Editor.instanceCreatedSignal().connect( editorCreated )
 
-		scriptEditorsCreated = []
-		def scriptEditorCreated( editor ) :
-			scriptEditorsCreated.append( editor )
-		scriptEditorCreatedConnection = GafferUI.ScriptEditor.instanceCreatedSignal().connect( scriptEditorCreated )
+		pythonEditorsCreated = []
+		def pythonEditorCreated( editor ) :
+			pythonEditorsCreated.append( editor )
+		pythonEditorCreatedConnection = GafferUI.PythonEditor.instanceCreatedSignal().connect( pythonEditorCreated )
 
 		s = Gaffer.ScriptNode()
 
 		e1 = GafferUI.NodeEditor( s )
-		e2 = GafferUI.ScriptEditor( s )
+		e2 = GafferUI.PythonEditor( s )
 		e3 = GafferUI.NodeEditor( s )
 
 		self.assertEqual( editorsCreated, [ e1, e2, e3 ] )
-		self.assertEqual( scriptEditorsCreated, [ e2 ] )
+		self.assertEqual( pythonEditorsCreated, [ e2 ] )
 
 if __name__ == "__main__":
 	unittest.main()
