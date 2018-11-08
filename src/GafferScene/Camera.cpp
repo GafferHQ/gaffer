@@ -68,7 +68,7 @@ Camera::Camera( const std::string &name )
 	addChild( new FloatPlug( "focalLength", Plug::In, 35.0f, 0.0f ) );
 	addChild( new V2fPlug( "orthographicAperture", Plug::In, V2f( 2.0f, 2.0f ), V2f( 0.0f ) ) );
 	addChild( new V2fPlug( "apertureOffset", Plug::In, V2f( 0.0f ) ) );
-	addChild( new FloatPlug( "fStop", Plug::In, 0.0f, 0.0f ) );
+	addChild( new FloatPlug( "fStop", Plug::In, 5.6f, 0.0f ) );
 	addChild( new FloatPlug( "focalLengthWorldScale", Plug::In, 0.1f, 0.0f ) );
 	addChild( new FloatPlug( "focusDistance", Plug::In, 1.0f ) );
 	addChild( new V2fPlug( "clippingPlanes", Plug::In, V2f( 0.01, 100000 ), V2f( 0 ) ) );
