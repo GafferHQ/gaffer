@@ -72,6 +72,37 @@ Breaking Changes
   Use the generic equivalents instead. Compatibility with old scripts is provided by
   converting them automatically on loading (#2880).
 
+0.52.1.0 (relative to 0.52.0.0)
+========
+
+Features
+--------
+
+- PrimitiveInspector : Added new editor panel for inspecting the values of all
+  primitive variables associated with the object at the selected location (#2863).
+
+Fixes
+-----
+
+- Fixed FilterSwitch compatibility within boxes (#2866).
+- SceneWriter : Fixed unnecessary messages about unsupported features from
+  the Alembic writer (#2865).
+- USD : Fixed python errors due to clashing symbols (#2837).
+
+API
+---
+
+- VectorDataWidget (#2863) :
+  - Added `horizontal/verticalScrollMode` constructor arguments.
+  - Added `set/getHeader()` accessors.
+  - Fixed various issues with the header and tooltips.
+  - Restricted column tooltips to the header.
+  - Added alternating column background colours.
+  - Added support for many new data types (eg vectors, matrices, boxes, quats,
+    char, short).
+- GafferUI : Moved ScrollMode enum from ScrolledContainer to Enums (backwards
+  compatibility is provided) (#2863).
+
 0.52.0.0
 ========
 
