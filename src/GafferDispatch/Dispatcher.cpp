@@ -135,6 +135,14 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
 	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
 
+	// If we have no directory set, first check if we're already inside a dispatch,
+	// and if so use the parent directory
+	if ( jobDirectory == "" )
+	{
+		jobDirectory = context->get<std::string>( "dispatcher:jobDirectory", "" );
+	}
+
+	// If we still have no directory, use the OS current working path
 	if ( jobDirectory == "" )
 	{
 		jobDirectory = boost::filesystem::current_path().string();

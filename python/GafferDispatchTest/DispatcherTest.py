@@ -1623,5 +1623,24 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegexp( Exception, "Python argument types in" ) :
 			d.frameRange( Gaffer.ScriptNode(), None )
 
+	def testRecursiveDispatch( self ) :
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+		command = "import GafferDispatch\nGafferDispatch.LocalDispatcher().dispatch( [ self.parent()['n1'] ] )"
+		s["ReDispatch1"] = GafferDispatch.PythonCommand()
+		s["ReDispatch1"]["command"].setValue( command )
+		s["ReDispatch2"] = GafferDispatch.PythonCommand()
+		s["ReDispatch2"]["command"].setValue( command )
+
+		#s["n2"] = GafferDispatchTest.LoggingTaskNode()
+		dispatcher.dispatch( [ s["ReDispatch1"], s["ReDispatch2"] ] )
+
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/000000" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/000000/000000" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/000000/000001" ) )
+
 if __name__ == "__main__":
 	unittest.main()
