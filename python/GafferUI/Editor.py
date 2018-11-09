@@ -42,6 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
+from Qt import QtWidgets
+
 class _EditorMetaclass( type ) :
 
 	def __call__( cls, *args, **kw ) :
@@ -63,6 +66,8 @@ class Editor( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
+		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
 
 		self.__scriptNode = scriptNode
@@ -70,6 +75,9 @@ class Editor( GafferUI.Widget ) :
 
 		self.__title = ""
 		self.__titleChangedSignal = GafferUI.WidgetSignal()
+
+		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
 		self.__setContextInternal( scriptNode.context(), callUpdate=False )
 
@@ -196,3 +204,13 @@ class Editor( GafferUI.Widget ) :
 		s = Gaffer.Signal1()
 		setattr( cls, "__instanceCreatedSignal", s )
 		return s
+
+	def __enter( self, widget ) :
+
+		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
+			self._qtWidget().setFocus()
+
+	def __leave( self, widget ) :
+
+		self._qtWidget().clearFocus()
+

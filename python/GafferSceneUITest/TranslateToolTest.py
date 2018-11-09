@@ -605,5 +605,46 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( len( cs ) )
 		self.assertEqual( cs[0][0], tool )
 
+	def testEditAncestorIfSelectionNotTransformable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["sceneReader"] = GafferScene.SceneReader()
+		script["sceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/alembicFiles/groupedPlane.abc" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["sceneReader"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
+		selection = tool.selection()
+		self.assertEqual( len( selection ), 1 )
+		self.assertEqual( selection[0].transformPlug, script["sceneReader"]["transform"] )
+		self.assertEqual( selection[0].path, "/group" )
+
+	def testSelectionRefersToFirstPublicPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		view = GafferSceneUI.SceneView()
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		self.assertEqual( tool.selection(), [] )
+
+		view["in"].setInput( script["plane"]["out"] )
+		self.assertEqual( tool.selection(), [] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].scene, script["plane"]["out"] )
+
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( [ script["plane"] ] ) )
+		Gaffer.PlugAlgo.promote( box["plane"]["out"] )
+		view["in"].setInput( box["out"] )
+		self.assertEqual( tool.selection()[0].scene, box["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

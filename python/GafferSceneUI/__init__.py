@@ -127,6 +127,7 @@ import ShaderBallUI
 import LightTweaksUI
 import LightToCameraUI
 import FilterResultsUI
+import TransformToolUI
 import TranslateToolUI
 import ScaleToolUI
 import EvaluateLightLinksUI

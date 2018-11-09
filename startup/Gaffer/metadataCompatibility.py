@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,42 +35,20 @@
 ##########################################################################
 
 import Gaffer
-import GafferScene
 
-Gaffer.Metadata.registerNode(
+def __registerValueWrapper( originalRegisterValue ) :
 
-	GafferScene.ShaderBall,
+	def registerValue( *args, **kw ) :
 
-	"description",
-	"""
-	Generates scenes suitable for rendering shader balls.
-	""",
+		if len( args ) == 3 and isinstance( args[0], Gaffer.Node ) :
+			if args[1] == "graphBookmarks:bookmarked" :
+				args = list( args )
+				args[1] = "bookmarked"
+			if args[1] == "bookmarked" and not args[2] :
+				return # No need to explicitly store `bookmarked==False`
 
-	"childNodesAreReadOnly", True,
+		originalRegisterValue( *args, **kw )
 
-	plugs = {
+	return staticmethod( registerValue )
 
-		"shader" : [
-
-			"description",
-			"""
-			The shader to be rendered.
-			""",
-
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
-
-		],
-
-		"resolution" : [
-
-			"description",
-			"""
-			The resolution of the shader ball image, which
-			is always a square.
-			""",
-
-		],
-
-	}
-)
+Gaffer.Metadata.registerValue = __registerValueWrapper( Gaffer.Metadata.registerValue )

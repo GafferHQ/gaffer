@@ -37,6 +37,8 @@
 
 import functools
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -102,6 +104,8 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		node = self._lastAddedNode()
 		if not node :
+			with self.__column :
+				GafferUI.Spacer( imath.V2i( 0 ) )
 			return
 
 		with self.__column :

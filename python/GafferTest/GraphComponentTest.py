@@ -345,6 +345,18 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assert_( s["n1"].commonAncestor( s["n2"], Gaffer.ScriptNode ).isSame( s ) )
 		self.assert_( s["n2"].commonAncestor( s["n1"], Gaffer.ScriptNode ).isSame( s ) )
 
+	def testCommonAncestorType( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p1"] = Gaffer.IntPlug()
+		s["n"]["user"]["p2"] = Gaffer.Color3fPlug()
+
+		self.assertEqual( s["n"]["user"]["p1"].commonAncestor( s["n"]["user"]["p2"]["r"] ), s["n"]["user"] )
+		self.assertEqual( s["n"]["user"]["p1"].commonAncestor( s["n"]["user"]["p2"]["r"], Gaffer.Plug ), s["n"]["user"] )
+		self.assertEqual( s["n"]["user"]["p1"].commonAncestor( s["n"]["user"]["p2"]["r"], Gaffer.Node ), s["n"] )
+
 	def testRenameThenRemove( self ) :
 
 		p = Gaffer.GraphComponent()
