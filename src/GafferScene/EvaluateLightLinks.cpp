@@ -39,6 +39,7 @@
 #include "GafferScene/SetAlgo.h"
 
 #include "IECore/CompoundData.h"
+#include "IECore/NullObject.h"
 
 #include <cstdio>
 
@@ -48,21 +49,27 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( EvaluateLightLinks );
 
+size_t EvaluateLightLinks::g_firstPlugIndex = 0;
+
 IECore::InternedString m_lightLinkAttrName = "linkedLights";
 IECore::InternedString m_shadowGroupAttrName = "ai:visibility:shadow_group";
 
+IECore::InternedString g_lightsSetName( "__lights" );
+IECore::InternedString g_defaultLightsSetName( "defaultLights" );
+
+IECore::InternedString g_expressionContextEntryName( "__evaluateLightLinks:setExpression" );
+
 namespace{
 
-IECore::StringVectorDataPtr expressionToLightNames( const std::string &expression, const ScenePlug *in, const PathMatcher &allLights )
+IECore::ObjectPtr setToValidLightNames( const PathMatcher &linkedLights, const PathMatcher &allLights )
 {
-	IECore::StringVectorDataPtr lightNames = new IECore::StringVectorData();
-	std::vector<std::string> &lightNamesWritable = lightNames->writable();
+	IECore::StringVectorDataPtr lightNamesData = new IECore::StringVectorData();
+	std::vector<std::string> &lightNames = lightNamesData->writable();
 
-	PathMatcher linkedIlluminationSet = SetAlgo::evaluateSetExpression( expression, in );
-	linkedIlluminationSet = linkedIlluminationSet.intersection( allLights );
-	linkedIlluminationSet.paths( lightNamesWritable );
+	const PathMatcher &intersected = linkedLights.intersection( allLights );
+	intersected.paths( lightNames );
 
-	return lightNames;
+	return lightNamesData;
 }
 
 } // namespace
@@ -71,6 +78,11 @@ IECore::StringVectorDataPtr expressionToLightNames( const std::string &expressio
 EvaluateLightLinks::EvaluateLightLinks( const std::string &name )
 	:	SceneProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	// Private plug used only to cache computation results.
+	addChild( new Gaffer::ObjectPlug( "__lightNames", Gaffer::Plug::Out, NullObject::defaultNullObject() ) );
+
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
@@ -100,15 +112,84 @@ void EvaluateLightLinks::affects( const Gaffer::Plug *input, AffectedPlugsContai
 	}
 }
 
+void EvaluateLightLinks::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hash( output, context, h );
+
+	if( output == lightNamesPlug() )
+	{
+		const StringData *expressionData = context->get<StringData>( g_expressionContextEntryName, nullptr );
+
+		if( expressionData )
+		{
+			h.append( SetAlgo::setExpressionHash( expressionData->readable(), inPlug() ) );
+			h.append( inPlug()->setHash( g_lightsSetName ) );
+		}
+		else
+		{
+			ScenePlug::SetScope scope( context, g_lightsSetName );
+
+			h.append( inPlug()->setPlug()->hash() );
+			scope.setSetName( g_defaultLightsSetName );
+			h.append( inPlug()->setPlug()->hash() );
+		}
+
+		return;
+	}
+}
+
+void EvaluateLightLinks::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == lightNamesPlug() )
+	{
+		const StringData *expressionData = context->get<StringData>( g_expressionContextEntryName, nullptr );
+
+		ObjectPtr result = NullObject::defaultNullObject();
+		if( expressionData )
+		{
+			PathMatcher linkedSet = SetAlgo::evaluateSetExpression( expressionData->readable(), inPlug() );
+			ConstPathMatcherDataPtr lightsSet = inPlug()->set( g_lightsSetName );
+			result = setToValidLightNames( linkedSet, lightsSet->readable() );
+		}
+		else
+		{
+			ScenePlug::SetScope scope( context, g_lightsSetName );
+
+			IECore::MurmurHash lightsSetHash = inPlug()->setPlug()->hash();
+			scope.setSetName( g_defaultLightsSetName );
+			IECore::MurmurHash defaultLightsSetHash = inPlug()->setPlug()->hash();
+
+			if( defaultLightsSetHash != lightsSetHash )
+			{
+				ConstPathMatcherDataPtr defaultLightsSetData = inPlug()->setPlug()->getValue( &defaultLightsSetHash );
+				const PathMatcher &defaultLightsSet = defaultLightsSetData->readable();
+
+				scope.setSetName( g_lightsSetName );
+				ConstPathMatcherDataPtr lightsSetData = inPlug()->setPlug()->getValue( &lightsSetHash );
+				const PathMatcher &lightsSet = lightsSetData->readable();
+
+				if( lightsSet != defaultLightsSet )
+				{
+					result = setToValidLightNames( defaultLightsSet, lightsSet );
+				}
+			}
+		}
+
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( result );
+	}
+
+	return SceneProcessor::compute( output, context );
+}
+
 void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	const MurmurHash inputHash = inPlug()->attributesPlug()->hash();
-	ConstCompoundObjectPtr attributes = inPlug()->attributesPlug()->getValue( & inputHash );
+	ConstCompoundObjectPtr inputAttributes = inPlug()->attributesPlug()->getValue( &inputHash );
 
-	ConstStringDataPtr illuminationExpressionData = attributes->member<StringData>( m_lightLinkAttrName );
-	ConstStringDataPtr shadowExpressionData = attributes->member<StringData>( m_shadowGroupAttrName );
+	ConstStringDataPtr illuminationExpressionData = inputAttributes->member<StringData>( m_lightLinkAttrName );
+	ConstStringDataPtr shadowExpressionData = inputAttributes->member<StringData>( m_shadowGroupAttrName );
 
-	if( !illuminationExpressionData && !shadowExpressionData )
+	if( !illuminationExpressionData && !shadowExpressionData && path.size() != 1 )
 	{
 		// Pass through.
 		h = inputHash;
@@ -117,14 +198,31 @@ void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Co
 
 	SceneProcessor::hashAttributes( path, context, parent, h );
 	h.append( inputHash );
-	if( illuminationExpressionData )
+
+	Context::EditableScope scope( context );
+
+	if( illuminationExpressionData || path.size() == 1 )
 	{
-		h.append( SetAlgo::setExpressionHash( illuminationExpressionData->readable(), inPlug() ) );
+		if( illuminationExpressionData )
+		{
+			scope.set<std::string>( g_expressionContextEntryName, illuminationExpressionData->readable() );
+		}
+
+		h.append( lightNamesPlug()->hash() );
 	}
 
-	if( shadowExpressionData )
+	if( shadowExpressionData || path.size() == 1 )
 	{
-		h.append( SetAlgo::setExpressionHash( shadowExpressionData->readable(), inPlug() ) );
+		if( shadowExpressionData )
+		{
+			scope.set<std::string>( g_expressionContextEntryName, shadowExpressionData->readable() );
+		}
+		else
+		{
+			scope.remove( g_expressionContextEntryName );
+		}
+
+		h.append( lightNamesPlug()->hash() );
 	}
 }
 
@@ -135,7 +233,15 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 	ConstStringDataPtr illuminationExpressionData = inputAttributes->member<StringData>( m_lightLinkAttrName );
 	ConstStringDataPtr shadowExpressionData = inputAttributes->member<StringData>( m_shadowGroupAttrName );
 
-	if( !illuminationExpressionData && !shadowExpressionData )
+	// In addition to locations that have SetExpressions assigned that need
+	// evaluating, locations at the root level of the hierarchy need to consider
+	// the set containing default lights. As an optimization, we don't provide
+	// linking data based on this set unless lights exist that don't illuminate
+	// geometry by default. Renderers consider all lights to be linked unless told
+	// otherwise anyway. The resulting linking is propagated through the hierarchy
+	// via inheritance.
+
+	if( !illuminationExpressionData && !shadowExpressionData && path.size() != 1 )
 	{
 		// Pass through
 		return inputAttributes;
@@ -144,18 +250,51 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 	CompoundObjectPtr result = new CompoundObject;
 	result->members() = inputAttributes->members();
 
-	ConstPathMatcherDataPtr lightsSetData = inPlug()->set( "__lights" );
-	const PathMatcher &lightsSet = lightsSetData->readable();
+	Context::EditableScope scope( context );
 
-	if( illuminationExpressionData )
+	if( illuminationExpressionData || path.size() == 1 )
 	{
-		result->members()[ m_lightLinkAttrName ] = expressionToLightNames( illuminationExpressionData->readable(), inPlug(), lightsSet );
+		if( illuminationExpressionData )
+		{
+			scope.set<std::string>( g_expressionContextEntryName, illuminationExpressionData->readable() );
+		}
+
+		ConstObjectPtr object = lightNamesPlug()->getValue();
+		if( object != NullObject::defaultNullObject() )
+		{
+			const StringVectorData *tmp = static_cast<const StringVectorData *>( object.get() );
+			result->members()[ m_lightLinkAttrName ] = const_cast<StringVectorData *>( tmp );
+		}
 	}
 
-	if( shadowExpressionData )
+	if( shadowExpressionData || path.size() == 1 )
 	{
-		result->members()[ m_shadowGroupAttrName ] = expressionToLightNames( shadowExpressionData->readable(), inPlug(), lightsSet );
+		if( shadowExpressionData )
+		{
+			scope.set<std::string>( g_expressionContextEntryName, shadowExpressionData->readable() );
+		}
+		else
+		{
+			scope.remove( g_expressionContextEntryName );
+		}
+
+		ConstObjectPtr object = lightNamesPlug()->getValue();
+		if( object != NullObject::defaultNullObject() )
+		{
+			const StringVectorData *tmp = static_cast<const StringVectorData *>( object.get() );
+			result->members()[ m_shadowGroupAttrName ] = const_cast<StringVectorData *>( tmp );
+		}
 	}
 
 	return result;
+}
+
+Gaffer::ObjectPlug *EvaluateLightLinks::lightNamesPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::ObjectPlug *EvaluateLightLinks::lightNamesPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex );
 }
