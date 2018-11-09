@@ -315,6 +315,9 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.__toolPlugSetConnections = [
 				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet, fallbackResult = lambda plug : None ) ) for t in self.tools
 			]
+			self.__toolPlugDirtiedConnections = [
+				t.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__toolPlugDirtied, fallbackResult = lambda plug : None ) ) for t in self.tools
+			]
 
 			with GafferUI.ListContainer( spacing = 1 ) as self.widgets :
 
@@ -348,6 +351,19 @@ class _ToolChooser( GafferUI.Frame ) :
 			if plug != tool["active"] :
 				return
 
+			if not plug.getValue() or Gaffer.Metadata.value( tool, "tool:exclusive" ) == False :
+				return
+
+			for t in self.tools :
+				if not t.isSame( tool ) and Gaffer.Metadata.value( t, "tool:exclusive" ) != False :
+					t["active"].setValue( False )
+
+		def __toolPlugDirtied( self, plug ) :
+
+			tool = plug.node()
+			if plug != tool["active"] :
+				return
+
 			newPrimaryTool = self.primaryTool
 			if plug.getValue() :
 				newPrimaryTool = tool
@@ -357,13 +373,6 @@ class _ToolChooser( GafferUI.Frame ) :
 			if newPrimaryTool != self.primaryTool :
 				self.primaryTool = newPrimaryTool
 				self.primaryToolChangedSignal()
-
-			if not plug.getValue() or Gaffer.Metadata.value( tool, "tool:exclusive" ) == False :
-				return
-
-			for t in self.tools :
-				if not t.isSame( tool ) and Gaffer.Metadata.value( t, "tool:exclusive" ) != False :
-					t["active"].setValue( False )
 
 	def __init__( self, **kw ) :
 

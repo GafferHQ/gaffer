@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,43 +34,23 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferScene
+import GafferUI
 
-Gaffer.Metadata.registerNode(
+def __editorKeyPress( editor, event ) :
 
-	GafferScene.ShaderBall,
+	if event.key == "B" and event.modifiers == event.modifiers.Control :
+		return GafferUI.GraphBookmarksUI.popupFindBookmarkMenu( editor )
 
-	"description",
-	"""
-	Generates scenes suitable for rendering shader balls.
-	""",
+	return False
 
-	"childNodesAreReadOnly", True,
+def __editorCreated( editor ) :
 
-	plugs = {
+	editor.keyPressSignal().connect( __editorKeyPress, scoped = False )
 
-		"shader" : [
+GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
 
-			"description",
-			"""
-			The shader to be rendered.
-			""",
+def __nodeSetMenu( editor, menuDefinition ) :
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+	GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions( editor, menuDefinition )
 
-		],
-
-		"resolution" : [
-
-			"description",
-			"""
-			The resolution of the shader ball image, which
-			is always a square.
-			""",
-
-		],
-
-	}
-)
+GafferUI.CompoundEditor.nodeSetMenuSignal().connect( __nodeSetMenu, scoped = False )

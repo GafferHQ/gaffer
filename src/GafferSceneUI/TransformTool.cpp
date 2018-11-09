@@ -78,6 +78,20 @@ using namespace GafferSceneUI;
 namespace
 {
 
+bool ancestorMakesChildNodesReadOnly( const Node *node )
+{
+	node = node->parent<Node>();
+	while( node )
+	{
+		if( MetadataAlgo::getChildNodesAreReadOnly( node ) )
+		{
+			return true;
+		}
+		node = node->parent<Node>();
+	}
+	return false;
+}
+
 struct CapturedProcess
 {
 
@@ -250,6 +264,14 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 	if( selection.transformPlug )
 	{
 		selection.transformPlug = selection.transformPlug->source<TransformPlug>();
+		if( ancestorMakesChildNodesReadOnly( selection.transformPlug->node() ) )
+		{
+			// Inside a Reference node or similar. Unlike a regular read-only
+			// status, the user has no chance of unlocking this node, so don't
+			// tease them with an unusable selection.
+			selection.transformPlug = nullptr;
+			return false;
+		}
 		selection.upstreamScene = scenePlug;
 		selection.upstreamPath = process->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		selection.upstreamContext = process->context;
@@ -606,6 +628,17 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
+	// If there's no input scene, then there's no need to
+	// do anything. Our `scenePlug()` receives its input
+	// from the View's input, but that doesn't count.
+	const ScenePlug *scene = scenePlug()->getInput<ScenePlug>();
+	scene = scene ? scene->getInput<ScenePlug>() : scene;
+	if( !scene )
+	{
+		return;
+	}
+
+
 	// Otherwise we need to populate our selection from
 	// the scene selection.
 
@@ -622,7 +655,14 @@ void TransformTool::updateSelection() const
 	std::unordered_set<Gaffer::TransformPlug *> transformPlugs;
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		Selection selection( scenePlug(), *it, view()->getContext() );
+		ScenePlug::ScenePath path = *it;
+		Selection selection;
+		while( path.size() && !selection.transformPlug )
+		{
+			selection = Selection( scene, path, view()->getContext() );
+			path.pop_back();
+		}
+
 		if( selection.transformPlug )
 		{
 			// Selection is editable, but it's possible that we've already added it

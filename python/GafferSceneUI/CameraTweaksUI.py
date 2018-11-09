@@ -83,7 +83,7 @@ def __populateMetadata():
 			"clippingPlanes" ] ] + [
 			("Render Overrides", i ) for i in [ "filmFit", "shutter", "resolution", "pixelAspectRatio",
 			"resolutionMultiplier", "overscan", "overscanLeft", "overscanRight", "overscanTop",
-			"overscanBottom", "cropWindow" ] ]
+			"overscanBottom", "cropWindow", "depthOfField" ] ]
 
 	for category, plugName in parameterCategories:
 		if category == "Render Overrides":

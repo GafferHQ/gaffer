@@ -38,6 +38,8 @@
 import functools
 import collections
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -102,6 +104,15 @@ class CompoundEditor( GafferUI.Editor ) :
 	def editorAddedSignal( self ) :
 
 		return self.__editorAddedSignal
+
+	__nodeSetMenuSignal = Gaffer.Signal2()
+	## A signal emitted to populate a menu for manipulating
+	# the node set of a NodeSetEditor - the signature is
+	# `slot( nodeSetEditor, menuDefinition )`.
+	@classmethod
+	def nodeSetMenuSignal( cls ) :
+
+		return CompoundEditor.__nodeSetMenuSignal
 
 	def __serialise( self, w ) :
 
@@ -173,6 +184,7 @@ class CompoundEditor( GafferUI.Editor ) :
 			tabbedContainer = GafferUI.Widget.widgetAt( GafferUI.Widget.mousePosition(), _TabbedContainer )
 			if tabbedContainer is not None :
 				tabbedContainer.setTabsVisible( not tabbedContainer.getTabsVisible() )
+				return True
 
 		return False
 
@@ -285,6 +297,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.setCornerWidget( cornerWidget )
 
 		self.__pinningButtonClickedConnection = self.__pinningButton.clickedSignal().connect( Gaffer.WeakMethod( self.__pinningButtonClicked ) )
+		self.__pinningButtonContextMenuConnection = self.__pinningButton.contextMenuSignal().connect( Gaffer.WeakMethod( self.__pinningButtonContextMenu ) )
 		self.__currentTabChangedConnection = self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
@@ -408,6 +421,24 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		else :
 			nodeSet = selectionSet
 		editor.setNodeSet( nodeSet )
+
+	def __pinningButtonContextMenu( self, button ) :
+
+		m = IECore.MenuDefinition()
+		CompoundEditor.nodeSetMenuSignal()( self.getCurrent(), m )
+
+		if not len( m.items() ) :
+			return False
+
+		self.__pinningMenu = GafferUI.Menu( m )
+
+		buttonBound = button.bound()
+		self.__pinningMenu.popup(
+			parent = self.ancestor( GafferUI.Window ),
+			position = imath.V2i( buttonBound.min().x, buttonBound.max().y )
+		)
+
+		return True
 
 	def __dragEnter( self, tabbedContainer, event ) :
 
