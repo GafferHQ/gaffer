@@ -69,6 +69,8 @@ def __cameraSummary( plug ) :
 		info.append( "Crop %s,%s-%s,%s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( crop.min().x, crop.min().y, crop.max().x, crop.max().y ) ) )
 	if plug["overscan"]["enabled"].getValue() :
 		info.append( "Overscan %s" % ( "On" if plug["overscan"]["value"].getValue() else "Off" ) )
+	if plug["depthOfField"]["enabled"].getValue() :
+		info.append( "DOF " + ( "On" if plug["depthOfField"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -265,6 +267,18 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Camera",
 
+		],
+
+		"options.depthOfField" : [
+
+			"description",
+			"""
+			Enable rendering with depth of field blur.  To get blur, you
+			must enable this setting, and set an f-stop on the camera you
+			are rendering.
+			""",
+
+			"layout:section", "Camera",
 		],
 
 		# Motion blur plugs
