@@ -1,3 +1,60 @@
+0.52.2.0
+========
+
+Improvements
+------------
+
+- Bookmarks (#2873) :
+  - Added Ctrl+B shortcut to quickly navigate to a bookmark in any editor.
+  - Added bookmarks to pinning icon context menu.
+- TransformTool (#2850) :
+  - Added status widget with information about what is being edited (#2753).
+  - Added support for transforming an ancestor location if the selected location
+    is not movable. This is particularly convenient for transforming the output of
+    a SceneReader node.
+- Wrapper : Added GAFFER_EXTENSION_PATHS environment variable for easy configuration of 3rd
+  party extensions (#2868).
+- StandardOptions : Added a depthOfField enable toggle (default off) (#2890).
+- Camera/CameraTweaks : Added a depthOfField render override (#2890).
+
+Fixes
+-----
+
+- GUI Config : Fixed layout registration bug that caused the standard layouts to be
+  copied into the user preferences. This caused problems running older Gaffer versions
+  and broke the saving of custom layouts (#2891).
+- Cameras : Fixed on-by-default depth of field rendering for cameras with an fStop
+  specified. In particular this affected cameras imported to Gaffer via Alembic. The
+  `depthOfField` plug on the StandardOptions node must now be used to turn depth of field
+  on explicitly (#2890).
+- Arnold metadata : Added missing metadata for Arnold 5.2 shader parameters (#2883).
+- TransformTool (#2850) :
+  - Fixed attempts to edit read-only plugs inside References.
+  - Fixed `Selection::scene` so that it doesn't refer to internal plugs of
+    the tool.
+- Menus : Fixed search widget focus styling on Mac (#2873).
+- Clipboard : Fixed bug that meant Gaffer's clipboard was not synchronised with
+  the system clipboard on startup (#2878).
+- Instancer : Fixed division by zero bug (#2886).
+- Switch : Fixed overzealous dirty propagation. These could cause unnecessary
+  viewer and/or interactive render updates (#2859).
+
+API
+---
+
+- Tool : Made `view()` method public (#2850).
+- GraphComponent : Added default value for `commonAncestor()` type (#2850).
+- Menu : Fixed position of search widget when menu has title (#2873).
+- Editor : Editors now grab keyboard focus on enter. This makes it easier to add
+  custom shortcuts from extension code (#2873).
+- CompoundEditor : Added `nodeSetMenuSignal()`, used for customising the context
+  menu for the pinning icon (#2873).
+
+Build
+-----
+
+- Added VDB_LIB_SUFFIX option (#2889).
+
 0.52.1.0
 ========
 
