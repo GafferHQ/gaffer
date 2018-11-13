@@ -57,9 +57,12 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 	def hash( self, context ) :
 
+		command = self["command"].getValue()
+		if command == "" :
+			return IECore.MurmurHash()
+
 		h = GafferDispatch.TaskNode.hash( self, context )
 
-		command = self["command"].getValue()
 		h.append( command )
 
 		parser = _Parser( command )

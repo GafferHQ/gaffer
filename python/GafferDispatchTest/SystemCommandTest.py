@@ -115,5 +115,11 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( len( sequences ), 1 )
 		self.assertEqual( str( sequences[0] ), "systemCommandTest.####.txt 1-10" )
 
+	def testEmptyCommand( self ) :
+
+		c = Gaffer.SystemCommand()
+		self.assertEqual( c["command"].getValue(), "" )
+		self.assertEqual( c["task"].hash(), IECore.MurmurHash() )
+
 if __name__ == "__main__":
 	unittest.main()
