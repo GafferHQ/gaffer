@@ -48,10 +48,13 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// main
 	options->addOptionalMember( "as:cfg:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "qmc" ), "sampler", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), "aaSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:sampler", new IECore::StringData( "adaptive" ), "sampler", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:adaptive_tile_renderer:min_samples", new IECore::IntData( 0 ), "minAASamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:adaptive_tile_renderer:max_samples", new IECore::IntData( 32 ), "maxAASamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:adaptive_tile_renderer:batch_size", new IECore::IntData( 16 ), "aaBatchSampleSize", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:adaptive_tile_renderer:noise_threshold", new IECore::FloatData( 1.0f ), "aaNoiseThresh", Gaffer::Plug::Default, false );
+
 	options->addOptionalMember( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), "lightingEngine", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:mesh_file_format", new IECore::StringData( "binarymesh" ), "meshFileFormat", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:shading_engine:override_shading:mode", new IECore::StringData( "no_override" ), "shadingOverride", Gaffer::Plug::Default, false );
 
 	// environment
