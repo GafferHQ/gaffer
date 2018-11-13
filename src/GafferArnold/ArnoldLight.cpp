@@ -46,10 +46,13 @@
 
 #include "IECoreArnold/UniverseBlock.h"
 
+#include "IECoreScene/ShaderNetworkAlgo.h"
+
 #include "IECore/Exception.h"
 
 #include "boost/format.hpp"
 
+using namespace std;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
@@ -100,36 +103,31 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 	shaderNamePlug()->hash( h );
 }
 
-IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
+IECoreScene::ShaderNetworkPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::ObjectVectorPtr result = new IECore::ObjectVector;
+	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
 	IECoreScene::ShaderPtr lightShader = new IECoreScene::Shader( shaderNamePlug()->getValue(), "ai:light" );
+	vector<IECoreScene::ShaderNetwork::Connection> connections;
 	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
 		{
-			/// \todo We should generalise Shader::NetworkBuilder so we can
-			/// use it directly to do the whole of the light generation, instead
-			/// of dealing with input networks manually one by one here. Alternatively
-			/// we could take the approach that OSLLight takes, and use an internal
+			/// \todo Take the approach that OSLLight takes, and use an internal
 			/// ArnoldShader to do all the shader loading and network generation.
-			/// This would avoid exposing any Shader internals, and would generalise
-			/// nicely to the other Light subclasses too.
+			/// This would avoid manually splicing in networks here, and would
+			/// generalise nicely to the other Light subclasses too.
 			IECore::ConstCompoundObjectPtr inputAttributes = shader->attributes();
-			const IECore::ObjectVector *inputNetwork = inputAttributes->member<const IECore::ObjectVector>( "ai:surface" );
-			if( !inputNetwork || inputNetwork->members().empty() )
+			const IECoreScene::ShaderNetwork *inputNetwork = inputAttributes->member<const IECoreScene::ShaderNetwork>( "ai:surface" );
+			if( !inputNetwork || !inputNetwork->size() )
 			{
 				continue;
 			}
 
 			// Add input network into our result.
-			result->members().insert( result->members().end(), inputNetwork->members().begin(), inputNetwork->members().end() );
-			// Update endpoint of network with a handle we can refer to it with.
-			result->members().back() = result->members().back()->copy();
-			IECoreScene::Shader *endpoint = static_cast<IECoreScene::Shader *>( result->members().back().get() );
-			endpoint->parameters()["__handle"] = new IECore::StringData( (*it)->getName() );
-			// Add a parameter value linking to the input network.
-			lightShader->parameters()[(*it)->getName()] = new IECore::StringData( "link:" + (*it)->getName().string() );
+			IECoreScene::ShaderNetwork::Parameter sourceParameter = IECoreScene::ShaderNetworkAlgo::addShaders( result.get(), inputNetwork );
+			connections.push_back(
+				{ sourceParameter, { IECore::InternedString(), (*it)->getName() } }
+			);
 		}
 		else if( ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() ) )
 		{
@@ -137,7 +135,13 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 		}
 	}
 
-	result->members().push_back( lightShader );
+	const IECore::InternedString handle = result->addShader( "light", std::move( lightShader ) );
+	for( const auto &c : connections )
+	{
+		result->addConnection( { c.source, { handle, c.destination.name } } );
+	}
+	result->setOutput( handle );
+
 	return result;
 }
 

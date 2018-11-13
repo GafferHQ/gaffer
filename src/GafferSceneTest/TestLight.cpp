@@ -64,13 +64,14 @@ void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h
 	}
 }
 
-IECore::ObjectVectorPtr TestLight::computeLight( const Gaffer::Context *context ) const
+IECoreScene::ShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECoreScene::ShaderPtr result = new IECoreScene::Shader( "testLight", "light" );
-	result->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
-	result->parameters()["__areaLight"] = new IECore::BoolData( parametersPlug()->getChild<BoolPlug>( "areaLight" )->getValue() );
+	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( "testLight", "light" );
+	shader->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
+	shader->parameters()["__areaLight"] = new IECore::BoolData( parametersPlug()->getChild<BoolPlug>( "areaLight" )->getValue() );
 
-	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();
-	resultVector->members().push_back( result );
-	return resultVector;
+	IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork();
+	network->addShader( "light", std::move( shader ) );
+	network->setOutput( { "light" } );
+	return network;
 }
