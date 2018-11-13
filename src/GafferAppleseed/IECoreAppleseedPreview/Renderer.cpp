@@ -2287,13 +2287,17 @@ void AppleseedRendererBase::createProject()
 	cfg_params = &cfg->get_parameters();
 	cfg_params->insert( "sample_renderer", "generic" );
 	cfg_params->insert( "sample_generator", "generic" );
-	cfg_params->insert( "tile_renderer", "generic" );
+	cfg_params->insert( "tile_renderer", "adaptive" );
 	cfg_params->insert( "frame_renderer", "generic" );
 	cfg_params->insert( "lighting_engine", "pt" );
 	cfg_params->insert( "pixel_renderer", "uniform" );
 	cfg_params->insert( "sampling_mode", "qmc" );
 	cfg_params->insert( "spectrum_mode", "rgb" );
-	cfg_params->insert_path( "uniform_pixel_renderer.samples", "16" );
+	cfg_params->insert_path( "uniform_pixel_renderer.samples", "32" );
+	cfg_params->insert_path( "adaptive_tile_renderer.min_samples", "0" );
+	cfg_params->insert_path( "adaptive_tile_renderer.max_samples", "32" );
+	cfg_params->insert_path( "adaptive_tile_renderer.batch_size", "16" );
+	cfg_params->insert_path( "adaptive_tile_renderer.noise_threshold", "1.0" );
 
 	// Create some basic project entities.
 	asf::auto_release_ptr<asr::Frame> frame( asr::FrameFactory::create( "beauty", asr::ParamArray().insert( "resolution", "640 480" ) ) );
@@ -2371,11 +2375,13 @@ InternedString g_environmentEDFBackground( "as:environment_edf_background" );
 InternedString g_logLevelOptionName( "as:log:level" );
 InternedString g_logFileNameOptionName( "as:log:filename" );
 InternedString g_renderPasses( "as:cfg:passes" );
+InternedString g_antialiasSampler( "as:cfg:sampler" );
+InternedString g_maxAASamples( "as:cfg:adaptive_tile_renderer:max_samples" );
 InternedString g_ptMaxRayIntensity( "as:cfg:pt:max_ray_intensity" );
 InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mode" );
 InternedString g_searchPath( "as:searchpath" );
 InternedString g_maxInteractiveRenderSamples( "as:cfg:progressive_frame_renderer:max_samples" );
-InternedString g_textureCacheSize( "as:cfg:texture_store:max_size" ) ;
+InternedString g_textureCacheSize( "as:cfg:texture_store:max_size" );
 
 /// The full renderer implementation as presented to the outside world.
 class AppleseedRenderer final : public AppleseedRendererBase
@@ -2447,6 +2453,37 @@ class AppleseedRenderer final : public AppleseedRendererBase
 						// enable decorrelate pixels if the number of render passes is greater than one.
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( "uniform_pixel_renderer.decorrelate_pixels", numPasses > 1 ? "true" : "false" );
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), numPasses );
+					}
+					return;
+				}
+
+				if( name == g_antialiasSampler )
+				{
+					if( value == nullptr )
+					{
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert( "tile_renderer", "adaptive" );
+					}
+					else if( const StringData *d = reportedCast<const StringData>( value, "option", name ) )
+					{
+						const string& sampler = d->readable();
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert( "tile_renderer", sampler.c_str() );
+					}
+					return;
+				}
+
+				if ( name == g_maxAASamples )
+				{
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue == nullptr )
+					{
+						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
+						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( "uniform_pixel_renderer.samples" );
+					}
+					else if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
+					{
+						int samples = d->readable();
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), samples );
+						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( "uniform_pixel_renderer.samples", samples );
 					}
 					return;
 				}

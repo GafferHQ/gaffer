@@ -48,10 +48,13 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// main
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:passes", new IECore::IntData( 1 ), false, "renderPasses" ) );
-	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sampling_mode", new IECore::StringData( "qmc" ), false, "sampler" ) );
-	options->addChild( new Gaffer::NameValuePlug( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), false, "aaSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sampler", new IECore::StringData( "adaptive" ), false, "sampler" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:adaptive_tile_renderer:min_samples", new IECore::IntData( 0 ), false, "minAASamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:adaptive_tile_renderer:max_samples", new IECore::IntData( 32 ), false, "maxAASamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:adaptive_tile_renderer:batch_size", new IECore::IntData( 16 ), false, "aaBatchSampleSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:adaptive_tile_renderer:noise_threshold", new IECore::FloatData( 1.0f ), false, "aaNoiseThresh" ) );
+
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), false, "lightingEngine" ) );
-	options->addChild( new Gaffer::NameValuePlug( "as:mesh_file_format", new IECore::StringData( "binarymesh" ), false, "meshFileFormat" ) );
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:shading_engine:override_shading:mode", new IECore::StringData( "no_override" ), false, "shadingOverride" ) );
 
 	// environment
