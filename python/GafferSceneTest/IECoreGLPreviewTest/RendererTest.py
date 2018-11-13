@@ -96,9 +96,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		attributes = renderer.attributes(
 			IECore.CompoundObject( {
-				"gl:surface" : IECore.ObjectVector( [
-					IECoreScene.Shader( "rgbColor", "surface", { "gl:fragmentSource" : fragmentSource } )
-				] )
+				"gl:surface" : IECoreScene.ShaderNetwork( {
+					"output" : IECoreScene.Shader( "rgbColor", "surface", { "gl:fragmentSource" : fragmentSource } )
+				} )
 			} )
 		)
 
@@ -169,8 +169,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 		attributes = renderer.attributes(
 			IECore.CompoundObject( {
-				"gl:surface" : IECore.ObjectVector( [
-					IECoreScene.Shader(
+				"gl:surface" : IECoreScene.ShaderNetwork( {
+					"output" : IECoreScene.Shader(
 						"color",
 						"surface",
 						{
@@ -178,7 +178,7 @@ class RendererTest( GafferTest.TestCase ) :
 							"colorValue" : imath.Color3f( 1, 0, 0 )
 						}
 					)
-				] )
+				} )
 			} )
 		)
 

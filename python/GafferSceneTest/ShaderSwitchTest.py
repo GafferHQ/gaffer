@@ -47,8 +47,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		shader1 = GafferSceneTest.TestShader()
-		shader2 = GafferSceneTest.TestShader()
+		shader1 = GafferSceneTest.TestShader( "s1" )
+		shader2 = GafferSceneTest.TestShader( "s2" )
 
 		shader1["type"].setValue( "test:surface" )
 		shader2["type"].setValue( "test:surface" )
@@ -67,13 +67,13 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		sphere = GafferScene.Sphere()
 		assignment["in"].setInput( sphere["out"] )
 
-		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"][0].parameters["i"].value, 1 )
+		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"].getShader( "s1" ).parameters["i"].value, 1 )
 
 		switch["index"].setValue( 1 )
-		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"][0].parameters["i"].value, 2 )
+		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"].getShader( "s2" ).parameters["i"].value, 2 )
 
 		switch["enabled"].setValue( False )
-		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"][0].parameters["i"].value, 1 )
+		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"].getShader( "s1" ).parameters["i"].value, 1 )
 
 	def testSerialisation( self ) :
 
@@ -108,8 +108,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 	def testSetup( self ) :
 
-		shader1 = GafferSceneTest.TestShader()
-		shader2 = GafferSceneTest.TestShader()
+		shader1 = GafferSceneTest.TestShader( "s1" )
+		shader2 = GafferSceneTest.TestShader( "s2" )
 
 		shader1["parameters"]["c"].setValue( imath.Color3f( 0 ) )
 		shader2["parameters"]["c"].setValue( imath.Color3f( 1 ) )
@@ -120,7 +120,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch["in"][0].setInput( shader1["out"] )
 		switch["in"][1].setInput( shader2["out"] )
 
-		shader3 = GafferSceneTest.TestShader()
+		shader3 = GafferSceneTest.TestShader( "s3" )
 		shader3["type"].setValue( "test:surface" )
 		shader3["parameters"]["c"].setInput( switch["out"] )
 
@@ -130,7 +130,10 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 			network = shader3.attributes()["test:surface"]
 
 			self.assertEqual( len( network ), 2 )
-			self.assertEqual( network[0].parameters["c"].value, imath.Color3f( i ) )
+			self.assertEqual(
+				network.getShader( "s{0}".format( i + 1 ) ).parameters["c"].value,
+				imath.Color3f( i )
+			)
 
 	def testContextSensitiveIndex( self ) :
 
@@ -166,8 +169,14 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 				network = s["n3"].attributes()["test:surface"]
 				self.assertEqual( len( network ), 2 )
-				self.assertEqual( network[0].parameters["i"].value, effectiveIndex + 1 )
-				self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+				self.assertEqual(
+					network.getShader( "n{0}".format( effectiveIndex + 1 ) ).parameters["i"].value,
+					effectiveIndex + 1
+				)
+				self.assertEqual(
+					network.inputConnections( "n3" ),
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "" ), network.Parameter( "n3", "c" ) ) ]
+				)
 
 if __name__ == "__main__":
 	unittest.main()

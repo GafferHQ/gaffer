@@ -94,12 +94,12 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s2 = s.attributes()["test:surface"]
 		self.assertNotEqual( s2, s1 )
 
-		self.assertEqual( s1[0].blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
-		self.assertEqual( s2[0].blindData()["gaffer:nodeName"], IECore.StringData( "node2" ) )
+		self.assertEqual( s1.getShader( "node1" ).blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
+		self.assertEqual( s2.getShader( "node2" ).blindData()["gaffer:nodeName"], IECore.StringData( "node2" ) )
 
 	def testNodeColorBlindData( self ) :
 
-		s = GafferSceneTest.TestShader()
+		s = GafferSceneTest.TestShader( "test" )
 		s["type"].setValue( "test:surface" )
 
 		h1 = s.attributesHash()
@@ -116,8 +116,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s2 = s.attributes()["test:surface"]
 		self.assertNotEqual( s2, s1 )
 
-		self.assertEqual( s1[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( imath.Color3f( 0 ) ) )
-		self.assertEqual( s2[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( s1.getShader( "test" ).blindData()["gaffer:nodeColor"], IECore.Color3fData( imath.Color3f( 0 ) ) )
+		self.assertEqual( s2.getShader( "test" ).blindData()["gaffer:nodeColor"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
 
 	def testShaderTypesInAttributes( self ) :
 
@@ -133,10 +133,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		surface["parameters"]["t"].setInput( texture["out"] )
 
 		network = surface.attributes()["test:surface"]
-		self.assertEqual( network[0].type, "test:shader" )
-		self.assertEqual( network[1].type, "test:surface" )
+		self.assertEqual( network.getShader( "texture" ).type, "test:shader" )
+		self.assertEqual( network.getShader( "surface" ).type, "test:surface" )
 
-		surface['attributeSuffix'].setValue( "TestSurface" )
+		surface["attributeSuffix"].setValue( "TestSurface" )
 		self.assertIn( "test:surface:TestSurface", surface.attributes() )
 
 	def testDirtyPropagationThroughShaderAssignment( self ) :
@@ -186,13 +186,9 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testSwitch( self ) :
 
-		n1 = GafferSceneTest.TestShader()
-		n1["parameters"]["i"].setValue( 1 )
-
-		n2 = GafferSceneTest.TestShader()
-		n2["parameters"]["i"].setValue( 2 )
-
-		n3 = GafferSceneTest.TestShader()
+		n1 = GafferSceneTest.TestShader( "n1" )
+		n2 = GafferSceneTest.TestShader( "n2" )
+		n3 = GafferSceneTest.TestShader( "n3" )
 		n3["type"].setValue( "test:surface" )
 
 		switch = Gaffer.Switch()
@@ -210,21 +206,18 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 			network = n3.attributes()["test:surface"]
 			self.assertEqual( len( network ), 2 )
-			self.assertEqual( network[0].parameters["i"].value, effectiveIndex + 1 )
-			self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+			self.assertEqual(
+				network.inputConnections( "n3" ),
+				[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "", ), network.Parameter( "n3", "c" ) ) ]
+			)
 
 	def testSwitchWithContextSensitiveIndex( self ) :
 
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferSceneTest.TestShader()
-		s["n1"]["parameters"]["i"].setValue( 1 )
-
 		s["n2"] = GafferSceneTest.TestShader()
-		s["n2"]["parameters"]["i"].setValue( 2 )
-
 		s["n3"] = GafferSceneTest.TestShader()
-		s["n3"]["parameters"]["i"].setValue( 3 )
 		s["n3"]["type"].setValue( "test:surface" )
 
 		s["switch"] = Gaffer.Switch()
@@ -236,8 +229,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["n3"]["parameters"]["c"].setInput( s["switch"]["out"] )
 
 		network = s["n3"].attributes()["test:surface"]
-		self.assertEqual( network[0].parameters["i"].value, 1 )
-		self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+		self.assertEqual( len( network ), 2 )
+		self.assertEqual(
+			network.inputConnections( "n3" ),
+			[ network.Connection( network.Parameter( "n1", "", ), network.Parameter( "n3", "c" ) ) ]
+		)
 
 		s["expression"] = Gaffer.Expression()
 		s["expression"].setExpression( 'parent["switch"]["index"] = context["index"]' )
@@ -251,8 +247,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 				network = s["n3"].attributes()["test:surface"]
 				self.assertEqual( len( network ), 2 )
-				self.assertEqual( network[0].parameters["i"].value, effectiveIndex + 1 )
-				self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+				self.assertEqual(
+					network.inputConnections( "n3" ),
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "", ), network.Parameter( "n3", "c" ) ) ]
+				)
 
 if __name__ == "__main__":
 	unittest.main()
