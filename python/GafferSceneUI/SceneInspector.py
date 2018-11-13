@@ -476,7 +476,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatMatrices( values )
 		elif isinstance( values[0], ( imath.Box3f, imath.Box3d, imath.Box3i, imath.Box2f, imath.Box2d, imath.Box2i ) ) :
 			return self.__formatBoxes( values )
-		elif isinstance( values[0], ( IECoreScene.Shader, IECore.ObjectVector ) ) :
+		elif isinstance( values[0], ( IECoreScene.Shader, IECoreScene.ShaderNetwork ) ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], ( float, int ) ) :
 			return self.__formatNumbers( values )
@@ -557,7 +557,7 @@ class TextDiff( SideBySideDiff ) :
 		formattedValues = []
 		for value in values :
 
-			shader = value[-1] if isinstance( value, IECore.ObjectVector ) else value
+			shader = value.outputShader() if isinstance( value, IECoreScene.ShaderNetwork ) else value
 			shaderName = shader.name
 			nodeName = shader.blindData().get( "gaffer:nodeName", None )
 
@@ -952,7 +952,7 @@ class DiffRow( Row ) :
 		for i, target in enumerate( targets ) :
 
 			attribute = self.__inspector( target )
-			targetsAreShaders.append( isinstance( attribute, IECore.ObjectVector ) and isinstance( attribute[-1], IECoreScene.Shader ) )
+			targetsAreShaders.append( isinstance( attribute, IECoreScene.ShaderNetwork ) and len( attribute ) )
 
 			if len( targets ) == 2 :
 				labelSuffix = "/For " + ( "A", "B" )[i]
@@ -1399,12 +1399,12 @@ class _ShaderSection( LocationSection ) :
 
 		def __call__( self, target ) :
 
-			shaders = self.__inspector( target )
-			if not shaders or not isinstance( shaders, IECore.ObjectVector ) :
+			network = self.__inspector( target )
+			if not network or not isinstance( network, IECoreScene.ShaderNetwork ) :
 				return None
 
-			shader = shaders[-1]
-			if not shader or not isinstance( shader, IECoreScene.Shader ) :
+			shader = network.outputShader()
+			if not shader :
 				return None
 
 			if self.__mode == self.Name :
@@ -1447,11 +1447,11 @@ class _ShaderSection( LocationSection ) :
 			if target.path is None :
 				return None
 
-			shaders = self.__inspector( target )
-			if not shaders :
+			network = self.__inspector( target )
+			if not network :
 				return None
 
-			return shaders[-1].parameters  # only the last one is supported
+			return network.outputShader().parameters
 
 	def __init__( self, inspector, diffCreator = TextDiff, **kw ) :
 
