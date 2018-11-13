@@ -307,14 +307,20 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		c["task"].execute()
 		self.assertEqual( c.test, 10 )
-	
+
 	def testImath( self ) :
-		
+
 		c = Gaffer.PythonCommand()
 		c["command"].setValue( "self.test = imath.V2i( 1, 2 )" )
 
 		c["task"].execute()
 		self.assertEqual( c.test, imath.V2i( 1, 2 ) )
+
+	def testEmptyCommand( self ) :
+
+		c = Gaffer.PythonCommand()
+		self.assertEqual( c["command"].getValue(), "" )
+		self.assertEqual( c["task"].hash(), IECore.MurmurHash() )
 
 if __name__ == "__main__":
 	unittest.main()

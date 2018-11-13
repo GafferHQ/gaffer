@@ -54,9 +54,13 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 
 	def hash( self, context ) :
 
+		command = self["command"].getValue()
+		if command == "" :
+			return IECore.MurmurHash()
+
 		h = GafferDispatch.TaskNode.hash( self, context )
 
-		self["command"].hash( h )
+		h.append( command )
 		self["substitutions"].hash( h )
 		self["environmentVariables"].hash( h )
 
