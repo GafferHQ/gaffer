@@ -116,8 +116,6 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		self.setEnabled( self._editable() )
 
-
-
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
@@ -209,11 +207,9 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 				for name, network in attributes.items() :
 					if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 						continue
-					if not isinstance( network, IECore.ObjectVector ) or not len( network ):
+					if not isinstance( network, IECoreScene.ShaderNetwork ) or not len( network ):
 						continue
-					if not isinstance( network[-1], IECoreScene.Shader ) :
-						continue
-					shader = network[-1]
+					shader = network.outputShader()
 					for parameterName, parameterValue in shader.parameters.items() :
 						if parameterName.startswith( "__" ) :
 							continue
