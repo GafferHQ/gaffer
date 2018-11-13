@@ -15,26 +15,38 @@ def build( extraArgs = [] ) :
 	
 		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
 
-if IEEnv.platform() in ( "cent7.x86_64" ) :
+platform = IEEnv.platform()
+if platform in ( "cent7.x86_64" ) :
 
 	# fetch at least one active version of each renderer
 	aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
 	dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
-	appleseedVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] )[-1]
-	
-	extraArgs = [ "ARNOLD_VERSION="+aiVersion, "APPLESEED_VERSION="+appleseedVersion, "DL_VERSION="+dlVersion ]
-	
+
+	extraArgs = [ "ARNOLD_VERSION="+aiVersion, "DL_VERSION="+dlVersion ]
+
+	# find a specific appleseed version per compiler
+	compilerVersions = IEEnv.activeVersions( IEEnv.registry["compilers"]["gcc"] )
+	appleseedVersions = IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] )
+	appleseedCompilerMap = { x : [] for x in compilerVersions }
+	for appleseedVersion in appleseedVersions :
+		compilerVersion = IEEnv.registry["apps"]["appleseed"][appleseedVersion][platform]["compilerVersion"]
+		appleseedCompilerMap[compilerVersion].append( appleseedVersion )
+
 	# standalone build
-	build( extraArgs )
-	
+	compilerVersion = IEEnv.registry["platformDefaults"][platform]["compilerVersion"]
+	appleseedVersion = appleseedCompilerMap[compilerVersion][-1]
+	build( [ "COMPILER_VERSION=" + compilerVersion, "APPLESEED_VERSION="+appleseedVersion ] + extraArgs )
+
 	# app specific builds
 	for app, minimumVersion in (
 		( "maya", None ),
 		( "houdini", "16.5.268" ),
 		( "nuke", None )
 	) :
-		for version in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
-			build( [ "APP=" + app, "APP_VERSION=" + version ] + extraArgs )
+		for appVersion in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
+			compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
+			appleseedVersion = appleseedCompilerMap.get( compilerVersion, appleseedVersions )[-1]
+			build( [ "APP=" + app, "APP_VERSION=" + appVersion, "APPLESEED_VERSION="+appleseedVersion ] + extraArgs )
 			
 else :
 
