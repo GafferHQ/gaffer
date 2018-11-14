@@ -52,7 +52,6 @@
 #include "IECoreScene/Shader.h"
 
 #include "IECore/LRUCache.h"
-#include "IECore/ObjectVector.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/format.hpp"
@@ -67,42 +66,36 @@ using namespace GafferSceneUI;
 namespace
 {
 
-// \todo These should be consolidated with the functions in the other visualisers into a templatized version
-// Where should that live?
-float parameterOrDefault( const IECore::CompoundData *data, const char *key, const float def )
+/// \todo We have similar methods in several places. Can we consolidate them all somewhere? Perhaps a new
+/// method of CompoundData?
+template<typename T>
+T parameterOrDefault( const IECore::CompoundData *parameters, const IECore::InternedString &name, const T &defaultValue )
 {
-	ConstFloatDataPtr member = data->member<const FloatData>( key );
-	if( member )
+	typedef IECore::TypedData<T> DataType;
+	if( const DataType *d = parameters->member<DataType>( name ) )
 	{
-		return member->readable();
+		return d->readable();
 	}
-	return def;
+	else
+	{
+		return defaultValue;
+	}
 }
 
-V2f parameterOrDefault( const IECore::CompoundData *data, const char *key, const V2f def )
-{
-	ConstV2fDataPtr member = data->member<const V2fData>( key );
-	if( member )
-	{
-		return member->readable();
-	}
-	return def;
-}
-
-CompoundDataPtr evalOSLTexture( IECore::ObjectVectorPtr shaderVector, int resolution );
+CompoundDataPtr evalOSLTexture( const IECoreScene::ShaderNetwork *shaderNetwork, int resolution );
 
 struct OSLTextureCacheGetterKey
 {
 
 	OSLTextureCacheGetterKey()
-		:	shaders( NULL )
+		:	shaderNetwork( nullptr )
 	{
 	}
 
-	OSLTextureCacheGetterKey( IECore::ObjectVector *s )
-		:	shaders( s )
+	OSLTextureCacheGetterKey( IECoreScene::ShaderNetwork *shaderNetwork )
+		:	shaderNetwork( shaderNetwork )
 	{
-		s->hash( hash );
+		shaderNetwork->hash( hash );
 	}
 
 	operator const IECore::MurmurHash & () const
@@ -110,7 +103,7 @@ struct OSLTextureCacheGetterKey
 		return hash;
 	}
 
-	IECore::ObjectVector *shaders;
+	IECoreScene::ShaderNetwork *shaderNetwork;
 	MurmurHash hash;
 
 };
@@ -118,7 +111,7 @@ struct OSLTextureCacheGetterKey
 CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 {
 	cost = 1;
-	return evalOSLTexture( key.shaders, 512 );
+	return evalOSLTexture( key.shaderNetwork, 512 );
 }
 
 typedef LRUCache<IECore::MurmurHash, CompoundDataPtr, LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
@@ -144,17 +137,9 @@ const char *goboFragSource()
 
 // OSLTextureEvaluation
 
-void addSurfaceShader( IECore::ObjectVectorPtr shaderVector, string surfaceInput )
+CompoundDataPtr evalOSLTexture( const IECoreScene::ShaderNetwork *shaderNetwork, int resolution )
 {
-	IECoreScene::Shader *surfaceShader = new IECoreScene::Shader( "Surface/Constant", "osl:shader" );
-	surfaceShader->parameters()["Cs"] = new StringData( surfaceInput );
-
-	shaderVector->members().push_back( surfaceShader );
-}
-
-CompoundDataPtr evalOSLTexture( IECore::ObjectVectorPtr shaderVector, int resolution )
-{
-	GafferOSL::ShadingEnginePtr shadingEngine = new GafferOSL::ShadingEngine( shaderVector.get() );
+	GafferOSL::ShadingEnginePtr shadingEngine = new GafferOSL::ShadingEngine( shaderNetwork );
 
 	CompoundDataPtr shadingPoints = new CompoundData();
 
@@ -243,7 +228,7 @@ class GoboVisualiser final : public LightFilterVisualiser
 		GoboVisualiser();
 		~GoboVisualiser();
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const override;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -264,46 +249,23 @@ GoboVisualiser::~GoboVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
-	if( !shaderVector || shaderVector->members().empty() || !lightShaderVector || lightShaderVector->members().empty() )
-	{
-		return result;
-	}
-
-	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
-	if( !filterShader )
-	{
-		return result;
-	}
-
-	const IECoreScene::Shader *lightShader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaderVector->members().back().get() );
-	if( !lightShader )
-	{
-		return result;
-	}
-
-	auto it = filterShader->parameters().find( "slidemap" );
-	if( it == filterShader->parameters().end() )
-	{
-		return result;
-	}
+	const ShaderNetwork::Parameter slideMapInput = shaderNetwork->input( ShaderNetwork::Parameter( shaderNetwork->getOutput().shader, "slidemap" ) );
 
 	CompoundDataPtr imageData = new CompoundData;
-
-	const StringData *slidemap = IECore::runTimeCast<const StringData>( it->second.get() );
-	if( slidemap )
+	if( slideMapInput )
 	{
-		IECore::ObjectVectorPtr oslNetwork = new IECore::ObjectVector();
-		oslNetwork->members().assign( shaderVector->members().begin(), shaderVector->members().end() - 1 );
-
-		addSurfaceShader( oslNetwork, slidemap->readable() );
+		IECoreScene::ShaderNetworkPtr surfaceNetwork = shaderNetwork->copy();
+		IECore::InternedString surface = surfaceNetwork->addShader( "surface", new IECoreScene::Shader( "Surface/Constant", "osl:shader" ) );
+		surfaceNetwork->addConnection( { slideMapInput, { surface, "Cs" } } );
+		surfaceNetwork->setOutput( { surface, "" } );
 
 		try
 		{
-			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( oslNetwork.get() ) );
+			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( surfaceNetwork.get() ) );
 		}
 		catch( const Exception &e )
 		{
@@ -313,34 +275,20 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 		}
 	}
 
+	const CompoundData *filterParameters = shaderNetwork->outputShader()->parametersData();
+
 	if( imageData->readable().empty() )
 	{
-		ConstColor3fDataPtr goboColor = IECore::runTimeCast<const Color3fData>( it->second.get() );
-		if( !goboColor )
-		{
-			goboColor = new Color3fData( Color3f( 1 ) );
-		}
+		const Color3f goboColor = parameterOrDefault( filterParameters, "slidemap", Color3f( 1 ) );
 
-		// single-pixel windows
-		Imath::Box2i dataWindow( Imath::V2i( 0.0f ), Imath::V2i( 0.0f ) );
-		Imath::Box2i displayWindow( Imath::V2i( 0.0f ), Imath::V2i( 0.0f ) );
-
-		imageData->writable()["dataWindow"] = new Box2iData( dataWindow );
-		imageData->writable()["displayWindow"] = new Box2iData( displayWindow );
+		Box2iDataPtr singlePixelWindow = new Box2iData( { V2i( 0.0f ), V2i( 0.0f ) } );
+		imageData->writable()["dataWindow"] = singlePixelWindow;
+		imageData->writable()["displayWindow"] = singlePixelWindow;
 
 		CompoundDataPtr channels = new CompoundData;
-
-		std::vector<float> r;
-		std::vector<float> g;
-		std::vector<float> b;
-		r.push_back( goboColor->readable()[0] );
-		g.push_back( goboColor->readable()[1] );
-		b.push_back( goboColor->readable()[2] );
-
-		channels->writable()["R"] = new FloatVectorData( r );
-		channels->writable()["G"] = new FloatVectorData( g );
-		channels->writable()["B"] = new FloatVectorData( b );
-
+		channels->writable()["R"] = new FloatVectorData( { goboColor[0] } );
+		channels->writable()["G"] = new FloatVectorData( { goboColor[1] } );
+		channels->writable()["B"] = new FloatVectorData( { goboColor[2] } );
 		imageData->writable()["channels"] = channels;
 	}
 
@@ -362,7 +310,7 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 	float coneAngle;
 	float lensRadius;
 
-	StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderVector, innerAngle, coneAngle, lensRadius );
+	StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderNetwork, innerAngle, coneAngle, lensRadius );
 
 	float halfPi = 0.5 * M_PI;
 
@@ -370,7 +318,6 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 	const float baseRadius = sin( halfAngle ) + lensRadius;
 	const float baseDistance = cos( halfAngle );
 
-	const CompoundData *filterParameters = filterShader->parametersData();
 	float rotate = parameterOrDefault( filterParameters, "rotate", 0.0f );
 	float scaleS = parameterOrDefault( filterParameters, "scale_s", 1.0f );
 	float scaleT = parameterOrDefault( filterParameters, "scale_t", 1.0f );

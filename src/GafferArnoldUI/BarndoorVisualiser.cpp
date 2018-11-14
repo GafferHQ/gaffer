@@ -50,8 +50,6 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
 
-#include "IECore/ObjectVector.h"
-
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
@@ -157,7 +155,7 @@ class BarndoorVisualiser final : public LightFilterVisualiser
 		BarndoorVisualiser();
 		~BarndoorVisualiser();
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const override;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -178,28 +176,11 @@ BarndoorVisualiser::~BarndoorVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr BarndoorVisualiser::visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr BarndoorVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
-	if( !shaderVector || shaderVector->members().size() == 0 || !lightShaderVector || lightShaderVector->members().empty() )
-	{
-		return result;
-	}
-
-	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
-	if( !filterShader )
-	{
-		return result;
-	}
-
-	const IECoreScene::Shader *lightShader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaderVector->members().back().get() );
-	if( !lightShader )
-	{
-		return result;
-	}
-
-	const IECore::CompoundData *filterShaderParameters = filterShader->parametersData();
+	const IECore::CompoundData *filterShaderParameters = shaderNetwork->outputShader()->parametersData();
 
 	float topLeft = parameterOrDefault( filterShaderParameters, "barndoor_top_left", 0.0f );
 	float topRight = parameterOrDefault( filterShaderParameters, "barndoor_top_right", 0.0f );
@@ -237,7 +218,7 @@ IECoreGL::ConstRenderablePtr BarndoorVisualiser::visualise( const IECore::Intern
 		float coneAngle;
 		float lensRadius;
 
-		StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderVector, innerAngle, coneAngle, lensRadius );
+		StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderNetwork, innerAngle, coneAngle, lensRadius );
 
 		const float halfAngle = 0.5 * M_PI * coneAngle / 180.0;
 		const float baseRadius = sin( halfAngle ) + lensRadius;
