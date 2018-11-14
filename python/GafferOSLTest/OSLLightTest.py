@@ -117,7 +117,7 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 		lightNode = GafferOSL.OSLLight()
 		lightNode.loadShader( constantShader )
 
-		shaderNode = GafferOSL.OSLShader()
+		shaderNode = GafferOSL.OSLShader( "shader" )
 		shaderNode.loadShader( addShader )
 
 		lightNode["parameters"]["Cs"].setInput( shaderNode["out"]["out"] )
@@ -125,8 +125,8 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 		network = lightNode["out"].attributes( "/light" )["osl:light"]
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual(
-			network[1].parameters["Cs"],
-			IECore.StringData( "link:" + network[0].parameters["__handle"].value + ".out" )
+			network.inputConnections( network.getOutput().shader ),
+			[ network.Connection( ( "shader", "out" ), ( network.getOutput().shader, "Cs" ) ) ]
 		)
 
 	def testAttributes( self ) :

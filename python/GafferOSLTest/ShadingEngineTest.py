@@ -84,9 +84,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/constant.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "Cs" : imath.Color3f( 1, 0.5, 0.25 ) } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"constant" : IECoreScene.Shader( s, "osl:surface", { "Cs" : imath.Color3f( 1, 0.5, 0.25 ) } ),
+			},
+			output = "constant",
+		) )
 
 		p = e.shade( self.rectanglePoints() )
 
@@ -97,10 +100,16 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		constant = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/constant.osl" )
 		input = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/outputTypes.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( input, "osl:shader", { "input" : 0.5, "__handle" : "h" } ),
-			IECoreScene.Shader( constant, "osl:surface", { "Cs" : "link:h.c" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"outputTypes" : IECoreScene.Shader( input, "osl:shader", { "input" : 0.5 } ),
+				"constant" : IECoreScene.Shader( constant, "osl:surface" ),
+			},
+			connections = [
+				( ( "outputTypes", "c" ), ( "constant", "Cs" ) )
+			],
+			output = "constant"
+		) )
 
 		p = e.shade( self.rectanglePoints() )
 
@@ -113,23 +122,30 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		rp = self.rectanglePoints()
 
 		for n in ( "P", "u", "v" ) :
-			e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-				IECoreScene.Shader( shader, "osl:surface", { "global" : n } )
-			] ) )
+			e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( shader, "osl:surface", { "global" : n } )
+				},
+				output = "output"
+			) )
 			p = e.shade( rp )
 			v1 = p["Ci"]
 			v2 = rp[n]
 			for i in range( 0, len( v1 ) ) :
 				self.assertEqual( v1[i], imath.Color3f( v2[i] ) )
 
-	def testDoubleAsIntViaGetAttribute( self ):
+	def testDoubleAsIntViaGetAttribute( self ) :
+
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/intAttribute.osl" )
 
 		rp = self.rectanglePoints()
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "doubleUserData" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "doubleUserData" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( e.needsAttribute( "floatUserData" ), False )
 		self.assertEqual( e.needsAttribute( "doubleUserData" ), True )
@@ -145,9 +161,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		rp = self.rectanglePoints()
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "floatUserData" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "floatUserData" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( e.needsAttribute( "floatUserData" ), True )
 		self.assertEqual( e.needsAttribute( "doubleUserData" ), False )
@@ -156,9 +175,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		p = e.shade( rp )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "doubleUserData" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "doubleUserData" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( e.needsAttribute( "floatUserData" ), False )
 		self.assertEqual( e.needsAttribute( "doubleUserData" ), True )
@@ -170,9 +192,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i, c in enumerate( p["Ci"] ) :
 			self.assertEqual( c[0], float(i) )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "colorUserData" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "colorUserData" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( e.needsAttribute( "floatUserData" ), False )
 		self.assertEqual( e.needsAttribute( "doubleUserData" ), False )
@@ -185,9 +210,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			self.assertEqual( c, rp["colorUserData"][i] )
 
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "shading:index" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "shading:index" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( e.needsAttribute( "floatUserData" ), False )
 		self.assertEqual( e.needsAttribute( "doubleUserData" ), False )
@@ -203,9 +231,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/dynamicAttribute.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface" )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface" )
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( e.needsAttribute( "foo" ), True )
 		self.assertEqual( e.needsAttribute( "bar" ), True )
@@ -215,10 +246,16 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/structs.osl" )
 		constant = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:shader", { "s.c" : imath.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } ),
-			IECoreScene.Shader( constant, "osl:surface", { "Cs" : "link:h.c" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"structs" : IECoreScene.Shader( shader, "osl:shader", { "s.c" : imath.Color3f( 0.1, 0.2, 0.3 ) } ),
+				"constant" : IECoreScene.Shader( constant, "osl:surface" ),
+			},
+			connections = [
+				( ( "structs", "c" ), ( "constant", "Cs" ) )
+			],
+			output = "constant"
+		) )
 		p = e.shade( self.rectanglePoints() )
 
 		for c in p["Ci"] :
@@ -229,10 +266,16 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		outputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
 		inputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( outputClosure, "osl:shader", { "e" : imath.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } ),
-			IECoreScene.Shader( inputClosure, "osl:surface", { "i" : "link:h.c" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"outputClosure" : IECoreScene.Shader( outputClosure, "osl:shader", { "e" : imath.Color3f( 0.1, 0.2, 0.3 ) } ),
+				"inputClosure" : IECoreScene.Shader( inputClosure, "osl:surface" ),
+			},
+			connections = [
+				( ( "outputClosure", "c" ), ( "inputClosure", "i" ) )
+			],
+			output = "inputClosure"
+		) )
 		p = e.shade( self.rectanglePoints() )
 
 		for c in p["Ci"] :
@@ -242,9 +285,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosure.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "a", "weight" : imath.Color3f( 1, 0, 0 ) } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "a", "weight" : imath.Color3f( 1, 0, 0 ) } ),
+			},
+			output = "output"
+		) )
 
 		points = self.rectanglePoints()
 		shading = e.shade( points )
@@ -264,9 +310,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/multipleDebugClosures.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", {} ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", {} ),
+			},
+			output = "output"
+		) )
 
 		points = self.rectanglePoints()
 		shading =e.shade( self.rectanglePoints() )
@@ -279,9 +328,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/typedDebugClosure.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", {} ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", {} ),
+			},
+			output = "output"
+		) )
 
 		points = self.rectanglePoints()
 		shading = e.shade( self.rectanglePoints() )
@@ -322,9 +374,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "value" : imath.Color3f( 1, 0.5, 0.25 ) } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "value" : imath.Color3f( 1, 0.5, 0.25 ) } ),
+			},
+			output = "output",
+		) )
 
 		points = self.rectanglePoints()
 		shading = e.shade( self.rectanglePoints() )
@@ -350,9 +405,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "value" : imath.Color3f( 0 ) } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "value" : imath.Color3f( 0 ) } ),
+			},
+			output = "output"
+		) )
 
 		points = self.rectanglePoints()
 		shading = e.shade( self.rectanglePoints() )
@@ -387,9 +445,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			]
 		)
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "colorSpline" : spline } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "colorSpline" : spline } )
+			},
+			output = "output"
+		) )
 
 		rp = self.rectanglePoints()
 		p = e.shade( rp )
@@ -400,9 +461,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/extractTranslate.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "m" : imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "m" : imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) } )
+			},
+			output = "output"
+		) )
 
 		p = e.shade( self.rectanglePoints() )
 		for i in range( 0, len( p["Ci"] ) ) :
@@ -411,19 +475,22 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 	def testParameters( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/parameterTypes.osl" )
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", {
-				"f" : 1.0,
-				"i" : 2,
-				"s" : "three",
-				"c" : imath.Color3f( 4, 5, 6 ),
-				"vec" : IECore.V3fData( imath.V3f( 7, 8, 9 ), IECore.GeometricData.Interpretation.Vector ),
-				"p" : IECore.V3fData( imath.V3f( 10, 11, 12 ), IECore.GeometricData.Interpretation.Point ),
-				"n" : IECore.V3fData( imath.V3f( 13, 14, 15 ), IECore.GeometricData.Interpretation.Normal ),
-				"noInterp" : imath.V3f( 16, 17, 18 ),
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", {
+					"f" : 1.0,
+					"i" : 2,
+					"s" : "three",
+					"c" : imath.Color3f( 4, 5, 6 ),
+					"vec" : IECore.V3fData( imath.V3f( 7, 8, 9 ), IECore.GeometricData.Interpretation.Vector ),
+					"p" : IECore.V3fData( imath.V3f( 10, 11, 12 ), IECore.GeometricData.Interpretation.Point ),
+					"n" : IECore.V3fData( imath.V3f( 13, 14, 15 ), IECore.GeometricData.Interpretation.Normal ),
+					"noInterp" : imath.V3f( 16, 17, 18 ),
 
-			 } )
-		] ) )
+				 } )
+			},
+			output = "output"
+		) )
 
 		rp = self.rectanglePoints()
 		p = e.shade( rp )
@@ -434,9 +501,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/transform.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface" )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface" )
+			},
+			output = "output"
+		) )
 
 		p = e.shade( self.rectanglePoints() )
 
@@ -450,9 +520,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		# Transform from object to world
 		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( i + imath.V3f( 2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "backwards" : IECore.IntData( 1 ) } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "backwards" : IECore.IntData( 1 ) } )
+			},
+			output = "output"
+		) )
 
 		p = e.shade( self.rectanglePoints(), { "world" : GafferOSL.ShadingEngine.Transform( worldMatrix ) } )
 
@@ -461,10 +534,16 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testVectorToColorConnections( self ) :
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( "Utility/Globals", "osl:shader", { "__handle" : "h" } ),
-			IECoreScene.Shader( "Surface/Constant", "osl:surface", { "Cs" : "link:h.globalP" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"globals" : IECoreScene.Shader( "Utility/Globals", "osl:shader" ),
+				"constant" : IECoreScene.Shader( "Surface/Constant", "osl:surface" ),
+			},
+			connections = [
+				( ( "globals", "globalP" ), ( "constant", "Cs" ) )
+			],
+			output = "constant"
+		) )
 
 		p = self.rectanglePoints()
 		r = e.shade( p )
@@ -476,9 +555,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/V3iArrayAttributeRead.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface" )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface" )
+			},
+			output = "output"
+		) )
 
 		p = self.rectanglePoints()
 
@@ -501,20 +583,30 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 	def testWarningForInvalidShaders( self ) :
 
 		with self.assertRaises( Exception ) as engineError :
-			e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-				IECoreScene.Shader( "aiImage", "shader", {} ),
-				IECoreScene.Shader( "aiImage", "shader", {} ),
-				IECoreScene.Shader( "Surface/Constant", "osl:surface", {} ),
-			] ) )
+			e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+				shaders = {
+					"image1" : IECoreScene.Shader( "aiImage", "shader", {} ),
+					"image2" : IECoreScene.Shader( "aiImage", "shader", {} ),
+					"output" : IECoreScene.Shader( "Surface/Constant", "osl:surface", {} ),
+				},
+				connections = [
+					( ( "image1", "" ), ( "output", "p1" ) ),
+					( ( "image2", "" ), ( "output", "p2" ) ),
+				],
+				output = "output"
+			) )
 
 		self.assertEqual( str(engineError.exception), "Exception : The following shaders can't be used as they are not OSL shaders: aiImage (shader), aiImage (shader)" )
 
 	def testReadV2fUserData( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/attribute.osl" )
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "name" : "v2f" } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "v2f" } )
+			},
+			output = "output"
+		) )
 
 		p = self.rectanglePoints()
 		p["v2f"] = IECore.V2fVectorData( [ imath.V2f( x.x, x.y ) for x in p["P"] ] )
@@ -530,9 +622,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 	def testCanReadStringData( self ):
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/stringAttribute.osl" )
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "name" : "strattr" } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "strattr" } )
+			},
+			output = "output"
+		) )
 
 		p = self.rectanglePoints()
 		p["strattr"] = IECore.StringVectorData( [ "testo" if x % 2 == 0 else "no-testo"  for x in range(len(p["P"])) ] )
@@ -559,9 +654,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		for uvIndex, uvName in enumerate( [ "u", "v" ] ) :
 
-			e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-				IECoreScene.Shader( shader, "osl:surface", { "global" : uvName } ),
-			] ) )
+			e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( shader, "osl:surface", { "global" : uvName } ),
+				},
+				output = "output"
+			) )
 
 			p = e.shade( rp )
 			for i, c in enumerate( p["Ci"] ) :
@@ -570,9 +668,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 	def testTextureOrientation( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/uvTextureMap.osl" )
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "fileName" : os.path.dirname( __file__ ) + "/images/vRamp.tx" } )
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "fileName" : os.path.dirname( __file__ ) + "/images/vRamp.tx" } )
+			},
+			output = "output"
+		) )
 
 		p = self.rectanglePoints()
 		r = e.shade( p )
@@ -595,18 +696,24 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				e.hash( h )
 				return h
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "global" : "P" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "global" : "P" } ),
+			},
+			output = "output"
+		) )
 		self.assertEqual( hashAtFrame( e, 0 ), hashAtFrame( e, 1 ) )
 		self.assertEqual( hashAtFrame( e, 1 ), hashAtFrame( e, 2 ) )
 
 		# And a shader that does read time needs to reflect that
 		# in the hash.
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "global" : "time" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "global" : "time" } ),
+			},
+			output = "output"
+		) )
 		self.assertNotEqual( hashAtFrame( e, 0 ), hashAtFrame( e, 1 ) )
 		self.assertNotEqual( hashAtFrame( e, 1 ), hashAtFrame( e, 2 ) )
 		self.assertEqual( hashAtFrame( e, 1 ), hashAtFrame( e, 1 ) )
@@ -631,9 +738,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		# A shader which doesn't read a context variable should
 		# have a hash which is constant with respect to that variable.
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "name" : "" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "" } ),
+			},
+			output = "output"
+		) )
 
 		def hashWithVariable( e, name, value ) :
 
@@ -648,9 +758,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		# And a shader which does read a context variable needs to reflect
 		# that in the hash.
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "name" : "myVariable", "type" : "int" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "myVariable", "type" : "int" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertEqual( hashWithVariable( e, "unrelated", 0 ), hashWithVariable( e, "unrelated", 1 ) )
 		self.assertNotEqual( hashWithVariable( e, "myVariable", 0 ), hashWithVariable( e, "myVariable", 1 ) )
@@ -672,9 +785,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		# Same goes for variables of other types
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "name" : "myVariable", "type" : "color" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "myVariable", "type" : "color" } ),
+			},
+			output = "output"
+		) )
 
 		assertCanReadVariable( e, "myVariable", imath.Color3f( 0, 0.5, 1 ) )
 		assertCanReadVariable( e, "myVariable", imath.Color3f( 1, 0.5, 0 ) )
@@ -683,9 +799,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/red.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { } ),
+			},
+			output = "output",
+		) )
 
 		self.assertTrue( e.needsAttribute( "P" ) )
 		self.assertFalse( e.needsAttribute( "N" ) )
@@ -695,9 +814,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "global" : "P" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "global" : "P" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertTrue( e.needsAttribute( "P" ) )
 		self.assertFalse( e.needsAttribute( "N" ) )
@@ -706,9 +828,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertFalse( e.needsAttribute( "v" ) )
 		self.assertFalse( e.needsAttribute( "time" ) )
 
-		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "global" : "u" } ),
-		] ) )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "global" : "u" } ),
+			},
+			output = "output"
+		) )
 
 		self.assertTrue( e.needsAttribute( "P" ) )
 		self.assertFalse( e.needsAttribute( "N" ) )
