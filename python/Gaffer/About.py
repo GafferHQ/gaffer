@@ -74,6 +74,11 @@ class About :
 		return "%d.%d.%d.%d" % ( About.milestoneVersion(), About.majorVersion(), About.minorVersion(), About.patchVersion() )
 
 	@staticmethod
+	def compatibilityVersionString() :
+
+		return "%d.%d" % ( About.milestoneVersion(), About.majorVersion() )
+
+	@staticmethod
 	def copyright() :
 
 		return "Copyright (c) 2011-2018 John Haddon, Copyright (c) 2011-2018 Image Engine Design Inc."
