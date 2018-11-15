@@ -8,7 +8,7 @@ Rumour has it some other application has a feature for creating equestrian playt
 If you've already read the xref:configurationFilesExample[Configuration Files Example], then you'll know we can add features to Gaffer by creating files it runs automatically on startup. We'll create our script in the following file, and gaffer will load it each time it runs :
 
 ------------------------------------
-~/gaffer/startup/gui/iWantAPony.py
+~/gaffer/<gafferCompatibilityVersion>/startup/gui/iWantAPony.py
 ------------------------------------
 
 ==== Creating a menu item

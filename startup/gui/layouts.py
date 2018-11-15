@@ -57,7 +57,7 @@ layouts.registerEditor( "PrimitiveInspector")
 # > Note : The easiest way to edit these layouts is to :
 # >
 # >  - Edit the layout in Gaffer itself
-# >  - Save the layout so that it is serialised to `${HOME}/gaffer/startup/gui/layouts.py`
+# >  - Save the layout so that it is serialised to `${HOME}/gaffer/<gafferCompatibilityVersion>/startup/gui/layouts.py`
 # >  - Copy the layout back into this file
 #
 # > Caution : You _must_ omit the `persistent = True` argument when copying layouts into

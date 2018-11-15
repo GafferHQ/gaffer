@@ -14,7 +14,7 @@ If you’ve already read the [Configuration Files Tutorial][1], then you’ll kn
 files it runs automatically on startup. We’ll create our script in the following file, and gaffer will load it each time it
 runs :
 
-`~/gaffer/startup/gui/iWantAPony.py`
+`~/gaffer/<gafferCompatibilityVersion>/startup/gui/iWantAPony.py`
 
 Creating the menu item
 --------------------
