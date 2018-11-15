@@ -44,7 +44,7 @@ import GafferTest
 
 class ApplicationRootTest( GafferTest.TestCase ) :
 
-	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
+	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/{version}/startup/testApp/preferences.py".format( version = Gaffer.About.compatibilityVersionString() ) )
 	__preferencesFile = "/tmp/testPreferences.py"
 
 	def testPreferences( self ) :
