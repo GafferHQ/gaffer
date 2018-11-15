@@ -36,9 +36,13 @@
 #
 ##########################################################################
 
+import distutils.version
+import glob
 import os
-import sys
+import shutil
 import signal
+import sys
+import re
 import warnings
 
 # Get rid of the annoying signal handler which turns Ctrl-C into a KeyboardInterrupt exception
@@ -50,6 +54,7 @@ warnings.simplefilter( "default", DeprecationWarning )
 
 import IECore
 from Gaffer._Gaffer import _nameProcess
+from Gaffer import About
 
 _nameProcess()
 
@@ -140,6 +145,46 @@ def checkCleanExit() :
 			)
 		)
 
+def modifyStartupPaths() :
+
+	versionedConfigs = "{home}/gaffer/{version}".format( home = os.environ["HOME"], version = About.compatibilityVersionString() )
+	versionedStartup = os.path.join( versionedConfigs, "startup" )
+	unversionedStartup = "{home}/gaffer/startup".format( home = os.environ["HOME"] )
+
+	# create the versioned startup folder
+	if not os.path.isdir( versionedConfigs ) :
+		previousConfigs = None
+		folders = glob.glob( "{home}/gaffer/*".format( home = os.environ["HOME"] ) )
+		for folder in folders :
+			if re.match( '.*/[0-9]\.[0-9]+$', folder ) :
+				if not previousConfigs or distutils.version.LooseVersion( os.path.basename( folder ) ) > distutils.version.LooseVersion( os.path.basename( previousConfigs ) ) :
+					previousConfigs = folder
+		if previousConfigs :
+			shutil.copytree( previousConfigs, versionedConfigs )
+		else :
+			# fallback for legacy folder structure
+			os.makedirs( versionedConfigs )
+			if os.path.isdir( unversionedStartup ) :
+				shutil.copytree( unversionedStartup, versionedStartup )
+			else :
+				os.mkdir( versionedStartup )
+
+	# update the startup variables
+	for var in ( "GAFFER_STARTUP_PATHS", "CORTEX_STARTUP_PATHS" ) :
+		paths = []
+		replaced = False
+		for path in os.environ[var].split( ":" ) :
+			# we need to check both because subprocesses will have already been
+			# been updated, but $GAFFER_ROOT/bin/gaffer will have prepended the
+			# unversioned startup path again.
+			if path in ( unversionedStartup, versionedStartup ) :
+				if not replaced :
+					paths.append( versionedStartup )
+					replaced = True
+			else :
+				paths.append( path )
+		os.environ[var] = ":".join( paths )
+
 args = sys.argv[1:]
 if args and args[0] in ( "-help", "-h", "--help", "-H" ) :
 	if len( args ) > 1 :
@@ -161,6 +206,8 @@ else :
 
 	app = loadApp( appName )
 	IECore.ParameterParser().parse( appArgs, app.parameters() )
+
+	modifyStartupPaths()
 
 	result = app.run()
 
