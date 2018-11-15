@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,72 +33,27 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+import IECore
+import Gaffer
+import GafferImage
 
-__import__( "GafferUI" )
+Gaffer.Metadata.registerNode(
 
-from _GafferImageUI import *
+	GafferImage.BleedFill,
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+	"description",
+	"Fills in areas of low alpha in the image by blurring in contributions from nearby pixels.",
 
-import ImageReaderPathPreview
+	plugs = {
+		"expandDataWindow" : [
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import CheckerboardUI
-import RampUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import DeleteImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import RankFilterUI
-import ErodeUI
-import DilateUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
-import CatalogueSelectUI
-import BleedFillUI
+			"description",
+			"""
+			Expand the data window to cover the display window.  The new data will be filled
+			with blurred contributions from nearby pixels ( the same as any regions of low
+			alpha within the original data window ).
+			""",
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )
+		],
+	}
+)
