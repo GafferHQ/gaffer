@@ -47,11 +47,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		sphere = GafferScene.Sphere()
 
-		adaptors = GafferScene.createAdaptors()
-		adaptors["in"].setInput( sphere["out"] )
-
-		self.assertScenesEqual( sphere["out"], adaptors["out"] )
-		self.assertSceneHashesEqual( sphere["out"], adaptors["out"] )
+		defaultAdaptors = GafferScene.createAdaptors()
+		defaultAdaptors["in"].setInput( sphere["out"] )
 
 		def a() :
 
@@ -63,20 +60,20 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferScene.registerAdaptor( "Test", a )
 
-		adaptors = GafferScene.createAdaptors()
-		adaptors["in"].setInput( sphere["out"] )
+		testAdaptors = GafferScene.createAdaptors()
+		testAdaptors["in"].setInput( sphere["out"] )
 
 		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
-		self.assertTrue( "doubleSided" in adaptors["out"].attributes( "/sphere" ) )
-		self.assertEqual( adaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
+		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
+		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
 
 		GafferScene.deregisterAdaptor( "Test" )
 
-		adaptors = GafferScene.createAdaptors()
-		adaptors["in"].setInput( sphere["out"] )
+		defaultAdaptors2 = GafferScene.createAdaptors()
+		defaultAdaptors2["in"].setInput( sphere["out"] )
 
-		self.assertScenesEqual( sphere["out"], adaptors["out"] )
-		self.assertSceneHashesEqual( sphere["out"], adaptors["out"] )
+		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
+		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 
 	def tearDown( self ) :
 
