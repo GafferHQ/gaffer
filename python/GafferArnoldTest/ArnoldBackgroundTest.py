@@ -37,7 +37,8 @@
 import unittest
 
 import imath
-import arnold
+
+import IECoreScene
 
 import GafferTest
 import GafferSceneTest
@@ -58,16 +59,18 @@ class ArnoldBackgroundTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
 
 		backgroundOption = a["out"]["globals"].getValue()["option:ai:background"]
-		self.assertEqual( backgroundOption[0].name, "flat" )
-		self.assertEqual( backgroundOption[0].parameters["color"].value, imath.Color3f( 1 ) )
+		self.assertIsInstance( backgroundOption, IECoreScene.ShaderNetwork )
+		self.assertEqual( backgroundOption.outputShader().name, "flat" )
+		self.assertEqual( backgroundOption.outputShader().parameters["color"].value, imath.Color3f( 1 ) )
 
 		del cs[:]
 		s["parameters"]["color"]["r"].setValue( 0.25 )
 		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
 
 		backgroundOption = a["out"]["globals"].getValue()["option:ai:background"]
-		self.assertEqual( backgroundOption[0].name, "flat" )
-		self.assertEqual( backgroundOption[0].parameters["color"].value, imath.Color3f( 0.25, 1, 1 ) )
+		self.assertIsInstance( backgroundOption, IECoreScene.ShaderNetwork )
+		self.assertEqual( backgroundOption.outputShader().name, "flat" )
+		self.assertEqual( backgroundOption.outputShader().parameters["color"].value, imath.Color3f( 0.25, 1, 1 ) )
 
 if __name__ == "__main__":
 	unittest.main()

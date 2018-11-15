@@ -36,6 +36,8 @@
 
 import unittest
 
+import IECoreScene
+
 import GafferTest
 import GafferSceneTest
 import GafferArnold
@@ -55,16 +57,18 @@ class ArnoldAtmosphereTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
 
 		atmosphereOption = a["out"]["globals"].getValue()["option:ai:atmosphere"]
-		self.assertEqual( atmosphereOption[0].name, "atmosphere_volume" )
-		self.assertEqual( atmosphereOption[0].parameters["density"].value, 0.0 )
+		self.assertIsInstance( atmosphereOption, IECoreScene.ShaderNetwork )
+		self.assertEqual( atmosphereOption.outputShader().name, "atmosphere_volume" )
+		self.assertEqual( atmosphereOption.outputShader().parameters["density"].value, 0.0 )
 
 		del cs[:]
 		s["parameters"]["density"].setValue( 0.25 )
 		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
 
 		atmosphereOption = a["out"]["globals"].getValue()["option:ai:atmosphere"]
-		self.assertEqual( atmosphereOption[0].name, "atmosphere_volume" )
-		self.assertEqual( atmosphereOption[0].parameters["density"].value, 0.25 )
+		self.assertIsInstance( atmosphereOption, IECoreScene.ShaderNetwork )
+		self.assertEqual( atmosphereOption.outputShader().name, "atmosphere_volume" )
+		self.assertEqual( atmosphereOption.outputShader().parameters["density"].value, 0.25 )
 
 if __name__ == "__main__":
 	unittest.main()
