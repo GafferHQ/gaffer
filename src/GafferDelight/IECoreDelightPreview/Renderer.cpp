@@ -40,11 +40,11 @@
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 #include "IECoreScene/Shader.h"
-#include "IECoreScene/Transform.h"
+#include "IECoreScene/ShaderNetwork.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
-#include "IECore/ObjectVector.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -390,75 +390,62 @@ class DelightShader : public IECore::RefCounted
 
 	public :
 
-		DelightShader( NSIContext_t context, const IECore::ObjectVector *shaderNetwork, DelightHandle::Ownership ownership )
+		DelightShader( NSIContext_t context, const IECoreScene::ShaderNetwork *shaderNetwork, DelightHandle::Ownership ownership )
 		{
 			const string name = "shader:" + shaderNetwork->Object::hash().toString();
+			ShaderNetworkAlgo::depthFirstTraverse(
+				shaderNetwork,
+				[this, &name, &context, &ownership] ( const ShaderNetwork *shaderNetwork, const InternedString &handle ) {
 
-			for( const ObjectPtr &object : shaderNetwork->members() )
-			{
-				const Shader *shader = runTimeCast<const Shader>( object.get() );
-				if( !shader )
-				{
-					continue;
-				}
+					// Create node
 
-				const string shaderHandle = parameter<string>( shader->parameters(), "__handle", "" );
-				const string nodeName = shaderHandle.size() ? name + ":" + shaderHandle : name;
+					const Shader *shader = shaderNetwork->getShader( handle );
+					const string nodeName = name + ":" + handle.string();
 
-				NSICreate(
-					context,
-					nodeName.c_str(),
-					"shader",
-					0, nullptr
-				);
+					NSICreate(
+						context,
+						nodeName.c_str(),
+						"shader",
+						0, nullptr
+					);
 
-				ParameterList parameterList;
-				std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-				parameterList.add( "shaderfilename", shaderFileName );
+					m_handles.emplace_back( context, nodeName, ownership );
 
-				for( const auto &parameter : shader->parameters() )
-				{
-					if( parameter.first == "__handle" )
+					// Set parameters
+
+					ParameterList parameterList;
+					std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
+					parameterList.add( "shaderfilename", shaderFileName );
+
+					for( const auto &parameter : shader->parameters() )
 					{
-						continue;
+						parameterList.add( parameter.first.c_str(), parameter.second.get() );
 					}
-					// Deal with connections, which are specified awkwardly as
-					// string parameters prefixed with "link:".
-					if( auto stringData = runTimeCast<const StringData>( parameter.second ) )
+
+					NSISetAttribute(
+						context,
+						nodeName.c_str(),
+						parameterList.size(),
+						parameterList.data()
+					);
+
+					// Make connections
+
+					for( const auto &c : shaderNetwork->inputConnections( handle ) )
 					{
-						const string &value = stringData->readable();
-						if( boost::starts_with( value, "link:" ) )
-						{
-							const size_t i = value.find_first_of( "." );
-
-							string fromHandle( value.begin() + 5, value.begin() + i );
-							fromHandle = name + ":" + fromHandle;
-							const char *fromAttr = value.c_str() + i + 1;
-
-							NSIConnect(
-								context,
-								fromHandle.c_str(),
-								fromAttr,
-								nodeName.c_str(),
-								parameter.first.c_str(),
-								0, nullptr
-							);
-							continue;
-						}
+						const string sourceHandle = name + ":" + c.source.shader.string();
+						NSIConnect(
+							context,
+							sourceHandle.c_str(),
+							c.source.name.c_str(),
+							nodeName.c_str(),
+							c.destination.name.c_str(),
+							0, nullptr
+						);
 					}
-					// Standard parameter with values
-					parameterList.add( parameter.first.c_str(), parameter.second.get() );
 				}
+			);
 
-				NSISetAttribute(
-					context,
-					nodeName.c_str(),
-					parameterList.size(),
-					parameterList.data()
-				);
-
-				m_handles.emplace_back( context, nodeName, ownership );
-			}
 		}
 
 		const DelightHandle &handle() const
@@ -494,7 +481,7 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		DelightShaderPtr get( const IECore::ObjectVector *shader )
+		DelightShaderPtr get( const IECoreScene::ShaderNetwork *shader )
 		{
 			Cache::accessor a;
 			m_cache.insert( a, shader ? shader->Object::hash() : MurmurHash() );
@@ -506,14 +493,15 @@ class ShaderCache : public IECore::RefCounted
 				}
 				else
 				{
-					ObjectVectorPtr defaultSurfaceNetwork = new ObjectVector;
+					ShaderNetworkPtr defaultSurfaceNetwork = new ShaderNetwork;
 					/// \todo Use a shader that comes with 3delight, and provide
 					/// the expected "defaultsurface" facing ratio shading. The
 					/// closest available at present is the samplerInfo shader, but
 					/// that spews errors about a missing "mayaCamera" coordinate
 					/// system.
 					ShaderPtr defaultSurfaceShader = new Shader( "Surface/Constant", "surface" );
-					defaultSurfaceNetwork->members().push_back( defaultSurfaceShader );
+					defaultSurfaceNetwork->addShader( "surface", std::move( defaultSurfaceShader ) );
+					defaultSurfaceNetwork->setOutput( { "surface" } );
 					a->second = new DelightShader( m_context, defaultSurfaceNetwork.get(), m_ownership );
 				}
 			}
@@ -591,7 +579,7 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 			{
 				if( const Object *o = attributes->member<const Object>( name ) )
 				{
-					if( const ObjectVector *shader = reportedCast<const ObjectVector>( o, "attribute", name ) )
+					if( const ShaderNetwork *shader = reportedCast<const ShaderNetwork>( o, "attribute", name ) )
 					{
 						m_shader = shaderCache->get( shader );
 					}
@@ -1377,7 +1365,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				renderRegion = Box2i( V2i( 0 ), V2i( 1 ) );
 			}
 
-			const Box2f crop( 
+			const Box2f crop(
 				V2f(
 					renderRegion.min.x / float( resolution.x ),
 					1 - renderRegion.max.y / float( resolution.y )
