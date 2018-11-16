@@ -145,8 +145,12 @@ class dispatch( Gaffer.Application ) :
 	def _run( self, args ) :
 
 		if not len( args["tasks"] ) :
-			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No task nodes were specified" )
-			return 1
+			# fallback to nodes for backwards compatibility
+			if len( args["nodes"] ) :
+				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "Use the \"tasks\" parameter to specify the dispatchable nodes. The \"nodes\" parameter is only for gui purposes." )
+			else :
+				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No task nodes were specified" )
+				return 1
 
 		script = Gaffer.ScriptNode()
 
@@ -161,7 +165,8 @@ class dispatch( Gaffer.Application ) :
 		self.root()["scripts"].addChild( script )
 
 		tasks = []
-		for taskName in args["tasks"] :
+		# fallback to nodes for backwards compatibility
+		for taskName in args["tasks"] or args["nodes"] :
 			if args["script"].value :
 				task = script.descendant( taskName )
 				if task is None :
