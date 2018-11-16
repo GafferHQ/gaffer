@@ -56,9 +56,9 @@ class dispatch( Gaffer.Application ) :
 			Example usage :
 
 			```
-			gaffer dispatch -script comp.gfr -nodes ImageWriter1 -dispatcher Local -settings -dispatcher.frameRange '"1001-1020"'
+			gaffer dispatch -script comp.gfr -tasks ImageWriter1 -dispatcher Local -settings -dispatcher.frameRange '"1001-1020"'
 
-			gaffer dispatch -gui -nodes GafferDispatch.SystemCommand -dispatcher Local -settings -SystemCommand.command '"ls -l"'
+			gaffer dispatch -gui -tasks GafferDispatch.SystemCommand -dispatcher Local -settings -SystemCommand.command '"ls -l"'
 			```
 			"""
 		)
@@ -97,10 +97,17 @@ class dispatch( Gaffer.Application ) :
 				),
 
 				IECore.StringVectorParameter(
-					name = "nodes",
-					description = "The names of the nodes to dispatch. Note if a script is supplied, the nodes must "
-						"exist within the script. If no script is supplied, the nodes will be constructed on the fly "
+					name = "tasks",
+					description = "The names of the task nodes to dispatch. Note if a script is supplied, the tasks must "
+						"exist within the script. If no script is supplied, the task nodes will be constructed on the fly "
 						"and added to a default script.",
+					defaultValue = IECore.StringVectorData( [] ),
+				),
+
+				IECore.StringVectorParameter(
+					name = "nodes",
+					description = "A list of nodes to make editable when running the gui. "
+						"This parameter has no effect unless the gui is loaded.",
 					defaultValue = IECore.StringVectorData( [] ),
 				),
 
@@ -137,9 +144,8 @@ class dispatch( Gaffer.Application ) :
 
 	def _run( self, args ) :
 
-		nodes = []
-		if not len( args["nodes"] ) :
-			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No nodes were specified" )
+		if not len( args["tasks"] ) :
+			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No task nodes were specified" )
 			return 1
 
 		script = Gaffer.ScriptNode()
@@ -154,19 +160,31 @@ class dispatch( Gaffer.Application ) :
 
 		self.root()["scripts"].addChild( script )
 
-		for nodeName in args["nodes"] :
+		tasks = []
+		for taskName in args["tasks"] :
 			if args["script"].value :
-				node = script.descendant( nodeName )
-				if node is None :
-					IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % nodeName )
+				task = script.descendant( taskName )
+				if task is None :
+					IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % taskName )
 					return 1
 			else :
-				node = self.__create( nodeName )
-				if node is None :
+				task = self.__create( taskName )
+				if task is None :
 					return 1
 				if args["applyUserDefaults"].value :
-					Gaffer.NodeAlgo.applyUserDefaults( node )
-				script.addChild( node )
+					Gaffer.NodeAlgo.applyUserDefaults( task )
+				script.addChild( task )
+			tasks.append( task )
+
+		nodes = []
+		for nodeName in args["nodes"] :
+			if not args["script"].value :
+				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"nodes\" cannot be used without a script." )
+				return 1
+			node = script.descendant( nodeName )
+			if node is None :
+				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % nodeName )
+				return 1
 			nodes.append( node )
 
 		dispatcherType = args["dispatcher"].value or GafferDispatch.Dispatcher.getDefaultDispatcherType()
@@ -210,7 +228,7 @@ class dispatch( Gaffer.Application ) :
 			import GafferUI
 			import GafferDispatchUI
 
-			self.__dialogue = GafferDispatchUI.DispatchDialogue( nodes, dispatchers )
+			self.__dialogue = GafferDispatchUI.DispatchDialogue( tasks, dispatchers, nodes )
 			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 			self.__dialogue.setVisible( True )
 
@@ -218,25 +236,25 @@ class dispatch( Gaffer.Application ) :
 
 		else :
 
-			return self.__dispatch( dispatchers[0], nodes )
+			return self.__dispatch( dispatchers[0], tasks )
 
 		return 0
 
 	@staticmethod
-	def __dispatch( dispatcher, nodes ) :
+	def __dispatch( dispatcher, tasks ) :
 
-		script = nodes[0].scriptNode()
+		script = tasks[0].scriptNode()
 
 		try :
 
 			with script.context() :
-				dispatcher.dispatch( nodes )
+				dispatcher.dispatch( tasks )
 
 		except Exception :
 
 			IECore.msg(
 				IECore.Msg.Level.Error,
-				"gaffer dispatch : dispatching %s" % str( [ node.relativeName( script ) for node in nodes ] ),
+				"gaffer dispatch : dispatching %s" % str( [ task.relativeName( script ) for task in tasks ] ),
 				"".join( traceback.format_exception( *sys.exc_info() ) ),
 			)
 
