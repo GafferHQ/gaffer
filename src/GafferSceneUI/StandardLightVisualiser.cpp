@@ -50,8 +50,6 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
 
-#include "IECore/ObjectVector.h"
-
 using namespace std;
 using namespace boost;
 using namespace Imath;
@@ -69,20 +67,11 @@ using namespace GafferSceneUI;
 namespace
 {
 
-const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, InternedString &metadataTarget )
+const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, InternedString &metadataTarget )
 {
-	if( !shaderVector || shaderVector->members().size() == 0 )
-	{
-		return nullptr;
-	}
-
-	if( const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() ) )
-	{
-		metadataTarget = attributeName.string() + ":" + shader->getName();
-		return shader->parametersData();
-	}
-
-	return nullptr;
+	const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+	metadataTarget = attributeName.string() + ":" + shader->getName();
+	return shader->parametersData();
 }
 
 template<typename T>
@@ -233,14 +222,10 @@ StandardLightVisualiser::~StandardLightVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, IECoreGL::ConstStatePtr &state ) const
 {
 	InternedString metadataTarget;
-	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderVector, metadataTarget );
-	if( !shaderParameters )
-	{
-		return nullptr;
-	}
+	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderNetwork, metadataTarget );
 
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
 	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
@@ -281,7 +266,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	else if( type && type->readable() == "spot" )
 	{
 		float innerAngle, outerAngle, lensRadius;
-		spotlightParameters( attributeName, shaderVector, innerAngle, outerAngle, lensRadius );
+		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / locatorScale ) ) );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
@@ -321,11 +306,11 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	return result;
 }
 
-void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECore::ObjectVector *shaderVector, float &innerAngle, float &outerAngle, float &lensRadius )
+void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius )
 {
 
 	InternedString metadataTarget;
-	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderVector, metadataTarget );
+	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderNetwork, metadataTarget );
 
 	float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
 	float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );

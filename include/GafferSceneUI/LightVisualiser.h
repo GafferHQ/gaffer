@@ -41,7 +41,7 @@
 
 #include "IECoreGL/Renderable.h"
 
-#include "IECore/ObjectVector.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 namespace GafferSceneUI
 {
@@ -64,8 +64,8 @@ class GAFFERSCENEUI_API LightVisualiser : public IECore::RefCounted
 		~LightVisualiser() override;
 
 		/// Must be implemented by derived classes to visualise
-		/// the light contained within shaderVector.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const = 0;
+		/// the light contained within `shaderNetwork`.
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, IECoreGL::ConstStatePtr &state ) const = 0;
 
 		/// Registers a visualiser to visualise a particular type of light.
 		/// For instance, `registerLightVisualiser( "ai:light", "point_light", visualiser )`

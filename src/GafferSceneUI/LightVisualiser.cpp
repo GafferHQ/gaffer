@@ -122,14 +122,14 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 			continue;
 		}
 
-		const IECore::ObjectVector *shaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() );
-		if( !shaderVector || shaderVector->members().empty() )
+		const IECoreScene::ShaderNetwork *shaderNetwork = IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it->second.get() );
+		if( !shaderNetwork )
 		{
 			continue;
 		}
 
 		IECore::InternedString shaderName;
-		if( const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() ) )
+		if( const IECoreScene::Shader *shader = shaderNetwork->outputShader() )
 		{
 			shaderName = shader->getName();
 		}
@@ -149,7 +149,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 		}
 
 		IECoreGL::ConstStatePtr curState = nullptr;
-		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( it->first, shaderVector, curState );
+		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( it->first, shaderNetwork, curState );
 
 		if( curVis )
 		{
