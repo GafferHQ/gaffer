@@ -74,6 +74,6 @@ void GafferSceneModule::bindIO()
 		.staticmethod( "supportedExtensions" )
 	;
 
-	GafferDispatchBindings::TaskNodeClass<SceneWriter>();
-
+	typedef GafferDispatchBindings::TaskNodeWrapper<SceneWriter> SceneWriterWrapper;
+	GafferDispatchBindings::TaskNodeClass<SceneWriter, SceneWriterWrapper>();
 }
