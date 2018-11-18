@@ -122,6 +122,8 @@ def __ptSummary( plug ) :
 		info.append( "IBL Samples %f" % plug["ptIBLSamples"]["value"].getValue() )
 	if plug["ptMaxRayIntensity"]["enabled"].getValue() :
 		info.append( "Max Ray Intensity %f" % plug["ptMaxRayIntensity"]["value"].getValue() )
+	if plug["ptClampRoughness"]["enabled"].getValue() :
+		info.append( "Clamp Roughness %f" % plug["ptClampRoughness"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -484,6 +486,16 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Max Ray Intensity",
+
+		],
+
+		"options.ptClampRoughness" : [
+
+			"description",
+			__getDescriptionString("pt:clamp_roughness"),
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Clamp Roughness",
 
 		],
 

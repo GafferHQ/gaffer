@@ -72,6 +72,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:dl_light_samples", new IECore::FloatData( 1.0f ), false, "ptLightingSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:ibl_env_samples", new IECore::FloatData( 1.0f ), false, "ptIBLSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:max_ray_intensity", new IECore::FloatData( 0.0f ), false, "ptMaxRayIntensity" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:clamp_roughness", new IECore::BoolData( false ), false, "ptClampRoughness" ) );
 
 	// sppm
 	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:photon_type", new IECore::StringData( "mono" ), false, "photonType" ) );
