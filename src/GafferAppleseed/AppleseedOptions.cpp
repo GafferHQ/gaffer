@@ -72,6 +72,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:cfg:pt:dl_light_samples", new IECore::FloatData( 1.0f ), "ptLightingSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:ibl_env_samples", new IECore::FloatData( 1.0f ), "ptIBLSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:max_ray_intensity", new IECore::FloatData( 0.0f ), "ptMaxRayIntensity", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:pt:clamp_roughness", new IECore::BoolData( false ), "ptClampRoughness", Gaffer::Plug::Default, false );
 
 	// sppm
 	options->addOptionalMember( "as:cfg:sppm:photon_type", new IECore::StringData( "mono" ), "photonType", Gaffer::Plug::Default, false );
