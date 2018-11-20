@@ -38,8 +38,9 @@
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "IECore/CompoundData.h"
-#include "IECore/ObjectVector.h"
 
 #include "boost/container/flat_set.hpp"
 
@@ -53,7 +54,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
 
-		ShadingEngine( const IECore::ObjectVector *shaderNetwork );
+		ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork );
 		~ShadingEngine() override;
 
 		struct Transform
