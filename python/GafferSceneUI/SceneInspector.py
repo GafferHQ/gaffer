@@ -302,7 +302,6 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 			for section in self.__sections :
 				section.update( targets )
-				section.setEnabled( section.getEnabled() and bool( targets ) )
 
 			return False # remove idle callback
 
@@ -1161,6 +1160,8 @@ class Section( GafferUI.Widget ) :
 	# UI to reflect the state of the targets. Implementations should
 	# first call the base class implementation.
 	def update( self, targets ) :
+
+		self.setEnabled( bool( targets ) )
 
 		if self.__collapsible is None :
 			return
