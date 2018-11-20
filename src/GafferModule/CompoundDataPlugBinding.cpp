@@ -98,7 +98,11 @@ void addMembersWrapper( CompoundDataPlug &p, const IECore::CompoundData *members
 tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPlug::MemberPlug *member )
 {
 	std::string name;
-	IECore::DataPtr d = p.memberDataAndName( member, name );
+	IECore::DataPtr d;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		d = p.memberDataAndName( member, name );
+	}
 	return boost::python::make_tuple( d, name );
 }
 
