@@ -252,5 +252,25 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "", ), network.Parameter( "n3", "c" ) ) ]
 				)
 
+	def testComponentToComponentConnections( self ) :
+
+		n1 = GafferSceneTest.TestShader( "n1" )
+		n2 = GafferSceneTest.TestShader( "n2" )
+		n2["type"].setValue( "test:surface" )
+
+		n2["parameters"]["c"]["r"].setInput( n1["out"]["g"] )
+		n2["parameters"]["c"]["g"].setInput( n1["out"]["b"] )
+		n2["parameters"]["c"]["b"].setInput( n1["out"]["r"] )
+
+		network = n2.attributes()["test:surface"]
+		self.assertEqual(
+			network.inputConnections( "n2" ),
+			[
+				( ( "n1", "r" ), ( "n2", "c.b" ) ),
+				( ( "n1", "b" ), ( "n2", "c.g" ) ),
+				( ( "n1", "g" ), ( "n2", "c.r" ) ),
+			]
+		)
+
 if __name__ == "__main__":
 	unittest.main()

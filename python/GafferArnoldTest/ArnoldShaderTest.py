@@ -792,6 +792,28 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 					[ network1.Connection( ( "oslIn", "c" ), ( "oslOut", "c" ) ) ]
 				)
 
+	def testComponentToComponentConnections( self ) :
+
+		n1 = GafferArnold.ArnoldShader( "n1" )
+		n1.loadShader( "flat" )
+
+		n2 = GafferArnold.ArnoldShader( "n2" )
+		n2.loadShader( "flat" )
+
+		n2["parameters"]["color"]["r"].setInput( n1["out"]["g"] )
+		n2["parameters"]["color"]["g"].setInput( n1["out"]["b"] )
+		n2["parameters"]["color"]["b"].setInput( n1["out"]["r"] )
+
+		network = n2.attributes()["ai:surface"]
+		self.assertEqual(
+			network.inputConnections( "n2" ),
+			[
+				( ( "n1", "r" ), ( "n2", "color.b" ) ),
+				( ( "n1", "b" ), ( "n2", "color.g" ) ),
+				( ( "n1", "g" ), ( "n2", "color.r" ) ),
+			]
+		)
+
 	def __forceArnoldRestart( self ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) :

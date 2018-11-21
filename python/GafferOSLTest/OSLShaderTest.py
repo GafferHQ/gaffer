@@ -1018,5 +1018,27 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		s2.execute( serialised )
 		self.assertEqual( s2['n']["parameters"]["colorSpline"].getValue(), splineValue )
 
+	def testComponentToComponentConnections( self ) :
+
+		n1 = GafferOSL.OSLShader( "n1" )
+		n1.loadShader( "Maths/MixColor" )
+
+		n2 = GafferOSL.OSLShader( "n2" )
+		n2.loadShader( "Maths/MixColor" )
+
+		n2["parameters"]["a"]["r"].setInput( n1["out"]["out"]["g"] )
+		n2["parameters"]["a"]["g"].setInput( n1["out"]["out"]["b"] )
+		n2["parameters"]["a"]["b"].setInput( n1["out"]["out"]["r"] )
+
+		network = n2.attributes()["osl:shader"]
+		self.assertEqual(
+			network.inputConnections( "n2" ),
+			[
+				( ( "n1", "out.r" ), ( "n2", "a.b" ) ),
+				( ( "n1", "out.b" ), ( "n2", "a.g" ) ),
+				( ( "n1", "out.g" ), ( "n2", "a.r" ) ),
+			]
+		)
+
 if __name__ == "__main__":
 	unittest.main()

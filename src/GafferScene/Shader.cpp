@@ -111,6 +111,22 @@ bool isLeafParameter( const Gaffer::Plug *parameterPlug )
 	return true;
 }
 
+bool isCompoundNumericPlug( const Gaffer::Plug *plug )
+{
+	switch( (Gaffer::TypeId)plug->typeId() )
+	{
+		case V2iPlugTypeId :
+		case V2fPlugTypeId :
+		case V3iPlugTypeId :
+		case V3fPlugTypeId :
+		case Color3fPlugTypeId :
+		case Color4fPlugTypeId :
+			return true;
+		default :
+			return false;
+	}
+}
+
 typedef boost::unordered_set<const Shader *> ShaderSet;
 
 struct CycleDetector
@@ -392,6 +408,7 @@ class Shader::NetworkBuilder
 			if( isInputParameter( effectiveParameter ) )
 			{
 				effectiveShader->parameterHash( effectiveParameter, h );
+				hashParameterComponentConnections( parameter, h );
 			}
 			else
 			{
@@ -420,6 +437,7 @@ class Shader::NetworkBuilder
 				{
 					shader->parameters()[parameterName] = value;
 				}
+				addParameterComponentConnections( parameter, parameterName, connections );
 			}
 			else
 			{
@@ -432,6 +450,54 @@ class Shader::NetworkBuilder
 					{ this->handle( effectiveShader ), outputName },
 					{ IECore::InternedString(), parameterName }
 				} );
+			}
+		}
+
+		void hashParameterComponentConnections( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
+		{
+			if( !isCompoundNumericPlug( parameter ) )
+			{
+				return;
+			}
+			for( InputPlugIterator it( parameter ); !it.done(); ++it )
+			{
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+					h.append( shaderHash( effectiveShader ) );
+					if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+					{
+						h.append( effectiveParameter->relativeName( effectiveShader->outPlug() ) );
+					}
+					h.append( (*it)->getName() );
+				}
+			}
+		}
+
+		void addParameterComponentConnections( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
+		{
+			if( !isCompoundNumericPlug( parameter ) )
+			{
+				return;
+			}
+			for( InputPlugIterator it( parameter ); !it.done(); ++it )
+			{
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+					IECore::InternedString outputName;
+					if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+					{
+						outputName = effectiveParameter->relativeName( effectiveShader->outPlug() );
+					}
+					IECore::InternedString inputName = parameterName.string() + "." + (*it)->getName().string();
+					connections.push_back( {
+						{ this->handle( effectiveShader ), outputName },
+						{ IECore::InternedString(), inputName }
+					} );
+				}
 			}
 		}
 
