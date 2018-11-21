@@ -326,6 +326,130 @@ class RendererTest( GafferTest.TestCase ) :
 			source = arnold.AiNodeGetLink( target, "color[0]" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
 
+	def testShaderComponentConnections( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		s = IECoreScene.ShaderNetwork(
+			shaders = {
+				"source" : IECoreScene.Shader( "image" ),
+				"output" : IECoreScene.Shader( "flat" ),
+			},
+			connections = [
+				( ( "source", "r" ), ( "output", "color.g" ) ),
+				( ( "source", "g" ), ( "output", "color.b" ) ),
+				( ( "source", "b" ), ( "output", "color.r" ) ),
+			],
+			output = "output"
+		)
+
+		r.object(
+			"test",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:surface" : s
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			outputNode = self.arnoldCompat( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "test" ), "shader" ) )
+
+			componentIndex = ctypes.c_int()
+			sourceR = arnold.AiNodeGetLink( outputNode, "color.r", componentIndex )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( sourceR ) ), "image" )
+			self.assertEqual( componentIndex.value, 2 )
+
+			sourceG = arnold.AiNodeGetLink( outputNode, "color.g", componentIndex )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( sourceG ) ), "image" )
+			self.assertEqual( componentIndex.value, 0 )
+
+			sourceB = arnold.AiNodeGetLink( outputNode, "color.b", componentIndex )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( sourceB ) ), "image" )
+			self.assertEqual( componentIndex.value, 1 )
+
+			self.assertReferSameNode( sourceR, sourceG )
+			self.assertReferSameNode( sourceR, sourceB )
+
+	def testOSLShaderComponentConnections( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		s = IECoreScene.ShaderNetwork(
+			shaders = {
+				"source" : IECoreScene.Shader( "Maths/MixColor", "osl:shader" ),
+				"output" : IECoreScene.Shader( "Maths/MixColor", "osl:shader" ),
+			},
+			connections = [
+				( ( "source", "out.r" ), ( "output", "a.g" ) ),
+				( ( "source", "out.g" ), ( "output", "a.b" ) ),
+				( ( "source", "out.b" ), ( "output", "a.r" ) ),
+			],
+			output = "output"
+		)
+
+		r.object(
+			"test",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:surface" : s
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			outputNode = self.arnoldCompat( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "test" ), "shader" ) )
+
+			pack = arnold.AiNodeGetLink( outputNode, "param_a" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( pack ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( pack, "shadername" ), "MaterialX/mx_pack_color" )
+
+			swizzleR = arnold.AiNodeGetLink( pack, "param_in1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleR ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleR, "shadername" ), "MaterialX/mx_swizzle_color_float" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleR, "param_channels" ), "b" )
+			swizzleRSource = arnold.AiNodeGetLink( swizzleR, "param_in" )
+
+			swizzleG = arnold.AiNodeGetLink( pack, "param_in2" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleG ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleG, "shadername" ), "MaterialX/mx_swizzle_color_float" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleG, "param_channels" ), "r" )
+			swizzleGSource = arnold.AiNodeGetLink( swizzleG, "param_in" )
+
+			swizzleB = arnold.AiNodeGetLink( pack, "param_in3" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleB ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleB, "shadername" ), "MaterialX/mx_swizzle_color_float" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleB, "param_channels" ), "g" )
+			swizzleBSource = arnold.AiNodeGetLink( swizzleG, "param_in" )
+
+			self.assertReferSameNode( swizzleRSource, swizzleGSource )
+			self.assertReferSameNode( swizzleRSource, swizzleBSource )
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleRSource ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleRSource, "shadername" ), "Maths/MixColor" )
+
 	def testLightNames( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

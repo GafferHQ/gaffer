@@ -41,6 +41,7 @@
 #include "IECoreArnold/ParameterAlgo.h"
 
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
@@ -112,11 +113,47 @@ void setSplineParameter( AtNode *node, const std::string &name, const Spline &sp
 
 typedef boost::unordered_map<ShaderNetwork::Parameter, AtNode *> ShaderMap;
 
+// Equivalent to Python's `s.partition( c )[0]`.
+InternedString partitionStart( const InternedString &s, char c )
+{
+	const size_t index = s.string().find_first_of( '.' );
+	if( index == string::npos )
+	{
+		return s;
+	}
+	else
+	{
+		return InternedString( s.c_str(), index );
+	}
+}
+
+// Equivalent to Python's `s.partition( c )[2]`.
+InternedString partitionEnd( const InternedString &s, char c )
+{
+	const size_t index = s.string().find_first_of( '.' );
+	if( index == string::npos )
+	{
+		return InternedString();
+	}
+	else
+	{
+		return InternedString( s.c_str() + index + 1 );
+	}
+}
+
 AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode, vector<AtNode *> &nodes, ShaderMap &converted )
 {
-	// Reuse previously created node if we can
+	// Reuse previously created node if we can. OSL shaders
+	// can have multiple outputs, but each Arnold shader node
+	// can have only a single output, so we have to emit OSL
+	// shaders multiple times, once for each distinct top-level
+	// output that is used.
 
-	auto inserted = converted.insert( { outputParameter, nullptr } );
+	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
+	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+	const InternedString oslOutput = isOSLShader ? partitionStart( outputParameter.name, '.' ) : InternedString();
+
+	auto inserted = converted.insert( { { outputParameter.shader, oslOutput }, nullptr } );
 	AtNode *&node = inserted.first->second;
 	if( !inserted.second )
 	{
@@ -125,21 +162,22 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Create the AtNode for this shader output
 
-	const string nodeName(
+	string nodeName(
 		namePrefix +
-		outputParameter.shader.string() +
-		outputParameter.name.string()
+		outputParameter.shader.string()
 	);
+	if( oslOutput.string().size() )
+	{
+		nodeName += ":" + oslOutput.string();
+	}
 
-	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	if( isOSLShader )
 	{
 		node = AiNode( g_oslArnoldString, AtString( nodeName.c_str() ), parentNode );
-		if( outputParameter.name.string().size() )
+		if( oslOutput.string().size() )
 		{
 			AiNodeDeclare( node, g_outputArnoldString, "constant STRING" );
-			AiNodeSetStr( node, g_outputArnoldString, AtString( outputParameter.name.c_str() ) );
+			AiNodeSetStr( node, g_outputArnoldString, AtString( oslOutput.c_str() ) );
 		}
 		AiNodeSetStr( node, g_shaderNameArnoldString, AtString( shader->getName().c_str() ) );
 	}
@@ -207,7 +245,14 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			parameterName = connection.destination.name.string();
 		}
 
-		AiNodeLinkOutput( sourceNode, "", node, parameterName.c_str() );
+		InternedString sourceName = connection.source.name;
+		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
+		if( boost::starts_with( sourceShader->getType(), "osl:" ) )
+		{
+			sourceName = partitionEnd( sourceName, '.' );
+		}
+
+		AiNodeLinkOutput( sourceNode, sourceName.c_str(), node, parameterName.c_str() );
 	}
 
 	nodes.push_back( node );
@@ -224,6 +269,14 @@ namespace ShaderNetworkAlgo
 
 std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode )
 {
+	ShaderNetworkPtr networkCopy;
+	if( true ) // todo : make conditional on OSL < 1.10
+	{
+		networkCopy = shaderNetwork->copy();
+		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
+		shaderNetwork = networkCopy.get();
+	}
+
 	ShaderMap converted;
 	vector<AtNode *> result;
 	const InternedString output = shaderNetwork->getOutput().shader;
