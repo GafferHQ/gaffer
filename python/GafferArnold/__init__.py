@@ -58,5 +58,6 @@ finally :
 	del sys, ctypes, originalDLOpenFlags
 
 from ArnoldShaderBall import ArnoldShaderBall
+from ArnoldTextureBake import ArnoldTextureBake
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnold" )
