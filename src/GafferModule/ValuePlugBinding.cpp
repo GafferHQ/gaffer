@@ -63,6 +63,31 @@ std::string repr( const ValuePlug *plug )
 	return ValuePlugSerialiser::repr( plug );
 }
 
+bool isSetToDefault( ValuePlug *plug )
+{
+    // we use a GIL release here to prevent a lock in the case where this triggers a graph
+    // evaluation which decides to go back into python on another thread:
+    IECorePython::ScopedGILRelease r;
+    return plug->isSetToDefault();
+}
+
+IECore::MurmurHash hash( ValuePlug *plug )
+{
+    // we use a GIL release here to prevent a lock in the case where this triggers a graph
+    // evaluation which decides to go back into python on another thread:
+    IECorePython::ScopedGILRelease r;
+    return plug->hash();
+}
+
+void hash2( ValuePlug *plug, IECore::MurmurHash &h )
+{
+    // we use a GIL release here to prevent a lock in the case where this triggers a graph
+    // evaluation which decides to go back into python on another thread:
+    IECorePython::ScopedGILRelease r;
+    plug->hash( h);
+}
+
+
 } // namespace
 
 void GafferModule::bindValuePlug()
@@ -79,9 +104,9 @@ void GafferModule::bindValuePlug()
 		.def( "settable", &ValuePlug::settable )
 		.def( "setFrom", &ValuePlug::setFrom )
 		.def( "setToDefault", &ValuePlug::setToDefault )
-		.def( "isSetToDefault", &ValuePlug::isSetToDefault )
-		.def( "hash", (IECore::MurmurHash (ValuePlug::*)() const)&ValuePlug::hash )
-		.def( "hash", (void (ValuePlug::*)( IECore::MurmurHash & ) const)&ValuePlug::hash )
+		.def( "isSetToDefault", isSetToDefault )
+		.def( "hash", hash )
+		.def( "hash", hash2 )
 		.def( "getCacheMemoryLimit", &ValuePlug::getCacheMemoryLimit )
 		.staticmethod( "getCacheMemoryLimit" )
 		.def( "setCacheMemoryLimit", &ValuePlug::setCacheMemoryLimit )
