@@ -190,7 +190,7 @@ bool Grade::channelEnabled( const std::string &channel ) const
 		return false;
 	}
 
-	return gamma != 1.0f || a != 1.0f || b != 0.0f;
+	return gamma != 1.0f || a != 1.0f || b != 0.0f || blackClampPlug()->getValue() || whiteClampPlug()->getValue();
 }
 
 void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
