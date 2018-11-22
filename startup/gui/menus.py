@@ -353,6 +353,7 @@ import GafferImageUI
 
 nodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
 nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/Shape/Rectangle", GafferImage.Rectangle, postCreator = GafferImageUI.RectangleUI.postCreate )
 nodeMenu.append( "/Image/Shape/Text", GafferImage.Text, postCreator = GafferImageUI.TextUI.postCreate )
 nodeMenu.append( "/Image/Pattern/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Pattern/Checkerboard", GafferImageUI.CheckerboardUI.nodeMenuCreateCommand )
