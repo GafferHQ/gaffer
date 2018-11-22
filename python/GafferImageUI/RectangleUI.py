@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,72 +34,102 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import imath
 
-from _GafferImageUI import *
+import IECore
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+import Gaffer
+import GafferImage
 
-import ImageReaderPathPreview
+## A function suitable as the postCreator in a NodeMenu.append() call. It
+# sets the rectangle area relative to the input format.
+def postCreate( node, menu ) :
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import CheckerboardUI
-import RampUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import DeleteImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import RankFilterUI
-import ErodeUI
-import DilateUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
-import CatalogueSelectUI
-import BleedFillUI
-import RectangleUI
+	with node.scriptNode().context() :
+		if node["in"].getInput() :
+			format = node["in"]["format"].getValue()
+		else:
+			format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )
+	node["area"].setValue(
+		imath.Box2f(
+			imath.V2f( format.getDisplayWindow().min() ) + imath.V2f( 10 ),
+			imath.V2f( format.getDisplayWindow().max() ) - imath.V2f( 10 ),
+		)
+	)
+
+Gaffer.Metadata.registerNode(
+
+	GafferImage.Rectangle,
+
+	"description",
+	"""
+	Renders a rectangle with adjustable line width, corner radius,
+	drop shadow and transform.
+	""",
+
+	plugs = {
+
+		"color" : [
+
+			"description",
+			"""
+			The colour of the rectangle.
+			""",
+
+		],
+
+		"area" : [
+
+			"description",
+			"""
+			The area of the rectangle before the transform is applied.
+			""",
+
+		],
+
+		"lineWidth" : [
+
+			"description",
+			"""
+			The width of the outline, measured in pixels.
+			""",
+
+		],
+
+		"cornerRadius" : [
+
+			"description",
+			"""
+			Used to give the rectangle rounded corners. A radius of
+			0 gives square corners.
+			""",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			Transformation applied to the rectangle.
+			""",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			A transformation applied to the rectangle. The translate and
+			pivot values are specified in pixels, and the rotate value is
+			specified in degrees.
+			""",
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Transform",
+
+		],
+
+	}
+
+)
