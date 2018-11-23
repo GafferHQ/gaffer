@@ -55,6 +55,9 @@ class GAFFERSCENE_API Light : public ObjectSource
 		Gaffer::Plug *parametersPlug();
 		const Gaffer::Plug *parametersPlug() const;
 
+		Gaffer::BoolPlug *defaultLightPlug();
+		const Gaffer::BoolPlug *defaultLightPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
@@ -68,6 +71,7 @@ class GAFFERSCENE_API Light : public ObjectSource
 		void hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		Imath::Box3f computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
+		void hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const override;
 
 		/// Must be implemented by derived classes to hash and generate the light to be placed
