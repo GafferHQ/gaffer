@@ -3053,6 +3053,13 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void interactiveRender()
 		{
+			// Enable console logging.
+			ScopedLogTarget logTarget;
+			{
+				asf::auto_release_ptr<asf::ILogTarget> l( asf::create_console_log_target( stderr ) );
+				logTarget.setLogTarget( l );
+			}
+
 			// Reset the renderer controller.
 			m_rendererController->set_status( asr::IRendererController::ContinueRendering );
 
