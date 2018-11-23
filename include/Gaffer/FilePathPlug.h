@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,17 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_STRINGPLUGBINDING_H
-#define GAFFERMODULE_STRINGPLUGBINDING_H
+#ifndef GAFFER_FILEPATHPLUG_H
+#define GAFFER_FILEPATHPLUG_H
 
-namespace GafferModule
+#include "Gaffer/StringPlug.h"
+
+#include "IECore/StringAlgo.h"
+
+namespace Gaffer
 {
 
-template<typename T>
-void bindStringPlug();
+/// Plug for providing file system path values.
+///
+/// Inherit from StringPlug for string substitution support and backwards
+/// compatibility.
 
-void bindStringPlugs();
+class GAFFER_API FilePathPlug : public StringPlug
+{
 
-} // namespace GafferModule
+	public :
 
-#endif // GAFFERMODULE_STRINGPLUGBINDING_H
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::FilePathPlug, FilePathPlugTypeId, StringPlug );
+
+		FilePathPlug(
+			const std::string &name = defaultName<FilePathPlug>(),
+			Direction direction=In,
+			const std::string &defaultValue = "",
+			unsigned flags = Default,
+			unsigned substitutions = IECore::StringAlgo::AllSubstitutions
+		);
+		~FilePathPlug() override;
+
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+
+		/// \undoable
+		void setValue( const std::string &value ) override;
+		/// Returns the value in OS-specific format. See comments in
+		/// TypedObjectPlug::getValue() for details of the optional
+		/// precomputedHash argument - and use with care!
+		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const override;
+};
+
+IE_CORE_DECLAREPTR( FilePathPlug );
+
+} // namespace Gaffer
+
+#endif // GAFFER_FILEPATHPLUGPLUG_H

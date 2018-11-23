@@ -46,17 +46,21 @@ import GafferTest
 
 class StringPlugTest( GafferTest.TestCase ) :
 
+	def inOutNode( self, name="StringInOutNode", defaultValue="", substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions ) :
+
+		return GafferTest.StringInOutNode( name = name, defaultValue = defaultValue, substitutions = substitutions )
+
 	def testExpansion( self ) :
 
-		n = GafferTest.StringInOutNode()
+		n = self.inOutNode()
 		self.assertHashesValid( n )
 
 		# nothing should be expanded when we're in a non-computation context
 		n["in"].setValue( "testyTesty.##.exr" )
 		self.assertEqual( n["in"].getValue(), "testyTesty.##.exr" )
 
-		n["in"].setValue( "${a}/$b/${a:b}" )
-		self.assertEqual( n["in"].getValue(), "${a}/$b/${a:b}" )
+		n["in"].setValue( "${a}-$b-${a:b}" )
+		self.assertEqual( n["in"].getValue(), "${a}-$b-${a:b}" )
 
 		# but expansions should happen magically when the compute()
 		# calls getValue().
@@ -77,10 +81,10 @@ class StringPlugTest( GafferTest.TestCase ) :
 		with context :
 			self.assertEqual( n["out"].getValue(), "what a lovely peach" )
 
-		context["env:dir"] = "a/path"
-		n["in"].setValue( "a/${env:dir}/b" )
+		context["env:dir"] = "a-path"
+		n["in"].setValue( "a-${env:dir}-b" )
 		with context :
-			self.assertEqual( n["out"].getValue(), "a/a/path/b" )
+			self.assertEqual( n["out"].getValue(), "a-a-path-b" )
 
 		n["in"].setValue( "$dontExist" )
 		with context :
@@ -93,7 +97,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testRecursiveExpansion( self ) :
 
-		n = GafferTest.StringInOutNode()
+		n = self.inOutNode()
 		n["in"].setValue( "$a" )
 
 		context = Gaffer.Context()
@@ -105,7 +109,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testRecursiveExpansionCycles( self ) :
 
-		n = GafferTest.StringInOutNode()
+		n = self.inOutNode()
 		n["in"].setValue( "$a" )
 
 		context = Gaffer.Context()
@@ -117,7 +121,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testTildeExpansion( self ) :
 
-		n = GafferTest.StringInOutNode()
+		n = self.inOutNode()
 
 		n["in"].setValue( "~" )
 		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~" ) )
@@ -132,7 +136,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testEnvironmentExpansion( self ) :
 
-		n = GafferTest.StringInOutNode()
+		n = self.inOutNode()
 
 		n["in"].setValue( "${NOT_AN_ENVIRONMENT_VARIABLE}" )
 		h1 = n["out"].hash()
@@ -153,7 +157,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testDefaultValueExpansion( self ) :
 
-		n = GafferTest.StringInOutNode( defaultValue = "${A}" )
+		n = self.inOutNode( defaultValue = "${A}" )
 		context = Gaffer.Context()
 		context["A"] = "b"
 		with context :
@@ -164,7 +168,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.StringPlug()
 		p.setValue( "${foo}" )
 
-		n = GafferTest.StringInOutNode()
+		n = self.inOutNode()
 		n["in"].setInput( p )
 
 		c = Gaffer.Context()
@@ -179,8 +183,8 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testExpansionMask( self ) :
 
-		n1 = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions )
-		n2 = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
+		n1 = self.inOutNode( substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions )
+		n2 = self.inOutNode( substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
 
 		n1["in"].setValue( "hello.####.${ext}" )
 		n2["in"].setValue( "hello.####.${ext}" )
@@ -248,10 +252,10 @@ class StringPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		# Should output a substituted version of the input.
-		s["substitionsOn"] = GafferTest.StringInOutNode()
+		s["substitionsOn"] = self.inOutNode()
 
 		# Should pass through the input directly, without substitutions.
-		s["substitionsOff"] = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
+		s["substitionsOff"] = self.inOutNode( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
 
 		# The third case is trickier. The "in" plug on the node
 		# itself requests no substitutions, but it receives its
@@ -269,7 +273,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 		# nodes that know when a substitution is relevant, and the
 		# user shouldn't be burdened with the job of thinking about
 		# them when making intermediate connections to that node.
-		s["substitionsOnIndirectly"] = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
+		s["substitionsOnIndirectly"] = self.inOutNode( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
 		s["substitionsOnIndirectly"]["user"]["in"] = Gaffer.StringPlug()
 		s["substitionsOnIndirectly"]["in"].setInput( s["substitionsOnIndirectly"]["user"]["in"] )
 
@@ -360,7 +364,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testHashUsesValue( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["node"] = GafferTest.StringInOutNode()
+		script["node"] = self.inOutNode()
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression(

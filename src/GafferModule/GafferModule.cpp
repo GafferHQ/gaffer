@@ -208,7 +208,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindValuePlug();
 	bindNumericPlug();
 	bindTypedPlug();
-	bindStringPlug();
+	bindStringPlugs();
 	bindTypedObjectPlug();
 	bindScriptNode();
 	bindApplicationRoot();

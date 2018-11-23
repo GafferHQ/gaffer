@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,17 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_STRINGPLUGBINDING_H
-#define GAFFERMODULE_STRINGPLUGBINDING_H
+#include "Gaffer/FilePathPlug.h"
+#include "Gaffer/FileSystemPath.h"
+#include "Gaffer/PathFilter.h"
 
-namespace GafferModule
+#include "Gaffer/Context.h"
+#include "Gaffer/Process.h"
+
+using namespace IECore;
+using namespace Gaffer;
+
+GAFFER_PLUG_DEFINE_TYPE( FilePathPlug );
+
+FilePathPlug::FilePathPlug(
+	const std::string &name,
+	Direction direction,
+	const std::string &defaultValue,
+	unsigned flags,
+	unsigned substitutions
+) : StringPlug( name, direction, defaultValue, flags, substitutions )
 {
+}
 
-template<typename T>
-void bindStringPlug();
+FilePathPlug::~FilePathPlug()
+{
+}
 
-void bindStringPlugs();
+PlugPtr FilePathPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new FilePathPlug( name, direction, defaultValue(), getFlags(), substitutions() );
+}
 
-} // namespace GafferModule
+void FilePathPlug::setValue(const std::string &value)
+{
+	const std::string genericValue = Gaffer::FileSystemPath( value ).string();
+	StringPlug::setValue( genericValue );
+}
 
-#endif // GAFFERMODULE_STRINGPLUGBINDING_H
+std::string FilePathPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+{
+	const std::string genericValue = StringPlug::getValue( precomputedHash );
+	return Gaffer::FileSystemPath( genericValue ).nativeString();
+}

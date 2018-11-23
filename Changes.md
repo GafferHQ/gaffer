@@ -35,6 +35,10 @@ API
   - (Windows only) Paths beginning with a single `/` or `\` not followed by a drive letter are interpreted as UNC paths.
 - WidgetAlgo : Improved `joinEdges()` to support a wider range of widget types.
 - OpenColorIOTransform : Consolidated the duplicate `Direction` enums from CDL, LookTransform and LUT in to a single `OpenColorIOTransform::Direction` enum.
+- FilePathPlug : Added plug to represent file paths in an OS-friendly way. It behaves identically to `StringPlug` except for the way its value is set.
+  - When setting the value, an OS-native or generic string can be supplied. It will be converted to Gaffer's internal file path representation for storage.
+  - Values returned by `getValue()` are in Gaffer's internal representation, using forward slashes to separate directory components.
+  - `FilePathPlug` is compatible with `StringPlug` - `FilePathPlug` can be used as input for `StringPlug` and `StringPlug` can be used as input for `FilePathPlug`.
 
 Breaking Changes
 ----------------

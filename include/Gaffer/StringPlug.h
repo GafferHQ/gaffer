@@ -108,11 +108,11 @@ class GAFFER_API StringPlug : public ValuePlug
 		const std::string &defaultValue() const;
 
 		/// \undoable
-		void setValue( const std::string &value );
+		virtual void setValue( const std::string &value );
 		/// Returns the value. The `precomputedHash` argument is deprecated, and
 		/// will be removed in a future release.
 		/// \todo Remove `precomputedHash` argument.
-		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		virtual std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
 		void setFrom( const ValuePlug *other ) override;
 

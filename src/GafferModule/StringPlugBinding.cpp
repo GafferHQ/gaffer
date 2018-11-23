@@ -39,6 +39,7 @@
 #include "GafferBindings/ValuePlugBinding.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/FilePathPlug.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -49,7 +50,8 @@ using namespace GafferBindings;
 namespace
 {
 
-void setValue( StringPlug *plug, const std::string& value )
+template<typename T>
+void setValue( T *plug, const std::string& value )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
 	// evaluation which decides to go back into python on another thread:
@@ -57,7 +59,8 @@ void setValue( StringPlug *plug, const std::string& value )
 	plug->setValue( value );
 }
 
-std::string getValue( const StringPlug *plug, const IECore::MurmurHash *precomputedHash )
+template<typename T>
+std::string getValue( const T *plug, const IECore::MurmurHash *precomputedHash )
 {
 	// Must release GIL in case computation spawns threads which need
 	// to reenter Python.
@@ -101,7 +104,8 @@ std::string substitutionsRepr( unsigned substitutions )
 	return result;
 }
 
-std::string serialisationRepr( const Gaffer::StringPlug *plug, Serialisation *serialisation )
+template<typename T>
+std::string serialisationRepr( const T *plug, Serialisation *serialisation )
 {
 	std::string extraArguments;
 	if( plug->substitutions() != IECore::StringAlgo::AllSubstitutions )
@@ -115,11 +119,13 @@ std::string serialisationRepr( const Gaffer::StringPlug *plug, Serialisation *se
 	return ValuePlugSerialiser::repr( plug, extraArguments, serialisation );
 }
 
-std::string repr( const Gaffer::StringPlug *plug )
+template<typename T>
+std::string repr( const T *plug )
 {
 	return serialisationRepr( plug, nullptr );
 }
 
+template<typename T>
 class StringPlugSerialiser : public ValuePlugSerialiser
 {
 
@@ -127,21 +133,22 @@ class StringPlugSerialiser : public ValuePlugSerialiser
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
-			return serialisationRepr( static_cast<const StringPlug *>( graphComponent ), &serialisation );
+			return serialisationRepr( static_cast<const T *>( graphComponent ), &serialisation );
 		}
 
 };
 
 } // namespace
 
+template<typename T>
 void GafferModule::bindStringPlug()
 {
 
-	PlugClass<StringPlug>()
+	PlugClass<T>()
 		.def(
 			boost::python::init<const std::string &, Gaffer::Plug::Direction, const std::string &, unsigned, unsigned>(
 				(
-					boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<StringPlug>(),
+					boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Gaffer::Plug::In,
 					boost::python::arg_( "defaultValue" )="",
 					boost::python::arg_( "flags" )=Gaffer::Plug::Default,
@@ -149,13 +156,18 @@ void GafferModule::bindStringPlug()
 				)
 			)
 		)
-		.def( "__repr__", &repr )
-		.def( "substitutions", &StringPlug::substitutions )
-		.def( "defaultValue", &StringPlug::defaultValue, return_value_policy<boost::python::copy_const_reference>() )
-		.def( "setValue", &setValue )
-		.def( "getValue", &getValue, ( boost::python::arg( "_precomputedHash" ) = object() ) )
+		.def( "__repr__", &repr<T> )
+		.def( "substitutions", &T::substitutions )
+		.def( "defaultValue", &T::defaultValue, return_value_policy<boost::python::copy_const_reference>() )
+		.def( "setValue", &setValue<T> )
+		.def( "getValue", &getValue<T>, ( boost::python::arg( "_precomputedHash" ) = object() ) )
 	;
 
-	Serialisation::registerSerialiser( StringPlug::staticTypeId(), new StringPlugSerialiser );
+	Serialisation::registerSerialiser( T::staticTypeId(), new StringPlugSerialiser<T> );
+}
 
+void GafferModule::bindStringPlugs()
+{
+	bindStringPlug<StringPlug>();
+	bindStringPlug<FilePathPlug>();
 }
