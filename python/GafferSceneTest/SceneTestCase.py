@@ -61,6 +61,15 @@ class SceneTestCase( GafferTest.TestCase ) :
 			if isinstance( o, IECoreScene.VisibleRenderable ) :
 				 if not IECore.BoxAlgo.contains( thisBound, o.bound() ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
+			if isinstance( o, IECoreScene.Primitive ) :
+				if "P" in o :
+					if not isinstance( o["P"].data, IECore.V3fVectorData ) :
+						self.fail( "Object %s has incorrect type %s for primitive variable \"P\"" % ( scenePath, o["P"].data.typeName() ) )
+					if o["P"].data.getInterpretation() != IECore.GeometricData.Interpretation.Point :
+						self.fail( "Object %s has primitive variable \"P\" with incorrect interpretation" % scenePath )
+				if not o.arePrimitiveVariablesValid() :
+					self.fail( "Object %s has invalid primitive variables" % scenePath )
+
 
 			unionOfTransformedChildBounds = imath.Box3f()
 			childNames = scenePlug.childNames( scenePath, _copy = False )
