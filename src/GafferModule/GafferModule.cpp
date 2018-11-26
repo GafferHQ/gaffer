@@ -49,6 +49,7 @@
 #include "DotBinding.h"
 #include "ExpressionBinding.h"
 #include "GraphComponentBinding.h"
+#include "ProcessMessageHandlerBinding.h"
 #include "MetadataAlgoBinding.h"
 #include "MetadataBinding.h"
 #include "MonitorBinding.h"
@@ -214,6 +215,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindPlugAlgo();
 	bindParallelAlgo();
 	bindContextProcessor();
+	bindProcessMessageHandler();
 
 	NodeClass<Backdrop>();
 
