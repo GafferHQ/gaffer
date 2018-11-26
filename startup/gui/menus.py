@@ -294,6 +294,7 @@ nodeMenu.append( "/Scene/Object/Collect Primitive Variables", GafferScene.Collec
 nodeMenu.append( "/Scene/Object/Mesh Type", GafferScene.MeshType, searchText = "MeshType" )
 nodeMenu.append( "/Scene/Object/Points Type", GafferScene.PointsType, searchText = "PointsType" )
 nodeMenu.append( "/Scene/Object/Mesh To Points", GafferScene.MeshToPoints, searchText = "MeshToPoints" )
+nodeMenu.append( "/Scene/Object/Wireframe", GafferScene.Wireframe )
 nodeMenu.append( "/Scene/Object/Light To Camera", GafferScene.LightToCamera, searchText = "LightToCamera" )
 nodeMenu.append( "/Scene/Object/Map Projection", GafferScene.MapProjection, searchText = "MapProjection" )
 nodeMenu.append( "/Scene/Object/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
