@@ -842,5 +842,29 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertFalse( e.needsAttribute( "v" ) )
 		self.assertFalse( e.needsAttribute( "time" ) )
 
+	def testComponentConnections( self ) :
+
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"color1" : IECoreScene.Shader(
+					"Maths/MixColor", "osl:shader",
+					{
+						"a" : imath.Color3f( 1, 0, 0 ),
+					}
+				),
+				"color2" : IECoreScene.Shader( "Maths/MixColor", "osl:shader" ),
+				"output" : IECoreScene.Shader( "Surface/Constant", "osl:surface" ),
+			},
+			connections = [
+				( ( "color1", "out.r" ), ( "color2", "a.g" ) ),
+				( ( "color2", "out" ), ( "output", "Cs" ) ),
+			],
+			output = "output"
+		) )
+
+		s = e.shade( self.rectanglePoints() )
+		for c in s["Ci"] :
+			self.assertEqual( c, imath.Color3f( 0, 1, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
