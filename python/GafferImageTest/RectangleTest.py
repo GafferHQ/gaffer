@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,68 +34,47 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import unittest
+import imath
 
-from _GafferImageUI import *
+import IECore
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+import Gaffer
+import GafferImage
+import GafferImageTest
 
-import ImageReaderPathPreview
+class RectangleTest( GafferImageTest.ImageTestCase ) :
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import CheckerboardUI
-import RampUI
-import ColorSpaceUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import RankFilterUI
-import ErodeUI
-import DilateUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
-import CatalogueSelectUI
-import BleedFillUI
-import RectangleUI
+	def testDataWindow( self ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )
+		a = imath.Box2f( imath.V2f( 10 ), imath.V2f( 100 ) )
+
+		r = GafferImage.Rectangle()
+		r["area"].setValue( a )
+		r["lineWidth"].setValue( 10 )
+
+		dw = r["out"]["dataWindow"].getValue()
+		self.assertEqual( dw.min(), imath.V2i( a.min() ) - imath.V2i( 5 ) )
+		self.assertEqual( dw.max(), imath.V2i( a.max() ) + imath.V2i( 5 ) )
+
+	def testChannelData( self ) :
+
+		a = imath.Box2f( imath.V2f( 0.5 ), imath.V2f( 49.5 ) )
+
+		r = GafferImage.Rectangle()
+		r["area"].setValue( a )
+		r["lineWidth"].setValue( 1 )
+
+		w = r["out"]["dataWindow"].getValue()
+		s = GafferImage.Sampler( r["out"], "R", w )
+
+		for y in range( w.min().y, w.max().y ) :
+			for x in range( w.min().x, w.max().x ) :
+				v = s.sample( x, y )
+				if x == 0 or x == 49 or y == 0 or y == 49 :
+					self.assertEqual( v, 1 )
+				else :
+					self.assertEqual( v, 0 )
+
+if __name__ == "__main__":
+	unittest.main()

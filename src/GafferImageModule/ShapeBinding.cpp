@@ -38,6 +38,7 @@
 
 #include "GafferImage/Shape.h"
 #include "GafferImage/Text.h"
+#include "GafferImage/Rectangle.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -49,6 +50,7 @@ void GafferImageModule::bindShape()
 {
 
 	DependencyNodeClass<Shape>();
+	DependencyNodeClass<Rectangle>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Text>();
