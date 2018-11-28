@@ -64,37 +64,48 @@ namespace
 struct MakeWireframe
 {
 
-	CurvesPrimitivePtr operator() ( const V2fVectorData *positions, const vector<int> &verticesPerFace, const vector<int> &vertexIds )
+	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
 	{
-		return makeWireframe( positions->baseReadable(), 2, verticesPerFace, vertexIds );
+		return makeWireframe<V2fVectorData>( data, mesh, primitiveVariable );
 	}
 
-	CurvesPrimitivePtr operator() ( const V3fVectorData *positions, const vector<int> &verticesPerFace, const vector<int> &vertexIds )
+	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
 	{
-		return makeWireframe( positions->baseReadable(), 3, verticesPerFace, vertexIds );
+		return makeWireframe<V3fVectorData>( data, mesh, primitiveVariable );
 	}
 
-	CurvesPrimitivePtr operator() ( const Data *positions, const vector<int> &verticesPerFace, const vector<int> &vertexIds )
+	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
 	{
 		throw IECore::Exception( boost::str(
-			boost::format( "Position has unsupported type \"%1%\"" ) % positions->typeName()
+			boost::format( "Position has unsupported type \"%1%\"" ) % data->typeName()
 		) );
 	}
 
 	private :
 
-		V3f position( const float *positions, int dimensions, int index )
+		template<typename T>
+		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
 		{
-			V3f result( 0.0f );
-			for( int i = 0; i < dimensions; ++i )
-			{
-				result[i] = positions[index*dimensions+i];
-			}
-			return result;
-		}
+			using Vec = typename T::ValueType::value_type;
+			using DataView = PrimitiveVariable::IndexedView<Vec>;
 
-		CurvesPrimitivePtr makeWireframe( const float *positions, int dimensions, const vector<int> &verticesPerFace, const vector<int> &vertexIds )
-		{
+			DataView dataView;
+			const vector<int> *vertexIds = nullptr;
+			switch( primitiveVariable.interpolation )
+			{
+				case PrimitiveVariable::Vertex :
+				case PrimitiveVariable::Varying :
+					vertexIds = &mesh->vertexIds()->readable();
+					dataView = DataView( primitiveVariable );
+					break;
+				case PrimitiveVariable::FaceVarying :
+					vertexIds = primitiveVariable.indices ? &primitiveVariable.indices->readable() : nullptr;
+					dataView = DataView( data->readable(), nullptr );
+					break;
+				default :
+					throw IECore::Exception( "Position must have Vertex, Varying or FaceVarying interpolation" );
+			}
+
 			IECore::V3fVectorDataPtr pData = new V3fVectorData;
 			pData->setInterpretation( GeometricData::Point );
 			vector<V3f> &p = pData->writable();
@@ -104,17 +115,23 @@ struct MakeWireframe
 			EdgeSet edgesVisited;
 
 			int vertexIdsIndex = 0;
-			for( int numVertices : verticesPerFace )
+			for( int numVertices : mesh->verticesPerFace()->readable() )
 			{
 				for( int i = 0; i < numVertices; ++i )
 				{
-					int index0 = vertexIds[vertexIdsIndex + i];
-					int index1 = vertexIds[vertexIdsIndex + (i + 1) % numVertices];
+					int index0 = vertexIdsIndex + i;
+					int index1 = vertexIdsIndex + (i + 1) % numVertices;
+					if( vertexIds )
+					{
+						index0 = (*vertexIds)[index0];
+						index1 = (*vertexIds)[index1];
+					}
+
 					Edge edge( min( index0, index1 ), max( index0, index1 ) );
 					if( edgesVisited.insert( edge ).second )
 					{
-						p.push_back( position( positions, dimensions, index0 ) );
-						p.push_back( position( positions, dimensions, index1 ) );
+						p.push_back( v3f( dataView[index0] ) );
+						p.push_back( v3f( dataView[index1] ) );
 					}
 				}
 				vertexIdsIndex += numVertices;
@@ -126,6 +143,16 @@ struct MakeWireframe
 			CurvesPrimitivePtr result = new CurvesPrimitive( vertsPerCurveData );
 			result->variables["P"] = PrimitiveVariable( PrimitiveVariable::Vertex, pData );
 			return result;
+		}
+
+		V3f v3f( const Imath::V3f &v )
+		{
+			return v;
+		}
+
+		V3f v3f( const Imath::V2f &v )
+		{
+			return V3f( v.x, v.y, 0.0f );
 		}
 
 };
@@ -141,24 +168,7 @@ CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &posi
 		) );
 	}
 
-	const IntVectorData *indices = nullptr;
-	switch( it->second.interpolation )
-	{
-		case PrimitiveVariable::Vertex :
-			indices = mesh->vertexIds();
-			if( it->second.indices )
-			{
-				throw IECore::Exception( "Vertex primitive variable with indices not supported" );
-			}
-			break;
-		case PrimitiveVariable::FaceVarying :
-			indices = it->second.indices.get();
-			break;
-		default :
-			throw IECore::Exception( "Position must have Vertex or FaceVarying interpolation" );
-	}
-
-	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh->verticesPerFace()->readable(), indices->readable() );
+	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->second );
 	return result;
 }
 

@@ -86,5 +86,31 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( wireframe["out"] )
 
+	def testFaceVaryingUVsWithoutIndices( self ) :
+
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), divisions = imath.V2i( 2, 1 ) )
+		uv = plane["uv"]
+		uv.data = uv.expandedData()
+		uv.indices = None
+		plane["uv"] = uv
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( plane )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		wireframe = GafferScene.Wireframe()
+		wireframe["in"].setInput( objectToScene["out"] )
+		wireframe["filter"].setInput( filter["out"] )
+		wireframe["position"].setValue( "uv" )
+
+		self.assertSceneValid( wireframe["out"] )
+
+		# Because we removed the indices, there is no connectivity information,
+		# and therefore no shared edges, so we expect to see 8 curves.
+		curves = wireframe["out"].object( "/object" )
+		self.assertEqual( len( curves.verticesPerCurve() ), 8 )
+
 if __name__ == "__main__":
 	unittest.main()
