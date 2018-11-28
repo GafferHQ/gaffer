@@ -180,7 +180,6 @@ Wireframe::Wireframe( const std::string &name )
 	addChild( new FloatPlug( "width", Plug::In, 1.0f, 0.0f ) );
 
 	// Fast pass-throughs for things we don't modify
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
@@ -220,6 +219,26 @@ void Wireframe::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
+}
+
+bool Wireframe::processesBound() const
+{
+	return true;
+}
+
+void Wireframe::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	outPlug()->objectPlug()->hash( h );
+}
+
+Imath::Box3f Wireframe::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
+{
+	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
+	if( const CurvesPrimitive *wireframe = runTimeCast<const CurvesPrimitive>( object.get() ) )
+	{
+		return wireframe->bound();
+	}
+	return inputBound;
 }
 
 bool Wireframe::processesObject() const

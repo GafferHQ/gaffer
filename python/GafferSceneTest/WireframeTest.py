@@ -71,5 +71,20 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 		# shared edge, hence we expect 7 curves in the output.
 		self.assertEqual( len( curves.verticesPerCurve() ), 7 )
 
+	def testUVs( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setValue( 0.1 )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		wireframe = GafferScene.Wireframe()
+		wireframe["in"].setInput( sphere["out"] )
+		wireframe["filter"].setInput( filter["out"] )
+		wireframe["position"].setValue( "uv" )
+
+		self.assertSceneValid( wireframe["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
