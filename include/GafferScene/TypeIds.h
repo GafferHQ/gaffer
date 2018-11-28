@@ -55,7 +55,7 @@ enum TypeId
 	GroupTypeId = 110510,
 	ShaderPlugTypeId = 110511,
 	UDIMQueryTypeId = 110512,
-	SceneTimeWarpTypeId = 110513, // Obsolete, available for reuse
+	WireframeTypeId = 110513,
 	ObjectSourceTypeId = 110514,
 	PlaneTypeId = 110515,
 	SeedsTypeId = 110516,
@@ -149,7 +149,6 @@ enum TypeId
 	PrimitiveVariableExistsTypeId = 110604,
 	CollectTransformsTypeId = 110605,
 	CameraTweaksTypeId = 110606,
-	WireframeTypeId = 110607,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
