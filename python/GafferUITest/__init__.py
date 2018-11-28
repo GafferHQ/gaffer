@@ -113,6 +113,7 @@ from ErrorDialogueTest import ErrorDialogueTest
 from WidgetAlgoTest import WidgetAlgoTest
 from BackupsTest import BackupsTest
 from LayoutsTest import LayoutsTest
+from CompoundNumericNoduleTest import CompoundNumericNoduleTest
 
 if __name__ == "__main__":
 	unittest.main()
