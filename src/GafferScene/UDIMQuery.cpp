@@ -206,8 +206,21 @@ struct InfoDataAccumulator
 		const IECoreScene::MeshPrimitive *meshPrimitive = runTimeCast<const IECoreScene::MeshPrimitive>( object.get() );
 		if( !meshPrimitive ) return true;
 
+		// First check if there are face-varying UVs
+		bool faceVarying = true;
 		auto uvs = meshPrimitive->variableIndexedView<IECore::V2fVectorData>( m_uvSet,  IECoreScene::PrimitiveVariable::FaceVarying );
-		if( !uvs ) return true;
+		if( !uvs )
+		{
+			// Next check for vertex UVs
+			faceVarying = false;
+			uvs = meshPrimitive->variableIndexedView<IECore::V2fVectorData>( m_uvSet,  IECoreScene::PrimitiveVariable::Vertex );
+		}
+
+		if( !uvs )
+		{
+			// No face-varying or vertex UVs
+			return true;
+		}
 
 		const IntVectorData *vertsPerFaceData = meshPrimitive->verticesPerFace();
 		const std::vector<int> &vertsPerFace = vertsPerFaceData->readable();
@@ -223,10 +236,21 @@ struct InfoDataAccumulator
 		for( int numVerts : vertsPerFace )
 		{
 			Imath::V2f accum = Imath::V2f(0);
-			for( int i = 0; i < numVerts; i++ )
+			if( faceVarying )
 			{
-				accum += (*uvs)[faceVertId];
-				faceVertId++;
+				for( int i = 0; i < numVerts; i++ )
+				{
+					accum += (*uvs)[faceVertId];
+					faceVertId++;
+				}
+			}
+			else
+			{
+				for( int i = 0; i < numVerts; i++ )
+				{
+					accum += (*uvs)[ meshPrimitive->vertexIds()->readable()[faceVertId] ];
+					faceVertId++;
+				}
 			}
 			Imath::V2f centerUV = accum / numVerts;
 			int udim = 1001 + int( floor( centerUV[0] ) ) + 10 * int( floor( centerUV[1] ) );
