@@ -60,9 +60,8 @@ class GAFFERUI_API CompoundNodule : public Nodule
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 
-		/// Returns a Nodule for a child of the plug being represented.
-		Nodule *nodule( const Gaffer::Plug *plug );
-		const Nodule *nodule( const Gaffer::Plug *plug ) const;
+		Nodule *nodule( const Gaffer::Plug *plug ) override;
+		const Nodule *nodule( const Gaffer::Plug *plug ) const override;
 
 		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
 		void createConnection( Gaffer::Plug *endpoint ) override;

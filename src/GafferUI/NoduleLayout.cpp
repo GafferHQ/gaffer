@@ -37,7 +37,6 @@
 
 #include "GafferUI/NoduleLayout.h"
 
-#include "GafferUI/CompoundNodule.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -426,10 +425,9 @@ Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug )
 	}
 	else if( const Plug *parentPlug = IECore::runTimeCast<const Plug>( plugParent ) )
 	{
-		CompoundNodule *compoundNodule = IECore::runTimeCast<CompoundNodule>( nodule( parentPlug ) );
-		if( compoundNodule )
+		if( Nodule *parentNodule = nodule( parentPlug ) )
 		{
-			return compoundNodule->nodule( plug );
+			return parentNodule->nodule( plug );
 		}
 	}
 	return nullptr;

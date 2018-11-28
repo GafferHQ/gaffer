@@ -68,6 +68,16 @@ const Gaffer::Plug *Nodule::plug() const
 	return m_plug.get();
 }
 
+Nodule *Nodule::nodule( const Gaffer::Plug *plug )
+{
+	return nullptr;
+}
+
+const Nodule *Nodule::nodule( const Gaffer::Plug *plug ) const
+{
+	return nullptr;
+}
+
 void Nodule::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
 {
 }
