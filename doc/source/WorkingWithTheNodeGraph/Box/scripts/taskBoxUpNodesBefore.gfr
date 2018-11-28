@@ -1,0 +1,64 @@
+import Gaffer
+import GafferAppleseed
+import GafferDispatch
+import GafferOSL
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 53, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
+parent.addChild( __children["ShaderAssignment"] )
+__children["ShaderAssignment"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["as_disney_material"] = GafferOSL.OSLShader( "as_disney_material" )
+parent.addChild( __children["as_disney_material"] )
+__children["as_disney_material"].loadShader( "material/as_disney_material" )
+__children["as_disney_material"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["CustomAttributes"] = GafferScene.CustomAttributes( "CustomAttributes" )
+parent.addChild( __children["CustomAttributes"] )
+__children["CustomAttributes"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["as_texture"] = GafferOSL.OSLShader( "as_texture" )
+parent.addChild( __children["as_texture"] )
+__children["as_texture"].loadShader( "as_texture" )
+__children["as_texture"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Transform"] = GafferScene.Transform( "Transform" )
+parent.addChild( __children["Transform"] )
+__children["Transform"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["SceneReader"] = GafferScene.SceneReader( "SceneReader" )
+parent.addChild( __children["SceneReader"] )
+__children["SceneReader"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+parent.addChild( __children["PathFilter"] )
+__children["PathFilter"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["AppleseedRender"] = GafferAppleseed.AppleseedRender( "AppleseedRender" )
+parent.addChild( __children["AppleseedRender"] )
+__children["AppleseedRender"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["ShaderAssignment"]["in"].setInput( __children["CustomAttributes"]["out"] )
+__children["ShaderAssignment"]["filter"].setInput( __children["PathFilter"]["out"] )
+__children["ShaderAssignment"]["shader"].setInput( __children["as_disney_material"]["out"] )
+__children["ShaderAssignment"]["__uiPosition"].setValue( imath.V2f( -3.8758955, 3.61751962 ) )
+__children["as_disney_material"]["parameters"]["BaseColor"].setInput( __children["as_texture"]["out"]["out_color"] )
+__children["as_disney_material"]["parameters"]["BaseColor"]["r"].setInput( __children["as_texture"]["out"]["out_color"]["r"] )
+__children["as_disney_material"]["parameters"]["BaseColor"]["g"].setInput( __children["as_texture"]["out"]["out_color"]["g"] )
+__children["as_disney_material"]["parameters"]["BaseColor"]["b"].setInput( __children["as_texture"]["out"]["out_color"]["b"] )
+__children["as_disney_material"]["__uiPosition"].setValue( imath.V2f( -21.4308262, 3.61662579 ) )
+__children["CustomAttributes"]["in"].setInput( __children["Transform"]["out"] )
+__children["CustomAttributes"]["filter"].setInput( __children["PathFilter"]["out"] )
+__children["CustomAttributes"]["__uiPosition"].setValue( imath.V2f( -3.8758955, 11.7815819 ) )
+__children["as_texture"]["__uiPosition"].setValue( imath.V2f( -36.6341934, 7.21662617 ) )
+__children["Transform"]["in"].setInput( __children["SceneReader"]["out"] )
+__children["Transform"]["filter"].setInput( __children["PathFilter"]["out"] )
+__children["Transform"]["__uiPosition"].setValue( imath.V2f( -3.8758955, 19.8833752 ) )
+__children["SceneReader"]["__uiPosition"].setValue( imath.V2f( -3.87589574, 34.8647652 ) )
+__children["PathFilter"]["__uiPosition"].setValue( imath.V2f( 15.6973858, 23.6948223 ) )
+__children["AppleseedRender"]["in"].setInput( __children["ShaderAssignment"]["out"] )
+__children["AppleseedRender"]["fileName"].setValue( '${project:rootDirectory}/appleseeds/${script:name}/${script:name}.####.appleseed' )
+__children["AppleseedRender"]["__uiPosition"].setValue( imath.V2f( -5.3758955, -15.2511711 ) )
+
+del __children
