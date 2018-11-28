@@ -42,6 +42,7 @@
 
 #include "GafferDispatch/TaskNode.h"
 
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/StringPlug.h"
 
@@ -60,8 +61,8 @@ class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneWriter, SceneWriterTypeId, GafferDispatch::TaskNode );
 
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
+		Gaffer::FilePathPlug *fileNamePlug();
+		const Gaffer::FilePathPlug *fileNamePlug() const;
 
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;

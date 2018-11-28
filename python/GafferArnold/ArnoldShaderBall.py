@@ -46,7 +46,7 @@ class ArnoldShaderBall( GafferScene.ShaderBall ) :
 
 		GafferScene.ShaderBall.__init__( self, name )
 
-		self["environment"] = Gaffer.StringPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
+		self["environment"] = Gaffer.FilePathPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
 
 		self["__envMap"] = GafferArnold.ArnoldShader()
 		self["__envMap"].loadShader( "image" )

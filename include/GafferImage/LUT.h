@@ -44,7 +44,7 @@
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( FilePathPlug )
 
 } // namespace Gaffer
 
@@ -69,8 +69,14 @@ class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 			Tetrahedral
 		};
 
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
+		enum Direction
+		{
+			Forward = 0,
+			Inverse
+		};
+
+		Gaffer::FilePathPlug *fileNamePlug();
+		const Gaffer::FilePathPlug *fileNamePlug() const;
 
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;

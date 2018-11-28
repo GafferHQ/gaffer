@@ -36,7 +36,7 @@
 
 #include "GafferImage/LUT.h"
 
-#include "Gaffer/StringPlug.h"
+#include "Gaffer/FilePathPlug.h"
 
 using namespace std;
 using namespace IECore;
@@ -51,7 +51,7 @@ LUT::LUT( const std::string &name )
 	:	OpenColorIOTransform( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "fileName" ) );
+	addChild( new FilePathPlug( "fileName" ) );
 
 	addChild( new IntPlug(
 		"interpolation", Plug::In,
@@ -73,14 +73,14 @@ LUT::~LUT()
 {
 }
 
-Gaffer::StringPlug *LUT::fileNamePlug()
+Gaffer::FilePathPlug *LUT::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *LUT::fileNamePlug() const
+const Gaffer::FilePathPlug *LUT::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
 Gaffer::IntPlug *LUT::interpolationPlug()

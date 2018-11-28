@@ -68,7 +68,6 @@ Gaffer.Metadata.registerNode(
 			in any of the formats supported by Cortex's SceneInterfaces.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:valid", True,
 			"path:bookmarks", "sceneCache",

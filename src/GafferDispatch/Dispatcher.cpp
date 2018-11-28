@@ -38,6 +38,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -131,7 +132,7 @@ Dispatcher::Dispatcher( const std::string &name )
 	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame ) );
 	addChild( new StringPlug( "frameRange", Plug::In, "1-100x10" ) );
 	addChild( new StringPlug( "jobName", Plug::In, "" ) );
-	addChild( new StringPlug( "jobsDirectory", Plug::In, "" ) );
+	addChild( new FilePathPlug( "jobsDirectory", Plug::In, "" ) );
 }
 
 Dispatcher::~Dispatcher()
@@ -168,14 +169,14 @@ const StringPlug *Dispatcher::jobNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-StringPlug *Dispatcher::jobsDirectoryPlug()
+FilePathPlug *Dispatcher::jobsDirectoryPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 3 );
 }
 
-const StringPlug *Dispatcher::jobsDirectoryPlug() const
+const FilePathPlug *Dispatcher::jobsDirectoryPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 3 );
 }
 
 const std::string Dispatcher::jobDirectory() const
@@ -185,7 +186,7 @@ const std::string Dispatcher::jobDirectory() const
 
 void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const
 {
-	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
+	boost::filesystem::path jobDirectory( jobsDirectoryPlug()->getValue() );
 	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
 
 	if( jobDirectory == "" )

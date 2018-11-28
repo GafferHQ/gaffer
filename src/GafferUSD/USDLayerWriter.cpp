@@ -231,7 +231,7 @@ USDLayerWriter::USDLayerWriter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "base", Plug::In ) );
 	addChild( new ScenePlug( "layer", Plug::In ) );
-	addChild( new StringPlug( "fileName" ) );
+	addChild( new FilePathPlug( "fileName" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 
 	SceneWriterPtr sceneWriter = new SceneWriter( "__sceneWriter" );
@@ -275,14 +275,14 @@ const GafferScene::ScenePlug *USDLayerWriter::layerPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
 
-StringPlug *USDLayerWriter::fileNamePlug()
+FilePathPlug *USDLayerWriter::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 2 );
 }
 
-const StringPlug *USDLayerWriter::fileNamePlug() const
+const FilePathPlug *USDLayerWriter::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 2 );
 }
 
 GafferScene::ScenePlug *USDLayerWriter::outPlug()

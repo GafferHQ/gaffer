@@ -92,7 +92,6 @@ Gaffer.Metadata.registerNode(
 			environment variable.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:bookmarks", "font",
 			"path:leaf", True,
 			"path:valid", True,

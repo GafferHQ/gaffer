@@ -113,7 +113,6 @@ Gaffer.Metadata.registerNode(
 			A directory to store temporary files used by the dispatcher.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", False,
 
 		),

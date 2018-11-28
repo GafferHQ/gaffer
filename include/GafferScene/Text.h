@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_TEXT_H
 #define GAFFERSCENE_TEXT_H
 
+#include "Gaffer/FilePathPlug.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
@@ -55,8 +56,8 @@ class GAFFERSCENE_API Text : public ObjectSource
 		Gaffer::StringPlug *textPlug();
 		const Gaffer::StringPlug *textPlug() const;
 
-		Gaffer::StringPlug *fontPlug();
-		const Gaffer::StringPlug *fontPlug() const;
+		Gaffer::FilePathPlug *fontPlug();
+		const Gaffer::FilePathPlug *fontPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

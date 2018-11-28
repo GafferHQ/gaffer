@@ -396,7 +396,6 @@ Gaffer.Metadata.registerNode(
 			in the catalogue for the next session.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", False,
 
 		],

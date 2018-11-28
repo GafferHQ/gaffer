@@ -61,8 +61,8 @@ class GAFFERUSD_API USDLayerWriter : public GafferDispatch::TaskNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDLayerWriter, USDLayerWriterTypeId, GafferDispatch::TaskNode );
 
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
+		Gaffer::FilePathPlug *fileNamePlug();
+		const Gaffer::FilePathPlug *fileNamePlug() const;
 
 		GafferScene::ScenePlug *basePlug();
 		const GafferScene::ScenePlug *basePlug() const;

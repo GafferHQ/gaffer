@@ -223,7 +223,6 @@ Gaffer.Metadata.registerNode(
 			the file at the resulting path.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", False,
 			"layout:visibilityActivator", "metadataManifest",
 		],
@@ -238,7 +237,6 @@ Gaffer.Metadata.registerNode(
 			as a placeholder for the frame numbers.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"fileSystemPath:extensions", "json",
 			"fileSystemPath:extensionsLabel", "Show only JSON files",

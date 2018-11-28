@@ -62,7 +62,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "appleseed",
 			"fileSystemPath:extensions", "appleseed",

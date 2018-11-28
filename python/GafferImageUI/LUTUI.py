@@ -60,7 +60,6 @@ Gaffer.Metadata.registerNode(
 			supported files will function as expected.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "color",
 			"fileSystemPath:extensions", " ".join( GafferImage.LUT.supportedExtensions() ),

@@ -36,7 +36,7 @@
 
 #include "GafferScene/ExternalProcedural.h"
 
-#include "Gaffer/StringPlug.h"
+#include "Gaffer/FilePathPlug.h"
 
 #include "IECoreScene/ExternalProcedural.h"
 
@@ -52,7 +52,7 @@ ExternalProcedural::ExternalProcedural( const std::string &name )
 	:	ObjectSource( name, "procedural" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "fileName" ) );
+	addChild( new FilePathPlug( "fileName" ) );
 	addChild( new Box3fPlug( "bound", Plug::In, Box3f( V3f( -0.5 ), V3f( 0.5 ) ) ) );
 	addChild( new CompoundDataPlug( "parameters" ) );
 }
@@ -61,14 +61,14 @@ ExternalProcedural::~ExternalProcedural()
 {
 }
 
-Gaffer::StringPlug *ExternalProcedural::fileNamePlug()
+Gaffer::FilePathPlug *ExternalProcedural::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *ExternalProcedural::fileNamePlug() const
+const Gaffer::FilePathPlug *ExternalProcedural::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
 Gaffer::Box3fPlug *ExternalProcedural::boundPlug()

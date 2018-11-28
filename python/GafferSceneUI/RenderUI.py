@@ -94,7 +94,6 @@ Gaffer.Metadata.registerNode(
 			The name of the file to be generated when in scene description mode.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 
 			"layout:activator", "modeIsSceneDescription",

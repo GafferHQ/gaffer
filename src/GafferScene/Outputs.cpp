@@ -39,6 +39,7 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/FilePathPlug.h"
 
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -132,7 +133,7 @@ Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECoreScen
 	activePlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( activePlug );
 
-	StringPlugPtr fileNamePlug = new StringPlug( "fileName" );
+	FilePathPlugPtr fileNamePlug = new FilePathPlug( "fileName" );
 	fileNamePlug->setValue( output->getName() );
 	fileNamePlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( fileNamePlug );

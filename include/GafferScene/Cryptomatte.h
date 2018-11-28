@@ -41,6 +41,7 @@
 
 #include "GafferImage/FlatImageProcessor.h"
 
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
@@ -73,11 +74,11 @@ class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
 		Gaffer::IntPlug *manifestSourcePlug();
 		const Gaffer::IntPlug *manifestSourcePlug() const;
 
-		Gaffer::StringPlug *manifestDirectoryPlug();
-		const Gaffer::StringPlug *manifestDirectoryPlug() const;
+		Gaffer::FilePathPlug *manifestDirectoryPlug();
+		const Gaffer::FilePathPlug *manifestDirectoryPlug() const;
 
-		Gaffer::StringPlug *sidecarFilePlug();
-		const Gaffer::StringPlug *sidecarFilePlug() const;
+		Gaffer::FilePathPlug *sidecarFilePlug();
+		const Gaffer::FilePathPlug *sidecarFilePlug() const;
 
 		Gaffer::StringVectorDataPlug *matteNamesPlug();
 		const Gaffer::StringVectorDataPlug *matteNamesPlug() const;

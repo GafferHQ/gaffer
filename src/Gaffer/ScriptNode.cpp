@@ -44,9 +44,9 @@
 #include "Gaffer/Container.inl"
 #include "Gaffer/Context.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StandardSet.h"
-#include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include "IECore/Exception.h"
@@ -356,7 +356,7 @@ ScriptNode::ScriptNode( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
+	addChild( new FilePathPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "unsavedChanges", Plug::In, false, Plug::Default & ~Plug::Serialisable ) );
 
 	ValuePlugPtr frameRangePlug = new ValuePlug( "frameRange", Plug::In );
@@ -384,14 +384,14 @@ ScriptNode::~ScriptNode()
 {
 }
 
-StringPlug *ScriptNode::fileNamePlug()
+FilePathPlug *ScriptNode::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
-const StringPlug *ScriptNode::fileNamePlug() const
+const FilePathPlug *ScriptNode::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
 BoolPlug *ScriptNode::unsavedChangesPlug()

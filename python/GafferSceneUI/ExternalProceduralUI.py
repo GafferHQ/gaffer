@@ -62,7 +62,6 @@ Gaffer.Metadata.registerNode(
 			The path to the external procedural or archive.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "procedurals",
 

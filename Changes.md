@@ -39,6 +39,7 @@ API
   - When setting the value, an OS-native or generic string can be supplied. It will be converted to Gaffer's internal file path representation for storage.
   - Values returned by `getValue()` are in Gaffer's internal representation, using forward slashes to separate directory components.
   - `FilePathPlug` is compatible with `StringPlug` - `FilePathPlug` can be used as input for `StringPlug` and `StringPlug` can be used as input for `FilePathPlug`.
+  - Converted existing `StringPlug` used for file paths to `FilePathPlug`.
 
 Breaking Changes
 ----------------

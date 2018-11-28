@@ -38,6 +38,7 @@
 
 #include "GafferImage/BufferAlgo.h"
 
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Transform2DPlug.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
@@ -217,7 +218,7 @@ Text::Text( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "text", Plug::In, "Hello World" ) );
-	addChild( new StringPlug( "font", Plug::In, "Vera.ttf" ) );
+	addChild( new FilePathPlug( "font", Plug::In, "Vera.ttf" ) );
 	addChild( new V2iPlug( "size", Plug::In, V2i( 50 ), V2i( 0 ) ) );
 	addChild( new Box2iPlug( "area" ) );
 	addChild( new IntPlug( "horizontalAlignment", Plug::In, Left, Left, HorizontalCenter ) );
@@ -240,14 +241,14 @@ const Gaffer::StringPlug *Text::textPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *Text::fontPlug()
+Gaffer::FilePathPlug *Text::fontPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *Text::fontPlug() const
+const Gaffer::FilePathPlug *Text::fontPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::V2iPlug *Text::sizePlug()

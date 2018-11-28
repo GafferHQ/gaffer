@@ -98,7 +98,6 @@ Gaffer.Metadata.registerNode(
 			The name of the USD file to be written.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "sceneCache",
 			"fileSystemPath:extensions", "usd usda usdc",

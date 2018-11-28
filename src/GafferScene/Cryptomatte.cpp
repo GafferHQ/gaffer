@@ -335,8 +335,8 @@ Cryptomatte::Cryptomatte( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "layer", Gaffer::Plug::In, "" ) );
 	addChild( new IntPlug( "manifestSource", Gaffer::Plug::In, (int)ManifestSource::Metadata, /* min */ (int)ManifestSource::None, /* max */ (int)ManifestSource::Sidecar ) );
-	addChild( new StringPlug( "manifestDirectory", Gaffer::Plug::In, "") );
-	addChild( new StringPlug( "sidecarFile", Gaffer::Plug::In, "") );
+	addChild( new FilePathPlug( "manifestDirectory", Gaffer::Plug::In, "") );
+	addChild( new FilePathPlug( "sidecarFile", Gaffer::Plug::In, "") );
 	addChild( new StringPlug( "outputChannel", Gaffer::Plug::In, "A") );
 	addChild( new StringVectorDataPlug( "matteNames", Gaffer::Plug::In, new StringVectorData() ) );
 	addChild( new FloatVectorDataPlug( "__matteValues", Gaffer::Plug::Out, new FloatVectorData() ) );
@@ -374,24 +374,24 @@ const Gaffer::IntPlug *Cryptomatte::manifestSourcePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::StringPlug *Cryptomatte::manifestDirectoryPlug()
+Gaffer::FilePathPlug *Cryptomatte::manifestDirectoryPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::StringPlug *Cryptomatte::manifestDirectoryPlug() const
+const Gaffer::FilePathPlug *Cryptomatte::manifestDirectoryPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::StringPlug *Cryptomatte::sidecarFilePlug()
+Gaffer::FilePathPlug *Cryptomatte::sidecarFilePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 3 );
 }
 
-const Gaffer::StringPlug *Cryptomatte::sidecarFilePlug() const
+const Gaffer::FilePathPlug *Cryptomatte::sidecarFilePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::StringPlug *Cryptomatte::outputChannelPlug()

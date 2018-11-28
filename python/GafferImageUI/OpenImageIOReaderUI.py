@@ -63,7 +63,6 @@ Gaffer.Metadata.registerNode(
 			format is used, then missingFrameMode will be activated.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "image",
 			"fileSystemPath:extensions", " ".join( GafferImage.OpenImageIOReader.supportedExtensions() ),

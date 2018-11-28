@@ -106,7 +106,7 @@ ArnoldVDB::ArnoldVDB( const std::string &name )
 	:	ObjectSource( name, "volume" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "fileName" ) );
+	addChild( new FilePathPlug( "fileName" ) );
 	addChild( new StringPlug( "grids", Plug::In, "density" ) );
 	addChild( new StringPlug( "velocityGrids" ) );
 	addChild( new FloatPlug( "velocityScale", Plug::In, 1.0f ) );
@@ -118,14 +118,14 @@ ArnoldVDB::~ArnoldVDB()
 {
 }
 
-Gaffer::StringPlug *ArnoldVDB::fileNamePlug()
+Gaffer::FilePathPlug *ArnoldVDB::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *ArnoldVDB::fileNamePlug() const
+const Gaffer::FilePathPlug *ArnoldVDB::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
 Gaffer::StringPlug *ArnoldVDB::gridsPlug()

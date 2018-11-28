@@ -142,7 +142,6 @@ Gaffer.Metadata.registerNode(
 
 		"textureFileName" : [
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "image",
 			"fileSystemPath:extensions", " ".join( GafferImage.ImageReader.supportedExtensions() ),

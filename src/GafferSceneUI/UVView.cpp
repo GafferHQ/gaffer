@@ -103,7 +103,7 @@ class UVView::UVScene : public SceneProcessor
 
 			addChild( new StringVectorDataPlug( "visiblePaths", Plug::In, new StringVectorData ) );
 			addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
-			addChild( new StringPlug( "textureFileName", Plug::In, "" ) );
+			addChild( new FilePathPlug( "textureFileName", Plug::In, "" ) );
 			addChild( new CompoundObjectPlug( "textures", Plug::Out, new CompoundObject ) );
 
 			addChild( new StringVectorDataPlug( "__udimQueryPaths", Plug::Out, new StringVectorData ) );
@@ -171,14 +171,14 @@ class UVView::UVScene : public SceneProcessor
 			return getChild<StringPlug>( g_firstPlugIndex + 1 );
 		}
 
-		StringPlug *textureFileNamePlug()
+		FilePathPlug *textureFileNamePlug()
 		{
-			return getChild<StringPlug>( g_firstPlugIndex + 2 );
+			return getChild<FilePathPlug>( g_firstPlugIndex + 2 );
 		}
 
-		const StringPlug *textureFileNamePlug() const
+		const FilePathPlug *textureFileNamePlug() const
 		{
-			return getChild<StringPlug>( g_firstPlugIndex + 2 );
+			return getChild<FilePathPlug>( g_firstPlugIndex + 2 );
 		}
 
 		CompoundObjectPlug *texturesPlug()
@@ -587,7 +587,7 @@ UVView::UVView( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
-	addChild( new StringPlug( "textureFileName" ) );
+	addChild( new FilePathPlug( "textureFileName" ) );
 	addChild( new StringPlug( "displayTransform", Plug::In, "Default" ) );
 	addChild( new CompoundObjectPlug( "__textures", Plug::In, new CompoundObject ) );
 
@@ -656,14 +656,14 @@ const Gaffer::StringPlug *UVView::uvSetPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *UVView::textureFileNamePlug()
+Gaffer::FilePathPlug *UVView::textureFileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *UVView::textureFileNamePlug() const
+const Gaffer::FilePathPlug *UVView::textureFileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<FilePathPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringPlug *UVView::displayTransformPlug()

@@ -42,6 +42,8 @@
 
 #include "GafferScene/ObjectSource.h"
 
+#include "Gaffer/FilePathPlug.h"
+
 namespace GafferArnold
 {
 
@@ -55,8 +57,8 @@ class GAFFERARNOLD_API ArnoldVDB : public GafferScene::ObjectSource
 		ArnoldVDB( const std::string &name=defaultName<ArnoldVDB>() );
 		~ArnoldVDB() override;
 
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
+		Gaffer::FilePathPlug *fileNamePlug();
+		const Gaffer::FilePathPlug *fileNamePlug() const;
 
 		Gaffer::StringPlug *gridsPlug();
 		const Gaffer::StringPlug *gridsPlug() const;

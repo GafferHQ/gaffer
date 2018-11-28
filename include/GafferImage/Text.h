@@ -40,6 +40,7 @@
 #include "GafferImage/Shape.h"
 
 #include "Gaffer/BoxPlug.h"
+#include "Gaffer/FilePathPlug.h"
 
 namespace Gaffer
 {
@@ -79,8 +80,8 @@ class GAFFERIMAGE_API Text : public Shape
 		Gaffer::StringPlug *textPlug();
 		const Gaffer::StringPlug *textPlug() const;
 
-		Gaffer::StringPlug *fontPlug();
-		const Gaffer::StringPlug *fontPlug() const;
+		Gaffer::FilePathPlug *fontPlug();
+		const Gaffer::FilePathPlug *fontPlug() const;
 
 		Gaffer::V2iPlug *sizePlug();
 		const Gaffer::V2iPlug *sizePlug() const;

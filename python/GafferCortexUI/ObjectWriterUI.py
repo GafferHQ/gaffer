@@ -73,7 +73,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "cortex",
 			"fileSystemPath:extensions", " ".join( IECore.Reader.supportedExtensions() ),

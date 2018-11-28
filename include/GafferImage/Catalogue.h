@@ -39,6 +39,7 @@
 
 #include "GafferImage/ImageNode.h"
 
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Switch.h"
@@ -77,8 +78,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 				Image( const std::string &name = defaultName<Image>(), Direction direction = In, unsigned flags = Default );
 
-				Gaffer::StringPlug *fileNamePlug();
-				const Gaffer::StringPlug *fileNamePlug() const;
+				Gaffer::FilePathPlug *fileNamePlug();
+				const Gaffer::FilePathPlug *fileNamePlug() const;
 
 				Gaffer::StringPlug *descriptionPlug();
 				const Gaffer::StringPlug *descriptionPlug() const;
@@ -117,8 +118,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
-		Gaffer::StringPlug *directoryPlug();
-		const Gaffer::StringPlug *directoryPlug() const;
+		Gaffer::FilePathPlug *directoryPlug();
+		const Gaffer::FilePathPlug *directoryPlug() const;
 
 		/// All Catalogues share a single DisplayDriverServer instance
 		/// to receive rendered images. To send an image to the catalogues,

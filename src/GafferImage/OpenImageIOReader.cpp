@@ -45,6 +45,8 @@
 #include "GafferImage/ImageReader.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/FilePathPlug.h"
+#include "Gaffer/FileSystemPath.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
@@ -1032,7 +1034,7 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
-		new StringPlug(
+		new FilePathPlug(
 			"fileName", Plug::In, "",
 			/* flags */ Plug::Default,
 			/* substitutions */ IECore::StringAlgo::AllSubstitutions & ~IECore::StringAlgo::FrameSubstitutions
@@ -1051,14 +1053,14 @@ OpenImageIOReader::~OpenImageIOReader()
 {
 }
 
-Gaffer::StringPlug *OpenImageIOReader::fileNamePlug()
+Gaffer::FilePathPlug *OpenImageIOReader::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *OpenImageIOReader::fileNamePlug() const
+const Gaffer::FilePathPlug *OpenImageIOReader::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<FilePathPlug>( g_firstPlugIndex );
 }
 
 Gaffer::IntPlug *OpenImageIOReader::refreshCountPlug()
@@ -1580,7 +1582,9 @@ std::shared_ptr<void> OpenImageIOReader::retrieveFile( const Context *context, b
 	}
 	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
 
-	const std::string resolvedFileName = context->substitute( fileName );
+	// `fileNamePlug()->getValue()` has already done all substitutions except for frames.
+	// Leaving out `EscapeSubsitutions` also prevents losing a backslash on Windows.
+	const std::string resolvedFileName = context->substitute( fileName, IECore::StringAlgo::FrameSubstitutions );
 
 	FileHandleCache *cache = fileCache();
 	CacheEntry cacheEntry = cache->get( std::make_pair( resolvedFileName, channelNaming ) );
@@ -1612,7 +1616,7 @@ std::shared_ptr<void> OpenImageIOReader::retrieveFile( const Context *context, b
 				Context::EditableScope holdScope( context );
 				holdScope.setFrame( *fIt );
 
-				const std::string resolvedFileNameHeld = holdScope.context()->substitute( fileName );
+				const std::string resolvedFileNameHeld = holdScope.context()->substitute( fileName, IECore::StringAlgo::FrameSubstitutions );
 				cacheEntry = cache->get( std::make_pair( resolvedFileNameHeld, channelNaming ) );
 			}
 

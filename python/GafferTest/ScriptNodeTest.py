@@ -67,7 +67,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		self.assertEqual( s.getName(), "ScriptNode" )
 
-		self.assertEqual( s["fileName"].typeName(), "Gaffer::StringPlug" )
+		self.assertEqual( s["fileName"].typeName(), "Gaffer::FilePathPlug" )
 
 	def testExecution( self ) :
 

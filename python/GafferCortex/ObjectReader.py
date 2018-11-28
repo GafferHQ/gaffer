@@ -47,7 +47,7 @@ class ObjectReader( Gaffer.ComputeNode ) :
 
 		Gaffer.ComputeNode.__init__( self, name )
 
-		self.addChild( Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In ) )
+		self.addChild( Gaffer.FilePathPlug( "fileName", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() ) )
 
 	def affects( self, input ) :

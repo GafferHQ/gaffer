@@ -48,6 +48,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextQuery.h"
 #include "Gaffer/DeleteContextVariables.h"
+#include "Gaffer/FilePathPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -1514,7 +1515,7 @@ ImageWriter::ImageWriter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in" ) );
-	addChild( new StringPlug( "fileName" ) );
+	addChild( new FilePathPlug( "fileName" ) );
 	addChild( new StringPlug( "channels", Gaffer::Plug::In, "*" ) );
 	addChild( new StringPlug( "colorSpace" ) );
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
@@ -1651,14 +1652,14 @@ const GafferImage::ImagePlug *ImageWriter::inPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *ImageWriter::fileNamePlug()
+Gaffer::FilePathPlug *ImageWriter::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex+1 );
+	return getChild<FilePathPlug>( g_firstPlugIndex+1 );
 }
 
-const Gaffer::StringPlug *ImageWriter::fileNamePlug() const
+const Gaffer::FilePathPlug *ImageWriter::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex+1 );
+	return getChild<FilePathPlug>( g_firstPlugIndex+1 );
 }
 
 Gaffer::StringPlug *ImageWriter::channelsPlug()

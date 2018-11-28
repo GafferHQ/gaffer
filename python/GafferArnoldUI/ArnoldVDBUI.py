@@ -58,7 +58,6 @@ Gaffer.Metadata.registerNode(
 			The name of the VDB file to be loaded.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:valid", True,
 			"path:bookmarks", "vdb",

@@ -52,7 +52,7 @@ class ObjectWriter( GafferDispatch.TaskNode ) :
 		inPlug = Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject.defaultNullObject() )
 		self.addChild( inPlug )
 
-		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
+		fileNamePlug = Gaffer.FilePathPlug( "fileName", Gaffer.Plug.Direction.In )
 		self.addChild( fileNamePlug )
 
 		self.addChild( Gaffer.Plug( "parameters" ) )

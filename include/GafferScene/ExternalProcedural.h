@@ -40,6 +40,7 @@
 #include "GafferScene/ObjectSource.h"
 
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/FilePathPlug.h"
 
 namespace GafferScene
 {
@@ -54,8 +55,8 @@ class GAFFERSCENE_API ExternalProcedural : public ObjectSource
 		ExternalProcedural( const std::string &name=defaultName<ExternalProcedural>() );
 		~ExternalProcedural() override;
 
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
+		Gaffer::FilePathPlug *fileNamePlug();
+		const Gaffer::FilePathPlug *fileNamePlug() const;
 
 		Gaffer::Box3fPlug *boundPlug();
 		const Gaffer::Box3fPlug *boundPlug() const;

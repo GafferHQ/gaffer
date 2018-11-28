@@ -64,7 +64,6 @@ Gaffer.Metadata.registerNode(
 			number is generally not necessary.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", True,
 			"path:bookmarks", "sceneCache",
 			"fileSystemPath:extensions", " ".join( IECoreScene.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write ) ),
