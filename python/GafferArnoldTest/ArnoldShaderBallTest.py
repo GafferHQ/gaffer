@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,17 @@
 #
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
-from ArnoldVDBTest import ArnoldVDBTest
-from ArnoldLightTest import ArnoldLightTest
-from ArnoldMeshLightTest import ArnoldMeshLightTest
-from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from ArnoldDisplacementTest import ArnoldDisplacementTest
-from LightToCameraTest import LightToCameraTest
-from IECoreArnoldPreviewTest import *
-from ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from ArnoldBackgroundTest import ArnoldBackgroundTest
-from ModuleTest import ModuleTest
-from ArnoldShaderBallTest import ArnoldShaderBallTest
+import unittest
+
+import GafferSceneTest
+import GafferArnold
+
+class ArnoldShaderBallTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		n = GafferArnold.ArnoldShaderBall()
+		self.assertSceneValid( n["out"] )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
