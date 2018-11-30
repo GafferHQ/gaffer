@@ -50,6 +50,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 static IECore::InternedString g_lightsSetName( "__lights" );
+static IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 
 IE_CORE_DEFINERUNTIMETYPED( Light );
 
@@ -60,6 +61,7 @@ Light::Light( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Plug( "parameters" ) );
+	addChild( new BoolPlug( "defaultLight", Gaffer::Plug::Direction::In, true ) );
 }
 
 Light::~Light()
@@ -76,6 +78,16 @@ const Gaffer::Plug *Light::parametersPlug() const
 	return getChild<Plug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *Light::defaultLightPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *Light::defaultLightPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
@@ -85,6 +97,10 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
 
+	if( input == defaultLightPlug() )
+	{
+		outputs.push_back( outPlug()->setNamesPlug() );
+	}
 }
 
 void Light::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -123,10 +139,21 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 	return result;
 }
 
+void Light::hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	defaultLightPlug()->hash( h );
+}
+
 IECore::ConstInternedStringVectorDataPtr Light::computeStandardSetNames() const
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
 	result->writable().push_back( g_lightsSetName );
+
+	if( defaultLightPlug()->getValue() )
+	{
+		result->writable().push_back( g_defaultLightsSetName );
+	}
+
 	return result;
 }
 

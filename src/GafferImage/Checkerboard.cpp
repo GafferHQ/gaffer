@@ -262,12 +262,14 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 	const float valueB = colorBPlug()->getChild( channelIndex )->getValue();
 	const V2f size = sizePlug()->getValue();
 	const M33f transform = transformPlug()->matrix();
+	const M33f inverseTransform = transform.inverse();
+
 	V2f baseA( 1, 0 );
 	V2f filterWidthA;
 	V2f baseB( 0, 1 );
 	V2f filterWidthB;
-	transform.inverse().multDirMatrix( baseA, filterWidthA );
-	transform.inverse().multDirMatrix( baseB, filterWidthB );
+	inverseTransform.multDirMatrix( baseA, filterWidthA );
+	inverseTransform.multDirMatrix( baseB, filterWidthB );
 	V2f filterWidth( fabs( filterWidthA.x ) + fabs( filterWidthB.x ), fabs( filterWidthA.y ) + fabs( filterWidthB.y ) );
 
 	FloatVectorDataPtr resultData = new FloatVectorData;
@@ -283,7 +285,7 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 		for( int x = 0; x < ImagePlug::tileSize(); ++x )
 		{
 			V2f p( tileOrigin.x + x + .5f, tileOrigin.y + y + .5f );
-			p *= transform.inverse();
+			p *= inverseTransform;
 
 			w0 = filteredStripes( p.x, size.x, filterWidth.x );
 			h0 = filteredStripes( p.y, size.y, filterWidth.y );

@@ -94,6 +94,8 @@ from MixTest import MixTest
 from CatalogueTest import CatalogueTest
 from CollectImagesTest import CollectImagesTest
 from CatalogueSelectTest import CatalogueSelectTest
+from BleedFillTest import BleedFillTest
+from RectangleTest import RectangleTest
 
 if __name__ == "__main__":
 	import unittest

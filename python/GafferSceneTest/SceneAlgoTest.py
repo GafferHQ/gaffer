@@ -157,13 +157,13 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		light["sets"].setValue( "A B C" )
 
 		sets = GafferScene.SceneAlgo.sets( light["out"] )
-		self.assertEqual( set( sets.keys() ), { "__lights", "A", "B", "C" } )
+		self.assertEqual( set( sets.keys() ), { "__lights", "defaultLights", "A", "B", "C" } )
 		for n in sets.keys() :
 			self.assertEqual( sets[n], light["out"].set( n ) )
 			self.assertFalse( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 
 		sets = GafferScene.SceneAlgo.sets( light["out"], _copy = False )
-		self.assertEqual( set( sets.keys() ), { "__lights", "A", "B", "C" } )
+		self.assertEqual( set( sets.keys() ), { "__lights", "defaultLights", "A", "B", "C" } )
 		for n in sets.keys() :
 			self.assertTrue( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 

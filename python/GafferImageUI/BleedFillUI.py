@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,52 +33,27 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-
-import unittest
-
 import IECore
+import Gaffer
+import GafferImage
 
-import GafferScene
-import GafferSceneTest
+Gaffer.Metadata.registerNode(
 
-class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
+	GafferImage.BleedFill,
 
-	def test( self ) :
+	"description",
+	"Fills in areas of low alpha in the image by blurring in contributions from nearby pixels.",
 
-		sphere = GafferScene.Sphere()
+	plugs = {
+		"expandDataWindow" : [
 
-		defaultAdaptors = GafferScene.createAdaptors()
-		defaultAdaptors["in"].setInput( sphere["out"] )
+			"description",
+			"""
+			Expand the data window to cover the display window.  The new data will be filled
+			with blurred contributions from nearby pixels ( the same as any regions of low
+			alpha within the original data window ).
+			""",
 
-		def a() :
-
-			r = GafferScene.StandardAttributes()
-			r["attributes"]["doubleSided"]["enabled"].setValue( True )
-			r["attributes"]["doubleSided"]["value"].setValue( False )
-
-			return r
-
-		GafferScene.registerAdaptor( "Test", a )
-
-		testAdaptors = GafferScene.createAdaptors()
-		testAdaptors["in"].setInput( sphere["out"] )
-
-		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
-		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
-		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
-
-		GafferScene.deregisterAdaptor( "Test" )
-
-		defaultAdaptors2 = GafferScene.createAdaptors()
-		defaultAdaptors2["in"].setInput( sphere["out"] )
-
-		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-
-	def tearDown( self ) :
-
-		GafferSceneTest.SceneTestCase.tearDown( self )
-		GafferScene.deregisterAdaptor( "Test" )
-
-if __name__ == "__main__":
-	unittest.main()
+		],
+	}
+)

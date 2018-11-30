@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,50 +35,46 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
-import GafferScene
-import GafferSceneTest
+import Gaffer
+import GafferImage
+import GafferImageTest
 
-class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
+class RectangleTest( GafferImageTest.ImageTestCase ) :
 
-	def test( self ) :
+	def testDataWindow( self ) :
 
-		sphere = GafferScene.Sphere()
+		a = imath.Box2f( imath.V2f( 10 ), imath.V2f( 100 ) )
 
-		defaultAdaptors = GafferScene.createAdaptors()
-		defaultAdaptors["in"].setInput( sphere["out"] )
+		r = GafferImage.Rectangle()
+		r["area"].setValue( a )
+		r["lineWidth"].setValue( 10 )
 
-		def a() :
+		dw = r["out"]["dataWindow"].getValue()
+		self.assertEqual( dw.min(), imath.V2i( a.min() ) - imath.V2i( 5 ) )
+		self.assertEqual( dw.max(), imath.V2i( a.max() ) + imath.V2i( 5 ) )
 
-			r = GafferScene.StandardAttributes()
-			r["attributes"]["doubleSided"]["enabled"].setValue( True )
-			r["attributes"]["doubleSided"]["value"].setValue( False )
+	def testChannelData( self ) :
 
-			return r
+		a = imath.Box2f( imath.V2f( 0.5 ), imath.V2f( 49.5 ) )
 
-		GafferScene.registerAdaptor( "Test", a )
+		r = GafferImage.Rectangle()
+		r["area"].setValue( a )
+		r["lineWidth"].setValue( 1 )
 
-		testAdaptors = GafferScene.createAdaptors()
-		testAdaptors["in"].setInput( sphere["out"] )
+		w = r["out"]["dataWindow"].getValue()
+		s = GafferImage.Sampler( r["out"], "R", w )
 
-		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
-		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
-		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
-
-		GafferScene.deregisterAdaptor( "Test" )
-
-		defaultAdaptors2 = GafferScene.createAdaptors()
-		defaultAdaptors2["in"].setInput( sphere["out"] )
-
-		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-
-	def tearDown( self ) :
-
-		GafferSceneTest.SceneTestCase.tearDown( self )
-		GafferScene.deregisterAdaptor( "Test" )
+		for y in range( w.min().y, w.max().y ) :
+			for x in range( w.min().x, w.max().x ) :
+				v = s.sample( x, y )
+				if x == 0 or x == 49 or y == 0 or y == 49 :
+					self.assertEqual( v, 1 )
+				else :
+					self.assertEqual( v, 0 )
 
 if __name__ == "__main__":
 	unittest.main()

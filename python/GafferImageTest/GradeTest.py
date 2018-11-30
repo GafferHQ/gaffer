@@ -145,11 +145,12 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 	def testChannelPassThrough( self ) :
 
 		# we should get a perfect pass-through without cache duplication when
-		# all the colour plugs are at their defaults.
+		# all the colour plugs are at their defaults and clamping is disabled
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Constant()
 		s["g"] = GafferImage.Grade()
+		s["g"]["blackClamp"].setValue( False )
 		s["g"]["in"].setInput( s["c"]["out"] )
 
 		for channelName in ( "R", "G", "B", "A" ) :
