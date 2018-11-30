@@ -52,6 +52,20 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 		self["substitutions"] = Gaffer.CompoundDataPlug()
 		self["environmentVariables"] = Gaffer.CompoundDataPlug()
 
+	def hash( self, context ) :
+
+		command = self["command"].getValue()
+		if command == "" :
+			return IECore.MurmurHash()
+
+		h = GafferDispatch.TaskNode.hash( self, context )
+
+		h.append( command )
+		self["substitutions"].hash( h )
+		self["environmentVariables"].hash( h )
+
+		return h
+
 	def execute( self ) :
 
 		substitutions = IECore.CompoundData()
@@ -68,15 +82,5 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 			env[name] = str( value )
 
 		subprocess.check_call( command, shell = True, env = env )
-
-	def hash( self, context ) :
-
-		h = GafferDispatch.TaskNode.hash( self, context )
-
-		self["command"].hash( h )
-		self["substitutions"].hash( h )
-		self["environmentVariables"].hash( h )
-
-		return h
 
 IECore.registerRunTimeTyped( SystemCommand, typeName = "GafferDispatch::SystemCommand" )

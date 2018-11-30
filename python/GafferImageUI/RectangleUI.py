@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,51 +34,102 @@
 #
 ##########################################################################
 
-import unittest
+import imath
 
 import IECore
 
-import GafferScene
-import GafferSceneTest
+import Gaffer
+import GafferImage
 
-class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
+## A function suitable as the postCreator in a NodeMenu.append() call. It
+# sets the rectangle area relative to the input format.
+def postCreate( node, menu ) :
 
-	def test( self ) :
+	with node.scriptNode().context() :
+		if node["in"].getInput() :
+			format = node["in"]["format"].getValue()
+		else:
+			format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
-		sphere = GafferScene.Sphere()
+	node["area"].setValue(
+		imath.Box2f(
+			imath.V2f( format.getDisplayWindow().min() ) + imath.V2f( 10 ),
+			imath.V2f( format.getDisplayWindow().max() ) - imath.V2f( 10 ),
+		)
+	)
 
-		defaultAdaptors = GafferScene.createAdaptors()
-		defaultAdaptors["in"].setInput( sphere["out"] )
+Gaffer.Metadata.registerNode(
 
-		def a() :
+	GafferImage.Rectangle,
 
-			r = GafferScene.StandardAttributes()
-			r["attributes"]["doubleSided"]["enabled"].setValue( True )
-			r["attributes"]["doubleSided"]["value"].setValue( False )
+	"description",
+	"""
+	Renders a rectangle with adjustable line width, corner radius,
+	drop shadow and transform.
+	""",
 
-			return r
+	plugs = {
 
-		GafferScene.registerAdaptor( "Test", a )
+		"color" : [
 
-		testAdaptors = GafferScene.createAdaptors()
-		testAdaptors["in"].setInput( sphere["out"] )
+			"description",
+			"""
+			The colour of the rectangle.
+			""",
 
-		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
-		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
-		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
+		],
 
-		GafferScene.deregisterAdaptor( "Test" )
+		"area" : [
 
-		defaultAdaptors2 = GafferScene.createAdaptors()
-		defaultAdaptors2["in"].setInput( sphere["out"] )
+			"description",
+			"""
+			The area of the rectangle before the transform is applied.
+			""",
 
-		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
+		],
 
-	def tearDown( self ) :
+		"lineWidth" : [
 
-		GafferSceneTest.SceneTestCase.tearDown( self )
-		GafferScene.deregisterAdaptor( "Test" )
+			"description",
+			"""
+			The width of the outline, measured in pixels.
+			""",
 
-if __name__ == "__main__":
-	unittest.main()
+		],
+
+		"cornerRadius" : [
+
+			"description",
+			"""
+			Used to give the rectangle rounded corners. A radius of
+			0 gives square corners.
+			""",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			Transformation applied to the rectangle.
+			""",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			A transformation applied to the rectangle. The translate and
+			pivot values are specified in pixels, and the rotate value is
+			specified in degrees.
+			""",
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Transform",
+
+		],
+
+	}
+
+)

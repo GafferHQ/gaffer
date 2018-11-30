@@ -42,6 +42,10 @@
 namespace GafferScene
 {
 
+// SceneProcessor that prepares light linking for the renderer backend by
+// resolving SetExpressions. If no SetExpression is given to determine the
+// lights to be linked, the default set of lights is used to
+// determine linking.
 class GAFFERSCENE_API EvaluateLightLinks : public GafferScene::SceneProcessor
 {
 
@@ -59,6 +63,15 @@ class GAFFERSCENE_API EvaluateLightLinks : public GafferScene::SceneProcessor
 		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+ private:
+
+		Gaffer::ObjectPlug *lightNamesPlug();
+		const Gaffer::ObjectPlug *lightNamesPlug() const;
+
+		static size_t g_firstPlugIndex;
 };
 
 IE_CORE_DECLAREPTR( EvaluateLightLinks )

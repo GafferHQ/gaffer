@@ -195,6 +195,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 					if self.__currentView is None :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
+							Gaffer.NodeAlgo.applyUserDefaults( self.__currentView )
 							self.__currentView.setContext( self.getContext() )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then

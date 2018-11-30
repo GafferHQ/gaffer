@@ -103,7 +103,13 @@ def layoutMenuCallable( menu ) :
 
 	layoutNames = sorted( layouts.names() )
 	for name in layoutNames :
-		menuDefinition.append( "/" + name, { "command" : functools.partial( restore, name = name ) } )
+		menuDefinition.append(
+			"/restore:" + name,
+			{
+				"command" : functools.partial( restore, name = name ),
+				"label" : name
+			}
+		)
 	if layoutNames :
 		menuDefinition.append( "/SetDivider", { "divider" : True } )
 
@@ -128,7 +134,13 @@ def layoutMenuCallable( menu ) :
 
 	persistentLayoutNames = sorted( layouts.names( persistent = True ) )
 	for name in persistentLayoutNames :
-		menuDefinition.append( "/Save As/" + name, { "command" : functools.partial( layouts.add, name, scriptWindow.getLayout(), persistent = True ) } )
+		menuDefinition.append(
+			"/Save As/saveAs:" + name,
+			{
+				"command" : functools.partial( layouts.add, name, scriptWindow.getLayout(), persistent = True ),
+				"label" : name
+			}
+		)
 	if persistentLayoutNames :
 		menuDefinition.append( "/Save As/Divider", { "divider" : True } )
 

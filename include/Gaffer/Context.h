@@ -262,7 +262,7 @@ class GAFFER_API Context : public IECore::RefCounted
 			public :
 
 				/// It is the caller's responsibility to
-				/// guarantee that `context` outlives the
+				/// guarantee that `context` outlives
 				/// the EditableScope.
 				EditableScope( const Context *context );
 				~EditableScope();

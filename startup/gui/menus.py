@@ -354,6 +354,7 @@ import GafferImageUI
 
 nodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
 nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/Shape/Rectangle", GafferImage.Rectangle, postCreator = GafferImageUI.RectangleUI.postCreate )
 nodeMenu.append( "/Image/Shape/Text", GafferImage.Text, postCreator = GafferImageUI.TextUI.postCreate )
 nodeMenu.append( "/Image/Pattern/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Pattern/Checkerboard", GafferImageUI.CheckerboardUI.nodeMenuCreateCommand )
@@ -370,6 +371,7 @@ nodeMenu.append( "/Image/Filter/Blur", GafferImageUI.BlurUI.nodeMenuCreateComman
 nodeMenu.append( "/Image/Filter/Median", GafferImageUI.MedianUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Filter/Erode", GafferImageUI.ErodeUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Filter/Dilate", GafferImageUI.DilateUI.nodeMenuCreateCommand )
+nodeMenu.append( "/Image/Filter/BleedFill", GafferImage.BleedFill )
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Mix", GafferImage.Mix )
 nodeMenu.append( "/Image/Transform/Resize", GafferImage.Resize )
