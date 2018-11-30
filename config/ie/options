@@ -36,6 +36,7 @@
 
 import os
 import sys
+import distutils
 
 import IEEnv
 
@@ -137,7 +138,8 @@ if targetApp :
 	qtVersion = targetAppReg.get( "qtVersion", qtVersion )
 	
 	if targetApp == "houdini" :
-		VDB_LIB_SUFFIX = "_sesi"
+		if distutils.version.LooseVersion(targetAppVersion) >= distutils.version.LooseVersion("17.0") :
+			VDB_LIB_SUFFIX = "_sesi"
 
 else :
 
@@ -234,7 +236,13 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 ]
 
 if targetAppVersion :
-	LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+	# avoid the proper dependency order for Houdini 16.5 and earlier.
+	# this is not ideal, but we're too far along in the H16.5 lifecycle
+	##\ todo: Remove this clause once we're onto H17.0 across the studio.
+	if targetApp == "houdini" and distutils.version.LooseVersion(targetAppVersion) < distutils.version.LooseVersion("17.0") :
+		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+	else :
+		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
 
 LOCATE_DEPENDENCY_CPPPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "include" ),
