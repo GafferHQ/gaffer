@@ -34,12 +34,26 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 def __editorKeyPress( editor, event ) :
 
 	if event.key == "B" and event.modifiers == event.modifiers.Control :
 		return GafferUI.GraphBookmarksUI.popupFindBookmarkMenu( editor )
+
+	if event.key == '0' :
+		if isinstance( editor, GafferUI.GraphEditor ) :
+			return GafferUI.GraphBookmarksUI.setNumericBookmark( editor, 0 )
+		if isinstance( editor, GafferUI.NodeSetEditor ) :
+			editor.setNodeSet( editor.scriptNode().selection() )
+			return True
+
+	if event.key in map( str, range( 1, 10 ) ) :
+		if event.modifiers == event.modifiers.Control :
+			return GafferUI.GraphBookmarksUI.setNumericBookmark( editor, int( event.key ) )
+		else :
+			return GafferUI.GraphBookmarksUI.findNumericBookmark( editor, int( event.key ) )
 
 	return False
 
