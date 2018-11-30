@@ -41,6 +41,42 @@ Breaking Changes
     instead.
 - Screengrab app : Renamed `-scriptEditor` argument to `pythonEditor` (#2876).
 
+0.52.3.0 (relative to 0.52.2.0)
+========
+
+Features
+--------
+
+- BleedFill : Added new image node to fill areas with zero alpha by bleeding in colours
+  from adjacent image regions (#2909).
+- Rectangle : Added new image node to annotate rectangular regions of an image (#2912).
+
+Improvements
+------------
+
+- Light linking (#2875) :
+  - Added a "defaultLights" set for use in light linking set expressions.
+  - Added a "defaultLight" plug to all Light nodes, to control membership in
+    the "defaultLights" set.
+  - Significantly optimised the processing of light links in Gaffer and in
+    the Arnold renderer backend.
+- Viewer : "userDefault" metadata can now be used to configure the default settings
+  for Views (#2893).
+- PythonCommand/SystemCommand : Empty commands are now ignored (#2896).
+- SceneWriter : Added support for subclassing in Python (#2901).
+- Checkerboard : Improved performance (#2912).
+
+Fixes
+-----
+
+- SceneInspector : Fixed bug which caused sections to be disabled (#2903).
+- Layout Menu : Fixed clashes between custom layout names and standard menu items. For instance,
+  previously you could save a layout called "Delete" and it would mean that the standard "Delete"
+  submenu was no longer available (#2899).
+- Grade : Fixed bug that caused clamping to be ignored if the other settings were at default
+  values (#2908).
+- CompoundDataPlug/ValuePlug : Fixed GIL management bugs which could cause Gaffer to hang (#2907).
+
 0.52.2.0 (relative to 0.52.1.0)
 ========
 
