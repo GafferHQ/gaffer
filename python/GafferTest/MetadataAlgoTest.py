@@ -435,6 +435,39 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertTrue( Gaffer.MetadataAlgo.getBookmarked( s["OldBookmarked"] ) )
 		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["OldBookmarked"], instanceOnly = True ) ), 1 )
 
+	def testNumericBookmarks( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["n1"] )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["n1"] )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n1"] ), 1 )
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["n2"] )  # moving the bookmark
+
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n1"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["n2"] )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n2"] ), 1 )
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, None )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n2"] ), 0 )
+
+	def testNumericBookmarkAffectedByChange( self ) :
+
+		# The naming convention for valid numeric bookmarks is "numericBookmark<1-9>"
+		for i in range( 1, 10 ) :
+			self.assertTrue( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark%s" % i ) )
+
+		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark0" ) )
+		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark-1" ) )
+		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark10" ) )
+		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "foo" ) )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :
