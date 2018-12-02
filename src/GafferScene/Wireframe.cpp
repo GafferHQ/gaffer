@@ -64,27 +64,27 @@ namespace
 struct MakeWireframe
 {
 
-	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
 	{
-		return makeWireframe<V2fVectorData>( data, mesh, primitiveVariable );
+		return makeWireframe<V2fVectorData>( data, mesh, name, primitiveVariable );
 	}
 
-	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
 	{
-		return makeWireframe<V3fVectorData>( data, mesh, primitiveVariable );
+		return makeWireframe<V3fVectorData>( data, mesh, name, primitiveVariable );
 	}
 
-	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
 	{
 		throw IECore::Exception( boost::str(
-			boost::format( "Position has unsupported type \"%1%\"" ) % data->typeName()
+			boost::format( "PrimitiveVariable \"%1%\" has unsupported type \"%2%\"" ) % name % data->typeName()
 		) );
 	}
 
 	private :
 
 		template<typename T>
-		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const PrimitiveVariable &primitiveVariable )
+		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
 		{
 			using Vec = typename T::ValueType::value_type;
 			using DataView = PrimitiveVariable::IndexedView<Vec>;
@@ -103,7 +103,9 @@ struct MakeWireframe
 					dataView = DataView( data->readable(), nullptr );
 					break;
 				default :
-					throw IECore::Exception( "Position must have Vertex, Varying or FaceVarying interpolation" );
+					throw IECore::Exception( boost::str(
+						boost::format( "Primitive variable \"%1%\" must have Vertex, Varying or FaceVarying interpolation" ) % name
+					) );
 			}
 
 			IECore::V3fVectorDataPtr pData = new V3fVectorData;
@@ -164,11 +166,11 @@ CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &posi
 	if( it == mesh->variables.end() )
 	{
 		throw IECore::Exception( boost::str(
-			boost::format( "MeshPrimitive has no primitive variable \"%1%\"" ) % position
+			boost::format( "MeshPrimitive has no primitive variable named \"%1%\"" ) % position
 		) );
 	}
 
-	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->second );
+	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->first, it->second );
 	return result;
 }
 

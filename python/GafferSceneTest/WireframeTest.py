@@ -112,5 +112,34 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 		curves = wireframe["out"].object( "/object" )
 		self.assertEqual( len( curves.verticesPerCurve() ), 8 )
 
+	def testExceptions( self ) :
+
+		plane = GafferScene.Plane()
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( plane["out"] )
+		primitiveVariables["filter"].setInput( filter["out"] )
+		primitiveVariables["primitiveVariables"].addMember( "constantV3f", IECore.V3fVectorData( [ imath.V3f( 1 ) ] ) )
+		primitiveVariables["primitiveVariables"].addMember( "constantString", "test" )
+
+		wireframe = GafferScene.Wireframe()
+		wireframe["in"].setInput( primitiveVariables["out"] )
+		wireframe["filter"].setInput( filter["out"] )
+
+		wireframe["position"].setValue( "notKnownHere" )
+		with self.assertRaisesRegexp( RuntimeError, "MeshPrimitive has no primitive variable named \"notKnownHere\"" ) :
+			wireframe["out"].object( "/plane" )
+
+		wireframe["position"].setValue( "constantString" )
+		with self.assertRaisesRegexp( RuntimeError, ".* \"constantString\" has unsupported type \"StringData\"" ) :
+			wireframe["out"].object( "/plane" )
+
+		wireframe["position"].setValue( "constantV3f" )
+		with self.assertRaisesRegexp( RuntimeError, ".* \"constantV3f\" must have Vertex, Varying or FaceVarying interpolation" ) :
+			wireframe["out"].object( "/plane" )
+
 if __name__ == "__main__":
 	unittest.main()
