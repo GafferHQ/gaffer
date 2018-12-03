@@ -984,11 +984,11 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertRaisesRegexp( RuntimeError, "Render aborted", s["render"]["task"].execute )
 
-	def testMXShaders( self ) :
+	def testOSLShaders( self ) :
 
 		swizzle = GafferOSL.OSLShader()
 		swizzle.loadShader( "MaterialX/mx_swizzle_color_float" )
-		swizzle["parameters"]["in"].setValue( imath.Color3f( 1 ) )
+		swizzle["parameters"]["in"].setValue( imath.Color3f( 0, 0, 1 ) )
 		swizzle["parameters"]["channels"].setValue( "b" )
 
 		pack = GafferOSL.OSLShader()
