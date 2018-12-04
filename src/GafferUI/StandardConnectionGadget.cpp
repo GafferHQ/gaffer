@@ -145,6 +145,8 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		return;
 	}
 
+	// Destination
+
 	if( m_dragEnd != Gaffer::Plug::In )
 	{
 		Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
@@ -169,29 +171,37 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		m_dstTangent = dstNoduleNodeGadget ? dstNoduleNodeGadget->connectionTangent( dstNodule() ) : V3f( 0, 1, 0 );
 	}
 
-	if( srcNodule() && m_dragEnd!=Gaffer::Plug::Out )
+	// Source
+
+	m_auxiliary = false;
+	const NodeGadget *srcNodeGadget = this->srcNodeGadget();
+	if( srcNodeGadget )
 	{
-		Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
-		if( srcNodeGadget )
+		/// \todo See above.
+		srcNodeGadget->bound();
+	}
+
+	if( m_dragEnd != Gaffer::Plug::Out )
+	{
+		const Nodule *srcNodule = this->srcNodule();
+		if( srcNodule )
 		{
-			/// \todo See above.
-			srcNodeGadget->bound();
+			m_srcPos = V3f( 0 ) * srcNodule->fullTransform( p );;
+			m_srcTangent = srcNodeGadget ? srcNodeGadget->connectionTangent( srcNodule ) : V3f( 0, -1, 0 );
 		}
-		M44f m = srcNodule()->fullTransform( p );
-		m_srcPos = V3f( 0 ) * m;
-
-		const NodeGadget *srcNoduleNodeGadget = srcNodule()->ancestor<NodeGadget>();
-		m_srcTangent = srcNoduleNodeGadget ? srcNoduleNodeGadget->connectionTangent( srcNodule() ) : V3f( 0, -1, 0 );
+		else if( srcNodeGadget )
+		{
+			m_auxiliary = true;
+			m_srcPos = srcNodeGadget->transformedBound().center();
+			m_srcTangent = V3f( 0 );
+		}
+		else
+		{
+			// We're a dangling connection because the source node is hidden.
+			m_srcPos = m_dstPos + m_dstTangent * 1.5f;
+			m_srcTangent = -m_dstTangent;
+		}
 	}
-	else if( m_dragEnd != Gaffer::Plug::Out )
-	{
-		// not dragging and don't have a source nodule.
-		// we're a dangling connection because the source
-		// node is hidden.
-		m_srcPos = m_dstPos + m_dstTangent * 1.5f;
-		m_srcTangent = -m_dstTangent;
-	}
-
 }
 
 Imath::Box3f StandardConnectionGadget::bound() const
@@ -283,28 +293,23 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 	}
 
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
-
 	const Style::State state = highlighted() ? Style::HighlightedState : Style::NormalState;
-
-	const Gadget *srcNodeGadget = this->srcNodeGadget();
-	if( !srcNodule() && srcNodeGadget )
-	{
-		// Auxiliary connection. This case is not dealt with fully in
-		// `setPositionsFromNodules()` (it thinks we're a stub), but that's
-		// OK because we generate srcPos and srcTangent ourselves.
-		const V3f srcPos = srcNodeGadget->transformedBound().center();
-		style->renderAuxiliaryConnection(
-			V2f( srcPos.x, srcPos.y ), V2f( 0.0f ),
-			V2f( m_dstPos.x, m_dstPos.y ), V2f( m_dstTangent.x, m_dstTangent.y ),
-			state
-		);
-		return;
-	}
 
 	V3f minimisedSrcPos, minimisedSrcTangent;
 	minimisedPositionAndTangent( state == Style::HighlightedState, minimisedSrcPos, minimisedSrcTangent );
 
-	style->renderConnection( minimisedSrcPos, minimisedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
+	if( m_auxiliary )
+	{
+		style->renderAuxiliaryConnection(
+			V2f( minimisedSrcPos.x, minimisedSrcPos.y ), V2f( minimisedSrcTangent.x, minimisedSrcTangent.y ),
+			V2f( m_dstPos.x, m_dstPos.y ), V2f( m_dstTangent.x, m_dstTangent.y ),
+			state
+		);
+	}
+	else
+	{
+		style->renderConnection( minimisedSrcPos, minimisedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
+	}
 
 	if(m_addingConnection)
 	{

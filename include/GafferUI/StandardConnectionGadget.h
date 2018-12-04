@@ -120,6 +120,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		Imath::V3f m_srcTangent;
 		Imath::V3f m_dstPos;
 		Imath::V3f m_dstTangent;
+		bool m_auxiliary;
 
 		Gaffer::Plug::Direction m_dragEnd;
 
