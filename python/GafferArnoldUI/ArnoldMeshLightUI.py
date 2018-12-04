@@ -100,6 +100,20 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"defaultLight" : [
+
+			"description",
+			"""
+			Whether this light illuminates all geometry by default. When
+			toggled, the light will be added to the \"defaultLights\" set, which
+			can be referenced in set expressions and manipulated by downstream
+			nodes.
+			""",
+
+			"layout:section", "Light Linking",
+
+		]
+
 	}
 
 )
