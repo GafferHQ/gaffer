@@ -46,6 +46,8 @@
 namespace GafferUI
 {
 
+class NodeGadget;
+
 /// The standard implementation of the abstract ConnectionGadget base
 /// class. Connections endpoints may be dragged + dropped, and the tooltip
 /// displays the name of the source and destination plugs.
@@ -79,6 +81,19 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 	private :
 
 		static ConnectionGadgetTypeDescription<StandardConnectionGadget> g_connectionGadgetTypeDescription;
+
+		// Returns the NodeGadget for the source end of the
+		// connection, even if `srcNodule()` is null. Will
+		// return null if the node is hidden though.
+		const NodeGadget *srcNodeGadget() const;
+		// Decides whether this connection should be highlighted,
+		// taking into account hovering, dragging, dot insertion
+		// and the highlighted state of the nodes at either end.
+		bool highlighted() const;
+		// `m_srcPos` and `m_srcTangent` are stored as if the
+		// connection is not minimised. This method returns them
+		// adjusted according to `getMinimised().
+		void minimisedPositionAndTangent( bool highlighted, Imath::V3f &position, Imath::V3f &tangent ) const;
 
 		void setPositionsFromNodules();
 		float distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const;

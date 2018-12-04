@@ -93,6 +93,50 @@ void StandardConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, Gaffer
 	setPositionsFromNodules();
 }
 
+const NodeGadget *StandardConnectionGadget::srcNodeGadget() const
+{
+	if( srcNodule() )
+	{
+		return srcNodule()->ancestor<NodeGadget>();
+	}
+	else if( auto graphGadget = parent<GraphGadget>() )
+	{
+		return graphGadget->nodeGadget(
+			dstNodule()->plug()->getInput()->node()
+		);
+	}
+	return nullptr;
+}
+
+bool StandardConnectionGadget::highlighted() const
+{
+	if( m_hovering || m_dragEnd || m_dotPreview )
+	{
+		return true;
+	}
+
+	const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
+	if( dstNodeGadget && dstNodeGadget->getHighlighted() )
+	{
+		return true;
+	}
+
+	const NodeGadget *srcNodeGadget = this->srcNodeGadget();
+	if( srcNodeGadget && srcNodeGadget->getHighlighted() )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void StandardConnectionGadget::minimisedPositionAndTangent( bool highlighted, Imath::V3f &position, Imath::V3f &tangent ) const
+{
+	const bool minimise = !highlighted && getMinimised();
+	position = minimise ? m_dstPos + m_dstTangent * 1.5f : m_srcPos;
+	tangent = minimise ? -m_dstTangent : m_srcTangent;
+}
+
 void StandardConnectionGadget::setPositionsFromNodules()
 {
 	const Gadget *p = parent<Gadget>();
@@ -240,35 +284,9 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	const Gadget *srcNodeGadget = nullptr;
-	if( srcNodule() )
-	{
-		srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
-	}
-	else if( auto graphGadget = parent<GraphGadget>() )
-	{
-		srcNodeGadget = graphGadget->nodeGadget(
-			dstNodule()->plug()->getInput()->node()
-		);
-	}
+	const Style::State state = highlighted() ? Style::HighlightedState : Style::NormalState;
 
-	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState )
-	{
-		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
-		{
-			state = Style::HighlightedState;
-		}
-		else
-		{
-			const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
-			if( dstNodeGadget && dstNodeGadget->getHighlighted() )
-			{
-				state = Style::HighlightedState;
-			}
-		}
-	}
-
+	const Gadget *srcNodeGadget = this->srcNodeGadget();
 	if( !srcNodule() && srcNodeGadget )
 	{
 		// Auxiliary connection. This case is not dealt with fully in
@@ -283,15 +301,10 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 		return;
 	}
 
-	V3f adjustedSrcPos = m_srcPos;
-	V3f adjustedSrcTangent = m_srcTangent;
-	if( getMinimised() && state != Style::HighlightedState )
-	{
-		adjustedSrcPos = m_dstPos + m_dstTangent * 1.5f;
-		adjustedSrcTangent = -m_dstTangent;
-	}
+	V3f minimisedSrcPos, minimisedSrcTangent;
+	minimisedPositionAndTangent( state == Style::HighlightedState, minimisedSrcPos, minimisedSrcTangent );
 
-	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
+	style->renderConnection( minimisedSrcPos, minimisedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
 
 	if(m_addingConnection)
 	{
@@ -314,33 +327,10 @@ Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	Style::State state = ( m_hovering || m_dragEnd ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState && srcNodule() )
-	{
-		const Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
-		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
-		{
-			state = Style::HighlightedState;
-		}
-		else
-		{
-			const Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
-			if( dstNodeGadget && dstNodeGadget->getHighlighted() )
-			{
-				state = Style::HighlightedState;
-			}
-		}
-	}
+	V3f minimisedSrcPos, minimisedSrcTangent;
+	minimisedPositionAndTangent( highlighted(), minimisedSrcPos, minimisedSrcTangent );
 
-	V3f adjustedSrcPos = m_srcPos;
-	V3f adjustedSrcTangent = m_srcTangent;
-	if( getMinimised() && state != Style::HighlightedState )
-	{
-		adjustedSrcPos = m_dstPos + m_dstTangent * 1.5f;
-		adjustedSrcTangent = -m_dstTangent;
-	}
-
-	return style()->closestPointOnConnection( p, adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent );
+	return style()->closestPointOnConnection( p, minimisedSrcPos, minimisedSrcTangent, m_dstPos, m_dstTangent );
 }
 
 float StandardConnectionGadget::distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const
