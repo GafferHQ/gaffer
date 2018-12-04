@@ -111,6 +111,16 @@ struct MakeWireframe
 			IECore::V3fVectorDataPtr pData = new V3fVectorData;
 			pData->setInterpretation( GeometricData::Point );
 			vector<V3f> &p = pData->writable();
+			// We don't know upfront how many edges we will generate.
+			// `mesh->variableSize( PrimitiveVariable::FaceVarying )` gives us
+			// an upper bound, but edges can be shared by faces in which case
+			// we only add the edge once. For a fully closed mesh without border
+			// edges, we will only generate half of the edges from this upper bound.
+			// (For non-manifold meshes we could generate even fewer, but we assume
+			// we will not be given those).
+			const size_t minExpectedEdges = mesh->variableSize( PrimitiveVariable::FaceVarying ) / 2;
+			// Each edge we add will add 2 points to `p`.
+			p.reserve( minExpectedEdges * 2 );
 
 			using Edge = std::pair<int, int>;
 			using EdgeSet = unordered_set<Edge, boost::hash<Edge>>;
