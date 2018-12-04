@@ -134,9 +134,35 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
 			self._qtWidget().setFocus()
 
+		## \todo Widget.enterSignal() should be providing this
+		# event itself.
+		p = self.mousePosition( relativeTo = self )
+		event = GafferUI.ButtonEvent(
+			GafferUI.ButtonEvent.Buttons.None,
+			GafferUI.ButtonEvent.Buttons.None,
+			IECore.LineSegment3f(
+				imath.V3f( p.x, p.y, 1 ),
+				imath.V3f( p.x, p.y, 0 )
+			)
+		)
+
+		self.__viewportGadget.enterSignal()( self.__viewportGadget, event )
+
 	def __leave( self, widget ) :
 
 		self._qtWidget().clearFocus()
+
+		p = self.mousePosition( relativeTo = self )
+		event = GafferUI.ButtonEvent(
+			GafferUI.ButtonEvent.Buttons.None,
+			GafferUI.ButtonEvent.Buttons.None,
+			IECore.LineSegment3f(
+				imath.V3f( p.x, p.y, 1 ),
+				imath.V3f( p.x, p.y, 0 )
+			)
+		)
+
+		self.__viewportGadget.leaveSignal()( self.__viewportGadget, event )
 
 	def __renderRequest( self, gadget ) :
 
