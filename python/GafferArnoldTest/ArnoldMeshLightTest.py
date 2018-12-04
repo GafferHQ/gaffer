@@ -128,5 +128,37 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["l"]["parameters"].keys(), s2["l"]["parameters"].keys() )
 		self.assertEqual( s["l"]["out"].attributes( "/plane" ), s2["l"]["out"].attributes( "/plane" ) )
 
+	def testSets( self ) :
+
+		p = GafferScene.Plane()
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		l = GafferArnold.ArnoldMeshLight()
+		l["in"].setInput( p["out"] )
+		l["filter"].setInput( f["out"] )
+
+		self.assertEqual( l["defaultLight"].getValue(), True )
+		self.assertEqual( l["out"].set( "defaultLights" ).value.paths(), [ "/plane" ] )
+		self.assertEqual( l["out"].set( "__lights" ).value.paths(), [ "/plane" ] )
+
+		l["defaultLight"].setValue( False )
+		self.assertEqual( l["out"].set( "defaultLights" ).value.paths(), [] )
+		self.assertEqual( l["out"].set( "__lights" ).value.paths(), [ "/plane" ] )
+
+	def testDisabling( self ) :
+
+		p = GafferScene.Plane()
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		l = GafferArnold.ArnoldMeshLight()
+		l["in"].setInput( p["out"] )
+		l["filter"].setInput( f["out"] )
+
+		self.assertSceneValid( l["out"] )
+
+		l["enabled"].setValue( False )
+		self.assertScenesEqual( p["out"], l["out"] )
+		self.assertSceneHashesEqual( p["out"], l["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
