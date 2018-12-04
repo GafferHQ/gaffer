@@ -94,7 +94,11 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		// connection is not minimised. This method returns them
 		// adjusted according to `getMinimised().
 		void minimisedPositionAndTangent( bool highlighted, Imath::V3f &position, Imath::V3f &tangent ) const;
-
+		// Updates m_srcPos, m_srcTangent etc. We basically always
+		// call this before accessing that state, so I'm not sure
+		// why we store it at all - we could just return it instead.
+		/// \todo Consider making the updates lazy based on events, or
+		/// just drop the state.
 		void setPositionsFromNodules();
 		float distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const;
 		Gaffer::Plug::Direction endAt( const IECore::LineSegment3f &line ) const;
