@@ -392,7 +392,7 @@ class Shader::NetworkBuilder
 			}
 			else
 			{
-				this->addParameter( parameter, parameterName, shader, connections );
+				addParameter( parameter, parameterName, shader, connections );
 			}
 		}
 
