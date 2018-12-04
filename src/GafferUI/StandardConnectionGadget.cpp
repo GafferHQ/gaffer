@@ -184,6 +184,20 @@ void StandardConnectionGadget::setPositionsFromNodules()
 	if( m_dragEnd != Gaffer::Plug::Out )
 	{
 		const Nodule *srcNodule = this->srcNodule();
+		if( !srcNodule && srcNodeGadget )
+		{
+			// If we don't have a source nodule, try to find the nodule
+			// for the parent plug.
+			if( const Plug *srcParentPlug = dstNodule()->plug()->getInput()->parent<Plug>() )
+			{
+				srcNodule = srcNodeGadget->nodule( srcParentPlug );
+				if( srcNodule )
+				{
+					m_auxiliary = true;
+				}
+			}
+		}
+
 		if( srcNodule )
 		{
 			m_srcPos = V3f( 0 ) * srcNodule->fullTransform( p );;
@@ -191,6 +205,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		}
 		else if( srcNodeGadget )
 		{
+			// Auxiliary connection to centre of node.
 			m_auxiliary = true;
 			m_srcPos = srcNodeGadget->transformedBound().center();
 			m_srcTangent = V3f( 0 );
