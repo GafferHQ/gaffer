@@ -56,7 +56,7 @@ class LightTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( t["out"] )
 		self.assertScenesEqual( t["out"], l["out"] )
 		self.assertSceneHashesEqual( t["out"], l["out"] )
-		self.assertEqual( l["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 1 ) )
+		self.assertEqual( l["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 1 ) )
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -72,25 +72,25 @@ class LightTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( t["out"] )
 
-		self.assertEqual( t["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 1, 0, 0 ) )
+		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 1, 0, 0 ) )
 
 		intensityTweak["value"].setValue( imath.Color3f( 100 ) )
-		self.assertEqual( t["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 100 ) )
+		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 100 ) )
 
 		intensityTweak["enabled"].setValue( False )
-		self.assertEqual( t["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 1 ) )
+		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 1 ) )
 
 		intensityTweak["enabled"].setValue( True )
 		intensityTweak["mode"].setValue( intensityTweak.Mode.Add )
-		self.assertEqual( t["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 101 ) )
+		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 101 ) )
 
 		intensityTweak["mode"].setValue( intensityTweak.Mode.Subtract )
 		intensityTweak["value"].setValue( imath.Color3f( 0.1, 0.2, 0.3 ) )
-		self.assertEqual( t["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 0.9, 0.8, 0.7 ) )
+		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 0.9, 0.8, 0.7 ) )
 
 		intensityTweak["mode"].setValue( intensityTweak.Mode.Multiply )
 		l["parameters"]["intensity"].setValue( imath.Color3f( 2 ) )
-		self.assertEqual( t["out"].attributes( "/light" )["light"][0].parameters["intensity"].value, imath.Color3f( 0.2, 0.4, 0.6 ) )
+		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 0.2, 0.4, 0.6 ) )
 
 		t["type"].setValue( "" )
 		self.assertScenesEqual( t["out"], l["out"] )

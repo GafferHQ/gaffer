@@ -125,13 +125,10 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 
 	std::string lightAttribute = "light";
 
-	IECore::ObjectVectorPtr lightShaders = computeLight( context );
-	if( lightShaders->members().size() )
+	IECoreScene::ShaderNetworkPtr lightShaders = computeLight( context );
+	if( const IECoreScene::Shader *shader = lightShaders->outputShader() )
 	{
-		if( const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaders->members().back().get() ) )
-		{
-			lightAttribute = shader->getType();
-		}
+		lightAttribute = shader->getType();
 	}
 
 	result->members()[lightAttribute] = lightShaders;

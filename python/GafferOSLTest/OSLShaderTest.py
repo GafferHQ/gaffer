@@ -78,13 +78,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		network = n.attributes()["osl:surface"]
 		self.assertEqual( len( network ), 1 )
-		self.assertEqual( network[0].name, s )
-		self.assertEqual( network[0].type, "osl:surface" )
-		self.assertEqual( network[0].parameters["i"], IECore.IntData( 10 ) )
-		self.assertEqual( network[0].parameters["f"], IECore.FloatData( 1 ) )
-		self.assertEqual( network[0].parameters["c"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
-		self.assertEqual( network[0].parameters["s"], IECore.StringData( "s" ) )
-		self.assertEqual( network[0].parameters["m"], IECore.M44fData( imath.M44f() ) )
+		self.assertEqual( network.outputShader().name, s )
+		self.assertEqual( network.outputShader().type, "osl:surface" )
+		self.assertEqual( network.outputShader().parameters["i"], IECore.IntData( 10 ) )
+		self.assertEqual( network.outputShader().parameters["f"], IECore.FloatData( 1 ) )
+		self.assertEqual( network.outputShader().parameters["c"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( network.outputShader().parameters["s"], IECore.StringData( "s" ) )
+		self.assertEqual( network.outputShader().parameters["m"], IECore.M44fData( imath.M44f() ) )
 
 	def testOutputTypes( self ) :
 
@@ -113,8 +113,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		typesShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
 		outputTypesShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" )
 
-		typesNode = GafferOSL.OSLShader()
-		outputTypesNode = GafferOSL.OSLShader()
+		typesNode = GafferOSL.OSLShader( "types" )
+		outputTypesNode = GafferOSL.OSLShader( "outputTypes" )
 
 		typesNode.loadShader( typesShader )
 		outputTypesNode.loadShader( outputTypesShader )
@@ -124,18 +124,25 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( typesNode["parameters"]["i"].getValue(), 10 )
 
 		network = typesNode.attributes()["osl:surface"]
-
 		self.assertEqual( len( network ), 2 )
+		self.assertEqual( network.getOutput(), ( "types", "" ) )
 
-		self.assertEqual( network[1].name, typesShader )
-		self.assertEqual( network[1].type, "osl:surface" )
-		self.assertEqual( network[1].parameters["i"], IECore.StringData( "link:" + network[0].parameters["__handle"].value + ".i" ) )
-		self.assertEqual( network[1].parameters["f"], IECore.FloatData( 1 ) )
-		self.assertEqual( network[1].parameters["c"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
-		self.assertEqual( network[1].parameters["s"], IECore.StringData( "s" ) )
-		self.assertEqual( network[0].name, outputTypesShader )
-		self.assertEqual( network[0].type, "osl:shader" )
-		self.assertEqual( network[0].parameters["input"], IECore.FloatData( 1 ) )
+		types = network.getShader( "types" )
+		outputTypes = network.getShader( "outputTypes" )
+
+		self.assertEqual( types.name, typesShader )
+		self.assertEqual( types.type, "osl:surface" )
+		self.assertEqual( types.parameters["f"], IECore.FloatData( 1 ) )
+		self.assertEqual( types.parameters["c"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( types.parameters["s"], IECore.StringData( "s" ) )
+		self.assertEqual( outputTypes.name, outputTypesShader )
+		self.assertEqual( outputTypes.type, "osl:shader" )
+		self.assertEqual( outputTypes.parameters["input"], IECore.FloatData( 1 ) )
+
+		self.assertEqual(
+			network.inputConnections( "types" ),
+			[ ( ( "outputTypes", "i" ), ( "types", "i" ) ) ]
+		)
 
 	def testSerialiation( self ) :
 
@@ -212,14 +219,15 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n["parameters"]["s"]["s"].setValue( "ttt" )
 
 		network = n.attributes()["osl:shader"]
-		self.assertEqual( len( network[0].parameters ), 7 )
-		self.assertTrue( network[0].parameters["i"], IECore.IntData( 2 ) )
-		self.assertTrue( network[0].parameters["f"], IECore.FloatData( 3 ) )
-		self.assertTrue( network[0].parameters["s.i"], IECore.IntData( 10 ) )
-		self.assertTrue( network[0].parameters["s.f"], IECore.FloatData( 21 ) )
-		self.assertTrue( network[0].parameters["s.c"], IECore.Color3fData( imath.Color3f( 3, 4, 5 ) ) )
-		self.assertTrue( network[0].parameters["s.s"], IECore.StringData( "ttt" ) )
-		self.assertTrue( network[0].parameters["ss"], IECore.StringData( "ss" ) )
+		shader = network.outputShader()
+		self.assertEqual( len( shader.parameters ), 7 )
+		self.assertTrue( shader.parameters["i"], IECore.IntData( 2 ) )
+		self.assertTrue( shader.parameters["f"], IECore.FloatData( 3 ) )
+		self.assertTrue( shader.parameters["s.i"], IECore.IntData( 10 ) )
+		self.assertTrue( shader.parameters["s.f"], IECore.FloatData( 21 ) )
+		self.assertTrue( shader.parameters["s.c"], IECore.Color3fData( imath.Color3f( 3, 4, 5 ) ) )
+		self.assertTrue( shader.parameters["s.s"], IECore.StringData( "ttt" ) )
+		self.assertTrue( shader.parameters["ss"], IECore.StringData( "ss" ) )
 
 		h1 = n.attributesHash()
 
@@ -267,11 +275,11 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 	def testClosureParameters( self ) :
 
 		outputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
-		outputClosure = GafferOSL.OSLShader()
+		outputClosure = GafferOSL.OSLShader( "outputClosure" )
 		outputClosure.loadShader( outputClosureShader )
 
 		inputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
-		inputClosure = GafferOSL.OSLShader()
+		inputClosure = GafferOSL.OSLShader( "inputClosure" )
 		inputClosure.loadShader( inputClosureShader )
 
 		self.assertEqual( outputClosure["out"]["c"].typeId(), GafferOSL.ClosurePlug.staticTypeId() )
@@ -279,9 +287,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		inputClosure["parameters"]["i"].setInput( outputClosure["out"]["c"] )
 
-		s = inputClosure.attributes()["osl:surface"]
-		self.assertEqual( len( s ), 2 )
-		self.assertEqual( s[1].parameters["i"].value, "link:" + s[0].parameters["__handle"].value + ".c" )
+		network = inputClosure.attributes()["osl:surface"]
+		self.assertEqual( len( network ), 2 )
+		self.assertNotIn( "i", network.outputShader().parameters )
+		self.assertEqual(
+			network.inputConnections( "inputClosure" ),
+			[ network.Connection( ( "outputClosure", "c" ), ( "inputClosure", "i" ) ) ]
+		)
 
 	def testClosureParametersInputAcceptance( self ) :
 
@@ -350,7 +362,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		sn2["parameters"]["i"].setInput( sn1["out"]["i"] )
 
 		network = sn2.attributes()["osl:surface"]
-		self.assertTrue( "Shader1" in network[0].parameters["__handle"].value )
+		self.assertEqual( set( network.shaders().keys() ), { "Shader1", "Shader2" } )
 
 	def testHandlesAreUniqueEvenIfNodeNamesArent( self ) :
 
@@ -378,7 +390,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		script["in2"].setName( "notUnique" )
 
 		network = script["shader"].attributes()["osl:surface"]
-		self.assertNotEqual( network[0].parameters["__handle"], network[1].parameters["__handle"] )
+		self.assertEqual( len( network.shaders() ), 3 )
 
 	def testShaderMetadata( self ) :
 
@@ -712,7 +724,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		shader = n.attributes()["osl:surface"][0]
+		shader = n.attributes()["osl:surface"].outputShader()
 
 		self.assertEqual(
 			shader.parameters["floatSpline"].value,
@@ -784,7 +796,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			for a, b in zip( oslSamples, cortexSamples ):
 				self.assertAlmostEqual( a, b, places = 4 )
 
-
 	def testArrays( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrays.osl" )
@@ -818,18 +829,18 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		network = n.attributes()["osl:surface"]
 		self.assertEqual( len( network ), 1 )
-		self.assertEqual( network[0].name, s )
-		self.assertEqual( network[0].type, "osl:surface" )
-		self.assertEqual( network[0].parameters["i"], IECore.IntVectorData( [ 10, 11, 12 ] ) )
-		self.assertEqual( network[0].parameters["f"], IECore.FloatVectorData( [ 1, 2 ] ) )
-		self.assertEqual( network[0].parameters["c"], IECore.Color3fVectorData(
+		self.assertEqual( network.outputShader().name, s )
+		self.assertEqual( network.outputShader().type, "osl:surface" )
+		self.assertEqual( network.outputShader().parameters["i"], IECore.IntVectorData( [ 10, 11, 12 ] ) )
+		self.assertEqual( network.outputShader().parameters["f"], IECore.FloatVectorData( [ 1, 2 ] ) )
+		self.assertEqual( network.outputShader().parameters["c"], IECore.Color3fVectorData(
 			[ imath.Color3f( 1, 2, 3 ), imath.Color3f( 4, 5, 6 ) ] ) )
-		self.assertEqual( network[0].parameters["p"], IECore.V3fVectorData(
+		self.assertEqual( network.outputShader().parameters["p"], IECore.V3fVectorData(
 			[ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
-		self.assertEqual( network[0].parameters["q"], IECore.V3fVectorData(
+		self.assertEqual( network.outputShader().parameters["q"], IECore.V3fVectorData(
 			[ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
-		self.assertEqual( network[0].parameters["s"], IECore.StringVectorData( [ "s", "t", "u", "v", "word" ] ) )
-		self.assertEqual( network[0].parameters["m"], IECore.M44fVectorData(
+		self.assertEqual( network.outputShader().parameters["s"], IECore.StringVectorData( [ "s", "t", "u", "v", "word" ] ) )
+		self.assertEqual( network.outputShader().parameters["m"], IECore.M44fVectorData(
 			[ imath.M44f() * 1, imath.M44f() * 0, imath.M44f() * 1 ] ) )
 
 	def testUnload( self ) :
@@ -874,14 +885,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDisablingShader( self ) :
 
-		n1 = GafferOSL.OSLShader()
+		n1 = GafferOSL.OSLShader( "n1" )
 		n1.loadShader( "Maths/AddVector" )
 		n1["parameters"]["a"].setValue( imath.V3f( 5, 7, 6 ) )
 
-		n2 = GafferOSL.OSLShader()
+		n2 = GafferOSL.OSLShader( "n2" )
 		n2.loadShader( "Maths/AddVector" )
 
-		n3 = GafferOSL.OSLShader()
+		n3 = GafferOSL.OSLShader( "n3" )
 		n3.loadShader( "Maths/AddVector" )
 
 		n2["parameters"]["a"].setInput( n1["out"]["out"] )
@@ -890,8 +901,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n2["enabled"].setValue( False )
 		network = n3.attributes()["osl:shader"]
 		self.assertEqual( len( network ), 2 )
-		self.assertEqual( network[1].parameters["a"].value, "link:" + network[0].parameters["__handle"].value + ".out" )
-		self.assertEqual( network[0].parameters["a"].value, imath.V3f( 5, 7, 6 ) )
+		self.assertEqual( network.inputConnections( "n3" ), [ network.Connection( ( "n1", "out" ), ( "n3", "a" ) ) ] )
+		self.assertEqual( network.getShader( "n1" ).parameters["a"].value, imath.V3f( 5, 7, 6 ) )
 
 	def testDisabledShaderPassesThroughExternalValue( self ) :
 
@@ -899,11 +910,11 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n1["user"]["v"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n1["user"]["v"].setValue( imath.V3f( 12, 11, 10 ) )
 
-		n2 = GafferOSL.OSLShader()
+		n2 = GafferOSL.OSLShader( "n2" )
 		n2.loadShader( "Maths/AddVector" )
 		n2["parameters"]["a"].setInput( n1["user"]["v"] )
 
-		n3 = GafferOSL.OSLShader()
+		n3 = GafferOSL.OSLShader( "n3" )
 		n3.loadShader( "Maths/AddVector" )
 		n3["parameters"]["a"].setInput( n2["parameters"]["a"] )
 
@@ -911,7 +922,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		network = n3.attributes()["osl:shader"]
 		self.assertEqual( len( network ), 1 )
-		self.assertEqual( network[0].parameters["a"].value, imath.V3f( 12, 11, 10 ) )
+		self.assertEqual( network.getShader( "n3" ).parameters["a"].value, imath.V3f( 12, 11, 10 ) )
 
 	def testDisabledShaderEvaluatesStateCorrectly( self ) :
 
@@ -941,24 +952,19 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		shaderAssignment["filter"].setInput(pathFilter["out"])
 		shaderAssignment["shader"].setInput(n1["out"]["out"])
 
-		attributes = shaderAssignment['out'].attributes("/sphere")
-		shader = attributes["osl:shader"]
+		network = shaderAssignment["out"].attributes( "/sphere" )["osl:shader"]
+		self.assertEqual( len( network ), 3 )
 
-		self.assertEqual( len( shader ), 3 )
+		self.assertEqual( network.getShader( "red1" ).name.split( "/" )[-1], "red" )
+		self.assertEqual( network.getShader( "green1" ).name.split( "/" )[-1], "green")
+		self.assertEqual( network.getShader( "add" ).name.split( "/" )[-1], "add")
 
-		self.assertEqual( shader[0].name.split('/')[-1], "red")
-		self.assertEqual( shader[1].name.split('/')[-1], "green")
-		self.assertEqual( shader[2].name.split('/')[-1], "add")
+		# when we disable the add shader we should get the pass through parameter's ("a") shader (n2)
+		n1["enabled"].setValue( False )
 
-		# when we disable the add shader we should get the pass through parameter's ('a') shader (n2)
-		n1["enabled"].setValue(False)
-
-		attributes = shaderAssignment['out'].attributes("/sphere")
-		shader = attributes["osl:shader"]
-
-		self.assertEqual( len ( shader ), 1 )
-
-		self.assertEqual( shader[0].name.split('/')[-1], "red")
+		network = shaderAssignment["out"].attributes( "/sphere" )["osl:shader"]
+		self.assertEqual( len ( network ), 1 )
+		self.assertEqual( network.getShader( "red1" ).name.split( "/" )[-1], "red" )
 
 	def testLoadClosureNetworkFromVersion0_41( self ) :
 
@@ -1011,6 +1017,28 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( serialised )
 		self.assertEqual( s2['n']["parameters"]["colorSpline"].getValue(), splineValue )
+
+	def testComponentToComponentConnections( self ) :
+
+		n1 = GafferOSL.OSLShader( "n1" )
+		n1.loadShader( "Maths/MixColor" )
+
+		n2 = GafferOSL.OSLShader( "n2" )
+		n2.loadShader( "Maths/MixColor" )
+
+		n2["parameters"]["a"]["r"].setInput( n1["out"]["out"]["g"] )
+		n2["parameters"]["a"]["g"].setInput( n1["out"]["out"]["b"] )
+		n2["parameters"]["a"]["b"].setInput( n1["out"]["out"]["r"] )
+
+		network = n2.attributes()["osl:shader"]
+		self.assertEqual(
+			network.inputConnections( "n2" ),
+			[
+				( ( "n1", "out.r" ), ( "n2", "a.b" ) ),
+				( ( "n1", "out.b" ), ( "n2", "a.g" ) ),
+				( ( "n1", "out.g" ), ( "n2", "a.r" ) ),
+			]
+		)
 
 if __name__ == "__main__":
 	unittest.main()

@@ -39,6 +39,8 @@
 
 #include "GafferScene/ObjectSource.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 namespace GafferScene
 {
 
@@ -77,7 +79,7 @@ class GAFFERSCENE_API Light : public ObjectSource
 		/// Must be implemented by derived classes to hash and generate the light to be placed
 		/// in the scene graph.
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const = 0;
+		virtual IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const = 0;
 
 	private :
 

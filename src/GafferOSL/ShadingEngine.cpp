@@ -40,7 +40,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
@@ -69,6 +69,7 @@
 #include "tbb/spin_rw_mutex.h"
 
 #include <limits>
+#include <unordered_set>
 
 using namespace std;
 using namespace boost;
@@ -583,7 +584,7 @@ OSL::ShadingSystem *shadingSystem()
 	ClosureParam emissionParams[] = {
 		CLOSURE_FINISH_PARAM( EmissionParameters ),
 	};
-	
+
 
 	ClosureParam debugParams[] = {
 		CLOSURE_STRING_PARAM( DebugParameters, name ),
@@ -875,21 +876,6 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 {
 	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
 	{
-		if( it->first == "__handle" )
-		{
-			continue;
-		}
-
-		if( it->second->isInstanceOf( StringDataTypeId ) )
-		{
-			const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
-			if( boost::starts_with( value, "link:" ) )
-			{
-				// this will be handled in declareConnections()
-				continue;
-			}
-		}
-
 		if( const SplinefColor3fData *spline = runTimeCast<const SplinefColor3fData>( it->second.get() ) )
 		{
 			declareSpline( it->first, spline->readable(), shadingSystem );
@@ -918,33 +904,6 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 		else
 		{
 			msg( Msg::Warning, "ShadingEngine", boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % it->first.string() % it->second->typeName() );
-		}
-	}
-}
-
-void declareConnections( const std::string &shaderHandle, const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
-{
-	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
-	{
-		if( it->second->typeId() != StringDataTypeId )
-		{
-			continue;
-		}
-		const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
-		if( boost::starts_with( value, "link:" ) )
-		{
-			vector<string> splitValue;
-			split( splitValue, value, is_any_of( "." ), token_compress_on );
-			if( splitValue.size() != 2 )
-			{
-				msg( Msg::Warning, "ShadingEngine", boost::format( "Parameter \"%s\" has unexpected value \"%s\" - expected value of the form \"link:sourceShader.sourceParameter" ) % it->first.string() % value );
-				continue;
-			}
-
-			shadingSystem->ConnectShaders(
-				splitValue[0].c_str() + 5, splitValue[1].c_str(),
-				shaderHandle.c_str(), it->first.c_str()
-			);
 		}
 	}
 }
@@ -981,54 +940,57 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 
 } // namespace
 
-ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
+ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false )
 {
+	ShaderNetworkPtr networkCopy;
+	if( true ) /// \todo Make conditional on OSL < 1.10
+	{
+		networkCopy = shaderNetwork->copy();
+		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
+		shaderNetwork = networkCopy.get();
+	}
+
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
-	std::vector<std::string> invalidShaders;
 	{
 		ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-
 		m_shaderGroupRef = new ShaderGroupRef( shadingSystem->ShaderGroupBegin() );
+		std::vector<std::string> invalidShaders;
 
-		for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
-		{
-			const Shader *shader = runTimeCast<const Shader>( it->get() );
-			if( !shader )
-			{
-				continue;
-			}
+		ShaderNetworkAlgo::depthFirstTraverse(
+			shaderNetwork,
+			[shadingSystem, &invalidShaders] ( const ShaderNetwork *shaderNetwork, const InternedString &handle ) {
 
-			string type = shader->getType();
-			if( !boost::starts_with( type, "osl:" ) )
-			{
-				invalidShaders.push_back( shader->getName() + " (" + type + ")" );
-				continue;
-			}
+				// Check for invalid (non-OSL) shaders. We stop declaring shaders if any
+				// have been found, but complete the traversal so that we can compile a
+				// full list of invalid shaders.
 
-			if( !invalidShaders.empty() )
-			{
-				continue;
-			}
+				const Shader *shader = shaderNetwork->getShader( handle );
+				if( !boost::starts_with( shader->getType(), "osl:" ) )
+				{
+					invalidShaders.push_back( shader->getName() + " (" + shader->getType() + ")" );
+				}
 
-			declareParameters( shader->parameters(), shadingSystem );
-			const char *handle = nullptr;
-			if( const StringData *handleData = shader->parametersData()->member<StringData>( "__handle" ) )
-			{
-				handle = handleData->readable().c_str();
-			}
-			else if( it == eIt - 1 )
-			{
-				handle = "gafferOSL:shadingSystem:root";
-			}
+				if( invalidShaders.size() )
+				{
+					return;
+				}
 
-			shadingSystem->Shader( "surface", shader->getName().c_str(), handle );
-			if( handle )
-			{
-				declareConnections( handle, shader->parameters(), shadingSystem );
+				// Declare this shader along with its parameters and connections.
+
+				declareParameters( shader->parameters(), shadingSystem );
+				shadingSystem->Shader( "surface", shader->getName().c_str(), handle.c_str() );
+
+				for( const auto &c : shaderNetwork->inputConnections( handle ) )
+				{
+					shadingSystem->ConnectShaders(
+						c.source.shader.c_str(), c.source.name.c_str(),
+						c.destination.shader.c_str(), c.destination.name.c_str()
+					);
+				}
 			}
-		}
+		);
 
 		shadingSystem->ShaderGroupEnd();
 

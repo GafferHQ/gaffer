@@ -41,6 +41,7 @@
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/Transform.h"
 
 #include "IECore/CompoundData.h"
@@ -98,14 +99,13 @@ void light( const CompoundObject *attributes, const IECore::CompoundData* &shade
 			continue;
 		}
 
-		const IECore::ObjectVector *shaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() );
-		if( !shaderVector || shaderVector->members().empty() )
+		const IECoreScene::ShaderNetwork *shaderNetwork = IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it->second.get() );
+		if( !shaderNetwork || !shaderNetwork->size() )
 		{
 			continue;
 		}
 
-		IECore::InternedString shaderName;
-		const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
+		const IECoreScene::Shader *shader = shaderNetwork->outputShader();
 		if( !shader )
 		{
 			continue;

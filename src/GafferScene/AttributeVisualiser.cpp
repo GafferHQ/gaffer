@@ -39,6 +39,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 #include "OpenEXR/ImathRandom.h"
 
@@ -251,12 +252,9 @@ IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( 
 		const Shader *shader = runTimeCast<const Shader>( attribute );
 		if( !shader )
 		{
-			if( const ObjectVector *objectVector = runTimeCast<const ObjectVector>( attribute ) )
+			if( const ShaderNetwork *network = runTimeCast<const ShaderNetwork>( attribute ) )
 			{
-				if( objectVector->members().size() )
-				{
-					shader = runTimeCast<const Shader>( objectVector->members()[0].get() );
-				}
+				shader = network->outputShader();
 			}
 		}
 		if( shader )
@@ -307,8 +305,11 @@ IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( 
 
 	ShaderPtr shader = new Shader( shaderNamePlug()->getValue(), shaderType );
 	shader->parameters()[shaderParameterPlug()->getValue()] = new Color3fData( color );
+	ShaderNetworkPtr shaderNetwork = new ShaderNetwork;
+	const InternedString handle = shaderNetwork->addShader( "surface", std::move( shader ) );
+	shaderNetwork->setOutput( handle );
 
-	result->members()[shaderType] = shader;
+	result->members()[shaderType] = shaderNetwork;
 
 	return result;
 }

@@ -149,7 +149,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["a"]["shader"].setInput( s["s"]["out"] )
 
 		self.assertTrue( "test:surface" in s["a"]["out"].attributes( "/plane" ) )
-		self.assertEqual( s["a"]["out"].attributes( "/plane" )["test:surface"][-1].name, "test" )
+		self.assertEqual( s["a"]["out"].attributes( "/plane" )["test:surface"].outputShader().name, "test" )
 
 		s["s2"] = GafferSceneTest.TestShader()
 		s["s2"]["name"].setValue( "test2" )
@@ -160,12 +160,12 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["a2"]["shader"].setInput( s["s2"]["out"] )
 
 		self.assertTrue( "test:surface" in s["a"]["out"].attributes( "/plane" ) )
-		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["test:surface"][-1].name, "test2" )
+		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["test:surface"].outputShader().name, "test2" )
 
 		s["s2"]["enabled"].setValue( False )
 
 		self.assertTrue( "test:surface" in s["a"]["out"].attributes( "/plane" ) )
-		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["test:surface"][-1].name, "test" )
+		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["test:surface"].outputShader().name, "test" )
 
 	def testInputAcceptanceInsideBoxes( self ) :
 

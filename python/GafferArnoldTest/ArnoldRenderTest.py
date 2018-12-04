@@ -45,6 +45,7 @@ import arnold
 import imath
 
 import IECore
+import IECoreImage
 import IECoreScene
 import IECoreArnold
 
@@ -54,6 +55,7 @@ import GafferDispatch
 import GafferImage
 import GafferScene
 import GafferSceneTest
+import GafferOSL
 import GafferArnold
 import GafferArnoldTest
 
@@ -981,6 +983,59 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
 		self.assertRaisesRegexp( RuntimeError, "Render aborted", s["render"]["task"].execute )
+
+	def testOSLShaders( self ) :
+
+		swizzle = GafferOSL.OSLShader()
+		swizzle.loadShader( "MaterialX/mx_swizzle_color_float" )
+		swizzle["parameters"]["in"].setValue( imath.Color3f( 0, 0, 1 ) )
+		swizzle["parameters"]["channels"].setValue( "b" )
+
+		pack = GafferOSL.OSLShader()
+		pack.loadShader( "MaterialX/mx_pack_color" )
+		pack["parameters"]["in1"].setInput( swizzle["out"]["out"] )
+
+		ball = GafferArnold.ArnoldShaderBall()
+		ball["shader"].setInput( pack["out"] )
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere",
+				}
+			)
+		)
+		outputs["in"].setInput( ball["out"] )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( outputs["out"] )
+		render["task"].execute()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		self.assertEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
+
+	def __color4fAtUV( self, image, uv ) :
+
+		objectToImage = GafferImage.ObjectToImage()
+		objectToImage["object"].setValue( image )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( objectToImage["out"] )
+		sampler["pixel"].setValue(
+			uv * imath.V2f(
+				image.displayWindow.size().x,
+				image.displayWindow.size().y
+			)
+		)
+
+		return sampler["color"].getValue()
 
 	def __arrayToSet( self, a ) :
 

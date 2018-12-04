@@ -362,7 +362,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# `GafferScene::Shader` base class shouldn't even
 		# mandate the existence of "name" and "type" plugs.
 
-		return oslCode.attributes()["osl:shader"][0].name
+		return oslCode.attributes()["osl:shader"].outputShader().name
 
 	def __assertError( self, oslCode, fn, *args, **kw ) :
 

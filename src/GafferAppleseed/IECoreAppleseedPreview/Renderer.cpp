@@ -47,7 +47,7 @@
 #include "IECoreAppleseed/ParameterAlgo.h"
 #include "IECoreAppleseed/ProgressTileCallback.h"
 #include "IECoreAppleseed/RendererController.h"
-#include "IECoreAppleseed/ShaderAlgo.h"
+#include "IECoreAppleseed/ShaderNetworkAlgo.h"
 #include "IECoreAppleseed/TransformAlgo.h"
 
 #include "IECoreScene/Camera.h"
@@ -55,7 +55,6 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/ObjectInterpolator.h"
-#include "IECore/ObjectVector.h"
 #include "IECore/SimpleTypedData.h"
 
 #include "foundation/platform/timers.h"
@@ -613,10 +612,10 @@ class AppleseedShader : public AppleseedEntity
 
 	public :
 
-		AppleseedShader( asr::Project &project, const string &name, const ObjectVector *shader, bool interactiveRender )
+		AppleseedShader( asr::Project &project, const string &name, const ShaderNetwork *shader, bool interactiveRender )
 			:	AppleseedEntity( project, name, interactiveRender )
 		{
-			asf::auto_release_ptr<asr::ShaderGroup> shaderGroup( ShaderAlgo::convert( shader ) );
+			asf::auto_release_ptr<asr::ShaderGroup> shaderGroup( ShaderNetworkAlgo::convert( shader ) );
 			shaderGroup->set_name( name.c_str() );
 			m_shaderGroup = shaderGroup.get();
 			insertShaderGroup( shaderGroup );
@@ -666,7 +665,7 @@ class ShaderCache : public RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		AppleseedShaderPtr get( const ObjectVector *shader )
+		AppleseedShaderPtr get( const ShaderNetwork *shader )
 		{
 			Cache::accessor a;
 			m_cache.insert( a, shader->Object::hash() );
@@ -783,12 +782,12 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 				m_meshSmoothTangents = d->readable();
 			}
 
-			m_lightShader = attribute<ObjectVector>( g_appleseedLightShaderAttributeName, attributes );
-			m_lightShader = m_lightShader ? m_lightShader : attribute<ObjectVector>( g_lightShaderAttributeName, attributes );
+			m_lightShader = attribute<ShaderNetwork>( g_appleseedLightShaderAttributeName, attributes );
+			m_lightShader = m_lightShader ? m_lightShader : attribute<ShaderNetwork>( g_lightShaderAttributeName, attributes );
 
-			const ObjectVector *surfaceShaderAttribute = attribute<ObjectVector>( g_appleseedSurfaceShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<ObjectVector>( g_oslSurfaceShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<ObjectVector>( g_surfaceShaderAttributeName, attributes );
+			const ShaderNetwork *surfaceShaderAttribute = attribute<ShaderNetwork>( g_appleseedSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<ShaderNetwork>( g_surfaceShaderAttributeName, attributes );
 
 			if( surfaceShaderAttribute )
 			{
@@ -827,7 +826,7 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 		asf::Dictionary m_visibilityDictionary;
 		bool m_meshSmoothNormals;
 		bool m_meshSmoothTangents;
-		ConstObjectVectorPtr m_lightShader;
+		ConstShaderNetworkPtr m_lightShader;
 		AppleseedShaderPtr m_shaderGroup;
 
 	private :
@@ -1509,30 +1508,14 @@ bool isAreaLight( const string &lightModel )
 	return edfFactoryRegistrar.lookup( lightModel.c_str() ) != nullptr;
 }
 
-string getLightModel( const ObjectVector* lightShader )
+string getLightModel( const ShaderNetwork *lightShader )
 {
-	for( ObjectVector::MemberContainer::const_iterator it = lightShader->members().begin(), eIt = lightShader->members().end(); it != eIt; ++it )
-	{
-		if( const Shader *shader = runTimeCast<const Shader>( it->get() ) )
-		{
-			return shader->getName();
-		}
-	}
-
-	return string();
+	return lightShader->outputShader()->getName();
 }
 
-const CompoundDataMap *getLightParameters( const ObjectVector* lightShader )
+const CompoundDataMap *getLightParameters( const ShaderNetwork *lightShader )
 {
-	for( ObjectVector::MemberContainer::const_iterator it = lightShader->members().begin(), eIt = lightShader->members().end(); it != eIt; ++it )
-	{
-		if( const Shader *shader = runTimeCast<const Shader>( it->get() ) )
-		{
-			return &shader->parameters();
-		}
-	}
-
-	return nullptr;
+	return &(lightShader->outputShader()->parameters());
 }
 
 /// Appleseed light handle base class.

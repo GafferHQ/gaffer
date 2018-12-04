@@ -47,7 +47,6 @@
 #include "IECoreScene/MeshPrimitive.h"
 
 #include "IECore/CompoundObject.h"
-#include "IECore/ObjectVector.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -120,15 +119,9 @@ bool parameterOrDefault( const IECore::CompoundData *data, const char *key, cons
 	return def;
 }
 
-void getKnotsToVisualize( const IECore::ObjectVector *shaderVector, KnotVector &knots )
+void getKnotsToVisualize( const IECoreScene::ShaderNetwork *shaderNetwork, KnotVector &knots )
 {
-	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
-	if( !filterShader )
-	{
-		return;
-	}
-
-	const IECore::CompoundData *filterShaderParameters = filterShader->parametersData();
+	const IECore::CompoundData *filterShaderParameters = shaderNetwork->outputShader()->parametersData();
 
 	bool nearEnabled = parameterOrDefault( filterShaderParameters, "use_near_atten", false );
 	bool farEnabled = parameterOrDefault( filterShaderParameters, "use_far_atten", false );
@@ -207,7 +200,7 @@ class DecayVisualiser final : public LightFilterVisualiser
 		DecayVisualiser();
 		~DecayVisualiser();
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const override;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -228,29 +221,12 @@ DecayVisualiser::~DecayVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr DecayVisualiser::visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr DecayVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
-	if( !shaderVector || shaderVector->members().size() == 0 || !lightShaderVector || lightShaderVector->members().empty() )
-	{
-		return result;
-	}
-
-	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
-	if( !filterShader )
-	{
-		return result;
-	}
-
-	const IECoreScene::Shader *lightShader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaderVector->members().back().get() );
-	if( !lightShader )
-	{
-		return result;
-	}
-
 	KnotVector knots;
-	getKnotsToVisualize( shaderVector, knots );
+	getKnotsToVisualize( shaderNetwork, knots );
 
 	if( knots.empty() )
 	{

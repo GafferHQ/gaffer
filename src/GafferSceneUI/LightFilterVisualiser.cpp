@@ -113,14 +113,14 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 			continue;
 		}
 
-		const IECore::ObjectVector *filterShaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it.second.get() );
-		if( !filterShaderVector || filterShaderVector->members().empty() )
+		const IECoreScene::ShaderNetwork *filterShaderNetwork = IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it.second.get() );
+		if( !filterShaderNetwork )
 		{
 			continue;
 		}
 
 		IECore::InternedString filterShaderName;
-		if( const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( filterShaderVector->members().back().get() ) )
+		if( const IECoreScene::Shader *filterShader = filterShaderNetwork->outputShader() )
 		{
 			filterShaderName = filterShader->getName();
 		}
@@ -134,15 +134,8 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 
 		std::vector<std::string> tokens;
 		boost::split( tokens, attributeName, boost::is_any_of(":") );
-		auto lightIt = attributes->members().find( tokens.front() + ":light" );
-
-		if( lightIt == attributes->members().end() )
-		{
-			continue;
-		}
-
-		const IECore::ObjectVector *lightShaderVector = IECore::runTimeCast<const IECore::ObjectVector>( lightIt->second.get() );
-		if( !lightShaderVector || lightShaderVector->members().empty() )
+		const IECoreScene::ShaderNetwork *lightShaderNetwork = attributes->member<IECoreScene::ShaderNetwork>( tokens.front() + ":light" );
+		if( !lightShaderNetwork || !lightShaderNetwork->outputShader() )
 		{
 			continue;
 		}
@@ -167,7 +160,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 		}
 
 		IECoreGL::ConstStatePtr curState = nullptr;
-		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( attributeName, filterShaderVector, lightShaderVector, curState );
+		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( attributeName, filterShaderNetwork, lightShaderNetwork, curState );
 
 		if( curVis )
 		{

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,41 +36,15 @@
 
 import unittest
 
-import imath
-
-import IECoreScene
-
-import GafferTest
 import GafferSceneTest
 import GafferArnold
 
-class ArnoldBackgroundTest( GafferSceneTest.SceneTestCase ) :
+class ArnoldShaderBallTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		a = GafferArnold.ArnoldBackground()
-		self.assertNotIn( "option:ai:background", a["out"]["globals"].getValue() )
-
-		s = GafferArnold.ArnoldShader()
-		s.loadShader( "flat" )
-
-		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
-		a["shader"].setInput( s["out"] )
-		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
-
-		backgroundOption = a["out"]["globals"].getValue()["option:ai:background"]
-		self.assertIsInstance( backgroundOption, IECoreScene.ShaderNetwork )
-		self.assertEqual( backgroundOption.outputShader().name, "flat" )
-		self.assertEqual( backgroundOption.outputShader().parameters["color"].value, imath.Color3f( 1 ) )
-
-		del cs[:]
-		s["parameters"]["color"]["r"].setValue( 0.25 )
-		self.assertIn( a["out"]["globals"], { x[0] for x in cs } )
-
-		backgroundOption = a["out"]["globals"].getValue()["option:ai:background"]
-		self.assertIsInstance( backgroundOption, IECoreScene.ShaderNetwork )
-		self.assertEqual( backgroundOption.outputShader().name, "flat" )
-		self.assertEqual( backgroundOption.outputShader().parameters["color"].value, imath.Color3f( 0.25, 1, 1 ) )
+		n = GafferArnold.ArnoldShaderBall()
+		self.assertSceneValid( n["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

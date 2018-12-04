@@ -41,6 +41,7 @@
 #include "Gaffer/CompoundDataPlug.h"
 
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -135,7 +136,6 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 		return inputAttributes;
 	}
 
-
 	CompoundObjectPtr result = new CompoundObject;
 	const CompoundObject::ObjectMap &in = inputAttributes->members();
 	CompoundObject::ObjectMap &out = result->members();
@@ -146,24 +146,15 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 			out.insert( *it );
 			continue;
 		}
-		const ObjectVector *network = runTimeCast<const ObjectVector>( it->second.get() );
-		if( !network || network->members().empty() )
+		const ShaderNetwork *network = runTimeCast<const ShaderNetwork>( it->second.get() );
+		if( !network )
 		{
 			out.insert( *it );
 			continue;
 		}
 
-		const Shader *lightShader = runTimeCast<const Shader>( network->members().back().get() );
-		if( !lightShader )
-		{
-			out.insert( *it );
-			continue;
-		}
-
-		ObjectVectorPtr tweakedNetwork = new ObjectVector;
-		tweakedNetwork->members() = network->members();
-		ShaderPtr tweakedShader = lightShader->copy();
-		tweakedNetwork->members().back() = tweakedShader;
+		ShaderNetworkPtr tweakedNetwork = network->copy();
+		ShaderPtr tweakedShader = tweakedNetwork->outputShader()->copy();
 
 		for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
 		{
@@ -173,6 +164,7 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 			// all supported parameters defined
 		}
 
+		tweakedNetwork->setShader( tweakedNetwork->getOutput().shader, std::move( tweakedShader ) );
 		out[it->first] = tweakedNetwork;
 	}
 

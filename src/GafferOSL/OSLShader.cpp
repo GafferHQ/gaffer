@@ -48,6 +48,8 @@
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "IECoreImage/OpenImageIOAlgo.h"
 
 #include "IECore/LRUCache.h"
@@ -110,8 +112,8 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &co
 		return nullptr;
 	}
 
-	const ObjectVector *network = runTimeCast<const ObjectVector>( it->second.get() );
-	if( !network || network->members().empty() )
+	const ShaderNetwork *network = runTimeCast<const ShaderNetwork>( it->second.get() );
+	if( !network || !network->size() )
 	{
 		return nullptr;
 	}

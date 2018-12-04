@@ -269,7 +269,7 @@ void OSLLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h 
 	throw IECore::NotImplementedException( "OSLLight::hashLight" );
 }
 
-IECore::ObjectVectorPtr OSLLight::computeLight( const Gaffer::Context *context ) const
+IECoreScene::ShaderNetworkPtr OSLLight::computeLight( const Gaffer::Context *context ) const
 {
 	// Should never be called because we reimplemented computeAttributes() instead.
 	throw IECore::NotImplementedException( "OSLLight::computeLight" );

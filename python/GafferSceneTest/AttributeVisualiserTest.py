@@ -90,11 +90,11 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "gl:surface" in visualiser["out"].attributes( "/group/sphere1" ) )
 		self.assertTrue( "gl:surface" in visualiser["out"].attributes( "/group/sphere2" ) )
 		self.assertEqual(
-			visualiser["out"].attributes( "/group/sphere1" )["gl:surface"].parameters["Cs"].value,
+			visualiser["out"].attributes( "/group/sphere1" )["gl:surface"].outputShader().parameters["Cs"].value,
 			imath.Color3f( 1 ),
 		)
 		self.assertEqual(
-			visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].parameters["Cs"].value,
+			visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].outputShader().parameters["Cs"].value,
 			imath.Color3f( .5 ),
 		)
 
@@ -151,11 +151,11 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "gl:surface" in visualiser["out"].attributes( "/group/sphere1" ) )
 		self.assertTrue( "gl:surface" in visualiser["out"].attributes( "/group/sphere2" ) )
 		self.assertEqual(
-			visualiser["out"].attributes( "/group/sphere1" )["gl:surface"].parameters["Cs"].value,
+			visualiser["out"].attributes( "/group/sphere1" )["gl:surface"].outputShader().parameters["Cs"].value,
 			imath.Color3f( 0 ),
 		)
 		self.assertEqual(
-			visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].parameters["Cs"].value,
+			visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].outputShader().parameters["Cs"].value,
 			imath.Color3f( 1, 0, 0 ),
 		)
 

@@ -52,11 +52,11 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		l.loadShader( "point_light" )
 
 		n = l["out"].attributes( "/light" )["ai:light"]
-		self.assertTrue( isinstance( n, IECore.ObjectVector ) )
+		self.assertTrue( isinstance( n, IECoreScene.ShaderNetwork ) )
 		self.assertEqual( len( n ), 1 )
-		self.assertTrue( isinstance( n[0], IECoreScene.Shader ) )
-		self.assertEqual( n[0].type, "ai:light" )
-		self.assertEqual( n[0].name, "point_light" )
+		self.assertTrue( isinstance( n.outputShader(), IECoreScene.Shader ) )
+		self.assertEqual( n.outputShader().type, "ai:light" )
+		self.assertEqual( n.outputShader().name, "point_light" )
 
 	def testLoadAllLightsWithoutWarnings( self ) :
 
@@ -77,14 +77,14 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 
 	def testShaderInputs( self ) :
 
-		s = GafferArnold.ArnoldShader()
+		s = GafferArnold.ArnoldShader( "sky" )
 		s.loadShader( "physical_sky" )
 		s["parameters"]["intensity"].setValue( 2 )
 
 		# Test setting up a matte closure connected to "shader"
 		# Note that this doesn't currently render correctly, but SolidAngle assures me that they are fixing
 		# it and is the preferred way
-		s2 = GafferArnold.ArnoldShader()
+		s2 = GafferArnold.ArnoldShader( "matte" )
 		s2.loadShader( "matte" )
 		s2["parameters"]["color"].setValue( imath.Color4f( 0, 1, 0, 0.5 ) )
 
@@ -95,16 +95,22 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 
 		network = l["out"].attributes( "/light" )["ai:light"]
 		self.assertEqual( len( network ), 3 )
-		self.assertEqual( network[0].name, "physical_sky" )
-		self.assertEqual( network[0].parameters["intensity"].value, 2 )
-		self.assertEqual( network[1].name, "matte" )
-		self.assertEqual( network[1].parameters["color"].value, imath.Color4f( 0, 1, 0, 0.5 ) )
-		self.assertEqual( network[2].parameters["color"].value, "link:" + network[0].parameters["__handle"].value )
-		self.assertEqual( network[2].parameters["shader"].value, "link:" + network[1].parameters["__handle"].value )
+		self.assertEqual( network.getShader( "sky" ).name, "physical_sky" )
+		self.assertEqual( network.getShader( "sky" ).parameters["intensity"].value, 2 )
+		self.assertEqual( network.getShader( "matte" ).name, "matte" )
+		self.assertEqual( network.getShader( "matte" ).parameters["color"].value, imath.Color4f( 0, 1, 0, 0.5 ) )
+
+		self.assertEqual(
+			network.inputConnections( network.getOutput().shader ),
+			[
+				network.Connection( ( "sky", "" ), ( network.getOutput().shader, "color" ) ),
+				network.Connection( ( "matte", "" ), ( network.getOutput().shader, "shader" ) ),
+			]
+		)
 
 		s["parameters"]["intensity"].setValue( 4 )
 		network = l["out"].attributes( "/light" )["ai:light"]
-		self.assertEqual( network[0].parameters["intensity"].value, 4 )
+		self.assertEqual( network.getShader( "sky" ).parameters["intensity"].value, 4 )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -49,6 +49,7 @@ from ArnoldAOVShaderTest import ArnoldAOVShaderTest
 from ArnoldAtmosphereTest import ArnoldAtmosphereTest
 from ArnoldBackgroundTest import ArnoldBackgroundTest
 from ModuleTest import ModuleTest
+from ArnoldShaderBallTest import ArnoldShaderBallTest
 
 if __name__ == "__main__":
 	import unittest
