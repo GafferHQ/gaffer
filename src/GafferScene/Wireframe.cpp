@@ -115,6 +115,7 @@ struct MakeWireframe
 			using Edge = std::pair<int, int>;
 			using EdgeSet = unordered_set<Edge, boost::hash<Edge>>;
 			EdgeSet edgesVisited;
+			edgesVisited.reserve( mesh->variableSize( PrimitiveVariable::FaceVarying ) );
 
 			int vertexIdsIndex = 0;
 			for( int numVertices : mesh->verticesPerFace()->readable() )
