@@ -110,7 +110,6 @@ def __translateNodeMetadata( nodeEntry ) :
 	if url is not None :
 		__metadata[nodeName]["documentation:url"] = url
 
-	havePages = False
 	paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
 	while not arnold.AiParamIteratorFinished( paramIt ) :
 
@@ -152,7 +151,7 @@ def __translateNodeMetadata( nodeEntry ) :
 				arnold.AI_TYPE_BOOLEAN, arnold.AI_TYPE_ENUM, arnold.AI_TYPE_STRING
 			)
 		)
-		__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
+		__metadata[paramPath]["nodule:type"] = None if linkable else ""
 
 		# PlugValueWidget type from OSL "widget"
 		widget = None
@@ -173,19 +172,28 @@ def __translateNodeMetadata( nodeEntry ) :
 
 		page = __aiMetadataGetStr( nodeEntry, paramName, "page" )
 		if page is not None :
-			havePages = True
 			__metadata[paramPath]["layout:section"] = page
 
 		# Label from OSL "label"
 		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
-		if label is not None :
-			__metadata[paramPath]["label"] = label
-		elif "_" in paramName:
+		if label is None :
 			# Label from Arnold naming convention
 			# Arnold uses snake_case rather than camelCase for naming, so translate this into
 			# nice looking names
-			__metadata[paramPath]["label"] = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
+			label = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
 
+		__metadata[paramPath]["label"] = label
+		__metadata[paramPath]["noduleLayout:label"] = label
+
+		childComponents = {
+			arnold.AI_TYPE_VECTOR2 : "xy",
+			arnold.AI_TYPE_VECTOR : "xyz",
+			arnold.AI_TYPE_RGB : "rgb",
+			arnold.AI_TYPE_RGBA : "rgba",
+		}.get( paramType )
+		if childComponents is not None :
+			for c in childComponents :
+				__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
 		# GraphEditor visibility from Gaffer-specific metadata
 
@@ -253,9 +261,10 @@ for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 	nodeKeys = set()
 	parametersPlugKeys = set()
 	parameterPlugKeys = set()
+	parameterPlugComponentKeys = set()
 
 	for name, metadata in __metadata.items() :
-		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys )[name.count( ".")]
+		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys, parameterPlugComponentKeys )[name.count( "." )]
 		keys.update( metadata.keys() )
 
 	for key in nodeKeys :
@@ -267,8 +276,10 @@ for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 	for key in parameterPlugKeys :
 		Gaffer.Metadata.registerValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
 
-	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
+	for key in parameterPlugComponentKeys :
+		Gaffer.Metadata.registerValue( nodeType, "parameters.*.[xyzrgb]", key, functools.partial( __plugMetadata, name = key ) )
 
+	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
 
 Gaffer.Metadata.registerValue( GafferArnold.ArnoldShader, "attributeSuffix", "plugValueWidget:type", "GafferUI.StringPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferArnold.ArnoldShader, "layout:activator:suffixActivator", lambda parent : parent["type"].getValue() == "ai:lightFilter" )
