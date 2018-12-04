@@ -101,7 +101,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		return;
 	}
 
-	if( dstNodule() && m_dragEnd!=Gaffer::Plug::In )
+	if( m_dragEnd != Gaffer::Plug::In )
 	{
 		Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
 		if( dstNodeGadget )
@@ -315,7 +315,7 @@ Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
 	Style::State state = ( m_hovering || m_dragEnd ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState && srcNodule() && dstNodule() )
+	if( state != Style::HighlightedState && srcNodule() )
 	{
 		const Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
 		if( srcNodeGadget && srcNodeGadget->getHighlighted() )
