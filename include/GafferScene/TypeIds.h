@@ -54,7 +54,7 @@ enum TypeId
 	DeletePrimitiveVariablesTypeId = 110509,
 	GroupTypeId = 110510,
 	ShaderPlugTypeId = 110511,
-	SceneContextProcessorTypeId = 110512, // Obsolete, available for reuse
+	UDIMQueryTypeId = 110512,
 	SceneTimeWarpTypeId = 110513, // Obsolete, available for reuse
 	ObjectSourceTypeId = 110514,
 	PlaneTypeId = 110515,
