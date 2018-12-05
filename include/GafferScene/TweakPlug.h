@@ -87,7 +87,7 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
-		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false );
+		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false ) const;
 
 
 };

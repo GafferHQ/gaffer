@@ -251,7 +251,7 @@ private:
 
 } // namespace
 
-void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists )
+void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists ) const
 {
 	if( !enabledPlug()->getValue() )
 	{
