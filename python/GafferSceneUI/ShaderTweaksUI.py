@@ -56,7 +56,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"type" : [
+		"shader" : [
 
 			"description",
 			"""
@@ -200,7 +200,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		parameters = {}
 		with self.getContext() :
-			attributeNamePatterns = node["type"].getValue()
+			attributeNamePatterns = node["shader"].getValue()
 			for path in paths :
 				attributes = node["in"].attributes( path )
 				for name, network in attributes.items() :

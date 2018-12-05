@@ -60,7 +60,7 @@ ShaderTweaks::ShaderTweaks( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "type", Plug::In, "light *:light" ) );
+	addChild( new StringPlug( "shader" ) );
 	addChild( new Plug( "tweaks" ) );
 
 	// Fast pass-throughs for the things we don't alter.
@@ -73,12 +73,12 @@ ShaderTweaks::~ShaderTweaks()
 {
 }
 
-Gaffer::StringPlug *ShaderTweaks::typePlug()
+Gaffer::StringPlug *ShaderTweaks::shaderPlug()
 {
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *ShaderTweaks::typePlug() const
+const Gaffer::StringPlug *ShaderTweaks::shaderPlug() const
 {
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
@@ -97,7 +97,7 @@ void ShaderTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( tweaksPlug()->isAncestorOf( input ) || input == typePlug() )
+	if( tweaksPlug()->isAncestorOf( input ) || input == shaderPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -112,7 +112,7 @@ bool ShaderTweaks::processesAttributes() const
 
 void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	typePlug()->hash( h );
+	shaderPlug()->hash( h );
 	for( TweakPlugIterator tIt( tweaksPlug() ); !tIt.done(); ++tIt )
 	{
 		for( ValuePlugIterator vIt( tIt->get() ); !vIt.done(); ++vIt )
@@ -124,8 +124,8 @@ void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer:
 
 IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	const string type = typePlug()->getValue();
-	if( type.empty() )
+	const string shader = shaderPlug()->getValue();
+	if( shader.empty() )
 	{
 		return inputAttributes;
 	}
@@ -141,7 +141,7 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	CompoundObject::ObjectMap &out = result->members();
 	for( CompoundObject::ObjectMap::const_iterator it = in.begin(), eIt = in.end(); it != eIt; ++it )
 	{
-		if( !StringAlgo::matchMultiple( it->first, type ) )
+		if( !StringAlgo::matchMultiple( it->first, shader ) )
 		{
 			out.insert( *it );
 			continue;

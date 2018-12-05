@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 import imath
 
@@ -52,6 +53,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		t = GafferScene.ShaderTweaks()
 		t["in"].setInput( l["out"] )
+		t["shader"].setValue( "light" )
 
 		self.assertSceneValid( t["out"] )
 		self.assertScenesEqual( t["out"], l["out"] )
@@ -92,7 +94,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		l["parameters"]["intensity"].setValue( imath.Color3f( 2 ) )
 		self.assertEqual( t["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value, imath.Color3f( 0.2, 0.4, 0.6 ) )
 
-		t["type"].setValue( "" )
+		t["shader"].setValue( "" )
 		self.assertScenesEqual( t["out"], l["out"] )
 
 	def testSerialisation( self ) :
@@ -108,6 +110,49 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 0, len( s["t"]["tweaks"] ) ) :
 			for n in s["t"]["tweaks"][i].keys() :
 				self.assertEqual( ss["t"]["tweaks"][i][n].getValue(), s["t"]["tweaks"][i][n].getValue() )
+
+	def testLoadFromVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/lightTweaks-0.52.3.1.gfr" )
+		s.load()
+
+		self.assertIsInstance( s["LightTweaks1"], GafferScene.ShaderTweaks )
+		self.assertIsInstance( s["LightTweaks2"], GafferScene.ShaderTweaks )
+
+		self.assertEqual( s["LightTweaks1"]["shader"].getValue(), "light *:light" )
+		self.assertEqual( s["LightTweaks2"]["shader"].getValue(), "light" )
+
+		self.assertEqual(
+			s["TestLight"]["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 1, 1, 1 )
+		)
+
+		self.assertEqual(
+			s["LightTweaks1"]["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 1, 0, 0 )
+		)
+
+		self.assertEqual(
+			s["LightTweaks2"]["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 0.5, 0, 0 )
+		)
+
+	def testLoadAndResaveFromVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/lightTweaks-0.52.3.1.gfr" )
+		s.load()
+
+		ss = s.serialise()
+		self.assertNotIn( "GafferScene.LightTweaks", ss )
+		self.assertEqual( ss.count( "GafferScene.ShaderTweaks" ), 2 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+
+		self.assertSceneHashesEqual( s["LightTweaks2"]["out"], s2["LightTweaks2"]["out"] )
+		self.assertScenesEqual( s["LightTweaks2"]["out"], s2["LightTweaks2"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()
