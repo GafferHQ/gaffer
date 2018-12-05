@@ -46,6 +46,23 @@ import GafferSceneTest
 
 class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
+	def testConstructor( self ) :
+
+		p = GafferScene.TweakPlug( "test", 10.0, GafferScene.TweakPlug.Mode.Multiply, enabled = False )
+
+		self.assertEqual( p["name"].defaultValue(), "" )
+		self.assertEqual( p["name"].getValue(), "test" )
+
+		self.assertIsInstance( p["value"], Gaffer.FloatPlug )
+		self.assertEqual( p["value"].defaultValue(), 10 )
+		self.assertEqual( p["value"].getValue(), 10 )
+
+		self.assertEqual( p["mode"].defaultValue(), p.Mode.Replace )
+		self.assertEqual( p["mode"].getValue(), p.Mode.Multiply )
+
+		self.assertEqual( p["enabled"].defaultValue(), True )
+		self.assertEqual( p["enabled"].getValue(), False )
+
 	def testWrongDataType( self ) :
 
 		p = GafferScene.TweakPlug( "test", imath.Color3f( 1 ) )

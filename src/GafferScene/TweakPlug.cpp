@@ -56,7 +56,7 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( TweakPlug );
 
-TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, bool enabled )
+TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode, bool enabled )
 	:	TweakPlug( "tweak", In, Default | Dynamic )
 {
 	valuePlug->setName( "value" );
@@ -64,11 +64,12 @@ TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePl
 	addChild( valuePlug );
 
 	namePlug()->setValue( tweakName );
+	modePlug()->setValue( mode );
 	enabledPlug()->setValue( enabled );
 }
 
-TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, bool enabled )
-	:	TweakPlug( tweakName, PlugAlgo::createPlugFromData( "value", In, Default | Dynamic, value ), enabled )
+TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, Mode mode, bool enabled )
+	:	TweakPlug( tweakName, PlugAlgo::createPlugFromData( "value", In, Default | Dynamic, value ), mode, enabled )
 {
 }
 
