@@ -136,6 +136,7 @@ from CameraTweaksTest import CameraTweaksTest
 from FilterProcessorTest import FilterProcessorTest
 from UDIMQueryTest import UDIMQueryTest
 from WireframeTest import WireframeTest
+from TweakPlugTest import TweakPlugTest
 
 from IECoreGLPreviewTest import *
 

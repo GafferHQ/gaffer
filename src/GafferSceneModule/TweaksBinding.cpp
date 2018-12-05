@@ -58,6 +58,12 @@ TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstData
 	return new TweakPlug( tweakName, tweakValue.get(), enabled );
 }
 
+void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, bool requireExists )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	plug.applyTweak( &parameters, requireExists );
+}
+
 } // namespace
 
 void GafferSceneModule::bindTweaks()
@@ -96,6 +102,7 @@ void GafferSceneModule::bindTweaks()
 				)
 			)
 		)
+		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
 	;
 
 	enum_<TweakPlug::Mode>( "Mode" )
