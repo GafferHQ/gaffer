@@ -43,6 +43,7 @@
 #include "GafferScene/ShaderAssignment.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Switch.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -66,7 +67,6 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 	ArnoldAttributesPtr attributes = new ArnoldAttributes( "__attributes" );
 	attributes->inPlug()->setInput( inPlug() );
 	attributes->filterPlug()->setInput( filterPlug() );
-	attributes->enabledPlug()->setInput( enabledPlug() );
 	for( CompoundDataPlug::MemberPlugIterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
 		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) && (*it)->getName() != "cameraVisibility" )
@@ -106,7 +106,6 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 	shaderAssignment->inPlug()->setInput( attributes->outPlug() );
 	shaderAssignment->filterPlug()->setInput( filterPlug() );
 	shaderAssignment->shaderPlug()->setInput( shader->outPlug() );
-	shaderAssignment->enabledPlug()->setInput( enabledPlug() );
 	addChild( shaderAssignment );
 
 	// Set node. This adds the objects into the __lights set,
@@ -115,12 +114,34 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 	SetPtr set = new Set( "__set" );
 	set->inPlug()->setInput( shaderAssignment->outPlug() );
 	set->filterPlug()->setInput( filterPlug() );
-	set->enabledPlug()->setInput( enabledPlug() );
 	set->namePlug()->setValue( "__lights" );
 	set->modePlug()->setValue( Set::Add );
 	addChild( set );
 
-	outPlug()->setInput( set->outPlug() );
+	// Default lights Set node.
+
+	BoolPlugPtr defaultLightPlug = new BoolPlug( "defaultLight", Plug::In, true );
+	addChild( defaultLightPlug );
+
+	SetPtr defaultLightsSet = new Set( "__defaultLightsSet" );
+	defaultLightsSet->inPlug()->setInput( set->outPlug() );
+	defaultLightsSet->filterPlug()->setInput( filterPlug() );
+	defaultLightsSet->enabledPlug()->setInput( defaultLightPlug.get() );
+	defaultLightsSet->namePlug()->setValue( "defaultLights" );
+	defaultLightsSet->modePlug()->setValue( Set::Add );
+	addChild( defaultLightsSet );
+
+	// Switch for enabling/disabling
+
+	SwitchPtr enabledSwitch = new Switch( "__switch" );
+	enabledSwitch->setup( inPlug() );
+	enabledSwitch->inPlugs()->getChild<ScenePlug>( 0 )->setInput( inPlug() );
+	enabledSwitch->inPlugs()->getChild<ScenePlug>( 1 )->setInput( defaultLightsSet->outPlug() );
+	enabledSwitch->indexPlug()->setValue( 1 );
+	enabledSwitch->enabledPlug()->setInput( enabledPlug() );
+	addChild( enabledSwitch );
+
+	outPlug()->setInput( enabledSwitch->outPlug() );
 	// We don't need to serialise the connection because we make
 	// it upon construction.
 	/// \todo Can we just do this in the SceneProcessor base class?
