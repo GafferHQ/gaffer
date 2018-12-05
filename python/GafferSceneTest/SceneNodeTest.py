@@ -94,7 +94,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			namesToIgnore = {
 				"PathMatcherData", "Gaffer::PathMatcherDataPlug", "Gaffer::Switch",
 				"Gaffer::ContextVariables", "Gaffer::DeleteContextVariables", "Gaffer::TimeWarp",
-				"Gaffer::Loop",
+				"Gaffer::Loop", "GafferScene::ShaderTweaks"
 			}
 		)
 
@@ -105,7 +105,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			namesToIgnore = {
 				"SceneSwitch", "ShaderSwitch", "FilterSwitch",
 				"DeleteSceneContextVariables", "SceneContextVariables", "SceneTimeWarp",
-				"SceneLoop",
+				"SceneLoop", "LightTweaks"
 			}
 		)
 
@@ -204,7 +204,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNodesConstructWithDefaultValues( self ) :
 
-		self.assertNodesConstructWithDefaultValues( GafferScene )
+		self.assertNodesConstructWithDefaultValues( GafferScene, nodesToIgnore = { GafferScene.LightTweaks } )
 
 	def testDerivingInPython( self ) :
 

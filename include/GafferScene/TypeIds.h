@@ -129,7 +129,7 @@ enum TypeId
 	SceneLoopTypeId = 110584, // Obsolete, available for reuse
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
-	LightTweaksTypeId = 110587,
+	ShaderTweaksTypeId = 110587,
 	TweakPlugTypeId = 110588,
 	CopyOptionsTypeId = 110589,
 	LightToCameraTypeId = 110590,

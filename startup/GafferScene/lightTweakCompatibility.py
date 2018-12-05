@@ -49,5 +49,7 @@ def __tweakPlugAddChild( originalAddChild ) :
 
 GafferScene.TweakPlug.addChild = __tweakPlugAddChild( GafferScene.TweakPlug.addChild )
 
-# Compatibility with old TweakPlug that was part of LightTweaks
+# Compatibility for old LightTweaks nodes
+
+GafferScene.LightTweaks = GafferScene.ShaderTweaks
 GafferScene.LightTweaks.TweakPlug = GafferScene.TweakPlug

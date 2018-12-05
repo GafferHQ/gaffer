@@ -47,11 +47,11 @@ import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.LightTweaks,
+	GafferScene.ShaderTweaks,
 
 	"description",
 	"""
-	Makes modifications to light parameter values.
+	Makes modifications to shader parameter values.
 	""",
 
 	plugs = {
@@ -60,9 +60,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The type of light to modify. This is actually the name
-			of an attribute which contains the light shader
-			network.
+			The type of shader to modify. This is actually the name
+			of an attribute which contains the shader network.
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
@@ -76,14 +75,14 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The tweaks to be made to the parameters of the light.
+			The tweaks to be made to the parameters of the shader.
 			Arbitrary numbers of user defined tweaks may be
 			added as children of this plug via the user
-			interface, or using the LightTweaks API via python.
+			interface, or using the ShaderTweaks API via python.
 			""",
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.LightTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:widgetType", "GafferSceneUI.ShaderTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,
 
 		],
@@ -168,7 +167,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addFromAffectedMenuDefinition( self ) :
 
 		paths = []
-		node = self.__lightTweaksNode()
+		node = self.__shaderTweaksNode()
 		if node is not None :
 			pathMatcher = IECore.PathMatcher()
 			with self.getContext() :
@@ -180,7 +179,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addFromSelectedMenuDefinition( self ) :
 
 		paths = []
-		node = self.__lightTweaksNode()
+		node = self.__shaderTweaksNode()
 		if node is not None :
 			paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() )
 			paths = paths.paths() if paths else []
@@ -192,7 +191,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		node = self.__lightTweaksNode()
+		node = self.__shaderTweaksNode()
 		if node is None :
 			result.append(
 				"/No Scene Found", { "active" : False }
@@ -234,16 +233,16 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __lightTweaksNode( self ) :
+	def __shaderTweaksNode( self ) :
 
-		# Our plug may not belong to a LightTweaks node
+		# Our plug may not belong to a ShaderTweaks node
 		# directly. Instead it may have been promoted
 		# elsewhere and be driving a target plug on a
-		# LightTweaksNode.
+		# ShaderTweaks node.
 
 		def walkOutputs( plug ) :
 
-			if isinstance( plug.node(), GafferScene.LightTweaks ) :
+			if isinstance( plug.node(), GafferScene.ShaderTweaks ) :
 				return plug.node()
 
 			for output in plug.outputs() :

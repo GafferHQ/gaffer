@@ -43,14 +43,14 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class LightTweaksTest( GafferSceneTest.SceneTestCase ) :
+class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
 		l = GafferSceneTest.TestLight()
 		l["parameters"]["intensity"].setValue( imath.Color3f( 1 ) )
 
-		t = GafferScene.LightTweaks()
+		t = GafferScene.ShaderTweaks()
 		t["in"].setInput( l["out"] )
 
 		self.assertSceneValid( t["out"] )
@@ -98,7 +98,7 @@ class LightTweaksTest( GafferSceneTest.SceneTestCase ) :
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["t"] = GafferScene.LightTweaks()
+		s["t"] = GafferScene.ShaderTweaks()
 		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", 1.0 ) )
 		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
 

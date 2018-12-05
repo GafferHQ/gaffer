@@ -110,7 +110,7 @@ from MeshToPointsTest import MeshToPointsTest
 from InteractiveRenderTest import InteractiveRenderTest
 from FilteredSceneProcessorTest import FilteredSceneProcessorTest
 from ShaderBallTest import ShaderBallTest
-from LightTweaksTest import LightTweaksTest
+from ShaderTweaksTest import ShaderTweaksTest
 from FilterResultsTest import FilterResultsTest
 from RendererAlgoTest import RendererAlgoTest
 from SetAlgoTest import SetAlgoTest

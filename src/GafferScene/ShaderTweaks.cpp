@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/LightTweaks.h"
+#include "GafferScene/ShaderTweaks.h"
 
 #include "GafferScene/TweakPlug.h"
 
@@ -52,11 +52,11 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( LightTweaks );
+IE_CORE_DEFINERUNTIMETYPED( ShaderTweaks );
 
-size_t LightTweaks::g_firstPlugIndex = 0;
+size_t ShaderTweaks::g_firstPlugIndex = 0;
 
-LightTweaks::LightTweaks( const std::string &name )
+ShaderTweaks::ShaderTweaks( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -69,31 +69,31 @@ LightTweaks::LightTweaks( const std::string &name )
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
-LightTweaks::~LightTweaks()
+ShaderTweaks::~ShaderTweaks()
 {
 }
 
-Gaffer::StringPlug *LightTweaks::typePlug()
-{
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *LightTweaks::typePlug() const
+Gaffer::StringPlug *ShaderTweaks::typePlug()
 {
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::Plug *LightTweaks::tweaksPlug()
+const Gaffer::StringPlug *ShaderTweaks::typePlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::Plug *ShaderTweaks::tweaksPlug()
 {
 	return getChild<Gaffer::Plug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::Plug *LightTweaks::tweaksPlug() const
+const Gaffer::Plug *ShaderTweaks::tweaksPlug() const
 {
 	return getChild<Gaffer::Plug>( g_firstPlugIndex + 1 );
 }
 
-void LightTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void ShaderTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
@@ -103,14 +103,14 @@ void LightTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	}
 }
 
-bool LightTweaks::processesAttributes() const
+bool ShaderTweaks::processesAttributes() const
 {
 	// Although the base class says that we should return a constant, it should
 	// be OK to return this because it's constant across the hierarchy.
 	return !tweaksPlug()->children().empty();
 }
 
-void LightTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	typePlug()->hash( h );
 	for( TweakPlugIterator tIt( tweaksPlug() ); !tIt.done(); ++tIt )
@@ -122,7 +122,7 @@ void LightTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::
 	}
 }
 
-IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	const string type = typePlug()->getValue();
 	if( type.empty() )
@@ -160,7 +160,7 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 		{
 			(*tIt)->applyTweak( tweakedShader->parametersData(), true /* Require parameters to already exist */ );
 
-			// Note that it doesn't make sense to allow adding new parameters to lights - lights start out with
+			// Note that it doesn't make sense to allow adding new parameters to shaders - shaders start out with
 			// all supported parameters defined
 		}
 

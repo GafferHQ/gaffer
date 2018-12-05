@@ -120,7 +120,7 @@ import FilterProcessorUI
 import MeshToPointsUI
 import RenderUI
 import ShaderBallUI
-import LightTweaksUI
+import ShaderTweaksUI
 import CameraTweaksUI
 import LightToCameraUI
 import FilterResultsUI
