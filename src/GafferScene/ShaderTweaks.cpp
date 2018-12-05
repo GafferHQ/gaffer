@@ -154,17 +154,7 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
-		ShaderPtr tweakedShader = tweakedNetwork->outputShader()->copy();
-
-		for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
-		{
-			(*tIt)->applyTweak( tweakedShader->parametersData(), true /* Require parameters to already exist */ );
-
-			// Note that it doesn't make sense to allow adding new parameters to shaders - shaders start out with
-			// all supported parameters defined
-		}
-
-		tweakedNetwork->setShader( tweakedNetwork->getOutput().shader, std::move( tweakedShader ) );
+		TweakPlug::applyTweaks( tweaksPlug, tweakedNetwork.get() );
 		out[it->first] = tweakedNetwork;
 	}
 

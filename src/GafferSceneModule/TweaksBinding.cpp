@@ -64,6 +64,12 @@ void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, bool r
 	plug.applyTweak( &parameters, requireExists );
 }
 
+void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork );
+}
+
 } // namespace
 
 void GafferSceneModule::bindTweaks()
@@ -118,6 +124,8 @@ void GafferSceneModule::bindTweaks()
 			)
 		)
 		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
+		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
+		.staticmethod( "applyTweaks" )
 	;
 
 }

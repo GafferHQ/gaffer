@@ -43,6 +43,8 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 namespace GafferScene
 {
 
@@ -87,8 +89,14 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
+		/// Tweak application
+		/// =================
+
 		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false ) const;
 
+		/// Provided as a static method because it is more efficient to apply all tweaks at once
+		/// when editing a ShaderNetwork.
+		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork );
 
 };
 

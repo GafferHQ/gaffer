@@ -39,6 +39,7 @@ import unittest
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -62,6 +63,39 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( p["enabled"].defaultValue(), True )
 		self.assertEqual( p["enabled"].getValue(), False )
+
+	def testTweakNetwork( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"texture" : IECoreScene.Shader( "image", "ai:shader", { "filename" : "test.tx", "sscale" : 1.0 } ),
+				"surface" : IECoreScene.Shader( "lambert", "ai:surface", { "Kd" : 1.0 } )
+			},
+			output = "surface"
+		)
+
+		tweaks = Gaffer.Plug()
+		tweaks.addChild( GafferScene.TweakPlug( "texture.sscale", 10.0, GafferScene.TweakPlug.Mode.Multiply ) )
+		tweaks.addChild( GafferScene.TweakPlug( "texture.sscale", 1.0, GafferScene.TweakPlug.Mode.Add ) )
+		tweaks.addChild( GafferScene.TweakPlug( "surface.Kd", 0.5, GafferScene.TweakPlug.Mode.Multiply ) )
+		tweaks.addChild( GafferScene.TweakPlug( "Kd", 0.25, GafferScene.TweakPlug.Mode.Add ) )
+
+		GafferScene.TweakPlug.applyTweaks( tweaks, network )
+
+		self.assertEqual( network.getShader( "texture" ).parameters["sscale"].value, 11.0 )
+		self.assertEqual( network.getShader( "surface" ).parameters["Kd"].value, 0.75 )
+
+	def testThrowOnMissingShader( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = { "surface" : IECoreScene.Shader( "lambert", "ai:surface" ) },
+		)
+
+		tweaks = Gaffer.Plug()
+		tweaks.addChild( GafferScene.TweakPlug( "missingShader", 0.5 ) )
+
+		with self.assertRaisesRegexp( RuntimeError, "" ) :
+			GafferScene.TweakPlug.applyTweaks( tweaks, network )
 
 	def testWrongDataType( self ) :
 
