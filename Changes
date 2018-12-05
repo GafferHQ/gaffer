@@ -41,6 +41,16 @@ Breaking Changes
     instead.
 - Screengrab app : Renamed `-scriptEditor` argument to `pythonEditor` (#2876).
 
+0.52.3.1 (relative to 0.52.3.0)
+========
+
+Fixes
+-----
+
+- ArnoldMeshLight : Fixed light linking bug. ArnoldMeshLights are now included in the
+  `defaultLights` set by default. A new `defaultLight` plug controls this behaviour,
+  matching the `defaultLight` plug on other Light nodes (#2926).
+
 0.52.3.0 (relative to 0.52.2.0)
 ========
 
