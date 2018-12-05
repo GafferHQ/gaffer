@@ -276,7 +276,7 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists
 	if( !newData )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply to tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug()->typeName() )
+			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug()->typeName() )
 		);
 	}
 	if( parameterValue && parameterValue->typeId() != newData->typeId() )
