@@ -243,7 +243,7 @@ public:
 	}
 
 private:
-	
+
 	IECore::Data *m_sourceData;
 	TweakPlug::Mode m_mode;
 	const std::string &m_parameterName;
@@ -272,11 +272,11 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists
 
 
 	Data *parameterValue = parameters->member<Data>( name );
-	DataPtr newData = PlugAlgo::extractDataFromPlug( valuePlug<ValuePlug>() );
+	DataPtr newData = PlugAlgo::extractDataFromPlug( valuePlug() );
 	if( !newData )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply to tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug<ValuePlug>()->typeName() )
+			boost::str( boost::format( "Cannot apply to tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug()->typeName() )
 		);
 	}
 	if( parameterValue && parameterValue->typeId() != newData->typeId() )
@@ -290,7 +290,7 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists
 		{
 			throw IECore::Exception( boost::str( boost::format( "Cannot replace parameter \"%s\" which does not exist" ) % name ) );
 		}
-		
+
 		parameters->writable()[name] = newData;
 		return;
 	}

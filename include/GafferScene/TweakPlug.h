@@ -79,9 +79,9 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 		Gaffer::IntPlug *modePlug();
 		const Gaffer::IntPlug *modePlug() const;
 
-		template<typename T>
+		template<typename T=Gaffer::ValuePlug>
 		T *valuePlug();
-		template<typename T>
+		template<typename T=Gaffer::ValuePlug>
 		const T *valuePlug() const;
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
