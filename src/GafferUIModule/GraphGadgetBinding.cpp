@@ -222,7 +222,7 @@ void GafferUIModule::bindGraphGadget()
 	}
 
 	GadgetClass<AuxiliaryConnectionsGadget>()
-		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const NodeGadget *, const NodeGadget * ) const)&AuxiliaryConnectionsGadget::hasConnection )
+		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const Gadget *, const Gadget * ) const)&AuxiliaryConnectionsGadget::hasConnection )
 		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const Node *, const Node * ) const)&AuxiliaryConnectionsGadget::hasConnection )
 		.def( "connectionAt", &connectionAt )
 	;

@@ -38,6 +38,7 @@
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/Nodule.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
@@ -58,6 +59,19 @@ using namespace std;
 
 namespace
 {
+
+const Gadget *endGadget( const Plug *plug, const NodeGadget *nodeGadget )
+{
+	while( plug )
+	{
+		if( const Nodule *n = nodeGadget->nodule( plug ) )
+		{
+			return n;
+		}
+		plug = plug->parent<Plug>();
+	}
+	return nodeGadget;
+}
 
 template<typename Visitor>
 void visitAuxiliaryConnections( const GraphGadget *graphGadget, const NodeGadget *dstNodeGadget, Visitor visitor )
@@ -88,17 +102,35 @@ void visitAuxiliaryConnections( const GraphGadget *graphGadget, const NodeGadget
 			continue;
 		}
 
-		visitor( srcPlug, dstPlug, srcNodeGadget, dstNodeGadget );
+		visitor(
+			srcPlug, dstPlug,
+			srcNodeGadget, dstNodeGadget,
+			endGadget( srcPlug, srcNodeGadget ),
+			endGadget( dstPlug, dstNodeGadget )
+		);
 	}
 }
 
-Box2f nodeFrame( const NodeGadget *nodeGadget )
+Box2f gadgetFrame( const Gadget *gadget )
 {
-	const Box3f b = nodeGadget->transformedBound();
+	const Box3f b = gadget->transformedBound( nullptr );
 	return Box2f(
 		V2f( b.min.x, b.min.y ),
 		V2f( b.max.x, b.max.y )
 	);
+}
+
+string gadgetName( const Gadget *gadget )
+{
+	if( auto nodeGadget = runTimeCast<const NodeGadget>( gadget ) )
+	{
+		return nodeGadget->node()->getName().string();
+	}
+	else
+	{
+		auto plug = static_cast<const Nodule *>( gadget )->plug();
+		return plug->node()->getName().string() + "." + plug->relativeName( plug->node() );
+	}
 }
 
 } // namespace
@@ -118,11 +150,10 @@ AuxiliaryConnectionsGadget::~AuxiliaryConnectionsGadget()
 {
 }
 
-bool AuxiliaryConnectionsGadget::hasConnection( const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget ) const
+bool AuxiliaryConnectionsGadget::hasConnection( const Gadget *srcGadget, const Gadget *dstGadget ) const
 {
 	updateConnections();
-	auto it = m_nodeGadgetConnections.find( dstNodeGadget );
-	return it != m_nodeGadgetConnections.end() && it->second.sourceGadgets.count( srcNodeGadget );
+	return m_auxiliaryConnections.count( make_pair( srcGadget, dstGadget ) );
 }
 
 bool AuxiliaryConnectionsGadget::hasConnection( const Gaffer::Node *srcNode, const Gaffer::Node *dstNode ) const
@@ -133,21 +164,32 @@ bool AuxiliaryConnectionsGadget::hasConnection( const Gaffer::Node *srcNode, con
 	{
 		return false;
 	}
-	return hasConnection( srcNodeGadget, dstNodeGadget );
+
+	updateConnections();
+
+	auto srcRange = srcNodeGadgetIndex().equal_range( srcNodeGadget );
+	for( auto it = srcRange.first; it != srcRange.second; ++it )
+	{
+		if( it->dstNodeGadget == dstNodeGadget )
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
-std::pair<NodeGadget *, NodeGadget *> AuxiliaryConnectionsGadget::connectionAt( const IECore::LineSegment3f &position )
+std::pair<Gadget *, Gadget *> AuxiliaryConnectionsGadget::connectionAt( const IECore::LineSegment3f &position )
 {
-	std::pair<const NodeGadget *, const NodeGadget *> c = const_cast<const AuxiliaryConnectionsGadget *>( this )->connectionAt( position );
-	return { const_cast<NodeGadget *>( c.first ), const_cast<NodeGadget *>( c.second ) };
+	std::pair<const Gadget *, const Gadget *> c = const_cast<const AuxiliaryConnectionsGadget *>( this )->connectionAt( position );
+	return { const_cast<Gadget *>( c.first ), const_cast<Gadget *>( c.second ) };
 }
 
-std::pair<const NodeGadget *, const NodeGadget *> AuxiliaryConnectionsGadget::connectionAt( const IECore::LineSegment3f &position ) const
+std::pair<const Gadget *, const Gadget *> AuxiliaryConnectionsGadget::connectionAt( const IECore::LineSegment3f &position ) const
 {
 	updateConnections();
 
 	vector<IECoreGL::HitRecord> selection;
-	vector<pair<const NodeGadget *, const NodeGadget *>> connections;
+	vector<pair<const Gadget *, const Gadget *>> connections;
 
 	{
 		ViewportGadget::SelectionScope selectionScope( position, this, selection, IECoreGL::Selector::IDRender );
@@ -155,16 +197,12 @@ std::pair<const NodeGadget *, const NodeGadget *> AuxiliaryConnectionsGadget::co
 		const Style *style = this->style();
 		style->bind();
 		GLuint name = 1; // Name 0 is invalid, so we start at 1
-		for( auto &x : m_nodeGadgetConnections )
+
+		for( auto &c : m_auxiliaryConnections )
 		{
-			const NodeGadget *dstNodeGadget = x.first;
-			const Box2f dstFrame = nodeFrame( dstNodeGadget );
-			for( auto &srcNodeGadget : x.second.sourceGadgets )
-			{
-				connections.push_back( { srcNodeGadget, dstNodeGadget } );
-				selector->loadName( name++ );
-				style->renderAuxiliaryConnection( nodeFrame( srcNodeGadget ), dstFrame, Style::NormalState );
-			}
+			connections.push_back( c.endpoints );
+			selector->loadName( name++ );
+			style->renderAuxiliaryConnection( gadgetFrame( c.endpoints.first ), gadgetFrame( c.endpoints.second ), Style::NormalState );
 		}
 	}
 
@@ -205,18 +243,21 @@ std::string AuxiliaryConnectionsGadget::getToolTip( const IECore::LineSegment3f 
 		return s;
 	}
 
-	pair<const NodeGadget *, const NodeGadget *> connection = connectionAt( position );
+	auto connection = connectionAt( position );
 	if( !connection.first )
 	{
 		return "";
 	}
 
-	s += "Auxiliary connections from " + connection.first->node()->getName().string() + " to " + connection.second->node()->getName().string() + " : \n\n";
+	auto dstNodeGadget = runTimeCast<const NodeGadget>( connection.second );
+	dstNodeGadget = dstNodeGadget ? dstNodeGadget : connection.second->ancestor<NodeGadget>();
+
+	s += "Auxiliary connections from " + gadgetName( connection.first ) + " to " + gadgetName( connection.second ) + " : \n\n";
 	visitAuxiliaryConnections(
-		graphGadget(), connection.second,
-		[ &s, &connection ] ( const Plug *srcPlug, const Plug *dstPlug, const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget )
+		graphGadget(), dstNodeGadget,
+		[ &s, &connection ] ( const Plug *srcPlug, const Plug *dstPlug, const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget, const Gadget *srcGadget, const Gadget *dstGadget )
 		{
-			if( srcNodeGadget == connection.first )
+			if( srcGadget == connection.first && dstGadget == connection.second )
 			{
 				s +=
 					"\t" +
@@ -240,15 +281,10 @@ void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style 
 	}
 
 	updateConnections();
-	for( auto &x : m_nodeGadgetConnections )
+	for( auto &c : m_auxiliaryConnections )
 	{
-		bool dstHighlighted = x.first->getHighlighted();
-		const Box2f dstFrame = nodeFrame( x.first );
-		for( auto &srcNodeGadget : x.second.sourceGadgets )
-		{
-			Style::State state = dstHighlighted || srcNodeGadget->getHighlighted() ? Style::HighlightedState : Style::NormalState;
-			style->renderAuxiliaryConnection( nodeFrame( srcNodeGadget ), dstFrame, state );
-		}
+		const Style::State state = c.srcNodeGadget->getHighlighted() || c.dstNodeGadget->getHighlighted() ? Style::HighlightedState : Style::NormalState;
+		style->renderAuxiliaryConnection( gadgetFrame( c.endpoints.first ), gadgetFrame( c.endpoints.second ), state );
 	}
 }
 
@@ -290,6 +326,8 @@ void AuxiliaryConnectionsGadget::graphGadgetChildRemoved( const GraphComponent *
 {
 	if( const NodeGadget *nodeGadget = runTimeCast<const NodeGadget>( child ) )
 	{
+		dirtyInputConnections( nodeGadget );
+		dirtyOutputConnections( nodeGadget );
 		m_nodeGadgetConnections.erase( nodeGadget );
 	}
 }
@@ -298,7 +336,7 @@ void AuxiliaryConnectionsGadget::plugInputChanged( const Gaffer::Plug *plug )
 {
 	if( const NodeGadget *nodeGadget = graphGadget()->nodeGadget( plug->node() ) )
 	{
-		dirty( nodeGadget );
+		dirtyInputConnections( nodeGadget );
 	}
 }
 
@@ -310,21 +348,24 @@ void AuxiliaryConnectionsGadget::childRemoved( const Gaffer::GraphComponent *nod
 	}
 	if( const NodeGadget *nodeGadget = graphGadget()->nodeGadget( static_cast<const Node *>( node ) ) )
 	{
-		dirty( nodeGadget );
+		dirtyInputConnections( nodeGadget );
+		dirtyOutputConnections( nodeGadget );
 	}
 }
 
 void AuxiliaryConnectionsGadget::noduleAdded( const NodeGadget *nodeGadget, const Nodule *nodule )
 {
-	dirty( nodeGadget );
+	dirtyInputConnections( nodeGadget );
+	dirtyOutputConnections( nodeGadget );
 }
 
 void AuxiliaryConnectionsGadget::noduleRemoved( const NodeGadget *nodeGadget, const Nodule *nodule )
 {
-	dirty( nodeGadget );
+	dirtyInputConnections( nodeGadget );
+	dirtyOutputConnections( nodeGadget );
 }
 
-void AuxiliaryConnectionsGadget::dirty( const NodeGadget *nodeGadget )
+void AuxiliaryConnectionsGadget::dirtyInputConnections( const NodeGadget *nodeGadget )
 {
 	auto it = m_nodeGadgetConnections.find( nodeGadget );
 	// We only connect to signals for NodeGadgets we're tracking,
@@ -335,7 +376,33 @@ void AuxiliaryConnectionsGadget::dirty( const NodeGadget *nodeGadget )
 	{
 		return;
 	}
+
+	auto &dstIndex = dstNodeGadgetIndex();
+	auto dstRange = dstIndex.equal_range( nodeGadget );
+	dstIndex.erase( dstRange.first, dstRange.second );
 	it->second.dirty = true;
+
+	if( m_dirty )
+	{
+		return;
+	}
+	m_dirty = true;
+	requestRender();
+}
+
+void AuxiliaryConnectionsGadget::dirtyOutputConnections( const NodeGadget *nodeGadget )
+{
+	auto &srcIndex = srcNodeGadgetIndex();
+	auto srcRange = srcIndex.equal_range( nodeGadget );
+	for( auto it = srcRange.first; it != srcRange.second; ++it )
+	{
+		auto cIt = m_nodeGadgetConnections.find( it->dstNodeGadget );
+		assert( cIt != m_nodeGadgetConnections.end() );
+		cIt->second.dirty = true;
+	}
+
+	srcIndex.erase( srcRange.first, srcRange.second );
+
 	if( m_dirty )
 	{
 		return;
@@ -359,18 +426,26 @@ void AuxiliaryConnectionsGadget::updateConnections() const
 			continue;
 		}
 
-		connections.sourceGadgets.clear();
 		visitAuxiliaryConnections(
 			graphGadget(), x.first,
-			[&connections] ( const Plug *srcPlug, const Plug *dstPlug, const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget )
+			[this] ( const Plug *srcPlug, const Plug *dstPlug, const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget, const Gadget *srcGadget, const Gadget *dstGadget )
 			{
-				connections.sourceGadgets.insert( srcNodeGadget );
+				AuxiliaryConnection c = { srcNodeGadget, dstNodeGadget, { srcGadget, dstGadget } };
+				m_auxiliaryConnections.insert( c );
 			}
 		);
-
 		connections.dirty = false;
 	}
 
 	m_dirty = false;
 }
 
+AuxiliaryConnectionsGadget::SrcNodeGadgetIndex &AuxiliaryConnectionsGadget::srcNodeGadgetIndex() const
+{
+	return m_auxiliaryConnections.get<1>();
+}
+
+AuxiliaryConnectionsGadget::DstNodeGadgetIndex &AuxiliaryConnectionsGadget::dstNodeGadgetIndex() const
+{
+	return m_auxiliaryConnections.get<2>();
+}
