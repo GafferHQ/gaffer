@@ -1132,7 +1132,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( m_shadowGroup )
 				{
-					const std::vector<AtNode *> &linkedLightNodes = m_lightListCache->get( m_linkedLights.get() );
+					const std::vector<AtNode *> &linkedLightNodes = m_lightListCache->get( m_shadowGroup.get() );
 
 					AiNodeSetArray( node, g_shadowGroupArnoldString, AiArrayConvert( linkedLightNodes.size(), 1, AI_TYPE_NODE, linkedLightNodes.data() ) );
 					AiNodeSetBool( node, g_useShadowGroupArnoldString, true );
