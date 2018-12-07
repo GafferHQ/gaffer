@@ -153,7 +153,7 @@ class gui( Gaffer.Application ) :
 
 		from Qt import QtWidgets
 
-		text = str( QtWidgets.QApplication.clipboard().text() )
+		text = str( QtWidgets.QApplication.clipboard().text().encode( 'ascii', 'ignore' ) )
 		if text :
 			with Gaffer.BlockedConnection( self.__clipboardContentsChangedConnection ) :
 				self.root().setClipboardContents( IECore.StringData( text ) )
