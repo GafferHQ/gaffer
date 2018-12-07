@@ -262,6 +262,10 @@ Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, 
 	else
 	{
 		const Box2i in = inPlug()->dataWindowPlug()->getValue();
+		if( BufferAlgo::empty( in ) )
+		{
+			return in;
+		}
 		return box2fToBox2i( transform( Box2f( V2f( in.min ), V2f( in.max ) ), matrix ) );
 	}
 }
