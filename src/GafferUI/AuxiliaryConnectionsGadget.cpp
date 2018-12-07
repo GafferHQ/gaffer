@@ -111,13 +111,19 @@ void visitAuxiliaryConnections( const GraphGadget *graphGadget, const NodeGadget
 	}
 }
 
-Box2f gadgetFrame( const Gadget *gadget )
+Box2f nodeFrame( const NodeGadget *nodeGadget )
 {
-	const Box3f b = gadget->transformedBound( nullptr );
+	const Box3f b = nodeGadget->transformedBound( nullptr );
 	return Box2f(
 		V2f( b.min.x, b.min.y ),
 		V2f( b.max.x, b.max.y )
 	);
+}
+
+V2f gadgetCenter( const Gadget *gadget )
+{
+	const V3f c = gadget->transformedBound( nullptr ).center();
+	return V2f( c.x, c.y );
 }
 
 string gadgetName( const Gadget *gadget )
@@ -202,7 +208,7 @@ std::pair<const Gadget *, const Gadget *> AuxiliaryConnectionsGadget::connection
 		{
 			connections.push_back( c.endpoints );
 			selector->loadName( name++ );
-			style->renderAuxiliaryConnection( gadgetFrame( c.endpoints.first ), gadgetFrame( c.endpoints.second ), Style::NormalState );
+			renderConnection( c, style );
 		}
 	}
 
@@ -283,8 +289,37 @@ void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style 
 	updateConnections();
 	for( auto &c : m_auxiliaryConnections )
 	{
-		const Style::State state = c.srcNodeGadget->getHighlighted() || c.dstNodeGadget->getHighlighted() ? Style::HighlightedState : Style::NormalState;
-		style->renderAuxiliaryConnection( gadgetFrame( c.endpoints.first ), gadgetFrame( c.endpoints.second ), state );
+		renderConnection( c, style );
+	}
+}
+
+void AuxiliaryConnectionsGadget::renderConnection( const AuxiliaryConnection &c, const Style *style ) const
+{
+	const Style::State state = c.srcNodeGadget->getHighlighted() || c.dstNodeGadget->getHighlighted() ? Style::HighlightedState : Style::NormalState;
+	if( c.srcNodeGadget == c.endpoints.first && c.dstNodeGadget == c.endpoints.second )
+	{
+		// Connection between nodes
+		style->renderAuxiliaryConnection( nodeFrame( c.srcNodeGadget ), nodeFrame( c.dstNodeGadget ), state );
+	}
+	else
+	{
+		// Connection involving a least one nodule
+		const V2f srcPos = gadgetCenter( c.endpoints.first );
+		const V2f dstPos = gadgetCenter( c.endpoints.second );
+		V2f srcTangent( 0 );
+		V2f dstTangent( 0 );
+		if( c.endpoints.first != c.srcNodeGadget )
+		{
+			const V3f v = c.srcNodeGadget->connectionTangent( static_cast<const Nodule *>( c.endpoints.first ) );
+			srcTangent = V2f( v.x, v.y );
+		}
+		if( c.endpoints.second != c.dstNodeGadget )
+		{
+			const V3f v = c.dstNodeGadget->connectionTangent( static_cast<const Nodule *>( c.endpoints.second ) );
+			dstTangent = V2f( v.x, v.y );
+		}
+
+		style->renderAuxiliaryConnection( srcPos, srcTangent, dstPos, dstTangent, state );
 	}
 }
 

@@ -113,6 +113,9 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 
 		void updateConnections() const;
 
+		struct AuxiliaryConnection;
+		void renderConnection( const AuxiliaryConnection &connection, const Style *style ) const;
+
 		struct Connections
 		{
 			boost::signals::scoped_connection plugInputChangedConnection;
