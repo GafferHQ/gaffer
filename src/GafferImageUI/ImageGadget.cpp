@@ -76,6 +76,7 @@ ImageGadget::ImageGadget()
 	:	Gadget( defaultName<ImageGadget>() ),
 		m_image( nullptr ),
 		m_soloChannel( -1 ),
+		m_labelsVisible( true ),
 		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
 		m_renderRequestPending( false )
@@ -193,6 +194,21 @@ void ImageGadget::setSoloChannel( int index )
 int ImageGadget::getSoloChannel() const
 {
 	return m_soloChannel;
+}
+
+void ImageGadget::setLabelsVisible( bool visible )
+{
+	if( visible == m_labelsVisible )
+	{
+		return;
+	}
+	m_labelsVisible = visible;
+	requestRender();
+}
+
+bool ImageGadget::getLabelsVisible() const
+{
+	return m_labelsVisible;
 }
 
 void ImageGadget::setPaused( bool paused )
@@ -887,36 +903,41 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	glColor3f( 0.1f, 0.1f, 0.1f );
 	style->renderRectangle( displayWindowF );
 
-	string formatText = Format::name( format );
-	const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " +  lexical_cast<string>( displayWindow.size().y );
-	if( formatText.empty() )
-	{
-		formatText = dimensionsText;
-	}
-	else
-	{
-		formatText += " ( " + dimensionsText + " )";
-	}
-
-	renderText( formatText, V2f( displayWindowF.center().x, displayWindowF.min.y ), V2f( 0.5, 1.5 ), style );
-
-	if( displayWindow.min != V2i( 0 ) )
-	{
-		renderText( lexical_cast<string>( displayWindow.min ), displayWindowF.min, V2f( 1, 1.5 ), style );
-		renderText( lexical_cast<string>( displayWindow.max ), displayWindowF.max, V2f( 0, -0.5 ), style );
-	}
-
 	if( !BufferAlgo::empty( dataWindow ) && dataWindow != displayWindow )
 	{
 		glColor3f( 0.5f, 0.5f, 0.5f );
 		style->renderRectangle( dataWindowF );
+	}
 
-		if( dataWindow.min != displayWindow.min )
+	// Render labels for resolution and suchlike.
+
+	if( m_labelsVisible )
+	{
+		string formatText = Format::name( format );
+		const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " +  lexical_cast<string>( displayWindow.size().y );
+		if( formatText.empty() )
+		{
+			formatText = dimensionsText;
+		}
+		else
+		{
+			formatText += " ( " + dimensionsText + " )";
+		}
+
+		renderText( formatText, V2f( displayWindowF.center().x, displayWindowF.min.y ), V2f( 0.5, 1.5 ), style );
+
+		if( displayWindow.min != V2i( 0 ) )
+		{
+			renderText( lexical_cast<string>( displayWindow.min ), displayWindowF.min, V2f( 1, 1.5 ), style );
+			renderText( lexical_cast<string>( displayWindow.max ), displayWindowF.max, V2f( 0, -0.5 ), style );
+		}
+
+		if( !BufferAlgo::empty( dataWindow ) && dataWindow.min != displayWindow.min )
 		{
 			renderText( lexical_cast<string>( dataWindow.min ), dataWindowF.min, V2f( 1, 1.5 ), style );
 		}
 
-		if( dataWindow.max != displayWindow.max )
+		if( !BufferAlgo::empty( dataWindow ) && dataWindow.max != displayWindow.max )
 		{
 			renderText( lexical_cast<string>( dataWindow.max ), dataWindowF.max, V2f( 0, -0.5 ), style );
 		}
