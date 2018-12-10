@@ -1931,7 +1931,17 @@ class __ObjectSection( LocationSection ) :
 			target.object() if target.path is not None else IECore.NullObject.defaultNullObject()
 			for target in targets
 		]
-		typeNames = [ o.typeName().split( ":" )[-1] for o in objects ]
+
+		def friendlyTypeName( o ) :
+			annotatedTypeName = o.typeName().split( ":" )[-1]
+			if isinstance( o, IECoreScene.CurvesPrimitive ) :
+				annotatedTypeName += " - " + str( o.basis().standardBasis() )
+			elif isinstance( o, IECoreScene.MeshPrimitive ) :
+				annotatedTypeName += " - " + str( o.interpolation )
+
+			return annotatedTypeName
+
+		typeNames = [friendlyTypeName( o ) for o in objects]
 		typeNames = [ "None" if t == "NullObject" else t for t in typeNames ]
 
 		if len( typeNames ) == 1 or typeNames[0] == typeNames[1] :
@@ -1967,6 +1977,9 @@ class __ObjectSection( LocationSection ) :
 			if self.__interpolation is not None :
 				return object.variableSize( self.__interpolation ) if isinstance( object, IECoreScene.Primitive ) else None
 			else :
+				if self.__property == "interpolation" and isinstance( object, IECoreScene.CurvesPrimitive ) :
+					return str( object.basis().standardBasis() )
+
 				return getattr( object, self.__property, None )
 
 		def children( self, target ) :
@@ -1980,7 +1993,7 @@ class __ObjectSection( LocationSection ) :
 
 			result = []
 
-			if isinstance( object, IECoreScene.MeshPrimitive ) :
+			if isinstance( object, IECoreScene.MeshPrimitive ) or isinstance( object, IECoreScene.CurvesPrimitive ) :
 				result.append( self.__class__( property = "interpolation" ) )
 
 			for i in [
