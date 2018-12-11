@@ -25,6 +25,7 @@ Frame selected nodes                  :kbd:`F`
 Enter `Box` node (subgraph)	          :kbd:`↓`
 Leave `Box` node (subgraph)           :kbd:`↑`
 Search for nodes                      :kbd:`Ctrl` + :kbd:`F`
+Frame to numeric bookmark             :kbd:`1` … :kbd:`9`
 ===================================== =============================================
 ```
 
@@ -114,6 +115,8 @@ Action			                      Control or Shortcut
 Bookmark node                         Right-click node > *Bookmark*
 Connect to bookmarked node            Right-click plug > *Connect Bookmark* > select
                                       node
+Assign numeric bookmark               :kbd:`Ctrl` + :kbd:`1` … :kbd:`9`
+Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ===================================== =============================================
 ```
 
@@ -138,6 +141,7 @@ Zoom/dolly                            :kbd:`Alt` + right-click and drag
                                       Mouse wheel up/down
 Frame view to contents                :kbd:`F`
 Pause processing                      :kbd:`Escape`
+Pin to numeric bookmark               :kbd:`1` … :kbd:`9`
 ===================================== =============================================
 ```
 
