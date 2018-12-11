@@ -278,8 +278,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<Con
 		{
 			if( !excludedNodes || !excludedNodes->contains( input->node() ) )
 			{
-				ConnectionGadget *connection = connectionGadget( plug );
-				if( connection && connection->srcNodule() )
+				if( ConnectionGadget *connection = connectionGadget( plug ) )
 				{
 					connections.push_back( connection );
 				}
@@ -295,8 +294,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<Con
 			{
 				continue;
 			}
-			ConnectionGadget *connection = connectionGadget( *it );
-			if( connection && connection->srcNodule() )
+			if( ConnectionGadget *connection = connectionGadget( *it ) )
 			{
 				connections.push_back( connection );
 			}
@@ -1326,6 +1324,11 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 
 			const ConnectionGadget *connection = *it;
 			const Nodule *srcNodule = connection->srcNodule();
+			if( !srcNodule )
+			{
+				continue;
+			}
+
 			const Nodule *dstNodule = connection->dstNodule();
 			const NodeGadget *srcNodeGadget = srcNodule->ancestor<NodeGadget>();
 			const NodeGadget *dstNodeGadget = dstNodule->ancestor<NodeGadget>();
