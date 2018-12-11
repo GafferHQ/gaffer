@@ -147,7 +147,7 @@ class dispatch( Gaffer.Application ) :
 		if not len( args["tasks"] ) :
 			# fallback to nodes for backwards compatibility
 			if len( args["nodes"] ) :
-				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "Use the \"tasks\" parameter to specify the dispatchable nodes. The \"nodes\" parameter is only for gui purposes." )
+				IECore.msg( IECore.Msg.Level.Warning, "gaffer dispatch", "Use the \"tasks\" parameter to specify the dispatchable nodes. The \"nodes\" parameter is only for gui purposes." )
 			else :
 				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No task nodes were specified" )
 				return 1
