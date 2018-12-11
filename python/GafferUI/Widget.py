@@ -1060,7 +1060,7 @@ class _EventFilter( QtCore.QObject ) :
 			return True
 
 		widget = Widget._owner( qObject )
-		if widget._mouseMoveSignal is not None :
+		if widget is not None and widget._mouseMoveSignal is not None :
 
 			event = GafferUI.ButtonEvent(
 				Widget._buttons( qEvent.button() ),
