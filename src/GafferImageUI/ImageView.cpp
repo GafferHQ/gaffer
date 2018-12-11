@@ -203,8 +203,7 @@ class V2fContextVariable : public Gaffer::ComputeNode
 			addChild( new V2fPlug( "out", Plug::Out ) );
 		}
 
-		// Deliberately omitting RunTimeTyped macros because this
-		// is just a private class and doesn't need its own type.
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( V2fContextVariable, V2fContextVariableTypeId, ComputeNode );
 
 		StringPlug *namePlug()
 		{
@@ -271,6 +270,7 @@ class V2fContextVariable : public Gaffer::ComputeNode
 };
 
 size_t V2fContextVariable::g_firstPlugIndex = 0;
+IE_CORE_DEFINERUNTIMETYPED( V2fContextVariable )
 
 IE_CORE_DECLAREPTR( V2fContextVariable )
 
