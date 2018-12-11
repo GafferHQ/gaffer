@@ -359,20 +359,22 @@ class _WindowEventFilter( QtCore.QObject ) :
 
 		if type==QtCore.QEvent.Close :
 			widget = GafferUI.Widget._owner( qObject )
-			closed = widget.close()
-			if closed :
-				qEvent.accept()
-			else :
-				qEvent.ignore()
-			return True
+			if widget is not None :
+				closed = widget.close()
+				if closed :
+					qEvent.accept()
+				else :
+					qEvent.ignore()
+				return True
 		elif type==QtCore.QEvent.LayoutRequest :
 			widget = GafferUI.Widget._owner( qObject )
-			if widget.getSizeMode() == widget.SizeMode.Automatic :
+			if widget is not None and widget.getSizeMode() == widget.SizeMode.Automatic :
 				widget.resizeToFitChild()
 				return True
 		elif type==QtCore.QEvent.Resize :
 			widget = GafferUI.Widget._owner( qObject )
-			widget._Window__sizeValid = True
+			if widget is not None :
+				widget._Window__sizeValid = True
 
 		return False
 
