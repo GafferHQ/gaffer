@@ -648,11 +648,9 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
-	const ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
 	assert( selectedPaths.match( lastSelectedPath ) & IECore::PathMatcher::ExactMatch );
 
-	Selection lastSelection;
-	std::unordered_set<Gaffer::TransformPlug *> transformPlugs;
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
 		ScenePlug::ScenePath path = *it;
@@ -665,20 +663,10 @@ void TransformTool::updateSelection() const
 
 		if( selection.transformPlug )
 		{
-			// Selection is editable, but it's possible that we've already added it
-			// (multiple paths may originate from the same node). We use the `transformPlugs`
-			// set to ensure we only include any plug in the selection once.
-			if( transformPlugs.insert( selection.transformPlug.get() ).second )
+			m_selection.push_back( selection );
+			if( *it == lastSelectedPath )
 			{
-				if( *it != lastSelectedPath )
-				{
-					m_selection.push_back( selection );
-				}
-				else
-				{
-					// We'll push this back last, outside the loop
-					lastSelection = selection;
-				}
+				lastSelectedPath = selection.path;
 			}
 		}
 		else
@@ -689,8 +677,65 @@ void TransformTool::updateSelection() const
 		}
 	}
 
-	assert( lastSelection.transformPlug );
-	m_selection.push_back( lastSelection );
+	// Multiple selected paths may have transforms originating from
+	// the same node, in which case we need to remove duplicates from
+	// `m_selection`. We also need to make sure that the selection for
+	// `lastSelectedPath` appears last, and isn't removed by the
+	// deduplication.
+
+	// Sort by `transformPlug`, ensuring `lastSelectedPath` comes first
+	// in its group (so it survives deduplication).
+
+	std::sort(
+		m_selection.begin(), m_selection.end(),
+		[&lastSelectedPath]( const Selection &a, const Selection &b )
+		{
+			if( a.transformPlug.get() < b.transformPlug.get() )
+			{
+				return true;
+			}
+			else if( b.transformPlug.get() > a.transformPlug.get() )
+			{
+				return false;
+			}
+			return a.path == lastSelectedPath;
+		}
+	);
+
+	// Deduplicate by `transformPlug`.
+
+	auto last = std::unique(
+		m_selection.begin(), m_selection.end(),
+		[]( const Selection &a, const Selection &b )
+		{
+			return a.transformPlug == b.transformPlug;
+		}
+	);
+	m_selection.erase( last, m_selection.end() );
+
+	// Move `lastSelectedPath` to the end
+
+	auto lastSelectedIt = std::find_if(
+		m_selection.begin(), m_selection.end(),
+		[&lastSelectedPath]( const Selection &x )
+		{
+			return x.path == lastSelectedPath;
+		}
+	);
+
+	if( lastSelectedIt != m_selection.end() )
+	{
+		std::swap( m_selection.back(), *lastSelectedIt );
+	}
+	else
+	{
+		// We shouldn't get here, because ContextAlgo guarantees that lastSelectedPath is
+		// contained in selectedPaths, and we've preserved lastSelectedPath through our
+		// uniquefication process. But we could conceivably get here if an extension has
+		// edited "ui:scene:selectedPaths" directly instead of using ContextAlgo,
+		// in which case we emit a warning instead of crashing.
+		IECore::msg( IECore::Msg::Warning, "TransformTool::updateSelection", "Last selected path not included in selection" );
+	}
 }
 
 void TransformTool::preRender()
