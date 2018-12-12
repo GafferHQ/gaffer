@@ -167,28 +167,15 @@ class dispatch( Gaffer.Application ) :
 		tasks = []
 		# fallback to nodes for backwards compatibility
 		for taskName in args["tasks"] or args["nodes"] :
-			if args["script"].value :
-				task = script.descendant( taskName )
-				if task is None :
-					IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % taskName )
-					return 1
-			else :
-				task = self.__create( taskName )
-				if task is None :
-					return 1
-				if args["applyUserDefaults"].value :
-					Gaffer.NodeAlgo.applyUserDefaults( task )
-				script.addChild( task )
+			task = self.__acquireNode( taskName, script, args )
+			if not task :
+				return 1
 			tasks.append( task )
 
 		nodes = []
 		for nodeName in args["nodes"] :
-			if not args["script"].value :
-				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"nodes\" cannot be used without a script." )
-				return 1
-			node = script.descendant( nodeName )
-			if node is None :
-				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % nodeName )
+			node = self.__acquireNode( nodeName, script, args )
+			if not node :
 				return 1
 			nodes.append( node )
 
@@ -272,6 +259,24 @@ class dispatch( Gaffer.Application ) :
 		import GafferUI
 
 		GafferUI.EventLoop.mainEventLoop().stop()
+
+	def __acquireNode( self, nodeName, script, args ) :
+
+		node = script.descendant( nodeName )
+
+		if node is None :
+			if args["script"].value :
+				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % nodeName )
+				return None
+			else :
+				node = self.__create( nodeName )
+				if node is None :
+					return None
+				if args["applyUserDefaults"].value :
+					Gaffer.NodeAlgo.applyUserDefaults( node )
+				script.addChild( node )
+
+		return node
 
 	@staticmethod
 	def __setValue( identifier, value, parent, context=False ) :

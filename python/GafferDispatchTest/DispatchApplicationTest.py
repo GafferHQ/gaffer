@@ -136,13 +136,6 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "notANode" in "".join( error ) )
 		self.failUnless( p.returncode )
 
-		# nodes without script
-		p = self.waitForCommand( "gaffer dispatch -tasks GafferDispatchTest.TextWriter -nodes test" )
-		error = p.stderr.readlines()
-		self.failUnless( "gaffer dispatch" in "".join( error ) )
-		self.failUnless( "nodes" in "".join( error ) )
-		self.failUnless( p.returncode )
-
 		# bad plugs
 		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -settings -test.notAPlug 1".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
