@@ -171,8 +171,9 @@ class dispatch( Gaffer.Application ) :
 
 		nodesToShow = []
 		for nodeName in args["show"] :
-			node = self.__acquireNode( nodeName, script, args )
-			if not node :
+			node = script.descendant( nodeName )
+			if node is None :
+				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "\"%s\" does not exist." % nodeName )
 				return 1
 			nodesToShow.append( node )
 
