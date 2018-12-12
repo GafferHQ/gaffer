@@ -1100,5 +1100,44 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( cs2, [ ( Gaffer.Node.staticTypeId(), "*", "key", None ) ] )
 		self.assertEqual( cs3, [ ( Gaffer.Node.staticTypeId(), "key", None ) ] )
 
+	def testRegisterPlugTypeMetadata( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "testKey", "testValue" )
+		Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "testKey2", lambda plug : plug.staticTypeName() )
+
+		p1 = Gaffer.Color3fPlug()
+		p2 = Gaffer.FloatPlug()
+
+		self.assertEqual( Gaffer.Metadata.value( p1, "testKey" ), "testValue" )
+		self.assertEqual( Gaffer.Metadata.value( p2, "testKey" ), None )
+
+		self.assertEqual( Gaffer.Metadata.value( p1, "testKey2" ), "Gaffer::Color3fPlug" )
+		self.assertEqual( Gaffer.Metadata.value( p2, "testKey2" ), None )
+
+	def testPlugTypeMetadataEmitsPlugValueChangedSignal( self ) :
+
+		nodeChanges = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		plugChanges = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+
+		Gaffer.Metadata.registerValue( Gaffer.FloatPlug, "testChanges", 10 )
+
+		self.assertEqual( len( nodeChanges ), 0 )
+		self.assertEqual( plugChanges, [ ( Gaffer.FloatPlug.staticTypeId(), "", "testChanges", None ) ] )
+
+		del plugChanges[:]
+		Gaffer.Metadata.deregisterValue( Gaffer.FloatPlug, "testChanges" )
+
+		self.assertEqual( len( nodeChanges ), 0 )
+		self.assertEqual( plugChanges, [ ( Gaffer.FloatPlug.staticTypeId(), "", "testChanges", None ) ] )
+
+	def testPlugTypeMetadataInRegisteredValues( self ) :
+
+		n = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( Gaffer.IntPlug, "typeRegistration", 10 )
+		self.assertIn( "typeRegistration", Gaffer.Metadata.registeredValues( n["op1"] ) )
+
+		Gaffer.Metadata.deregisterValue( Gaffer.IntPlug, "typeRegistration" )
+		self.assertNotIn( "typeRegistration", Gaffer.Metadata.registeredValues( n["op1"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

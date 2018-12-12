@@ -82,17 +82,17 @@ struct PythonValueFunction
 
 };
 
-struct PythonNodeValueFunction
+struct PythonGraphComponentValueFunction
 {
-	PythonNodeValueFunction( object fn )
+	PythonGraphComponentValueFunction( object fn )
 		:	m_fn( fn )
 	{
 	}
 
-	ConstDataPtr operator()( const Node *node )
+	ConstDataPtr operator()( const GraphComponent *graphComponent )
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ConstDataPtr result = extract<ConstDataPtr>( m_fn( NodePtr( const_cast<Node *>( node ) ) ) );
+		ConstDataPtr result = extract<ConstDataPtr>( m_fn( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) ) );
 		return result;
 	}
 
@@ -155,17 +155,17 @@ Metadata::ValueFunction objectToValueFunction( InternedString name, object o )
 	}
 }
 
-Metadata::NodeValueFunction objectToNodeValueFunction( InternedString name, object o )
+Metadata::GraphComponentValueFunction objectToGraphComponentValueFunction( InternedString name, object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
 	{
 		ConstDataPtr data = dedent( name, dataExtractor() );
-		return [data](const Node *) { return data; };
+		return [data](const GraphComponent *) { return data; };
 	}
 	else
 	{
-		return PythonNodeValueFunction( o );
+		return PythonGraphComponentValueFunction( o );
 	}
 }
 
@@ -202,7 +202,7 @@ object graphComponentValue( const GraphComponent *graphComponent, const char *ke
 
 void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, object &value )
 {
-	Metadata::registerValue( nodeTypeId, key, objectToNodeValueFunction( key, value ) );
+	Metadata::registerValue( nodeTypeId, key, objectToGraphComponentValueFunction( key, value ) );
 }
 
 object registerNode( tuple args, dict kw )
@@ -212,7 +212,7 @@ object registerNode( tuple args, dict kw )
 	for( size_t i = 1, e = len( args ); i < e; i += 2 )
 	{
 		IECore::InternedString name = extract<IECore::InternedString>( args[i] )();
-		Metadata::registerValue( nodeTypeId, name, objectToNodeValueFunction( name, args[i+1] ) );
+		Metadata::registerValue( nodeTypeId, name, objectToGraphComponentValueFunction( name, args[i+1] ) );
 	}
 
 	object plugsObject = kw.get( "plugs" );

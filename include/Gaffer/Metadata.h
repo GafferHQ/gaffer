@@ -73,10 +73,10 @@ class GAFFER_API Metadata
 		/// Type for a signal emitted when new plug metadata is registered. The
 		/// plug argument will be null when generic (rather than per-instance)
 		/// metadata is registered.
-		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
+		typedef boost::signal<void ( IECore::TypeId typeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
 		typedef std::function<IECore::ConstDataPtr ()> ValueFunction;
-		typedef std::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
+		typedef std::function<IECore::ConstDataPtr ( const GraphComponent *graphComponent )> GraphComponentValueFunction;
 		typedef std::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
 
 		/// Value registration
@@ -88,11 +88,11 @@ class GAFFER_API Metadata
 		/// be called to compute it.
 		static void registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value );
 
-		/// Registers a static metadata value for the specified node type.
-		static void registerValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value );
-		/// Registers a dynamic metadata value for the specified node type. Each time the data is retrieved, the
-		/// NodeValueFunction will be called to compute it.
-		static void registerValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value );
+		/// Registers a static metadata value for the specified GraphComponent type.
+		static void registerValue( IECore::TypeId typeId, IECore::InternedString key, IECore::ConstDataPtr value );
+		/// Registers a dynamic metadata value for the specified GraphComponent type. Each time the data is retrieved, the
+		/// GraphComponentValueFunction will be called to compute it.
+		static void registerValue( IECore::TypeId typeId, IECore::InternedString key, GraphComponentValueFunction value );
 
 		/// Registers a static metadata value for plugs with the specified path on the specified node type.
 		static void registerValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
@@ -128,7 +128,7 @@ class GAFFER_API Metadata
 		/// ====================
 
 		static void deregisterValue( IECore::InternedString target, IECore::InternedString key );
-		static void deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedString key );
+		static void deregisterValue( IECore::TypeId typeId, IECore::InternedString key );
 		static void deregisterValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
 
 		/// \undoable
@@ -150,7 +150,7 @@ class GAFFER_API Metadata
 		///
 		/// These are emitted when the Metadata has been changed with one
 		/// of the register*() methods. If dynamic metadata is registered
-		/// with a NodeValueFunction or PlugValueFunction then it is the
+		/// with a GraphComponentValueFunction or PlugValueFunction then it is the
 		/// responsibility of the registrant to manually emit the signals
 		/// when necessary.
 		static ValueChangedSignal &valueChangedSignal();
@@ -172,8 +172,6 @@ class GAFFER_API Metadata
 
 		static IECore::ConstDataPtr valueInternal( IECore::InternedString target, IECore::InternedString key );
 		static IECore::ConstDataPtr valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly );
-		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool instanceOnly );
-		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool instanceOnly );
 
 };
 
