@@ -58,6 +58,8 @@ class dispatch( Gaffer.Application ) :
 			```
 			gaffer dispatch -script comp.gfr -tasks ImageWriter1 -dispatcher Local -settings -dispatcher.frameRange '"1001-1020"'
 
+			gaffer dispatch -script comp.gfr -tasks ImageWriter1 -gui -show ImageWriter1 -dispatcher Local -settings -dispatcher.frameRange '"1001-1020"'
+
 			gaffer dispatch -gui -tasks GafferDispatch.SystemCommand -dispatcher Local -settings -SystemCommand.command '"ls -l"'
 			```
 			"""
@@ -105,8 +107,8 @@ class dispatch( Gaffer.Application ) :
 				),
 
 				IECore.StringVectorParameter(
-					name = "nodes",
-					description = "A list of nodes to make editable when running the gui. "
+					name = "show",
+					description = "A list of nodes to display when running the gui. "
 						"This parameter has no effect unless the gui is loaded.",
 					defaultValue = IECore.StringVectorData( [] ),
 				),
@@ -145,12 +147,8 @@ class dispatch( Gaffer.Application ) :
 	def _run( self, args ) :
 
 		if not len( args["tasks"] ) :
-			# fallback to nodes for backwards compatibility
-			if len( args["nodes"] ) :
-				IECore.msg( IECore.Msg.Level.Warning, "gaffer dispatch", "Use the \"tasks\" parameter to specify the dispatchable nodes. The \"nodes\" parameter is only for gui purposes." )
-			else :
-				IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No task nodes were specified" )
-				return 1
+			IECore.msg( IECore.Msg.Level.Error, "gaffer dispatch", "No task nodes were specified" )
+			return 1
 
 		script = Gaffer.ScriptNode()
 
@@ -165,19 +163,18 @@ class dispatch( Gaffer.Application ) :
 		self.root()["scripts"].addChild( script )
 
 		tasks = []
-		# fallback to nodes for backwards compatibility
-		for taskName in args["tasks"] or args["nodes"] :
+		for taskName in args["tasks"] :
 			task = self.__acquireNode( taskName, script, args )
 			if not task :
 				return 1
 			tasks.append( task )
 
-		nodes = []
-		for nodeName in args["nodes"] :
+		nodesToShow = []
+		for nodeName in args["show"] :
 			node = self.__acquireNode( nodeName, script, args )
 			if not node :
 				return 1
-			nodes.append( node )
+			nodesToShow.append( node )
 
 		dispatcherType = args["dispatcher"].value or GafferDispatch.Dispatcher.getDefaultDispatcherType()
 		dispatchers = [ GafferDispatch.Dispatcher.create( dispatcherType ) ]
@@ -220,7 +217,7 @@ class dispatch( Gaffer.Application ) :
 			import GafferUI
 			import GafferDispatchUI
 
-			self.__dialogue = GafferDispatchUI.DispatchDialogue( tasks, dispatchers, nodes )
+			self.__dialogue = GafferDispatchUI.DispatchDialogue( tasks, dispatchers, nodesToShow )
 			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 			self.__dialogue.setVisible( True )
 

@@ -129,8 +129,8 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "notANode" in "".join( error ) )
 		self.failUnless( p.returncode )
 
-		# nodes not in script
-		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -nodes notANode".format( script = self.__scriptFileName ) )
+		# nodesToShow not in script
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -show notANode".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "notANode" in "".join( error ) )
