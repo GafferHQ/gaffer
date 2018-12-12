@@ -58,7 +58,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 	__dispatchDialogueMenuDefinition = None
 
-	def __init__( self, tasks, dispatchers, nodes, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def __init__( self, tasks, dispatchers, nodesToShow, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
@@ -66,7 +66,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		self.__dispatchers = dispatchers
 		self.__tasks = tasks
-		self.__nodes = nodes
+		self.__nodesToShow = nodesToShow
 		self.__script = tasks[0].scriptNode()
 		# hold a reference to the script window so plugs which launch child windows work properly.
 		# this is necessary for PlugValueWidgets like color swatches and ramps. Ideally those widgets
@@ -83,7 +83,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 			with GafferUI.TabbedContainer() as self.__tabs :
 
-				for node in self.__nodes :
+				for node in self.__nodesToShow :
 					nodeFrame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 					nodeFrame.addChild( self.__nodeEditor( node ) )
 					# remove the per-node execute button
@@ -130,7 +130,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__initiateSettings( self.__primaryButton )
 
 	@staticmethod
-	def createWithDefaultDispatchers( tasks, nodes, defaultDispatcherType=None, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def createWithDefaultDispatchers( tasks, nodesToShow, defaultDispatcherType=None, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		defaultType = defaultDispatcherType if defaultDispatcherType else GafferDispatch.Dispatcher.getDefaultDispatcherType()
 		dispatcherTypes = list(GafferDispatch.Dispatcher.registeredDispatchers())
@@ -144,7 +144,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
 			dispatchers.append( dispatcher )
 
-		return DispatchDialogue( tasks, dispatchers, nodes, postDispatchBehaviour=postDispatchBehaviour, title = title, sizeMode = sizeMode, **kw )
+		return DispatchDialogue( tasks, dispatchers, nodesToShow, postDispatchBehaviour=postDispatchBehaviour, title = title, sizeMode = sizeMode, **kw )
 
 	def scriptNode( self ) :
 
