@@ -543,7 +543,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( selection ), 1 )
 		self.assertEqual( selection[0].transformPlug, script["plane"]["transform"] )
 
-	def testHandesFollowLastSelected( self ) :
+	def testHandlesFollowLastSelected( self ) :
 
 		script = Gaffer.ScriptNode()
 
@@ -645,6 +645,40 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		Gaffer.PlugAlgo.promote( box["plane"]["out"] )
 		view["in"].setInput( box["out"] )
 		self.assertEqual( tool.selection()[0].scene, box["out"] )
+
+	def testLastSelectedObjectWithSharedTransformPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group"]["in"][1].setInput( script["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/sphere" ] ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].transformPlug, script["sphere"]["transform"] )
+		self.assertEqual( tool.selection()[0].path, "/group/sphere" )
+
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere1" )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].transformPlug, script["sphere"]["transform"] )
+		self.assertEqual( tool.selection()[0].path, "/group/sphere1" )
+
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere" )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].transformPlug, script["sphere"]["transform"] )
+		self.assertEqual( tool.selection()[0].path, "/group/sphere" )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 
 if __name__ == "__main__":
 	unittest.main()
