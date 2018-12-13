@@ -44,10 +44,10 @@ def __compatibilityFunc( node, oldParent ):
 	parentNode = node.ancestor( Gaffer.Node )
 	while parentNode :
 		gafferVersion = (
-			Gaffer.Metadata.nodeValue( parentNode, "serialiser:milestoneVersion" ),
-			Gaffer.Metadata.nodeValue( parentNode, "serialiser:majorVersion" ),
-			Gaffer.Metadata.nodeValue( parentNode, "serialiser:minorVersion" ),
-			Gaffer.Metadata.nodeValue( parentNode, "serialiser:patchVersion" )
+			Gaffer.Metadata.value( parentNode, "serialiser:milestoneVersion" ),
+			Gaffer.Metadata.value( parentNode, "serialiser:majorVersion" ),
+			Gaffer.Metadata.value( parentNode, "serialiser:minorVersion" ),
+			Gaffer.Metadata.value( parentNode, "serialiser:patchVersion" )
 		)
 
 		# only use the information if we have valid information from the node
