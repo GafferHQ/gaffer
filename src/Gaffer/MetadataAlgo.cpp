@@ -44,7 +44,7 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include <boost/regex.hpp> 
+#include <boost/regex.hpp>
 
 using namespace std;
 using namespace IECore;
@@ -291,15 +291,21 @@ bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey )
 	return boost::regex_match( changedKey.string(), expr );
 }
 
-bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool affectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
 		return plug == changedPlug;
 	}
 
+	if( changedPlugPath.empty() )
+	{
+		// Metadata has been registered for an entire plug type.
+		return plug->isInstanceOf( changedTypeId );
+	}
+
 	const Node *node = plug->node();
-	if( !node || !node->isInstanceOf( changedNodeTypeId ) )
+	if( !node || !node->isInstanceOf( changedTypeId ) )
 	{
 		return false;
 	}
@@ -312,11 +318,24 @@ bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const
 	return false;
 }
 
-bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
 		return parent == changedPlug->parent();
+	}
+
+	if( changedPlugPath.empty() )
+	{
+		// Metadata has been registered for an entire plug type.
+		for( auto &c : parent->children() )
+		{
+			if( c->isInstanceOf( changedTypeId ) )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	const Node *node = runTimeCast<const Node>( parent );
@@ -325,7 +344,7 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 		node = parent->ancestor<Node>();
 	}
 
-	if( !node || !node->isInstanceOf( changedNodeTypeId ) )
+	if( !node || !node->isInstanceOf( changedTypeId ) )
 	{
 		return false;
 	}
@@ -365,16 +384,29 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 	return false;
 }
 
-bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
 		return changedPlug->isAncestorOf( plug );
 	}
 
+	if( changedPlugPath.empty() )
+	{
+		// Metadata has been registered for an entire plug type.
+		while( ( plug = plug->parent<Plug>() ) )
+		{
+			if( plug->isInstanceOf( changedTypeId ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	while( ( plug = plug->parent<Plug>() ) )
 	{
-		if( affectedByChange( plug, changedNodeTypeId, changedPlugPath, changedPlug ) )
+		if( affectedByChange( plug, changedTypeId, changedPlugPath, changedPlug ) )
 		{
 			return true;
 		}
