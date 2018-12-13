@@ -54,75 +54,27 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	IECore.registerRunTimeTyped( DerivedAddNode )
 
-	def testNodeDescription( self ) :
-
-		add = GafferTest.AddNode()
-
-		self.assertEqual( Gaffer.Metadata.nodeDescription( add ), "" )
-
-		Gaffer.Metadata.registerNodeDescription( GafferTest.AddNode, "description" )
-		self.assertEqual( Gaffer.Metadata.nodeDescription( add ), "description" )
-
-		Gaffer.Metadata.registerNodeDescription( GafferTest.AddNode, lambda node : node.getName() )
-		self.assertEqual( Gaffer.Metadata.nodeDescription( add ), "AddNode" )
-
-		derivedAdd = self.DerivedAddNode()
-		self.assertEqual( Gaffer.Metadata.nodeDescription( derivedAdd ), "DerivedAddNode" )
-		self.assertEqual( Gaffer.Metadata.nodeDescription( derivedAdd, inherit=False ), "" )
-
-		Gaffer.Metadata.registerNodeDescription( self.DerivedAddNode.staticTypeId(), "a not very helpful description" )
-		self.assertEqual( Gaffer.Metadata.nodeDescription( derivedAdd ), "a not very helpful description" )
-		self.assertEqual( Gaffer.Metadata.nodeDescription( add ), "AddNode" )
-
-	def testExtendedNodeDescription( self ) :
-
-		multiply = GafferTest.MultiplyNode()
-
-		self.assertEqual( Gaffer.Metadata.nodeDescription( multiply ), "" )
-
-		Gaffer.Metadata.registerNodeDescription(
-
-			GafferTest.MultiplyNode,
-			"description",
-
-			"op1",
-			"op1 description",
-
-			"op2",
-			{
-				"description" : "op2 description",
-				"otherValue" : 100,
-			}
-
-		)
-
-		self.assertEqual( Gaffer.Metadata.nodeDescription( multiply ), "description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( multiply["op1"] ), "op1 description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( multiply["op2"] ), "op2 description" )
-		self.assertEqual( Gaffer.Metadata.value( multiply["op2"], "otherValue" ), 100 )
-
 	def testPlugDescription( self ) :
 
 		add = GafferTest.AddNode()
 
-		self.assertEqual( Gaffer.Metadata.plugDescription( add["op1"] ), "" )
+		self.assertEqual( Gaffer.Metadata.value( add["op1"], "description" ), None )
 
-		Gaffer.Metadata.registerPlugDescription( GafferTest.AddNode.staticTypeId(), "op1", "The first operand" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( add["op1"] ), "The first operand" )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "description", "The first operand" )
+		self.assertEqual( Gaffer.Metadata.value( add["op1"], "description" ), "The first operand" )
 
-		Gaffer.Metadata.registerPlugDescription( GafferTest.AddNode.staticTypeId(), "op1", lambda plug : plug.getName() + " description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( add["op1"] ), "op1 description" )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "description", lambda plug : plug.getName() + " description" )
+		self.assertEqual( Gaffer.Metadata.value( add["op1"], "description" ), "op1 description" )
 
 		derivedAdd = self.DerivedAddNode()
-		self.assertEqual( Gaffer.Metadata.plugDescription( derivedAdd["op1"] ), "op1 description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( derivedAdd["op1"], inherit=False ), "" )
+		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "description" ), "op1 description" )
 
-		Gaffer.Metadata.registerPlugDescription( self.DerivedAddNode, "op*", "derived class description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( derivedAdd["op1"] ), "derived class description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( derivedAdd["op2"] ), "derived class description" )
+		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op*", "description", "derived class description" )
+		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "description" ), "derived class description" )
+		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op2"], "description" ), "derived class description" )
 
-		self.assertEqual( Gaffer.Metadata.plugDescription( add["op1"] ), "op1 description" )
-		self.assertEqual( Gaffer.Metadata.plugDescription( add["op2"] ), "" )
+		self.assertEqual( Gaffer.Metadata.value( add["op1"], "description" ), "op1 description" )
+		self.assertEqual( Gaffer.Metadata.value( add["op2"], "description" ), None )
 
 	def testArbitraryValues( self ) :
 
@@ -327,7 +279,7 @@ class MetadataTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 
 		for p, s in zip( script2["n"]["user"].children(), trickyStrings ) :
-			self.assertEqual( Gaffer.Metadata.plugDescription( p ), s )
+			self.assertEqual( Gaffer.Metadata.value( p, "description" ), s )
 
 	def testRegisteredValues( self ) :
 
