@@ -55,8 +55,8 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 		n1["o"] = Gaffer.Plug( direction=Gaffer.Plug.Direction.Out )
 		n2["i"] = Gaffer.Plug()
 
-		Gaffer.Metadata.registerPlugValue( n1["o"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( n2["i"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( n1["o"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( n2["i"], "nodule:type", "" )
 
 		n2["i"].setInput( n1["o"] )
 
@@ -91,8 +91,8 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 		script["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		script["n2"]["i"] = Gaffer.IntPlug()
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["o"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( script["n2"]["i"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["o"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n2"]["i"], "nodule:type", "" )
 
 		script["n2"]["i"].setInput( script["n1"]["o"] )
 
@@ -119,8 +119,8 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 		script["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		script["n2"]["i"] = Gaffer.IntPlug()
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["o"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( script["n2"]["i"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["o"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n2"]["i"], "nodule:type", "" )
 
 		script["n2"]["i"].setInput( script["n1"]["o"] )
 
@@ -143,11 +143,11 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 
 		script["n1"] = Gaffer.Node()
 		script["n1"]["p"] = Gaffer.Plug()
-		Gaffer.Metadata.registerPlugValue( script["n1"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["p"], "nodule:type", "" )
 
 		script["n2"] = Gaffer.Node()
 		script["n2"]["p"] = Gaffer.Plug()
-		Gaffer.Metadata.registerPlugValue( script["n2"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n2"]["p"], "nodule:type", "" )
 
 		script["n2"]["p"].setInput( script["n1"]["p"] )
 
@@ -167,12 +167,12 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 
 		script["n1"] = Gaffer.Node()
 		script["n1"]["p"] = Gaffer.Plug()
-		Gaffer.Metadata.registerPlugValue( script["n1"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["p"], "nodule:type", "" )
 
 		script["n2"] = Gaffer.Node()
 		script["n2"]["p"] = Gaffer.Plug()
 		script["n2"]["p"].setInput( script["n1"]["p"] )
-		Gaffer.Metadata.registerPlugValue( script["n2"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n2"]["p"], "nodule:type", "" )
 
 		g = GafferUI.GraphGadget( script )
 		self.assertTrue( g.auxiliaryConnectionsGadget().hasConnection( script["n1"], script["n2"] ) )
@@ -188,11 +188,11 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 
 		script["n1"] = Gaffer.Node()
 		script["n1"]["p"] = Gaffer.Plug()
-		Gaffer.Metadata.registerPlugValue( script["n1"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["p"], "nodule:type", "" )
 
 		script["n2"] = Gaffer.Node()
 		script["n2"]["p"] = Gaffer.Plug()
-		Gaffer.Metadata.registerPlugValue( script["n2"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n2"]["p"], "nodule:type", "" )
 
 		script["n2"]["p"].setInput( script["n1"]["p"] )
 
@@ -201,11 +201,11 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( acg.hasConnection( script["n1"], script["n2"] ) )
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["p"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( script["n1"]["p"], "nodule:type", "GafferUI::StandardNodule" )
 
 		self.assertTrue( acg.hasConnection( script["n1"], script["n2"] ) )
 
-		Gaffer.Metadata.registerPlugValue( script["n2"]["p"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( script["n2"]["p"], "nodule:type", "GafferUI::StandardNodule" )
 
 		self.assertFalse( acg.hasConnection( script["n1"], script["n2"] ) )
 

@@ -132,7 +132,7 @@ class _InfoButton( GafferUI.Button ) :
 		## and we should use those to get the proper context here.
 		context = self.__node.scriptNode().context() if self.__node.scriptNode() else Gaffer.Context.current()
 		with context :
-			result = Gaffer.Metadata.nodeDescription( self.__node )
+			result = Gaffer.Metadata.value( self.__node, "description" ) or ""
 			summary = Gaffer.Metadata.value( self.__node, "summary" )
 
 		if summary :

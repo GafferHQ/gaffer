@@ -156,6 +156,7 @@ class Backups( object ) :
 			# Commented lines, for instance a header.
 			r'#.*$',
 			# Version metadata.
+			r'Gaffer\.Metadata\.registerValue\( parent, "serialiser:.*Version", .* \)$',
 			r'Gaffer\.Metadata\.registerNodeValue\( parent, "serialiser:.*Version", .* \)$',
 			# Pesky catalogue port number, which is different each time we run.
 			r'parent\["variables"\]\["imageCataloguePort"\]\["value"\]\.setValue\( [0-9]* \)$',

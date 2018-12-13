@@ -738,7 +738,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = LayoutNode()
-		Gaffer.Metadata.registerPlugValue( s["n"]["top0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["top0"], "nodule:type", "" )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['top0'] = 0" )
@@ -777,15 +777,15 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = LayoutNode()
 
-		Gaffer.Metadata.registerPlugValue( s["n"]["left0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["left0"], "nodule:type", "" )
 
-		Gaffer.Metadata.registerPlugValue( s["n"]["top0"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( s["n"]["top1"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( s["n"]["top2"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["top0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["top1"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["top2"], "nodule:type", "" )
 
-		Gaffer.Metadata.registerPlugValue( s["n"]["bottom0"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( s["n"]["bottom1"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( s["n"]["bottom2"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["bottom0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["bottom1"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["bottom2"], "nodule:type", "" )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['left0'] = 0" )
@@ -834,9 +834,9 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = LayoutNode()
 
-		Gaffer.Metadata.registerPlugValue( s["n"]["left0"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( s["n"]["left1"], "nodule:type", "" )
-		Gaffer.Metadata.registerPlugValue( s["n"]["left2"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["left0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["left1"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["left2"], "nodule:type", "" )
 
 		s["e1"] = Gaffer.Expression()
 		s["e1"].setExpression( "parent['n']['left0'] = 0" )
@@ -866,13 +866,13 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["o"] = LayoutNode()
-		Gaffer.Metadata.registerPlugValue( s["o"]["left0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["o"]["left0"], "nodule:type", "" )
 
 		s["i1"] = LayoutNode()
-		Gaffer.Metadata.registerPlugValue( s["i1"]["left0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["i1"]["left0"], "nodule:type", "" )
 
 		s["i2"] = LayoutNode()
-		Gaffer.Metadata.registerPlugValue( s["i2"]["left0"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["i2"]["left0"], "nodule:type", "" )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['i1']['left0'] = 0\nparent['i2']['left0'] = parent['o']['right0']" )

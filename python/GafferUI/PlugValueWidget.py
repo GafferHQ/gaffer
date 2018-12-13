@@ -143,7 +143,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			inputText = " &lt;- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent ) )
 
 		result = "<h3>" + plug.relativeName( plug.node() ) + inputText + "</h3>"
-		description = Gaffer.Metadata.plugDescription( plug )
+		description = Gaffer.Metadata.value( plug, "description" )
 		if description :
 			result += "\n\n" + description
 

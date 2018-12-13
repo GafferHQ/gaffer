@@ -48,7 +48,7 @@ preferences["cache"]["memoryLimit"] = Gaffer.IntPlug( defaultValue = Gaffer.Valu
 Gaffer.Metadata.registerValue( preferences["cache"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
 Gaffer.Metadata.registerValue( preferences["cache"], "layout:section", "Cache", persistent = False )
 
-Gaffer.Metadata.registerPlugValue(
+Gaffer.Metadata.registerValue(
 	preferences["cache"]["memoryLimit"],
 	"description",
 	"""
