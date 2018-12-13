@@ -75,10 +75,8 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# might just be member data for a subclass of one of those.
 		dispatchData = {}
 		dispatchData["scriptNode"] = rootBatch.preTasks()[0].node().scriptNode()
-		dispatchData["scriptFile"] = os.path.join( self.jobDirectory(), os.path.basename( dispatchData["scriptNode"]["fileName"].getValue() ) or "untitled.gfr" )
+		dispatchData["scriptFile"] = Gaffer.Context.current()["dispatcher:scriptFileName"]
 		dispatchData["batchesToTasks"] = {}
-
-		dispatchData["scriptNode"].serialiseToFile( dispatchData["scriptFile"] )
 
 		# Create a Tractor job and set its basic properties.
 

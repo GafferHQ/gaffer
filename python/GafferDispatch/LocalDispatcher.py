@@ -83,6 +83,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__name = Gaffer.Context.current().substitute( dispatcher["jobName"].getValue() )
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
+			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
 			self.__id = os.path.basename( self.__directory )
 			self.__stats = {}
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
@@ -94,10 +95,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__messageHandler = IECore.CapturingMessageHandler()
 			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
-
-			scriptFileName = script["fileName"].getValue()
-			self.__scriptFile = os.path.join( self.__directory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
-			script.serialiseToFile( self.__scriptFile )
 
 			self.__initBatchWalk( batch )
 

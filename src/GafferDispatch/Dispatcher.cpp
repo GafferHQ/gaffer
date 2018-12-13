@@ -60,6 +60,7 @@ static InternedString g_sizeBlindDataName( "dispatcher:size" );
 static InternedString g_executedBlindDataName( "dispatcher:executed" );
 static InternedString g_visitedBlindDataName( "dispatcher:visited" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
+static InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
 static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
@@ -130,7 +131,7 @@ const std::string Dispatcher::jobDirectory() const
 	return m_jobDirectory;
 }
 
-std::string Dispatcher::createJobDirectory( const Context *context ) const
+void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const
 {
 	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
 	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
@@ -154,8 +155,8 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 		i = std::max( i, strtol( d.path().filename().c_str(), nullptr, 10 ) );
 	}
 
-	// Now create the next directory and return it. We do this in a loop
-	// until we successfully create a directory of our own, because we
+	// Now create the next directory. We do this in a loop until we
+	// successfully create a directory of our own, because we
 	// may be in a race against other processes.
 
 	boost::format formatter( "%06d" );
@@ -166,9 +167,28 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 		numberedJobDirectory = jobDirectory / ( formatter % i ).str();
 		if( boost::filesystem::create_directory( numberedJobDirectory ) )
 		{
-			return numberedJobDirectory.string();
+			break;
 		}
 	}
+
+	m_jobDirectory = numberedJobDirectory.string();
+	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
+
+	// Now save a copy of the script into the directory.
+
+	boost::filesystem::path scriptFileName = script->fileNamePlug()->getValue();
+	if( scriptFileName.size() )
+	{
+		scriptFileName = numberedJobDirectory / scriptFileName.filename();
+	}
+	else
+	{
+		scriptFileName = numberedJobDirectory / "untitled.gfr";
+	}
+
+	script->serialiseToFile( scriptFileName.string() );
+
+	context->set( g_scriptFileNameContextEntry, scriptFileName.string() );
 }
 
 /*
@@ -661,11 +681,12 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 	}
 
-	Context::EditableScope jobScope( Context::current() );
 	// create the job directory now, so it's available in preDispatchSignal().
 	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal()
-	m_jobDirectory = createJobDirectory( Context::current() );
-	jobScope.set( g_jobDirectoryContextEntry, m_jobDirectory );
+
+	ContextPtr jobContext = new Context( *Context::current() );
+	Context::Scope jobScope( jobContext.get() );
+	createJobDirectory( script, jobContext.get() );
 
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
@@ -687,7 +708,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
 		{
-			jobScope.setFrame( *fIt );
+			jobContext->setFrame( *fIt );
 			batcher.addTask( TaskNode::Task( *nIt, Context::current() ) );
 		}
 	}
