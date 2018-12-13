@@ -157,55 +157,6 @@ class GAFFER_API Metadata
 		static NodeValueChangedSignal &nodeValueChangedSignal();
 		static PlugValueChangedSignal &plugValueChangedSignal();
 
-		/// Deprecated
-		/// ==============
-
-		/// \deprecated
-		static void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value );
-		/// \deprecated
-		static void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value );
-		/// \deprecated
-		static void registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent = true );
-		/// \deprecated
-		static void registeredNodeValues( const Node *node, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false, bool persistentOnly = false );
-		/// \deprecated
-		template<typename T>
-		static typename T::ConstPtr nodeValue( const Node *node, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
-		/// \deprecated
-		static void deregisterNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key );
-		/// \deprecated
-		static void deregisterNodeValue( Node *node, IECore::InternedString key );
-
-		/// \deprecated
-		static void registerPlugValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
-		/// \deprecated
-		static void registerPlugValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
-		/// \deprecated
-		static void registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent = true );
-		/// \deprecated
-		static void registeredPlugValues( const Plug *plug, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false, bool persistentOnly = false );
-		/// \deprecated
-		template<typename T>
-		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
-		/// \deprecated
-		static void deregisterPlugValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
-		/// \deprecated
-		static void deregisterPlugValue( Plug *plug, IECore::InternedString key );
-
-		/// \deprecated
-		static void registerNodeDescription( IECore::TypeId nodeTypeId, const std::string &description );
-		/// \deprecated
-		static void registerNodeDescription( IECore::TypeId nodeTypeId, NodeValueFunction description );
-		/// \deprecated
-		static std::string nodeDescription( const Node *node, bool inherit = true );
-
-		/// \deprecated
-		static void registerPlugDescription( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, const std::string &description );
-		/// \deprecated
-		static void registerPlugDescription( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, PlugValueFunction description );
-		/// \deprecated
-		static std::string plugDescription( const Plug *plug, bool inherit = true );
-
 	private :
 
 		/// Per-instance Metadata is stored as a mapping from GraphComponent * to the
@@ -221,8 +172,8 @@ class GAFFER_API Metadata
 
 		static IECore::ConstDataPtr valueInternal( IECore::InternedString target, IECore::InternedString key );
 		static IECore::ConstDataPtr valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly );
-		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly );
-		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly );
+		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool instanceOnly );
+		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool instanceOnly );
 
 };
 
