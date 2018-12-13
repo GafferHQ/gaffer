@@ -818,5 +818,40 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			"0.0 1.0 2.0"
 		)
 
+	def testNestedDispatchBorrowingOuterJobDirectory( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["nestedTask"] = GafferDispatchTest.TextWriter()
+		s["nestedTask"]["fileName"].setValue( self.temporaryDirectory() + "/nested.txt" )
+		s["nestedTask"]["text"].setValue( "${dispatcher:jobDirectory} : ${dispatcher:scriptFileName}" )
+
+		s["dispatchTask"] = GafferDispatch.PythonCommand()
+		s["dispatchTask"]["command"].setValue( inspect.cleandoc(
+			"""
+			import GafferDispatch
+			dispatcher = GafferDispatch.LocalDispatcher()
+			dispatcher.dispatch( [ self.parent()["nestedTask"] ] )
+			"""
+		) )
+
+		s["outerTask"] = GafferDispatchTest.TextWriter()
+		s["outerTask"]["preTasks"][0].setInput( s["dispatchTask"]["task"] )
+		s["outerTask"]["fileName"].setValue( self.temporaryDirectory() + "/outer.txt" )
+		s["outerTask"]["text"].setValue( "${dispatcher:jobDirectory} : ${dispatcher:scriptFileName}" )
+
+		d = self.__createLocalDispatcher()
+		d["executeInBackground"].setValue( True )
+		d.dispatch( [ s["outerTask"] ] )
+		d.jobPool().waitForAll()
+
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/nested.txt" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/outer.txt" ) )
+
+		self.assertEqual(
+			open( self.temporaryDirectory() + "/nested.txt" ).readlines(),
+			open( self.temporaryDirectory() + "/outer.txt" ).readlines(),
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -37,6 +37,7 @@
 #include "GafferDispatch/Dispatcher.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
@@ -47,6 +48,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/filesystem.hpp"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
@@ -136,8 +138,31 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
 	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
 
-	if ( jobDirectory == "" )
+	if( jobDirectory == "" )
 	{
+		const string outerJobDirectory = context->get<string>( g_jobDirectoryContextEntry, "" );
+		const string outerScriptFileName = context->get<string>( g_scriptFileNameContextEntry, "" );
+		const Process *outerProcess = Process::current();
+		InternedString outerProcessType = outerProcess ? outerProcess->type() : "";
+		if(
+			outerJobDirectory.size() && outerScriptFileName.size() &&
+			( outerProcessType == "taskNode:execute" || outerProcessType == "taskNode:executeSequence" ) &&
+			outerProcess->plug()->ancestor<ScriptNode>() == script
+		)
+		{
+			// We're being run inside a task executing in another dispatch
+			// for the same script. Borrow the job directory created by that dispatch.
+			/// \todo Should there be a more explicit way of saying "borrow
+			/// the outer directory"? Perhaps dispatchers should have a
+			/// plug specifying that they are to do a nested dispatch?
+			/// Consider this at the same time as we consider hosting
+			/// dispatchers directly in the graph.
+			m_jobDirectory = outerJobDirectory;
+			return;
+		}
+
+		/// \todo I think it would be better to throw here, rather than
+		/// litter the current directory.
 		jobDirectory = boost::filesystem::current_path().string();
 	}
 
