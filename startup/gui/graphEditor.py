@@ -52,12 +52,8 @@ import GafferDispatchUI
 ##########################################################################
 
 Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "nodeGadget:color", imath.Color3f( 0.61, 0.1525, 0.1525 ) )
-Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "task", "nodule:color", imath.Color3f( 0.645, 0.2483, 0.2483 ) )
-Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "preTasks.*", "nodule:color", imath.Color3f( 0.645, 0.2483, 0.2483 ) )
-Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "postTasks.*", "nodule:color", imath.Color3f( 0.645, 0.2483, 0.2483 ) )
-Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "task", "connectionGadget:color", imath.Color3f( 0.315, 0.0787, 0.0787 ) )
-Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "preTasks.*", "connectionGadget:color", imath.Color3f( 0.315, 0.0787, 0.0787 ) )
-Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "postTasks.*", "connectionGadget:color", imath.Color3f( 0.315, 0.0787, 0.0787 ) )
+Gaffer.Metadata.registerValue( GafferDispatch.TaskNode.TaskPlug, "nodule:color", imath.Color3f( 0.645, 0.2483, 0.2483 ) )
+Gaffer.Metadata.registerValue( GafferDispatch.TaskNode.TaskPlug, "connectionGadget:color", imath.Color3f( 0.315, 0.0787, 0.0787 ) )
 
 Gaffer.Metadata.registerValue( Gaffer.SubGraph, "nodeGadget:color", imath.Color3f( 0.225 ) )
 Gaffer.Metadata.registerValue( Gaffer.BoxIO, "nodeGadget:color", imath.Color3f( 0.225 ) )
@@ -66,34 +62,21 @@ Gaffer.Metadata.registerValue( Gaffer.Random, "nodeGadget:color", imath.Color3f(
 Gaffer.Metadata.registerValue( Gaffer.Expression, "nodeGadget:color", imath.Color3f( 0.3, 0.45, 0.3 ) )
 Gaffer.Metadata.registerValue( Gaffer.Animation, "nodeGadget:color", imath.Color3f( 0.3, 0.3, 0.45 ) )
 
-Gaffer.Metadata.registerValue( GafferScene.SceneNode, "in...", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
-Gaffer.Metadata.registerValue( GafferScene.SceneNode, "out", "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
-Gaffer.Metadata.registerValue( GafferScene.InteractiveRender, "in", "nodule:color", imath.Color3f( 0.2346, 0.326, 0.46 ) )
-Gaffer.Metadata.registerValue( GafferScene.Parent, "child", "nodule:color", imath.Color3f( 0.2346, 0.326, 0.46 ) )
+Gaffer.Metadata.registerValue( GafferScene.ScenePlug, "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
 
 Gaffer.Metadata.registerValue( GafferScene.SceneProcessor, "nodeGadget:color", imath.Color3f( 0.495, 0.2376, 0.4229 ) )
 Gaffer.Metadata.registerValue( GafferScene.SceneElementProcessor, "nodeGadget:color", imath.Color3f( 0.1886, 0.2772, 0.41 ) )
 
-Gaffer.Metadata.registerValue( GafferScene.FilteredSceneProcessor, "filter", "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
-Gaffer.Metadata.registerValue( GafferScene.Filter, "out", "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
-Gaffer.Metadata.registerValue( GafferScene.Filter, "in...", "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
+Gaffer.Metadata.registerValue( GafferScene.FilterPlug, "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
 
 Gaffer.Metadata.registerValue( GafferScene.Transform, "nodeGadget:color", imath.Color3f( 0.485, 0.3112, 0.2255 ) )
 Gaffer.Metadata.registerValue( GafferScene.Constraint, "nodeGadget:color", imath.Color3f( 0.485, 0.3112, 0.2255 ) )
 
 Gaffer.Metadata.registerValue( GafferScene.GlobalsProcessor, "nodeGadget:color", imath.Color3f( 0.255, 0.505, 0.28 ) )
 
-__shaderNoduleColors = {
-	Gaffer.FloatPlug.staticTypeId() : IECore.Color3fData( imath.Color3f( 0.2467, 0.3762, 0.47 ) ),
-	Gaffer.Color3fPlug.staticTypeId() : IECore.Color3fData( imath.Color3f( 0.69, 0.5378, 0.2283 ) ),
-	Gaffer.V3fPlug.staticTypeId() : IECore.Color3fData( imath.Color3f( 0.47, 0.181, 0.181 ) ),
-}
-
-def __shaderNoduleColor( plug ) :
-
-	return __shaderNoduleColors.get( plug.typeId(), None )
-
-Gaffer.Metadata.registerValue( GafferScene.Shader, "...", "nodule:color", __shaderNoduleColor )
+Gaffer.Metadata.registerValue( Gaffer.FloatPlug, "nodule:color", imath.Color3f( 0.2467, 0.3762, 0.47 ) )
+Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
+Gaffer.Metadata.registerValue( Gaffer.V3fPlug, "nodule:color", imath.Color3f( 0.47, 0.181, 0.181 ) )
 
 ##########################################################################
 # Behaviour
