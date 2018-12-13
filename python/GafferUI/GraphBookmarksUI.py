@@ -46,7 +46,18 @@ import GafferUI
 # Public methods
 ##########################################################################
 
+## May be called to connect the GraphBookmarksUI functionality to an application
+# instance. This isn't done automatically because some applications may decide
+# to not use bookmarks. Typically this function would be called from an
+# application startup file.
+def connect( applicationRoot ) :
+
+	applicationRoot.__graphBookmarksUIConnected = True
+
 def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+
+	if not __isConnected( graphEditor ) :
+		return
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/GraphBookmarksDivider", { "divider" : True } )
@@ -69,7 +80,21 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		  }
 	  )
 
+	menuDefinition.append(
+		"/Numeric Bookmark/Remove",
+		{
+			"command" : functools.partial( assignNumericBookmark, graphEditor, 0 ),
+			"shortCut" : "Ctrl+0",
+			"active" : Gaffer.MetadataAlgo.numericBookmark( node )
+		}
+	)
+
+GafferUI.GraphEditor.nodeContextMenuSignal().connect( appendNodeContextMenuDefinitions, scoped = False )
+
 def appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition ) :
+
+	if not __isConnected( graphEditor ) :
+		return
 
 	parent = graphEditor.graphGadget().getRoot()
 	dividerAdded = False
@@ -105,6 +130,8 @@ def appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition ) :
 					"active" : not outPlug.isSame( inPlug.getInput() ) and not Gaffer.MetadataAlgo.readOnly( inPlug )
 				}
 			)
+
+GafferUI.GraphEditor.plugContextMenuSignal().connect( appendPlugContextMenuDefinitions, scoped = False )
 
 def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
@@ -197,6 +224,15 @@ def findNumericBookmark( editor, numericBookmark ) :
 ##########################################################################
 # Internal implementation
 ##########################################################################
+
+def __isConnected( editor ) :
+
+	applicationRoot = editor.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	connected = False
+	with IECore.IgnoredExceptions( AttributeError ) :
+		connected = applicationRoot.__graphBookmarksUIConnected
+
+	return connected
 
 def __setBookmarked( node, bookmarked ) :
 
@@ -311,3 +347,40 @@ def __findBookmark( editor, bookmarks = None ) :
 
 	return True
 
+def __editorKeyPress( editor, event ) :
+
+	if event.key == "B" and event.modifiers == event.modifiers.Control :
+		return GafferUI.GraphBookmarksUI.popupFindBookmarkMenu( editor )
+
+	if event.key == '0' :
+		if isinstance( editor, GafferUI.GraphEditor ) :
+			return GafferUI.GraphBookmarksUI.setNumericBookmark( editor, 0 )
+		if isinstance( editor, GafferUI.NodeSetEditor ) :
+			editor.setNodeSet( editor.scriptNode().selection() )
+			return True
+
+	if event.key in map( str, range( 1, 10 ) ) :
+		if event.modifiers == event.modifiers.Control :
+			return GafferUI.GraphBookmarksUI.assignNumericBookmark( editor, int( event.key ) )
+		else :
+			return GafferUI.GraphBookmarksUI.findNumericBookmark( editor, int( event.key ) )
+
+	return False
+
+def __editorCreated( editor ) :
+
+	if not __isConnected( editor ) :
+		return
+
+	editor.keyPressSignal().connect( __editorKeyPress, scoped = False )
+
+GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
+
+def __nodeSetMenu( editor, menuDefinition ) :
+
+	if not __isConnected( editor ) :
+		return
+
+	GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions( editor, menuDefinition )
+
+GafferUI.CompoundEditor.nodeSetMenuSignal().connect( __nodeSetMenu, scoped = False )
