@@ -82,7 +82,6 @@ void Switch::setup( const Plug *plug )
 	}
 
 	PlugPtr inElement = plug->createCounterpart( "in0", Plug::In );
-	MetadataAlgo::copyColors( plug , inElement.get() , /* overwrite = */ false  );
 	inElement->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	ArrayPlugPtr in = new ArrayPlug(
 		g_inPlugsName,
@@ -96,7 +95,6 @@ void Switch::setup( const Plug *plug )
 
 	PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
-	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
 	addChild( out );
 }
 

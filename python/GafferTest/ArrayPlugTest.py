@@ -368,26 +368,6 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( len( n["a"] ), 3 )
 		assertInput( n["b"], n["a"] )
 
-	def testArrayPlugCopiesColors( self ) :
-		n = Gaffer.Node()
-
-		n2 = Gaffer.Node()
-
-		n2.addChild(Gaffer.IntPlug("test"))
-
-		connectionColor = imath.Color3f( 0.1 , 0.2 , 0.3 )
-		noodleColor = imath.Color3f( 0.4, 0.5 , 0.6 )
-
-		element = Gaffer.IntPlug()
-		Gaffer.Metadata.registerValue( element, "connectionGadget:color", connectionColor )
-		Gaffer.Metadata.registerValue( element, "nodule:color", noodleColor )
-
-		n["a"] = Gaffer.ArrayPlug( element = element )
-		n["a"][0].setInput(n2["test"])
-
-		self.assertEqual( Gaffer.Metadata.value( n["a"][1], "connectionGadget:color" ), connectionColor )
-		self.assertEqual( Gaffer.Metadata.value( n["a"][1], "nodule:color" ), noodleColor )
-
 	def testOnlyOneChildType( self ) :
 
 		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
