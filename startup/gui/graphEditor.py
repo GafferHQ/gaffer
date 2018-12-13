@@ -116,12 +116,7 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 
 GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu, scoped = False )
 
-def __plugContextMenu( graphEditor, node, menuDefinition ) :
-
-	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, node, menuDefinition )
-
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
+GafferUI.GraphBookmarksUI.connect( application.root() )
