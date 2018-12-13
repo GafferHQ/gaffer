@@ -1,3 +1,15 @@
+0.51.3.2 (relative to 0.51.3.1)
+========
+
+Fixes
+-----
+
+- gui : Fixed crash when starting Gaffer with unicode in the clipboard (#2933).
+- TransformTool : Fixed crash caused by selection deduplication (#2940).
+- ImageTransform : Fixed bug when rotating an empty data window (#2932).
+- ImageView : Fixed TypeId bug (#2937).
+- Arnold : Fixed crash when using shadowGroups (#2934).
+
 0.51.3.1 (relative to 0.51.3.0)
 ========
 
