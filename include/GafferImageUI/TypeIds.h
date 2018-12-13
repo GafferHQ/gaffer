@@ -44,6 +44,7 @@ enum TypeId
 {
 	ImageViewTypeId = 110850,
 	ImageGadgetTypeId = 110851,
+	V2fContextVariableTypeId = 110852,
 
 	LastTypeId = 110899
 };
