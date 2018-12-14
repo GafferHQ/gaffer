@@ -298,5 +298,16 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( sampler.sample( 0, 1 ), 1 )
 		self.assertEqual( sampler.sample( 1, 1 ), 0 )
 
+	def testRotateEmptyDataWindow( self ) :
+
+		r = GafferImage.ImageReader()
+		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i() )
+
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( r["out"] )
+		t["transform"]["rotate"].setValue( 1 )
+
+		self.assertEqual( t["out"]["dataWindow"].getValue(), imath.Box2i() )
+
 if __name__ == "__main__":
 	unittest.main()
