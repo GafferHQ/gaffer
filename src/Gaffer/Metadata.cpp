@@ -62,25 +62,6 @@ using namespace Gaffer;
 namespace
 {
 
-/// \todo Would this make sense in a GraphComponentAlgo namespace?
-vector<InternedString> relativePath( const GraphComponent *graphComponent, const GraphComponent *ancestor )
-{
-	vector<InternedString> result;
-	while( graphComponent && graphComponent != ancestor )
-	{
-		result.push_back( graphComponent->getName() );
-		graphComponent = graphComponent->parent();
-	}
-	if( ancestor && graphComponent != ancestor )
-	{
-		const string what = boost::str( boost::format( "Object \"%s\" is not an ancestor of \"%s\"." ) % graphComponent->fullName() % ancestor->fullName() );
-		throw Exception( what );
-	}
-
-	std::reverse( result.begin(), result.end() );
-	return result;
-}
-
 IECore::InternedString g_ellipsis( "..." );
 
 typedef vector<InternedString> MatchPatternPath;
@@ -499,9 +480,9 @@ void Metadata::deregisterValue( IECore::TypeId typeId, IECore::InternedString ke
 	}
 }
 
-void Metadata::deregisterValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
+void Metadata::deregisterValue( IECore::TypeId ancestorTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
 {
-	auto &m = graphComponentMetadataMap()[nodeTypeId];
+	auto &m = graphComponentMetadataMap()[ancestorTypeId];
 	auto &plugValues = m.plugPathsToValues[matchPatternPath(plugPath)];
 
 	auto it = plugValues.find( key );
@@ -511,7 +492,7 @@ void Metadata::deregisterValue( IECore::TypeId nodeTypeId, const StringAlgo::Mat
 	}
 
 	plugValues.erase( it );
-	plugValueChangedSignal()( nodeTypeId, plugPath, key, nullptr );
+	plugValueChangedSignal()( ancestorTypeId, plugPath, key, nullptr );
 }
 
 void Metadata::deregisterValue( GraphComponent *target, IECore::InternedString key )
@@ -555,14 +536,14 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	return nodes;
 }
 
-void Metadata::registerValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
+void Metadata::registerValue( IECore::TypeId ancestorTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
-	registerValue( nodeTypeId, plugPath, key, [value](const Plug *){ return value; } );
+	registerValue( ancestorTypeId, plugPath, key, [value](const Plug *){ return value; } );
 }
 
-void Metadata::registerValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
+void Metadata::registerValue( IECore::TypeId ancestorTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
 {
-	auto &graphComponentMetadata = graphComponentMetadataMap()[nodeTypeId];
+	auto &graphComponentMetadata = graphComponentMetadataMap()[ancestorTypeId];
 	auto &plugValues = graphComponentMetadata.plugPathsToValues[matchPatternPath(plugPath)];
 
 	GraphComponentMetadata::NamedPlugValue namedValue( key, value );
@@ -577,7 +558,7 @@ void Metadata::registerValue( IECore::TypeId nodeTypeId, const StringAlgo::Match
 		plugValues.replace( it, namedValue );
 	}
 
-	plugValueChangedSignal()( nodeTypeId, plugPath, key, nullptr );
+	plugValueChangedSignal()( ancestorTypeId, plugPath, key, nullptr );
 }
 
 std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool instanceOnly )
@@ -646,12 +627,13 @@ void Metadata::registeredValues( const GraphComponent *target, std::vector<IECor
 
 		if( const Plug *plug = runTimeCast<const Plug>( target ) )
 		{
-			if( const Node *node = plug->node() )
-			{
-				const vector<InternedString> plugPath = relativePath( plug, node );
+			vector<InternedString> plugPathKeys;
 
-				vector<InternedString> plugPathKeys;
-				IECore::TypeId typeId = node->typeId();
+			const GraphComponent *ancestor = plug->parent();
+			vector<InternedString> plugPath( { plug->getName() } );
+			while( ancestor )
+			{
+				IECore::TypeId typeId = ancestor->typeId();
 				while( typeId != InvalidTypeId )
 				{
 					auto nIt = graphComponentMetadataMap().find( typeId );
@@ -672,8 +654,10 @@ void Metadata::registeredValues( const GraphComponent *target, std::vector<IECor
 					typeId = RunTimeTyped::baseTypeId( typeId );
 				}
 
-				keys.insert( keys.end(), plugPathKeys.rbegin(), plugPathKeys.rend() );
+				plugPath.insert( plugPath.begin(), ancestor->getName() );
+				ancestor = ancestor->parent();
 			}
+			keys.insert( keys.end(), plugPathKeys.rbegin(), plugPathKeys.rend() );
 		}
 	}
 	registeredInstanceValues( target, keys, persistentOnly );
@@ -697,35 +681,22 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 	// If the target is a plug, then look for a path-based
 	// value. These are more specific than type-based values.
 
-	const Plug *plug = runTimeCast<const Plug>( target );
-	const Node *node = plug ? plug->node() : nullptr;
-
-	if( plug && node )
+	if( const Plug *plug = runTimeCast<const Plug>( target ) )
 	{
-		const vector<InternedString> plugPath = relativePath( plug, node );
-
-		IECore::TypeId typeId = node->typeId();
-		while( typeId != InvalidTypeId )
+		const GraphComponent *ancestor = plug->parent();
+		vector<InternedString> plugPath( { plug->getName() } );
+		while( ancestor )
 		{
-			auto nIt = graphComponentMetadataMap().find( typeId );
-			if( nIt != graphComponentMetadataMap().end() )
+			IECore::TypeId typeId = ancestor->typeId();
+			while( typeId != InvalidTypeId )
 			{
-				// First do a direct lookup using the plug path.
-				auto it = nIt->second.plugPathsToValues.find( plugPath );
-				const auto eIt = nIt->second.plugPathsToValues.end();
-				if( it != eIt )
+				auto nIt = graphComponentMetadataMap().find( typeId );
+				if( nIt != graphComponentMetadataMap().end() )
 				{
-					auto vIt = it->second.find( key );
-					if( vIt != it->second.end() )
-					{
-						return vIt->second( plug );
-					}
-				}
-				// And only if the direct lookups fails, do a full search using
-				// wildcard matches.
-				for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
-				{
-					if( match( plugPath, it->first ) )
+					// First do a direct lookup using the plug path.
+					auto it = nIt->second.plugPathsToValues.find( plugPath );
+					const auto eIt = nIt->second.plugPathsToValues.end();
+					if( it != eIt )
 					{
 						auto vIt = it->second.find( key );
 						if( vIt != it->second.end() )
@@ -733,9 +704,25 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 							return vIt->second( plug );
 						}
 					}
+					// And only if the direct lookup fails, do a full search using
+					// wildcard matches.
+					for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
+					{
+						if( match( plugPath, it->first ) )
+						{
+							auto vIt = it->second.find( key );
+							if( vIt != it->second.end() )
+							{
+								return vIt->second( plug );
+							}
+						}
+					}
 				}
+				typeId = RunTimeTyped::baseTypeId( typeId );
 			}
-			typeId = RunTimeTyped::baseTypeId( typeId );
+
+			plugPath.insert( plugPath.begin(), ancestor->getName() );
+			ancestor = ancestor->parent();
 		}
 	}
 

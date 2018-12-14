@@ -94,11 +94,11 @@ class GAFFER_API Metadata
 		/// GraphComponentValueFunction will be called to compute it.
 		static void registerValue( IECore::TypeId typeId, IECore::InternedString key, GraphComponentValueFunction value );
 
-		/// Registers a static metadata value for plugs with the specified path on the specified node type.
-		static void registerValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
+		/// Registers a static metadata value for plugs with the specified path relative to the ancestor type.
+		static void registerValue( IECore::TypeId ancestorTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
 		/// Registers a dynamic metadata value for the specified plug. Each time the data is retrieved, the
 		/// PlugValueFunction will be called to compute it.
-		static void registerValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
+		static void registerValue( IECore::TypeId ancestorTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
 
 		/// Registers a metadata value specific to a single instance - this will take precedence over any
 		/// values registered above. If persistent is true, the value will be preserved across script save/load and cut/paste.
@@ -129,7 +129,7 @@ class GAFFER_API Metadata
 
 		static void deregisterValue( IECore::InternedString target, IECore::InternedString key );
 		static void deregisterValue( IECore::TypeId typeId, IECore::InternedString key );
-		static void deregisterValue( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
+		static void deregisterValue( IECore::TypeId ancestorTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
 
 		/// \undoable
 		static void deregisterValue( GraphComponent *target, IECore::InternedString key );
