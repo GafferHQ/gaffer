@@ -2288,6 +2288,7 @@ IECore::InternedString g_cameraOptionName( "camera" );
 
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
+IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
 IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
@@ -2369,6 +2370,34 @@ class ArnoldGlobals
 						}
 					}
 					AiMsgSetLogFileName( d->readable().c_str() );
+
+				}
+				return;
+			}
+			else if( name == g_statisticsFileNameOptionName )
+			{
+				AiStatsSetMode( AI_STATS_MODE_OVERWRITE );
+
+				if( value == nullptr )
+				{
+					AiStatsSetFileName( "" );
+				}
+				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
+				{
+					if( !d->readable().empty() )
+					{
+						try
+						{
+							boost::filesystem::path path( d->readable() );
+							path.remove_filename();
+							boost::filesystem::create_directories( path );
+						}
+						catch( const std::exception &e )
+						{
+							IECore::msg( IECore::Msg::Error, "ArnoldRenderer::option()", e.what() );
+						}
+					}
+					AiStatsSetFileName( d->readable().c_str() );
 
 				}
 				return;
