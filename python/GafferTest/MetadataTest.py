@@ -1139,5 +1139,16 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.deregisterValue( Gaffer.IntPlug, "typeRegistration" )
 		self.assertNotIn( "typeRegistration", Gaffer.Metadata.registeredValues( n["op1"] ) )
 
+	def testMetadataRelativeToAncestorPlug( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( Gaffer.Metadata.value( n["user"]["p"]["r"], "testPlugAncestor" ), None )
+		self.assertNotIn( "testPlugAncestor", Gaffer.Metadata.registeredValues( n["user"]["p"]["r"] ) )
+
+		Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "r", "testPlugAncestor", 10 )
+		self.assertEqual( Gaffer.Metadata.value( n["user"]["p"]["r"], "testPlugAncestor" ), 10 )
+		self.assertIn( "testPlugAncestor", Gaffer.Metadata.registeredValues( n["user"]["p"]["r"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
