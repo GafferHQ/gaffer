@@ -143,10 +143,39 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v.setViewport( imath.V2i( 100, 200 ) )
 		self.assertEqual( v.getCamera().frustum(), imath.Box2f( imath.V2f( -1.5, -1.5 ), imath.V2f( -0.5, 0.5 ) ) )
 
+	def testRasterToWorldPlanar( self ) :
+
+		v = GafferUI.ViewportGadget()
+		v.setViewport( imath.V2i( 500, 250 ) )
+		v.setCamera(
+			IECoreScene.Camera( parameters = {
+				"resolution" : imath.V2i( 500, 250 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
+				"projection" : "orthographic",
+				"clippingPlanes" : imath.V2f( .1, 10 ),
+			} )
+		)
+
+		self.assertEqual(
+			v.rasterToWorldSpace( imath.V2f( 0 ) ),
+			IECore.LineSegment3f( imath.V3f( -2, 1, -.1 ), imath.V3f( -2, 1, -10 ) )
+		)
+
+		self.assertEqual(
+			v.rasterToWorldSpace( imath.V2f( 500, 250 ) ),
+			IECore.LineSegment3f( imath.V3f( 2, -1, -.1 ), imath.V3f( 2, -1, -10 ) )
+		)
+
+		self.assertEqual(
+			v.rasterToWorldSpace( imath.V2f( 250, 125 ) ),
+			IECore.LineSegment3f( imath.V3f( 0, 0, -.1 ), imath.V3f( 0, 0, -10 ) )
+		)
+
 	def testRasterToWorldOrthographic( self ) :
 
 		v = GafferUI.ViewportGadget()
 		v.setViewport( imath.V2i( 500, 250 ) )
+		v.setPlanarMovement( False )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
 				"resolution" : imath.V2i( 500, 250 ),
@@ -201,7 +230,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			IECore.LineSegment3f( imath.V3f( 0, 0, -.1 ), imath.V3f( 0, 0, -10 ) )
 		)
 
-	def testWorldToRasterOrthographic( self ) :
+	def testWorldToRasterPlanar( self ) :
 
 		v = GafferUI.ViewportGadget()
 		v.setViewport( imath.V2i( 500, 250 ) )
@@ -220,6 +249,35 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			line = v.rasterToWorldSpace( rasterPosition )
 			nearProjected = v.worldToRasterSpace( line.p0 )
 			farProjected = v.worldToRasterSpace( line.p1 )
+
+			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
+			self.failUnless(
+				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
+					nearProjected, 0.0001
+				)
+			)
+
+	def testWorldToRasterOrthographic( self ) :
+
+		v = GafferUI.ViewportGadget()
+		v.setViewport( imath.V2i( 500, 250 ) )
+		v.setPlanarMovement( False )
+		v.setCamera(
+			IECoreScene.Camera( parameters = {
+				"resolution" : imath.V2i( 500, 250 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
+				"projection" : "orthographic",
+				"clippingPlanes" : imath.V2f( .1, 10 ),
+			} )
+		)
+
+		r = imath.Rand48()
+		for i in range( 0, 100 ) :
+			rasterPosition = imath.V2f( r.nexti() % 500, r.nexti() % 250 )
+			line = v.rasterToWorldSpace( rasterPosition )
+			nearProjected = v.worldToRasterSpace( line.p0 )
+			farProjected = v.worldToRasterSpace( line.p1 )
+
 			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
 			self.failUnless(
 				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
@@ -231,6 +289,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 
 		v = GafferUI.ViewportGadget()
 		v.setViewport( imath.V2i( 500, 250 ) )
+		v.setPlanarMovement( False )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
 				"resolution" : imath.V2i( 500, 250 ),
