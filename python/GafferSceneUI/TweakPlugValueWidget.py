@@ -36,6 +36,8 @@
 
 import functools
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -49,35 +51,9 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 
-		# TODO - would be nice if this stuff didn't need to be added to the instance as metadata
-		# John has said that in the future we may be able to use match patterns to register metadata
-		# to children of a plug type, like we can do with nodes.
-		# This would allow us to use dynamic metadata to hide the value plug when in "Remove" mode
-
-		Gaffer.Metadata.registerValue( plug['name'], "description",
-			"The name of the parameter to apply the tweak to.", persistent=False
-		)
-		Gaffer.Metadata.registerValue( plug['mode'], "plugValueWidget:type",
-			"GafferUI.PresetsPlugValueWidget", persistent=False
-		)
-
-		presetNames = [ "Replace" ]
-
-		# Identify plugs which are derived from NumericPlug or CompoundNumericPlug
-		plugIsNumeric = hasattr( plug["value"], "hasMinValue" )
-		if plugIsNumeric:
-			presetNames += [ "Add", "Subtract", "Multiply" ]
-
-		if Gaffer.Metadata.value( plug, "tweakPlugValueWidget:allowRemove" ):
-			presetNames += [ "Remove" ]
-
-		for name in presetNames:
-			Gaffer.Metadata.registerValue( plug['mode'], "preset:" + name, GafferScene.TweakPlug.Mode.names[ name ], persistent = False )
-
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
-
 
 		nameWidget = GafferUI.StringPlugValueWidget( plug["name"] )
 		nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
@@ -164,3 +140,40 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ):
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 GafferUI.PlugValueWidget.registerType( GafferScene.TweakPlug, TweakPlugValueWidget )
+
+# Metadata for child plugs
+
+Gaffer.Metadata.registerValue(
+	GafferScene.TweakPlug, "name",
+	"description", "The name of the parameter to apply the tweak to."
+)
+
+Gaffer.Metadata.registerValue(
+	GafferScene.TweakPlug, "mode",
+	"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
+)
+
+def __validModes( plug ) :
+
+	result = [ GafferScene.TweakPlug.Mode.Replace ]
+	if hasattr( plug.parent()["value"], "hasMinValue" ) :
+		result += [
+			GafferScene.TweakPlug.Mode.Add,
+			GafferScene.TweakPlug.Mode.Subtract,
+			GafferScene.TweakPlug.Mode.Multiply
+		]
+
+	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowRemove" ) :
+		result += [ GafferScene.TweakPlug.Mode.Remove ]
+
+	return result
+
+Gaffer.Metadata.registerValue(
+	GafferScene.TweakPlug, "mode",
+	"presetNames", lambda plug : IECore.StringVectorData( [ str( x ) for x in __validModes( plug ) ] )
+)
+
+Gaffer.Metadata.registerValue(
+	GafferScene.TweakPlug, "mode",
+	"presetValues", lambda plug : IECore.IntVectorData( [ int( x ) for x in __validModes( plug ) ] )
+)
