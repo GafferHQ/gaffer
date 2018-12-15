@@ -51,9 +51,9 @@ namespace SocketAlgo
 {
 
 // Convenience functions to convert matrices.
-IECORECYCLES_API ccl::Transform m44dToTransform( const Imath::M44d &transform );
-IECORECYCLES_API ccl::Transform m44fToTransform( const Imath::M44f &transform );
-IECORECYCLES_API Imath::M44f transformToM44f( const ccl::Transform transform );
+IECORECYCLES_API ccl::Transform setTransform( const Imath::M44d &transform );
+IECORECYCLES_API ccl::Transform setTransform( const Imath::M44f &transform );
+IECORECYCLES_API Imath::M44f getTransform( const ccl::Transform transform );
 
 // Setting sockets onto cycles nodes.
 IECORECYCLES_API void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value );

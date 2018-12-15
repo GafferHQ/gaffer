@@ -380,7 +380,7 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 					socketType,
 					plugParent,
 					direction,
-					SocketAlgo::transformToM44f( t )
+					SocketAlgo::getTransform( t )
 				);
 			}
 			break;
