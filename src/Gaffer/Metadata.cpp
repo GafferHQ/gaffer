@@ -42,8 +42,8 @@
 
 #include "IECore/CompoundData.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/StringAlgo.h"
 
-#include "boost/algorithm/string/replace.hpp"
 #include "boost/bind.hpp"
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -61,69 +61,6 @@ using namespace Gaffer;
 
 namespace
 {
-
-IECore::InternedString g_ellipsis( "..." );
-
-typedef vector<InternedString> MatchPatternPath;
-vector<InternedString> matchPatternPath( std::string path )
-{
-	const InternedString ellipsisSubstitute = "!!!";
-	boost::replace_all( path, "...", "." + ellipsisSubstitute.string() + "." );
-
-	vector<InternedString> result;
-	StringAlgo::tokenize( path, '.', result );
-
-	std::replace( result.begin(), result.end(), ellipsisSubstitute, g_ellipsis );
-	return result;
-}
-
-bool matchInternal(
-	vector<InternedString>::const_iterator pathBegin,
-	vector<InternedString>::const_iterator pathEnd,
-	MatchPatternPath::const_iterator matchPathBegin,
-	MatchPatternPath::const_iterator matchPathEnd
-)
-{
-	while( true )
-	{
-		if( matchPathBegin == matchPathEnd )
-		{
-			return pathBegin == pathEnd;
-		}
-		else if( *matchPathBegin == g_ellipsis )
-		{
-			auto nextMatchPathBegin = std::next( matchPathBegin );
-			if( nextMatchPathBegin == matchPathEnd )
-			{
-				return true;
-			}
-			for( auto pb = pathBegin; pb != pathEnd; ++pb )
-			{
-				if( matchInternal( pb, pathEnd, nextMatchPathBegin, matchPathEnd ) )
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-		else if( pathBegin == pathEnd )
-		{
-			return false;
-		}
-		else if( !StringAlgo::match( *pathBegin, *matchPathBegin ) )
-		{
-			return false;
-		}
-		++pathBegin;
-		++matchPathBegin;
-	}
-}
-
-/// \todo Move to IECore::StringAlgo?
-bool match( const vector<InternedString> &path, const MatchPatternPath &matchPath )
-{
-	return matchInternal( path.begin(), path.end(), matchPath.begin(), matchPath.end() );
-}
 
 typedef std::pair<InternedString, Metadata::ValueFunction> NamedValue;
 
@@ -171,7 +108,7 @@ struct GraphComponentMetadata
 		>
 	> PlugValues;
 
-	typedef map<MatchPatternPath, PlugValues> PlugPathsToValues;
+	typedef map<StringAlgo::MatchPatternPath, PlugValues> PlugPathsToValues;
 
 	Values values;
 	PlugPathsToValues plugPathsToValues;
@@ -483,7 +420,7 @@ void Metadata::deregisterValue( IECore::TypeId typeId, IECore::InternedString ke
 void Metadata::deregisterValue( IECore::TypeId ancestorTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
 {
 	auto &m = graphComponentMetadataMap()[ancestorTypeId];
-	auto &plugValues = m.plugPathsToValues[matchPatternPath(plugPath)];
+	auto &plugValues = m.plugPathsToValues[StringAlgo::matchPatternPath( plugPath, '.' )];
 
 	auto it = plugValues.find( key );
 	if( it == plugValues.end() )
@@ -544,7 +481,7 @@ void Metadata::registerValue( IECore::TypeId ancestorTypeId, const StringAlgo::M
 void Metadata::registerValue( IECore::TypeId ancestorTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
 {
 	auto &graphComponentMetadata = graphComponentMetadataMap()[ancestorTypeId];
-	auto &plugValues = graphComponentMetadata.plugPathsToValues[matchPatternPath(plugPath)];
+	auto &plugValues = graphComponentMetadata.plugPathsToValues[StringAlgo::matchPatternPath( plugPath, '.' )];
 
 	GraphComponentMetadata::NamedPlugValue namedValue( key, value );
 
@@ -641,7 +578,7 @@ void Metadata::registeredValues( const GraphComponent *target, std::vector<IECor
 					{
 						for( auto it = nIt->second.plugPathsToValues.begin(), eIt = nIt->second.plugPathsToValues.end(); it != eIt; ++it )
 						{
-							if( match( plugPath, it->first ) )
+							if( StringAlgo::match( plugPath, it->first ) )
 							{
 								const auto &index = it->second.get<1>();
 								for( auto vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
@@ -708,7 +645,7 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 					// wildcard matches.
 					for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
 					{
-						if( match( plugPath, it->first ) )
+						if( StringAlgo::match( plugPath, it->first ) )
 						{
 							auto vIt = it->second.find( key );
 							if( vIt != it->second.end() )
