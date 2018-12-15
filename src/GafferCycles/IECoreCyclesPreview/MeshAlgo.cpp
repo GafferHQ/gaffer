@@ -159,9 +159,9 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		}
 
 		// TODO: Cycles supports edge creases, but I am not sure if Cortex does?
-		/*
 		if(!cmesh->subd_params)
 			cmesh->subd_params = new ccl::SubdParams(cmesh);
+		/*
 		ccl::SubdParams& sdparams = *cmesh->subd_params;
 		const float &dicing_rate = mesh->parametersData()->member<FloatData>( "ccl:dicing_rate", 0.0 )->readable();
 		sdparams.dicing_rate = max(0.1f, dicing_rate);
