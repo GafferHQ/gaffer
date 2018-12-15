@@ -59,11 +59,11 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 
 	// Shading parameters
 
-	attributes->addOptionalMember( "ccl:matte", new IECore::BoolData( false ), "matte", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ccl:use_holdout", new IECore::BoolData( false ), "useHoldout", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ccl:is_shadow_catcher", new IECore::BoolData( false ), "isShadowCatcher", Gaffer::Plug::Default, false );
 
 	// Subdivision parameters
-	attributes->addOptionalMember( "ccl:use_adaptive_subdivision", new IECore::BoolData( false ), "useAdaptiveSubdivision", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ccl:max_level", new IECore::IntData( 12 ), "maxLevel", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ccl:dicing_rate", new IECore::FloatData( 1.0f ), "dicingScale", Gaffer::Plug::Default, false );
 
 }

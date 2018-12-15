@@ -222,6 +222,27 @@ def __texturingSummary( plug ) :
 
 	return ", ".join( info )
 
+def __bvhSummary( plug ) :
+
+	info = []
+
+	if plug["bvhType"]["enabled"].getValue() :
+		info.append( "BVH Type {}".format( plug["bvhType"]["value"].getValue() ) )
+
+	if plug["bvhLayout"]["enabled"].getValue() :
+		info.append( "BVH Layout {}".format( plug["bvhLayout"]["value"].getValue() ) )
+
+	if plug["useSpatialSplits"]["enabled"].getValue() :
+		info.append( "Use Spatial Splits {}".format( plug["useSpatialSplits"]["value"].getValue() ) )
+
+	if plug["useBvhUnalignedNodes"]["enabled"].getValue() :
+		info.append( "Use BVH Unaligned Nodes {}".format( plug["useBvhUnalignedNodes"]["value"].getValue() ) )
+
+	if plug["useBvhTimeSteps"]["enabled"].getValue() :
+		info.append( "Use BVH Time Steps {}".format( plug["useBvhTimeSteps"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesOptions,
@@ -248,6 +269,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
 			"layout:section:Texturing:summary", __texturingSummary,
+			"layout:section:BVH", __bvhSummary,
 
 		],
 
@@ -1014,6 +1036,91 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# BVH
+
+		"options.bvhType" : [
+
+			"description",
+			"""
+			Choose between faster updates, or faster render.
+			- Dynamic BVH - Objects can be individually updated, at the 
+			  cost of slower render time").
+			- Static BVH  - Any object modification requires a complete BVH 
+			  rebuild, but renders faster").
+			""",
+
+			"layout:section", "BVH",
+			"label", "BVH Type",
+
+		],
+
+		"options.bvhType.value" : [
+
+			"present:Dynamic", 0,
+			"present:Static", 1,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.bvhLayout" : [
+
+			"description",
+			"""
+			BVH Layout size. This corresponds with CPU architecture
+			(the higher the faster, but might not be supported on old CPUs).
+			""",
+
+			"layout:section", "BVH",
+			"label", "BVH Layout",
+
+		],
+
+		"options.bvhLayout.value" : [
+
+			"present:BVH2", 0,
+			"present:BVH4", 1,
+			"present:BVH8", 2,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.useSpatialSplits" : [
+
+			"description",
+			"""
+			Use BVH spatial splits: longer builder time, faster render.
+			""",
+
+			"layout:section", "BVH",
+			"label", "Use Spatial Splits",
+
+		],
+
+		"options.useBvhUnalignedNodes" : [
+
+			"description",
+			"""
+			Use special type BVH optimized for hair (uses more ram but renders faster).
+			""",
+
+			"layout:section", "BVH",
+			"label", "Use Hair BVH",
+
+		],
+
+		"options.useBvhTimeSteps" : [
+
+			"description",
+			"""
+			Use special type BVH optimized for hair (uses more ram but renders faster).
+			""",
+
+			"layout:section", "BVH",
+			"label", "Use Hair BVH",
+
+		],
 
 	}
 

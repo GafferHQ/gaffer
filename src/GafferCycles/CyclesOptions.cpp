@@ -93,8 +93,10 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	
 	// Scene/BVH
 
-	options->addOptionalMember( "ccl:scene:bvh_type", new IECore::StringData( "dynamic" ), "bvhType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::StringData( "bvh2" ), "bvhLayout", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
+
+	options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 2 ), "bvhLayout", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), "useBvhUnalignedNodes", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_time_steps", new IECore::IntData( 0 ), "useBvhTimeSteps", Gaffer::Plug::Default, false );
