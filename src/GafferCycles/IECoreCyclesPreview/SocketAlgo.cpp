@@ -110,6 +110,33 @@ IECore::DataPtr arrayToData( const ccl::array<ccl::float3>& array )
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
+ccl::Transform m44dToTransform( const Imath::M44d &matrix )
+{
+	ccl::Transform t;
+	t.x = ccl::make_float4((float)matrix[0][0], (float)matrix[0][1], (float)matrix[0][2], (float)matrix[0][3]);
+	t.y = ccl::make_float4((float)matrix[1][0], (float)matrix[1][1], (float)matrix[1][2], (float)matrix[1][3]);
+	t.z = ccl::make_float4((float)matrix[2][0], (float)matrix[2][1], (float)matrix[2][2], (float)matrix[2][3]);
+	return t;
+}
+
+ccl::Transform m44fToTransform( const Imath::M44f &matrix )
+{
+	ccl::Transform t;
+	t.x = ccl::make_float4(matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]);
+	t.y = ccl::make_float4(matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3]);
+	t.z = ccl::make_float4(matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3]);
+	return t;
+}
+
+Imath::M44f transformToM44f( const ccl::Transform transform )
+{
+	return Imath::M44f( 
+				transform.x.x, transform.x.y, transform.x.z, transform.x.w,
+				transform.y.x, transform.y.y, transform.y.z, transform.y.w,
+				transform.z.x, transform.z.y, transform.z.z, transform.z.w,
+				0.0f,  0.0f,  0.0f,  1.0f );
+}
+
 void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )
 {
 	if( socket == nullptr )
@@ -189,21 +216,11 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::TRANSFORM:
 			if( const M44dData *data = static_cast<const M44dData *>( value ) )
 			{
-				const Imath::M44d &m = data->readable();
-				ccl::Transform t;
-				t.x = ccl::make_float4((float)m[0][0], (float)m[0][1], (float)m[0][2], (float)m[0][3]);
-				t.y = ccl::make_float4((float)m[1][0], (float)m[1][1], (float)m[1][2], (float)m[1][3]);
-				t.z = ccl::make_float4((float)m[2][0], (float)m[2][1], (float)m[2][2], (float)m[2][3]);
-				node->set( *socket, t );
+				node->set( *socket, m44dToTransform( data->readable() ) );
 			}
 			else if( const M44fData *data = static_cast<const M44fData *>( value ) )
 			{
-				const Imath::M44f &m = data->readable();
-				ccl::Transform t;
-				t.x = ccl::make_float4(m[0][0], m[0][1], m[0][2], m[0][3]);
-				t.y = ccl::make_float4(m[1][0], m[1][1], m[1][2], m[1][3]);
-				t.z = ccl::make_float4(m[2][0], m[2][1], m[2][2], m[2][3]);
-				node->set( *socket, t );
+				node->set( *socket, m44fToTransform( data->readable() ) );
 			}
 			break;
 		case ccl::SocketType::NODE:
@@ -266,11 +283,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 				for(int i = 0; i < matricesSize; ++i)
 				{
 					auto m = matrices[i];
-					ccl::Transform t;
-					t.x = ccl::make_float4((float)m[0][0], (float)m[0][1], (float)m[0][2], (float)m[0][3]);
-					t.y = ccl::make_float4((float)m[1][0], (float)m[1][1], (float)m[1][2], (float)m[1][3]);
-					t.z = ccl::make_float4((float)m[2][0], (float)m[2][1], (float)m[2][2], (float)m[2][3]);
-					*(tdata++) = t;
+					*(tdata++) = m44dToTransform( m );
 				}
 				node->set( *socket, array );
 			}
@@ -283,11 +296,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 				for(int i = 0; i < matricesSize; ++i)
 				{
 					auto m = matrices[i];
-					ccl::Transform t;
-					t.x = ccl::make_float4(m[0][0], m[0][1], m[0][2], m[0][3]);
-					t.y = ccl::make_float4(m[1][0], m[1][1], m[1][2], m[1][3]);
-					t.z = ccl::make_float4(m[2][0], m[2][1], m[2][2], m[2][3]);
-					*(tdata++) = t;
+					*(tdata++) = m44fToTransform( m );
 				}
 				node->set( *socket, array );
 			}
@@ -352,12 +361,7 @@ IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket 
 			return new IntData( node->get_int( *socket ) );
 		case ccl::SocketType::TRANSFORM:
 		{
-			ccl::Transform t = node->get_transform( *socket );
-			return new M44fData( Imath::M44f( 
-				t.x.x, t.x.y, t.x.z, t.x.w,
-				t.y.x, t.y.y, t.y.z, t.y.w,
-				t.z.x, t.z.y, t.z.z, t.z.w,
-				0.0f,  0.0f,  0.0f,  1.0f ) );
+			return new M44fData( transformToM44f( node->get_transform( *socket ) ) );
 		}
 		case ccl::SocketType::NODE:
 			return nullptr;
@@ -410,11 +414,7 @@ IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket 
 			for( size_t i = 0; i < array.size(); ++i )
 			{
 				auto t = array[i];
-				v.push_back( Imath::M44f( 
-					t.x.x, t.x.y, t.x.z, t.x.w,
-					t.y.x, t.y.y, t.y.z, t.y.w,
-					t.z.x, t.z.y, t.z.z, t.z.w,
-					0.0f,  0.0f,  0.0f,  1.0f ) );
+				v.push_back( transformToM44f( t ) );
 			}
 			return data;
 		}

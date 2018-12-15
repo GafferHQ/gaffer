@@ -37,6 +37,8 @@
 
 #include "GafferCycles/SocketHandler.h"
 
+#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+
 #include "GafferOSL/ClosurePlug.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
@@ -61,6 +63,7 @@ using namespace boost;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferCycles;
+using namespace IECoreCycles;
 
 namespace
 {
@@ -377,10 +380,7 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 					socketType,
 					plugParent,
 					direction,
-					M44f( t.x.x, t.x.y, t.x.z, t.x.w,
-						  t.y.x, t.y.y, t.y.z, t.y.w,
-						  t.z.x, t.z.y, t.z.z, t.z.w,
-						  0.0f,  0.0f,  0.0f,  1.0f )
+					SocketAlgo::transformToM44f( t )
 				);
 			}
 			break;

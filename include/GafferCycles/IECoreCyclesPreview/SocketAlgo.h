@@ -42,6 +42,7 @@
 // Cycles
 #include "graph/node.h"
 #include "graph/node_type.h"
+#include "util/util_transform.h"
 
 namespace IECoreCycles
 {
@@ -49,10 +50,17 @@ namespace IECoreCycles
 namespace SocketAlgo
 {
 
+// Convenience functions to convert matrices.
+IECORECYCLES_API ccl::Transform m44dToTransform( const Imath::M44d &transform );
+IECORECYCLES_API ccl::Transform m44fToTransform( const Imath::M44f &transform );
+IECORECYCLES_API Imath::M44f transformToM44f( const ccl::Transform transform );
+
+// Setting sockets onto cycles nodes.
 IECORECYCLES_API void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value );
 IECORECYCLES_API void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value );
 IECORECYCLES_API void setSockets( ccl::Node *node, const IECore::CompoundDataMap &values );
 
+// Getting data from cycles nodes via sockets.
 IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket );
 IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name );
 
