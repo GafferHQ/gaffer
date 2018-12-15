@@ -486,6 +486,19 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertTrue( Gaffer.MetadataAlgo.ancestorAffectedByChange( n["p"]["s"], Gaffer.Plug, changedPlugPath = "", changedPlug = None ) )
 		self.assertFalse( Gaffer.MetadataAlgo.ancestorAffectedByChange( n["p"]["s"], Gaffer.StringPlug, changedPlugPath = "", changedPlug = None ) )
 
+	def testAffectedByPlugRelativeMetadata( self ) :
+
+		n = GafferTest.CompoundNumericNode()
+
+		self.assertTrue( Gaffer.MetadataAlgo.affectedByChange( n["p"]["x"], Gaffer.V3fPlug, changedPlugPath = "*", changedPlug = None ) )
+		self.assertTrue( Gaffer.MetadataAlgo.affectedByChange( n["p"]["x"], Gaffer.V3fPlug, changedPlugPath = "[xyz]", changedPlug = None ) )
+		self.assertTrue( Gaffer.MetadataAlgo.affectedByChange( n["p"]["x"], Gaffer.V3fPlug, changedPlugPath = "...", changedPlug = None ) )
+		self.assertFalse( Gaffer.MetadataAlgo.affectedByChange( n["p"]["x"], Gaffer.V3fPlug, changedPlugPath = "x.c", changedPlug = None ) )
+		self.assertFalse( Gaffer.MetadataAlgo.affectedByChange( n["p"]["x"], Gaffer.V3fPlug, changedPlugPath = "c", changedPlug = None ) )
+
+		self.assertTrue( Gaffer.MetadataAlgo.childAffectedByChange( n["p"], Gaffer.V3fPlug, changedPlugPath = "[xyz]", changedPlug = None ) )
+		self.assertFalse( Gaffer.MetadataAlgo.childAffectedByChange( n["p"], Gaffer.V3fPlug, changedPlugPath = "x.c", changedPlug = None ) )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :

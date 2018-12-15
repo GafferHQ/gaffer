@@ -56,18 +56,6 @@ InternedString g_readOnlyName( "readOnly" );
 InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
 InternedString g_bookmarkedName( "bookmarked" );
 InternedString g_numericBookmarkBaseName( "numericBookmark" );
-
-size_t findNth( const std::string &s, char c, int n )
-{
-	size_t result = 0;
-	while( n-- && result != string::npos )
-	{
-		result = s.find( c, result );
-	}
-
-	return result;
-}
-
 IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
 IECore::InternedString g_noduleColorKey( "nodule:color" );
 
@@ -304,15 +292,20 @@ bool affectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IEC
 		return plug->isInstanceOf( changedTypeId );
 	}
 
-	const Node *node = plug->node();
-	if( !node || !node->isInstanceOf( changedTypeId ) )
+	const GraphComponent *ancestor = plug->parent();
+	vector<InternedString> plugPath( { plug->getName() } );
+	const StringAlgo::MatchPatternPath matchPatternPath = StringAlgo::matchPatternPath( changedPlugPath, '.' );
+	while( ancestor )
 	{
-		return false;
-	}
-
-	if( StringAlgo::match( plug->relativeName( node ), changedPlugPath ) )
-	{
-		return true;
+		if( ancestor->isInstanceOf( changedTypeId ) )
+		{
+			if( StringAlgo::match( plugPath, matchPatternPath ) )
+			{
+				return true;
+			}
+		}
+		plugPath.insert( plugPath.begin(), ancestor->getName() );
+		ancestor = ancestor->parent();
 	}
 
 	return false;
@@ -338,32 +331,25 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 		return false;
 	}
 
-	const Node *node = runTimeCast<const Node>( parent );
-	if( !node )
+	StringAlgo::MatchPatternPath matchPatternPath = StringAlgo::matchPatternPath( changedPlugPath, '.' );
+	matchPatternPath.pop_back(); // Remove element that would match child, so we can do matching for parent.
+
+	const GraphComponent *ancestor = parent;
+	vector<InternedString> path;
+	while( ancestor )
 	{
-		node = parent->ancestor<Node>();
+		if( ancestor->isInstanceOf( changedTypeId ) )
+		{
+			if( StringAlgo::match( path, matchPatternPath ) )
+			{
+				return true;
+			}
+		}
+		path.insert( path.begin(), ancestor->getName() );
+		ancestor = ancestor->parent();
 	}
 
-	if( !node || !node->isInstanceOf( changedTypeId ) )
-	{
-		return false;
-	}
-
-	if( parent == node )
-	{
-		return changedPlugPath.find( '.' ) == string::npos;
-	}
-
-	const string parentName = parent->relativeName( node );
-	const size_t n = count( parentName.begin(), parentName.end(), '.' ) + 1;
-	const size_t parentMatchPatternEnd = findNth( changedPlugPath, '.', n );
-
-	if( parentMatchPatternEnd == string::npos )
-	{
-		return false;
-	}
-
-	return StringAlgo::match( parentName, changedPlugPath.substr( 0, parentMatchPatternEnd ) );
+	return false;
 }
 
 bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode )
