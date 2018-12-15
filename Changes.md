@@ -40,6 +40,7 @@ API
   - Values returned by `getValue()` are in Gaffer's internal representation, using forward slashes to separate directory components.
   - `FilePathPlug` is compatible with `StringPlug` - `FilePathPlug` can be used as input for `StringPlug` and `StringPlug` can be used as input for `FilePathPlug`.
   - Converted existing `StringPlug` used for file paths to `FilePathPlug`.
+  - Added `FilePathPlug` to the list of User Plugs.
 
 Breaking Changes
 ----------------
