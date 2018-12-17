@@ -37,8 +37,6 @@
 #ifndef GAFFERCYCLES_SOCKETHANDLER_H
 #define GAFFERCYCLES_SOCKETHANDLER_H
 
-#include "GafferCycles/Export.h"
-
 #include "Gaffer/Plug.h"
 
 // Cycles
@@ -51,9 +49,9 @@ namespace SocketHandler
 {
 
 /// A helper class for mapping Cycles Sockets to Gaffer Plugs.
-GAFFERCYCLES_API Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-GAFFERCYCLES_API Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-GAFFERCYCLES_API void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 
 } // namespace SocketHandler
 

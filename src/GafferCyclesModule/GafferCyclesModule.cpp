@@ -42,19 +42,73 @@
 
 #include "GafferCycles/CyclesAttributes.h"
 #include "GafferCycles/CyclesOptions.h"
+#include "GafferCycles/CyclesLight.h"
+#include "GafferCycles/CyclesShader.h"
 #include "GafferCycles/CyclesRender.h"
 #include "GafferCycles/InteractiveCyclesRender.h"
+
+// Cycles
+#include "graph/node.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
 using namespace GafferCycles;
 
+namespace
+{
+
+boost::python::dict getSocketUINameDict( const ccl::NodeType *nodeType, const bool output )
+{
+	boost::python::dict result;
+
+	if( output )
+	{
+		for( const ccl::SocketType socketType : nodeType->outputs )
+		{
+			result[socketType.ui_name.c_str()] = socketType.name.c_str();
+		}
+	}
+	else
+	{
+		for( const ccl::SocketType socketType : nodeType->inputs )
+		{
+			result[socketType.ui_name.c_str()] = socketType.name.c_str();
+		}
+	}
+
+	return result;
+}
+
+boost::python::dict createNodeRegistry()
+{
+	boost::python::dict result;
+
+	for( const auto& nodeType : ccl::NodeType::types() )
+	{
+		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
+		if( cNodeType )
+		{
+			boost::python::dict sockets;
+			sockets["in"] = getSocketUINameDict( cNodeType, false );
+			sockets["out"] = getSocketUINameDict( cNodeType, true );
+			result[nodeType.first.c_str()] = sockets;
+		}
+	}
+	return result;
+}
+
+} // namespace
+
 BOOST_PYTHON_MODULE( _GafferCycles )
 {
 
+	boost::python::scope().attr( "nodeRegistry" ) = createNodeRegistry();
+
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesOptions>();
+	DependencyNodeClass<CyclesLight>();
+	DependencyNodeClass<CyclesShader>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
 

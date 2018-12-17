@@ -420,14 +420,14 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 
 	if( direction == Plug::In )
 	{
-		for( ccl::SocketType socketType : nodeType->inputs )
+		for( const ccl::SocketType socketType : nodeType->inputs )
 		{
 			validPlugs.insert( setupPlug( nodeType, socketType, plugsParent, direction ) );
 		}
 	}
 	else
 	{
-		for( ccl::SocketType socketType : nodeType->outputs )
+		for( const ccl::SocketType socketType : nodeType->outputs )
 		{
 			validPlugs.insert( setupPlug( nodeType, socketType, plugsParent, direction ) );
 		}

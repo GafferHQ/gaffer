@@ -120,12 +120,12 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 {
 	ccl::Mesh *cmesh = new ccl::Mesh();
 
-	size_t numFaces = mesh->numFaces();
+	const size_t numFaces = mesh->numFaces();
 
 	const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
 	const vector<int> &vertexIds = mesh->vertexIds()->readable();
-	size_t numVerts = points.size();
+	const size_t numVerts = points.size();
 
 	bool subdivision = false;
 	bool triangles = ( mesh->maxVerticesPerFace() == 3 ) ? true : false;
@@ -157,17 +157,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			cmesh->add_subd_face( const_cast<int*>(&vertexIds[index_offset]), vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
 			index_offset += vertsPerFace[i];
 		}
-
-		// TODO: Cycles supports edge creases, but I am not sure if Cortex does?
-		if(!cmesh->subd_params)
-			cmesh->subd_params = new ccl::SubdParams(cmesh);
-		/*
-		ccl::SubdParams& sdparams = *cmesh->subd_params;
-		const float &dicing_rate = mesh->parametersData()->member<FloatData>( "ccl:dicing_rate", 0.0 )->readable();
-		sdparams.dicing_rate = max(0.1f, dicing_rate);
-		const int &max_level = mesh->parametersData()->member<IntData>( "ccl:max_level", 1 )->readable();
-		sdparams.max_level = max_level;
-		*/
 	}
 	else
 	{
@@ -199,6 +188,10 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
 		}
 	}
+
+	// TODO: Maybe move this to attibutes so it can be shared between meshes?
+	if( ( cmesh->subdivision_type != ccl::Mesh::SUBDIVISION_NONE ) && ( !cmesh->subd_params ) )
+		cmesh->subd_params = new ccl::SubdParams( cmesh );
 
 	// Primitive Variables are Attributes in Cycles
 	ccl::AttributeSet& attributes = (subdivision) ? cmesh->subd_attributes : cmesh->attributes;

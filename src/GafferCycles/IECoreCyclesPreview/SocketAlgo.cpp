@@ -413,8 +413,7 @@ IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket 
 
 			for( size_t i = 0; i < array.size(); ++i )
 			{
-				auto t = array[i];
-				v.push_back( getTransform( t ) );
+				v.push_back( getTransform( array[i] ) );
 			}
 			return data;
 		}
