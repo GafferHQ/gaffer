@@ -154,6 +154,43 @@ Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ```
 
 
+## _Node Editor_ ##
+
+
+### Numeric Plugs ###
+
+```eval_rst
+============================================== ===============================================
+Action                                         Control or Shorcut
+============================================== ===============================================
+Increment/decrement value, specific precision  Position cursor next to a number position in 
+                                               plug field, then hit :kbd:`↑` / :kbd:`↓`
+Scrub value, coarse precision                  :kbd:`Control` + click and drag the field
+                                               left/right
+Scrub value, fine precision                    :kbd:`Control` + :kbd:`Shift` + click and drag
+                                               the field left/right
+============================================== ===============================================
+```
+
+
+### Path Plugs ###
+
+```eval_rst
+==================================== ================================================
+Action                               Control or Shorcut
+==================================== ================================================
+Autocomplete path component          :kbd:`Tab`
+Path-level contents menu             Select path component
+
+                                     or
+                                     
+                                     Position text cursor in path component, then hit
+                                     :kbd:`↓`
+Path hierarchy menu                  Select all
+==================================== ================================================
+```
+
+
 ## _Viewer_ ##
 
 > Note :
@@ -301,21 +338,3 @@ Adjust frame(s) of selected key(s)              :kbd:`Shift` + click and drag le
 Adjust value(s) of selected key(s)              :kbd:`Shift` + click and drag up or down
 =============================================== =============================================
 ```
-
-
-## Plug Values ##
-
-> Note :
-> The following controls and shortcuts only operate on numerical plugs.
-
-```eval_rst
-====================================================== ==============================================
-Action                                                 Control or Shorcut
-====================================================== ==============================================
-Increment/decrement plug value, arbitrary precision    Edit plug field, position cursor next to
-                                                       a number position, then :kbd:`↑` or :kbd:`↓`
-Increment/decrement plug value, coarse precision       :kbd:`Control` + click and drag the field left
-                                                       and right
-Increment/decrement plug value, fine precision         :kbd:`Control` + :kbd:`Shift` + click and drag
-                                                       the field left and right
-====================================================== ==============================================
