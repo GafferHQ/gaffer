@@ -93,9 +93,10 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
-		result += "\n\n<ul>"
-		result += "<li>Tab to auto-complete</li>"
-		result += "<li>Cursor down to list</li>"
+		result += "<ul>"
+		result += "<li><kbd>Tab</kbd> to autocomplete path component</li>"
+		result += "<li>Select path component (or hit <kbd>&darr;</kbd>) to show path-level contents menu</li>"
+		result += "<li>Select all to show path hierarchy menu</li>"
 		result += "</ul>"
 
 		return result
