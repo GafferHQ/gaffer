@@ -7,6 +7,9 @@
 
 The following is a list of input device controls and shortcuts for manipulating the _Node Graph_, _Viewer_, and _Python Editor_.
 
+> Tip :
+> OSX users: replace <kbd>Ctrl</kbd> with <kbd>Command ⌘</kbd>.
+
 
 ## General ##
 
@@ -14,12 +17,12 @@ The following is a list of input device controls and shortcuts for manipulating 
 ===================================== =============================================
 Action			                      Control or Shortcut
 ===================================== =============================================
-New node graph                        :kbd:`Control` + :kbd:`N`
-Open node graph                       :kbd:`Control` + :kbd:`O`
-Save node graph                       :kbd:`Control` + :kbd:`S`
-Save node graph as                    :kbd:`Control` + :kbd:`Shift` + :kbd:`S`
-Undo                                  :kbd:`Control` + :kbd:`Z`
-Redo                                  :kbd:`Control` + :kbd:`Shift` + :kbd:`Z`
+New node graph                        :kbd:`Ctrl` + :kbd:`N`
+Open node graph                       :kbd:`Ctrl` + :kbd:`O`
+Save node graph                       :kbd:`Ctrl` + :kbd:`S`
+Save node graph as                    :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`S`
+Undo                                  :kbd:`Ctrl` + :kbd:`Z`
+Redo                                  :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`Z`
 Step one frame forward                :kbd:`→`
 Step one frame backward               :kbd:`←`
 Fullscreen mode                       :raw-html:`<kbd>&#96;</kbd>`
@@ -66,7 +69,7 @@ Show node menu                        Right-click
                                       or
                                       
                                       :kbd:`Tab`
-Insert `Dot` at connection            :kbd:`Control` + click connection
+Insert `Dot` at connection            :kbd:`Ctrl` + click connection
                                       
                                       or
                                       
@@ -81,15 +84,15 @@ Insert `Dot` at connection            :kbd:`Control` + click connection
 ===================================== =============================================
 Action			                      Control or Shortcut
 ===================================== =============================================
-Select all                            :kbd:`Control` + :kbd:`A`
-Clear selection                       :kbd:`Control` + :kbd:`Shift` + :kbd:`A`
+Select all                            :kbd:`Ctrl` + :kbd:`A`
+Clear selection                       :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`A`
 Select node                           Click
 Add/remove node from selection        :kbd:`Shift` + click
 Select nodes                          Click and drag marquee, then release
 Add nodes                             :kbd:`Shift` + click and drag marquee, then 
                                       release
 Select upstream nodes                 :kbd:`Shift` + :kbd:`Alt` + click node
-Select downstream nodes               :kbd:`Shift` + :kbd:`Control` + click node
+Select downstream nodes               :kbd:`Shift` + :kbd:`Ctrl` + click node
 ===================================== =============================================
 ```
 
@@ -102,9 +105,9 @@ Select downstream nodes               :kbd:`Shift` + :kbd:`Control` + click node
 ===================================== =============================================
 Action			                      Control or Shortcut
 ===================================== =============================================
-Cut node(s)                           :kbd:`Control` + :kbd:`X`
-Copy node(s)                          :kbd:`Control` + :kbd:`C`
-Paste node(s)                         :kbd:`Control` + :kbd:`V`
+Cut node(s)                           :kbd:`Ctrl` + :kbd:`X`
+Copy node(s)                          :kbd:`Ctrl` + :kbd:`C`
+Paste node(s)                         :kbd:`Ctrl` + :kbd:`V`
 Delete node(s)                        :kbd:`Backspace`
                                       
                                       or
@@ -124,7 +127,7 @@ Action			                      Control or Shortcut
 Connect plug                          Click and drag plug to another plug
 Disconnect plug                       Click and drag connection to background
 Insert node onto connection           Click and drag node onto connection
-Auto-arrange selected nodes           :kbd:`Control` + :kbd:`L`
+Auto-arrange selected nodes           :kbd:`Ctrl` + :kbd:`L`
 Duplicate outgoing connection         :kbd:`Shift`-click and drag connection just 
                                       before *in* plug
 ===================================== =============================================
@@ -140,7 +143,7 @@ Action			                      Control or Shortcut
 Bookmark node                         Right-click node > *Bookmark*
 Connect to bookmarked node            Right-click plug > *Connect Bookmark* > select
                                       node
-Jump to bookmarked node               Hover cursor over editor, :kbd:`Control` +
+Jump to bookmarked node               Hover cursor over editor, :kbd:`Ctrl` +
                                       :kbd:`B` > select bookmarked node
                                       
                                       or
@@ -165,9 +168,9 @@ Action                                         Control or Shorcut
 ============================================== ===============================================
 Increment/decrement value, specific precision  Position cursor next to a number position in 
                                                plug field, then hit :kbd:`↑` / :kbd:`↓`
-Scrub value, coarse precision                  :kbd:`Control` + click and drag the field
+Scrub value, coarse precision                  :kbd:`Ctrl` + click and drag the field
                                                left/right
-Scrub value, fine precision                    :kbd:`Control` + :kbd:`Shift` + click and drag
+Scrub value, fine precision                    :kbd:`Ctrl` + :kbd:`Shift` + click and drag
                                                the field left/right
 ============================================== ===============================================
 ```
@@ -240,8 +243,8 @@ Fit clipping planes to selection                       Right-click > *Clipping 
 
                                                        or
 
-                                                       :kbd:`Control` + :kbd:`K`
-Frame view, and fit clipping planes to scene/selection :kbd:`Control` + :kbd:`F`
+                                                       :kbd:`Ctrl` + :kbd:`K`
+Frame view, and fit clipping planes to scene/selection :kbd:`Ctrl` + :kbd:`F`
 Reset clipping planes                                  Right-click > *Clipping Planes* > 
                                                        *Default*
 ====================================================== =====================================
@@ -299,8 +302,8 @@ Drop scene location path(s) into *Python Editor*   Click and drag selection from
 ===================================== ===================================================
 Action                                Control or Shortcut
 ===================================== ===================================================
-Execute and clear                     :kbd:`Control` + :kbd:`Enter`
-Execute selection                     Select code, then hit :kbd:`Control` + :kbd:`Enter`
+Execute and clear                     :kbd:`Ctrl` + :kbd:`Enter`
+Execute selection                     Select code, then hit :kbd:`Ctrl` + :kbd:`Enter`
 ===================================== ===================================================
 ```
 
@@ -326,7 +329,7 @@ Adjust key value range                          :kbd:`Alt` + :kbd:`Shift` + righ
                                                 drag up/down
 Frame all curves (no selection)                 :kbd:`F`
 Frame selected key(s)                           :kbd:`F`
-Add key to a curve                              :kbd:`Control` + click
+Add key to a curve                              :kbd:`Ctrl` + click
 Add key to all selected curves at current frame :kbd:`I`
 Delete selected key(s)                          :kbd:`Delete`
 
