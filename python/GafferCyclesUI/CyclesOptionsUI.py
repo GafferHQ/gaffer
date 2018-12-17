@@ -39,7 +39,7 @@ import IECore
 import Gaffer
 import GafferCycles
 
-def __renderingSummary( plug ) :
+def __sessionSummary( plug ) :
 
 	info = []
 
@@ -55,12 +55,6 @@ def __renderingSummary( plug ) :
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
 
-	if plug["method"]["enabled"].getValue() :
-		if plug["method"]["value"].getValue() == 0 :
-			info.append( "Branched-Path Integrator" )
-		elif plug["method"]["value"].getValue() == 1 :
-			info.append( "Path Integrator" )
-
 	if plug["numThreads"]["enabled"].getValue() :
 		info.append( "Threads {}".format( plug["numThreads"]["value"].getValue() ) )
 
@@ -71,9 +65,39 @@ def __renderingSummary( plug ) :
 
 	return ", ".join( info )
 
+def __sceneSummary( plug ) :
+
+	info = []
+
+	if plug["bvhType"]["enabled"].getValue() :
+		info.append( "BVH Type {}".format( plug["bvhType"]["value"].getValue() ) )
+
+	if plug["bvhLayout"]["enabled"].getValue() :
+		info.append( "BVH Layout {}".format( plug["bvhLayout"]["value"].getValue() ) )
+
+	if plug["useSpatialSplits"]["enabled"].getValue() :
+		info.append( "Use Spatial Splits {}".format( plug["useSpatialSplits"]["value"].getValue() ) )
+
+	if plug["useBvhUnalignedNodes"]["enabled"].getValue() :
+		info.append( "Use BVH Unaligned Nodes {}".format( plug["useBvhUnalignedNodes"]["value"].getValue() ) )
+
+	if plug["useBvhTimeSteps"]["enabled"].getValue() :
+		info.append( "Use BVH Time Steps {}".format( plug["useBvhTimeSteps"]["value"].getValue() ) )
+
+	if plug["textureLimit"]["enabled"].getValue() :
+			info.append( "Texture Limit - {}".format( plug["textureLimit"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 def __samplingSummary( plug ) :
 
 	info = []
+
+	if plug["method"]["enabled"].getValue() :
+		if plug["method"]["value"].getValue() == 0 :
+			info.append( "Branched-Path Integrator" )
+		elif plug["method"]["value"].getValue() == 1 :
+			info.append( "Path Integrator" )
 
 	if plug["samples"]["enabled"].getValue() :
 		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
@@ -213,36 +237,6 @@ def __denoisingSummary( plug ) :
 
 	return ", ".join( info )
 
-def __texturingSummary( plug ) :
-
-	info = []
-
-	if plug["textureLimit"]["enabled"].getValue() :
-		info.append( "Texture Limit - {}".format( plug["textureLimit"]["value"].getValue() ) )
-
-	return ", ".join( info )
-
-def __bvhSummary( plug ) :
-
-	info = []
-
-	if plug["bvhType"]["enabled"].getValue() :
-		info.append( "BVH Type {}".format( plug["bvhType"]["value"].getValue() ) )
-
-	if plug["bvhLayout"]["enabled"].getValue() :
-		info.append( "BVH Layout {}".format( plug["bvhLayout"]["value"].getValue() ) )
-
-	if plug["useSpatialSplits"]["enabled"].getValue() :
-		info.append( "Use Spatial Splits {}".format( plug["useSpatialSplits"]["value"].getValue() ) )
-
-	if plug["useBvhUnalignedNodes"]["enabled"].getValue() :
-		info.append( "Use BVH Unaligned Nodes {}".format( plug["useBvhUnalignedNodes"]["value"].getValue() ) )
-
-	if plug["useBvhTimeSteps"]["enabled"].getValue() :
-		info.append( "Use BVH Time Steps {}".format( plug["useBvhTimeSteps"]["value"].getValue() ) )
-
-	return ", ".join( info )
-
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesOptions,
@@ -260,7 +254,8 @@ Gaffer.Metadata.registerNode(
 
 		"options" : [
 
-			"layout:section:Rendering:summary", __renderingSummary,
+			"layout:section:Session:summary", __sessionSummary,
+			"layout:section:Scene:summary", __sceneSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Volumes:summary", __volumesSummary,
@@ -268,12 +263,10 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
-			"layout:section:Texturing:summary", __texturingSummary,
-			"layout:section:BVH", __bvhSummary,
 
 		],
 
-		# Rendering
+		# Session
 
 		"options.device" : [
 
@@ -282,18 +275,11 @@ Gaffer.Metadata.registerNode(
 			Device to use for rendering.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Session",
 
 		],
 
-		"options.device.value" : [
-
-			"preset:CPU", "CPU",
-			"preset:GPU", "GPU",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
+		"options.device.value" : __devices( GafferCycles.devices ),
 
 		"options.featureSet" : [
 
@@ -302,11 +288,11 @@ Gaffer.Metadata.registerNode(
 			Feature set to use for rendering.
 			- Supported : Only use finished and supported features
 			- Experimental : Use experimental and incomplete features
-			                 that might be broken or change in the 
-							 future.
+								that might be broken or change in the 
+								future.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Session",
 
 		],
 
@@ -329,7 +315,7 @@ Gaffer.Metadata.registerNode(
 			- SVM : Use Shader Virtual Machine.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Session",
 
 		],
 
@@ -342,32 +328,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.method" : [
-
-			"description",
-			"""
-			Method to sample lights and materials.
-
-			- Branched Path : Path tracing integrator that branches on
-			  the first bounce, giving more control over the number of
-			  light and material samples.
-			- Path Tracing : Pure path tracing integrator.
-			""",
-
-			"layout:section", "Rendering",
-			"label", "Integrator",
-
-		],
-
-		"options.method.value" : [
-
-			"preset:BranchedPath", False,
-			"preset:Path", True,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
 		"options.numThreads" : [
 
 			"description",
@@ -375,15 +335,15 @@ Gaffer.Metadata.registerNode(
 			The number of threads used for rendering.
 
 			- The default value of 0 lets the renderer choose
-			  an optimal number of threads based on the available
-			  hardware.
+				an optimal number of threads based on the available
+				hardware.
 			- Positive values directly set the number of threads.
 			- Negative values can be used to reserve some cores
-			  while otherwise letting the renderer choose the
-			  optimal number of threads.
+				while otherwise letting the renderer choose the
+				optimal number of threads.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Session",
 
 		],
 
@@ -394,7 +354,7 @@ Gaffer.Metadata.registerNode(
 			Tile order for rendering.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Session",
 
 		],
 
@@ -411,7 +371,146 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Scene
+
+		"options.bvhType" : [
+
+			"description",
+			"""
+			Choose between faster updates, or faster render.
+			- Dynamic BVH - Objects can be individually updated, at the 
+				cost of slower render time").
+			- Static BVH  - Any object modification requires a complete BVH 
+				rebuild, but renders faster").
+			""",
+
+			"layout:section", "Scene",
+			"label", "BVH Type",
+
+		],
+
+		"options.bvhType.value" : [
+
+			"present:Dynamic", 0,
+			"present:Static", 1,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.bvhLayout" : [
+
+			"description",
+			"""
+			BVH Layout size. This corresponds with CPU architecture
+			(the higher the faster, but might not be supported on old CPUs).
+			""",
+
+			"layout:section", "Scene",
+			"label", "BVH Layout",
+
+		],
+
+		"options.bvhLayout.value" : [
+
+			"present:BVH2", 0,
+			"present:BVH4", 1,
+			"present:BVH8", 2,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.useSpatialSplits" : [
+
+			"description",
+			"""
+			Use BVH spatial splits: longer builder time, faster render.
+			""",
+
+			"layout:section", "Scene",
+			"label", "Use Spatial Splits",
+
+		],
+
+		"options.useBvhUnalignedNodes" : [
+
+			"description",
+			"""
+			Use special type BVH optimized for hair (uses more ram but renders faster).
+			""",
+
+			"layout:section", "BVH",
+			"label", "Use Hair BVH",
+
+		],
+
+		"options.useBvhTimeSteps" : [
+
+			"description",
+			"""
+			Use special type BVH optimized for hair (uses more ram but renders faster).
+			""",
+
+			"layout:section", "Scene",
+			"label", "Use Hair BVH",
+
+		],
+
+		"options.textureLimit" : [
+
+			"description",
+			"""
+			Limit the maximum texture size used by final rendering.
+			""",
+
+			"layout:section", "Scene",
+			"label", "Size Limit",
+
+		],
+
+		"options.textureLimit.value" : [
+
+			"preset:No Limit", 0,
+			"preset:128", 1,
+			"preset:256", 2,
+			"preset:512", 3,
+			"preset:1024", 4,
+			"preset:2048", 5,
+			"preset:4096", 6,
+			"preset:8192", 7,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 		# Sampling
+
+		"options.method" : [
+
+			"description",
+			"""
+			Method to sample lights and materials.
+
+			- Branched Path : Path tracing integrator that branches on
+			  the first bounce, giving more control over the number of
+			  light and material samples.
+			- Path Tracing : Pure path tracing integrator.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Integrator",
+
+		],
+
+		"options.method.value" : [
+
+			"preset:BranchedPath", False,
+			"preset:Path", True,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
 
 		"options.samples" : [
 
@@ -1004,121 +1103,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Denoising",
 			"label", "Store Denoising Passes",
-
-		],
-
-		# Texturing
-
-		"options.textureLimit" : [
-
-			"description",
-			"""
-			Limit the maximum texture size used by final rendering.
-			""",
-
-			"layout:section", "Texturing",
-			"label", "Size Limit",
-
-		],
-
-		"options.textureLimit.value" : [
-
-			"preset:No Limit", 0,
-			"preset:128", 1,
-			"preset:256", 2,
-			"preset:512", 3,
-			"preset:1024", 4,
-			"preset:2048", 5,
-			"preset:4096", 6,
-			"preset:8192", 7,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		# BVH
-
-		"options.bvhType" : [
-
-			"description",
-			"""
-			Choose between faster updates, or faster render.
-			- Dynamic BVH - Objects can be individually updated, at the 
-			  cost of slower render time").
-			- Static BVH  - Any object modification requires a complete BVH 
-			  rebuild, but renders faster").
-			""",
-
-			"layout:section", "BVH",
-			"label", "BVH Type",
-
-		],
-
-		"options.bvhType.value" : [
-
-			"present:Dynamic", 0,
-			"present:Static", 1,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.bvhLayout" : [
-
-			"description",
-			"""
-			BVH Layout size. This corresponds with CPU architecture
-			(the higher the faster, but might not be supported on old CPUs).
-			""",
-
-			"layout:section", "BVH",
-			"label", "BVH Layout",
-
-		],
-
-		"options.bvhLayout.value" : [
-
-			"present:BVH2", 0,
-			"present:BVH4", 1,
-			"present:BVH8", 2,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.useSpatialSplits" : [
-
-			"description",
-			"""
-			Use BVH spatial splits: longer builder time, faster render.
-			""",
-
-			"layout:section", "BVH",
-			"label", "Use Spatial Splits",
-
-		],
-
-		"options.useBvhUnalignedNodes" : [
-
-			"description",
-			"""
-			Use special type BVH optimized for hair (uses more ram but renders faster).
-			""",
-
-			"layout:section", "BVH",
-			"label", "Use Hair BVH",
-
-		],
-
-		"options.useBvhTimeSteps" : [
-
-			"description",
-			"""
-			Use special type BVH optimized for hair (uses more ram but renders faster).
-			""",
-
-			"layout:section", "BVH",
-			"label", "Use Hair BVH",
 
 		],
 
