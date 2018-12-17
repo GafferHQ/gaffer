@@ -43,11 +43,16 @@
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 #include "Gaffer/Process.h"
 
+#include "IECore/MurmurHash.h"
+
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
+
+#include <unordered_map>
 
 using namespace Gaffer;
 
@@ -57,6 +62,74 @@ using namespace Gaffer;
 
 namespace
 {
+
+tbb::enumerable_thread_specific<size_t> g_threadHashCacheMemoryAllocated;
+
+template<typename T>
+class CustomAllocator
+{
+	public:
+		typedef T value_type;
+
+		typedef T* pointer;
+		typedef const T* const_pointer;
+
+		typedef T& reference;
+		typedef const T& const_reference;
+
+		typedef std::size_t size_type;
+		typedef std::ptrdiff_t difference_type;
+
+		template< class U > struct rebind { typedef CustomAllocator<U> other; };
+
+		CustomAllocator() noexcept
+		{
+		}
+
+		CustomAllocator( const CustomAllocator& other ) noexcept
+		{
+		}
+
+		template< class U >
+		CustomAllocator( const CustomAllocator<U>& other ) noexcept
+		{
+		}
+
+		template< class U, class... Args >
+		void construct( U* p, Args&&... args )
+		{
+			new ( (void*) p) T(args...);
+		}
+
+		pointer address( reference x ) const
+		{
+			return &x;
+		}
+
+		pointer allocate( size_type n, const void * hint = 0 )
+		{
+			auto& m = g_threadHashCacheMemoryAllocated.local();
+			m += n * sizeof(T);
+			return (pointer) malloc( n * sizeof( T ));
+		}
+
+		void deallocate( T* p, std::size_t n )
+		{
+			auto& m = g_threadHashCacheMemoryAllocated.local();
+			m -= n * sizeof(T);
+			free( (void*) p );
+		}
+
+		size_type max_size() const
+		{
+			return std::numeric_limits<size_type>::max();
+		}
+
+		void destroy( pointer p )
+		{
+			((T*) p)->~T();
+		}
+};
 
 // Before using the HashProcess/ComputeProcess classes to get a hash or
 // a value, we first traverse back down the chain of input plugs to the
@@ -76,6 +149,27 @@ inline const ValuePlug *sourcePlug( const ValuePlug *p )
 
 	return p;
 }
+
+size_t getCacheCacheLimit()
+{
+	const char *cacheLimit = getenv( "GAFFER_HASHCACHE_LIMIT" );
+
+	if( cacheLimit )
+	{
+		try
+		{
+			return boost::lexical_cast<size_t>( cacheLimit ) * 1024ULL * 1024ULL;
+		}
+		catch( ... )
+		{
+		}
+	}
+
+	return 64ULL * 1024ULL * 1024ULL;
+
+}
+
+size_t hashCacheLimit = (size_t) getCacheCacheLimit();
 
 } // namespace
 
@@ -119,31 +213,18 @@ class ValuePlug::HashProcess : public Process
 			// from our cache, and if we can't we'll compute it using a HashProcess instance.
 
 			ThreadData &threadData = g_threadData.local();
-			if( !Process::current() )
-			{
-				// Starting a new root computation.
-				if( ++(threadData.cacheClearCount) == 3200 )
-				{
-					// Prevent unbounded growth in the hash cache
-					// if many computations are being performed
-					// without any plugs being dirtied in between,
-					// by clearing it after every Nth computation.
-					// N == 3200 was observed to be 6x faster than
-					// N == 100 for a procedural instancing scene at
-					// a memory cost of about 100 mb.
-					threadData.clearCache = 1;
-				}
-			}
 
-			if( threadData.clearCache )
+			if( threadData.clearCache || ( g_threadHashCacheMemoryAllocated.local() > hashCacheLimit ) )
 			{
-				threadData.cache.clear();
-				threadData.cacheClearCount = 0;
+				Cache empty;
+				threadData.cache.swap( empty );
+
 				threadData.clearCache = 0;
 			}
 
 			const Context *currentContext = Context::current();
-			const CacheKey key( p, currentContext->hash() );
+			IECore::MurmurHash key( currentContext->hash() );
+			key.append ( (size_t) p );
 			Cache::iterator it = threadData.cache.find( key );
 			if( it != threadData.cache.end() )
 			{
@@ -217,16 +298,25 @@ class ValuePlug::HashProcess : public Process
 		// by the plug the hash is for and the context the hash was performed in. The
 		// typedefs below describe that data structure. We use Plug::dirty() to empty
 		// the caches, because they are invalidated whenever an upstream value or
-		// connection is changed. We also clear the cache unconditionally every N
-		// computations, to prevent unbounded growth.
-		typedef std::pair<const ValuePlug *, IECore::MurmurHash> CacheKey;
-		typedef boost::unordered_map<CacheKey, IECore::MurmurHash> Cache;
+		// connection is changed. We also clear the cache unconditionally when a
+		// specified memory limit is reached.
+
+		// Given the key is already a hash taking the lower 64 bits should be a decent enough hash function.
+		class CustomHasher
+		{
+			public:
+				std::size_t operator()( const IECore::MurmurHash& key ) const
+				{
+					return *((uint64_t *) &key);
+				}
+		};
+
+		typedef std::unordered_map<IECore::MurmurHash, IECore::MurmurHash, CustomHasher, std::equal_to<IECore::MurmurHash>,  CustomAllocator<std::pair<IECore::MurmurHash, IECore::MurmurHash> > > Cache;
 
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
-			ThreadData() : cacheClearCount( 0 ) {}
-			int cacheClearCount;
+			ThreadData() {}
 			Cache cache;
 			// Flag to request that hashCache be cleared.
 			tbb::atomic<int> clearCache;
