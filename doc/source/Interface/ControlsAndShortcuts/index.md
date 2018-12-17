@@ -254,10 +254,10 @@ Reset clipping planes                                  Right-click > *Clipping 
 ===================================== =============================================
 Action			                      Control or Shortcut
 ===================================== =============================================
-Isolate red channel                    :kbd:`R`
-Isolate green channel                  :kbd:`G`
-Isolate blue channel                   :kbd:`B`
-Isolate alpha channel                  :kbd:`A`
+Isolate red channel                   :kbd:`R`
+Isolate green channel                 :kbd:`G`
+Isolate blue channel                  :kbd:`B`
+Isolate alpha channel                 :kbd:`A`
 Center image at 1:1 scale             :kbd:`Home`
 ===================================== =============================================
 ```
@@ -296,12 +296,12 @@ Drop scene location path(s) into *Python Editor*   Click and drag selection from
 > For the following controls and shortcuts, the input field of the _Python Editor_ must be in focus.
 
 ```eval_rst
-===================================== =============================================
+===================================== ===================================================
 Action                                Control or Shortcut
-===================================== =============================================
+===================================== ===================================================
 Execute and clear                     :kbd:`Control` + :kbd:`Enter`
-Execute selection                     Select code, then :kbd:`Control` + :kbd:`Enter`
-===================================== =============================================
+Execute selection                     Select code, then hit :kbd:`Control` + :kbd:`Enter`
+===================================== ===================================================
 ```
 
 
@@ -319,11 +319,11 @@ Zoom                                            :kbd:`Alt` + right-click and dra
 
                                                 or
                                                 
-                                                Mouse wheel up or down
+                                                Mouse wheel up/down
 Adjust frame range                              :kbd:`Alt` + :kbd:`Shift` + right-click and
-                                                drag left or right
+                                                drag left/right
 Adjust key value range                          :kbd:`Alt` + :kbd:`Shift` + right-click and
-                                                drag up or down
+                                                drag up/down
 Frame all curves (no selection)                 :kbd:`F`
 Frame selected key(s)                           :kbd:`F`
 Add key to a curve                              :kbd:`Control` + click
@@ -334,7 +334,7 @@ Delete selected key(s)                          :kbd:`Delete`
                                                 
                                                 :kbd:`Backspace`
 Adjust selected key(s)                          Click and drag
-Adjust frame(s) of selected key(s)              :kbd:`Shift` + click and drag left or right
-Adjust value(s) of selected key(s)              :kbd:`Shift` + click and drag up or down
+Adjust frame(s) of selected key(s)              :kbd:`Shift` + click and drag left/right
+Adjust value(s) of selected key(s)              :kbd:`Shift` + click and drag up/down
 =============================================== =============================================
 ```
