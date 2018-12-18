@@ -5,6 +5,12 @@ Improvements
 ------------
 
 - Loop : Added plug context menu item for connecting previous to next (#2887).
+- ArnoldOptions : Added adaptive sampling settings (#2919).
+- ArnoldRender (#2919) :
+  - Added support for a "camera" parameter in outputs, allowing renders from
+    multiple cameras to be performed in a single process.
+  - Added support for Arnold's `uv_camera`.
+- SceneInspector : Added curve basis to Object section (#2892).
 
 Documentation
 -------------
@@ -40,6 +46,28 @@ Breaking Changes
   - Removed `parent` variable. Paste serialised scripts using the GraphEditor
     instead.
 - Screengrab app : Renamed `-scriptEditor` argument to `pythonEditor` (#2876).
+
+0.52.3.3 (relative to 0.52.3.2)
+========
+
+Fixes
+-----
+
+- Arnold renderer : Fixed light linking bug (#2947).
+- ViewportGadget : Fixed bug in orthographic camera projection. This prevented the
+  CropWindowTool from working (#2946).
+
+0.52.3.2 (relative to 0.52.3.1)
+========
+
+Fixes
+-----
+
+- gui : Fixed crash when starting Gaffer with unicode in the clipboard (#2933).
+- TransformTool : Fixed crash caused by selection deduplication (#2940).
+- ImageTransform : Fixed bug when rotating an empty data window (#2932).
+- ImageView : Fixed TypeId bug (#2937).
+- Arnold : Fixed crash when using shadowGroups (#2934).
 
 0.52.3.1 (relative to 0.52.3.0)
 ========
