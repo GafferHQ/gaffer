@@ -350,12 +350,12 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				);
 				if( m_sourceCamera->getProjection() == "perspective" )
 				{
-					cameraPosition = cameraPosition / cameraPosition.z;
+					cameraPosition = cameraPosition / -cameraPosition.z;
 				}
 
 				V2f ndcPosition(
-					lerpfactor( cameraPosition.x, normalizedScreenWindow.max.x, normalizedScreenWindow.min.x ),
-					lerpfactor( cameraPosition.y, normalizedScreenWindow.min.y, normalizedScreenWindow.max.y )
+					lerpfactor( cameraPosition.x, normalizedScreenWindow.min.x, normalizedScreenWindow.max.x ),
+					lerpfactor( cameraPosition.y, normalizedScreenWindow.max.y, normalizedScreenWindow.min.y )
 				);
 				return V2f(
 					ndcPosition.x * resolution.x,
