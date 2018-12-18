@@ -237,6 +237,36 @@ def __denoisingSummary( plug ) :
 
 	return ", ".join( info )
 
+def __curvesSummary( plug ) :
+
+	info = []
+
+	if plug["useCurves"]["enabled"].getValue() :
+		info.append( "Use Curves {}".format( plug["useCurves"]["value"].getValue() ) )
+
+	if plug["curveMinimumWidth"]["enabled"].getValue() :
+		info.append( "Minimum Width {}".format( plug["curveMinimumWidth"]["value"].getValue() ) )
+
+	if plug["curveMaximumWidth"]["enabled"].getValue() :
+		info.append( "Maximum Width {}".format( plug["curveMaximumWidth"]["value"].getValue() ) )
+
+	if plug["curvePrimitive"]["enabled"].getValue() :
+		info.append( "Primitive {}".format( plug["curvePrimitive"]["value"].getValue() ) )
+
+	if plug["curveShape"]["enabled"].getValue() :
+		info.append( "Shape {}".format( plug["curveShape"]["value"].getValue() ) )
+
+	if plug["curveResolution"]["enabled"].getValue() :
+		info.append( "Resolution {}".format( plug["curveResolution"]["value"].getValue() ) )
+
+	if plug["curveSubdivisions"]["enabled"].getValue() :
+		info.append( "Subdivisions {}".format( plug["curveSubdivisions"]["value"].getValue() ) )
+
+	if plug["curveCullBackfacing"]["enabled"].getValue() :
+		info.append( "Cull Backfacing {}".format( plug["curveCullBackfacing"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesOptions,
@@ -263,6 +293,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
+			"layout:section:Curves:summary", __curvesSummary,
 
 		],
 
@@ -416,6 +447,7 @@ Gaffer.Metadata.registerNode(
 			"present:BVH2", 0,
 			"present:BVH4", 1,
 			"present:BVH8", 2,
+			"present:EMBREE", 3,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -1106,6 +1138,122 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-	}
+		# Curves
 
+		"options.useCurves" : [
+
+			"description",
+			"""
+			Activate Cycles curves/hair particle system.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Enable Curve Particles",
+
+		],
+
+		"options.curveMinimumWidth" : [
+
+			"description",
+			"""
+			Minimal pixel width for strand (0 - deactivated).
+			""",
+
+			"layout:section", "Curves",
+			"label", "Minimum Width",
+
+		],
+
+		"options.curveMaximumWidth" : [
+
+			"description",
+			"""
+			Maximum extension that strand radius can be increased by.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Minimum Width",
+
+		],
+
+		"options.curvePrimitive" : [
+
+			"description",
+			"""
+			Curve primitve type.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Primitive",
+
+		],
+
+		"options.curvePrimitive.value" : [
+
+			"preset:Triangles", 0,
+			"preset:LineSegments", 1,
+			"preset:Segments", 2,
+			"preset:Ribbons", 3,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.curveShape" : [
+
+			"description",
+			"""
+			Curve shape type.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Shape",
+
+		],
+
+		"options.curveShape.value" : [
+
+			"preset:Ribbon", 0,
+			"preset:Thick", 1,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.curveResolution" : [
+
+			"description",
+			"""
+			Curve resolution.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Resolution",
+
+		],
+
+		"options.curveSubdivisions" : [
+
+			"description",
+			"""
+			Curve subdivisions.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Subdivisions",
+
+		],
+
+		"options.curveCullBackfacing" : [
+
+			"description",
+			"""
+			Curve cull back-faces.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Subdivisions",
+
+		],
+	}
 )

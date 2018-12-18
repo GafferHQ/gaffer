@@ -804,10 +804,10 @@ class InstanceCache : public IECore::RefCounted
 			// Push-back to vector needs thread locking.
 			{
 				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-				m_objects.push_back( cobjectptr );
+				m_objects.push_back( cobjectPtr );
 			}
 
-			return Instance( cobjectptr, a->second );
+			return Instance( cobjectPtr, a->second );
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -847,7 +847,7 @@ class InstanceCache : public IECore::RefCounted
 				m_objects.push_back( cobjectPtr );
 			}
 
-			return Instance( cobjectptr, a->second );
+			return Instance( cobjectPtr, a->second );
 		}
 
 		// Must not be called concurrently with anything.
@@ -869,8 +869,12 @@ class InstanceCache : public IECore::RefCounted
 			{
 				m_meshes.erase( *it );
 			}
+
+			if( toErase.size() )
+				updateMeshes();
+
 			// Objects
-			set<SharedCObjectPtr> toErase;
+			vector<SharedCObjectPtr> toErase;
 			for( set<SharedCObjectPtr>::iterator it = m_objects.begin(), eIt = m_meshes.end(); it != eIt; ++it )
 			{
 				if( it->unique() )
@@ -878,13 +882,16 @@ class InstanceCache : public IECore::RefCounted
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
 					// instance.
-					toErase.insert( *it );
+					toErase.push_back( *it );
 				}
 			}
 			for( set<SharedCObjectPtr>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
 			{
 				m_objects.erase( *it );
 			}
+
+			if( toErase.size() )
+				updateObjects();
 		}
 
 	private :
@@ -916,9 +923,10 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		set<SharedCObjectPtr> m_objects;
+		vector<SharedCObjectPtr> m_objects;
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCMeshPtr> MeshCache;
 		MeshCache m_meshes;
+		tbb::spin_mutex m_objectsMutex;
 
 };
 
@@ -956,8 +964,8 @@ class LightCache : public IECore::RefCounted
 			clight.get().name = nodeName.c_str();
 			// Push-back to vector needs thread locking.
 			{
-				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-				m_lights.insert( clight );
+				tbb::spin_mutex::scoped_lock lock( m_lightsMutex );
+				m_lights.push_back( clight );
 			}
 			return clight;
 		}
@@ -965,21 +973,24 @@ class LightCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			set<SharedCLightPtr> toErase;
-			for( set<SharedCLightPtr>::iterator it = m_objects.begin(), eIt = m_meshes.end(); it != eIt; ++it )
+			vector<SharedCLightPtr> toErase;
+			for( vector<SharedCLightPtr>::iterator it = m_objects.begin(), eIt = m_meshes.end(); it != eIt; ++it )
 			{
 				if( it->unique() )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
 					// instance.
-					toErase.insert( *it );
+					toErase.push_back( *it );
 				}
 			}
 			for( set<SharedCLightPtr>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
 			{
 				m_objects.erase( *it );
 			}
+
+			if( toErase.size() )
+				updateLights();
 		}
 
 	private :
@@ -998,7 +1009,8 @@ class LightCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		ccl::set<SharedCLightPtr> m_lights;
+		ccl::vector<SharedCLightPtr> m_lights;
+		tbb::spin_mutex m_lightsMutex;
 
 };
 
@@ -1184,12 +1196,13 @@ IE_CORE_DECLAREPTR( CyclesCamera )
 namespace
 {
 
+// Core
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
-
+// Session
 IECore::InternedString g_backgroundOptionName( "ccl:session:background" );
 IECore::InternedString g_progressiveRefineOptionName( "ccl:session:progressive_refine" );
 IECore::InternedString g_progressiveOptionName( "ccl:session:progressive" );
@@ -1210,7 +1223,7 @@ IECore::InternedString g_cancelTimeoutOptionName( "ccl:session:cancel_timeout" )
 IECore::InternedString g_resetTimeoutOptionName( "ccl:session:reset_timeout" );
 IECore::InternedString g_textTimeoutOptionName( "ccl:session:text_timeout" );
 IECore::InternedString g_progressiveUpdateTimeoutOptionName( "ccl:session:progressive_update_timeout" );
-
+// Scene
 IECore::InternedString g_bvhTypeOptionName( "ccl:scene:bvh_type" );
 IECore::InternedString g_bvhLayoutOptionName( "ccl:scene:bvh_layout" );
 IECore::InternedString g_useBvhSpatialSplitOptionName( "ccl:scene:use_bvh_spatial_split" );
@@ -1218,6 +1231,15 @@ IECore::InternedString g_useBvhUnalignedNodesOptionName( "ccl:scene:use_bvh_unal
 IECore::InternedString g_useBvhTimeStepsOptionName( "ccl:scene:use_bvh_time_steps" );
 IECore::InternedString g_persistentDataOptionName( "ccl:scene:persistent_data" );
 IECore::InternedString g_textureLimitOptionName( "ccl:scene:texture_limit" );
+// Curves
+IECore::InternedString g_useCurvesOptionType( "ccl:curve:use_curves" );
+IECore::InternedString g_curveMinimumWidthOptionType( "ccl:curve:minimum_width" );
+IECore::InternedString g_curveMaximumWidthOptionType( "ccl:curve:maximum_width" );
+IECore::InternedString g_curvePrimitiveOptionType( "ccl:curve:primitive" );
+IECore::InternedString g_curveShapeOptionType( "ccl:curve:shape" );
+IECore::InternedString g_curveResolutionOptionType( "ccl:curve:resolution" );
+IECore::InternedString g_curveSubdivisionsOptionType( "ccl:curve:subdivisions" );
+IECore::InternedString g_curveCullBackfacing( "ccl:curve:cull_backfacing" );
 
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
@@ -1256,7 +1278,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			init();
 
 			m_lightCache = new LightCache( m_scene );
-			//m_shaderCache = new InstanceCache( m_scene );
+			//m_shaderCache = new ShaderCache( m_scene );
 			m_instanceCache = new InstanceCache( m_scene );
 			m_attributesCache = new AttributesCache();
 
@@ -1344,10 +1366,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 						{
 							auto device_name = data->readable();
-							if( device_name == "CPU" )
-							{
-								m_device_name = device_name;
-							}
+							m_device_name = device_name;
 						}
 						else
 						{
@@ -1568,6 +1587,60 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 				}
 			}
+			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
+			{
+				if( value )
+				{
+					if( name == g_useCurvesOptionType )
+					{
+						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+							m_curve_params.use_curves = data->readable();
+						return;
+					}
+					else if( name == g_curveMinimumWidthOptionType )
+					{
+						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+							m_curve_params.minimum_width = data->readable();
+						return;
+					}
+					else if( name == g_curveMaximumWidthOptionType )
+					{
+						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+							m_curve_params.maximum_width = data->readable();
+						return;
+					}
+					else if( name == g_curvePrimitiveOptionType )
+					{
+						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+							m_curve_params.primitive = (ccl::CurvePrimitiveType)data->readable();
+						return;
+					}
+					else if( name == g_curveShapeOptionType )
+					{
+						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+							m_curve_params.curve_shape = (ccl::CurveShapeType)data->readable();
+						return;
+					}
+					else if( name == g_curveResolutionOptionType )
+					{
+						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+							m_curve_params.resolution = data->readable();
+						return;
+					}
+					else if( name == g_curveSubdivisionsOptionType )
+					{
+						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+							m_curve_params.subdivisions = data->readable();
+						return;
+					}
+					else if( name == g_curveCullBackfacing )
+					{
+						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+							m_curve_params.use_backfacing = data->readable();
+						return;
+					}
+				}
+			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
 			else if( boost::starts_with( name.string(), "ccl:background:" ) )
 			{
@@ -1704,7 +1777,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Store the camera for later use in updateCamera().
 			{
-				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
+				tbb::spin_mutex::scoped_lock lock( m_camerasMutex );
 				m_cameras[name] = camera;
 			}
 
@@ -1754,14 +1827,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void render() override
 		{
+			updateOptions();
 			// Clear out any objects which aren't needed in the cache.
 			m_lightCache->clearUnused();
 			m_instanceCache->clearUnused();
 			m_attributesCache->clearUnused();
-
-			updateSceneObjects();
-
-			updateOptions();
 
 			if( m_rendering )
 			{
@@ -1806,9 +1876,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else if( m_shadingsystem_name == "SVM" )
 				m_session_params.shadingsystem = ccl::SHADINGSYSTEM_SVM;
 
+			// Fallback
+			ccl::DeviceType device_type_fallback = ccl::Device::type_from_string( "CPU" );
+			ccl::DeviceInfo device_fallback;
+
 			ccl::DeviceType device_type = ccl::Device::type_from_string( m_device_name.c_str() );
+
 			ccl::vector<ccl::DeviceInfo>& devices = ccl::Device::available_devices();
 			bool device_available = false;
+			for( ccl::DeviceInfo& device : devices ) 
+			{
+				if( device_type_fallback == device.type )
+				{
+					device_fallback = device;
+					break;
+				}
+			}
 			for( ccl::DeviceInfo& device : devices ) 
 			{
 				if( device_type == device.type ) 
@@ -1817,6 +1900,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					device_available = true;
 					break;
 				}
+			}
+			if( !device_available )
+			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", boost::format( "Cannot find the device \"%s\" requested, reverting to CPU." ) % m_device_name );
+				m_session_params.device = device_fallback;
 			}
 
 			m_session = new ccl::Session( m_session_params );
@@ -1849,9 +1937,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
+
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_scene_params ) ||
-				m_session->params.modified( m_session_params )
+			    m_session->params.modified( m_session_params )
 			{
 				reset();
 			}
@@ -1865,30 +1954,25 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( m_background->modified( m_scene->background ) )
 			{
 				memcpy( m_scene.background, m_background, sizeof( ccl::Background ) );
-				background->tag_update( m_scene );
+				m_scene->background->tag_update( m_scene );
 			}
 
 			if( m_film->modified( m_scene->film ) )
 			{
 				memcpy( m_scene.film, m_film, sizeof( ccl::Film ) );
-				film->tag_update( m_scene );
+				m_scene->film->tag_update( m_scene );
 			}
 		}
 
 		void reset()
 		{
-			// Salvage all the objects first so that cycles doesn't delete them.
-			m_objects.swap( m_scene->objects );
-			m_meshes.swap( m_scene->meshes );
-			m_shaders.swap( m_scene->shaders );
-			m_lights.swap( m_scene->lights );
-			m_particle_systems.swap( m_scene->particle_systems );
+			// This is so cycles doesn't delete the objects that Gaffer manages.
+			m_scene->objects.clear();
+			m_scene->meshes.clear();
+			m_scene->shaders.clear();
+			m_scene->lights.clear();
+			m_scene->particle_systems.clear();
 			init();
-			m_objects.swap( m_scene->objects );
-			m_meshes.swap( m_scene->meshes );
-			m_shaders.swap( m_scene->shaders );
-			m_lights.swap( m_scene->lights );
-			m_particle_systems.swap( m_scene->particle_systems );
 			// Make sure the instance cache points to the right scene.
 			updateSceneObjects();
 		}
@@ -1970,14 +2054,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::Background *m_background;
 		ccl::Film *m_film;
 
-		// These belong to scene, but we temporarily swap them into here and back again on
-		// scene resets so that cycles doesn't delete them.
-		ccl::vector<ccl::Object*> m_objects;
-		ccl::vector<ccl::Mesh*> m_meshes;
-		ccl::vector<ccl::Shader*> m_shaders;
-		ccl::vector<ccl::Light*> m_lights;
-		ccl::vector<ccl::ParticleSystem*> m_particle_systems;
-
 		// IECoreScene::Renderer
 		std::string m_device;
 		RenderType m_renderType;
@@ -1987,6 +2063,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		bool m_rendering = false;
 
 		// Caches.
+		ShaderCachePtr m_shaderCache;
+		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
 		AttributesCachePtr m_attributesCache;
 
@@ -1994,12 +2072,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		typedef std::map<IECore::InternedString, ConstCyclesOutputPtr> OutputMap;
 		OutputMap m_outputs;
 
-		// Mutex for adding objects/lights/cameras back to cycles
-		tbb::spin_mutex m_objectMutex;
-
+		// Cameras (Cycles can only know of one camera at a time)
 		typedef unordered_map<string, ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
-
+		tbb::spin_mutex m_camerasMutex;
 		ConstCameraPtr m_defaultCamera;
 
 		// Registration with factory

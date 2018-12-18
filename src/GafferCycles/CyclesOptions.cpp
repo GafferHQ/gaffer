@@ -145,6 +145,16 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	options->addOptionalMember( "ccl:integrator:sampling_pattern", new IECore::IntData( 0 ), "samplingPattern", Gaffer::Plug::Default, false );
 
+	// Curves
+	options->addOptionalMember( "ccl:curve:use_curves", new IECore::BoolData( false ), "useCurves", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:minimum_width", new IECore::FloatData( 0.0f ), "curveMinimumWidth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:maximum_width", new IECore::FloatData( 0.10f ), "curveMaximumWidth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:primitive", new IECore::IntData( 0 ), "curvePrimitive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:shape", new IECore::IntData( 0 ), "curveShape", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:resolution", new IECore::IntData( 0 ), "curveResolution", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:subdivisions", new IECore::IntData( 0 ), "curveSubdivisions", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:cull_backfacing", new IECore::BoolData( false ), "curveCullBackfacing", Gaffer::Plug::Default, false );
+
 }
 
 CyclesOptions::~CyclesOptions()

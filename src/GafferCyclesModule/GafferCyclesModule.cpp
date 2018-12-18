@@ -121,11 +121,34 @@ boost::python::dict getNodes()
 		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
 		if( cNodeType )
 		{
-			boost::python::dict d;
-			d["shader"] = cNodeType->type == ccl::NodeType::SHADER ? true : false;
-			d["in"] = getSockets( cNodeType, false );
-			d["out"] = getSockets( cNodeType, true );
-			result[nodeType.first.c_str()] = d;
+			if( cNodeType->type != ccl::NodeType::SHADER )
+			{
+				boost::python::dict d;
+				d["in"] = getSockets( cNodeType, false );
+				d["out"] = getSockets( cNodeType, true );
+				result[nodeType.first.c_str()] = d;
+			}
+		}
+	}
+	return result;
+}
+
+boost::python::dict getShaders()
+{
+	boost::python::dict result;
+
+	for( const auto& nodeType : ccl::NodeType::types() )
+	{
+		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
+		if( cNodeType )
+		{
+			if( cNodeType->type == ccl::NodeType::SHADER )
+			{
+				boost::python::dict d;
+				d["in"] = getSockets( cNodeType, false );
+				d["out"] = getSockets( cNodeType, true );
+				result[nodeType.first.c_str()] = d;
+			}
 		}
 	}
 	return result;
@@ -138,6 +161,7 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 
 	boost::python::scope().attr( "devices" ) = getDevices();
 	boost::python::scope().attr( "nodes" ) = getNodes();
+	boost::python::scope().attr( "shaders" ) = getShaders();
 
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesOptions>();
