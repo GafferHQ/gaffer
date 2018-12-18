@@ -1,3 +1,13 @@
+0.52.3.3 (relative to 0.52.3.2)
+========
+
+Fixes
+-----
+
+- Arnold renderer : Fixed light linking bug (#2947).
+- ViewportGadget : Fixed bug in orthographic camera projection. This prevented the
+  CropWindowTool from working (#2946).
+
 0.52.3.2 (relative to 0.52.3.1)
 ========
 
