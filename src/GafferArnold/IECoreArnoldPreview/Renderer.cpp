@@ -982,7 +982,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// geometry attributes are compatible with those which were applied previously
 		// (and which cannot be changed now). Returns true if all is well and false
 		// if there is a clash (and the edit has therefore failed).
-		bool apply( AtNode *node, const ArnoldAttributes *previousAttributes ) const
+		bool apply( AtNode *node, const ArnoldAttributes *previousAttributes, bool applyLinkedLights ) const
 		{
 
 			// Check that we're not looking at an impossible request
@@ -1117,7 +1117,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeResetParameter( node, g_sssSetNameArnoldString );
 				}
 
-				if( m_linkedLights )
+				if( m_linkedLights && applyLinkedLights )
 				{
 					const std::vector<AtNode *> &linkedLightNodes = m_lightListCache->get( m_linkedLights.get() );
 
@@ -1130,7 +1130,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeResetParameter( node, g_useLightGroupArnoldString );
 				}
 
-				if( m_shadowGroup )
+				if( m_shadowGroup && applyLinkedLights )
 				{
 					const std::vector<AtNode *> &linkedLightNodes = m_lightListCache->get( m_shadowGroup.get() );
 
@@ -1817,7 +1817,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		ArnoldObject( const Instance &instance )
-			:	m_instance( instance ), m_attributes( nullptr )
+			:	m_instance( instance ), m_attributes( nullptr ), m_supportsLinkedLights( true )
 		{
 		}
 
@@ -1850,7 +1850,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			if( arnoldAttributes->apply( node, m_attributes.get() ) )
+			if( arnoldAttributes->apply( node, m_attributes.get(), m_supportsLinkedLights ) )
 			{
 				m_attributes = arnoldAttributes;
 				return true;
@@ -1898,6 +1898,9 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 		//    `attributes()`.
 		ConstArnoldAttributesPtr m_attributes;
 
+		// Derived classes are allowed to reject having lights linked to them
+		bool m_supportsLinkedLights;
+
 };
 
 IE_CORE_FORWARDDECLARE( ArnoldObject )
@@ -1919,6 +1922,17 @@ class ArnoldLight : public ArnoldObject
 		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode )
 			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
 		{
+			// Explicitly opt out of having lights linked to us, for two reasons :
+			//
+			// - It doesn't make much sense, because we're a light ourself.
+			// - We can only apply light linking correctly once all lights have
+			//   been output, otherwise LightListCache will be outputting partial
+			//   lists. We have no idea if more lights will be output after this
+			//   one.
+			//
+			/// \todo There is an argument for dealing with this in `GafferScene::RendererAlgo`
+			/// instead. Reconsider when adding light linking to other renderer backends.
+			m_supportsLinkedLights = false;
 		}
 
 		void transform( const Imath::M44f &transform ) override

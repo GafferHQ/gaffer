@@ -945,6 +945,53 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( lightNames, [] )
 			self.assertEqual( doLinking, False )
 
+	def testNoLinkedLightsOnLights( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		meshLightShader = GafferArnold.ArnoldShader()
+		meshLightShader.loadShader( "flat" )
+
+		meshLightFilter = GafferScene.PathFilter()
+		meshLightFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		meshLight = GafferArnold.ArnoldMeshLight()
+		meshLight["in"].setInput( sphere["out"] )
+		meshLight["filter"].setInput( meshLightFilter["out"] )
+		meshLight["parameters"]["color"].setInput( meshLightShader["out"] )
+
+		light1 = GafferArnold.ArnoldLight()
+		light1.loadShader( "point_light" )
+
+		light2 = GafferArnold.ArnoldLight()
+		light2.loadShader( "point_light" )
+
+		# Trigger light linking by unlinking a light
+		light2["defaultLight"].setValue( False )
+
+		group = GafferScene.Group()
+
+		group["in"][0].setInput( meshLight["out"] )
+		group["in"][1].setInput( light1["out"] )
+		group["in"][2].setInput( light2["out"] )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( group["out"] )
+
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
+			self.assertIsNotNone( sphere )
+
+			self.assertEqual( arnold.AiArrayGetNumElements( arnold.AiNodeGetArray( sphere, "light_group" ) ), 0 )
+			self.assertFalse( arnold.AiNodeGetBool( sphere, "use_light_group" ) )
+
 	def testAbortRaises( self ) :
 
 		s = Gaffer.ScriptNode()
