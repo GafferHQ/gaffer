@@ -518,7 +518,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		title = ".".join( [ IECore.CamelCase.join( IECore.CamelCase.split( x ) ) for x in title.split( "." ) ] )
 
 		self.__popupMenu = GafferUI.Menu( menuDefinition, title = title )
-		self.__popupMenu.popup()
+		self.__popupMenu.popup( parent = self )
 
 		return True
 
