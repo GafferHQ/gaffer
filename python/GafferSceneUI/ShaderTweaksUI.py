@@ -65,9 +65,9 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:All", "light *:light",
-			"preset:Appleseed", "as:light",
-			"preset:Arnold", "ai:light",
+			"presetsPlugValueWidget:allowCustom", True,
+
+			"preset:None", "",
 
 		],
 
@@ -90,6 +90,79 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# Internal utilities
+##########################################################################
+
+def _shaderTweaksNode( plugValueWidget ) :
+
+	# The plug may not belong to a ShaderTweaks node
+	# directly. Instead it may have been promoted
+	# elsewhere and be driving a target plug on a
+	# ShaderTweaks node.
+
+	def walkOutputs( plug ) :
+
+		if isinstance( plug.node(), GafferScene.ShaderTweaks ) :
+			return plug.node()
+
+		for output in plug.outputs() :
+			node = walkOutputs( output )
+			if node is not None :
+				return node
+
+	return walkOutputs( plugValueWidget.getPlug() )
+
+def _pathsFromAffected( plugValueWidget ) :
+
+	node = _shaderTweaksNode( plugValueWidget )
+	if node is None :
+		return []
+
+	pathMatcher = IECore.PathMatcher()
+	with plugValueWidget.getContext() :
+		GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
+
+	return pathMatcher.paths()
+
+def _pathsFromSelection( plugValueWidget ) :
+
+	node = _shaderTweaksNode( plugValueWidget )
+	if node is None :
+		return []
+
+	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() )
+	paths = paths.paths() if paths else []
+
+	with plugValueWidget.getContext() :
+		paths = [ p for p in paths if GafferScene.SceneAlgo.exists( node["in"], p ) ]
+
+	return paths
+
+def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
+
+	result = {}
+	node = _shaderTweaksNode( plugValueWidget )
+	if node is None :
+		return result
+
+	with plugValueWidget.getContext() :
+		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
+		for path in paths :
+			attributes = node["in"].attributes( path )
+			for name, attribute in attributes.items() :
+				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+					continue
+				if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
+					continue
+				result.setdefault( path, {} )[name] = attribute
+
+	return result
+
+##########################################################################
+# _TweaksFooter
+##########################################################################
 
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
@@ -166,53 +239,31 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def __addFromAffectedMenuDefinition( self ) :
 
-		paths = []
-		node = self.__shaderTweaksNode()
-		if node is not None :
-			pathMatcher = IECore.PathMatcher()
-			with self.getContext() :
-				GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
-				paths = pathMatcher.paths()
-
-		return self.__addFromPathsMenuDefinition( paths )
+		return self.__addFromPathsMenuDefinition( _pathsFromAffected( self ) )
 
 	def __addFromSelectedMenuDefinition( self ) :
 
-		paths = []
-		node = self.__shaderTweaksNode()
-		if node is not None :
-			paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() )
-			paths = paths.paths() if paths else []
-			paths = [ p for p in paths if GafferScene.SceneAlgo.exists( node["in"], p ) ]
-
-		return self.__addFromPathsMenuDefinition( paths )
+		return self.__addFromPathsMenuDefinition( _pathsFromSelection( self ) )
 
 	def __addFromPathsMenuDefinition( self, paths ) :
 
 		result = IECore.MenuDefinition()
 
-		node = self.__shaderTweaksNode()
-		if node is None :
+		shaderAttributes = _shaderAttributes( self, paths, affectedOnly = True )
+		if not len( shaderAttributes ) :
 			result.append(
-				"/No Scene Found", { "active" : False }
+				"/No Shaders Found", { "active" : False }
 			)
 			return result
 
 		parameters = {}
-		with self.getContext() :
-			attributeNamePatterns = node["shader"].getValue()
-			for path in paths :
-				attributes = node["in"].attributes( path )
-				for name, network in attributes.items() :
-					if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+		for attributes in shaderAttributes.values() :
+			for name, network in attributes.items() :
+				shader = network.outputShader()
+				for parameterName, parameterValue in shader.parameters.items() :
+					if parameterName.startswith( "__" ) :
 						continue
-					if not isinstance( network, IECoreScene.ShaderNetwork ) or not len( network ):
-						continue
-					shader = network.outputShader()
-					for parameterName, parameterValue in shader.parameters.items() :
-						if parameterName.startswith( "__" ) :
-							continue
-						parameters[parameterName] = parameterValue
+					parameters[parameterName] = parameterValue
 
 		if not len( parameters ) :
 			result.append(
@@ -233,25 +284,6 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __shaderTweaksNode( self ) :
-
-		# Our plug may not belong to a ShaderTweaks node
-		# directly. Instead it may have been promoted
-		# elsewhere and be driving a target plug on a
-		# ShaderTweaks node.
-
-		def walkOutputs( plug ) :
-
-			if isinstance( plug.node(), GafferScene.ShaderTweaks ) :
-				return plug.node()
-
-			for output in plug.outputs() :
-				node = walkOutputs( output )
-				if node is not None :
-					return node
-
-		return walkOutputs( self.getPlug() )
-
 	def __addTweak( self, name, plugTypeOrValue ) :
 
 		if isinstance( plugTypeOrValue, IECore.Data ) :
@@ -264,3 +296,58 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
+
+##########################################################################
+# PlugValueWidget context menu
+##########################################################################
+
+def __setShaderFromAffectedMenuDefinition( menu ) :
+
+	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
+	return __setShaderFromPathsMenuDefinition( plugValueWidget, _pathsFromAffected( plugValueWidget ) )
+
+def __setShaderFromSelectionMenuDefinition( menu ) :
+
+	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
+	return __setShaderFromPathsMenuDefinition( plugValueWidget, _pathsFromSelection( plugValueWidget ) )
+
+def __setShader( plug, value ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( value )
+
+def __setShaderFromPathsMenuDefinition( plugValueWidget, paths ) :
+
+	shaderAttributes = _shaderAttributes( plugValueWidget, paths, affectedOnly = False )
+	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
+
+	result = IECore.MenuDefinition()
+	for name in sorted( names ) :
+		result.append(
+			"/" + name,
+			{
+				"command" : functools.partial( __setShader, plugValueWidget.getPlug(), name ),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
+			}
+		)
+
+	return result
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if plug is None :
+		return
+
+	node = plug.node()
+	if not isinstance( node, GafferScene.ShaderTweaks ) :
+		return
+
+	if plug != node["shader"] :
+		return
+
+	menuDefinition.prepend( "/ShaderTweaksDivider/", { "divider" : True } )
+	menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
+	menuDefinition.prepend( "/From Affected/", { "subMenu" : __setShaderFromAffectedMenuDefinition } )
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
