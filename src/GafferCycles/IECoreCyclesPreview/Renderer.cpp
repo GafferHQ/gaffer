@@ -308,104 +308,6 @@ IE_CORE_DECLAREPTR( CyclesOutput )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// CyclesShader
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class CyclesShader : public IECore::RefCounted
-{
-
-	public :
-
-		CyclesShader( ccl::Scene* scene, const IECore::ObjectVector *shaderNetwork, DelightHandle::Ownership ownership )
-		{
-			const string name = "shader:" + shaderNetwork->Object::hash().toString();
-
-			for( const ObjectPtr &object : shaderNetwork->members() )
-			{
-				const Shader *shader = runTimeCast<const Shader>( object.get() );
-				if( !shader )
-				{
-					continue;
-				}
-
-				const string shaderHandle = parameter<string>( shader->parameters(), "__handle", "" );
-				const string nodeName = shaderHandle.size() ? name + ":" + shaderHandle : name;
-
-				NSICreate(
-					context,
-					nodeName.c_str(),
-					"shader",
-					0, nullptr
-				);
-
-				ParameterList parameterList;
-				std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-				parameterList.add( "shaderfilename", shaderFileName );
-
-				for( const auto &parameter : shader->parameters() )
-				{
-					if( parameter.first == "__handle" )
-					{
-						continue;
-					}
-					// Deal with connections, which are specified awkwardly as
-					// string parameters prefixed with "link:".
-					if( auto stringData = runTimeCast<const StringData>( parameter.second ) )
-					{
-						const string &value = stringData->readable();
-						if( boost::starts_with( value, "link:" ) )
-						{
-							const size_t i = value.find_first_of( "." );
-
-							string fromHandle( value.begin() + 5, value.begin() + i );
-							fromHandle = name + ":" + fromHandle;
-							const char *fromAttr = value.c_str() + i + 1;
-
-							NSIConnect(
-								context,
-								fromHandle.c_str(),
-								fromAttr,
-								nodeName.c_str(),
-								parameter.first.c_str(),
-								0, nullptr
-							);
-							continue;
-						}
-					}
-					// Standard parameter with values
-					parameterList.add( parameter.first.c_str(), parameter.second.get() );
-				}
-
-				NSISetAttribute(
-					context,
-					nodeName.c_str(),
-					parameterList.size(),
-					parameterList.data()
-				);
-
-				m_handles.emplace_back( context, nodeName, ownership );
-			}
-		}
-
-		const DelightHandle &handle() const
-		{
-			return m_handles.back();
-		}
-
-	private :
-
-		std::vector<CyclesHandle> m_handles;
-
-};
-
-IE_CORE_DECLAREPTR( CyclesShader )
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // ShaderCache
 //////////////////////////////////////////////////////////////////////////
 
@@ -417,13 +319,19 @@ class ShaderCache : public IECore::RefCounted
 
 	public :
 
-		ShaderCache( ccl::Scene* scene, DelightHandle::Ownership ownership )
-			:	m_scene( scene ), m_ownership( ownership )
+		ShaderCache( ccl::Scene* scene )
+			: m_scene( scene )
 		{
 		}
 
+		void update( ccl::Scene *scene )
+		{
+			m_scene = scene;
+			updateShaders();
+		}
+
 		// Can be called concurrently with other get() calls.
-		CyclesShaderPtr get( const IECore::ObjectVector *shader )
+		SharedCShaderPtr get( const IECoreScene::ShaderNetwork *shader )
 		{
 			Cache::accessor a;
 			m_cache.insert( a, shader ? shader->Object::hash() : MurmurHash() );
@@ -431,25 +339,24 @@ class ShaderCache : public IECore::RefCounted
 			{
 				if( shader )
 				{
-					a->second = new CyclesShader( m_context, shader, m_ownership );
+					const std::string namePrefix = "shader:" + a->first.toString() + ":";
+					a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, namePrefix, m_scene ) );
 				}
 				else
 				{
-					ObjectVectorPtr defaultSurfaceNetwork = new ObjectVector;
-					/// \todo Use a shader that comes with 3delight, and provide
-					/// the expected "defaultsurface" facing ratio shading. The
-					/// closest available at present is the samplerInfo shader, but
-					/// that spews errors about a missing "mayaCamera" coordinate
-					/// system.
+					const std::string namePrefix = "shader:default:";
+					IECoreScene::ShaderNetwork defaultSurfaceNetwork = new IECoreScene::ShaderNetwork();
+					/// \todo Use a shader that comes with cycles, and provide
+					/// the expected "defaultsurface" facing ratio shading.
 					ShaderPtr defaultSurfaceShader = new Shader( "Surface/Constant", "surface" );
 					defaultSurfaceNetwork->members().push_back( defaultSurfaceShader );
-					a->second = new CyclesShader( m_context, defaultSurfaceNetwork.get(), m_ownership );
+					a->second = new SharedCShaderPtr( ShaderNetworkAlgo::convert( defaultSurfaceNetwork.get(), namePrefix, m_scene ) );
 				}
 			}
 			return a->second;
 		}
 
-		CyclesShaderPtr defaultSurface()
+		SharedCShaderPtr defaultSurface()
 		{
 			return get( nullptr );
 		}
@@ -460,7 +367,7 @@ class ShaderCache : public IECore::RefCounted
 			vector<IECore::MurmurHash> toErase;
 			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
-				if( it->second->refCount() == 1 )
+				if( it->second->unique() )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
@@ -472,14 +379,28 @@ class ShaderCache : public IECore::RefCounted
 			{
 				m_cache.erase( *it );
 			}
+
+			if( toErase.size() )
+				updateShaders();
 		}
 
 	private :
 
-		ccl::Scene* m_scene;
-		DelightHandle::Ownership m_ownership;
+		void updateShaders() const
+		{
+			auto &shaders = m_scene->shaders;
+			shaders.clear();
+			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second )
+				{
+					shaders.push_back( it->second.get() );
+				}
+			}
+		}
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr> Cache;
+		ccl::Scene* m_scene;
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCShaderPtr> Cache;
 		Cache m_cache;
 
 };
@@ -676,7 +597,7 @@ class AttributesCache : public IECore::RefCounted
 	public :
 
 		AttributesCache( ShaderCachePtr *shaderCache )
-			:	m_shaderCache( shaderCache )
+			: m_shaderCache( shaderCache )
 		{
 		}
 
@@ -1278,7 +1199,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			init();
 
 			m_lightCache = new LightCache( m_scene );
-			//m_shaderCache = new ShaderCache( m_scene );
+			m_shaderCache = new ShaderCache( m_scene );
 			m_instanceCache = new InstanceCache( m_scene );
 			m_attributesCache = new AttributesCache();
 
@@ -1293,6 +1214,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_attributesCache.reset();
 			m_instanceCache.reset();
+			m_shaderCache.reset();
 			m_lightCache.reset();
 			m_outputs.clear();
 			m_defaultCamera.reset();
@@ -1877,11 +1799,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session_params.shadingsystem = ccl::SHADINGSYSTEM_SVM;
 
 			// Fallback
-			ccl::DeviceType device_type_fallback = ccl::Device::type_from_string( "CPU" );
+			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
 
 			ccl::DeviceType device_type = ccl::Device::type_from_string( m_device_name.c_str() );
-
 			ccl::vector<ccl::DeviceInfo>& devices = ccl::Device::available_devices();
 			bool device_available = false;
 			for( ccl::DeviceInfo& device : devices ) 
@@ -2066,6 +1987,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ShaderCachePtr m_shaderCache;
 		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
+		//ParticleSystemPtr m_particleSystemCache;
 		AttributesCachePtr m_attributesCache;
 
 		// Outputs

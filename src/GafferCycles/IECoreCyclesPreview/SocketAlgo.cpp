@@ -110,6 +110,27 @@ IECore::DataPtr arrayToData( const ccl::array<ccl::float3>& array )
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
+ccl::float2 setVector( const Imath::V2f &vector )
+{
+	return ccl::make_float2( vector[0], vector[1] );
+}
+
+ccl::float3 setVector( const Imath::V3f &vector )
+{
+	return ccl::make_float3( vector[0], vector[1], vector[2] );
+}
+
+ccl::float3 setColor( const Imath::Color3f &color )
+{
+	return ccl::make_float3( color[0], color[1], color[2] );
+}
+
+ccl::float3 setColor( const Imath::Color4f &color )
+{
+	// Dropping alpha
+	return ccl::make_float3( color[0], color[1], color[2] );
+}
+
 ccl::Transform setTransform( const Imath::M44d &matrix )
 {
 	ccl::Transform t;
@@ -126,6 +147,26 @@ ccl::Transform setTransform( const Imath::M44f &matrix )
 	t.y = ccl::make_float4(matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3]);
 	t.z = ccl::make_float4(matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3]);
 	return t;
+}
+
+Imath::V2f getVector( const ccl::float2 vector )
+{
+	return Imath::V2f( vector.x, vector.y );
+}
+
+Imath::V3f getVector( const ccl::float3 vector )
+{
+	return Imath::V3f( vector.x, vector.y, vector.z );
+}
+
+Imath::Color4f getColor( const ccl::float3 color )
+{
+	return Imath::Color4f( color.x, color.y, color.z, 1.0f );
+}
+
+Imath::Color4f getColor( const ccl::float4 color )
+{
+	return Imath::Color4f( color.x, color.y, color.z, color.w );
 }
 
 Imath::M44f getTransform( const ccl::Transform transform )
@@ -166,14 +207,12 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::COLOR:
 			if( const Color3fData *data = static_cast<const Color3fData *>( value ) )
 			{
-				const Imath::Color3f &c = data->readable();
-				node->set( *socket, ccl::make_float3( c[0], c[1], c[2] ) );
+				node->set( *socket, setColor( data->readable() ) );
 			}
 			else if( const Color4fData *data = static_cast<const Color4fData *>( value ) )
 			{
 				// Dropping alpha
-				const Imath::Color4f &c = data->readable();
-				node->set( *socket, ccl::make_float3( c[0], c[1], c[2] ) );
+				node->set( *socket, setColor( data->readable() ) );
 			}
 			break;
 		case ccl::SocketType::VECTOR:
@@ -181,25 +220,21 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::NORMAL:
 			if( const V3iData *data = static_cast<const V3iData *>( value ) )
 			{
-				const Imath::V3f &v = Imath::V3f( data->readable() );
-				node->set( *socket, ccl::make_float3( v.x, v.y, v.z ) );
+				node->set( *socket, setVector( Imath::V3f( data->readable() ) ) );
 			}
 			else if( const V3fData *data = static_cast<const V3fData *>( value ) )
 			{
-				const Imath::V3f &v = data->readable();
-				node->set( *socket, ccl::make_float3( v.x, v.y, v.z ) );
+				node->set( *socket, setVector( data->readable() ) );
 			}
 			break;
 		case ccl::SocketType::POINT2:
 			if( const V2iData *data = static_cast<const V2iData *>( value ) )
 			{
-				const Imath::V2f &v = Imath::V2f( data->readable() );
-				node->set( *socket, ccl::make_float2( v.x, v.y ) );
+				node->set( *socket, setVector( Imath::V2f( data->readable() ) ) );
 			}
 			else if( const V2fData *data = static_cast<const V2fData *>( value ) )
 			{
-				const Imath::V2f &v = data->readable();
-				node->set( *socket, ccl::make_float2( v.x, v.y ) );
+				node->set( *socket, setVector( data->readable() ) );
 			}
 			break;
 		case ccl::SocketType::CLOSURE:
