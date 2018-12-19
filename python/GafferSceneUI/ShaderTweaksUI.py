@@ -256,31 +256,42 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			)
 			return result
 
-		parameters = {}
+		shaders = {}
 		for attributes in shaderAttributes.values() :
-			for name, network in attributes.items() :
-				shader = network.outputShader()
-				for parameterName, parameterValue in shader.parameters.items() :
-					if parameterName.startswith( "__" ) :
-						continue
-					parameters[parameterName] = parameterValue
+			for attributeName, network in attributes.items() :
+				for shaderName, shader in network.shaders().items() :
+					if shaderName == network.getOutput().shader :
+						shaderName = ""
+					shaderParameters = shaders.setdefault( shaderName, {} )
+					for parameterName, parameterValue in shader.parameters.items() :
+						if parameterName.startswith( "__" ) :
+							continue
+						shaderParameters[parameterName] = parameterValue
 
-		if not len( parameters ) :
+		if not len( shaders ) :
 			result.append(
 				"/No Parameters Found", { "active" : False }
 			)
 			return result
 
-		for parameterName in sorted( parameters.keys() ) :
-			result.append(
-				"/" + parameterName,
-				{
-					"command" :	functools.partial(
-						Gaffer.WeakMethod( self.__addTweak ),
-						parameterName, parameters[parameterName]
-					)
-				}
-			)
+		for shaderName, shader in shaders.items() :
+
+			menuPrefix = "/"
+			tweakPrefix = ""
+			if len( shaders ) > 1 :
+				menuPrefix = "/Other/{0}/".format( shaderName ) if shaderName else "/Main/"
+				tweakPrefix = "{0}.".format( shaderName ) if shaderName else ""
+
+			for parameterName in sorted( shader.keys() ) :
+				result.append(
+					menuPrefix + parameterName,
+					{
+						"command" :	functools.partial(
+							Gaffer.WeakMethod( self.__addTweak ),
+							tweakPrefix + parameterName, shader[parameterName]
+						)
+					}
+				)
 
 		return result
 
@@ -291,8 +302,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		else :
 			plug = GafferScene.TweakPlug( name, plugTypeOrValue() )
 
-		if name:
-			plug.setName( "tweak_" + name )
+		if name :
+			plug.setName( name.replace( ".", "_" ) )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
