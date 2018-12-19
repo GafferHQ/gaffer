@@ -1040,5 +1040,18 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			]
 		)
 
+	def testGetConnectedParameterValueInsideSceneNode( self ) :
+
+		n = GafferScene.SceneNode()
+
+		n["n1"] = GafferOSL.OSLShader()
+		n["n1"].loadShader( "Maths/AddColor" )
+
+		n["n2"] = GafferOSL.OSLShader()
+		n["n2"].loadShader( "Maths/AddColor" )
+
+		n["n2"]["parameters"]["a"].setInput( n["n1"]["out"]["out"] )
+		self.assertEqual( n["n2"]["parameters"]["a"].getValue(), imath.Color3f( 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
