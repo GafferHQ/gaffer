@@ -112,7 +112,7 @@ class GAFFER_API ValuePlug : public Plug
 		static void setCacheMemoryLimit( size_t bytes );
 		/// Returns the current memory usage of the cache in bytes.
 		static size_t cacheMemoryUsage();
-		/// Clears the cache.
+		/// Clears the compute & hash caches.
 		static void clearCache();
 		//@}
 

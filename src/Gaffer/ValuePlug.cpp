@@ -162,7 +162,7 @@ class ValuePlug::HashProcess : public Process
 			return process.m_result;
 		}
 
-		static void clearCache()
+		static void clearCache( bool immediate = false )
 		{
 			// The docs for enumerable_thread_specific aren't particularly clear
 			// on whether or not it's ok to iterate an e_t_s while concurrently using
@@ -179,7 +179,15 @@ class ValuePlug::HashProcess : public Process
 				// a graph while a computation is being performed with it, and
 				// we know that the plug requesting the clear will be removed
 				// from the cache before the next computation starts.
-				it->clearCache = 1;
+				if ( immediate )
+				{
+					Cache empty;
+					it->cache.swap( empty );
+				}
+				else
+				{
+					it->clearCache = 1;
+				}
 			}
 		}
 
@@ -784,4 +792,5 @@ size_t ValuePlug::cacheMemoryUsage()
 void ValuePlug::clearCache()
 {
 	ComputeProcess::clearCache();
+	HashProcess::clearCache( true /* immediate */ );
 }
