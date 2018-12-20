@@ -45,6 +45,7 @@
 
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
@@ -76,6 +77,27 @@ inline const ValuePlug *sourcePlug( const ValuePlug *p )
 
 	return p;
 }
+
+size_t getCacheCacheLimit()
+{
+	const char *cacheLimit = getenv( "GAFFER_HASHCACHE_LIMIT" );
+
+	if( cacheLimit )
+	{
+		try
+		{
+			return boost::lexical_cast<size_t>( cacheLimit ) * 1024ULL * 1024ULL;
+		}
+		catch( ... )
+		{
+		}
+	}
+
+	return 8ULL * 1024ULL * 1024ULL;
+
+}
+
+size_t hashCacheLimit = (size_t) getCacheCacheLimit();
 
 } // namespace
 
@@ -119,26 +141,11 @@ class ValuePlug::HashProcess : public Process
 			// from our cache, and if we can't we'll compute it using a HashProcess instance.
 
 			ThreadData &threadData = g_threadData.local();
-			if( !Process::current() )
+			if( threadData.clearCache || ( threadData.cache.size() > hashCacheLimit ) )
 			{
-				// Starting a new root computation.
-				if( ++(threadData.cacheClearCount) == 3200 )
-				{
-					// Prevent unbounded growth in the hash cache
-					// if many computations are being performed
-					// without any plugs being dirtied in between,
-					// by clearing it after every Nth computation.
-					// N == 3200 was observed to be 6x faster than
-					// N == 100 for a procedural instancing scene at
-					// a memory cost of about 100 mb.
-					threadData.clearCache = 1;
-				}
-			}
+				Cache empty;
+				threadData.cache.swap( empty );
 
-			if( threadData.clearCache )
-			{
-				threadData.cache.clear();
-				threadData.cacheClearCount = 0;
 				threadData.clearCache = 0;
 			}
 
@@ -225,8 +232,6 @@ class ValuePlug::HashProcess : public Process
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
-			ThreadData() : cacheClearCount( 0 ) {}
-			int cacheClearCount;
 			Cache cache;
 			// Flag to request that hashCache be cleared.
 			tbb::atomic<int> clearCache;
