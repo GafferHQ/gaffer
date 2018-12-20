@@ -277,7 +277,7 @@ class ValuePlug::ComputeProcess : public Process
 
 			if( !p->getInput() )
 			{
-				if( p->direction()==In || !p->ancestor<ComputeNode>() )
+				if( p->direction()==In || !IECore::runTimeCast<const ComputeNode>( p->node() ) )
 				{
 					// No input connection, and no means of computing
 					// a value. There can only ever be a single value,
@@ -368,7 +368,7 @@ class ValuePlug::ComputeProcess : public Process
 				}
 				else
 				{
-					const ComputeNode *n = plug->ancestor<ComputeNode>();
+					const ComputeNode *n = IECore::runTimeCast<const ComputeNode>( plug->node() );
 					if( !n )
 					{
 						throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no ComputeNode." ) % plug->fullName() ) );
