@@ -266,6 +266,22 @@ struct MetricGreater
 
 };
 
+template<typename T>
+std::string formatItem(const T& i)
+{
+	std::stringstream ss;
+	ss << i;
+	return ss.str();
+}
+
+template<>
+std::string formatItem(const boost::chrono::duration<double>& i)
+{
+	std::stringstream ss;
+	ss << i.count();
+	return ss.str();
+}
+
 template<typename Item>
 void outputItems( const std::vector<std::string> &names, const std::vector<Item> &items, std::ostream &os )
 {
@@ -278,7 +294,12 @@ void outputItems( const std::vector<std::string> &names, const std::vector<Item>
 	os << std::fixed;
 	for( size_t i = 0, e = names.size(); i < e; ++i )
 	{
-		os << "  " << std::left << std::setw( maxSize + 4 ) << names[i] << items[i] << "\n";
+		os << "[ \"" << names[i] << "\"," << formatItem(items[i]) << "]";
+		if ( i == ( e - 1 ) )
+		{
+			continue;
+		}
+		os << ",\n";
 	}
 }
 
@@ -319,10 +340,12 @@ struct FormatStatistics
 		}
 
 		std::stringstream s;
-		s << "Top " << plugNames.size() << " plugs by " << metric.description() << " :\n\n";
+
+		s << "\"" << metric.description() << "\": [";
 
 		outputItems( plugNames, metrics, s );
 
+		s << "]";
 		return s.str();
 	}
 
@@ -346,7 +369,7 @@ struct FormatTotalStatistics
 	{
 		std::stringstream s;
 
-		s << std::fixed << ": " <<  metric( combinedStatistics );
+		s << formatItem( metric( combinedStatistics ) );
 
 		return ResultType( std::string( "Total " ) + metric.description(), s.str() );
 	}
@@ -382,9 +405,9 @@ std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLines
 
 	std::stringstream ss;
 
-	ss << "PerformanceMonitor Summary :\n\n";
+	ss << "{\"summary\": [";
 	outputItems( names, values, ss );
-	ss << "\n";
+	ss << "], " << std::endl;
 
 	// Now show breakdowns by plugs in each category
 	std::string s = ss.str();
@@ -393,13 +416,15 @@ std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLines
 		s += formatStatistics( monitor, static_cast<PerformanceMetric>( m ), maxLinesPerMetric );
 		if( m != Last )
 		{
-			s += "\n";
+			s += ",\n";
 		}
 	}
+	s += "}";
+
 	return s;
 }
 
-std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines )
+std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines  )
 {
 	return dispatchMetric<FormatStatistics>( FormatStatistics( monitor.allStatistics(), maxLines ), metric );
 }
