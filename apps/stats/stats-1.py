@@ -42,10 +42,48 @@ import tempfile
 import resource
 import collections
 import json
+import StringIO
 
 import IECore
 
 import Gaffer
+
+def _writeItems( f, data ) :
+	items = data.items()
+
+	if not len( items ) :
+		return
+
+	width = max( [len( x[0] ) for x in items] ) + 4
+
+	for name, value in items :
+		if isinstance( value, list ) :
+
+			width = max( [len( x[0] ) for x in value] ) + 4
+
+			f.write( "  " + name + "\n\n" )
+
+			for listItem in value :
+				f.write( "    {name:<{width}}{value}\n".format( name = listItem[0], width = width, value = listItem[1] ) )
+
+			f.write( "\n" )
+
+		else :
+
+			f.write( "  {name:<{width}}{value}\n".format( name = name, width = width, value = value ) )
+
+
+def _formatStatsAsText( statsData ) :
+	f = StringIO.StringIO()
+
+	for title, data in statsData.items() :
+
+		f.write( "{title} :\n\n".format( title = title ) )
+
+		_writeItems( f, data )
+		f.write( "\n\n" )
+
+	return f.getvalue()
 
 class stats( Gaffer.Application ) :
 
@@ -189,6 +227,12 @@ class stats( Gaffer.Application ) :
 					defaultValue = False
 				),
 
+				IECore.BoolParameter(
+					name = "json",
+					description = "Output stats as JSON",
+					defaultValue = False
+				),
+
 				IECore.IntParameter(
 					name = "cacheSize",
 					description = "compute cache size in MB",
@@ -250,14 +294,15 @@ class stats( Gaffer.Application ) :
 			except AttributeError:
 				IECore.msg( IECore.Msg.Level.Error, "gui", "unable to create requested VTune monitor" )
 
-		class JSONWriter( object ) :
+		class Writer( object ) :
 
-			def __init__( self, output ) :
+			def __init__( self, output, writeJSON = False) :
 
-				self.__outputObject = {}
+				self.__outputObject = collections.OrderedDict()
 				self.__currentSectionTitle = None
 
 				self.__output = output
+				self.__writeJSON = writeJSON
 
 			def begin( self ):
 
@@ -265,7 +310,10 @@ class stats( Gaffer.Application ) :
 
 			def end( self ) :
 
-				self.__output.write( json.dumps( self.__outputObject, indent = 2 ) )
+				if self.__writeJSON :
+					self.__output.write( json.dumps( self.__outputObject, indent = 2 ) )
+				else :
+					self.__output.write( _formatStatsAsText( self.__outputObject ) )
 
 			def setTitle( self, title ) :
 
@@ -291,7 +339,7 @@ class stats( Gaffer.Application ) :
 				self.__outputObject[self.__currentSectionTitle] = data
 
 		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
-		self.__writer = JSONWriter(self.__output)
+		self.__writer = Writer( self.__output, args["json"].value )
 
 		self.__writer.begin()
 
