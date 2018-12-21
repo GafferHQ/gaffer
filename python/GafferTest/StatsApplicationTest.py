@@ -34,12 +34,13 @@
 #
 ##########################################################################
 
-import re
+import json
 import unittest
 import subprocess32 as subprocess
 
 import Gaffer
 import GafferTest
+
 
 class StatsApplicationTest( GafferTest.TestCase ) :
 
@@ -58,16 +59,18 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 		script["fileName"].setValue( self.temporaryDirectory() + "/script.gfr" )
 		script.save()
 
-		o = subprocess.check_output( [ "gaffer", "stats", script["fileName"].getValue() ] )
+		o = subprocess.check_output( [ "gaffer", "stats", script["fileName"].getValue(), "-json", "1" ] )
 
-		self.assertTrue( Gaffer.About.versionString() in o )
-		self.assertTrue( re.search( r"frameRange\.start\s*10", o ) )
-		self.assertTrue( re.search( r"frameRange\.end\s*50", o ) )
-		self.assertTrue( re.search( r"framesPerSecond\s*24.0", o ) )
-		self.assertTrue( re.search( r"test\s*20.5", o ) )
-		self.assertTrue( re.search( r"AddNode\s*2", o ) )
-		self.assertTrue( re.search( r"Box\s*1", o ) )
-		self.assertTrue( re.search( r"Total\s*3", o ) )
+		statsData = json.loads( o )
+
+		self.assertEqual( statsData["Version"]["Current"], Gaffer.About.versionString() )
+		self.assertEqual( statsData["Settings"]["frameRange.start"], 10 )
+		self.assertEqual( statsData["Settings"]["frameRange.end"], 50 )
+		self.assertEqual( statsData["Settings"]["framesPerSecond"], 24.0 )
+		self.assertEqual( statsData["Variables"]["test"], "20.5" )
+		self.assertEqual( statsData["Nodes"]["AddNode"], 2 )
+		self.assertEqual( statsData["Nodes"]["Box"], 1 )
+		self.assertEqual( statsData["Nodes"]["Total"], 3 )
 
 if __name__ == "__main__":
 	unittest.main()
