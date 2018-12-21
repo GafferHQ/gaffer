@@ -12,7 +12,7 @@ Users can learn how to use Gaffer through the [documentation](https://gafferhq.o
 
 Developer notes are available on the [Gaffer developer wiki](https://github.com/GafferHQ/gaffer/wiki).
 
-Participating in the Gaffer community requires abiding by the project's [Code of Conduct](https://github.com/GafferHQ/gaffer/blob/master/CODE_OF_CONDUCT.md).
+Participating in the Gaffer community requires abiding by the project's [Code of Conduct](CODE_OF_CONDUCT.md).
 
 
 ## Download ##
@@ -100,7 +100,7 @@ If there is a feature you would like to see in Gaffer, request it on the [Gaffer
 
 ## Contributions and Bugs Reports ##
 
-Please see the project's [contribution guidelines](https://github.com/GafferHQ/gaffer/blob/master/CONTRIBUTING.md).
+Please see the project's [contribution guidelines](CONTRIBUTING.md).
 
 
 ## Copyright and License ##
@@ -109,4 +109,4 @@ Please see the project's [contribution guidelines](https://github.com/GafferHQ/g
 
 © 2018 Image Engine Design Inc. All rights reserved.
 
-Distributed under the [BSD license](https://github.com/GafferHQ/gaffer/blob/master/LICENSE).
+Distributed under the [BSD license](LICENSE).
