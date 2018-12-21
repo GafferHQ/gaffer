@@ -105,8 +105,8 @@ Please see the project's [contribution guidelines](https://github.com/GafferHQ/g
 
 ## Copyright and License ##
 
-© 2018 John Haddon. All rights reserved.
+© 2011–2019 John Haddon. All rights reserved.
 
-© 2018 Image Engine Design Inc. All rights reserved.
+© 2011–2019 Image Engine Design Inc. All rights reserved.
 
 Distributed under the [BSD license](https://github.com/GafferHQ/gaffer/blob/master/LICENSE).
