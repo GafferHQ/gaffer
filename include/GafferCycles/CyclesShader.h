@@ -34,28 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_SOCKETHANDLER_H
-#define GAFFERCYCLES_SOCKETHANDLER_H
+#ifndef GAFFERCYCLES_CYCLESSHADER_H
+#define GAFFERCYCLES_CYCLESSHADER_H
 
-#include "Gaffer/Plug.h"
+#include "GafferCycles/Export.h"
+#include "GafferCycles/TypeIds.h"
 
-// Cycles
-#include "graph/node.h"
+#include "GafferScene/Shader.h"
 
 namespace GafferCycles
 {
 
-namespace SocketHandler
+class GAFFERCYCLES_API CyclesShader : public GafferScene::Shader
 {
 
-/// A helper class for mapping Cycles Sockets to Gaffer Plugs.
-Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-Gaffer::Plug *setupOutputNodePlug( Gaffer::GraphComponent *plugParent );
+	public :
 
-} // namespace SocketHandler
+		CyclesShader( const std::string &name=defaultName<CyclesShader>() );
+		~CyclesShader() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesShader, CyclesShaderTypeId, GafferScene::Shader );
+
+		/// Implemented for outPlug(), returning the parameter named in the "primaryInput"
+		/// shader annotation if it has been specified.
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
+
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
+
+	private :
+
+		// Shader metadata is stored in a "shader" member of the result and
+		// parameter metadata is stored indexed by name inside a
+		// "parameter" member of the result.
+		const IECore::CompoundData *metadata() const;
+
+		mutable IECore::ConstCompoundDataPtr m_metadata;
+};
+
+IE_CORE_DECLAREPTR( CyclesShader )
 
 } // namespace GafferCycles
 
-#endif // GAFFERCYCLES_SOCKETHANDLER_H
+#endif // GAFFERCYCLES_CYCLESSHADER_H

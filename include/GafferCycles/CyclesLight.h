@@ -34,28 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_SOCKETHANDLER_H
-#define GAFFERCYCLES_SOCKETHANDLER_H
+#ifndef GAFFERCYCLES_CYCLESLIGHT_H
+#define GAFFERCYCLES_CYCLESLIGHT_H
 
-#include "Gaffer/Plug.h"
+#include "GafferCycles/Export.h"
+#include "GafferCycles/TypeIds.h"
 
-// Cycles
-#include "graph/node.h"
+#include "GafferScene/Light.h"
 
 namespace GafferCycles
 {
 
-namespace SocketHandler
+class GAFFERCYCLES_API CyclesLight : public GafferScene::Light
 {
 
-/// A helper class for mapping Cycles Sockets to Gaffer Plugs.
-Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-Gaffer::Plug *setupOutputNodePlug( Gaffer::GraphComponent *plugParent );
+	public :
 
-} // namespace SocketHandler
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesLight, CyclesLightTypeId, GafferScene::Light );
+
+		CyclesLight( const std::string &name=defaultName<CyclesLight>() );
+		~CyclesLight() override;
+
+		void loadShader( const std::string &shaderName );
+
+	protected :
+
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
+
+	private :
+
+		Gaffer::StringPlug *shaderNamePlug();
+		const Gaffer::StringPlug *shaderNamePlug() const;
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CyclesLight )
 
 } // namespace GafferCycles
 
-#endif // GAFFERCYCLES_SOCKETHANDLER_H
+#endif // GAFFERCYCLES_CYCLESLIGHT_H

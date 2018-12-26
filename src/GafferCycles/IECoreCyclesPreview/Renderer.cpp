@@ -41,6 +41,7 @@
 #include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/Camera.h"
@@ -155,10 +156,8 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 	}
 }
 
-typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
-ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
-
-//const ccl::ustring g_( "" );
+//typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
+//ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 } // namespace
 
@@ -169,7 +168,7 @@ ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 namespace
 {
 
-class RenderCallback : public IECore:RefCounted
+class RenderCallback : public IECore::RefCounted
 {
 
 	public :
@@ -184,7 +183,7 @@ class RenderCallback : public IECore:RefCounted
 
 }
 
-class RenderTileCallback : public IECore:RefCounted
+class RenderTileCallback : public IECore::RefCounted
 {
 
 	public :
@@ -356,11 +355,6 @@ class ShaderCache : public IECore::RefCounted
 			return a->second;
 		}
 
-		SharedCShaderPtr defaultSurface()
-		{
-			return get( nullptr );
-		}
-
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
@@ -423,9 +417,9 @@ IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
 
 std::array<IECore::InternedString, 4> g_shaderAttributeNames = { {
 	"osl:light",
-	"light",
+	"ccl:light",
 	"osl:surface",
-	"surface",
+	"ccl:surface",
 } };
 
 ccl::RayType nameToRayType( const std::string &name )
@@ -484,7 +478,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						{
 							auto &vis = data->readable();
 							auto ray = nameToRayType( m.first.string() + 15 );
-							m_visibility |= vis ? ray : m_visibility & ~ray;
+							m_visibility = vis ? m_visibility |= ray : m_visibility & ~ray;
 						}
 					}
 				}
@@ -529,22 +523,15 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					msg( Msg::Warning, "CyclesRenderer", boost::format( "Attribute \"%s\" not supported" ) % m.first.string() );
 				}
 			}
-
-			//setSocket( node, "visibility", value );
-
-			if( !m_shader )
-			{
-				m_shader = shaderCache->defaultSurface();
-			}
-
 		}
 
 		bool apply( ccl::Node *node, const CyclesAttributes *previousAttributes ) const
 		{
+			const ccl::NodeType *nodeType = node->type;
 			SocketAlgo::setSocket( node, "visibility", m_visibility );
 			SocketAlgo::setSocket( node, g_useHoldoutAttributeName + 4, m_useHoldout );
 			SocketAlgo::setSocket( node, g_isShadowCatcherAttributeName + 4, m_isShadowCatcher );
-			if( node->find_input("Mesh") )
+			if( node->find_input( "mesh" ) )
 			{
 				ccl::Object *object = (ccl::Object*)node;
 				if( object->mesh->subd_params )
@@ -552,30 +539,29 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					object->mesh->subd_params.max_level = m_max_level;
 					object->mesh->subd_params.dicing_rate = m_dicing_rate;
 				}
+				// Assign shader. Clearing used_shaders will use the default shader.
+				object->mesh->used_shaders.clear();
+				if( m_shader )
+				{
+					object->mesh->used_shaders.append( m_shader.get() );
+				}
+			}
+			else if( node->find_input( "shader" ) )
+			{
+				// This is probably a light
+				ccl::Light *light = (ccl::Light*)node;
+				light->shader = m_shader.get();
 			}
 			return true;
 		}
 
-		//const DelightHandle &handle() const
-		//{
-		//	return m_handle;
-		//}
-
 	private :
-
-		struct Curves
-		{
-			Curves( const IECore::CompoundObject *attributes )
-			{
-				
-			}
-		}
 
 		ConstCyclesShaderPtr m_shader;
 		unsigned m_visibility;
 		bool m_useHoldout;
 		bool m_isShadowCatcher;
-		bool m_useAdaptiveSubdivision;
+		bool m_maxLevel;
 		float m_dicingRate;
 
 };
@@ -828,6 +814,7 @@ class InstanceCache : public IECore::RefCounted
 					objects.push_back( it->second.get() );
 				}
 			}
+			m_scene->object_manager->tag_update( m_scene );
 		}
 
 		void updateMeshes() const
@@ -841,6 +828,7 @@ class InstanceCache : public IECore::RefCounted
 					meshes.push_back( it->second.get() );
 				}
 			}
+			m_scene->mesh_manager->tag_update( m_scene );
 		}
 
 		ccl::Scene *m_scene;
@@ -927,6 +915,7 @@ class LightCache : public IECore::RefCounted
 					lights.push_back( it->second.get() );
 				}
 			}
+			m_scene->light_manager->tag_update( m_scene );
 		}
 
 		ccl::Scene *m_scene;
@@ -1749,9 +1738,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void render() override
 		{
+			updateSceneObjects();
 			updateOptions();
 			// Clear out any objects which aren't needed in the cache.
 			m_lightCache->clearUnused();
+			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
 			m_attributesCache->clearUnused();
 

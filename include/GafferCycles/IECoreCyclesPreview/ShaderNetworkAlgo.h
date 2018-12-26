@@ -41,7 +41,7 @@
 
 // Cycles
 #include "render/shader.h"
-#include "renderer/scene.h"
+#include "render/scene.h"
 
 namespace IECoreCycles
 {
@@ -49,7 +49,7 @@ namespace IECoreCycles
 namespace ShaderNetworkAlgo
 {
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix = "", const ccl::Scene *scene );
+ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::Scene *scene, const std::string &namePrefix = "" );
 
 } // namespace ShaderNetworkAlgo
 

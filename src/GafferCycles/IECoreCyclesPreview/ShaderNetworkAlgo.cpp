@@ -35,11 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCycles/ShaderNetworkAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 
 #include "GafferOSL/OSLShader.h"
 
-#include "IECoreCycles/SocketAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
@@ -55,6 +55,7 @@
 
 // Cycles
 #include "render/nodes.h"
+#include "render/osl.h"
 
 using namespace std;
 using namespace IECore;
@@ -66,95 +67,92 @@ namespace
 
 ccl::ShaderNode *getShaderNode( const std::string &name )
 {
-#define MAP_NODE(nodeTypeName, nodeType) if( name = nodeTypeName ){ auto *shaderNode = new nodeType; return (ccl::ShaderNode*)shaderNode }
-	MAP_NODE( "RGBCurvesNode", ccl::RGBCurvesNode() );
-	MAP_NODE( "VectorCurvesNode", ccl::VectorCurvesNode() );
-	MAP_NODE( "RGBRampNode", ccl::RGBRampNode() );
-	MAP_NODE( "ColorNode", ccl::ColorNode() );
-	MAP_NODE( "VectorCurvesNode", ccl::VectorCurvesNode() );
-	MAP_NODE( "RGBRampNode", ccl::RGBRampNode() );
-	MAP_NODE( "ColorNode", ccl::ColorNode() );
-	MAP_NODE( "ValueNode", ccl::ValueNode() );
-	MAP_NODE( "CameraNode", ccl::CameraNode() );
-	MAP_NODE( "InvertNode", ccl::InvertNode() );
-	MAP_NODE( "GammaNode", ccl::GammaNode() );
-	MAP_NODE( "BrightContrastNode", ccl::BrightContrastNode() );
-	MAP_NODE( "MixNode", ccl::MixNode() );
-	MAP_NODE( "SeparateRGBNode", ccl::SeparateRGBNode() );
-	MAP_NODE( "CombineRGBNode", ccl::CombineRGBNode() );
-	MAP_NODE( "SeparateHSVNode", ccl::SeparateHSVNode() );
-	MAP_NODE( "CombineHSVNode", ccl::CombineHSVNode() );
-	MAP_NODE( "SeparateXYZNode", ccl::SeparateXYZNode() );
-	MAP_NODE( "CombineXYZNode", ccl::CombineXYZNode() );
-	MAP_NODE( "HSVNode", ccl::HSVNode() );
-	MAP_NODE( "RGBToBWNode", ccl::RGBToBWNode() );
-	MAP_NODE( "MathNode", ccl::MathNode() );
-	MAP_NODE( "VectorMathNode", ccl::VectorMathNode() );
-	MAP_NODE( "VectorTransformNode", ccl::VectorTransformNode() );
-	MAP_NODE( "NormalNode", ccl::NormalNode() );
-	MAP_NODE( "MappingNode", ccl::MappingNode() );
-	MAP_NODE( "FresnelNode", ccl::FresnelNode() );
-	MAP_NODE( "LayerWeightNode", ccl::LayerWeightNode() );
-	MAP_NODE( "AddClosureNode", ccl::AddClosureNode() );
-	MAP_NODE( "MixClosureNode", ccl::MixClosureNode() );
-	MAP_NODE( "AttributeNode", ccl::AttributeNode() );
-	MAP_NODE( "BackgroundNode", ccl::BackgroundNode() );
-	MAP_NODE( "HoldoutNode", ccl::HoldoutNode() );
-	MAP_NODE( "AnisotropicBsdfNode", ccl::AnisotropicBsdfNode() );
-	MAP_NODE( "DiffuseBsdfNode", ccl::DiffuseBsdfNode() );
-	MAP_NODE( "SubsurfaceScatteringNode", ccl::SubsurfaceScatteringNode() );
-	MAP_NODE( "GlossyBsdfNode", ccl::GlossyBsdfNode() );
-	MAP_NODE( "GlassBsdfNode", ccl::GlassBsdfNode() );
-	MAP_NODE( "RefractionBsdfNode", ccl::RefractionBsdfNode() );
-	MAP_NODE( "ToonBsdfNode", ccl::ToonBsdfNode() );
-	MAP_NODE( "HairBsdfNode", ccl::HairBsdfNode() );
-	MAP_NODE( "PrincipledHairBsdfNode", ccl::PrincipledHairBsdfNode() );
-	MAP_NODE( "PrincipledBsdfNode", ccl::PrincipledBsdfNode() );
-	MAP_NODE( "TranslucentBsdfNode", ccl::TranslucentBsdfNode() );
-	MAP_NODE( "TransparentBsdfNode", ccl::TransparentBsdfNode() );
-	MAP_NODE( "VelvetBsdfNode", ccl::VelvetBsdfNode() );
-	MAP_NODE( "EmissionNode", ccl::EmissionNode() );
-	MAP_NODE( "AmbientOcclusionNode", ccl::AmbientOcclusionNode() );
-	MAP_NODE( "ScatterVolumeNode", ccl::ScatterVolumeNode() );
-	MAP_NODE( "AbsorptionVolumeNode", ccl::AbsorptionVolumeNode() );
-	MAP_NODE( "PrincipledVolumeNode", ccl::PrincipledVolumeNode() );
-	MAP_NODE( "GeometryNode", ccl::GeometryNode() );
-	MAP_NODE( "WireframeNode", ccl::WireframeNode() );
-	MAP_NODE( "WavelengthNode", ccl::WavelengthNode() );
-	MAP_NODE( "BlackbodyNode", ccl::BlackbodyNode() );
-	MAP_NODE( "LightPathNode", ccl::LightPathNode() );
-	MAP_NODE( "LightFalloffNode", ccl::LightFalloffNode() );
-	MAP_NODE( "ObjectInfoNode", ccl::ObjectInfoNode() );
-	MAP_NODE( "ParticleInfoNode", ccl::ParticleInfoNode() );
-	MAP_NODE( "HairInfoNode", ccl::HairInfoNode() );
-	MAP_NODE( "BumpNode", ccl::BumpNode() );
-	MAP_NODE( "ImageTextureNode", ccl::ImageTextureNode() );
-	MAP_NODE( "EnvironmentTextureNode", ccl::EnvironmentTextureNode() );
-	MAP_NODE( "GradientTextureNode", ccl::GradientTextureNode() );
-	MAP_NODE( "VoronoiTextureNode", ccl::VoronoiTextureNode() );
-	MAP_NODE( "MagicTextureNode", ccl::MagicTextureNode() );
-	MAP_NODE( "WaveTextureNode", ccl::WaveTextureNode() );
-	MAP_NODE( "CheckerTextureNode", ccl::CheckerTextureNode() );
-	MAP_NODE( "BrickTextureNode", ccl::BrickTextureNode() );
-	MAP_NODE( "NoiseTextureNode", ccl::NoiseTextureNode() );
-	MAP_NODE( "MusgraveTextureNode", ccl::MusgraveTextureNode() );
-	MAP_NODE( "TextureCoordinateNode", ccl::TextureCoordinateNode() );
-	MAP_NODE( "SkyTextureNode", ccl::SkyTextureNode() );
-	MAP_NODE( "IESLightNode", ccl::IESLightNode() );
-	MAP_NODE( "NormalMapNode", ccl::NormalMapNode() );
-	MAP_NODE( "TangentNode", ccl::TangentNode() );
-	MAP_NODE( "UVMapNode", ccl::UVMapNode() );
-	MAP_NODE( "PointDensityTextureNode", ccl::PointDensityTextureNode() );
-	MAP_NODE( "BevelNode", ccl::BevelNode() );
-	MAP_NODE( "DisplacementNode", ccl::DisplacementNode() );
-	MAP_NODE( "VectorDisplacementNode", ccl::VectorDisplacementNode() );
+#define MAP_NODE(nodeTypeName, nodeType) if( name == nodeTypeName ){ auto *shaderNode = new nodeType; return (ccl::ShaderNode*)shaderNode; }
+	MAP_NODE( "rgb_curves", ccl::RGBCurvesNode() );
+	MAP_NODE( "vector_curves", ccl::VectorCurvesNode() );
+	MAP_NODE( "rgb_ramp", ccl::RGBRampNode() );
+	MAP_NODE( "color", ccl::ColorNode() );
+	MAP_NODE( "value", ccl::ValueNode() );
+	MAP_NODE( "camera", ccl::CameraNode() );
+	MAP_NODE( "invert", ccl::InvertNode() );
+	MAP_NODE( "gamma", ccl::GammaNode() );
+	MAP_NODE( "brightness_contrast", ccl::BrightContrastNode() );
+	MAP_NODE( "mix", ccl::MixNode() );
+	MAP_NODE( "separate_rgb", ccl::SeparateRGBNode() );
+	MAP_NODE( "combine_rgb", ccl::CombineRGBNode() );
+	MAP_NODE( "separate_hsv", ccl::SeparateHSVNode() );
+	MAP_NODE( "combine_hsv", ccl::CombineHSVNode() );
+	MAP_NODE( "separate_xyz", ccl::SeparateXYZNode() );
+	MAP_NODE( "combine_xyz", ccl::CombineXYZNode() );
+	MAP_NODE( "hsv", ccl::HSVNode() );
+	MAP_NODE( "rgb_to_bw", ccl::RGBToBWNode() );
+	MAP_NODE( "math", ccl::MathNode() );
+	MAP_NODE( "vector_math", ccl::VectorMathNode() );
+	MAP_NODE( "vector_transform", ccl::VectorTransformNode() );
+	MAP_NODE( "normal", ccl::NormalNode() );
+	MAP_NODE( "mapping", ccl::MappingNode() );
+	MAP_NODE( "fresnel", ccl::FresnelNode() );
+	MAP_NODE( "layer_weight", ccl::LayerWeightNode() );
+	MAP_NODE( "add_closure", ccl::AddClosureNode() );
+	MAP_NODE( "mix_closure", ccl::MixClosureNode() );
+	MAP_NODE( "attribute", ccl::AttributeNode() );
+	MAP_NODE( "background_shader", ccl::BackgroundNode() );
+	MAP_NODE( "holdout", ccl::HoldoutNode() );
+	MAP_NODE( "anisotropic_bsdf", ccl::AnisotropicBsdfNode() );
+	MAP_NODE( "diffuse_bsdf", ccl::DiffuseBsdfNode() );
+	MAP_NODE( "subsurface_scattering", ccl::SubsurfaceScatteringNode() );
+	MAP_NODE( "glossy_bsdf", ccl::GlossyBsdfNode() );
+	MAP_NODE( "glass_bsdf", ccl::GlassBsdfNode() );
+	MAP_NODE( "refraction_bsdf", ccl::RefractionBsdfNode() );
+	MAP_NODE( "toon_bsdf", ccl::ToonBsdfNode() );
+	MAP_NODE( "hair_bsdf", ccl::HairBsdfNode() );
+	MAP_NODE( "principled_hair_bsdf", ccl::PrincipledHairBsdfNode() );
+	MAP_NODE( "principled_bsdf", ccl::PrincipledBsdfNode() );
+	MAP_NODE( "translucent_bsdf", ccl::TranslucentBsdfNode() );
+	MAP_NODE( "transparent_bsdf", ccl::TransparentBsdfNode() );
+	MAP_NODE( "velvet_bsdf", ccl::VelvetBsdfNode() );
+	MAP_NODE( "emission", ccl::EmissionNode() );
+	MAP_NODE( "ambient_occlusion", ccl::AmbientOcclusionNode() );
+	MAP_NODE( "scatter_volume", ccl::ScatterVolumeNode() );
+	MAP_NODE( "absorption_volume", ccl::AbsorptionVolumeNode() );
+	MAP_NODE( "principled_volume", ccl::PrincipledVolumeNode() );
+	MAP_NODE( "geometry", ccl::GeometryNode() );
+	MAP_NODE( "wireframe", ccl::WireframeNode() );
+	MAP_NODE( "wavelength", ccl::WavelengthNode() );
+	MAP_NODE( "blackbody", ccl::BlackbodyNode() );
+	MAP_NODE( "light_path", ccl::LightPathNode() );
+	MAP_NODE( "light_falloff", ccl::LightFalloffNode() );
+	MAP_NODE( "object_info", ccl::ObjectInfoNode() );
+	MAP_NODE( "particle_info", ccl::ParticleInfoNode() );
+	MAP_NODE( "hair_info", ccl::HairInfoNode() );
+	MAP_NODE( "bump", ccl::BumpNode() );
+	MAP_NODE( "image_texture", ccl::ImageTextureNode() );
+	MAP_NODE( "environment_texture", ccl::EnvironmentTextureNode() );
+	MAP_NODE( "gradient_texture", ccl::GradientTextureNode() );
+	MAP_NODE( "voronoi_texture", ccl::VoronoiTextureNode() );
+	MAP_NODE( "magic_texture", ccl::MagicTextureNode() );
+	MAP_NODE( "wave_texture", ccl::WaveTextureNode() );
+	MAP_NODE( "checker_texture", ccl::CheckerTextureNode() );
+	MAP_NODE( "brick_texture", ccl::BrickTextureNode() );
+	MAP_NODE( "noise_texture", ccl::NoiseTextureNode() );
+	MAP_NODE( "musgrave_texture", ccl::MusgraveTextureNode() );
+	MAP_NODE( "texture_coordinate", ccl::TextureCoordinateNode() );
+	MAP_NODE( "sky_texture", ccl::SkyTextureNode() );
+	MAP_NODE( "ies_light", ccl::IESLightNode() );
+	MAP_NODE( "normal_map", ccl::NormalMapNode() );
+	MAP_NODE( "tangent", ccl::TangentNode() );
+	MAP_NODE( "uvmap", ccl::UVMapNode() );
+	MAP_NODE( "point_density_texture", ccl::PointDensityTextureNode() );
+	MAP_NODE( "bevel", ccl::BevelNode() );
+	MAP_NODE( "displacement", ccl::DisplacementNode() );
+	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode() );
+	MAP_NODE( "add_closure", ccl::AddClosureNode() );
 #undef MAP_NODE
-	default:
-		return nullptr;
+	return nullptr;
 }
 
 template<typename Spline>
-void setSplineParameter( AtNode *node, const std::string &name, const Spline &spline )
+void setSplineParameter( ccl::ShaderNode *node, const std::string &name, const Spline &spline )
 {
 	typedef vector<typename Spline::XType> PositionsVector;
 	typedef vector<typename Spline::YType> ValuesVector;
@@ -191,7 +189,7 @@ void setSplineParameter( AtNode *node, const std::string &name, const Spline &sp
 	}
 */
 
-	GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
+	//GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
 	SocketAlgo::setSocket( node, ( name + "Positions" ).c_str(), positionsData.get() );
 	SocketAlgo::setSocket( node, ( name + "Values" ).c_str(), valuesData.get() );
 	//SocketAlgo::setSocket( node, name + "Basis", basis );
@@ -227,19 +225,18 @@ InternedString partitionEnd( const InternedString &s, char c )
 	}
 }
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::Scene *scene, ccl::Shader *shader, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::Scene *scene, ccl::Shader *cshader, ShaderMap &converted )
 {
-	// Reuse previously created node if we can. OSL shaders
-	// can have multiple outputs, but each Arnold shader node
-	// can have only a single output, so we have to emit OSL
-	// shaders multiple times, once for each distinct top-level
-	// output that is used.
-
+	// Reuse previously created node if we can. It is ideal for all assigned
+	// shaders in the graph to funnel through the default "cycles_shader" so
+	// that things like MIS/displacement/etc. can be set, however it isn't a
+	// requirement. Regardless, we look out for this special node as it already
+	// exists in the graph and we simply point to it.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
+	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "cycles_shader" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
-	//const InternedString oslOutput = isOSLShader ? partitionStart( outputParameter.name, '.' ) : InternedString();
 
-	auto inserted = converted.insert( { { outputParameter.shader, oslOutput }, nullptr } );
+	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
 	if( !inserted.second )
 	{
@@ -252,20 +249,23 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		namePrefix +
 		outputParameter.shader.string()
 	);
-	//if( oslOutput.string().size() )
-	//{
-	//	nodeName += ":" + oslOutput.string();
-	//}
-	node.name = nodeName.c_str();
+	node->name = nodeName.c_str();
 
-	if( isOSLShader )
+	if( isOutput )
 	{
-		if( scene->params.shadingsystem == SHADINGSYSTEM_OSL )
+		node = (ccl::ShaderNode*)cshader->graph->output();
+	}
+	else if( isOSLShader )
+	{
+#ifdef WITH_OSL
+		if( scene->params.shadingsystem == ccl::SHADINGSYSTEM_OSL )
 		{
-			OSLShaderManager *manager = (OSLShaderManager*)scene->shader_manager;
+			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)scene->shader_manager;
 			node = manager->osl_node( shader->getName().c_str(), "" );
+			node = cshader->graph->add( node );
 		}
 		else
+#endif
 		{
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
 			return node;
@@ -274,6 +274,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	else
 	{
 		node = getShaderNode( shader->getName() );
+		node = cshader->graph->add( node );
 	}
 
 	if( !node )
@@ -315,7 +316,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, shader, converted );
+		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, cshader, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -333,16 +334,24 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 		InternedString sourceName = connection.source.name;
 		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
-		if( boost::starts_with( sourceShader->getType(), "osl:" ) )
-		{
-			sourceName = partitionEnd( sourceName, '.' );
-		}
-
-		//AiNodeLinkOutput( sourceNode, sourceName.c_str(), node, parameterName.c_str() );
-		//shader->graph.connect();
+		//if( boost::starts_with( sourceShader->getType(), "osl:" ) )
+		//{
+		//	sourceName = partitionEnd( sourceName, '.' );
+		//}
+		cshader->graph->connect( sourceNode->output( sourceName.c_str() ), node->input( parameterName.c_str() ) );
 	}
 
-	return shader->graph.add( node );
+	if( !isOutput && ( shaderNetwork->outputShader() == shader ) )
+	{
+		// In the cases where there is no cycles_shader attached in the network
+		// we just connect to the main output node of the cycles shader graph.
+		// Either ccl:surface, ccl:volume or ccl:displacement.
+		auto *outputNode = (ccl::ShaderNode*)cshader->graph->output();
+		string input = string( shader->getType().c_str() + 4 );
+		cshader->graph->connect( node->output( outputParameter.name.string().c_str() ), outputNode->input( input.c_str() ) );
+	}
+
+	return node;
 }
 
 } // namespace
@@ -353,7 +362,7 @@ namespace IECoreCycles
 namespace ShaderNetworkAlgo
 {
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::Scene *scene )
+ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::Scene *scene, const std::string &namePrefix )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) // todo : make conditional on OSL < 1.10
