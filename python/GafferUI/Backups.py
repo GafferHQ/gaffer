@@ -46,6 +46,9 @@ import re
 import stat
 import weakref
 
+if os.name == "nt":
+	import ctypes
+
 class Backups( object ) :
 
 	def __init__( self, applicationRoot ) :
@@ -95,6 +98,11 @@ class Backups( object ) :
 		dirName = os.path.dirname( fileName )
 		try :
 			os.makedirs( dirName )
+			# Avoid the win32 module dependency by using ctypes to make directory hidden
+			# The magic number 2 comes from https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfileattributesa
+			if os.name == "nt":
+				ctypes.windll.kernel32.SetFileAttributesW( unicode( dirName, "utf-8" ), 2 )
+
 		except OSError :
 			# makedirs very unhelpfully raises an exception if
 			# the directory already exists, but it might also
@@ -266,7 +274,7 @@ class Backups( object ) :
 
 		context = Gaffer.Context()
 		context["script:name"] = os.path.splitext( os.path.basename( fileName ) )[0]
-		context["script:directory"] = os.path.dirname( os.path.abspath( fileName ) )
+		context["script:directory"] = os.path.dirname( os.path.abspath( fileName ) ).replace( "\\", "/" )
 
 		pattern = self.__settings["fileName"].getValue()
 		fileNames = []
