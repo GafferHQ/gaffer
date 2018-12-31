@@ -274,7 +274,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	else
 	{
 		node = getShaderNode( shader->getName() );
-		node = cshader->graph->add( node );
+		if( node )
+			node = cshader->graph->add( node );
 	}
 
 	if( !node )

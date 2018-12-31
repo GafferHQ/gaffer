@@ -184,6 +184,42 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Subdivision
+
+		"attributes.use_adaptive_subdivision" : [
+
+			"description",
+			"""
+			Use adaptive render time subdivision.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		"attributes.max_level" : [
+
+			"description",
+			"""
+			The max level of subdivision that can be
+			applied.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
+		"attributes.dicing_rate" : [
+
+			"description",
+			"""
+			Multiplier for scene dicing rate.
+			""",
+
+			"layout:section", "Subdivision",
+
+		],
+
 	}
 
 )

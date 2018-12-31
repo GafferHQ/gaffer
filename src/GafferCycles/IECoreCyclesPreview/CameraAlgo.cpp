@@ -139,9 +139,3 @@ ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::
 {
 	return convertCommon( camera, nodeName );
 }
-
-ccl::Camera *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, const std::string &nodeName )
-{
-	// Not sure if Cortex can even do motion blurred cameras?
-	return convertCommon( samples[0], nodeName );
-}

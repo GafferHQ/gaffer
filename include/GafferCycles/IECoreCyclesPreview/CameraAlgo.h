@@ -52,9 +52,6 @@ namespace CameraAlgo
 
 /// Converts the specified IECoreScene::Camera into a ccl::Camera.
 IECORECYCLES_API ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName );
-/// As above, but converting a moving object. If no motion converter
-/// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Camera *convert( const std::vector<const IECoreScene::Camera *> &samples, const std::string &nodeName );
 
 } // namespace CameraAlgo
 
