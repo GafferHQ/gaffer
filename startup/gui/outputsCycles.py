@@ -59,6 +59,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"motion",
 		"motion_weight",
 		"render_time",
+		"cryptomatte",
 		"mist",
 		"emission",
 		"background",

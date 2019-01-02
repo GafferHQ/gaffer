@@ -112,11 +112,12 @@ using namespace IECoreCycles;
 namespace
 {
 
-typedef std::unique_ptr<ccl::Camera> CCameraPtr;
+//typedef std::unique_ptr<ccl::Camera> CCameraPtr;
 typedef std::unique_ptr<ccl::Integrator> CIntegratorPtr;
 typedef std::unique_ptr<ccl::Background> CBackgroundPtr;
 typedef std::unique_ptr<ccl::Film> CFilmPtr;
 typedef std::unique_ptr<ccl::CurveSystemManager> CCurveSystemManagerPtr;
+typedef std::shared_ptr<ccl::Camera> SharedCCameraPtr;
 typedef std::shared_ptr<ccl::Object> SharedCObjectPtr;
 typedef std::shared_ptr<ccl::Light> SharedCLightPtr;
 typedef std::shared_ptr<ccl::Mesh> SharedCMeshPtr;
@@ -309,6 +310,7 @@ class CyclesOutput : public IECore::RefCounted
 		CyclesOutput( const IECoreScene::Output *output )
 			: m_image( nullptr )
 		{
+			m_name = output->getName();
 			m_type = output->getType();
 			m_data = output->getData();
 			m_passType = nameToPassType( m_data );
@@ -379,21 +381,44 @@ class CyclesOutput : public IECore::RefCounted
 
 		void writeImage()
 		{
-			IECore::WriterPtr writer = IECore::Writer::create( IECore::runTimeCast<IECore::Object>( m_image->image() ), "tmp." + m_type );
+			auto displayImg = m_image->image();
+			IECoreImage::ImagePrimitivePtr image = new IECoreImage::ImagePrimitive();
+			if( auto data = displayImg->getChannel<float>( "R" ) )
+			{
+				auto channel = image->createChannel<float>( "R" );
+				channel->writable() = data->readable();
+			}
+			if( auto data = displayImg->getChannel<float>( "G" ) )
+			{
+				auto channel = image->createChannel<float>( "G" );
+				channel->writable() = data->readable();
+			}
+			if( auto data = displayImg->getChannel<float>( "B" ) )
+			{
+				auto channel = image->createChannel<float>( "B" );
+				channel->writable() = data->readable();
+			}
+			if( auto data = displayImg->getChannel<float>( "A" ) )
+			{
+				auto channel = image->createChannel<float>( "A" );
+				channel->writable() = data->readable();
+			}
+			IECore::WriterPtr writer = IECore::Writer::create( image, "tmp." + m_type );
 			if( !writer )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Unsupported display type \"%s\"." ) % m_type );
 				return;
 			}
 
-			writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_data );
-			if( m_quantize == ccl::TypeDesc::UINT16 )
-				writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'half' );
-			else if( m_quantize == ccl::TypeDesc::UINT16 )
-				writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'float' );
+			writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
+			//if( m_quantize == ccl::TypeDesc::UINT16 )
+			//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'half' );
+			//else if( m_quantize == ccl::TypeDesc::UINT16 )
+			//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'float' );
 			writer->write();
 		}
 
+		std::string m_name;
 		std::string m_type;
 		std::string m_data;
 		ccl::PassType m_passType;
@@ -405,7 +430,7 @@ class CyclesOutput : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( CyclesOutput )
 
-typedef unordered_map<IECore::InternedString, ConstCyclesOutputPtr> OutputMap;
+typedef unordered_map<IECore::InternedString, CyclesOutputPtr> OutputMap;
 
 } // namespace
 
@@ -445,27 +470,24 @@ class RenderCallback : public IECore::RefCounted
 
 			CompoundDataPtr parameters = new CompoundData();
 			std::vector<std::string> channelNames;
-			int numOutputs = 0;
 
 			for( auto &output : outputs )
 			{
 				std::string namePrefix = output.first.string();
 				auto passType = output.second->m_passType;
 				int components = passComponents( passType );
-				quantize = ;
+
 				if( m_interactive )
 				{
 					if( components == 1 )
 					{
 						channelNames.push_back( namePrefix );
-						numOutputs += 1;
 						continue;
 					}
 					else if( components == 2 )
 					{
 						channelNames.push_back( namePrefix + ".R" );
 						channelNames.push_back( namePrefix + ".G" );
-						numOutputs += 1;
 						continue;
 					}
 					else if( components == 3 )
@@ -473,7 +495,6 @@ class RenderCallback : public IECore::RefCounted
 						channelNames.push_back( namePrefix + ".R" );
 						channelNames.push_back( namePrefix + ".G" );
 						channelNames.push_back( namePrefix + ".B" );
-						numOutputs += 1;
 						continue;
 					}
 					else if( components == 4 )
@@ -482,22 +503,15 @@ class RenderCallback : public IECore::RefCounted
 						channelNames.push_back( namePrefix + ".G" );
 						channelNames.push_back( namePrefix + ".B" );
 						channelNames.push_back( namePrefix + ".A" );
-						numOutputs += 1;
 						continue;
 					}
 				}
-				else
-				{
-					// Create the backing image primitives.
-					output->update( camera );
-				}
 			}
 
-			std::string driverType = "ieDisplay";
 			if( m_interactive )
 			{
-				m_displayDriver = IECoreImage::DisplayDriver::create(
-					driverType,
+				m_displayDriver = DisplayDriver::create(
+					"ieDisplay",
 					displayWindow, 
 					dataWindow, 
 					channelNames,
@@ -538,12 +552,12 @@ class RenderCallback : public IECore::RefCounted
 */
 		void writeRenderTile( ccl::RenderTile& rtile )
 		{
-			int x = rtile.x - m_session->tile_manager.params.full_x;
-			int y = rtile.y - m_session->tile_manager.params.full_y;
-			int w = rtile.w;
-			int h = rtile.h;
+			const int x = rtile.x - m_session->tile_manager.params.full_x;
+			const int y = rtile.y - m_session->tile_manager.params.full_y;
+			const int w = rtile.w;
+			const int h = rtile.h;
 
-			Box2i tile( V2i( x, x + y - 1 ), V2i( w, x + h - 1 ) );
+			Box2i tile( V2i( x, y ), V2i( x + w - 1, y + h - 1 ) );
 
 			ccl::RenderBuffers *buffers = rtile.buffers;
 			/* copy data from device */
@@ -555,15 +569,15 @@ class RenderCallback : public IECore::RefCounted
 			const int numOutputChannels = m_displayDriver->channelNames().size();
 
 			// Pixels we will use to get from cycles.
-			vector<float> tileData( rtile.w*rtile.h*4 );
+			vector<float> tileData( w * h * 4 );
 			// Multiple channels get outputted to one display driver in interactive mode.
 			vector<float> interleavedData;
 			if( m_interactive )
-				interleavedData.resize( rtile.w * rtile.h * numOutputChannels );
+				interleavedData.resize( w * h * numOutputChannels );
 
 			/* Adjust absolute sample number to the range. */
 			int sample = rtile.sample;
-			const int range_start_sample = session->tile_manager.range_start_sample;
+			const int range_start_sample = m_session->tile_manager.range_start_sample;
 			if( range_start_sample != -1 )
 			{
 				sample -= range_start_sample;
@@ -572,8 +586,8 @@ class RenderCallback : public IECore::RefCounted
 			int outChannelOffset = 0;
 			for( auto &output : m_outputs )
 			{
-				int numChannels = output.m_components;
-				buffers->get_pass_rect( output.m_passType, exposure, sample, numChannels, &tileData[0], ccl::ustring( m_output.m_name.c_str() ) );
+				int numChannels = output.second->m_components;
+				buffers->get_pass_rect( output.second->m_passType, exposure, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
 				if( m_interactive )
 				{
 					for( int c = 0; c < numChannels; c++ )
@@ -581,9 +595,9 @@ class RenderCallback : public IECore::RefCounted
 						// This is taken out of the Arnold output driver. Interleaving.
 						float *in = &(tileData[0]) + c;
 						float *out = &(interleavedData[0]) + outChannelOffset;
-						for( int j = 0; j < rtile.h; j++ )
+						for( int j = 0; j < h; j++ )
 						{
-							for( int i = 0; i < rtile.w; i++ )
+							for( int i = 0; i < w; i++ )
 							{
 								*out = *in;
 								out += numOutputChannels;
@@ -595,12 +609,12 @@ class RenderCallback : public IECore::RefCounted
 				}
 				else
 				{
-					output.m_image->imageData( tile, &tileData[0], rtile.w * rtile.h * output.m_components );
+					output.second->m_image->imageData( tile, &tileData[0], w * h * numChannels );
 				}
 			}
 			if( m_interactive )
 			{
-				m_displayDriver->imageData( tile, &interleavedData[0], rtile.w * rtile.h * numOutputChannels );
+				m_displayDriver->imageData( tile, &interleavedData[0], w * h * numOutputChannels );
 			}
 		}
 
@@ -614,7 +628,7 @@ class RenderCallback : public IECore::RefCounted
 		ccl::Session *m_session;
 		DisplayDriverPtr m_displayDriver;
 		OutputMap m_outputs;
-		RenderType m_renderType;
+		bool m_interactive;
 
 };
 
@@ -882,17 +896,13 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		bool applyLight( ccl::Light *light, ccl::Shader *emission, const CyclesAttributes *previousAttributes )
+		bool applyLight( ccl::Light *light, ccl::Shader *emission, const CyclesAttributes *previousAttributes ) const
 		{
 			if( previousAttributes )
 			{
 				if( m_shader.get() )
 				{
 					light->shader = m_shader.get();
-				}
-				else if( !previousAttributes->m_shader.get() )
-				{
-					light->shader = emission;
 				}
 			}
 			else
@@ -1136,23 +1146,20 @@ class InstanceCache : public IECore::RefCounted
 				updateMeshes();
 
 			// Objects
-			vector<SharedCObjectPtr> toEraseObj;
-			for( vector<SharedCObjectPtr>::iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
+			bool objectsDirty = false;
+			for( vector<SharedCObjectPtr>::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
 			{
 				if( it->unique() )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
 					// instance.
-					toEraseObj.push_back( *it );
+					m_objects.erase( it );
+					objectsDirty = true;
 				}
 			}
-			for( vector<SharedCObjectPtr>::const_iterator it = toEraseObj.begin(), eIt = toEraseObj.end(); it != eIt; ++it )
-			{
-				m_objects.erase( *it );
-			}
 
-			if( toEraseObj.size() )
+			if( objectsDirty )
 				updateObjects();
 		}
 
@@ -1237,7 +1244,7 @@ class LightCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			vector<SharedCLightPtr> toErase;
+			bool lightsDirty = false;
 			for( vector<SharedCLightPtr>::iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
 			{
 				if( it->unique() )
@@ -1245,15 +1252,12 @@ class LightCache : public IECore::RefCounted
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
 					// instance.
-					toErase.push_back( *it );
+					m_lights.erase( it );
+					lightsDirty = true;
 				}
 			}
-			for( vector<SharedCLightPtr>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
-			{
-				m_lights.erase( *it );
-			}
 
-			if( toErase.size() )
+			if( lightsDirty )
 				updateLights();
 		}
 
@@ -1280,6 +1284,69 @@ class LightCache : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( LightCache )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// CameraCache
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class CameraCache : public IECore::RefCounted
+{
+
+	public :
+
+		CameraCache()
+		{
+		}
+
+		// Can be called concurrently with other get() calls.
+		SharedCCameraPtr get( const IECoreScene::Camera *camera, const std::string &name )
+		{
+			const IECore::MurmurHash hash = camera->Object::hash();
+
+			Cache::accessor a;
+			m_cache.insert( a, hash );
+
+			if( !a->second )
+			{
+				a->second = SharedCCameraPtr( CameraAlgo::convert( camera, name ) );
+			}
+
+			return a->second;
+		}
+
+		// Must not be called concurrently with anything.
+		void clearUnused()
+		{
+			vector<IECore::MurmurHash> toErase;
+			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second.unique() )
+				{
+					// Only one reference - this is ours, so
+					// nothing outside of the cache is using the
+					// camera.
+					toErase.push_back( it->first );
+				}
+			}
+			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
+			{
+				m_cache.erase( *it );
+			}
+		}
+
+	private :
+
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCCameraPtr> Cache;
+		Cache m_cache;
+
+};
+
+IE_CORE_DECLAREPTR( CameraCache )
 
 } // namespace
 
@@ -1357,7 +1424,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesLight( const SharedCLightPtr &light, const SharedCShaderPtr &emission )
+		CyclesLight( SharedCLightPtr &light, SharedCShaderPtr &emission )
 			: m_light( light ), m_emission( emission ), m_attributes( nullptr )
 		{
 		}
@@ -1418,7 +1485,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesCamera( const ccl::Camera *camera )
+		CyclesCamera( SharedCCameraPtr camera )
 			: m_camera( camera )//, m_attributes( nullptr )
 		{
 		}
@@ -1449,7 +1516,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
-		CCameraPtr m_camera;
+		SharedCCameraPtr m_camera;
 		//ConstCyclesAttributesPtr m_attributes;
 
 };
@@ -1497,7 +1564,7 @@ IECore::InternedString g_bvhTypeOptionName( "ccl:scene:bvh_type" );
 IECore::InternedString g_bvhLayoutOptionName( "ccl:scene:bvh_layout" );
 IECore::InternedString g_useBvhSpatialSplitOptionName( "ccl:scene:use_bvh_spatial_split" );
 IECore::InternedString g_useBvhUnalignedNodesOptionName( "ccl:scene:use_bvh_unaligned_nodes" );
-IECore::InternedString g_useBvhTimeStepsOptionName( "ccl:scene:use_bvh_time_steps" );
+IECore::InternedString g_numBvhTimeStepsOptionName( "ccl:scene:num_bvh_time_steps" );
 IECore::InternedString g_persistentDataOptionName( "ccl:scene:persistent_data" );
 IECore::InternedString g_textureLimitOptionName( "ccl:scene:texture_limit" );
 // Curves
@@ -1553,6 +1620,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			init();
 
+			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
 			m_shaderCache = new ShaderCache( m_scene );
 			m_instanceCache = new InstanceCache( m_scene );
@@ -1580,10 +1648,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
-			auto integrator = m_integratorCache.get();
-			auto background = m_backgroundCache.get();
-			auto film = m_filmCache.get();
-			auto curveSystemManager = m_curveSystemManagerCache.get();
+			auto *integrator = m_integratorCache.get();
+			auto *background = m_backgroundCache.get();
+			auto *film = m_filmCache.get();
+			auto *curveSystemManager = m_curveSystemManagerCache.get();
 
 			if( name == g_frameOptionName )
 			{
@@ -1611,12 +1679,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_sampleMotionOptionName )
 			{
-				ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( "motion_blur" ) );
+				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( "motion_blur" ) );
 				if( value && input )
 				{
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
-						SocketAlgo::setSocket( (ccl::Node*)integrator, *input, value );
+						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
 					}
 					else
 					{
@@ -1645,7 +1713,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						else
 						{
 							m_deviceName = "CPU";
-							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName, name.string() );
+							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
 						}
 						return;
 					}
@@ -1660,7 +1728,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 								m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 								m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
 							}
-							else if( shadingsystem_name == "SVM" )
+							else if( shadingsystemName == "SVM" )
 							{
 								m_shadingsystemName = shadingsystemName;
 								m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
@@ -1669,7 +1737,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							else
 							{
 								m_shadingsystemName = "OSL";
-								IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % shadingsystemName, name.string() );
+								IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % shadingsystemName % name.string() );
 							}
 						}
 						else
@@ -1710,7 +1778,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					else if( name == g_tileSizeOptionName )
 					{
-						if ( const V2iData *data = reportedCast<const IntData>( value, "option", name ) )
+						if ( const V2iData *data = reportedCast<const V2iData>( value, "option", name ) )
 						{
 							auto d = data->readable();
 							m_sessionParams.tile_size = ccl::make_int2( d.x, d.y );
@@ -1815,7 +1883,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					if( name == g_bvhTypeOptionName )
 					{
 						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sceneParams.bvh_type = (ccl::BVHType)data->readable();
+							m_sceneParams.bvh_type = (ccl::SceneParams::BVHType)data->readable();
 						return;
 					}
 					else if( name == g_bvhLayoutOptionName )
@@ -1836,7 +1904,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							m_sceneParams.use_bvh_unaligned_nodes = data->readable();
 						return;
 					}
-					else if( name == g_useBvhTimeStepsOptionName )
+					else if( name == g_numBvhTimeStepsOptionName )
 					{
 						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
 							m_sceneParams.num_bvh_time_steps = data->readable();
@@ -1918,12 +1986,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
 			else if( boost::starts_with( name.string(), "ccl:background:" ) )
 			{
-				ccl::SocketType *input = background->node_type->find_input( name.string().c_str() + 15 );
+				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
 				if( value && input )
 				{
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
-						SocketAlgo::setSocket( (ccl::Node*)background, *input, value );
+						SocketAlgo::setSocket( (ccl::Node*)background, input, data );
 					}
 					else
 					{
@@ -1938,12 +2006,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:film:" ) )
 			{
-				ccl::SocketType *input = film->node_type->find_input( name.string().c_str() + 9 );
+				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 9 ) );
 				if( value && input )
 				{
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
-						SocketAlgo::setSocket( (ccl::Node*)film, *input, value );
+						SocketAlgo::setSocket( (ccl::Node*)film, input, data );
 					}
 					else
 					{
@@ -1958,12 +2026,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:integrator:" ) )
 			{
-				ccl::SocketType *input = integrator->node_type->find_input( name.string().c_str() + 15 );
+				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
 				if( value && input )
 				{
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
-						SocketAlgo::setSocket( (ccl::Node*)integrator, *input, value );
+						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
 					}
 					else
 					{
@@ -2004,9 +2072,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( passType == ccl::PASS_NONE )
 				return;
 
-			ccl::array<ccl::Pass> passes;
+			ccl::vector<ccl::Pass> passes;
 			// Beauty
-			ccl::Pass::add( ccl::PASS_COMBINED, &passes );
+			ccl::Pass::add( ccl::PASS_COMBINED, passes );
 
 			if( !output && ccl::Pass::contains( m_filmCache->passes, passType ) )
 			{
@@ -2026,7 +2094,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					continue;
 				}
-				ccl::Pass::add( output.second->m_passType, &passes );
+				ccl::Pass::add( output.second->m_passType, passes );
 			}
 
 			m_bufferParams.passes = passes;
@@ -2039,7 +2107,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
-			ccl::Camera *ccamera = CameraAlgo::convert( camera, name );
+			SharedCCameraPtr ccamera = m_cameraCache->get( camera, name );
 			if( !ccamera )
 			{
 				return nullptr;
@@ -2083,7 +2151,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
 		{
-			Instance instance = m_instanceCache->get( samples, name );
+			Instance instance = m_instanceCache->get( samples, times, name );
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
 			result->attributes( attributes );
@@ -2095,23 +2163,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			updateSceneObjects();
 			updateOptions();
 			// Clear out any objects which aren't needed in the cache.
+			m_cameraCache->clearUnused();
 			m_lightCache->clearUnused();
 			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
 			m_attributesCache->clearUnused();
 
 			updateCamera();
+			updateOutputs();
 
 			if( m_rendering )
 			{
 				return;
 			}
-
-			updateOutputs();
-
-			//if( m_renderType == Interactive )
-			//{
-			//}
 
 			m_rendering = true;
 
@@ -2134,6 +2198,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_session->set_pause( true );
 		}
 
+		void writeRenderTile( ccl::RenderTile& rtile )
+		{
+			m_renderCallback->writeRenderTile( rtile );
+		}
+
+		void updateRenderTile( ccl::RenderTile& rtile, bool highlight )
+		{
+			m_renderCallback->updateRenderTile( rtile, highlight );
+		}
+
 	private :
 
 		void init()
@@ -2143,6 +2217,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				delete m_session;
 			
 			m_renderCallback.reset();
+
+			m_bufferParams = ccl::BufferParams();
 
 			// Session Defaults
 			m_sessionParams.display_buffer_linear = true;
@@ -2191,19 +2267,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_sessionParams.background = false;
 			}
-			m_sessionParams.write_render_cb = writeRender;
 
 			m_session = new ccl::Session( m_sessionParams );
 			m_session->scene = m_scene;
 
 			if( m_renderType == Interactive )
 			{
-				m_session->progress.set_update_callback( ccl::function_bind( &CyclesRenderer::tagRedraw, this ) );
-				m_session->progress.set_cancel_callback( ccl::function_bind( &CyclesRenderer::testCancel, this ) );
+				m_session->progress.set_update_callback( function_bind( &CyclesRenderer::tagRedraw, this ) );
+				m_session->progress.set_cancel_callback( function_bind( &CyclesRenderer::testCancel, this ) );
 			}
 
-			m_session->write_render_tile_cb = ccl::function_bind( &CyclesRenderer::writeRenderTile, this, _1 );
-			m_session->update_render_tile_cb = ccl::function_bind( &CyclesRenderer::updateRenderTile, this, _1, _2 );
+			m_session->write_render_tile_cb = function_bind( &CyclesRenderer::writeRenderTile, this, ccl::_1 );
+			m_session->update_render_tile_cb = function_bind( &CyclesRenderer::updateRenderTile, this, ccl::_1, ccl::_2 );
 
 			m_session->set_pause( true );
 
@@ -2236,48 +2311,69 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
-
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
 			    m_session->params.modified( m_sessionParams ) )
 			{
 				reset();
 			}
+			// This doesn't get checked, so we set it just in-case.
+			m_session->params.samples = m_sessionParams.samples;
 
-			if( m_integrator->modified( m_integratorCache.get() ) )
+			const auto *integrator = m_integratorCache.get();
+			if( m_integrator->modified( *integrator ) )
 			{
-				memcpy( m_integrator, m_integratorCache.get(), sizeof( ccl::Integrator ) );
+				memcpy( m_integrator, integrator, sizeof( ccl::Integrator ) );
 				m_integrator->tag_update( m_scene );
 			}
 
-			if( m_background->modified( m_backgroundCache.get() ) )
+			const auto *background = m_backgroundCache.get();
+			if( m_background->modified( *background ) )
 			{
-				memcpy( m_background, m_backgroundCache.get(), sizeof( ccl::Background ) );
+				memcpy( m_background, background, sizeof( ccl::Background ) );
 				m_background->tag_update( m_scene );
 			}
 
-			if( m_film->modified( m_filmCache.get() ) )
+			const auto *film = m_filmCache.get();
+			if( m_film->modified( *film ) )
 			{
-				memcpy( m_film, m_filmCache.get(), sizeof( ccl::Film ) );
+				memcpy( m_film, film, sizeof( ccl::Film ) );
 				m_film->tag_update( m_scene );
 			}
 
-			if( m_curveSystemManager->modified( m_curveSystemManagerCache.get() ) )
+			const auto *curveSystemManager = m_curveSystemManagerCache.get();
+			if( m_curveSystemManager->modified( *curveSystemManager ) )
 			{
-				memcpy( m_curveSystemManager, m_curveSystemManagerCache.get(), sizeof( ccl::CurveSystemManager ) );
+				memcpy( m_curveSystemManager, curveSystemManager, sizeof( ccl::CurveSystemManager ) );
 				m_curveSystemManager->tag_update( m_scene );
 			}
 		}
 
 		void updateOutputs()
 		{
-			m_session->reset( m_bufferParams, m_sessionParams.samples );
-			renderCallback->update( m_outputs );
-			if( m_renderType != Interactive )
+			// Update m_bufferParams from the current camera.
+			auto *cam = m_scene->camera;
+			const int width = cam->width;
+			const int height = cam->height;
+			m_bufferParams.full_width = cam->full_width;
+			m_bufferParams.full_height = cam->full_height;
+			ccl::BoundBox2D border = cam->border.clamp();
+			m_bufferParams.full_x = (int)(border.left * (float)width);
+			m_bufferParams.full_y = (int)(border.bottom * (float)height);
+			m_bufferParams.width =  (int)(border.right * (float)width) - m_bufferParams.full_x;
+			m_bufferParams.height = (int)(border.top * (float)height) - m_bufferParams.full_y;
+
+			if( m_session->buffers->params.modified( m_bufferParams ) )
 			{
-				for( auto &output : m_outputs )
+				m_session->reset( m_bufferParams, m_sessionParams.samples );
+				m_renderCallback->updateOutputs( m_outputs );
+				if( m_renderType != Interactive )
 				{
-					output.createImage( m_scene->camera );
+					for( auto &output : m_outputs )
+					{
+						CyclesOutput *co = output.second.get();
+						co->createImage( cam );
+					}
 				}
 			}
 		}
@@ -2317,30 +2413,25 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				m_scene->camera = cameraIt->second.get();
-			}
-			m_scene->camera->update( m_scene );
-		}
-
-		void writeImages()
-		{
-			if( renderType != Interactive )
-			{
-				for( auto &output : m_outputs )
+				auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
+				if( m_scene->camera != ccamera.get() )
 				{
-					output.writeImage();
+					m_scene->camera = ccamera.get();
+					m_scene->camera->update( m_scene );
 				}
 			}
 		}
 
-		void writeRenderTile( ccl::RenderTile& rtile )
+		void writeImages()
 		{
-			m_renderCallback->writeRenderTile( rtile );
-		}
-
-		void updateRenderTile( ccl::RenderTile& rtile, bool highlight )
-		{
-			m_renderCallback->updateRenderTile( rtile, highlight );
+			if( m_renderType != Interactive )
+			{
+				for( auto &output : m_outputs )
+				{
+					CyclesOutput *co = output.second.get();
+					co->writeImage();
+				}
+			}
 		}
 
 		void tagRedraw()
@@ -2371,10 +2462,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 		int m_frame;
 		string m_camera;
-		int m_oversampling;
-		bool m_rendering = false;
+		bool m_rendering;
 
 		// Caches.
+		CameraCachePtr m_cameraCache;
 		ShaderCachePtr m_shaderCache;
 		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;

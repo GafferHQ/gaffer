@@ -99,7 +99,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 2 ), "bvhLayout", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), "useBvhUnalignedNodes", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:use_bvh_time_steps", new IECore::IntData( 0 ), "useBvhTimeSteps", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), "numBvhTimeSteps", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:scene:persistent_data", new IECore::BoolData( false ), "persistentData", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:texture_limit", new IECore::IntData( 0 ), "textureLimit", Gaffer::Plug::Default, false );
@@ -147,13 +147,13 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Curves
 	options->addOptionalMember( "ccl:curve:use_curves", new IECore::BoolData( false ), "useCurves", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:minimum_width", new IECore::FloatData( 0.0f ), "curveMinimumWidth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:maximum_width", new IECore::FloatData( 0.10f ), "curveMaximumWidth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:primitive", new IECore::IntData( 0 ), "curvePrimitive", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:shape", new IECore::IntData( 0 ), "curveShape", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:resolution", new IECore::IntData( 0 ), "curveResolution", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:subdivisions", new IECore::IntData( 0 ), "curveSubdivisions", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:cull_backfacing", new IECore::BoolData( false ), "curveCullBackfacing", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:minimum_width", new IECore::FloatData( 0.0f ), "minimumWidth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:maximum_width", new IECore::FloatData( 0.10f ), "maximumWidth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:primitive", new IECore::IntData( 0 ), "primitive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:shape", new IECore::IntData( 0 ), "primitive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:resolution", new IECore::IntData( 0 ), "primitive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:subdivisions", new IECore::IntData( 0 ), "primitive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:curve:cull_backfacing", new IECore::BoolData( false ), "useCurves", Gaffer::Plug::Default, false );
 
 }
 
