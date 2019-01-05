@@ -52,7 +52,7 @@
 #include "device/device.h"
 #include "graph/node.h"
 
-using namespace boost::python;
+namespace py = boost::python;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
 using namespace GafferCycles;
@@ -66,14 +66,14 @@ namespace
 #define CCL_MAX_ENUMS 24
 #define CCL_MAX_LIGHTS 5
 
-boost::python::list getDevices()
+py::list getDevices()
 {
-	boost::python::list result;
+	py::list result;
 
 	ccl::vector<ccl::DeviceInfo> &devices = ccl::Device::available_devices();
 	for( const ccl::DeviceInfo &device : devices ) 
 	{
-		boost::python::dict d;
+		py::dict d;
 		d["type"] = ccl::Device::string_from_type( device.type );
 		d["description"] = device.description;
 		d["id"] = device.id;
@@ -93,28 +93,28 @@ boost::python::list getDevices()
 	return result;
 }
 
-boost::python::dict getSockets( const ccl::NodeType *nodeType, const bool output )
+py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 {
-	boost::python::dict result;
+	py::dict result;
 
-	if( output )
+	if( !output )
 	{
-		for( const ccl::SocketType socketType : nodeType->outputs )
+		for( const ccl::SocketType socketType : nodeType->inputs )
 		{
-			boost::python::dict d;
+			py::dict d;
 			d["ui_name"] = socketType.ui_name.c_str();
 			d["type"] = ccl::SocketType::type_name( socketType.type ).c_str();
-			if( socketType.enum_values )
+			if( socketType.type == ccl::SocketType::ENUM )
 			{
-				const ccl::NodeEnum enums = (ccl::NodeEnum&)socketType.enum_values;
-				boost::python::list enumList;
+				const ccl::NodeEnum *enums = socketType.enum_values;
+				py::list enumList;
 				// No way of finding how many enums presets exist, so we make up
 				// an upper limit of 24 (math node has 24).
 				for( int i = 0; i < CCL_MAX_ENUMS; ++i )
 				{
-					if( enums.exists( i ) )
+					if( enums->exists( i ) )
 					{
-						enumList.append( enums[i].c_str() );
+						enumList.append( enums->operator[](i).c_str() );
 					}
 					else
 					{
@@ -131,9 +131,9 @@ boost::python::dict getSockets( const ccl::NodeType *nodeType, const bool output
 	}
 	else
 	{
-		for( const ccl::SocketType socketType : nodeType->inputs )
+		for( const ccl::SocketType socketType : nodeType->outputs )
 		{
-			boost::python::dict d;
+			py::dict d;
 			d["ui_name"] = socketType.ui_name.c_str();
 			d["type"] = ccl::SocketType::type_name( socketType.type ).c_str();
 			d["is_array"] = socketType.is_array();
@@ -145,9 +145,9 @@ boost::python::dict getSockets( const ccl::NodeType *nodeType, const bool output
 	return result;
 }
 
-boost::python::dict getNodes()
+py::dict getNodes()
 {
-	boost::python::dict result;
+	py::dict result;
 
 	for( const auto& nodeType : ccl::NodeType::types() )
 	{
@@ -158,7 +158,7 @@ boost::python::dict getNodes()
 			if( cNodeType->type == ccl::NodeType::SHADER )
 				continue;
 
-			boost::python::dict d;
+			py::dict d;
 			d["in"] = getSockets( cNodeType, false );
 			d["out"] = getSockets( cNodeType, true );
 			
@@ -168,7 +168,7 @@ boost::python::dict getNodes()
 			// to simplify things.
 			if( nodeType.first == "shader" )
 			{
-				boost::python::dict output;
+				py::dict output;
 				const ccl::NodeType *outputNodeType = ccl::NodeType::find( ccl::ustring( "output" ) );
 				if( outputNodeType )
 				{
@@ -190,9 +190,9 @@ boost::python::dict getNodes()
 	return result;
 }
 
-boost::python::dict getShaders()
+py::dict getShaders()
 {
-	boost::python::dict result;
+	py::dict result;
 
 	for( const auto& nodeType : ccl::NodeType::types() )
 	{
@@ -206,7 +206,7 @@ boost::python::dict getShaders()
 		{
 			if( cNodeType->type == ccl::NodeType::SHADER )
 			{
-				boost::python::dict d;
+				py::dict d;
 				d["in"] = getSockets( cNodeType, false );
 				d["out"] = getSockets( cNodeType, true );
 
@@ -338,29 +338,29 @@ boost::python::dict getShaders()
 	return result;
 }
 
-boost::python::dict getLights()
+py::dict getLights()
 {
-	boost::python::dict result;
+	py::dict result;
 
 	const ccl::NodeType *cNodeType = ccl::NodeType::find( ccl::ustring( "light" ) );
 	if( cNodeType )
 	{
-		boost::python::dict _in;
+		py::dict _in;
 		_in = getSockets( cNodeType, false );
 
 		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "type" ) );
-		const ccl::NodeEnum enums = (ccl::NodeEnum&)socketType->enum_values;
+		const ccl::NodeEnum *enums = socketType->enum_values;
 
 		for( int i = 0; i < CCL_MAX_LIGHTS; ++i )
 		{
-			boost::python::dict d;
-			if ( enums.exists(i) )
+			py::dict d;
+			if ( enums->exists(i) )
 			{
-				boost::python::dict in;
-				std::string type = enums[i].c_str();
+				py::dict in;
+				std::string type = enums->operator[](i).c_str();
 
 				in["size"] = _in["size"];
-				in["cast_shad"] = _in["cast_shad"];
+				in["cast_shadow"] = _in["cast_shadow"];
 				in["use_mis"] = _in["use_mis"];
 				in["use_diffuse"] = _in["use_diffuse"];
 				in["use_glossy"] = _in["use_glossy"];
@@ -376,8 +376,8 @@ boost::python::dict getLights()
 				}
 				else if( type == "area" )
 				{
-					boost::python::dict shape;
-					boost::python::list shapeList;
+					py::dict shape;
+					py::list shapeList;
 					shapeList.append( "ellipse" );
 					shapeList.append( "disk" );
 					shapeList.append( "rectangle" );
@@ -404,9 +404,11 @@ boost::python::dict getLights()
 			}
 		}
 		// Portal
-		boost::python::dict in;
-		in["shape"] = result["area"]["shape"];
-		result["portal"]["in"] = in;
+		py::dict in;
+		py::dict shape;
+		shape["shape"] = result["area"]["in"]["shape"];
+		in["in"] = shape;
+		result["portal"] = in;
 	}
 	return result;
 }
@@ -416,10 +418,10 @@ boost::python::dict getLights()
 BOOST_PYTHON_MODULE( _GafferCycles )
 {
 
-	boost::python::scope().attr( "devices" ) = getDevices();
-	boost::python::scope().attr( "nodes" ) = getNodes();
-	boost::python::scope().attr( "shaders" ) = getShaders();
-	boost::python::scope().attr( "lights" ) = getLights();
+	py::scope().attr( "devices" ) = getDevices();
+	py::scope().attr( "nodes" ) = getNodes();
+	py::scope().attr( "shaders" ) = getShaders();
+	py::scope().attr( "lights" ) = getLights();
 
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesOptions>();
