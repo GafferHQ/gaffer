@@ -37,6 +37,8 @@
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
+#include "IECore/Export.h"
+
 #include "IECore/CompoundData.h"
 
 // Cycles
@@ -55,8 +57,8 @@ IECORECYCLES_API ccl::float2 setVector( const Imath::V2f &vector );
 IECORECYCLES_API ccl::float3 setVector( const Imath::V3f &vector );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color3f &color );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color4f &color );
-IECORECYCLES_API ccl::Transform setTransform( const Imath::M44d &transform );
-IECORECYCLES_API ccl::Transform setTransform( const Imath::M44f &transform );
+IECORECYCLES_API ccl::Transform setTransform( const Imath::M44d &matrix );
+IECORECYCLES_API ccl::Transform setTransform( const Imath::M44f &matrix );
 
 IECORECYCLES_API Imath::V2f getVector( const ccl::float2 vector );
 IECORECYCLES_API Imath::V3f getVector( const ccl::float3 vector );

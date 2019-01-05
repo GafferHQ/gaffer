@@ -58,7 +58,15 @@ namespace
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
-ccl::TypeDesc AttributeAlgo::typeDesc( IECore::TypeId dataType )
+namespace IECoreCycles
+
+{
+
+namespace AttributeAlgo
+
+{
+
+ccl::TypeDesc typeDesc( IECore::TypeId dataType )
 {
 	switch( dataType )
 	{
@@ -79,7 +87,7 @@ ccl::TypeDesc AttributeAlgo::typeDesc( IECore::TypeId dataType )
 	}
 }
 
-ccl::TypeDesc AttributeAlgo::typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType )
+ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType )
 {
 	switch( dataType )
 	{
@@ -100,7 +108,7 @@ ccl::TypeDesc AttributeAlgo::typeFromGeometricDataInterpretation( IECore::Geomet
 	}
 }
 
-void AttributeAlgo::convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
+void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
 {
 	ccl::TypeDesc ctype = typeDesc( primitiveVariable.data.get()->typeId() );
 	ccl::Attribute *attr = nullptr;
@@ -205,3 +213,7 @@ void AttributeAlgo::convertPrimitiveVariable( const std::string &name, const IEC
 		}
 	}
 }
+
+} // AttributeAlgo
+
+} // IECoreCycles

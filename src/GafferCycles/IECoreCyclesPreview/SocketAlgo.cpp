@@ -106,6 +106,13 @@ IECore::DataPtr arrayToData( const ccl::array<ccl::float3>& array )
 
 } // namespace
 
+namespace IECoreCycles
+{
+
+namespace SocketAlgo
+
+{
+
 //////////////////////////////////////////////////////////////////////////
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
@@ -464,3 +471,7 @@ IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name )
 {
 	return getSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ) );
 }
+
+} // namespace SocketAlgo
+
+} // namespace IECoreCycles

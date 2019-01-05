@@ -219,6 +219,14 @@ const string nodeName ( Gaffer::GraphComponent *plugParent )
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
+namespace GafferCycles
+
+{
+
+namespace SocketHandler
+
+{
+
 Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
 	switch( socketType )
@@ -463,3 +471,7 @@ Gaffer::Plug *setupOutputNodePlug( Gaffer::GraphComponent *plugParent )
 
 	return plug.get();
 }
+
+} // namespace SocketHandler
+
+} // namespace GafferCycles

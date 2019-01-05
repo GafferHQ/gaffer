@@ -244,7 +244,15 @@ ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( MeshAlgo::convert
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
-ccl::Object *MeshAlgo::convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
+namespace IECoreCycles
+
+{
+
+namespace MeshAlgo
+
+{
+
+ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
 {
 	ccl::Object *cobject = new ccl::Object();
 	cobject->mesh = convertCommon(mesh);
@@ -252,7 +260,7 @@ ccl::Object *MeshAlgo::convert( const IECoreScene::MeshPrimitive *mesh, const st
 	return cobject;
 }
 
-ccl::Object *MeshAlgo::convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::string &nodeName )
+ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::string &nodeName )
 {
 	ccl::Mesh *cmesh = convertCommon(meshes[0]);
 
@@ -332,3 +340,7 @@ ccl::Object *MeshAlgo::convert( const std::vector<const IECoreScene::MeshPrimiti
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
+
+} // namespace MeshAlgo
+
+} // namespace IECoreCycles

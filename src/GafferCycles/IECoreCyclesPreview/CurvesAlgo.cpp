@@ -119,7 +119,15 @@ ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( CurvesAlgo::con
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
-ccl::Object *CurvesAlgo::convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
+namespace IECoreCycles
+
+{
+
+namespace CurvesAlgo
+
+{
+
+ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
 {
 	ccl::Object *cobject = new ccl::Object();
 	cobject->mesh = convertCommon(curve);
@@ -127,7 +135,7 @@ ccl::Object *CurvesAlgo::convert( const IECoreScene::CurvesPrimitive *curve, con
 	return cobject;
 }
 
-ccl::Object *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
+ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
 {
 	ccl::Mesh *cmesh = convertCommon(curves[0]);
 
@@ -176,3 +184,7 @@ ccl::Object *CurvesAlgo::convert( const vector<const IECoreScene::CurvesPrimitiv
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
+
+} // namespace CurvesAlgo
+
+} // namespace IECoreCycles

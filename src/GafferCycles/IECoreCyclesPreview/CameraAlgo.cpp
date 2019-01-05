@@ -135,7 +135,19 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 // Implementation of public API
 //////////////////////////////////////////////////////////////////////////
 
-ccl::Camera *CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName )
+namespace IECoreCycles
+
+{
+
+namespace CameraAlgo
+
+{
+
+ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
 	return convertCommon( camera, nodeName );
 }
+
+} // namespace CameraAlgo
+
+} // namespace IECoreCycles
