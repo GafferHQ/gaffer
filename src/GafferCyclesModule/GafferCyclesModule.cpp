@@ -60,12 +60,6 @@ using namespace GafferCycles;
 namespace
 {
 
-// No way of finding how many enums presets exist, so we make up an upper 
-// limit of 24 (math node has 24). Lights are defined by an enum as well, so we
-// make an upper-bound of 5.
-#define CCL_MAX_ENUMS 24
-#define CCL_MAX_LIGHTS 5
-
 py::list getDevices()
 {
 	py::list result;
@@ -102,31 +96,34 @@ py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 		for( const ccl::SocketType socketType : nodeType->inputs )
 		{
 			py::dict d;
-			d["ui_name"] = socketType.ui_name.c_str();
+			std::string name( socketType.name.c_str() );
+			std::string uiName( socketType.ui_name.c_str() );
+			if( boost::contains( name, "." ) )
+			{
+				std::vector<std::string> split;
+				boost::split( split, name, boost::is_any_of( "." ) );
+				if( split[0] == "tex_mapping" )
+					d["category"] = "Texture Mapping";
+			}
+			d["ui_name"] = uiName;
+
 			d["type"] = ccl::SocketType::type_name( socketType.type ).c_str();
 			if( socketType.type == ccl::SocketType::ENUM )
 			{
 				const ccl::NodeEnum *enums = socketType.enum_values;
-				py::list enumList;
-				// No way of finding how many enums presets exist, so we make up
-				// an upper limit of 24 (math node has 24).
-				for( int i = 0; i < CCL_MAX_ENUMS; ++i )
+				py::dict enumDict;
+				for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
 				{
-					if( enums->exists( i ) )
-					{
-						enumList.append( enums->operator[](i).c_str() );
-					}
-					else
-					{
-						// No more enums
-						break;
-					}
+					enumDict[it->first.c_str()] = it->second;
 				}
-				d["enum_values"] = enumList;
+				d["enum_values"] = enumDict;
 			}
 			d["is_array"] = socketType.is_array();
 			d["flags"] = socketType.flags;
-			result[socketType.name.c_str()] = d;
+
+			// Some of the texture mapping nodes have a dot in them, replace here with a colon
+			std::string actualName = boost::replace_first_copy( name, ".", "__" );
+			result[actualName] = d;
 		}
 	}
 	else
@@ -178,8 +175,10 @@ py::dict getNodes()
 				d["in"]["volume"] = output["in"]["volume"];
 				d["in"]["displacement"] = output["in"]["displacement"];
 				d["in"]["normal"] = output["in"]["normal"];
+				d["type"] = "surface";
+				d["category"] = "Shader";
 
-				result["cycles_shader"] = d;
+				result["shader"] = d;
 			}
 			else
 			{
@@ -198,7 +197,7 @@ py::dict getShaders()
 	{
 		// Skip over the "output" ShaderNode, as this is a part of the main
 		// "shader" node.
-		if( nodeType.first == "output" )
+		if( std::string( nodeType.first.c_str() ) == "output" )
 			continue;
 
 		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
@@ -210,127 +209,139 @@ py::dict getShaders()
 				d["in"] = getSockets( cNodeType, false );
 				d["out"] = getSockets( cNodeType, true );
 
-				if( boost::ends_with( nodeType.first.c_str(), "bsdf" ) )
+				std::string type = nodeType.first.c_str();
+
+				if( boost::ends_with( type, "bsdf" ) )
 				{
 					d["type"] = "surface";
 					d["category"] = "Shader";
 				}
-				else if( boost::ends_with( nodeType.first.c_str(), "closure" ) )
+				else if( boost::starts_with( type, "convert" ) )
+				{
+					d["type"] = "emission";
+					d["category"] = "Converter";
+				}
+				else if( boost::ends_with( type, "closure" ) )
 				{
 					d["type"] = "surface";
 					d["category"] = "Shader";
 				}
-				else if( nodeType.first.c_str() == "subsurface_scattering" )
+				else if( boost::equals( type, "subsurface_scattering" ) )
 				{
 					d["type"] = "surface";
 					d["category"] = "Shader";
 				}
-				else if( nodeType.first.c_str() == "emission" )
+				else if( boost::equals( type, "emission" ) )
 				{
 					d["type"] = "surface";
 					d["category"] = "Shader";
 				}
-				else if( nodeType.first.c_str() == "background_shader" )
+				else if( boost::equals( type, "background_shader" ) )
 				{
 					d["type"] = "surface";
 					d["category"] = "Shader";
 				}
-				else if( nodeType.first.c_str() == "holdout" )
+				else if( boost::equals( type, "holdout" ) )
 				{
 					d["type"] = "surface";
 					d["category"] = "Shader";
 				}
-				else if( boost::ends_with( nodeType.first.c_str(), "volume" ) )
+				else if( boost::ends_with( type, "volume" ) )
 				{
 					d["type"] = "volume";
 					d["category"] = "Shader";
 				}
-				else if( boost::ends_with( nodeType.first.c_str(), "texture" ) )
+				else if( boost::ends_with( type, "texture" ) )
 				{
 					d["type"] = "emission";
 					d["category"] = "Texture";
 				}
-				else if( boost::ends_with( nodeType.first.c_str(), "displacement" ) )
+				else if( boost::ends_with( type, "displacement" ) )
 				{
 					d["type"] = "displacement";
 					d["category"] = "Vector";
 				}
-				else if( boost::starts_with( nodeType.first.c_str(), "combine" ) )
+				else if( boost::starts_with( type, "combine" ) )
 				{
 					d["type"] = "emission";
 					d["category"] = "Converter";
 				}
-				else if( boost::starts_with( nodeType.first.c_str(), "separate" ) )
+				else if( boost::starts_with( type, "separate" ) )
 				{
 					d["type"] = "emission";
 					d["category"] = "Converter";
 				}
-				else if( boost::ends_with( nodeType.first.c_str(), "info" ) )
+				else if( boost::ends_with( type, "info" ) )
 				{
 					d["type"] = "emission";
 					d["category"] = "Input";
 				}
-				else if( nodeType.first.c_str() == "ambient_occlusion"
-					|| nodeType.first.c_str() == "attribute"
-					|| nodeType.first.c_str() == "bevel"
-					|| nodeType.first.c_str() == "camera"
-					|| nodeType.first.c_str() == "fresnel"
-					|| nodeType.first.c_str() == "geometry"
-					|| nodeType.first.c_str() == "layer_weight"
-					|| nodeType.first.c_str() == "light_path"
-					|| nodeType.first.c_str() == "rgb"
-					|| nodeType.first.c_str() == "tangent"
-					|| nodeType.first.c_str() == "texture_coordinate"
-					|| nodeType.first.c_str() == "uvmap"
-					|| nodeType.first.c_str() == "value"
-					|| nodeType.first.c_str() == "wireframe"
+				else if( ( boost::equals( type, "ambient_occlusion" ) )
+					|| ( boost::equals( type, "attribute" ) )
+					|| ( boost::equals( type, "bevel" ) )
+					|| ( boost::equals( type, "camera" ) )
+					|| ( boost::equals( type, "fresnel" ) )
+					|| ( boost::equals( type, "geometry" ) )
+					|| ( boost::equals( type, "layer_weight" ) )
+					|| ( boost::equals( type, "light_path" ) )
+					|| ( boost::equals( type, "rgb" ) )
+					|| ( boost::equals( type, "tangent" ) )
+					|| ( boost::equals( type, "texture_coordinate" ) )
+					|| ( boost::equals( type, "uvmap" ) )
+					|| ( boost::equals( type, "value" ) )
+					|| ( boost::equals( type, "wireframe" ) )
 				)
 				{
 					d["type"] = "emission";
 					d["category"] = "Input";
 				}
-				else if( nodeType.first.c_str() == "brightness_contrast"
-					|| nodeType.first.c_str() == "gamma"
-					|| nodeType.first.c_str() == "hsv"
-					|| nodeType.first.c_str() == "invert"
-					|| nodeType.first.c_str() == "light_falloff"
-					|| nodeType.first.c_str() == "mix"
-					|| nodeType.first.c_str() == "rgb_curves"
+				else if( ( boost::equals( type, "brightness_contrast" ) )
+					|| ( boost::equals( type, "gamma" ) )
+					|| ( boost::equals( type, "hsv" ) )
+					|| ( boost::equals( type, "invert" ) )
+					|| ( boost::equals( type, "light_falloff" ) )
+					|| ( boost::equals( type, "mix" ) )
+					|| ( boost::equals( type, "rgb_curves" ) )
 				)
 				{
 					d["type"] = "emission";
 					d["category"] = "Color";
 				}
-				else if( nodeType.first.c_str() == "bump"
-					|| nodeType.first.c_str() == "mapping"
-					|| nodeType.first.c_str() == "normal"
-					|| nodeType.first.c_str() == "normal_map"
-					|| nodeType.first.c_str() == "vector_curves"
-					|| nodeType.first.c_str() == "vector_transform"
+				else if( ( boost::equals( type, "bump" ) )
+					|| ( boost::equals( type, "mapping" ) )
+					|| ( boost::equals( type, "normal" ) )
+					|| ( boost::equals( type, "normal_map" ) )
+					|| ( boost::equals( type, "vector_curves" ) )
+					|| ( boost::equals( type, "vector_transform" ) )
 				)
 				{
 					d["type"] = "emission";
 					d["category"] = "Vector";
 				}
-				else if( nodeType.first.c_str() == "blackbody"
-					|| nodeType.first.c_str() == "rgb_ramp"
-					|| nodeType.first.c_str() == "math"
-					|| nodeType.first.c_str() == "rgb_to_bw"
-					//|| nodeType.first.c_str() == "shader_to_rgb"
-					|| nodeType.first.c_str() == "vector_math"
-					|| nodeType.first.c_str() == "wavelength"
+				else if( ( boost::equals( type, "blackbody" ) )
+					|| ( boost::equals( type, "rgb_ramp" ) )
+					|| ( boost::equals( type, "math" ) )
+					|| ( boost::equals( type, "rgb_to_bw" ) )
+					//|| type == "shader_to_rgb"
+					|| ( boost::equals( type, "vector_math" ) )
+					|| ( boost::equals( type, "wavelength" ) )
 				)
 				{
 					d["type"] = "emission";
 					d["category"] = "Converter";
 				}
-				else if( nodeType.first.c_str() == "ies_light" )
+				else if( boost::equals( type, "ies_light" ) )
 				{
 					d["type"] = "emission";
 					d["category"] = "Texture";
 				}
+				else
+				{
+					d["type"] = "emission";
+					d["category"] = "Misc";
+				}
 
-				result[nodeType.first.c_str()] = d;
+				result[type] = d;
 			}
 		}
 	}
@@ -348,67 +359,72 @@ py::dict getLights()
 		py::dict _in;
 		_in = getSockets( cNodeType, false );
 
+		// Set to invisible
+		//_in["axisu"]["visible"] = false;
+		//_in["axisv"]["visible"] = false;
+		//_in["sizeu"]["visible"] = false;
+		//_in["sizev"]["visible"] = false;
+
 		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "type" ) );
 		const ccl::NodeEnum *enums = socketType->enum_values;
 
-		for( int i = 0; i < CCL_MAX_LIGHTS; ++i )
+		for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
 		{
 			py::dict d;
-			if ( enums->exists(i) )
+			py::dict in;
+			std::string type = it->first.c_str();
+
+			in["size"] = _in["size"];
+			in["cast_shadow"] = _in["cast_shadow"];
+			in["use_mis"] = _in["use_mis"];
+			in["use_diffuse"] = _in["use_diffuse"];
+			in["use_glossy"] = _in["use_glossy"];
+			in["use_transmission"] = _in["use_transmission"];
+			in["use_scatter"] = _in["use_scatter"];
+			in["max_bounces"] = _in["max_bounces"];
+			in["samples"] = _in["samples"];
+
+			if( type == "background" )
 			{
-				py::dict in;
-				std::string type = enums->operator[](i).c_str();
-
-				in["size"] = _in["size"];
-				in["cast_shadow"] = _in["cast_shadow"];
-				in["use_mis"] = _in["use_mis"];
-				in["use_diffuse"] = _in["use_diffuse"];
-				in["use_glossy"] = _in["use_glossy"];
-				in["use_transmission"] = _in["use_transmission"];
-				in["use_scatter"] = _in["use_scatter"];
-				in["max_bounces"] = _in["max_bounces"];
-				in["samples"] = _in["samples"];
-
-				if( type == "background" )
-				{
-					// Part of CyclesOptions
-					continue;
-				}
-				else if( type == "area" )
-				{
-					py::dict shape;
-					py::list shapeList;
-					shapeList.append( "ellipse" );
-					shapeList.append( "disk" );
-					shapeList.append( "rectangle" );
-					shapeList.append( "square" );
-					shape["enum_values"] = shapeList;
-					shape["ui_name"] = "Shape";
-					shape["type"] = "enum";
-					shape["is_array"] = false;
-					shape["flags"] = 0;
-					//in["axisu"] = _in["axisu"];
-					//in["axisv"] = _in["axisv"];
-					//in["sizeu"] = _in["sizeu"];
-					//in["sizev"] = _in["sizev"];
-					in["shape"] = shape;
-				}
-				else if( type == "spot" )
-				{
-					in["spot_angle"] = _in["spot_angle"];
-					in["spot_smooth"] = _in["spot_smooth"];
-				}
-
-				d["in"] = in;
-				result[type] = d;
+				// Part of CyclesOptions
+				continue;
 			}
+			else if( type == "area" )
+			{
+				py::dict shape;
+				py::dict shapeEnums;
+				shapeEnums["ellipse"] = 0;
+				shapeEnums["disk"] = 1;
+				shapeEnums["rectangle"] = 2;
+				shapeEnums["square"] = 3;
+				shape["enum_values"] = shapeEnums;
+				shape["ui_name"] = "Shape";
+				shape["type"] = "enum";
+				shape["is_array"] = false;
+				shape["flags"] = 0;
+				//in["axisu"] = _in["axisu"];
+				//in["axisv"] = _in["axisv"];
+				//in["sizeu"] = _in["sizeu"];
+				//in["sizev"] = _in["sizev"];
+				in["shape"] = shape;
+			}
+			else if( type == "spot" )
+			{
+				in["spot_angle"] = _in["spot_angle"];
+				in["spot_smooth"] = _in["spot_smooth"];
+			}
+
+			d["in"] = in;
+			d["enum"] = it->second;
+			result[type] = d;
 		}
 		// Portal
+		py::dict d;
 		py::dict in;
-		py::dict shape;
-		shape["shape"] = result["area"]["in"]["shape"];
-		in["in"] = shape;
-		result["portal"] = in;
+		in["shape"] = result["area"]["in"]["shape"];
+		d["enum"] = result["area"]["enum"];
+		d["in"] = in;
+		result["portal"] = d;
 	}
 	return result;
 }

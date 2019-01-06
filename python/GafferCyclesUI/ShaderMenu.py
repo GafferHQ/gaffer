@@ -51,21 +51,30 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 
 	menuItems = []
 
-	for shader in GafferCycles.shaders:
+	shaderName = "output"
+	displayName = "Output"
+	menuPath = "Shader"
+
+	nodeCreator = functools.partial( __shaderCreator, shaderName, GafferCycles.CyclesShader )
+	menuItems.append( MenuItem( "%s/%s" % ( menuPath, displayName ), nodeCreator ) ) 
+
+	for shader in GafferCycles.shaders :
 		shaderName = str( shader )
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
-		category = value["category"]
+		category = GafferCycles.shaders[shader]["category"]
 		menuPath = "Shader"
 
 		nodeCreator = functools.partial( __shaderCreator, shaderName, GafferCycles.CyclesShader )
 		menuItems.append( MenuItem( "%s/%s/%s" % ( menuPath, category, displayName ), nodeCreator ) ) 
 
-	for light in GafferCycles.lights:
+	for light in GafferCycles.lights :
 		shaderName = str( "%s_light" % light )
+		if light == "portal" :
+			shaderName = str( light )
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
 		menuPath = "Light"
 
-		nodeCreator = functools.partial( __shaderCreator, shaderName, GafferCycles.CyclesLight )
+		nodeCreator = functools.partial( __lightCreator, shaderName, GafferCycles.CyclesLight )
 		menuItems.append( MenuItem( "%s/%s" % ( menuPath, displayName ), nodeCreator ) )
 
 	# Create the actual menu items.
@@ -80,6 +89,12 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 		)
 
 def __shaderCreator( name, nodeType ) :
+
+	shader = nodeType( name )
+	shader.loadShader( name )
+	return shader
+
+def __lightCreator( name, nodeType ) :
 
 	shader = nodeType( name )
 	shader.loadShader( name )

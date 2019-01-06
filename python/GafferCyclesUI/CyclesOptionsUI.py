@@ -272,8 +272,8 @@ def __devices( devices ) :
 	result = []
 
 	for device in devices :
-		preset = ["preset:%s - %s" % ( device["type"], device["description"] ), device["id"]]
-		result.append( preset )
+		result.append( "preset:%s - %s" % ( device["type"], device["description"] ) )
+		result.append( device["id"] )
 	result.append( "plugValueWidget:type" )
 	result.append( "GafferUI.PresetsPlugValueWidget" )
 

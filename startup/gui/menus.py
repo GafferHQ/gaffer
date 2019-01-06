@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2018, Alex Fuller. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,14 +35,44 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+## Node creation menu
+###########################################################################
 
-import CyclesAttributesUI
-import CyclesLightUI
-import CyclesOptionsUI
-import CyclesRenderUI
-import CyclesShaderUI
-import InteractiveCyclesRenderUI
-import ShaderMenu
+import os
+import re
+import traceback
+import functools
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCyclesUI" )
+import IECore
+
+import Gaffer
+import GafferScene
+import GafferUI
+import GafferSceneUI
+
+moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"] )
+
+nodeMenu = GafferUI.NodeMenu.acquire( application )
+
+if moduleSearchPath.find( "GafferCycles" ) :
+
+	try :
+
+		import GafferCycles
+		import GafferCyclesUI
+
+		GafferCyclesUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+
+		nodeMenu.append( "/Cycles/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
+		nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
+		nodeMenu.append(
+			"/Cycles/Render", GafferCycles.CyclesRender,
+			searchText = "CyclesRender"
+		)
+		nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
+		#nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
+
+	except Exception, m :
+
+		stacktrace = traceback.format_exc()
+		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Cycles module - \"%s\".\n %s" % ( m, stacktrace ) )

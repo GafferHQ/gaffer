@@ -49,6 +49,7 @@
 #include "IECore/SplineData.h"
 #include "IECore/VectorTypedData.h"
 
+#include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
@@ -288,14 +289,12 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &namedParameter : shader->parameters() )
 	{
-		string parameterName;
+		// We needed to change any "." found in the socket input names to
+		// ":", revert that change here.
+		string parameterName = boost::replace_first_copy( namedParameter.first.string(), "__", "." );
 		if( isOSLShader )
 		{
-			parameterName = "param_" + namedParameter.first.string();
-		}
-		else
-		{
-			parameterName = namedParameter.first.string();
+			parameterName = "param_" + parameterName;
 		}
 
 		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
@@ -309,7 +308,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 		else
 		{
-			SocketAlgo::setSocket( node, parameterName.c_str(), namedParameter.second.get() );
+			SocketAlgo::setSocket( node, parameterName, namedParameter.second.get() );
 		}
 	}
 
@@ -323,14 +322,12 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			continue;
 		}
 
-		string parameterName;
+		// We needed to change any "." found in the socket input names to
+		// ":", revert that change here.
+		string parameterName = boost::replace_first_copy( connection.destination.name.string(), "__", "." );
 		if( isOSLShader )
 		{
 			parameterName = "param_" + connection.destination.name.string();
-		}
-		else
-		{
-			parameterName = connection.destination.name.string();
 		}
 
 		InternedString sourceName = connection.source.name;

@@ -59,24 +59,24 @@ def __getSocketToWidget( socketType ) :
 		return "GafferUI.NumericPlugValueWidget"
 	elif( socketType == "color" ) :
 		return "GafferUI.ColorPlugValueWidget"
-	elif( socketType == "vector" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "point" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "normal" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "point2" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "closure" ) :
-		return "GafferUI.StringPlugValueWidget"
+	#elif( socketType == "vector" ) :
+	#	return "GafferUI.NumericPlugValueWidget"
+	#elif( socketType == "point" ) :
+	#	return "GafferUI.NumericPlugValueWidget"
+	#elif( socketType == "normal" ) :
+	#	return "GafferUI.NumericPlugValueWidget"
+	#elif( socketType == "point2" ) :
+	#	return "GafferUI.NumericPlugValueWidget"
+	#elif( socketType == "closure" ) :
+	#	return "GafferUI.StringPlugValueWidget"
 	elif( socketType == "string" ) :
 		return "GafferUI.StringPlugValueWidget"
 	elif( socketType == "enum" ) :
 		return "GafferUI.PresetsPlugValueWidget"
-	elif( socketType == "transform" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "node" ) :
-		return "GafferUI.StringPlugValueWidget"
+	#elif( socketType == "transform" ) :
+	#	return "GafferUI.NumericPlugValueWidget"
+	#elif( socketType == "node" ) :
+	#	return "GafferUI.StringPlugValueWidget"
 	else :
 		return ""
 
@@ -87,14 +87,14 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	socketType = value["type"]
 	label = value["ui_name"]
 	flags = value["flags"]
-	enumValues = []
 	if socketType == "enum" :
-		enumValues = value["enum_values"]
-		presets = []
-		for i in range( len( enumValues ) ) :
-			presets.append( i )
-		__metadata[paramPath]["presetNames"] = enumValues
-		__metadata[paramPath]["presetValues"] = presets
+		presetNames = IECore.StringVectorData()
+		presetValues = IECore.IntVectorData()
+		for enumName, enumValues in value["enum_values"].items() :
+			presetNames.append(enumName)
+			presetValues.append(enumValues)
+		__metadata[paramPath]["presetNames"] = presetNames
+		__metadata[paramPath]["presetValues"] = presetValues
 
 	__metadata[paramPath]["plugValueWidget:type"] = __getSocketToWidget( socketType )
 
@@ -107,11 +107,14 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	linkable = bool( flags & ( 1 << 0 ) )
 	__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
 
+	if "category" in value :
+		__metadata[paramPath]["layout:section"] = value["category"]
+
 
 def __translateShaderMetadata() :
 
-	for socketName, value in GafferCycles.nodes["cycles_shader"]["in"].items() :
-		__translateParamMetadata( "cycles_shader", socketName, value )
+	for socketName, value in GafferCycles.nodes["shader"]["in"].items() :
+		__translateParamMetadata( "output", socketName, value )
 
 def __translateNodesMetadata( nodeTypes ) :
 
@@ -171,7 +174,7 @@ def __plugMetadata( plug, name ) :
 
 	return __metadata[key].get( name )
 
-for nodeType in ( GafferCycles.CyclesShader, Cycles.CyclesLight ) :
+for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 
 	nodeKeys = set()
 	parametersPlugKeys = set()

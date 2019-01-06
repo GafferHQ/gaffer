@@ -40,6 +40,7 @@
 #include "GafferCycles/SocketHandler.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
@@ -114,17 +115,22 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 {
 
 	// First populate all the Gaffer plugs for shaders
-	const ccl::NodeType *shaderNodeType = ccl::NodeType::find( ccl::ustring( shaderName.c_str() ) );
+	auto cShaderName = ccl::ustring( shaderName.c_str() );
+	const ccl::NodeType *shaderNodeType = ccl::NodeType::find( cShaderName );
 
 	if( !shaderNodeType )
 	{
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
 	}
 
+	Plug *out = outPlug();
+
+	const bool outPlugHadChildren = out ? out->children().size() : false;
 	if( !keepExistingValues )
 	{
 		parametersPlug()->clearChildren();
-		outPlug()->clearChildren();
+		if( out )
+			out->clearChildren();
 	}
 
 	namePlug()->setValue( shaderName );
@@ -143,10 +149,27 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 	}
 
 	SocketHandler::setupPlugs( shaderNodeType, parametersPlug() );
+
+	if( !out )
+	{
+		out = SocketHandler::setupOutputNodePlug( this );
+	}
+	setChild( "out", out );
 	SocketHandler::setupPlugs( shaderNodeType, outPlug(), Gaffer::Plug::Out );
-	//if( shaderName == "cycles_shader" )
-	//{
-	//	SocketHandler::setupOutputNodePlug( this );
-	//}
+
+	if( shaderName == "output" )
+	{
+		const ccl::NodeType *shaderOutput = ccl::NodeType::find( ccl::ustring( "shader" ) );
+		SocketHandler::setupPlugs( shaderOutput, parametersPlug(), Gaffer::Plug::In, true );
+		//SocketHandler::setupPlugs( shaderOutput, outPlug(), Gaffer::Plug::Out, true );
+	}
+
+	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
+	{
+		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
+		// not the plug has children, so we must notify the world that the value will
+		// have changed.
+		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
+	}
 
 }
