@@ -434,6 +434,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.lowLightThreshold" : [
+
+			"description",
+			"""
+			Light paths with less energy than this will be discarded.  This
+			saves tracing shadow rays, but cuts off the light when it gets dim.
+			Raising this improves performance, but makes the image potentially
+			darker in some areas.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Low Light Threshold",
+
+		],
+
 		"options.enableAdaptiveSampling" : [
 
 			"description",

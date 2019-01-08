@@ -66,6 +66,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:AA_sample_clamp", new IECore::FloatData( 10 ), "aaSampleClamp", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), "aaSampleClampAffectsAOVs", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:indirect_sample_clamp", new IECore::FloatData( 10 ), "indirectSampleClamp", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:low_light_threshold", new IECore::FloatData( 0.001 ), "lowLightThreshold", Gaffer::Plug::Default, false );
 
 	// Adaptive sampling parameters
 	options->addOptionalMember( "ai:enable_adaptive_sampling", new IECore::BoolData( false ), "enableAdaptiveSampling", Gaffer::Plug::Default, false );
