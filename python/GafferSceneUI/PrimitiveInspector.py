@@ -332,4 +332,4 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 				self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
 
-GafferUI.EditorWidget.registerType( "PrimitiveInspector", PrimitiveInspector )
+GafferUI.Editor.registerType( "PrimitiveInspector", PrimitiveInspector )
