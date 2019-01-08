@@ -528,6 +528,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					}
 				}
 				m_planarScale = m_motionPlanarScale * mult;
+
+				// Also apply a transform to keep the origin of the scale centered on the
+				// starting cursor position
+				V2f offset = V2f( -1, 1 ) * ( m_planarScale - m_motionPlanarScale ) *
+					( m_motionStart - V2f( 0.5 ) * resolution );
+				M44f t = m_motionMatrix;
+				t.translate( V3f( offset.x, offset.y, 0 ) );
+				m_transform = t;
 			}
 			else
 			{
