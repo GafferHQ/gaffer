@@ -48,6 +48,10 @@ import GafferCycles
 # Build a registry of information retrieved from GafferCycles metadata.
 ##########################################################################
 
+def __outPlugNoduleType( plug ) :
+
+	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
+
 def __getSocketToWidget( socketType ) :
 	if( socketType == "boolean" ) :
 		return "GafferUI.BoolPlugValueWidget"
@@ -109,7 +113,6 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 
 	if "category" in value :
 		__metadata[paramPath]["layout:section"] = value["category"]
-
 
 def __translateShaderMetadata() :
 
@@ -195,6 +198,26 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 
 	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
 
-
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "attributeSuffix", "plugValueWidget:type", "GafferUI.StringPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "attributeSuffix", "layout:visibilityActivator", "suffixActivator" )
+
+Gaffer.Metadata.registerNode( 
+
+	GafferCycles.CyclesShader, 
+
+	plugs = {
+
+		"out" : [
+
+			"nodule:type", __outPlugNoduleType,
+			"noduleLayout:spacing", 0.2,
+
+		],
+
+		"out.*" : [
+
+			"noduleLayout:visible", True,
+
+		]
+	}
+)

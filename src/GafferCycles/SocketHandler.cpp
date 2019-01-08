@@ -465,7 +465,7 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	{
 		for( const ccl::SocketType socketType : nodeType->outputs )
 		{
-			std::string name = nodeType->name.c_str();
+			std::string name = socketType.name.c_str();
 			validPlugs.insert( setupPlug( name, (int)socketType.type, plugsParent, direction ) );
 		}
 	}
