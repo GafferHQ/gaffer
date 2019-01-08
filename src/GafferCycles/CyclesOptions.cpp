@@ -55,6 +55,8 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Session/Render
 
+	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "featureSet", Gaffer::Plug::Default, false );
+
 	options->addOptionalMember( "ccl:session:background", new IECore::BoolData( false ), "useBackground", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
 
@@ -77,11 +79,11 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:denoising_relative_pca", new IECore::BoolData( false ), "denoisingRelativePca", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:denoising_diffuse_direct",        new IECore::BoolData( true ), "denoisingDiffuseDirect",       Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_diffuse_indirect",      new IECore::BoolData( true ), "denoisingDiffuseInirect",      Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoising_diffuse_indirect",      new IECore::BoolData( true ), "denoisingDiffuseIndirect",      Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_glossy_direct",         new IECore::BoolData( true ), "denoisingGlossyDirect",        Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_glossy_indirect",       new IECore::BoolData( true ), "denoisingGlossyIndirect",      Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_transmission_direct",   new IECore::BoolData( true ), "denoisingTransmissionDirect",  Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_transmission_indirect", new IECore::BoolData( true ), "denoisingTransmissionIndrect", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoising_transmission_indirect", new IECore::BoolData( true ), "denoisingTransmissionIndirect", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_subsurface_direct",     new IECore::BoolData( true ), "denoisingSubsurfaceDirect",    Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_subsurface_indirect",   new IECore::BoolData( true ), "denoisingSubsurfaceIndirect",  Gaffer::Plug::Default, false );
 
@@ -93,7 +95,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	
 	// Scene/BVH
 
-	options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
+	//options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 2 ), "bvhLayout", Gaffer::Plug::Default, false );
@@ -125,7 +127,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:integrator:filter_glossy", new IECore::FloatData( 0.0f ), "filterGlossy", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:seed", new IECore::IntData( 0 ), "seed", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), "sampleClampDirect", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), "sampleClampDirect", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), "sampleClampIndirect", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:integrator:aa_samples", new IECore::IntData( 0 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:diffuse_samples", new IECore::IntData( 1 ), "diffuseSamples", Gaffer::Plug::Default, false );

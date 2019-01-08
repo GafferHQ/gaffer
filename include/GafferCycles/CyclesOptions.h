@@ -37,10 +37,10 @@
 #ifndef GAFFERCYCLES_CYCLESOPTIONS_H
 #define GAFFERCYCLES_CYCLESOPTIONS_H
 
-#include "GafferScene/Options.h"
-
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
+
+#include "GafferScene/Options.h"
 
 namespace GafferCycles
 {

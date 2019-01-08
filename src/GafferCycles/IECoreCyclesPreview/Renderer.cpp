@@ -1538,6 +1538,7 @@ IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
+IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
 // Session
 IECore::InternedString g_backgroundOptionName( "ccl:session:background" );
 IECore::InternedString g_progressiveRefineOptionName( "ccl:session:progressive_refine" );
@@ -1744,6 +1745,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						{
 							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
 						}
+						return;
+					}
+					else if( name == g_featureSetOptionName )
+					{
+						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+							m_sessionParams.experimental = data->readable();
 						return;
 					}
 					else if( name == g_backgroundOptionName )

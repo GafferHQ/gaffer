@@ -43,7 +43,7 @@ def __visibilitySummary( plug ) :
 
 	info = []
 	for childName in ( "camera", "diffuse", "glossy", "transmission", "shadow", "scatter" ) :
-		if plug[childName]["enabled"].getValue() :
+		if plug[childName + "Visibility"]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
@@ -51,7 +51,7 @@ def __visibilitySummary( plug ) :
 def __shadingSummary( plug ) :
 
 	info = []
-	for childName in ( "matte", "isShadowCatcher" ) :
+	for childName in ( "useHoldout", "isShadowCatcher" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -161,7 +161,7 @@ Gaffer.Metadata.registerNode(
 
 		# Shading
 
-		"attributes.matte" : [
+		"attributes.useHoldout" : [
 
 			"description",
 			"""
@@ -197,7 +197,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.max_level" : [
+		"attributes.maxLevel" : [
 
 			"description",
 			"""
@@ -209,7 +209,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.dicing_rate" : [
+		"attributes.dicingScale" : [
 
 			"description",
 			"""

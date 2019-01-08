@@ -37,6 +37,7 @@
 import IECore
 
 import Gaffer
+import GafferUI
 import GafferCycles
 
 def __sessionSummary( plug ) :
@@ -75,14 +76,14 @@ def __sceneSummary( plug ) :
 	if plug["bvhLayout"]["enabled"].getValue() :
 		info.append( "BVH Layout {}".format( plug["bvhLayout"]["value"].getValue() ) )
 
-	if plug["useSpatialSplits"]["enabled"].getValue() :
-		info.append( "Use Spatial Splits {}".format( plug["useSpatialSplits"]["value"].getValue() ) )
+	if plug["useBvhSpatialSplit"]["enabled"].getValue() :
+		info.append( "Use BVH Spatial Splits {}".format( plug["useBvhSpatialSplit"]["value"].getValue() ) )
 
 	if plug["useBvhUnalignedNodes"]["enabled"].getValue() :
 		info.append( "Use BVH Unaligned Nodes {}".format( plug["useBvhUnalignedNodes"]["value"].getValue() ) )
 
-	if plug["useBvhTimeSteps"]["enabled"].getValue() :
-		info.append( "Use BVH Time Steps {}".format( plug["useBvhTimeSteps"]["value"].getValue() ) )
+	if plug["numBvhTimeSteps"]["enabled"].getValue() :
+		info.append( "Num BVH Time Steps {}".format( plug["numBvhTimeSteps"]["value"].getValue() ) )
 
 	if plug["textureLimit"]["enabled"].getValue() :
 			info.append( "Texture Limit - {}".format( plug["textureLimit"]["value"].getValue() ) )
@@ -112,17 +113,17 @@ def __samplingSummary( plug ) :
 	if plug["samplingPattern"]["enabled"].getValue() :
 		info.append( "Sampling Pattern {}".format( plug["samplingPattern"]["value"].getValue() ) )
 
-	if plug["samplingAllLightsDirect"]["enabled"].getValue() :
-		info.append( "All Lights Direct {}".format( plug["samplingAllLightsDirect"]["value"].getValue() ) )
+	if plug["sampleAllLightsDirect"]["enabled"].getValue() :
+		info.append( "All Lights Direct {}".format( plug["sampleAllLightsDirect"]["value"].getValue() ) )
 
-	if plug["samplingAllLightsIndirect"]["enabled"].getValue() :
-		info.append( "All Lights Indirect {}".format( plug["samplingAllLightsIndirect"]["value"].getValue() ) )
+	if plug["sampleAllLightsIndirect"]["enabled"].getValue() :
+		info.append( "All Lights Indirect {}".format( plug["sampleAllLightsIndirect"]["value"].getValue() ) )
 
 	if plug["lightSamplingThreshold"]["enabled"].getValue() :
 		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
 
-	if plug["blurGlossy"]["enabled"].getValue() :
-		info.append( "Blur Glossy {}".format( plug["blurGlossy"]["value"].getValue() ) )
+	if plug["filterGlossy"]["enabled"].getValue() :
+		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -130,8 +131,8 @@ def __rayDepthSummary( plug ) :
 
 	info = []
 
-	if plug["maxBounces"]["enabled"].getValue() :
-		info.append( "Max Bounces {}".format( plug["maxBounces"]["value"].getValue() ) )
+	if plug["maxBounce"]["enabled"].getValue() :
+		info.append( "Max Bounces {}".format( plug["maxBounce"]["value"].getValue() ) )
 
 	for rayType in ( "Diffuse", "Glossy", "Transmission", "Volume" ) :
 		childName = "max%sBounce" % rayType
@@ -214,7 +215,7 @@ def __denoisingSummary( plug ) :
 
 	for rayType in ( "Diffuse", "Glossy", "Transmission", "Subsurface" ) :
 		for dirType in ( "Direct", "Indirect") :
-			childName = "denoise%s%s" % ( rayType, dirType )
+			childName = "denoising%s%s" % ( rayType, dirType )
 			if plug[childName]["enabled"].getValue() :
 				info.append(
 					"{} {} {}".format( rayType, dirType, plug[childName]["value"].getValue() )
@@ -232,8 +233,8 @@ def __denoisingSummary( plug ) :
 	if plug["denoisingRelativePca"]["enabled"].getValue() :
 		info.append( "Relative Filter {}".format( plug["denoisingRelativePca"]["value"].getValue() ) )
 
-	if plug["denoisingStorePasses"]["enabled"].getValue() :
-		info.append( "Store Passes {}".format( plug["denoisingStorePasses"]["value"].getValue() ) )
+	#if plug["denoisingStorePasses"]["enabled"].getValue() :
+	#	info.append( "Store Passes {}".format( plug["denoisingStorePasses"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -267,17 +268,23 @@ def __curvesSummary( plug ) :
 
 	return ", ".join( info )
 
-def __devices( devices ) :
+def __devicePresetNames( plug ) :
 
-	result = []
+	presetNames = IECore.StringVectorData()
 
-	for device in devices :
-		result.append( "preset:%s - %s" % ( device["type"], device["description"] ) )
-		result.append( device["id"] )
-	result.append( "plugValueWidget:type" )
-	result.append( "GafferUI.PresetsPlugValueWidget" )
+	for device in GafferCycles.devices :
+		presetNames.append( "%s - %s" % ( device["type"], device["description"] ) )
 
-	return result
+	return presetNames
+
+def __devicePresetValues( plug ) :
+
+	presetValues = IECore.StringVectorData()
+
+	for device in GafferCycles.devices :
+		presetValues.append( device["id"] )
+
+	return presetValues
 
 Gaffer.Metadata.registerNode(
 
@@ -323,7 +330,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.device.value" : __devices( GafferCycles.devices ),
+		"options.device.value" : [
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", __devicePresetNames,
+		"presetValues", __devicePresetValues,
+
+		],
 
 		"options.featureSet" : [
 
@@ -404,14 +417,9 @@ Gaffer.Metadata.registerNode(
 
 		"options.tileOrder.value" : [
 
-			"preset:Center", 0,
-			"preset:Right to Left", 1,
-			"preset:Left to Right", 2,
-			"preset:Top to Bottom", 3,
-			"preset:Bottom to Top", 4,
-			"preset:Hilbert Spiral", 5,
-
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetNames", IECore.StringVectorData( ["Center", "Right to Left", "Left to Right", "Top to Bottom", "Bottom to Top", "Hilbert Spiral"] ),
+			"presetValues", IECore.IntVectorData( [0, 1, 2, 3, 4, 5] ),
 
 		],
 
@@ -435,8 +443,8 @@ Gaffer.Metadata.registerNode(
 
 		"options.bvhType.value" : [
 
-			"present:Dynamic", 0,
-			"present:Static", 1,
+			"preset:Dynamic", 0,
+			"preset:Static", 1,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -457,16 +465,16 @@ Gaffer.Metadata.registerNode(
 
 		"options.bvhLayout.value" : [
 
-			"present:BVH2", 0,
-			"present:BVH4", 1,
-			"present:BVH8", 2,
-			"present:EMBREE", 3,
+			"preset:BVH2", 0,
+			"preset:BVH4", 1,
+			"preset:BVH8", 2,
+			"preset:EMBREE", 3,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
-		"options.useSpatialSplits" : [
+		"options.useBvhSpatialSplit" : [
 
 			"description",
 			"""
@@ -490,15 +498,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.useBvhTimeSteps" : [
+		"options.numBvhTimeSteps" : [
 
 			"description",
 			"""
-			Use special type BVH optimized for hair (uses more ram but renders faster).
+			Split BVH primitives by this number of time steps to speed up render time in cost of memory.
 			""",
 
 			"layout:section", "Scene",
-			"label", "Use Hair BVH",
+			"label", "BVH Time Steps",
 
 		],
 
@@ -510,7 +518,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Scene",
-			"label", "Size Limit",
+			"label", "Texture Size Limit",
 
 		],
 
@@ -693,7 +701,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.samplingAllLightsDirect" : [
+		"options.sampleAllLightsDirect" : [
 
 			"description",
 			"""
@@ -704,7 +712,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.samplingAllLightsIndirect" : [
+		"options.sampleAllLightsIndirect" : [
 
 			"description",
 			"""
@@ -729,7 +737,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.blurGlossy" : [
+		"options.filterGlossy" : [
 
 			"description",
 			"""
@@ -743,7 +751,7 @@ Gaffer.Metadata.registerNode(
 
 		# Ray Depth
 
-		"options.maxBounces" : [
+		"options.maxBounce" : [
 
 			"description",
 			"""
@@ -1139,17 +1147,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.denoisingStorePasses" : [
-
-			"description",
-			"""
-			Store the denoising feature passes and the noisy image.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Store Denoising Passes",
-
-		],
+		#"options.denoisingStorePasses" : [
+		#
+		#	"description",
+		#	"""
+		#	Store the denoising feature passes and the noisy image.
+		#	""",
+		#
+		#	"layout:section", "Denoising",
+		#	"label", "Store Denoising Passes",
+		#
+		#],
 
 		# Curves
 
@@ -1265,7 +1273,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Curves",
-			"label", "Cull Backfacing",
+			"label", "CullBackfacing",
 
 		],
 	}
