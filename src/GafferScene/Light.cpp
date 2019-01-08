@@ -100,6 +100,7 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	if( input == defaultLightPlug() )
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 }
 
