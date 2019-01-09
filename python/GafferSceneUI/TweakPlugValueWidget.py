@@ -40,8 +40,8 @@ import Gaffer
 import GafferUI
 import GafferScene
 
-# Widget for TweakPlug, which is used to build tweak nodes such as LightTweaks, CameraTweaks
-# and ShaderTweaks.  Shows a value plug that you can use to specify a tweak value, along with
+# Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
+# and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
 # or "Add"/"Subtract"/"Multiply" if the plug is numeric,
 # or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set

@@ -39,14 +39,19 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/SplinePlug.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "IECore/DataAlgo.h"
 #include "IECore/TypeTraits.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/SplineData.h"
 #include "IECore/StringAlgo.h"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -56,7 +61,7 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( TweakPlug );
 
-TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, bool enabled )
+TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode, bool enabled )
 	:	TweakPlug( "tweak", In, Default | Dynamic )
 {
 	valuePlug->setName( "value" );
@@ -64,11 +69,12 @@ TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePl
 	addChild( valuePlug );
 
 	namePlug()->setValue( tweakName );
+	modePlug()->setValue( mode );
 	enabledPlug()->setValue( enabled );
 }
 
-TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, bool enabled )
-	:	TweakPlug( tweakName, PlugAlgo::createPlugFromData( "value", In, Default | Dynamic, value ), enabled )
+TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, Mode mode, bool enabled )
+	:	TweakPlug( tweakName, PlugAlgo::createPlugFromData( "value", In, Default | Dynamic, value ), mode, enabled )
 {
 }
 
@@ -209,8 +215,8 @@ template< typename T > struct SupportsArithData : boost::mpl::or_<  TypeTraits::
 class NumericTweak
 {
 public:
-	NumericTweak( IECore::Data *sourceData, TweakPlug::Mode mode, const std::string &parameterName )
-		: m_sourceData( sourceData ), m_mode( mode ), m_parameterName( parameterName )
+	NumericTweak( IECore::Data *sourceData, TweakPlug::Mode mode, const std::string &tweakName )
+		: m_sourceData( sourceData ), m_mode( mode ), m_tweakName( tweakName )
 	{
 	}
 
@@ -239,70 +245,122 @@ public:
 
 	void operator()( Data * data ) const
 	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : Data type %s not supported." ) % modeToString( m_mode ) % m_parameterName % m_sourceData->typeName() ) );
+		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : Data type %s not supported." ) % modeToString( m_mode ) % m_tweakName % m_sourceData->typeName() ) );
 	}
 
 private:
-	
+
 	IECore::Data *m_sourceData;
 	TweakPlug::Mode m_mode;
-	const std::string &m_parameterName;
+	const std::string &m_tweakName;
 };
 
-} // namespace
-
-void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists )
+void applyTweakInternal( const TweakPlug *tweakPlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, bool requireExists )
 {
-	if( !enabledPlug()->getValue() )
+	if( !tweakPlug->enabledPlug()->getValue() )
 	{
 		return;
 	}
+
+	TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
+	if( mode == TweakPlug::Remove )
+	{
+		parameters->writable().erase( parameterName );
+		return;
+	}
+
+	Data *parameterValue = parameters->member<Data>( parameterName );
+	DataPtr newData = PlugAlgo::extractDataFromPlug( tweakPlug->valuePlug() );
+	if( !newData )
+	{
+		throw IECore::Exception(
+			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % tweakName % tweakPlug->valuePlug()->typeName() )
+		);
+	}
+	if( parameterValue && parameterValue->typeId() != newData->typeId() )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % tweakName % parameterValue->typeName() % newData->typeName() ) );
+	}
+
+	if( mode == TweakPlug::Replace )
+	{
+		if( !parameterValue && requireExists )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Cannot replace parameter \"%s\" which does not exist" ) % tweakName ) );
+		}
+
+		parameters->writable()[parameterName] = newData;
+		return;
+	}
+
+	if( !parameterValue )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % tweakName ) );
+	}
+
+	NumericTweak t( newData.get(), mode, tweakName );
+	dispatch( parameterValue, t );
+}
+
+} // namespace
+
+void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists ) const
+{
 	const std::string name = namePlug()->getValue();
 	if( name.empty() )
 	{
 		return;
 	}
 
-	Mode mode = static_cast<Mode>( modePlug()->getValue() );
-	if( mode == Remove )
-	{
-		parameters->writable().erase( name );
-		return;
-	}
-
-
-	Data *parameterValue = parameters->member<Data>( name );
-	DataPtr newData = PlugAlgo::extractDataFromPlug( valuePlug<ValuePlug>() );
-	if( !newData )
-	{
-		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply to tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug<ValuePlug>()->typeName() )
-		);
-	}
-	if( parameterValue && parameterValue->typeId() != newData->typeId() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % parameterValue->typeName() % newData->typeName() ) );
-	}
-
-	if( mode == Replace )
-	{
-		if( !parameterValue && requireExists )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot replace parameter \"%s\" which does not exist" ) % name ) );
-		}
-		
-		parameters->writable()[name] = newData;
-		return;
-	}
-
-	if( !parameterValue )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
-	}
-
-	NumericTweak t( newData.get(), mode, name );
-	dispatch( parameterValue, t );
-
-
+	applyTweakInternal( this, name, name, parameters, requireExists );
 }
 
+void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	unordered_map<InternedString, ShaderPtr> modifiedShaders;
+
+	for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
+	{
+		const TweakPlug *tweakPlug = tIt->get();
+		const std::string name = tweakPlug->namePlug()->getValue();
+		if( name.empty() )
+		{
+			continue;
+		}
+
+		ShaderNetwork::Parameter parameter;
+		size_t dotPos = name.find_last_of( '.' );
+		if( dotPos == string::npos )
+		{
+			parameter.shader = shaderNetwork->getOutput().shader;
+			parameter.name = name;
+		}
+		else
+		{
+			parameter.shader = InternedString( name.c_str(), dotPos );
+			parameter.name = InternedString( name.c_str() + dotPos + 1 );
+		}
+
+		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
+		if( modifiedShader.second )
+		{
+			if( const Shader *shader = shaderNetwork->getShader( parameter.shader ) )
+			{
+				modifiedShader.first->second = shader->copy();
+			}
+			else
+			{
+				throw IECore::Exception( boost::str(
+					boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
+				) );
+			}
+		}
+
+		applyTweakInternal( tweakPlug, name, parameter.name, modifiedShader.first->second->parametersData(), /* requireExists = */ true );
+	}
+
+	for( auto &x : modifiedShaders )
+	{
+		shaderNetwork->setShader( x.first, std::move( x.second ) );
+	}
+}

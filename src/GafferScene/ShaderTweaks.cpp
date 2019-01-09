@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/LightTweaks.h"
+#include "GafferScene/ShaderTweaks.h"
 
 #include "GafferScene/TweakPlug.h"
 
@@ -52,15 +52,15 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( LightTweaks );
+IE_CORE_DEFINERUNTIMETYPED( ShaderTweaks );
 
-size_t LightTweaks::g_firstPlugIndex = 0;
+size_t ShaderTweaks::g_firstPlugIndex = 0;
 
-LightTweaks::LightTweaks( const std::string &name )
+ShaderTweaks::ShaderTweaks( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "type", Plug::In, "light *:light" ) );
+	addChild( new StringPlug( "shader" ) );
 	addChild( new Plug( "tweaks" ) );
 
 	// Fast pass-throughs for the things we don't alter.
@@ -69,50 +69,50 @@ LightTweaks::LightTweaks( const std::string &name )
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
-LightTweaks::~LightTweaks()
+ShaderTweaks::~ShaderTweaks()
 {
 }
 
-Gaffer::StringPlug *LightTweaks::typePlug()
-{
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *LightTweaks::typePlug() const
+Gaffer::StringPlug *ShaderTweaks::shaderPlug()
 {
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::Plug *LightTweaks::tweaksPlug()
+const Gaffer::StringPlug *ShaderTweaks::shaderPlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::Plug *ShaderTweaks::tweaksPlug()
 {
 	return getChild<Gaffer::Plug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::Plug *LightTweaks::tweaksPlug() const
+const Gaffer::Plug *ShaderTweaks::tweaksPlug() const
 {
 	return getChild<Gaffer::Plug>( g_firstPlugIndex + 1 );
 }
 
-void LightTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void ShaderTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( tweaksPlug()->isAncestorOf( input ) || input == typePlug() )
+	if( tweaksPlug()->isAncestorOf( input ) || input == shaderPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
 }
 
-bool LightTweaks::processesAttributes() const
+bool ShaderTweaks::processesAttributes() const
 {
 	// Although the base class says that we should return a constant, it should
 	// be OK to return this because it's constant across the hierarchy.
 	return !tweaksPlug()->children().empty();
 }
 
-void LightTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	typePlug()->hash( h );
+	shaderPlug()->hash( h );
 	for( TweakPlugIterator tIt( tweaksPlug() ); !tIt.done(); ++tIt )
 	{
 		for( ValuePlugIterator vIt( tIt->get() ); !vIt.done(); ++vIt )
@@ -122,10 +122,10 @@ void LightTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::
 	}
 }
 
-IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	const string type = typePlug()->getValue();
-	if( type.empty() )
+	const string shader = shaderPlug()->getValue();
+	if( shader.empty() )
 	{
 		return inputAttributes;
 	}
@@ -141,7 +141,7 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 	CompoundObject::ObjectMap &out = result->members();
 	for( CompoundObject::ObjectMap::const_iterator it = in.begin(), eIt = in.end(); it != eIt; ++it )
 	{
-		if( !StringAlgo::matchMultiple( it->first, type ) )
+		if( !StringAlgo::matchMultiple( it->first, shader ) )
 		{
 			out.insert( *it );
 			continue;
@@ -154,17 +154,7 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
-		ShaderPtr tweakedShader = tweakedNetwork->outputShader()->copy();
-
-		for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
-		{
-			(*tIt)->applyTweak( tweakedShader->parametersData(), true /* Require parameters to already exist */ );
-
-			// Note that it doesn't make sense to allow adding new parameters to lights - lights start out with
-			// all supported parameters defined
-		}
-
-		tweakedNetwork->setShader( tweakedNetwork->getOutput().shader, std::move( tweakedShader ) );
+		TweakPlug::applyTweaks( tweaksPlug, tweakedNetwork.get() );
 		out[it->first] = tweakedNetwork;
 	}
 

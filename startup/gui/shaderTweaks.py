@@ -34,36 +34,47 @@
 #
 ##########################################################################
 
+import IECore
+import Gaffer
 import GafferScene
 
-# Compatibility with old tweak plugs with unnecessary stuff serialized
-def __tweakPlugAddChild( originalAddChild ) :
+def __registerShaderPresets( presets ) :
 
-	def addChild( self, child ) :
-		if child.getName() in [ "name", "enabled", "mode" ] and child.getName() in self.keys():
-			pass # Old scripts have serialized addChilds for these non-dynamic plugs
-		else:
-			return originalAddChild( self, child )
+	for name, value in presets :
+		Gaffer.Metadata.registerValue( GafferScene.ShaderTweaks, "shader", "preset:" + name, value )
 
-	return addChild
+with IECore.IgnoredExceptions( ImportError ) :
 
-GafferScene.TweakPlug.addChild = __tweakPlugAddChild( GafferScene.TweakPlug.addChild )
+	import GafferArnold
 
-# Compatibility for old LightTweaks nodes
+	__registerShaderPresets( [
 
-class LightTweaks( GafferScene.ShaderTweaks ) :
+		( "Arnold Surface", "ai:surface" ),
+		( "Arnold Displacement", "ai:disp_map" ),
+		( "Arnold Light", "ai:light" ),
+		( "Arnold Gobo", "ai:lightFilter:gobo" ),
+		( "Arnold Decay", "ai:lightFilter:light_decay" ),
+		( "Arnold Barndoor", "ai:lightFilter:barndoor" ),
 
-	def __init__( self, name = "LightTweaks" ) :
+	] )
 
-		GafferScene.ShaderTweaks.__init__( self, name )
-		self["shader"].setValue( "light *:light" )
+with IECore.IgnoredExceptions( ImportError ) :
 
-	def __getitem__( self, key ) :
+	import GafferAppleseed
 
-		if key == "type" :
-			key = "shader"
+	__registerShaderPresets( [
 
-		return GafferScene.ShaderTweaks.__getitem__( self, key )
+		( "Appleseed Light", "as:light" ),
 
-GafferScene.LightTweaks = LightTweaks
-GafferScene.LightTweaks.TweakPlug = GafferScene.TweakPlug
+	] )
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferOSL
+
+	__registerShaderPresets( [
+
+		( "OSL Surface", "osl:surface" ),
+		( "OSL Light", "osl:light" ),
+
+	] )

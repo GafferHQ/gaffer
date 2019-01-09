@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LIGHTTWEAKS_H
-#define GAFFERSCENE_LIGHTTWEAKS_H
+#ifndef GAFFERSCENE_SHADERTWEAKS_H
+#define GAFFERSCENE_SHADERTWEAKS_H
 
 #include "GafferScene/SceneElementProcessor.h"
 
@@ -44,18 +44,18 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API LightTweaks : public SceneElementProcessor
+class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
 {
 
 	public :
 
-		LightTweaks( const std::string &name=defaultName<LightTweaks>() );
-		~LightTweaks() override;
+		ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
+		~ShaderTweaks() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::LightTweaks, LightTweaksTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderTweaks, ShaderTweaksTypeId, SceneElementProcessor );
 
-		Gaffer::StringPlug *typePlug();
-		const Gaffer::StringPlug *typePlug() const;
+		Gaffer::StringPlug *shaderPlug();
+		const Gaffer::StringPlug *shaderPlug() const;
 
 		Gaffer::Plug *tweaksPlug();
 		const Gaffer::Plug *tweaksPlug() const;
@@ -72,8 +72,8 @@ class GAFFERSCENE_API LightTweaks : public SceneElementProcessor
 
 };
 
-IE_CORE_DECLAREPTR( LightTweaks )
+IE_CORE_DECLAREPTR( ShaderTweaks )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_LIGHTTWEAKS_H
+#endif // GAFFERSCENE_SHADERTWEAKS_H

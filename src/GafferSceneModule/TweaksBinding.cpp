@@ -38,7 +38,7 @@
 
 #include "TweaksBinding.h"
 
-#include "GafferScene/LightTweaks.h"
+#include "GafferScene/ShaderTweaks.h"
 #include "GafferScene/CameraTweaks.h"
 #include "GafferScene/TweakPlug.h"
 
@@ -53,19 +53,44 @@ using namespace GafferScene;
 namespace
 {
 
-TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstDataPtr tweakValue, bool enabled )
+TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstDataPtr tweakValue, TweakPlug::Mode mode, bool enabled )
 {
-	return new TweakPlug( tweakName, tweakValue.get(), enabled );
+	return new TweakPlug( tweakName, tweakValue.get(), mode, enabled );
+}
+
+void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, bool requireExists )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	plug.applyTweak( &parameters, requireExists );
+}
+
+void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork );
 }
 
 } // namespace
 
 void GafferSceneModule::bindTweaks()
 {
-	DependencyNodeClass<LightTweaks>();
+	DependencyNodeClass<ShaderTweaks>();
 	DependencyNodeClass<CameraTweaks>();
 
-	scope tweakPlugScope = PlugClass<TweakPlug>()
+	PlugClass<TweakPlug> tweakPlugClass;
+
+	{
+		scope tweakPlugScope = tweakPlugClass;
+		enum_<TweakPlug::Mode>( "Mode" )
+			.value( "Replace", TweakPlug::Replace )
+			.value( "Add", TweakPlug::Add )
+			.value( "Subtract", TweakPlug::Subtract )
+			.value( "Multiply", TweakPlug::Multiply )
+			.value( "Remove", TweakPlug::Remove )
+		;
+	}
+
+	tweakPlugClass
 		.def(
 			init<const char *, Plug::Direction, unsigned>(
 				(
@@ -82,28 +107,25 @@ void GafferSceneModule::bindTweaks()
 				default_call_policies(),
 				(
 					boost::python::arg_( "tweakName" ),
-					boost::python::arg_( "tweakValuePlug" ),
+					boost::python::arg_( "valuePlug" ),
+					arg( "mode" ) = TweakPlug::Replace,
 					boost::python::arg_( "enabled" )=true
 				)
 			)
 		)
 		.def(
-			init<const std::string &, const ValuePlugPtr, bool>(
+			init<const std::string &, const ValuePlugPtr, TweakPlug::Mode, bool>(
 				(
 					boost::python::arg_( "tweakName" ),
-					boost::python::arg_( "tweakValue" ),
+					boost::python::arg_( "value" ),
+					arg( "mode" ) = TweakPlug::Replace,
 					boost::python::arg_( "enabled" )=true
 				)
 			)
 		)
-	;
-
-	enum_<TweakPlug::Mode>( "Mode" )
-		.value( "Replace", TweakPlug::Replace )
-		.value( "Add", TweakPlug::Add )
-		.value( "Subtract", TweakPlug::Subtract )
-		.value( "Multiply", TweakPlug::Multiply )
-		.value( "Remove", TweakPlug::Remove )
+		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
+		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
+		.staticmethod( "applyTweaks" )
 	;
 
 }

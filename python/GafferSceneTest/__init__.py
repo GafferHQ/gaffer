@@ -110,7 +110,7 @@ from MeshToPointsTest import MeshToPointsTest
 from InteractiveRenderTest import InteractiveRenderTest
 from FilteredSceneProcessorTest import FilteredSceneProcessorTest
 from ShaderBallTest import ShaderBallTest
-from LightTweaksTest import LightTweaksTest
+from ShaderTweaksTest import ShaderTweaksTest
 from FilterResultsTest import FilterResultsTest
 from RendererAlgoTest import RendererAlgoTest
 from SetAlgoTest import SetAlgoTest
@@ -136,6 +136,7 @@ from CameraTweaksTest import CameraTweaksTest
 from FilterProcessorTest import FilterProcessorTest
 from UDIMQueryTest import UDIMQueryTest
 from WireframeTest import WireframeTest
+from TweakPlugTest import TweakPlugTest
 
 from IECoreGLPreviewTest import *
 

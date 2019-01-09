@@ -43,23 +43,20 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 namespace GafferScene
 {
 
 /// Represents a "tweak" - an adjustment with a name, a mode, and a value,
 /// and an enable flag.  Can be used to add/subtract/multiply/replace or
-/// remove parameters, for example in the LightTweak or CameraTweak node.
+/// remove parameters, for example in the ShaderTweaks or CameraTweaks nodes.
 class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 {
 
 	public :
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::Plug );
-
-		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr tweakValuePlug, bool enabled = true );
-		TweakPlug( const std::string &tweakName, const IECore::Data *tweakValue, bool enabled = true );
-		/// Primarily used for serialisation.
-		TweakPlug( const std::string &name=defaultName<TweakPlug>(), Direction direction=In, unsigned flags=Default );
 
 		enum Mode
 		{
@@ -70,6 +67,11 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 			Remove
 		};
 
+		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode = Replace, bool enabled = true );
+		TweakPlug( const std::string &tweakName, const IECore::Data *value, Mode mode = Replace, bool enabled = true );
+		/// Primarily used for serialisation.
+		TweakPlug( const std::string &name=defaultName<TweakPlug>(), Direction direction=In, unsigned flags=Default );
+
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
@@ -79,16 +81,22 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 		Gaffer::IntPlug *modePlug();
 		const Gaffer::IntPlug *modePlug() const;
 
-		template<typename T>
+		template<typename T=Gaffer::ValuePlug>
 		T *valuePlug();
-		template<typename T>
+		template<typename T=Gaffer::ValuePlug>
 		const T *valuePlug() const;
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
-		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false );
+		/// Tweak application
+		/// =================
 
+		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false ) const;
+
+		/// Provided as a static method because it is more efficient to apply all tweaks at once
+		/// when editing a ShaderNetwork.
+		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork );
 
 };
 
