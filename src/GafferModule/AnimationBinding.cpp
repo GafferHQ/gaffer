@@ -53,6 +53,12 @@ using namespace GafferBindings;
 namespace
 {
 
+Animation::CurvePlugPtr acquire( ValuePlug *plug )
+{
+	ScopedGILRelease gilRelease;
+	return Animation::acquire( plug );
+}
+
 void setTime( Animation::Key &k, float time )
 {
 	ScopedGILRelease gilRelease;
@@ -131,7 +137,7 @@ void GafferModule::bindAnimation()
 		.staticmethod( "canAnimate" )
 		.def( "isAnimated", &Animation::isAnimated )
 		.staticmethod( "isAnimated" )
-		.def( "acquire", &Animation::acquire, return_value_policy<CastToIntrusivePtr>() )
+		.def( "acquire", &acquire )
 		.staticmethod( "acquire" )
 	;
 
