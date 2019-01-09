@@ -648,7 +648,7 @@ const std::string &fragmentSource()
 		"uniform sampler2D blueTexture;\n"
 		"uniform sampler2D alphaTexture;\n"
 
-		"uniform bool active;\n"
+		"uniform bool activeParam;\n"
 
 		"#if __VERSION__ >= 330\n"
 
@@ -672,7 +672,7 @@ const std::string &fragmentSource()
 		"		texture2D( alphaTexture, gl_TexCoord[0].xy ).r\n"
 		"	);\n"
 
-		"	if( active )\n"
+		"	if( activeParam )\n"
 		"	{\n"
 		"		vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );\n"
 		"		float aspect = pixelWidth.x / pixelWidth.y;\n"
@@ -740,7 +740,7 @@ void ImageGadget::renderTiles() const
 	glUniform1i( shader->uniformParameter( "blueTexture" )->location, textureUnits[2] );
 	glUniform1i( shader->uniformParameter( "alphaTexture" )->location, textureUnits[3] );
 
-	GLint activeParameterLocation = shader->uniformParameter( "active" )->location;
+	GLint activeParameterLocation = shader->uniformParameter( "activeParam" )->location;
 
 	const Box2i dataWindow = this->dataWindow();
 	const float pixelAspect = this->format().getPixelAspect();
