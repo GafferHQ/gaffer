@@ -82,76 +82,83 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 
 	def testErrorReturnStatus( self ) :
 
-		# no nodes
+		# no tasks
 		p = self.waitForCommand( "gaffer dispatch" )
-		self.failUnless( "No nodes were specified" in "".join( p.stderr.readlines() ) )
+		self.failUnless( "No task nodes were specified" in "".join( p.stderr.readlines() ) )
 		self.failUnless( p.returncode )
 
-		# bad nodes
-		p = self.waitForCommand( "gaffer dispatch -nodes Gaffer" )
+		# bad tasks
+		p = self.waitForCommand( "gaffer dispatch -tasks Gaffer" )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "Gaffer" in "".join( error ) )
 		self.failUnless( p.returncode )
 
-		# bad nodes in a module
-		p = self.waitForCommand( "gaffer dispatch -nodes Gaffer.NotANode" )
+		# bad tasks in a module
+		p = self.waitForCommand( "gaffer dispatch -tasks Gaffer.NotANode" )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "NotANode" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# no namespace
-		p = self.waitForCommand( "gaffer dispatch -nodes TextWriter" )
+		p = self.waitForCommand( "gaffer dispatch -tasks TextWriter" )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "TextWriter" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad dispatcher
-		p = self.waitForCommand( "gaffer dispatch -nodes GafferDispatchTest.TextWriter -dispatcher NotADispatcher" )
+		p = self.waitForCommand( "gaffer dispatch -tasks GafferDispatchTest.TextWriter -dispatcher NotADispatcher" )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "NotADispatcher" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# invalid script
-		p = self.waitForCommand( "gaffer dispatch -script thisScriptDoesNotExist -nodes GafferDispatch.SystemCommand" )
+		p = self.waitForCommand( "gaffer dispatch -script thisScriptDoesNotExist -tasks GafferDispatch.SystemCommand" )
 		self.failUnless( "thisScriptDoesNotExist" in "".join( p.stderr.readlines() ) )
 		self.failUnless( p.returncode )
 
 		self.writeSimpleScript()
 
-		# nodes not in script
-		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes notANode".format( script = self.__scriptFileName ) )
+		# tasks not in script
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks notANode".format( script = self.__scriptFileName ) )
+		error = p.stderr.readlines()
+		self.failUnless( "gaffer dispatch" in "".join( error ) )
+		self.failUnless( "notANode" in "".join( error ) )
+		self.failUnless( p.returncode )
+
+		# nodesToShow not in script
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -show notANode".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "notANode" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad plugs
-		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -test.notAPlug 1".format( script = self.__scriptFileName ) )
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -settings -test.notAPlug 1".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "notAPlug" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad values (text is a string so needs quotations)
-		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -test.text 1".format( script = self.__scriptFileName ) )
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -settings -test.text 1".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "test.text" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad dispatcher plugs
-		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -LocalDispatcher.notAPlug 1".format( script = self.__scriptFileName ) )
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -settings -LocalDispatcher.notAPlug 1".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "notAPlug" in "".join( error ) )
 		self.failUnless( p.returncode )
 
 		# bad dispatcher values
-		p = self.waitForCommand( "gaffer dispatch -script {script} -nodes test -settings -LocalDispatcher.executeInBackground '\"its a bool\"'".format( script = self.__scriptFileName ) )
+		p = self.waitForCommand( "gaffer dispatch -script {script} -tasks test -settings -LocalDispatcher.executeInBackground '\"its a bool\"'".format( script = self.__scriptFileName ) )
 		error = p.stderr.readlines()
 		self.failUnless( "gaffer dispatch" in "".join( error ) )
 		self.failUnless( "executeInBackground" in "".join( error ) )
@@ -162,9 +169,9 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.writeSimpleScript()
 
 		p = self.waitForCommand(
-			"gaffer dispatch -script {script} -nodes {node}".format(
+			"gaffer dispatch -script {script} -tasks {task}".format(
 				script = self.__scriptFileName,
-				node = "test",
+				task = "test",
 			)
 		)
 		error = "".join( p.stderr.readlines() )
@@ -183,9 +190,9 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = self.waitForCommand(
-			"gaffer dispatch -script {script} -nodes {node}".format(
+			"gaffer dispatch -script {script} -tasks {task}".format(
 				script = self.__scriptFileName,
-				node = "test",
+				task = "test",
 			)
 		)
 		error = "".join( p.stderr.readlines() )
@@ -196,9 +203,9 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.failIf( os.path.exists( self.__outputTextFile ) )
 
 		p = self.waitForCommand(
-			"gaffer dispatch -ignoreScriptLoadErrors -script {script} -nodes {node}".format(
+			"gaffer dispatch -ignoreScriptLoadErrors -script {script} -tasks {task}".format(
 				script = self.__scriptFileName,
-				node = "test",
+				task = "test",
 			)
 		)
 		error = "".join( p.stderr.readlines() )
@@ -211,8 +218,8 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 	def testNodesWithoutScript( self ) :
 
 		p = self.waitForCommand(
-			"gaffer dispatch -nodes {node} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
-				node = "GafferDispatchTest.TextWriter",
+			"gaffer dispatch -tasks {task} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
+				task = "GafferDispatchTest.TextWriter",
 				output = self.__outputTextFile,
 				text = "command line test",
 			)
@@ -226,8 +233,8 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 	def testApplyUserDefaults( self ) :
 
 		p = self.waitForCommand(
-			"gaffer dispatch -nodes {node} -applyUserDefaults -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
-				node = "GafferDispatchTest.TextWriter",
+			"gaffer dispatch -tasks {task} -applyUserDefaults -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
+				task = "GafferDispatchTest.TextWriter",
 				output = self.__outputTextFile,
 				text = "userDefault test ${dispatcher:jobDirectory}",
 			)
@@ -250,9 +257,9 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		# this can be done as there aren't other dispatchers available to test with.
 
 		p = self.waitForCommand(
-			"gaffer dispatch -script {script} -nodes {node} -dispatcher Local -settings -dispatcher.framesMode {mode}".format(
+			"gaffer dispatch -script {script} -tasks {task} -dispatcher Local -settings -dispatcher.framesMode {mode}".format(
 				script = self.__scriptFileName,
-				node = "test",
+				task = "test",
 				mode = int(GafferDispatch.Dispatcher.FramesMode.FullRange),
 			)
 		)
@@ -265,8 +272,8 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 	def testContextVariables( self ) :
 
 		p = self.waitForCommand(
-			"gaffer dispatch -nodes {node} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"' -context.myVar 1.25".format(
-				node = "GafferDispatchTest.TextWriter",
+			"gaffer dispatch -tasks {task} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"' -context.myVar 1.25".format(
+				task = "GafferDispatchTest.TextWriter",
 				output = self.__outputTextFile,
 				text = "context ${myVar} test",
 			)
@@ -286,9 +293,9 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = self.waitForCommand(
-			"gaffer dispatch -script {script} -nodes {node} -settings -box.test.text '\"{text}\"'".format(
+			"gaffer dispatch -script {script} -tasks {task} -settings -box.test.text '\"{text}\"'".format(
 				script = self.__scriptFileName,
-				node = "box",
+				task = "box",
 				text = "test inside a box",
 			)
 		)
@@ -307,10 +314,10 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = self.waitForCommand(
-			"gaffer dispatch -script {script} -nodes {nodeA} {nodeB}".format(
+			"gaffer dispatch -script {script} -tasks {taskA} {taskB}".format(
 				script = self.__scriptFileName,
-				nodeA = "test",
-				nodeB = "test2",
+				taskA = "test",
+				taskB = "test2",
 			)
 		)
 		error = "".join( p.stderr.readlines() )
