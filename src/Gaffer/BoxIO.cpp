@@ -45,6 +45,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Switch.h"
 
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/bind.hpp"
@@ -64,6 +65,9 @@ InternedString g_inName( "in" );
 InternedString g_inNamePrivate( "__in" );
 InternedString g_outName( "out" );
 InternedString g_outNamePrivate( "__out" );
+InternedString g_passThroughName( "passThrough" );
+InternedString g_enabledName( "enabled" );
+InternedString g_switchName( "__switch" );
 InternedString g_sectionName( "noduleLayout:section" );
 
 std::string oppositeSection( const std::string &section )
@@ -178,14 +182,9 @@ BoxIO::BoxIO( Plug::Direction direction, const std::string &name )
 	// Connect to the signals we need to syncronise the namePlug() value
 	// with the name of the promotedPlug().
 	plugSetSignal().connect( boost::bind( &BoxIO::plugSet, this, ::_1 ) );
-	if( direction == Plug::In )
-	{
-		plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );
-	}
-	else
-	{
-		parentChangedSignal().connect( boost::bind( &BoxIO::parentChanged, this, ::_2 ) );
-	}
+	plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );
+
+	parentChangedSignal().connect( boost::bind( &BoxIO::parentChanged, this, ::_2 ) );
 }
 
 BoxIO::~BoxIO()
@@ -204,44 +203,108 @@ const StringPlug *BoxIO::namePlug() const
 
 void BoxIO::setup( const Plug *plug )
 {
-	if( plug )
+	if( inPlugInternal() )
 	{
-		if( inPlugInternal() )
-		{
-			throw IECore::Exception( "Plugs already set up" );
-		}
-		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
-		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
-
-		inPlugInternal()->setFlags( Plug::Serialisable, true );
-		outPlugInternal()->setFlags( Plug::Serialisable, true );
-		applyDynamicFlag( inPlugInternal() );
-		applyDynamicFlag( outPlugInternal() );
-		outPlugInternal()->setInput( inPlugInternal() );
-
-		MetadataAlgo::copy(
-			plug,
-			m_direction == Plug::In ? inPlugInternal() : outPlugInternal(),
-			/* exclude = */ "layout:*"
-		);
-
-		setupNoduleSectionMetadata(
-			m_direction == Plug::In ? outPlugInternal() : inPlugInternal(),
-			plug
-		);
+		throw IECore::Exception( "Plugs already set up" );
 	}
+	addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
+	addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
-	if( promotedPlug() )
+	inPlugInternal()->setFlags( Plug::Serialisable, true );
+	applyDynamicFlag( inPlugInternal() );
+	applyDynamicFlag( outPlugInternal() );
+	outPlugInternal()->setInput( inPlugInternal() );
+
+	MetadataAlgo::copy(
+		plug,
+		m_direction == Plug::In ? inPlugInternal() : outPlugInternal(),
+		/* exclude = */ "layout:*"
+	);
+
+	setupNoduleSectionMetadata(
+		m_direction == Plug::In ? outPlugInternal() : inPlugInternal(),
+		plug
+	);
+
+	if( m_direction == Plug::Out )
 	{
-		throw IECore::Exception( "Promoted plug already set up" );
+		setupPassThrough();
 	}
 
 	if( parent<Box>() )
 	{
-		Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
-		Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
-		namePlug()->setValue( promoted->getName() );
+		// We also want to set up our promoted plug.  But if we're
+		// being created from a script execution, we don't need to
+		// do that ourselves because it'll have been serialised into
+		// the script.
+		ScriptNode *script = scriptNode();
+		if( !script || !script->isExecuting() )
+		{
+			setupPromotedPlug();
+		}
 	}
+}
+
+void BoxIO::setupPassThrough()
+{
+	addChild( inPlugInternal()->createCounterpart( g_passThroughName, Plug::In ) );
+	addChild( new BoolPlug( g_enabledName, Plug::In, true ) );
+	addChild( new Switch( g_switchName ) );
+	switchInternal()->setup( inPlugInternal() );
+	switchInternal()->enabledPlug()->setInput( enabledPlugInternal() );
+	switchInternal()->inPlugs()->getChild<Plug>( 0 )->setInput( passThroughPlugInternal() );
+	switchInternal()->inPlugs()->getChild<Plug>( 1 )->setInput( inPlugInternal() );
+	switchInternal()->indexPlug()->setValue( 1 );
+	outPlugInternal()->setInput( switchInternal()->outPlug() );
+}
+
+void BoxIO::setupPromotedPlug()
+{
+	Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
+	Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
+	namePlug()->setValue( promoted->getName() );
+}
+
+void BoxIO::setupBoxEnabledPlug()
+{
+	if( m_direction != Plug::Out )
+	{
+		return;
+	}
+
+	Box *box = parent<Box>();
+	if( !box )
+	{
+		return;
+	}
+
+	BoolPlug *boxEnabledPlug = box->enabledPlug();
+	if( !boxEnabledPlug )
+	{
+		BoolPlugPtr p = new BoolPlug( g_enabledName, Plug::In, true, Plug::Default | Plug::Dynamic );
+		box->addChild( p );
+		boxEnabledPlug = p.get();
+	}
+	enabledPlugInternal()->setInput( boxEnabledPlug );
+}
+
+void BoxIO::scriptExecuted( ScriptNode *script )
+{
+	if( m_direction == Plug::Out && inPlugInternal() && !passThroughPlugInternal() )
+	{
+		// We're loading an old script from the times before the pass
+		// through plug.
+		setupPassThrough();
+	}
+
+	if( parent<Box>() && inPlugInternal() && !promotedPlug() )
+	{
+		setupPromotedPlug();
+	}
+
+	script->scriptExecutedSignal().disconnect(
+		boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
+	);
 }
 
 Plug::Direction BoxIO::direction() const
@@ -267,6 +330,36 @@ Gaffer::Plug *BoxIO::outPlugInternal()
 const Gaffer::Plug *BoxIO::outPlugInternal() const
 {
 	return getChild<Plug>( outPlugName() );
+}
+
+Gaffer::Plug *BoxIO::passThroughPlugInternal()
+{
+	return getChild<Plug>( g_passThroughName );
+}
+
+const Gaffer::Plug *BoxIO::passThroughPlugInternal() const
+{
+	return getChild<Plug>( g_passThroughName );
+}
+
+Gaffer::Switch *BoxIO::switchInternal()
+{
+	return getChild<Switch>( g_switchName );
+}
+
+const Gaffer::Switch *BoxIO::switchInternal() const
+{
+	return getChild<Switch>( g_switchName );
+}
+
+BoolPlug *BoxIO::enabledPlugInternal()
+{
+	return getChild<BoolPlug>( g_enabledName );
+}
+
+const BoolPlug *BoxIO::enabledPlugInternal() const
+{
+	return getChild<BoolPlug>( g_enabledName );
 }
 
 void BoxIO::parentChanging( Gaffer::GraphComponent *newParent )
@@ -344,6 +437,23 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 			boost::bind( &BoxIO::plugInputChanged, this, ::_1 )
 		);
 	}
+
+	// If we're being parented during a script execution, it
+	// could be that we're being cut+pasted into a new Box. In
+	// that case we need to set up our promoted plug, but we
+	// won't know if we're a cut+paste or a regular load until
+	// execution is complete. So we defer until then. We use the
+	// same mechanism to automatically add the pass-through
+	// mechanism to old BoxOuts that were serialised without it.
+
+	ScriptNode *script = scriptNode();
+	if( script && script->isExecuting() )
+	{
+		script->scriptExecutedSignal().connect(
+			boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
+		);
+	}
+
 }
 
 void BoxIO::plugInputChanged( Plug *plug )
@@ -370,6 +480,14 @@ void BoxIO::plugInputChanged( Plug *plug )
 		m_promotedPlugParentChangedConnection = promoted->parentChangedSignal().connect(
 			boost::bind( &BoxIO::promotedPlugParentChanged, this, ::_1 )
 		);
+	}
+
+	// If a connection has been made to our passThrough plug
+	// for the first time, then we also want to create an enabled
+	// plug for the Box and connect to it.
+	if( plug == passThroughPlugInternal() && passThroughPlugInternal()->getInput() )
+	{
+		setupBoxEnabledPlug();
 	}
 }
 
@@ -529,7 +647,7 @@ bool BoxIO::canInsert( const Box *box )
 			const Plug::OutputContainer &outputs = plug->outputs();
 			for( Plug::OutputContainer::const_iterator oIt = outputs.begin(), oeIt = outputs.end(); oIt != oeIt; ++oIt )
 			{
-				if( hasNodule( *oIt ) && !runTimeCast<BoxIn>( (*oIt)->node() ) )
+				if( hasNodule( *oIt ) && !runTimeCast<BoxIO>( (*oIt)->node() ) )
 				{
 					return true;
 				}
@@ -538,7 +656,7 @@ bool BoxIO::canInsert( const Box *box )
 		else
 		{
 			const Plug *input = plug->getInput();
-			if( input && hasNodule( input ) && !runTimeCast<const BoxOut>( input->node() ) )
+			if( input && hasNodule( input ) && !runTimeCast<const BoxIO>( input->node() ) )
 			{
 				return true;
 			}
@@ -562,7 +680,7 @@ void BoxIO::insert( Box *box )
 			const Plug::OutputContainer &outputs = plug->outputs();
 			for( Plug::OutputContainer::const_iterator oIt = outputs.begin(), oeIt = outputs.end(); oIt != oeIt; ++oIt )
 			{
-				if( hasNodule( *oIt ) && !runTimeCast<BoxIn>( (*oIt)->node() ) )
+				if( hasNodule( *oIt ) && !runTimeCast<BoxIO>( (*oIt)->node() ) )
 				{
 					outputsNeedingBoxIn.push_back( *oIt );
 				}
@@ -589,7 +707,7 @@ void BoxIO::insert( Box *box )
 			// Output plug
 
 			Plug *input = plug->getInput();
-			if( !input || !hasNodule( input ) || runTimeCast<BoxOut>( input->node() ) )
+			if( !input || !hasNodule( input ) || runTimeCast<BoxIO>( input->node() ) )
 			{
 				continue;
 			}

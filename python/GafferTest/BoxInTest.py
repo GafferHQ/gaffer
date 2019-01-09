@@ -393,6 +393,10 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertTrue( sumPromoted.source().isSame( s["b"]["n"]["sum"] ) )
 
 		self.assertEqual( Gaffer.BoxIO.canInsert( s["b"] ), False )
+		# Even if we ignore `canInsert()` and call `insert()`, nothing should happen.
+		Gaffer.BoxIO.insert( s["b"] )
+		self.assertEqual( len( s["b"].children( Gaffer.BoxIn ) ), 1 )
+		self.assertEqual( len( s["b"].children( Gaffer.BoxOut ) ), 1 )
 
 	def testNonSerialisableInput( self ) :
 
@@ -429,6 +433,31 @@ class BoxInTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertTrue( s2["b"]["n"]["in"].source().isSame( s2["b"]["in"] ) )
+
+	def testSetupNone( self ) :
+
+		b = Gaffer.BoxIn()
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			b.setup( None )
+
+	def testSetupNoArgument( self ) :
+
+		b = Gaffer.BoxIn()
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			b.setup()
+
+	def testSerialisationUsesSetup( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.BoxIn()
+		s["b"].setup( Gaffer.IntPlug() )
+
+		ss = s.serialise()
+		self.assertIn( "setup", ss )
+		self.assertNotIn( "setInput", ss )
+		self.assertNotIn( "__in", ss )
+		self.assertEqual( ss.count( "addChild" ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

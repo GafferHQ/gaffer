@@ -237,5 +237,116 @@ class BoxOutTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["b"][promotedPlug.getName()].source().isSame( s2["b"]["a"]["sum"] ) )
 
+	def testSerialisationUsesSetup( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.BoxOut()
+		s["b"].setup( Gaffer.IntPlug() )
+
+		ss = s.serialise()
+		self.assertIn( "setup", ss )
+		self.assertNotIn( "setInput", ss )
+		self.assertNotIn( "__out", ss )
+		self.assertEqual( ss.count( "addChild" ), 1 )
+
+	def testPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"].setup( s["b"]["a"]["op1"] )
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"].setup( s["b"]["a"]["op1"] )
+		self.assertTrue( isinstance( s["b"]["o"]["passThrough"], Gaffer.IntPlug ) )
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["a"]["sum"] ) )
+
+		s["b"]["a"]["op1"].setInput( s["b"]["i"]["out"] )
+		s["b"]["o"]["in"].setInput( s["b"]["a"]["sum"] )
+		s["b"]["o"]["passThrough"].setInput( s["b"]["i"]["out"] )
+
+		self.assertTrue( "enabled" in s["b"] )
+		self.assertEqual( s["b"]["out"].source(), s["b"]["a"]["sum"] )
+		s["b"]["enabled"].setValue( False )
+		self.assertEqual( s["b"]["out"].source(), s["b"]["in"] )
+
+		self.assertEqual( s["b"].correspondingInput( s["b"]["out"] ), s["b"]["in"] )
+
+	def testPassThroughInputAcceptance( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = GafferTest.AddNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"].setup( s["b"]["a"]["op1"] )
+
+		# Don't accept input from any old node
+
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["a"]["sum"] ) )
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["a"]["sum"] ) )
+
+		# Do accept input from BoxIn
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"].setup( s["b"]["a"]["op1"] )
+
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["i"]["out"] ) )
+
+		# Do accept input from unconnected Dot
+
+		s["b"]["d"] = Gaffer.Dot()
+		s["b"]["d"].setup( s["b"]["a"]["op1"] )
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+		# And Dot connected to BoxIn
+
+		s["b"]["d"]["in"].setInput( s["b"]["i"]["out"] )
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+		# And Dot connected to unconnected Dot
+
+		s["b"]["d2"] = Gaffer.Dot()
+		s["b"]["d2"].setup( s["b"]["a"]["op1"] )
+		s["b"]["d"]["in"].setInput( s["b"]["d2"]["out"] )
+		self.assertTrue( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+		# But not Dot connected to something else
+
+		s["b"]["d"]["in"].setInput( s["b"]["a"]["sum"] )
+		self.assertFalse( s["b"]["o"]["passThrough"].acceptsInput( s["b"]["d"]["out"] ) )
+
+	def testInsertAndPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a1"] = GafferTest.AddNode()
+
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["a1"]["sum"] )
+		s["a2"]["op2"].setValue( 10 )
+
+		s["a3"] = GafferTest.AddNode()
+		s["a3"]["op1"].setInput( s["a2"]["sum"] )
+
+		Gaffer.Metadata.registerValue( s["a2"]["op1"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( s["a2"]["sum"], "nodule:type", "GafferUI::StandardNodule" )
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a2"] ] ) )
+		Gaffer.BoxIO.insert( b )
+
+		b["BoxOut"]["passThrough"].setInput( b["BoxIn"]["out"] )
+		self.assertIn( "enabled", b )
+
+		self.assertEqual( b["sum"].getValue(), 10 )
+		b["enabled"].setValue( False )
+		self.assertEqual( b["sum"].getValue(), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

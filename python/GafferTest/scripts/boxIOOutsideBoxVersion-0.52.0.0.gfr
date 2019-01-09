@@ -1,0 +1,41 @@
+import Gaffer
+import GafferImage
+import IECore
+import imath
+
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 52, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["BoxOut"] = Gaffer.BoxOut( "BoxOut" )
+parent.addChild( __children["BoxOut"] )
+__children["BoxOut"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["BoxOut"].addChild( Gaffer.IntPlug( "in", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["BoxOut"].addChild( Gaffer.IntPlug( "__out", direction = Gaffer.Plug.Direction.Out, defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["BoxIn"] = Gaffer.BoxIn( "BoxIn" )
+parent.addChild( __children["BoxIn"] )
+__children["BoxIn"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["BoxIn"].addChild( Gaffer.IntPlug( "__in", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["BoxIn"].addChild( Gaffer.IntPlug( "out", direction = Gaffer.Plug.Direction.Out, defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+
+__children["BoxOut"]["__uiPosition"].setValue( imath.V2f( 6.10000229, -6.85000086 ) )
+__children["BoxOut"]["in"].setInput( __children["BoxIn"]["out"] )
+Gaffer.Metadata.registerValue( __children["BoxOut"]["in"], 'noduleLayout:section', 'top' )
+__children["BoxOut"]["__out"].setInput( __children["BoxOut"]["in"] )
+__children["BoxIn"]["__uiPosition"].setValue( imath.V2f( 6.10000229, 3.55000043 ) )
+Gaffer.Metadata.registerValue( __children["BoxIn"]["__in"], 'plugValueWidget:type', '' )
+Gaffer.Metadata.registerValue( __children["BoxIn"]["__in"], 'noduleLayout:section', 'top' )
+__children["BoxIn"]["out"].setInput( __children["BoxIn"]["__in"] )
+Gaffer.Metadata.registerValue( __children["BoxIn"]["out"], 'noduleLayout:section', 'bottom' )
+__children["BoxOut"].setup()
+__children["BoxIn"].setup()
+
+
+del __children
+

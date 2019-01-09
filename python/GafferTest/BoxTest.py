@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import os
 
 import IECore
 
@@ -959,6 +960,50 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertTrue( s["b"]["sum"].source().isSame( innerBox["n"]["sum"] ) )
 		self.assertTrue( innerBox["n"]["op1"].source().isSame( s["b"]["op1"] ) )
 
+	def testCreateWithBoxIOPassThroughInSelection( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# Make a Box containing BoxIn -> n -> BoxOut
+		# and BoxIn -> dot -> BoxOut.passThrough
+
+		s["b"] = Gaffer.Box()
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["n"] = GafferTest.AddNode()
+		s["b"]["o"] = Gaffer.BoxOut()
+
+		s["b"]["i"]["name"].setValue( "op1" )
+		s["b"]["i"].setup( s["b"]["n"]["op1"] )
+		s["b"]["n"]["op1"].setInput( s["b"]["i"]["out"] )
+
+		s["b"]["dot"] = Gaffer.Dot()
+		s["b"]["dot"].setup( s["b"]["n"]["sum"] )
+		s["b"]["dot"]["in"].setInput( s["b"]["i"]["out"] )
+
+		s["b"]["o"]["name"].setValue( "sum" )
+		s["b"]["o"].setup( s["b"]["n"]["sum"] )
+		s["b"]["o"]["in"].setInput( s["b"]["n"]["sum"] )
+		s["b"]["o"]["passThrough"].setInput( s["b"]["dot"]["out"] )
+
+		# Ask to move all that (including the BoxIOs) into a
+		# nested Box. This doesn't really make sense, because
+		# the BoxIOs exist purely to build a bridge to the
+		# outer parent. So we expect them to remain where they
+		# were.
+
+		innerBox = Gaffer.Box.create( s["b"], Gaffer.StandardSet( s["b"].children( Gaffer.Node ) ) )
+
+		self.assertEqual( len( innerBox.children( Gaffer.Node ) ), 1 )
+		self.assertTrue( "n" in innerBox )
+		self.assertFalse( "n" in s["b"] )
+		self.assertFalse( "dot" in innerBox )
+		self.assertTrue( "dot" in s["b"] )
+		self.assertTrue( "i" in s["b"] )
+		self.assertTrue( "o" in s["b"] )
+		self.assertTrue( s["b"]["sum"].source().isSame( innerBox["n"]["sum"] ) )
+		self.assertTrue( innerBox["n"]["op1"].source().isSame( s["b"]["op1"] ) )
+		self.assertTrue( s["b"]["o"]["passThrough"].source().isSame( s["b"]["i"].promotedPlug() ) )
+
 	def testCanBoxNodesWithInternalNodeNetworkAndHiddenPlug( self ) :
 
 		# if we try to box a node which has an internal node network using a hidden non-serialised
@@ -1003,6 +1048,74 @@ class BoxTest( GafferTest.TestCase ) :
 			box = Gaffer.Box.create( scriptNode, setOfNodesToBox )
 		except RuntimeError, e :
 			self.assertTrue( False, msg = "boxing should not raise an exception here" )
+
+	def testPassThroughCreatedInVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/boxPassThroughVersion-0.52.0.0.gfr" )
+		s.load()
+
+		def assertPassThrough( script ) :
+
+			self.assertEqual( script["AddTen"]["op1"].getValue(), 0 )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 10 )
+			self.assertEqual( script["AddTen"].correspondingInput( script["AddTen"]["sum"] ), script["AddTen"]["op1"] )
+
+			script["AddTen"]["enabled"].setValue( False )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 0 )
+
+			script["AddTen"]["op1"].setValue( 1 )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 1 )
+
+			script["AddTen"]["enabled"].setValue( True )
+			script["AddTen"]["op1"].setValue( 0 )
+
+		assertPassThrough( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertPassThrough( s2 )
+
+	def testAddPassThroughToBoxFromVersion0_52( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/boxVersion-0.52.0.0.gfr" )
+		s.load()
+
+		# The original Box had no pass-through behaviour defined,
+		# and no "enabled" plug. We don't want that to change without
+		# user interaction.
+
+		self.assertNotIn( "enabled", s["AddTen"] )
+		self.assertEqual( s["AddTen"]["sum"].getValue(), 10 )
+
+		# When the user defines a pass-through for the first time,
+		# only then do we want to create the enabled plug and hook
+		# everything up.
+
+		s["AddTen"]["BoxOut"]["passThrough"].setInput( s["AddTen"]["BoxIn"]["out"] )
+
+		def assertPassThrough( script ) :
+
+			self.assertIn( "enabled", script["AddTen"] )
+			self.assertEqual( script["AddTen"]["enabled"].getValue(), True )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 10 )
+			script["AddTen"]["enabled"].setValue( False )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 0 )
+
+			script["AddTen"]["op1"].setValue( 1 )
+			self.assertEqual( script["AddTen"]["sum"].getValue(), 1 )
+
+			script["AddTen"]["enabled"].setValue( True )
+			script["AddTen"]["op1"].setValue( 0 )
+
+		assertPassThrough( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertPassThrough( s2 )
 
 if __name__ == "__main__":
 	unittest.main()

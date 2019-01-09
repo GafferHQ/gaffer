@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,53 +36,20 @@
 
 import Gaffer
 
-Gaffer.Metadata.registerNode(
+def __setupWrapper( originalSetup ) :
 
-	Gaffer.BoxOut,
+	def setup( self, plug = None ) :
 
-	"description",
-	"""
-	Convenience node for representing output plugs
-	visually in the internal node graph of a Box.
-	""",
+		if plug is None :
+			script = self.scriptNode()
+			if script is not None and script.isExecuting() :
+				# We used to use a bogus `setup()` call without
+				# a plug to trigger reconnection after serialisation.
+				# We no longer do that, so ignore it.
+				return
 
-	"icon", "boxOutNode.png",
+		return originalSetup( self, plug )
 
-	plugs = {
+	return setup
 
-		"passThrough" : (
-
-			"description",
-			"""
-			May be connected to a BoxIn node to define
-			an input that is passed through when the Box
-			is disabled. Defining a pass-through also
-			activates the following behaviours :
-
-			- If the Box is deleted, the input and output
-			  nodes are reconnected automatically.
-			- The Box can be dragged onto an existing connection
-			  to insert it.
-			""",
-
-			"plugValueWidget:type", "",
-
-		),
-
-		"enabled" : (
-
-			"description",
-			"""
-			Automatically connected to the Box.enabled plugs
-			to control the pass-through behaviour.
-			""",
-
-			"plugValueWidget:type", "",
-			"nodule:type", "",
-
-		),
-
-	}
-
-)
-
+Gaffer.BoxIO.setup = __setupWrapper( Gaffer.BoxIO.setup )

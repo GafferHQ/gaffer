@@ -81,15 +81,43 @@ class BoxSerialiser : public NodeSerialiser
 
 };
 
+} // namespace
+
 // BoxIO
 // =====
+
+namespace GafferModule
+{
 
 class BoxIOSerialiser : public NodeSerialiser
 {
 
-	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
-		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
+		const BoxIO *boxIO = child->parent<BoxIO>();
+		if( child == boxIO->outPlugInternal() )
+		{
+			// Avoid having our internal connection serialised. This will
+			// be recreated in `setup()` anyway.
+			return false;
+		}
+		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
+	}
+
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		const BoxIO *boxIO = child->parent<BoxIO>();
+		if( child == boxIO->inPlugInternal() || child == boxIO->outPlugInternal() || child == boxIO->passThroughPlugInternal() )
+		{
+			// We'll serialise a `setup()` call to construct these.
+			return false;
+		}
+		return NodeSerialiser::childNeedsConstruction( child, serialisation );
+	}
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
 
 		const BoxIO *boxIO = static_cast<const BoxIO *>( graphComponent );
 		if( !boxIO->plug() )
@@ -98,33 +126,33 @@ class BoxIOSerialiser : public NodeSerialiser
 			return result;
 		}
 
-		const Plug *promoted = boxIO->promotedPlug();
-		if( promoted && serialisation.identifier( promoted ) != "" )
-		{
-			return result;
-		}
-
-		// The BoxIO node has been set up, but its promoted plug isn't
-		// being serialised (for instance, because someone is copying a
-		// selection from inside a box). Add a setup() call to the
-		// serialisation so that the promoted plug will be created upon
-		// pasting into another box.
-
-		if( !result.empty() )
+		if( result.size() )
 		{
 			result += "\n";
 		}
-		result += identifier + ".setup()\n";
+
+		// Add a call to `setup()` to recreate the plugs.
+
+		PlugPtr plug = boxIO->plug()->createCounterpart( boxIO->plug()->getName(), Plug::In );
+		plug->setFlags( Plug::Dynamic, false );
+
+		const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( plug.get() );
+		result += identifier + ".setup( " + plugSerialiser->constructor( plug.get(), serialisation ) + " )\n";
 
 		return result;
 	}
 
 };
 
-void setup( BoxIO &b, const Plug *plug )
+} // namespace GafferModule
+
+namespace
+{
+
+void setup( BoxIO &b, const Plug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	b.setup( plug );
+	b.setup( &plug );
 }
 
 PlugPtr plug( BoxIO &b )
@@ -137,8 +165,13 @@ PlugPtr promotedPlug( BoxIO &b )
 	return b.promotedPlug();
 }
 
+} // namespace
+
 // Reference
 // =========
+
+namespace
+{
 
 struct ReferenceLoadedSlotCaller
 {
