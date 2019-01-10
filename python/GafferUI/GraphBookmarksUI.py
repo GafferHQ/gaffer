@@ -229,18 +229,18 @@ def __findableBookmarks( editor ) :
 def __findBookmark( editor, bookmarks = None ) :
 
 	if not isinstance( editor, ( GafferUI.NodeSetEditor, GafferUI.GraphEditor ) ) :
-		return False
+		return
 
 	# Don't modify the contents of floating windows, because these are
 	# expected to be locked to one node.
 	if editor.ancestor( GafferUI.CompoundEditor ) is None :
-		return False
+		return
 
 	if bookmarks is None :
 		bookmarks = __findableBookmarks( editor )
 
 	if not bookmarks :
-		return False
+		return
 
 	scriptNode = editor.scriptNode()
 	pathsAndNodes = [
@@ -268,8 +268,6 @@ def __findBookmark( editor, bookmarks = None ) :
 
 	editor.__findBookmarksMenu = GafferUI.Menu( menuDefinition, title = "Find Bookmark", searchable = True )
 	editor.__findBookmarksMenu.popup()
-
-	return True
 
 def __assignNumericBookmark( node, numericBookmark ) :
 
@@ -306,7 +304,8 @@ def __findNumericBookmark( editor, numericBookmark ) :
 def __editorKeyPress( editor, event ) :
 
 	if event.key == "B" and event.modifiers == event.modifiers.Control :
-		return __findBookmark( editor )
+		__findBookmark( editor )
+		return True
 
 	if event.key in [ str( x ) for x in range( 0, 10 ) ] :
 
