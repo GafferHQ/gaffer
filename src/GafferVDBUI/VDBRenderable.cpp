@@ -11,6 +11,7 @@
 #include "IECoreGL/ShaderStateComponent.h"
 
 #include "IECore/SplineData.h"
+#include "IECore/SimpleTypedData.h"
 
 
 //#include "IECoreGL/State.h"
@@ -415,12 +416,10 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
 
     std::string gridName = names[0];
 
-    IECoreGL::VolumeGridStateComponent *volumeGridStateComponent = currentState->get<IECoreGL::VolumeGridStateComponent>();
-
-    if ( volumeGridStateComponent )
-    {
-        gridName = volumeGridStateComponent->value();
-    }
+	if( auto gridNameOverride = currentState->userAttributes()->member<IECore::StringData>( "glVisualiser:volume:grid", false ) )
+	{
+		gridName = gridNameOverride->readable();
+	}
 
     openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
 
@@ -429,36 +428,29 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
         return;
     }
 
-    IECoreGL::VolumeScalarRampStateComponent *volumeScalarRampStateComponent = currentState->get<IECoreGL::VolumeScalarRampStateComponent>();
-
     IECore::Splineff spline;
-
     IECore::MurmurHash hash;
 
-    if ( volumeScalarRampStateComponent )
-    {
-        spline = volumeScalarRampStateComponent->value();
-    }
+	if( auto splineData = currentState->userAttributes()->member<IECore::SplineffData>( "glVisualiser:volume:scalarRamp", false ) )
+	{
+		spline = splineData->readable();
+		splineData->hash( hash );
+	}
 
-    IECore::SplineffDataPtr splineData = new IECore::SplineffData(spline);
-    splineData->hash( hash );
-
-    IECoreGL::VolumeColorRampStateComponent *volumeColorRampStateComponent = currentState->get<IECoreGL::VolumeColorRampStateComponent>();
     IECore::SplinefColor3f colorSpline;
-    if ( volumeColorRampStateComponent )
-    {
-        colorSpline = volumeColorRampStateComponent->value();
-    }
+	if( auto colorSplineData = currentState->userAttributes()->member<IECore::SplinefColor3fData>( "glVisualiser:volume:colorRamp", false ) )
+	{
+		colorSpline = colorSplineData->readable();
+		colorSplineData->hash( hash );
+	}
 
-    IECore::SplinefColor3fDataPtr colorSplineData = new IECore::SplinefColor3fData( colorSpline );
-    colorSplineData->hash( hash );
+	auto volumeRenderStyle = currentState->userAttributes()->member<IECore::IntData>( "glVisualiser:volume:style", false );
 
-    IECoreGL::VolumeTypeStateComponent* volumeTypeStateComponent = currentState->get<IECoreGL::VolumeTypeStateComponent>();
     int renderType = 0;
-    if ( volumeTypeStateComponent )
-    {
-        renderType = volumeTypeStateComponent->value();
-    }
+	if( volumeRenderStyle )
+	{
+		renderType = volumeRenderStyle->readable();
+	}
 
     if ( m_group && m_renderType == renderType && m_gridName == gridName && m_hash == hash)
     {
