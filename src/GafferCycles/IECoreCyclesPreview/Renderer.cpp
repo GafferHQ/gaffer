@@ -1638,6 +1638,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_lightCache.reset();
 			m_outputs.clear();
 
+			// Gaffer has already deleted these, so we can't double-delete
+			m_scene->shaders.clear();
+			m_scene->meshes.clear();
+			m_scene->objects.clear();
+			m_scene->lights.clear();
+			m_scene->particle_systems.clear();
+
 			// The rest should be cleaned up by Cycles.
 			delete m_session;
 		}
