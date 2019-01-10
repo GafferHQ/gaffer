@@ -37,6 +37,7 @@
 #include "GafferDispatch/Dispatcher.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
@@ -47,6 +48,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/filesystem.hpp"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
@@ -60,6 +62,7 @@ static InternedString g_sizeBlindDataName( "dispatcher:size" );
 static InternedString g_executedBlindDataName( "dispatcher:executed" );
 static InternedString g_visitedBlindDataName( "dispatcher:visited" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
+static InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
 static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
@@ -130,13 +133,36 @@ const std::string Dispatcher::jobDirectory() const
 	return m_jobDirectory;
 }
 
-std::string Dispatcher::createJobDirectory( const Context *context ) const
+void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const
 {
 	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
 	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
 
-	if ( jobDirectory == "" )
+	if( jobDirectory == "" )
 	{
+		const string outerJobDirectory = context->get<string>( g_jobDirectoryContextEntry, "" );
+		const string outerScriptFileName = context->get<string>( g_scriptFileNameContextEntry, "" );
+		const Process *outerProcess = Process::current();
+		InternedString outerProcessType = outerProcess ? outerProcess->type() : "";
+		if(
+			outerJobDirectory.size() && outerScriptFileName.size() &&
+			( outerProcessType == "taskNode:execute" || outerProcessType == "taskNode:executeSequence" ) &&
+			outerProcess->plug()->ancestor<ScriptNode>() == script
+		)
+		{
+			// We're being run inside a task executing in another dispatch
+			// for the same script. Borrow the job directory created by that dispatch.
+			/// \todo Should there be a more explicit way of saying "borrow
+			/// the outer directory"? Perhaps dispatchers should have a
+			/// plug specifying that they are to do a nested dispatch?
+			/// Consider this at the same time as we consider hosting
+			/// dispatchers directly in the graph.
+			m_jobDirectory = outerJobDirectory;
+			return;
+		}
+
+		/// \todo I think it would be better to throw here, rather than
+		/// litter the current directory.
 		jobDirectory = boost::filesystem::current_path().string();
 	}
 
@@ -154,8 +180,8 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 		i = std::max( i, strtol( d.path().filename().c_str(), nullptr, 10 ) );
 	}
 
-	// Now create the next directory and return it. We do this in a loop
-	// until we successfully create a directory of our own, because we
+	// Now create the next directory. We do this in a loop until we
+	// successfully create a directory of our own, because we
 	// may be in a race against other processes.
 
 	boost::format formatter( "%06d" );
@@ -166,9 +192,27 @@ std::string Dispatcher::createJobDirectory( const Context *context ) const
 		numberedJobDirectory = jobDirectory / ( formatter % i ).str();
 		if( boost::filesystem::create_directory( numberedJobDirectory ) )
 		{
-			return numberedJobDirectory.string();
+			break;
 		}
 	}
+
+	m_jobDirectory = numberedJobDirectory.string();
+	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
+
+	// Now figure out where we'll save the script in that directory, and
+	// advertise it via the context. We'll do the actual saving later.
+
+	boost::filesystem::path scriptFileName = script->fileNamePlug()->getValue();
+	if( scriptFileName.size() )
+	{
+		scriptFileName = numberedJobDirectory / scriptFileName.filename();
+	}
+	else
+	{
+		scriptFileName = numberedJobDirectory / "untitled.gfr";
+	}
+
+	context->set( g_scriptFileNameContextEntry, scriptFileName.string() );
 }
 
 /*
@@ -661,11 +705,13 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 	}
 
-	Context::EditableScope jobScope( Context::current() );
 	// create the job directory now, so it's available in preDispatchSignal().
-	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal()
-	m_jobDirectory = createJobDirectory( Context::current() );
-	jobScope.set( g_jobDirectoryContextEntry, m_jobDirectory );
+	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal() - a cancelled
+	/// dispatch should not create anything on disk.
+
+	ContextPtr jobContext = new Context( *Context::current() );
+	Context::Scope jobScope( jobContext.get() );
+	createJobDirectory( script, jobContext.get() );
 
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
@@ -687,12 +733,37 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
 		{
-			jobScope.setFrame( *fIt );
+			jobContext->setFrame( *fIt );
 			batcher.addTask( TaskNode::Task( *nIt, Context::current() ) );
 		}
 	}
 
 	executeAndPruneImmediateBatches( batcher.rootBatch() );
+
+	// Save the script. If we're in a nested dispatch, this may have been done already by
+	// the outer dispatch, hence the call to `exists()`. Performing the saving here is
+	// unsatisfactory for a couple of reasons :
+	//
+	// - It is _after_ the execution of immediate tasks because currently at Image Engine, some immediate tasks
+	//   modify the node graph and expect those modifications to be saved in the script. This is definitely
+	//   not kosher - `TaskNode::execute()` is `const` for a reason, and TaskNodes should never modify the graph.
+	//   Among other things, such rogue nodes preclude us from being able to multithread dispatch in the future.
+	//   Nevertheless, we need to continue to support this for now.
+	// - Some dispatchers don't need the script to be saved at all, or even need a job directory (a LocalDispatcher
+	//   in foreground mode for instance). We would prefer not to litter the filesystem in these cases.
+	//
+	// One solution may be to defer the creation of the job directory and the script until it is
+	// first required, either by `doDispatch()` or a TaskNode. We'd do this by creating the
+	// "dispatcher:jobDirectory" and "dispatcher:scriptFileName" context variables upfront as normal,
+	// but not actually updating the filesystem until a call to a utility method is made. The main issue
+	// to resolve there is the generation of a unique directory name without actually creating the
+	// directory. We could use some sort of UUID for this, but there is some concern that this will be less
+	// useable/friendly than the existing sequential naming.
+	const std::string scriptFileName = jobContext->get<string>( g_scriptFileNameContextEntry );
+	if( !boost::filesystem::exists( scriptFileName ) )
+	{
+		script->serialiseToFile( scriptFileName );
+	}
 
 	if( !batcher.rootBatch()->preTasks().empty() )
 	{

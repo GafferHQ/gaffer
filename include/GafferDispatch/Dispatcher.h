@@ -278,7 +278,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 
 	private :
 
-		std::string createJobDirectory( const Gaffer::Context *context ) const;
+		void createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const;
 		mutable std::string m_jobDirectory;
 
 		void executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate = false ) const;

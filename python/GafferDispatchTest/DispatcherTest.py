@@ -1228,6 +1228,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["nonImmediate2"]["preTasks"][0].setInput( s["immediate"]["task"] )
 
 		dispatcher = self.NullDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ s["nonImmediate2"] ] )
 
 		self.assertEqual( [ l.node for l in log ], [ s["nonImmediate1"], s["immediate" ] ] )
@@ -1256,6 +1257,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# NullDispatcher dispatch should only execute the immediate nodes.
 		dispatcher = self.NullDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ s["n2"] ] )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1" ], s["i2"] ] )
 
@@ -1288,6 +1290,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# NullDispatcher dispatch should only execute the immediate nodes.
 		dispatcher = self.NullDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1" ] ] )
 
@@ -1438,7 +1441,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 			lastTask = perSequence
 
 		d = self.TestDispatcher()
-
+		d["jobsDirectory"].setValue( self.temporaryDirectory() )
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
@@ -1596,6 +1599,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n"]["command"].setValue( "echo #" )
 
 		dispatcher = self.NullDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "1-10" )
 		dispatcher.dispatch( [ s["n"] ] )

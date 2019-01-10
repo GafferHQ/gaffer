@@ -576,6 +576,7 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( postTasks[0].node(), s["n2"] )
 
 		dispatcher = GafferDispatchTest.DispatcherTest.TestDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ s["n3"] ] )
 
 		self.assertEqual( len( log ), 3 )

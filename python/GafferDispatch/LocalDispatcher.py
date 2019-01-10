@@ -64,7 +64,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		Status = IECore.Enum.create( "Waiting", "Running", "Complete", "Failed", "Killed" )
 
-		def __init__( self, batch, dispatcher, name, jobId, directory ) :
+		def __init__( self, batch, dispatcher ) :
 
 			assert( isinstance( batch, GafferDispatch.Dispatcher._TaskBatch ) )
 			assert( isinstance( dispatcher, GafferDispatch.Dispatcher ) )
@@ -81,9 +81,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			script = batch.preTasks()[0].plug().ancestor( Gaffer.ScriptNode )
 			self.__context = Gaffer.Context( script.context() )
 
-			self.__name = name
-			self.__id = jobId
-			self.__directory = directory
+			self.__name = Gaffer.Context.current().substitute( dispatcher["jobName"].getValue() )
+			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
+			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
+			self.__id = os.path.basename( self.__directory )
 			self.__stats = {}
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			## \todo Make `Dispatcher::dispatch()` use a Process, so we don't need to
@@ -94,10 +95,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__messageHandler = IECore.CapturingMessageHandler()
 			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
-
-			scriptFileName = script["fileName"].getValue()
-			self.__scriptFile = os.path.join( self.__directory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
-			script.serialiseToFile( self.__scriptFile )
 
 			self.__initBatchWalk( batch )
 
@@ -442,9 +439,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		job = LocalDispatcher.Job(
 			batch = batch,
 			dispatcher = self,
-			name = Gaffer.Context.current().substitute( self["jobName"].getValue() ),
-			jobId = os.path.basename( self.jobDirectory() ),
-			directory = self.jobDirectory(),
 		)
 
 		self.__jobPool._append( job )
