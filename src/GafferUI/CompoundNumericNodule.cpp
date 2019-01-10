@@ -89,6 +89,37 @@ void connect( Plug *p1, Plug *p2 )
 	}
 }
 
+bool canConnectAllSourceComponents( const Plug *source, const Plug *destination )
+{
+	if( source->direction() != Plug::Out || destination->direction() != Plug::In )
+	{
+		return false;
+	}
+
+	if( !source->children().size() || destination->children().size() <= source->children().size() )
+	{
+		return false;
+	}
+
+	for( size_t i = 0; i < source->children().size(); ++i )
+	{
+		if( !canConnect( source->getChild<Plug>( i ), destination->getChild<Plug>( i ) ) )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void connectAllSourceComponents( Plug *source, Plug *destination )
+{
+	for( size_t i = 0; i < source->children().size(); ++i )
+	{
+		connect( source->getChild<Plug>( i ), destination->getChild<Plug>( i ) );
+	}
+}
+
 IECore::TypeId g_compoundNumericTypeIds[] = {
 	V2fPlug::staticTypeId(), V3fPlug::staticTypeId(),
 	V2iPlug::staticTypeId(), V3iPlug::staticTypeId(),
@@ -167,6 +198,13 @@ bool CompoundNumericNodule::canCreateConnection( const Gaffer::Plug *endpoint ) 
 		return false;
 	}
 
+	// Things like Color3f -> Color4f
+	if( canConnectAllSourceComponents( endpoint, plug() ) )
+	{
+		return true;
+	}
+
+	// Things like float <-> Color3f.[rgb]
 	for( PlugIterator it( plug() ); !it.done(); ++it )
 	{
 		if( canConnect( endpoint, it->get() ) )
@@ -184,6 +222,17 @@ void CompoundNumericNodule::createConnection( Gaffer::Plug *endpoint )
 		StandardNodule::createConnection( endpoint );
 		return;
 	}
+
+	// Things like Color3f -> Color4f
+
+	if( canConnectAllSourceComponents( endpoint, plug() ) )
+	{
+		connectAllSourceComponents( endpoint, plug() );
+		Gaffer::Metadata::registerValue( plug(), g_childrenVisibleKey, new BoolData( true ) );
+		return;
+	}
+
+	// Things like float <-> Color3f.[rgb]
 
 	vector<Plug *> plugs;
 	string allName;
