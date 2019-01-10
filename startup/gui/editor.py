@@ -36,16 +36,9 @@
 
 import GafferUI
 
-def __editorKeyPress( editor, event ) :
-
-	if event.key == "B" and event.modifiers == event.modifiers.Control :
-		return GafferUI.GraphBookmarksUI.popupFindBookmarkMenu( editor )
-
-	return False
-
 def __editorCreated( editor ) :
 
-	editor.keyPressSignal().connect( __editorKeyPress, scoped = False )
+	GafferUI.GraphBookmarksUI.connectToEditor( editor )
 
 GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
 

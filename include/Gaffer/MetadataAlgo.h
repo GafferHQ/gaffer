@@ -115,6 +115,22 @@ GAFFER_API bool getBookmarked( const Node *node );
 GAFFER_API bool bookmarkedAffectedByChange( const IECore::InternedString &changedKey );
 GAFFER_API void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks );
 
+/// Numeric Bookmarks
+/// =================
+///
+/// Each script has a set of numeric bookmarks numbered 1-9, each of which can
+//  have a single node assigned. Reassigning a numeric bookmark will
+/// consequently remove it from another node. Nodes can be assigned to a
+/// single numeric bookmark at a time.
+/// The following functions throw if given bookmark is not in {1, ..., 9}.
+
+/// \undoable, pass a nullptr to remove the bookmark.
+GAFFER_API void setNumericBookmark( ScriptNode *script, int bookmark, Node *node );
+GAFFER_API Node *getNumericBookmark( ScriptNode *script, int bookmark );
+/// Returns 0 if the node isn't assigned, the bookmark otherwise.
+GAFFER_API int numericBookmark( const Node *node );
+GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
+
 /// Utilities
 /// =========
 

@@ -42,6 +42,7 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -82,6 +83,17 @@ boost::python::list bookmarksWrapper( const Node *node )
 	}
 
 	return result;
+}
+
+void setNumericBookmarkWrapper( ScriptNode &scriptNode, int bookmark, NodePtr node )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setNumericBookmark( &scriptNode, bookmark, node.get() );
+}
+
+NodePtr getNumericBookmarkWrapper( ScriptNode &scriptNode, int bookmark )
+{
+	return getNumericBookmark( &scriptNode, bookmark );
 }
 
 void copyWrapper( const GraphComponent &from, GraphComponent &to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
@@ -129,6 +141,12 @@ void GafferModule::bindMetadataAlgo()
 	def( "getBookmarked", &getBookmarked );
 	def( "bookmarkedAffectedByChange", &bookmarkedAffectedByChange );
 	def( "bookmarks", &bookmarksWrapper );
+
+	def( "setNumericBookmark", &setNumericBookmarkWrapper, ( arg( "scriptNode" ), arg( "bookmark" ), arg( "node" ) ) );
+	def( "getNumericBookmark", &getNumericBookmarkWrapper, ( arg( "scriptNode" ), arg( "bookmark" ) ) );
+	def( "numericBookmark", &numericBookmark, ( arg( "node" ) ) );
+	def( "numericBookmarkAffectedByChange", &numericBookmarkAffectedByChange, ( arg( "changedKey" ) ) );
+
 	def(
 		"affectedByChange",
 		(bool (*)( const Plug *, IECore::TypeId, const IECore::StringAlgo::MatchPattern &, const Plug * ))&affectedByChange,
