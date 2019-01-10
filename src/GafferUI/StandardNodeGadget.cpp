@@ -440,6 +440,13 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
 			}
 
+			/// \todo This bookmark drawing code is duplicated in the BackdropNodeGadget.
+			/// Consolidate into a NodeAnnotationsGadget that operates a bit like the
+			/// AuxiliaryConnectionsGadget, drawing annotations for all nodes using a single
+			/// gadget. This could also render arbitrary annotations defined by metadata
+			/// matching "annotation:*", which we could then use to display things like
+			/// monitor statistics, asset management information etc.
+
 			bool isBookmarked = MetadataAlgo::getBookmarked( node() );
 			if( isBookmarked )
 			{
