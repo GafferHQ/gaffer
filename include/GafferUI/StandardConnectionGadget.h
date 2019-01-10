@@ -99,7 +99,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		// why we store it at all - we could just return it instead.
 		/// \todo Consider making the updates lazy based on events, or
 		/// just drop the state.
-		void setPositionsFromNodules();
+		void updateConnectionGeometry();
 		float distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const;
 		Gaffer::Plug::Direction endAt( const IECore::LineSegment3f &line ) const;
 
@@ -120,6 +120,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 
 		void updateDotPreviewLocation( const ButtonEvent &event );
 
+		// Connection geometry - computed by `updateConnectionGeometry()`.
 		Imath::V3f m_srcPos;
 		Imath::V3f m_srcTangent;
 		Imath::V3f m_dstPos;

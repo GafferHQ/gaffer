@@ -90,7 +90,7 @@ StandardConnectionGadget::~StandardConnectionGadget()
 void StandardConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
 {
 	ConnectionGadget::setNodules( srcNodule, dstNodule );
-	setPositionsFromNodules();
+	updateConnectionGeometry();
 }
 
 const NodeGadget *StandardConnectionGadget::srcNodeGadget() const
@@ -137,7 +137,7 @@ void StandardConnectionGadget::minimisedPositionAndTangent( bool highlighted, Im
 	tangent = minimise ? -m_dstTangent : m_srcTangent;
 }
 
-void StandardConnectionGadget::setPositionsFromNodules()
+void StandardConnectionGadget::updateConnectionGeometry()
 {
 	const Gadget *p = parent<Gadget>();
 	if( !p )
@@ -221,7 +221,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 
 Imath::Box3f StandardConnectionGadget::bound() const
 {
-	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
+	const_cast<StandardConnectionGadget *>( this )->updateConnectionGeometry();
 	Box3f r;
 	r.extendBy( m_srcPos );
 	r.extendBy( m_dstPos );
@@ -307,7 +307,7 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 		return;
 	}
 
-	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
+	const_cast<StandardConnectionGadget *>( this )->updateConnectionGeometry();
 	const Style::State state = highlighted() ? Style::HighlightedState : Style::NormalState;
 
 	V3f minimisedSrcPos, minimisedSrcTangent;
@@ -345,7 +345,7 @@ bool StandardConnectionGadget::hasLayer( Layer layer ) const
 
 Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 {
-	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
+	const_cast<StandardConnectionGadget *>( this )->updateConnectionGeometry();
 
 	V3f minimisedSrcPos, minimisedSrcTangent;
 	minimisedPositionAndTangent( highlighted(), minimisedSrcPos, minimisedSrcTangent );
@@ -465,7 +465,7 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent
 		return nullptr;
 	}
 
-	setPositionsFromNodules();
+	updateConnectionGeometry();
 	m_dragEnd = endAt( event.line );
 
 	// prepare for adding additional connection
