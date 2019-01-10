@@ -59,18 +59,18 @@ public:
         }
     }
 
-    void collectVectors(  openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline )
+    void collectVectors(  openvdb::GridBase::ConstPtr grid, const IECore::SplineffData *spline, const IECore::SplinefColor3fData *colorSpline, const IECore::V2fData *domain )
     {
-        static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline)> > collectors =
+        static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr, const IECore::SplineffData *spline, const IECore::SplinefColor3fData *colorSpline, const IECore::V2fData *domain)> > collectors =
                 {
-                        { openvdb::typeNameAsString<openvdb::Vec3d>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline ) { collector.collectTypedVector<openvdb::Vec3DGrid>( grid, spline, colorSpline ); } },
-                        { openvdb::typeNameAsString<openvdb::Vec3f>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline ) { collector.collectTypedVector<openvdb::Vec3SGrid>( grid, spline, colorSpline ); } },
+                        { openvdb::typeNameAsString<openvdb::Vec3d>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::SplineffData *spline, const IECore::SplinefColor3fData * colorSpline, const IECore::V2fData *domain ) { collector.collectTypedVector<openvdb::Vec3DGrid>( grid, spline, colorSpline, domain ); } },
+                        { openvdb::typeNameAsString<openvdb::Vec3f>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::SplineffData * spline, const IECore::SplinefColor3fData * colorSpline, const IECore::V2fData *domain ) { collector.collectTypedVector<openvdb::Vec3SGrid>( grid, spline, colorSpline, domain ); } },
                 };
 
         const auto it = collectors.find( grid->valueType() );
         if( it != collectors.end() )
         {
-            it->second( *this, grid, spline, colorSpline );
+            it->second( *this, grid, spline, colorSpline, domain );
         }
         else
         {
@@ -78,18 +78,18 @@ public:
         }
     }
 
-	void collectScalarValues(  openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline )
+	void collectScalarValues(  openvdb::GridBase::ConstPtr grid, const IECore::SplineffData *spline, const IECore::SplinefColor3fData *colorSpline, const IECore::V2fData *domain )
 	{
-		static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline)> > collectors =
+		static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr, const IECore::SplineffData *spline, const IECore::SplinefColor3fData *colorSpline, const IECore::V2fData *domain )> > collectors =
 				{
-						{ openvdb::typeNameAsString<float>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline ) { collector.collectTypedScalar<openvdb::FloatGrid>( grid, spline, colorSpline ); } },
-						{ openvdb::typeNameAsString<double>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline ) { collector.collectTypedScalar<openvdb::DoubleGrid>( grid, spline, colorSpline ); } },
+						{ openvdb::typeNameAsString<float>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::SplineffData * spline, const IECore::SplinefColor3fData * colorSpline, const IECore::V2fData *domain ) { collector.collectTypedScalar<openvdb::FloatGrid>( grid, spline, colorSpline, domain ); } },
+						{ openvdb::typeNameAsString<double>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid, const IECore::SplineffData * spline, const IECore::SplinefColor3fData * colorSpline, const IECore::V2fData *domain ) { collector.collectTypedScalar<openvdb::DoubleGrid>( grid, spline, colorSpline, domain ); } },
 				};
 
 		const auto it = collectors.find( grid->valueType() );
 		if( it != collectors.end() )
 		{
-			it->second( *this, grid, spline, colorSpline );
+			it->second( *this, grid, spline, colorSpline, domain );
 		}
 		else
 		{
@@ -103,8 +103,6 @@ public:
     IECore::Color3fVectorDataPtr colors;
 	IECore::FloatVectorDataPtr values;
 	std::vector<IECore::V3fVectorDataPtr> points;
-
-
 
 private:
 
@@ -134,7 +132,7 @@ private:
     }
 
     template<typename GridType>
-    void collectTypedVector( openvdb::GridBase::ConstPtr baseGrid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline)
+    void collectTypedVector( openvdb::GridBase::ConstPtr baseGrid, const IECore::SplineffData *spline, const IECore::SplinefColor3fData *colorSpline, const IECore::V2fData *domain)
     {
         typename GridType::ConstPtr grid = openvdb::GridBase::constGrid<GridType>( baseGrid );
 
@@ -145,24 +143,32 @@ private:
 
         for (typename GridType::ValueOnCIter iter = grid->cbeginValueOn(); iter.test(); ++iter)
         {
-            const typename GridType::TreeType::ValueType& value = *iter;
+            typename GridType::TreeType::ValueType value = *iter;
 
             openvdb::CoordBBox bbox;
             iter.getBoundingBox(bbox);
 
-            float v = value.length();
-            float length = v;
-            float newLength = spline( value.length() );
-            addLine(0, grid->indexToWorld( bbox.getCenter()),  grid->indexToWorld( bbox.getCenter() + value * (newLength / length) ), colorSpline( v ));
+            float length = value.length();
+			float newLength = length;
+			if ( domain )
+			{
+				V2f minMax = domain->readable();
+				newLength = (newLength - minMax.x) / ( minMax.y - minMax.x);
+			}
 
+            newLength = spline ? spline->readable()( newLength ) : newLength;
+
+			addLine(
+				0,
+				grid->indexToWorld( bbox.getCenter() ),
+				grid->indexToWorld( bbox.getCenter() + value * ( newLength / length ) ),
+				colorSpline ? colorSpline->readable()( newLength ) : Color3f( newLength, newLength, newLength )
+			);
         }
-
     }
 
-
-
 	template<typename GridType>
-	void collectTypedScalar( openvdb::GridBase::ConstPtr baseGrid, const IECore::Splineff& spline, const IECore::SplinefColor3f& colorSpline)
+	void collectTypedScalar( openvdb::GridBase::ConstPtr baseGrid, const IECore::SplineffData *spline, const IECore::SplinefColor3fData *colorSpline, const IECore::V2fData *domain)
 	{
 		typename GridType::ConstPtr grid = openvdb::GridBase::constGrid<GridType>( baseGrid );
 
@@ -173,15 +179,20 @@ private:
 
 		for (typename GridType::ValueOnCIter iter = grid->cbeginValueOn(); iter.test(); ++iter)
 		{
-			const typename GridType::TreeType::ValueType& value = *iter;
+			typename GridType::TreeType::ValueType value = *iter;
 
 			openvdb::CoordBBox bbox;
 			iter.getBoundingBox(bbox);
 
-			const typename GridType::TreeType::ValueType m = spline( value );
-			addPoint( grid->indexToWorld( bbox.getCenter()), m, colorSpline( value ) );
-		}
+			if ( domain )
+			{
+				V2f minMax = domain->readable();
+				value = (value - minMax.x) / ( minMax.y - minMax.x);
+			}
 
+			const typename GridType::TreeType::ValueType m = spline ? spline->readable()( value ) : value;
+			addPoint( grid->indexToWorld( bbox.getCenter()), m, colorSpline ? colorSpline->readable() ( value ) : Color3f(value,value,value));
+		}
 	}
 
     void collectPoints( openvdb::GridBase::ConstPtr baseGrid )
@@ -418,30 +429,34 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
 
 	if( auto gridNameOverride = currentState->userAttributes()->member<IECore::StringData>( "glVisualiser:volume:grid", false ) )
 	{
-		gridName = gridNameOverride->readable();
+		std::string newGridName = gridNameOverride->readable();
+		if ( vdbObject->findGrid( newGridName ) )
+		{
+			gridName = newGridName;
+		}
 	}
 
     openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
 
-    if ( !grid )
-    {
-        return;
-    }
-
-    IECore::Splineff spline;
     IECore::MurmurHash hash;
 
-	if( auto splineData = currentState->userAttributes()->member<IECore::SplineffData>( "glVisualiser:volume:scalarRamp", false ) )
+	auto domainData = currentState->userAttributes()->member<IECore::V2fData>( "glVisualiser:volume:domain" );
+	auto splineData = currentState->userAttributes()->member<IECore::SplineffData>( "glVisualiser:volume:scalarRamp", false );
+	auto colorSplineData = currentState->userAttributes()->member<IECore::SplinefColor3fData>( "glVisualiser:volume:colorRamp", false );
+
+	if( splineData )
 	{
-		spline = splineData->readable();
 		splineData->hash( hash );
 	}
 
-    IECore::SplinefColor3f colorSpline;
-	if( auto colorSplineData = currentState->userAttributes()->member<IECore::SplinefColor3fData>( "glVisualiser:volume:colorRamp", false ) )
+	if( colorSplineData )
 	{
-		colorSpline = colorSplineData->readable();
 		colorSplineData->hash( hash );
+	}
+
+	if ( domainData )
+	{
+		domainData->hash( hash );
 	}
 
 	auto volumeRenderStyle = currentState->userAttributes()->member<IECore::IntData>( "glVisualiser:volume:style", false );
@@ -541,7 +556,7 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
         m_group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
 
         GeometryCollector collector;
-        collector.collectVectors( grid, spline, colorSpline );
+        collector.collectVectors( grid, splineData, colorSplineData, domainData );
 
         openvdb::Index64 depth = 0;
 
@@ -565,28 +580,32 @@ void VDBRenderable::render( IECoreGL::State *currentState ) const
     }
     else if ( m_renderType == 2 )
     {
-		IECoreGL::Group *group = new IECoreGL::Group();
+
 
 		GeometryCollector collector;
-		collector.collectScalarValues( grid, spline, colorSpline );
-		group->getState()->add( new IECoreGL::Primitive::DrawPoints( true ) );
-		group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
-		group->getState()->add( new IECoreGL::PointsPrimitive::GLPointWidth( 2.0 ) );
+		collector.collectScalarValues( grid, splineData, colorSplineData, domainData );
 
-		IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
+		if ( !collector.positions.empty() )
+		{
+			IECoreGL::Group *group = new IECoreGL::Group();
 
-		points->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.positions[0] ) );
-		points->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.colors) );
-		points->addPrimitiveVariable( "width", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.values ) );
+			group->getState()->add( new IECoreGL::Primitive::DrawPoints( true ) );
+			group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
+			group->getState()->add( new IECoreGL::PointsPrimitive::GLPointWidth( 2.0 ) );
 
-		group->addChild( points );
+			IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
 
-		m_group->addChild( group );
+			points->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.positions[0] ) );
+			points->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.colors) );
+			points->addPrimitiveVariable( "width", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.values ) );
+
+			group->addChild( points );
+
+			m_group->addChild( group );
+		}
     }
 
-
     m_group->render( currentState );
-
 }
 
 Imath::Box3f VDBRenderable::bound() const
