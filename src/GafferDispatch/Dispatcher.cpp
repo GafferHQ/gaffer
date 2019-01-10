@@ -199,7 +199,8 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	m_jobDirectory = numberedJobDirectory.string();
 	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
 
-	// Now save a copy of the script into the directory.
+	// Now figure out where we'll save the script in that directory, and
+	// advertise it via the context. We'll do the actual saving later.
 
 	boost::filesystem::path scriptFileName = script->fileNamePlug()->getValue();
 	if( scriptFileName.size() )
@@ -210,8 +211,6 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	{
 		scriptFileName = numberedJobDirectory / "untitled.gfr";
 	}
-
-	script->serialiseToFile( scriptFileName.string() );
 
 	context->set( g_scriptFileNameContextEntry, scriptFileName.string() );
 }
@@ -707,7 +706,8 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	}
 
 	// create the job directory now, so it's available in preDispatchSignal().
-	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal()
+	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal() - a cancelled
+	/// dispatch should not create anything on disk.
 
 	ContextPtr jobContext = new Context( *Context::current() );
 	Context::Scope jobScope( jobContext.get() );
@@ -739,6 +739,31 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	}
 
 	executeAndPruneImmediateBatches( batcher.rootBatch() );
+
+	// Save the script. If we're in a nested dispatch, this may have been done already by
+	// the outer dispatch, hence the call to `exists()`. Performing the saving here is
+	// unsatisfactory for a couple of reasons :
+	//
+	// - It is _after_ the execution of immediate tasks because currently at Image Engine, some immediate tasks
+	//   modify the node graph and expect those modifications to be saved in the script. This is definitely
+	//   not kosher - `TaskNode::execute()` is `const` for a reason, and TaskNodes should never modify the graph.
+	//   Among other things, such rogue nodes preclude us from being able to multithread dispatch in the future.
+	//   Nevertheless, we need to continue to support this for now.
+	// - Some dispatchers don't need the script to be saved at all, or even need a job directory (a LocalDispatcher
+	//   in foreground mode for instance). We would prefer not to litter the filesystem in these cases.
+	//
+	// One solution may be to defer the creation of the job directory and the script until it is
+	// first required, either by `doDispatch()` or a TaskNode. We'd do this by creating the
+	// "dispatcher:jobDirectory" and "dispatcher:scriptFileName" context variables upfront as normal,
+	// but not actually updating the filesystem until a call to a utility method is made. The main issue
+	// to resolve there is the generation of a unique directory name without actually creating the
+	// directory. We could use some sort of UUID for this, but there is some concern that this will be less
+	// useable/friendly than the existing sequential naming.
+	const std::string scriptFileName = jobContext->get<string>( g_scriptFileNameContextEntry );
+	if( !boost::filesystem::exists( scriptFileName ) )
+	{
+		script->serialiseToFile( scriptFileName );
+	}
 
 	if( !batcher.rootBatch()->preTasks().empty() )
 	{
