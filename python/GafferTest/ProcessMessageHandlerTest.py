@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import inspect
+
 import IECore
 
 import Gaffer
@@ -41,7 +43,7 @@ import GafferTest
 
 class ProcessMessageHandlerTest( GafferTest.TestCase ) :
 
-	def testMessageOutSideProcessIsForwaredUnmodified( self ) :
+	def testMessageOutSideProcessIsForwardedUnmodified( self ) :
 
 		capturingMessageHandler = IECore.CapturingMessageHandler()
 		messageHandler = Gaffer.ProcessMessageHandler( capturingMessageHandler )
@@ -70,18 +72,45 @@ class ProcessMessageHandlerTest( GafferTest.TestCase ) :
 		scriptNode.addChild(expression)
 		scriptNode.addChild(node)
 
-		expression.setExpression( 'import IECore\nIECore.MessageHandler.output(IECore.MessageHandler.Level.Error, "testA", "testB") \n\nparent["Node"]["user"]["test"] = 1', 'python' )
+		expression.setExpression( inspect.cleandoc(
+			"""
+			import IECore
+			IECore.MessageHandler.output( IECore.MessageHandler.Level.Error, "testA", "testB" )
+			parent["Node"]["user"]["test"] = len( context.get( "scene:path", [] ) )
+			"""
+		) )
 
-		with messageHandler:
-			node['user']['test'].getValue()
+		with Gaffer.Context() as context :
 
-		self.assertEqual(len( capturingMessageHandler.messages ), 2 )
+			with messageHandler :
 
-		self.assertEqual(capturingMessageHandler.messages[0].level, IECore.MessageHandler.Level.Error)
-		self.assertEqual(capturingMessageHandler.messages[0].context, "testA")
-		self.assertEqual(capturingMessageHandler.messages[0].message, "testB")
+				self.assertEqual( node['user']['test'].getValue(), 0 )
 
-		self.assertEqual(capturingMessageHandler.messages[1].level, IECore.MessageHandler.Level.Debug)
-		self.assertEqual(capturingMessageHandler.messages[1].context, "Gaffer::Process")
-		self.assertEqual(capturingMessageHandler.messages[1].message, "[ plug: 'ScriptNode.Expression.__execute', path: '/', frame: 1]\n")
+				self.assertEqual( len( capturingMessageHandler.messages ), 2 )
 
+				self.assertEqual( capturingMessageHandler.messages[0].level, IECore.MessageHandler.Level.Error )
+				self.assertEqual( capturingMessageHandler.messages[0].context, "testA" )
+				self.assertEqual( capturingMessageHandler.messages[0].message, "testB" )
+
+				self.assertEqual( capturingMessageHandler.messages[1].level, IECore.MessageHandler.Level.Debug )
+				self.assertEqual( capturingMessageHandler.messages[1].context, "Gaffer::Process" )
+				self.assertEqual( capturingMessageHandler.messages[1].message, "[ plug: 'ScriptNode.Expression.__execute', frame: 1 ]" )
+
+				del capturingMessageHandler.messages[:]
+
+				context["scene:path"] = IECore.InternedStringVectorData( [ "a", "b" ] )
+
+				self.assertEqual( node['user']['test'].getValue(), 2 )
+
+				self.assertEqual( len( capturingMessageHandler.messages ), 2 )
+
+				self.assertEqual( capturingMessageHandler.messages[0].level, IECore.MessageHandler.Level.Error )
+				self.assertEqual( capturingMessageHandler.messages[0].context, "testA" )
+				self.assertEqual( capturingMessageHandler.messages[0].message, "testB" )
+
+				self.assertEqual( capturingMessageHandler.messages[1].level, IECore.MessageHandler.Level.Debug )
+				self.assertEqual( capturingMessageHandler.messages[1].context, "Gaffer::Process" )
+				self.assertEqual( capturingMessageHandler.messages[1].message, "[ plug: 'ScriptNode.Expression.__execute', frame: 1, path: '/a/b' ]" )
+
+if __name__ == "__main__":
+	unittest.main()

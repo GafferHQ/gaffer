@@ -58,7 +58,6 @@ namespace
 {
 
 IECore::InternedString g_scenePath( "scene:path" );
-IECore::InternedString g_frame( "frame" );
 
 }
 
@@ -78,20 +77,23 @@ void ProcessMessageHandler::handle( Level level, const string &context, const st
 	{
 		stringstream ss;
 
-		auto path = p->context()->get<vector<IECore::InternedString> >( g_scenePath, vector<IECore::InternedString>() );
-
-		std::string strPath = std::string("/") + boost::algorithm::join(
-			path | transformed(
-				[]( const IECore::InternedString &s ) -> const string&
-				{
-					return (const string &) s;
-				}
-			), "/"
-		);
-
 		ss << "[ plug: '" << p->plug()->fullName() << "', ";
-		ss << "path: '" << strPath << "', ";
-		ss << "frame: " << p->context()->getFrame() << "]" << endl;
+		ss << "frame: " << p->context()->getFrame();
+
+		if( auto path = p->context()->get<IECore::InternedStringVectorData>( g_scenePath, nullptr ) )
+		{
+			std::string strPath = std::string("/") + join(
+				path->readable() | transformed(
+					[]( const IECore::InternedString &s )
+					{
+						return s.string();
+					}
+				), "/"
+			);
+			ss << ", path: '" << strPath << "'";
+		}
+
+		ss << " ]";
 
 		m_handler->handle( Level::Debug, "Gaffer::Process", ss.str() );
 	}
