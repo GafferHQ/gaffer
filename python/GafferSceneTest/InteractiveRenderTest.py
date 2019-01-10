@@ -1590,6 +1590,80 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.__assertColorsAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
 
+	def testLightLinking( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["l"], colorPlug = self._createPointLight()
+		colorPlug.setValue( imath.Color3f( 1, 0.5, 0.25 ) )
+		s["l"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["p"] = GafferScene.Plane()
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
+
+		s["s"], unused = self._createMatteShader()
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 2 )
+
+		c = self.__color3fAtUV(
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			imath.V2f( 0.5 ),
+		)
+		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
+
+		# Unlink the light, give it time to update, and check the output.
+
+		s["l"]["defaultLight"].setValue( False )
+
+		time.sleep( 1 )
+
+		c = self.__color3fAtUV(
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			imath.V2f( 0.5 ),
+		)
+		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
+
+		# \todo: This should also test the light linking functionaly provided by
+		# StandardAttributes
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
