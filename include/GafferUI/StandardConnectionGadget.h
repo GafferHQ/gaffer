@@ -46,6 +46,8 @@
 namespace GafferUI
 {
 
+class NodeGadget;
+
 /// The standard implementation of the abstract ConnectionGadget base
 /// class. Connections endpoints may be dragged + dropped, and the tooltip
 /// displays the name of the source and destination plugs.
@@ -80,7 +82,24 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 
 		static ConnectionGadgetTypeDescription<StandardConnectionGadget> g_connectionGadgetTypeDescription;
 
-		void setPositionsFromNodules();
+		// Returns the NodeGadget for the source end of the
+		// connection, even if `srcNodule()` is null. Will
+		// return null if the node is hidden though.
+		const NodeGadget *srcNodeGadget() const;
+		// Decides whether this connection should be highlighted,
+		// taking into account hovering, dragging, dot insertion
+		// and the highlighted state of the nodes at either end.
+		bool highlighted() const;
+		// `m_srcPos` and `m_srcTangent` are stored as if the
+		// connection is not minimised. This method returns them
+		// adjusted according to `getMinimised().
+		void minimisedPositionAndTangent( bool highlighted, Imath::V3f &position, Imath::V3f &tangent ) const;
+		// Updates m_srcPos, m_srcTangent etc. We basically always
+		// call this before accessing that state, so I'm not sure
+		// why we store it at all - we could just return it instead.
+		/// \todo Consider making the updates lazy based on events, or
+		/// just drop the state.
+		void updateConnectionGeometry();
 		float distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const;
 		Gaffer::Plug::Direction endAt( const IECore::LineSegment3f &line ) const;
 
@@ -101,10 +120,12 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 
 		void updateDotPreviewLocation( const ButtonEvent &event );
 
+		// Connection geometry - computed by `updateConnectionGeometry()`.
 		Imath::V3f m_srcPos;
 		Imath::V3f m_srcTangent;
 		Imath::V3f m_dstPos;
 		Imath::V3f m_dstTangent;
+		bool m_auxiliary;
 
 		Gaffer::Plug::Direction m_dragEnd;
 

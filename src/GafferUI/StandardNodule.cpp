@@ -155,6 +155,11 @@ void StandardNodule::createConnection( Gaffer::Plug *endpoint )
 
 bool StandardNodule::hasLayer( Layer layer ) const
 {
+	if( children().size() )
+	{
+		return true;
+	}
+
 	switch( layer )
 	{
 		case GraphLayer::Connections :

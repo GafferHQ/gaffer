@@ -225,6 +225,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &event );
+		void enter( const ButtonEvent &event );
+		void leave( const ButtonEvent &event );
 		bool mouseMove( GadgetPtr gadget, const ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
@@ -239,6 +241,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void eventToGadgetSpace( Event &event, Gadget *gadget );
 		void eventToGadgetSpace( ButtonEvent &event, Gadget *gadget );
 
+		void updateGadgetUnderMouse( const ButtonEvent &event );
 		void emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event );
 
 		GadgetPtr updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event );

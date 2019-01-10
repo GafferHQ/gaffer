@@ -1374,5 +1374,24 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		assertBothVisible()
 
+	def testConnectionGadgetsIncludesDanglingConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["c"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["c"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n2"]["c"]["r"].setInput( s["n1"]["c"]["r"] )
+
+		Gaffer.Metadata.registerValue( s["n2"]["c"], "compoundNumericNodule:childrenVisible", True )
+
+		g = GafferUI.GraphGadget( s )
+		c = g.connectionGadgets( s["n2"]["c"]["r"] )
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( c[0].dstNodule(), g.nodeGadget( s["n2"] ).nodule( s["n2"]["c"]["r"] ) )
+		self.assertIsNone( c[0].srcNodule() )
+
 if __name__ == "__main__":
 	unittest.main()

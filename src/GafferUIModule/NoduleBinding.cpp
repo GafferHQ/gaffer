@@ -45,6 +45,7 @@
 #include "GafferUI/Nodule.h"
 #include "GafferUI/NoduleLayout.h"
 #include "GafferUI/StandardNodule.h"
+#include "GafferUI/CompoundNumericNodule.h"
 
 #include "Gaffer/Plug.h"
 
@@ -144,6 +145,10 @@ void GafferUIModule::bindNodule()
 	;
 
 	ConnectionCreatorClass<CompoundNodule>()
+		.def( init<Gaffer::PlugPtr>( ( arg( "plug" ) ) ) )
+	;
+
+	ConnectionCreatorClass<CompoundNumericNodule>()
 		.def( init<Gaffer::PlugPtr>( ( arg( "plug" ) ) ) )
 	;
 

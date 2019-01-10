@@ -99,7 +99,7 @@ V2f planarScaleFromCameraAndRes( const IECoreScene::Camera *cam, const V2i &res 
 	{
 		return V2f( 1.0f );
 	}
-	
+
 	return V2f( cam->getAperture()[0] / ((float)res[0] ), cam->getAperture()[1] / ((float)res[1] ) );
 }
 
@@ -600,6 +600,8 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	buttonPressSignal().connect( boost::bind( &ViewportGadget::buttonPress, this, ::_1,  ::_2 ) );
 	buttonReleaseSignal().connect( boost::bind( &ViewportGadget::buttonRelease, this, ::_1,  ::_2 ) );
 	buttonDoubleClickSignal().connect( boost::bind( &ViewportGadget::buttonDoubleClick, this, ::_1,  ::_2 ) );
+	enterSignal().connect( boost::bind( &ViewportGadget::enter, this, ::_2 ) );
+	leaveSignal().connect( boost::bind( &ViewportGadget::leave, this, ::_2 ) );
 	mouseMoveSignal().connect( boost::bind( &ViewportGadget::mouseMove, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &ViewportGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &ViewportGadget::dragEnter, this, ::_1, ::_2 ) );
@@ -1010,57 +1012,8 @@ bool ViewportGadget::buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &eve
 	return false;
 }
 
-void ViewportGadget::emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event )
+void ViewportGadget::updateGadgetUnderMouse( const ButtonEvent &event )
 {
-	// figure out the lowest point in the hierarchy where the entered status is unchanged.
-	GadgetPtr lowestUnchanged = this;
-	if( oldGadgetUnderMouse && newGadgetUnderMouse )
-	{
-		if( oldGadgetUnderMouse->isAncestorOf( newGadgetUnderMouse.get() ) )
-		{
-			lowestUnchanged = oldGadgetUnderMouse;
-		}
-		else if( newGadgetUnderMouse->isAncestorOf( oldGadgetUnderMouse.get() ) )
-		{
-			lowestUnchanged = newGadgetUnderMouse;
-		}
-		else
-		{
-			lowestUnchanged = oldGadgetUnderMouse->commonAncestor<Gadget>( newGadgetUnderMouse.get() );
-		}
-	}
-
-	// emit leave events, innermost first
-	if( oldGadgetUnderMouse )
-	{
-		GadgetPtr leaveTarget = oldGadgetUnderMouse;
-		while( leaveTarget != lowestUnchanged )
-		{
-			dispatchEvent( leaveTarget.get(), &Gadget::leaveSignal, event );
-			leaveTarget = leaveTarget->parent<Gadget>();
-		}
-	}
-
-	// emit enter events, outermost first
-	if( newGadgetUnderMouse )
-	{
-		std::vector<GadgetPtr> enterTargets;
-		GadgetPtr enterTarget = newGadgetUnderMouse;
-		while( enterTarget != lowestUnchanged )
-		{
-			enterTargets.push_back( enterTarget );
-			enterTarget = enterTarget->parent<Gadget>();
-		}
-		for( std::vector<GadgetPtr>::const_reverse_iterator it = enterTargets.rbegin(); it!=enterTargets.rend(); it++ )
-		{
-			dispatchEvent( *it, &Gadget::enterSignal, event );
-		}
-	}
-};
-
-bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
-{
-	// find the gadget under the mouse
 	std::vector<GadgetPtr> gadgets;
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 
@@ -1075,6 +1028,79 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		emitEnterLeaveEvents( newGadgetUnderMouse, m_gadgetUnderMouse, event );
 		m_gadgetUnderMouse = newGadgetUnderMouse;
 	}
+}
+
+void ViewportGadget::emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event )
+{
+
+	// figure out the lowest point in the hierarchy where the entered status is unchanged.
+	GadgetPtr lowestUnchanged = this;
+	if( oldGadgetUnderMouse && newGadgetUnderMouse )
+	{
+		if( oldGadgetUnderMouse->isAncestorOf( newGadgetUnderMouse.get() ) )
+		{
+			lowestUnchanged = oldGadgetUnderMouse;
+		}
+		else if( newGadgetUnderMouse->isAncestorOf( oldGadgetUnderMouse.get() ) )
+		{
+			lowestUnchanged = newGadgetUnderMouse;
+		}
+		else
+		{
+			if( Gadget *commonAncestor = oldGadgetUnderMouse->commonAncestor<Gadget>( newGadgetUnderMouse.get() ) )
+			{
+				lowestUnchanged = commonAncestor;
+			}
+		}
+	}
+
+	// emit leave events, innermost first
+	if( oldGadgetUnderMouse )
+	{
+		GadgetPtr leaveTarget = oldGadgetUnderMouse;
+		while( leaveTarget && leaveTarget != lowestUnchanged )
+		{
+			dispatchEvent( leaveTarget.get(), &Gadget::leaveSignal, event );
+			leaveTarget = leaveTarget->parent<Gadget>();
+		}
+	}
+
+	// emit enter events, outermost first
+	if( newGadgetUnderMouse )
+	{
+		std::vector<GadgetPtr> enterTargets;
+		GadgetPtr enterTarget = newGadgetUnderMouse;
+		while( enterTarget && enterTarget != lowestUnchanged )
+		{
+			enterTargets.push_back( enterTarget );
+			enterTarget = enterTarget->parent<Gadget>();
+		}
+		for( std::vector<GadgetPtr>::const_reverse_iterator it = enterTargets.rbegin(); it!=enterTargets.rend(); it++ )
+		{
+			dispatchEvent( *it, &Gadget::enterSignal, event );
+		}
+	}
+
+};
+
+void ViewportGadget::enter( const ButtonEvent &event )
+{
+	updateGadgetUnderMouse( event );
+}
+
+void ViewportGadget::leave( const ButtonEvent &event )
+{
+	if( m_gadgetUnderMouse )
+	{
+		emitEnterLeaveEvents( nullptr, m_gadgetUnderMouse, event );
+		m_gadgetUnderMouse = nullptr;
+	}
+}
+
+bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
+{
+	// find the gadget under the mouse
+	updateGadgetUnderMouse( event );
 
 	// pass the signal through
 	if( m_gadgetUnderMouse )

@@ -144,7 +144,9 @@ def __plugNoduleType( plug ) :
 	elif plug.node().parameterMetadata( plug, "connectable" ) == 0 :
 		return ""
 	else :
-		return "GafferUI::StandardNodule"
+		# Causes `Nodule::create()` to choose nodule type
+		# based on plug type.
+		return None
 
 def __outPlugNoduleType( plug ) :
 
@@ -171,6 +173,15 @@ def __plugNoduleLabel( plug ) :
 
 	return label
 
+def __plugComponentNoduleLabel( plug ) :
+
+	parameterPlug = plug.parent()
+	label = __plugLabel( parameterPlug )
+	if label is None :
+		label = parameterPlug.getName()
+
+	return label + "." + plug.getName()
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -186,7 +197,6 @@ Gaffer.Metadata.registerNode(
 
 			"description", __plugDescription,
 			"label", __plugLabel,
-			"noduleLayout:label", __plugLabel,
 			"layout:divider", __plugDivider,
 			"layout:section", __plugPage,
 			"presetNames", __plugPresetNames,
@@ -195,6 +205,12 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", __plugNoduleType,
 			"noduleLayout:visible", __plugNoduleVisibility,
 			"noduleLayout:label", __plugNoduleLabel,
+
+		],
+
+		"parameters.*.[rgbxyz]" : [
+
+			"noduleLayout:label", __plugComponentNoduleLabel,
 
 		],
 

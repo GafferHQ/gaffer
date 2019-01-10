@@ -65,6 +65,12 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 		Gaffer::Plug *plug();
 		const Gaffer::Plug *plug() const;
 
+		/// Returns a nodule for a child of the plug being represented.
+		/// Default implementation returns `nullptr`. Derived classes that
+		/// manage nodules for child plugs should reimplement appropriately.
+		virtual Nodule *nodule( const Gaffer::Plug *plug );
+		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
+
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 
 		/// Creates a Nodule for the specified plug. The type of nodule created can be

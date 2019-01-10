@@ -220,5 +220,121 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.GraphGadget( script )
 		self.assertFalse( g.auxiliaryConnectionsGadget().hasConnection( script["n"], script["n"] ) )
 
+	def testRemoveSourceNodeGadgetViaFilter( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n1"] = Gaffer.Node()
+		script["n1"]["o"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		Gaffer.Metadata.registerPlugValue( script["n1"]["o"], "nodule:type", "" )
+
+		script["n2"] = Gaffer.Node()
+		script["n2"]["i"] = Gaffer.Plug()
+		Gaffer.Metadata.registerPlugValue( script["n2"]["i"], "nodule:type", "" )
+
+		script["n2"]["i"].setInput( script["n1"]["o"] )
+
+		g = GafferUI.GraphGadget( script )
+		n1g = g.nodeGadget( script["n1"] )
+		n2g = g.nodeGadget( script["n2"] )
+
+		acg = g.auxiliaryConnectionsGadget()
+		self.assertTrue( acg.hasConnection( n1g, n2g ) )
+
+		g.setFilter( Gaffer.StandardSet( { script["n2"] } ) )
+
+		self.assertIsNone( n1g.parent() )
+		self.assertIsNotNone( n2g.parent() )
+
+		self.assertFalse( acg.hasConnection( n1g, n2g ) )
+
+	def testCompoundNumericNodules( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["c"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["f"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["c"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		g = GafferUI.GraphGadget( s )
+		acg = g.auxiliaryConnectionsGadget()
+
+		def gadget( graphComponent ) :
+
+			if isinstance( graphComponent, Gaffer.Node ) :
+				return g.nodeGadget( graphComponent )
+			else :
+				return g.nodeGadget( graphComponent.node() ).nodule( graphComponent )
+
+		# No connections to start with
+
+		self.assertFalse( acg.hasConnection( gadget( s["n1"] ), gadget( s["n2"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["f"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["c"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( s["n1"], s["n2"] ) )
+		self.assertFalse( acg.hasConnection( s["n2"], s["n1"] ) )
+
+		# Component-level connections should be represented, because we haven't
+		# expanded the CompoundNumericNodules to show the component with the connection.
+		# But the connections should run between the nodules, not directly between the nodes.
+
+		s["n2"]["c"]["r"].setInput( s["n1"]["f"] )
+		s["n2"]["c"]["g"].setInput( s["n1"]["c"]["g"] )
+
+		self.assertFalse( acg.hasConnection( gadget( s["n1"] ), gadget( s["n2"] ) ) )
+		self.assertTrue( acg.hasConnection( gadget( s["n1"]["f"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertTrue( acg.hasConnection( gadget( s["n1"]["c"] ), gadget( s["n2"]["c"] ) ) )
+
+		# Expand the source side of the connection. We should still auxiliary connections,
+		# but now they should point at the exact source nodule
+
+		Gaffer.Metadata.registerValue( s["n1"]["c"], "compoundNumericNodule:childrenVisible", True )
+		self.assertIsNotNone( gadget( s["n1"]["c"]["r"] ) )
+
+		self.assertFalse( acg.hasConnection( gadget( s["n1"] ), gadget( s["n2"] ) ) )
+		self.assertTrue( acg.hasConnection( gadget( s["n1"]["f"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["c"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertTrue( acg.hasConnection( gadget( s["n1"]["c"]["g"] ), gadget( s["n2"]["c"] ) ) )
+
+		# Expand the destination side of the connection. We shouldn't have any auxiliary connections
+		# now, because the connections are represented as regular connections.
+
+		Gaffer.Metadata.registerValue( s["n2"]["c"], "compoundNumericNodule:childrenVisible", True )
+		self.assertIsNotNone( gadget( s["n2"]["c"]["r"] ) )
+
+		self.assertFalse( acg.hasConnection( gadget( s["n1"] ), gadget( s["n2"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["f"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["c"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["c"]["g"] ), gadget( s["n2"]["c"] ) ) )
+
+		self.assertIsNotNone( g.connectionGadget( s["n2"]["c"]["r"] ) )
+		self.assertIsNotNone( g.connectionGadget( s["n2"]["c"]["g"] ) )
+
+		# Collapse the source side of the connection. We should still have a regular connection.
+
+		Gaffer.Metadata.registerValue( s["n1"]["c"], "compoundNumericNodule:childrenVisible", False )
+
+		self.assertFalse( acg.hasConnection( gadget( s["n1"] ), gadget( s["n2"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["f"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["c"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertFalse( acg.hasConnection( gadget( s["n1"]["c"]["g"] ), gadget( s["n2"]["c"] ) ) )
+
+		self.assertIsNotNone( g.connectionGadget( s["n2"]["c"]["r"] ) )
+		self.assertIsNotNone( g.connectionGadget( s["n2"]["c"]["g"] ) )
+
+		# Collapse the destination side. We should be back to where we started.
+
+		Gaffer.Metadata.registerValue( s["n2"]["c"], "compoundNumericNodule:childrenVisible", False )
+
+		self.assertFalse( acg.hasConnection( gadget( s["n1"] ), gadget( s["n2"] ) ) )
+		self.assertTrue( acg.hasConnection( gadget( s["n1"]["f"] ), gadget( s["n2"]["c"] ) ) )
+		self.assertTrue( acg.hasConnection( gadget( s["n1"]["c"] ), gadget( s["n2"]["c"] ) ) )
+
+		self.assertIsNone( g.connectionGadget( s["n2"]["c"]["r"] ) )
+		self.assertIsNone( g.connectionGadget( s["n2"]["c"]["g"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

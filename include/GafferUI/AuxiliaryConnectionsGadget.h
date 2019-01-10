@@ -39,7 +39,9 @@
 
 #include "GafferUI/Gadget.h"
 
-#include "boost/container/flat_set.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index_container.hpp"
 
 #include <unordered_map>
 
@@ -59,7 +61,8 @@ class NodeGadget;
 class Nodule;
 
 /// Renders the "auxiliary" connections within a node graph. These
-/// are defined as connections into plugs which don't have a nodule.
+/// are defined as connections into plugs which don't have a nodule
+/// of their own (although their parent may have a nodule).
 class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 {
 
@@ -69,11 +72,12 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AuxiliaryConnectionsGadget, AuxiliaryConnectionsGadgetTypeId, Gadget );
 
-		bool hasConnection( const NodeGadget *srcNodeGadget, const NodeGadget *dstNodeGadget ) const;
+		/// Gadgets may either be NodeGadgets or Nodules.
+		bool hasConnection( const Gadget *srcGadget, const Gadget *dstGadget ) const;
 		bool hasConnection( const Gaffer::Node *srcNode, const Gaffer::Node *dstNode ) const;
 
-		std::pair<NodeGadget *, NodeGadget *> connectionAt( const IECore::LineSegment3f &position );
-		std::pair<const NodeGadget *, const NodeGadget *> connectionAt( const IECore::LineSegment3f &position ) const;
+		std::pair<Gadget *, Gadget *> connectionAt( const IECore::LineSegment3f &position );
+		std::pair<const Gadget *, const Gadget *> connectionAt( const IECore::LineSegment3f &position ) const;
 
 		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 		std::string getToolTip( const IECore::LineSegment3f &position ) const override;
@@ -104,9 +108,13 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 		void noduleAdded( const NodeGadget *nodeGadget, const Nodule *nodule );
 		void noduleRemoved( const NodeGadget *nodeGadget, const Nodule *nodule );
 
-		void dirty( const NodeGadget *nodeGadget );
+		void dirtyInputConnections( const NodeGadget *nodeGadget );
+		void dirtyOutputConnections( const NodeGadget *nodeGadget );
 
 		void updateConnections() const;
+
+		struct AuxiliaryConnection;
+		void renderConnection( const AuxiliaryConnection &connection, const Style *style ) const;
 
 		struct Connections
 		{
@@ -114,18 +122,62 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 			boost::signals::scoped_connection noduleAddedConnection;
 			boost::signals::scoped_connection noduleRemovedConnection;
 			boost::signals::scoped_connection childRemovedConnection;
-			// The set of all NodeGadgets at the source end of the connections.
-			boost::container::flat_set<const NodeGadget *> sourceGadgets;
 			bool dirty = true;
 		};
 
 		boost::signals::scoped_connection m_graphGadgetChildAddedConnection;
 		boost::signals::scoped_connection m_graphGadgetChildRemovedConnection;
 
-		// Key is the NodeGadget at the destination end of the connections.
+		// Key is the NodeGadget at the destination end of the connections
+		// tracked by `Connections.dirty`.
 		typedef std::unordered_map<const NodeGadget *, Connections> NodeGadgetConnections;
 		mutable NodeGadgetConnections m_nodeGadgetConnections;
+
+		// An auxiliary connection that we will draw.
+		struct AuxiliaryConnection
+		{
+			const NodeGadget *srcNodeGadget;
+			const NodeGadget *dstNodeGadget;
+			// Endpoints may be srcNodeGadget/dstNodeGadget, or Nodules
+			// belonging to them.
+			std::pair<const Gadget *, const Gadget *> endpoints;
+		};
+
+		// Container for all our auxiliary connections.
+		using AuxiliaryConnections = boost::multi_index::multi_index_container<
+			AuxiliaryConnection,
+			boost::multi_index::indexed_by<
+				// Primary key is the unique pair of endpoint
+				// gadgets the connection represents.
+				boost::multi_index::hashed_unique<
+					boost::multi_index::member<AuxiliaryConnection, std::pair<const Gadget *, const Gadget *>, &AuxiliaryConnection::endpoints>
+				>,
+				// Access to the range of connections originating
+				// at `srcNodeGadget`. This will include all source
+				// endpoints which are either `srcNodeGadget` itself
+				// or are a nodule belonging to it.
+				boost::multi_index::hashed_non_unique<
+					boost::multi_index::member<AuxiliaryConnection, const NodeGadget *, &AuxiliaryConnection::srcNodeGadget>
+				>,
+				// Access to the range of connections ending at
+				// `dstNodeGadget`. This will include all destination
+				// endpoints which are either `dstNodeGadget` itself or
+				// are a nodule belonging to it.
+				boost::multi_index::hashed_non_unique<
+					boost::multi_index::member<AuxiliaryConnection, const NodeGadget *, &AuxiliaryConnection::dstNodeGadget>
+				>
+			>
+		>;
+
+		mutable AuxiliaryConnections m_auxiliaryConnections;
 		mutable bool m_dirty;
+
+		// Convenience accessors for the secondary indexes of `m_auxiliaryConnections`.
+
+		using SrcNodeGadgetIndex = AuxiliaryConnections::nth_index<1>::type;
+		using DstNodeGadgetIndex = AuxiliaryConnections::nth_index<2>::type;
+		SrcNodeGadgetIndex &srcNodeGadgetIndex() const;
+		DstNodeGadgetIndex &dstNodeGadgetIndex() const;
 
 };
 

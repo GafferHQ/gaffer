@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_COMPOUNDNODULE_H
-#define GAFFERUI_COMPOUNDNODULE_H
+#ifndef GAFFERUI_COMPOUNDNUMERICNODULE_H
+#define GAFFERUI_COMPOUNDNUMERICNODULE_H
 
-#include "GafferUI/LinearContainer.h"
-#include "GafferUI/Nodule.h"
+#include "GafferUI/StandardNodule.h"
 
 namespace GafferUI
 {
 
-IE_CORE_FORWARDDECLARE( NoduleLayout );
+class NoduleLayout;
 
-/// A Nodule subclass to represent each of the children of a
-/// Plug with their own nodule.
-class GAFFERUI_API CompoundNodule : public Nodule
+/// A Nodule subclass to represent CompoundNumericPlugs
+/// so that connections can optionally be made to the
+/// child plugs.
+class GAFFERUI_API CompoundNumericNodule : public StandardNodule
 {
 
 	public :
 
-		CompoundNodule( Gaffer::PlugPtr plug );
-		~CompoundNodule() override;
+		CompoundNumericNodule( Gaffer::PlugPtr plug );
+		~CompoundNumericNodule() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
-
-		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNumericNodule, CompoundNumericNoduleTypeId, StandardNodule );
 
 		Nodule *nodule( const Gaffer::Plug *plug ) override;
 		const Nodule *nodule( const Gaffer::Plug *plug ) const override;
@@ -66,20 +63,29 @@ class GAFFERUI_API CompoundNodule : public Nodule
 		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
 		void createConnection( Gaffer::Plug *endpoint ) override;
 
+		Imath::Box3f bound() const override;
+
+	protected :
+
+		void doRenderLayer( Layer layer, const Style *style ) const override;
+
 	private :
 
 		NoduleLayout *noduleLayout();
 		const NoduleLayout *noduleLayout() const;
 
-		static NoduleTypeDescription<CompoundNodule> g_noduleTypeDescription;
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void updateChildNoduleVisibility();
+
+		static NoduleTypeDescription<CompoundNumericNodule> g_noduleTypeDescription;
 
 };
 
-IE_CORE_DECLAREPTR( CompoundNodule );
+IE_CORE_DECLAREPTR( CompoundNumericNodule );
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<CompoundNodule> > CompoundNoduleIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<CompoundNodule> > RecursiveCompoundNoduleIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<CompoundNumericNodule> > CompoundNumericNoduleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<CompoundNumericNodule> > RecursiveCompoundNumericNoduleIterator;
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_COMPOUNDNODULE_H
+#endif // GAFFERUI_COMPOUNDNUMERICNODULE_H

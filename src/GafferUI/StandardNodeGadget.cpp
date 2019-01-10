@@ -175,9 +175,13 @@ bool canConnect( const DragDropEvent &event, const ConnectionCreator *destinatio
 {
 	if( auto plug = IECore::runTimeCast<const Plug>( event.data.get() ) )
 	{
-		return destination->canCreateConnection( plug );
+		if( destination->canCreateConnection( plug ) )
+		{
+			return true;
+		}
 	}
-	else if( auto sourceCreator = IECore::runTimeCast<const ConnectionCreator>( event.sourceGadget.get() ) )
+
+	if( auto sourceCreator = IECore::runTimeCast<const ConnectionCreator>( event.sourceGadget.get() ) )
 	{
 		if( auto destinationNodule = IECore::runTimeCast<const Nodule>( destination ) )
 		{
@@ -191,10 +195,15 @@ void connect( const DragDropEvent &event, ConnectionCreator *destination )
 {
 	if( auto plug = IECore::runTimeCast<Plug>( event.data.get() ) )
 	{
-		UndoScope undoScope( plug->ancestor<ScriptNode>() );
-		destination->createConnection( plug );
+		if( destination->canCreateConnection( plug ) )
+		{
+			UndoScope undoScope( plug->ancestor<ScriptNode>() );
+			destination->createConnection( plug );
+			return;
+		}
 	}
-	else if( auto sourceCreator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
+
+	if( auto sourceCreator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
 		if( auto destinationNodule = IECore::runTimeCast<Nodule>( destination ) )
 		{
