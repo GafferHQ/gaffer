@@ -234,7 +234,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	// requirement. Regardless, we look out for this special node as it already
 	// exists in the graph and we simply point to it.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "cycles_shader" );
+	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "output" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
@@ -243,14 +243,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	{
 		return node;
 	}
-
-	// Create the ShaderNode for this shader output
-
-	string nodeName(
-		namePrefix +
-		outputParameter.shader.string()
-	);
-	node->name = nodeName.c_str();
 
 	if( isOutput )
 	{
@@ -284,6 +276,14 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load shader \"%s\"" ) % shader->getName() );
 		return node;
 	}
+
+	// Create the ShaderNode for this shader output
+
+	string nodeName(
+		namePrefix +
+		outputParameter.shader.string()
+	);
+	node->name = ccl::ustring( nodeName.c_str() );
 
 	// Set the shader parameters
 
@@ -336,17 +336,25 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		//{
 		//	sourceName = partitionEnd( sourceName, '.' );
 		//}
-		cshader->graph->connect( sourceNode->output( sourceName.c_str() ), node->input( parameterName.c_str() ) );
+		//auto *input = node->input( parameterName.c_str() );
+		//if( !input )
+		//{
+		//	msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't find input connection \"%s\"" ) % parameterName  );
+		//	continue;
+		//}
+		cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( sourceNode, sourceName ), 
+		                         IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) );
 	}
 
 	if( !isOutput && ( shaderNetwork->outputShader() == shader ) )
 	{
-		// In the cases where there is no cycles_shader attached in the network
+		// In the cases where there is no cycles output attached in the network
 		// we just connect to the main output node of the cycles shader graph.
 		// Either ccl:surface, ccl:volume or ccl:displacement.
-		auto *outputNode = (ccl::ShaderNode*)cshader->graph->output();
+		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
 		string input = string( shader->getType().c_str() + 4 );
-		cshader->graph->connect( node->output( outputParameter.name.string().c_str() ), outputNode->input( input.c_str() ) );
+		cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ), 
+		                         IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) );
 	}
 
 	return node;
@@ -360,6 +368,36 @@ namespace IECoreCycles
 namespace ShaderNetworkAlgo
 {
 
+// These functions do exist in Cycles, however they check the 'ui_name' and not
+// the true 'name' which is really annoying, so we check the 'name' with these.
+// We might as well use IECore::InternedString here also for a cleaner API.
+
+ccl::ShaderInput *input( ccl::ShaderNode *node, IECore::InternedString name )
+{
+	ccl::ustring cname = ccl::ustring( name.c_str() );
+	for( ccl::ShaderInput *socket : node->inputs )
+	{
+		if( socket->socket_type.name == cname )
+			return socket;
+	}
+
+	msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't find socket input \"%s\" on shaderNode \"%s\"" ) % name.string() % string( node->name.c_str() ) );
+	return nullptr;
+}
+
+ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
+{
+	ccl::ustring cname = ccl::ustring( name.c_str() );
+	for( ccl::ShaderOutput *socket : node->outputs )
+	{
+		if( socket->socket_type.name == cname )
+			return socket;
+	}
+
+	msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't find socket output \"%s\" on shaderNode \"%s\"" ) % name.string() % string ( node->name.c_str() ) );
+	return nullptr;
+}
+
 ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::Scene *scene, const std::string &namePrefix )
 {
 	ShaderNetworkPtr networkCopy;
@@ -372,6 +410,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 
 	ShaderMap converted;
 	ccl::Shader *result = new ccl::Shader();
+	result->graph = new ccl::ShaderGraph();
 	const InternedString output = shaderNetwork->getOutput().shader;
 	if( output.string().empty() )
 	{

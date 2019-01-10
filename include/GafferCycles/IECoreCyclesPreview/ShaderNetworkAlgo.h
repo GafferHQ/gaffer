@@ -40,6 +40,7 @@
 #include "IECoreScene/ShaderNetwork.h"
 
 // Cycles
+#include "render/graph.h"
 #include "render/shader.h"
 #include "render/scene.h"
 
@@ -48,6 +49,9 @@ namespace IECoreCycles
 
 namespace ShaderNetworkAlgo
 {
+
+ccl::ShaderInput *input( ccl::ShaderNode *node, IECore::InternedString name );
+ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name );
 
 ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::Scene *scene, const std::string &namePrefix = "" );
 
