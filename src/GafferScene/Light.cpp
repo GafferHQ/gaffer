@@ -99,6 +99,13 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 	if( input == defaultLightPlug() )
 	{
+		// \todo: Perhaps this is indicative of a hole in the ObjectSource API. In
+		// theory the Light class has no responsibility towards the `setPlug()` since
+		// that is meant to be dealt with in the ObjectSource base class. The
+		// subclasses are meant to only worry about `hashStandardSetNames()` and
+		// `computeStandardSetNames()`. We should maybe have a matching `virtual bool
+		// affectsStandardSetNames( const Plug *input )` that subclasses implement
+		// and is called in `ObjectSource::affects()`
 		outputs.push_back( outPlug()->setNamesPlug() );
 		outputs.push_back( outPlug()->setPlug() );
 	}
