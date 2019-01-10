@@ -566,7 +566,7 @@ class RenderCallback : public IECore::RefCounted
 
 			float exposure = m_session->scene->film->exposure;
 
-			const int numOutputChannels = m_displayDriver->channelNames().size();
+			const int numOutputChannels = m_interactive ? m_displayDriver->channelNames().size() : 1;
 
 			// Pixels we will use to get from cycles.
 			vector<float> tileData( w * h * 4 );
@@ -1632,10 +1632,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		~CyclesRenderer() override
 		{
 			pause();
+
+			// Cycles created the defaultCamera, so we give it back for it to delete.
+			m_scene->camera = m_defaultCamera;
+
 			m_attributesCache.reset();
 			m_instanceCache.reset();
 			m_shaderCache.reset();
 			m_lightCache.reset();
+			m_cameraCache.reset();
 			m_outputs.clear();
 
 			// Gaffer has already deleted these, so we can't double-delete
@@ -2099,6 +2104,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_outputs[name] = new CyclesOutput( output );
 			}
+			else if ( output->getData() == "rgba" )
+			{
+				m_outputs[name] = new CyclesOutput( output );
+			}
 			else
 				return;
 
@@ -2242,6 +2251,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else if( m_shadingsystemName == "SVM" )
 				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
 
+			// Sane defaults, not INT_MAX
+			m_sessionParams.samples = 128;
+			m_sessionParams.start_resolution = 64;
+
 			// Fallback
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
@@ -2377,17 +2390,20 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_bufferParams.width =  (int)(border.right * (float)width) - m_bufferParams.full_x;
 			m_bufferParams.height = (int)(border.top * (float)height) - m_bufferParams.full_y;
 
-			if( m_session->buffers->params.modified( m_bufferParams ) )
+			if( m_session->buffers )
 			{
-				m_session->reset( m_bufferParams, m_sessionParams.samples );
-				m_renderCallback->updateOutputs( m_outputs );
-				if( m_renderType != Interactive )
+				if( !m_session->buffers->params.modified( m_bufferParams ) )
+					return;
+			}
+
+			m_session->reset( m_bufferParams, m_sessionParams.samples );
+			m_renderCallback->updateOutputs( m_outputs );
+			if( m_renderType != Interactive )
+			{
+				for( auto &output : m_outputs )
 				{
-					for( auto &output : m_outputs )
-					{
-						CyclesOutput *co = output.second.get();
-						co->createImage( cam );
-					}
+					CyclesOutput *co = output.second.get();
+					co->createImage( cam );
 				}
 			}
 		}
