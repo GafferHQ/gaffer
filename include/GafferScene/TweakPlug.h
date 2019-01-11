@@ -98,6 +98,11 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 		/// when editing a ShaderNetwork.
 		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork );
 
+	private :
+
+		Gaffer::ValuePlug *valuePlugInternal();
+		const Gaffer::ValuePlug *valuePlugInternal() const;
+
 };
 
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TweakPlug> > TweakPlugIterator;
@@ -105,5 +110,7 @@ typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invali
 IE_CORE_DECLAREPTR( TweakPlug )
 
 } // namespace GafferScene
+
+#include "GafferScene/TweakPlug.inl"
 
 #endif // GAFFERSCENE_TWEAKPLUG_H
