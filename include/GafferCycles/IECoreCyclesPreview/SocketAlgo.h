@@ -57,6 +57,7 @@ IECORECYCLES_API ccl::float2 setVector( const Imath::V2f &vector );
 IECORECYCLES_API ccl::float3 setVector( const Imath::V3f &vector );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color3f &color );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color4f &color );
+IECORECYCLES_API float setAlpha( const Imath::Color4f &color );
 IECORECYCLES_API ccl::Transform setTransform( const Imath::M44d &matrix );
 IECORECYCLES_API ccl::Transform setTransform( const Imath::M44f &matrix );
 

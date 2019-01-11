@@ -138,21 +138,26 @@ ccl::float3 setColor( const Imath::Color4f &color )
 	return ccl::make_float3( color[0], color[1], color[2] );
 }
 
+float setAlpha( const Imath::Color4f &color )
+{
+	return color[3];
+}
+
 ccl::Transform setTransform( const Imath::M44d &matrix )
 {
 	ccl::Transform t;
-	t.x = ccl::make_float4((float)matrix[0][0], (float)matrix[0][1], (float)matrix[0][2], (float)matrix[0][3]);
-	t.y = ccl::make_float4((float)matrix[1][0], (float)matrix[1][1], (float)matrix[1][2], (float)matrix[1][3]);
-	t.z = ccl::make_float4((float)matrix[2][0], (float)matrix[2][1], (float)matrix[2][2], (float)matrix[2][3]);
+	t.x = ccl::make_float4( (float)matrix[0][0], (float)matrix[1][0], (float)matrix[2][0], (float)matrix[3][0] );
+	t.y = ccl::make_float4( (float)matrix[0][1], (float)matrix[1][1], (float)matrix[2][1], (float)matrix[3][1] );
+	t.z = ccl::make_float4( (float)matrix[0][2], (float)matrix[1][2], (float)matrix[2][2], (float)matrix[3][2] );
 	return t;
 }
 
 ccl::Transform setTransform( const Imath::M44f &matrix )
 {
 	ccl::Transform t;
-	t.x = ccl::make_float4(matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]);
-	t.y = ccl::make_float4(matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3]);
-	t.z = ccl::make_float4(matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3]);
+	t.x = ccl::make_float4( matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0] );
+	t.y = ccl::make_float4( matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1] );
+	t.z = ccl::make_float4( matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2] );
 	return t;
 }
 
@@ -179,10 +184,11 @@ Imath::Color4f getColor( const ccl::float4 color )
 Imath::M44f getTransform( const ccl::Transform transform )
 {
 	return Imath::M44f( 
-				transform.x.x, transform.x.y, transform.x.z, transform.x.w,
-				transform.y.x, transform.y.y, transform.y.z, transform.y.w,
-				transform.z.x, transform.z.y, transform.z.z, transform.z.w,
-				0.0f,  0.0f,  0.0f,  1.0f );
+		transform.x.x, transform.y.x, transform.z.x, 0.0f,
+		transform.x.y, transform.y.y, transform.z.y, 0.0f,
+		transform.x.z, transform.y.z, transform.z.z, 0.0f,
+		transform.x.w, transform.y.w, transform.z.w, 1.0f
+		);
 }
 
 void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )

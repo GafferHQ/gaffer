@@ -133,7 +133,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	// If we need to convert
 	MeshPrimitivePtr trimesh;
 
-	if( ( mesh->interpolation() == "catmullClark" ) || !triangles )
+	if( ( mesh->interpolation() == "catmullClark" ) )//|| !triangles )
 	{
 		subdivision = true;
 		cmesh->subdivision_type = (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR;
@@ -161,10 +161,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	else
 	{
 		cmesh->subdivision_type = (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE;
-		cmesh->reserve_mesh(numVerts, numFaces);
-
-		for( size_t i = 0; i < numVerts; i++ )
-			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
 		if( !triangles )
 		{
@@ -179,18 +175,29 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			}
 			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
 
+			const size_t triNumFaces = trimesh->numFaces();
+			cmesh->reserve_mesh(numVerts, triNumFaces);
+
+			for( size_t i = 0; i < numVerts; i++ )
+				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+
 			for( size_t i = 0; i < triVertexIds.size(); i+= 3 )
 				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
 		}
 		else
 		{
+			cmesh->reserve_mesh(numVerts, numFaces);
+
+			for( size_t i = 0; i < numVerts; i++ )
+				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+
 			for( size_t i = 0; i < vertexIds.size(); i+= 3 )
 				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
 		}
 	}
 
 	// TODO: Maybe move this to attibutes so it can be shared between meshes?
-	if( ( cmesh->subdivision_type != ccl::Mesh::SUBDIVISION_NONE ) && ( !cmesh->subd_params ) )
+	if( ( subdivision ) && ( cmesh->subdivision_type != ccl::Mesh::SUBDIVISION_NONE ) && ( !cmesh->subd_params ) )
 		cmesh->subd_params = new ccl::SubdParams( cmesh );
 
 	// Primitive Variables are Attributes in Cycles

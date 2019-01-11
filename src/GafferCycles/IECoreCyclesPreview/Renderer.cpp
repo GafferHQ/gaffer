@@ -47,6 +47,7 @@
 #include "IECoreImage/DisplayDriver.h"
 #include "IECoreImage/ImageDisplayDriver.h"
 #include "IECoreImage/ImagePrimitive.h"
+#include "IECoreImage/ImageWriter.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/CurvesPrimitive.h"
@@ -315,7 +316,7 @@ class CyclesOutput : public IECore::RefCounted
 			m_data = output->getData();
 			m_passType = nameToPassType( m_data );
 			m_components = passComponents( m_passType );
-			//m_parameters = output->parameters();
+			m_parameters = output->parametersData()->copy();
 
 			const vector<int> quantize = parameter<vector<int>>( output->parameters(), "quantize", { 0, 0, 0, 0 } );
 			if( quantize == vector<int>( { 0, 255, 0, 255 } ) )
@@ -403,7 +404,7 @@ class CyclesOutput : public IECore::RefCounted
 				auto channel = image->createChannel<float>( "A" );
 				channel->writable() = data->readable();
 			}
-			IECore::WriterPtr writer = IECore::Writer::create( image, "tmp." + m_type );
+			IECore::WriterPtr writer = IECoreImage::ImageWriter::create( image, "tmp." + m_type );
 			if( !writer )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Unsupported display type \"%s\"." ) % m_type );
@@ -468,12 +469,14 @@ class RenderCallback : public IECore::RefCounted
 				V2i( camera->width - 1, camera->height - 1 )
 				);
 
-			CompoundDataPtr parameters = new CompoundData();
+			//CompoundDataPtr parameters = new CompoundData();
+			//auto &p = parameters->writable();
+
 			std::vector<std::string> channelNames;
 
-			for( auto &output : outputs )
+			for( auto &output : m_outputs )
 			{
-				std::string namePrefix = output.first.string();
+				std::string namePrefix = output.second->m_data;
 				auto passType = output.second->m_passType;
 				int components = passComponents( passType );
 
@@ -510,13 +513,19 @@ class RenderCallback : public IECore::RefCounted
 
 			if( m_interactive )
 			{
-				m_displayDriver = DisplayDriver::create(
-					"ieDisplay",
-					displayWindow, 
-					dataWindow, 
-					channelNames,
-					parameters
-					);
+				const auto bIt = m_outputs.find( "Interactive/Beauty" );
+				if( bIt != m_outputs.end() )
+				{
+					const auto parameters = bIt->second->m_parameters;
+					const StringData *driverType = parameters->member<StringData>( "driverType", true );
+					m_displayDriver = DisplayDriver::create(
+						driverType->readable(),
+						displayWindow, 
+						dataWindow, 
+						channelNames,
+						parameters
+						);
+				}
 			}
 		}
 /*
@@ -1597,7 +1606,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_integratorCache( new ccl::Integrator() ),
 				m_backgroundCache( new ccl::Background() ),
 				m_filmCache( new ccl::Film() ),
-				m_curveSystemManagerCache( new ccl::CurveSystemManager() )
+				m_curveSystemManagerCache( new ccl::CurveSystemManager() ),
+				m_rendering( false )
 		{
 			/*
 			ccl::vector<ccl::DeviceType>& device_types = ccl::Device::available_types();
@@ -2251,9 +2261,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else if( m_shadingsystemName == "SVM" )
 				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
 
-			// Sane defaults, not INT_MAX
-			m_sessionParams.samples = 128;
-			m_sessionParams.start_resolution = 64;
+			if( m_renderType != Interactive )
+			{
+				// Sane defaults, not INT_MAX
+				m_sessionParams.samples = 128;
+				m_sessionParams.start_resolution = 64;
+			}
 
 			// Fallback
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
@@ -2285,15 +2298,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = device_fallback;
 			}
 
-			// Create render callback
-			if( m_renderType != Interactive )
-			{
-				m_sessionParams.background = true;
-			}
-			else
-			{
-				m_sessionParams.background = false;
-			}
+			m_sessionParams.background = true;
 
 			m_session = new ccl::Session( m_sessionParams );
 			m_session->scene = m_scene;

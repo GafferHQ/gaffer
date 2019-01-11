@@ -688,7 +688,7 @@ Gaffer.Metadata.registerNode(
 			Random sampling pattern used by the integrator.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Sampling",
 
 		],
 
@@ -708,7 +708,7 @@ Gaffer.Metadata.registerNode(
 			Sample all lights (for direct samples), rather than randomly picking one.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Sampling",
 
 		],
 
@@ -719,7 +719,7 @@ Gaffer.Metadata.registerNode(
 			Sample all lights (for indirect samples), rather than randomly picking one.
 			""",
 
-			"layout:section", "Rendering",
+			"layout:section", "Sampling",
 
 		],
 
