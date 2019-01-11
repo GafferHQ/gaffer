@@ -182,7 +182,13 @@ class Shader::NetworkBuilder
 			{
 				if( isOutputParameter( p ) )
 				{
-					return shaderHash( static_cast<const Shader *>( p->node() ) );
+					auto shader = static_cast<const Shader *>( p->node() );
+					IECore::MurmurHash result = shaderHash( shader );
+					if( p != shader->outPlug() )
+					{
+						result.append( p->relativeName( shader->outPlug() ) );
+					}
+					return result;
 				}
 			}
 
@@ -198,8 +204,14 @@ class Shader::NetworkBuilder
 				{
 					if( isOutputParameter( p ) )
 					{
-						const IECore::InternedString outputHandle = handle( static_cast<const Shader *>( p->node() ) );
-						m_network->setOutput( { outputHandle } );
+						auto shader = static_cast<const Shader *>( p->node() );
+						const IECore::InternedString outputHandle = handle( shader );
+						IECore::InternedString outputName;
+						if( p != shader->outPlug() )
+						{
+							outputName = p->relativeName( shader->outPlug() );
+						}
+						m_network->setOutput( { outputHandle, outputName } );
 					}
 				}
 			}
