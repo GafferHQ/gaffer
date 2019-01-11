@@ -51,12 +51,12 @@ namespace GafferScene
 /// Represents a "tweak" - an adjustment with a name, a mode, and a value,
 /// and an enable flag.  Can be used to add/subtract/multiply/replace or
 /// remove parameters, for example in the ShaderTweaks or CameraTweaks nodes.
-class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
+class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::Plug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::ValuePlug );
 
 		enum Mode
 		{
