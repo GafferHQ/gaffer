@@ -40,6 +40,7 @@ import imath
 import random
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -1052,6 +1053,34 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		n["n2"]["parameters"]["a"].setInput( n["n1"]["out"]["out"] )
 		self.assertEqual( n["n2"]["parameters"]["a"].getValue(), imath.Color3f( 0 ) )
+
+	def testOutputNameIncludedInNetwork( self ) :
+
+		shader = GafferOSL.OSLShader( "globals" )
+		shader.loadShader( "Utility/Globals" )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( shader["out"] )
+		network1 = shaderPlug.attributes()["osl:shader"]
+		hash1 = shaderPlug.attributesHash()
+
+		shaderPlug.setInput( shader["out"]["globalP"] )
+		network2 = shaderPlug.attributes()["osl:shader"]
+		hash2 = shaderPlug.attributesHash()
+
+		shaderPlug.setInput( shader["out"]["globalN"] )
+		network3 = shaderPlug.attributes()["osl:shader"]
+		hash3 = shaderPlug.attributesHash()
+
+		self.assertEqual( network1.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals" ) )
+		self.assertEqual( network2.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals", "globalP" ) )
+		self.assertEqual( network3.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals", "globalN" ) )
+
+		self.assertEqual( network1.getShader( "global" ), network2.getShader( "global" ) )
+		self.assertEqual( network1.getShader( "global" ), network3.getShader( "global" ) )
+
+		self.assertNotEqual( hash1, hash2 )
+		self.assertNotEqual( hash2, hash3 )
 
 if __name__ == "__main__":
 	unittest.main()
