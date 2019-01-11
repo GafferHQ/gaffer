@@ -131,21 +131,22 @@ class Application( IECore.Parameterised ) :
 
 	def __run( self ) :
 
-		# Update the default message handler so gaffer can give more context to messages
-		# in when the level is set to DEBUG
+		threads = self.parameters()["threads"].getTypedValue()
 
-		messageHandler = Gaffer.ProcessMessageHandler( IECore.MessageHandler.currentHandler() )
-		with messageHandler:
+		with IECore.tbb_task_scheduler_init(
+			IECore.tbb_task_scheduler_init.automatic if threads == 0 else threads
+		) :
 
-			threads = self.parameters()["threads"].getTypedValue()
+			self._executeStartupFiles( self.root().getName() )
 
-			with IECore.tbb_task_scheduler_init(
-				IECore.tbb_task_scheduler_init.automatic if threads == 0 else threads
-			) :
+			# Append DEBUG message with process information to all messages
+			defaultMessageHandler = IECore.MessageHandler.getDefaultHandler()
+			if not isinstance( defaultMessageHandler, Gaffer.ProcessMessageHandler ) :
+				IECore.MessageHandler.setDefaultHandler(
+					Gaffer.ProcessMessageHandler( defaultMessageHandler )
+				)
 
-				self._executeStartupFiles( self.root().getName() )
-
-				return self._run( self.parameters().getValidatedValue() )
+			return self._run( self.parameters().getValidatedValue() )
 
 	def __formatHelp( self ) :
 
