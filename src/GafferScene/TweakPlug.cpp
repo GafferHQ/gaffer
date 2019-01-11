@@ -116,16 +116,14 @@ const Gaffer::IntPlug *TweakPlug::modePlug() const
 	return getChild<IntPlug>( 2 );
 }
 
-template<typename T>
-T *TweakPlug::valuePlug()
+Gaffer::ValuePlug *TweakPlug::valuePlugInternal()
 {
-	return getChild<T>( 3 );
+	return getChild<ValuePlug>( 3 );
 }
 
-template<typename T>
-const T *TweakPlug::valuePlug() const
+const Gaffer::ValuePlug *TweakPlug::valuePlugInternal() const
 {
-	return getChild<T>( 3 );
+	return getChild<ValuePlug>( 3 );
 }
 
 bool TweakPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
