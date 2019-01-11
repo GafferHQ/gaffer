@@ -79,7 +79,7 @@ TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, M
 }
 
 TweakPlug::TweakPlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	addChild( new StringPlug( "name" ) );
 	addChild( new BoolPlug( "enabled", Plug::In, true ) );
