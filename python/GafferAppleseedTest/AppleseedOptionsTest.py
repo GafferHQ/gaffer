@@ -54,7 +54,7 @@ class AppleseedOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["o"] = GafferAppleseed.AppleseedOptions()
-		s["o"]["options"]["aaSamples"]["value"].setValue( 1 )
+		s["o"]["options"]["maxAASamples"]["value"].setValue( 1 )
 		names = s["o"]["options"].keys()
 
 		s2 = Gaffer.ScriptNode()
@@ -62,7 +62,7 @@ class AppleseedOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s2["o"]["options"].keys(), names )
 		self.assertTrue( "options1" not in s2["o"] )
-		self.assertEqual( s2["o"]["options"]["aaSamples"]["value"].getValue(), 1 )
+		self.assertEqual( s2["o"]["options"]["maxAASamples"]["value"].getValue(), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

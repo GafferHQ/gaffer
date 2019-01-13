@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+#  Copyright (c) 2018, Esteban Tovagliari. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,30 +35,62 @@
 ##########################################################################
 
 import os
-import subprocess32 as subprocess
+import unittest
 
-def appleseedProjectSchemaPath():
+import IECore
+import IECoreScene
+import IECoreImage
 
-	return os.path.join( os.environ["APPLESEED"], "schemas", "project.xsd" )
+import Gaffer
+import GafferTest
+import GafferScene
+import GafferSceneTest
+import GafferImage
+import GafferOSL
+import GafferAppleseed
 
-def appleseedBinPath():
+from AppleseedTest import compileOSLShader
 
-	return os.path.join( os.environ["APPLESEED"], "bin" )
+class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
-def appleseedOSLHeadersPath():
+	# Disabled since appleseed does not support multiple beauty outputs.
+	@unittest.expectedFailure
+	def testAddAndRemoveOutput( self ):
 
-	return os.path.join( os.environ["APPLESEED"], "shaders" )
+		self.assertTrue( False )
 
-def compileOSLShader( sourceFileName, tempDir ) :
+	# Disabled since appleseed does not support trace sets.
+	@unittest.expectedFailure
+	def testTraceSets( self ) :
 
-	outputFileName = tempDir + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
+		self.assertTrue( False )
 
-	oslc = os.path.join( appleseedBinPath(), "oslc" )
+	def _createInteractiveRender( self ) :
 
-	subprocess.check_call(
-		[ oslc, "-q" ] +
-		[ "-I" + appleseedOSLHeadersPath() ] +
-		[ "-o", outputFileName, sourceFileName ]
-	)
+		return GafferAppleseed.InteractiveAppleseedRender()
 
-	return os.path.splitext( outputFileName )[0]
+	def _createConstantShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader(
+			compileOSLShader( os.path.dirname( __file__ ) + "/shaders/constant.osl",
+			self.temporaryDirectory() ) )
+		return shader, shader["parameters"]["constant_color"]
+
+	def _createMatteShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader(
+			compileOSLShader( os.path.dirname( __file__ ) + "/shaders/matte.osl",
+			self.temporaryDirectory() ) )
+		return shader, shader["parameters"]["Kd_color"]
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "as:visibility:camera"
+
+	def _createPointLight( self ) :
+
+		light = GafferAppleseed.AppleseedLight( "point_light" )
+		light.loadShader( "point_light" )
+		return light, light['parameters']['intensity']

@@ -1,0 +1,8 @@
+
+surface constant(color constant_color = color(1))
+{
+    if (raytype("npr"))
+        Ci = constant_color * as_npr_shading();
+    else
+        Ci = 0;
+}
