@@ -39,6 +39,7 @@
 
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/ShaderView.h"
+#include "GafferSceneUI/UVView.h"
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -242,6 +243,41 @@ struct SceneChangedSlotCaller
 
 } // namespace
 
+//////////////////////////////////////////////////////////////////////////
+// UVView binding utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void setPaused( UVView &v, bool paused )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.setPaused( paused );
+}
+
+struct UVViewSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, UVViewPtr g )
+	{
+		try
+		{
+			slot( g );
+		}
+		catch( const error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Public API
+//////////////////////////////////////////////////////////////////////////
+
 void GafferSceneUIModule::bindViews()
 {
 
@@ -270,5 +306,21 @@ void GafferSceneUIModule::bindViews()
 
 	SignalClass<ShaderView::SceneChangedSignal, DefaultSignalCaller<ShaderView::SceneChangedSignal>, SceneChangedSlotCaller>( "SceneChangedSignal" );
 
+	{
+		scope s = GafferBindings::NodeClass<UVView>()
+			.def( "setPaused", &setPaused )
+			.def( "getPaused", &UVView::getPaused )
+			.def( "state", &UVView::state )
+			.def( "stateChangedSignal", &UVView::stateChangedSignal, return_internal_reference<1>() )
+		;
+
+		enum_<UVView::State>( "State" )
+			.value( "Paused", UVView::Paused )
+			.value( "Running", UVView::Running )
+			.value( "Complete", UVView::Complete )
+		;
+
+		SignalClass<UVView::UVViewSignal, DefaultSignalCaller<UVView::UVViewSignal>, UVViewSlotCaller>( "UVViewSignal" );
+	}
 
 }
