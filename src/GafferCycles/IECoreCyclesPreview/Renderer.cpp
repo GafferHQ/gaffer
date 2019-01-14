@@ -1163,21 +1163,20 @@ class InstanceCache : public IECore::RefCounted
 				updateMeshes();
 
 			// Objects
-			bool objectsDirty = false;
+			vector<SharedCObjectPtr> objectsKeep;
 			for( vector<SharedCObjectPtr>::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
 			{
-				if( it->unique() )
+				if( !it->unique() )
 				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// instance.
-					m_objects.erase( it );
-					objectsDirty = true;
+					objectsKeep.push_back( *it );
 				}
 			}
 
-			if( objectsDirty )
+			if( objectsKeep.size() )
+			{
+				m_objects = objectsKeep;
 				updateObjects();
+			}
 		}
 
 	private :
@@ -1261,21 +1260,20 @@ class LightCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			bool lightsDirty = false;
-			for( vector<SharedCLightPtr>::iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
+			vector<SharedCLightPtr> lightsKeep;
+			for( vector<SharedCLightPtr>::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
 			{
-				if( it->unique() )
+				if( !it->unique() )
 				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// instance.
-					m_lights.erase( it );
-					lightsDirty = true;
+					lightsKeep.push_back( *it );
 				}
 			}
 
-			if( lightsDirty )
+			if( lightsKeep.size() )
+			{
+				m_lights = lightsKeep;
 				updateLights();
+			}
 		}
 
 	private :
@@ -2543,6 +2541,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_session->scene = m_scene;
 
+			m_scene->camera->need_update = true;
+			m_scene->camera->update( m_scene );
+
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
 		}
 
@@ -2680,16 +2681,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					co->writeImage();
 				}
 			}
-		}
-
-		void tagRedraw()
-		{
-			return;
-		}
-
-		void testCancel()
-		{
-			return;
 		}
 
 		void progress()
