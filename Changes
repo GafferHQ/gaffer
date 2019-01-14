@@ -1,3 +1,16 @@
+0.52.3.4 (relative to 0.52.3.3)
+========
+
+Fixes
+-----
+
+- Primitive Inspector : Fixed EditorWidget error (#2958).
+- Graph Editor : Fixed scaling so it is centred on cursor position (#2965).
+- Animation : Fixed possible deadlock when setting a key (#2970).
+- ImageGadget : Fixed conflict with GLSL 'active' keyword (#2971).
+- Light : Fixed light linking during IPR update (#2969).
+- gui app : Fixed keypress handling of Ctrl+B (#2975).
+
 0.52.3.3 (relative to 0.52.3.2)
 ========
 
