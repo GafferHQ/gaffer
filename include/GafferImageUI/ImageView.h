@@ -105,6 +105,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
 		static void registeredDisplayTransforms( std::vector<std::string> &names );
+		static GafferImage::ImageProcessorPtr createDisplayTransform( const std::string &name );
 
 	protected :
 

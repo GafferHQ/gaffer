@@ -109,6 +109,12 @@ boost::python::list registeredDisplayTransforms()
 	return result;
 }
 
+ImageProcessorPtr createDisplayTransform( const std::string &name )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return ImageView::createDisplayTransform( name );
+}
+
 } // namespace
 
 void GafferImageUIModule::bindImageView()
@@ -121,6 +127,8 @@ void GafferImageUIModule::bindImageView()
 		.staticmethod( "registerDisplayTransform" )
 		.def( "registeredDisplayTransforms", &registeredDisplayTransforms )
 		.staticmethod( "registeredDisplayTransforms" )
+		.def( "createDisplayTransform", &createDisplayTransform )
+		.staticmethod( "createDisplayTransform" )
 	;
 
 }
