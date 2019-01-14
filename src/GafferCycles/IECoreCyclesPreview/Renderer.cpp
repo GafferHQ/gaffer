@@ -211,7 +211,6 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS( "motion", ccl::PASS_MOTION );
 	MAP_PASS( "motion_weight", ccl::PASS_MOTION_WEIGHT );
 	MAP_PASS( "render_time", ccl::PASS_RENDER_TIME );
-	MAP_PASS( "cryptomatte", ccl::PASS_CRYPTOMATTE );
 	MAP_PASS( "mist", ccl::PASS_MIST );
 	MAP_PASS( "emission", ccl::PASS_EMISSION );
 	MAP_PASS( "background", ccl::PASS_BACKGROUND );
@@ -237,6 +236,9 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS( "subsurface_color", ccl::PASS_SUBSURFACE_COLOR );
 	MAP_PASS( "volume_direct", ccl::PASS_VOLUME_DIRECT );
 	MAP_PASS( "volume_indirect", ccl::PASS_VOLUME_INDIRECT );
+	MAP_PASS( "cryptomatte_asset", ccl::PASS_CRYPTOMATTE );
+	MAP_PASS( "cryptomatte_object", ccl::PASS_CRYPTOMATTE );
+	MAP_PASS( "cryptomatte_material", ccl::PASS_CRYPTOMATTE );
 #undef MAP_PASS
 
 	return ccl::PASS_NONE;
@@ -317,6 +319,8 @@ class CyclesOutput : public IECore::RefCounted
 			m_passType = nameToPassType( m_data );
 			m_components = passComponents( m_passType );
 			m_parameters = output->parametersData()->copy();
+			if( m_type == "ieDisplay" )
+				m_interactive = true;
 
 			const vector<int> quantize = parameter<vector<int>>( output->parameters(), "quantize", { 0, 0, 0, 0 } );
 			if( quantize == vector<int>( { 0, 255, 0, 255 } ) )
@@ -382,28 +386,12 @@ class CyclesOutput : public IECore::RefCounted
 
 		void writeImage()
 		{
-			auto displayImg = m_image->image();
-			IECoreImage::ImagePrimitivePtr image = new IECoreImage::ImagePrimitive();
-			if( auto data = displayImg->getChannel<float>( "R" ) )
+			if( !m_image )
 			{
-				auto channel = image->createChannel<float>( "R" );
-				channel->writable() = data->readable();
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Cannot write output: \"%s\"." ) % m_name );
+				return;
 			}
-			if( auto data = displayImg->getChannel<float>( "G" ) )
-			{
-				auto channel = image->createChannel<float>( "G" );
-				channel->writable() = data->readable();
-			}
-			if( auto data = displayImg->getChannel<float>( "B" ) )
-			{
-				auto channel = image->createChannel<float>( "B" );
-				channel->writable() = data->readable();
-			}
-			if( auto data = displayImg->getChannel<float>( "A" ) )
-			{
-				auto channel = image->createChannel<float>( "A" );
-				channel->writable() = data->readable();
-			}
+			IECoreImage::ImagePrimitivePtr image = m_image->image()->copy();
 			IECore::WriterPtr writer = IECoreImage::ImageWriter::create( image, "tmp." + m_type );
 			if( !writer )
 			{
@@ -427,6 +415,7 @@ class CyclesOutput : public IECore::RefCounted
 		ImageDisplayDriverPtr m_image;
 		CompoundDataPtr m_parameters;
 		int m_components;
+		bool m_interactive;
 };
 
 IE_CORE_DECLAREPTR( CyclesOutput )
@@ -561,6 +550,18 @@ class RenderCallback : public IECore::RefCounted
 */
 		void writeRenderTile( ccl::RenderTile& rtile )
 		{
+			// Early-out if there's no output passes
+			if( m_outputs.empty() )
+			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", "No outputs to render to." );
+				return;
+			}
+			// Early-out if there's no interactive render passes
+			if( m_interactive && !m_displayDriver )
+			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", "No interactive outputs to render to." );
+				return;
+			}
 			const int x = rtile.x - m_session->tile_manager.params.full_x;
 			const int y = rtile.y - m_session->tile_manager.params.full_y;
 			const int w = rtile.w;
@@ -573,7 +574,7 @@ class RenderCallback : public IECore::RefCounted
 			if(!buffers->copy_from_device())
 				return;
 
-			float exposure = m_session->scene->film->exposure;
+			//float exposure = m_session->scene->film->exposure;
 
 			const int numOutputChannels = m_interactive ? m_displayDriver->channelNames().size() : 1;
 
@@ -595,8 +596,12 @@ class RenderCallback : public IECore::RefCounted
 			int outChannelOffset = 0;
 			for( auto &output : m_outputs )
 			{
+				if( m_interactive && !output.second->m_interactive )
+					continue;
+				if( !m_interactive && output.second->m_interactive )
+					continue;
 				int numChannels = output.second->m_components;
-				buffers->get_pass_rect( output.second->m_passType, exposure, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
+				buffers->get_pass_rect( output.second->m_passType, 0.0f, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
 				if( m_interactive )
 				{
 					for( int c = 0; c < numChannels; c++ )
@@ -624,6 +629,7 @@ class RenderCallback : public IECore::RefCounted
 			if( m_interactive )
 			{
 				m_displayDriver->imageData( tile, &interleavedData[0], w * h * numOutputChannels );
+				//m_displayDriver->imageData( tile, &tileData[0], w * h * 4 );
 			}
 		}
 
@@ -733,7 +739,9 @@ class ShaderCache : public IECore::RefCounted
 			{
 				if( it->second )
 				{
-					shaders.push_back( it->second.get() );
+					ccl::Shader *cshader = it->second.get();
+					shaders.push_back( cshader );
+					cshader->tag_update( m_scene );
 				}
 			}
 		}
@@ -1547,12 +1555,11 @@ IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
-IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
 // Session
+IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
 IECore::InternedString g_backgroundOptionName( "ccl:session:background" );
 IECore::InternedString g_progressiveRefineOptionName( "ccl:session:progressive_refine" );
 IECore::InternedString g_progressiveOptionName( "ccl:session:progressive" );
-IECore::InternedString g_experimentalOptionName( "ccl:session:experimental" );
 IECore::InternedString g_samplesOptionName( "ccl:session:samples" );
 IECore::InternedString g_tileSizeOptionName( "ccl:session:tile_size" );
 IECore::InternedString g_tileOrderOptionName( "ccl:session:tile_order" );
@@ -1599,7 +1606,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_deviceName( "CPU" ),
-				m_shadingsystemName( "OSL" ),
+				m_shadingsystemName( "SVM" ),
 				m_session( nullptr ),
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
@@ -1607,27 +1614,32 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_backgroundCache( new ccl::Background() ),
 				m_filmCache( new ccl::Film() ),
 				m_curveSystemManagerCache( new ccl::CurveSystemManager() ),
+				m_curveSystemManagerDefault( new ccl::CurveSystemManager() ), // To restore default values
 				m_rendering( false )
 		{
-			/*
-			ccl::vector<ccl::DeviceType>& device_types = ccl::Device::available_types();
-			ccl::foreach(ccl::DeviceType type, device_types) {
-				if(device_names != "")
-					device_names += ", ";
+			// Session Defaults
+			m_sessionParams.display_buffer_linear = true;
 
-				device_names += Device::string_from_type(type);
+			if( m_shadingsystemName == "OSL" )
+				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+			else if( m_shadingsystemName == "SVM" )
+				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
+			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
+
+			if( m_renderType != Interactive )
+			{
+				// Sane defaults, not INT_MAX
+				m_sessionParams.samples = 128;
+				m_sessionParams.start_resolution = 64;
 			}
-			*/
 
-			// TODO: See if it makes sense for Gaffer to manage image stuff or just use Cycles built-in.
-			/*
-			m_scene->image_manager->builtin_image_info_cb = 
-				ccl::function_bind( &builtinImageInfo, this, ccl::_1, ccl::_2, ccl::_3 );
-			m_scene->image_manager->builtin_image_pixels_cb = 
-				ccl::function_bind( &builtinImagePixels, this, ccl::_1, ccl::_2, ccl::_3, ccl::_4, ccl::_5 );
-			m_scene->image_manager->builtin_image_float_pixels_cb = 
-				ccl::function_bind( &builtinImageFloatPixels, this, ccl::_1, ccl::_2, ccl::_3, ccl::_4, ccl::_5 );
-			*/
+			// The interactive renderer also runs in the background. Having
+			// this off makes more sense if we were to use Cycles as a
+			// viewport alternative to the OpenGL viewer.
+			m_sessionParams.background = true;
+
+			m_sessionParamsDefault = m_sessionParams;
+			m_sceneParamsDefault = m_sceneParams;
 
 			init();
 
@@ -1721,295 +1733,464 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:session:" ) )
+			else if( name == g_deviceOptionName )
 			{
-				//std::string param = name.c_str() + 12;
-				if( value )
+				if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 				{
-					if( name == g_deviceOptionName )
+					auto device_name = data->readable();
+					m_deviceName = device_name;
+				}
+				else if( value == nullptr )
+				{
+					m_deviceName = "CPU";
+				}
+				else
+				{
+					m_deviceName = "CPU";
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
+				}
+				return;
+			}
+			else if( name == g_shadingsystemOptionName )
+			{
+				if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+				{
+					auto shadingsystemName = data->readable();
+					if( shadingsystemName == "OSL" )
 					{
-						if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-						{
-							auto device_name = data->readable();
-							m_deviceName = device_name;
-						}
-						else
-						{
-							m_deviceName = "CPU";
-							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
-						}
-						return;
+						m_shadingsystemName = shadingsystemName;
+						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
 					}
-					else if( name == g_shadingsystemOptionName )
+					else if( shadingsystemName == "SVM" )
 					{
-						if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-						{
-							auto shadingsystemName = data->readable();
-							if( shadingsystemName == "OSL" )
-							{
-								m_shadingsystemName = shadingsystemName;
-								m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-								m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
-							}
-							else if( shadingsystemName == "SVM" )
-							{
-								m_shadingsystemName = shadingsystemName;
-								m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
-								m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
-							}
-							else
-							{
-								m_shadingsystemName = "OSL";
-								IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % shadingsystemName % name.string() );
-							}
-						}
-						else
-						{
-							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
-						}
-						return;
-					}
-					else if( name == g_featureSetOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.experimental = data->readable();
-						return;
-					}
-					else if( name == g_backgroundOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.background = data->readable();
-						return;
-					}
-					else if( name == g_progressiveRefineOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.progressive_refine = data->readable();
-						return;
-					}
-					else if( name == g_progressiveOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.progressive = data->readable();
-						return;
-					}
-					else if( name == g_experimentalOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.experimental = data->readable();
-						return;
-					}
-					else if( name == g_samplesOptionName )
-					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sessionParams.samples = data->readable();
-						return;
-					}
-					else if( name == g_tileSizeOptionName )
-					{
-						if ( const V2iData *data = reportedCast<const V2iData>( value, "option", name ) )
-						{
-							auto d = data->readable();
-							m_sessionParams.tile_size = ccl::make_int2( d.x, d.y );
-						}
-						return;
-					}
-					else if( name == g_tileOrderOptionName )
-					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sessionParams.tile_order = (ccl::TileOrder)data->readable();
-						return;
-					}
-					else if( name == g_startResolutionOptionName )
-					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sessionParams.start_resolution = data->readable();
-						return;
-					}
-					else if( name == g_pixelSizeOptionName )
-					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sessionParams.pixel_size = data->readable();
-						return;
-					}
-					else if( name == g_threadsOptionName )
-					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sessionParams.threads = data->readable();
-						return;
-					}
-					else if( name == g_displayBufferLinearOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.display_buffer_linear = data->readable();
-						return;
-					}
-					else if( name == g_useDenoisingOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.use_denoising = data->readable();
-						return;
-					}
-					else if( name == g_denoisingRadiusOptionName )
-					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sessionParams.denoising_radius = data->readable();
-						return;
-					}
-					else if( name == g_denoisingStrengthOptionName )
-					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							m_sessionParams.denoising_strength = data->readable();
-						return;
-					}
-					else if( name == g_denoisingFeatureStrengthOptionName )
-					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							m_sessionParams.denoising_feature_strength = data->readable();
-						return;
-					}
-					else if( name == g_denoisingRelativePcaOptionName )
-					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sessionParams.denoising_relative_pca = data->readable();
-						return;
-					}
-					else if( name == g_cancelTimeoutOptionName )
-					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							m_sessionParams.cancel_timeout = (double)data->readable();
-						return;
-					}
-					else if( name == g_resetTimeoutOptionName )
-					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							m_sessionParams.reset_timeout = (double)data->readable();
-						return;
-					}
-					else if( name == g_textTimeoutOptionName )
-					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							m_sessionParams.text_timeout = (double)data->readable();
-						return;
-					}
-					else if( name == g_progressiveUpdateTimeoutOptionName )
-					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							m_sessionParams.progressive_update_timeout = (double)data->readable();
-						return;
+						m_shadingsystemName = shadingsystemName;
+						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
+						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
 					}
 					else
 					{
-						IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+						m_shadingsystemName = "OSL";
+						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
+						IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % shadingsystemName % name.string() );
+					}
+				}
+				else if( value == nullptr )
+				{
+					m_shadingsystemName = "OSL";
+					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+					m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
+				}
+				return;
+			}
+			else if( boost::starts_with( name.string(), "ccl:session:" ) )
+			{
+				if( name == g_featureSetOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.experimental = m_sessionParamsDefault.experimental;
 						return;
 					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.experimental = data->readable();
+					return;
+				}
+				else if( name == g_backgroundOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.background = m_sessionParamsDefault.background;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.background = data->readable();
+					return;
+				}
+				else if( name == g_progressiveRefineOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.progressive_refine = m_sessionParamsDefault.progressive_refine;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.progressive_refine = data->readable();
+					return;
+				}
+				else if( name == g_progressiveOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.progressive = m_sessionParamsDefault.progressive;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.progressive = data->readable();
+					return;
+				}
+				else if( name == g_samplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.samples = m_sessionParamsDefault.samples;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sessionParams.samples = data->readable();
+					return;
+				}
+				else if( name == g_tileSizeOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.tile_size = m_sessionParamsDefault.tile_size;
+						return;
+					}
+					if ( const V2iData *data = reportedCast<const V2iData>( value, "option", name ) )
+					{
+						auto d = data->readable();
+						m_sessionParams.tile_size = ccl::make_int2( d.x, d.y );
+					}
+					return;
+				}
+				else if( name == g_tileOrderOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.tile_order = m_sessionParamsDefault.tile_order;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sessionParams.tile_order = (ccl::TileOrder)data->readable();
+					return;
+				}
+				else if( name == g_startResolutionOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.start_resolution = m_sessionParamsDefault.start_resolution;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sessionParams.start_resolution = data->readable();
+					return;
+				}
+				else if( name == g_pixelSizeOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.pixel_size = m_sessionParamsDefault.pixel_size;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sessionParams.pixel_size = data->readable();
+					return;
+				}
+				else if( name == g_threadsOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.threads = m_sessionParamsDefault.threads;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sessionParams.threads = data->readable();
+					return;
+				}
+				else if( name == g_displayBufferLinearOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.display_buffer_linear = m_sessionParamsDefault.display_buffer_linear;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.display_buffer_linear = data->readable();
+					return;
+				}
+				else if( name == g_useDenoisingOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.use_denoising = m_sessionParamsDefault.use_denoising;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.use_denoising = data->readable();
+					return;
+				}
+				else if( name == g_denoisingRadiusOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.denoising_radius = m_sessionParamsDefault.denoising_radius;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sessionParams.denoising_radius = data->readable();
+					return;
+				}
+				else if( name == g_denoisingStrengthOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.denoising_strength = m_sessionParamsDefault.denoising_strength;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_sessionParams.denoising_strength = data->readable();
+					return;
+				}
+				else if( name == g_denoisingFeatureStrengthOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.denoising_feature_strength = m_sessionParamsDefault.denoising_feature_strength;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_sessionParams.denoising_feature_strength = data->readable();
+					return;
+				}
+				else if( name == g_denoisingRelativePcaOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.denoising_relative_pca = m_sessionParamsDefault.denoising_relative_pca;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.denoising_relative_pca = data->readable();
+					return;
+				}
+				else if( name == g_cancelTimeoutOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.cancel_timeout = m_sessionParamsDefault.cancel_timeout;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_sessionParams.cancel_timeout = (double)data->readable();
+					return;
+				}
+				else if( name == g_resetTimeoutOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.reset_timeout = m_sessionParamsDefault.reset_timeout;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_sessionParams.reset_timeout = (double)data->readable();
+					return;
+				}
+				else if( name == g_textTimeoutOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.text_timeout = m_sessionParamsDefault.text_timeout;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_sessionParams.text_timeout = (double)data->readable();
+				}
+				else if( name == g_progressiveUpdateTimeoutOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.progressive_update_timeout = m_sessionParamsDefault.progressive_update_timeout;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_sessionParams.progressive_update_timeout = (double)data->readable();
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+					return;
 				}
 			}
 			else if( boost::starts_with( name.string(), "ccl:scene:" ) )
 			{
-				if( value )
+				if( name == g_bvhTypeOptionName )
 				{
-					if( name == g_bvhTypeOptionName )
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sceneParams.bvh_type = (ccl::SceneParams::BVHType)data->readable();
+						m_sceneParams.bvh_type = m_sceneParamsDefault.bvh_type;
 						return;
 					}
-					else if( name == g_bvhLayoutOptionName )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sceneParams.bvh_type = (ccl::SceneParams::BVHType)data->readable();
+					return;
+				}
+				else if( name == g_bvhLayoutOptionName )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sceneParams.bvh_layout = (ccl::BVHLayout)data->readable();
+						m_sceneParams.bvh_layout = m_sceneParamsDefault.bvh_layout;
 						return;
 					}
-					else if( name == g_useBvhSpatialSplitOptionName )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sceneParams.bvh_layout = (ccl::BVHLayout)data->readable();
+					return;
+				}
+				else if( name == g_useBvhSpatialSplitOptionName )
+				{
+					if( value == nullptr )
 					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sceneParams.use_bvh_spatial_split = data->readable();
+						m_sceneParams.use_bvh_spatial_split = m_sceneParamsDefault.use_bvh_spatial_split;
 						return;
 					}
-					else if( name == g_useBvhUnalignedNodesOptionName )
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sceneParams.use_bvh_spatial_split = data->readable();
+					return;
+				}
+				else if( name == g_useBvhUnalignedNodesOptionName )
+				{
+					if( value == nullptr )
 					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sceneParams.use_bvh_unaligned_nodes = data->readable();
+						m_sceneParams.use_bvh_unaligned_nodes = m_sceneParamsDefault.use_bvh_unaligned_nodes;
 						return;
 					}
-					else if( name == g_numBvhTimeStepsOptionName )
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sceneParams.use_bvh_unaligned_nodes = data->readable();
+					return;
+				}
+				else if( name == g_numBvhTimeStepsOptionName )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sceneParams.num_bvh_time_steps = data->readable();
+						m_sceneParams.num_bvh_time_steps = m_sceneParamsDefault.num_bvh_time_steps;
 						return;
 					}
-					else if( name == g_persistentDataOptionName )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sceneParams.num_bvh_time_steps = data->readable();
+					return;
+				}
+				else if( name == g_persistentDataOptionName )
+				{
+					if( value == nullptr )
 					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							m_sceneParams.persistent_data = data->readable();
+						m_sceneParams.persistent_data = m_sceneParamsDefault.persistent_data;
 						return;
 					}
-					else if( name == g_textureLimitOptionName )
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sceneParams.persistent_data = data->readable();
+					return;
+				}
+				else if( name == g_textureLimitOptionName )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							m_sceneParams.texture_limit = data->readable();
+						m_sceneParams.texture_limit = m_sceneParamsDefault.texture_limit;
 						return;
 					}
-					else
-					{
-						IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-						return;
-					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_sceneParams.texture_limit = data->readable();
+					return;
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+					return;
 				}
 			}
 			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
 			{
-				if( value )
+				if( name == g_useCurvesOptionType )
 				{
-					if( name == g_useCurvesOptionType )
+					if( value == nullptr )
 					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							curveSystemManager->use_curves = data->readable();
+						curveSystemManager->use_curves = m_curveSystemManagerDefault->use_curves;
 						return;
 					}
-					else if( name == g_curveMinimumWidthOptionType )
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						curveSystemManager->use_curves = data->readable();
+					return;
+				}
+				else if( name == g_curveMinimumWidthOptionType )
+				{
+					if( value == nullptr )
 					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							curveSystemManager->minimum_width = data->readable();
+						curveSystemManager->minimum_width = m_curveSystemManagerDefault->minimum_width;
 						return;
 					}
-					else if( name == g_curveMaximumWidthOptionType )
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						curveSystemManager->minimum_width = data->readable();
+					return;
+				}
+				else if( name == g_curveMaximumWidthOptionType )
+				{
+					if( value == nullptr )
 					{
-						if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-							curveSystemManager->maximum_width = data->readable();
+						curveSystemManager->maximum_width = m_curveSystemManagerDefault->maximum_width;
 						return;
 					}
-					else if( name == g_curvePrimitiveOptionType )
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						curveSystemManager->maximum_width = data->readable();
+					return;
+				}
+				else if( name == g_curvePrimitiveOptionType )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							curveSystemManager->primitive = (ccl::CurvePrimitiveType)data->readable();
+						curveSystemManager->primitive = m_curveSystemManagerDefault->primitive;
 						return;
 					}
-					else if( name == g_curveShapeOptionType )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						curveSystemManager->primitive = (ccl::CurvePrimitiveType)data->readable();
+					return;
+				}
+				else if( name == g_curveShapeOptionType )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							curveSystemManager->curve_shape = (ccl::CurveShapeType)data->readable();
+						curveSystemManager->curve_shape = m_curveSystemManagerDefault->curve_shape;
 						return;
 					}
-					else if( name == g_curveResolutionOptionType )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						curveSystemManager->curve_shape = (ccl::CurveShapeType)data->readable();
+					return;
+				}
+				else if( name == g_curveResolutionOptionType )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							curveSystemManager->resolution = data->readable();
+						curveSystemManager->resolution = m_curveSystemManagerDefault->resolution;
 						return;
 					}
-					else if( name == g_curveSubdivisionsOptionType )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						curveSystemManager->resolution = data->readable();
+					return;
+				}
+				else if( name == g_curveSubdivisionsOptionType )
+				{
+					if( value == nullptr )
 					{
-						if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							curveSystemManager->subdivisions = data->readable();
+						curveSystemManager->subdivisions = m_curveSystemManagerDefault->subdivisions;
 						return;
 					}
-					else if( name == g_curveCullBackfacing )
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						curveSystemManager->subdivisions = data->readable();
+					return;
+				}
+				else if( name == g_curveCullBackfacing )
+				{
+					if( value == nullptr )
 					{
-						if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-							curveSystemManager->use_backfacing = data->readable();
+						curveSystemManager->use_backfacing = m_curveSystemManagerDefault->use_backfacing;
 						return;
 					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						curveSystemManager->use_backfacing = data->readable();
+					return;
 				}
 			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
@@ -2097,6 +2278,35 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void output( const IECore::InternedString &name, const Output *output ) override
 		{
+			auto *film = m_filmCache.get();
+
+			if( !output )
+			{
+				const auto coutput = m_outputs.find( name );
+				if( coutput != m_outputs.end() )
+				{
+					auto *o = coutput->second.get();
+					auto passType = nameToPassType( o->m_data );
+					if( passType == ccl::PASS_CRYPTOMATTE )
+					{
+						if( o->m_name == "cryptomatte_asset" )
+						{
+							film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes ^ ccl::CRYPT_ASSET );
+						}
+						else if( o->m_name == "cryptomatte_object" )
+						{
+							film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes ^ ccl::CRYPT_OBJECT );
+						}
+						else if( o->m_name == "cryptomatte_material" )
+						{
+							film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes ^ ccl::CRYPT_MATERIAL );
+						}
+					}
+					m_outputs.erase( name );
+				}
+				return;
+			}
+
 			auto passType = nameToPassType( output->getData() );
 			if( passType == ccl::PASS_NONE )
 				return;
@@ -2105,12 +2315,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Beauty
 			ccl::Pass::add( ccl::PASS_COMBINED, passes );
 
-			if( !output && ccl::Pass::contains( m_filmCache->passes, passType ) )
-			{
-				// Just remove and rebuild
-				m_outputs.erase( name );
-			}
-			else if( !ccl::Pass::contains( m_filmCache->passes, passType ) )
+			if( !ccl::Pass::contains( m_filmCache->passes, passType ) )
 			{
 				m_outputs[name] = new CyclesOutput( output );
 			}
@@ -2121,13 +2326,42 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else
 				return;
 
-			for( auto &output : m_outputs )
+			for( auto &coutput : m_outputs )
 			{
-				if( output.second->m_passType == ccl::PASS_COMBINED )
+				if( coutput.second->m_passType == ccl::PASS_COMBINED )
 				{
 					continue;
 				}
-				ccl::Pass::add( output.second->m_passType, passes );
+				else if( coutput.second->m_passType == ccl::PASS_CRYPTOMATTE )
+				{
+					string cryptoName( "Crypto" );
+					if( output->getName() == "cryptomatte_asset" )
+					{
+						cryptoName += "Asset";
+						film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes | ccl::CRYPT_ASSET );
+					}
+					else if( output->getName() == "cryptomatte_object" )
+					{
+						cryptoName += "Object";
+						film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes | ccl::CRYPT_OBJECT );
+					}
+					else if( output->getName() == "cryptomatte_material" )
+					{
+						cryptoName += "Material";
+						film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes | ccl::CRYPT_MATERIAL );
+					}
+					else
+					{
+						continue;
+					}
+					for( int i = 0; i < film->cryptomatte_depth; ++i )
+					{
+						string cryptoFullName = ( boost::format( "%s%02i" ) % cryptoName % i ).str();
+						ccl::Pass::add( ccl::PASS_CRYPTOMATTE, passes, cryptoFullName.c_str() );
+					}
+				}
+				else
+					ccl::Pass::add( coutput.second->m_passType, passes );
 			}
 
 			m_bufferParams.passes = passes;
@@ -2196,11 +2430,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			updateSceneObjects();
 			updateOptions();
 			// Clear out any objects which aren't needed in the cache.
-			m_cameraCache->clearUnused();
-			m_lightCache->clearUnused();
-			m_shaderCache->clearUnused();
-			m_instanceCache->clearUnused();
-			m_attributesCache->clearUnused();
+			if( m_renderType == Interactive )
+			{
+				m_cameraCache->clearUnused();
+				m_lightCache->clearUnused();
+				m_shaderCache->clearUnused();
+				m_instanceCache->clearUnused();
+				m_attributesCache->clearUnused();
+			}
 
 			updateCamera();
 			updateOutputs();
@@ -2253,21 +2490,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_bufferParams = ccl::BufferParams();
 
-			// Session Defaults
-			m_sessionParams.display_buffer_linear = true;
-
-			if( m_shadingsystemName == "OSL" )
-				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-			else if( m_shadingsystemName == "SVM" )
-				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
-
-			if( m_renderType != Interactive )
-			{
-				// Sane defaults, not INT_MAX
-				m_sessionParams.samples = 128;
-				m_sessionParams.start_resolution = 64;
-			}
-
 			// Fallback
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
@@ -2298,28 +2520,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = device_fallback;
 			}
 
-			m_sessionParams.background = true;
-
 			m_session = new ccl::Session( m_sessionParams );
 			m_session->scene = m_scene;
 
-			if( m_renderType == Interactive )
-			{
-				m_session->progress.set_update_callback( function_bind( &CyclesRenderer::tagRedraw, this ) );
-				m_session->progress.set_cancel_callback( function_bind( &CyclesRenderer::testCancel, this ) );
-			}
-
 			m_session->write_render_tile_cb = function_bind( &CyclesRenderer::writeRenderTile, this, ccl::_1 );
 			m_session->update_render_tile_cb = function_bind( &CyclesRenderer::updateRenderTile, this, ccl::_1, ccl::_2 );
+			m_session->progress.set_update_callback( function_bind( &CyclesRenderer::progress, this ) );
 
 			m_session->set_pause( true );
 
 			m_scene = new ccl::Scene( m_sceneParams, m_session->device );
 
-			bool interactive = false;
-			if( m_renderType == Interactive )
-				interactive = true;
-			m_renderCallback = new RenderCallback( m_session, interactive );
+			m_renderCallback = new RenderCallback( m_session, ( m_renderType == Interactive ) ? true : false );
 
 			// Grab the default camera from cycles.
 			m_defaultCamera = m_scene->camera;
@@ -2452,9 +2664,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				if( m_scene->camera != ccamera.get() )
 				{
 					m_scene->camera = ccamera.get();
-					m_scene->camera->update( m_scene );
 				}
 			}
+			m_scene->camera->need_update = true;
+			m_scene->camera->update( m_scene );
 		}
 
 		void writeImages()
@@ -2479,6 +2692,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			return;
 		}
 
+		void progress()
+		{
+			string status, substatus;
+
+			/* get status */
+			float progress = m_session->progress.get_progress();
+			m_session->progress.get_status(status, substatus);
+
+			if(substatus != "")
+				status += ": " + substatus;
+
+			/* print status */
+			IECore::msg( IECore::Msg::Info, "CyclesRenderer", boost::format( "Progress %05.2f   %s" ) % (double)(progress * 100.0f ) % status );
+		}
+
 		// Cycles core objects.
 		ccl::Session *m_session;
 		ccl::Scene *m_scene;
@@ -2490,6 +2718,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::Background *m_background;
 		ccl::Film *m_film;
 		ccl::CurveSystemManager *m_curveSystemManager;
+
+		// Defaults
+		ccl::SessionParams m_sessionParamsDefault;
+		ccl::SceneParams m_sceneParamsDefault;
+		CCurveSystemManagerPtr m_curveSystemManagerDefault;
 
 		// IECoreScene::Renderer
 		string m_deviceName;

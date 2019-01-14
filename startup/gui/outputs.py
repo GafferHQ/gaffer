@@ -78,7 +78,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"subsurface_indirect",
 		"subsurface_color",
 		"volume_direct",
-		"volume_indirect"
+		"volume_indirect",
+		"cryptomatte_asset",
+		"cryptomatte_object",
+		"cryptomatte_material"
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )

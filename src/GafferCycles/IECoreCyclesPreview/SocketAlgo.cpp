@@ -202,13 +202,13 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			convert<BoolData>( node, socket, value );
 			break;
 		case ccl::SocketType::FLOAT:
-			if( const DoubleData *data = static_cast<const DoubleData *>( value ) )
-			{
-				node->set( *socket, (float)data->readable() );
-			}
-			else if( const FloatData *data = static_cast<const FloatData *>( value ) )
+			if( const FloatData *data = static_cast<const FloatData *>( value ) )
 			{
 				node->set( *socket, data->readable() );
+			}
+			else if( const DoubleData *data = static_cast<const DoubleData *>( value ) )
+			{
+				node->set( *socket, (float)data->readable() );
 			}
 			break;
 		case ccl::SocketType::INT:
@@ -231,23 +231,23 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::VECTOR:
 		case ccl::SocketType::POINT:
 		case ccl::SocketType::NORMAL:
-			if( const V3iData *data = static_cast<const V3iData *>( value ) )
+			if( const V3fData *data = static_cast<const V3fData *>( value ) )
+			{
+				node->set( *socket, setVector( data->readable() ) );
+			}
+			else if( const V3iData *data = static_cast<const V3iData *>( value ) )
 			{
 				node->set( *socket, setVector( Imath::V3f( data->readable() ) ) );
 			}
-			else if( const V3fData *data = static_cast<const V3fData *>( value ) )
-			{
-				node->set( *socket, setVector( data->readable() ) );
-			}
 			break;
 		case ccl::SocketType::POINT2:
-			if( const V2iData *data = static_cast<const V2iData *>( value ) )
-			{
-				node->set( *socket, setVector( Imath::V2f( data->readable() ) ) );
-			}
-			else if( const V2fData *data = static_cast<const V2fData *>( value ) )
+			if( const V2fData *data = static_cast<const V2fData *>( value ) )
 			{
 				node->set( *socket, setVector( data->readable() ) );
+			}
+			else if( const V2iData *data = static_cast<const V2iData *>( value ) )
+			{
+				node->set( *socket, setVector( Imath::V2f( data->readable() ) ) );
 			}
 			break;
 		case ccl::SocketType::CLOSURE:
@@ -262,11 +262,11 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			convert<IntData>( node, socket, value );
 			break;
 		case ccl::SocketType::TRANSFORM:
-			if( const M44dData *data = static_cast<const M44dData *>( value ) )
+			if( const M44fData *data = static_cast<const M44fData *>( value ) )
 			{
 				node->set( *socket, setTransform( data->readable() ) );
 			}
-			else if( const M44fData *data = static_cast<const M44fData *>( value ) )
+			else if( const M44dData *data = static_cast<const M44dData *>( value ) )
 			{
 				node->set( *socket, setTransform( data->readable() ) );
 			}

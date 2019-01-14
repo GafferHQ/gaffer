@@ -61,7 +61,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "integrator", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "experimental", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:samples", new IECore::IntData( 128 ), "samples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), "tileSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_order", new IECore::IntData( 0 ), "tileOrder", Gaffer::Plug::Default, false );
