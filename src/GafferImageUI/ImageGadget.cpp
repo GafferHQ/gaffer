@@ -318,11 +318,6 @@ void ImageGadget::contextChanged( const IECore::InternedString &name )
 
 void ImageGadget::dirty( unsigned flags )
 {
-	if( (flags & m_dirtyFlags) == flags )
-	{
-		return;
-	}
-
 	if( (flags & TilesDirty) && !(m_dirtyFlags & TilesDirty) )
 	{
 		m_tilesTask.reset();
