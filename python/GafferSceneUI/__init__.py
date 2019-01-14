@@ -42,6 +42,7 @@ from _GafferSceneUI import *
 from HierarchyView import HierarchyView
 from SceneInspector import SceneInspector
 from PrimitiveInspector import PrimitiveInspector
+from UVInspector import UVInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
 from ScenePathPlugValueWidget import ScenePathPlugValueWidget
 from TweakPlugValueWidget import TweakPlugValueWidget
