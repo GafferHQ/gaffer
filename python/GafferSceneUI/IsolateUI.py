@@ -51,6 +51,18 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Isolates objects by removing paths not matching a filter from the scene.
+
+	> Caution : The Isolate node does not work well with the `...` wildcard in
+	> PathFilters. Because of the way Gaffer generates scenes progressively
+	> from the root, the Isolate node needs to know if the filter matches any
+	> descendants (children, grandchildren etc) of the current location; if there
+	> are any matches then the current location is kept, otherwise it is removed.
+	> When faced with `...`, the Isolate node assumes that there will always be a
+	> descendant match because `...` matches anything. This can cause it to keep
+	> locations where in fact there may be no true descendant match. The only
+	> alternative would be to search the scene recursively looking for a true
+	> match, but this would defeat the goal of lazy evaluation and could cause
+	> poor performance.
 	""",
 
 	plugs = {
