@@ -177,3 +177,20 @@ Gaffer.Metadata.registerValue(
 	GafferScene.TweakPlug, "mode",
 	"presetValues", lambda plug : IECore.IntVectorData( [ int( x ) for x in __validModes( plug ) ] )
 )
+
+def __noduleLabel( plug ) :
+
+	if not isinstance( plug, GafferScene.TweakPlug ) :
+		plug = plug.parent()
+
+	name = None
+	with IECore.IgnoredExceptions( Exception ) :
+		name = plug["name"].getValue()
+
+	return name or plug.getName()
+
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "nodule:type", "GafferUI::CompoundNodule" )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "*", "nodule:type", "" )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "nodule:type", "GafferUI::StandardNodule" )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "noduleLayout:label", __noduleLabel )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "noduleLayout:label", __noduleLabel )
