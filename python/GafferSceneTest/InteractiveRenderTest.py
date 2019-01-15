@@ -90,7 +90,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
@@ -121,7 +121,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Check we have our first image, but not a second one.
 
@@ -143,7 +143,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive ) )
 		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ), IECoreImage.ImagePrimitive ) )
@@ -153,7 +153,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		IECoreImage.ImageDisplayDriver.removeStoredImage( "myLovelySphere2" )
 		s["o"]["outputs"][1]["active"].setValue( False )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		self.assertTrue( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
 
@@ -172,7 +172,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive ) )
 		self.assertTrue( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
@@ -203,19 +203,19 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		s["s"]["enabled"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		s["s"]["enabled"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -260,7 +260,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Render the sphere.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -268,7 +268,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Switch to the empty group.
 
 		s["switch"]["index"].setValue( 1 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -276,7 +276,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Switch back to the sphere.
 
 		s["switch"]["index"].setValue( 0 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -316,7 +316,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -327,7 +327,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
 		s["a"]["attributes"]["visibility"]["value"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -335,7 +335,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Tweak the sphere geometry - it should remain hidden
 
 		s["s"]["radius"].setValue( 1.01 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -343,7 +343,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Show it again
 
 		s["a"]["attributes"]["visibility"]["value"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -352,7 +352,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		s["a"]["attributes"]["visibility"]["value"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -360,7 +360,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Show it again
 
 		s["a"]["attributes"]["visibility"]["value"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -401,7 +401,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -412,7 +412,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
 		visibilityPlug["value"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -420,7 +420,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Show it again
 
 		visibilityPlug["value"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -429,7 +429,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		visibilityPlug["value"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -437,7 +437,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Show it again
 
 		visibilityPlug["value"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -467,7 +467,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -477,7 +477,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Move to one side
 
 		s["s"]["transform"]["translate"]["x"].setValue( 2 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -485,7 +485,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Move back
 
 		s["s"]["transform"]["translate"]["x"].setValue( 0 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -522,7 +522,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 2.0 )
 
 		# Render red sphere
 
@@ -532,7 +532,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Make it green
 
 		colorPlug.setValue( imath.Color3f( 0, 1, 0 ) )
-		time.sleep( 0.5 )
+		time.sleep( 2.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), delta = 0.01 )
@@ -540,7 +540,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Make it blue
 
 		colorPlug.setValue( imath.Color3f( 0, 0, 1 ) )
-		time.sleep( 0.5 )
+		time.sleep( 2.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), delta = 0.01 )
@@ -581,7 +581,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -591,7 +591,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Move to one side
 
 		s["c"]["transform"]["translate"]["x"].setValue( 2 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -599,7 +599,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Move back
 
 		s["c"]["transform"]["translate"]["x"].setValue( 0 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -645,7 +645,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"" if withDefaultCamera else "/group/camera"
 			)
 
-			time.sleep( 0.5 )
+			time.sleep( 1.0 )
 
 			# Use the default resolution to start with
 
@@ -659,7 +659,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			s["options"]["options"]["renderResolution"]["enabled"].setValue( True )
 			s["options"]["options"]["renderResolution"]["value"].setValue( imath.V2i( 200, 100 ) )
 
-			time.sleep( 0.5 )
+			time.sleep( 1.0 )
 
 			self.assertEqual(
 				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
@@ -670,7 +670,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			s["options"]["options"]["renderResolution"]["value"].setValue( imath.V2i( 300, 100 ) )
 
-			time.sleep( 0.5 )
+			time.sleep( 1.0 )
 
 			self.assertEqual(
 				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
@@ -681,7 +681,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			s["options"]["options"]["renderResolution"]["enabled"].setValue( False )
 
-			time.sleep( 0.5 )
+			time.sleep( 1.0 )
 
 			self.assertEqual(
 				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
@@ -816,7 +816,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -826,7 +826,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Move to one side
 
 		s.context().setFrame( 3 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -834,7 +834,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Move back
 
 		s.context().setFrame( 1 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -844,13 +844,13 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		c = Gaffer.Context()
 		c.setFrame( 3 )
 		s["r"].setContext( c )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		c.setFrame( 1 )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -1237,7 +1237,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -1247,7 +1247,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Hide
 
 		s["a"]["attributes"]["visibility"]["value"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -1255,7 +1255,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Show again
 
 		s["a"]["attributes"]["visibility"]["value"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -1294,7 +1294,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# Visible to start with
 
@@ -1304,7 +1304,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Hide
 
 		visibilityPlug["value"].setValue( False )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -1312,7 +1312,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Show again
 
 		visibilityPlug["value"].setValue( True )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -1461,7 +1461,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["state"].setValue( s["render"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		# We haven't used the trace sets yet, so should be able to see
 		# the reflection.
@@ -1481,35 +1481,35 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# we haven't added anything to the set.
 
 		traceSetParameter.setValue( "myTraceSet" )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 		assertReflected( False )
 
 		# Now add the reflected object into the set. Reflection should
 		# come back.
 
 		s["set"]["paths"].setValue( IECore.StringVectorData( [ "/group/reflected" ] ) )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 		assertReflected( True )
 
 		# Rename the set so that it's not a trace set any more. Reflection
 		# should disappear.
 
 		s["set"]["name"].setValue( "myTraceSet" )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 		assertReflected( False )
 
 		# Rename the set so that it is a trace set, but with a different namer.
 		# Reflection should not reappear.
 
 		s["set"]["name"].setValue( "render:myOtherTraceSet" )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 		assertReflected( False )
 
 		# Update the shader to use this new trace set. Reflection should
 		# reappear.
 
 		traceSetParameter.setValue( "myOtherTraceSet" )
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 		assertReflected( True )
 
 	def testRendererContextVariable( self ):
@@ -1537,7 +1537,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 1.0 )
 
 		renderer = s["r"]["renderer"].getValue() if "renderer" in s["r"] else s["r"]["__renderer"].getValue()
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
@@ -1855,7 +1855,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		time.sleep( 2.0 )
 
 		# Render red sphere
 
