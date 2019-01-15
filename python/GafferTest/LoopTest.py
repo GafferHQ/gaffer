@@ -199,5 +199,27 @@ class LoopTest( GafferTest.TestCase ) :
 		self.assertIsInstance( n["previous"], Gaffer.StringPlug )
 		self.assertIsInstance( n["next"], Gaffer.StringPlug )
 
+	def testSerialisationUsesSetup( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s1["c"] = Gaffer.Loop()
+		s1["c"].setup( Gaffer.IntPlug() )
+
+		ss = s1.serialise()
+		self.assertIn( "setup", ss )
+		self.assertEqual( ss.count( "addChild" ), 1 )
+		self.assertNotIn( "Dynamic", ss )
+		self.assertNotIn( "Serialisable", ss )
+		self.assertNotIn( "setInput", ss )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+		self.assertIn( "in", s2["c"] )
+		self.assertIn( "out", s2["c"] )
+		self.assertIsInstance( s2["c"]["in"], Gaffer.IntPlug )
+		self.assertIsInstance( s2["c"]["out"], Gaffer.IntPlug )
+		self.assertIsInstance( s2["c"]["previous"], Gaffer.IntPlug )
+		self.assertIsInstance( s2["c"]["next"], Gaffer.IntPlug )
+
 if __name__ == "__main__":
 	unittest.main()
