@@ -154,5 +154,119 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesEqual( s["LightTweaks2"]["out"], s2["LightTweaks2"]["out"] )
 		self.assertScenesEqual( s["LightTweaks2"]["out"], s2["LightTweaks2"]["out"] )
 
+	def testConnect( self ) :
+
+		plane = GafferScene.Plane()
+		shader = GafferSceneTest.TestShader( "surface" )
+		shader["type"].setValue( "surface" )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["filter"].setInput( planeFilter["out"] )
+		assignment["shader"].setInput( shader["out"] )
+
+		originalNetwork = assignment["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( originalNetwork ), 1 )
+
+		textureShader = GafferSceneTest.TestShader( "texture" )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( assignment["out"] )
+		tweaks["filter"].setInput( planeFilter["out"] )
+		tweaks["shader"].setValue( "surface" )
+
+		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"][0]["value"].setInput( textureShader["out"] )
+
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( tweakedNetwork ), 2 )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture", "" ) )
+
+		tweakedNetwork.removeShader( "texture" )
+		self.assertEqual( tweakedNetwork, originalNetwork )
+
+		textureShader["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( tweakedNetwork.getShader( "texture" ).parameters["c"].value, imath.Color3f( 1, 2, 3 ) )
+
+	def testConnectSpecificOutputParameter( self ) :
+
+		plane = GafferScene.Plane()
+		shader = GafferSceneTest.TestShader( "surface" )
+		shader["type"].setValue( "surface" )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["filter"].setInput( planeFilter["out"] )
+		assignment["shader"].setInput( shader["out"] )
+
+		originalNetwork = assignment["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( originalNetwork ), 1 )
+
+		textureShader = GafferSceneTest.TestShader( "texture" )
+		textureShader["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		textureShader["out"]["color"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+		textureShader["out"]["opacity"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( assignment["out"] )
+		tweaks["filter"].setInput( planeFilter["out"] )
+		tweaks["shader"].setValue( "surface" )
+
+		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"][0]["value"].setInput( textureShader["out"]["opacity"] )
+
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( tweakedNetwork ), 2 )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture", "opacity" ) )
+
+		tweakedNetwork.removeShader( "texture" )
+		self.assertEqual( tweakedNetwork, originalNetwork )
+
+		textureShader["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( tweakedNetwork.getShader( "texture" ).parameters["c"].value, imath.Color3f( 1, 2, 3 ) )
+
+	def testReconnect( self ) :
+
+		plane = GafferScene.Plane()
+		shader = GafferSceneTest.TestShader( "surface" )
+		shader["type"].setValue( "surface" )
+
+		textureShader1 = GafferSceneTest.TestShader( "texture1" )
+		shader["parameters"]["c"].setInput( textureShader1["out"] )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["filter"].setInput( planeFilter["out"] )
+		assignment["shader"].setInput( shader["out"] )
+
+		originalNetwork = assignment["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( originalNetwork ), 2 )
+		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture1", "" ) )
+
+		textureShader2 = GafferSceneTest.TestShader( "texture2" )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( assignment["out"] )
+		tweaks["filter"].setInput( planeFilter["out"] )
+		tweaks["shader"].setValue( "surface" )
+
+		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"][0]["value"].setInput( textureShader2["out"] )
+
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( tweakedNetwork ), 2 )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture2", "" ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -37,9 +37,7 @@
 #ifndef GAFFERSCENE_TWEAKPLUG_H
 #define GAFFERSCENE_TWEAKPLUG_H
 
-#include "GafferScene/SceneElementProcessor.h"
-
-#include "GafferScene/TweakPlug.h"
+#include "GafferScene/Shader.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -88,6 +86,10 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+		IECore::MurmurHash hash() const override;
+		/// Ensures the method above doesn't mask
+		/// ValuePlug::hash( h )
+		using ValuePlug::hash;
 
 		/// Tweak application
 		/// =================
@@ -102,6 +104,8 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 
 		Gaffer::ValuePlug *valuePlugInternal();
 		const Gaffer::ValuePlug *valuePlugInternal() const;
+
+		std::pair<const Shader *, const Gaffer::Plug *> shaderOutput() const;
 
 };
 
