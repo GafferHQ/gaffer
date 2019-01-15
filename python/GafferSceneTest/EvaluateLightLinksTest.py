@@ -257,3 +257,40 @@ class EvaluateLightLinksTest( GafferSceneTest.SceneTestCase ) :
 
 		light1["defaultLight"].setValue( True )
 
+	def testLightFilterAttribute( self ) :
+
+		# There are not concrete LightFilter nodes in GafferScene. We'll use a
+		# sphere as a proxy.
+		lightFilter = GafferScene.Sphere( "LightFilter" )
+		lightFilter["name"].setValue( "lightFilter" )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["attributes"]["filteredLights"]["enabled"].setValue( True )
+		attributes["in"].setInput( lightFilter["out"] )
+
+		mainGroup = GafferScene.Group( "MainGroup" )
+
+		light1 = GafferSceneTest.TestLight()
+		light2 = GafferSceneTest.TestLight()
+
+		lightGroup = GafferScene.Group( "LightGroup" )
+		lightGroup["in"][0].setInput( light1["out"] )
+		lightGroup["in"][1].setInput( light2["out"] )
+
+		mainGroup["in"][0].setInput( attributes["out"] )
+		mainGroup["in"][1].setInput( lightGroup["out"] )
+
+		evalNode = GafferScene.EvaluateLightLinks()
+		evalNode["in"].setInput( mainGroup["out"] )
+
+		self.assertEqual(
+			set( evalNode["out"].attributes( '/group/lightFilter' )["filteredLights"] ),
+			set( [] )
+		)
+
+		attributes["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
+
+		self.assertEqual(
+			set( evalNode["out"].attributes( '/group/lightFilter' )["filteredLights"] ),
+			{ '/group/group/light', '/group/group/light1' }
+		)
