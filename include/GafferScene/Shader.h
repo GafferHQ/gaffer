@@ -165,6 +165,7 @@ class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 		static size_t g_firstPlugIndex;
 
 		friend class ShaderPlug;
+		friend class TweakPlug;
 
 };
 

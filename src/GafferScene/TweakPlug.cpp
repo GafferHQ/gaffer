@@ -36,10 +36,13 @@
 
 #include "GafferScene/TweakPlug.h"
 
+#include "GafferScene/Shader.h"
+
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/SplinePlug.h"
 
 #include "IECoreScene/ShaderNetwork.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/DataAlgo.h"
 #include "IECore/TypeTraits.h"
@@ -179,6 +182,19 @@ Gaffer::PlugPtr TweakPlug::createCounterpart( const std::string &name, Direction
 	return result;
 }
 
+IECore::MurmurHash TweakPlug::hash() const
+{
+	MurmurHash result = ValuePlug::hash();
+
+	const auto shaderOutput = this->shaderOutput();
+	if( shaderOutput.first )
+	{
+		shaderOutput.first->attributesHash( shaderOutput.second, result );
+	}
+
+	return result;
+}
+
 // Utility methods need by applyTweak
 namespace
 {
@@ -315,8 +331,9 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists
 
 void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork )
 {
-	unordered_map<InternedString, ShaderPtr> modifiedShaders;
+	unordered_map<InternedString, IECoreScene::ShaderPtr> modifiedShaders;
 
+	bool madeConnections = false;
 	for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
 	{
 		const TweakPlug *tweakPlug = tIt->get();
@@ -339,26 +356,84 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 			parameter.name = InternedString( name.c_str() + dotPos + 1 );
 		}
 
-		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
-		if( modifiedShader.second )
+		if( auto input = shaderNetwork->input( parameter ) )
 		{
-			if( const Shader *shader = shaderNetwork->getShader( parameter.shader ) )
-			{
-				modifiedShader.first->second = shader->copy();
-			}
-			else
-			{
-				throw IECore::Exception( boost::str(
-					boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
-				) );
-			}
+			shaderNetwork->removeConnection( { input, parameter } );
 		}
 
-		applyTweakInternal( tweakPlug, name, parameter.name, modifiedShader.first->second->parametersData(), /* requireExists = */ true );
+		const auto shaderOutput = tweakPlug->shaderOutput();
+		if( shaderOutput.first )
+		{
+			// New connection
+			ConstCompoundObjectPtr shaderAttributes = shaderOutput.first->attributes( shaderOutput.second );
+			const ShaderNetwork *inputNetwork = nullptr;
+			for( const auto &a : shaderAttributes->members() )
+			{
+				if( ( inputNetwork = runTimeCast<const ShaderNetwork>( a.second.get() ) ) )
+				{
+					break;
+				}
+			}
+
+			if( !inputNetwork || !inputNetwork->getOutput() )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Input didn't generate a valid shader network" ) % name ) );
+			}
+
+			if( tweakPlug->modePlug()->getValue() != Mode::Replace )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when inserting a connection" ) % name ) );
+			}
+
+			const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
+			shaderNetwork->addConnection( { inputParameter, parameter } );
+			madeConnections = true;
+		}
+		else
+		{
+			// Regular tweak
+			auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
+			if( modifiedShader.second )
+			{
+				if( const IECoreScene::Shader *shader = shaderNetwork->getShader( parameter.shader ) )
+				{
+					modifiedShader.first->second = shader->copy();
+				}
+				else
+				{
+					throw IECore::Exception( boost::str(
+						boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
+					) );
+				}
+			}
+
+			applyTweakInternal( tweakPlug, name, parameter.name, modifiedShader.first->second->parametersData(), /* requireExists = */ true );
+		}
 	}
 
 	for( auto &x : modifiedShaders )
 	{
 		shaderNetwork->setShader( x.first, std::move( x.second ) );
 	}
+
+	if( madeConnections )
+	{
+		ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
+	}
+}
+
+std::pair<const GafferScene::Shader *, const Gaffer::Plug *> TweakPlug::shaderOutput() const
+{
+	const Plug *source = valuePlug()->source();
+	if( source != valuePlug() )
+	{
+		if( auto shader = runTimeCast<const GafferScene::Shader>( source->node() ) )
+		{
+			if( source == shader->outPlug() || shader->outPlug()->isAncestorOf( source ) )
+			{
+				return { shader, source };
+			}
+		}
+	}
+	return { nullptr, nullptr };
 }
