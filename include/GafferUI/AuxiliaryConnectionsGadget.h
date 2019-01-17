@@ -68,7 +68,7 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 
 	public :
 
-		~AuxiliaryConnectionsGadget();
+		~AuxiliaryConnectionsGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AuxiliaryConnectionsGadget, AuxiliaryConnectionsGadgetTypeId, Gadget );
 

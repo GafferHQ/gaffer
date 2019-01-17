@@ -2055,12 +2055,12 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		{
 		}
 
-		virtual void option( const IECore::InternedString &name, const IECore::Object *value ) override
+		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call option()" );
 		}
 
-		virtual void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
+		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call output()" );
 		}
@@ -2105,12 +2105,12 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			return result;
 		}
 
-		virtual void render() override
+		void render() override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call render()" );
 		}
 
-		virtual void pause() override
+		void pause() override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call pause()" );
 		}

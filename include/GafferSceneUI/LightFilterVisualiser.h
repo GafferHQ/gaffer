@@ -61,7 +61,7 @@ class GAFFERSCENEUI_API LightFilterVisualiser : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( LightFilterVisualiser )
 
 		LightFilterVisualiser();
-		virtual ~LightFilterVisualiser();
+		~LightFilterVisualiser() override;
 
 		/// Must be implemented by derived classes to visualise
 		/// the light filter contained within `filterShaderNetwork`.

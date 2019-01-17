@@ -180,7 +180,7 @@ class AppleseedRendererBase : public IECoreScenePreview::Renderer
 
 	public :
 
-		virtual ~AppleseedRendererBase() override;
+		~AppleseedRendererBase() override;
 
 		IECore::InternedString name() const override
 		{
@@ -1745,7 +1745,7 @@ class AppleseedAreaLight : public AppleseedLight
 			AppleseedAreaLight::attributes( attributes );
 		}
 
-		virtual ~AppleseedAreaLight()
+		~AppleseedAreaLight() override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1768,7 +1768,7 @@ class AppleseedAreaLight : public AppleseedLight
 			}
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 			M44d md( transform );
 			asf::Matrix4d m( md );
@@ -1785,13 +1785,13 @@ class AppleseedAreaLight : public AppleseedLight
 			}
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 			// appleseed does not support light transform motion blur yet.
 			transform(samples[0]);
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			// Remove any previously created area light.
 			removeAreaLightEntities();
@@ -1951,12 +1951,12 @@ class ProceduralRenderer : public AppleseedRendererBase
 			assert( renderType != Interactive );
 		}
 
-		virtual void option( const IECore::InternedString &name, const IECore::Object *value ) override
+		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call option()" );
 		}
 
-		virtual void output( const IECore::InternedString &name, const Output *output ) override
+		void output( const IECore::InternedString &name, const Output *output ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call output()" );
 		}
@@ -1973,12 +1973,12 @@ class ProceduralRenderer : public AppleseedRendererBase
 			return nullptr;
 		}
 
-		virtual void render() override
+		void render() override
 		{
 			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call render()" );
 		}
 
-		virtual void pause() override
+		void pause() override
 		{
 			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call pause()" );
 		}

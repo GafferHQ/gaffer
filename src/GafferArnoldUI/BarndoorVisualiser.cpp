@@ -153,7 +153,7 @@ class BarndoorVisualiser final : public LightFilterVisualiser
 		IE_CORE_DECLAREMEMBERPTR( BarndoorVisualiser )
 
 		BarndoorVisualiser();
-		~BarndoorVisualiser();
+		~BarndoorVisualiser() override;
 
 		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const override;
 

@@ -96,12 +96,12 @@ class HostedGLContext : public QGLContext
 
 		}
 
-		virtual ~HostedGLContext()
+		~HostedGLContext() override
 		{
 			glXDestroyContext( m_display, m_context );
 		}
 
-		virtual void makeCurrent()
+		void makeCurrent() override
 		{
 #if QT_VERSION >= 0x050000
 			QGLContext::makeCurrent();

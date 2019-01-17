@@ -95,8 +95,8 @@ class IECORE_EXPORT Switch : public ComputeNode
 		// the input branch specified by indexPlug(). They operate via the hashInternal() and
 		// computeInternal() methods, which are specialised for the cases where we do and do
 		// not inherit from ComputeNode.
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
-		virtual void compute( ValuePlug *output, const Context *context ) const override;
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 
