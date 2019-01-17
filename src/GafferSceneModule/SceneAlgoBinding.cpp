@@ -44,12 +44,15 @@
 
 #include "IECoreScene/Camera.h"
 
+#include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "boost/python/suite/indexing/container_utils.hpp"
+#include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 
 using namespace boost::python;
 using namespace IECore;
+using namespace Gaffer;
 using namespace GafferScene;
 
 namespace
@@ -118,6 +121,32 @@ IECore::CompoundDataPtr setsWrapper2( const ScenePlug *scene, object pythonSetNa
 	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundData>( result );
 }
 
+ScenePlugPtr historyGetScene( SceneAlgo::History &h )
+{
+	return h.scene;
+}
+
+void historySetScene( SceneAlgo::History &h, const ScenePlugPtr &s )
+{
+	h.scene = s;
+}
+
+Gaffer::ContextPtr historyGetContext( SceneAlgo::History &h )
+{
+	return h.context;
+}
+
+void historySetContext( SceneAlgo::History &h, const Gaffer::ContextPtr &c )
+{
+	h.context = c;
+}
+
+SceneAlgo::History::Ptr historyWrapper( const ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::history( scenePlugChild, path );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -146,6 +175,25 @@ void bindSceneAlgo()
 		&setsWrapper2,
 		( arg( "scene" ), arg( "setNames" ), arg( "_copy" ) = true )
 	);
+
+	// History
+
+	{
+		scope s = IECorePython::RefCountedClass<SceneAlgo::History, IECore::RefCounted>( "History" )
+			.def( init<>() )
+			.def( init<ScenePlugPtr, Gaffer::ContextPtr>() )
+			.add_property( "scene", &historyGetScene, &historySetScene )
+			.add_property( "context", &historyGetContext, &historySetContext )
+			.def_readonly( "predecessors", &SceneAlgo::History::predecessors )
+		;
+
+		class_<SceneAlgo::History::Predecessors>( "Predecessors" )
+			.def( vector_indexing_suite<SceneAlgo::History::Predecessors, true>() )
+		;
+	}
+
+	def( "history", &historyWrapper );
+
 }
 
 } // namespace GafferSceneModule
