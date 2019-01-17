@@ -57,7 +57,7 @@ class GAFFERUI_API ConnectionCreator : public Gadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionCreator, ConnectionCreatorTypeId, Gadget );
 
 		ConnectionCreator( const std::string &name=defaultName<ConnectionCreator>() );
-		virtual ~ConnectionCreator();
+		~ConnectionCreator() override;
 
 		/// May be called by the recipient of a drag to figure out if this
 		/// ConnectionCreator can set up the connection.

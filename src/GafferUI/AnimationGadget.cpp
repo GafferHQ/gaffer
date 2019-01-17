@@ -55,7 +55,7 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/bind.hpp"
 
-#include "math.h"
+#include <cmath>
 
 using namespace Gaffer;
 using namespace GafferUI;

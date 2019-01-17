@@ -305,11 +305,11 @@ class VDBVisualiser : public ObjectVisualiser
 			m_group->addChild( curves );
 		}
 
-		virtual ~VDBVisualiser()
+		~VDBVisualiser() override
 		{
 		}
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const
+		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
 			const VDBObject* vdbObject = IECore::runTimeCast<const VDBObject>(object);
 			if ( !vdbObject )

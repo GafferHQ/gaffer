@@ -54,7 +54,7 @@ class GAFFERVDB_API LevelSetOffset : public GafferScene::SceneElementProcessor
 	public :
 
 		LevelSetOffset(const std::string &name = defaultName<LevelSetOffset>() );
-		~LevelSetOffset();
+		~LevelSetOffset() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::LevelSetOffset, LevelSetOffsetTypeId, GafferScene::SceneElementProcessor );
 
@@ -64,7 +64,7 @@ class GAFFERVDB_API LevelSetOffset : public GafferScene::SceneElementProcessor
 		Gaffer::FloatPlug *offsetPlug();
 		const Gaffer::FloatPlug *offsetPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 

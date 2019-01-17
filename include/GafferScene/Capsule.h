@@ -69,7 +69,7 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 			const IECore::MurmurHash &hash,
 			const Imath::Box3f &bound
 		);
-		virtual ~Capsule();
+		~Capsule() override;
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferScene::Capsule, GafferScene::CapsuleTypeId, IECoreScenePreview::Procedural );
 

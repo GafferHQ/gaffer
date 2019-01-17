@@ -82,7 +82,7 @@ class AttributeVisualiserForLightFilters : public AttributeVisualiser
 
 		/// Uses a custom visualisation registered via `registerLightFilterVisualiser()` if one
 		/// is available, if not falls back to a basic visualisation.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 

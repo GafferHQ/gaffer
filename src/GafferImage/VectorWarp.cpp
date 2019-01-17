@@ -43,7 +43,7 @@
 
 #include "OpenEXR/ImathFun.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace Imath;
 using namespace IECore;

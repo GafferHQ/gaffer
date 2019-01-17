@@ -54,7 +54,7 @@ class IECORESCENE_API Procedural : public IECoreScene::VisibleRenderable
 	public :
 
 		Procedural();
-		~Procedural();
+		~Procedural() override;
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
 

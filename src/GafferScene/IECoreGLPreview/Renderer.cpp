@@ -546,7 +546,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
 		{
 			if( name == "gl:queryBound" )
 			{

@@ -198,7 +198,7 @@ class DecayVisualiser final : public LightFilterVisualiser
 		IE_CORE_DECLAREMEMBERPTR( DecayVisualiser )
 
 		DecayVisualiser();
-		~DecayVisualiser();
+		~DecayVisualiser() override;
 
 		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const override;
 

@@ -54,7 +54,7 @@ class GAFFERVDB_API LevelSetToMesh : public GafferScene::SceneElementProcessor
 	public :
 
 		LevelSetToMesh( const std::string &name=defaultName<LevelSetToMesh>() );
-		virtual ~LevelSetToMesh();
+		~LevelSetToMesh() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::LevelSetToMesh, LevelSetToMeshTypeId, GafferScene::SceneElementProcessor );
 
@@ -67,13 +67,13 @@ class GAFFERVDB_API LevelSetToMesh : public GafferScene::SceneElementProcessor
 		Gaffer::FloatPlug *adaptivityPlug();
 		const Gaffer::FloatPlug *adaptivityPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesObject() const override;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 		bool processesBound() const override;
 		void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;

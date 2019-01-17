@@ -58,7 +58,7 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcess
 	public :
 
 		PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
-		virtual ~PointsGridToPoints();
+		~PointsGridToPoints() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::PointsGridToPoints, PointsGridToPointsId, GafferScene::SceneElementProcessor );
 
@@ -71,13 +71,13 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcess
 		Gaffer::BoolPlug *invertNamesPlug();
 		const Gaffer::BoolPlug *invertNamesPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesObject() const override;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 	private :
 
