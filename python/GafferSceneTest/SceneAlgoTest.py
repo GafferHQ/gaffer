@@ -202,5 +202,98 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 				context["lightName"] = "light%d" % i
 				GafferScene.SceneAlgo.sets( script["light"]["out"] )
 
+	def testHistoryClass( self ) :
+
+		h = GafferScene.SceneAlgo.History()
+		self.assertEqual( h.scene, None )
+		self.assertEqual( h.context, None )
+		self.assertEqual( len( h.predecessors ), 0 )
+
+		s = GafferScene.ScenePlug()
+		c = Gaffer.Context()
+
+		h.scene = s
+		h.context = c
+
+		self.assertEqual( h.scene, s )
+		self.assertEqual( h.context, c )
+
+		h.predecessors.append( GafferScene.SceneAlgo.History() )
+		self.assertEqual( len( h.predecessors ), 1 )
+
+	def testHistory( self ) :
+
+		plane = GafferScene.Plane()
+
+		attributesFilter = GafferScene.PathFilter()
+		attributesFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( plane["out"] )
+		attributes["filter"].setInput( attributesFilter["out"] )
+		attributes["attributes"].addMember( "test", 10 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( attributes["out"] )
+
+		transformFilter = GafferScene.PathFilter()
+		transformFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( group["out"] )
+		transform["filter"].setInput( transformFilter["out"] )
+
+		# Transform history
+
+		with Gaffer.Context() as c :
+			c.setFrame( 10 )
+			history = GafferScene.SceneAlgo.history( transform["out"]["transform"], "/group/plane" )
+
+		self.assertEqual( history.scene, transform["out"] )
+		self.assertEqual( history.context.getFrame(), 10 )
+		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "group", "plane" ] ) )
+		self.assertEqual( len( history.predecessors ), 1 )
+
+		history = history.predecessors[0]
+		self.assertEqual( history.scene, group["out"] )
+		self.assertEqual( history.context.getFrame(), 10 )
+		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "group", "plane" ] ) )
+		self.assertEqual( len( history.predecessors ), 1 )
+
+		history = history.predecessors[0]
+		self.assertEqual( history.scene, plane["out"] )
+		self.assertEqual( history.context.getFrame(), 10 )
+		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( len( history.predecessors ), 0 )
+
+		# Attributes history
+
+		with Gaffer.Context() as c :
+			c.setFrame( 20 )
+			history = GafferScene.SceneAlgo.history( transform["out"]["attributes"], "/group/plane" )
+
+		self.assertEqual( history.scene, group["out"] )
+		self.assertEqual( history.context.getFrame(), 20 )
+		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "group", "plane" ] ) )
+		self.assertEqual( len( history.predecessors ), 1 )
+
+		history = history.predecessors[0]
+		self.assertEqual( history.scene, attributes["out"] )
+		self.assertEqual( history.context.getFrame(), 20 )
+		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( len( history.predecessors ), 1 )
+
+		history = history.predecessors[0]
+		self.assertEqual( history.scene, plane["out"] )
+		self.assertEqual( history.context.getFrame(), 20 )
+		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( len( history.predecessors ), 0 )
+
+	def testHistoryWithInvalidPlug( self ) :
+
+		plane = GafferScene.Plane()
+		with self.assertRaisesRegexp( RuntimeError, "is not a child of a ScenePlug" ) :
+			GafferScene.SceneAlgo.history( plane["name"], "/plane" )
+
 if __name__ == "__main__":
 	unittest.main()
