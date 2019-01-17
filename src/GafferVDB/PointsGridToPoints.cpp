@@ -47,7 +47,7 @@
 #include "openvdb/points/PointConversion.h"
 #include "openvdb/points/PointCount.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 using namespace std;
 using namespace Imath;

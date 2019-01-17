@@ -72,7 +72,7 @@
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include <math.h>
+#include <cmath>
 
 using namespace boost;
 using namespace IECoreGL;
