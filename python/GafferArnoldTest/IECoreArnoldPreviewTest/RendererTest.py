@@ -37,6 +37,7 @@
 import os
 import ctypes
 import unittest
+import json
 
 import arnold
 import imath
@@ -2271,6 +2272,47 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertTrue( "Permission denied" in mh.messages[0].message )
+
+	def testStatsAndLog( self ) :
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/test/test_log.txt" ) )
+		r.option( "ai:statisticsFileName", IECore.StringData( self.temporaryDirectory() + "/test/test_stats.json" ) )
+		c = r.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"projection" : "orthographic"
+				}
+			),
+			r.attributes( IECore.CompoundObject() )
+		)
+
+		r.output(
+			"testBeauty",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/beauty.exr",
+				"exr",
+				"rgba"
+			)
+		)
+
+		r.option( "camera", IECore.StringData( "testCamera" ) )
+
+		r.render()
+
+		with open( self.temporaryDirectory() + "/test/test_log.txt", "r" ) as logHandle:
+			self.assertNotEqual( logHandle.read().find( "rendering image at 640 x 480" ), -1 )
+
+		with open( self.temporaryDirectory() + "/test/test_stats.json", "r" ) as statsHandle:
+			stats = json.load( statsHandle )["render 0000"]
+			self.assertTrue( "scene creation time microseconds" in stats )
+			self.assertTrue( "frame time microseconds" in stats )
+			self.assertTrue( "memory consumed MB" in stats )
+			self.assertTrue( "ray counts" in stats )
 
 	def testProcedural( self ) :
 
