@@ -233,7 +233,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			return False
 
 		for t in self.__toolChooser.tools() :
-			if Gaffer.Metadata.nodeValue( t, "viewer:shortCut" ) == event.key :
+			if Gaffer.Metadata.value( t, "viewer:shortCut" ) == event.key :
 				t["active"].setValue( True )
 				return True
 
@@ -311,7 +311,7 @@ class _ToolChooser( GafferUI.Frame ) :
 		def __init__( self, view ) :
 
 			self.tools = [ GafferUI.Tool.create( n, view ) for n in GafferUI.Tool.registeredTools( view.typeId() ) ]
-			self.tools.sort( key = lambda v : Gaffer.Metadata.nodeValue( v, "order" ) if Gaffer.Metadata.nodeValue( v, "order" ) is not None else 999 )
+			self.tools.sort( key = lambda v : Gaffer.Metadata.value( v, "order" ) if Gaffer.Metadata.value( v, "order" ) is not None else 999 )
 
 			self.__toolPlugSetConnections = [
 				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet, fallbackResult = lambda plug : None ) ) for t in self.tools
@@ -325,7 +325,7 @@ class _ToolChooser( GafferUI.Frame ) :
 				for tool in self.tools :
 
 					toolTip = tool.getName()
-					description = Gaffer.Metadata.nodeDescription( tool )
+					description = Gaffer.Metadata.value( tool, "description" )
 					if description :
 						toolTip += "\n\n" + IECore.StringUtil.wrap( description, 80 )
 

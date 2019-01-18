@@ -52,3 +52,9 @@ def __registerValueWrapper( originalRegisterValue ) :
 	return staticmethod( registerValue )
 
 Gaffer.Metadata.registerValue = __registerValueWrapper( Gaffer.Metadata.registerValue )
+
+# Monkey patching for continued support of deprecated methods that are used in
+# legacy .gfr files.
+
+Gaffer.Metadata.registerNodeValue = staticmethod( Gaffer.Metadata.registerValue )
+Gaffer.Metadata.registerPlugValue = staticmethod( Gaffer.Metadata.registerValue )

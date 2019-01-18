@@ -52,18 +52,6 @@ typename T::ConstPtr Metadata::value( const GraphComponent *target, IECore::Inte
 	return IECore::runTimeCast<const T>( valueInternal( target, key, instanceOnly ) );
 }
 
-template<typename T>
-typename T::ConstPtr Metadata::nodeValue( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly )
-{
-	return IECore::runTimeCast<const T>( nodeValueInternal( node, key, inherit, instanceOnly ) );
-}
-
-template<typename T>
-typename T::ConstPtr Metadata::plugValue( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly )
-{
-	return IECore::runTimeCast<const T>( plugValueInternal( plug, key, inherit, instanceOnly ) );
-}
-
 } // namespace Gaffer
 
 #endif // GAFFER_METADATA_INL

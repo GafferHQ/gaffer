@@ -559,7 +559,7 @@ bool hasNodule( const Plug *plug )
 {
 	for( const Plug *p = plug; p; p = p->parent<Plug>() )
 	{
-		ConstStringDataPtr d = Metadata::plugValue<StringData>( p, g_noduleTypeName );
+		ConstStringDataPtr d = Metadata::value<StringData>( p, g_noduleTypeName );
 		if( d && d->readable() == "" )
 		{
 			return false;

@@ -44,6 +44,7 @@
 #include "IECore/SimpleTypedData.h"
 
 using namespace GafferUI;
+using namespace IECore;
 using namespace Imath;
 using namespace std;
 
@@ -154,10 +155,9 @@ std::string Nodule::getToolTip( const IECore::LineSegment3f &line ) const
 	}
 
 	result = "<h3>" + result + "</h3>";
-	std::string description = Gaffer::Metadata::plugDescription( m_plug.get() );
-	if( description.size() )
+	if( ConstStringDataPtr description = Gaffer::Metadata::value<StringData>( m_plug.get(), "description" ) )
 	{
-		result += "\n\n" + description;
+		result += "\n\n" + description->readable();
 	}
 
 	return result;

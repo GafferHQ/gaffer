@@ -100,7 +100,7 @@ std::string Serialisation::result() const
 		runTimeCast<const Node>( m_parent )
 	)
 	{
-		boost::format formatter( "Gaffer.Metadata.registerNodeValue( %s, \"%s\", %d, persistent=False )\n" );
+		boost::format formatter( "Gaffer.Metadata.registerValue( %s, \"%s\", %d, persistent=False )\n" );
 
 		result += "\n";
 		result += boost::str( formatter % m_parentName % "serialiser:milestoneVersion" % GAFFER_MILESTONE_VERSION );

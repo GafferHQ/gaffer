@@ -295,7 +295,7 @@ class stats( Gaffer.Application ) :
 
 	def __writeVersion( self, script ) :
 
-		numbers = [ Gaffer.Metadata.nodeValue( script, "serialiser:" + x + "Version" ) for x in ( "milestone", "major", "minor", "patch" ) ]
+		numbers = [ Gaffer.Metadata.value( script, "serialiser:" + x + "Version" ) for x in ( "milestone", "major", "minor", "patch" ) ]
 		if None not in numbers :
 			version = ".".join( str( x ) for x in numbers )
 		else :
