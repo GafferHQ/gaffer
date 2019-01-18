@@ -65,6 +65,14 @@ def __sceneView( plug ) :
 
 GafferUI.View.registerView( GafferScene.ScenePlug.staticTypeId(), __sceneView )
 
+# Add items to the viewer's right click menu
+
+def __viewContextMenu( viewer, view, menuDefinition ) :
+
+	GafferSceneUI.SceneHistoryUI.appendViewContextMenuItems( viewer, view, menuDefinition )
+
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+
 # register shading modes
 
 def __createNode( nodeType, plugValues ) :

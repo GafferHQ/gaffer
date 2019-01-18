@@ -40,6 +40,8 @@
 #include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/Process.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ClippingPlane.h"
@@ -47,9 +49,11 @@
 #include "IECoreScene/MatrixMotionTransform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
+#include "IECore/MessageHandler.h"
 #include "IECore/NullObject.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "tbb/parallel_for.h"
 #include "tbb/spin_mutex.h"
@@ -302,4 +306,174 @@ Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
 	{
 		return Imath::Box3f();
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// History
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct CapturedProcess
+{
+
+	typedef std::unique_ptr<CapturedProcess> Ptr;
+	typedef vector<Ptr> PtrVector;
+
+	InternedString type;
+	ConstPlugPtr plug;
+	ContextPtr context;
+
+	PtrVector children;
+
+};
+
+/// \todo Perhaps add this to the Gaffer module as a
+/// public class, and expose it within the stats app?
+/// Give a bit more thought to the CapturedProcess
+/// class if doing this.
+class CapturingMonitor : public Monitor
+{
+
+	public :
+
+		CapturingMonitor()
+		{
+		}
+
+		~CapturingMonitor() override
+		{
+		}
+
+		const CapturedProcess::PtrVector &rootProcesses()
+		{
+			return m_rootProcesses;
+		}
+
+	protected :
+
+		void processStarted( const Process *process ) override
+		{
+			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
+			capturedProcess->type = process->type();
+			capturedProcess->plug = process->plug();
+			capturedProcess->context = new Context( *process->context() );
+
+			Mutex::scoped_lock lock( m_mutex );
+
+			m_processMap[process] = capturedProcess.get();
+
+			if( process->parent() )
+			{
+				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+				if( it != m_processMap.end() )
+				{
+					it->second->children.push_back( std::move( capturedProcess ) );
+				}
+				else
+				{
+					// We've been called for a process whose parent we have not
+					// been called for. This shouldn't happen, but currently it
+					// can if another thread is doing unrelated computes while we're
+					// trying to capture the transform computes on the UI thread.
+					// We need our scope to be limited to processes that originate
+					// from the thread our Process::Scope is on, but that is not the
+					// case (see #2806). The best we can do is ignore this, but we
+					// could still crash if a background process accesses us after
+					// we're destroyed. Output a warning so we have a trail of
+					// breadcrumbs for the future.
+					IECore::msg( IECore::Msg::Warning, "CapturingMonitor", "Unscoped process encountered" );
+				}
+			}
+			else
+			{
+				m_rootProcesses.push_back( std::move( capturedProcess ) );
+			}
+		}
+
+		void processFinished( const Process *process ) override
+		{
+			Mutex::scoped_lock lock( m_mutex );
+			m_processMap.erase( process );
+		}
+
+	private :
+
+		typedef tbb::spin_mutex Mutex;
+
+		Mutex m_mutex;
+		typedef boost::unordered_map<const Process *, CapturedProcess *> ProcessMap;
+		ProcessMap m_processMap;
+		CapturedProcess::PtrVector m_rootProcesses;
+
+};
+
+InternedString g_contextUniquefierName = "__sceneAlgoHistory:uniquefier";
+uint64_t g_contextUniquefierValue = 0;
+
+SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedString scenePlugChildName, SceneAlgo::History *parent )
+{
+	SceneAlgo::History::Ptr history;
+	ScenePlug *scene = const_cast<Plug *>( process->plug.get() )->parent<ScenePlug>();
+	if( scene && process->plug.get() == scene->getChild( scenePlugChildName ) )
+	{
+		history = new SceneAlgo::History( scene, process->context );
+	}
+
+	if( parent && history )
+	{
+		parent->predecessors.push_back( history );
+	}
+
+	parent = history ? history.get() : parent;
+	assert( parent );
+
+	for( const auto &p : process->children )
+	{
+		historyWalk( p.get(), scenePlugChildName, parent );
+	}
+
+	return history;
+}
+
+} // namespace
+
+SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path )
+{
+	if( !scenePlugChild->parent<ScenePlug>() )
+	{
+		throw IECore::Exception( boost::str(
+			boost::format( "Plug \"%1%\" is not a child of a ScenePlug." ) % scenePlugChild->fullName()
+		) );
+	}
+
+	CapturingMonitor monitor;
+	{
+		ScenePlug::PathScope pathScope( Context::current(), path );
+		// Trick to bypass the hash cache and get a full upstream evaluation.
+		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
+		Monitor::Scope monitorScope( &monitor );
+		scenePlugChild->hash();
+	}
+	assert( monitor.rootProcesses().size() == 1 );
+	return historyWalk( monitor.rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
+}
+
+ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	History::ConstPtr h = history( scene->objectPlug(), path );
+	const History *c = h.get();
+	while( c )
+	{
+		if( c->predecessors.empty() )
+		{
+			return c->scene.get();
+		}
+		else
+		{
+			c = c->predecessors.front().get();
+		}
+	}
+	return nullptr;
 }
