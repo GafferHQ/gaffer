@@ -190,5 +190,24 @@ class DotTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["d"]["out"], "connectionGadget:color" ), connectionColor )
 		self.assertEqual( Gaffer.Metadata.value( s["d"]["out"], "nodule:color" ), noodleColor )
 
+	def testSerialisationUsesSetup( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s1["d"] = Gaffer.Dot()
+		s1["d"].setup( Gaffer.IntPlug() )
+
+		ss = s1.serialise()
+		self.assertIn( "setup", ss )
+		self.assertEqual( ss.count( "addChild" ), 1 )
+		self.assertNotIn( "Dynamic", ss )
+		self.assertNotIn( "setInput", ss )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+		self.assertIn( "in", s2["d"] )
+		self.assertIn( "out", s2["d"] )
+		self.assertIsInstance( s2["d"]["in"], Gaffer.IntPlug )
+		self.assertIsInstance( s2["d"]["out"], Gaffer.IntPlug )
+
 if __name__ == "__main__":
 	unittest.main()

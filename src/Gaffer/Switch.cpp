@@ -83,19 +83,18 @@ void Switch::setup( const Plug *plug )
 
 	PlugPtr inElement = plug->createCounterpart( "in0", Plug::In );
 	MetadataAlgo::copyColors( plug , inElement.get() , /* overwrite = */ false  );
-	inElement->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	inElement->setFlags( Plug::Serialisable, true );
 	ArrayPlugPtr in = new ArrayPlug(
 		g_inPlugsName,
 		Plug::In,
 		inElement,
 		0,
-		Imath::limits<size_t>::max(),
-		Plug::Default | Plug::Dynamic
+		Imath::limits<size_t>::max()
 	);
 	addChild( in );
 
 	PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
-	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	out->setFlags( Plug::Serialisable, false ); // Avoid serialising internal connection
 	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
 	addChild( out );
 }

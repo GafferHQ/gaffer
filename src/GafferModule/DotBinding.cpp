@@ -55,6 +55,52 @@ void setup( Dot &dot, const Plug &plug )
 	dot.setup( &plug );
 }
 
+/// \todo This is almost identical to the serialisers for Switch, ContextProcessor and Loop.
+/// Can we somehow consolidate them all into one? Or should `setup()` calls be supported by
+/// the standard serialiser, driven by some metadata?
+class DotSerialiser : public NodeSerialiser
+{
+
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		const Dot *dot = child->parent<Dot>();
+		if( child == dot->inPlug() || child == dot->outPlug() )
+		{
+			// We'll serialise a `setup()` call to construct these.
+			return false;
+		}
+		return NodeSerialiser::childNeedsConstruction( child, serialisation );
+	}
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		auto dot = static_cast<const Dot *>( graphComponent );
+		if( !dot->inPlug() )
+		{
+			// Dot::setup() hasn't been called yet.
+			return result;
+		}
+
+		if( result.size() )
+		{
+			result += "\n";
+		}
+
+		// Add a call to `setup()` to recreate the plugs.
+
+		PlugPtr plug = dot->inPlug()->createCounterpart( "in", Plug::In );
+		plug->setFlags( Plug::Dynamic, false );
+
+		const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( plug.get() );
+		result += identifier + ".setup( " + plugSerialiser->constructor( plug.get(), serialisation ) + " )\n";
+
+		return result;
+	}
+
+};
+
 } // namespace
 
 void GafferModule::bindDot()
@@ -70,5 +116,7 @@ void GafferModule::bindDot()
 		.value( "UpstreamNodeName", Dot::UpstreamNodeName )
 		.value( "Custom", Dot::Custom )
 	;
+
+	Serialisation::registerSerialiser( Dot::staticTypeId(), new DotSerialiser );
 
 }

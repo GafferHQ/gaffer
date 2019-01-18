@@ -72,12 +72,11 @@ void Loop::setup( const ValuePlug *plug )
 
 	PlugPtr in = plug->createCounterpart( "in", Plug::In );
 	MetadataAlgo::copyColors( plug , in.get() , /* overwrite = */ false  );
-	in->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	in->setFlags( Plug::Serialisable, true );
 	addChild( in );
 
 	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
 	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
-	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	addChild( out );
 }
 
