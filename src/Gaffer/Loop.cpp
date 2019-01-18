@@ -269,8 +269,15 @@ bool Loop::setupPlugs()
 	previousPlug()->setFlags( Plug::Dynamic, false );
 
 	// Copy styling over from main plugs.
-	/// \todo It would be much better if colours could be registered once by
-	/// Plug TypeId, and then we wouldn't need to do this.
+	/// \todo We shouldn't really need to do this, because plug colours are
+	/// expected to be registered against plug type, so our plugs will get
+	/// the right colour automatically (and `copyColors()` will do nothing
+	/// because of the `overwrite = false` argument). We are keeping it for
+	/// now to accommodate proprietary extensions which are using custom colours
+	/// instead of introducing their own plug types, but some day we should
+	/// just remove this entirely. Note that the same applies for the Dot,
+	/// ContextProcessor, ArrayPlug and Switch nodes. See
+	/// https://github.com/GafferHQ/gaffer/pull/2953 for further discussion.
 	MetadataAlgo::copyColors( inPlug(), nextPlug() , /* overwrite = */ false  );
 	MetadataAlgo::copyColors( inPlug(), previousPlug() , /* overwrite = */ false  );
 
