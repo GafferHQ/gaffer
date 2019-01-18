@@ -35,10 +35,12 @@
 ##########################################################################
 
 import GafferUI
+import GafferSceneUI
 
 def __editorCreated( editor ) :
 
 	GafferUI.GraphBookmarksUI.connectToEditor( editor )
+	GafferSceneUI.SceneHistoryUI.connectToEditor( editor )
 
 GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
 
