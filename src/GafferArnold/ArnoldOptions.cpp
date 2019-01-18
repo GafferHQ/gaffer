@@ -151,6 +151,9 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:console:memory", new IECore::BoolData( true ), "consoleMemory", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:color", new IECore::BoolData( true ), "consoleColor", Gaffer::Plug::Default, false );
 
+	// Statistics
+	options->addOptionalMember( "ai:statisticsFileName", new IECore::StringData( "" ), "statisticsFileName", Gaffer::Plug::Default, false );
+
 	// Licensing
 
 	options->addOptionalMember( "ai:abort_on_license_fail", new IECore::BoolData( false ), "abortOnLicenseFail", Gaffer::Plug::Default, false );

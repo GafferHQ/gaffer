@@ -172,6 +172,14 @@ def __loggingSummary( plug ) :
 
 	return ", ".join( info )
 
+def __statisticsSummary( plug ) :
+
+	info = []
+	if plug["statisticsFileName"]["enabled"].getValue() :
+		info.append( "File name: " + plug["statisticsFileName"]["value"].getValue() )
+
+	return ", ".join( info )
+
 def __licensingSummary( plug ) :
 
 	info = []
@@ -211,6 +219,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Handling:summary", __errorHandlingSummary,
 			"layout:section:Logging:summary", __loggingSummary,
+			"layout:section:Statistics:summary", __statisticsSummary,
 			"layout:section:Licensing:summary", __licensingSummary,
 
 		],
@@ -881,6 +890,21 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Logging",
 			"label", "Max Warnings",
+
+		],
+
+		# Statistics
+
+		"options.statisticsFileName" : [
+
+			"description",
+			"""
+			The name of a statistics file where Arnold will store structured
+			JSON statistics.
+			""",
+
+			"layout:section", "Statistics",
+			"label", "File Name",
 
 		],
 
