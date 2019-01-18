@@ -141,10 +141,16 @@ void historySetContext( SceneAlgo::History &h, const Gaffer::ContextPtr &c )
 	h.context = c;
 }
 
-SceneAlgo::History::Ptr historyWrapper( const ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path )
+SceneAlgo::History::Ptr historyWrapper( const ValuePlug &scenePlugChild, const ScenePlug::ScenePath &path )
 {
 	IECorePython::ScopedGILRelease r;
-	return SceneAlgo::history( scenePlugChild, path );
+	return SceneAlgo::history( &scenePlugChild, path );
+}
+
+ScenePlugPtr sourceWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &path )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::source( &scene, path );
 }
 
 } // namespace
@@ -193,6 +199,7 @@ void bindSceneAlgo()
 	}
 
 	def( "history", &historyWrapper );
+	def( "source", &sourceWrapper );
 
 }
 

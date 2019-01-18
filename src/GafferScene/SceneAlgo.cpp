@@ -460,3 +460,20 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 	return historyWalk( monitor.rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
 }
 
+ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	History::ConstPtr h = history( scene->objectPlug(), path );
+	const History *c = h.get();
+	while( c )
+	{
+		if( c->predecessors.empty() )
+		{
+			return c->scene.get();
+		}
+		else
+		{
+			c = c->predecessors.front().get();
+		}
+	}
+	return nullptr;
+}

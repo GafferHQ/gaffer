@@ -295,5 +295,40 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegexp( RuntimeError, "is not a child of a ScenePlug" ) :
 			GafferScene.SceneAlgo.history( plane["name"], "/plane" )
 
+	def testSource( self ) :
+
+		# - group1
+		#	- group2
+		#		- plane
+		# 		- sphere
+		#   - plane
+		# - cube
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( plane["out"] )
+		group2["in"][1].setInput( sphere["out"] )
+		group2["name"].setValue( "group2" )
+
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( group2["out"] )
+		group1["in"][1].setInput( plane["out"] )
+		group1["name"].setValue( "group1" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group1["out"] )
+		parent["child"].setInput( cube["out"] )
+		parent["parent"].setValue( "/" )
+
+		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/group1" ), group1["out"] )
+		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/group1/group2" ), group2["out"] )
+		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/group1/group2/plane" ), plane["out"] )
+		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/group1/group2/sphere" ), sphere["out"] )
+		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/group1/plane" ), plane["out"] )
+		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/cube" ), cube["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

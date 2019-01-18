@@ -176,6 +176,9 @@ struct History : public IECore::RefCounted
 
 GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path );
 
+/// Returns the upstream scene originally responsible for generating the specified location.
+GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+
 } // namespace SceneAlgo
 
 } // namespace GafferScene
