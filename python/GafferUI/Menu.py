@@ -74,6 +74,9 @@ class Menu( GafferUI.Widget ) :
 		self.__popupParent = None
 		self.__popupPosition = None
 
+		self.__previousSearchText = ''
+		self.__cachedSearchStructureKeys = []
+
 	## Displays the menu at the specified position, and attached to
 	# an optional parent. If position is not specified then it
 	# defaults to the current cursor position. If forcePosition is specified
@@ -405,6 +408,18 @@ class Menu( GafferUI.Widget ) :
 
 		return itemValue
 
+	def __getSearchBoxErrorState(self):
+
+		return GafferUI._Variant.fromVariant( self.__searchLine.property( "gafferError" ) ) or False
+
+	def __setSearchBoxErrorState(self, errored):
+
+		if errored is self.__getSearchBoxErrorState():
+			return
+
+		self.__searchLine.setProperty( "gafferError", GafferUI._Variant.toVariant( errored ) )
+		self._repolish()
+
 	def __updateSearchMenu( self, text ) :
 
 		if not self.__searchable :
@@ -418,40 +433,54 @@ class Menu( GafferUI.Widget ) :
 		if not text :
 			return
 
-		matched = self.__matchingActions( str(text) )
+		text = str(text)
+		errored = False
+		matched = self.__matchingActions( text )
 
-		# sorting on match position within the name
-		matchIndexMap = {}
-		for name, info in matched.items() :
-			if info["pos"] not in matchIndexMap :
-				matchIndexMap[info["pos"]] = []
-			matchIndexMap[info["pos"]].append( ( name, info["actions"] ) )
+		if not matched:
+
+			errored = True
+
+			if len( text ) > 1:
+				matched = self.__matchingActions( text[:-1] )
+
+			# cut of after first character that gives no results anymore
+			if not matched and len( text ) > 2:
+				self.__searchLine.setText( text[:-1] )
+				matched = self.__matchingActions( text[:-2] )
+
+		self.__setSearchBoxErrorState(errored)
+
+		# sort first by weight, then position of the first matching character, then alphabetically
+		matchedItems = [ ( k, v['pos'], v['weight'], v['actions']  ) for k, v in matched.items() ]
+		matchedItems = sorted(matchedItems, key = lambda x : (x[2], x[1], x[0]))
 
 		numActions = 0
 		maxActions = 30
 		overflowMenu = None
 
-		# sorting again alphabetically within each match position
-		for matchIndex in sorted( matchIndexMap ) :
+		for match in matchedItems:
 
-			for ( name, actions ) in sorted( matchIndexMap[matchIndex], key = lambda x : x[0] ) :
+			name = match[0]
+			actions = match[3]
 
-				if len(actions) > 1 :
-					for ( action, path ) in actions :
-						action.setText( self.__disambiguate( name, path ) )
-				# since all have the same name, sorting alphabetically on disambiguation text
-				for ( action, path ) in sorted( actions, key = lambda x : x[0].text() ) :
+			if len( actions ) > 1 :
+				for ( action, path ) in actions :
+					action.setText( self.__disambiguate( name, path ) )
 
-					if numActions < maxActions :
-						self.__searchMenu.addAction( action )
-					else :
-						if overflowMenu is None :
-							self.__searchMenu.addSeparator()
-							overflowMenu = _Menu( self.__searchMenu, "More Results" )
-							self.__searchMenu.addMenu( overflowMenu )
-						overflowMenu.addAction( action )
+			# since all have the same name, sorting alphabetically on disambiguation text
+			for ( action, path ) in sorted( actions, key = lambda x : x[0].text() ) :
 
-					numActions += 1
+				if numActions < maxActions :
+					self.__searchMenu.addAction( action )
+				else :
+					if overflowMenu is None :
+						self.__searchMenu.addSeparator()
+						overflowMenu = _Menu( self.__searchMenu, "More Results" )
+						self.__searchMenu.addMenu( overflowMenu )
+					overflowMenu.addAction( action )
+
+				numActions += 1
 
 		finalActions = self.__searchMenu.actions()
 		if len(finalActions) :
@@ -464,21 +493,73 @@ class Menu( GafferUI.Widget ) :
 
 	def __matchingActions( self, searchText ) :
 
+		searchText = searchText[:99]  # re matching only supports up to 100 groups
 		results = {}
-		matcher = re.compile( re.escape( searchText ), re.IGNORECASE )
 
-		for name in self.__searchStructure :
+		# split on spaces so we can search words in random order with a lookaround
+		# and do a non greedy search of all the characters.
+		# for example: (?=.*?(t).*?(e).*?(s).*?(t))(?=.*?(w).*?(o).*?(r).*?(d))
+		spaceSeparated = [ s for s in searchText.split(' ') if s ]
+		if not spaceSeparated:
+			return results
+
+		wordLengths = [ len(s) for s in spaceSeparated ]
+		wordSearch =  [ '.*?' + '.*?'.join( [ '(' + re.escape(s[i]) + ')' for i in range(len(s))] ) for s in spaceSeparated ]
+		regex = ''.join( [ '(?=' + s + ')' for s in wordSearch ] )
+
+		matcher = re.compile( regex, re.IGNORECASE )
+
+		# Narrow down the cachedSearchStructure with every typed character, so we only search previously matched items.
+		if searchText.startswith( self.__previousSearchText ) and len( searchText ) != 1:
+			searchStructureKeys = self.__cachedSearchStructureKeys
+		# Revert that cache to the full searchStructure otherwise
+		else:
+			searchStructureKeys = self.__searchStructure.keys()
+
+		self.__cachedSearchStructureKeys = []
+
+		for name in searchStructureKeys :
 
 			match = matcher.search( name )
+
 			if match :
+
+				weight = 0
+				wordWeight = 1
+				currentWordPos = 0
+
+				# go through match groups per word
+				# for the weight calculation per word we reward:
+				# - (d) short distances of the matching characters (penalizing gaps)
+				# - (p) small index of the matches (matches in the beginning of the word)
+				# - (wordWeight) small index of the space separated word
+				for wordLength in wordLengths:
+
+					wordGroups = range( currentWordPos+1, currentWordPos+wordLength+1 )
+					hitPositions = [ match.span( g )[0] for g in wordGroups ]
+					hitPositionDistances = [ j - i for i, j in zip( hitPositions[:-1], hitPositions[1:] ) ]
+
+					weight += wordWeight * sum( [ ( p + 1 ) * d for p, d in zip( hitPositions[:-1], hitPositionDistances ) ] )
+
+					currentWordPos += wordLength
+					wordWeight += 1
+
+				# position of the first matching character
+				pos = match.span( 1 )[0]
+
+				self.__cachedSearchStructureKeys.append( name )
 
 				for item, path in self.__searchStructure[name] :
 
 					action = self.__buildAction( item, name, self.__searchMenu )
 					if name not in results :
-						results[name] = { "pos" : match.start(), "actions" : [] }
+						results[name] = { "pos" : pos, "weight" : weight, "actions" : [], 'grp' : match.groups() }
 
 					results[name]["actions"].append( ( action, path ) )
+
+
+		self.__previousSearchText = searchText
+
 
 		return results
 
