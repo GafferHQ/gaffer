@@ -146,7 +146,7 @@ struct InfoHashAccumulator
 	{
 		IECore::MurmurHash locationHash;
 		in->objectPlug()->hash( locationHash );
-		in->attributesPlug()->hash( locationHash );
+		locationHash.append( in->fullAttributesHash( path ) );
 		std::string pathStr;
 		ScenePlug::pathToString( path, pathStr );
 		m_hashes.push_back( std::pair<std::string, IECore::MurmurHash>( pathStr, locationHash ) );
@@ -261,7 +261,7 @@ struct InfoDataAccumulator
 		info.attributes = new CompoundObject();
 		if( m_attributeNames.size() )
 		{
-			IECore::ConstCompoundObjectPtr inAttributes = in->attributesPlug()->getValue();
+			IECore::ConstCompoundObjectPtr inAttributes = in->fullAttributes( path );
 			for( const auto &i : inAttributes->members() )
 			{
 				if( StringAlgo::matchMultiple( i.first, m_attributeNames ) )

@@ -54,6 +54,9 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		allFilter = GafferScene.PathFilter()
 		allFilter["paths"].setValue( IECore.StringVectorData( [ '/...' ] ) )
 
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
 		plane0 = GafferScene.Plane()
 		plane0["transform"]["translate"].setValue( imath.V3f( 2, 1, 0 ) )
 		plane0["transform"]["scale"].setValue( imath.V3f( 2, 2, 1 ) )
@@ -74,7 +77,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( dictResult(), {'1001': {'/group/plane': {}}} )
 	
 		# Add an attribute
-		udimQuery["attributes"].setValue( 'attributeA attributeB' )
+		udimQuery["attributes"].setValue( 'attributeA attributeB attributeC' )
 		customAttributes0 = GafferScene.CustomAttributes()
 		customAttributes0["attributes"].addMember( "attributeA", "test" )
 		customAttributes0["in"].setInput( plane0["out"] )
@@ -124,10 +127,17 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][2].setInput( customAttributes1["out"] )
 		group["in"][3].setInput( plane2["out"] )
 
+		customAttributes2 = GafferScene.CustomAttributes( "CustomAttributes2" )
+		customAttributes2["in"].setInput( group["out"] )
+		customAttributes2["filter"].setInput( rootFilter["out"] )
+		customAttributes2["attributes"].addMember( "attributeC", "inherited" )
+		
+		mapProjection["in"].setInput( customAttributes2["out"] )
+
 		self.assertEqual( dictResult(), dict(
-			[(i, {'/group/plane': {'attributeA': IECore.StringData( 'test' )}}) for i in [ "1002", "1003", "1012", "1013" ]] +
-			[("1027", {'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 )}})] + 
-			[(i, {'/group/plane2': {}}) for i in ["1038", "1039", "1048", "1049"]]
+			[(i, {'/group/plane': {'attributeA': IECore.StringData( 'test' ), 'attributeC': IECore.StringData( 'inherited' )}}) for i in [ "1002", "1003", "1012", "1013" ]] +
+			[("1027", {'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 ), 'attributeC': IECore.StringData( 'inherited' )}})] + 
+			[(i, {'/group/plane2': {'attributeC': IECore.StringData( 'inherited' )}}) for i in ["1038", "1039", "1048", "1049"]]
  ) )
 
 		# Switch back to default uv set so that everything lands on top of each other
@@ -135,9 +145,9 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( dictResult(), 
 			{ "1001" : {
-				'/group/plane': {'attributeA': IECore.StringData( 'test' )},
-				'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 )},
-				'/group/plane2': {}
+				'/group/plane': {'attributeA': IECore.StringData( 'test' ), 'attributeC': IECore.StringData( 'inherited' )},
+				'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 ), 'attributeC': IECore.StringData( 'inherited' )},
+				'/group/plane2': { 'attributeC': IECore.StringData( 'inherited' )}
 			}})
 
 	def testNameChangeOnly( self ) :
