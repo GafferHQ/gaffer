@@ -436,6 +436,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 	nodeMenu.append( "/OSL/Code", GafferOSL.OSLCode, searchText = "OSLCode" )
 	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
 	nodeMenu.append( "/OSL/Object", GafferOSL.OSLObject, searchText = "OSLObject" )
+	nodeMenu.append( "/OSL/OSLVDB", GafferOSL.OSLVDB, searchText = "OSLVDB" )
 
 	oslDocs = os.path.expandvars( "$GAFFER_ROOT/doc/osl-languagespec.pdf" )
 	scriptWindowMenu.append(

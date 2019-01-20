@@ -49,6 +49,7 @@ enum TypeId
 	OSLCodeTypeId = 110979,
 	ClosurePlugTypeId = 110980,
 	OSLLightTypeId = 110981,
+	OSLVDBTypeId = 110982,
 
 	LastTypeId = 110999
 };

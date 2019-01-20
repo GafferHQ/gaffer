@@ -44,6 +44,7 @@ from ModuleTest import ModuleTest
 from OSLCodeTest import OSLCodeTest
 from OSLLightTest import OSLLightTest
 from ClosurePlugTest import ClosurePlugTest
+from OSLVDBTest import OSLVDBTest
 
 if __name__ == "__main__":
 	import unittest

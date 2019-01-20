@@ -40,5 +40,6 @@ import OSLObjectUI
 import OSLCodeUI
 import OSLExpressionEngineUI
 import OSLLightUI
+import OSLVDBUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSLUI" )

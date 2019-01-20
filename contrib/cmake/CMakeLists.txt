@@ -9,7 +9,7 @@ project( Gaffer )
 # Declare the version
 
 
-option( WITH_TESTS "Compile tests" OFF )
+option( WITH_TESTS "Compile tests" ON )
 
 set( GAFFER_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../.. )
 
