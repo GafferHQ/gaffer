@@ -190,6 +190,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.filteredLights" : [
+
+			"description",
+			"""
+			The lights to be filtered by this light filter. Accepts a
+			set expression or a space separated list of lights.
+			Use \"defaultLights\" to refer to all lights that
+			contribute to illumination by default.
+			""",
+
+			"layout:section", "LightFilters",
+			"label", "Filtered Lights",
+
+		],
+
 	}
 
 )
