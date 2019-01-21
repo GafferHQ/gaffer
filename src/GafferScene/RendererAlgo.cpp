@@ -284,6 +284,7 @@ namespace
 
 InternedString g_camerasSetName( "__cameras" );
 InternedString g_lightsSetName( "__lights" );
+InternedString g_lightFiltersSetName( "__lightFilters" );
 std::string g_renderSetsPrefix( "render:" );
 ConstInternedStringVectorDataPtr g_emptySetsAttribute = new InternedStringVectorData;
 
@@ -330,9 +331,15 @@ struct RenderSets::Updater
 				n = g_camerasSetName;
 				potentialChange = CamerasSetChanged;
 			}
+			else if( i == m_renderSets.m_sets.size() + 1 )
+			{
+				s = &m_renderSets.m_lightFiltersSet;
+				n = g_lightFiltersSetName;
+				potentialChange = LightFiltersSetChanged;
+			}
 			else
 			{
-				assert( i == m_renderSets.m_sets.size() + 1 );
+				assert( i == m_renderSets.m_sets.size() + 2 );
 				s = &m_renderSets.m_lightsSet;
 				n = g_lightsSetName;
 				potentialChange = LightsSetChanged;
@@ -372,6 +379,7 @@ RenderSets::RenderSets( const ScenePlug *scene )
 {
 	m_camerasSet.unprefixedName = g_camerasSetName;
 	m_lightsSet.unprefixedName = g_lightsSetName;
+	m_lightFiltersSet.unprefixedName = g_lightFiltersSetName;
 	update( scene );
 }
 
@@ -414,7 +422,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 	Updater updater( scene, Context::current(), *this, changed );
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_reduce(
-		tbb::blocked_range<size_t>( 0, m_sets.size() + 2 ),
+		tbb::blocked_range<size_t>( 0, m_sets.size() + 3 ),
 		updater,
 		tbb::auto_partitioner(),
 		// Prevents outer tasks silently cancelling our tasks
@@ -429,6 +437,7 @@ void RenderSets::clear()
 	m_sets.clear();
 	m_camerasSet = Set();
 	m_lightsSet = Set();
+	m_lightFiltersSet = Set();
 }
 
 const PathMatcher &RenderSets::camerasSet() const
@@ -439,6 +448,11 @@ const PathMatcher &RenderSets::camerasSet() const
 const PathMatcher &RenderSets::lightsSet() const
 {
 	return m_lightsSet.set;
+}
+
+const PathMatcher &RenderSets::lightFiltersSet() const
+{
+	return m_lightFiltersSet.set;
 }
 
 ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IECore::InternedString> &path ) const
@@ -807,11 +821,48 @@ struct LightOutput : public LocationOutput
 
 };
 
+// \todo: consolidate with LightOutput?
+struct LightFiltersOutput : public LocationOutput
+{
+	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightFiltersSet( renderSets.lightFiltersSet() )
+	{
+	}
+
+	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+	{
+
+
+		if( !LocationOutput::operator()( scene, path ) )
+		{
+			return false;
+		}
+
+		const size_t lightFilterMatch = m_lightFiltersSet.match( path );
+		if( lightFilterMatch & IECore::PathMatcher::ExactMatch )
+		{
+			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
+
+			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->lightFilter(
+				name( path ),
+				!runTimeCast<const NullObject>( object.get() ) ? object.get() : nullptr,
+				attributes().get()
+			);
+
+			applyTransform( objectInterface.get() );
+		}
+
+		return lightFilterMatch & IECore::PathMatcher::DescendantMatch;
+	}
+
+	const PathMatcher &m_lightFiltersSet;
+};
+
 struct ObjectOutput : public LocationOutput
 {
 
 	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() )
 	{
 	}
 
@@ -822,7 +873,7 @@ struct ObjectOutput : public LocationOutput
 			return false;
 		}
 
-		if( ( m_cameraSet.match( path ) & IECore::PathMatcher::ExactMatch ) || ( m_lightSet.match( path ) & IECore::PathMatcher::ExactMatch ) )
+		if( ( m_cameraSet.match( path ) & IECore::PathMatcher::ExactMatch ) || ( m_lightFiltersSet.match( path ) & IECore::PathMatcher::ExactMatch ) || ( m_lightSet.match( path ) & IECore::PathMatcher::ExactMatch ) )
 		{
 			return true;
 		}
@@ -859,6 +910,7 @@ struct ObjectOutput : public LocationOutput
 
 	const PathMatcher &m_cameraSet;
 	const PathMatcher &m_lightSet;
+	const PathMatcher &m_lightFiltersSet;
 
 };
 
@@ -1035,6 +1087,13 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 {
 	const ScenePlug::ScenePath root;
 	LightOutput output( renderer, globals, renderSets, root, scene );
+	SceneAlgo::parallelProcessLocations( scene, output );
+}
+
+void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
+{
+	const ScenePlug::ScenePath root;
+	LightFiltersOutput output( renderer, globals, renderSets, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
