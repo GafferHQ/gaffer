@@ -804,6 +804,11 @@ ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEve
 		}
 
 		const Box3f bound = (*it)->transformedBound( this );
+		if( bound.isEmpty() )
+		{
+			continue;
+		}
+
 		const V3f closestPoint = closestPointOnBox( event.line.p0, bound );
 		const float dist = ( closestPoint - event.line.p0 ).length2();
 		if( dist < maxDist )
