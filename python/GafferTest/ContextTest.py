@@ -237,10 +237,10 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c["v"], v )
 		self.failIf( c["v"].isSame( v ) )
 
-	def testGetWithDefault( self ) :
+	def testGetFallbackValue( self ) :
 
 		c = Gaffer.Context()
-		self.assertRaises( RuntimeError, c.get, "f" )
+		self.assertEqual( c.get( "f" ), None )
 		self.assertEqual( c.get( "f", 10 ), 10 )
 		c["f"] = 1.0
 		self.assertEqual( c.get( "f" ), 1.0 )

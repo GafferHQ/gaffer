@@ -85,13 +85,7 @@ void set( Context &c, const IECore::InternedString &name, const T &value )
 // in the same way as we do for the TypedObjectPlug::getValue() binding. This is mainly of
 // use in the unit tests, but may also have the odd application where performance is critical.
 // As a general rule, you should be wary of using this parameter.
-object get( Context &c, const IECore::InternedString &name, bool copy )
-{
-	ConstDataPtr d = c.get<Data>( name );
-	return dataToPython( d.get(), copy );
-}
-
-object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
+object get( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
 {
 	ConstDataPtr d = c.get<Data>( name, nullptr );
 	return dataToPython( d.get(), copy, defaultValue );
@@ -99,7 +93,8 @@ object getWithDefault( Context &c, const IECore::InternedString &name, object de
 
 object getItem( Context &c, const IECore::InternedString &name )
 {
-	return get( c, name, /* copy = */ true );
+	ConstDataPtr d = c.get<Data>( name );
+	return dataToPython( d.get(), /* copy = */ true );
 }
 
 bool contains( Context &c, const IECore::InternedString &name )
@@ -207,8 +202,7 @@ void GafferModule::bindContext()
 		.def( "__setitem__", &set<Imath::V3f> )
 		.def( "__setitem__", &set<Imath::Color3f> )
 		.def( "__setitem__", &set<Data *> )
-		.def( "get", &get, arg( "_copy" ) = true )
-		.def( "get", &getWithDefault, ( arg( "defaultValue" ), arg( "_copy" ) = true ) )
+		.def( "get", &get, ( arg( "defaultValue" ) = object(), arg( "_copy" ) = true ) )
 		.def( "__getitem__", &getItem )
 		.def( "__contains__", &contains )
 		.def( "remove", &delItem )
