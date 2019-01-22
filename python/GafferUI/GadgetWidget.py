@@ -146,6 +146,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			)
 		)
 
+		if not self._makeCurrent() :
+			return False
+
 		self.__viewportGadget.enterSignal()( self.__viewportGadget, event )
 
 	def __leave( self, widget ) :
@@ -161,6 +164,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 				imath.V3f( p.x, p.y, 0 )
 			)
 		)
+
+		if not self._makeCurrent() :
+			return False
 
 		self.__viewportGadget.leaveSignal()( self.__viewportGadget, event )
 
