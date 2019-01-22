@@ -184,6 +184,36 @@ tuple connectionAt( AuxiliaryConnectionsGadget &g, IECore::LineSegment3f positio
 	return make_tuple( nodeGadgets.first, nodeGadgets.second );
 }
 
+bool connectNode( const GraphLayout &layout, GraphGadget &graph, Gaffer::Node &node, Gaffer::Set &potentialInputs )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return layout.connectNode( &graph, &node, &potentialInputs );
+}
+
+bool connectNodes( const GraphLayout &layout, GraphGadget &graph, Gaffer::Set &nodes, Gaffer::Set &potentialInputs )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return layout.connectNodes( &graph, &nodes, &potentialInputs );
+}
+
+void positionNode( const GraphLayout &layout, GraphGadget &graph, Gaffer::Node &node, const Imath::V2f &fallbackPosition )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	layout.positionNode( &graph, &node, fallbackPosition );
+}
+
+void positionNodes( const GraphLayout &layout, GraphGadget &graph, Gaffer::Set &nodes, const Imath::V2f &fallbackPosition )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	layout.positionNodes( &graph, &nodes, fallbackPosition );
+}
+
+void layoutNodes( const GraphLayout &layout, GraphGadget &graph, Gaffer::Set *nodes )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	layout.layoutNodes( &graph, nodes );
+}
+
 } // namespace
 
 void GafferUIModule::bindGraphGadget()
@@ -228,11 +258,11 @@ void GafferUIModule::bindGraphGadget()
 	;
 
 	IECorePython::RunTimeTypedClass<GraphLayout>()
-		.def( "connectNode", &GraphLayout::connectNode )
-		.def( "connectNodes", &GraphLayout::connectNodes )
-		.def( "positionNode", &GraphLayout::positionNode, ( arg_( "graph" ), arg_( "node" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
-		.def( "positionNodes", &GraphLayout::positionNodes, ( arg_( "graph" ), arg_( "nodes" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
-		.def( "layoutNodes", &GraphLayout::layoutNodes, ( arg_( "graph" ), arg_( "nodes" ) = object() ) )
+		.def( "connectNode", &connectNode )
+		.def( "connectNodes", &connectNodes )
+		.def( "positionNode", &positionNode, ( arg_( "graph" ), arg_( "node" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
+		.def( "positionNodes", &positionNodes, ( arg_( "graph" ), arg_( "nodes" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
+		.def( "layoutNodes", &layoutNodes, ( arg_( "graph" ), arg_( "nodes" ) = object() ) )
 	;
 
 	IECorePython::RunTimeTypedClass<StandardGraphLayout>()
