@@ -269,14 +269,8 @@ private:
 	const std::string &m_tweakName;
 };
 
-void applyTweakInternal( const TweakPlug *tweakPlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, bool requireExists )
+void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, bool requireExists )
 {
-	if( !tweakPlug->enabledPlug()->getValue() )
-	{
-		return;
-	}
-
-	TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
 	if( mode == TweakPlug::Remove )
 	{
 		parameters->writable().erase( parameterName );
@@ -284,11 +278,11 @@ void applyTweakInternal( const TweakPlug *tweakPlug, const std::string &tweakNam
 	}
 
 	Data *parameterValue = parameters->member<Data>( parameterName );
-	DataPtr newData = PlugAlgo::extractDataFromPlug( tweakPlug->valuePlug() );
+	DataPtr newData = PlugAlgo::extractDataFromPlug( valuePlug );
 	if( !newData )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % tweakName % tweakPlug->valuePlug()->typeName() )
+			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % tweakName % valuePlug->typeName() )
 		);
 	}
 	if( parameterValue && parameterValue->typeId() != newData->typeId() )
@@ -320,20 +314,26 @@ void applyTweakInternal( const TweakPlug *tweakPlug, const std::string &tweakNam
 
 void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists ) const
 {
+	if( !enabledPlug()->getValue() )
+	{
+		return;
+	}
+
 	const std::string name = namePlug()->getValue();
 	if( name.empty() )
 	{
 		return;
 	}
 
-	applyTweakInternal( this, name, name, parameters, requireExists );
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
+	applyTweakInternal( mode, this->valuePlug(), name, name, parameters, requireExists );
 }
 
 void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	unordered_map<InternedString, IECoreScene::ShaderPtr> modifiedShaders;
 
-	bool madeConnections = false;
+	bool removedConnections = false;
 	for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
 	{
 		const TweakPlug *tweakPlug = tIt->get();
@@ -356,9 +356,21 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 			parameter.name = InternedString( name.c_str() + dotPos + 1 );
 		}
 
-		if( auto input = shaderNetwork->input( parameter ) )
+		if( !tweakPlug->enabledPlug()->getValue() )
 		{
+			continue;
+		}
+
+		const Mode mode = static_cast<Mode>( tweakPlug->modePlug()->getValue() );
+
+		if( auto input = shaderNetwork->input( parameter )  )
+		{
+			if( mode != Mode::Replace )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when a previous connection exists" ) % name ) );
+			}
 			shaderNetwork->removeConnection( { input, parameter } );
+			removedConnections = true;
 		}
 
 		const auto shaderOutput = tweakPlug->shaderOutput();
@@ -375,19 +387,15 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 				}
 			}
 
-			if( !inputNetwork || !inputNetwork->getOutput() )
+			if( inputNetwork && inputNetwork->getOutput() )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Input didn't generate a valid shader network" ) % name ) );
+				if( mode != Mode::Replace )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when inserting a connection" ) % name ) );
+				}
+				const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
+				shaderNetwork->addConnection( { inputParameter, parameter } );
 			}
-
-			if( tweakPlug->modePlug()->getValue() != Mode::Replace )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when inserting a connection" ) % name ) );
-			}
-
-			const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
-			shaderNetwork->addConnection( { inputParameter, parameter } );
-			madeConnections = true;
 		}
 		else
 		{
@@ -407,7 +415,7 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 				}
 			}
 
-			applyTweakInternal( tweakPlug, name, parameter.name, modifiedShader.first->second->parametersData(), /* requireExists = */ true );
+			applyTweakInternal( mode, tweakPlug->valuePlug(), name, parameter.name, modifiedShader.first->second->parametersData(), /* requireExists = */ true );
 		}
 	}
 
@@ -416,7 +424,7 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 		shaderNetwork->setShader( x.first, std::move( x.second ) );
 	}
 
-	if( madeConnections )
+	if( removedConnections )
 	{
 		ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
 	}
