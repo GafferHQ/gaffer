@@ -64,10 +64,6 @@ IE_CORE_FORWARDDECLARE( GraphGadget );
 /// The GraphLayout class provides a base class for implementing layout algorithms for
 /// the GraphGadget. This simplifies GraphGadget implementation and makes it possible to
 /// implement different styles of layout for different scenarios.
-/// \todo This needs a method for laying out a whole bunch of nodes at once, and perhaps
-/// a mechanism of named operations which can be invoked by menu items in the GraphEditor.
-/// The StandardGraphLayout should then implement some variation of the Sugiyama algorithm
-/// and have named operations for snapping to grid, aligning etc.
 class GAFFERUI_API GraphLayout : public IECore::RunTimeTyped
 {
 
@@ -79,24 +75,29 @@ class GAFFERUI_API GraphLayout : public IECore::RunTimeTyped
 
 		/// Attempts to connect the specified node to the specified input nodes. Returns true
 		/// if any connections were made and false otherwise.
+		/// \undoable
 		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const = 0;
 		/// Attempts to connect the specified nodes to the specified input nodes in a sensible fashion.
 		/// Returns true if any connections were made and false otherwise.
+		/// \undoable
 		virtual bool connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const = 0;
 
 		/// Positions the specified node somewhere sensible, while leaving all other
 		/// nodes in the graph in their current positions. The fallbackPosition may
 		/// be specified to provide a hint as to where might be convenient for the user
 		/// in the absence of a better means of determining a position.
+		/// \undoable
 		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const = 0;
 		/// Positions the specified nodes somewhere sensible, preserving their relative positions
 		/// and leaving all other nodes in the graph in their current positions. The fallbackPosition may
 		/// be specified to provide a hint as to where might be convenient for the user
 		/// in the absence of a better means of determining a position.
+		/// \undoable
 		virtual void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const = 0;
 
 		/// Automatically positions the specified nodes relative to one another to
 		/// make best sense of the connections between them.
+		/// \undoable
 		virtual void layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) const = 0;
 
 	protected :
