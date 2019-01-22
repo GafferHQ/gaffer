@@ -994,6 +994,59 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( arnold.AiArrayGetNumElements( arnold.AiNodeGetArray( sphere, "light_group" ) ), 0 )
 			self.assertFalse( arnold.AiNodeGetBool( sphere, "use_light_group" ) )
 
+	def testLightFilters( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["lightFilter"] = GafferArnold.ArnoldLightFilter()
+		s["lightFilter"].loadShader( "light_blocker" )
+
+		s["attributes"] = GafferScene.StandardAttributes()
+		s["attributes"]["in"].setInput( s["lightFilter"]["out"] )
+		s["attributes"]["attributes"]["filteredLights"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
+
+		s["light"] = GafferArnold.ArnoldLight()
+		s["light"].loadShader( "point_light" )
+
+		s["gobo"] = GafferArnold.ArnoldShader()
+		s["gobo"].loadShader( "gobo" )
+
+		s["assignment"] = GafferScene.ShaderAssignment()
+		s["assignment"]["in"].setInput( s["light"]["out"] )
+		s["assignment"]["shader"].setInput( s["gobo"]["out"] )
+
+		s["group"] = GafferScene.Group()
+
+		s["group"]["in"][0].setInput( s["attributes"]["out"] )
+		s["group"]["in"][1].setInput( s["assignment"]["out"] )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["group"]["out"] )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			light = arnold.AiNodeLookUpByName( "light:/group/light" )
+			linkedFilters = arnold.AiNodeGetArray( light, "filters" )
+			numFilters = arnold.AiArrayGetNumElements( linkedFilters.contents )
+
+			self.assertEqual( numFilters, 2 )
+
+			linkedFilter = arnold.cast(arnold.AiArrayGetPtr(linkedFilters, 0), arnold.POINTER(arnold.AtNode))
+			linkedGobo = arnold.cast(arnold.AiArrayGetPtr(linkedFilters, 1), arnold.POINTER(arnold.AtNode))
+
+			self.assertEqual( arnold.AiNodeGetName( linkedFilter ), "lightFilter:/group/lightFilter" )
+
+			# We don't care about the exact name of the gobo which contains a hash
+			goboName = arnold.AiNodeGetName( linkedGobo )
+			self.assertTrue( goboName.startswith( "shader:" ) and goboName.endswith( ":gobo" ) )
+
 	def testAbortRaises( self ) :
 
 		s = Gaffer.ScriptNode()
