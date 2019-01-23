@@ -793,6 +793,7 @@ _styleSheet = string.Template(
 		width: 20px;
 		height: 20px;
 		background-color: transparent;
+		border-radius: 2px;
 	}
 
 	QCheckBox::indicator:unchecked {
@@ -820,6 +821,14 @@ _styleSheet = string.Template(
 
 	QCheckBox::indicator:unchecked:disabled {
 		image: url($GAFFER_ROOT/graphics/checkBoxUncheckedDisabled.png);
+	}
+
+	QCheckBox[gafferAnimated="true"]::indicator {
+		background-color: $animatedColor;
+	}
+
+	QCheckBox[gafferError="true"]::indicator {
+		background-color: $errorColor;
 	}
 
 	/* boolwidget drawn as switch */
