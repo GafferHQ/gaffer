@@ -114,15 +114,10 @@ if moduleSearchPath.find( "arnold" ) :
 		nodeMenu.append( "/Arnold/Displacement", GafferArnold.ArnoldDisplacement, searchText = "ArnoldDisplacement"  )
 		nodeMenu.append( "/Arnold/VDB", GafferArnold.ArnoldVDB, searchText = "ArnoldVDB"  )
 		nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
-		nodeMenu.append(
-			"/Arnold/Render", GafferArnold.ArnoldRender,
-			plugValues = {
-				"fileName" : "${project:rootDirectory}/asses/${script:name}/${script:name}.####.ass",
-			},
-			searchText = "ArnoldRender"
-		)
+		nodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender, searchText = "ArnoldRender" )
 		nodeMenu.append( "/Arnold/Interactive Render", GafferArnold.InteractiveArnoldRender, searchText = "InteractiveArnoldRender" )
 		nodeMenu.append( "/Arnold/Shader Ball", GafferArnold.ArnoldShaderBall, searchText = "ArnoldShaderBall" )
+		nodeMenu.append( "/Arnold/Arnold Texture Bake", GafferArnold.ArnoldTextureBake, searchText = "ArnoldTextureBake" )
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
 
@@ -249,13 +244,7 @@ if "APPLESEED" in os.environ :
 
 		nodeMenu.append( "/Appleseed/Attributes", GafferAppleseed.AppleseedAttributes, searchText = "AppleseedAttributes" )
 		nodeMenu.append( "/Appleseed/Options", GafferAppleseed.AppleseedOptions, searchText = "AppleseedOptions" )
-		nodeMenu.append(
-			"/Appleseed/Render", GafferAppleseed.AppleseedRender,
-			plugValues = {
-				"fileName" : "${project:rootDirectory}/appleseeds/${script:name}/${script:name}.####.appleseed",
-			},
-			searchText = "AppleseedRender"
-		)
+		nodeMenu.append( "/Appleseed/Render", GafferAppleseed.AppleseedRender, searchText = "AppleseedRender" )
 		nodeMenu.append( "/Appleseed/Interactive Render", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveAppleseedRender" )
 		nodeMenu.append( "/Appleseed/Shader Ball", GafferAppleseed.AppleseedShaderBall, searchText = "AppleseedShaderBall" )
 

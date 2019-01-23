@@ -113,7 +113,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			A space separated list of attribute names ( may use wildcards ), to collect from meshes
-			which have UDIMs, and return as part of the output.
+			which have UDIMs, and return as part of the output.  Inherited attributes are included.
 			""",
 			"nodule:type", "",
 

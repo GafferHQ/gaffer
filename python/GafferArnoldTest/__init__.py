@@ -48,6 +48,7 @@ from IECoreArnoldPreviewTest import *
 from ArnoldAOVShaderTest import ArnoldAOVShaderTest
 from ArnoldAtmosphereTest import ArnoldAtmosphereTest
 from ArnoldBackgroundTest import ArnoldBackgroundTest
+from ArnoldTextureBakeTest import ArnoldTextureBakeTest
 from ModuleTest import ModuleTest
 from ArnoldShaderBallTest import ArnoldShaderBallTest
 
