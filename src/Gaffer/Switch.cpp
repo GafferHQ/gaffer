@@ -94,7 +94,7 @@ void Switch::setup( const Plug *plug )
 	addChild( in );
 
 	PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
-	out->setFlags( Plug::Serialisable, false ); // Avoid serialising internal connection
+	out->setFlags( Plug::Serialisable, true );
 	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
 	addChild( out );
 }

@@ -92,18 +92,6 @@ namespace GafferModule
 class BoxIOSerialiser : public NodeSerialiser
 {
 
-	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-	{
-		const BoxIO *boxIO = child->parent<BoxIO>();
-		if( child == boxIO->outPlugInternal() )
-		{
-			// Avoid having our internal connection serialised. This will
-			// be recreated in `setup()` anyway.
-			return false;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
-	}
-
 	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		const BoxIO *boxIO = child->parent<BoxIO>();

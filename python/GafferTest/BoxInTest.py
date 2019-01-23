@@ -476,5 +476,18 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s1["b"].keys(), s2["b"].keys() )
 
+	def testPlugMetadataSerialisation( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s1["b"] = Gaffer.BoxIn()
+		s1["b"].setup( Gaffer.IntPlug() )
+
+		Gaffer.Metadata.registerValue( s1["b"]["out"], "test", 1 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s1.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.value( s2["b"]["out"], "test" ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -81,7 +81,7 @@ void Dot::setup( const Plug *plug )
 	MetadataAlgo::copyColors( originalPlug , out.get() , /* overwrite = */ false );
 
 	in->setFlags( Plug::Serialisable, true );
-	out->setFlags( Plug::Serialisable, false ); // Avoid serialising internal connection
+	out->setFlags( Plug::Serialisable, true );
 
 	// Set up Metadata so our plugs appear in the right place. We must do this now rather
 	// than later because the GraphEditor will add a Nodule for the plug as soon as the plug

@@ -41,6 +41,7 @@
 #include "GafferBindings/PlugBinding.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/BoxIO.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -88,6 +89,24 @@ class ArrayPlugSerialiser : public PlugSerialiser
 {
 
 	public :
+
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+		{
+			auto arrayPlug = static_cast<const ArrayPlug *>( child->parent() );
+			if( arrayPlug->direction() == Plug::Out && arrayPlug->parent<BoxIO>() )
+			{
+				// BoxIO serialisation is different than most nodes, in that
+				// the internal connection is made _before_ children are added
+				// to the input ArrayPlug. The existence of the connection means
+				// that when a child is added to the input plug, an equivalent
+				// child is added to the output plug automatically. Hence we don't
+				// need to serialise an explicit constructor for this child.
+				/// \todo Figure out how we can do this cleanly, without the
+				/// ArrayPlugSerialiser needing knowledge of BoxIO.
+				return false;
+			}
+			return PlugSerialiser::childNeedsConstruction( child, serialisation );
+		}
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{

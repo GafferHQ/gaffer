@@ -506,6 +506,21 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertIsInstance( s2["switch"]["in"][0], Gaffer.IntPlug )
 		self.assertIsInstance( s2["switch"]["out"], Gaffer.IntPlug )
 
+	def testPlugMetadataSerialisation( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s1["switch"] = Gaffer.Switch()
+		s1["switch"].setup( Gaffer.IntPlug() )
+
+		Gaffer.Metadata.registerValue( s1["switch"]["in"], "test", 1 )
+		Gaffer.Metadata.registerValue( s1["switch"]["out"], "test", 2 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s1.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.value( s2["switch"]["in"], "test" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( s2["switch"]["out"], "test" ), 2 )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

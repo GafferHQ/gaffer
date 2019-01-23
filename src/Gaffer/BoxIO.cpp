@@ -211,6 +211,7 @@ void BoxIO::setup( const Plug *plug )
 	addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
 	inPlugInternal()->setFlags( Plug::Serialisable, true );
+	outPlugInternal()->setFlags( Plug::Serialisable, true );
 	applyDynamicFlag( inPlugInternal() );
 	applyDynamicFlag( outPlugInternal() );
 
