@@ -953,7 +953,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		shaderAssignment["filter"].setInput(pathFilter["out"])
 		shaderAssignment["shader"].setInput(n1["out"]["out"])
 
-		network = shaderAssignment["out"].attributes( "/sphere" )["osl:shader"]
+		network = shaderAssignment["out"].attributes( "/sphere" )["osl:surface"]
 		self.assertEqual( len( network ), 3 )
 
 		self.assertEqual( network.getShader( "red1" ).name.split( "/" )[-1], "red" )
@@ -963,7 +963,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# when we disable the add shader we should get the pass through parameter's ("a") shader (n2)
 		n1["enabled"].setValue( False )
 
-		network = shaderAssignment["out"].attributes( "/sphere" )["osl:shader"]
+		network = shaderAssignment["out"].attributes( "/sphere" )["osl:surface"]
 		self.assertEqual( len ( network ), 1 )
 		self.assertEqual( network.getShader( "red1" ).name.split( "/" )[-1], "red" )
 
@@ -1081,6 +1081,23 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertNotEqual( hash1, hash2 )
 		self.assertNotEqual( hash2, hash3 )
+
+	def testShaderTypeAssignsAsSurfaceType( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		shader = GafferOSL.OSLShader( "globals" )
+		shader.loadShader( "Maths/AddColor" )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["shader"].setInput( shader["out"]["out"] )
+		shaderAssignment["filter"].setInput( planeFilter["out"] )
+
+		self.assertEqual( shaderAssignment["out"].attributes( "/plane" ).keys(), [ "osl:surface" ] )
 
 if __name__ == "__main__":
 	unittest.main()
