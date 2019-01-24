@@ -91,6 +91,11 @@ class GAFFER_API BoxIO : public Node
 		/// construction to determine what
 		/// sort of plug this node will promote.
 		void setup( const Plug *plug );
+		/// Sets up the promoted plug on the parent box.
+		/// This is called automatically by `setup()`, so
+		/// there is no need to call it unless `setup()`
+		/// was called before parenting the BoxIO to a Box.
+		void setupPromotedPlug();
 
 		/// The internal plug which
 		/// can be used within the box.
@@ -169,7 +174,6 @@ class GAFFER_API BoxIO : public Node
 		boost::signals::scoped_connection m_promotedPlugParentChangedConnection;
 
 		void setupPassThrough();
-		void setupPromotedPlug();
 		void setupBoxEnabledPlug();
 		void scriptExecuted( ScriptNode *script );
 		void plugSet( Plug *plug );

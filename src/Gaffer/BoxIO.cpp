@@ -231,17 +231,14 @@ void BoxIO::setup( const Plug *plug )
 		setupPassThrough();
 	}
 
-	if( parent<Box>() )
+	// We also want to set up our promoted plug.  But if we're
+	// being created from a script execution, we don't need to
+	// do that ourselves because it'll have been serialised into
+	// the script.
+	ScriptNode *script = scriptNode();
+	if( !script || !script->isExecuting() )
 	{
-		// We also want to set up our promoted plug.  But if we're
-		// being created from a script execution, we don't need to
-		// do that ourselves because it'll have been serialised into
-		// the script.
-		ScriptNode *script = scriptNode();
-		if( !script || !script->isExecuting() )
-		{
-			setupPromotedPlug();
-		}
+		setupPromotedPlug();
 	}
 }
 
@@ -261,8 +258,11 @@ void BoxIO::setupPassThrough()
 void BoxIO::setupPromotedPlug()
 {
 	Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
-	Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
-	namePlug()->setValue( promoted->getName() );
+	if( toPromote && parent<Box>() )
+	{
+		Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
+		namePlug()->setValue( promoted->getName() );
+	}
 }
 
 void BoxIO::setupBoxEnabledPlug()
@@ -290,16 +290,12 @@ void BoxIO::setupBoxEnabledPlug()
 
 void BoxIO::scriptExecuted( ScriptNode *script )
 {
-	if( m_direction == Plug::Out && inPlugInternal() && !passThroughPlugInternal() )
+	assert( m_direction == Plug::Out );
+	if( inPlugInternal() && !passThroughPlugInternal() )
 	{
 		// We're loading an old script from the times before the pass
 		// through plug.
 		setupPassThrough();
-	}
-
-	if( parent<Box>() && inPlugInternal() && !promotedPlug() )
-	{
-		setupPromotedPlug();
 	}
 
 	script->scriptExecutedSignal().disconnect(
@@ -438,22 +434,19 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 		);
 	}
 
-	// If we're being parented during a script execution, it
-	// could be that we're being cut+pasted into a new Box. In
-	// that case we need to set up our promoted plug, but we
-	// won't know if we're a cut+paste or a regular load until
-	// execution is complete. So we defer until then. We use the
-	// same mechanism to automatically add the pass-through
-	// mechanism to old BoxOuts that were serialised without it.
-
-	ScriptNode *script = scriptNode();
-	if( script && script->isExecuting() )
+	if( m_direction == Plug::Out )
 	{
-		script->scriptExecutedSignal().connect(
-			boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
-		);
+		ScriptNode *script = scriptNode();
+		if( script && script->isExecuting() )
+		{
+			// Connect to `scriptExecutedSignal()` so that after loading
+			// we can add the pass-through mechanism to old BoxOuts that
+			// were serialised without it.
+			script->scriptExecutedSignal().connect(
+				boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
+			);
+		}
 	}
-
 }
 
 void BoxIO::plugInputChanged( Plug *plug )
