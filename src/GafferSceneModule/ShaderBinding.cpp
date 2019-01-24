@@ -163,8 +163,8 @@ void GafferSceneModule::bindShader()
 			)
 		)
 		// value accessors
-		.def( "attributesHash", &shaderPlugAttributesHash )
-		.def( "attributes", &shaderPlugAttributes )
+		.def( "attributesHash", &shaderPlugAttributesHash  )
+		.def( "attributes", &shaderPlugAttributes, ( boost::python::arg_( "_copy" ) = true ) )
 	;
 
 	GafferBindings::NodeClass<OpenGLShader>();

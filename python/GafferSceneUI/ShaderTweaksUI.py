@@ -85,6 +85,19 @@ Gaffer.Metadata.registerNode(
 			"layout:customWidget:footer:widgetType", "GafferSceneUI.ShaderTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,
 
+			"nodule:type", "GafferUI::CompoundNodule",
+			"noduleLayout:section", "left",
+			"noduleLayout:spacing", 0.2,
+
+			# Add + button for showing and hiding parameters in the GraphEditor
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderTweaksUI.PlugAdder",
+
+		],
+
+		"tweaks.*" : [
+
+			"noduleLayout:visible", False, # Can be shown individually using PlugAdder above
+
 		],
 
 	}
@@ -362,3 +375,39 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.prepend( "/From Affected/", { "subMenu" : __setShaderFromAffectedMenuDefinition } )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+
+##########################################################################
+# Nodule context menu
+##########################################################################
+
+def __setPlugMetadata( plug, key, value ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.Metadata.registerValue( plug, key, value )
+
+def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
+
+	if not isinstance( plug.node(), GafferScene.ShaderTweaks ) :
+		return
+
+	tweakPlug = plug.parent()
+	if not isinstance( tweakPlug, GafferScene.TweakPlug ) :
+		return False
+
+	if tweakPlug.parent() != plug.node()["tweaks"] :
+		return
+
+	if len( menuDefinition.items() ) :
+		menuDefinition.append( "/HideDivider", { "divider" : True } )
+
+	menuDefinition.append(
+
+		"/Hide",
+		{
+			"command" : functools.partial( __setPlugMetadata, tweakPlug, "noduleLayout:visible", False ),
+			"active" : plug.getInput() is None and not Gaffer.readOnly( tweakPlug ),
+		}
+
+	)
+
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )

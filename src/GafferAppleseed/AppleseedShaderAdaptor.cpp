@@ -141,7 +141,13 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 {
 	ConstCompoundObjectPtr inputAttributes = inPlug()->attributesPlug()->getValue();
 
+	/// \todo Drop support for "osl:shader" assignments. They were never desirable, and the ShaderAssignment node
+	/// no longer makes them.
 	const ShaderNetwork *shaderNetwork = inputAttributes->member<const ShaderNetwork>( g_oslShaderAttributeName );
+	if( !shaderNetwork )
+	{
+		shaderNetwork = inputAttributes->member<const ShaderNetwork>( g_oslSurfaceAttributeName );
+	}
 	if( !shaderNetwork )
 	{
 		return inputAttributes;

@@ -115,10 +115,7 @@ void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer:
 	shaderPlug()->hash( h );
 	for( TweakPlugIterator tIt( tweaksPlug() ); !tIt.done(); ++tIt )
 	{
-		for( ValuePlugIterator vIt( tIt->get() ); !vIt.done(); ++vIt )
-		{
-			(*vIt)->hash( h );
-		}
+		(*tIt)->hash( h );
 	}
 }
 

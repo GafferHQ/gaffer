@@ -43,6 +43,9 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( ShaderAssignment );
 
+static InternedString g_oslShader( "osl:shader" );
+static InternedString g_oslSurface( "osl:surface" );
+
 size_t ShaderAssignment::g_firstPlugIndex = 0;
 
 ShaderAssignment::ShaderAssignment( const std::string &name )
@@ -105,9 +108,33 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 	// the input members in our result without copying. Be careful not to modify
 	// them though!
 	result->members() = inputAttributes->members();
-	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+	for( const auto &attribute : attributes->members() )
 	{
-		result->members()[it->first] = it->second;
+		InternedString name = attribute.first;
+		if( name == g_oslShader )
+		{
+			// We are given an "osl:shader" attribute when assigning a generic
+			// OSL shader rather than an OSL surface shader. In the absence
+			// of other information we assume that the user's intention is to
+			// assign it as a surface shader.
+			///
+			/// \todo Consider ways of making the purpose of the assignment
+			/// more explicit. Perhaps shaders need to be plugged into various
+			/// inputs of a Material node that groups surface/displacement etc?
+			/// This also seems a good time to consider that the mixing of
+			/// Arnold and OSL shader assignments has caused confusion
+			/// in some environments, because "ai:surface" is considered to take
+			/// priority over "osl:surface", even if the OSL assignment is lower
+			/// in the hierarchy.
+			///
+			/// Also bear in mind that OSL has deprecated shader types
+			/// entirely - more info at the following links :
+			///
+			/// - https://groups.google.com/d/msg/osl-dev/bVBZda-UsbI/EvByoI6sBQAJ
+			/// - https://github.com/imageworks/OpenShadingLanguage/pull/899
+			name = g_oslSurface;
+		}
+		result->members()[name] = attribute.second;
 	}
 
 	return result;

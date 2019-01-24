@@ -37,9 +37,7 @@
 #ifndef GAFFERSCENE_TWEAKPLUG_H
 #define GAFFERSCENE_TWEAKPLUG_H
 
-#include "GafferScene/SceneElementProcessor.h"
-
-#include "GafferScene/TweakPlug.h"
+#include "GafferScene/Shader.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -51,12 +49,12 @@ namespace GafferScene
 /// Represents a "tweak" - an adjustment with a name, a mode, and a value,
 /// and an enable flag.  Can be used to add/subtract/multiply/replace or
 /// remove parameters, for example in the ShaderTweaks or CameraTweaks nodes.
-class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
+class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::Plug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::ValuePlug );
 
 		enum Mode
 		{
@@ -88,6 +86,10 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+		IECore::MurmurHash hash() const override;
+		/// Ensures the method above doesn't mask
+		/// ValuePlug::hash( h )
+		using ValuePlug::hash;
 
 		/// Tweak application
 		/// =================
@@ -98,6 +100,13 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 		/// when editing a ShaderNetwork.
 		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork );
 
+	private :
+
+		Gaffer::ValuePlug *valuePlugInternal();
+		const Gaffer::ValuePlug *valuePlugInternal() const;
+
+		std::pair<const Shader *, const Gaffer::Plug *> shaderOutput() const;
+
 };
 
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TweakPlug> > TweakPlugIterator;
@@ -105,5 +114,7 @@ typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invali
 IE_CORE_DECLAREPTR( TweakPlug )
 
 } // namespace GafferScene
+
+#include "GafferScene/TweakPlug.inl"
 
 #endif // GAFFERSCENE_TWEAKPLUG_H

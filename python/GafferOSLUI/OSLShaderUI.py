@@ -176,7 +176,7 @@ def __plugNoduleLabel( plug ) :
 def __plugComponentNoduleLabel( plug ) :
 
 	parameterPlug = plug.parent()
-	label = __plugLabel( parameterPlug )
+	label = __plugNoduleLabel( parameterPlug )
 	if label is None :
 		label = parameterPlug.getName()
 
@@ -224,6 +224,7 @@ Gaffer.Metadata.registerNode(
 		"out.*" : [
 
 			"noduleLayout:visible", __plugNoduleVisibility,
+			"noduleLayout:label", __plugNoduleLabel,
 
 		]
 

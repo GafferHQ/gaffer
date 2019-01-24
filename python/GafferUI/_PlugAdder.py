@@ -38,6 +38,7 @@ import functools
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 def __plugMenu( title, plugs ) :
@@ -49,7 +50,7 @@ def __plugMenu( title, plugs ) :
 	menuDefinition = IECore.MenuDefinition()
 	for plug in plugs :
 		menuDefinition.append(
-			"/" + plug.getName(),
+			"/" + ( Gaffer.Metadata.value( plug, "noduleLayout:label" ) or plug.getName() ),
 			{
 				"command" : functools.partial( choosePlug, plug )
 			}
