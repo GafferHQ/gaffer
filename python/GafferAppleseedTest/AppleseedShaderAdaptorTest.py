@@ -62,7 +62,7 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		assignment = GafferScene.ShaderAssignment()
 		assignment["in"].setInput( sphere["out"] )
 		assignment["shader"].setInput( shader["out"] )
-		self.assertEqual( assignment["out"].attributes( "/sphere" ).keys(), [ "osl:shader" ] )
+		self.assertEqual( assignment["out"].attributes( "/sphere" ).keys(), [ "osl:surface" ] )
 
 		adaptor = GafferAppleseed.AppleseedShaderAdaptor()
 		adaptor["in"].setInput( assignment["out"] )
@@ -94,7 +94,7 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		assignment = GafferScene.ShaderAssignment()
 		assignment["in"].setInput( sphere["out"] )
 		assignment["shader"].setInput( shader["out"] )
-		self.assertEqual( assignment["out"].attributes( "/sphere" ).keys(), [ "osl:shader" ] )
+		self.assertEqual( assignment["out"].attributes( "/sphere" ).keys(), [ "osl:surface" ] )
 
 		adaptor = GafferAppleseed.AppleseedShaderAdaptor()
 		adaptor["in"].setInput( assignment["out"] )
