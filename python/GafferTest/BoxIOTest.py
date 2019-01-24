@@ -37,6 +37,7 @@
 import unittest
 import os
 
+import IECore
 import Gaffer
 import GafferTest
 
@@ -158,6 +159,29 @@ class BoxIOTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b2"].keys(), s["b1"].keys() )
 		self.assertEqual( s["b2"]["i"].keys(), s["b1"]["i"].keys() )
 		self.assertEqual( s["b2"]["o"].keys(), s["b1"]["o"].keys() )
+
+	def testSetupSerialisation( self ) :
+		class TestContainer( Gaffer.Box ):
+			def __init__( self ):
+				Gaffer.Box.__init__( self )
+				self["testNode"] = Gaffer.Random()
+				Gaffer.BoxIO.promote( self["testNode"]["seed"] )
+		IECore.registerRunTimeTyped( TestContainer )
+
+		s = Gaffer.ScriptNode()
+		s["n"] = TestContainer()
+
+		self.assertTrue( "setup(" in s.serialise() )
+
+		class SkipBoxInSerialiser( Gaffer.NodeSerialiser ) :
+			def childNeedsConstruction( self, child, serialisation ) :
+				if isinstance( child, Gaffer.BoxIn ):
+					return False
+				return super( SkipBoxInSerialiser, self ).childNeedsConstruction( child, serialisation )
+
+		Gaffer.Serialisation.registerSerialiser( TestContainer, SkipBoxInSerialiser() )
+
+		self.assertFalse( "setup(" in s.serialise() )
 
 if __name__ == "__main__":
 	unittest.main()

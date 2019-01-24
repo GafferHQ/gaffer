@@ -83,6 +83,13 @@ class DotSerialiser : public NodeSerialiser
 			return result;
 		}
 
+		// Only serialise a call to setup() when we need to construct this node
+		if( !Serialisation::acquireSerialiser( graphComponent->parent() )->childNeedsConstruction(
+			graphComponent, serialisation ) )
+		{
+			return result;
+		}
+
 		if( result.size() )
 		{
 			result += "\n";
