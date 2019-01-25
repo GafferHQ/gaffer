@@ -213,7 +213,6 @@ void BoxIO::setup( const Plug *plug )
 	inPlugInternal()->setFlags( Plug::Serialisable, true );
 	applyDynamicFlag( inPlugInternal() );
 	applyDynamicFlag( outPlugInternal() );
-	outPlugInternal()->setInput( inPlugInternal() );
 
 	MetadataAlgo::copy(
 		plug,
@@ -229,6 +228,10 @@ void BoxIO::setup( const Plug *plug )
 	if( m_direction == Plug::Out )
 	{
 		setupPassThrough();
+	}
+	else
+	{
+		outPlugInternal()->setInput( inPlugInternal() );
 	}
 
 	// We also want to set up our promoted plug.  But if we're
@@ -286,21 +289,6 @@ void BoxIO::setupBoxEnabledPlug()
 		boxEnabledPlug = p.get();
 	}
 	enabledPlugInternal()->setInput( boxEnabledPlug );
-}
-
-void BoxIO::scriptExecuted( ScriptNode *script )
-{
-	assert( m_direction == Plug::Out );
-	if( inPlugInternal() && !passThroughPlugInternal() )
-	{
-		// We're loading an old script from the times before the pass
-		// through plug.
-		setupPassThrough();
-	}
-
-	script->scriptExecutedSignal().disconnect(
-		boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
-	);
 }
 
 Plug::Direction BoxIO::direction() const
@@ -433,20 +421,6 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 			boost::bind( &BoxIO::plugInputChanged, this, ::_1 )
 		);
 	}
-
-	if( m_direction == Plug::Out )
-	{
-		ScriptNode *script = scriptNode();
-		if( script && script->isExecuting() )
-		{
-			// Connect to `scriptExecutedSignal()` so that after loading
-			// we can add the pass-through mechanism to old BoxOuts that
-			// were serialised without it.
-			script->scriptExecutedSignal().connect(
-				boost::bind( &BoxIO::scriptExecuted, this, ::_1 )
-			);
-		}
-	}
 }
 
 void BoxIO::plugInputChanged( Plug *plug )
@@ -473,6 +447,19 @@ void BoxIO::plugInputChanged( Plug *plug )
 		m_promotedPlugParentChangedConnection = promoted->parentChangedSignal().connect(
 			boost::bind( &BoxIO::promotedPlugParentChanged, this, ::_1 )
 		);
+	}
+
+	// Detect manual setups created by legacy scripts from before
+	// we added the pass-through, and fix them to include a pass-through.
+
+	if(
+		m_direction == Plug::Out &&
+		plug == outPlugInternal() &&
+		plug->getInput() == inPlugInternal() &&
+		!passThroughPlugInternal()
+	)
+	{
+		setupPassThrough();
 	}
 
 	// If a connection has been made to our passThrough plug

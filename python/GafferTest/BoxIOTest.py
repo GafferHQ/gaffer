@@ -183,5 +183,52 @@ class BoxIOTest( GafferTest.TestCase ) :
 
 		self.assertFalse( "setup(" in s.serialise() )
 
+
+	def testManualSetup( self ) :
+
+		# Because we used to serialise BoxIO nodes without nice `setup()` calls,
+		# people have copied that in their own code and we have nasty manual setup
+		# code like this in the wild. Make sure we can cope with it.
+
+		box = Gaffer.Box()
+
+		box["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		box["boxIn"] = Gaffer.BoxIn()
+		box["boxIn"].addChild( Gaffer.IntPlug( "__in", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		box["boxIn"].addChild( Gaffer.IntPlug( "out", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		box["boxIn"]["out"].setInput( box["boxIn"]["__in"] )
+		box["boxIn"]["__in"].setInput( box["in"] )
+
+		box["add"] = GafferTest.AddNode()
+		box["add"]["op1"].setInput( box["boxIn"]["out"] )
+		box["add"]["op2"].setValue( 2 )
+
+		box["boxOut"] = Gaffer.BoxOut()
+		box["boxOut"].addChild( Gaffer.IntPlug( "in", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		box["boxOut"].addChild( Gaffer.IntPlug( "__out", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		box["boxOut"]["__out"].setInput( box["boxOut"]["in"] )
+		box["boxOut"]["in"].setInput( box["add"]["sum"] )
+
+		box["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["out"].setInput( box["boxOut"]["__out"] )
+
+		box["in"].setValue( 1 )
+		self.assertEqual( box["out"].getValue(), 3 )
+
+		self.assertIsNone( box.correspondingInput( box["out"] ) )
+
+		# Also make sure that the new pass-through functionality is available, even
+		# though the manual setup above omitted it.
+
+		box["boxOut"]["passThrough"].setInput( box["boxIn"]["out"] )
+		self.assertEqual( box.correspondingInput( box["out"] ), box["in"] )
+
+		box["enabled"].setValue( False )
+		self.assertEqual( box["out"].getValue(), 1 )
+
+		box["enabled"].setValue( True )
+		self.assertEqual( box["out"].getValue(), 3 )
+
 if __name__ == "__main__":
 	unittest.main()
