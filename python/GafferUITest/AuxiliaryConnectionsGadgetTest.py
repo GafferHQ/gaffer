@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -335,6 +336,22 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertIsNone( g.connectionGadget( s["n2"]["c"]["r"] ) )
 		self.assertIsNone( g.connectionGadget( s["n2"]["c"]["g"] ) )
+
+	def testBoxExitCrash( self ) :
+
+		for i in range( 0, 20 ) :
+
+			s = Gaffer.ScriptNode()
+			s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/auxiliaryConnectionBoxExitCrash.gfr" )
+			s.load()
+
+			g = GafferUI.GraphGadget( s )
+			g.setRoot( s["Box"] )
+
+			acg = g.auxiliaryConnectionsGadget()
+			self.assertTrue( acg.hasConnection( s["Box"]["CameraMatrixAveraged"], s["Box"]["OutputCameraMatrices"] ) )
+
+			g.setRoot( s )
 
 if __name__ == "__main__":
 	unittest.main()
