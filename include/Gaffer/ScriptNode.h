@@ -187,9 +187,6 @@ class GAFFER_API ScriptNode : public Node
 		/// sources of execution, and there is intentionally no way of
 		/// distinguishing between them.
 		bool isExecuting() const;
-		/// This signal is emitted following successful execution of a script.
-		typedef boost::signal<void ( ScriptNode *, const std::string )> ScriptExecutedSignal;
-		ScriptExecutedSignal &scriptExecutedSignal();
 		//@}
 
 		//! @name Saving and loading
@@ -318,7 +315,6 @@ class GAFFER_API ScriptNode : public Node
 		friend struct GafferModule::SerialiserRegistration;
 
 		bool m_executing;
-		ScriptExecutedSignal m_scriptExecutedSignal;
 
 		// Context and plugs
 		// =================

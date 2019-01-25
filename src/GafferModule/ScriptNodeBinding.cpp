@@ -474,24 +474,6 @@ struct UndoAddedSlotCaller
 
 };
 
-struct ScriptExecutedSlotCaller
-{
-
-	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNode *script, const std::string &s )
-	{
-		try
-		{
-			slot( ScriptNodePtr( script ), s );
-		}
-		catch( const boost::python::error_already_set &e )
-		{
-			IECorePython::ExceptionAlgo::translatePythonException();
-		}
-		return boost::signals::detail::unusable();
-	}
-
-};
-
 } // namespace
 
 void GafferModule::bindScriptNode()
@@ -513,7 +495,6 @@ void GafferModule::bindScriptNode()
 		.def( "execute", &executeWrapper, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "executeFile", &executeFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "isExecuting", &ScriptNode::isExecuting )
-		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, boost::python::return_internal_reference<1>() )
 		.def( "serialise", &ScriptNode::serialise, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "save", &save )
@@ -524,7 +505,5 @@ void GafferModule::bindScriptNode()
 
 	SignalClass<ScriptNode::ActionSignal, DefaultSignalCaller<ScriptNode::ActionSignal>, ActionSlotCaller>( "ActionSignal" );
 	SignalClass<ScriptNode::UndoAddedSignal, DefaultSignalCaller<ScriptNode::UndoAddedSignal>, UndoAddedSlotCaller>( "UndoAddedSignal" );
-
-	SignalClass<ScriptNode::ScriptExecutedSignal, DefaultSignalCaller<ScriptNode::ScriptExecutedSignal>, ScriptExecutedSlotCaller>( "ScriptExecutedSignal" );
 
 }
