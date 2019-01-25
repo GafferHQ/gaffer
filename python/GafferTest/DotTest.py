@@ -209,5 +209,20 @@ class DotTest( GafferTest.TestCase ) :
 		self.assertIsInstance( s2["d"]["in"], Gaffer.IntPlug )
 		self.assertIsInstance( s2["d"]["out"], Gaffer.IntPlug )
 
+	def testPlugMetadataSerialisation( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s1["d"] = Gaffer.Dot()
+		s1["d"].setup( Gaffer.IntPlug() )
+
+		Gaffer.Metadata.registerValue( s1["d"]["in"], "test", 1 )
+		Gaffer.Metadata.registerValue( s1["d"]["out"], "test", 2 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s1.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.value( s2["d"]["in"], "test" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( s2["d"]["out"], "test" ), 2 )
+
 if __name__ == "__main__":
 	unittest.main()

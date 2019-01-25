@@ -37,16 +37,104 @@
 
 #include "boost/python.hpp"
 
+#include "Gaffer/BoxIn.h"
+#include "Gaffer/BoxOut.h"
+#include "Gaffer/Dot.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Switch.h"
 
 #include "GafferBindings/PlugBinding.h"
 
 #include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+namespace
+{
+
+bool shouldSerialiseInput( const Plug *plug )
+{
+	if( !plug->getFlags( Plug::Serialisable ) )
+	{
+		// Removing the Serialisable flag is a common way of
+		// disabling serialisation of a `setInput()` call, but
+		// it has problems :
+		//
+		// - Plug flags get propagated round by `Plug::createCounterpart()`,
+		//   often in an unwanted fashion. Our goal should be to remove
+		//   them entirely.
+		// - It's too blunt an instrument. It disables all serialisation
+		//   for the plug, including any metadata that has been registered.
+		return false;
+	}
+
+	// Because of the problems with using Plug::Serialisable, it seems we
+	// need a mechanism for a node to say whether or not an input needs to
+	// be serialised. Options might include :
+	//
+	// 1. Adding a `virtual bool Node::serialiseInput( const Plug * ) const`
+	//    method that can be overridden by subclasses. This would be pretty
+	//    convenient, but it would blur the separation between the Gaffer
+	//    and GafferBindings libraries. Maybe we can justify this because it's
+	//    not actually a dependency on Python, and doesn't know anything about
+	//    the serialisation format. In other words, maybe it's OK for a node
+	//    to know _what_ needs to be serialised, as long as it doesn't know
+	//    _how_. It seems that if we had similar `bool GraphComponent::serialiseChild()`
+	//    and `bool GraphComponent::serialiseChildConstructor()` methods, we
+	//    could actually ditch a fair proportion of custom serialisers, which
+	//    might be nice.
+	//
+	// 2. Adding a `virtual bool NodeSerialiser::serialiseInput( const Plug * )`
+	//    method, and finding the registered serialiser for the node in `postHierarchy()`
+	//    below. This is purer, but probably a bit more of a faff in practice.
+	//
+	// 3. Coming up with a sensible rule that doesn't require more API. Perhaps
+	//    we only need to serialise internal connections if they come from a
+	//    child node which itself is serialised? It sure would be nice to simplify
+	//    all this serialisation logic, and if a simple rule allows us to avoid
+	//    greater complexity, that would be great.
+	//
+	// In lieu of a decision on this, for now we just hardcode the end result
+	// we want, which is to omit serialisation for the internal connections of
+	// the nodes below...
+
+	if( auto boxIn = runTimeCast<const BoxIn>( plug->node() ) )
+	{
+		if( plug == boxIn->plug() )
+		{
+			return false;
+		}
+	}
+	else if( runTimeCast<const BoxOut>( plug->node() ) )
+	{
+		if( plug->getName() == "__out" )
+		{
+			return false;
+		}
+	}
+	else if( auto dot = runTimeCast<const Dot>( plug->node() ) )
+	{
+		if( plug == dot->outPlug() )
+		{
+			return false;
+		}
+	}
+	else if( auto sw = runTimeCast<const Switch>( plug->node() ) )
+	{
+		if( plug == sw->outPlug() )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+} // namespace
 
 void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
@@ -62,20 +150,19 @@ std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComp
 std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
 	const Plug *plug = static_cast<const Plug *>( graphComponent );
-	if( plug->getFlags( Plug::Serialisable ) )
+
+	std::string result = Serialiser::postHierarchy( graphComponent, identifier, serialisation );
+	if( shouldSerialiseInput( plug ) )
 	{
-		std::string result;
 		std::string inputIdentifier = serialisation.identifier( plug->getInput() );
 		if( inputIdentifier.size() )
 		{
 			result += identifier + ".setInput( " + inputIdentifier + " )\n";
 		}
-
-		result += metadataSerialisation( plug, identifier );
-
-		return result;
 	}
-	return "";
+
+	result += metadataSerialisation( plug, identifier );
+	return result;
 }
 
 bool PlugSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const

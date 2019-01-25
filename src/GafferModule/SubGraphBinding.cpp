@@ -92,18 +92,6 @@ namespace GafferModule
 class BoxIOSerialiser : public NodeSerialiser
 {
 
-	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-	{
-		const BoxIO *boxIO = child->parent<BoxIO>();
-		if( child == boxIO->outPlugInternal() )
-		{
-			// Avoid having our internal connection serialised. This will
-			// be recreated in `setup()` anyway.
-			return false;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
-	}
-
 	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		const BoxIO *boxIO = child->parent<BoxIO>();
@@ -149,6 +137,38 @@ class BoxIOSerialiser : public NodeSerialiser
 		return result;
 	}
 
+	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
+
+		const BoxIO *boxIO = static_cast<const BoxIO *>( graphComponent );
+		if( !boxIO->plug() )
+		{
+			// BoxIO::setup() hasn't been called yet.
+			return result;
+		}
+
+		const Plug *promoted = boxIO->promotedPlug();
+		if( promoted && serialisation.identifier( promoted ) != "" )
+		{
+			return result;
+		}
+
+		// The BoxIO node has been set up, but its promoted plug isn't
+		// being serialised (for instance, because someone is copying a
+		// selection from inside a box). Add a `setupPromotedPlug()` call
+		// so that the promoted plug will be created if we happen to be
+		// pasted into another box.
+
+		if( !result.empty() )
+		{
+			result += "\n";
+		}
+		result += identifier + ".setupPromotedPlug()\n";
+
+		return result;
+	}
+
 };
 
 } // namespace GafferModule
@@ -160,6 +180,12 @@ void setup( BoxIO &b, const Plug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	b.setup( &plug );
+}
+
+void setupPromotedPlug( BoxIO &b )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	b.setupPromotedPlug();
 }
 
 PlugPtr plug( BoxIO &b )
@@ -243,6 +269,7 @@ void GafferModule::bindSubGraph()
 
 	NodeClass<BoxIO>( nullptr, no_init )
 		.def( "setup", &setup, ( arg( "plug" ) = object() ) )
+		.def( "setupPromotedPlug", &setupPromotedPlug )
 		.def( "plug", &plug )
 		.def( "promotedPlug", &promotedPlug )
 		.def( "promote", &BoxIO::promote, return_value_policy<CastToIntrusivePtr>() )

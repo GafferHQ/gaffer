@@ -44,8 +44,8 @@ def __setupWrapper( originalSetup ) :
 			script = self.scriptNode()
 			if script is not None and script.isExecuting() :
 				# We used to use a bogus `setup()` call without
-				# a plug to trigger reconnection after serialisation.
-				# We no longer do that, so ignore it.
+				# a plug as a proxy for `setupPromotedPlug()`.
+				self.setupPromotedPlug()
 				return
 
 		return originalSetup( self, plug )

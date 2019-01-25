@@ -70,17 +70,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testExecution( self ) :
 
 		s = Gaffer.ScriptNode()
-
-		def f( n, s ) :
-			ScriptNodeTest.lastNode = n
-			ScriptNodeTest.lastScript = s
-
-		c = s.scriptExecutedSignal().connect( f )
-
 		s.execute( "script.addChild( Gaffer.Node( 'child' ) )" )
-		self.assertEqual( ScriptNodeTest.lastNode, s )
-		self.assertEqual( ScriptNodeTest.lastScript, "script.addChild( Gaffer.Node( 'child' ) )" )
-
 		self.assert_( s["child"].typeName(), "Node" )
 
 	def testSelection( self ) :
@@ -1235,7 +1225,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( s["frameRange"]["end"].getValue(), 15 )
 		self.assertEqual( s.context().get( "frameRange:start" ), 15 )
 		self.assertEqual( s.context().get( "frameRange:end" ), 15 )
-		
+
 		s["frameRange"]["end"].setValue( 150 )
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )

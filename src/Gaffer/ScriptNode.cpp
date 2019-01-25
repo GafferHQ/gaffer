@@ -671,11 +671,6 @@ bool ScriptNode::isExecuting() const
 	return m_executing;
 }
 
-ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
-{
-	return m_scriptExecutedSignal;
-}
-
 std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 {
 	return serialiseInternal( parent, filter );
@@ -775,7 +770,6 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	try
 	{
 		result = g_executeFunction( this, serialisation, parent ? parent : this, continueOnError, context );
-		scriptExecutedSignal()( this, serialisation );
 	}
 	catch( ... )
 	{

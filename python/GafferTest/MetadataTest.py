@@ -1150,5 +1150,10 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( n["user"]["p"]["r"], "testPlugAncestor" ), 10 )
 		self.assertIn( "testPlugAncestor", Gaffer.Metadata.registeredValues( n["user"]["p"]["r"] ) )
 
+	def testValueFromNoneRaises( self ) :
+
+		with self.assertRaisesRegexp( Exception, "did not match C\+\+ signature" ) :
+			Gaffer.Metadata.value( None, "test" )
+
 if __name__ == "__main__":
 	unittest.main()
