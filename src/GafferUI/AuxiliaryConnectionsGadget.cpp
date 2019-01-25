@@ -407,10 +407,6 @@ void AuxiliaryConnectionsGadget::dirtyInputConnections( const NodeGadget *nodeGa
 	// so we have a logic error somewhere if we don't already have
 	// an entry for this particular node gadget.
 	assert( it != m_nodeGadgetConnections.end() );
-	if( it->second.dirty )
-	{
-		return;
-	}
 
 	auto &dstIndex = dstNodeGadgetIndex();
 	auto dstRange = dstIndex.equal_range( nodeGadget );

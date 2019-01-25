@@ -652,7 +652,11 @@ libraries = {
 		},
 	},
 
-	"GafferUITest" : {},
+	"GafferUITest" : {
+
+		"additionalFiles" : glob.glob( "python/GafferUITest/scripts/*.gfr" ),
+
+	},
 
 	"GafferDispatch" : {
 		"envAppends" : {
