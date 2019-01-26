@@ -204,7 +204,10 @@ struct InfoDataAccumulator
 
 		IECore::ConstObjectPtr object = in->objectPlug()->getValue();
 		const IECoreScene::MeshPrimitive *meshPrimitive = runTimeCast<const IECoreScene::MeshPrimitive>( object.get() );
-		if( !meshPrimitive ) return true;
+		if( !meshPrimitive )
+		{
+			return true;
+		}
 
 		// First check if there are face-varying UVs
 		bool faceVarying = true;
@@ -222,11 +225,25 @@ struct InfoDataAccumulator
 			return true;
 		}
 
+		std::string pathString;
+		ScenePlug::pathToString( path, pathString );
+		unsigned int targetSize = meshPrimitive->variableSize( faceVarying ? IECoreScene::PrimitiveVariable::FaceVarying : IECoreScene::PrimitiveVariable::Vertex );
+		if( uvs->size() != targetSize )
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format(
+						"Cannot query UDIMs.  Bad uvs at location %s.  Required count %i but found %i."
+					) % pathString % targetSize % uvs->size()
+				)
+			);
+		}
+
 		const IntVectorData *vertsPerFaceData = meshPrimitive->verticesPerFace();
 		const std::vector<int> &vertsPerFace = vertsPerFaceData->readable();
 
 		BakeInfoData &info = *m_data.grow_by( 1 );
-		ScenePlug::pathToString( path, info.mesh );
+		info.mesh = pathString;
 
 		// We check the center UVs of each face, because the edge uvs could lie directly on a UDIM boundary,
 		// and without checking adjacency information, it would be impossible to tell which UDIM the edge
