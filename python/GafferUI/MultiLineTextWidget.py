@@ -82,7 +82,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	def getText( self ) :
 
-		return str( self._qtWidget().toPlainText() )
+		return self._qtWidget().toPlainText().encode( "utf-8" )
 
 	def setText( self, text ) :
 

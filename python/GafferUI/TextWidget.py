@@ -65,7 +65,7 @@ class TextWidget( GafferUI.Widget ) :
 
 	def getText( self ) :
 
-		return str( self._qtWidget().text() )
+		return self._qtWidget().text().encode( "utf-8" )
 
 	def setEditable( self, editable ) :
 
