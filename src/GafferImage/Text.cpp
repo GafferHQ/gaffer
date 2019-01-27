@@ -46,6 +46,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "boost/locale/encoding_utf.hpp"
+
 #include "ft2build.h"
 
 #include FT_FREETYPE_H
@@ -153,12 +155,17 @@ FT_Matrix transform( const M33f &transform, FT_Vector &delta )
 	return matrix;
 }
 
-int width( const string &word, FT_FaceRec *face )
+u32string fromUTF8( const string &utf8 )
+{
+	return boost::locale::conv::utf_to_utf<char32_t>( utf8 );
+}
+
+int width( const u32string &word, FT_FaceRec *face )
 {
 	int result = 0;
-	for( const char *c = word.c_str(); *c; ++c )
+	for( auto c : word )
 	{
-		FT_Error e = FT_Load_Char( face, *c, FT_LOAD_DEFAULT );
+		FT_Error e = FT_Load_Char( face, c, FT_LOAD_DEFAULT );
 		if( e )
 		{
 			continue;
@@ -171,12 +178,12 @@ int width( const string &word, FT_FaceRec *face )
 
 struct Word
 {
-	Word( const string &text, int x )
+	Word( const u32string &text, int x )
 		:	text( text ), x( x )
 	{
 	}
 
-	string text;
+	u32string text;
 	int x;
 };
 
@@ -390,6 +397,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	int penYCutoff = area.min.y - face->size->metrics.descender;
 
 	const std::string text = textPlug()->getValue();
+	/// \todo Does tokenization/wrapping need to be unicode aware?
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	boost::char_separator<char> separator( "", " \n\t" );
 	Tokenizer tokenizer( text, separator );
@@ -410,11 +418,12 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 		}
 		else if( *it == " " || *it =="\t" )
 		{
-			pen.x += ::width( *it, face.get() );
+			pen.x += ::width( fromUTF8( *it ), face.get() );
 		}
 		else
 		{
-			int width = ::width( *it, face.get() );
+			const u32string word = fromUTF8( *it );
+			int width = ::width( word, face.get() );
 			if( pen.x + width > area.max.x )
 			{
 				pen.x = area.min.x;
@@ -429,7 +438,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 				lines.push_back( Line( pen.y ) );
 			}
 
-			lines.back().words.push_back( Word( *it, pen.x ) );
+			lines.back().words.push_back( Word( word, pen.x ) );
 			pen.x += width;
 			lines.back().width = pen.x - area.min.x;
 		}
@@ -446,7 +455,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	layout->members()["font"] = new StringData( font );
 	layout->members()["size"] = new V2iData( size );
 
-	const CharVectorDataPtr characters = new CharVectorData;
+	const IntVectorDataPtr characters = new IntVectorData;
 	const M33fVectorDataPtr transforms = new M33fVectorData;
 	const Box2iVectorDataPtr bounds = new Box2iVectorData;
 	layout->members()["characters"] = characters;
@@ -495,13 +504,13 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 			characterTransform[2][1] = yOffset + (float)lIt->y / 64.0f;
 			characterTransform *= transform;
 
-			for( const char *c = wIt->text.c_str(); *c; ++c )
+			for( auto c : wIt->text )
 			{
 				FT_Vector delta;
 				FT_Matrix matrix = ::transform( characterTransform, delta );
 				FT_Set_Transform( face.get(), &matrix, &delta );
 
-				FT_Error e = FT_Load_Char( face.get(), *c, FT_LOAD_RENDER );
+				FT_Error e = FT_Load_Char( face.get(), c, FT_LOAD_RENDER );
 				if( e )
 				{
 					continue;
@@ -513,7 +522,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 					V2i( slot->bitmap_left + bitmap.width, slot->bitmap_top )
 				);
 
-				characters->writable().push_back( *c );
+				characters->writable().push_back( c );
 				transforms->writable().push_back( characterTransform );
 				bounds->writable().push_back( bound );
 
@@ -584,7 +593,7 @@ IECore::ConstFloatVectorDataPtr Text::computeShapeChannelData(  const Imath::V2i
 		layout = layoutPlug()->getValue();
 	}
 
-	const vector<char> &characters = layout->member<CharVectorData>( "characters" )->readable();
+	const vector<int> &characters = layout->member<IntVectorData>( "characters" )->readable();
 	const vector<M33f> &transforms = layout->member<M33fVectorData>( "transforms" )->readable();
 	const vector<Box2i> &bounds = layout->member<Box2iVectorData>( "bounds" )->readable();
 
