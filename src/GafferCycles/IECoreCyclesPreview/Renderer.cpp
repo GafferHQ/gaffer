@@ -567,6 +567,8 @@ class RenderCallback : public IECore::RefCounted
 			const int w = rtile.w;
 			const int h = rtile.h;
 
+			const int cam_h = m_session->scene->camera->height;
+
 			Box2i tile( V2i( x, y ), V2i( x + w - 1, y + h - 1 ) );
 
 			ccl::RenderBuffers *buffers = rtile.buffers;
@@ -601,7 +603,7 @@ class RenderCallback : public IECore::RefCounted
 				if( !m_interactive && output.second->m_interactive )
 					continue;
 				int numChannels = output.second->m_components;
-				buffers->get_pass_rect( output.second->m_passType, 0.0f, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
+				buffers->get_pass_rect( output.second->m_passType, 0.5f, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
 				if( m_interactive )
 				{
 					for( int c = 0; c < numChannels; c++ )
@@ -629,7 +631,6 @@ class RenderCallback : public IECore::RefCounted
 			if( m_interactive )
 			{
 				m_displayDriver->imageData( tile, &interleavedData[0], w * h * numOutputChannels );
-				//m_displayDriver->imageData( tile, &tileData[0], w * h * 4 );
 			}
 		}
 
@@ -778,11 +779,13 @@ IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
 
 // Shader Assignment
-std::array<IECore::InternedString, 4> g_shaderAttributeNames = { {
+std::array<IECore::InternedString, 6> g_shaderAttributeNames = { {
 	"osl:light",
 	"ccl:light",
 	"osl:surface",
 	"ccl:surface",
+	"ccl:volume",
+	"ccl:displacement"
 } };
 
 ccl::PathRayFlag nameToRayType( const std::string &name )
@@ -1510,7 +1513,9 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 			ccl::Camera *camera = m_camera.get();
 			if( !camera )
 				return;
-			camera->matrix = SocketAlgo::setTransform( transform );
+			Imath::M44f ctransform = transform;
+			ctransform.scale( Imath::V3f( 1.0f, -1.0f, -1.0f ) );
+			camera->matrix = SocketAlgo::setTransform( ctransform );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1520,8 +1525,13 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 				return;
 			const size_t numSamples = samples.size();
 			camera->motion = ccl::array<ccl::Transform>( numSamples );
+			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
 			for( size_t i = 0; i < numSamples; ++i )
-				camera->motion[i] = SocketAlgo::setTransform( samples[i] );
+			{
+				Imath::M44f ctransform = samples[i];
+				ctransform.scale( scale );
+				camera->motion[i] = SocketAlgo::setTransform( ctransform );
+			}
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2556,14 +2566,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
+			// This doesn't get checked, so we set it just in-case.
+			m_session->params.samples = m_sessionParams.samples;
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
 			    m_session->params.modified( m_sessionParams ) )
 			{
 				reset();
 			}
-			// This doesn't get checked, so we set it just in-case.
-			m_session->params.samples = m_sessionParams.samples;
 
 			const auto *integrator = m_integratorCache.get();
 			if( m_integrator->modified( *integrator ) )

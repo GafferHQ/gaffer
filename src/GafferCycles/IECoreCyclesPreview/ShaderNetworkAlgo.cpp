@@ -229,7 +229,7 @@ InternedString partitionEnd( const InternedString &s, char c )
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::Scene *scene, ccl::Shader *cshader, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. It is ideal for all assigned
-	// shaders in the graph to funnel through the default "cycles_shader" so
+	// shaders in the graph to funnel through the default "output" so
 	// that things like MIS/displacement/etc. can be set, however it isn't a
 	// requirement. Regardless, we look out for this special node as it already
 	// exists in the graph and we simply point to it.
@@ -290,7 +290,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	for( const auto &namedParameter : shader->parameters() )
 	{
 		// We needed to change any "." found in the socket input names to
-		// ":", revert that change here.
+		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( namedParameter.first.string(), "__", "." );
 		if( isOSLShader )
 		{
@@ -323,7 +323,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 
 		// We needed to change any "." found in the socket input names to
-		// ":", revert that change here.
+		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( connection.destination.name.string(), "__", "." );
 		if( isOSLShader )
 		{

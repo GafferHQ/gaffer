@@ -38,7 +38,7 @@
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECoreScene/MeshPrimitive.h"
-#include "IECoreScene/TriangulateOp.h"
+#include "IECoreScene/MeshAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -165,14 +165,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		if( !triangles )
 		{
 			// triangulate primitive
-			trimesh = mesh->copy();
-			{
-				TriangulateOpPtr op = new TriangulateOp();
-				op->inputParameter()->setValue( trimesh );
-				op->throwExceptionsParameter()->setTypedValue( false ); // it's better to see something than nothing
-				op->copyParameter()->setTypedValue( false );
-				op->operate();
-			}
+			trimesh = IECoreScene::MeshAlgo::triangulate( mesh );
 			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
 
 			const size_t triNumFaces = trimesh->numFaces();
@@ -243,7 +236,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	return cmesh;
 }
 
-ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( MeshAlgo::convert, MeshAlgo::convert );
+ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( IECoreCycles::MeshAlgo::convert, IECoreCycles::MeshAlgo::convert );
 
 } // namespace
 

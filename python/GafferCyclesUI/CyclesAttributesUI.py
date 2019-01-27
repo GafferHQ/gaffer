@@ -44,7 +44,7 @@ def __visibilitySummary( plug ) :
 	info = []
 	for childName in ( "camera", "diffuse", "glossy", "transmission", "shadow", "scatter" ) :
 		if plug[childName + "Visibility"]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName + "Visibility"]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
