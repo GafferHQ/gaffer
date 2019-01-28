@@ -146,7 +146,7 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 		{
 			"command" : functools.partial( __findBookmark, editor, bookmarks ),
 			"active" : len( bookmarks ),
-			"shortCut" : "Ctrl+B",
+			"shortCut" : "B",
 		}
 	)
 
@@ -239,9 +239,6 @@ def __findBookmark( editor, bookmarks = None ) :
 	if bookmarks is None :
 		bookmarks = __findableBookmarks( editor )
 
-	if not bookmarks :
-		return
-
 	scriptNode = editor.scriptNode()
 	pathsAndNodes = [
 		( "/" + b.relativeName( scriptNode ).replace( ".", "/" ), b )
@@ -265,6 +262,9 @@ def __findBookmark( editor, bookmarks = None ) :
 			menuDefinition.append( path + "/__BookmarksParentDivider__", { "divider" : True } )
 		else :
 			menuDefinition.append( path, { "command" : command } )
+
+	if not len( bookmarks ) :
+		menuDefinition.append( "/No bookmarks available", { "active" : False, "searchText" : "" } )
 
 	editor.__findBookmarksMenu = GafferUI.Menu( menuDefinition, title = "Find Bookmark", searchable = True )
 	editor.__findBookmarksMenu.popup()
@@ -303,7 +303,7 @@ def __findNumericBookmark( editor, numericBookmark ) :
 
 def __editorKeyPress( editor, event ) :
 
-	if event.key == "B" and event.modifiers == event.modifiers.Control :
+	if event.key == "B" :
 		__findBookmark( editor )
 		return True
 
