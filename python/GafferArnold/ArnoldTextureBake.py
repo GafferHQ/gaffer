@@ -304,8 +304,20 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 		# Now set up the render tasks.  This involves doing the actual rendering, and triggering the
 		# output of the file list index file.
+
+		# First get rid of options from the upstream scene that could mess up the bake
+		self["__OptionOverrides"] = GafferScene.StandardOptions()
+		self["__OptionOverrides"]["in"].setInput( self["in"] )
+		self["__OptionOverrides"]["options"]["pixelAspectRatio"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["overscan"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["renderCropWindow"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["cameraBlur"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["transformBlur"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["deformationBlur"]["enabled"].setValue( True )
+
 		self["__CameraSetup"] = self.__CameraSetup()
-		self["__CameraSetup"]["in"].setInput( self["in"] )
+		self["__CameraSetup"]["in"].setInput( self["__OptionOverrides"]["out"] )
 		self["__CameraSetup"]["filter"].setInput( self["filter"] )
 		self["__CameraSetup"]["defaultFileName"].setInput( self["defaultFileName"] )
 		self["__CameraSetup"]["defaultResolution"].setInput( self["defaultResolution"] )
