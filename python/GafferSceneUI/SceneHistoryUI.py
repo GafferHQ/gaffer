@@ -52,7 +52,7 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 		"/Edit Source Node...",
 		{
 			"active" : selectedPath is not None,
-			"command" : functools.partial( __editSourceNode, view["in"], selectedPath ),
+			"command" : functools.partial( __editSourceNode, view.getContext(), view["in"], selectedPath ),
 			"shortCut" : "Ctrl+E",
 		}
 	)
@@ -74,9 +74,11 @@ def __sceneViewSelectedPath( sceneView ) :
 	else :
 		return None
 
-def __editSourceNode( scene, path ) :
+def __editSourceNode( context, scene, path ) :
 
-	source = GafferScene.SceneAlgo.source( scene, path )
+	with context :
+		source = GafferScene.SceneAlgo.source( scene, path )
+
 	if source is None :
 		return
 
@@ -103,6 +105,6 @@ def __viewerKeyPress( viewer, event ) :
 	if event.key == "E" and event.modifiers == event.modifiers.Control :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
-			__editSourceNode( view["in"], selectedPath )
+			__editSourceNode( view.getContext(), view["in"], selectedPath )
 		return True
 
