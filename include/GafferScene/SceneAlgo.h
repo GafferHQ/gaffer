@@ -66,6 +66,8 @@ IE_CORE_FORWARDDECLARE( Camera )
 namespace GafferScene
 {
 
+class ShaderTweaks;
+
 namespace SceneAlgo
 {
 
@@ -178,6 +180,9 @@ GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild, c
 
 /// Returns the upstream scene originally responsible for generating the specified location.
 GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+
+/// Returns the last ShaderTweaks node to edit the specified attribute.
+GAFFERSCENE_API ShaderTweaks *shaderTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path, const IECore::InternedString &attributeName );
 
 } // namespace SceneAlgo
 

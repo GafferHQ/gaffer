@@ -38,6 +38,7 @@
 
 #include "GafferScene/Filter.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/ShaderTweaks.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
@@ -437,6 +438,34 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 	return history;
 }
 
+ShaderTweaks *shaderTweaksWalk( const SceneAlgo::History *h, const IECore::InternedString &attributeName )
+{
+	if( auto tweaks = h->scene->parent<ShaderTweaks>() )
+	{
+		if( h->scene == tweaks->outPlug() )
+		{
+			Context::Scope contextScope( h->context.get() );
+			if(
+				StringAlgo::matchMultiple( attributeName, tweaks->shaderPlug()->getValue() ) &&
+				( tweaks->filterPlug()->getValue() & PathMatcher::ExactMatch )
+			)
+			{
+				return tweaks;
+			}
+		}
+	}
+
+	for( const auto &p : h->predecessors )
+	{
+		if( auto tweaks = shaderTweaksWalk( p.get(), attributeName ) )
+		{
+			return tweaks;
+		}
+	}
+
+	return nullptr;
+}
+
 } // namespace
 
 SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path )
@@ -474,6 +503,22 @@ ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath
 		{
 			c = c->predecessors.front().get();
 		}
+	}
+	return nullptr;
+}
+
+ShaderTweaks *SceneAlgo::shaderTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path, const IECore::InternedString &attributeName )
+{
+	ScenePlug::ScenePath inheritancePath = path;
+	while( inheritancePath.size() )
+	{
+		ConstCompoundObjectPtr attributes = scene->attributes( inheritancePath );
+		if( attributes->member<Object>( attributeName ) )
+		{
+			History::ConstPtr h = history( scene->attributesPlug(), inheritancePath );
+			return shaderTweaksWalk( h.get(), attributeName );
+		}
+		inheritancePath.pop_back();
 	}
 	return nullptr;
 }

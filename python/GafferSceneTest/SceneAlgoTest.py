@@ -330,5 +330,100 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/group1/plane" ), plane["out"] )
 		self.assertEqual( GafferScene.SceneAlgo.source( parent["out"], "/cube" ), cube["out"] )
 
+	def testShaderTweaks( self ) :
+
+		shader = GafferSceneTest.TestShader()
+		shader["type"].setValue( "test:surface" )
+
+		plane = GafferScene.Plane()
+		planeShaderAssignment = GafferScene.ShaderAssignment()
+		planeShaderAssignment["in"].setInput( plane["out"] )
+		planeShaderAssignment["shader"].setInput( shader["out"] )
+
+		sphere = GafferScene.Sphere()
+		sphereShaderAssignment = GafferScene.ShaderAssignment()
+		sphereShaderAssignment["in"].setInput( sphere["out"] )
+		sphereShaderAssignment["shader"].setInput( shader["out"] )
+
+		light = GafferSceneTest.TestLight()
+
+		lightFilter = GafferScene.PathFilter()
+		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		lightTweaks = GafferScene.ShaderTweaks()
+		lightTweaks["in"].setInput( light["out"] )
+		lightTweaks["filter"].setInput( lightFilter["out"] )
+		lightTweaks["shader"].setValue( "light" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( planeShaderAssignment["out"] )
+		group["in"][1].setInput( sphereShaderAssignment["out"] )
+		group["in"][2].setInput( lightTweaks["out"] )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		planeTweaks = GafferScene.ShaderTweaks()
+		planeTweaks["in"].setInput( group["out"] )
+		planeTweaks["filter"].setInput( planeFilter["out"] )
+		planeTweaks["shader"].setValue( "test:surface" )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+
+		sphereTweaks = GafferScene.ShaderTweaks()
+		sphereTweaks["in"].setInput( planeTweaks["out"] )
+		sphereTweaks["filter"].setInput( sphereFilter["out"] )
+		sphereTweaks["shader"].setValue( "test:surface" )
+
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group/light", "light" ), lightTweaks )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group", "light" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group/light", "surface" ), None )
+
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group/sphere", "test:surface" ), sphereTweaks )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group/sphere", "displacement" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group", "test:surface" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/", "surface" ), None )
+
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group/plane", "test:surface" ), planeTweaks )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group/plane", "displacement" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/group", "test:surface" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( sphereTweaks["out"], "/", "surface" ), None )
+
+	def testShaderTweaksInheritance( self ) :
+
+		plane = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		shader = GafferSceneTest.TestShader()
+		shader["type"].setValue( "test:surface" )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( group["out"] )
+		shaderAssignment["shader"].setInput( shader["out"] )
+		shaderAssignment["filter"].setInput( groupFilter["out"] )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( shaderAssignment["out"] )
+		tweaks["filter"].setInput( groupFilter["out"] )
+		tweaks["shader"].setValue( "test:surface" )
+
+		sphere = GafferScene.Sphere()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( tweaks["out"] )
+		parent["child"].setInput( sphere["out"] )
+		parent["parent"].setValue( "/" )
+
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/group/plane", "test:surface" ), tweaks )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/group", "test:surface" ), tweaks )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/", "surface" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/sphere", "surface" ), None )
+
 if __name__ == "__main__":
 	unittest.main()
