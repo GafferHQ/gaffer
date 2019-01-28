@@ -146,7 +146,7 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 		{
 			"command" : functools.partial( __findBookmark, editor, bookmarks ),
 			"active" : len( bookmarks ),
-			"shortCut" : "Ctrl+B",
+			"shortCut" : "B",
 		}
 	)
 
@@ -303,7 +303,7 @@ def __findNumericBookmark( editor, numericBookmark ) :
 
 def __editorKeyPress( editor, event ) :
 
-	if event.key == "B" and event.modifiers == event.modifiers.Control :
+	if event.key == "B" :
 		__findBookmark( editor )
 		return True
 
