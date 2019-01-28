@@ -1,28 +1,119 @@
 0.53.0.0 (relative to 0.52.x)
 ========
 
+This release provides several features useful for look development, including component-level
+connections for colour and vector parameters, a new ShaderTweaks node for making downstream tweaks,
+and an ArnoldTextureBake node for baking UV textures. We've also added a nifty new system for quickly
+accessing nodes via numeric hotkeys, and made numerous other enhancements and bug fixes.
+
+> Caution : This release replaces nodes such as SceneLoop and ImageLoop with more general purpose
+> nodes such as Loop. Backwards compatibility is provided for loading old scripts, but any scripts
+> saved in Gaffer 0.53 will _not be loadable in previous versions_. Test carefully before upgrading,
+> because there is no going back.
+
+Features
+--------
+
+- ArnoldTextureBake : Added a new node for baking Arnold shading networks down into
+  UV textures (#2931).
+- Numeric bookmarks : Added the ability to associate a numeric hotkey to a node, providing
+  quick pinning of the node into any editor. Use `Ctrl+[0-9]` in the GraphEditor to assign
+  the bookmark, and then simply hit `[0-9]` to pin that node into the editor below the
+  cursor (#2974).
+- Viewer (#2985, #2666, #2717) : Added "Edit Source Node..." context menu item, to open a
+  NodeEditor for the selected scene object.
+- ShaderTweaks : Added a new node to allow shader parameters to be overridden
+  downstream of the shader assignment. This replaces the old LightTweaks node, with
+  the addition of new functionality to allow new connections to be made (#2954, #2983).
+- GraphEditor : Added support for making connections to the individual components of colour
+  and vector parameters (#2938, #2973, #755).
+- BoxOut : Added a `passThrough` plug, providing a convenient way of allowing
+  Boxes to be disabled (#2879).
+- UDIMQuery : Added a new node to query the texture UDIMs used by a set of
+  objects (#2913).
+- Wireframe : Added a new node for converting MeshPrimitives into a wireframe
+  representation using CurvesPrimitives (#2914).
+
 Improvements
 ------------
 
 - Loop : Added plug context menu item for connecting previous to next (#2887).
-- ArnoldOptions : Added adaptive sampling settings (#2919).
+- ArnoldOptions :
+  - Added adaptive sampling settings (#2919).
+  - Added low light threshold (#2968).
+  - Added support for JSON stats files (#2984).
 - ArnoldRender (#2919) :
   - Added support for a "camera" parameter in outputs, allowing renders from
     multiple cameras to be performed in a single process.
   - Added support for Arnold's `uv_camera`.
 - SceneInspector : Added curve basis to Object section (#2892).
+- Dispatch app : Added `-show` argument to control which nodes are shown
+  in `-gui` mode (#2900).
+- Dispatcher (#2942) :
+  - Added `dispatcher:scriptFileName` context variable.
+  - Added support for nested dispatchers, with the inner dispatch sharing the
+    job directory for the outer dispatch (#2942).
+- Dot/ContextProcessor/Switch/Loop : Improved serialisation to use a call to `setup()`
+  rather than manual creation of plugs. This makes the serialisation format a better
+  learning tool for aspiring scripters (#2981).
+- BoolPlugValueWidget : Added colour to indicate animation inputs and compute errors
+ (#2990).
+- OSLShader : Improved nodule labelling (#2983).
+- PlugAdder : Added support for label metadata (#2345, #2983).
+- Shader/Light : Improved the representation of shaders in the scene dataflow. These
+  now use a dedicated `IECoreScene::ShaderNetwork` class rather than a cumbersome
+  `IECore::ObjectVector`. This lays the groundwork for features such as downstream
+  tweaks (#2902).
+
+Fixes
+-----
+
+- ValuePlug : Fixed bug in finding the ComputeNode for a plug. In specific
+  circumstances this could cause a `Value for Plug not set as expected`
+  error (#2955, #2950).
+- ViewportGadget/GadgetWidget : Fixed enter/leave event handling bug (#2938).
+- Context : Fixed fallback value for `get()` method (#2987).
+- GraphLayout : Fixed GIL management bugs that could cause deadlock (#2988).
+- ShaderAssignment : OSL shaders of type "shader" are now assigned correctly
+  as "osl:surface" and not "osl:shader" (#2983).
+- Metadata bindings : Fix crashes caused by calling `value( None )` (#2996).
 
 Documentation
 -------------
 
 - Improved the "Getting Started" scripting tutorial, renaming it to "Node Graph
   Editing in Python".
+- Added "Working with the Node Graph" section, including documentation for
+  Box nodes in particular.
+- Improved the "Controls and Shortcuts" section (#2929).
 
 API
 ---
 
+- SceneAlgo (#2985) :
+  - Added `history()` method for returning the tree of operations used
+    to generate a a particular part of the scene.
+  - Added `source()` method to return the node originally responsible for
+    the creation of a particular location.
+- Metadata #2953 :
+  - Values may now be registered for plugs of a specific type.
+  - Values may now be registered to specific named descendants of plugs
+    of a specific type.
+- CompoundNumericNodule : Added new nodule type to allow connections to be
+  made to child components (#2938).
+- MetadataAlgo : Added methods for numeric bookmarks (#2974).
 - ContextProcessor : Added `setup()`, `inPlug()` and `outPlug()` methods (#2880).
 - Loop : Added `setup()`, `inPlug()` and `outPlug()` methods (#2887).
+- TweakPlug (#2954, #2983) :
+  - Added default template argument to `valuePlug()` method.
+  - Made `applyTweak()` const.
+  - Added `mode` argument to convenience constructors.
+  - Added `applyTweaks()` method for tweaking `ShaderNetworks`.
+  - Added support for connecting new shaders into a `ShaderNetwork`.
+- Nodule : Added `nodule()` virtual method, used to return a nodule for a child
+  plug (#2938).
+- GraphBookmarksUI : Removed `popupFindBookmarkMenu()`. Use `connectToEditor()`
+  instead (#2974).
 
 Build
 -----
@@ -32,6 +123,18 @@ Build
 Breaking Changes
 ----------------
 
+- LightTweaks : Replaced with new general-purpose `ShaderTweaks` node (#2954).
+- Shader : Shaders are now represented with `IECoreScene::ShaderNetworks` rather than
+  `IECore::ObjectVectors` (#2902).
+- Dispatcher : The base class now saves the script to dispatch automatically, so derived
+  classes no longer need to do so (#2942).
+- Metadata (#2953) :
+  - Removed all deprecated methods.
+  - `NodeValueFunction` has been replaced by a generic `GraphComponentFunction`. This allows
+     metadata to be registered by Plug TypeId.
+- TweakPlug :
+  - Changed signatures for `applyTweak()` and constructor (#2954).
+  - Changed base class (#2983).
 - ContextProcessors : Removed SceneContextVariables, DeleteSceneContextVariables,
   SceneTimeWarp, ImageContextVariables, DeleteImageContextVariables and ImageTimeWarp nodes.
   Use the generic equivalents instead. Compatibility with old scripts is provided by
@@ -46,6 +149,9 @@ Breaking Changes
   - Removed `parent` variable. Paste serialised scripts using the GraphEditor
     instead.
 - Screengrab app : Renamed `-scriptEditor` argument to `pythonEditor` (#2876).
+- Dispatch app : Renamed `-nodes` argument to `-tasks` (#2900).
+- Nodule : Added virtual method (#2938).
+- ScriptNode : Removed `scriptExecutedSignal()` (#2996).
 
 0.52.3.4 (relative to 0.52.3.3)
 ========
