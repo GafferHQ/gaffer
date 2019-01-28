@@ -67,6 +67,8 @@
 #include "IECore/VectorTypedData.h"
 #include "IECore/Writer.h"
 
+#include "OpenEXR/ImathMatrixAlgo.h"
+
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -118,6 +120,7 @@ typedef std::unique_ptr<ccl::Integrator> CIntegratorPtr;
 typedef std::unique_ptr<ccl::Background> CBackgroundPtr;
 typedef std::unique_ptr<ccl::Film> CFilmPtr;
 typedef std::unique_ptr<ccl::CurveSystemManager> CCurveSystemManagerPtr;
+typedef std::unique_ptr<ccl::Light> CLightPtr;
 typedef std::shared_ptr<ccl::Camera> SharedCCameraPtr;
 typedef std::shared_ptr<ccl::Object> SharedCObjectPtr;
 typedef std::shared_ptr<ccl::Light> SharedCLightPtr;
@@ -689,19 +692,22 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// To apply a default color+strength to the lights without shaders assigned.
-		SharedCShaderPtr getEmission( const IECore::Object *light )
+		SharedCShaderPtr getEmission( const IECoreScene::Shader *shader, const V3f &color, const float strength )
 		{
 			Cache::accessor a;
-			m_cache.insert( a, light->Object::hash() );
+			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
 				const std::string name = "shader:" + a->first.toString() + ":emission";
 				ccl::Shader *cshader = new ccl::Shader();
 				cshader->name = name.c_str();
+				cshader->graph = new ccl::ShaderGraph();
 				ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
 				ccl::EmissionNode *emission = new ccl::EmissionNode();
+				emission->color = SocketAlgo::setColor( color );
+				emission->strength = strength;
 				ccl::ShaderNode *shaderNode = cshader->graph->add( (ccl::ShaderNode*)emission );
-				cshader->graph->connect( shaderNode->output( "emission" ), outputNode->input( "surface" ) );
+				cshader->graph->connect( shaderNode->output( "Emission" ), outputNode->input( "Surface" ) );
 				a->second = SharedCShaderPtr( cshader );
 			}
 			return a->second;
@@ -777,11 +783,11 @@ IECore::InternedString g_useHoldoutAttributeName( "ccl:use_holdout" );
 IECore::InternedString g_isShadowCatcherAttributeName( "ccl:is_shadow_catcher" );
 IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
+// Cycles Light
+IECore::InternedString g_lightAttributeName( "ccl:light" );
 
 // Shader Assignment
-std::array<IECore::InternedString, 6> g_shaderAttributeNames = { {
-	"osl:light",
-	"ccl:light",
+std::array<IECore::InternedString, 4> g_shaderAttributeNames = { {
 	"osl:surface",
 	"ccl:surface",
 	"ccl:volume",
@@ -812,6 +818,38 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
 			:	m_cclVisibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f )
 		{
+			if( const Object *o = attributes->member<const Object>( g_lightAttributeName ) )
+			{
+				if( const ShaderNetwork *shaderNetwork = reportedCast<const ShaderNetwork>( o, "attribute", g_lightAttributeName ) )
+				{
+					const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderNetwork->getOutput().shader );
+					// This is just to store some data.
+					m_light = CLightPtr( new ccl::Light() );
+					ccl::Light *clight = m_light.get();
+					float strength = 1.0f;
+					auto color = Imath::V3f( 1.0f );
+					for( const auto &namedParameter : shader->parameters() )
+					{
+						string paramName = namedParameter.first.string();
+						if( paramName == "color" )
+						{
+							if( const Color3fData *data = static_cast<const Color3fData *>( namedParameter.second.get() ) )
+								color = data->readable();
+							continue;
+						}
+						else if ( paramName == "strength" )
+						{
+							if( const FloatData *data = static_cast<const FloatData *>( namedParameter.second.get() ) )
+								strength = data->readable();
+							continue;
+						}
+						SocketAlgo::setSocket( clight, paramName, namedParameter.second.get() );
+					}
+
+					m_shader = shaderCache->getEmission( shader, color, strength );
+				}
+			}
+
 			for( const auto &name : g_shaderAttributeNames )
 			{
 				if( const Object *o = attributes->member<const Object>( name ) )
@@ -916,32 +954,35 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		bool applyLight( ccl::Light *light, ccl::Shader *emission, const CyclesAttributes *previousAttributes ) const
+		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
 		{
-			if( previousAttributes )
+			if( ccl::Light *clight = m_light.get() )
 			{
-				if( m_shader.get() )
-				{
-					light->shader = m_shader.get();
-				}
+				light->size = clight->size;
+				light->map_resolution = clight->map_resolution;
+				light->spot_angle = clight->spot_angle;
+				light->spot_smooth = clight->spot_smooth;
+				light->cast_shadow = clight->cast_shadow;
+				light->use_mis = clight->use_mis;
+				light->use_diffuse = clight->use_diffuse;
+				light->use_glossy = clight->use_glossy;
+				light->use_transmission = clight->use_transmission;
+				light->use_scatter = clight->use_scatter;
+				light->samples = clight->samples;
+				light->max_bounces = clight->max_bounces;
+				light->is_portal = clight->is_portal;
+				light->is_enabled = clight->is_enabled;
 			}
-			else
+			if( m_shader.get() )
 			{
-				if( m_shader.get() )
-				{
-					light->shader = m_shader.get();
-				}
-				else
-				{
-					light->shader = emission;
-				}
+				light->shader = m_shader.get();
 			}
-
 			return true;
 		}
 
 	private :
 
+		CLightPtr m_light;
 		SharedCShaderPtr m_shader;
 		unsigned m_cclVisibility;
 		bool m_useHoldout;
@@ -1248,7 +1289,7 @@ class LightCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		SharedCLightPtr get( const IECore::Object *object, const std::string &nodeName )
+		SharedCLightPtr get( const std::string &nodeName )
 		{
 			auto clight = SharedCLightPtr( new ccl::Light() );
 			clight.get()->name = nodeName.c_str();
@@ -1442,8 +1483,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesLight( SharedCLightPtr &light, SharedCShaderPtr &emission )
-			: m_light( light ), m_emission( emission ), m_attributes( nullptr )
+		CyclesLight( SharedCLightPtr &light )
+			: m_light( light ), m_attributes( nullptr )
 		{
 		}
 
@@ -1452,7 +1493,17 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			ccl::Light *light = m_light.get();
 			if( !light )
 				return;
-			light->tfm = SocketAlgo::setTransform( transform );
+			ccl::Transform tfm = SocketAlgo::setTransform( transform );
+			light->tfm = tfm;
+			// To feed into area lights
+			light->axisu = ccl::transform_get_column(&tfm, 0);
+			light->axisv = ccl::transform_get_column(&tfm, 1);
+			Imath::Vec3<float> scale = Imath::Vec3<float>( 1.0f );
+			Imath::extractScaling( transform, scale, false );
+			light->sizeu = scale.x;
+			light->sizev = scale.y;
+			light->co = ccl::transform_get_column(&tfm, 3);
+			light->dir = -ccl::transform_get_column(&tfm, 2);
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1461,7 +1512,17 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !light )
 				return;
 			// Cycles doesn't support motion samples on lights (yet)
-			light->tfm = SocketAlgo::setTransform( samples[0] );
+			ccl::Transform tfm = SocketAlgo::setTransform( samples[0] );
+			light->tfm = tfm;
+			// To feed into area lights
+			light->axisu = ccl::transform_get_column(&tfm, 0);
+			light->axisv = ccl::transform_get_column(&tfm, 1);
+			Imath::Vec3<float> scale = Imath::Vec3<float>( 1.0f );
+			Imath::extractScaling( samples[0], scale, false );
+			light->sizeu = scale.x;
+			light->sizev = scale.y;
+			light->co = ccl::transform_get_column(&tfm, 3);
+			light->dir = -ccl::transform_get_column(&tfm, 2);
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -1471,7 +1532,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 				return true;
 
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyLight( light, m_emission.get(), m_attributes.get() ) )
+			if( cyclesAttributes->applyLight( light, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
 				return true;
@@ -1482,7 +1543,6 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		SharedCLightPtr m_light;
-		SharedCShaderPtr m_emission;
 		ConstCyclesAttributesPtr m_attributes;
 
 };
@@ -2401,16 +2461,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			SharedCLightPtr clight = m_lightCache->get( object, name );
+			SharedCLightPtr clight = m_lightCache->get( name );
 			if( !clight )
 			{
 				return nullptr;
 			}
-			// For colour
-			SharedCShaderPtr cshader = m_shaderCache->getEmission( object );
-			clight.get()->shader = cshader.get();
 
-			ObjectInterfacePtr result = new CyclesLight( clight, cshader );
+			ObjectInterfacePtr result = new CyclesLight( clight );
 			result->attributes( attributes );
 			return result;
 		}

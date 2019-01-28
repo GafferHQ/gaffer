@@ -359,12 +359,6 @@ py::dict getLights()
 		py::dict _in;
 		_in = getSockets( cNodeType, false );
 
-		// Set to invisible
-		//_in["axisu"]["visible"] = false;
-		//_in["axisv"]["visible"] = false;
-		//_in["sizeu"]["visible"] = false;
-		//_in["sizev"]["visible"] = false;
-
 		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "type" ) );
 		const ccl::NodeEnum *enums = socketType->enum_values;
 
@@ -373,6 +367,7 @@ py::dict getLights()
 			py::dict d;
 			py::dict in;
 			std::string type = it->first.c_str();
+			type += "_light";
 
 			in["size"] = _in["size"];
 			in["cast_shadow"] = _in["cast_shadow"];
@@ -384,45 +379,43 @@ py::dict getLights()
 			in["max_bounces"] = _in["max_bounces"];
 			in["samples"] = _in["samples"];
 
-			if( type == "background" )
+			if( type == "background_light" )
 			{
 				// Part of CyclesOptions
 				continue;
 			}
-			else if( type == "area" )
+			else if( type == "area_light" )
 			{
-				py::dict shape;
-				py::dict shapeEnums;
-				shapeEnums["ellipse"] = 0;
-				shapeEnums["disk"] = 1;
-				shapeEnums["rectangle"] = 2;
-				shapeEnums["square"] = 3;
-				shape["enum_values"] = shapeEnums;
-				shape["ui_name"] = "Shape";
-				shape["type"] = "enum";
-				shape["is_array"] = false;
-				shape["flags"] = 0;
-				//in["axisu"] = _in["axisu"];
-				//in["axisv"] = _in["axisv"];
-				//in["sizeu"] = _in["sizeu"];
-				//in["sizev"] = _in["sizev"];
-				in["shape"] = shape;
+				in["axisu"] = _in["axisu"];
+				in["axisv"] = _in["axisv"];
+				in["sizeu"] = _in["sizeu"];
+				in["sizev"] = _in["sizev"];
+				d["in"] = in;
+				d["enum"] = it->second;
+				result["disk_light"] = d;
+				result["quad_light"] = d;
 			}
-			else if( type == "spot" )
+			else if( type == "spot_light" )
 			{
 				in["spot_angle"] = _in["spot_angle"];
 				in["spot_smooth"] = _in["spot_smooth"];
+				d["in"] = in;
+				d["enum"] = it->second;
+				result[type] = d;
 			}
-
-			d["in"] = in;
-			d["enum"] = it->second;
-			result[type] = d;
+			else
+			{
+				d["in"] = in;
+				d["enum"] = it->second;
+				result[type] = d;
+			}
 		}
 		// Portal
 		py::dict d;
 		py::dict in;
-		in["shape"] = result["area"]["in"]["shape"];
-		d["enum"] = result["area"]["enum"];
+		in["is_portal"] = _in["is_portal"];
+		in["size"] = _in["size"];
+		d["enum"] = result["quad_light"]["enum"];
 		d["in"] = in;
 		result["portal"] = d;
 	}
@@ -441,7 +434,9 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesOptions>();
-	DependencyNodeClass<CyclesLight>();
+	DependencyNodeClass<CyclesLight>()
+		.def( "loadShader", (void (CyclesLight::*)( const std::string & ) )&CyclesLight::loadShader )
+	;
 	DependencyNodeClass<CyclesShader>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();

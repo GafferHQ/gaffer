@@ -71,7 +71,7 @@ Gaffer.Metadata.registerNode(
 		"parameters.color" : [
 
 			# The color parameter on quad and skydome lights is connectable.
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "area_light", "skydome_light" ) else ""
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "skydome_light" ) else ""
 
 		],
 

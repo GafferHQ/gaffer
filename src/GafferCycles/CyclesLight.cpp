@@ -51,6 +51,7 @@
 #include "boost/format.hpp"
 
 using namespace std;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferCycles;
@@ -77,7 +78,7 @@ void CyclesLight::loadShader( const std::string &shaderName )
 
 	if( lightNodeType )
 	{
-		SocketHandler::setupPlugs( lightNodeType, parametersPlug() );
+		SocketHandler::setupLightPlugs( shaderName, lightNodeType, parametersPlug() );
 		shaderNamePlug()->setValue( shaderName );
 	}
 }
@@ -103,6 +104,9 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
 	IECoreScene::ShaderPtr lightShader = new IECoreScene::Shader( shaderNamePlug()->getValue(), "ccl:light" );
 	vector<IECoreScene::ShaderNetwork::Connection> connections;
+	bool strength = false;
+	float exposure = 0.0f;
+	float intensity = 1.0f;
 	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
@@ -126,9 +130,26 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 		}
 		else if( ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() ) )
 		{
-			lightShader->parameters()[valuePlug->getName()] = PlugAlgo::extractDataFromPlug( valuePlug );
+			auto parameterName = valuePlug->getName();
+
+			if( parameterName == "exposure" )
+			{
+				auto data = new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
+				exposure = data->readable();
+			}
+			else if( parameterName == "intensity" )
+			{
+				strength = true;
+				auto data = new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
+				intensity = data->readable();
+			}
+			else
+				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 		}
 	}
+
+	if( strength )
+		lightShader->parameters()["strength"] = new FloatData( intensity * pow( 2.0f, exposure ) );
 
 	const IECore::InternedString handle = result->addShader( "light", std::move( lightShader ) );
 	for( const auto &c : connections )

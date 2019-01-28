@@ -485,6 +485,65 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	}
 }
 
+void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, bool keepExistingChildren )
+{
+
+	// Make sure we have a plug to represent each socket, reusing plugs wherever possible.
+
+	std::set<const Plug *> validPlugs;
+
+	if( shaderName == "portal" )
+	{
+		validPlugs.insert( setupTypedPlug<BoolPlug>( "is_portal", plugsParent, Gaffer::Plug::In, true ) );
+	}
+	else
+	{
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_diffuse" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_glossy" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_transmission" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_scatter" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "max_bounces" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "samples" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "intensity", plugsParent, Gaffer::Plug::In, 1.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "exposure", plugsParent, Gaffer::Plug::In, 0.0f ) );
+		validPlugs.insert( setupTypedPlug<V3fPlug>( "color", plugsParent, Gaffer::Plug::In, V3f( 1.0f ) ) );
+	}
+
+	if( shaderName == "spot_light" )
+	{
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_angle" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
+	}
+	else if( ( shaderName == "quad_light" )
+	      || ( shaderName == "disk_light" )
+	      || ( shaderName == "portal" ) )
+	{
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 1.0f ) );
+	}
+	else
+	{
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
+	}
+	
+
+	// Remove any old plugs which it turned out we didn't need.
+
+	if( !keepExistingChildren )
+	{
+		for( int i = plugsParent->children().size() - 1; i >= 0; --i )
+		{
+			Plug *child = plugsParent->getChild<Plug>( i );
+			if( validPlugs.find( child ) == validPlugs.end() )
+			{
+				plugsParent->removeChild( child );
+			}
+		}
+	}
+}
+
 Gaffer::Plug *setupOutputNodePlug( Gaffer::GraphComponent *plugParent )
 {
 	Plug *existingPlug = plugParent->getChild<Plug>( "out" );
