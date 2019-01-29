@@ -20,13 +20,16 @@ Features
   quick pinning of the node into any editor. Use `Ctrl+[0-9]` in the GraphEditor to assign
   the bookmark, and then simply hit `[0-9]` to pin that node into the editor below the
   cursor (#2974).
-- Viewer (#2985, #2666, #2717) : Added "Edit Source Node..." context menu item, to open a
-  NodeEditor for the selected scene object.
 - ShaderTweaks : Added a new node to allow shader parameters to be overridden
   downstream of the shader assignment. This replaces the old LightTweaks node, with
   the addition of new functionality to allow new connections to be made (#2954, #2983).
 - GraphEditor : Added support for making connections to the individual components of colour
   and vector parameters (#2938, #2973, #755).
+- Viewer (#2985, #2666, #2717, #3001) :
+  - Added "History" context menu for the selected scene object.
+    - Added "Edit Source..." to open a NodeEditor for the node that created the object.
+    - Added "Edit Tweaks..." to open a NodeEditor for the most recent ShaderTweaks node
+      applied to the object.
 - BoxOut : Added a `passThrough` plug, providing a convenient way of allowing
   Boxes to be disabled (#2879).
 - UDIMQuery : Added a new node to query the texture UDIMs used by a set of
@@ -64,6 +67,9 @@ Improvements
   now use a dedicated `IECoreScene::ShaderNetwork` class rather than a cumbersome
   `IECore::ObjectVector`. This lays the groundwork for features such as downstream
   tweaks (#2902).
+- GraphEditor : Changed hotkey for the Bookmarks menu from `Ctrl+B` to `B` (#3000).
+- Error Handling : Added the plug full name, frame, and scene path (if applicable)
+  to the logging output as additional `DEBUG` log messages (#2976).
 
 Fixes
 -----
@@ -90,12 +96,14 @@ Documentation
 API
 ---
 
-- SceneAlgo (#2985) :
+- SceneAlgo (#2985, #3001) :
   - Added `history()` method for returning the tree of operations used
     to generate a a particular part of the scene.
   - Added `source()` method to return the node originally responsible for
     the creation of a particular location.
-- Metadata #2953 :
+  - Added `shaderTweaks()` method to return the most recent ShaderTweaks
+    node applied to an attribute.
+- Metadata (#2953) :
   - Values may now be registered for plugs of a specific type.
   - Values may now be registered to specific named descendants of plugs
     of a specific type.
@@ -114,6 +122,8 @@ API
   plug (#2938).
 - GraphBookmarksUI : Removed `popupFindBookmarkMenu()`. Use `connectToEditor()`
   instead (#2974).
+- ProcessMessageHandler : Added a MessageHandler for injecing `Gaffer::Process`
+  information as additional `DEBUG` log messages (#2976).
 
 Build
 -----
