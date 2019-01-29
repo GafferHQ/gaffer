@@ -79,7 +79,7 @@ def __historySubMenu( menu, context, scene, selectedPath ) :
 		{
 			"active" : selectedPath is not None,
 			"command" : functools.partial( __editSourceNode, context, scene, selectedPath ),
-			"shortCut" : "Ctrl+E",
+			"shortCut" : "Alt+E",
 		}
 	)
 
@@ -88,7 +88,7 @@ def __historySubMenu( menu, context, scene, selectedPath ) :
 		{
 			"active" : selectedPath is not None,
 			"command" : functools.partial( __editTweaksNode, context, scene, selectedPath ),
-			"shortCut" : "Shift+Ctrl+E",
+			"shortCut" : "Alt+Shift+E",
 		}
 	)
 
@@ -150,12 +150,12 @@ def __viewerKeyPress( viewer, event ) :
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return False
 
-	if event.key == "E" and event.modifiers == event.modifiers.Control :
+	if event.key == "E" and event.modifiers == event.modifiers.Alt :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
 			__editSourceNode( view.getContext(), view["in"], selectedPath )
 		return True
-	elif event.key == "E" and event.modifiers == event.modifiers.Control | event.modifiers.Shift :
+	elif event.key == "E" and event.modifiers == event.modifiers.Alt | event.modifiers.Shift :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
 			__editTweaksNode( view.getContext(), view["in"], selectedPath )
