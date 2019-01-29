@@ -235,8 +235,9 @@ Tumble                                                 :kbd:`Alt` + click and dr
 Expand selection                                       :kbd:`↓`
 Fully expand selection                                 :kbd:`Shift` + :kbd:`↓`
 Collapse selection                                     :kbd:`↑`
-Edit source node of selection                          :kbd:`Ctrl` + :kbd:`E`
-Fit clipping planes to scene                           Right-click > *Clipping Planes* > *Fit 
+Edit source node of selection                          :kbd:`Alt` + :kbd:`E`
+Edit tweaks node for selection                         :kbd:`Alt` + :kbd:`Shift` + :kbd:`E`
+Fit clipping planes to scene                           Right-click > *Clipping Planes* > *Fit
                                                        To Scene*
 Fit clipping planes to selection                       Right-click > *Clipping Planes* > *Fit 
                                                        To Selection*

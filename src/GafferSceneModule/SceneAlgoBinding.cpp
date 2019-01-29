@@ -41,6 +41,7 @@
 #include "GafferScene/Filter.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/ShaderTweaks.h"
 
 #include "IECoreScene/Camera.h"
 
@@ -153,6 +154,12 @@ ScenePlugPtr sourceWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &
 	return SceneAlgo::source( &scene, path );
 }
 
+ShaderTweaksPtr shaderTweaksWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &path, const InternedString &attributeName )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::shaderTweaks( &scene, path, attributeName );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -200,6 +207,7 @@ void bindSceneAlgo()
 
 	def( "history", &historyWrapper );
 	def( "source", &sourceWrapper );
+	def( "shaderTweaks", &shaderTweaksWrapper );
 
 }
 

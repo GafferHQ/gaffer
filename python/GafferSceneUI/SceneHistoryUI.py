@@ -36,6 +36,9 @@
 
 import functools
 
+import IECore
+import IECoreScene
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -46,14 +49,15 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return None
 
-	selectedPath = __sceneViewSelectedPath( view )
-
 	menuDefinition.append(
-		"/Edit Source Node...",
+		"/History",
 		{
-			"active" : selectedPath is not None,
-			"command" : functools.partial( __editSourceNode, view["in"], selectedPath ),
-			"shortCut" : "Ctrl+E",
+			"subMenu" : functools.partial(
+				__historySubMenu,
+				context = view.getContext(),
+				scene = view["in"],
+				selectedPath = __sceneViewSelectedPath( view )
+			)
 		}
 	)
 
@@ -66,6 +70,30 @@ def connectToEditor( editor ) :
 # Internal implementation
 ##########################################################################
 
+def __historySubMenu( menu, context, scene, selectedPath ) :
+
+	menuDefinition = IECore.MenuDefinition()
+
+	menuDefinition.append(
+		"/Edit Source...",
+		{
+			"active" : selectedPath is not None,
+			"command" : functools.partial( __editSourceNode, context, scene, selectedPath ),
+			"shortCut" : "Alt+E",
+		}
+	)
+
+	menuDefinition.append(
+		"/Edit Tweaks...",
+		{
+			"active" : selectedPath is not None,
+			"command" : functools.partial( __editTweaksNode, context, scene, selectedPath ),
+			"shortCut" : "Alt+Shift+E",
+		}
+	)
+
+	return menuDefinition
+
 def __sceneViewSelectedPath( sceneView ) :
 
 	sceneGadget = sceneView.viewportGadget().getPrimaryChild()
@@ -74,14 +102,36 @@ def __sceneViewSelectedPath( sceneView ) :
 	else :
 		return None
 
-def __editSourceNode( scene, path ) :
+def __editSourceNode( context, scene, path ) :
 
-	source = GafferScene.SceneAlgo.source( scene, path )
+	with context :
+		source = GafferScene.SceneAlgo.source( scene, path )
+
 	if source is None :
 		return
 
 	node = source.node()
 	node = __ancestorWithReadOnlyChildNodes( node ) or node
+	GafferUI.NodeEditor.acquire( node, floating = True )
+
+def __editTweaksNode( context, scene, path ) :
+
+	with context :
+		attributes = scene.fullAttributes( path )
+
+	shaderAttributeNames = [ x[0] for x in attributes.items() if isinstance( x[1], IECoreScene.ShaderNetwork ) ]
+	# Just happens to order as Surface, Light, Displacement, which is what we want.
+	shaderAttributeNames = list( reversed( sorted( shaderAttributeNames ) ) )
+	if not len( shaderAttributeNames ) :
+		return
+
+	with context :
+		tweaks = GafferScene.SceneAlgo.shaderTweaks( scene, path, shaderAttributeNames[0] )
+
+	if tweaks is None :
+		return
+
+	node = __ancestorWithReadOnlyChildNodes( tweaks ) or tweaks
 	GafferUI.NodeEditor.acquire( node, floating = True )
 
 def __ancestorWithReadOnlyChildNodes( node ) :
@@ -100,9 +150,13 @@ def __viewerKeyPress( viewer, event ) :
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return False
 
-	if event.key == "E" and event.modifiers == event.modifiers.Control :
+	if event.key == "E" and event.modifiers == event.modifiers.Alt :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
-			__editSourceNode( view["in"], selectedPath )
+			__editSourceNode( view.getContext(), view["in"], selectedPath )
 		return True
-
+	elif event.key == "E" and event.modifiers == event.modifiers.Alt | event.modifiers.Shift :
+		selectedPath = __sceneViewSelectedPath( view )
+		if selectedPath is not None :
+			__editTweaksNode( view.getContext(), view["in"], selectedPath )
+		return True
