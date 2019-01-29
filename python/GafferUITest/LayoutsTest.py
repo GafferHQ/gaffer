@@ -84,20 +84,7 @@ class LayoutsTest( GafferUITest.TestCase ) :
 
 	def testNoPersistentLayoutsInDefaultConfigs( self ) :
 
-		class TestApp( Gaffer.Application ) :
-
-			def __init__( self ) :
-
-				Gaffer.Application.__init__( self, "Test" )
-
-			def _run( self, args ) :
-
-				# Load the standard gui config files
-				self._executeStartupFiles( "gui" )
-
-				return 0
-
-		app = TestApp()
+		app = Gaffer.Application()
 
 		# Load the GUI config, making sure we only use the standard
 		# startup files, and not any others from the current environment
@@ -105,7 +92,7 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		startupPaths = os.environ["GAFFER_STARTUP_PATHS"]
 		try :
 			os.environ["GAFFER_STARTUP_PATHS"] = os.path.expandvars( "$GAFFER_ROOT/startup" )
-			app.run()
+			app._executeStartupFiles( "gui" )
 		finally :
 			os.environ["GAFFER_STARTUP_PATHS"] = startupPaths
 

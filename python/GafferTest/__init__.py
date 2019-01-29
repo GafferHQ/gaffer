@@ -135,6 +135,7 @@ from DirtyPropagationScopeTest import DirtyPropagationScopeTest
 from BoxIOTest import BoxIOTest
 from ParallelAlgoTest import ParallelAlgoTest
 from BackgroundTaskTest import BackgroundTaskTest
+from ProcessMessageHandlerTest import ProcessMessageHandlerTest
 
 if __name__ == "__main__":
 	import unittest
