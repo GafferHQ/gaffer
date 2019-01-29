@@ -19,7 +19,7 @@ platform = IEEnv.platform()
 if platform in ( "cent7.x86_64" ) :
 
 	# fetch at least one active version of each renderer
-	aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
+	aiVersion = "5.1.1.0"#IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
 	dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
 
 	extraArgs = [ "ARNOLD_VERSION="+aiVersion, "DL_VERSION="+dlVersion ]
