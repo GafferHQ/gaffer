@@ -430,14 +430,24 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 		self["__ImageLoop"]["next"].setInput( self["__Merge"]["out"] )
 
+		# Write out the combined image, so we can immediately read it back in
+		# This is just because we're doing enough image processing that we
+		# could saturate the cache, and Gaffer wouldn't know that this is
+		# the important result to keep
+		self["__ImageIntermediateWriter"] = GafferImage.ImageWriter()
+		self["__ImageIntermediateWriter"]["in"].setInput( self["__ImageLoop"]["out"] )
+
+		self["__ImageIntermediateReader"] = GafferImage.ImageReader()
+
 		# Now that we've merged everything together, we can use a BleedFill to fill in the background,
 		# so that texture filtering across the edges will pull in colors that are at least reasonable.	
 		self["__BleedFill"] = GafferImage.BleedFill()
-		self["__BleedFill"]["in"].setInput( self["__ImageLoop"]["out"] )
+		self["__BleedFill"]["in"].setInput( self["__ImageIntermediateReader"]["out"] )
 
 		# Write out the result	
 		self["__ImageWriter"] = GafferImage.ImageWriter()
 		self["__ImageWriter"]["in"].setInput( self["__BleedFill"]["out"] )
+		self["__ImageWriter"]["preTasks"][0].setInput( self["__ImageIntermediateWriter"]["task"] )
 
 		# Convert result to texture
 		self["__ConvertCommand"] = GafferDispatch.SystemCommand()
@@ -452,6 +462,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			"""
 
 			outFileBase = context["wedge:outFile"]
+			intermediateExr = outFileBase + ".intermediate.exr"
+			parent["__ImageIntermediateWriter"]["fileName"] = intermediateExr
+			parent["__ImageIntermediateReader"]["fileName"] = intermediateExr
 			tmpExr = outFileBase + ".tmp.exr"
 			parent["__ImageWriter"]["fileName"] = tmpExr
 			parent["__ConvertCommand"]["substitutions"]["member1"]["value"] = tmpExr
@@ -485,8 +498,10 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			toDelete = []
 			for outFileBase, inputExrs in imageList.items():
 				tmpExr = outFileBase + ".tmp.exr"
+				intermediateExr = outFileBase + ".intermediate.exr"
 				toDelete.extend( inputExrs )
 				toDelete.append( tmpExr )
+				toDelete.append( intermediateExr )
 			toDelete.append( parent["__indexFilePath"] )
 
 			parent["__CleanUpCommand"]["variables"]["member1"]["value"] = IECore.StringVectorData( toDelete )
