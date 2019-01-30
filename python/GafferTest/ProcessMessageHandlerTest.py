@@ -112,5 +112,21 @@ class ProcessMessageHandlerTest( GafferTest.TestCase ) :
 				self.assertEqual( capturingMessageHandler.messages[1].context, "Gaffer::Process" )
 				self.assertEqual( capturingMessageHandler.messages[1].message, "[ plug: 'ScriptNode.Expression.__execute', frame: 1, path: '/a/b' ]" )
 
+				del capturingMessageHandler.messages[:]
+
+				del context["frame"]
+				context["scene:path"] = IECore.InternedStringVectorData( [ "a", "b", "c" ] )
+
+				self.assertEqual( node['user']['test'].getValue(), 3 )
+				self.assertEqual( len( capturingMessageHandler.messages ), 2 )
+
+				self.assertEqual( capturingMessageHandler.messages[0].level, IECore.MessageHandler.Level.Error )
+				self.assertEqual( capturingMessageHandler.messages[0].context, "testA" )
+				self.assertEqual( capturingMessageHandler.messages[0].message, "testB" )
+
+				self.assertEqual( capturingMessageHandler.messages[1].level, IECore.MessageHandler.Level.Debug )
+				self.assertEqual( capturingMessageHandler.messages[1].context, "Gaffer::Process" )
+				self.assertEqual( capturingMessageHandler.messages[1].message, "[ plug: 'ScriptNode.Expression.__execute', path: '/a/b/c' ]" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -57,9 +57,10 @@ using boost::algorithm::join;
 namespace
 {
 
+IECore::InternedString g_frame( "frame" );
 IECore::InternedString g_scenePath( "scene:path" );
 
-}
+} // namespace
 
 ProcessMessageHandler::ProcessMessageHandler( IECore::MessageHandlerPtr handler ) : IECore::FilteredMessageHandler( handler )
 {
@@ -77,8 +78,12 @@ void ProcessMessageHandler::handle( Level level, const string &context, const st
 	{
 		stringstream ss;
 
-		ss << "[ plug: '" << p->plug()->fullName() << "', ";
-		ss << "frame: " << p->context()->getFrame();
+		ss << "[ plug: '" << p->plug()->fullName() << "'";
+
+		if( auto frame = p->context()->get<IECore::FloatData>( g_frame, nullptr ) )
+		{
+			ss << ", frame: " << frame->readable();
+		}
 
 		if( auto path = p->context()->get<IECore::InternedStringVectorData>( g_scenePath, nullptr ) )
 		{
