@@ -219,7 +219,7 @@ class About :
 			{
 				"name" : "Qt",
 				"url" : "http://qt.nokia.com/",
-				"license" : "$GAFFER_ROOT/doc/licenses/qt",
+				"license" : "$GAFFER_ROOT/doc/licenses/Qt",
 			},
 
 		]
