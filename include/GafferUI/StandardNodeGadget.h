@@ -161,7 +161,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		ConnectionCreator *m_dragDestination;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
-		boost::optional<std::string> m_unused;
+
 };
 
 IE_CORE_DECLAREPTR( StandardNodeGadget )

@@ -100,7 +100,6 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 		int m_mergeGroupId;
 
 		boost::optional<Imath::Color3f> m_userColor;
-		boost::optional<std::string> m_unused;
 
 		static NodeGadgetTypeDescription<BackdropNodeGadget> g_nodeGadgetTypeDescription;
 
