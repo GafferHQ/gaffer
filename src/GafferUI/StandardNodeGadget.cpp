@@ -154,40 +154,6 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 namespace
 {
 
-IECoreGL::Texture *bookmarkTexture()
-{
-	static IECoreGL::TexturePtr bookmarkTexture;
-
-	if( !bookmarkTexture )
-	{
-		bookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar2.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *bookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
-	return bookmarkTexture.get();
-}
-
-IECoreGL::Texture *numericBookmarkTexture()
-{
-	static IECoreGL::TexturePtr numericBookmarkTexture;
-
-	if( !numericBookmarkTexture )
-	{
-		numericBookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *numericBookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
-	return numericBookmarkTexture.get();
-}
-
 bool canConnect( const DragDropEvent &event, const ConnectionCreator *destination )
 {
 	if( auto plug = IECore::runTimeCast<const Plug>( event.data.get() ) )
@@ -380,7 +346,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	updateNodeEnabled();
 	updateIcon();
 	updateShape();
-	updateNumericBookmark();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -439,37 +404,6 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.
 				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
 			}
-
-			/// \todo This bookmark drawing code is duplicated in the BackdropNodeGadget.
-			/// Consolidate into a NodeAnnotationsGadget that operates a bit like the
-			/// AuxiliaryConnectionsGadget, drawing annotations for all nodes using a single
-			/// gadget. This could also render arbitrary annotations defined by metadata
-			/// matching "annotation:*", which we could then use to display things like
-			/// monitor statistics, asset management information etc.
-
-			bool isBookmarked = MetadataAlgo::getBookmarked( node() );
-			if( isBookmarked )
-			{
-				style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), bookmarkTexture() );
-			}
-
-			if( m_numericBookmark )
-			{
-
-				if( !isBookmarked )
-				{
-					style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), numericBookmarkTexture() );
-				}
-
-				Box3f textBounds = style->textBound( Style::LabelText, *m_numericBookmark );
-
-				Imath::Color3f textColor( 1.0f );
-				glPushMatrix();
-				IECoreGL::glTranslate( V2f( b.min.x + 1.0 - textBounds.size().x * 0.5, b.max.y - textBounds.size().y * 0.5 - 0.7 ) );
-				style->renderText( Style::LabelText, *m_numericBookmark, Style::NormalState, &textColor );
-				glPopMatrix();
-			}
-
 			break;
 		}
 		default :
@@ -855,17 +789,6 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 			requestRender();
 		}
 	}
-	else if( MetadataAlgo::bookmarkedAffectedByChange( key ) )
-	{
-		requestRender();
-	}
-	else if( MetadataAlgo::numericBookmarkAffectedByChange( key ) )
-	{
-		if( updateNumericBookmark() )
-		{
-			requestRender();
-		}
-	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -978,28 +901,6 @@ bool StandardNodeGadget::updateShape()
 		return false;
 	}
 	m_oval = oval;
-	return true;
-}
-
-bool StandardNodeGadget::updateNumericBookmark()
-{
-	int cached = m_numericBookmark ? stoi( *m_numericBookmark ) : 0;
-	int bookmark = MetadataAlgo::numericBookmark( this->node() );
-
-	if( cached == bookmark )
-	{
-		return false;
-	}
-
-	if( bookmark )
-	{
-		m_numericBookmark = std::to_string( bookmark );
-	}
-	else
-	{
-		m_numericBookmark = boost::none;
-	}
-
 	return true;
 }
 
