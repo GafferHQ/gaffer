@@ -38,6 +38,7 @@
 #define GAFFERSCENE_CAMERATWEAKS_H
 
 #include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/TweakPlug.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -54,8 +55,8 @@ class GAFFERSCENE_API CameraTweaks : public SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CameraTweaks, CameraTweaksTypeId, SceneElementProcessor );
 
-		Gaffer::Plug *tweaksPlug();
-		const Gaffer::Plug *tweaksPlug() const;
+		GafferScene::TweaksPlug *tweaksPlug();
+		const GafferScene::TweaksPlug *tweaksPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

@@ -38,6 +38,7 @@
 #define GAFFERSCENE_SHADERTWEAKS_H
 
 #include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/TweakPlug.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -57,8 +58,8 @@ class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
 		Gaffer::StringPlug *shaderPlug();
 		const Gaffer::StringPlug *shaderPlug() const;
 
-		Gaffer::Plug *tweaksPlug();
-		const Gaffer::Plug *tweaksPlug() const;
+		GafferScene::TweaksPlug *tweaksPlug();
+		const GafferScene::TweaksPlug *tweaksPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

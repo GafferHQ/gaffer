@@ -54,7 +54,7 @@ CameraTweaks::CameraTweaks( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "tweaks" ) );
+	addChild( new TweaksPlug( "tweaks" ) );
 
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -66,14 +66,14 @@ CameraTweaks::~CameraTweaks()
 {
 }
 
-Gaffer::Plug *CameraTweaks::tweaksPlug()
+GafferScene::TweaksPlug *CameraTweaks::tweaksPlug()
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex );
+	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Plug *CameraTweaks::tweaksPlug() const
+const GafferScene::TweaksPlug *CameraTweaks::tweaksPlug() const
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex );
+	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex );
 }
 
 void CameraTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -95,10 +95,7 @@ bool CameraTweaks::processesObject() const
 
 void CameraTweaks::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( TweakPlugIterator tIt( tweaksPlug() ); !tIt.done(); ++tIt )
-	{
-		(*tIt)->hash( h );
-	}
+	tweaksPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const

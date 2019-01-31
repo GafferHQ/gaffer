@@ -314,5 +314,32 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 			with self.assertRaisesRegexp( RuntimeError, "Mode must be \"Replace\" when a previous connection exists" ) :
 				tweaks["out"].attributes( "/plane" )
 
+	def testPromoteTweaksPlug( self ) :
+
+		box = Gaffer.Box()
+
+		box["plane"] = GafferScene.Plane()
+		box["shader"] = GafferSceneTest.TestShader()
+		box["shader"]["type"].setValue( "surface" )
+
+		box["planeFilter"] = GafferScene.PathFilter()
+		box["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		box["assignment"] = GafferScene.ShaderAssignment()
+		box["assignment"]["in"].setInput( box["plane"]["out"] )
+		box["assignment"]["filter"].setInput( box["planeFilter"]["out"] )
+		box["assignment"]["shader"].setInput( box["shader"]["out"] )
+
+		box["tweaks"] = GafferScene.ShaderTweaks()
+		box["tweaks"]["in"].setInput( box["assignment"]["out"] )
+		box["tweaks"]["filter"].setInput( box["planeFilter"]["out"] )
+		box["tweaks"]["shader"].setValue( "surface" )
+
+		p = Gaffer.PlugAlgo.promote( box["tweaks"]["tweaks"] )
+		p.addChild( GafferScene.TweakPlug( "c", imath.Color3f( 0.1, 5, 9 ) ) )
+
+		network = box["tweaks"]["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( network.getShader( "shader" ).parameters["c"].value, imath.Color3f( 0.1, 5, 9 ) )
+
 if __name__ == "__main__":
 	unittest.main()
