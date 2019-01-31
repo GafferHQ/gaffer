@@ -558,6 +558,9 @@ class TextDiff( SideBySideDiff ) :
 		for value in values :
 
 			shader = value.outputShader() if isinstance( value, IECoreScene.ShaderNetwork ) else value
+			if not shader:
+				formattedValues.append( "Missing output shader" )
+				continue
 			shaderName = shader.name
 			nodeName = shader.blindData().get( "gaffer:nodeName", None )
 
