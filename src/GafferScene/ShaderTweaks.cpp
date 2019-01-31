@@ -61,7 +61,7 @@ ShaderTweaks::ShaderTweaks( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "shader" ) );
-	addChild( new Plug( "tweaks" ) );
+	addChild( new TweaksPlug( "tweaks" ) );
 
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
@@ -83,14 +83,14 @@ const Gaffer::StringPlug *ShaderTweaks::shaderPlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::Plug *ShaderTweaks::tweaksPlug()
+GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug()
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 1 );
+	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::Plug *ShaderTweaks::tweaksPlug() const
+const GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug() const
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 1 );
+	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 1 );
 }
 
 void ShaderTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -113,10 +113,7 @@ bool ShaderTweaks::processesAttributes() const
 void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	shaderPlug()->hash( h );
-	for( TweakPlugIterator tIt( tweaksPlug() ); !tIt.done(); ++tIt )
-	{
-		(*tIt)->hash( h );
-	}
+	tweaksPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
@@ -127,7 +124,7 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		return inputAttributes;
 	}
 
-	const Plug *tweaksPlug = this->tweaksPlug();
+	const TweaksPlug *tweaksPlug = this->tweaksPlug();
 	if( tweaksPlug->children().empty() )
 	{
 		return inputAttributes;
@@ -151,7 +148,7 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
-		TweakPlug::applyTweaks( tweaksPlug, tweakedNetwork.get() );
+		tweaksPlug->applyTweaks( tweakedNetwork.get() );
 		out[it->first] = tweakedNetwork;
 	}
 
