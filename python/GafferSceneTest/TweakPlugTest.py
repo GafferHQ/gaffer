@@ -64,6 +64,18 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["enabled"].defaultValue(), True )
 		self.assertEqual( p["enabled"].getValue(), False )
 
+	def testCreateCounterpart( self ) :
+
+		p = GafferScene.TweakPlug( "test", 10.0, GafferScene.TweakPlug.Mode.Multiply )
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+
+		self.assertIsInstance( p2, GafferScene.TweakPlug )
+		self.assertEqual( p2.getName(), "p2" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.keys(), p.keys() )
+		for n in p2.keys() :
+			self.assertIsInstance( p2[n], p[n].__class__ )
+
 	def testTweakNetwork( self ) :
 
 		network = IECoreScene.ShaderNetwork(
