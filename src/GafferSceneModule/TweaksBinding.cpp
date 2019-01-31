@@ -70,6 +70,12 @@ void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetw
 	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork );
 }
 
+void applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, bool requireExists )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	tweaksPlug.applyTweaks( &parameters, requireExists );
+}
+
 } // namespace
 
 void GafferSceneModule::bindTweaks()
@@ -126,6 +132,20 @@ void GafferSceneModule::bindTweaks()
 		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
 		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
 		.staticmethod( "applyTweaks" )
+	;
+
+	PlugClass<TweaksPlug>()
+		.def(
+			init<const std::string &, Plug::Direction, unsigned>(
+				(
+					boost::python::arg_( "name" )=GraphComponent::defaultName<TweaksPlug>(),
+					boost::python::arg_( "direction" )=Plug::In,
+					boost::python::arg_( "flags" )=Plug::Default
+				)
+			)
+		)
+		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
+		.def( "applyTweaks", &applyTweaksToParameters, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
 	;
 
 }

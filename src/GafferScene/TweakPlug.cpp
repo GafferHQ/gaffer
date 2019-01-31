@@ -39,6 +39,7 @@
 #include "GafferScene/Shader.h"
 
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/SplinePlug.h"
 
 #include "IECoreScene/ShaderNetwork.h"
@@ -444,4 +445,77 @@ std::pair<const GafferScene::Shader *, const Gaffer::Plug *> TweakPlug::shaderOu
 		}
 	}
 	return { nullptr, nullptr };
+}
+
+//////////////////////////////////////////////////////////////////////////
+// TweaksPlug
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( TweaksPlug );
+
+TweaksPlug::TweaksPlug( const std::string &name, Direction direction, unsigned flags )
+	:	ValuePlug( name, direction, flags )
+{
+}
+
+bool TweaksPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
+{
+	if( !ValuePlug::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
+
+	return runTimeCast<const TweakPlug>( potentialChild );
+}
+
+bool TweaksPlug::acceptsInput( const Plug *input ) const
+{
+	if( !ValuePlug::acceptsChild( input ) )
+	{
+		return false;
+	}
+
+	if( !input )
+	{
+		return true;
+	}
+
+	if( const ScriptNode *s = ancestor<ScriptNode>() )
+	{
+		if( s->isExecuting() )
+		{
+			// Before TweaksPlug existed, regular Plugs were
+			// used in its place. If such plugs were ever
+			// promoted or passed through dots, they will have
+			// been serialised with just a regular plug type,
+			// and we need to tolerate connections to them
+			// on loading.
+			return true;
+		}
+	}
+
+	return runTimeCast<const TweaksPlug>( input );
+}
+
+Gaffer::PlugPtr TweaksPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	PlugPtr result = new TweaksPlug( name, direction, getFlags() );
+	for( PlugIterator it( this ); !it.done(); ++it )
+	{
+		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+	}
+	return result;
+}
+
+void TweaksPlug::applyTweaks( IECore::CompoundData *parameters, bool requireExists ) const
+{
+	for( TweakPlugIterator it( this ); !it.done(); ++it )
+	{
+		(*it)->applyTweak( parameters, requireExists );
+	}
+}
+
+void TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork ) const
+{
+	TweakPlug::applyTweaks( this, shaderNetwork );
 }

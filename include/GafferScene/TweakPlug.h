@@ -91,13 +91,8 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 		/// ValuePlug::hash( h )
 		using ValuePlug::hash;
 
-		/// Tweak application
-		/// =================
-
+		/// \deprecated. Use `TweaksPlug::applyTweaks()` instead.
 		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false ) const;
-
-		/// Provided as a static method because it is more efficient to apply all tweaks at once
-		/// when editing a ShaderNetwork.
 		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork );
 
 	private :
@@ -112,6 +107,31 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TweakPlug> > TweakPlugIterator;
 
 IE_CORE_DECLAREPTR( TweakPlug )
+
+/// Represents a collection of tweaks, and provides methods for applying them
+/// to parameters lists and shader networks.
+/// \todo Consider how TweaksPlug/TweakPlug relates to CompoundDataPlug/CompoundDataPlug::MemberPlug
+/// and others. We should make these consistent with one another.
+class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
+{
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweaksPlug, TweaksPlugTypeId, Gaffer::ValuePlug );
+
+		TweaksPlug( const std::string &name=defaultName<TweaksPlug>(), Direction direction=In, unsigned flags=Default );
+
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		bool acceptsInput( const Plug *input ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+
+		/// Tweak application
+		/// =================
+
+		void applyTweaks( IECore::CompoundData *parameters, bool requireExists = false ) const;
+		void applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork ) const;
+
+};
 
 } // namespace GafferScene
 

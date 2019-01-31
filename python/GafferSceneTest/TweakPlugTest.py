@@ -76,6 +76,17 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		for n in p2.keys() :
 			self.assertIsInstance( p2[n], p[n].__class__ )
 
+	def testTweakParameters( self ) :
+
+		tweaks = GafferScene.TweaksPlug()
+
+		tweaks.addChild( GafferScene.TweakPlug( "a", 1.0, GafferScene.TweakPlug.Mode.Replace ) )
+		tweaks.addChild( GafferScene.TweakPlug( "b", 10.0, GafferScene.TweakPlug.Mode.Multiply ) )
+
+		parameters = IECore.CompoundData( { "b" : 2.0 } )
+		tweaks.applyTweaks( parameters )
+		self.assertEqual( parameters, IECore.CompoundData( { "a" : 1.0, "b" : 20.0 } ) )
+
 	def testTweakNetwork( self ) :
 
 		network = IECoreScene.ShaderNetwork(
@@ -86,13 +97,13 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 			output = "surface"
 		)
 
-		tweaks = Gaffer.Plug()
+		tweaks = GafferScene.TweaksPlug()
 		tweaks.addChild( GafferScene.TweakPlug( "texture.sscale", 10.0, GafferScene.TweakPlug.Mode.Multiply ) )
 		tweaks.addChild( GafferScene.TweakPlug( "texture.sscale", 1.0, GafferScene.TweakPlug.Mode.Add ) )
 		tweaks.addChild( GafferScene.TweakPlug( "surface.Kd", 0.5, GafferScene.TweakPlug.Mode.Multiply ) )
 		tweaks.addChild( GafferScene.TweakPlug( "Kd", 0.25, GafferScene.TweakPlug.Mode.Add ) )
 
-		GafferScene.TweakPlug.applyTweaks( tweaks, network )
+		tweaks.applyTweaks( network )
 
 		self.assertEqual( network.getShader( "texture" ).parameters["sscale"].value, 11.0 )
 		self.assertEqual( network.getShader( "surface" ).parameters["Kd"].value, 0.75 )
@@ -119,6 +130,20 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak to \"test\" : Value of type \"IntData\" does not match parameter of type \"Color3fData\"" ) :
 			p.applyTweak( d )
+
+	def testTweaksPlug( self ) :
+
+		p = GafferScene.TweaksPlug()
+		self.assertFalse( p.acceptsChild( Gaffer.Plug() ) )
+		self.assertFalse( p.acceptsInput( Gaffer.Plug() ) )
+
+		p.addChild( GafferScene.TweakPlug( "x", 10.0, GafferScene.TweakPlug.Mode.Replace ) )
+
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		self.assertIsInstance( p2, GafferScene.TweaksPlug )
+		self.assertEqual( p2.getName(), "p2" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.keys(), p.keys() )
 
 if __name__ == "__main__":
 	unittest.main()
