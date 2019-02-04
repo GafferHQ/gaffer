@@ -468,36 +468,44 @@ class RenderCallback : public IECore::RefCounted
 
 			for( auto &output : m_outputs )
 			{
-				std::string namePrefix = output.second->m_data;
+				std::string name = output.second->m_data;
 				auto passType = output.second->m_passType;
 				int components = passComponents( passType );
 
 				if( m_interactive )
 				{
+					if( name == "rgba" )
+					{
+						channelNames.push_back( "R" );
+						channelNames.push_back( "G" );
+						channelNames.push_back( "B" );
+						channelNames.push_back( "A" );
+						continue;
+					}
 					if( components == 1 )
 					{
-						channelNames.push_back( namePrefix );
+						channelNames.push_back( name );
 						continue;
 					}
 					else if( components == 2 )
 					{
-						channelNames.push_back( namePrefix + ".R" );
-						channelNames.push_back( namePrefix + ".G" );
+						channelNames.push_back( name + ".R" );
+						channelNames.push_back( name + ".G" );
 						continue;
 					}
 					else if( components == 3 )
 					{
-						channelNames.push_back( namePrefix + ".R" );
-						channelNames.push_back( namePrefix + ".G" );
-						channelNames.push_back( namePrefix + ".B" );
+						channelNames.push_back( name + ".R" );
+						channelNames.push_back( name + ".G" );
+						channelNames.push_back( name + ".B" );
 						continue;
 					}
 					else if( components == 4 )
 					{
-						channelNames.push_back( namePrefix + ".R" );
-						channelNames.push_back( namePrefix + ".G" );
-						channelNames.push_back( namePrefix + ".B" );
-						channelNames.push_back( namePrefix + ".A" );
+						channelNames.push_back( name + ".R" );
+						channelNames.push_back( name + ".G" );
+						channelNames.push_back( name + ".B" );
+						channelNames.push_back( name + ".A" );
 						continue;
 					}
 				}
