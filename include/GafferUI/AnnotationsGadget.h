@@ -39,6 +39,8 @@
 
 #include "GafferUI/Gadget.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include <unordered_map>
 
 namespace Gaffer
@@ -85,9 +87,16 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		void graphGadgetChildRemoved( const GraphComponent *child );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
 
+		struct StandardAnnotation
+		{
+			IECore::ConstStringDataPtr text;
+			IECore::ConstColor3fDataPtr color;
+		};
+
 		struct Annotations
 		{
 			bool dirty = true;
+			std::vector<StandardAnnotation> standardAnnotations;
 			bool bookmarked = false;
 			IECore::InternedString numericBookmark;
 			bool renderable = false;

@@ -44,6 +44,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
@@ -104,6 +105,10 @@ IECoreGL::Texture *numericBookmarkTexture()
 	return numericBookmarkTexture.get();
 }
 
+float g_offset = 0.5;
+float g_borderWidth = 0.5;
+float g_spacing = 0.25;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -152,6 +157,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		return;
 	}
 
+	vector<InternedString> registeredValues;
 	for( auto &ga : m_annotations )
 	{
 		const Node *node = ga.first->node();
@@ -172,6 +178,24 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			else
 			{
 				annotations.numericBookmark = InternedString();
+			}
+
+			annotations.standardAnnotations.clear();
+			registeredValues.clear();
+			Metadata::registeredValues( node, registeredValues );
+			for( const auto &key : registeredValues )
+			{
+				if( boost::starts_with( key.string(), "annotation:" ) && boost::ends_with( key.string(), ":text" ) )
+				{
+					if( auto text = Metadata::value<StringData>( node, key ) )
+					{
+						const string prefix = key.string().substr( 0, key.string().size() - 4 );
+						annotations.standardAnnotations.push_back(
+							{ text, Metadata::value<Color3fData>( node, prefix + "color" ) }
+						);
+						annotations.renderable = true;
+					}
+				}
 			}
 
 			annotations.dirty = false;
@@ -200,7 +224,44 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			const Imath::Color3f textColor( 1.0f );
 			glPushMatrix();
 				IECoreGL::glTranslate( V2f( b.min.x + 1.0 - textBounds.size().x * 0.5, b.max.y - textBounds.size().y * 0.5 - 0.7 ) );
-				style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
+				style->renderText( Style::BodyText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
+			glPopMatrix();
+		}
+
+		if( annotations.standardAnnotations.size() )
+		{
+			glPushMatrix();
+			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y - g_borderWidth ) );
+
+			const Color3f midGrey( 0.65 );
+			const Color3f darkGrey( 0.05 );
+			float previousHeight = 0;
+			for( auto &a : annotations.standardAnnotations )
+			{
+				Box3f textBounds = style->textBound( Style::BodyText, a.text->readable() );
+
+				float yOffset;
+				if( &a == &annotations.standardAnnotations.front() )
+				{
+					yOffset = -style->characterBound( Style::BodyText ).max.y;
+				}
+				else
+				{
+					yOffset = -previousHeight -g_spacing;
+				}
+
+				IECoreGL::glTranslate( V2f( 0, yOffset ) );
+				/// \todo We're using `renderNodeFrame()` because it's the only way we can specify a colour,
+				/// but really we want `renderFrame()` to provide that option. Or we could consider having
+				/// explicit annotation rendering methods in the Style class.
+				style->renderNodeFrame(
+					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, textBounds.max.y ) ),
+					g_borderWidth, Style::NormalState,
+					a.color ? &(a.color->readable()) : &darkGrey
+				);
+				style->renderText( Style::BodyText, a.text->readable(), Style::NormalState, &midGrey );
+				previousHeight = textBounds.size().y + g_borderWidth * 2;
+			}
 			glPopMatrix();
 		}
 	}
@@ -243,7 +304,8 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 
 	if(
 		!MetadataAlgo::bookmarkedAffectedByChange( key ) &&
-		!MetadataAlgo::numericBookmarkAffectedByChange( key )
+		!MetadataAlgo::numericBookmarkAffectedByChange( key ) &&
+		!boost::starts_with( key.c_str(), "annotation:" )
 	)
 	{
 		return;
