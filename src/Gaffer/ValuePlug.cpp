@@ -127,6 +127,11 @@ class ValuePlug::HashProcess : public Process
 				threadData.clearCache = 0;
 			}
 
+			if( threadData.cache.getMaxCost() != g_cacheSizeLimit )
+			{
+				threadData.cache.setMaxCost( g_cacheSizeLimit );
+			}
+
 			const Context *currentContext = Context::current();
 			const CacheKey key( p, currentContext->hash() );
 			IECore::MurmurHash result = threadData.cache.get( key );
@@ -136,8 +141,17 @@ class ValuePlug::HashProcess : public Process
 				result = process.m_result;
 				threadData.cache.set( key, result, 1 );
 			}
-
 			return result;
+		}
+
+		static size_t getCacheSizeLimit()
+		{
+			return g_cacheSizeLimit;
+		}
+
+		static void setCacheSizeLimit( size_t maxEntriesPerThread )
+		{
+			g_cacheSizeLimit = maxEntriesPerThread;
 		}
 
 		static void clearCache()
@@ -214,7 +228,7 @@ class ValuePlug::HashProcess : public Process
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
-			ThreadData() : cache( nullGetter, 10000 ), clearCache( 0 ) {}
+			ThreadData() : cache( nullGetter, g_cacheSizeLimit ), clearCache( 0 ) {}
 			Cache cache;
 			// Flag to request that hashCache be cleared.
 			tbb::atomic<int> clearCache;
@@ -222,6 +236,7 @@ class ValuePlug::HashProcess : public Process
 
 		static tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance > g_threadData;
 		static IECore::MurmurHash g_nullHash;
+		static tbb::atomic<size_t> g_cacheSizeLimit;
 
 		IECore::MurmurHash m_result;
 
@@ -230,6 +245,8 @@ class ValuePlug::HashProcess : public Process
 const IECore::InternedString ValuePlug::HashProcess::staticType( "computeNode:hash" );
 tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_aligned_allocator<ValuePlug::HashProcess::ThreadData>, tbb::ets_key_per_instance > ValuePlug::HashProcess::g_threadData;
 IECore::MurmurHash ValuePlug::HashProcess::g_nullHash;
+// Default limit corresponds to a cost of roughly 25Mb per thread.
+tbb::atomic<size_t> ValuePlug::HashProcess::g_cacheSizeLimit = 128000;
 
 //////////////////////////////////////////////////////////////////////////
 // The ComputeProcess manages the task of calling ComputeNode::compute()
@@ -769,4 +786,14 @@ size_t ValuePlug::cacheMemoryUsage()
 void ValuePlug::clearCache()
 {
 	ComputeProcess::clearCache();
+}
+
+size_t ValuePlug::getHashCacheSizeLimit()
+{
+	return HashProcess::getCacheSizeLimit();
+}
+
+void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
+{
+	HashProcess::setCacheSizeLimit( maxEntriesPerThread );
 }
