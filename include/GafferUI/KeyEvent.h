@@ -64,6 +64,16 @@ struct GAFFERUI_API KeyEvent : public ModifiableEvent
 
 };
 
+inline bool operator == ( const KeyEvent &lhs, const KeyEvent &rhs )
+{
+	return lhs.modifiers == rhs.modifiers && lhs.key == rhs.key;
+}
+
+inline bool operator != ( const KeyEvent &lhs, const KeyEvent &rhs )
+{
+	return !(lhs == rhs);
+}
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_KEYEVENT_H
