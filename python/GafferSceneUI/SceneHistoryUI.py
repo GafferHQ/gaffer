@@ -114,19 +114,26 @@ def __editSourceNode( context, scene, path ) :
 	node = __ancestorWithReadOnlyChildNodes( node ) or node
 	GafferUI.NodeEditor.acquire( node, floating = True )
 
-def __editTweaksNode( context, scene, path ) :
+def __tweaksNode( scene, path ) :
 
-	with context :
-		attributes = scene.fullAttributes( path )
+	tweaks = GafferScene.SceneAlgo.objectTweaks( scene, path )
+	if tweaks is not None :
+		return tweaks
+
+	attributes = scene.fullAttributes( path )
 
 	shaderAttributeNames = [ x[0] for x in attributes.items() if isinstance( x[1], IECoreScene.ShaderNetwork ) ]
 	# Just happens to order as Surface, Light, Displacement, which is what we want.
 	shaderAttributeNames = list( reversed( sorted( shaderAttributeNames ) ) )
 	if not len( shaderAttributeNames ) :
-		return
+		return None
+
+	return GafferScene.SceneAlgo.shaderTweaks( scene, path, shaderAttributeNames[0] )
+
+def __editTweaksNode( context, scene, path ) :
 
 	with context :
-		tweaks = GafferScene.SceneAlgo.shaderTweaks( scene, path, shaderAttributeNames[0] )
+		tweaks = __tweaksNode( scene, path )
 
 	if tweaks is None :
 		return
