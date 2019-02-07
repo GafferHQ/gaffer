@@ -107,6 +107,10 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 		self.__plug = None
 		self._updateFromSet()
 
+	def scene( self ) :
+
+		return self.__plug
+
 	def __repr__( self ) :
 
 		return "GafferSceneUI.HierarchyView( scriptNode )"

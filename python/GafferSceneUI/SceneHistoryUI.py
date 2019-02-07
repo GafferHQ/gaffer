@@ -65,6 +65,8 @@ def connectToEditor( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
 		editor.keyPressSignal().connect( __viewerKeyPress, scoped = False )
+	elif isinstance( editor, GafferSceneUI.HierarchyView ) :
+		editor.keyPressSignal().connect( __hierarchyViewKeyPress, scoped = False )
 
 ##########################################################################
 # Internal implementation
@@ -101,6 +103,14 @@ def __sceneViewSelectedPath( sceneView ) :
 		return sceneGadget.getSelection().paths()[0]
 	else :
 		return None
+
+def __hierarchyViewSelectedPath( hierarchyView ) :
+
+	selection = GafferSceneUI.ContextAlgo.getSelectedPaths( hierarchyView.getContext() )
+	if selection.size() != 1 :
+		return None
+
+	return selection.paths()[0]
 
 def __editSourceNode( context, scene, path ) :
 
@@ -151,19 +161,40 @@ def __ancestorWithReadOnlyChildNodes( node ) :
 
 	return result
 
+__editSourceKeyPress = GafferUI.KeyEvent( "E", GafferUI.KeyEvent.Modifiers.Alt )
+__editTweaksKeyPress = GafferUI.KeyEvent(
+	"E",
+	GafferUI.KeyEvent.Modifiers(
+		GafferUI.KeyEvent.Modifiers.Alt | GafferUI.KeyEvent.Modifiers.Shift
+	)
+)
+
 def __viewerKeyPress( viewer, event ) :
 
 	view = viewer.view()
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return False
 
-	if event.key == "E" and event.modifiers == event.modifiers.Alt :
+	if event == __editSourceKeyPress :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
 			__editSourceNode( view.getContext(), view["in"], selectedPath )
 		return True
-	elif event.key == "E" and event.modifiers == event.modifiers.Alt | event.modifiers.Shift :
+	elif event == __editTweaksKeyPress :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
 			__editTweaksNode( view.getContext(), view["in"], selectedPath )
+		return True
+
+def __hierarchyViewKeyPress( hierarchyView, event ) :
+
+	if event == __editSourceKeyPress :
+		selectedPath = __hierarchyViewSelectedPath( hierarchyView )
+		if selectedPath is not None :
+			__editSourceNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
+		return True
+	elif event == __editTweaksKeyPress :
+		selectedPath = __hierarchyViewSelectedPath( hierarchyView )
+		if selectedPath is not None :
+			__editTweaksNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
 		return True
