@@ -324,6 +324,8 @@ class CyclesOutput : public IECore::RefCounted
 			m_parameters = output->parametersData()->copy();
 			if( m_type == "ieDisplay" )
 				m_interactive = true;
+			else
+				m_interactive = false;
 
 			const vector<int> quantize = parameter<vector<int>>( output->parameters(), "quantize", { 0, 0, 0, 0 } );
 			if( quantize == vector<int>( { 0, 255, 0, 255 } ) )
@@ -382,9 +384,9 @@ class CyclesOutput : public IECore::RefCounted
 				channelNames.push_back( "A" );
 			}
 
-			CompoundDataPtr parameters = new CompoundData();
+			m_parameters->writable()["handle"] = new StringData();
 
-			m_image = new ImageDisplayDriver( displayWindow, dataWindow, channelNames, parameters );
+			m_image = new ImageDisplayDriver( displayWindow, dataWindow, channelNames, m_parameters );
 		}
 
 		void writeImage()
@@ -690,13 +692,43 @@ class ShaderCache : public IECore::RefCounted
 		SharedCShaderPtr get( const IECoreScene::ShaderNetwork *shader )
 		{
 			Cache::accessor a;
-			m_cache.insert( a, shader->Object::hash() );
+			m_cache.insert( a, shader ? shader->Object::hash() : MurmurHash() );
 			if( !a->second )
 			{
-				const std::string namePrefix = "shader:" + a->first.toString() + ":";
-				a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_scene, namePrefix ) );
+				if( shader )
+				{
+					const std::string namePrefix = "shader:" + a->first.toString() + ":";
+					a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_scene, namePrefix ) );
+				}
+				else
+				{
+					// This creates a camera dot-product shader/facing ratio.
+					const std::string name = "defaultSurfaceShader";
+					ccl::Shader *cshader = new ccl::Shader();
+					cshader->name = name.c_str();
+					cshader->graph = new ccl::ShaderGraph();
+					ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
+					ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
+					vecMath->type = ccl::NODE_VECTOR_MATH_DOT_PRODUCT;
+					ccl::GeometryNode *geo = new ccl::GeometryNode();
+					ccl::ShaderNode *vecMathNode = cshader->graph->add( (ccl::ShaderNode*)vecMath );
+					ccl::ShaderNode *geoNode = cshader->graph->add( (ccl::ShaderNode*)geo );
+					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "normal" ), 
+											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
+					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "incoming" ), 
+											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
+					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( vecMathNode, "value" ), 
+											 IECoreCycles::ShaderNetworkAlgo::input( outputNode, "surface" ) );
+					a->second = SharedCShaderPtr( cshader );
+				}
+				
 			}
 			return a->second;
+		}
+
+		SharedCShaderPtr defaultSurface()
+		{
+			return get( nullptr );
 		}
 
 		// To apply a default color+strength to the lights without shaders assigned.
@@ -795,11 +827,9 @@ IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
 IECore::InternedString g_lightAttributeName( "ccl:light" );
 
 // Shader Assignment
-std::array<IECore::InternedString, 4> g_shaderAttributeNames = { {
+std::array<IECore::InternedString, 2> g_shaderAttributeNames = { {
+	"surface",
 	"osl:surface",
-	"ccl:surface",
-	"ccl:volume",
-	"ccl:displacement"
 } };
 
 ccl::PathRayFlag nameToRayType( const std::string &name )
@@ -826,38 +856,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
 			:	m_cclVisibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f )
 		{
-			if( const Object *o = attributes->member<const Object>( g_lightAttributeName ) )
-			{
-				if( const ShaderNetwork *shaderNetwork = reportedCast<const ShaderNetwork>( o, "attribute", g_lightAttributeName ) )
-				{
-					const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderNetwork->getOutput().shader );
-					// This is just to store some data.
-					m_light = CLightPtr( new ccl::Light() );
-					ccl::Light *clight = m_light.get();
-					float strength = 1.0f;
-					auto color = Imath::V3f( 1.0f );
-					for( const auto &namedParameter : shader->parameters() )
-					{
-						string paramName = namedParameter.first.string();
-						if( paramName == "color" )
-						{
-							if( const Color3fData *data = static_cast<const Color3fData *>( namedParameter.second.get() ) )
-								color = data->readable();
-							continue;
-						}
-						else if ( paramName == "strength" )
-						{
-							if( const FloatData *data = static_cast<const FloatData *>( namedParameter.second.get() ) )
-								strength = data->readable();
-							continue;
-						}
-						SocketAlgo::setSocket( clight, paramName, namedParameter.second.get() );
-					}
-
-					m_shader = shaderCache->getEmission( shader, color, strength );
-				}
-			}
-
 			for( const auto &name : g_shaderAttributeNames )
 			{
 				if( const Object *o = attributes->member<const Object>( name ) )
@@ -866,6 +864,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					{
 						m_shader = shaderCache->get( shader );
 					}
+
 					break;
 				}
 			}
@@ -896,7 +895,42 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 				else if( boost::starts_with( m.first.string(), "ccl:" ) )
 				{
-					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
+					if( const ShaderNetwork *shaderNetwork = reportedCast<const ShaderNetwork>( m.second.get(), "attribute", m.first ) )
+					{
+						if( m.first == g_lightAttributeName )
+						{
+							const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderNetwork->getOutput().shader );
+							// This is just to store some data.
+							m_light = CLightPtr( new ccl::Light() );
+							ccl::Light *clight = m_light.get();
+							float strength = 1.0f;
+							auto color = Imath::V3f( 1.0f );
+							for( const auto &namedParameter : shader->parameters() )
+							{
+								string paramName = namedParameter.first.string();
+								if( paramName == "color" )
+								{
+									if( const Color3fData *data = static_cast<const Color3fData *>( namedParameter.second.get() ) )
+										color = data->readable();
+									continue;
+								}
+								else if ( paramName == "strength" )
+								{
+									if( const FloatData *data = static_cast<const FloatData *>( namedParameter.second.get() ) )
+										strength = data->readable();
+									continue;
+								}
+								SocketAlgo::setSocket( clight, paramName, namedParameter.second.get() );
+							}
+
+							m_shader = shaderCache->getEmission( shader, color, strength );
+						}
+						else
+						{
+							m_shader = shaderCache->get( shaderNetwork );
+						}
+					}
+					else if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
 					{
 						if( m.first == g_useHoldoutAttributeName )
 						{
@@ -933,7 +967,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					msg( Msg::Warning, "CyclesRenderer", boost::format( "Attribute \"%s\" not supported" ) % m.first.string() );
 				}
 			}
-			// TODO: Fallback to creating a basic emission shaderNode unique to the light (only way to get colour for l
+
+			if( !m_shader )
+			{
+				m_shader = shaderCache->defaultSurface();
+				msg( Msg::Warning, "CyclesRenderer", boost::format( "NO SHADER" ) );
+			}
 		}
 
 		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes ) const

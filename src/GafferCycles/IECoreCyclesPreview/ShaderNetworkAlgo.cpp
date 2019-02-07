@@ -332,18 +332,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 		InternedString sourceName = connection.source.name;
 		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
-		//if( boost::starts_with( sourceShader->getType(), "osl:" ) )
-		//{
-		//	sourceName = partitionEnd( sourceName, '.' );
-		//}
-		//auto *input = node->input( parameterName.c_str() );
-		//if( !input )
-		//{
-		//	msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't find input connection \"%s\"" ) % parameterName  );
-		//	continue;
-		//}
-		cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( sourceNode, sourceName ), 
-		                         IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) );
+
+		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( sourceNode, sourceName ) )
+			if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) )
+				cshader->graph->connect( shaderOutput, shaderInput );
 	}
 
 	if( !isOutput && ( shaderNetwork->outputShader() == shader ) )
@@ -353,8 +345,9 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// Either ccl:surface, ccl:volume or ccl:displacement.
 		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
 		string input = string( shader->getType().c_str() + 4 );
-		cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ), 
-		                         IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) );
+		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ) )
+		    if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) )
+				cshader->graph->connect( shaderOutput, shaderInput );
 	}
 
 	return node;
