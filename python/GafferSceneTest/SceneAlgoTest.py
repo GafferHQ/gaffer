@@ -425,5 +425,39 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/", "surface" ), None )
 		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/sphere", "surface" ), None )
 
+	def testObjectTweaks( self ) :
+
+		camera1 = GafferScene.Camera( "Camera1" )
+		camera1["name"].setValue( "camera1" )
+
+		camera1Filter = GafferScene.PathFilter()
+		camera1Filter["paths"].setValue( IECore.StringVectorData( [ "/camera1" ] ) )
+
+		camera1Tweaks = GafferScene.CameraTweaks( "Camera1Tweaks" )
+		camera1Tweaks["in"].setInput( camera1["out"] )
+		camera1Tweaks["filter"].setInput( camera1Filter["out"] )
+
+		unfilteredTweaks = GafferScene.CameraTweaks( "UnfilteredTweaks" )
+		unfilteredTweaks["in"].setInput( camera1Tweaks["out"] )
+
+		camera2 = GafferScene.Camera( "Camera2" )
+		camera2["name"].setValue( "camera2" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( unfilteredTweaks["out"] )
+		group["in"][1].setInput( camera2["out"] )
+
+		camera2Filter = GafferScene.PathFilter()
+		camera2Filter["paths"].setValue( IECore.StringVectorData( [ "/group/camera2" ] ) )
+
+		camera2Tweaks = GafferScene.CameraTweaks( "Camera2Tweaks" )
+		camera2Tweaks["in"].setInput( group["out"] )
+		camera2Tweaks["filter"].setInput( camera2Filter["out"] )
+
+		self.assertEqual( GafferScene.SceneAlgo.objectTweaks( camera2Tweaks["out"], "/" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.objectTweaks( camera2Tweaks["out"], "/group" ), None )
+		self.assertEqual( GafferScene.SceneAlgo.objectTweaks( camera2Tweaks["out"], "/group/camera1" ), camera1Tweaks )
+		self.assertEqual( GafferScene.SceneAlgo.objectTweaks( camera2Tweaks["out"], "/group/camera2" ), camera2Tweaks )
+
 if __name__ == "__main__":
 	unittest.main()
