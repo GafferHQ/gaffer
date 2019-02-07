@@ -110,6 +110,8 @@ void GafferUIModule::bindEvent()
 		.def( init<const char *>() )
 		.def( init<const char *, ModifiableEvent::Modifiers>() )
 		.def_readwrite( "key", &KeyEvent::key )
+		.def( self == self )
+		.def( self != self )
 	;
 
 	{

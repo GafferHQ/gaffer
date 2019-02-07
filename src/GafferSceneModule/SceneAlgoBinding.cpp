@@ -154,6 +154,12 @@ ScenePlugPtr sourceWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &
 	return SceneAlgo::source( &scene, path );
 }
 
+SceneProcessorPtr objectTweaksWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &path )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::objectTweaks( &scene, path );
+}
+
 ShaderTweaksPtr shaderTweaksWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &path, const InternedString &attributeName )
 {
 	IECorePython::ScopedGILRelease r;
@@ -207,6 +213,7 @@ void bindSceneAlgo()
 
 	def( "history", &historyWrapper );
 	def( "source", &sourceWrapper );
+	def( "objectTweaks", &objectTweaksWrapper );
 	def( "shaderTweaks", &shaderTweaksWrapper );
 
 }

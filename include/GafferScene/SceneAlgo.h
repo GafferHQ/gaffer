@@ -66,6 +66,7 @@ IE_CORE_FORWARDDECLARE( Camera )
 namespace GafferScene
 {
 
+class SceneProcessor;
 class ShaderTweaks;
 
 namespace SceneAlgo
@@ -180,6 +181,12 @@ GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild, c
 
 /// Returns the upstream scene originally responsible for generating the specified location.
 GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+
+/// Returns the last tweaks node to edit the specified object.
+/// > Note : Currently only CameraTweaks are recognised, but as other tweaks nodes are added
+/// > we should support them here (for instance, we might introduce an ExternalProceduralTweaks
+/// > node to replace the old Parameters node).
+GAFFERSCENE_API SceneProcessor *objectTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Returns the last ShaderTweaks node to edit the specified attribute.
 GAFFERSCENE_API ShaderTweaks *shaderTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path, const IECore::InternedString &attributeName );
