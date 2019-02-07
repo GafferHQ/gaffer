@@ -159,6 +159,100 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["objectToImage"]["object"].setValue( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ) )
 		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
 
+	# This test covers a sublety in how we get and return AtNodes from and to
+	# Arnold that can cause issues with light linking. See
+	# `ArnoldLight::attributes()` in Renderer.cpp for more information.
+	def testLightLinkingAfterParameterUpdates( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = GafferScene.Sphere()
+
+		s["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+		s["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		s["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
+		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
+		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
+
+		s["lambert"], _ = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+
+		s["StandardAttributes"] = GafferScene.StandardAttributes( "StandardAttributes" )
+		s["StandardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
+		s["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+		s["StandardAttributes"]["filter"].setInput( s["PathFilter"]["out"] )
+		s["StandardAttributes"]["in"].setInput( s["ShaderAssignment"]["out"] )
+
+		s["Light"] = GafferArnold.ArnoldLight( "skydome_light" )
+		s["Light"].loadShader( "skydome_light" )
+
+		s["FloatToRGB"] = GafferArnold.ArnoldShader( "FloatToRGB" )
+		s["FloatToRGB"].loadShader( "float_to_rgb" )
+		s["FloatToRGB"]["parameters"]["r"].setValue( 1.0 )
+		s["FloatToRGB"]["parameters"]["g"].setValue( 1.0 )
+		s["FloatToRGB"]["parameters"]["b"].setValue( 1.0 )
+
+		s["Light"]["parameters"]["color"].setInput( s["FloatToRGB"]["out"] )
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 2 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["StandardAttributes"]["out"] )
+		s["group"]["in"][1].setInput( s["Light"]["out"] )
+		s["group"]["in"][2].setInput( s["c"]["out"] )
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "litByEnvironment",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["group"]["out"] )
+
+		s["so"] = GafferScene.StandardOptions()
+		s["so"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["so"]["in"].setInput( s["o"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["so"]["out"] )
+
+		# Start rendering and make sure the light is linked to the sphere
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 0.5 )
+
+		c = self._color3fAtUV(
+			IECoreImage.ImageDisplayDriver.storedImage( "litByEnvironment" ),
+			imath.V2f( 0.5 )
+		)
+
+		self.assertEqual( c, imath.Color3f( 1.0 ) )
+
+		# Change a value on the light causing it to get reconstructed in the
+		# backend. At this point the light should still be linked to the sphere
+		# and we should get the same result as before.
+		s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
+
+		time.sleep( 0.5 )
+
+		c = self._color3fAtUV(
+			IECoreImage.ImageDisplayDriver.storedImage( "litByEnvironment" ),
+			imath.V2f( 0.5 )
+		)
+
+		self.assertEqual( c, imath.Color3f( 1.0 ) )
+
 	def _createInteractiveRender( self ) :
 
 		return GafferArnold.InteractiveArnoldRender()

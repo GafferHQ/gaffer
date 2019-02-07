@@ -1946,7 +1946,25 @@ class ArnoldLight : public ArnoldObject
 
 			// Update light shader.
 
+			// Delete current light shader, destroying all AtNodes it owns. It
+			// is crucial that we do this _before_ constructing a new
+			// ArnoldShader (and therefore AtNodes) below, because we are
+			// relying on a specific behaviour of the Arnold node allocator.
+			// When we destroy the light node, Arnold does not remove it from
+			// any of the `light_group` arrays we have assigned to geometry,
+			// meaning they will contain a dangling pointer. If we destroy the
+			// old AtNode first, we get lucky, and Arnold will allocate the new
+			// one at the _exact same address_ as the old one, keeping our
+			// arrays valid. We have been accidentally relying on this behaviour
+			// for some time, and for now continue to rely on it in lieu of a
+			// more complex fix which might involve a `LightLinkManager` that is
+			// able to track and patch up any affected light links. Because of
+			// the extra bookkeeping involved in such an approach, we would want
+			// to keep its use to a minimum. We could achieve that for the
+			// common case by editing the light node's parameters in place, only
+			// creating a new light node when the type has changed.
 			m_lightShader = nullptr;
+
 			if( !arnoldAttributes->lightShader() )
 			{
 				return true;
