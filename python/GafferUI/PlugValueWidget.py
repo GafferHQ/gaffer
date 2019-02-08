@@ -569,8 +569,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		result = IECore.MenuDefinition()
 		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+			menuPath = presetName if presetName.startswith( "/" ) else "/" + presetName
 			result.append(
-				presetName, {
+				menuPath, {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
 					"active" : self._editable(),
 					"checkBox" : presetName == currentPreset,
