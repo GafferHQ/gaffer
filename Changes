@@ -1,3 +1,33 @@
+0.53.1.0 (relative to 0.53.0.0)
+========
+
+Improvements
+------------
+
+- Viewer : The "Edit Tweaks..." menu item now supports CameraTweaks nodes in addition
+  to ShaderTweaks (#3013).
+- HierarchyView : Added `Alt+E` and `Alt+Shift+E` shortcuts, matching those found in the
+  Viewer (#3013).
+
+Fixes
+-----
+
+- GLWidget : Fixed corrupted font rendering in overlay widgets (#3002).
+- SceneInspector : Fixed display of empty shader networks (#2997).
+- ShaderTweaks : Fixed auto-connection bugs that could cause a newly
+  created node to be connected to inappropriate inputs (#3007).
+- TweakPlug : Fixed `createCounterpart()` method, so TweakPlugs may now be promoted (#3007).
+- NodeEditor : Fixed bug that could cause keyboard focus to be lost when switching
+  between nodes (#3008).
+
+API
+---
+
+- SceneAlgo : Added `objectTweaks()` method, for finding the last tweak node in an
+  object's history (#3013).
+- KeyEvent : Added equality operators (#3013).
+- TweaksPlug : Added new class for holding a collection of TweakPlugs (#3007).
+
 0.53.0.0 (relative to 0.52.x)
 ========
 
@@ -78,8 +108,6 @@ Fixes
   circumstances this could cause a `Value for Plug not set as expected`
   error (#2955, #2950).
 - ViewportGadget/GadgetWidget : Fixed enter/leave event handling bug (#2938).
-- Context : Fixed fallback value for `get()` method (#2987).
-- GraphLayout : Fixed GIL management bugs that could cause deadlock (#2988).
 - ShaderAssignment : OSL shaders of type "shader" are now assigned correctly
   as "osl:surface" and not "osl:shader" (#2983).
 - Metadata bindings : Fix crashes caused by calling `value( None )` (#2996).
@@ -162,6 +190,19 @@ Breaking Changes
 - Dispatch app : Renamed `-nodes` argument to `-tasks` (#2900).
 - Nodule : Added virtual method (#2938).
 - ScriptNode : Removed `scriptExecutedSignal()` (#2996).
+
+0.52.3.5 (relative to 0.52.3.4)
+========
+
+Fixes
+-----
+
+- GLWidget : Fixed corrupted font rendering in overlay widgets (#3002).
+- Context : Fixed fallback value for `get()` method (#2987).
+- GraphLayout : Fixed GIL management bugs that could cause deadlock (#2988).
+- TweakPlug : Fixed `createCounterpart()` method, so TweakPlugs may now be promoted (#3007).
+- NodeEditor : Fixed bug that could cause keyboard focus to be lost when switching
+  between nodes (#3008).
 
 0.52.3.4 (relative to 0.52.3.3)
 ========
