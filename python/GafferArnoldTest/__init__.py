@@ -52,6 +52,7 @@ from ArnoldTextureBakeTest import ArnoldTextureBakeTest
 from ModuleTest import ModuleTest
 from ArnoldShaderBallTest import ArnoldShaderBallTest
 from ArnoldCameraShadersTest import ArnoldCameraShadersTest
+from ArnoldLightFilterTest import ArnoldLightFilterTest
 
 if __name__ == "__main__":
 	import unittest
