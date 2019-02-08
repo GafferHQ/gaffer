@@ -168,9 +168,9 @@ bool TweakPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) con
 Gaffer::PlugPtr TweakPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new TweakPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); !it.done(); ++it )
+	if( const Plug *p = valuePlug<ValuePlug>() )
 	{
-		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+		result->addChild( p->createCounterpart( p->getName(), direction ) );
 	}
 	return result;
 }

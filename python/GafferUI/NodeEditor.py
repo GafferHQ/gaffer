@@ -44,6 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtWidgets
+
 class NodeEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -97,6 +99,15 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
+
+		focusWidget = GafferUI.Widget._owner( QtWidgets.QApplication.focusWidget() )
+		if self.__column.isAncestorOf( focusWidget ) :
+			# The focus is in our editor, but it belongs to a widget we're about
+			# to delete. Transfer the focus up so that we don't lose the focus
+			# when we delete the widget.
+			## \todo Is there an argument for moving this fix to the ListContainer
+			# itself?
+			self.__column._qtWidget().setFocus()
 
 		del self.__column[:]
 		self.__nodeUI = None
