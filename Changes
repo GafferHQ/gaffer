@@ -4,6 +4,8 @@
 Fixes
 -----
 
+- Arnold Renderer : Fixed light linking bug. This could cause lights with shader inputs
+  to disappear during interactive rendering updates (#3012).
 - GLWidget : Fixed corrupted font rendering in overlay widgets (#3002).
 - Context : Fixed fallback value for `get()` method (#2987).
 - GraphLayout : Fixed GIL management bugs that could cause deadlock (#2988).
