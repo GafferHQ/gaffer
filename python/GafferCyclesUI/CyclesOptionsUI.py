@@ -61,7 +61,57 @@ def __sessionSummary( plug ) :
 
 	if plug["tileOrder"]["enabled"].getValue() :
 		info.append(
-			"Order {}".format( Gaffer.NodeAlgo.currentPreset( plug["tileOrder"]["value"] ) )
+			"Tile Order {}".format( Gaffer.NodeAlgo.currentPreset( plug["tileOrder"]["value"] ) )
+		)
+
+	if plug["tileSize"]["enabled"].getValue() :
+		info.append(
+			"Tile Size {}".format( Gaffer.NodeAlgo.currentPreset( plug["tileSize"]["value"] ) )
+		)
+
+	if plug["startResolution"]["enabled"].getValue() :
+		info.append(
+			"Start Resolution {}".format( Gaffer.NodeAlgo.currentPreset( plug["startResolution"]["value"] ) )
+		)
+
+	if plug["pixelSize"]["enabled"].getValue() :
+		info.append(
+			"Pixel Size {}".format( Gaffer.NodeAlgo.currentPreset( plug["pixelSize"]["value"] ) )
+		)
+
+	if plug["cancelTimeout"]["enabled"].getValue() :
+		info.append(
+			"Cancel Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["cancelTimeout"]["value"] ) )
+		)
+
+	if plug["resetTimeout"]["enabled"].getValue() :
+		info.append(
+			"Reset Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["resetTimeout"]["value"] ) )
+		)
+
+	if plug["textTimeout"]["enabled"].getValue() :
+		info.append(
+			"Text Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["textTimeout"]["value"] ) )
+		)
+
+	if plug["progressiveUpdateTimeout"]["enabled"].getValue() :
+		info.append(
+			"Progressive Update Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["progressiveUpdateTimeout"]["value"] ) )
+		)
+
+	if plug["integrator"]["enabled"].getValue() :
+		info.append(
+			"Integrator{}".format( Gaffer.NodeAlgo.currentPreset( plug["integrator"]["value"] ) )
+		)
+
+	if plug["progressiveRefine"]["enabled"].getValue() :
+		info.append(
+			"Progressive Refine {}".format( Gaffer.NodeAlgo.currentPreset( plug["progressiveRefine"]["value"] ) )
+		)
+
+	if plug["persistentData"]["enabled"].getValue() :
+		info.append(
+			"Persistent Data {}".format( Gaffer.NodeAlgo.currentPreset( plug["persistentData"]["value"] ) )
 		)
 
 	return ", ".join( info )
@@ -124,6 +174,18 @@ def __samplingSummary( plug ) :
 
 	if plug["filterGlossy"]["enabled"].getValue() :
 		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
+
+	if plug["seed"]["enabled"].getValue() :
+		info.append( "Seed Value {}".format( plug["seed"]["value"].getValue() ) )
+
+	if plug["sampleClampDirect"]["enabled"].getValue() :
+		info.append( "Sample Clamp Direct {}".format( plug["sampleClampDirect"]["value"].getValue() ) )
+
+	if plug["sampleClampIndirect"]["enabled"].getValue() :
+		info.append( "Sample Clamp Indirect {}".format( plug["sampleClampIndirect"]["value"].getValue() ) )
+
+	if plug["startSample"]["enabled"].getValue() :
+		info.append( "Start Sample {}".format( plug["startSample"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -195,14 +257,32 @@ def __filmSummary( plug ) :
 	if plug["exposure"]["enabled"].getValue() :
 		info.append( "Exposure {}".format( plug["exposure"]["value"].getValue() ) )
 
-	if plug["transparent"]["enabled"].getValue() :
-		info.append( "Transparent {}".format( plug["transparent"]["value"].getValue() ) )
+	if plug["passAlphaThreshold"]["enabled"].getValue() :
+		info.append( "Pass Alpha Threshold {}".format( plug["passAlphaThreshold"]["value"].getValue() ) )
 
-	if plug["transparentGlass"]["enabled"].getValue() :
-		info.append( "Transparent Glass {}".format( plug["transparentGlass"]["value"].getValue() ) )
+	if plug["filterType"]["enabled"].getValue() :
+		info.append( "Filter Type {}".format( plug["filterType"]["value"].getValue() ) )
 
-	if plug["transparentRoughness"]["enabled"].getValue() :
-		info.append( "Transparent Roughness {}".format( plug["transparentRoughness"]["value"].getValue() ) )
+	if plug["filterWidth"]["enabled"].getValue() :
+		info.append( "Filter Width {}".format( plug["filterWidth"]["value"].getValue() ) )
+
+	if plug["mistStart"]["enabled"].getValue() :
+		info.append( "Mist Start {}".format( plug["mistStart"]["value"].getValue() ) )
+
+	if plug["mistDepth"]["enabled"].getValue() :
+		info.append( "Mist Depth {}".format( plug["mistDepth"]["value"].getValue() ) )
+
+	if plug["mistFalloff"]["enabled"].getValue() :
+		info.append( "Mist Falloff {}".format( plug["mistFalloff"]["value"].getValue() ) )
+
+	if plug["useSampleClamp"]["enabled"].getValue() :
+		info.append( "Use Sample Clamp {}".format( plug["useSampleClamp"]["value"].getValue() ) )
+
+	if plug["denoisingDataPass"]["enabled"].getValue() :
+		info.append( "Denoising Data Pass {}".format( plug["denoisingDataPass"]["value"].getValue() ) )
+
+	if plug["denoisingCleanPass"]["enabled"].getValue() :
+		info.append( "Denoising Clean Pass {}".format( plug["denoisingCleanPass"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -268,6 +348,37 @@ def __curvesSummary( plug ) :
 
 	return ", ".join( info )
 
+def __backgroundSummary( plug ) :
+
+	info = []
+
+	if plug["aoFactor"]["enabled"].getValue() :
+		info.append( "AO Factor {}".format( plug["aoFactor"]["value"].getValue() ) )
+
+	if plug["aoDistance"]["enabled"].getValue() :
+		info.append( "AO Distance {}".format( plug["aoDistance"]["value"].getValue() ) )
+
+	if plug["bgUseShader"]["enabled"].getValue() :
+		info.append( "Use Shader {}".format( plug["bgUseShader"]["value"].getValue() ) )
+
+	if plug["useAO"]["enabled"].getValue() :
+		info.append( "Use AO {}".format( plug["useAO"]["value"].getValue() ) )
+
+	if plug["bgTransparent"]["enabled"].getValue() :
+		info.append( "Transparent {}".format( plug["bgTransparent"]["value"].getValue() ) )
+
+	if plug["bgTransparentGlass"]["enabled"].getValue() :
+		info.append( "Transparent Glass {}".format( plug["bgTransparentGlass"]["value"].getValue() ) )
+
+	if plug["bgTransparentRoughnessThreshold"]["enabled"].getValue() :
+		info.append( "Roughness Threshold {}".format( plug["bgTransparentRoughnessThreshold"]["value"].getValue() ) )
+
+	for childName in ( "Camera", "Diffuse", "Glossy", "Transmission", "Shadow", "Scatter" ) :
+		if plug["bg" + childName + "Visibility"]["enabled"].getValue() :
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug["bg" + childName + "Visibility"]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
 def __devicePresetNames( plug ) :
 
 	presetNames = IECore.StringVectorData()
@@ -313,6 +424,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
 			"layout:section:Curves:summary", __curvesSummary,
+			"layout:section:Background:summary", __backgroundSummary,
 
 		],
 
@@ -423,6 +535,116 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.tileSize" : [
+
+			"description",
+			"""
+			Tile size for rendering.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.startResolution" : [
+
+			"description",
+			"""
+			Start resolution.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.pixelSize" : [
+
+			"description",
+			"""
+			Pixel Size.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.cancelTimeout" : [
+
+			"description",
+			"""
+			Cancel Timeout.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.resetTimeout" : [
+
+			"description",
+			"""
+			Reset Timeout.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.textTimeout" : [
+
+			"description",
+			"""
+			Text Timeout.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.progressiveUpdateTimeout" : [
+
+			"description",
+			"""
+			Progressive Update Timeout.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.integrator" : [
+
+			"description",
+			"""
+			Integrator for interactive rendering.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.progressiveRefine" : [
+
+			"description",
+			"""
+			Progressive Refine for interactive rendering.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
+		"options.persistentData" : [
+
+			"description",
+			"""
+			Enable persistent data. This will always be enabled.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
 		# Scene
 
 		"options.bvhType" : [
@@ -465,10 +687,10 @@ Gaffer.Metadata.registerNode(
 
 		"options.bvhLayout.value" : [
 
-			"preset:BVH2", 0,
-			"preset:BVH4", 1,
-			"preset:BVH8", 2,
-			"preset:EMBREE", 3,
+			"preset:BVH2", ( 1 << 0 ),
+			"preset:BVH4", ( 1 << 1 ),
+			"preset:BVH8", ( 1 << 2 ),
+			"preset:EMBREE", ( 1 << 3 ),
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -493,7 +715,7 @@ Gaffer.Metadata.registerNode(
 			Use special type BVH optimized for hair (uses more ram but renders faster).
 			""",
 
-			"layout:section", "BVH",
+			"layout:section", "Scene",
 			"label", "Use Hair BVH",
 
 		],
@@ -749,6 +971,51 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.seed" : [
+
+			"description",
+			"""
+			Seed value for the sampling pattern.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Seed Value",
+
+		],
+
+		"options.sampleClampDirect" : [
+
+			"description",
+			"""
+			Clamp value for sampling direct rays.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
+		"options.sampleClampIndirect" : [
+
+			"description",
+			"""
+			Clamp value for sampling indirect rays.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
+		"options.startSample" : [
+
+			"description",
+			"""
+			Start sample.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
 		# Ray Depth
 
 		"options.maxBounce" : [
@@ -823,6 +1090,18 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Ray Depth",
 			"label", "Transparency",
+
+		],
+
+		"options.aoBounces" : [
+
+			"description",
+			"""
+			Maximum number of Ambient Occlusion bounces.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Ambient Occlusion",
 
 		],
 
@@ -935,6 +1214,173 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Background
+
+		"options.aoFactor" : [
+
+			"description",
+			"""
+			Ambient Occlusion factor.
+			""",
+
+			"layout:section", "Background",
+			"label", "Ambient Occlusion Factor",
+
+		],
+
+		"options.aoDistance" : [
+
+			"description",
+			"""
+			Ambient Occlusion Distance.
+			""",
+
+			"layout:section", "Background",
+			"label", "Ambient Occlusion Distance",
+
+		],
+
+		"options.bgUseShader" : [
+
+			"description",
+			"""
+			Use background shader. There must be a CyclesBackground node with
+			a shader attached to it.
+			""",
+
+			"layout:section", "Background",
+			"label", "Use Shader",
+
+		],
+
+		"options.useAO" : [
+
+			"description",
+			"""
+			Enable Ambient Occlusion.
+			""",
+
+			"layout:section", "Background",
+			"label", "Use Ambient Occlusion",
+
+		],
+
+		"options.bgTransparent" : [
+
+			"description",
+			"""
+			Make the background transparent.
+			""",
+
+			"layout:section", "Background",
+			"label", "Transparent",
+
+		],
+
+		"options.bgTransparentGlass" : [
+
+			"description",
+			"""
+			Background can be seen through transmissive surfaces.
+			""",
+
+			"layout:section", "Background",
+			"label", "Transmission Visible",
+
+		],
+
+		"options.bgTransparentRoughnessThreshold" : [
+
+			"description",
+			"""
+			Roughness threshold of background shader in transmissive surfaces.
+			""",
+
+			"layout:section", "Background",
+			"label", "Roughness Threshold",
+
+		],
+
+		# BG Visibility
+
+		"options.bgCameraVisibility" : [
+
+			"description",
+			"""
+			Whether or not the background is visible to camera
+			rays.
+			""",
+
+			"layout:section", "Background",
+			"label", "Camera Visible",
+
+		],
+
+		"options.bgDiffuseVisibility" : [
+
+			"description",
+			"""
+			Whether or not the background is visible to diffuse
+			rays.
+			""",
+
+			"layout:section", "Background",
+			"label", "Diffuse Visible",
+
+		],
+
+		"options.bgGlossyVisibility" : [
+
+			"description",
+			"""
+			Whether or not the background is visible in
+			glossy rays.
+			""",
+
+			"layout:section", "Background",
+			"label", "Glossy Visible",
+
+		],
+
+		"options.bgTransmissionVisibility" : [
+
+			"description",
+			"""
+			Whether or not the background is visible in
+			transmission.
+			""",
+
+			"layout:section", "Background",
+			"label", "Transmission Visible",
+
+		],
+
+		"options.bgShadowVisibility" : [
+
+			"description",
+			"""
+			Whether or not the background is visible to shadow
+			rays - whether it casts shadows or not.
+			""",
+
+			"layout:section", "Background",
+			"label", "Shadow Visible",
+
+		],
+
+		"options.bgScatterVisibility" : [
+
+			"description",
+			"""
+			Whether or not the background is visible to
+			scatter rays.
+			""",
+
+			"layout:section", "Background",
+			"label", "Scatter Visible",
+
+		],
+
 		# Film
 
 		"options.exposure" : [
@@ -948,36 +1394,109 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.transparent" : [
+		"options.passAlphaThreshold" : [
 
 			"description",
 			"""
-			World background is transparent, for compositing the render over
-			another background.
+			Alpha threshold.
 			""",
 
 			"layout:section", "Film",
 
 		],
 
-		"options.transparentGlass" : [
+		"options.filterType" : [
 
 			"description",
 			"""
-			Render transmissive surfaces as transparent, for compositing glass
-			over another background.
+			Image filter type.
 			""",
 
 			"layout:section", "Film",
 
 		],
 
-		"options.transparentRoughness" : [
+		"options.filterType.value" : [
+
+			"preset:Box", 0,
+			"preset:Gaussian", 1,
+			"preset:Blackman Harris", 2,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.filterWidth" : [
 
 			"description",
 			"""
-			For transparent transmission, keep surfaces with roughness above
-			the threshold opaque.
+			Pixel width of the filter.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.mistStart" : [
+
+			"description",
+			"""
+			Start of the mist/fog.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.mistDepth" : [
+
+			"description",
+			"""
+			End of the mist/fog.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.mistFalloff" : [
+
+			"description",
+			"""
+			Falloff of the mist/fog.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.useSampleClamp" : [
+
+			"description",
+			"""
+			Use sample clamp.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.denoisingDataPass" : [
+
+			"description",
+			"""
+			Denoising data pass.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.denoisingCleanPass" : [
+
+			"description",
+			"""
+			Denoising clean pass.
 			""",
 
 			"layout:section", "Film",

@@ -519,9 +519,16 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( ( shaderName == "quad_light" )
 	      || ( shaderName == "disk_light" )
-	      || ( shaderName == "portal" ) )
+	      || ( shaderName == "portal" ) )	
 	{
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 1.0f ) );
+		if( shaderName != "portal" )
+			validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "shader" ) )), plugsParent, Gaffer::Plug::In ) );
+	}
+	else if( shaderName == "background_light" )
+	{
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "map_resolution", plugsParent, Gaffer::Plug::In, 1024 ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "shader" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else
 	{

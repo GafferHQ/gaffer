@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Alex Fuller. All rights reserved.
+//  Copyright (c) 2019, Alex Fuller. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_TYPEIDS_H
-#define GAFFERCYCLES_TYPEIDS_H
+#ifndef GAFFERCYCLES_CYCLESBACKGROUND_H
+#define GAFFERCYCLES_CYCLESBACKGROUND_H
+
+#include "GafferCycles/Export.h"
+#include "GafferCycles/TypeIds.h"
+
+#include "GafferScene/GlobalShader.h"
 
 namespace GafferCycles
 {
 
-enum TypeId
+class GAFFERSCENE_API CyclesBackground : public GafferScene::GlobalShader
 {
-	CyclesAttributesTypeId = 400000,
-	CyclesOptionsTypeId = 400001,
-	CyclesRenderTypeId = 400002,
-	InteractiveCyclesRenderTypeId = 400003,
-	CyclesShaderTypeId = 400004,
-	CyclesLightTypeId = 400005,
-	CyclesBackgroundTypeId =  400006,
 
-	LastTypeId = 400049
+	public :
+
+		CyclesBackground( const std::string &name=defaultName<CyclesBackground>() );
+		~CyclesBackground() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesBackground, CyclesBackgroundTypeId, GafferScene::GlobalShader );
+
+	protected :
+
+		bool affectsOptionName( const Gaffer::Plug *input ) const override;
+		void hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		std::string computeOptionName( const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( CyclesBackground )
 
 } // namespace GafferCycles
 
-#endif // GAFFERCYCLES_TYPEIDS_H
+#endif // GAFFERCYCLES_CYCLESBACKGROUND_H

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Alex Fuller. All rights reserved.
+//  Copyright (c) 2019, Alex Fuller. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_TYPEIDS_H
-#define GAFFERCYCLES_TYPEIDS_H
+#include "GafferCycles/CyclesBackground.h"
 
-namespace GafferCycles
+using namespace GafferCycles;
+
+IE_CORE_DEFINERUNTIMETYPED( CyclesBackground );
+
+CyclesBackground::CyclesBackground( const std::string &name )
+	:	GlobalShader( name )
 {
+}
 
-enum TypeId
+CyclesBackground::~CyclesBackground()
 {
-	CyclesAttributesTypeId = 400000,
-	CyclesOptionsTypeId = 400001,
-	CyclesRenderTypeId = 400002,
-	InteractiveCyclesRenderTypeId = 400003,
-	CyclesShaderTypeId = 400004,
-	CyclesLightTypeId = 400005,
-	CyclesBackgroundTypeId =  400006,
+}
 
-	LastTypeId = 400049
-};
+bool CyclesBackground::affectsOptionName( const Gaffer::Plug *input ) const
+{
+	return false;
+}
 
-} // namespace GafferCycles
+void CyclesBackground::hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	// No need to hash anything, because our option name is constant
+}
 
-#endif // GAFFERCYCLES_TYPEIDS_H
+std::string CyclesBackground::computeOptionName( const Gaffer::Context *context ) const
+{
+	return "ccl:background:shader";
+}
+

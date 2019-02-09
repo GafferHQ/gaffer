@@ -63,7 +63,8 @@ if moduleSearchPath.find( "GafferCycles" ) :
 
 		GafferCyclesUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
-		nodeMenu.append( "/Cycles/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
+		nodeMenu.append( "/Cycles/Globals/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
+		nodeMenu.append( "/Cycles/Globals/Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
 		nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
 		nodeMenu.append(
 			"/Cycles/Render", GafferCycles.CyclesRender,

@@ -143,6 +143,14 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 				auto data = new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
 				intensity = data->readable();
 			}
+			else if( parameterName == "samples" )
+			{
+				// Square samples
+				auto data = new IntData( static_cast<const IntPlug *>( valuePlug )->getValue() );
+				auto samples = data->readable();
+				samples *= samples;
+				lightShader->parameters()[parameterName] = new IntData( samples );
+			}
 			else
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 		}

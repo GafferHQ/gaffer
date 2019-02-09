@@ -42,6 +42,7 @@
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
 #include "GafferCycles/CyclesAttributes.h"
+#include "GafferCycles/CyclesBackground.h"
 #include "GafferCycles/CyclesOptions.h"
 #include "GafferCycles/CyclesLight.h"
 #include "GafferCycles/CyclesShader.h"
@@ -60,7 +61,7 @@ using namespace GafferCycles;
 namespace
 {
 
-py::list getDevices()
+static py::list getDevices()
 {
 	py::list result;
 
@@ -87,7 +88,7 @@ py::list getDevices()
 	return result;
 }
 
-py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
+static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 {
 	py::dict result;
 
@@ -142,7 +143,7 @@ py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 	return result;
 }
 
-py::dict getNodes()
+static py::dict getNodes()
 {
 	py::dict result;
 
@@ -189,7 +190,7 @@ py::dict getNodes()
 	return result;
 }
 
-py::dict getShaders()
+static py::dict getShaders()
 {
 	py::dict result;
 
@@ -349,7 +350,7 @@ py::dict getShaders()
 	return result;
 }
 
-py::dict getLights()
+static py::dict getLights()
 {
 	py::dict result;
 
@@ -381,8 +382,10 @@ py::dict getLights()
 
 			if( type == "background_light" )
 			{
-				// Part of CyclesOptions
-				continue;
+				in["map_resolution"] = _in["map_resolution"];
+				d["enum"] = it->second;
+				d["in"] = in;
+				result[type] = d;
 			}
 			else if( type == "area_light" )
 			{
@@ -433,6 +436,7 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "lights" ) = getLights();
 
 	DependencyNodeClass<CyclesAttributes>();
+	DependencyNodeClass<CyclesBackground>();
 	DependencyNodeClass<CyclesOptions>();
 	DependencyNodeClass<CyclesLight>()
 		.def( "loadShader", (void (CyclesLight::*)( const std::string & ) )&CyclesLight::loadShader )

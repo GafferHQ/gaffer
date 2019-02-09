@@ -711,13 +711,19 @@ class ShaderCache : public IECore::RefCounted
 					ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
 					vecMath->type = ccl::NODE_VECTOR_MATH_DOT_PRODUCT;
 					ccl::GeometryNode *geo = new ccl::GeometryNode();
+					ccl::MathNode *math = new ccl::MathNode();
+					math->type = ccl::NODE_MATH_MULTIPLY;
+					math->value2 = 2.0f;
 					ccl::ShaderNode *vecMathNode = cshader->graph->add( (ccl::ShaderNode*)vecMath );
 					ccl::ShaderNode *geoNode = cshader->graph->add( (ccl::ShaderNode*)geo );
+					ccl::ShaderNode *mathNode = cshader->graph->add( (ccl::ShaderNode*)math );
 					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "normal" ), 
 											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
 					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "incoming" ), 
 											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
 					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( vecMathNode, "value" ), 
+											 IECoreCycles::ShaderNetworkAlgo::input( mathNode, "value1" ) );
+					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( mathNode, "value" ), 
 											 IECoreCycles::ShaderNetworkAlgo::input( outputNode, "surface" ) );
 					a->second = SharedCShaderPtr( cshader );
 				}
@@ -971,7 +977,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( !m_shader )
 			{
 				m_shader = shaderCache->defaultSurface();
-				msg( Msg::Warning, "CyclesRenderer", boost::format( "NO SHADER" ) );
 			}
 		}
 
@@ -1672,7 +1677,6 @@ IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
 // Session
 IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
-IECore::InternedString g_backgroundOptionName( "ccl:session:background" );
 IECore::InternedString g_progressiveRefineOptionName( "ccl:session:progressive_refine" );
 IECore::InternedString g_progressiveOptionName( "ccl:session:progressive" );
 IECore::InternedString g_samplesOptionName( "ccl:session:samples" );
@@ -1708,6 +1712,19 @@ IECore::InternedString g_curveShapeOptionType( "ccl:curve:shape" );
 IECore::InternedString g_curveResolutionOptionType( "ccl:curve:resolution" );
 IECore::InternedString g_curveSubdivisionsOptionType( "ccl:curve:subdivisions" );
 IECore::InternedString g_curveCullBackfacing( "ccl:curve:cull_backfacing" );
+// Background shader
+IECore::InternedString g_backgroundShaderOptionName( "ccl:background:shader" );
+// Square samples
+std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
+	"ccl:integrator:aa_samples",
+	"ccl:integrator:diffuse_samples",
+	"ccl:integrator:glossy_samples",
+	"ccl:integrator:transmission_samples",
+	"ccl:integrator:ao_samples",
+	"ccl:integrator:mesh_light_samples",
+	"ccl:integrator:subsurface_samples",
+	"ccl:integrator:volume_samples",
+} };
 
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
@@ -1720,6 +1737,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			:	m_renderType( renderType ),
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
+				m_bufferParams( ccl::BufferParams() ),
 				m_deviceName( "CPU" ),
 				m_shadingsystemName( "SVM" ),
 				m_session( nullptr ),
@@ -1734,11 +1752,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Session Defaults
 			m_sessionParams.display_buffer_linear = true;
+			m_bufferParamsModified = m_bufferParams;
 
-			if( m_shadingsystemName == "OSL" )
-				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-			else if( m_shadingsystemName == "SVM" )
-				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
+			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
 			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
 
 			if( m_renderType != Interactive )
@@ -1752,6 +1768,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// this off makes more sense if we were to use Cycles as a
 			// viewport alternative to the OpenGL viewer.
 			m_sessionParams.background = true;
+			// We almost-always want persistent data.
+			m_sceneParams.persistent_data = true;
 
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
@@ -1868,7 +1886,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_shadingsystemOptionName )
 			{
-				if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+				if( value == nullptr )
+				{
+					m_shadingsystemName = "SVM";
+					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
+					m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
+				}
+				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 				{
 					auto shadingsystemName = data->readable();
 					if( shadingsystemName == "OSL" )
@@ -1885,17 +1909,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					else
 					{
-						m_shadingsystemName = "OSL";
-						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
+						m_shadingsystemName = "SVM";
+						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
+						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
 						IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % shadingsystemName % name.string() );
 					}
-				}
-				else if( value == nullptr )
-				{
-					m_shadingsystemName = "OSL";
-					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-					m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
 				}
 				else
 				{
@@ -1914,17 +1932,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
 						m_sessionParams.experimental = data->readable();
-					return;
-				}
-				else if( name == g_backgroundOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.background = m_sessionParamsDefault.background;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.background = data->readable();
 					return;
 				}
 				else if( name == g_progressiveRefineOptionName )
@@ -2314,7 +2321,32 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
 				if( value && input )
 				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
+					if( boost::starts_with( name.string(), "ccl:background:visibility:" ) )
+					{
+						if( const Data *d = reportedCast<const IECore::Data>( value, "option", name ) )
+						{
+							if( const IntData *data = static_cast<const IntData *>( d ) )
+							{
+								auto &vis = data->readable();
+								auto ray = nameToRayType( name.string().c_str() + 26 );
+								background->visibility = vis ? background->visibility |= ray : background->visibility & ~ray;
+							}
+						}
+					}
+					else if( name == g_backgroundShaderOptionName )
+					{
+						m_backgroundShader = nullptr;
+						if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
+						{
+							m_backgroundShader = m_shaderCache->get( d );
+							background->shader = m_backgroundShader.get();
+						}
+						else
+						{
+							background->shader = m_scene->default_background;
+						}
+					}
+					else if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
 						SocketAlgo::setSocket( (ccl::Node*)background, input, data );
 					}
@@ -2354,6 +2386,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
 				if( value && input )
 				{
+					for( const auto &sampleName : g_squareSamplesOptionNames )
+					{
+						if( name == sampleName )
+						{
+							if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+							{
+								// Square the values
+								integrator->set( *input, data->readable() * data->readable() );
+							}
+							else
+							{
+								integrator->set_default_value( *input );
+							}
+							return;
+						}
+					}
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
 						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
@@ -2479,7 +2527,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					ccl::Pass::add( coutput.second->m_passType, passes );
 			}
 
-			m_bufferParams.passes = passes;
+			m_bufferParamsModified.passes = passes;
 		}
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
@@ -2539,6 +2587,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void render() override
 		{
+			pause();
 			updateSceneObjects();
 			updateOptions();
 			// Clear out any objects which aren't needed in the cache.
@@ -2556,6 +2605,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_rendering )
 			{
+				m_scene->reset();
+				//m_session->update_scene();
+                m_session->reset( m_bufferParams, m_sessionParams.samples );
+				m_session->set_pause( false );
 				return;
 			}
 
@@ -2600,8 +2653,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			
 			m_renderCallback.reset();
 
-			m_bufferParams = ccl::BufferParams();
-
 			// Fallback
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
@@ -2633,7 +2684,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			m_session = new ccl::Session( m_sessionParams );
-			m_session->scene = m_scene;
 
 			m_session->write_render_tile_cb = function_bind( &CyclesRenderer::writeRenderTile, this, ccl::_1 );
 			m_session->update_render_tile_cb = function_bind( &CyclesRenderer::updateRenderTile, this, ccl::_1, ccl::_2 );
@@ -2642,6 +2692,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_session->set_pause( true );
 
 			m_scene = new ccl::Scene( m_sceneParams, m_session->device );
+			m_scene->params = m_sceneParams;
 
 			m_renderCallback = new RenderCallback( m_session, ( m_renderType == Interactive ) ? true : false );
 
@@ -2650,6 +2701,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// CyclesOptions will set some values to these.
 			m_integrator = m_scene->integrator;
 			m_background = m_scene->background;
+			m_background->transparent = true;
 			m_film = m_scene->film;
 			m_curveSystemManager = m_scene->curve_system_manager;
 
@@ -2673,9 +2725,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// This doesn't get checked, so we set it just in-case.
 			m_session->params.samples = m_sessionParams.samples;
 			// If anything changes in scene or session, we reset.
-			if( m_scene->params.modified( m_sceneParams ) ||
+			if( m_sceneParams.modified( m_sceneParams ) ||
 			    m_session->params.modified( m_sessionParams ) )
 			{
+				m_scene->params = m_sceneParams;
+				m_session->params = m_sessionParams;
 				reset();
 			}
 
@@ -2714,19 +2768,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			auto *cam = m_scene->camera;
 			const int width = cam->width;
 			const int height = cam->height;
-			m_bufferParams.full_width = cam->full_width;
-			m_bufferParams.full_height = cam->full_height;
+			m_bufferParamsModified.full_width = cam->full_width;
+			m_bufferParamsModified.full_height = cam->full_height;
 			ccl::BoundBox2D border = cam->border.clamp();
-			m_bufferParams.full_x = (int)(border.left * (float)width);
-			m_bufferParams.full_y = (int)(border.bottom * (float)height);
-			m_bufferParams.width =  (int)(border.right * (float)width) - m_bufferParams.full_x;
-			m_bufferParams.height = (int)(border.top * (float)height) - m_bufferParams.full_y;
+			m_bufferParamsModified.full_x = (int)(border.left * (float)width);
+			m_bufferParamsModified.full_y = (int)(border.bottom * (float)height);
+			m_bufferParamsModified.width =  (int)(border.right * (float)width) - m_bufferParamsModified.full_x;
+			m_bufferParamsModified.height = (int)(border.top * (float)height) - m_bufferParamsModified.full_y;
 
-			if( m_session->buffers )
-			{
-				if( !m_session->buffers->params.modified( m_bufferParams ) )
-					return;
-			}
+			if( !m_bufferParams.modified( m_bufferParamsModified ) )
+				return;
+			else
+				m_bufferParams = m_bufferParamsModified;
 
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
 			m_renderCallback->updateOutputs( m_outputs );
@@ -2818,11 +2871,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SessionParams m_sessionParams;
 		ccl::SceneParams m_sceneParams;
 		ccl::BufferParams m_bufferParams;
+		ccl::BufferParams m_bufferParamsModified;
 		ccl::Camera *m_defaultCamera;
 		ccl::Integrator *m_integrator;
 		ccl::Background *m_background;
 		ccl::Film *m_film;
 		ccl::CurveSystemManager *m_curveSystemManager;
+
+		// Background shader
+		SharedCShaderPtr m_backgroundShader;
 
 		// Defaults
 		ccl::SessionParams m_sessionParamsDefault;

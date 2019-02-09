@@ -51,13 +51,12 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:device", new IECore::StringData( "CPU" ), "device", Gaffer::Plug::Default, false );
 
 	// Session and scene
-	options->addOptionalMember( "ccl:shadingsystem", new IECore::StringData( "OSL" ), "shadingSystem", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:shadingsystem", new IECore::StringData( "SVM" ), "shadingSystem", Gaffer::Plug::Default, false );
 
 	// Session/Render
 
 	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "featureSet", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:session:background", new IECore::BoolData( false ), "useBackground", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "integrator", Gaffer::Plug::Default, false );
@@ -67,7 +66,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:start_resolution", new IECore::IntData( 64 ), "startResolution", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:pixel_size", new IECore::IntData( 64 ), "pixelSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:display_buffer_linear", new IECore::BoolData( true ), "displayBufferLinear", Gaffer::Plug::Default, false );
+	//options->addOptionalMember( "ccl:session:display_buffer_linear", new IECore::BoolData( true ), "displayBufferLinear", Gaffer::Plug::Default, false );
 
 	// Denoising
 
@@ -97,12 +96,12 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	//options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 2 ), "bvhLayout", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 1 << 1 ), "bvhLayout", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), "useBvhUnalignedNodes", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), "numBvhTimeSteps", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:scene:persistent_data", new IECore::BoolData( false ), "persistentData", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:scene:persistent_data", new IECore::BoolData( true ), "persistentData", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:texture_limit", new IECore::IntData( 0 ), "textureLimit", Gaffer::Plug::Default, false );
 
 	// Integrator
@@ -121,8 +120,8 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:integrator:volume_max_steps", new IECore::IntData( 1024 ), "volumeMaxSteps", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:volume_step_size", new IECore::FloatData( 0.1f ), "volumeStepSize", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:integrator:caustics_reflective", new IECore::BoolData( true ), "reflectiveCaustics", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:caustics_refractive", new IECore::BoolData( true ), "refractiveCaustics", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:integrator:caustics_reflective", new IECore::BoolData( true ), "causticsReflective", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:integrator:caustics_refractive", new IECore::BoolData( true ), "causticsRefractive", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:filter_glossy", new IECore::FloatData( 0.0f ), "filterGlossy", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:seed", new IECore::IntData( 0 ), "seed", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), "sampleClampDirect", Gaffer::Plug::Default, false );
@@ -156,6 +155,32 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:curve:subdivisions", new IECore::IntData( 0 ), "curveSubdivisions", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:curve:cull_backfacing", new IECore::BoolData( false ), "curveCullBackfacing", Gaffer::Plug::Default, false );
 
+	// Background
+	options->addOptionalMember( "ccl:background:ao_factor", new IECore::FloatData( 0.0f ), "aoFactor", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:ao_distance", new IECore::FloatData( FLT_MAX ), "aoDistance", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:use_shader", new IECore::BoolData( true ), "bgUseShader", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:use_ao", new IECore::BoolData( false ), "useAO", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:transparent", new IECore::BoolData( true ), "bgTransparent", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:transparent_glass", new IECore::BoolData( false ), "bgTransparentGlass", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:transparent_roughness_threshold", new IECore::FloatData( 0.0f ), "bgTransparentRoughnessThreshold", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:visibility:camera", new IECore::BoolData( true ), "bgCameraVisibility", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:visibility:diffuse", new IECore::BoolData( true ), "bgDiffuseVisibility", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:visibility:glossy", new IECore::BoolData( true ), "bgGlossyVisibility", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:visibility:transmission", new IECore::BoolData( true ), "bgTransmissionVisibility", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:visibility:shadow", new IECore::BoolData( true ), "bgShadowVisibility", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:background:visibility:scatter", new IECore::BoolData( true ), "bgScatterVisibility", Gaffer::Plug::Default, false );
+
+	// Film
+	options->addOptionalMember( "ccl:film:exposure", new IECore::FloatData( 0.5f ), "exposure", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:pass_alpha_threshold", new IECore::FloatData( 0.5f ), "passAlphaThreshold", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:filter_type", new IECore::IntData( 0 ), "filterType", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:filter_width", new IECore::FloatData( 1.0f ), "filterWidth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:mist_start", new IECore::FloatData( 0.0f ), "mistStart", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:mist_depth", new IECore::FloatData( 100.0f ), "mistDepth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:mist_falloff", new IECore::FloatData( 1.0f ), "mistFalloff", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:use_sample_clamp", new IECore::BoolData( false ), "useSampleClamp", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:denoising_data_pass", new IECore::BoolData( false ), "denoisingDataPass", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:film:denoising_clean_pass", new IECore::BoolData( false ), "denoisingCleanPass", Gaffer::Plug::Default, false );
 }
 
 CyclesOptions::~CyclesOptions()
