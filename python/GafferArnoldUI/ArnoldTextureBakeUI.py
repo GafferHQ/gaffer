@@ -47,6 +47,7 @@ Gaffer.Metadata.registerNode(
 	Supports multiple meshes and UDIMs, and any AOVs output by Arnold.  The file name and
 	resolution can be overridden per mesh using the "bake:fileName" and "bake:resolution" attributes.
 	""",
+	"layout:activator:medianActivator", lambda parent : parent["applyMedianFilter"].getValue(),
 
 	plugs = {
 
@@ -155,8 +156,23 @@ Gaffer.Metadata.registerNode(
 			are present ).  We then combine them, fill in the background, and convert to textures.  This
 			causes all intermediate EXRs, and the index txt file to be removed, and just the final .tx to be kept.
 			""",
+			"divider", True,
 		],
 		
+		"applyMedianFilter" : [
+			"description",
+			"""
+			Adds a simple denoising filter to the texture bake. Mostly preserves high-contrast edges.
+			""",
+		],
+
+		"medianRadius" : [
+			"description",
+			"""
+			The radius of the median filter. Values greater than 1 will likely remove small details from the texture.
+			""",
+			"layout:activator", "medianActivator",
+		],
 
 
 	}

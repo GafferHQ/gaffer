@@ -262,6 +262,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["tasks"] = Gaffer.IntPlug( "tasks", defaultValue = 1 )
 		self["cleanupIntermediateFiles"] = Gaffer.BoolPlug( "cleanupIntermediateFiles", defaultValue = True )
 
+		self["applyMedianFilter"] = Gaffer.BoolPlug( "applyMedianFilter", Gaffer.Plug.Direction.In, False )
+		self["medianRadius"] = Gaffer.IntPlug( "medianRadius", Gaffer.Plug.Direction.In, 1 )
+
 		# First, setup python commands which will dispatch a chunk of a render or image tasks as
 		# immediate execution once they reach the farm - this allows us to run multiple tasks in
 		# one farm process.
@@ -288,6 +291,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			d.dispatch( [ self.parent()["__CleanUpSwitch"] ] )
 			"""
 		) )
+		# Connect through the dispatch settings to the render dispatcher
+		# ( The image dispatcher runs much quicker, and should be OK using default settings )
+		self["__RenderDispatcher"]["dispatcher"].setInput( self["dispatcher"] )
 
 		# Wedge based on tasks into the overall number of tasks to run.  Note that we don't know how
 		# much work each task will do until we actually run the render tasks ( this is when scene
@@ -444,9 +450,15 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__BleedFill"] = GafferImage.BleedFill()
 		self["__BleedFill"]["in"].setInput( self["__ImageIntermediateReader"]["out"] )
 
+		self["__Median"] = GafferImage.Median()
+		self["__Median"]["in"].setInput( self["__BleedFill"]["out"] )
+		self["__Median"]["enabled"].setInput( self["applyMedianFilter"] )
+		self["__Median"]["radius"]["x"].setInput( self["medianRadius"] )
+		self["__Median"]["radius"]["y"].setInput( self["medianRadius"] )
+
 		# Write out the result	
 		self["__ImageWriter"] = GafferImage.ImageWriter()
-		self["__ImageWriter"]["in"].setInput( self["__BleedFill"]["out"] )
+		self["__ImageWriter"]["in"].setInput( self["__Median"]["out"] )
 		self["__ImageWriter"]["preTasks"][0].setInput( self["__ImageIntermediateWriter"]["task"] )
 
 		# Convert result to texture
