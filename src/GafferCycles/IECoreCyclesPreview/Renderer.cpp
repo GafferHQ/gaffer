@@ -79,6 +79,7 @@
 // Cycles
 #include "bvh/bvh_params.h"
 #include "device/device.h"
+#include "device/device_task.h"
 #include "graph/node.h"
 #include "graph/node_type.h"
 #include "kernel/kernel_types.h"
@@ -1686,11 +1687,9 @@ IECore::InternedString g_startResolutionOptionName( "ccl:session:start_resolutio
 IECore::InternedString g_pixelSizeOptionName( "ccl:session:pixel_size" );
 IECore::InternedString g_threadsOptionName( "ccl:session:threads" );
 IECore::InternedString g_displayBufferLinearOptionName( "ccl:session:display_buffer_linear" );
-IECore::InternedString g_useDenoisingOptionName( "ccl:session:use_denoising" );
-IECore::InternedString g_denoisingRadiusOptionName( "ccl:session:denoising_radius" );
-IECore::InternedString g_denoisingStrengthOptionName( "ccl:session:denoising_strength" );
-IECore::InternedString g_denoisingFeatureStrengthOptionName( "ccl:session:denoising_feature_strength" );
-IECore::InternedString g_denoisingRelativePcaOptionName( "ccl:session:denoising_relative_pca" );
+IECore::InternedString g_runDenoisingOptionName( "ccl:session:run_denoising" );
+IECore::InternedString g_writeDenoisingPassesOptionName( "ccl:session:write_denoising_passes" );
+IECore::InternedString g_fullDenoisingOptionName( "ccl:session:full_denoising" );
 IECore::InternedString g_cancelTimeoutOptionName( "ccl:session:cancel_timeout" );
 IECore::InternedString g_resetTimeoutOptionName( "ccl:session:reset_timeout" );
 IECore::InternedString g_textTimeoutOptionName( "ccl:session:text_timeout" );
@@ -1703,6 +1702,13 @@ IECore::InternedString g_useBvhUnalignedNodesOptionName( "ccl:scene:use_bvh_unal
 IECore::InternedString g_numBvhTimeStepsOptionName( "ccl:scene:num_bvh_time_steps" );
 IECore::InternedString g_persistentDataOptionName( "ccl:scene:persistent_data" );
 IECore::InternedString g_textureLimitOptionName( "ccl:scene:texture_limit" );
+// Denoise
+IECore::InternedString g_denoiseRadiusOptionName( "ccl:denoise:radius" );
+IECore::InternedString g_denoiseStrengthOptionName( "ccl:denoise:strength" );
+IECore::InternedString g_denoiseFeatureStrengthOptionName( "ccl:denoise:feature_strength" );
+IECore::InternedString g_denoiseRelativePcaOptionName( "ccl:denoise:relative_pca" );
+IECore::InternedString g_denoiseNeighborFramesOptionName( "ccl:denoise:neighbor_frames" );
+IECore::InternedString g_denoiseClampInputOptionName( "ccl:denoise:clampInput" );
 // Curves
 IECore::InternedString g_useCurvesOptionType( "ccl:curve:use_curves" );
 IECore::InternedString g_curveMinimumWidthOptionType( "ccl:curve:minimum_width" );
@@ -1738,6 +1744,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
+				m_denoiseParams( ccl::DenoiseParams() ),
 				m_deviceName( "CPU" ),
 				m_shadingsystemName( "SVM" ),
 				m_session( nullptr ),
@@ -1773,6 +1780,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
+			m_denoiseParamsDefault = m_denoiseParams;
 
 			init();
 
@@ -2036,59 +2044,37 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_sessionParams.display_buffer_linear = data->readable();
 					return;
 				}
-				else if( name == g_useDenoisingOptionName )
+				else if( name == g_runDenoisingOptionName )
 				{
 					if( value == nullptr )
 					{
-						m_sessionParams.use_denoising = m_sessionParamsDefault.use_denoising;
+						m_sessionParams.run_denoising = m_sessionParamsDefault.run_denoising;
 						return;
 					}
 					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.use_denoising = data->readable();
+						m_sessionParams.run_denoising = data->readable();
 					return;
 				}
-				else if( name == g_denoisingRadiusOptionName )
+				else if( name == g_writeDenoisingPassesOptionName )
 				{
 					if( value == nullptr )
 					{
-						m_sessionParams.denoising_radius = m_sessionParamsDefault.denoising_radius;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sessionParams.denoising_radius = data->readable();
-					return;
-				}
-				else if( name == g_denoisingStrengthOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.denoising_strength = m_sessionParamsDefault.denoising_strength;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_sessionParams.denoising_strength = data->readable();
-					return;
-				}
-				else if( name == g_denoisingFeatureStrengthOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.denoising_feature_strength = m_sessionParamsDefault.denoising_feature_strength;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_sessionParams.denoising_feature_strength = data->readable();
-					return;
-				}
-				else if( name == g_denoisingRelativePcaOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.denoising_relative_pca = m_sessionParamsDefault.denoising_relative_pca;
+						m_sessionParams.write_denoising_passes = m_sessionParamsDefault.write_denoising_passes;
 						return;
 					}
 					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.denoising_relative_pca = data->readable();
+						m_sessionParams.write_denoising_passes = data->readable();
+					return;
+				}
+				else if( name == g_fullDenoisingOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.full_denoising = m_sessionParamsDefault.full_denoising;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_sessionParams.full_denoising = data->readable();
 					return;
 				}
 				else if( name == g_cancelTimeoutOptionName )
@@ -2221,6 +2207,75 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				else
 				{
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+					return;
+				}
+			}
+			else if( boost::starts_with( name.string(), "ccl:denoise:" ) )
+			{
+				if( name == g_denoiseRadiusOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_denoiseParams.radius = m_denoiseParamsDefault.radius;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_denoiseParams.radius = data->readable();
+					return;
+				}
+				else if( name == g_denoiseStrengthOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_denoiseParams.strength = m_denoiseParamsDefault.strength;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_denoiseParams.strength = data->readable();
+					return;
+				}
+				else if( name == g_denoiseFeatureStrengthOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_denoiseParams.feature_strength = m_denoiseParamsDefault.feature_strength;
+						return;
+					}
+					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
+						m_denoiseParams.feature_strength = data->readable();
+					return;
+				}
+				else if( name == g_denoiseRelativePcaOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_denoiseParams.relative_pca = m_denoiseParamsDefault.relative_pca;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_denoiseParams.relative_pca = data->readable();
+					return;
+				}
+				else if( name == g_denoiseNeighborFramesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_denoiseParams.neighbor_frames = m_denoiseParamsDefault.neighbor_frames;
+						return;
+					}
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+						m_denoiseParams.neighbor_frames = data->readable();
+					return;
+				}
+				else if( name == g_denoiseClampInputOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_denoiseParams.clamp_input = m_denoiseParamsDefault.clamp_input;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+						m_denoiseParams.clamp_input = data->readable();
 					return;
 				}
 			}
@@ -2658,7 +2713,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::DeviceInfo device_fallback;
 
 			ccl::DeviceType device_type = ccl::Device::type_from_string( m_deviceName.c_str() );
-			ccl::vector<ccl::DeviceInfo>& devices = ccl::Device::available_devices();
+			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
 			bool device_available = false;
 			for( ccl::DeviceInfo& device : devices ) 
 			{
@@ -2693,6 +2748,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_scene = new ccl::Scene( m_sceneParams, m_session->device );
 			m_scene->params = m_sceneParams;
+			m_session->scene = m_scene;
 
 			m_renderCallback = new RenderCallback( m_session, ( m_renderType == Interactive ) ? true : false );
 
@@ -2704,8 +2760,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_background->transparent = true;
 			m_film = m_scene->film;
 			m_curveSystemManager = m_scene->curve_system_manager;
-
-			m_session->scene = m_scene;
 
 			m_scene->camera->need_update = true;
 			m_scene->camera->update( m_scene );
@@ -2872,6 +2926,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SceneParams m_sceneParams;
 		ccl::BufferParams m_bufferParams;
 		ccl::BufferParams m_bufferParamsModified;
+		ccl::DenoiseParams m_denoiseParams;
 		ccl::Camera *m_defaultCamera;
 		ccl::Integrator *m_integrator;
 		ccl::Background *m_background;
@@ -2884,6 +2939,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		// Defaults
 		ccl::SessionParams m_sessionParamsDefault;
 		ccl::SceneParams m_sceneParamsDefault;
+		ccl::DenoiseParams m_denoiseParamsDefault;
 		CCurveSystemManagerPtr m_curveSystemManagerDefault;
 
 		// IECoreScene::Renderer

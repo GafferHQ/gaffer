@@ -67,14 +67,21 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:pixel_size", new IECore::IntData( 64 ), "pixelSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
 	//options->addOptionalMember( "ccl:session:display_buffer_linear", new IECore::BoolData( true ), "displayBufferLinear", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:run_denoising", new IECore::BoolData( false ), "runDenoising", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:write_denoising_passes", new IECore::BoolData( false ), "writeDenoisingPasses", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:full_denoising", new IECore::BoolData( false ), "fullDenoising", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:cancel_timeout", new IECore::FloatData( 0.1f ), "cancelTimeout", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), "resetTimeout", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), "textTimeout", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:progressive_update_timeout", new IECore::FloatData( 1.0f ), "progressiveUpdateTimeout", Gaffer::Plug::Default, false );
 
 	// Denoising
-
-	options->addOptionalMember( "ccl:session:use_denoising", new IECore::BoolData( false ), "useDenoising", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:denoising_radius", new IECore::IntData( 8 ), "denoisingRadius", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:denoising_strength", new IECore::FloatData( 10.0f ), "denoisingStrength", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:denoising_feature_strength", new IECore::FloatData( 0.0f ), "denoisingFeatureStrength", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:denoising_relative_pca", new IECore::BoolData( false ), "denoisingRelativePca", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoise:radius", new IECore::IntData( 8 ), "denoiseRadius", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoise:strength", new IECore::FloatData( 0.5f ), "denoiseStrength", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoise:feature_strength", new IECore::FloatData( 0.5f ), "denoiseFeatureStrength", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoise:relative_pca", new IECore::BoolData( false ), "denoiseRelativePca", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoise:neighbor_frames", new IECore::IntData( 2 ), "denoiseNeighborFrames", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:denoise:clamp_input", new IECore::BoolData( true ), "denoiseClampInput", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:denoising_diffuse_direct",        new IECore::BoolData( true ), "denoisingDiffuseDirect",       Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_diffuse_indirect",      new IECore::BoolData( true ), "denoisingDiffuseIndirect",      Gaffer::Plug::Default, false );
@@ -85,18 +92,12 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:denoising_subsurface_direct",     new IECore::BoolData( true ), "denoisingSubsurfaceDirect",    Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:denoising_subsurface_indirect",   new IECore::BoolData( true ), "denoisingSubsurfaceIndirect",  Gaffer::Plug::Default, false );
 
-	// Progressive timeouts
-	options->addOptionalMember( "ccl:session:cancel_timeout", new IECore::FloatData( 0.1f ), "cancelTimeout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), "resetTimeout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), "textTimeout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:progressive_update_timeout", new IECore::FloatData( 1.0f ), "progressiveUpdateTimeout", Gaffer::Plug::Default, false );
-	
 	// Scene/BVH
 
 	//options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 1 << 1 ), "bvhLayout", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), "bvhLayout", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), "useBvhUnalignedNodes", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), "numBvhTimeSteps", Gaffer::Plug::Default, false );

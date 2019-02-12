@@ -290,8 +290,8 @@ def __denoisingSummary( plug ) :
 
 	info = []
 
-	if plug["useDenoising"]["enabled"].getValue() :
-		info.append( "Use Denoising {}".format( plug["useDenoising"]["value"].getValue() ) )
+	if plug["runDenoising"]["enabled"].getValue() :
+		info.append( "Run Denoising {}".format( plug["runDenoising"]["value"].getValue() ) )
 
 	for rayType in ( "Diffuse", "Glossy", "Transmission", "Subsurface" ) :
 		for dirType in ( "Direct", "Indirect") :
@@ -301,20 +301,23 @@ def __denoisingSummary( plug ) :
 					"{} {} {}".format( rayType, dirType, plug[childName]["value"].getValue() )
 				)
 
-	if plug["denoisingStrength"]["enabled"].getValue() :
-		info.append( "Strength {}".format( plug["denoisingStrength"]["value"].getValue() ) )
+	if plug["denoiseStrength"]["enabled"].getValue() :
+		info.append( "Strength {}".format( plug["denoiseStrength"]["value"].getValue() ) )
 
-	if plug["denoisingFeatureStrength"]["enabled"].getValue() :
-		info.append( "Feature Strength {}".format( plug["denoisingFeatureStrength"]["value"].getValue() ) )
+	if plug["denoiseFeatureStrength"]["enabled"].getValue() :
+		info.append( "Feature Strength {}".format( plug["denoiseFeatureStrength"]["value"].getValue() ) )
 
-	if plug["denoisingRadius"]["enabled"].getValue() :
-		info.append( "Radius {}".format( plug["denoisingRadius"]["value"].getValue() ) )
+	if plug["denoiseRadius"]["enabled"].getValue() :
+		info.append( "Radius {}".format( plug["denoiseRadius"]["value"].getValue() ) )
 
-	if plug["denoisingRelativePca"]["enabled"].getValue() :
-		info.append( "Relative Filter {}".format( plug["denoisingRelativePca"]["value"].getValue() ) )
+	if plug["denoiseRelativePca"]["enabled"].getValue() :
+		info.append( "Relative Filter {}".format( plug["denoiseRelativePca"]["value"].getValue() ) )
 
-	#if plug["denoisingStorePasses"]["enabled"].getValue() :
-	#	info.append( "Store Passes {}".format( plug["denoisingStorePasses"]["value"].getValue() ) )
+	if plug["denoiseNeighborFrames"]["enabled"].getValue() :
+		info.append( "Neighbor Frames {}".format( plug["denoiseNeighborFrames"]["value"].getValue() ) )
+
+	if plug["denoiseClampInput"]["enabled"].getValue() :
+		info.append( "Clamp Input {}".format( plug["denoiseClampInput"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -687,10 +690,10 @@ Gaffer.Metadata.registerNode(
 
 		"options.bvhLayout.value" : [
 
-			"preset:BVH2", ( 1 << 0 ),
-			"preset:BVH4", ( 1 << 1 ),
-			"preset:BVH8", ( 1 << 2 ),
-			"preset:EMBREE", ( 1 << 3 ),
+			"preset:BVH2", 0 | ( 1 << 0 ),
+			"preset:BVH4", 0 | ( 1 << 1 ),
+			"preset:BVH8", 0 | ( 1 << 2 ),
+			"preset:EMBREE", 0 | ( 1 << 3 ),
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -1505,7 +1508,7 @@ Gaffer.Metadata.registerNode(
 
 		# Denoising
 
-		"options.useDenoising" : [
+		"options.runDenoising" : [
 
 			"description",
 			"""
@@ -1513,7 +1516,31 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Use Denoising",
+			"label", "Run Denoising",
+
+		],
+
+		"options.writeDenoisingPasses" : [
+
+			"description",
+			"""
+			Write the denoising passes.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Write Denoising Passes",
+
+		],
+
+		"options.fullDenoising" : [
+
+			"description",
+			"""
+			Full Denoising.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Full Denoising",
 
 		],
 
@@ -1613,7 +1640,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.denoisingStrength" : [
+		"options.denoiseStrength" : [
 
 			"description",
 			"""
@@ -1622,11 +1649,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Denoising Strength",
+			"label", "Denoise Strength",
 
 		],
 
-		"options.denoisingFeatureStrength" : [
+		"options.denoiseFeatureStrength" : [
 
 			"description",
 			"""
@@ -1635,11 +1662,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Denoising Feature Strength",
+			"label", "Denoise Feature Strength",
 
 		],
 
-		"options.denoisingRadius" : [
+		"options.denoiseRadius" : [
 
 			"description",
 			"""
@@ -1648,11 +1675,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Denoising Radius",
+			"label", "Denoise Radius",
 
 		],
 
-		"options.denoisingRelativePca" : [
+		"options.denoiseRelativePca" : [
 
 			"description",
 			"""
@@ -1662,21 +1689,45 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Denoising Relative Filter",
+			"label", "Denoise Relative Filter",
 
 		],
 
-		#"options.denoisingStorePasses" : [
-		#
-		#	"description",
-		#	"""
-		#	Store the denoising feature passes and the noisy image.
-		#	""",
-		#
-		#	"layout:section", "Denoising",
-		#	"label", "Store Denoising Passes",
-		#
-		#],
+		"options.denoiseNeighborFrames" : [
+		
+			"description",
+			"""
+			Number of frames to use around the current frame for denoising.
+			""",
+		
+			"layout:section", "Denoising",
+			"label", "Denoise Neighbor Frames",
+		
+		],
+
+		"options.denoiseNeighborFrames" : [
+		
+			"description",
+			"""
+			Number of frames to use around the current frame for denoising.
+			""",
+		
+			"layout:section", "Denoising",
+			"label", "Denoise Neighbor Frames",
+		
+		],
+
+		"options.denoiseClampInput" : [
+		
+			"description",
+			"""
+			Denoise Clamp Input.
+			""",
+		
+			"layout:section", "Denoising",
+			"label", "Denoise Clamp Input",
+		
+		],
 
 		# Curves
 
