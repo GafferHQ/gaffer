@@ -2756,11 +2756,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// This doesn't get checked, so we set it just in-case.
 			m_session->params.samples = m_sessionParams.samples;
 			// If anything changes in scene or session, we reset.
-			if( m_sceneParams.modified( m_sceneParams ) ||
+			if( m_scene->params.modified( m_sceneParams ) ||
 			    m_session->params.modified( m_sessionParams ) )
 			{
-				m_scene->params = m_sceneParams;
-				m_session->params = m_sessionParams;
 				reset();
 			}
 
