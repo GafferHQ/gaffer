@@ -173,6 +173,15 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.FileNameParameter(
+					name = "annotatedScript",
+					description = "Filename used to save a copy of the script containing "
+						"annotations from the performance and context monitors.",
+					defaultValue = "",
+					allowEmptyString = True,
+					extensions = "gfr",
+				),
+
 				IECore.BoolParameter(
 					name = "vtune",
 					description = "Enables VTune instrumentation. When enabled, the VTune "
@@ -290,6 +299,16 @@ class stats( Gaffer.Application ) :
 		self.__output.write( "\n" )
 
 		self.__output.close()
+
+		if args["annotatedScript"].value :
+
+			if self.__performanceMonitor is not None :
+				Gaffer.MonitorAlgo.annotate( script, self.__performanceMonitor, Gaffer.MonitorAlgo.PerformanceMetric.TotalDuration )
+				Gaffer.MonitorAlgo.annotate( script, self.__performanceMonitor, Gaffer.MonitorAlgo.PerformanceMetric.HashCount )
+			if self.__contextMonitor is not None :
+				Gaffer.MonitorAlgo.annotate( script, self.__contextMonitor )
+
+			script.serialiseToFile( args["annotatedScript"].value )
 
 		return 0
 
