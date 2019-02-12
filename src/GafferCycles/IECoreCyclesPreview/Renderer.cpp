@@ -907,35 +907,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						if( m.first == g_lightAttributeName )
 						{
 							const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderNetwork->getOutput().shader );
-							// This is just to store some data.
-							m_light = CLightPtr( new ccl::Light() );
-							ccl::Light *clight = m_light.get();
-							float strength = 1.0f;
-							auto color = Imath::V3f( 1.0f );
-							for( const auto &namedParameter : shader->parameters() )
-							{
-								string paramName = namedParameter.first.string();
-								if( paramName == "color" )
-								{
-									if( const Color3fData *data = static_cast<const Color3fData *>( namedParameter.second.get() ) )
-										color = data->readable();
-									continue;
-								}
-								else if ( paramName == "strength" )
-								{
-									if( const FloatData *data = static_cast<const FloatData *>( namedParameter.second.get() ) )
-										strength = data->readable();
-									continue;
-								}
-								SocketAlgo::setSocket( clight, paramName, namedParameter.second.get() );
-							}
-
-							m_shader = shaderCache->getEmission( shader, color, strength );
+							// This is just to store data that is attached to the lights.
+							m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convertLight( shaderNetwork ) );
+							//m_shader = shaderCache->getEmission( shader, color, strength );
 						}
-						else
-						{
-							m_shader = shaderCache->get( shaderNetwork );
-						}
+						m_shader = shaderCache->get( shaderNetwork );
 					}
 					else if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
 					{
@@ -1011,6 +987,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			if( ccl::Light *clight = m_light.get() )
 			{
+				light->type = clight->type;
 				light->size = clight->size;
 				light->map_resolution = clight->map_resolution;
 				light->spot_angle = clight->spot_angle;
@@ -2860,8 +2837,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
 			init();
+			//m_session->progress.reset();
+			//m_scene->reset();
+			//m_session->tile_manager.set_tile_order( m_sessionParams.tile_order );
+			/* peak memory usage should show current render peak, not peak for all renders
+				* made by this render session
+				*/
+			//m_session->stats.mem_peak = m_session->stats.mem_used;
+
 			// Make sure the instance cache points to the right scene.
 			updateSceneObjects();
+
+			//m_session->reset( m_bufferParams, m_sessionParams.samples );
 		}
 
 		void updateCamera()

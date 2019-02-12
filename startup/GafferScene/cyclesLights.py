@@ -69,3 +69,7 @@ Gaffer.Metadata.registerValue( "ccl:light:disk_light", "intensityParameter", "in
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "radiusParameter", "size" )
+
+Gaffer.Metadata.registerValue( "ccl:light:background_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ccl:light:background_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ccl:light:background_light", "colorParameter", "color" )

@@ -407,11 +407,54 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 	const InternedString output = shaderNetwork->getOutput().shader;
 	if( output.string().empty() )
 	{
-		msg( Msg::Warning, "IECoreArnold::ShaderNetworkAlgo", "Shader has no output" );
+		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
 	}
 	else
 	{
-		convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, scene, result, converted );
+		if( shaderNetwork->outputShader()->getType() == "ccl:light" )
+		{
+			// The first shader is an emission node
+			for( const auto &connection : shaderNetwork->inputConnections( output ) )
+			{
+				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, result, converted );
+				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)result->graph->output();
+				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "emission" ) )
+					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
+						result->graph->connect( shaderOutput, shaderInput );
+				break; // Only one connection
+			}
+		}
+		else
+			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, scene, result, converted );
+	}
+	return result;
+}
+
+ccl::Light *convertLight( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetworkPtr networkCopy;
+	if( true ) // todo : make conditional on OSL < 1.10
+	{
+		networkCopy = shaderNetwork->copy();
+		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
+		shaderNetwork = networkCopy.get();
+	}
+
+	ccl::Light *result = new ccl::Light();
+
+	const InternedString output = shaderNetwork->getOutput().shader;
+	if( output.string().empty() )
+	{
+		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Output has no light shader" );
+	}
+	else
+	{
+		// First apply the parameters to the light
+		const IECoreScene::Shader *lightShader = shaderNetwork->getShader( output );
+		for( const auto &namedParameter : lightShader->parameters() )
+		{
+			SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
+		}
 	}
 	return result;
 }

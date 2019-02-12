@@ -84,6 +84,20 @@ def __getSocketToWidget( socketType ) :
 	else :
 		return ""
 
+def __getSocketToComponents( socketType ) :
+	if( socketType == "point2" ) :
+		return "xy"
+	elif( socketType == "vector" ) :
+		return "xyz"
+	elif( socketType == "point" ) :
+		return "xyz"
+	elif( socketType == "normal" ) :
+		return "xyz"
+	elif( socketType == "color" ) :
+		return "rgb"
+	else :
+		return None
+
 __metadata = collections.defaultdict( dict )
 
 def __translateParamMetadata( nodeTypeName, socketName, value ) :
@@ -107,12 +121,18 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 
 	__metadata[paramPath]["noduleLayout:visible"] = True
 	__metadata[paramPath]["label"] = label
+	__metadata[paramPath]["noduleLayout:label"] = label
 	# Linkable
 	linkable = bool( flags & ( 1 << 0 ) )
 	__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
 
 	if "category" in value :
 		__metadata[paramPath]["layout:section"] = value["category"]
+
+	#childComponents = __getSocketToComponents( socketType )
+	#if childComponents is not None :
+	#	for c in childComponents :
+	#		__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
 def __translateShaderMetadata() :
 
@@ -129,6 +149,12 @@ def __translateNodesMetadata( nodeTypes ) :
 __translateShaderMetadata() # For the main interfacing 'shader' node
 __translateNodesMetadata( GafferCycles.lights )
 __translateNodesMetadata( GafferCycles.shaders )
+
+# hide the light type
+for nodeTypeName, nodeType in GafferCycles.lights.items() :
+	paramPath = nodeTypeName + ".parameters.type"
+	__metadata[paramPath]["noduleLayout:visible"] = False
+
 
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
@@ -172,7 +198,7 @@ def __plugMetadata( plug, name ) :
 	if isinstance( node, GafferCycles.CyclesShader ) :
 		key = plug.node()["name"].getValue() + "." + plug.relativeName( node )
 	else :
-		# Node type is ArnoldLight.
+		# Node type is CyclesLight.
 		key = plug.node()["__shaderName"].getValue() + "." + plug.relativeName( node )
 
 	return __metadata[key].get( name )
@@ -182,6 +208,7 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 	nodeKeys = set()
 	parametersPlugKeys = set()
 	parameterPlugKeys = set()
+	#parameterPlugComponentKeys = set()
 
 	for name, metadata in __metadata.items() :
 		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys )[name.count( ".")]
@@ -195,6 +222,9 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 
 	for key in parameterPlugKeys :
 		Gaffer.Metadata.registerValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
+
+	#for key in parameterPlugComponentKeys :
+	#	Gaffer.Metadata.registerValue( nodeType, "parameters.*.[xyzrgb]", key, functools.partial( __plugMetadata, name = key ) )
 
 	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
 

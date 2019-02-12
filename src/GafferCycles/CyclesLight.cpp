@@ -102,19 +102,26 @@ void CyclesLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
+	// Light shader
 	IECoreScene::ShaderPtr lightShader = new IECoreScene::Shader( shaderNamePlug()->getValue(), "ccl:light" );
-	vector<IECoreScene::ShaderNetwork::Connection> connections;
-	bool strength = false;
+	// Emit shader (color/strength)
+	IECoreScene::ShaderPtr emitShader = new IECoreScene::Shader( "emission", "ccl:surface" );
+	// If we want to connect a texture to color
+	IECoreScene::ShaderNetwork::Connection colorEmitConnection;
+	// Parameters we need to modify depending on other parameters found.
 	float exposure = 0.0f;
 	float intensity = 1.0f;
+	bool squareSamples = true;
+	float samples = 1.0f;
 	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
 		{
-			/// \todo Take the approach that OSLLight takes, and use an internal
-			/// ArnoldShader to do all the shader loading and network generation.
-			/// This would avoid manually splicing in networks here, and would
-			/// generalise nicely to the other Light subclasses too.
+			// We only allow shaders to connect to color
+			auto parameterName = (*it)->getName();
+			if( parameterName != "color" )
+				continue;
+
 			IECore::ConstCompoundObjectPtr inputAttributes = shader->attributes();
 			const IECoreScene::ShaderNetwork *inputNetwork = inputAttributes->member<const IECoreScene::ShaderNetwork>( "ccl:surface" );
 			if( !inputNetwork || !inputNetwork->size() )
@@ -122,11 +129,9 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 				continue;
 			}
 
-			// Add input network into our result.
+			// Add input network into our emission color
 			IECoreScene::ShaderNetwork::Parameter sourceParameter = IECoreScene::ShaderNetworkAlgo::addShaders( result.get(), inputNetwork );
-			connections.push_back(
-				{ sourceParameter, { IECore::InternedString(), (*it)->getName() } }
-			);
+			colorEmitConnection = { sourceParameter, { IECore::InternedString(), parameterName } };
 		}
 		else if( ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() ) )
 		{
@@ -139,31 +144,37 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 			}
 			else if( parameterName == "intensity" )
 			{
-				strength = true;
 				auto data = new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
 				intensity = data->readable();
 			}
+			else if( parameterName == "squareSamples")
+			{
+				squareSamples = true;
+			}
 			else if( parameterName == "samples" )
 			{
-				// Square samples
 				auto data = new IntData( static_cast<const IntPlug *>( valuePlug )->getValue() );
-				auto samples = data->readable();
-				samples *= samples;
-				lightShader->parameters()[parameterName] = new IntData( samples );
+				samples = data->readable();
+			}
+			else if( parameterName == "color" )
+			{
+				emitShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 			}
 			else
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 		}
 	}
 
-	if( strength )
-		lightShader->parameters()["strength"] = new FloatData( intensity * pow( 2.0f, exposure ) );
-
+	lightShader->parameters()["samples"] = new IntData( squareSamples ? samples * samples : samples );
+	emitShader->parameters()["strength"] = new FloatData( intensity * pow( 2.0f, exposure ) );
+	if( colorEmitConnection.source )
+		emitShader->parameters()["surface_mix_weight"] = new FloatData( 1.0f );
 	const IECore::InternedString handle = result->addShader( "light", std::move( lightShader ) );
-	for( const auto &c : connections )
-	{
-		result->addConnection( { c.source, { handle, c.destination.name } } );
-	}
+	const IECore::InternedString emitHandle = result->addShader( "emission", std::move( emitShader ) );
+	if( colorEmitConnection.source )
+		result->addConnection( { colorEmitConnection.source, { emitHandle, colorEmitConnection.destination.name } } );
+	result->addConnection( { { emitHandle, "emission" }, { handle, "shader" } } );
+
 	result->setOutput( handle );
 
 	return result;
