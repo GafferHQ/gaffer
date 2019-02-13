@@ -1153,6 +1153,11 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return this->object( name, object, attributes );
 		}
 
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			return nullptr;
+		}
+
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
 			DelightHandleSharedPtr instance = m_instanceCache->get( object );
