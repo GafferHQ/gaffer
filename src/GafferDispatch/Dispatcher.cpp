@@ -41,6 +41,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/Switch.h"
 
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
@@ -455,19 +456,25 @@ class Dispatcher::Batcher
 		{
 			// See if we've previously visited this task, and therefore
 			// have placed it in a batch already, which we can return
-			// unchanged. The `taskToBatchMapHash` is used as the unique
-			// identity of a task.
-			MurmurHash taskToBatchMapHash = task.hash();
-			// Prevent identical tasks from different nodes from being
-			// coalesced.
-			taskToBatchMapHash.append( (uint64_t)task.node() );
-			if( task.hash() == IECore::MurmurHash() )
+			// unchanged. The `taskHash` is used as the unique identity of
+			// the task.
+			MurmurHash taskHash;
+			{
+				Context::Scope scopedTaskContext( task.context() );
+				taskHash = task.plug()->hash();
+			}
+			const bool taskIsNoOp = taskHash == IECore::MurmurHash();
+			if( taskIsNoOp )
 			{
 				// Prevent no-ops from coalescing into a single batch, as this
 				// would break parallelism - see `DispatcherTest.testNoOpDoesntBreakFrameParallelism()`
-				taskToBatchMapHash.append( contextHash( task.context() ) );
+				taskHash.append( contextHash( task.context() ) );
 			}
-			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskToBatchMapHash );
+			// Prevent identical tasks from different nodes from being
+			// coalesced.
+			taskHash.append( (uint64_t)task.node() );
+
+			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskHash );
 			if( it != m_tasksToBatches.end() )
 			{
 				return it->second;
@@ -508,7 +515,7 @@ class Dispatcher::Batcher
 			// Now we have an appropriate batch, update it to include
 			// the frame for our task, and any other relevant information.
 
-			if( task.hash() != MurmurHash() )
+			if( !taskIsNoOp )
 			{
 				float frame = task.context()->getFrame();
 				std::vector<float> &frames = batch->frames();
@@ -534,7 +541,7 @@ class Dispatcher::Batcher
 
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
-			m_tasksToBatches[taskToBatchMapHash] = batch;
+			m_tasksToBatches[taskHash] = batch;
 
 			return batch;
 		}

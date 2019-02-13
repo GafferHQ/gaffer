@@ -59,12 +59,6 @@ using namespace GafferDispatchBindings;
 namespace
 {
 
-unsigned long taskHash( const TaskNode::Task &t )
-{
-	const IECore::MurmurHash h = t.hash();
-	return tbb::tbb_hasher( h.toString() );
-}
-
 ContextPtr taskContext( const TaskNode::Task &t, bool copy = true )
 {
 	if ( ConstContextPtr context = t.context() )
@@ -161,7 +155,6 @@ void GafferDispatchModule::bindTaskNode()
 		.def( "plug", &taskPlug )
 		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def("__eq__", &TaskNode::Task::operator== )
-		.def("__hash__", &taskHash )
 	;
 
 	PlugClass<TaskNode::TaskPlug>()

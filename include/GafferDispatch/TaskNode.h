@@ -82,8 +82,7 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 		IE_CORE_FORWARDDECLARE( TaskPlug )
 
 		/// Defines a task for dispatch by storing a TaskPlug and
-		/// the context in which it should be executed. This is
-		/// primarily for the use of Dispatcher classes. See TaskPlug
+		/// the context in which it should be executed. See TaskPlug
 		/// for the main public interface for the execution of
 		/// individual tasks.
 		class Task
@@ -99,15 +98,8 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 				const TaskPlug *plug() const;
 				/// Returns the Context component of the task.
 				const Gaffer::Context *context() const;
-				/// Returns a hash uniquely representing the side effects
-				/// of the task. This is stored from `plug->hash()`
-				/// during construction, so editing the node or upstream
-				/// graph will invalidate the hash (and therefore the task).
-				const IECore::MurmurHash hash() const;
-				/// Compares hashes.
+
 				bool operator == ( const Task &rhs ) const;
-				/// Compares hashes.
-				bool operator < ( const Task &rhs ) const;
 
 				/// \deprecated
 				Task( TaskNodePtr n, const Gaffer::Context *c );
@@ -118,7 +110,6 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 				ConstTaskPlugPtr m_plug;
 				Gaffer::ConstContextPtr m_context;
-				IECore::MurmurHash m_hash;
 
 		};
 
