@@ -61,10 +61,7 @@ struct InvalidMetric
 		return 0;
 	}
 
-	const char *description() const
-	{
-		return "invalid";
-	}
+	const std::string description = "invalid";
 
 };
 
@@ -78,10 +75,7 @@ struct HashCountMetric
 		return s.hashCount;
 	}
 
-	const char *description() const
-	{
-		return "number of hash processes";
-	}
+	const std::string description = "number of hash processes";
 
 };
 
@@ -95,10 +89,7 @@ struct ComputeCountMetric
 		return s.computeCount;
 	}
 
-	const char *description() const
-	{
-		return "number of compute processes";
-	}
+	const std::string description = "number of compute processes";
 
 };
 
@@ -112,10 +103,7 @@ struct HashDurationMetric
 		return s.hashDuration;
 	}
 
-	const char *description() const
-	{
-		return "time spent in hash processes";
-	}
+	const std::string description = "time spent in hash processes";
 
 };
 
@@ -129,10 +117,7 @@ struct ComputeDurationMetric
 		return s.computeDuration;
 	}
 
-	const char *description() const
-	{
-		return "time spent in compute processes";
-	}
+	const std::string description = "time spent in compute processes";
 
 };
 
@@ -146,10 +131,7 @@ struct TotalDurationMetric
 		return s.hashDuration + s.computeDuration;
 	}
 
-	const char *description() const
-	{
-		return "sum of time spent in hash and compute processes";
-	}
+	const std::string description = "sum of time spent in hash and compute processes";
 
 };
 
@@ -163,10 +145,7 @@ struct PerHashDurationMetric
 		return ResultType( s.hashDuration ) / std::max( 1.0, static_cast<double>( s.hashCount ) );
 	}
 
-	const char *description() const
-	{
-		return "time spent per hash process";
-	}
+	const std::string description = "time spent per hash process";
 
 };
 
@@ -180,10 +159,7 @@ struct PerComputeDurationMetric
 		return ResultType( s.computeDuration ) / std::max( 1.0, static_cast<double>( s.computeCount ) );
 	}
 
-	const char *description() const
-	{
-		return "time spent per compute process";
-	}
+	const std::string description = "time spent per compute process";
 
 };
 
@@ -197,10 +173,7 @@ struct HashesPerComputeMetric
 		return static_cast<double>( s.hashCount ) / std::max( 1.0, static_cast<double>( s.computeCount ) );
 	}
 
-	const char *description() const
-	{
-		return "number of hash processes per compute process";
-	}
+	const std::string description = "number of hash processes per compute process";
 
 };
 
@@ -319,7 +292,7 @@ struct FormatStatistics
 		}
 
 		std::stringstream s;
-		s << "Top " << plugNames.size() << " plugs by " << metric.description() << " :\n\n";
+		s << "Top " << plugNames.size() << " plugs by " << metric.description << " :\n\n";
 
 		outputItems( plugNames, metrics, s );
 
@@ -348,7 +321,7 @@ struct FormatTotalStatistics
 
 		s << std::fixed << ": " <<  metric( combinedStatistics );
 
-		return ResultType( std::string( "Total " ) + metric.description(), s.str() );
+		return ResultType( "Total " + metric.description, s.str() );
 	}
 
 	const PerformanceMonitor::Statistics &combinedStatistics;
