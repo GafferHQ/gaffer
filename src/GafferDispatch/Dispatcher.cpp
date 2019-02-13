@@ -383,7 +383,10 @@ class Dispatcher::Batcher
 
 		void addTask( const TaskNode::Task &task )
 		{
-			addPreTask( m_rootBatch.get(), batchTasksWalk( task ) );
+			if( auto batch = batchTasksWalk( task ) )
+			{
+				addPreTask( m_rootBatch.get(), batch );
+			}
 		}
 
 		TaskBatch *rootBatch()
@@ -393,8 +396,25 @@ class Dispatcher::Batcher
 
 	private :
 
-		TaskBatchPtr batchTasksWalk( const TaskNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
+		TaskBatchPtr batchTasksWalk( TaskNode::Task task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
+			// Deal with Switch nodes. We need to do this manually
+			// because Switches only know how to deal with ValuePlugs,
+			// and we use TaskPlugs.
+			if( auto sw = runTimeCast<const Switch>( task.plug()->node() ) )
+			{
+				if( task.plug() == sw->outPlug() )
+				{
+					Context::Scope scopedTaskContext( task.context() );
+					task = TaskNode::Task( sw->activeInPlug()->source<TaskNode::TaskPlug>(), task.context() );
+				}
+			}
+
+			if( !task.plug() || task.plug()->direction() != Plug::Out )
+			{
+				return nullptr;
+			}
+
 			// Acquire a batch with this task placed in it,
 			// and check that we haven't discovered a cyclic
 			// dependency.
@@ -420,7 +440,10 @@ class Dispatcher::Batcher
 			TaskBatches postBatches;
 			for( TaskNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
 			{
-				postBatches.push_back( batchTasksWalk( *it ) );
+				if( auto postBatch = batchTasksWalk( *it ) )
+				{
+					postBatches.push_back( postBatch );
+				}
 			}
 
 			// Collect all the batches the preTasks belong in,
@@ -435,7 +458,10 @@ class Dispatcher::Batcher
 
 			for( TaskNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
 			{
-				addPreTask( batch.get(), batchTasksWalk( *it, preTaskAncestors ) );
+				if( auto preBatch = batchTasksWalk( *it, preTaskAncestors ) )
+				{
+					addPreTask( batch.get(), preBatch );
+				}
 			}
 
 			// As far as TaskBatch and doDispatch() are concerned, there
