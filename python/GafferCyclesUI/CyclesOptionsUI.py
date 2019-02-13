@@ -99,29 +99,11 @@ def __sessionSummary( plug ) :
 			"Progressive Update Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["progressiveUpdateTimeout"]["value"] ) )
 		)
 
-	if plug["integrator"]["enabled"].getValue() :
-		info.append(
-			"Integrator{}".format( Gaffer.NodeAlgo.currentPreset( plug["integrator"]["value"] ) )
-		)
-
-	if plug["progressiveRefine"]["enabled"].getValue() :
-		info.append(
-			"Progressive Refine {}".format( Gaffer.NodeAlgo.currentPreset( plug["progressiveRefine"]["value"] ) )
-		)
-
-	if plug["persistentData"]["enabled"].getValue() :
-		info.append(
-			"Persistent Data {}".format( Gaffer.NodeAlgo.currentPreset( plug["persistentData"]["value"] ) )
-		)
-
 	return ", ".join( info )
 
 def __sceneSummary( plug ) :
 
 	info = []
-
-	if plug["bvhType"]["enabled"].getValue() :
-		info.append( "BVH Type {}".format( plug["bvhType"]["value"].getValue() ) )
 
 	if plug["bvhLayout"]["enabled"].getValue() :
 		info.append( "BVH Layout {}".format( plug["bvhLayout"]["value"].getValue() ) )
@@ -615,65 +597,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.integrator" : [
-
-			"description",
-			"""
-			Integrator for interactive rendering.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.progressiveRefine" : [
-
-			"description",
-			"""
-			Progressive Refine for interactive rendering.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.persistentData" : [
-
-			"description",
-			"""
-			Enable persistent data. This will always be enabled.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
 		# Scene
-
-		"options.bvhType" : [
-
-			"description",
-			"""
-			Choose between faster updates, or faster render.
-			- Dynamic BVH - Objects can be individually updated, at the 
-				cost of slower render time").
-			- Static BVH  - Any object modification requires a complete BVH 
-				rebuild, but renders faster").
-			""",
-
-			"layout:section", "Scene",
-			"label", "BVH Type",
-
-		],
-
-		"options.bvhType.value" : [
-
-			"preset:Dynamic", 0,
-			"preset:Static", 1,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
 
 		"options.bvhLayout" : [
 

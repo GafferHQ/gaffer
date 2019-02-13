@@ -57,9 +57,9 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "featureSet", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
+	//options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "integrator", Gaffer::Plug::Default, false );
+	//options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "progressive", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:samples", new IECore::IntData( 128 ), "samples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), "tileSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_order", new IECore::IntData( 0 ), "tileOrder", Gaffer::Plug::Default, false );
@@ -96,13 +96,13 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	//options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
+	//options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), "bvhLayout", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), "useBvhUnalignedNodes", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), "numBvhTimeSteps", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:scene:persistent_data", new IECore::BoolData( true ), "persistentData", Gaffer::Plug::Default, false );
+	//options->addOptionalMember( "ccl:scene:persistent_data", new IECore::BoolData( true ), "persistentData", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:texture_limit", new IECore::IntData( 0 ), "textureLimit", Gaffer::Plug::Default, false );
 
 	// Integrator

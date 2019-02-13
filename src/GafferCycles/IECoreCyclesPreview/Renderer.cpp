@@ -1727,11 +1727,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session( nullptr ),
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
-				m_integratorCache( new ccl::Integrator() ),
-				m_backgroundCache( new ccl::Background() ),
-				m_filmCache( new ccl::Film() ),
-				m_curveSystemManagerCache( new ccl::CurveSystemManager() ),
-				m_curveSystemManagerDefault( new ccl::CurveSystemManager() ), // To restore default values
 				m_rendering( false )
 		{
 			// Session Defaults
@@ -1746,6 +1741,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				// Sane defaults, not INT_MAX
 				m_sessionParams.samples = 128;
 				m_sessionParams.start_resolution = 64;
+				m_sessionParams.progressive = false;
+				m_sessionParams.progressive_refine = false;
+				m_sceneParams.bvh_type = ccl::SceneParams::BVH_STATIC;
+			}
+			else
+			{
+				m_sessionParams.progressive = true;
+				m_sessionParams.progressive_refine = true;
+				m_sceneParams.bvh_type = ccl::SceneParams::BVH_DYNAMIC;
 			}
 
 			// The interactive renderer also runs in the background. Having
@@ -1801,10 +1805,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
-			auto *integrator = m_integratorCache.get();
-			auto *background = m_backgroundCache.get();
-			auto *film = m_filmCache.get();
-			auto *curveSystemManager = m_curveSystemManagerCache.get();
+			auto *integrator = m_scene->integrator; // m_integratorCache.get();
+			auto *background = m_scene->background; //m_backgroundCache.get();
+			auto *film = m_scene->film; //m_filmCache.get();
+			auto *curveSystemManager = m_scene->curve_system_manager; //m_curveSystemManagerCache.get();
 
 			if( name == g_frameOptionName )
 			{
@@ -2473,7 +2477,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void output( const IECore::InternedString &name, const Output *output ) override
 		{
-			auto *film = m_filmCache.get();
+			ccl::Film *film = m_scene->film;
 
 			if( !output )
 			{
@@ -2510,7 +2514,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Beauty
 			ccl::Pass::add( ccl::PASS_COMBINED, passes );
 
-			if( !ccl::Pass::contains( m_filmCache->passes, passType ) )
+			if( !ccl::Pass::contains( film->passes, passType ) )
 			{
 				m_outputs[name] = new CyclesOutput( output );
 			}
@@ -2724,7 +2728,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_session->set_pause( true );
 
 			m_scene = new ccl::Scene( m_sceneParams, m_session->device );
-			m_scene->params = m_sceneParams;
 			m_session->scene = m_scene;
 
 			m_renderCallback = new RenderCallback( m_session, ( m_renderType == Interactive ) ? true : false );
@@ -2732,11 +2735,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Grab the default camera from cycles.
 			m_defaultCamera = m_scene->camera;
 			// CyclesOptions will set some values to these.
-			m_integrator = m_scene->integrator;
-			m_background = m_scene->background;
-			m_background->transparent = true;
-			m_film = m_scene->film;
-			m_curveSystemManager = m_scene->curve_system_manager;
+			m_integrator = *(m_scene->integrator);
+			m_background = *(m_scene->background);
+			m_scene->background->transparent = true;
+			m_film = *(m_scene->film);
+			m_curveSystemManager = *(m_scene->curve_system_manager);
 
 			m_scene->camera->need_update = true;
 			m_scene->camera->update( m_scene );
@@ -2762,32 +2765,32 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				reset();
 			}
 
-			const auto *integrator = m_integratorCache.get();
-			if( m_integrator->modified( *integrator ) )
+			ccl::Integrator *integrator = m_scene->integrator;
+			if( integrator->modified( m_integrator ) )
 			{
-				memcpy( m_integrator, integrator, sizeof( ccl::Integrator ) );
-				m_integrator->tag_update( m_scene );
+				integrator->tag_update( m_scene );
+				m_integrator = *integrator;
 			}
 
-			const auto *background = m_backgroundCache.get();
-			if( m_background->modified( *background ) )
+			ccl::Background *background = m_scene->background;
+			if( m_scene->background->modified( m_background ) )
 			{
-				memcpy( m_background, background, sizeof( ccl::Background ) );
-				m_background->tag_update( m_scene );
+				background->tag_update( m_scene );
+				m_background = *background;
 			}
 
-			const auto *film = m_filmCache.get();
-			if( m_film->modified( *film ) )
+			ccl::Film *film = m_scene->film;
+			if( m_scene->film->modified( m_film ) )
 			{
-				memcpy( m_film, film, sizeof( ccl::Film ) );
-				m_film->tag_update( m_scene );
+				film->tag_update( m_scene );
+				m_film = *film;
 			}
 
-			const auto *curveSystemManager = m_curveSystemManagerCache.get();
-			if( m_curveSystemManager->modified( *curveSystemManager ) )
+			ccl::CurveSystemManager *curveSystemManager = m_scene->curve_system_manager;
+			if( curveSystemManager->modified( m_curveSystemManager ) )
 			{
-				memcpy( m_curveSystemManager, curveSystemManager, sizeof( ccl::CurveSystemManager ) );
-				m_curveSystemManager->tag_update( m_scene );
+				curveSystemManager->tag_update( m_scene );
+				m_curveSystemManager = *curveSystemManager;
 			}
 		}
 
@@ -2913,10 +2916,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::BufferParams m_bufferParamsModified;
 		ccl::DenoiseParams m_denoiseParams;
 		ccl::Camera *m_defaultCamera;
-		ccl::Integrator *m_integrator;
-		ccl::Background *m_background;
-		ccl::Film *m_film;
-		ccl::CurveSystemManager *m_curveSystemManager;
+		ccl::Integrator m_integrator;
+		ccl::Background m_background;
+		ccl::Film m_film;
+		ccl::CurveSystemManager m_curveSystemManager;
 
 		// Background shader
 		SharedCShaderPtr m_backgroundShader;
@@ -2942,12 +2945,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		InstanceCachePtr m_instanceCache;
 		//ParticleSystemPtr m_particleSystemCache;
 		AttributesCachePtr m_attributesCache;
-
-		// Store these to restore.
-		CIntegratorPtr m_integratorCache;
-		CBackgroundPtr m_backgroundCache;
-		CFilmPtr m_filmCache;
-		CCurveSystemManagerPtr m_curveSystemManagerCache;
 
 		// Outputs
 		OutputMap m_outputs;
