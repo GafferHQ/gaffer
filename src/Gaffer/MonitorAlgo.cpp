@@ -36,6 +36,7 @@
 
 #include "Gaffer/MonitorAlgo.h"
 
+#include "Gaffer/ContextMonitor.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/PerformanceMonitor.h"
@@ -466,6 +467,74 @@ struct Annotate
 
 };
 
+InternedString g_contextAnnotationTextKey = "annotation:contextMonitor:text";
+InternedString g_contextAnnotationColorKey = "annotation:contextMonitor:color";
+
+ContextMonitor::Statistics annotateContextWalk( Node &node, const ContextMonitor::StatisticsMap &statistics )
+{
+
+	using ChildStatistics = std::pair<Node &, ContextMonitor::Statistics>;
+
+	// Accumulate the statistics for all plugs belonging to this node.
+
+	ContextMonitor::Statistics result;
+	for( RecursivePlugIterator plugIt( &node ); !plugIt.done(); ++plugIt )
+	{
+		auto it = statistics.find( plugIt->get() );
+		if( it != statistics.end() )
+		{
+			result += it->second;
+		}
+	}
+
+	// Gather statistics for all child nodes.
+
+	std::vector<ChildStatistics> childStatistics;
+	size_t maxUniqueContexts( 0 );
+
+	for( NodeIterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
+	{
+		Node &childNode = **childNodeIt;
+		const auto cs = annotateContextWalk( childNode, statistics );
+		childStatistics.push_back( ChildStatistics( childNode, cs ) );
+		maxUniqueContexts = std::max( maxUniqueContexts, cs.numUniqueContexts() );
+	}
+
+	// Apply metadata for child nodes. We must do this
+	// after gathering because we need `childStatisticsSum` to
+	// calculate the heat map.
+
+	for( const auto &cs : childStatistics )
+	{
+		if( !cs.second.numUniqueContexts() )
+		{
+			continue;
+		}
+
+		std::string text = "Contexts : " + std::to_string( cs.second.numUniqueContexts() ) + "\n";
+
+		auto variableNames = cs.second.variableNames();
+		for( const auto &name : variableNames )
+		{
+			const size_t n = cs.second.numUniqueValues( name );
+			if( n > 1 )
+			{
+				text += "\n  " + name.string() + " : " + std::to_string( n );
+			}
+		}
+
+		Metadata::registerValue(
+			&cs.first, g_contextAnnotationTextKey,
+			new StringData( text )
+		);
+		Metadata::registerValue( &cs.first, g_contextAnnotationColorKey, heat( cs.second.numUniqueContexts(), maxUniqueContexts ) );
+
+		result += cs.second;
+	}
+
+	return result;
+
+}
 
 } // namespace
 
@@ -528,6 +597,11 @@ void annotate( Node &root, const PerformanceMonitor &monitor )
 void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric )
 {
 	dispatchMetric<Annotate>( Annotate( root, monitor.allStatistics() ), metric );
+}
+
+void annotate( Node &root, const ContextMonitor &monitor )
+{
+	annotateContextWalk( root, monitor.allStatistics() );
 }
 
 } // namespace MonitorAlgo

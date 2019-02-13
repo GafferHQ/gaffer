@@ -44,6 +44,7 @@
 namespace Gaffer
 {
 
+class ContextMonitor;
 class Node;
 class PerformanceMonitor;
 
@@ -71,6 +72,7 @@ GAFFER_API std::string formatStatistics( const PerformanceMonitor &monitor, Perf
 
 GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor );
 GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric );
+GAFFER_API void annotate( Node &root, const ContextMonitor &monitor );
 
 } // namespace MonitorAlgo
 

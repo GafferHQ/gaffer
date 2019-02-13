@@ -145,6 +145,12 @@ void annotateWrapper2( Node &root, const PerformanceMonitor &monitor, MonitorAlg
 	MonitorAlgo::annotate( root, monitor, metric );
 }
 
+void annotateWrapper3( Node &root, const ContextMonitor &monitor )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	MonitorAlgo::annotate( root, monitor );
+}
+
 } // namespace
 
 void GafferModule::bindMonitor()
@@ -196,6 +202,12 @@ void GafferModule::bindMonitor()
 			"annotate",
 			&annotateWrapper2,
 			( arg( "node" ), arg( "monitor" ), arg( "metric" ) )
+		);
+
+		def(
+			"annotate",
+			&annotateWrapper3,
+			( arg( "node" ), arg( "monitor" ) )
 		);
 	}
 
