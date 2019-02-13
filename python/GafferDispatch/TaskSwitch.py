@@ -53,10 +53,10 @@ class TaskSwitch( GafferDispatch.TaskNode ) :
 		index = index % ( len( self["preTasks"] ) - 1 )
 
 		source = self["preTasks"][index].source()
-		if source.isSame( self["preTasks"][index] ) or not isinstance( source.node(), GafferDispatch.TaskNode ) :
+		if source.isSame( self["preTasks"][index] ) :
 			return []
 
-		return [ self.Task( source.node(), context ) ]
+		return [ self.Task( source, context ) ]
 
 	def hash( self, context ) :
 

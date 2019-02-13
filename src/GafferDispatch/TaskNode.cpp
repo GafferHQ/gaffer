@@ -387,13 +387,15 @@ void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
 	{
-		Plug *source = (*cIt)->source();
-		if( source != *cIt && source->direction() == Plug::Out )
+		/// \todo Use all plugs unconditionally, and leave TaskPlug/Dispatcher
+		/// to worry about unconnected plugs and plug direction. We can't do
+		/// this currently because we are using PlugIterator rather than TaskPlugIterator,
+		/// to support plugs created long ago, when TaskPlug didn't even exist.
+		/// See related hack in `ArrayPlug::acceptsChild()`.
+		TaskPlug *source = (*cIt)->source<TaskPlug>();
+		if( source && source != *cIt && source->direction() == Plug::Out )
 		{
-			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
-			{
-				tasks.push_back( Task( n, context ) );
-			}
+			tasks.push_back( Task( source, context ) );
 		}
 	}
 }
@@ -402,13 +404,15 @@ void TaskNode::postTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
 	{
-		Plug *source = (*cIt)->source();
-		if( source != *cIt && source->direction() == Plug::Out )
+		/// \todo Use all plugs unconditionally, and leave TaskPlug/Dispatcher
+		/// to worry about unconnected plugs and plug direction. We can't do
+		/// this currently because we are using PlugIterator rather than TaskPlugIterator,
+		/// to support plugs created long ago, when TaskPlug didn't even exist.
+		/// See related hack in `ArrayPlug::acceptsChild()`.
+		TaskPlug *source = (*cIt)->source<TaskPlug>();
+		if( source && source != *cIt && source->direction() == Plug::Out )
 		{
-			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
-			{
-				tasks.push_back( Task( n, context ) );
-			}
+			tasks.push_back( Task( source, context ) );
 		}
 	}
 }

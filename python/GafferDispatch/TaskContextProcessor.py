@@ -56,10 +56,7 @@ class TaskContextProcessor( GafferDispatch.TaskNode ) :
 			if source.isSame( plug ) :
 				continue
 
-			if not isinstance( source.node(), GafferDispatch.TaskNode ):
-				continue
-
-			result.extend( [ self.Task( source.node(), c ) for c in contexts ] )
+			result.extend( [ self.Task( source, c ) for c in contexts ] )
 
 		return result
 
