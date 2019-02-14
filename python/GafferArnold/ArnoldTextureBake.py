@@ -265,10 +265,16 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["applyMedianFilter"] = Gaffer.BoolPlug( "applyMedianFilter", Gaffer.Plug.Direction.In, False )
 		self["medianRadius"] = Gaffer.IntPlug( "medianRadius", Gaffer.Plug.Direction.In, 1 )
 
+		# Set up connection to preTasks beforehand
+		self["__CleanPreTasks"] = GafferDispatch.TaskDeleteContextVariables()
+		self["__CleanPreTasks"]["preTasks"].setInput( self["preTasks"] )
+		self["__CleanPreTasks"]["variables"].setValue( "wedge:index wedge:value" )
+
 		# First, setup python commands which will dispatch a chunk of a render or image tasks as
 		# immediate execution once they reach the farm - this allows us to run multiple tasks in
 		# one farm process.
 		self["__RenderDispatcher"] = GafferDispatch.PythonCommand()
+		self["__RenderDispatcher"]["preTasks"][0].setInput( self["__CleanPreTasks"]["task"] )
 		self["__RenderDispatcher"]["command"].setValue( inspect.cleandoc(
 			"""
 			import GafferDispatch
