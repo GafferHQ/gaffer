@@ -90,6 +90,11 @@ TaskNodePtr taskNode( const TaskNode::Task &t )
 	return nullptr;
 }
 
+TaskNode::TaskPlugPtr taskPlug( const TaskNode::Task &t )
+{
+	return const_cast<TaskNode::TaskPlug *>( t.plug() );
+}
+
 IECore::MurmurHash taskPlugHash( const TaskNode::TaskPlug &t )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -150,8 +155,10 @@ void GafferDispatchModule::bindTaskNode()
 
 	class_<TaskNode::Task>( "Task", no_init )
 		.def( init<TaskNode::Task>() )
+		.def( init<GafferDispatch::TaskNode::TaskPlugPtr, const Gaffer::Context *>() )
 		.def( init<GafferDispatch::TaskNodePtr, const Gaffer::Context *>() )
 		.def( "node", &taskNode )
+		.def( "plug", &taskPlug )
 		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def("__eq__", &TaskNode::Task::operator== )
 		.def("__hash__", &taskHash )

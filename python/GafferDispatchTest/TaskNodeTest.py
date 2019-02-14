@@ -202,13 +202,20 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		t = GafferDispatch.TaskNode.Task( n, c )
 		t2 = GafferDispatch.TaskNode.Task( n, c )
 		t3 = GafferDispatch.TaskNode.Task( t2 )
+		t4 = GafferDispatch.TaskNode.Task( n["task"], c )
 
+		self.assertEqual( t.plug(), n["task"] )
 		self.assertEqual( t.node(), n )
 		self.assertEqual( t.context(), c )
+		self.assertEqual( t2.plug(), n["task"] )
 		self.assertEqual( t2.node(), n )
 		self.assertEqual( t2.context(), c )
+		self.assertEqual( t3.plug(), n["task"] )
 		self.assertEqual( t3.node(), n )
 		self.assertEqual( t3.context(), c )
+		self.assertEqual( t4.plug(), n["task"] )
+		self.assertEqual( t4.node(), n )
+		self.assertEqual( t4.context(), c )
 
 	def testTaskComparison( self ) :
 
