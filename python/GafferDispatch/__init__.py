@@ -43,6 +43,7 @@ from TaskList import TaskList
 from TaskContextProcessor import TaskContextProcessor
 from Wedge import Wedge
 from TaskContextVariables import TaskContextVariables
+from TaskDeleteContextVariables import TaskDeleteContextVariables
 from TaskSwitch import TaskSwitch
 from PythonCommand import PythonCommand
 from FrameMask import FrameMask

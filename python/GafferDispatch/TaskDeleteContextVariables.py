@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,23 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import IECore
 
-import DispatcherUI
-from DispatcherUI import DispatcherWindow
-from DispatchDialogue import DispatchDialogue
-import LocalDispatcherUI
-import TaskNodeUI
-import SystemCommandUI
-import TaskListUI
-import TaskContextProcessorUI
-import WedgeUI
-import TaskContextVariablesUI
-import TaskDeleteContextVariablesUI
-import TaskSwitchUI
-import PythonCommandUI
-import FrameMaskUI
+import Gaffer
+import GafferDispatch
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )
+class TaskDeleteContextVariables( GafferDispatch.TaskContextProcessor ) :
+
+	def __init__( self, name = "TaskDeleteContextVariables" ) :
+
+		GafferDispatch.TaskContextProcessor.__init__( self, name )
+
+		self["variables"] = Gaffer.StringPlug()
+
+	def _processedContexts( self, context ) :
+
+		context = Gaffer.Context( context )
+		context.removeMatching( self["variables"].getValue() )
+		return [ context ]
+
+IECore.registerRunTimeTyped( TaskDeleteContextVariables, typeName = "GafferDispatch::TaskDeleteContextVariables" )

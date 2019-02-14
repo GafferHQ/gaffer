@@ -52,6 +52,7 @@ from SystemCommandTest import SystemCommandTest
 from TaskListTest import TaskListTest
 from WedgeTest import WedgeTest
 from TaskContextVariablesTest import TaskContextVariablesTest
+from TaskDeleteContextVariablesTest import TaskDeleteContextVariablesTest
 from ExecuteApplicationTest import ExecuteApplicationTest
 from TaskPlugTest import TaskPlugTest
 from FrameMaskTest import FrameMaskTest

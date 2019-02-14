@@ -467,6 +467,7 @@ nodeMenu.append( "/Dispatch/Task List", GafferDispatch.TaskList, searchText = "T
 nodeMenu.append( "/Dispatch/Task Switch", GafferDispatch.TaskSwitch, searchText = "TaskSwitch" )
 nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
 nodeMenu.append( "/Dispatch/Variables", GafferDispatch.TaskContextVariables, searchText = "TaskContextVariables" )
+nodeMenu.append( "/Dispatch/Delete Variables", GafferDispatch.TaskDeleteContextVariables, searchText = "TaskDeleteContextVariables" )
 nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = "FrameMask" )
 
 # Utility nodes

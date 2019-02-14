@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,29 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import Gaffer
+import GafferDispatch
 
-import DispatcherUI
-from DispatcherUI import DispatcherWindow
-from DispatchDialogue import DispatchDialogue
-import LocalDispatcherUI
-import TaskNodeUI
-import SystemCommandUI
-import TaskListUI
-import TaskContextProcessorUI
-import WedgeUI
-import TaskContextVariablesUI
-import TaskDeleteContextVariablesUI
-import TaskSwitchUI
-import PythonCommandUI
-import FrameMaskUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )
+	GafferDispatch.TaskDeleteContextVariables,
+
+	"description",
+	"""
+	Removes variables from the context so that they won't be visible to upstream nodes.
+	""",
+
+	plugs = {
+
+		"variables" : [
+
+			"description",
+			"""
+			The variables to be deleted.
+			""",
+
+		]
+
+	}
+
+)
