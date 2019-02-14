@@ -39,6 +39,10 @@ import IECore
 import Gaffer
 import GafferDispatch
 
+## \todo Since we can now use regular Gaffer.ContextProcessors
+# with TaskNodes, the only legitimate subclass of TaskContextProcessor
+# is the Wedge node. So we could probably just remove the
+# TaskContextProcessor class entirely.
 class TaskContextProcessor( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name = "TaskContextProcessor" ) :
