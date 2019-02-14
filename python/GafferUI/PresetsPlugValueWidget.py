@@ -96,8 +96,9 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		allowCustom = Gaffer.Metadata.value( self.getPlug(), "presetsPlugValueWidget:allowCustom" )
 		isCustom = Gaffer.Metadata.value( self.getPlug(), "presetsPlugValueWidget:isCustom" )
 		for n in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+			menuPath = n if n.startswith( "/" ) else "/" + n
 			result.append(
-				"/" + n,
+				menuPath,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = n ),
 					"checkBox" : n == currentPreset and not isCustom,
