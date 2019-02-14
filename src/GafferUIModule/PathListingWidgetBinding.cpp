@@ -907,6 +907,7 @@ IECore::PathMatcher getExpansion( uint64_t treeViewAddress )
 		return result;
 	}
 
+	IECorePython::ScopedGILRelease gilRelease;
 	getExpansionWalk( treeView, model, QModelIndex(), result );
 	return result;
 }
