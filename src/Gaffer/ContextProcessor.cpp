@@ -167,6 +167,20 @@ void ContextProcessor::affects( const Plug *input, DependencyNode::AffectedPlugs
 	}
 }
 
+ContextPtr ContextProcessor::inPlugContext() const
+{
+	if( enabledPlug()->getValue() )
+	{
+		Context::EditableScope scope( Context::current() );
+		processContext( scope );
+		return new Context( *Context::current() );
+	}
+	else
+	{
+		return new Context( *Context::current() );
+	}
+}
+
 void ContextProcessor::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	const ValuePlug *input = oppositePlug( output );

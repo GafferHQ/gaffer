@@ -63,6 +63,12 @@ void setup( T &n, const ValuePlug &plug )
 	n.setup( &plug );
 }
 
+ContextPtr inPlugContext( const ContextProcessor &n )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return n.inPlugContext();
+}
+
 class SetupBasedNodeSerialiser : public NodeSerialiser
 {
 
@@ -118,6 +124,7 @@ void GafferModule::bindContextProcessor()
 
 	DependencyNodeClass<ContextProcessor>()
 		.def( "setup", &setup<ContextProcessor> )
+		.def( "inPlugContext", &inPlugContext )
 	;
 
 	DependencyNodeClass<TimeWarp>();

@@ -73,6 +73,10 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
+		/// Returns the context that `inPlug()` will be evaluated in
+		/// when `outPlug()` is evaluated in the current context.
+		ContextPtr inPlugContext() const;
+
 	protected :
 
 		/// Implemented to return the hash of the matching input using a context modified by

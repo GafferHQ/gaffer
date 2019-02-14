@@ -142,5 +142,19 @@ class TimeWarpTest( GafferTest.TestCase ) :
 				self.assertEqual( s["m"]["product"].getValue(), s["w"]["out"].getValue() )
 				self.assertEqual( s["m"]["product"].hash(), s["w"]["out"].hash() )
 
+	def testInPlugContext( self ) :
+
+		n = Gaffer.TimeWarp()
+		n.setup( Gaffer.Plug() )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 10 )
+			n["offset"].setValue( 1 )
+			self.assertEqual( n.inPlugContext().getFrame(), 11 )
+
+			n["enabled"].setValue( False )
+			self.assertEqual( n.inPlugContext().getFrame(), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
