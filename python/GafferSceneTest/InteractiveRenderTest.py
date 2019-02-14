@@ -206,19 +206,19 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		s["s"]["enabled"].setValue( False )
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		s["s"]["enabled"].setValue( True )
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testAddAndRemoveObject( self ) :
 
@@ -263,7 +263,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Switch to the empty group.
 
@@ -271,7 +271,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Switch back to the sphere.
 
@@ -279,7 +279,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testEditObjectVisibility( self ) :
 
@@ -321,7 +321,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Hide /group/sphere
 
@@ -330,7 +330,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Tweak the sphere geometry - it should remain hidden
 
@@ -338,7 +338,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show it again
 
@@ -346,7 +346,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Hide /group
 
@@ -355,7 +355,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show it again
 
@@ -363,7 +363,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testEditCameraVisibility( self ) :
 
@@ -405,7 +405,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Hide /group/sphere
 
@@ -414,7 +414,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show it again
 
@@ -422,7 +422,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Hide /group
 
@@ -431,7 +431,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show it again
 
@@ -439,7 +439,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testEditObjectTransform( self ) :
 
@@ -471,7 +471,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Move to one side
 
@@ -479,7 +479,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Move back
 
@@ -487,7 +487,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testShaderEdits( self ) :
 
@@ -526,7 +526,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Render red sphere
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertColorsAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
 
 		# Make it green
 
@@ -534,7 +534,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertColorsAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), delta = 0.01 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), delta = 0.01 )
 
 		# Make it blue
 
@@ -542,7 +542,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertColorsAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), delta = 0.01 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), delta = 0.01 )
 
 	def testEditCameraTransform( self ) :
 
@@ -585,7 +585,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Move to one side
 
@@ -593,7 +593,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Move back
 
@@ -601,7 +601,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testEditResolution( self ) :
 
@@ -820,7 +820,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Move to one side
 
@@ -828,7 +828,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Move back
 
@@ -836,7 +836,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Repeat, using a context we set directly ourselves.
 
@@ -846,13 +846,13 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		c.setFrame( 1 )
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testLights( self ) :
 
@@ -907,7 +907,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -919,7 +919,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 1 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -932,7 +932,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 1 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -943,7 +943,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"]["state"].setValue( s["r"].State.Running )
 		time.sleep( 1 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -955,7 +955,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		colorPlug.setValue( imath.Color3f( 0.25, 0.5, 1 ) )
 		time.sleep( 1 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1014,7 +1014,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1032,7 +1032,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 1 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1090,7 +1090,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1101,7 +1101,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["l"]["enabled"].setValue( False )
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1112,7 +1112,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["l"]["enabled"].setValue( True )
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1174,7 +1174,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1185,7 +1185,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["v"]["attributes"]["visibility"]["value"].setValue( False )
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1196,7 +1196,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["v"]["attributes"]["visibility"]["value"].setValue( True )
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1241,7 +1241,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Hide
 
@@ -1249,7 +1249,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show again
 
@@ -1257,7 +1257,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testGlobalCameraVisibility( self ) :
 
@@ -1297,7 +1297,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Visible to start with
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 		# Hide
 
@@ -1305,7 +1305,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show again
 
@@ -1313,7 +1313,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
 	def testEffectiveContext( self ) :
 
@@ -1467,11 +1467,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		def assertReflected( reflected ) :
 
 			image = IECoreImage.ImageDisplayDriver.storedImage( "traceSetsTest" )
-			self.assertGreater( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).a, 0.9 )
+			self.assertGreater( self._color4fAtUV( image, imath.V2f( 0.5 ) ).a, 0.9 )
 			if reflected :
-				self.assertGreater( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0.9 )
+				self.assertGreater( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0.9 )
 			else :
-				self.assertLess( self.__color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0.1 )
+				self.assertLess( self._color4fAtUV( image, imath.V2f( 0.5 ) ).r, 0.1 )
 
 		assertReflected( True )
 
@@ -1588,7 +1588,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Render red sphere
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertColorsAlmostEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
 
 	def testLightLinking( self ) :
 
@@ -1643,7 +1643,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 2 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1655,7 +1655,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		time.sleep( 1 )
 
-		c = self.__color3fAtUV(
+		c = self._color3fAtUV(
 			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			imath.V2f( 0.5 ),
 		)
@@ -1717,7 +1717,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		raise NotImplementedError
 
-	def __color4fAtUV( self, image, uv ) :
+	def _color4fAtUV( self, image, uv ) :
 
 		objectToImage = GafferImage.ObjectToImage()
 		objectToImage["object"].setValue( image )
@@ -1733,9 +1733,9 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		return sampler["color"].getValue()
 
-	def __color3fAtUV( self, image, uv ) :
+	def _color3fAtUV( self, image, uv ) :
 
-		c = self.__color4fAtUV( image, uv )
+		c = self._color4fAtUV( image, uv )
 		return imath.Color3f( c.r, c.g, c.b )
 
 	def __assertColorsAlmostEqual( self, c0, c1, **kw ) :
