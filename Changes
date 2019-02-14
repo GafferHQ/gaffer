@@ -1,3 +1,24 @@
+0.54.0.0 (relative to 0.53.x)
+========
+
+Improvements
+------------
+
+- Text : Added support for unicode characters (#2999).
+- TextWidget/MultiLineTextWidget : Added support for unicode characters. In this
+  case the `getText()` method will return a UTF8 encoded string (#2999).
+
+0.53.1.1 (relative to 0.53.1.0)
+========
+
+Fixes
+-----
+
+- PathListingWidget : Fixed GIL management bug which could cause hang when
+  interacting with the HierarchyView (#3018).
+- PlugValueWidget/PresetsPlugValueWidget : Fixed bugs handling leading '/'
+  characters in preset names (#3016).
+
 0.53.1.0 (relative to 0.53.0.0)
 ========
 
