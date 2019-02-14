@@ -265,16 +265,26 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["applyMedianFilter"] = Gaffer.BoolPlug( "applyMedianFilter", Gaffer.Plug.Direction.In, False )
 		self["medianRadius"] = Gaffer.IntPlug( "medianRadius", Gaffer.Plug.Direction.In, 1 )
 
+		# Set up connection to preTasks beforehand
+		self["__PreTaskList"] = GafferDispatch.TaskList()
+		self["__PreTaskList"]["preTasks"].setInput( self["preTasks"] )
+
+		self["__CleanPreTasks"] = Gaffer.DeleteContextVariables()
+		self["__CleanPreTasks"].setup( GafferDispatch.TaskNode.TaskPlug() )
+		self["__CleanPreTasks"]["in"].setInput( self["__PreTaskList"]["task"] )
+		self["__CleanPreTasks"]["variables"].setValue( "BAKE_WEDGE:index BAKE_WEDGE:value_unused" )
+
 		# First, setup python commands which will dispatch a chunk of a render or image tasks as
 		# immediate execution once they reach the farm - this allows us to run multiple tasks in
 		# one farm process.
 		self["__RenderDispatcher"] = GafferDispatch.PythonCommand()
+		self["__RenderDispatcher"]["preTasks"][0].setInput( self["__CleanPreTasks"]["out"] )
 		self["__RenderDispatcher"]["command"].setValue( inspect.cleandoc(
 			"""
 			import GafferDispatch
-			# We need to access frame and "wedge:index" so that the hash of render varies with the wedge index,
+			# We need to access frame and "BAKE_WEDGE:index" so that the hash of render varies with the wedge index,
 			# so we might as well print what we're doing
-			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching render task index %i for frame %i" % ( context["wedge:index"], context.getFrame() ) )
+			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching render task index %i for frame %i" % ( context["BAKE_WEDGE:index"], context.getFrame() ) )
 			d = GafferDispatch.LocalDispatcher()
 			d.dispatch( [ self.parent()["__bakeDirectoryContext"] ] )
 			"""
@@ -284,9 +294,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__ImageDispatcher"]["command"].setValue( inspect.cleandoc(
 			"""
 			import GafferDispatch
-			# We need to access frame and "wedge:index" so that the hash of render varies with the wedge index,
+			# We need to access frame and "BAKE_WEDGE:index" so that the hash of render varies with the wedge index,
 			# so we might as well print what we're doing
-			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching image task index %i for frame %i" % ( context["wedge:index"], context.getFrame() ) )
+			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching image task index %i for frame %i" % ( context["BAKE_WEDGE:index"], context.getFrame() ) )
 			d = GafferDispatch.LocalDispatcher()
 			d.dispatch( [ self.parent()["__CleanUpSwitch"] ] )
 			"""
@@ -301,6 +311,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# same task batch, if tasks is a large number, some tasks batches could end up empty
 		self["__MainWedge"] = GafferDispatch.Wedge()
 		self["__MainWedge"]["preTasks"][0].setInput( self["__ImageDispatcher"]["task"] )
+		self["__MainWedge"]["variable"].setValue( "BAKE_WEDGE:value_unused" )
+		self["__MainWedge"]["indexVariable"].setValue( "BAKE_WEDGE:index" )
 		self["__MainWedge"]["mode"].setValue( 1 )
 		self["__MainWedge"]["intMin"].setValue( 1 )
 		self["__MainWedge"]["intMax"].setInput( self["tasks"] )
@@ -333,7 +345,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__CameraSetup"]["tasks"].setInput( self["tasks"] )
 
 		self["__Expression"] = Gaffer.Expression()
-		self["__Expression"].setExpression( 'parent["__CameraSetup"]["taskIndex"] = context.get( "wedge:index", 0 )', "python" )
+		self["__Expression"].setExpression( 'parent["__CameraSetup"]["taskIndex"] = context.get( "BAKE_WEDGE:index", 0 )', "python" )
 
 		self["__indexFilePath"] = Gaffer.StringPlug()
 		self["__indexFilePath"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
@@ -342,7 +354,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			"""
 			import os
 			parent["__indexFilePath"] = os.path.join( parent["bakeDirectory"], "BAKE_FILE_INDEX_" +
-				str( context.get("wedge:index", 0 ) ) + ".####.txt" )
+				str( context.get("BAKE_WEDGE:index", 0 ) ) + ".####.txt" )
 			"""
 		), "python" )
 
