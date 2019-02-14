@@ -36,6 +36,18 @@
 
 import Gaffer
 import GafferScene
+import IECoreScene
+
+
+## To deprecate the uTangent and vTangent we hide them and feed in the new plugs.
+def postCreate( node, menu ) :
+	node["uTangent"].setInput( node['tangent'] )
+	node["vTangent"].setInput( node['biTangent'] )
+	Gaffer.Metadata.registerValue( node['uTangent'], 'plugValueWidget:type', '' )
+	Gaffer.Metadata.registerValue( node['vTangent'], 'plugValueWidget:type', '' )
+	Gaffer.Metadata.registerValue( node['tangent'], 'layout:activator', 'alwaysActive' )
+	Gaffer.Metadata.registerValue( node['biTangent'], 'layout:activator', 'alwaysActive' )
+
 
 Gaffer.Metadata.registerNode(
 
@@ -43,44 +55,111 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Adds surface tangent primitive variables to the mesh using the specified positions and UVSet. 
+	Adds surface tangent primitive variables to the mesh based on either UV or topology information.
 	""",
 
+	"layout:activator:uvActivator", lambda parent : parent["mode"].getValue() == int(GafferScene.MeshTangents.Mode.UV),
+	"layout:activator:uvDeactivator", lambda parent : parent["mode"].getValue() != int(GafferScene.MeshTangents.Mode.UV),
+	"layout:activator:leftHandedActivator", lambda parent : parent["orthogonal"].getValue() == True,
+	"layout:activator:alwaysActive", lambda x : True,
+
 	plugs = {
+
+		"mode" : [
+
+			"description",
+			"""
+			The style of how to calculate the Tangents.
+			(UV) calculates the tangents based on the gradient of the the corresponding UVs
+			(FirstEdge) defines the vector to the first neighbor as tangent and the bitangent orthogonal to tangent and normal
+			(TwoEdges) defines the vector between the first two neighbors as tangent and the bitangent orthogonal to tangent and normal
+			(PrimitiveCentroid) points the tangent towards the primitive centroid and the bitangent orthogonal to tangent and normal
+			""",
+
+			"preset:UV", GafferScene.MeshTangents.Mode.UV,
+			"preset:FirstEdge", GafferScene.MeshTangents.Mode.FirstEdge,
+			"preset:TwoEdges", GafferScene.MeshTangents.Mode.TwoEdges,
+			"preset:PrimitiveCentroid", GafferScene.MeshTangents.Mode.PrimitiveCentroid,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		],
+
+		"orthogonal" : [
+			"description",
+			"""
+			Adjusts vTangent to be orthogonal to the uTangent.
+			""",
+		],
+
+		"leftHanded" : [
+			"description",
+			"""
+			Make the local coordinate frame left handed
+			""",
+			"layout:activator", "leftHandedActivator",
+		],
+
+		"position" : [
+			"description",
+			"""
+			Name of the primitive variable which contains the position data used to calculate tangents & binormals.
+			For example 'Pref' would compute tangents using the reference positions (if defined)
+			""",
+			"layout:section", "Settings.Input",
+		],
+
+		"normal" : [
+			"description",
+			"""
+			Name of the primitive variable which contains the normals used to calculate tangents & binormals.
+			""",
+			"layout:section", "Settings.Input",
+			"layout:activator", "uvDeactivator",
+		],
 
 		"uvSet" : [
 			"description",
 			"""
 			Name of the UV set primitive variable used to calculate uTangent & vTangent.
 			""",
-		],
-
-		"position" : [
-			"description",
-			"""
-			Name of the primitive variable which contains the position data used calculate tangents & binormals. 
-			For example 'Pref' would compute tangents using the reference positions (if defined)
-			""",
-		],
-
-		"orthogonal" : [
-			"description",
-			"""
-			Adjusts vTangent to be orthogonal to the uTangent. 
-			""",
+			"layout:section", "Settings.Input",
+			"layout:activator", "uvActivator",
 		],
 
 		"uTangent" : [
 			"description",
 			"""
-			Name of the primitive variable which will contain the uTangent data. 
+			Name of the primitive variable which will contain the uTangent data.
 			""",
+			"layout:section", "Settings.Output",
+			"layout:activator", "uvActivator",
 		],
+
 		"vTangent" : [
 			"description",
 			"""
-			Name of the primitive variable which will contain the vTangent data. 
+			Name of the primitive variable which will contain the vTangent data.
 			""",
+			"layout:section", "Settings.Output",
+			"layout:activator", "uvActivator",
+		],
+
+		"tangent" : [
+			"description",
+			"""
+			Name of the primitive variable which will contain the tangent data.
+			""",
+			"layout:section", "Settings.Output",
+			"layout:activator", "uvDeactivator",
+		],
+
+		"biTangent" : [
+			"description",
+			"""
+			Name of the primitive variable which will contain the biTangent data.
+			""",
+			"layout:section", "Settings.Output",
+			"layout:activator", "uvDeactivator",
 		]
 	}
 

@@ -53,6 +53,15 @@ class GAFFERSCENE_API MeshTangents : public SceneElementProcessor
 		MeshTangents( const std::string &name=defaultName<MeshTangents>() );
 		~MeshTangents() override;
 
+		enum Mode
+		{
+			UV,
+			FirstEdge,
+			TwoEdges,
+			PrimitiveCentroid,
+			NumberOfModes
+		};
+
 		Gaffer::StringPlug *uvSetPlug();
 		const Gaffer::StringPlug *uvSetPlug() const;
 
@@ -67,6 +76,21 @@ class GAFFERSCENE_API MeshTangents : public SceneElementProcessor
 
 		Gaffer::BoolPlug *orthogonalPlug();
 		const Gaffer::BoolPlug *orthogonalPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		Gaffer::BoolPlug *leftHandedPlug();
+		const Gaffer::BoolPlug *leftHandedPlug() const;
+
+		Gaffer::StringPlug *normalPlug();
+		const Gaffer::StringPlug *normalPlug() const;
+
+		Gaffer::StringPlug *tangentPlug();
+		const Gaffer::StringPlug *tangentPlug() const;
+
+		Gaffer::StringPlug *biTangentPlug();
+		const Gaffer::StringPlug *biTangentPlug() const;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::MeshTangents, MeshTangentsTypeId, SceneElementProcessor );
 
