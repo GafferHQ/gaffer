@@ -53,7 +53,7 @@ class TaskSwitch( GafferDispatch.TaskNode ) :
 		index = index % ( len( self["preTasks"] ) - 1 )
 
 		source = self["preTasks"][index].source()
-		if source.isSame( self["preTasks"][index] ) or not isinstance( source.node(), GafferDispatch.TaskNode ) :
+		if source.isSame( self["preTasks"][index] ) or not isinstance( source.node(), GafferDispatch.TaskNode ) or not source.direction() == Gaffer.Plug.Direction.Out:
 			return []
 
 		return [ self.Task( source.node(), context ) ]

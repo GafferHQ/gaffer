@@ -53,7 +53,7 @@ class TaskContextProcessor( GafferDispatch.TaskNode ) :
 		for plug in self["preTasks"] :
 
 			source = plug.source()
-			if source.isSame( plug ) :
+			if source.isSame( plug ) or not source.direction() == Gaffer.Plug.Direction.Out:
 				continue
 
 			if not isinstance( source.node(), GafferDispatch.TaskNode ):
