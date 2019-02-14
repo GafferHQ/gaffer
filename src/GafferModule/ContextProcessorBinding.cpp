@@ -56,8 +56,13 @@ namespace
 IECore::InternedString g_inPlugName( "in" );
 IECore::InternedString g_outPlugName( "out" );
 
-template<typename T>
-void setup( T &n, const ValuePlug &plug )
+void setupContextProcessor( ContextProcessor &n, const Plug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	n.setup( &plug );
+}
+
+void setupLoop( Loop &n, const ValuePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	n.setup( &plug );
@@ -119,11 +124,11 @@ void GafferModule::bindContextProcessor()
 {
 
 	DependencyNodeClass<Loop>()
-		.def( "setup", &setup<Loop> )
+		.def( "setup", &setupLoop )
 	;
 
 	DependencyNodeClass<ContextProcessor>()
-		.def( "setup", &setup<ContextProcessor> )
+		.def( "setup", &setupContextProcessor )
 		.def( "inPlugContext", &inPlugContext )
 	;
 

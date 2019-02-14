@@ -57,13 +57,13 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 		~ContextProcessor() override;
 
 		/// \undoable
-		void setup( const ValuePlug *plug );
+		void setup( const Plug *plug );
 
-		ValuePlug *inPlug();
-		const ValuePlug *inPlug() const;
+		Plug *inPlug();
+		const Plug *inPlug() const;
 
-		ValuePlug *outPlug();
-		const ValuePlug *outPlug() const;
+		Plug *outPlug();
+		const Plug *outPlug() const;
 
 		BoolPlug *enabledPlug() override;
 		const BoolPlug *enabledPlug() const override;
@@ -92,10 +92,10 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 
 	private :
 
-		static const ValuePlug *correspondingDescendant( const ValuePlug *plug, const ValuePlug *plugAncestor, const ValuePlug *oppositeAncestor );
+		static const Plug *correspondingDescendant( const Plug *plug, const Plug *plugAncestor, const Plug *oppositeAncestor );
 
 		/// Returns the input corresponding to the output and vice versa.
-		const ValuePlug *oppositePlug( const ValuePlug *plug ) const;
+		const Plug *oppositePlug( const Plug *plug ) const;
 
 		static size_t g_firstPlugIndex;
 
