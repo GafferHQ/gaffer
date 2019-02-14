@@ -37,6 +37,7 @@
 #include "GafferDispatch/Dispatcher.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -398,15 +399,22 @@ class Dispatcher::Batcher
 
 		TaskBatchPtr batchTasksWalk( TaskNode::Task task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
-			// Deal with Switch nodes. We need to do this manually
-			// because Switches only know how to deal with ValuePlugs,
-			// and we use TaskPlugs.
+			// Deal with Switch and ContextProcessor nodes. We need to do this manually
+			// because they only know how to deal with ValuePlugs, and we use TaskPlugs.
 			if( auto sw = runTimeCast<const Switch>( task.plug()->node() ) )
 			{
 				if( task.plug() == sw->outPlug() )
 				{
 					Context::Scope scopedTaskContext( task.context() );
 					task = TaskNode::Task( sw->activeInPlug()->source<TaskNode::TaskPlug>(), task.context() );
+				}
+			}
+			else if( auto contextProcessor = runTimeCast<const ContextProcessor>( task.plug()->node() ) )
+			{
+				if( task.plug() == contextProcessor->outPlug() )
+				{
+					Context::Scope scopedTaskContext( task.context() );
+					task = TaskNode::Task( contextProcessor->inPlug()->source<TaskNode::TaskPlug>(), contextProcessor->inPlugContext().get() );
 				}
 			}
 
