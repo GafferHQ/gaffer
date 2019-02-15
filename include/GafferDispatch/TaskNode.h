@@ -103,8 +103,6 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 				/// \deprecated
 				Task( TaskNodePtr n, const Gaffer::Context *c );
-				/// \deprecated
-				const TaskNode *node() const;
 
 			private :
 

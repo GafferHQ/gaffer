@@ -71,11 +71,6 @@ const TaskNode::TaskPlug *TaskNode::Task::plug() const
 	return m_plug.get();
 }
 
-const TaskNode *TaskNode::Task::node() const
-{
-	return runTimeCast<const TaskNode>( m_plug->node() );
-}
-
 const Context *TaskNode::Task::context() const
 {
 	return m_context.get();

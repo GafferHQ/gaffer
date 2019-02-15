@@ -74,16 +74,6 @@ ContextPtr taskContext( const TaskNode::Task &t, bool copy = true )
 	return nullptr;
 }
 
-TaskNodePtr taskNode( const TaskNode::Task &t )
-{
-	if ( ConstTaskNodePtr node = t.node() )
-	{
-		return boost::const_pointer_cast<TaskNode>( node );
-	}
-
-	return nullptr;
-}
-
 TaskNode::TaskPlugPtr taskPlug( const TaskNode::Task &t )
 {
 	return const_cast<TaskNode::TaskPlug *>( t.plug() );
@@ -151,7 +141,6 @@ void GafferDispatchModule::bindTaskNode()
 		.def( init<TaskNode::Task>() )
 		.def( init<GafferDispatch::TaskNode::TaskPlugPtr, const Gaffer::Context *>() )
 		.def( init<GafferDispatch::TaskNodePtr, const Gaffer::Context *>() )
-		.def( "node", &taskNode )
 		.def( "plug", &taskPlug )
 		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def("__eq__", &TaskNode::Task::operator== )

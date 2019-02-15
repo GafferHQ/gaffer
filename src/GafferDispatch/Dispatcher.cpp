@@ -506,7 +506,7 @@ class Dispatcher::Batcher
 			}
 			// Prevent identical tasks from different nodes from being
 			// coalesced.
-			taskHash.append( (uint64_t)task.node() );
+			taskHash.append( (uint64_t)task.plug() );
 
 			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskHash );
 			if( it != m_tasksToBatches.end() )
@@ -530,7 +530,7 @@ class Dispatcher::Batcher
 				// Unfortunately we have to track batch size separately from `batch->frames().size()`,
 				// because no-ops don't update `frames()`, but _do_ count towards batch size.
 				IntDataPtr batchSizeData = candidateBatch->blindData()->member<IntData>( g_sizeBlindDataName );
-				const IntPlug *batchSizePlug = task.node()->dispatcherPlug()->getChild<const IntPlug>( g_batchSize );
+				const IntPlug *batchSizePlug = dispatcherPlug( task )->getChild<const IntPlug>( g_batchSize );
 				const int batchSizeLimit = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
 				if( requiresSequenceExecution || ( batchSizeData->readable() < batchSizeLimit ) )
 				{
@@ -563,7 +563,7 @@ class Dispatcher::Batcher
 				}
 			}
 
-			const BoolPlug *immediatePlug = task.node()->dispatcherPlug()->getChild<const BoolPlug>( g_immediatePlugName );
+			const BoolPlug *immediatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_immediatePlugName );
 			if( immediatePlug && immediatePlug->getValue() )
 			{
 				/// \todo Should we be scoping a context for this, to allow the plug to
@@ -586,7 +586,7 @@ class Dispatcher::Batcher
 		IECore::MurmurHash batchHash( const TaskNode::Task &task )
 		{
 			MurmurHash result;
-			result.append( (uint64_t)task.node() );
+			result.append( (uint64_t)task.plug() );
 			// We ignore the frame because the whole point of batching
 			// is to allow multiple frames to be placed in the same
 			// batch if the context is otherwise identical.
@@ -646,6 +646,11 @@ class Dispatcher::Batcher
 					preTasks.push_back( preTask );
 				}
 			}
+		}
+
+		const Gaffer::Plug *dispatcherPlug( const TaskNode::Task &task )
+		{
+			return static_cast<const TaskNode *>( task.plug()->node() )->dispatcherPlug();
 		}
 
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
