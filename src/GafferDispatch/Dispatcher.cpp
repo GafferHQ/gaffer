@@ -399,6 +399,7 @@ class Dispatcher::Batcher
 
 		TaskBatchPtr batchTasksWalk( TaskNode::Task task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
+			task = TaskNode::Task( task.plug()->source<TaskNode::TaskPlug>(), task.context() );
 			// Deal with Switch and ContextProcessor nodes. We need to do this manually
 			// because they only know how to deal with ValuePlugs, and we use TaskPlugs.
 			if( auto sw = runTimeCast<const Switch>( task.plug()->node() ) )
@@ -418,7 +419,7 @@ class Dispatcher::Batcher
 				}
 			}
 
-			if( !task.plug() || task.plug()->direction() != Plug::Out )
+			if( task.plug()->direction() != Plug::Out )
 			{
 				return nullptr;
 			}

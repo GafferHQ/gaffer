@@ -183,16 +183,11 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		c2.setFrame( 2 )
 
 		n = GafferDispatchTest.LoggingTaskNode()
-		n2 = GafferDispatchTest.LoggingTaskNode()
-
-		# make n2 require n
-		n2["preTasks"][0].setInput( n["task"] )
 
 		with c1 :
-			self.assertEqual( n["task"].preTasks(), [] )
-			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n, c1 ) ] )
+			self.assertEqual( n["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n["preTasks"][0], c1 ) ] )
 		with c2 :
-			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n, c2 ) ] )
+			self.assertEqual( n["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n["preTasks"][0], c2 ) ] )
 
 	def testTaskConstructors( self ) :
 
@@ -357,18 +352,13 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 	def testPostTasks( self ) :
 
-		preWriter = GafferDispatchTest.TextWriter()
-		postWriter = GafferDispatchTest.TextWriter()
-
 		writer = GafferDispatchTest.TextWriter()
-		writer["preTasks"][0].setInput( preWriter["task"] )
-		writer["postTasks"][0].setInput( postWriter["task"] )
 
 		c = Gaffer.Context()
 		c["test"] = "test"
 		with c :
-			self.assertEqual( writer["task"].preTasks(), [ GafferDispatch.TaskNode.Task( preWriter, c ) ] )
-			self.assertEqual( writer["task"].postTasks(), [ GafferDispatch.TaskNode.Task( postWriter, c ) ] )
+			self.assertEqual( writer["task"].preTasks(), [ GafferDispatch.TaskNode.Task( writer["preTasks"][0], c ) ] )
+			self.assertEqual( writer["task"].postTasks(), [ GafferDispatch.TaskNode.Task( writer["postTasks"][0], c ) ] )
 
 	def testLoadNetworkFromVersion0_19( self ) :
 
@@ -509,12 +499,14 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		s["n3"]["postTasks"][0].setInput( s["n2"]["task"] )
 
 		preTasks = s["n3"]["task"].preTasks()
-		self.assertEqual( len( preTasks ), 1 )
-		self.assertEqual( preTasks[0].plug(), s["n1"]["task"] )
+		self.assertEqual( len( preTasks ), 2 )
+		self.assertEqual( preTasks[0].plug(), s["n3"]["internalTask"]["preTasks"][0] )
+		self.assertEqual( preTasks[1].plug(), s["n3"]["internalTask"]["preTasks"][1] )
 
 		postTasks = s["n3"]["task"].postTasks()
-		self.assertEqual( len( postTasks ), 1 )
-		self.assertEqual( postTasks[0].plug(), s["n2"]["task"] )
+		self.assertEqual( len( postTasks ), 2 )
+		self.assertEqual( postTasks[0].plug(), s["n3"]["internalTask"]["postTasks"][0] )
+		self.assertEqual( postTasks[1].plug(), s["n3"]["internalTask"]["postTasks"][1] )
 
 		dispatcher = GafferDispatchTest.DispatcherTest.TestDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
