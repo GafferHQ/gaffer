@@ -145,30 +145,6 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( op.counter, 4 )
 		self.assertEqual( op.stringValue, "passed" )
 
-	def testPreTasks( self ) :
-
-		n1 = GafferCortex.ExecutableOpHolder()
-		n2 = GafferCortex.ExecutableOpHolder()
-		n2a = GafferCortex.ExecutableOpHolder()
-		n2b = GafferCortex.ExecutableOpHolder()
-
-		n1["preTasks"][0].setInput( n2["task"] )
-		n2["preTasks"][0].setInput( n2a["task"] )
-
-		n2["preTasks"][1].setInput( n2b["task"] )
-
-		with Gaffer.Context() as c :
-
-			self.assertEqual( n2a["task"].preTasks(), [] )
-			self.assertEqual( n2b["task"].preTasks(), [] )
-
-			n2PreTasks = n2["task"].preTasks()
-			self.assertEqual( len( n2PreTasks ), 2 )
-			self.assertEqual( n2PreTasks[0], GafferDispatch.TaskNode.Task( n2a, c ) )
-			self.assertEqual( n2PreTasks[1], GafferDispatch.TaskNode.Task( n2b, c ) )
-
-			self.assertEqual( n1["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n2, c ) ] )
-
 	def testSerialise( self ) :
 
 		s = Gaffer.ScriptNode()
