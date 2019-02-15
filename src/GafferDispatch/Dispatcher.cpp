@@ -37,10 +37,12 @@
 #include "GafferDispatch/Dispatcher.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/Switch.h"
 
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
@@ -382,7 +384,10 @@ class Dispatcher::Batcher
 
 		void addTask( const TaskNode::Task &task )
 		{
-			addPreTask( m_rootBatch.get(), batchTasksWalk( task ) );
+			if( auto batch = batchTasksWalk( task ) )
+			{
+				addPreTask( m_rootBatch.get(), batch );
+			}
 		}
 
 		TaskBatch *rootBatch()
@@ -392,8 +397,32 @@ class Dispatcher::Batcher
 
 	private :
 
-		TaskBatchPtr batchTasksWalk( const TaskNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
+		TaskBatchPtr batchTasksWalk( TaskNode::Task task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
+			// Deal with Switch and ContextProcessor nodes. We need to do this manually
+			// because they only know how to deal with ValuePlugs, and we use TaskPlugs.
+			if( auto sw = runTimeCast<const Switch>( task.plug()->node() ) )
+			{
+				if( task.plug() == sw->outPlug() )
+				{
+					Context::Scope scopedTaskContext( task.context() );
+					task = TaskNode::Task( sw->activeInPlug()->source<TaskNode::TaskPlug>(), task.context() );
+				}
+			}
+			else if( auto contextProcessor = runTimeCast<const ContextProcessor>( task.plug()->node() ) )
+			{
+				if( task.plug() == contextProcessor->outPlug() )
+				{
+					Context::Scope scopedTaskContext( task.context() );
+					task = TaskNode::Task( contextProcessor->inPlug()->source<TaskNode::TaskPlug>(), contextProcessor->inPlugContext().get() );
+				}
+			}
+
+			if( !task.plug() || task.plug()->direction() != Plug::Out )
+			{
+				return nullptr;
+			}
+
 			// Acquire a batch with this task placed in it,
 			// and check that we haven't discovered a cyclic
 			// dependency.
@@ -419,7 +448,10 @@ class Dispatcher::Batcher
 			TaskBatches postBatches;
 			for( TaskNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
 			{
-				postBatches.push_back( batchTasksWalk( *it ) );
+				if( auto postBatch = batchTasksWalk( *it ) )
+				{
+					postBatches.push_back( postBatch );
+				}
 			}
 
 			// Collect all the batches the preTasks belong in,
@@ -434,7 +466,10 @@ class Dispatcher::Batcher
 
 			for( TaskNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
 			{
-				addPreTask( batch.get(), batchTasksWalk( *it, preTaskAncestors ) );
+				if( auto preBatch = batchTasksWalk( *it, preTaskAncestors ) )
+				{
+					addPreTask( batch.get(), preBatch );
+				}
 			}
 
 			// As far as TaskBatch and doDispatch() are concerned, there
@@ -455,19 +490,25 @@ class Dispatcher::Batcher
 		{
 			// See if we've previously visited this task, and therefore
 			// have placed it in a batch already, which we can return
-			// unchanged. The `taskToBatchMapHash` is used as the unique
-			// identity of a task.
-			MurmurHash taskToBatchMapHash = task.hash();
-			// Prevent identical tasks from different nodes from being
-			// coalesced.
-			taskToBatchMapHash.append( (uint64_t)task.node() );
-			if( task.hash() == IECore::MurmurHash() )
+			// unchanged. The `taskHash` is used as the unique identity of
+			// the task.
+			MurmurHash taskHash;
+			{
+				Context::Scope scopedTaskContext( task.context() );
+				taskHash = task.plug()->hash();
+			}
+			const bool taskIsNoOp = taskHash == IECore::MurmurHash();
+			if( taskIsNoOp )
 			{
 				// Prevent no-ops from coalescing into a single batch, as this
 				// would break parallelism - see `DispatcherTest.testNoOpDoesntBreakFrameParallelism()`
-				taskToBatchMapHash.append( contextHash( task.context() ) );
+				taskHash.append( contextHash( task.context() ) );
 			}
-			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskToBatchMapHash );
+			// Prevent identical tasks from different nodes from being
+			// coalesced.
+			taskHash.append( (uint64_t)task.node() );
+
+			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskHash );
 			if( it != m_tasksToBatches.end() )
 			{
 				return it->second;
@@ -508,7 +549,7 @@ class Dispatcher::Batcher
 			// Now we have an appropriate batch, update it to include
 			// the frame for our task, and any other relevant information.
 
-			if( task.hash() != MurmurHash() )
+			if( !taskIsNoOp )
 			{
 				float frame = task.context()->getFrame();
 				std::vector<float> &frames = batch->frames();
@@ -534,7 +575,7 @@ class Dispatcher::Batcher
 
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
-			m_tasksToBatches[taskToBatchMapHash] = batch;
+			m_tasksToBatches[taskHash] = batch;
 
 			return batch;
 		}

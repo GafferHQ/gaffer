@@ -1627,5 +1627,87 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegexp( Exception, "Python argument types in" ) :
 			d.frameRange( Gaffer.ScriptNode(), None )
 
+	def testSwitch( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
+
+		s["switch"] = Gaffer.Switch()
+		s["switch"].setup( s["n1"]["task"] )
+		s["switch"]["in"][0].setInput( s["n1"]["task"] )
+		s["switch"]["in"][1].setInput( s["n2"]["task"] )
+
+		s["n3"] = GafferDispatchTest.LoggingTaskNode()
+		s["n3"]["preTasks"][0].setInput( s["switch"]["out"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		s["switch"]["index"].setValue( 1 )
+		dispatcher.dispatch( [ s["n3"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+		self.assertEqual( len( s["n3"].log ), 1 )
+
+		s["switch"]["index"].setValue( 0 )
+		dispatcher.dispatch( [ s["n3"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+		self.assertEqual( len( s["n3"].log ), 2 )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['switch']['index'] = context.getFrame()" )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 0 )
+			dispatcher.dispatch( [ s["n3"] ] )
+
+			self.assertEqual( len( s["n1"].log ), 2 )
+			self.assertEqual( len( s["n2"].log ), 1 )
+			self.assertEqual( len( s["n3"].log ), 3 )
+
+			c.setFrame( 1 )
+			dispatcher.dispatch( [ s["n3"] ] )
+
+			self.assertEqual( len( s["n1"].log ), 2 )
+			self.assertEqual( len( s["n2"].log ), 2 )
+			self.assertEqual( len( s["n3"].log ), 4 )
+
+			c.setFrame( 0 )
+			s["switch"]["in"][0].setInput( None )
+			dispatcher.dispatch( [ s["n3"] ] )
+
+			self.assertEqual( len( s["n1"].log ), 2 )
+			self.assertEqual( len( s["n2"].log ), 2 )
+			self.assertEqual( len( s["n3"].log ), 5 )
+
+	def testContextProcessor( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+
+		s["cv"] = Gaffer.ContextVariables()
+		s["cv"].setup( s["n1"]["task"] )
+		s["cv"]["in"].setInput( s["n1"]["task"] )
+		s["cv"]["variables"].addMember( "test", 10 )
+
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
+		s["n2"]["preTasks"][0].setInput( s["cv"]["out"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["n2"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+
+		self.assertNotIn( "test", s["n2"].log[0].context )
+		self.assertIn( "test", s["n1"].log[0].context )
+		self.assertEqual( s["n1"].log[0].context["test"], 10 )
+
 if __name__ == "__main__":
 	unittest.main()

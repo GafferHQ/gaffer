@@ -39,6 +39,9 @@ import IECore
 import Gaffer
 import GafferDispatch
 
+## \deprecated Use `Gaffer.ContextVariables` instead.
+# \todo Move to a compatibility config, perhaps reimplemented
+# as a ContextVariables node embedded inside a TaskNode.
 class TaskContextVariables( GafferDispatch.TaskContextProcessor ) :
 
 	def __init__( self, name = "TaskContextVariables" ) :

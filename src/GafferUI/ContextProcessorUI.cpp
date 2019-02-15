@@ -64,18 +64,9 @@ class ContextProcessorPlugAdder : public PlugAdder
 
 	protected :
 
-		bool canCreateConnection( const Plug *endpoint ) const override
-		{
-			if( !PlugAdder::canCreateConnection( endpoint ) )
-			{
-				return false;
-			}
-			return runTimeCast<const ValuePlug>( endpoint );
-		}
-
 		void createConnection( Plug *endpoint ) override
 		{
-			m_node->setup( static_cast<const ValuePlug *>( endpoint ) );
+			m_node->setup( endpoint );
 
 			bool inOpposite = false;
 			if( endpoint->direction() == Plug::Out )

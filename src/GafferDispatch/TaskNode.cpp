@@ -56,18 +56,14 @@ using namespace GafferDispatch;
 TaskNode::Task::Task( ConstTaskPlugPtr plug, const Gaffer::Context *context )
 	:	m_plug( plug ), m_context( new Context( *context ) )
 {
-	Context::Scope scopedContext( m_context.get() );
-	m_hash = m_plug->hash();
 }
 
-TaskNode::Task::Task( const Task &t ) : m_plug( t.m_plug ), m_context( t.m_context ), m_hash( t.m_hash )
+TaskNode::Task::Task( const Task &t ) : m_plug( t.m_plug ), m_context( t.m_context )
 {
 }
 
 TaskNode::Task::Task( TaskNodePtr n, const Context *c ) : m_plug( n->taskPlug() ), m_context( new Context( *c ) )
 {
-	Context::Scope scopedContext( m_context.get() );
-	m_hash = m_plug->hash();
 }
 
 const TaskNode::TaskPlug *TaskNode::Task::plug() const
@@ -85,19 +81,9 @@ const Context *TaskNode::Task::context() const
 	return m_context.get();
 }
 
-const MurmurHash TaskNode::Task::hash() const
-{
-	return m_hash;
-}
-
 bool TaskNode::Task::operator == ( const Task &rhs ) const
 {
-	return ( m_hash == rhs.m_hash );
-}
-
-bool TaskNode::Task::operator < ( const Task &rhs ) const
-{
-	return ( m_hash < rhs.m_hash );
+	return m_plug == rhs.m_plug && *m_context == *rhs.m_context;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -387,13 +373,15 @@ void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
 	{
-		Plug *source = (*cIt)->source();
-		if( source != *cIt && source->direction() == Plug::Out )
+		/// \todo Use all plugs unconditionally, and leave TaskPlug/Dispatcher
+		/// to worry about unconnected plugs and plug direction. We can't do
+		/// this currently because we are using PlugIterator rather than TaskPlugIterator,
+		/// to support plugs created long ago, when TaskPlug didn't even exist.
+		/// See related hack in `ArrayPlug::acceptsChild()`.
+		TaskPlug *source = (*cIt)->source<TaskPlug>();
+		if( source && source != *cIt && source->direction() == Plug::Out )
 		{
-			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
-			{
-				tasks.push_back( Task( n, context ) );
-			}
+			tasks.push_back( Task( source, context ) );
 		}
 	}
 }
@@ -402,13 +390,15 @@ void TaskNode::postTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
 	{
-		Plug *source = (*cIt)->source();
-		if( source != *cIt && source->direction() == Plug::Out )
+		/// \todo Use all plugs unconditionally, and leave TaskPlug/Dispatcher
+		/// to worry about unconnected plugs and plug direction. We can't do
+		/// this currently because we are using PlugIterator rather than TaskPlugIterator,
+		/// to support plugs created long ago, when TaskPlug didn't even exist.
+		/// See related hack in `ArrayPlug::acceptsChild()`.
+		TaskPlug *source = (*cIt)->source<TaskPlug>();
+		if( source && source != *cIt && source->direction() == Plug::Out )
 		{
-			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
-			{
-				tasks.push_back( Task( n, context ) );
-			}
+			tasks.push_back( Task( source, context ) );
 		}
 	}
 }
