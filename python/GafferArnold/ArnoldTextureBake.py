@@ -305,6 +305,25 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# ( The image dispatcher runs much quicker, and should be OK using default settings )
 		self["__RenderDispatcher"]["dispatcher"].setInput( self["dispatcher"] )
 
+		# Set up variables so the dispatcher knows that the render and image dispatches depend on
+		# the file paths ( in case they are varying in a wedge )
+		for redispatch in [ self["__RenderDispatcher"], self["__ImageDispatcher"] ]:
+			redispatch["variables"].addMember( "bakeDirectory", "", "bakeDirectoryVar" )
+			redispatch["variables"].addMember( "defaultFileName", "", "defaultFileNameVar" )
+	
+		# Connect the variables via an expression so that get expanded ( this also means that
+		# if you put #### in a filename you will get per frame tasks, because the hash will depend	
+		# on frame number )
+		self["__DispatchVariableExpression"] = Gaffer.Expression()
+		self["__DispatchVariableExpression"].setExpression( inspect.cleandoc( 
+			"""
+			parent["__RenderDispatcher"]["variables"]["bakeDirectoryVar"]["value"] = parent["bakeDirectory"]
+			parent["__RenderDispatcher"]["variables"]["defaultFileNameVar"]["value"] = parent["defaultFileName"]
+			parent["__ImageDispatcher"]["variables"]["bakeDirectoryVar"]["value"] = parent["bakeDirectory"]
+			parent["__ImageDispatcher"]["variables"]["defaultFileNameVar"]["value"] = parent["defaultFileName"]
+			"""
+		), "python" )
+
 		# Wedge based on tasks into the overall number of tasks to run.  Note that we don't know how
 		# much work each task will do until we actually run the render tasks ( this is when scene
 		# expansion happens ).  Because we must group all tasks that write to the same file into the 
