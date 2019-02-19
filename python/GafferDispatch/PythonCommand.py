@@ -65,8 +65,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 		h.append( command )
 
-		parser = _Parser( command )
-		for name in parser.contextReads :
+		for name in _contextReadsCache.get( command ) :
 			value = context.get( name )
 			if isinstance( value, IECore.Object ) :
 				value.hash( h )
@@ -87,7 +86,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 	def execute( self ) :
 
 		executionDict = self.__executionDict()
-		exec( self["command"].getValue(), executionDict, executionDict )
+		exec( _codeObjectCache.get( self["command"].getValue() ), executionDict, executionDict )
 
 	def executeSequence( self, frames ) :
 
@@ -210,5 +209,17 @@ class _Parser( ast.NodeVisitor ) :
 						self.contextReads.add( node.args[0].s )
 
 		ast.NodeVisitor.generic_visit( self, node )
+
+def __contextReadsCacheGetter( expression ) :
+
+	return _Parser( expression ).contextReads, 1
+
+_contextReadsCache = IECore.LRUCache( __contextReadsCacheGetter, 10000 )
+
+def __codeObjectCacheGetter( expression ) :
+
+	return compile( expression, "<string>", "exec" ), 1
+
+_codeObjectCache = IECore.LRUCache( __codeObjectCacheGetter, 10000 )
 
 IECore.registerRunTimeTyped( PythonCommand, typeName = "GafferDispatch::PythonCommand" )
