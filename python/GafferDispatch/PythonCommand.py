@@ -70,8 +70,12 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 			value = context.get( name )
 			if isinstance( value, IECore.Object ) :
 				value.hash( h )
-			else :
+			elif value is not None :
 				h.append( value )
+			else :
+				# Variable not in context. Hash a value that is
+				# extremely unlikely to be found in a context.
+				h.append( "__pythonCommandMissingContextVariable__" )
 
 		self["variables"].hash( h )
 

@@ -322,5 +322,34 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( c["command"].getValue(), "" )
 		self.assertEqual( c["task"].hash(), IECore.MurmurHash() )
 
+	def testContextGetNone( self ) :
+
+		command = Gaffer.PythonCommand()
+		command["command"].setValue( "print context.get( 'iAmNotHere' )" )
+
+		with Gaffer.Context() as c :
+			h = command["task"].hash()
+			c["iAmNotHere"] = 10
+			self.assertNotEqual( command["task"].hash(), h )
+
+	def testAlternateMissingContextVariables( self ) :
+
+		command = Gaffer.PythonCommand()
+		command["command"].setValue( "print 'a : ', context.get( 'a' ), 'b : ', context.get( 'b' )" )
+
+		neitherHash = command["task"].hash()
+
+		with Gaffer.Context() as c :
+			c["a"] = 10
+			aHash = command["task"].hash()
+
+		with Gaffer.Context() as c :
+			c["b"] = 10
+			bHash = command["task"].hash()
+			c["a"] = 10
+			bothHash = command["task"].hash()
+
+		self.assertEqual( len( { str( x ) for x in ( neitherHash, aHash, bHash, bothHash ) } ), 4 )
+
 if __name__ == "__main__":
 	unittest.main()
