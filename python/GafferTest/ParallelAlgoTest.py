@@ -170,6 +170,22 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			with self.assertRaises( IECore.Cancelled ) :
 				while True :
 					script["n"]["sum"].getValue()
+					# We might expect that `script["n"]["sum"].getValue()`
+					# would be guaranteed to throw after cancellation has been
+					# requested. But that is not the case if both the hash and the
+					# value are already cached, because cancellation is only checked
+					# for automatically when a Process is constructed. So we take
+					# a belt and braces approach and perform an explicit check here.
+					#
+					# The alternative would be to move the cancellation check outside
+					# of the Process class, so it is performed before the cache lookup.
+					# This may be the better approach, but we would need to benchmark
+					# it to ensure that performance was not adversely affected. To our
+					# knowledge, this "cache hits avoid cancellation" problem has not
+					# been responsible for unresponsive cancellation in the wild, because
+					# background tasks are typically triggered by `plugDirtiedSignal()`,
+					# and the hash cache is cleared when a plug is dirtied.
+					IECore.Canceller.check( backgroundContext.canceller() )
 
 		# Explicit cancellation
 
