@@ -41,6 +41,7 @@
 #include "Gaffer/ContextMonitor.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/MonitorAlgo.h"
+#include "Gaffer/Node.h"
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/VTuneMonitor.h"
@@ -132,6 +133,24 @@ list contextMonitorVariableNames( const ContextMonitor::Statistics &s )
 	return result;
 }
 
+void annotateWrapper1( Node &root, const PerformanceMonitor &monitor )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	MonitorAlgo::annotate( root, monitor );
+}
+
+void annotateWrapper2( Node &root, const PerformanceMonitor &monitor, MonitorAlgo::PerformanceMetric metric )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	MonitorAlgo::annotate( root, monitor, metric );
+}
+
+void annotateWrapper3( Node &root, const ContextMonitor &monitor )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	MonitorAlgo::annotate( root, monitor );
+}
+
 } // namespace
 
 void GafferModule::bindMonitor()
@@ -171,6 +190,24 @@ void GafferModule::bindMonitor()
 				arg( "metric" ),
 				arg( "maxLines" ) = 50
 			)
+		);
+
+		def(
+			"annotate",
+			&annotateWrapper1,
+			( arg( "node" ), arg( "monitor" ) )
+		);
+
+		def(
+			"annotate",
+			&annotateWrapper2,
+			( arg( "node" ), arg( "monitor" ), arg( "metric" ) )
+		);
+
+		def(
+			"annotate",
+			&annotateWrapper3,
+			( arg( "node" ), arg( "monitor" ) )
 		);
 	}
 

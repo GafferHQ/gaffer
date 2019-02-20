@@ -36,11 +36,20 @@
 
 #include "Gaffer/MonitorAlgo.h"
 
+#include "Gaffer/ContextMonitor.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/Node.h"
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/Plug.h"
 
+#include "IECore/SimpleTypedData.h"
+
+#include "boost/lexical_cast.hpp"
+
 #include <iomanip>
 
+using namespace Imath;
+using namespace IECore;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
@@ -61,10 +70,9 @@ struct InvalidMetric
 		return 0;
 	}
 
-	const char *description() const
-	{
-		return "invalid";
-	}
+	const std::string description = "invalid";
+	const std::string annotation = "invalid";
+	const std::string annotationPrefix = "invalid";
 
 };
 
@@ -78,10 +86,9 @@ struct HashCountMetric
 		return s.hashCount;
 	}
 
-	const char *description() const
-	{
-		return "number of hash processes";
-	}
+	const std::string description = "number of hash processes";
+	const std::string annotation = "hashCount";
+	const std::string annotationPrefix = "Hash count : ";
 
 };
 
@@ -95,10 +102,9 @@ struct ComputeCountMetric
 		return s.computeCount;
 	}
 
-	const char *description() const
-	{
-		return "number of compute processes";
-	}
+	const std::string description = "number of compute processes";
+	const std::string annotation = "computeCount";
+	const std::string annotationPrefix = "Compute count : ";
 
 };
 
@@ -112,10 +118,9 @@ struct HashDurationMetric
 		return s.hashDuration;
 	}
 
-	const char *description() const
-	{
-		return "time spent in hash processes";
-	}
+	const std::string description = "time spent in hash processes";
+	const std::string annotation = "hashDuration";
+	const std::string annotationPrefix = "Hash time : ";
 
 };
 
@@ -129,10 +134,9 @@ struct ComputeDurationMetric
 		return s.computeDuration;
 	}
 
-	const char *description() const
-	{
-		return "time spent in compute processes";
-	}
+	const std::string description = "time spent in compute processes";
+	const std::string annotation = "computeDuration";
+	const std::string annotationPrefix = "Compute time : ";
 
 };
 
@@ -146,10 +150,9 @@ struct TotalDurationMetric
 		return s.hashDuration + s.computeDuration;
 	}
 
-	const char *description() const
-	{
-		return "sum of time spent in hash and compute processes";
-	}
+	const std::string description = "sum of time spent in hash and compute processes";
+	const std::string annotation = "totalDuration";
+	const std::string annotationPrefix = "Time : ";
 
 };
 
@@ -163,10 +166,9 @@ struct PerHashDurationMetric
 		return ResultType( s.hashDuration ) / std::max( 1.0, static_cast<double>( s.hashCount ) );
 	}
 
-	const char *description() const
-	{
-		return "time spent per hash process";
-	}
+	const std::string description = "time spent per hash process";
+	const std::string annotation = "perHashDuration";
+	const std::string annotationPrefix = "Time per hash : ";
 
 };
 
@@ -180,10 +182,9 @@ struct PerComputeDurationMetric
 		return ResultType( s.computeDuration ) / std::max( 1.0, static_cast<double>( s.computeCount ) );
 	}
 
-	const char *description() const
-	{
-		return "time spent per compute process";
-	}
+	const std::string description = "time spent per compute process";
+	const std::string annotation = "perComputeDuration";
+	const std::string annotationPrefix = "Time per compute : ";
 
 };
 
@@ -197,10 +198,9 @@ struct HashesPerComputeMetric
 		return static_cast<double>( s.hashCount ) / std::max( 1.0, static_cast<double>( s.computeCount ) );
 	}
 
-	const char *description() const
-	{
-		return "number of hash processes per compute process";
-	}
+	const std::string description = "number of hash processes per compute process";
+	const std::string annotation = "hashesPerCompute";
+	const std::string annotationPrefix = "Hashes per compute : ";
 
 };
 
@@ -319,7 +319,7 @@ struct FormatStatistics
 		}
 
 		std::stringstream s;
-		s << "Top " << plugNames.size() << " plugs by " << metric.description() << " :\n\n";
+		s << "Top " << plugNames.size() << " plugs by " << metric.description << " :\n\n";
 
 		outputItems( plugNames, metrics, s );
 
@@ -348,11 +348,193 @@ struct FormatTotalStatistics
 
 		s << std::fixed << ": " <<  metric( combinedStatistics );
 
-		return ResultType( std::string( "Total " ) + metric.description(), s.str() );
+		return ResultType( "Total " + metric.description, s.str() );
 	}
 
 	const PerformanceMonitor::Statistics &combinedStatistics;
 };
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Annotation utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+template<typename T>
+double toDouble( const T &v )
+{
+	return static_cast<double>( v );
+}
+
+template<>
+double toDouble( const boost::chrono::duration<double> &v )
+{
+	return v.count();
+}
+
+template<typename T>
+ConstColor3fDataPtr heat( const T &v, const T &m )
+{
+	const double heatFactor = toDouble( v ) / toDouble( m );
+	const Color3f heat = lerp( Color3f( 0 ), Color3f( 0.5, 0, 0 ), heatFactor );
+	return new Color3fData( heat );
+}
+
+struct Annotate
+{
+
+	Annotate( Node &root, const PerformanceMonitor::StatisticsMap &statistics )
+		:	m_root( root ), m_statistics( statistics )
+	{
+	}
+
+	typedef void ResultType;
+
+	template<typename Metric>
+	ResultType operator() ( const Metric &metric ) const
+	{
+		walk<Metric>(
+			m_root, metric,
+			"annotation:performanceMonitor:" + metric.annotation + ":text",
+			"annotation:performanceMonitor:" + metric.annotation + ":color"
+		);
+	}
+
+	private :
+
+		Node &m_root;
+		const PerformanceMonitor::StatisticsMap &m_statistics;
+
+		template<typename Metric>
+		PerformanceMonitor::Statistics walk( Node &node, const Metric &metric, const InternedString &textKey, const InternedString &colorKey ) const
+		{
+			using Value = typename Metric::ResultType;
+			using ChildStatistics = std::pair<Node &, PerformanceMonitor::Statistics>;
+
+			// Accumulate the statistics for all plugs belonging to this node.
+
+			PerformanceMonitor::Statistics result;
+			for( RecursivePlugIterator plugIt( &node ); !plugIt.done(); ++plugIt )
+			{
+				auto it = m_statistics.find( plugIt->get() );
+				if( it != m_statistics.end() )
+				{
+					result += it->second;
+				}
+			}
+
+			// Gather statistics for all child nodes.
+
+			std::vector<ChildStatistics> childStatistics;
+			Value maxChildValue( 0 );
+
+			for( NodeIterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
+			{
+				Node &childNode = **childNodeIt;
+				const auto cs = walk( childNode, metric, textKey, colorKey );
+				childStatistics.push_back( ChildStatistics( childNode, cs ) );
+				maxChildValue = std::max( maxChildValue, metric( cs ) );
+			}
+
+			// Apply metadata for child nodes. We must do this
+			// after gathering because we need `maxChildValue` to
+			// calculate the heat map.
+
+			for( const auto &cs : childStatistics )
+			{
+				const Value value = metric( cs.second );
+				if( value == Value( 0 ) )
+				{
+					continue;
+				}
+
+				Metadata::registerValue(
+					&cs.first, textKey,
+					new StringData(
+						metric.annotationPrefix + boost::lexical_cast<std::string>( value )
+					)
+				);
+				Metadata::registerValue( &cs.first, colorKey, heat( value, maxChildValue ) );
+
+				result += cs.second;
+			}
+
+			return result;
+		}
+
+};
+
+InternedString g_contextAnnotationTextKey = "annotation:contextMonitor:text";
+InternedString g_contextAnnotationColorKey = "annotation:contextMonitor:color";
+
+ContextMonitor::Statistics annotateContextWalk( Node &node, const ContextMonitor::StatisticsMap &statistics )
+{
+
+	using ChildStatistics = std::pair<Node &, ContextMonitor::Statistics>;
+
+	// Accumulate the statistics for all plugs belonging to this node.
+
+	ContextMonitor::Statistics result;
+	for( RecursivePlugIterator plugIt( &node ); !plugIt.done(); ++plugIt )
+	{
+		auto it = statistics.find( plugIt->get() );
+		if( it != statistics.end() )
+		{
+			result += it->second;
+		}
+	}
+
+	// Gather statistics for all child nodes.
+
+	std::vector<ChildStatistics> childStatistics;
+	size_t maxUniqueContexts( 0 );
+
+	for( NodeIterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
+	{
+		Node &childNode = **childNodeIt;
+		const auto cs = annotateContextWalk( childNode, statistics );
+		childStatistics.push_back( ChildStatistics( childNode, cs ) );
+		maxUniqueContexts = std::max( maxUniqueContexts, cs.numUniqueContexts() );
+	}
+
+	// Apply metadata for child nodes. We must do this
+	// after gathering because we need `childStatisticsSum` to
+	// calculate the heat map.
+
+	for( const auto &cs : childStatistics )
+	{
+		if( !cs.second.numUniqueContexts() )
+		{
+			continue;
+		}
+
+		std::string text = "Contexts : " + std::to_string( cs.second.numUniqueContexts() ) + "\n";
+
+		auto variableNames = cs.second.variableNames();
+		for( const auto &name : variableNames )
+		{
+			const size_t n = cs.second.numUniqueValues( name );
+			if( n > 1 )
+			{
+				text += "\n  " + name.string() + " : " + std::to_string( n );
+			}
+		}
+
+		Metadata::registerValue(
+			&cs.first, g_contextAnnotationTextKey,
+			new StringData( text )
+		);
+		Metadata::registerValue( &cs.first, g_contextAnnotationColorKey, heat( cs.second.numUniqueContexts(), maxUniqueContexts ) );
+
+		result += cs.second;
+	}
+
+	return result;
+
+}
 
 } // namespace
 
@@ -402,6 +584,24 @@ std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLines
 std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines )
 {
 	return dispatchMetric<FormatStatistics>( FormatStatistics( monitor.allStatistics(), maxLines ), metric );
+}
+
+void annotate( Node &root, const PerformanceMonitor &monitor )
+{
+	for( int m = First; m <= Last; ++m )
+	{
+		annotate( root, monitor, static_cast<PerformanceMetric>( m ) );
+	}
+}
+
+void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric )
+{
+	dispatchMetric<Annotate>( Annotate( root, monitor.allStatistics() ), metric );
+}
+
+void annotate( Node &root, const ContextMonitor &monitor )
+{
+	annotateContextWalk( root, monitor.allStatistics() );
 }
 
 } // namespace MonitorAlgo

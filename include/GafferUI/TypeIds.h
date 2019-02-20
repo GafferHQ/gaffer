@@ -81,6 +81,7 @@ enum TypeId
 	ScaleHandleTypeId = 110286,
 	RotateHandleTypeId = 110287,
 	AnimationGadgetTypeId = 110288,
+	AnnotationsGadgetTypeId = 110289,
 
 	LastTypeId = 110450
 };

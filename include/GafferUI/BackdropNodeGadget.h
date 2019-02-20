@@ -90,7 +90,6 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
 		bool updateUserColor();
-		bool updateNumericBookmark();
 
 		Gaffer::Box2fPlug *boundPlug();
 		const Gaffer::Box2fPlug *boundPlug() const;
@@ -101,7 +100,6 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 		int m_mergeGroupId;
 
 		boost::optional<Imath::Color3f> m_userColor;
-		boost::optional<std::string> m_numericBookmark;
 
 		static NodeGadgetTypeDescription<BackdropNodeGadget> g_nodeGadgetTypeDescription;
 

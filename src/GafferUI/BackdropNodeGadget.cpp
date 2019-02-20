@@ -79,40 +79,6 @@ void titleAndDescriptionFromPlugs( const StringPlug *titlePlug, const StringPlug
 	}
 }
 
-IECoreGL::Texture *bookmarkTexture()
-{
-	static IECoreGL::TexturePtr bookmarkTexture;
-
-	if( !bookmarkTexture )
-	{
-		bookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar2.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *bookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
-	return bookmarkTexture.get();
-}
-
-IECoreGL::Texture *numericBookmarkTexture()
-{
-	static IECoreGL::TexturePtr numericBookmarkTexture;
-
-	if( !numericBookmarkTexture )
-	{
-		numericBookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *numericBookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
-	return numericBookmarkTexture.get();
-}
-
 } // namespace
 
 IE_CORE_DEFINERUNTIMETYPED( BackdropNodeGadget );
@@ -155,16 +121,7 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &BackdropNodeGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
 
-	// handle existing metadata that changes the way the node looks
-	///////////////////////////////////////////////////////////////
-	int bookmark = MetadataAlgo::numericBookmark( this->node() );
-	if( bookmark )
-	{
-		m_numericBookmark = std::to_string( bookmark );
-	}
-
 	updateUserColor();
-	updateNumericBookmark();
 }
 
 BackdropNodeGadget::~BackdropNodeGadget()
@@ -355,30 +312,6 @@ void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 		{
 			style->renderWrappedText( Style::BodyText, description, textBound );
 		}
-	}
-
-	// render bookmark information on top
-
-	bool isBookmarked = MetadataAlgo::getBookmarked( node() );
-	if( isBookmarked )
-	{
-		style->renderImage( Box2f( V2f( bound.min.x + 1.0, bound.max.y - 1.0 ), V2f( bound.min.x + 3.0, bound.max.y + 1.0 ) ), bookmarkTexture() );
-	}
-
-	if( m_numericBookmark )
-	{
-		if( !isBookmarked )
-		{
-			style->renderImage( Box2f( V2f( bound.min.x + 1.0, bound.max.y - 1.0 ), V2f( bound.min.x + 3.0, bound.max.y + 1.0 ) ), numericBookmarkTexture() );
-		}
-
-		Box3f textBounds = style->textBound( Style::LabelText, *m_numericBookmark );
-
-		Imath::Color3f textColor( 1.0f );
-		glPushMatrix();
-		IECoreGL::glTranslate( V2f( bound.min.x + 3.0 - textBounds.size().x * 0.5, bound.max.y - textBounds.size().y * 0.5 - 0.7 ) );
-		style->renderText( Style::LabelText, *m_numericBookmark, Style::NormalState, &textColor );
-		glPopMatrix();
 	}
 
 	glPopMatrix();
@@ -574,15 +507,6 @@ void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 			requestRender();
 		}
 	}
-
-	if( MetadataAlgo::numericBookmarkAffectedByChange( key ) )
-	{
-		if( updateNumericBookmark() )
-		{
-			requestRender();
-		}
-	}
-
 }
 
 bool BackdropNodeGadget::updateUserColor()
@@ -599,27 +523,5 @@ bool BackdropNodeGadget::updateUserColor()
 	}
 
 	m_userColor = c;
-	return true;
-}
-
-bool BackdropNodeGadget::updateNumericBookmark()
-{
-	int cached = m_numericBookmark ? stoi( *m_numericBookmark ) : 0;
-	int bookmark = MetadataAlgo::numericBookmark( this->node() );
-
-	if( cached == bookmark )
-	{
-		return false;
-	}
-
-	if( bookmark )
-	{
-		m_numericBookmark = std::to_string( bookmark );
-	}
-	else
-	{
-		m_numericBookmark = boost::none;
-	}
-
 	return true;
 }

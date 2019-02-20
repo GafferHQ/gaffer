@@ -136,6 +136,7 @@ from BoxIOTest import BoxIOTest
 from ParallelAlgoTest import ParallelAlgoTest
 from BackgroundTaskTest import BackgroundTaskTest
 from ProcessMessageHandlerTest import ProcessMessageHandlerTest
+from MonitorAlgoTest import MonitorAlgoTest
 
 if __name__ == "__main__":
 	import unittest

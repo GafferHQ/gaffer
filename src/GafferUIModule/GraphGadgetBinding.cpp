@@ -41,6 +41,7 @@
 
 #include "GafferUIBindings/GadgetBinding.h"
 
+#include "GafferUI/AnnotationsGadget.h"
 #include "GafferUI/AuxiliaryConnectionsGadget.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
@@ -255,6 +256,9 @@ void GafferUIModule::bindGraphGadget()
 		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const Gadget *, const Gadget * ) const)&AuxiliaryConnectionsGadget::hasConnection )
 		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const Node *, const Node * ) const)&AuxiliaryConnectionsGadget::hasConnection )
 		.def( "connectionAt", &connectionAt )
+	;
+
+	GadgetClass<AnnotationsGadget>()
 	;
 
 	IECorePython::RunTimeTypedClass<GraphLayout>()

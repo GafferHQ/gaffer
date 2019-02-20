@@ -37,6 +37,7 @@
 
 #include "GafferUI/GraphGadget.h"
 
+#include "GafferUI/AnnotationsGadget.h"
 #include "GafferUI/AuxiliaryConnectionsGadget.h"
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/ButtonEvent.h"
@@ -101,6 +102,7 @@ const InternedString g_inputConnectionsMinimisedPlugName( "__uiInputConnectionsM
 const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnectionsMinimised" );
 const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 const InternedString g_auxiliaryConnectionsGadgetName( "__auxiliaryConnections" );
+const InternedString g_annotationsGadgetName( "__annotations" );
 
 struct CompareV2fX{
 	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
@@ -135,6 +137,7 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	m_layout = new StandardGraphLayout;
 
 	setChild( g_auxiliaryConnectionsGadgetName, new AuxiliaryConnectionsGadget() );
+	setChild( g_annotationsGadgetName, new AnnotationsGadget() );
 
 	setRoot( root, filter );
 }
