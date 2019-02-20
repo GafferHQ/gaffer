@@ -236,7 +236,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			const Color3f midGrey( 0.65 );
 			const Color3f darkGrey( 0.05 );
 			float previousHeight = 0;
-			for( auto &a : annotations.standardAnnotations )
+			for( const auto &a : annotations.standardAnnotations )
 			{
 				Box3f textBounds = style->textBound( Style::BodyText, a.text->readable() );
 
