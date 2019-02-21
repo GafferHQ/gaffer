@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,31 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDFILTERMAP_H
+#define GAFFERARNOLD_ARNOLDFILTERMAP_H
+
+#include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+/// \todo See ArnoldDisplacement for comments regarding the
+/// awkwardness of deriving from Shader, and the possibility
+/// of making a more general Assignable class.
+class GAFFERARNOLD_API ArnoldFilterMap : public GafferScene::Shader
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
-	ArnoldBackgroundTypeId = 110911,
-	ArnoldFilterMapTypeId = 110912,
 
-	LastTypeId = 110924
+	public :
+
+		ArnoldFilterMap( const std::string &name=defaultName<ArnoldFilterMap>() );
+		~ArnoldFilterMap() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldFilterMap, ArnoldFilterMapTypeId, GafferScene::Shader );
+
+		GafferScene::ShaderPlug *mapPlug();
+		const GafferScene::ShaderPlug *mapPlug() const;
+
+		Gaffer::Plug *outPlug();
+		const Gaffer::Plug *outPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const override;
+
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ArnoldFilterMap )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDFILTERMAP_H
