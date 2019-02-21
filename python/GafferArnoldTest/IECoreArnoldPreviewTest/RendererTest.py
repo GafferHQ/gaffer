@@ -837,11 +837,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		for i in range( 3 ):
 			image = IECoreImage.ImageReader( self.temporaryDirectory() + "/beauty%i.exr"%i ).read()
-			self.assertEqual( image.blindData()["worldtocamera"].value, 
+			self.assertEqual( image.blindData()["worldtocamera"].value,
 				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
 
 		image = IECoreImage.ImageReader( self.temporaryDirectory() + "/diffuse2.exr" ).read()
-		self.assertEqual( image.blindData()["worldtocamera"].value, 
+		self.assertEqual( image.blindData()["worldtocamera"].value,
 			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
 
 	def testCameraMesh( self ) :
@@ -884,7 +884,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( camera ) ), "uv_camera" )
 			mesh = arnold.AiNodeGetPtr( camera, "mesh" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
-			self.assertEqual( 
+			self.assertEqual(
 				arnold.AiNodeGetName( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane" ), "node" ) ),
 				arnold.AiNodeGetName( mesh )
 			)
