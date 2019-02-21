@@ -557,5 +557,31 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.parent() is None )
 		self.assertTrue( k2.parent().isSame( curve ) )
 
+	def testSerialisationRoundTripsExactly( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		context = Gaffer.Context()
+		for frame in range( 0, 10000 ) :
+			context.setFrame( frame )
+			curve.addKey( Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Type.Linear ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		curve = Gaffer.Animation.acquire( s2["n"]["user"]["f"] )
+
+		for frame in range( 0, 10000 ) :
+			context.setFrame( frame )
+			self.assertEqual(
+				curve.getKey( context.getTime() ),
+				Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Type.Linear )
+			)
+
 if __name__ == "__main__":
 	unittest.main()
