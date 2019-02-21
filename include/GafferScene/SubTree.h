@@ -85,15 +85,27 @@ class GAFFERSCENE_API SubTree : public SceneProcessor
 
 	private :
 
+		enum SourceMode
+		{
+			Default, // Pass through source path
+			CreateRoot, // Create a root
+			EmptyRoot, // Create an empty root
+		};
+
 		// Generally the work of the SubTree node is easy - we just remap the
 		// output path to a source path and pass through the results unchanged from
-		// that source path. There is one situation in which this won't work - when
-		// outputPath == "/" and includeRoot == true. In this case we must actually perform
-		// some computation to create the right bounding box and the right child name.
-		// This method returns the appropriate source path for the simple case, and in
-		// the slightly more complex case sets createRoot to true and returns the
+		// that source path. There are two situations in which this won't work :
+		//
+		// - When outputPath == "/" and includeRoot == true. In this case we must
+		//   actually perform some computation to create the right bounding box and
+		//   the right child name.
+		// - When outputPath == "/" and !exists( root ). In this case we must return
+		//   an empty scene.
+		//
+		// This method returns the appropriate source path for the default case, and for
+		// the more complex cases sets `sourceMode` appropriately and returns the
 		// root path itself.
-		ScenePath sourcePath( const ScenePath &outputPath, bool &createRoot ) const;
+		ScenePath sourcePath( const ScenePath &outputPath, SourceMode &sourceMode ) const;
 
 		static size_t g_firstPlugIndex;
 
