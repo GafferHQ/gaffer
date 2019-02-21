@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,25 +34,56 @@
 #
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
-from ArnoldVDBTest import ArnoldVDBTest
-from ArnoldLightTest import ArnoldLightTest
-from ArnoldMeshLightTest import ArnoldMeshLightTest
-from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from ArnoldDisplacementTest import ArnoldDisplacementTest
-from LightToCameraTest import LightToCameraTest
-from IECoreArnoldPreviewTest import *
-from ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from ArnoldBackgroundTest import ArnoldBackgroundTest
-from ArnoldTextureBakeTest import ArnoldTextureBakeTest
-from ModuleTest import ModuleTest
-from ArnoldShaderBallTest import ArnoldShaderBallTest
-from ArnoldFilterMapTest import ArnoldFilterMapTest
+import unittest
+
+import IECore
+
+import GafferTest
+import GafferScene
+import GafferSceneTest
+import GafferOSL
+import GafferArnold
+
+class ArnoldFilterMapTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		sphere = GafferScene.Sphere()
+		camera = GafferScene.Camera()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( camera["out"] )
+
+		noise = GafferArnold.ArnoldShader()
+		noise.loadShader( "noise" )
+
+		filterMap = GafferArnold.ArnoldFilterMap()
+		filterMap["map"].setInput( noise["out"] )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+
+		cameraFilter = GafferScene.PathFilter()
+		cameraFilter["paths"].setValue( IECore.StringVectorData( [ "/group/camera" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( group["out"] )
+		assignment["shader"].setInput( noise["out"] )
+		assignment["filter"].setInput( sphereFilter["out"] )
+
+		filterMapAssignment = GafferScene.ShaderAssignment()
+		filterMapAssignment["in"].setInput( group["out"] )
+		filterMapAssignment["shader"].setInput( filterMap["out"] )
+		filterMapAssignment["filter"].setInput( cameraFilter["out"] )
+
+		self.assertEqual(
+			filterMapAssignment["out"].attributes( "/group/camera" )["ai:filtermap"],
+			assignment["out"].attributes( "/group/sphere" )["ai:surface"],
+		)
+
+		filterMap["enabled"].setValue( False )
+		self.assertNotIn( "ai:filtermap", filterMapAssignment["out"].attributes( "/group/camera" ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
