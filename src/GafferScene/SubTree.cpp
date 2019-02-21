@@ -110,108 +110,119 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 
 void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	bool createRoot = false;
-	ScenePath source = sourcePath( path, createRoot );
-	if( createRoot )
+	SourceMode sourceMode = Default;
+	ScenePath source = sourcePath( path, sourceMode );
+	switch( sourceMode )
 	{
-		h = hashOfTransformedChildBounds( path, parent );
-	}
-	else
-	{
-		h = inPlug()->boundHash( source );
+		case Default :
+			h = inPlug()->boundHash( source );
+			break;
+		case CreateRoot :
+			h = hashOfTransformedChildBounds( path, parent );
+			break;
+		case EmptyRoot :
+			SceneProcessor::hashBound( path, context, parent, h );
+			break;
 	}
 }
 
 Imath::Box3f SubTree::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	bool createRoot = false;
-	const ScenePath source = sourcePath( path, createRoot );
-	if( createRoot )
+	SourceMode sourceMode = Default;
+	const ScenePath source = sourcePath( path, sourceMode );
+	switch( sourceMode )
 	{
-		return unionOfTransformedChildBounds( path, parent );
-	}
-	else
-	{
-		return inPlug()->bound( source );
+		case Default :
+			return inPlug()->bound( source );
+		case CreateRoot :
+			return unionOfTransformedChildBounds( path, parent );
+		default : // EmptyRoot
+			return Imath::Box3f();
 	}
 }
 
 void SubTree::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	bool createRoot = false;
-	ScenePath source = sourcePath( path, createRoot );
-	assert( !createRoot ); // SceneNode::hash() shouldn't call this for the root path
+	SourceMode sourceMode = Default;
+	ScenePath source = sourcePath( path, sourceMode );
+	assert( sourceMode == Default ); // SceneNode::hash() shouldn't call this for the root path
 	h = inPlug()->transformHash( source );
 }
 
 Imath::M44f SubTree::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	bool createRoot = false;
-	const ScenePath source = sourcePath( path, createRoot );
-	assert( !createRoot ); // SceneNode::compute() shouldn't call this for the root path
+	SourceMode sourceMode = Default;
+	const ScenePath source = sourcePath( path, sourceMode );
+	assert( sourceMode == Default ); // SceneNode::compute() shouldn't call this for the root path
 	return inPlug()->transform( source );
 }
 
 void SubTree::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	bool createRoot = false;
-	ScenePath source = sourcePath( path, createRoot );
-	assert( !createRoot ); // SceneNode::hash() shouldn't call this for the root path
+	SourceMode sourceMode = Default;
+	ScenePath source = sourcePath( path, sourceMode );
+	assert( sourceMode == Default ); // SceneNode::hash() shouldn't call this for the root path
 	h = inPlug()->attributesHash( source );
 }
 
 IECore::ConstCompoundObjectPtr SubTree::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	bool createRoot = false;
-	const ScenePath source = sourcePath( path, createRoot );
-	assert( !createRoot ); // SceneNode::compute() shouldn't call this for the root path
+	SourceMode sourceMode = Default;
+	const ScenePath source = sourcePath( path, sourceMode );
+	assert( sourceMode == Default ); // SceneNode::compute() shouldn't call this for the root path
 	return inPlug()->attributes( source );
 }
 
 void SubTree::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	bool createRoot = false;
-	ScenePath source = sourcePath( path, createRoot );
-	assert( !createRoot ); // SceneNode::hash() shouldn't call this for the root path
+	SourceMode sourceMode = Default;
+	ScenePath source = sourcePath( path, sourceMode );
+	assert( sourceMode == Default ); // SceneNode::hash() shouldn't call this for the root path
 	h = inPlug()->objectHash( source );
 }
 
 IECore::ConstObjectPtr SubTree::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	bool createRoot = false;
-	const ScenePath source = sourcePath( path, createRoot );
-	assert( !createRoot ); // SceneNode::compute() shouldn't call this for the root path
+	SourceMode sourceMode = Default;
+	const ScenePath source = sourcePath( path, sourceMode );
+	assert( sourceMode == Default ); // SceneNode::compute() shouldn't call this for the root path
 	return inPlug()->object( source );
 }
 
 void SubTree::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	bool createRoot = false;
-	const ScenePath source = sourcePath( path, createRoot );
-	if( createRoot )
+	SourceMode sourceMode = Default;
+	const ScenePath source = sourcePath( path, sourceMode );
+	switch( sourceMode )
 	{
-		SceneProcessor::hashChildNames( path, context, parent, h );
-		h.append( *(source.rbegin()) );
-	}
-	else
-	{
-		h = inPlug()->childNamesHash( source );
+		case Default :
+			h = inPlug()->childNamesHash( source );
+			break;
+		case CreateRoot :
+			SceneProcessor::hashChildNames( path, context, parent, h );
+			h.append( *(source.rbegin()) );
+			break;
+		case EmptyRoot :
+			h = inPlug()->childNamesPlug()->defaultValue()->Object::hash();
+			break;
 	}
 }
 
 IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	bool createRoot = false;
-	const ScenePath source = sourcePath( path, createRoot );
-	if( createRoot )
+	SourceMode sourceMode = Default;
+	const ScenePath source = sourcePath( path, sourceMode );
+	switch( sourceMode )
 	{
-		IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
-		result->writable().push_back( *(source.rbegin()) );
-		return result;
-	}
-	else
-	{
-		return inPlug()->childNames( source );
+		case Default :
+			return inPlug()->childNames( source );
+		case CreateRoot : {
+			IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
+			result->writable().push_back( *(source.rbegin()) );
+			return result;
+		}
+		default : // EmptyRoot
+			return inPlug()->childNamesPlug()->defaultValue();
 	}
 }
 
@@ -246,14 +257,14 @@ IECore::ConstPathMatcherDataPtr SubTree::computeSet( const IECore::InternedStrin
 	return outputSetData;
 }
 
-SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &createRoot ) const
+SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, SourceMode &sourceMode ) const
 {
 	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
 	string rootAsString = rootPlug()->getValue();
 	ScenePath result;
 	ScenePlug::stringToPath( rootAsString, result );
 
-	createRoot = false;
+	sourceMode = Default;
 	if( result.size() && includeRootPlug()->getValue() )
 	{
 		if( outputPath.size() )
@@ -262,7 +273,7 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &cre
 		}
 		else
 		{
-			createRoot = true;
+			sourceMode = CreateRoot;
 		}
 	}
 	else
@@ -272,26 +283,13 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &cre
 
 	if( outputPath.empty() )
 	{
-		// Validate that the root the user has specified does exist.
-		// We only do this when the output path is "/", because we don't
-		// want to pay the cost for every location.
-		//
-		// The unwritten rule of GafferScene is that client code must not query
-		// invalid locations, and nodes are therefore free to assume that
-		// all queries made to them are valid, all in the name of performance.
-		//
-		// In its role as a client, the SubTree is therefore required to make
-		// only valid queries of the input scene, and it would be useful if it
-		// met this obligation even if the user has provided an invalid root
-		// path.
-		//
-		// However, testing only at the root of the output scene is justified
-		// because clients of the SubTree have the same obligation to make
-		// only valid queries, and this will necessarily involve them computing
-		// the child names for the root first.
+		// If the root the user has specified doesn't exist, fall back to EmptyRoot
+		// mode so that we output an empty scene. This guarantees that we will never
+		// request an invalid source location from our input, provided that we are not
+		// asked for an invalid output location.
 		if( !SceneAlgo::exists( inPlug(), result ) )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Root \"%s\" does not exist" ) % rootAsString ) );
+			sourceMode = EmptyRoot;
 		}
 	}
 
