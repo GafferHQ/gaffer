@@ -301,7 +301,7 @@ const AtString g_velocityOutlierThresholdArnoldString( "velocity_outlier_thresho
 const AtString g_widthArnoldString( "width" );
 const AtString g_xresArnoldString( "xres" );
 const AtString g_yresArnoldString( "yres" );
-
+const AtString g_filterMapArnoldString( "filtermap" );
 
 } // namespace
 
@@ -740,6 +740,7 @@ IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsu
 
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
+IECore::InternedString g_arnoldFilterMapAttributeName( "ai:filtermap" );
 
 IECore::InternedString g_arnoldReceiveShadowsAttributeName( "ai:receive_shadows" );
 IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
@@ -816,6 +817,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( surfaceShaderAttribute )
 			{
 				m_surfaceShader = shaderCache->get( surfaceShaderAttribute );
+			}
+
+			if( auto filterMapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldFilterMapAttributeName, attributes ) )
+			{
+				m_filterMap = shaderCache->get( filterMapAttribute );
 			}
 
 			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
@@ -1124,6 +1130,20 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					AiNodeResetParameter( node, g_shadowGroupArnoldString );
 					AiNodeResetParameter( node, g_useShadowGroupArnoldString );
+				}
+			}
+
+			// Add camera specific parameters.
+
+			if( AiNodeEntryGetType( AiNodeGetNodeEntry( node ) ) == AI_NODE_CAMERA )
+			{
+				if( m_filterMap && m_filterMap->root() )
+				{
+					AiNodeSetPtr( node, g_filterMapArnoldString, m_filterMap->root() );
+				}
+				else
+				{
+					AiNodeResetParameter( node, g_filterMapArnoldString );
 				}
 			}
 
@@ -1527,6 +1547,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
+		ArnoldShaderPtr m_filterMap;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
