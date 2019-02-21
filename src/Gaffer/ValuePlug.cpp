@@ -43,9 +43,10 @@
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 #include "Gaffer/Process.h"
 
+#include "IECore/LRUCache.h"
+
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
-#include "boost/unordered_map.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
 
@@ -119,40 +120,38 @@ class ValuePlug::HashProcess : public Process
 			// from our cache, and if we can't we'll compute it using a HashProcess instance.
 
 			ThreadData &threadData = g_threadData.local();
-			if( !Process::current() )
-			{
-				// Starting a new root computation.
-				if( ++(threadData.cacheClearCount) == 3200 )
-				{
-					// Prevent unbounded growth in the hash cache
-					// if many computations are being performed
-					// without any plugs being dirtied in between,
-					// by clearing it after every Nth computation.
-					// N == 3200 was observed to be 6x faster than
-					// N == 100 for a procedural instancing scene at
-					// a memory cost of about 100 mb.
-					threadData.clearCache = 1;
-				}
-			}
 
 			if( threadData.clearCache )
 			{
 				threadData.cache.clear();
-				threadData.cacheClearCount = 0;
 				threadData.clearCache = 0;
+			}
+
+			if( threadData.cache.getMaxCost() != g_cacheSizeLimit )
+			{
+				threadData.cache.setMaxCost( g_cacheSizeLimit );
 			}
 
 			const Context *currentContext = Context::current();
 			const CacheKey key( p, currentContext->hash() );
-			Cache::iterator it = threadData.cache.find( key );
-			if( it != threadData.cache.end() )
+			IECore::MurmurHash result = threadData.cache.get( key );
+			if( result == g_nullHash )
 			{
-				return it->second;
+				HashProcess process( p, plug, currentContext );
+				result = process.m_result;
+				threadData.cache.set( key, result, 1 );
 			}
+			return result;
+		}
 
-			HashProcess process( p, plug, currentContext );
-			threadData.cache[key] = process.m_result;
-			return process.m_result;
+		static size_t getCacheSizeLimit()
+		{
+			return g_cacheSizeLimit;
+		}
+
+		static void setCacheSizeLimit( size_t maxEntriesPerThread )
+		{
+			g_cacheSizeLimit = maxEntriesPerThread;
 		}
 
 		static void clearCache()
@@ -193,7 +192,7 @@ class ValuePlug::HashProcess : public Process
 
 				n->hash( plug, Context::current(), m_result );
 
-				if( m_result == IECore::MurmurHash() )
+				if( m_result == g_nullHash )
 				{
 					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % plug->fullName() ) );
 				}
@@ -204,35 +203,40 @@ class ValuePlug::HashProcess : public Process
 			}
 		}
 
-		// During a single graph evaluation, we actually call ValuePlug::hash()
-		// many times for the same plugs. First hash() is called for the terminating plug,
-		// which will call hash() for all the upstream plugs, and then compute() is called
-		// for the terminating plug, which will call getValue() on the upstream plugs. But
-		// those upstream plugs will need to call their hash() again in getValue(), so their
-		// value can be cached. This ripples on up the chain, leading to quadratic complexity
-		// in the length of the chain of nodes - not good. Thanks is due to David Minor for
-		// being the first to point this out.
-		//
-		// We address this problem by keeping a per-thread cache of hashes, indexed
-		// by the plug the hash is for and the context the hash was performed in. The
-		// typedefs below describe that data structure. We use Plug::dirty() to empty
-		// the caches, because they are invalidated whenever an upstream value or
-		// connection is changed. We also clear the cache unconditionally every N
-		// computations, to prevent unbounded growth.
+		// Per-thread cache of hashes, indexed by the plug the hash is for and the context
+		// the hash was performed in. The typedefs below describe that data structure. We
+		// use Plug::dirty() to empty the caches, because they are invalidated whenever an
+		// upstream value or connection is changed.
 		typedef std::pair<const ValuePlug *, IECore::MurmurHash> CacheKey;
-		typedef boost::unordered_map<CacheKey, IECore::MurmurHash> Cache;
+		typedef IECore::LRUCache<CacheKey, IECore::MurmurHash, IECore::LRUCachePolicy::Serial> Cache;
+
+		// In an ideal world we would give our cache instances a true getter, that computed and
+		// returned the hash. With this in mind, the IECore::LRUCache is carefully constructed to
+		// allow a reentrant getter, whereby `Cache::get( x )` may result in a nested call to
+		// `Cache::get( y )`, as would be the case when hashing triggers upstream hashing. But we
+		// are thwarted by TBB task stealing, which means that parallel code within `Cache::get( x )`
+		// might steal an outer (downstream) task, which might reenter the cache with a call to
+		// `Cache::get( _x_ )`. We may be able to deal with this using `tbb::this_task_arena::isolate()`,
+		// but for now we use `nullGetter()` instead, and use `Cache::set()` to insert values into
+		// the cache in our `hash()` method above.
+		static IECore::MurmurHash nullGetter( const CacheKey &key, size_t &cost )
+		{
+			cost = 1;
+			return g_nullHash;
+		}
 
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
-			ThreadData() : cacheClearCount( 0 ) {}
-			int cacheClearCount;
+			ThreadData() : cache( nullGetter, g_cacheSizeLimit ), clearCache( 0 ) {}
 			Cache cache;
 			// Flag to request that hashCache be cleared.
 			tbb::atomic<int> clearCache;
 		};
 
 		static tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance > g_threadData;
+		static IECore::MurmurHash g_nullHash;
+		static tbb::atomic<size_t> g_cacheSizeLimit;
 
 		IECore::MurmurHash m_result;
 
@@ -240,6 +244,9 @@ class ValuePlug::HashProcess : public Process
 
 const IECore::InternedString ValuePlug::HashProcess::staticType( "computeNode:hash" );
 tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_aligned_allocator<ValuePlug::HashProcess::ThreadData>, tbb::ets_key_per_instance > ValuePlug::HashProcess::g_threadData;
+IECore::MurmurHash ValuePlug::HashProcess::g_nullHash;
+// Default limit corresponds to a cost of roughly 25Mb per thread.
+tbb::atomic<size_t> ValuePlug::HashProcess::g_cacheSizeLimit = 128000;
 
 //////////////////////////////////////////////////////////////////////////
 // The ComputeProcess manages the task of calling ComputeNode::compute()
@@ -779,4 +786,14 @@ size_t ValuePlug::cacheMemoryUsage()
 void ValuePlug::clearCache()
 {
 	ComputeProcess::clearCache();
+}
+
+size_t ValuePlug::getHashCacheSizeLimit()
+{
+	return HashProcess::getCacheSizeLimit();
+}
+
+void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
+{
+	HashProcess::setCacheSizeLimit( maxEntriesPerThread );
 }

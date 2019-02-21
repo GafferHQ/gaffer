@@ -116,6 +116,18 @@ class GAFFER_API ValuePlug : public Plug
 		static void clearCache();
 		//@}
 
+		/// @name Hash cache management
+		/// In addition to the cache of recently computed values, we also
+		/// keep a per-thread cache of recently computed hashes. These functions
+		/// allow for management of that cache.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		static size_t getHashCacheSizeLimit();
+		/// > Note : Limits are applied on a per-thread basis as and
+		/// > when each thread is used to compute a hash.
+		static void setHashCacheSizeLimit( size_t maxEntriesPerThread );
+		//@}
+
 	protected :
 
 		/// This constructor must be used by all derived classes which wish
