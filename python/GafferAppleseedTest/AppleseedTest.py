@@ -41,23 +41,13 @@ def appleseedProjectSchemaPath():
 
 	return os.path.join( os.environ["APPLESEED"], "schemas", "project.xsd" )
 
-def appleseedBinPath():
-
-	return os.path.join( os.environ["APPLESEED"], "bin" )
-
-def appleseedOSLHeadersPath():
-
-	return os.path.join( os.environ["APPLESEED"], "shaders" )
-
 def compileOSLShader( sourceFileName, tempDir ) :
 
 	outputFileName = tempDir + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
 
-	oslc = os.path.join( appleseedBinPath(), "oslc" )
-
 	subprocess.check_call(
-		[ oslc, "-q" ] +
-		[ "-I" + appleseedOSLHeadersPath() ] +
+		[ "oslc", "-q" ] +
+		[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( ":" ) ] +
 		[ "-o", outputFileName, sourceFileName ]
 	)
 
