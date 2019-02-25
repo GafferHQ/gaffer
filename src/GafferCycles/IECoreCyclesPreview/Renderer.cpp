@@ -1528,10 +1528,10 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			// To feed into area lights
 			light->axisu = ccl::transform_get_column(&tfm, 0);
 			light->axisv = ccl::transform_get_column(&tfm, 1);
-			Imath::Vec3<float> scale = Imath::Vec3<float>( 1.0f );
-			Imath::extractScaling( transform, scale, false );
-			light->sizeu = scale.x;
-			light->sizev = scale.y;
+			//Imath::Vec3<float> scale = Imath::Vec3<float>( 1.0f );
+			//Imath::extractScaling( transform, scale, false );
+			//light->sizeu = scale.x;
+			//light->sizev = scale.y;
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
 		}
@@ -1547,10 +1547,10 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			// To feed into area lights
 			light->axisu = ccl::transform_get_column(&tfm, 0);
 			light->axisv = ccl::transform_get_column(&tfm, 1);
-			Imath::Vec3<float> scale = Imath::Vec3<float>( 1.0f );
-			Imath::extractScaling( samples[0], scale, false );
-			light->sizeu = scale.x;
-			light->sizev = scale.y;
+			//Imath::Vec3<float> scale = Imath::Vec3<float>( 1.0f );
+			//Imath::extractScaling( samples[0], scale, false );
+			//light->sizeu = scale.x;
+			//light->sizev = scale.y;
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
 		}
@@ -2266,7 +2266,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->use_curves = m_curveSystemManagerDefault->use_curves;
+						curveSystemManager->use_curves = m_curveSystemManagerDefault.use_curves;
 						return;
 					}
 					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
@@ -2277,7 +2277,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->minimum_width = m_curveSystemManagerDefault->minimum_width;
+						curveSystemManager->minimum_width = m_curveSystemManagerDefault.minimum_width;
 						return;
 					}
 					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
@@ -2288,7 +2288,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->maximum_width = m_curveSystemManagerDefault->maximum_width;
+						curveSystemManager->maximum_width = m_curveSystemManagerDefault.maximum_width;
 						return;
 					}
 					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
@@ -2299,7 +2299,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->primitive = m_curveSystemManagerDefault->primitive;
+						curveSystemManager->primitive = m_curveSystemManagerDefault.primitive;
 						return;
 					}
 					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
@@ -2310,7 +2310,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->curve_shape = m_curveSystemManagerDefault->curve_shape;
+						curveSystemManager->curve_shape = m_curveSystemManagerDefault.curve_shape;
 						return;
 					}
 					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
@@ -2321,7 +2321,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->resolution = m_curveSystemManagerDefault->resolution;
+						curveSystemManager->resolution = m_curveSystemManagerDefault.resolution;
 						return;
 					}
 					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
@@ -2332,7 +2332,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->subdivisions = m_curveSystemManagerDefault->subdivisions;
+						curveSystemManager->subdivisions = m_curveSystemManagerDefault.subdivisions;
 						return;
 					}
 					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
@@ -2343,7 +2343,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						curveSystemManager->use_backfacing = m_curveSystemManagerDefault->use_backfacing;
+						curveSystemManager->use_backfacing = m_curveSystemManagerDefault.use_backfacing;
 						return;
 					}
 					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
@@ -2928,7 +2928,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SessionParams m_sessionParamsDefault;
 		ccl::SceneParams m_sceneParamsDefault;
 		ccl::DenoiseParams m_denoiseParamsDefault;
-		CCurveSystemManagerPtr m_curveSystemManagerDefault;
+		ccl::CurveSystemManager m_curveSystemManagerDefault;
 
 		// IECoreScene::Renderer
 		string m_deviceName;
