@@ -1,0 +1,10 @@
+build
+install
+*.config
+*.creator*
+*.files
+*.includes
+dependencies/*/archives
+dependencies/*/working
+.directory
+.vscode
