@@ -38,6 +38,7 @@
 
 #include "GafferSceneUI/SceneView.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -58,6 +59,47 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// \todo These are stolen shamelessly from TransformTool. They probably
+/// should be moved somewhere they can be shared - perhaps AnimationAlgo
+/// of some sort? We would need to generalise to support more than just
+/// FloatPlugs, and also consider whether we really expect a non-ui API
+/// to be checking for read-onliness.
+bool canSetValueOrAddKey( const Gaffer::FloatPlug *plug )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		return !MetadataAlgo::readOnly( plug->source() );
+	}
+
+	return plug->settable() && !MetadataAlgo::readOnly( plug );
+}
+
+void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		Animation::CurvePlug *curve = Animation::acquire( plug );
+		curve->addKey( new Animation::Key( time, value ) );
+	}
+	else
+	{
+		plug->setValue( value );
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// CameraTool
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( CameraTool );
 
@@ -210,18 +252,18 @@ void CameraTool::preRenderEnd()
 	if( selection.transformPlug )
 	{
 		selectionEditable = true;
-		for( ValuePlugIterator it( selection.transformPlug->translatePlug() ); !it.done(); ++it )
+		for( FloatPlugIterator it( selection.transformPlug->translatePlug() ); !it.done(); ++it )
 		{
-			if( !(*it)->settable() || MetadataAlgo::readOnly( it->get() ) )
+			if( !canSetValueOrAddKey( it->get() ) )
 			{
 				selectionEditable = false;
 				break;
 			}
 		}
 
-		for( ValuePlugIterator it( selection.transformPlug->rotatePlug() ); !it.done(); ++it )
+		for( FloatPlugIterator it( selection.transformPlug->rotatePlug() ); !it.done(); ++it )
 		{
-			if( !(*it)->settable() || MetadataAlgo::readOnly( it->get() ) )
+			if( !canSetValueOrAddKey( it->get() ) )
 			{
 				selectionEditable = false;
 				break;
@@ -319,6 +361,7 @@ void CameraTool::viewportCameraChanged()
 		plugTransform = selection.transformPlug->matrix();
 	}
 	plugTransform = plugTransform * transformSpaceOffset;
+	const V3f t = plugTransform.translation();
 
 	Eulerf e; e.extract( plugTransform );
 	e.makeNear( degreesToRadians( selection.transformPlug->rotatePlug()->getValue() ) );
@@ -326,8 +369,11 @@ void CameraTool::viewportCameraChanged()
 
 	UndoScope undoScope( selection.transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
 
-	selection.transformPlug->rotatePlug()->setValue( r );
-	selection.transformPlug->translatePlug()->setValue( plugTransform.translation() );
+	for( int i = 0; i < 3; ++i )
+	{
+		setValueOrAddKey( selection.transformPlug->rotatePlug()->getChild( i ), selection.context->getTime(), r[i] );
+		setValueOrAddKey( selection.transformPlug->translatePlug()->getChild( i ), selection.context->getTime(), t[i] );
+	}
 
 	// Create an action to save/restore the current center of interest, so that
 	// when the user undos a framing action, they get back to the old center of
