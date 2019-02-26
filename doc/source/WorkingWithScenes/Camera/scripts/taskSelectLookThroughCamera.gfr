@@ -1,0 +1,58 @@
+import Gaffer
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 53, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["Camera2"] = GafferScene.Camera( "Camera2" )
+parent.addChild( __children["Camera2"] )
+__children["Camera1"] = GafferScene.Camera( "Camera1" )
+parent.addChild( __children["Camera1"] )
+__children["StandardOptions"] = GafferScene.StandardOptions( "StandardOptions" )
+parent.addChild( __children["StandardOptions"] )
+__children["Cube"] = GafferScene.Cube( "Cube" )
+parent.addChild( __children["Cube"] )
+__children["Sphere"] = GafferScene.Sphere( "Sphere" )
+parent.addChild( __children["Sphere"] )
+__children["Camera3"] = GafferScene.Camera( "Camera3" )
+parent.addChild( __children["Camera3"] )
+__children["Text"] = GafferScene.Text( "Text" )
+parent.addChild( __children["Text"] )
+__children["Group"] = GafferScene.Group( "Group" )
+parent.addChild( __children["Group"] )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in3", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in4", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in5", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in6", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Camera2"]["name"].setValue( 'camera2' )
+__children["Camera2"]["transform"]["translate"].setValue( imath.V3f( 5, 0, 0 ) )
+__children["Camera1"]["name"].setValue( 'camera1' )
+__children["Camera1"]["transform"]["translate"].setValue( imath.V3f( -5, 0, 0 ) )
+__children["StandardOptions"]["in"].setInput( __children["Group"]["out"] )
+__children["StandardOptions"]["options"]["renderCamera"]["value"].setValue( '/group/camera3' )
+__children["StandardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
+__children["Cube"]["transform"]["translate"].setValue( imath.V3f( 5, 0, -5 ) )
+__children["Sphere"]["transform"]["translate"].setValue( imath.V3f( -5, 0, -5 ) )
+__children["Sphere"]["radius"].setValue( 0.5 )
+__children["Camera3"]["name"].setValue( 'camera3' )
+__children["Camera3"]["transform"]["translate"].setValue( imath.V3f( 15, 0, 0 ) )
+__children["Text"]["transform"]["translate"].setValue( imath.V3f( 11.2, 0, -10 ) )
+__children["Text"]["text"].setValue( 'Render Camera' )
+__children["Group"]["in"]["in0"].setInput( __children["Camera1"]["out"] )
+__children["Group"]["in"]["in1"].setInput( __children["Camera2"]["out"] )
+__children["Group"]["in"]["in2"].setInput( __children["Camera3"]["out"] )
+__children["Group"]["in"]["in3"].setInput( __children["Sphere"]["out"] )
+__children["Group"]["in"]["in4"].setInput( __children["Cube"]["out"] )
+__children["Group"]["in"]["in5"].setInput( __children["Text"]["out"] )
+
+
+del __children
+
