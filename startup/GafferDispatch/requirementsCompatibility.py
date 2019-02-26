@@ -59,6 +59,9 @@ def __preTasksPlugAddChildWrapper( originalAddChild ) :
 
 		if __isPreTasksPlug( self ) :
 			child.setName( child.getName().replace( "requirement", "preTask" ) )
+			if child.__class__ is Gaffer.Plug :
+				# Replace ancient plugs from files prior to version 0.15 with proper TaskPlugs.
+				child = Gaffer.TaskNode.TaskPlug( child.getName(), child.direction(), child.getFlags() )
 
 		return originalAddChild( self, child )
 

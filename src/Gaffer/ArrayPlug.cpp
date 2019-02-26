@@ -84,20 +84,7 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 		return false;
 	}
 
-	if( children().size() == 0 || potentialChild->typeId() == children()[0]->typeId() )
-	{
-		return true;
-	}
-
-	// Ideally we'd just return false here right away, but we need this
-	// hack to provide backwards compatibility with old TaskNodes,
-	// which used to use generic Plugs as children and now use TaskPlugs.
-	if( children()[0]->isInstanceOf( "GafferDispatch::TaskNode::TaskPlug" ) && potentialChild->typeId() == (IECore::TypeId)PlugTypeId )
-	{
-		return true;
-	}
-
-	return false;
+	return children().size() == 0 || potentialChild->typeId() == children()[0]->typeId();
 }
 
 void ArrayPlug::setInput( PlugPtr input )

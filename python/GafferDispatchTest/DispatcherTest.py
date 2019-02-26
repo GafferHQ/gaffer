@@ -919,16 +919,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# e2 requires itself with a different context
 		with c1 :
-			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e2"], c2 ) ] )
-		# e2 in the other context requires e1 with the original context
+			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e2"]["task"], c2 ) ] )
+		# e2 in the other context requires its standard preTasks with the original context
 		with c2 :
-			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e1"], c1 ) ] )
+			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e2"]["preTasks"][0], c1 ), GafferDispatch.TaskNode.Task( s["e2"]["preTasks"][1], c1 ) ] )
 		# e1 requires itself with a different context
 		with c1 :
-			self.assertEqual( s["e1"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e1"], c2 ) ] )
-		# e1 in the other context has no requirements
+			self.assertEqual( s["e1"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e1"]["task"], c2 ) ] )
+		# e1 in the other context has the standard preTasks
 		with c2 :
-			self.assertEqual( s["e1"]["task"].preTasks(), [] )
+			self.assertEqual( s["e1"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e1"]["preTasks"][0], c1 ) ] )
 
 		self.assertEqual( s["e1"].preExecutionCount, 0 )
 		self.assertEqual( s["e1"].mainExecutionCount, 0 )
@@ -967,11 +967,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 				result = []
 				for plug in self["preTasks"] :
-					node = plug.source().node()
-					if node.isSame( self ) or not isinstance( node, GafferDispatch.TaskNode ):
-						continue
-
-					result.append( self.Task( node, upstreamContext ) )
+					result.append( self.Task( plug, upstreamContext ) )
 
 				return result
 
@@ -1708,6 +1704,23 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertNotIn( "test", s["n2"].log[0].context )
 		self.assertIn( "test", s["n1"].log[0].context )
 		self.assertEqual( s["n1"].log[0].context["test"], 10 )
+
+	def testTaskPlugsWithoutTaskNodes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["badNode"] = Gaffer.Node()
+		s["badNode"]["task"] = GafferDispatch.TaskNode.TaskPlug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		s["taskList"] = GafferDispatch.TaskList()
+		s["taskList"]["preTasks"][0].setInput( s["badNode"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		with self.assertRaisesRegexp( RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
+			dispatcher.dispatch( [ s["taskList"] ] )
 
 if __name__ == "__main__":
 	unittest.main()
