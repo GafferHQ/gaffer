@@ -147,19 +147,23 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		setA["paths"].setValue( IECore.StringVectorData( [ '/group/sphere1' ] ) )
 		self.assertNotEqual( h, GafferScene.SetAlgo.setExpressionHash( "setA", group2["out"] ) )
 
-	def testColonInSetAndObjectNames( self ):
+	def testColonAndDotInSetAndObjectNames( self ):
 
 		sphere1 = GafferScene.Sphere( "Sphere1" )
-		sphere1["name"].setValue( 'MyObject:sphere1' )
+		sphere1["name"].setValue( 'MyObject:sphere1.model' )
 
 		setA = GafferScene.Set( "SetA" )
-		setA["name"].setValue( "MySets:setA" )
-		setA["paths"].setValue( IECore.StringVectorData( [ "/MyObject:sphere1" ] ) )
+		setA["name"].setValue( "MySets:setA.set" )
+		setA["paths"].setValue( IECore.StringVectorData( [ "/MyObject:sphere1.model" ] ) )
 
-		self.assertCorrectEvaluation( setA["out"], "MySets:setA", [ "/MyObject:sphere1" ] )
-		self.assertCorrectEvaluation( setA["out"], "/MyObject:sphere1", [ "/MyObject:sphere1" ] )
+		self.assertCorrectEvaluation( setA["out"], "MySets:setA.set", [ "/MyObject:sphere1.model" ] )
+		self.assertCorrectEvaluation( setA["out"], "/MyObject:sphere1.model", [ "/MyObject:sphere1.model" ] )
 
 	def assertCorrectEvaluation( self, scenePlug, expression, expectedContents ) :
 
 		result = set( GafferScene.SetAlgo.evaluateSetExpression( expression, scenePlug ).paths() )
 		self.assertEqual( result, set( expectedContents ) )
+
+if __name__ == "__main__":
+	unittest.main()
+
