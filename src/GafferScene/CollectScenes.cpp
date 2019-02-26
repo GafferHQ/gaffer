@@ -36,7 +36,8 @@
 
 #include "GafferScene/CollectScenes.h"
 
-#include "Gaffer/ArrayPlug.h"
+#include "GafferScene/SceneAlgo.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
@@ -290,6 +291,15 @@ void CollectScenes::hashChildNames( const ScenePath &path, const Gaffer::Context
 	else
 	{
 		SceneScope sceneScope( context, rootNameVariablePlug()->getValue(), path, sourceRootPlug() );
+		if( path.size() == 1 )
+		{
+			const auto &upstreamPath = Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+			if( !SceneAlgo::exists( inPlug(), upstreamPath ) )
+			{
+				h = inPlug()->childNamesPlug()->defaultValue()->Object::hash();
+				return;
+			}
+		}
 		h = inPlug()->childNamesPlug()->hash();
 	}
 }
@@ -322,6 +332,14 @@ IECore::ConstInternedStringVectorDataPtr CollectScenes::computeChildNames( const
 	else
 	{
 		SceneScope sceneScope( context, rootNameVariablePlug()->getValue(), path, sourceRootPlug() );
+		if( path.size() == 1 )
+		{
+			const auto &upstreamPath = Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+			if( !SceneAlgo::exists( inPlug(), upstreamPath ) )
+			{
+				return inPlug()->childNamesPlug()->defaultValue();
+			}
+		}
 		return inPlug()->childNamesPlug()->getValue();
 	}
 }
