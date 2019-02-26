@@ -1705,5 +1705,22 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertIn( "test", s["n1"].log[0].context )
 		self.assertEqual( s["n1"].log[0].context["test"], 10 )
 
+	def testTaskPlugsWithoutTaskNodes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["badNode"] = Gaffer.Node()
+		s["badNode"]["task"] = GafferDispatch.TaskNode.TaskPlug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		s["taskList"] = GafferDispatch.TaskList()
+		s["taskList"]["preTasks"][0].setInput( s["badNode"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		with self.assertRaisesRegexp( RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
+			dispatcher.dispatch( [ s["taskList"] ] )
+
 if __name__ == "__main__":
 	unittest.main()
