@@ -1150,6 +1150,38 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		assertReferenceConnections()
 
+	def testSearchPaths( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		referenceFile = "test.grf"
+
+		boxA = Gaffer.Box("BoxA")
+		s.addChild(boxA)
+		boxPathA = os.path.join(self.temporaryDirectory(), "a")
+		os.makedirs(boxPathA)
+		fileA = os.path.join(boxPathA, referenceFile)
+		boxA.exportForReference(fileA)
+
+		boxB = Gaffer.Box("BoxB")
+		s.addChild(boxB)
+		boxPathB = os.path.join(self.temporaryDirectory(), "b")
+		os.makedirs(boxPathB)
+		fileB = os.path.join(boxPathB, referenceFile)
+		boxB.exportForReference(fileB)
+
+		s["r"] = Gaffer.Reference()
+
+		searchPathA = ":".join([boxPathA, boxPathB])
+		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
+		s["r"].load(referenceFile)
+		self.assertEqual(s["r"].fileName(), fileA)
+
+		searchPathB = ":".join([boxPathB, boxPathA])
+		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathB
+		s["r"].load(referenceFile)
+		self.assertEqual(s["r"].fileName(), fileB)
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
