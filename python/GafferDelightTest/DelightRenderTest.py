@@ -80,5 +80,30 @@ class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
 		render["task"].execute()
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
+	def testSceneTranslationOnly( self ) :
+
+		plane = GafferScene.Plane()
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/test.exr",
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		render = GafferDelight.DelightRender()
+		render["in"].setInput( outputs["out"] )
+		render["mode"].setValue( render.Mode.RenderMode )
+
+		with Gaffer.Context() as context :
+			context["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			render["task"].execute()
+
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
+
 if __name__ == "__main__":
 	unittest.main()
