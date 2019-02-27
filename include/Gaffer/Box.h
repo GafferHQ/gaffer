@@ -57,13 +57,13 @@ class GAFFER_API Box : public SubGraph
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, SubGraph );
 
-		/// \deprecated Use MetadataAlgo::canPromote() instead.
+		/// \deprecated Use PlugAlgo::canPromote() instead.
 		bool canPromotePlug( const Plug *descendantPlug ) const;
-		/// \deprecated Use MetadataAlgo::promote() instead.
+		/// \deprecated Use PlugAlgo::promote() instead.
 		Plug *promotePlug( Plug *descendantPlug );
-		/// \deprecated Use MetadataAlgo::isPromoted() instead.
+		/// \deprecated Use PlugAlgo::isPromoted() instead.
 		bool plugIsPromoted( const Plug *descendantPlug ) const;
-		/// \deprecated Use MetadataAlgo::unpromote() instead.
+		/// \deprecated Use PlugAlgo::unpromote() instead.
 		void unpromotePlug( Plug *promotedDescendantPlug );
 
 		/// Exports the contents of the Box so that it can be referenced
