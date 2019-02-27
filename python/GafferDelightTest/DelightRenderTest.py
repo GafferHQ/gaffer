@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,51 @@
 #
 ##########################################################################
 
-from IECoreDelightPreviewTest import *
+import os
+import unittest
 
-from DelightRenderTest import DelightRenderTest
-from InteractiveDelightRenderTest import InteractiveDelightRenderTest
+import IECore
+import IECoreScene
+
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import GafferDelight
+
+class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
+
+	def testSceneDescriptionMode( self ) :
+
+		plane = GafferScene.Plane()
+		render = GafferDelight.DelightRender()
+		render["in"].setInput( plane["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.nsi" ) )
+
+		render["task"].execute()
+		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+
+	def testRenderMode( self ) :
+
+		plane = GafferScene.Plane()
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/test.exr",
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		render = GafferDelight.DelightRender()
+		render["in"].setInput( outputs["out"] )
+		render["mode"].setValue( render.Mode.RenderMode )
+
+		render["task"].execute()
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
