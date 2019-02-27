@@ -115,7 +115,10 @@ class stats( Gaffer.Application ) :
 
 				IECore.StringParameter(
 					name = "scene",
-					description = "The name of a SceneNode or ScenePlug to examine.",
+					description = "The name of a SceneNode or ScenePlug to examine. "
+						"A Render node or TaskPlug on a Render node may also be passed, "
+						"to perform profiling of the render output process without "
+						"performing the actual image generation.",
 					defaultValue = "",
 				),
 
@@ -439,11 +442,14 @@ class stats( Gaffer.Application ) :
 
 	def __writeScene( self, script, args ) :
 
+		import GafferDispatch
 		import GafferScene
 		import GafferSceneTest
 
 		scene = script.descendant( args["scene"].value )
-		if isinstance( scene, Gaffer.Node ) :
+		if isinstance( scene, GafferScene.Render ) :
+			scene = scene["task"]
+		elif isinstance( scene, Gaffer.Node ) :
 			scene = next( ( x for x in scene.children( GafferScene.ScenePlug ) ), None )
 
 		if scene is None :
@@ -455,10 +461,15 @@ class stats( Gaffer.Application ) :
 			with self.__context( script, args ) as context :
 				for frame in self.__frames( script, args ) :
 					context.setFrame( frame )
-					if args["sets"] :
-						GafferScene.SceneAlgo.sets( scene, args["sets"] )
+
+					if isinstance( scene, GafferDispatch.TaskNode.TaskPlug ) :
+						context["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+						scene.execute()
 					else :
-						GafferSceneTest.traverseScene( scene )
+						if args["sets"] :
+							GafferScene.SceneAlgo.sets( scene, args["sets"] )
+						else :
+							GafferSceneTest.traverseScene( scene )
 
 		if args["preCache"].value :
 			computeScene()
