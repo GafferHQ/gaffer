@@ -397,5 +397,49 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( outChild.getName(), "attributes" )
 				self.assertIn( outChild, s.affects( inChild ) )
 
+	def testAssignThroughContextVaryingSwitch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["shader1"] = GafferSceneTest.TestShader()
+		script["shader1"]["type"].setValue( "test:surface" )
+		script["shader1"]["name"].setValue( "shader1" )
+
+		script["shader2"] = GafferSceneTest.TestShader()
+		script["shader2"]["type"].setValue( "test:surface" )
+		script["shader2"]["name"].setValue( "shader2" )
+
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( script["shader1"]["out"] )
+		script["switch"]["in"][0].setInput( script["shader1"]["out"] )
+		script["switch"]["in"][1].setInput( script["shader2"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'parent["switch"]["index"] = context.getFrame()' )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["planeFilter"] = GafferScene.PathFilter()
+		script["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["plane"]["out"] )
+		script["assignment"]["filter"].setInput( script["planeFilter"]["out"] )
+		script["assignment"]["shader"].setInput( script["switch"]["out"] )
+
+		with Gaffer.Context() as context :
+
+			context.setFrame( 0 )
+			self.assertEqual(
+				script["assignment"]["out"].attributes( "/plane" )["test:surface"].outputShader().name,
+				"shader1"
+			)
+
+			context.setFrame( 1 )
+			self.assertEqual(
+				script["assignment"]["out"].attributes( "/plane" )["test:surface"].outputShader().name,
+				"shader2"
+			)
+
 if __name__ == "__main__":
 	unittest.main()
