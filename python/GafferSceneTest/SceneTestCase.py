@@ -45,8 +45,17 @@ import IECoreScene
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferSceneTest
 
 class SceneTestCase( GafferTest.TestCase ) :
+
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		sanitiser = GafferSceneTest.ContextSanitiser()
+		sanitiser.__enter__()
+		self.addCleanup( sanitiser.__exit__, None, None, None )
 
 	def assertSceneValid( self, scenePlug, assertBuiltInSetsComplete=True ) :
 
