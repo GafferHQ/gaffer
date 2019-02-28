@@ -36,6 +36,8 @@
 
 #include "GafferScene/Duplicate.h"
 
+#include "GafferScene/SceneAlgo.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/StringAlgo.h"
@@ -172,7 +174,14 @@ void Duplicate::hash( const ValuePlug *output, const Context *context, IECore::M
 	}
 	else if( output == childNamesPlug() )
 	{
-		targetPlug()->hash( h );
+		ScenePath target;
+		ScenePlug::stringToPath( targetPlug()->getValue(), target );
+		if( !SceneAlgo::exists( inPlug(), target ) )
+		{
+			h = childNamesPlug()->defaultValue()->Object::hash();
+			return;
+		}
+		h.append( target.data(), target.size() );
 		copiesPlug()->hash( h );
 		namePlug()->hash( h );
 	}
@@ -198,19 +207,13 @@ void Duplicate::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( output == childNamesPlug() )
 	{
-		// get the path to our target.
+		// Get the path to our target, and check it exists.
 		ScenePath target;
 		ScenePlug::stringToPath( targetPlug()->getValue(), target );
-
-		// throw if the target path doesn't exist in the input. we need to compute the input child names at the
-		// parent for this, but it's not necessary to represent that in the hash, because it doesn't actually
-		// affect our result (if we throw we will have no result).
-		ScenePath parent( target ); parent.pop_back();
-		ConstInternedStringVectorDataPtr parentChildNamesData = inPlug()->childNames( parent );
-		vector<InternedString> parentChildNames = parentChildNamesData->readable();
-		if( find( parentChildNames.begin(), parentChildNames.end(), target.back() ) == parentChildNames.end() )
+		if( !SceneAlgo::exists( inPlug(), target ) )
 		{
-			throw Exception( boost::str( boost::format( "Target \"%s\" does not exist" ) % target.back().string() ) );
+			output->setToDefault();
+			return;
 		}
 
 		// go ahead and generate our childnames.
