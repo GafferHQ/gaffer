@@ -197,7 +197,7 @@ IECore::MurmurHash Transform::fullParentTransformHash( const ScenePath &path ) c
 
 Imath::M44f Transform::relativeParentTransform( const ScenePath &path, const Gaffer::Context *context, bool &matchingAncestorFound ) const
 {
-	FilterPlug::SceneScope sceneScope( context, inPlug() );
+	ScenePlug::PathScope pathScope( context );
 
 	Imath::M44f result;
 	matchingAncestorFound = false;
@@ -206,8 +206,8 @@ Imath::M44f Transform::relativeParentTransform( const ScenePath &path, const Gaf
 	while( ancestorPath.size() ) // Root transform is always identity so can be ignored
 	{
 		ancestorPath.pop_back();
-		sceneScope.set( ScenePlug::scenePathContextName, ancestorPath );
-		if( filterPlug()->getValue() & IECore::PathMatcher::ExactMatch )
+		pathScope.setPath( ancestorPath );
+		if( filterValue( pathScope.context() ) & IECore::PathMatcher::ExactMatch )
 		{
 			matchingAncestorFound = true;
 			return result;
@@ -220,7 +220,7 @@ Imath::M44f Transform::relativeParentTransform( const ScenePath &path, const Gaf
 
 IECore::MurmurHash Transform::relativeParentTransformHash( const ScenePath &path, const Gaffer::Context *context ) const
 {
-	FilterPlug::SceneScope sceneScope( context, inPlug() );
+	ScenePlug::PathScope pathScope( context );
 
 	IECore::MurmurHash result;
 
@@ -228,8 +228,8 @@ IECore::MurmurHash Transform::relativeParentTransformHash( const ScenePath &path
 	while( ancestorPath.size() ) // Root transform is always identity so can be ignored
 	{
 		ancestorPath.pop_back();
-		sceneScope.set( ScenePlug::scenePathContextName, ancestorPath );
-		if( filterPlug()->getValue() & IECore::PathMatcher::ExactMatch )
+		pathScope.setPath( ancestorPath );
+		if( filterValue( pathScope.context() ) & IECore::PathMatcher::ExactMatch )
 		{
 			result.append( true );
 			return result;
