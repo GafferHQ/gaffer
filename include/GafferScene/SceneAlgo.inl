@@ -176,7 +176,12 @@ struct ThreadableFilteredFunctor
 
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
-		const IECore::PathMatcher::Result match = (IECore::PathMatcher::Result)m_filter->getValue();
+		IECore::PathMatcher::Result match;
+		{
+			FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
+			match = (IECore::PathMatcher::Result)m_filter->getValue();
+		}
+
 		if( match & IECore::PathMatcher::ExactMatch )
 		{
 			if( !m_f( scene, path ) )
@@ -237,7 +242,6 @@ void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFu
 template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
-	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
 	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), root, f );
 	tbb::task::spawn_root_and_wait( *task );
@@ -246,7 +250,6 @@ void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFu
 template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
-	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
 	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::Context::current(), f );
 	tbb::task::spawn_root_and_wait( *task );
