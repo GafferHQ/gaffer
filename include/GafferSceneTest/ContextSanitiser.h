@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,42 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENETEST_CONTEXTSANITISER_H
+#define GAFFERSCENETEST_CONTEXTSANITISER_H
 
-#include "GafferSceneTest/ContextSanitiser.h"
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/ScenePlugTest.h"
-#include "GafferSceneTest/TestLight.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TraverseScene.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/Plug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "tbb/concurrent_unordered_set.h"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-using namespace boost::python;
-using namespace GafferSceneTest;
-
-static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug );
-}
-
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+namespace GafferSceneTest
 {
 
-	class_<ContextSanitiser, bases<Gaffer::Monitor>, boost::noncopyable>( "ContextSanitiser" );
+/// A monitor which warns about common context handling mistakes.
+class GAFFER_API ContextSanitiser : public Gaffer::Monitor
+{
 
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
+	public :
 
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
-	def( "connectTraverseSceneToContextChangedSignal", &connectTraverseSceneToContextChangedSignal );
-	def( "connectTraverseSceneToPreDispatchSignal", &connectTraverseSceneToPreDispatchSignal );
+		ContextSanitiser();
 
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
+	protected :
 
-}
+		void processStarted( const Gaffer::Process *process ) override;
+		void processFinished( const Gaffer::Process *process ) override;
+
+	private :
+
+		/// First is the upstream plug where the problem was detected. Second
+		/// is the plug from the parent process responsible for calling upstream.
+		typedef std::pair<Gaffer::ConstPlugPtr, Gaffer::ConstPlugPtr> PlugPair;
+		typedef std::pair<PlugPair, IECore::InternedString> Warning;
+
+		void warn( const Gaffer::Process &process, const IECore::InternedString &contextVariable );
+
+		typedef tbb::concurrent_unordered_set<Warning> WarningSet;
+		WarningSet m_warningsEmitted;
+
+};
+
+} // namespace GafferSceneTest
+
+#endif // GAFFERSCENETEST_CONTEXTSANITISER_H
