@@ -88,7 +88,7 @@ class GAFFERSCENE_API Isolate : public FilteredSceneProcessor
 	private :
 
 		struct SetsToKeep;
-		bool mayPruneChildren( const ScenePath &path, unsigned filterValue, const SetsToKeep &setsToKeep ) const;
+		bool mayPruneChildren( const ScenePath &path, const Gaffer::Context *context, const SetsToKeep &setsToKeep ) const;
 
 		static size_t g_firstPlugIndex;
 
