@@ -82,13 +82,10 @@ bool TimeWarp::affectsContext( const Plug *input ) const
 	return input == speedPlug() || input == offsetPlug();
 }
 
-void TimeWarp::processContext( Context::EditableScope &context ) const
+void TimeWarp::processContext( Context::EditableScope &scope ) const
 {
-	float frame;
-	{
-		const Context *c = Context::current();
-		ContextAlgo::GlobalScope globalScope( c, inPlug() );
-		frame = c->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue();
-	}
-	context.setFrame( frame );
+	ContextAlgo::GlobalScope globalScope( scope.context(), inPlug() );
+	scope.setFrame(
+		scope.context()->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue()
+	);
 }

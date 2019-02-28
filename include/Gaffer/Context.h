@@ -277,6 +277,8 @@ class GAFFER_API Context : public IECore::RefCounted
 				void remove( const IECore::InternedString &name );
 				void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
 
+				const Context *context() const { return m_context.get(); }
+
 			private :
 
 				Ptr m_context;

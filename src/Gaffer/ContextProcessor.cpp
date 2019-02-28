@@ -169,7 +169,7 @@ ContextPtr ContextProcessor::inPlugContext() const
 	{
 		Context::EditableScope scope( Context::current() );
 		processContext( scope );
-		return new Context( *Context::current() );
+		return new Context( *scope.context() );
 	}
 	else
 	{
