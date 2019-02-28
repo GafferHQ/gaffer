@@ -156,8 +156,7 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	const IECore::PathMatcher::Result m = (IECore::PathMatcher::Result)filterPlug()->getValue();
+	const IECore::PathMatcher::Result m = filterValue( context );
 
 	if( m & IECore::PathMatcher::ExactMatch )
 	{
@@ -170,6 +169,8 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
 		const vector<InternedString> &inputChildNames = inputChildNamesData->readable();
+
+		FilterPlug::SceneScope sceneScope( context, inPlug() );
 
 		ScenePath childPath = path;
 		childPath.push_back( InternedString() ); // for the child name
@@ -189,8 +190,7 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	const IECore::PathMatcher::Result m = (IECore::PathMatcher::Result)filterPlug()->getValue();
+	const IECore::PathMatcher::Result m = filterValue( context );
 
 	if( m & IECore::PathMatcher::ExactMatch  )
 	{
@@ -204,6 +204,8 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 
 		InternedStringVectorDataPtr outputChildNamesData = new InternedStringVectorData;
 		vector<InternedString> &outputChildNames = outputChildNamesData->writable();
+
+		FilterPlug::SceneScope sceneScope( context, inPlug() );
 
 		ScenePath childPath = path;
 		childPath.push_back( InternedString() ); // for the child name
