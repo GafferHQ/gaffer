@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 
 import IECore
@@ -71,6 +72,37 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 		c["variables"].addMember( "", IECore.StringData( "aardvark" ) )
 
 		self.assertSceneValid( c["out"] )
+
+	def testContextLeaks( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["sets"].setValue( "A" )
+
+		script["contextVariables"] = Gaffer.ContextVariables()
+		script["contextVariables"].setup( GafferScene.ScenePlug() )
+		script["contextVariables"]["in"].setInput( script["plane"]["out"] )
+		script["contextVariables"]["variables"].addOptionalMember( "a", IECore.StringData( "aardvark" ), plugName = "a" )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["contextVariables"]["enabled"] = True
+			parent["contextVariables"]["variables"]["a"]["enabled"] = True
+			parent["contextVariables"]["variables"]["a"]["name"] = "b"
+			parent["contextVariables"]["variables"]["a"]["value"] = "b"
+			"""
+		) )
+
+		with Gaffer.ContextMonitor( script["expression"] ) as cm :
+			self.assertSceneValid( script["contextVariables"]["out"] )
+
+		self.assertFalse(
+			set( cm.combinedStatistics().variableNames() ).intersection(
+				{ "scene:path", "scene:setName", "scene:filter:inputScene" }
+			)
+		)
 
 if __name__ == "__main__":
 	unittest.main()
