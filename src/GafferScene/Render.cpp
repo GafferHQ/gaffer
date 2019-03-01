@@ -60,7 +60,33 @@ using namespace GafferScene;
 namespace
 {
 
-InternedString g_performanceMonitorOptionName( "option:render:performanceMonitor" );
+const InternedString g_performanceMonitorOptionName( "option:render:performanceMonitor" );
+const InternedString g_sceneTranslationOnlyContextName( "scene:render:sceneTranslationOnly" );
+
+struct RenderScope : public Context::EditableScope
+{
+
+	RenderScope( const Context *context )
+		:	EditableScope( context ), m_sceneTranslationOnly( false )
+	{
+		if( auto d = context->get<BoolData>( g_sceneTranslationOnlyContextName, nullptr ) )
+		{
+			m_sceneTranslationOnly = d->readable();
+			// Don't leak variable upstream.
+			remove( g_sceneTranslationOnlyContextName );
+		}
+	}
+
+	bool sceneTranslationOnly() const
+	{
+		return m_sceneTranslationOnly;
+	}
+
+	private :
+
+		bool m_sceneTranslationOnly;
+
+};
 
 } // namespace
 
@@ -158,12 +184,26 @@ const ScenePlug *Render::adaptedInPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
 }
 
+void Render::preTasks( const Gaffer::Context *context, Tasks &tasks ) const
+{
+	RenderScope scope( context );
+	TaskNode::preTasks( Context::current(), tasks );
+}
+
+void Render::postTasks( const Gaffer::Context *context, Tasks &tasks ) const
+{
+	RenderScope scope( context );
+	TaskNode::postTasks( Context::current(), tasks );
+}
+
 IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 {
 	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source()->node() ) )
 	{
 		return IECore::MurmurHash();
 	}
+
+	RenderScope renderScope( context );
 
 	const std::string rendererType = rendererPlug()->getValue();
 	if( rendererType.empty() )
@@ -184,6 +224,7 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 	h.append( rendererType );
 	h.append( mode );
 	h.append( fileName );
+	h.append( renderScope.sceneTranslationOnly() );
 
 	return h;
 }
@@ -195,14 +236,15 @@ void Render::execute() const
 		return;
 	}
 
+	RenderScope renderScope( Context::current() );
+
 	const std::string rendererType = rendererPlug()->getValue();
 	if( rendererType.empty() )
 	{
 		return;
 	}
 
-	Context::EditableScope rendererContext( Context::current() );
-	rendererContext.set( g_rendererContextName, rendererType );
+	renderScope.set( g_rendererContextName, rendererType );
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();
@@ -216,7 +258,7 @@ void Render::execute() const
 		{
 			boost::filesystem::path fileNamePath( fileName );
 			boost::filesystem::path directoryPath = fileNamePath.parent_path();
-			if( !directoryPath.empty() )
+			if( !directoryPath.empty() && !renderScope.sceneTranslationOnly() )
 			{
 				boost::filesystem::create_directories( directoryPath );
 			}
@@ -234,7 +276,10 @@ void Render::execute() const
 	}
 
 	ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
-	GafferScene::RendererAlgo::createOutputDirectories( globals.get() );
+	if( !renderScope.sceneTranslationOnly() )
+	{
+		GafferScene::RendererAlgo::createOutputDirectories( globals.get() );
+	}
 
 	std::unique_ptr<PerformanceMonitor> performanceMonitor;
 	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
@@ -267,7 +312,11 @@ void Render::execute() const
 	ObjectPool::defaultObjectPool()->clear();
 	ValuePlug::clearCache();
 
-	renderer->render();
+	if( !renderScope.sceneTranslationOnly() )
+	{
+		renderer->render();
+	}
+
 	renderer.reset();
 
 	if( performanceMonitor )

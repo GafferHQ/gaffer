@@ -81,9 +81,6 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		ScenePlug *outPlug();
 		const ScenePlug *outPlug() const;
 
-		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
-		void execute() const override;
-
 	protected :
 
 		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps
@@ -92,12 +89,20 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		// loading of the module which registers the required renderer type.
 		Render( const IECore::InternedString &rendererType, const std::string &name );
 
+		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const override;
+		void postTasks( const Gaffer::Context *context, Tasks &tasks ) const override;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
 	private :
 
 		ScenePlug *adaptedInPlug();
 		const ScenePlug *adaptedInPlug() const;
 
 		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 };
 
