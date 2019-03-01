@@ -1,3 +1,34 @@
+0.53.2.0 (relative to 0.53.1.1)
+========
+
+Features
+--------
+
+- ArnoldFilterMap : Added new node used to define filtermap shaders for cameras. Use
+  a ShaderAssignment node to assign it to a camera (#2676, #3040).
+
+Improvements
+------------
+
+- SubTree : Entering an invalid root location no longer generates an error. An
+  empty scene is output instead (#3035).
+- CollectScenes : Entering an invalid sourceRoot no longer generates an error. An
+  empty scene is collected instead (#3055).
+- Duplicate : Targets with an invalid name no longer generate an error. The input
+  scene is passed through unchanged instead (#3055).
+- ArnoldLight : Added file browser for photometric_light (#3041).
+
+Fixes
+-----
+
+- PythonCommand : Fixed crashes caused by missing context variables (#3027, #3029).
+- GraphEditor : Prevented the insertion of Dot nodes into read only connections (#3032).
+- Set : Added support for '.' in set and object names (#3037).
+- CameraTool : Fixed to work with animated transforms (#3034).
+- Animation : Fixed precision loss when serialising keyframes (#3034).
+- BoxOut : Fixed crash in `acceptsInput()` (#3042).
+- ShaderAssignment : Fixed bug with Switch node plugged directly into shader input (#3052).
+
 0.53.1.1 (relative to 0.53.1.0)
 ========
 
