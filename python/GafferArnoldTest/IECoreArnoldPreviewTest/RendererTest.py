@@ -837,11 +837,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		for i in range( 3 ):
 			image = IECoreImage.ImageReader( self.temporaryDirectory() + "/beauty%i.exr"%i ).read()
-			self.assertEqual( image.blindData()["worldtocamera"].value, 
+			self.assertEqual( image.blindData()["worldtocamera"].value,
 				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
 
 		image = IECoreImage.ImageReader( self.temporaryDirectory() + "/diffuse2.exr" ).read()
-		self.assertEqual( image.blindData()["worldtocamera"].value, 
+		self.assertEqual( image.blindData()["worldtocamera"].value,
 			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
 
 	def testCameraMesh( self ) :
@@ -884,7 +884,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( camera ) ), "uv_camera" )
 			mesh = arnold.AiNodeGetPtr( camera, "mesh" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
-			self.assertEqual( 
+			self.assertEqual(
 				arnold.AiNodeGetName( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane" ), "node" ) ),
 				arnold.AiNodeGetName( mesh )
 			)
@@ -2546,6 +2546,40 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__testVDB( stepSize = 0.1, stepScale = None, expectedSize = 0.1, expectedScale = 1.0 )
 		self.__testVDB( stepSize = None, stepScale = None, expectedSize = 0.0, expectedScale = 1.0 )
 		self.__testVDB( stepSize = 1.0, stepScale = 0.5, expectedSize = 0.5, expectedScale = 1.0 )
+
+	def testFilterMap( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.camera(
+			"/camera",
+			IECoreScene.Camera(),
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:filtermap" : IECoreScene.ShaderNetwork(
+						shaders = { "out" : IECoreScene.Shader( "flat" ) },
+						output = "out"
+					)
+				} )
+			),
+		)
+
+		r.option( "camera", IECore.StringData( "/camera" ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			cameraNode = arnold.AiNodeLookUpByName( "/camera" )
+			shaderNode = arnold.AiNodeGetPtr( cameraNode, "filtermap" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( shaderNode ) ), "flat" )
 
 	@staticmethod
 	def __m44f( m ) :
