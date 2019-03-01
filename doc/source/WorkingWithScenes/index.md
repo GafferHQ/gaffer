@@ -10,4 +10,6 @@ Here you can find information on how to read, manipulate, and construct 3D scene
     :maxdepth: 1
 
     AnatomyOfAScene/index.md
+    AnatomyOfACamera/index.md
+    Camera/index.md
 ```
