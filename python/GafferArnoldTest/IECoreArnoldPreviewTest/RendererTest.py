@@ -2547,7 +2547,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__testVDB( stepSize = None, stepScale = None, expectedSize = 0.0, expectedScale = 1.0 )
 		self.__testVDB( stepSize = 1.0, stepScale = 0.5, expectedSize = 0.5, expectedScale = 1.0 )
 
-	def testFilterMap( self ) :
+	def testCameraAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
@@ -2557,10 +2557,14 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.camera(
 			"/camera",
-			IECoreScene.Camera(),
+			IECoreScene.Camera( { "projection" : "perspective" } ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:filtermap" : IECoreScene.ShaderNetwork(
+						shaders = { "out" : IECoreScene.Shader( "noise" ) },
+						output = "out"
+					),
+					"ai:uv_remap" : IECoreScene.ShaderNetwork(
 						shaders = { "out" : IECoreScene.Shader( "flat" ) },
 						output = "out"
 					)
@@ -2578,8 +2582,12 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			cameraNode = arnold.AiNodeLookUpByName( "/camera" )
-			shaderNode = arnold.AiNodeGetPtr( cameraNode, "filtermap" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( shaderNode ) ), "flat" )
+
+			filterMapNode = arnold.AiNodeGetPtr( cameraNode, "filtermap" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filterMapNode ) ), "noise" )
+
+			uvRemapNode =  arnold.AiNodeGetLink( cameraNode, "uv_remap" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( uvRemapNode ) ), "flat" )
 
 	@staticmethod
 	def __m44f( m ) :

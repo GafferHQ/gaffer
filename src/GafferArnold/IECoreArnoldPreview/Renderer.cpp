@@ -302,6 +302,7 @@ const AtString g_widthArnoldString( "width" );
 const AtString g_xresArnoldString( "xres" );
 const AtString g_yresArnoldString( "yres" );
 const AtString g_filterMapArnoldString( "filtermap" );
+const AtString g_uvRemapArnoldString( "uv_remap" );
 
 } // namespace
 
@@ -741,6 +742,7 @@ IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsu
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
 IECore::InternedString g_arnoldFilterMapAttributeName( "ai:filtermap" );
+IECore::InternedString g_arnoldUVRemapAttributeName( "ai:uv_remap" );
 
 IECore::InternedString g_arnoldReceiveShadowsAttributeName( "ai:receive_shadows" );
 IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
@@ -822,6 +824,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( auto filterMapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldFilterMapAttributeName, attributes ) )
 			{
 				m_filterMap = shaderCache->get( filterMapAttribute );
+			}
+			if( auto uvRemapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldUVRemapAttributeName, attributes ) )
+			{
+				m_uvRemap = shaderCache->get( uvRemapAttribute );
 			}
 
 			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
@@ -1137,13 +1143,28 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			if( AiNodeEntryGetType( AiNodeGetNodeEntry( node ) ) == AI_NODE_CAMERA )
 			{
-				if( m_filterMap && m_filterMap->root() )
+				if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), g_filterMapArnoldString ) )
 				{
-					AiNodeSetPtr( node, g_filterMapArnoldString, m_filterMap->root() );
+					if( m_filterMap && m_filterMap->root() )
+					{
+						AiNodeSetPtr( node, g_filterMapArnoldString, m_filterMap->root() );
+					}
+					else
+					{
+						AiNodeResetParameter( node, g_filterMapArnoldString );
+					}
 				}
-				else
+
+				if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), g_uvRemapArnoldString ) )
 				{
-					AiNodeResetParameter( node, g_filterMapArnoldString );
+					if( m_uvRemap && m_uvRemap->root() )
+					{
+						AiNodeLinkOutput( m_uvRemap->root(), "", node, g_uvRemapArnoldString );
+					}
+					else
+					{
+						AiNodeResetParameter( node, g_uvRemapArnoldString );
+					}
 				}
 			}
 
@@ -1548,6 +1569,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
 		ArnoldShaderPtr m_filterMap;
+		ArnoldShaderPtr m_uvRemap;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
