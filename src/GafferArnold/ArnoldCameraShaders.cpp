@@ -34,11 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/ArnoldFilterMap.h"
+#include "GafferArnold/ArnoldCameraShaders.h"
 
 #include "GafferArnold/ArnoldShader.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
@@ -47,67 +50,80 @@ namespace
 {
 
 IECore::InternedString g_filterMapAttributeName( "ai:filtermap" );
-IECore::InternedString g_inputShaderAttributeNames[] = { "ai:surface", "osl:shader" } ;
+IECore::InternedString g_uvRemapAttributeName( "ai:uv_remap" );
+IECore::InternedString g_inputShaderAttributeNames[] = { "osl:shader", "ai:surface" };
 
 } // namespace
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldFilterMap );
+IE_CORE_DEFINERUNTIMETYPED( ArnoldCameraShaders );
 
-size_t ArnoldFilterMap::g_firstPlugIndex = 0;
+size_t ArnoldCameraShaders::g_firstPlugIndex = 0;
 
-ArnoldFilterMap::ArnoldFilterMap( const std::string &name )
+ArnoldCameraShaders::ArnoldCameraShaders( const std::string &name )
 	:	Shader( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ShaderPlug( "map" ) );
+	addChild( new ShaderPlug( "filterMap" ) );
+	addChild( new ShaderPlug( "uvRemap" ) );
 	addChild( new Plug( "out", Plug::Out ) );
 }
 
-ArnoldFilterMap::~ArnoldFilterMap()
+ArnoldCameraShaders::~ArnoldCameraShaders()
 {
 }
 
-GafferScene::ShaderPlug *ArnoldFilterMap::mapPlug()
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex );
-}
-
-const GafferScene::ShaderPlug *ArnoldFilterMap::mapPlug() const
+GafferScene::ShaderPlug *ArnoldCameraShaders::filterMapPlug()
 {
 	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-Gaffer::Plug *ArnoldFilterMap::outPlug()
+const GafferScene::ShaderPlug *ArnoldCameraShaders::filterMapPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Plug *ArnoldFilterMap::outPlug() const
+GafferScene::ShaderPlug *ArnoldCameraShaders::uvRemapPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
 }
 
-void ArnoldFilterMap::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+const GafferScene::ShaderPlug *ArnoldCameraShaders::uvRemapPlug() const
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::Plug *ArnoldCameraShaders::outPlug()
+{
+	return getChild<Plug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::Plug *ArnoldCameraShaders::outPlug() const
+{
+	return getChild<Plug>( g_firstPlugIndex + 2 );
+}
+
+void ArnoldCameraShaders::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Shader::affects( input, outputs );
 
-	if( input == mapPlug() )
+	if( input == filterMapPlug() || input == uvRemapPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
 }
 
-void ArnoldFilterMap::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
+void ArnoldCameraShaders::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
 	if( !enabledPlug()->getValue() )
 	{
 		return;
 	}
-	h.append( mapPlug()->attributesHash() );
+	h.append( filterMapPlug()->attributesHash() );
+	h.append( uvRemapPlug()->attributesHash() );
 }
 
-IECore::ConstCompoundObjectPtr ArnoldFilterMap::attributes( const Gaffer::Plug *output ) const
+IECore::ConstCompoundObjectPtr ArnoldCameraShaders::attributes( const Gaffer::Plug *output ) const
 {
 	CompoundObjectPtr result = new CompoundObject;
 	if( !enabledPlug()->getValue() )
@@ -115,24 +131,26 @@ IECore::ConstCompoundObjectPtr ArnoldFilterMap::attributes( const Gaffer::Plug *
 		return result;
 	}
 
-	CompoundObject::ObjectMap &m = result->members();
-	m = mapPlug()->attributes()->members();
+	ConstCompoundObjectPtr filterMapAttributes = filterMapPlug()->attributes();
+	ConstCompoundObjectPtr uvRemapAttributes = uvRemapPlug()->attributes();
 
+	CompoundObject::ObjectMap &m = result->members();
 	for( const auto &name : g_inputShaderAttributeNames )
 	{
-		CompoundObject::ObjectMap::iterator it = m.find( name );
-		if( it != m.end() )
+		if( auto s = filterMapAttributes->member<ShaderNetwork>( name ) )
 		{
-			m[g_filterMapAttributeName] = it->second;
-			m.erase( it );
-			break;
+			m[g_filterMapAttributeName] = const_cast<ShaderNetwork *>( s );
+		}
+		if( auto s = uvRemapAttributes->member<ShaderNetwork>( name ) )
+		{
+			m[g_uvRemapAttributeName] = const_cast<ShaderNetwork *>( s );
 		}
 	}
 
 	return result;
 }
 
-bool ArnoldFilterMap::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+bool ArnoldCameraShaders::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
 	if( !Shader::acceptsInput( plug, inputPlug ) )
 	{
@@ -144,7 +162,7 @@ bool ArnoldFilterMap::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug
 		return true;
 	}
 
-	if( plug == mapPlug() )
+	if( plug == filterMapPlug() || plug == uvRemapPlug() )
 	{
 		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source()->node() ) )
 		{
