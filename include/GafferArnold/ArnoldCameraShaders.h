@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDFILTERMAP_H
-#define GAFFERARNOLD_ARNOLDFILTERMAP_H
+#ifndef GAFFERARNOLD_ARNOLDCAMERASHADERS_H
+#define GAFFERARNOLD_ARNOLDCAMERASHADERS_H
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -49,18 +49,21 @@ namespace GafferArnold
 /// \todo See ArnoldDisplacement for comments regarding the
 /// awkwardness of deriving from Shader, and the possibility
 /// of making a more general Assignable class.
-class GAFFERARNOLD_API ArnoldFilterMap : public GafferScene::Shader
+class GAFFERARNOLD_API ArnoldCameraShaders : public GafferScene::Shader
 {
 
 	public :
 
-		ArnoldFilterMap( const std::string &name=defaultName<ArnoldFilterMap>() );
-		~ArnoldFilterMap() override;
+		ArnoldCameraShaders( const std::string &name=defaultName<ArnoldCameraShaders>() );
+		~ArnoldCameraShaders() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldFilterMap, ArnoldFilterMapTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldCameraShaders, ArnoldCameraShadersTypeId, GafferScene::Shader );
 
-		GafferScene::ShaderPlug *mapPlug();
-		const GafferScene::ShaderPlug *mapPlug() const;
+		GafferScene::ShaderPlug *filterMapPlug();
+		const GafferScene::ShaderPlug *filterMapPlug() const;
+
+		GafferScene::ShaderPlug *uvRemapPlug();
+		const GafferScene::ShaderPlug *uvRemapPlug() const;
 
 		Gaffer::Plug *outPlug();
 		const Gaffer::Plug *outPlug() const;
@@ -80,8 +83,8 @@ class GAFFERARNOLD_API ArnoldFilterMap : public GafferScene::Shader
 
 };
 
-IE_CORE_DECLAREPTR( ArnoldFilterMap )
+IE_CORE_DECLAREPTR( ArnoldCameraShaders )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_ARNOLDFILTERMAP_H
+#endif // GAFFERARNOLD_ARNOLDCAMERASHADERS_H
