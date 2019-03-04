@@ -34,56 +34,59 @@
 #
 ##########################################################################
 
-import unittest
-
-import IECore
-
-import GafferTest
-import GafferScene
-import GafferSceneTest
-import GafferOSL
+import Gaffer
 import GafferArnold
 
-class ArnoldFilterMapTest( GafferSceneTest.SceneTestCase ) :
+Gaffer.Metadata.registerNode(
 
-	def test( self ) :
+	GafferArnold.ArnoldCameraShaders,
 
-		sphere = GafferScene.Sphere()
-		camera = GafferScene.Camera()
+	"description",
+	"""
+	Creates shaders for use with Arnold cameras. Use a ShaderAssignment
+	node to assign the shaders to the cameras they should affect.
+	""",
 
-		group = GafferScene.Group()
-		group["in"][0].setInput( sphere["out"] )
-		group["in"][1].setInput( camera["out"] )
+	plugs = {
 
-		noise = GafferArnold.ArnoldShader()
-		noise.loadShader( "noise" )
+		"name" : [
 
-		filterMap = GafferArnold.ArnoldFilterMap()
-		filterMap["map"].setInput( noise["out"] )
+			"plugValueWidget:type", "",
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		],
 
-		cameraFilter = GafferScene.PathFilter()
-		cameraFilter["paths"].setValue( IECore.StringVectorData( [ "/group/camera" ] ) )
+		"filterMap" : [
 
-		assignment = GafferScene.ShaderAssignment()
-		assignment["in"].setInput( group["out"] )
-		assignment["shader"].setInput( noise["out"] )
-		assignment["filter"].setInput( sphereFilter["out"] )
+			"description",
+			"""
+			A shader used to weight the samples taken by an
+			Arnold camera. This can be used to create vignetting effects
+			or to completely mask out areas of the render, causing no
+			rays to be fired for those pixels. The shader is evaluated
+			across a 0-1 UV range that is mapped to the camera's screen
+			space.
+			""",
 
-		filterMapAssignment = GafferScene.ShaderAssignment()
-		filterMapAssignment["in"].setInput( group["out"] )
-		filterMapAssignment["shader"].setInput( filterMap["out"] )
-		filterMapAssignment["filter"].setInput( cameraFilter["out"] )
+			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section", "left",
 
-		self.assertEqual(
-			filterMapAssignment["out"].attributes( "/group/camera" )["ai:filtermap"],
-			assignment["out"].attributes( "/group/sphere" )["ai:surface"],
-		)
+		],
 
-		filterMap["enabled"].setValue( False )
-		self.assertNotIn( "ai:filtermap", filterMapAssignment["out"].attributes( "/group/camera" ) )
+		"uvRemap" : [
 
-if __name__ == "__main__":
-	unittest.main()
+			"description",
+			"""
+			A shader used to simulate lens distortion effects. The shader
+			is evaluated across a 0-1 UV range that is mapped to the camera's
+			screen space, and should output a red/green UV image of distorted
+			UV positions.
+			""",
+
+			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section", "left",
+
+		],
+
+	}
+
+)
