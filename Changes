@@ -35,6 +35,15 @@ Fixes
   - Connected preTasks plug to internal tasks.
   - Fixed leakage of internal context variables.
 
+Documentation
+-------------
+
+- Added "Anatomy of a Camera" which gives an overview of Gaffer's camera model, the terminology,
+  the camera data in the scene, and how the data flows through the graph (#3050).
+- Added a "Camera" section to "Working with Scenes" which covers usage and task information
+  about the Camera node, manipulating camera objects, the CameraTweaks node, render overrides,
+  and demos of a spherical and anamorphic camera setup (#3050).
+
 API
 ---
 
