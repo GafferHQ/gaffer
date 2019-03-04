@@ -272,5 +272,29 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( s["CollectScenes"]["in"].getInput(), s["Sphere"]["out"] )
 
+	def testCollectInvalidLocation( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "set1" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		collect = GafferScene.CollectScenes()
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "A" ] ) )
+		collect["in"].setInput( group["out"] )
+
+		self.assertSceneValid( collect["out"] )
+		self.assertEqual( collect["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "A" ] ) )
+		self.assertEqual( collect["out"].childNames( "/A" ), IECore.InternedStringVectorData( [ "group" ] ) )
+		self.assertEqual( collect["out"].childNames( "/A/group" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+		self.assertEqual( collect["out"].childNames( "/A/group/sphere" ), IECore.InternedStringVectorData() )
+
+		collect["sourceRoot"].setValue( "iDontExist" )
+
+		self.assertSceneValid( collect["out"] )
+		self.assertEqual( collect["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "A" ] ) )
+		self.assertEqual( collect["out"].childNames( "/A" ), IECore.InternedStringVectorData() )
+
 if __name__ == "__main__":
 	unittest.main()

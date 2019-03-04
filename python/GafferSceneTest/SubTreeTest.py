@@ -38,6 +38,8 @@
 import os
 import unittest
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -324,15 +326,30 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testInvalidRoot( self ) :
 
 		p = GafferScene.Plane()
+		p["sets"].setValue( "A" )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( p["out"] )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
-		s["root"].setValue( "notAThing" )
 
-		self.assertRaisesRegexp( RuntimeError, r"Root \"notAThing\" does not exist", s["out"].childNames, "/" )
+		# An invalid root matches nothing, so should output an empty scene
+
+		for includeRoot in ( True, False ) :
+
+			s["includeRoot"].setValue( includeRoot )
+
+			for root in ( "notAThing", "/group/stillNotAThing", "/group/definitely/not/a/thing" ) :
+
+				s["root"].setValue( root )
+
+				self.assertSceneValid( s["out"] )
+				self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData() )
+				self.assertEqual( s["out"].set( "A" ), IECore.PathMatcherData() )
+				self.assertEqual( s["out"].bound( "/" ), imath.Box3f() )
+				self.assertEqual( s["out"].attributes( "/" ), IECore.CompoundObject() )
+				self.assertEqual( s["out"].transform( "/" ), imath.M44f() )
 
 if __name__ == "__main__":
 	unittest.main()

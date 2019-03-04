@@ -373,10 +373,10 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 
 
 		setName %= setNameToken;
-		setNameToken %= char_( "a-zA-Z_" ) >> *char_( "a-zA-Z_0-9:" );
+		setNameToken %= char_( "a-zA-Z_" ) >> *char_( "a-zA-Z_0-9:." );
 
 		objectName %= objectNameToken;
-		objectNameToken %= char_( "/" ) >> *char_( "a-zA-Z_0-9/:" );
+		objectNameToken %= char_( "/" ) >> *char_( "a-zA-Z_0-9/:." );
 
 
 		// these have no effect unless BOOST_SPIRIT_DEBUG is defined

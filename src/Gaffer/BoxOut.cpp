@@ -115,7 +115,7 @@ bool BoxOut::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 	// and accept that too.
 
 	const Node *inputNode = inputPlug->node();
-	if( sourceBoxIn( passThroughPlug() ) && inputNode->parent() != parent() )
+	if( sourceBoxIn( passThroughPlug() ) && ( !inputNode || inputNode->parent() != parent() ) )
 	{
 		return true;
 	}

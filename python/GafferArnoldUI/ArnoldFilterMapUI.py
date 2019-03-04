@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,26 +34,39 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
+import GafferArnold
 
-from _GafferArnoldUI import *
+Gaffer.Metadata.registerNode(
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
-import ArnoldVDBUI
-import InteractiveArnoldRenderUI
-import ArnoldDisplacementUI
-import ArnoldMeshLightUI
-import ArnoldShaderBallUI
-import ArnoldAOVShaderUI
-import ArnoldAtmosphereUI
-import ArnoldBackgroundUI
-import ArnoldTextureBakeUI
-import ArnoldFilterMapUI
-import CacheMenu
+	GafferArnold.ArnoldFilterMap,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnoldUI" )
+	"description",
+	"""
+	Creates filter maps that weight the samples taken by an
+	Arnold camera. This can be used to create vignetting effects
+	or to completely mask out areas of the render, causing no
+	rays to be fired for those pixels. Use a ShaderAssignment
+	node to assign the filter map to the cameras it should
+	affect.
+	""",
+
+	plugs = {
+
+		"map" : [
+
+			"description",
+			"""
+			The Arnold shader that provides the map. The shader
+			is evaluated across a 0-1 UV range that is mapped
+			to the camera's screen space.
+			""",
+
+			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section", "left",
+
+		],
+
+	}
+
+)

@@ -593,6 +593,14 @@ void StandardConnectionGadget::updateDotPreviewLocation( const ButtonEvent &even
 
 bool StandardConnectionGadget::keyPressed( const KeyEvent &event )
 {
+	if(
+		MetadataAlgo::readOnly( dstNodule()->plug() ) ||
+		( srcNodule() && MetadataAlgo::readOnly( srcNodule()->plug() ) )
+	)
+	{
+		return false;
+	}
+
 	if( event.modifiers & ButtonEvent::Control && srcNodule() )
 	{
 		m_dotPreview = true;
@@ -616,6 +624,14 @@ bool StandardConnectionGadget::keyReleased( const KeyEvent &event )
 
 void StandardConnectionGadget::enter( const ButtonEvent &event )
 {
+	if(
+		MetadataAlgo::readOnly( dstNodule()->plug() ) ||
+		( srcNodule() && MetadataAlgo::readOnly( srcNodule()->plug() ) )
+	)
+	{
+		return;
+	}
+
 	if( event.modifiers & ButtonEvent::Control && srcNodule() )
 	{
 		m_dotPreview = true;

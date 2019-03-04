@@ -106,7 +106,8 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		d["in"].setInput( s["out"] )
 		d["target"].setValue( "/cube" )
 
-		self.assertRaises( RuntimeError, d["out"].childNames, "/" )
+		self.assertSceneValid( d["out"] )
+		self.assertScenesEqual( d["out"], d["in"] )
 
 	def testNamePlug( self ) :
 

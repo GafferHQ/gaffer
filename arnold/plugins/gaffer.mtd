@@ -211,6 +211,9 @@
 
 		gaffer.plugType STRING ""
 
+	[attr filename]
+
+		widget STRING "filename"
 
 # Standard Arnold Shaders
 ##########################################################################

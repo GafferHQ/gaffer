@@ -93,7 +93,7 @@ const char *typeRepr( const Animation::Type &t )
 std::string keyRepr( const Animation::Key &k )
 {
 	return boost::str(
-		boost::format( "Gaffer.Animation.Key( %f, %f, %s )" ) % k.getTime() % k.getValue() % typeRepr( k.getType() )
+		boost::format( "Gaffer.Animation.Key( %.9g, %.9g, %s )" ) % k.getTime() % k.getValue() % typeRepr( k.getType() )
 	);
 };
 
