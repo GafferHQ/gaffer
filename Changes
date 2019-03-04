@@ -7,6 +7,92 @@ Improvements
 - Text : Added support for unicode characters (#2999).
 - TextWidget/MultiLineTextWidget : Added support for unicode characters. In this
   case the `getText()` method will return a UTF8 encoded string (#2999).
+- PythonCommand : Improved performance (#3029).
+- GraphEditor : Added support for arbitrary node annotations specified by metadata.
+  Use "annotation:<name>:text" to specify the text to render, and "annotation:<name>:color"
+  to specify an associated colour (#3028).
+- Stats app :
+  - Added `annotatedScript` argument to allow the saving of the script with
+    monitor annotations added to it (#3028).
+  - Added `-cacheMemoryLimit` and `-hashCacheSizeLimit` arguments for controlling
+    cache limits (#3033).
+  - Added support for render output profiling via `-scene` argument (#3053).
+- ArnoldTextureBake (#3026) : Added optional median filter.
+- Hash cache (#3033) : Reduced memory usage and improved performance.
+
+Fixes
+-----
+
+- Dispatcher (#3024) :
+  - Added support for Switch nodes. The dedicated TaskSwitch node is
+    still available, but will be removed in a future release.
+  - Added support for ContextProcessor nodes such as ContextVariables and
+    TimeWarp. The dedicated TaskContextVariables node is still available, but
+    will be removed in a future release.
+- GraphEditor (#3028) : Added bookmark annotations for Dots and other auxiliary nodes.
+- ArnoldTextureBake (#3026) :
+  - Connected external dispatcher settings to internal render task.
+  - Connected preTasks plug to internal tasks.
+  - Fixed leakage of internal context variables.
+
+API
+---
+
+- TaskNode (#3024, #3025) :
+  - Simplified implementation requirements for `preTasks()` and `postTasks()`
+    methods. It is now sufficient to construct `Tasks` directly from the input
+    plugs, with no requirement to find their source and check for a TaskNode.
+  - Added missing bindings for `Task( TaskPlug )` and `Task::plug()`.
+- ContextProcessor (#3024) :
+  - Added `inPlugContext()` method.
+  - Added support for forking with `Plugs` rather than `ValuePlugs`.
+- AnnotationsGadget (#3028) : Added new gadget for rendering annotations for GraphGadgets.
+- MonitorAlgo (#3028) : Added `annotate()` methods for turning Monitor statistics into
+  GraphEditor annotations.
+- ValuePlug : Added `set/getHashCacheSizeLimit()` methods for controlling hash cache
+  memory usage (#3033).
+
+Breaking Changes
+----------------
+
+- TaskNode::Task (#3024, #3025) :
+  - Removed `hash()` method and associated member data.
+  - Removed deprecated `node()` method.
+  - Removed less-than operator.
+  - The equality operator now compares plug and context instead of
+    hash.
+- BackdropNodeGadget/StandardNodeGadget (#3028) : Removed private member variables.
+
+0.53.2.0 (relative to 0.53.1.1)
+========
+
+Features
+--------
+
+- ArnoldFilterMap : Added new node used to define filtermap shaders for cameras. Use
+  a ShaderAssignment node to assign it to a camera (#2676, #3040).
+
+Improvements
+------------
+
+- SubTree : Entering an invalid root location no longer generates an error. An
+  empty scene is output instead (#3035).
+- CollectScenes : Entering an invalid sourceRoot no longer generates an error. An
+  empty scene is collected instead (#3055).
+- Duplicate : Targets with an invalid name no longer generate an error. The input
+  scene is passed through unchanged instead (#3055).
+- ArnoldLight : Added file browser for photometric_light (#3041).
+
+Fixes
+-----
+
+- PythonCommand : Fixed crashes caused by missing context variables (#3027, #3029).
+- GraphEditor : Prevented the insertion of Dot nodes into read only connections (#3032).
+- Set : Added support for '.' in set and object names (#3037).
+- CameraTool : Fixed to work with animated transforms (#3034).
+- Animation : Fixed precision loss when serialising keyframes (#3034).
+- BoxOut : Fixed crash in `acceptsInput()` (#3042).
+- ShaderAssignment : Fixed bug with Switch node plugged directly into shader input (#3052).
 
 0.53.1.1 (relative to 0.53.1.0)
 ========
