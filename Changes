@@ -78,8 +78,9 @@ Breaking Changes
 Features
 --------
 
-- ArnoldFilterMap : Added new node used to define filtermap shaders for cameras. Use
-  a ShaderAssignment node to assign it to a camera (#2676, #3040).
+- ArnoldCameraShaders : Added a new node used to define shaders for cameras (#2676, #3040, #3058).
+  - We currently support filtermap and uv_remap shaders.
+  - Use a ShaderAssignment node to assign it to a camera.
 
 Improvements
 ------------
