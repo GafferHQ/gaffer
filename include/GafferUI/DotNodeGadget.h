@@ -76,9 +76,6 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 		void updateUpstreamNameChangedConnection();
 		void updateLabel();
 
-		bool dragEnter( const DragDropEvent &event );
-		bool drop( const DragDropEvent &event );
-
 		boost::signals::scoped_connection m_upstreamNameChangedConnection;
 
 		std::string m_label;

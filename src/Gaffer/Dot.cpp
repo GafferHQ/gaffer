@@ -36,7 +36,6 @@
 
 #include "Gaffer/Dot.h"
 
-#include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StringPlug.h"
 
@@ -47,7 +46,6 @@ IE_CORE_DEFINERUNTIMETYPED( Dot );
 
 static InternedString g_inPlugName( "in" );
 static InternedString g_outPlugName( "out" );
-static InternedString g_sectionName( "noduleLayout:section" );
 
 size_t Dot::g_firstPlugIndex = 0;
 
@@ -65,67 +63,14 @@ Dot::~Dot()
 
 void Dot::setup( const Plug *plug )
 {
-	const Plug *originalPlug = plug;
-
-	if( const Plug *inputPlug = plug->getInput() )
-	{
-		// We'd prefer to set up based on an input plug if possible - see comments
-		// in DotNodeGadgetTest.testCustomNoduleTangentsPreferInputIfAvailable().
-		plug = inputPlug;
-	}
-
 	Gaffer::PlugPtr in = plug->createCounterpart( g_inPlugName, Plug::In );
 	Gaffer::PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 
-	MetadataAlgo::copyColors( originalPlug , in.get() , /* overwrite = */ false );
-	MetadataAlgo::copyColors( originalPlug , out.get() , /* overwrite = */ false );
+	MetadataAlgo::copyColors( plug , in.get() , /* overwrite = */ false );
+	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false );
 
 	in->setFlags( Plug::Serialisable, true );
 	out->setFlags( Plug::Serialisable, true );
-
-	// Set up Metadata so our plugs appear in the right place. We must do this now rather
-	// than later because the GraphEditor will add a Nodule for the plug as soon as the plug
-	// is added as a child.
-
-	ConstStringDataPtr sectionData;
-	for( const Plug *metadataPlug = plug; metadataPlug; metadataPlug = metadataPlug->parent<Plug>() )
-	{
-		if( ( sectionData = Metadata::value<StringData>( metadataPlug, g_sectionName ) ) )
-		{
-			break;
-		}
-	}
-
-	if( sectionData )
-	{
-		const std::string &section = sectionData->readable();
-		std::string oppositeSection;
-		if( section == "left" )
-		{
-			oppositeSection = "right";
-		}
-		else if( section == "right" )
-		{
-			oppositeSection = "left";
-		}
-		else if( section == "bottom" )
-		{
-			oppositeSection = "top";
-		}
-		else
-		{
-			oppositeSection = "bottom";
-		}
-
-		Metadata::registerValue(
-			plug->direction() == Plug::In ? in.get() : out.get(),
-			g_sectionName, sectionData
-		);
-		Metadata::registerValue(
-			plug->direction() == Plug::In ? out.get() : in.get(),
-			g_sectionName, new StringData( oppositeSection )
-		);
-	}
 
 	setChild( g_inPlugName, in );
 	setChild( g_outPlugName, out );

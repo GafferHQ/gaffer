@@ -72,6 +72,16 @@ Gaffer.Metadata.registerNode(
 
 	"layout:activator:labelTypeIsCustom", lambda node : node["labelType"].getValue() == node.LabelType.Custom,
 
+	# Add + buttons for creating new plugs in the GraphEditor
+	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.DotUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonTop:section", "top",
+	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.DotUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonBottom:section", "bottom",
+	"noduleLayout:customGadget:addButtonLeft:gadgetType", "GafferUI.DotUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonLeft:section", "left",
+	"noduleLayout:customGadget:addButtonRight:gadgetType", "GafferUI.DotUI.PlugAdder",
+	"noduleLayout:customGadget:addButtonRight:section", "right",
+
 	plugs = {
 
 		"in" : [

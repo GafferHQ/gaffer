@@ -36,17 +36,15 @@
 
 #include "GafferUI/DotNodeGadget.h"
 
-#include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/Nodule.h"
+#include "GafferUI/NoduleLayout.h"
+#include "GafferUI/PlugAdder.h"
 #include "GafferUI/SpacerGadget.h"
 #include "GafferUI/Style.h"
 
 #include "Gaffer/Dot.h"
-#include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/UndoScope.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/Selector.h"
@@ -76,9 +74,6 @@ DotNodeGadget::DotNodeGadget( Gaffer::NodePtr node )
 
 	node->plugDirtiedSignal().connect( boost::bind( &DotNodeGadget::plugDirtied, this, ::_1 ) );
 	node->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nameChanged, this, ::_1 ) );
-
-	dragEnterSignal().connect( boost::bind( &DotNodeGadget::dragEnter, this, ::_2 ) );
-	dropSignal().connect( boost::bind( &DotNodeGadget::drop, this, ::_2 ) );
 
 	updateUpstreamNameChangedConnection();
 	updateLabel();
@@ -213,81 +208,94 @@ void DotNodeGadget::updateLabel()
 	requestRender();
 }
 
-bool DotNodeGadget::dragEnter( const DragDropEvent &event )
+
+//////////////////////////////////////////////////////////////////////////
+// PlugAdder
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
-	if( MetadataAlgo::readOnly( dotNode() ) )
-	{
-		return false;
-	}
 
-	if( dotNode()->inPlug() )
-	{
-		// We've already got our plugs set up - StandardNodeGadget
-		// behaviour will take care of everything.
-		return false;
-	}
-
-	const Plug *plug = runTimeCast<Plug>( event.data.get() );
-	if( !plug )
-	{
-		return false;
-	}
-
-	const GraphGadget *graphGadget = ancestor<GraphGadget>();
-	if( !graphGadget )
-	{
-		return false;
-	}
-
-	const NodeGadget *nodeGadget = graphGadget->nodeGadget( plug->node() );
-	if( !nodeGadget )
-	{
-		return false;
-	}
-
-	const Nodule *nodule = nodeGadget->nodule( plug );
-	if( !nodule )
-	{
-		return false;
-	}
-
-	if( auto connectionCreator = runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
-	{
-		V3f tangent = -nodeGadget->connectionTangent( nodule );
-		V3f position = ( tangent * bound().size().x / 2.0f ) * fullTransform();
-		position = position * connectionCreator->fullTransform().inverse();
-		connectionCreator->updateDragEndPoint( position, tangent );
-	}
-
-	return true;
-}
-
-bool DotNodeGadget::drop( const DragDropEvent &event )
+class DotPlugAdder : public GafferUI::PlugAdder
 {
-	if( dotNode()->inPlug() )
+
+	public :
+
+		DotPlugAdder( DotPtr dot )
+			:	m_dot( dot )
+		{
+			dot->childAddedSignal().connect( boost::bind( &DotPlugAdder::childAdded, this ) );
+			dot->childRemovedSignal().connect( boost::bind( &DotPlugAdder::childRemoved, this ) );
+
+			updateVisibility();
+		}
+
+	protected :
+
+		void createConnection( Plug *endpoint ) override
+		{
+			m_dot->setup( endpoint );
+
+			bool inOpposite = false;
+			if( endpoint->direction() == Plug::Out )
+			{
+				m_dot->inPlug()->setInput( endpoint );
+				inOpposite = false;
+			}
+			else
+			{
+				endpoint->setInput( m_dot->outPlug() );
+				inOpposite = true;
+			}
+
+			applyEdgeMetadata( m_dot->inPlug(), inOpposite );
+			applyEdgeMetadata( m_dot->outPlug(), !inOpposite );
+		}
+
+	private :
+
+		void childAdded()
+		{
+			updateVisibility();
+		}
+
+		void childRemoved()
+		{
+			updateVisibility();
+		}
+
+		void updateVisibility()
+		{
+			setVisible( !m_dot->inPlug() );
+		}
+
+		DotPtr m_dot;
+
+};
+
+struct Registration
+{
+
+	Registration()
 	{
-		// We've already got our plugs set up - StandardNodeGadget
-		// behaviour will take care of everything.
-		return false;
+		NoduleLayout::registerCustomGadget( "GafferUI.DotUI.PlugAdder", boost::bind( &create, ::_1 ) );
 	}
 
-	Plug *plug = runTimeCast<Plug>( event.data.get() );
-	if( !plug )
-	{
-		return false;
-	}
+	private :
 
-	Gaffer::UndoScope undoEnabler( node()->ancestor<ScriptNode>() );
+		static GadgetPtr create( GraphComponentPtr parent )
+		{
+			DotPtr dotNode = runTimeCast<Dot>( parent );
+			if( !dotNode )
+			{
+				throw Exception( "DotPlugAdder requires a Dot" );
+			}
 
-	dotNode()->setup( plug );
-	if( plug->direction() == Plug::In )
-	{
-		plug->setInput( dotNode()->outPlug() );
-	}
-	else
-	{
-		dotNode()->inPlug()->setInput( plug );
-	}
+			return new DotPlugAdder( dotNode );
+		}
 
-	return true;
-}
+};
+
+Registration g_registration;
+
+} // namespace
