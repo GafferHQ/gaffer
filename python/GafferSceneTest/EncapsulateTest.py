@@ -75,7 +75,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		encapsulate = GafferScene.Encapsulate()
 		encapsulate["in"].setInput( groupA["out"] )
 
-		self.assertSceneHashesEqual( encapsulate["out"], groupA["out"] )
+		self.assertSceneHashesEqual( encapsulate["out"], groupA["out"], checks = self.allSceneChecks - { "sets" } )
 		self.assertScenesEqual( encapsulate["out"], groupA["out"] )
 
 		# The same goes if there is a filter but it
@@ -84,7 +84,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		pathFilter = GafferScene.PathFilter()
 		encapsulate["filter"].setInput( pathFilter["out"] )
 
-		self.assertSceneHashesEqual( encapsulate["out"], groupA["out"] )
+		self.assertSceneHashesEqual( encapsulate["out"], groupA["out"], checks = self.allSceneChecks - { "sets" } )
 		self.assertScenesEqual( encapsulate["out"], groupA["out"] )
 
 		# Even when the filter does match something, the

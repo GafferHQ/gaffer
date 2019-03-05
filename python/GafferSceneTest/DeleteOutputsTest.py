@@ -59,7 +59,7 @@ class DeleteOutputsTest( GafferSceneTest.SceneTestCase ) :
 		# test that by default the scene is passed through
 
 		self.assertScenesEqual( plane["out"], deleteOutputs["out"] )
-		self.assertSceneHashesEqual( plane["out"], deleteOutputs["out"] )
+		self.assertSceneHashesEqual( plane["out"], deleteOutputs["out"], checks = self.allSceneChecks - { "globals" } )
 
 		# test that we can delete options
 

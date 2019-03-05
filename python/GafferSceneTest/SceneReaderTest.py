@@ -244,7 +244,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneHashesEqual(
 			s["out"], t["out"],
-			childPlugNames = [ "childNames" ]
+			checks = { "childNames" }
 		)
 
 	def testStaticHashes( self ) :
@@ -279,37 +279,37 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertPathHashesNotEqual(
 			s["out"], "/movingGroup",
 			t["out"], "/movingGroup",
-			childPlugNames = [ "transform", "bound" ]
+			checks = { "transform", "bound" }
 		)
 
 		self.assertPathHashesNotEqual(
 			s["out"], "/movingGroup/deformingSphere",
 			t["out"], "/movingGroup/deformingSphere",
-			childPlugNames = [ "bound", "object" ]
+			checks = { "bound", "object" }
 		)
 
 		self.assertPathHashesEqual(
 			s["out"], "/movingGroup",
 			t["out"], "/movingGroup",
-			childPlugNames = [ "attributes", "object" ]
+			checks = { "attributes", "object" }
 		)
 
 		self.assertPathHashesEqual(
 			s["out"], "/movingGroup/deformingSphere",
 			t["out"], "/movingGroup/deformingSphere",
-			childPlugNames = [ "attributes" ]
+			checks = { "attributes" }
 		)
 
 		self.assertPathHashesEqual(
 			s["out"], "/staticGroup",
 			t["out"], "/staticGroup",
-			childPlugNames = [ "object", "transform", "attributes", "bound" ]
+			checks = { "object", "transform", "attributes", "bound" }
 		)
 
 		self.assertPathHashesEqual(
 			s["out"], "/staticGroup/staticSphere",
 			t["out"], "/staticGroup/staticSphere",
-			childPlugNames = [ "object", "transform", "attributes", "bound" ]
+			checks = { "object", "transform", "attributes", "bound" }
 		)
 
 	def testTagFilteringWholeScene( self ) :
@@ -354,8 +354,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		# as should be the hashes, except for childNames
 
-		self.assertSceneHashesEqual( s1["out"], s2["out"], childPlugNamesToIgnore = ( "childNames", ) )
-		self.assertSceneHashesEqual( s2["out"], s3["out"], childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertSceneHashesEqual( s1["out"], s2["out"], checks = self.allPathChecks - { "childNames" } )
+		self.assertSceneHashesEqual( s2["out"], s3["out"], checks = self.allPathChecks - { "childNames" } )
 
 	def testTagFilteringPartialScene( self ) :
 
@@ -409,14 +409,14 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		# check equality of the locations which are preserved
 
-		self.assertPathsEqual( s1["out"], "/", s2["out"], "/", childPlugNamesToIgnore = ( "childNames", ) )
-		self.assertPathsEqual( s1["out"], "/", s3["out"], "/", childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertPathsEqual( s1["out"], "/", s2["out"], "/", checks = self.allPathChecks - { "childNames" } )
+		self.assertPathsEqual( s1["out"], "/", s3["out"], "/", checks = self.allPathChecks - { "childNames" } )
 
-		self.assertPathsEqual( s1["out"], "/sphereGroup/sphere", s2["out"], "/sphereGroup/sphere", childPlugNamesToIgnore = ( "childNames", ) )
-		self.assertPathsEqual( s1["out"], "/sphereGroup/sphere", s2["out"], "/sphereGroup/sphere", childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertPathsEqual( s1["out"], "/sphereGroup/sphere", s2["out"], "/sphereGroup/sphere", checks = self.allPathChecks - { "childNames" } )
+		self.assertPathsEqual( s1["out"], "/sphereGroup/sphere", s2["out"], "/sphereGroup/sphere", checks = self.allPathChecks - { "childNames" } )
 
-		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", childPlugNamesToIgnore = ( "childNames", ) )
-		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", checks = self.allPathChecks - { "childNames" } )
+		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", checks = self.allPathChecks - { "childNames" } )
 
 	def testSupportedExtensions( self ) :
 

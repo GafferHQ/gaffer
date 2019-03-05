@@ -59,7 +59,7 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		d["names"].setValue( "uv e" )
 
 		self.assertNotEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"], childPlugNames = ( "attributes", "bound", "transform", "globals", "childNames" ) )
+		self.assertSceneHashesEqual( p["out"], d["out"], checks = self.allSceneChecks - { "object" } )
 		self.assertSceneHashesEqual( p["out"], d["out"], pathsToIgnore = ( "/plane" ) )
 		self.assertNotIn( "uv", d["out"].object( "/plane" ) )
 		self.assertIn( "P", d["out"].object( "/plane" ) )

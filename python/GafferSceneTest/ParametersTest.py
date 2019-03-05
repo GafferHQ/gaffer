@@ -68,8 +68,8 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		parameters["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( parameters["out"] )
-		self.assertScenesEqual( parameters["out"], group["out"], childPlugNamesToIgnore = ( "object", ) )
-		self.assertSceneHashesEqual( parameters["out"], group["out"], childPlugNamesToIgnore = ( "object", ) )
+		self.assertScenesEqual( parameters["out"], group["out"], checks = self.allSceneChecks - { "object" } )
+		self.assertSceneHashesEqual( parameters["out"], group["out"], checks = self.allSceneChecks - { "object" } )
 
 		cameraIn = group["out"].object( "/group/camera" )
 		cameraOut = parameters["out"].object( "/group/camera" )

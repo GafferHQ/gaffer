@@ -56,8 +56,8 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		p["primitiveVariables"].addMember( "a", IECore.IntData( 10 ) )
 
-		self.assertScenesEqual( s["out"], p["out"], childPlugNamesToIgnore=( "object", ) )
-		self.assertSceneHashesEqual( s["out"], p["out"], childPlugNamesToIgnore=( "object", ) )
+		self.assertScenesEqual( s["out"], p["out"], checks = self.allSceneChecks - { "object" } )
+		self.assertSceneHashesEqual( s["out"], p["out"], checks = self.allSceneChecks - { "object" } )
 
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), p["out"].objectHash( "/sphere" ) )
 		self.assertNotEqual( s["out"].object( "/sphere" ), p["out"].object( "/sphere" ) )

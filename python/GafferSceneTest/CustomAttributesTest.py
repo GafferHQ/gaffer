@@ -173,8 +173,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# when we have some attributes, everything except the attributes plug should
 		# be a pass-through.
 		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 2.0 ) )
-		self.assertSceneHashesEqual( input["out"], a["out"], childPlugNames = ( "globals", "childNames", "transform", "bound", "object" ) )
-		self.assertSceneHashesNotEqual( input["out"], a["out"], childPlugNames = ( "attributes", ) )
+		self.assertSceneHashesEqual( input["out"], a["out"], checks = self.allSceneChecks - { "attributes" } )
+		self.assertSceneHashesNotEqual( input["out"], a["out"], checks = { "attributes" } )
 
 		# when we add a filter, non-matching objects should become pass-throughs
 		f = GafferScene.PathFilter()

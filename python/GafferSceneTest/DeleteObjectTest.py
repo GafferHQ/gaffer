@@ -68,16 +68,16 @@ class DeleteObjectTest( GafferSceneTest.SceneTestCase ) :
 
 		# Bounds should be unchanged unless we ask for them to be adjusted
 
-		self.assertScenesEqual( plane["out"], deleteObject["out"], childPlugNamesToIgnore = { "object" } )
-		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], childPlugNamesToIgnore = { "object" } )
+		self.assertScenesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object" } )
+		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object" } )
 
 		deleteObject["adjustBounds"].setValue( True )
 
 		self.assertEqual( deleteObject["out"].bound( "/" ), imath.Box3f() )
 		self.assertEqual( deleteObject["out"].bound( "/plane" ), imath.Box3f() )
 
-		self.assertScenesEqual( plane["out"], deleteObject["out"], childPlugNamesToIgnore = { "object", "bound" } )
-		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], childPlugNamesToIgnore = { "object", "bound" } )
+		self.assertScenesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object", "bound" } )
+		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object", "bound" } )
 
 if __name__ == "__main__":
 	unittest.main()

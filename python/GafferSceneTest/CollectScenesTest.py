@@ -98,10 +98,10 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		script["subTree"]["in"].setInput( script["collect"]["out"] )
 
 		script["subTree"]["root"].setValue( "/sphere" )
-		self.assertScenesEqual( script["subTree"]["out"], script["sphere"]["out"] )
+		self.assertScenesEqual( script["subTree"]["out"], script["sphere"]["out"], checks = self.allSceneChecks - { "sets" } )
 
 		script["subTree"]["root"].setValue( "/cube" )
-		self.assertScenesEqual( script["subTree"]["out"], script["cube"]["out"] )
+		self.assertScenesEqual( script["subTree"]["out"], script["cube"]["out"], checks = self.allSceneChecks - { "sets" } )
 
 		script["subTree"]["root"].setValue( "/group" )
 		self.assertScenesEqual( script["subTree"]["out"], script["group"]["out"] )

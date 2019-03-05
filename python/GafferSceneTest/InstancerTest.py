@@ -203,7 +203,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["name"].setValue( "" )
 
 		self.assertScenesEqual( instancer["out"], plane["out"] )
-		self.assertSceneHashesEqual( instancer["out"], plane["out"] )
+		self.assertSceneHashesEqual( instancer["out"], plane["out"], checks = self.allSceneChecks - { "sets" } )
 
 	def testEmptyParent( self ) :
 

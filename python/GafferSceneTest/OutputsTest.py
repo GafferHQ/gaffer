@@ -136,7 +136,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		outputs = GafferScene.Outputs()
 		outputs["in"].setInput( p["out"] )
 
-		self.assertSceneHashesEqual( p["out"], outputs["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
+		self.assertSceneHashesEqual( p["out"], outputs["out"], checks = self.allSceneChecks - { "globals" } )
 
 	def testParametersHaveUsefulNames( self ) :
 

@@ -161,29 +161,27 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 		walkScene( "/" )
 
-	def __childPlugNames( self, childPlugNames, childPlugNamesToIgnore ) :
+	allPathChecks = { "bound", "transform", "attributes", "object", "childNames" }
+	allSceneChecks = allPathChecks | { "sets", "globals" }
 
-		if childPlugNames is None :
-			childPlugNames = ( "bound", "transform", "attributes", "object", "childNames" )
-		childPlugNames = set( childPlugNames )
-		childPlugNames -= set( childPlugNamesToIgnore )
+	def assertPathsEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, checks = allPathChecks ) :
 
-		return childPlugNames
+		assert( checks.issubset( self.allPathChecks ) )
 
-	def assertPathsEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
-
-		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
-		for childPlugName in childPlugNames :
+		for childPlugName in checks :
 			getFn1 = getattr( scenePlug1, childPlugName )
 			getFn2 = getattr( scenePlug2, childPlugName )
 			self.assertEqual( getFn1( scenePath1 ), getFn2( scenePath2 ) )
 
-	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
+	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
+
+		assert( checks.issubset( self.allSceneChecks ) )
 
 		def walkScene( scenePath1, scenePath2 ) :
 
 			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
-				self.assertPathsEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames, childPlugNamesToIgnore )
+				self.assertPathsEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, checks.intersection( self.allPathChecks ) )
+
 			childNames = scenePlug1.childNames( scenePath1 )
 			for childName in childNames :
 
@@ -202,68 +200,104 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 		walkScene( scenePath1, scenePath2 )
 
-	def assertPathHashesEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
+		if "globals" in checks :
+			self.assertEqual( scenePlug1.globals(), scenePlug2.globals() )
+		if "sets" in checks :
+			self.assertEqual( scenePlug1.setNames(), scenePlug2.setNames() )
+			for setName in scenePlug1.setNames() :
+				self.assertEqual( scenePlug1.set( setName ), scenePlug2.set( setName ) )
 
-		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
-		for childPlugName in childPlugNames :
+	def assertPathHashesEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, checks = allPathChecks ) :
+
+		assert( checks.issubset( self.allPathChecks ) )
+
+		for childPlugName in checks :
 			hashFn1 = getattr( scenePlug1, childPlugName + "Hash" )
 			hashFn2 = getattr( scenePlug2, childPlugName + "Hash" )
 			self.assertEqual( hashFn1( scenePath1 ), hashFn2( scenePath2 ) )
 
-	def assertPathHashesNotEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
+	def assertPathHashesNotEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, checks = allPathChecks ) :
 
-		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
-		for childPlugName in childPlugNames :
+		assert( checks.issubset( self.allPathChecks ) )
+
+		for childPlugName in checks :
 			hashFn1 = getattr( scenePlug1, childPlugName + "Hash" )
 			hashFn2 = getattr( scenePlug2, childPlugName + "Hash" )
 			self.assertNotEqual( hashFn1( scenePath1 ), hashFn2( scenePath2 ) )
 
-	def assertSceneHashesEqual( self, scenePlug1, scenePlug2, childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
+	def assertSceneHashesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
 
-		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+		assert( checks.issubset( self.allSceneChecks ) )
 
-		def walkScene( scenePath ) :
+		def walkScene( scenePath1, scenePath2 ) :
 
-			c = Gaffer.Context()
-			c["scene:path"] = scenePath
-			with c :
-				if ( not pathsToIgnore ) or ( self.__pathToString( scenePath ) not in pathsToIgnore ) :
-					for childPlugName in childPlugNames :
-						self.assertEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
-				childNames = scenePlug1["childNames"].getValue()
-				for childName in childNames :
+			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
 
-					childPath = IECore.InternedStringVectorData( scenePath )
-					childPath.append( childName )
+				self.assertPathHashesEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, checks.intersection( self.allPathChecks ) )
 
-					walkScene( childPath )
+			childNames = scenePlug1.childNames( scenePath1 )
+			for childName in childNames :
 
-		walkScene( IECore.InternedStringVectorData() )
+				childPath1 = IECore.InternedStringVectorData( scenePath1 )
+				childPath1.append( childName )
 
-	def assertSceneHashesNotEqual( self, scenePlug1, scenePlug2, childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
+				childPath2 = IECore.InternedStringVectorData( scenePath2 )
+				childPath2.append( childName )
 
-		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+				walkScene( childPath1, childPath2 )
 
-		def walkScene( scenePath ) :
+		scenePath1 = IECore.InternedStringVectorData()
+		scenePath2 = IECore.InternedStringVectorData()
+		if scenePlug2PathPrefix :
+			scenePath2.extend( IECore.InternedStringVectorData( scenePlug2PathPrefix[1:].split( "/" ) ) )
 
-			c = Gaffer.Context()
-			c["scene:path"] = scenePath
-			with c :
-				if ( not pathsToIgnore ) or ( self.__pathToString( scenePath ) not in pathsToIgnore ) :
-					for childPlugName in childPlugNames :
-						if len( scenePath ) == 0 and childPlugName in [ "attributes", "object", "transform" ]:
-							# hashes will automatically be equal for these plugs at the root
-							continue
-						self.assertNotEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
-				childNames = scenePlug1["childNames"].getValue() or []
-				for childName in childNames :
+		walkScene( scenePath1, scenePath2 )
 
-					childPath = IECore.InternedStringVectorData( scenePath )
-					childPath.append( childName )
+		if "globals" in checks :
+			self.assertEqual( scenePlug1.globalsHash(), scenePlug2.globalsHash() )
+		if "sets" in checks :
+			self.assertEqual( scenePlug1.setNamesHash(), scenePlug2.setNamesHash() )
+			for setName in scenePlug1.setNames() :
+				self.assertEqual( scenePlug1.setHash( setName ), scenePlug2.setHash( setName ) )
 
-					walkScene( childPath )
+	def assertSceneHashesNotEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
 
-		walkScene( IECore.InternedStringVectorData() )
+		def walkScene( scenePath1, scenePath2 ) :
+
+			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
+
+				pathChecks = checks.intersection( self.allPathChecks )
+				if len( scenePath1 ) == 0 :
+					# Hashes will automatically be equal for these plugs at the root,
+					# because they are dealt with automatically in the SceneNode base class.
+					pathChecks -= { "attributes", "object", "transform" }
+
+				self.assertPathHashesNotEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, pathChecks )
+
+			childNames = scenePlug1.childNames( scenePath1 )
+			for childName in childNames :
+
+				childPath1 = IECore.InternedStringVectorData( scenePath1 )
+				childPath1.append( childName )
+
+				childPath2 = IECore.InternedStringVectorData( scenePath2 )
+				childPath2.append( childName )
+
+				walkScene( childPath1, childPath2 )
+
+		scenePath1 = IECore.InternedStringVectorData()
+		scenePath2 = IECore.InternedStringVectorData()
+		if scenePlug2PathPrefix :
+			scenePath2.extend( IECore.InternedStringVectorData( scenePlug2PathPrefix[1:].split( "/" ) ) )
+
+		walkScene( scenePath1, scenePath2 )
+
+		if "globals" in checks :
+			self.assertNotEqual( scenePlug1.globalsHash(), scenePlug2.globalsHash() )
+		if "sets" in checks :
+			self.assertNotEqual( scenePlug1.setNamesHash(), scenePlug2.setNamesHash() )
+			for setName in scenePlug1.setNames() :
+				self.assertNotEqual( scenePlug1.setHash( setName ), scenePlug2.setHash( setName ) )
 
 	def assertBoxesEqual( self, box1, box2 ) :
 
