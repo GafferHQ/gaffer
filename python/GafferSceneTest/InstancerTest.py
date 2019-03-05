@@ -299,10 +299,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# we do truly enter python.
 		with Gaffer.Context() as c :
 
-			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
-
 			c.setFrame( 1 )
 			script["instancer"]["out"]["globals"].getValue()
+
+			c.setFrame( 101 )
+			script["instancer"]["out"]["globals"].hash()
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+
 			c.setFrame( 2 )
 			script["instancer"]["out"]["bound"].getValue()
 			c.setFrame( 3 )
@@ -315,8 +319,6 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			script["instancer"]["out"]["childNames"].getValue()
 			c.setFrame( 7 )
 
-			c.setFrame( 101 )
-			script["instancer"]["out"]["globals"].hash()
 			c.setFrame( 102 )
 			script["instancer"]["out"]["bound"].hash()
 			c.setFrame( 103 )
