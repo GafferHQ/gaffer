@@ -137,6 +137,7 @@ from FilterProcessorTest import FilterProcessorTest
 from UDIMQueryTest import UDIMQueryTest
 from WireframeTest import WireframeTest
 from TweakPlugTest import TweakPlugTest
+from ContextSanitiserTest import ContextSanitiserTest
 
 from IECoreGLPreviewTest import *
 
