@@ -229,14 +229,14 @@ void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 		case GraphLayer::Nodes :
 			if( !getHighlighted() )
 			{
-				const float radius = 0.75f;
+				const float radius = 0.5f;
 				style->renderImage( Box2f( V2f( -radius ), V2f( radius ) ), texture( Style::NormalState ) );
 			}
 			break;
 		case GraphLayer::Highlighting :
 			if( getHighlighted() )
 			{
-				const float radius = 1.25f;
+				const float radius = 1.0f;
 				style->renderImage( Box2f( V2f( -radius ), V2f( radius ) ), texture( Style::HighlightedState ) );
 			}
 			break;
