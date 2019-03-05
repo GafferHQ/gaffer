@@ -86,21 +86,25 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		for i in p['renderSettingOverrides']:
 			i["enabled"].setValue( True )
 
-		c = Gaffer.Context()
-		with c :
+		with Gaffer.Context() as c :
 
-			c["scene:setName"] = IECore.InternedStringData( "__cameras" )
 			c["scene:path"] = IECore.InternedStringVectorData()
 			# We ignore the enabled and sets plugs because they aren't hashed (instead
 			# their values are used to decide how the hash should be computed). We ignore
 			# the transform plug because it isn't affected by any inputs when the path is "/".
-			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["transform"] ] )
+			# We ignore the set plug because that needs a different context - we test that below.
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["transform"], p["out"]["set"] ] )
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
 			# We ignore the childNames because it doesn't use any inputs to compute when
 			# the path is not "/". We ignore the bound plug because although it has a dependency
 			# on the transform plug, that is only relevant when the path is "/".
-			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["childNames"], p["out"]["bound"] ] )
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["childNames"], p["out"]["bound"], p["out"]["set"] ] )
+
+		with Gaffer.Context() as c :
+
+			c["scene:setName"] = IECore.InternedStringData( "__cameras" )
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ c for c in p["out"] if c != p["out"]["set"] ] )
 
 	def testBound( self ) :
 
