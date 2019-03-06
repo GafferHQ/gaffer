@@ -57,7 +57,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( d["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere", "sphere1" ] ) )
 		self.assertPathHashesEqual( s["out"], "/sphere", d["out"], "/sphere" )
-		self.assertPathHashesEqual( d["out"], "/sphere", d["out"], "/sphere1", childPlugNamesToIgnore = ( "transform", ) )
+		self.assertPathHashesEqual( d["out"], "/sphere", d["out"], "/sphere1", checks = self.allPathChecks - { "transform" } )
 		self.assertEqual( d["out"].transform( "/sphere1" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 
 	def testMultipleCopies( self ) :
@@ -80,7 +80,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 
 		for i in range( 1, 11 ) :
 			path = "sphere%d" % i
-			self.assertPathHashesEqual( d["out"], "/sphere", d["out"], path, childPlugNamesToIgnore = ( "transform", ) )
+			self.assertPathHashesEqual( d["out"], "/sphere", d["out"], path, checks = self.allPathChecks - { "transform" } )
 			self.assertEqual( d["out"].transform( path ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) * i ) )
 
 	def testHierarchy( self ) :
@@ -95,7 +95,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( d["out"] )
 		self.assertPathsEqual( d["out"], "/group", d["out"], "/group1" )
-		self.assertPathHashesEqual( d["out"], "/group", d["out"], "/group1", childPlugNamesToIgnore = ( "transform", ) )
+		self.assertPathHashesEqual( d["out"], "/group", d["out"], "/group1", checks = self.allPathChecks - { "transform" } )
 		self.assertPathsEqual( d["out"], "/group/sphere", d["out"], "/group1/sphere" )
 		self.assertPathHashesEqual( d["out"], "/group/sphere", d["out"], "/group1/sphere" )
 

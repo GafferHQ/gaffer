@@ -63,8 +63,8 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		d["names"].setValue( "doubleSided" )
 
-		self.assertSceneHashesNotEqual( a["out"], d["out"], childPlugNames = ( "attributes", ) )
-		self.assertSceneHashesEqual( a["out"], d["out"], childPlugNames = ( "object", "bound", "transform", "globals", "childNames" ) )
+		self.assertSceneHashesNotEqual( a["out"], d["out"], checks = { "attributes" } )
+		self.assertSceneHashesEqual( a["out"], d["out"], checks = self.allSceneChecks - { "attributes" } )
 
 		self.failUnless( "scene:visible" in d["out"].attributes( "/plane" ) )
 		self.failIf( "doubleSided" in d["out"].attributes( "/plane" ) )

@@ -96,7 +96,7 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 	def testHashPassThrough( self ) :
 
-		# the hash of the per-object part of the output should be
+		# The hash of everything except the globals should be
 		# identical to the input, so that they share cache entries.
 
 		p = GafferScene.Plane()
@@ -104,7 +104,7 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		options["in"].setInput( p["out"] )
 		options["options"].addMember( "test", IECore.IntData( 10 ) )
 
-		self.assertSceneHashesEqual( p["out"], options["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
+		self.assertSceneHashesEqual( p["out"], options["out"], checks = self.allSceneChecks - { "globals" } )
 
 	def testDisabled( self ) :
 
@@ -113,7 +113,7 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		options["in"].setInput( p["out"] )
 		options["options"].addMember( "test", IECore.IntData( 10 ) )
 
-		self.assertSceneHashesEqual( p["out"], options["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
+		self.assertSceneHashesEqual( p["out"], options["out"], checks = self.allSceneChecks - { "globals" } )
 		self.assertNotEqual( options["out"]["globals"].hash(), p["out"]["globals"].hash() )
 
 		options["enabled"].setValue( False )

@@ -92,6 +92,8 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 
 	private :
 
+		class ProcessedScope;
+
 		static const Plug *correspondingDescendant( const Plug *plug, const Plug *plugAncestor, const Plug *oppositeAncestor );
 
 		/// Returns the input corresponding to the output and vice versa.

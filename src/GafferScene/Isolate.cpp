@@ -224,7 +224,7 @@ bool Isolate::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputP
 void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	const SetsToKeep setsToKeep( this );
-	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, filterValue( context ), setsToKeep ) )
+	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, context, setsToKeep ) )
 	{
 		h = hashOfTransformedChildBounds( path, outPlug() );
 		return;
@@ -237,7 +237,7 @@ void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	const SetsToKeep setsToKeep( this );
-	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, filterValue( context ), setsToKeep ) )
+	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, context, setsToKeep ) )
 	{
 		return unionOfTransformedChildBounds( path, outPlug() );
 	}
@@ -249,9 +249,7 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 {
 	const SetsToKeep setsToKeep( this );
 
-	FilterPlug::SceneScope sceneScope( context, inPlug() );
-
-	if( mayPruneChildren( path, filterPlug()->getValue(), setsToKeep ) )
+	if( mayPruneChildren( path, context, setsToKeep ) )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
@@ -261,6 +259,8 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue( &inputChildNamesHash );
 		const vector<InternedString> &inputChildNames = inputChildNamesData->readable();
+
+		FilterPlug::SceneScope sceneScope( context, inPlug() );
 
 		ScenePath childPath = path;
 		childPath.push_back( InternedString() ); // for the child name
@@ -290,9 +290,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 {
 	const SetsToKeep setsToKeep( this );
 
-	FilterPlug::SceneScope sceneScope( context, inPlug() );
-
-	if( mayPruneChildren( path, filterPlug()->getValue(), setsToKeep ) )
+	if( mayPruneChildren( path, context, setsToKeep ) )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
@@ -300,6 +298,8 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 
 		InternedStringVectorDataPtr outputChildNamesData = new InternedStringVectorData;
 		vector<InternedString> &outputChildNames = outputChildNamesData->writable();
+
+		FilterPlug::SceneScope sceneScope( context, inPlug() );
 
 		ScenePath childPath = path;
 		childPath.push_back( InternedString() ); // for the child name
@@ -434,7 +434,7 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 	return outputSetData;
 }
 
-bool Isolate::mayPruneChildren( const ScenePath &path, unsigned filterValue, const SetsToKeep &setsToKeep ) const
+bool Isolate::mayPruneChildren( const ScenePath &path, const Gaffer::Context *context, const SetsToKeep &setsToKeep ) const
 {
 	const std::string fromString = fromPlug()->getValue();
 	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
@@ -443,6 +443,6 @@ bool Isolate::mayPruneChildren( const ScenePath &path, unsigned filterValue, con
 		return false;
 	}
 
-	filterValue |= setsToKeep.match( path );
-	return filterValue == IECore::PathMatcher::DescendantMatch || filterValue == IECore::PathMatcher::NoMatch;
+	unsigned filterMatch = filterValue( context ) | setsToKeep.match( path );
+	return filterMatch == IECore::PathMatcher::DescendantMatch || filterMatch == IECore::PathMatcher::NoMatch;
 }

@@ -281,6 +281,8 @@ void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context 
 
 	FilteredSceneProcessor::hashSet( setName, context, parent, h );
 	inPlug()->setPlug()->hash( h );
+
+	ScenePlug::GlobalScope globalScope( context );
 	modePlug()->hash( h );
 	pathMatcherPlug()->hash( h );
 }
@@ -294,8 +296,15 @@ IECore::ConstPathMatcherDataPtr Set::computeSet( const IECore::InternedString &s
 		return inPlug()->setPlug()->getValue();
 	}
 
-	ConstPathMatcherDataPtr pathMatcher = pathMatcherPlug()->getValue();
-	switch( modePlug()->getValue() )
+	Mode mode;
+	ConstPathMatcherDataPtr pathMatcher;
+	{
+		ScenePlug::GlobalScope globalScope( context );
+		mode = static_cast<Mode>( modePlug()->getValue() );
+		pathMatcher = pathMatcherPlug()->getValue();
+	}
+
+	switch( mode )
 	{
 		case Add : {
 			ConstPathMatcherDataPtr inputSet = inPlug()->setPlug()->getValue();

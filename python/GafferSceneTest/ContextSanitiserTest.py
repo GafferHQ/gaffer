@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +34,46 @@
 #
 ##########################################################################
 
-import unittest
-
-import imath
-
 import IECore
-import IECoreScene
 
+import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class DeleteObjectTest( GafferSceneTest.SceneTestCase ) :
+class ContextSanitiserTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
 		plane = GafferScene.Plane()
+		plane["sets"].setValue( "a" )
 
-		# Node should do nothing without a filter applied.
+		with IECore.CapturingMessageHandler() as mh :
+			with GafferSceneTest.ContextSanitiser() :
+				with Gaffer.Context() as c :
 
-		deleteObject = GafferScene.DeleteObject()
-		deleteObject["in"].setInput( plane["out"] )
+					c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+					plane["out"]["globals"].getValue()
 
-		self.assertScenesEqual( plane["out"], deleteObject["out"] )
-		self.assertSceneHashesEqual( plane["out"], deleteObject["out"] )
+					c["scene:setName"] = IECore.InternedStringData( "a" )
+					plane["out"]["set"].getValue()
 
-		# Applying a filter should kick it into action.
+					plane["out"]["object"].getValue()
 
-		f = GafferScene.PathFilter()
-		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
-		deleteObject["filter"].setInput( f["out"] )
+		for message in mh.messages :
+			self.assertEqual( message.level, mh.Level.Warning )
+			self.assertEqual( message.context, "ContextSanitiser" )
 
-		self.assertEqual( deleteObject["out"].object( "/plane" ), IECore.NullObject() )
-
-		# Bounds should be unchanged unless we ask for them to be adjusted
-
-		self.assertScenesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object" } )
-		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object" } )
-
-		deleteObject["adjustBounds"].setValue( True )
-
-		self.assertEqual( deleteObject["out"].bound( "/" ), imath.Box3f() )
-		self.assertEqual( deleteObject["out"].bound( "/plane" ), imath.Box3f() )
-
-		self.assertScenesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object", "bound" } )
-		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object", "bound" } )
+		self.assertEqual(
+			[ m.message for m in mh.messages ],
+			[
+				"scene:path in context for Plane.out.globals computeNode:hash",
+				"scene:path in context for Plane.out.globals computeNode:hash",
+				"scene:path in context for Plane.out.set computeNode:hash",
+				"scene:path in context for Plane.out.set computeNode:hash",
+				"scene:setName in context for Plane.out.object computeNode:hash",
+				"scene:setName in context for Plane.out.object computeNode:hash",
+			]
+		)
 
 if __name__ == "__main__":
 	unittest.main()

@@ -97,7 +97,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p["in"].setInput( c["out"] )
 
 		self.assertScenesEqual( p["out"], c["out"] )
-		self.assertSceneHashesEqual( p["out"], c["out"] )
+		self.assertSceneHashesEqual( p["out"], c["out"], checks = self.allSceneChecks - { "sets" } )
 
 	def testNameUniqueification( self ) :
 

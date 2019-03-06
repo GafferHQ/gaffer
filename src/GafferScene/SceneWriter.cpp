@@ -79,7 +79,7 @@ struct LocationWriter
 
 		if( scenePath.empty() )
 		{
-			globals = scene->globalsPlug()->getValue();
+			globals = scene->globals();
 		}
 		else
 		{

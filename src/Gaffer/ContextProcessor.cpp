@@ -37,6 +37,7 @@
 
 #include "Gaffer/ContextProcessor.h"
 
+#include "Gaffer/ContextAlgo.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ValuePlug.h"
 
@@ -44,6 +45,23 @@ using namespace Gaffer;
 
 static IECore::InternedString g_inPlugName( "in" );
 static IECore::InternedString g_outPlugName( "out" );
+
+class ContextProcessor::ProcessedScope : public Context::EditableScope
+{
+
+	public :
+
+		ProcessedScope( const Context *context, const ContextProcessor *processor )
+			:	EditableScope( context )
+		{
+			ContextAlgo::GlobalScope globalScope( context, processor->inPlug() );
+			if( processor->enabledPlug()->getValue() )
+			{
+				processor->processContext( *this );
+			}
+		}
+
+};
 
 IE_CORE_DEFINERUNTIMETYPED( ContextProcessor );
 
@@ -165,16 +183,8 @@ void ContextProcessor::affects( const Plug *input, DependencyNode::AffectedPlugs
 
 ContextPtr ContextProcessor::inPlugContext() const
 {
-	if( enabledPlug()->getValue() )
-	{
-		Context::EditableScope scope( Context::current() );
-		processContext( scope );
-		return new Context( *Context::current() );
-	}
-	else
-	{
-		return new Context( *Context::current() );
-	}
+	ProcessedScope processedScope( Context::current(), this );
+	return new Context( *processedScope.context() );
 }
 
 void ContextProcessor::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
@@ -182,16 +192,8 @@ void ContextProcessor::hash( const ValuePlug *output, const Context *context, IE
 	auto input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output ) );
 	if( input )
 	{
-		if( enabledPlug()->getValue() )
-		{
-			Context::EditableScope scope( context );
-			processContext( scope );
-			h = input->hash();
-		}
-		else
-		{
-			h = input->hash();
-		}
+		ProcessedScope processedScope( context, this );
+		h = input->hash();
 		return;
 	}
 
@@ -203,16 +205,8 @@ void ContextProcessor::compute( ValuePlug *output, const Context *context ) cons
 	auto input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output ) );
 	if( input )
 	{
-		if( enabledPlug()->getValue() )
-		{
-			Context::EditableScope scope( context );
-			processContext( scope );
-			output->setFrom( input );
-		}
-		else
-		{
-			output->setFrom( input );
-		}
+		ProcessedScope processedScope( context, this );
+		output->setFrom( input );
 		return;
 	}
 

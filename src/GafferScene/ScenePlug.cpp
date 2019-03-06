@@ -255,10 +255,11 @@ const Gaffer::PathMatcherDataPlug *ScenePlug::setPlug() const
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context )
 	:	EditableScope( context )
 {
+	remove( ScenePlug::setNameContextName );
 }
 
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath &scenePath )
-	:	EditableScope( context )
+	:	PathScope( context )
 {
 	setPath( scenePath );
 }
