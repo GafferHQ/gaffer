@@ -198,7 +198,7 @@ void Render::postTasks( const Gaffer::Context *context, Tasks &tasks ) const
 
 IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 {
-	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source()->node() ) )
+	if( inPlug()->source()->direction() != Plug::Out )
 	{
 		return IECore::MurmurHash();
 	}
@@ -231,7 +231,7 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 
 void Render::execute() const
 {
-	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source()->node() ) )
+	if( inPlug()->source()->direction() != Plug::Out )
 	{
 		return;
 	}
