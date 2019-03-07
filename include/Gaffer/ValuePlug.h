@@ -100,6 +100,34 @@ class GAFFER_API ValuePlug : public Plug
 		/// Convenience function to append the hash to h.
 		void hash( IECore::MurmurHash &h ) const;
 
+		/// Specifies the methodology used to cache the value
+		/// and hash for output plugs.
+		enum class CachePolicy
+		{
+			/// No caching is performed. Suitable for
+			/// extremely quick processes. Also useful
+			/// to avoid double-counting of cache memory when
+			/// a compute always returns a sub-object of another
+			/// cache entry.
+			Uncached,
+			/// Suitable for regular processes that don't spawn
+			/// TBB tasks. It is essential that any task-spawning
+			/// processes use one of the dedicated policies below.
+			Standard,
+			/// Suitable for processes that spawn TBB tasks.
+			/// Threads waiting for the same result will collaborate
+			/// to perform tasks together until the work is complete.
+			TaskCollaboration,
+			/// Suitable for processes that spawn TBB tasks. Threads
+			/// waiting for an in-progress compute will block until
+			/// it is complete. In theory this is inferior to TaskCollaboration,
+			/// but due to TBB overhead it may be preferable for small
+			/// but frequent computes.
+			TaskIsolation,
+			/// Legacy policy, to be removed.
+			Legacy
+		};
+
 		/// @name Cache management
 		/// ValuePlug optimises repeated computation by storing a cache of
 		/// recently computed values. These functions allow for management
