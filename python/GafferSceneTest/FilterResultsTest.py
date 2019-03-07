@@ -158,5 +158,30 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 			] )
 		)
 
+	def testComputeCacheRecursion( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["filter1"] = GafferScene.PathFilter()
+		script["filter1"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+		script["filterResults1"] = GafferScene.FilterResults()
+		script["filterResults1"]["scene"].setInput( script["plane"]["out"] )
+		script["filterResults1"]["filter"].setInput( script["filter1"]["out"] )
+
+		script["filter2"] = GafferScene.PathFilter()
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'parent["filter2"]["paths"] = IECore.StringVectorData( parent["filterResults1"]["out"].value.paths() )')
+
+		script["filterResults2"] = GafferScene.FilterResults()
+		script["filterResults2"]["scene"].setInput( script["plane"]["out"] )
+		script["filterResults2"]["filter"].setInput( script["filter2"]["out"] )
+
+		h = script["filterResults2"]["out"].hash()
+		Gaffer.ValuePlug.clearCache()
+		script["filterResults2"]["out"].getValue( h )
+
 if __name__ == "__main__":
 	unittest.main()

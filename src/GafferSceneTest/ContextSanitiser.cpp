@@ -61,6 +61,13 @@ size_t tbb_hasher( const InternedString &s )
 
 } // namespace IECore
 
+namespace
+{
+
+InternedString g_internalOut( "__internalOut" );
+
+} // namespace
+
 ContextSanitiser::ContextSanitiser()
 {
 }
@@ -97,9 +104,9 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 		}
 	}
 
-	if( const FilterResults *filterResults = runTimeCast<const FilterResults>( process->plug()->node() ) )
+	if( process->plug()->parent<const FilterResults>() )
 	{
-		if( process->plug() == filterResults->outPlug() )
+		if( process->plug()->getName() == g_internalOut )
 		{
 			if( process->context()->get<IECore::Data>( ScenePlug::scenePathContextName, nullptr ) )
 			{
@@ -111,7 +118,6 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 			}
 		}
 	}
-
 }
 
 void ContextSanitiser::processFinished( const Gaffer::Process *process )
