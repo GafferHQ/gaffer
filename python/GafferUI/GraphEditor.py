@@ -127,6 +127,37 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return cls.__connectionContextMenuSignal
 
+	@classmethod
+	def appendConnectionNavigationMenuDefinitions( cls, graphEditor, destinationPlug, menuDefinition ) :
+
+		def __append( plug, label ) :
+
+			node = plug.node()
+			nodeGadget = graphEditor.graphGadget().nodeGadget( node ) if node is not None else None
+
+			menuDefinition.append(
+				"/Navigate/Go to " + label,
+				{
+					"active" : nodeGadget is not None,
+					"command" : functools.partial(
+						Gaffer.WeakMethod( graphEditor.frame ), [ node ]
+					)
+				}
+			)
+
+			menuDefinition.append(
+				"/Navigate/Select " + label,
+				{
+					"active" : node is not None,
+					"command" : functools.partial(
+						cls.__select, node
+					)
+				}
+			)
+
+		__append( destinationPlug.getInput(), "Source Node" )
+		__append( destinationPlug, "Destination Node" )
+
 	__nodeContextMenuSignal = Gaffer.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
@@ -546,5 +577,11 @@ class GraphEditor( GafferUI.Editor ) :
 
 		## \todo: Remove nodeGraph fallback when all client code has been updated
 		return Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" )
+
+	@staticmethod
+	def __select( node ) :
+
+		node.scriptNode().selection().clear()
+		node.scriptNode().selection().add( node )
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
