@@ -38,6 +38,8 @@
 import os
 import glob
 import inspect
+import platform
+import ctypes
 
 import IECore
 
@@ -190,6 +192,14 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 
 	index.write( __tocString( ).format( tocIndex ) )
 
+def markdownToHTML( markdown ) :
+
+	cmark = __cmark()
+	if cmark is None :
+		return markdown
+
+	return cmark.cmark_markdown_to_html( markdown, len( markdown ), 0 )
+
 def __nodeDocumentation( node ) :
 
 	result = __heading( node.typeName().rpartition( ":" )[2] )
@@ -280,3 +290,30 @@ def __tocString( ) :
 	)
 
 	return tocString
+
+__cmarkDLL = ""
+def __cmark() :
+
+	global __cmarkDLL
+	if __cmarkDLL != "" :
+		return __cmarkDLL
+
+	sys = platform.system()
+
+	if sys == "Darwin" :
+		libName = "libcmark-gfm.dylib"
+	elif sys == "Windows" :
+		libName = "cmark-gfm.dll"
+	else :
+		libName = "libcmark-gfm.so"
+
+	try :
+		__cmarkDLL = ctypes.CDLL( libName )
+	except :
+		__cmarkDLL = None
+		return __cmarkDLL
+
+	__cmarkDLL.cmark_markdown_to_html.restype = ctypes.c_char_p
+	__cmarkDLL.cmark_markdown_to_html.argtypes = [ctypes.c_char_p, ctypes.c_long, ctypes.c_long]
+
+	return __cmarkDLL

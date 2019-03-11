@@ -114,6 +114,7 @@ from WidgetAlgoTest import WidgetAlgoTest
 from BackupsTest import BackupsTest
 from LayoutsTest import LayoutsTest
 from CompoundNumericNoduleTest import CompoundNumericNoduleTest
+from DocumentationAlgoTest import DocumentationAlgoTest
 
 if __name__ == "__main__":
 	unittest.main()
