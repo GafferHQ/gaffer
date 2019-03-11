@@ -103,11 +103,12 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
 		if self.getPlug() is not None :
-			result += "<ul>"
-			result += "<li>Left drag to connect</li>"
+			if result :
+				result += "\n"
+			result += "## Actions\n\n"
+			result += "- Left drag to connect\n"
 			if hasattr( self.getPlug(), "getValue" ) :
-				result += "<li>Shift-left or middle drag to transfer value</li>"
-			result += "<ul>"
+				result += "- Shift+left or middle drag to transfer value"
 
 		return result
 

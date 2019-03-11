@@ -117,6 +117,10 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 			{
 				if( reported.find( it->second.error ) == reported.end() )
 				{
+					if( result.size() )
+					{
+						result += "\n";
+					}
 					result += it->second.error;
 					reported.insert( it->second.error );
 				}
@@ -1035,7 +1039,7 @@ void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *so
 	{
 		header = "Error on upstream node " + source->node()->relativeName( source->ancestor<ScriptNode>() );
 	}
-	header = "<h3>" + header + "</h3>";
+	header = "# " + header + "\n\n";
 
 	// We could be on any thread at this point, so we
 	// use an idle callback to do the work of displaying the error
