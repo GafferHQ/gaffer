@@ -321,6 +321,10 @@ class _EventFilter( QtCore.QObject ) :
 				)
 			 )
 
+			if not toolTip :
+				return False
+
+			toolTip = GafferUI.DocumentationAlgo.markdownToHTML( toolTip )
 			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 
 			return True
