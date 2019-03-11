@@ -85,9 +85,10 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
 		if self.getPlug() is not None :
-			result += "<ul>"
-			result += "<li>Cursor up/down to increment/decrement</li>"
-			result += "<ul>"
+			if result :
+				result += "\n"
+			result += "## Actions\n"
+			result += " - Cursor up/down to increment/decrement\n"
 
 		return result
 

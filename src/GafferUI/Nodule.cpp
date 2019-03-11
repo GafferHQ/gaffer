@@ -154,7 +154,7 @@ std::string Nodule::getToolTip( const IECore::LineSegment3f &line ) const
 		result = m_plug->relativeName( node->parent<Gaffer::GraphComponent>() );
 	}
 
-	result = "<h3>" + result + "</h3>";
+	result = "# " + result;
 	if( ConstStringDataPtr description = Gaffer::Metadata::value<StringData>( m_plug.get(), "description" ) )
 	{
 		result += "\n\n" + description->readable();

@@ -198,9 +198,10 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
-		result += "<ul>"
-		result += "<li>Click to toggle to/from default value</li>"
-		result += "<ul>"
+		if result :
+			result += "\n"
+		result += "## Actions\n\n"
+		result += "- Click to toggle to/from default value\n"
 
 		return result
 

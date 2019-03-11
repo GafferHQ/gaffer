@@ -140,9 +140,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		inputText = ""
 		if input is not None :
-			inputText = " &lt;- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent ) )
+			inputText = " <- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent ) )
 
-		result = "<h3>" + plug.relativeName( plug.node() ) + inputText + "</h3>"
+		result = "# " + plug.relativeName( plug.node() ) + inputText
 		description = Gaffer.Metadata.value( plug, "description" )
 		if description :
 			result += "\n\n" + description

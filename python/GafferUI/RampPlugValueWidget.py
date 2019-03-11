@@ -65,7 +65,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# metadata on this child plug right before constructing a widget for it.  There should probably
 				# be some way to do this genericly during initialization
 				Gaffer.Metadata.registerValue( plug['interpolation'],
-					"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent=False )  
+					"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent=False )
 				for name, value in sorted( Gaffer.SplineDefinitionInterpolation.names.items() ):
 					Gaffer.Metadata.registerValue( plug['interpolation'], "preset:" + name, value, persistent=False )
 
@@ -116,12 +116,13 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
 		if self.getPlug() is not None :
-			result += "<ul>"
-			result += "<li>Click empty space in slider to add handle"
-			result += "<li>Click handle to select"
-			result += "<li>Delete to remove selected handle"
-			result += "<li>Cursor left/right to nudge selected handle"
-			result += "<ul>"
+			if result :
+				result += "\n"
+			result += "## Actions\n\n"
+			result += "- Click empty space in slider to add handle\n"
+			result += "- Click handle to select\n"
+			result += "- Delete to remove selected handle\n"
+			result += "- Cursor left/right to nudge selected handle\n"
 
 		return result
 

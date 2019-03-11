@@ -147,7 +147,7 @@ std::string BackdropNodeGadget::getToolTip( const IECore::LineSegment3f &line ) 
 
 	if( title.size() )
 	{
-		result += "<h3>" + title + "</h3>";
+		result += "# " + title;
 	}
 	if( description.size() )
 	{
@@ -155,7 +155,6 @@ std::string BackdropNodeGadget::getToolTip( const IECore::LineSegment3f &line ) 
 		{
 			result += "\n\n";
 		}
-		boost::replace_all( description, "\n", "<br>" );
 		result += description;
 	}
 
