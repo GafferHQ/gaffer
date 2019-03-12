@@ -243,5 +243,32 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		self.assertFalse( "__adaptedIn" in s.serialise() )
 
+	def testNoInput( self ) :
+
+		render = GafferAppleseed.AppleseedRender()
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.appleseed" ) )
+
+		self.assertEqual( render["task"].hash(), IECore.MurmurHash() )
+		render["task"].execute()
+		self.assertFalse( os.path.exists( render["fileName"].getValue() ) )
+
+	def testInputFromContextVariables( self ) :
+
+		plane = GafferScene.Plane()
+
+		variables = Gaffer.ContextVariables()
+		variables.setup( GafferScene.ScenePlug() )
+		variables["in"].setInput( plane["out"] )
+
+		render = GafferAppleseed.AppleseedRender()
+		render["in"].setInput( variables["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.appleseed" ) )
+
+		self.assertNotEqual( render["task"].hash(), IECore.MurmurHash() )
+		render["task"].execute()
+		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -194,7 +194,7 @@ void InteractiveRender::update()
 	// Stop the current render if we've been asked to, or if
 	// there is no real input scene.
 
-	if( requiredState == Stopped || !runTimeCast<SceneNode>( inPlug()->source()->node() ) )
+	if( requiredState == Stopped || inPlug()->source()->direction() != Plug::Out )
 	{
 		stop();
 		return;
