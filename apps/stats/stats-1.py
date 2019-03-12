@@ -512,6 +512,10 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
 			return
 
+		contextSanitiser = _NullContextManager()
+		if args["contextSanitiser"].value :
+			contextSanitiser = GafferImageTest.ContextSanitiser()
+
 		def computeImage() :
 
 			with self.__context( script, args ) as context :
@@ -525,7 +529,8 @@ class stats( Gaffer.Application ) :
 		memory = _Memory.maxRSS()
 		with _Timer() as imageTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
-				computeImage()
+				with contextSanitiser :
+					computeImage()
 
 		self.__timers["Image generation"] = imageTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
