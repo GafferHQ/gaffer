@@ -108,3 +108,9 @@ def __plugContextMenu( graphEditor, node, menuDefinition ) :
 	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, node, menuDefinition )
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
+
+def __connectionContextMenu( graphEditor, destinationPlug, menuDefinition ) :
+
+	GafferUI.GraphEditor.appendConnectionNavigationMenuDefinitions( graphEditor, destinationPlug, menuDefinition )
+
+GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu, scoped = False )
