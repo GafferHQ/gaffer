@@ -457,19 +457,19 @@ class TextDiff( SideBySideDiff ) :
 
 		self.__values = values
 
-		formattedValues = self.__formatValues( values )
+		formattedValues = self._formatValues( values )
 		for i, value in enumerate( formattedValues ) :
 			self.getValueWidget( i ).setText( self.__htmlHeader + value + self.__htmlFooter )
 
-	def __formatValues( self, values ) :
+	def _formatValues( self, values ) :
 
 		if len( values ) == 0 :
 			return []
 		elif len( values ) == 2 and type( values[0] ) != type( values[1] ) :
 			# different types - format each separately
-			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
+			return self._formatValues( [ values[0] ] ) + self._formatValues( [ values[1] ] )
 		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
-			return self.__formatValues( [ v.value for v in values ] )
+			return self._formatValues( [ v.value for v in values ] )
 		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i, imath.Color4f ) ) :
 			return self.__formatVectors( values )
 		elif isinstance( values[0], ( imath.M44f, imath.M44d ) ) :
@@ -1890,6 +1890,16 @@ class _VDBGridInspector( Inspector ) :
 	def children ( self, target ) :
 		return []
 
+class _SubdivisionTextDiff( TextDiff ) :
+
+	def __init__( self, highlightDiffs=True, **kw ) :
+
+		TextDiff.__init__( self, highlightDiffs, **kw )
+
+	def _formatValues( self, values ) :
+
+		return TextDiff._formatValues( self, [ len( v["sharpnesses"] ) for v in values ] )
+
 class __ObjectSection( LocationSection ) :
 
 	def __init__( self ) :
@@ -1911,6 +1921,12 @@ class __ObjectSection( LocationSection ) :
 			DiffColumn(
 				self.__PrimitiveVariablesInspector(),
 				label = "Primitive Variables"
+			)
+
+			DiffColumn(
+				self.__SubdivisionInspector(),
+				diffCreator = _SubdivisionTextDiff,
+				label = "Subdivision"
 			)
 
 			DiffColumn(
@@ -2119,6 +2135,45 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			return [ self.__class__( k ) for k in object.keys() ]
+
+
+	class __SubdivisionInspector( Inspector ) :
+
+		def __init__( self, subdivisionVariableName = None ) :
+
+			Inspector.__init__( self )
+
+			self.__subdivisionVariableName = subdivisionVariableName
+
+		def name( self ) :
+
+			return self.__subdivisionVariableName
+
+		def __call__( self, target ) :
+
+			if target.path is None :
+				return None
+
+			object = target.object()
+			if not isinstance( object, IECoreScene.MeshPrimitive ) :
+				return None
+
+			if self.__subdivisionVariableName == "Corners" :
+				return IECore.CompoundData( { "sharpnesses" : object.cornerSharpnesses(), "ids" : object.cornerIds() } )
+
+			elif self.__subdivisionVariableName == "Creases" :
+				return IECore.CompoundData( { "sharpnesses" : object.creaseSharpnesses(), "ids" : object.creaseIds(), "lengths" : object.creaseLengths() } )
+
+		def children( self, target ) :
+
+			if target.path is None :
+				return []
+
+			object = target.object()
+			if not isinstance( object, IECoreScene.MeshPrimitive ) :
+				return []
+
+			return [ self.__class__( k ) for k in ["Corners", "Creases"] ]
 
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 
