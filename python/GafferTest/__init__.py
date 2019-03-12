@@ -138,6 +138,8 @@ from BackgroundTaskTest import BackgroundTaskTest
 from ProcessMessageHandlerTest import ProcessMessageHandlerTest
 from MonitorAlgoTest import MonitorAlgoTest
 
+from IECorePreviewTest import *
+
 if __name__ == "__main__":
 	import unittest
 	unittest.main()
