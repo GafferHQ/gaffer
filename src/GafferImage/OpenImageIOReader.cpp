@@ -590,10 +590,6 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
 	addChild( new ObjectVectorPlug( "__tileBatch", Plug::Out, new ObjectVector ) );
 
-	// disable caching on channelDataPlug, since it is just a redirect to the correct tile of
-	// the private tileBatchPlug, which is already being cached
-	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
-
 	plugSetSignal().connect( boost::bind( &OpenImageIOReader::plugSet, this, ::_1 ) );
 }
 
@@ -764,6 +760,12 @@ Gaffer::ValuePlug::CachePolicy OpenImageIOReader::computeCachePolicy( const Gaff
 		// Request blocking compute for tile batches, to avoid concurrent threads loading
 		// the same batch redundantly.
 		return ValuePlug::CachePolicy::Standard;
+	}
+	else if( output == outPlug()->channelDataPlug() )
+	{
+		// Disable caching on channelDataPlug, since it is just a redirect to the correct tile of
+		// the private tileBatchPlug, which is already being cached.
+		return ValuePlug::CachePolicy::Uncached;
 	}
 	return ImageNode::computeCachePolicy( output );
 }

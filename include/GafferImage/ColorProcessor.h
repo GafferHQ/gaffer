@@ -69,6 +69,7 @@ class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 		/// Implemented to process the color data and stash the results on colorDataPlug()
 		/// format, dataWindow, metadata, and channelNames are passed through via direct connection to the input values.
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 		/// Implemented to use the results of colorDataPlug() via processColorData()
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 

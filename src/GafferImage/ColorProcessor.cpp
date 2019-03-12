@@ -73,11 +73,6 @@ ColorProcessor::ColorProcessor( const std::string &name )
 		)
 	);
 
-	// Because our implementation of computeChannelData() is so simple,
-	// just copying data out of our intermediate colorDataPlug(), it is
-	// actually quicker not to cache the result.
-	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
-
 	// We don't ever want to change the these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
@@ -181,6 +176,18 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 	}
 
 	ImageProcessor::compute( output, context );
+}
+
+Gaffer::ValuePlug::CachePolicy ColorProcessor::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug()->channelDataPlug() )
+	{
+		// Because our implementation of computeChannelData() is so simple,
+		// just copying data out of our intermediate colorDataPlug(), it is
+		// actually quicker not to cache the result.
+		return ValuePlug::CachePolicy::Uncached;
+	}
+	return ImageProcessor::computeCachePolicy( output );
 }
 
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
