@@ -67,7 +67,7 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 		if extensions :
 			if result :
 				result += "\n\n"
-			result += "## Supported file extensions\n\n " + "".join( "- {0}\n".format( e ) for e in extensions )
+			result += "**Supported file extensions** : " + ", ".join( extensions )
 
 		return result
 
