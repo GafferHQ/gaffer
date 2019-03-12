@@ -148,7 +148,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 							scoped = False
 						)
 
-				toolTip = "<h3>" + node.typeName().rpartition( ":" )[2] + "</h3>"
+				toolTip = "# " + node.typeName().rpartition( ":" )[2]
 				description = Gaffer.Metadata.value( node, "description" )
 				if description :
 					toolTip += "\n\n" + description
