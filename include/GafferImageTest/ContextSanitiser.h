@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,71 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGETEST_CONTEXTSANITISER_H
+#define GAFFERIMAGETEST_CONTEXTSANITISER_H
 
-#include "GafferImageTest/ContextSanitiser.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/Plug.h"
 
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImage/ImagePlug.h"
+#include "tbb/concurrent_unordered_set.h"
 
-#include "Gaffer/Node.h"
-
-#include "IECorePython/ScopedGILRelease.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferImage;
-using namespace GafferImageTest;
-
-namespace
+namespace GafferImageTest
 {
 
-struct TilesEvaluateFunctor
+/// A monitor which warns about common context handling mistakes.
+class GAFFER_API ContextSanitiser : public Gaffer::Monitor
 {
-	bool operator()( const GafferImage::ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
-	{
-		imagePlug->channelDataPlug()->getValue();
-		return true;
-	}
+
+	public :
+
+		ContextSanitiser();
+
+	protected :
+
+		void processStarted( const Gaffer::Process *process ) override;
+		void processFinished( const Gaffer::Process *process ) override;
+
+	private :
+
+		/// First is the upstream plug where the problem was detected. Second
+		/// is the plug from the parent process responsible for calling upstream.
+		typedef std::pair<Gaffer::ConstPlugPtr, Gaffer::ConstPlugPtr> PlugPair;
+		typedef std::pair<PlugPair, IECore::InternedString> Warning;
+
+		void warn( const Gaffer::Process &process, const IECore::InternedString &contextVariable );
+
+		typedef tbb::concurrent_unordered_set<Warning> WarningSet;
+		WarningSet m_warningsEmitted;
+
 };
 
-void processTiles( const GafferImage::ImagePlug *imagePlug )
-{
-	TilesEvaluateFunctor f;
-	ImageAlgo::parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
-}
+} // namespace GafferImageTest
 
-void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )
-{
-	if( dirtiedPlug == image.get() )
-	{
-		processTiles( image.get() );
-	}
-}
-
-void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	processTiles( imagePlug );
-}
-
-boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
-{
-	const Node *node = image->node();
-	if( !node )
-	{
-		throw IECore::Exception( "Plug does not belong to a node." );
-	}
-
-	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &processTilesOnDirty, ::_1, image ) );
-}
-
-} // namespace
-
-BOOST_PYTHON_MODULE( _GafferImageTest )
-{
-	class_<ContextSanitiser, bases<Gaffer::Monitor>, boost::noncopyable>( "ContextSanitiser" );
-
-	def( "processTiles", &processTilesWrapper );
-	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );
-}
+#endif // GAFFERIMAGETEST_CONTEXTSANITISER_H
