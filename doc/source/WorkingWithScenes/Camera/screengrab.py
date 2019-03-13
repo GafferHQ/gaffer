@@ -111,11 +111,11 @@ __nodeEditorWindow._qtWidget().setFocus()
 GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = __tempImagePath )
 __dispatchScript(
 	script = "scripts/{}_edit.gfr".format( __imageName ),
-	tasks = ( "ImageWriter" ),
-	settings = (
+	tasks = [ "ImageWriter" ],
+	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
 		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		)
+		]
 	)
 
 # Task: the Aperture and Focal Length projection mode in the Node Editor
@@ -127,11 +127,11 @@ script["Camera"]["focalLength"].setValue( 50.0 )
 GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = __tempImagePath )
 __dispatchScript(
 	script = "scripts/{}_edit.gfr".format( __imageName ),
-	tasks = ( "ImageWriter" ),
-	settings = (
+	tasks = [ "ImageWriter" ],
+	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
 		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		)
+		]
 	)
 
 # Task: the Custom aperture mode and aperture.x and aperture.y plugs in the Node Editor
@@ -142,12 +142,12 @@ Gaffer.Metadata.registerValue( script["Camera"]["aperture"], 'presetsPlugValueWi
 GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = __tempImagePath )
 __dispatchScript(
 	script = "scripts/{}_edit.gfr".format( __imageName ),
-	tasks = ( "ImageWriter" ),
-	settings = (
+	tasks = [ "ImageWriter" ],
+	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath),
 		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		)
-    )
+		]
+  )
 
 # Task: animation of adjusting the Aperture Offset in the Node Editor, and the corresponding changes to the camera's frustrum in the Viewer
 ## TODO: Automate `images/taskApertureOffset.gif` when these tools become available:
@@ -175,11 +175,11 @@ GafferUI.PlugValueWidget.acquire( script["StandardOptions"]["options"]["depthOfF
 GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = __tempImagePath )
 __dispatchScript(
 	script = "scripts/{}_edit.gfr".format( __imageName ),
-	tasks = ( "ImageWriter" ),
-	settings = (
+	tasks = [ "ImageWriter" ],
+	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
 		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		)
+		]
 	)
 
 # Task: a Camera node's Render Overrides tab in the Node Editor
@@ -214,26 +214,27 @@ __nodeEditorWindow.parent().close()
 __imageName = "renderAnamorphicCameraSetup"
 __dispatchScript(
 	script = "demos/{}.gfr".format( __imageName ),
-	tasks = ( "AppleseedRender" ),
-	settings = (
+	tasks = [ "AppleseedRender" ],
+	settings = [
 		"-StandardOptions.options.renderResolution.value.x '240'",
 		"-StandardOptions.options.renderResolution.value.y '270'",
 		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) ),
 		"-Outputs.outputs.output1.type '\"png\"'"
-		)
+		]
 	)
 
 # Demo: spherical camera setup in Arnold
 # __imageName = "renderSphericalCameraSetupArnold"
 # __dispatchScript(
 #	script = "demos/{}.gfr".format( __imageName ),
-#	tasks = ( "ArnoldRender" ),
-#	settings = (
+#	tasks = [ "ArnoldRender" ],
+#	settings = [
 #		"-StandardOptions.options.renderResolution.value.x '480'",
 #		"-StandardOptions.options.renderResolution.value.y '270'",
-#		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) ),
+#		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) )
+#		),
 #		"-Outputs.outputs.output1.type '\"png\"'"
-#		)
+#		]
 #	)
 ## TODO: Automate `images/renderSphericalCameraSetupArnold.png` (the above) when these tools become available:
 # - Support for spherical cameras in Appleseed
