@@ -504,11 +504,16 @@ if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
 	Exit( 1 )
 
-if "clang++" in os.path.basename( env["CXX"] ) and env["ASAN"] :
+if env["ASAN"] :
 	env.Append(
-		CXXFLAGS = ["-fsanitize=address", "-shared-libasan"],
-		LINKFLAGS = ["-fsanitize=address", "-shared-libasan"]
+		CXXFLAGS = [ "-fsanitize=address" ],
+		LINKFLAGS = [ "-fsanitize=address" ],
 	)
+	if "clang++" in os.path.basename( env["CXX"] ) :
+		env.Append(
+			CXXFLAGS = [ "-shared-libasan" ],
+			LINKFLAGS = [ "-shared-libasan" ],
+		)
 
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
