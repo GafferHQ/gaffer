@@ -1,5 +1,5 @@
 #! /bin/bash
-# BuildTarget: images/pin.png
+# BuildTarget: images/targetNodesLocked.png
 
 set -e
 

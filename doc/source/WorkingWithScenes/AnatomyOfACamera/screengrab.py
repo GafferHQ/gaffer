@@ -1,4 +1,4 @@
-# BuildTarget: images/illustrationCameraParameters.png
+# BuildTarget: images/interfaceCameraParameters.png
 
 import IECore
 import time
