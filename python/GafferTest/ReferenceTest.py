@@ -1156,31 +1156,36 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		referenceFile = "test.grf"
 
-		boxA = Gaffer.Box("BoxA")
-		s.addChild(boxA)
-		boxPathA = os.path.join(self.temporaryDirectory(), "a")
-		os.makedirs(boxPathA)
-		fileA = os.path.join(boxPathA, referenceFile)
-		boxA.exportForReference(fileA)
+		boxA = Gaffer.Box( "BoxA" )
+		boxA["p"] = Gaffer.StringPlug( defaultValue = "a", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s.addChild( boxA )
+		boxPathA = os.path.join( self.temporaryDirectory(), "a" )
+		os.makedirs( boxPathA )
+		fileA = os.path.join( boxPathA, referenceFile )
+		boxA.exportForReference( fileA )
 
-		boxB = Gaffer.Box("BoxB")
-		s.addChild(boxB)
+		boxB = Gaffer.Box( "BoxB" )
+		boxB["p"] = Gaffer.StringPlug( defaultValue = "b", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s.addChild( boxB )
 		boxPathB = os.path.join(self.temporaryDirectory(), "b")
-		os.makedirs(boxPathB)
-		fileB = os.path.join(boxPathB, referenceFile)
-		boxB.exportForReference(fileB)
+		os.makedirs( boxPathB )
+		fileB = os.path.join( boxPathB, referenceFile )
+		boxB.exportForReference( fileB )
 
+		searchPathA = ":".join( [boxPathA, boxPathB] )
+		searchPathB = ":".join( [boxPathB, boxPathA] )
+
+		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
 		s["r"] = Gaffer.Reference()
 
-		searchPathA = ":".join([boxPathA, boxPathB])
-		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
 		s["r"].load(referenceFile)
-		self.assertEqual(s["r"].fileName(), fileA)
+		self.assertEqual( s["r"].fileName(), referenceFile )
+		self.assertEqual( s["r"]["p"].getValue(), "a" )
 
-		searchPathB = ":".join([boxPathB, boxPathA])
 		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathB
-		s["r"].load(referenceFile)
-		self.assertEqual(s["r"].fileName(), fileB)
+		s["r"].load( referenceFile )
+		self.assertEqual( s["r"].fileName(), referenceFile )
+		self.assertEqual( s["r"]["p"].getValue(), "b" )
 
 	def tearDown( self ) :
 
