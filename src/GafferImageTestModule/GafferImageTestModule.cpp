@@ -65,7 +65,12 @@ struct TilesEvaluateFunctor
 void processTiles( const GafferImage::ImagePlug *imagePlug )
 {
 	TilesEvaluateFunctor f;
-	ImageAlgo::parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
+	ImageAlgo::parallelProcessTiles(
+		imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(),
+		f,
+		imagePlug->dataWindowPlug()->getValue(),
+		ImageAlgo::TopToBottom
+	);
 }
 
 void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )
