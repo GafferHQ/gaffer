@@ -63,6 +63,18 @@ std::string repr( const ValuePlug *plug )
 	return ValuePlugSerialiser::repr( plug );
 }
 
+void setFrom( ValuePlug &plug, const ValuePlug &other )
+{
+	IECorePython::ScopedGILRelease r;
+	plug.setFrom( &other );
+}
+
+void setToDefault( ValuePlug &plug )
+{
+	IECorePython::ScopedGILRelease r;
+	plug.setToDefault();
+}
+
 bool isSetToDefault( ValuePlug *plug )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
@@ -102,8 +114,8 @@ void GafferModule::bindValuePlug()
 			)
 		)
 		.def( "settable", &ValuePlug::settable )
-		.def( "setFrom", &ValuePlug::setFrom )
-		.def( "setToDefault", &ValuePlug::setToDefault )
+		.def( "setFrom", setFrom )
+		.def( "setToDefault", setToDefault )
 		.def( "isSetToDefault", isSetToDefault )
 		.def( "hash", hash )
 		.def( "hash", hash2 )
