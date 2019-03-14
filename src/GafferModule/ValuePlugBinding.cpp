@@ -65,26 +65,26 @@ std::string repr( const ValuePlug *plug )
 
 bool isSetToDefault( ValuePlug *plug )
 {
-    // we use a GIL release here to prevent a lock in the case where this triggers a graph
-    // evaluation which decides to go back into python on another thread:
-    IECorePython::ScopedGILRelease r;
-    return plug->isSetToDefault();
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	return plug->isSetToDefault();
 }
 
 IECore::MurmurHash hash( ValuePlug *plug )
 {
-    // we use a GIL release here to prevent a lock in the case where this triggers a graph
-    // evaluation which decides to go back into python on another thread:
-    IECorePython::ScopedGILRelease r;
-    return plug->hash();
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	return plug->hash();
 }
 
 void hash2( ValuePlug *plug, IECore::MurmurHash &h )
 {
-    // we use a GIL release here to prevent a lock in the case where this triggers a graph
-    // evaluation which decides to go back into python on another thread:
-    IECorePython::ScopedGILRelease r;
-    plug->hash( h);
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	plug->hash( h);
 }
 
 
