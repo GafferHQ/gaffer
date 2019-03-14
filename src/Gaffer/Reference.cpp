@@ -154,6 +154,14 @@ Reference::~Reference()
 
 void Reference::load( const std::string &fileName )
 {
+	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
+	IECore::SearchPath sp( s ? s : "" );
+	boost::filesystem::path path = sp.find( fileName );
+	if( path.empty() )
+	{
+		throw Exception( "Could not find file '" + fileName + "'" );
+	}
+
 	ScriptNode *script = scriptNode();
 	if( !script )
 	{
