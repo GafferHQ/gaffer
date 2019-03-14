@@ -44,6 +44,8 @@
 
 #include "IECoreGL/Selector.h"
 
+#include "OpenEXR/ImathBoxAlgo.h"
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
@@ -122,7 +124,12 @@ Box2f nodeFrame( const NodeGadget *nodeGadget )
 
 V2f gadgetCenter( const Gadget *gadget )
 {
-	const V3f c = gadget->transformedBound( nullptr ).center();
+	Box3f b = gadget->bound();
+	if( b.isEmpty() )
+	{
+		b = Box3f( V3f( 0 ) );
+	}
+	const V3f c = transform( b, gadget->fullTransform() ).center();
 	return V2f( c.x, c.y );
 }
 
