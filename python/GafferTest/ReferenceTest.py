@@ -1187,6 +1187,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"].fileName(), referenceFile )
 		self.assertEqual( s["r"]["p"].getValue(), "b" )
 
+	def testLoadThrowsOnMissingFile( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+
+		with self.assertRaisesRegexp( Exception, "Could not find file 'thisFileDoesntExist.grf'" ) :
+			s["r"].load( "thisFileDoesntExist.grf" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
