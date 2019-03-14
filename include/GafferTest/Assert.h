@@ -52,6 +52,18 @@ namespace GafferTest
 		) ); \
 	}
 
+#define GAFFERTEST_ASSERTEQUAL( x, y ) \
+	{ \
+		const auto xx = x; /* evaluate macro arguments */ \
+		const auto yy = y; /* only once */ \
+		if( xx != yy ) \
+		{ \
+			throw IECore::Exception( boost::str( \
+				boost::format( "Failed assertion \"%1% == %2%\" : %3% line %4%" ) % (xx) % (yy) % __FILE__ % __LINE__ \
+			) ); \
+		} \
+	}
+
 } // namespace GafferTest
 
 #endif // GAFFERTEST_ASSERT_H
