@@ -414,7 +414,7 @@ elif env["PLATFORM"] == "posix" :
 env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
 
 if env["BUILD_TYPE"] == "DEBUG" :
-	env.Append( CXXFLAGS = ["-g", "-O0"] )
+	env.Append( CXXFLAGS = ["-g", "-O0", "-DTBB_USE_DEBUG=1"] )
 elif env["BUILD_TYPE"] == "RELEASE" :
 	env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3"] )
 elif env["BUILD_TYPE"] == "RELWITHDEBINFO" :
