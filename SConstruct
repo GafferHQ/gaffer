@@ -414,11 +414,11 @@ elif env["PLATFORM"] == "posix" :
 env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
 
 if env["BUILD_TYPE"] == "DEBUG" :
-	env.Append( CXXFLAGS = ["-g", "-O0"] )
+	env.Append( CXXFLAGS = ["-g", "-O0", "-DTBB_USE_DEBUG=1"] )
 elif env["BUILD_TYPE"] == "RELEASE" :
 	env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3"] )
 elif env["BUILD_TYPE"] == "RELWITHDEBINFO" :
-	env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3", "-g"] )
+	env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3", "-g", "-fno-omit-frame-pointer"] )
 
 if env["WARNINGS_AS_ERRORS"] :
 	env.Append(
@@ -504,11 +504,16 @@ if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
 	Exit( 1 )
 
-if "clang++" in os.path.basename( env["CXX"] ) and env["ASAN"] :
+if env["ASAN"] :
 	env.Append(
-		CXXFLAGS = ["-fsanitize=address", "-shared-libasan"],
-		LINKFLAGS = ["-fsanitize=address", "-shared-libasan"]
+		CXXFLAGS = [ "-fsanitize=address" ],
+		LINKFLAGS = [ "-fsanitize=address" ],
 	)
+	if "clang++" in os.path.basename( env["CXX"] ) :
+		env.Append(
+			CXXFLAGS = [ "-shared-libasan" ],
+			LINKFLAGS = [ "-shared-libasan" ],
+		)
 
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
