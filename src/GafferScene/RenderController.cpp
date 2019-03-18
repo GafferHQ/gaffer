@@ -621,7 +621,15 @@ class RenderController::SceneGraph
 
 				if( it != oldChildrenRaw.end() && (*it)->m_name == name )
 				{
-					m_children.push_back( std::move( oldChildren[it-oldChildrenRaw.begin()] ) );
+					decltype( it )::difference_type index = it - oldChildrenRaw.begin();
+					if( !oldChildren[ index ] )
+					{
+						std::string path;
+						ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), path );
+						path += "/" + name.string();
+						throw Exception( "RenderControllerSceneGraph::updateChildren() failed.  Duplicate children with name: " + path );
+					}
+					m_children.push_back( std::move( oldChildren[ index ] ) );
 				}
 				else
 				{
