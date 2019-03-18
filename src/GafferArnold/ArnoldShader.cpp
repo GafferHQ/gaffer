@@ -118,9 +118,11 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
 	}
 
+	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
+
 	if( !keepExistingValues )
 	{
-		parametersPlug()->clearChildren();
+		parametersPlug->clearChildren();
 		if( Plug *out = outPlug() )
 		{
 			removeChild( out );
@@ -158,7 +160,7 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 
 	typePlug()->setValue( type );
 
-	ParameterHandler::setupPlugs( shader, parametersPlug() );
+	ParameterHandler::setupPlugs( shader, parametersPlug );
 	ParameterHandler::setupPlug( "out", aiOutputType, this, Plug::Out );
 
 }
