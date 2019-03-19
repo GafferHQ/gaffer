@@ -145,7 +145,7 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 		Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
 
 		const Box2i outTileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		const Box2i inBound = BufferAlgo::intersection( 
+		const Box2i inBound = BufferAlgo::intersection(
 			inDataWindow,
 			Box2i( outTileBound.min - offset, outTileBound.max - offset )
 		);
@@ -184,7 +184,7 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 		Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
 
 		const Box2i outTileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		const Box2i inBound = BufferAlgo::intersection( 
+		const Box2i inBound = BufferAlgo::intersection(
 			inDataWindow,
 			Box2i( outTileBound.min - offset, outTileBound.max - offset )
 		);

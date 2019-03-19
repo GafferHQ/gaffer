@@ -44,7 +44,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-namespace 
+namespace
 {
 	struct GradeParametersScope : public Gaffer::Context::EditableScope
 	{
@@ -235,7 +235,7 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	const int channelIndex = std::max( 0, ImageAlgo::colorIndex( channelName ) );
 
-	GradeParametersScope s( context );	
+	GradeParametersScope s( context );
 	blackPointPlug()->getChild( channelIndex )->hash( h );
 	whitePointPlug()->getChild( channelIndex )->hash( h );
 	liftPlug()->getChild( channelIndex )->hash( h );
@@ -256,7 +256,7 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 	float A, B, gamma;
 	bool whiteClamp, blackClamp;
 	{
-		GradeParametersScope s( context );	
+		GradeParametersScope s( context );
 		parameters( std::max( 0, ImageAlgo::colorIndex( channel ) ), A, B, gamma );
 		whiteClamp = whiteClampPlug()->getValue();
 		blackClamp = blackClampPlug()->getValue();

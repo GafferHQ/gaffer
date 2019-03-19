@@ -109,7 +109,7 @@ class SmoothGaussian2D : public OIIO::Filter2D
 
 };
 
-// OIIO's default cubic is a general one with a protected m_a member that can be 
+// OIIO's default cubic is a general one with a protected m_a member that can be
 // modified.  But when m_a is left at it's default value of 0, it is 0 over half
 // of it's width.  By specializing for this case, we get a filter that needs
 // half as many support pixels, but gives an identical result.
@@ -256,7 +256,7 @@ std::vector<FilterPair> getAllFilters()
 		}
 	}
 	filters.push_back( FilterPair("smoothGaussian", new SmoothGaussian2D( 3.0f, 3.0f ) ) );
-	
+
 	return filters;
 }
 
@@ -311,7 +311,7 @@ const OIIO::Filter2D *GafferImage::FilterAlgo::acquireFilter( const std::string 
 	}
 	else
 	{
-		throw IECore::Exception( boost::str( boost::format( "Unknown filter \"%s\"" ) % name ) );	
+		throw IECore::Exception( boost::str( boost::format( "Unknown filter \"%s\"" ) % name ) );
 	}
 }
 
@@ -360,9 +360,9 @@ float GafferImage::FilterAlgo::sampleParallelogram( Sampler &sampler, const V2f 
 			// pixels within the bounding box, and another value for pixels actually touched
 			// by the filter, is a good way to check that the bounding box is correct
 			//w = w != 0.0f ? 1.0f : 0.1f;
-		
+
 			if( w != 0.0f )
-			{	
+			{
 				totalW += w;
 				v += w * sampler.sample( x, y );
 			}
@@ -420,7 +420,7 @@ float GafferImage::FilterAlgo::sampleBox( Sampler &sampler, const V2f &p, float 
 				// pixels within the bounding box, and another value for pixels actually touched
 				// by the filter, is a good way to check that the bounding box is correct
 				//w = w != 0.0f ? 1.0f : 0.1f;
-			
+
 				totalW += w;
 				v += w * sampler.sample( x, y );
 			}

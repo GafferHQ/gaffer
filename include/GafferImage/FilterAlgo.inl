@@ -60,7 +60,6 @@ Imath::V2f FilterAlgo::derivativesToAxisAligned( const Imath::V2f &p, const Imat
 	{
 		minLength = 1.0f;
 		majorVector = Imath::V2f(0.0f);
-		
 	}
 	else if( dxLength > dyLength )
 	{

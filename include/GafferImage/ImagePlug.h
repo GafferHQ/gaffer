@@ -173,9 +173,8 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 			return tileIndex( point ) * tileSize();
 		}
 
-
-
 	private :
+
 		static int tileSizeLog2() { return 6; };
 
 		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );
