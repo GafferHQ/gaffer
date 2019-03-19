@@ -99,6 +99,7 @@
 #include "subd/subd_dice.h"
 #include "util/util_array.h"
 #include "util/util_function.h"
+#include "util/util_path.h"
 #include "util/util_vector.h"
 
 using namespace std;
@@ -443,9 +444,14 @@ class RenderCallback : public IECore::RefCounted
 
 	public :
 
-		RenderCallback( ccl::Session *session, bool interactive )
-			: m_session( session ), m_interactive( interactive ), m_displayDriver( nullptr )
+		RenderCallback( bool interactive )
+			: m_session( nullptr ), m_interactive( interactive ), m_displayDriver( nullptr )
 		{
+		}
+
+		void updateSession( ccl::Session *session )
+		{
+			m_session = session;
 		}
 
 		void updateOutputs( OutputMap &outputs )
@@ -564,6 +570,9 @@ class RenderCallback : public IECore::RefCounted
 */
 		void writeRenderTile( ccl::RenderTile& rtile )
 		{
+			// No session, exit out
+			if( !m_session )
+				return;
 			// Early-out if there's no output passes
 			if( m_outputs.empty() )
 			{
@@ -1729,6 +1738,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_renderCallback( nullptr ),
 				m_rendering( false )
 		{
+			// Set path to find shaders
+			ccl::path_init( getenv("GAFFERCYCLES") );
 			// Session Defaults
 			m_sessionParams.display_buffer_linear = true;
 			m_bufferParamsModified = m_bufferParams;
@@ -1762,6 +1773,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
 			m_denoiseParamsDefault = m_denoiseParams;
+
+			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
 			init();
 
@@ -1805,10 +1818,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
-			auto *integrator = m_scene->integrator; // m_integratorCache.get();
-			auto *background = m_scene->background; //m_backgroundCache.get();
-			auto *film = m_scene->film; //m_filmCache.get();
-			auto *curveSystemManager = m_scene->curve_system_manager; //m_curveSystemManagerCache.get();
+			auto *integrator = m_scene->integrator;
+			auto *background = m_scene->background;
+			auto *film = m_scene->film;
+			auto *curveSystemManager = m_scene->curve_system_manager;
 
 			if( name == g_frameOptionName )
 			{
@@ -2686,14 +2699,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Clear scene & session if they exist.
 			if( m_session )
 				delete m_session;
-			
-			m_renderCallback.reset();
 
 			// Fallback
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
 
-			ccl::DeviceType device_type = ccl::Device::type_from_string( m_deviceName.c_str() );
 			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
 			bool device_available = false;
 			for( ccl::DeviceInfo& device : devices ) 
@@ -2706,7 +2716,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			for( ccl::DeviceInfo& device : devices ) 
 			{
-				if( device_type == device.type ) 
+				if( m_deviceName ==  device.id ) 
 				{
 					m_sessionParams.device = device;
 					device_available = true;
@@ -2730,7 +2740,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene = new ccl::Scene( m_sceneParams, m_session->device );
 			m_session->scene = m_scene;
 
-			m_renderCallback = new RenderCallback( m_session, ( m_renderType == Interactive ) ? true : false );
+			m_renderCallback->updateSession( m_session );
 
 			// Grab the default camera from cycles.
 			m_defaultCamera = m_scene->camera;
@@ -2773,14 +2783,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			ccl::Background *background = m_scene->background;
-			if( m_scene->background->modified( m_background ) )
+			if( background->modified( m_background ) )
 			{
 				background->tag_update( m_scene );
 				m_background = *background;
 			}
 
 			ccl::Film *film = m_scene->film;
-			if( m_scene->film->modified( m_film ) )
+			if( film->modified( m_film ) )
 			{
 				film->tag_update( m_scene );
 				m_film = *film;
