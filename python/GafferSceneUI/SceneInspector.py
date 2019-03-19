@@ -1871,16 +1871,6 @@ class _VDBGridInspector( Inspector ) :
 	def children ( self, target ) :
 		return []
 
-class _SubdivisionTextDiff( TextDiff ) :
-
-	def __init__( self, highlightDiffs=True, **kw ) :
-
-		TextDiff.__init__( self, highlightDiffs, **kw )
-
-	def _formatValues( self, values ) :
-
-		return TextDiff._formatValues( self, [ len( v["sharpnesses"] ) for v in values ] )
-
 class _PrimitiveVariableTextDiff( TextDiff ) :
 
 	def __init__( self, highlightDiffs=True, **kw ) :
@@ -1903,6 +1893,19 @@ class _PrimitiveVariableTextDiff( TextDiff ) :
 			result.append( s )
 
 		return result
+
+class _SubdivisionTextDiff( TextDiff ) :
+
+	def __init__( self, highlightDiffs=True, **kw ) :
+
+		TextDiff.__init__( self, highlightDiffs, **kw )
+
+	def _formatValues( self, values ) :
+
+		if isinstance( values[0], IECore.CompoundData ) :
+			return TextDiff._formatValues( self, [ len( v["sharpnesses"] ) for v in values ] )
+
+		return TextDiff._formatValues( self, values )
 
 class __ObjectSection( LocationSection ) :
 
@@ -2001,9 +2004,6 @@ class __ObjectSection( LocationSection ) :
 			if self.__interpolation is not None :
 				return object.variableSize( self.__interpolation ) if isinstance( object, IECoreScene.Primitive ) else None
 			else :
-				if self.__property == "interpolation" and isinstance( object, IECoreScene.CurvesPrimitive ) :
-					return str( object.basis().standardBasis() )
-
 				return getattr( object, self.__property, None )
 
 		def children( self, target ) :
@@ -2016,9 +2016,6 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			result = []
-
-			if isinstance( object, IECoreScene.MeshPrimitive ) or isinstance( object, IECoreScene.CurvesPrimitive ) :
-				result.append( self.__class__( property = "interpolation" ) )
 
 			for i in [
 				IECoreScene.PrimitiveVariable.Interpolation.Constant,
@@ -2168,7 +2165,7 @@ class __ObjectSection( LocationSection ) :
 				return None
 
 			object = target.object()
-			if not isinstance( object, IECoreScene.MeshPrimitive ) :
+			if not isinstance( object, ( IECoreScene.MeshPrimitive, IECoreScene.CurvesPrimitive ) ) :
 				return None
 
 			if self.__subdivisionVariableName == "Corners" :
@@ -2177,16 +2174,27 @@ class __ObjectSection( LocationSection ) :
 			elif self.__subdivisionVariableName == "Creases" :
 				return IECore.CompoundData( { "sharpnesses" : object.creaseSharpnesses(), "ids" : object.creaseIds(), "lengths" : object.creaseLengths() } )
 
+			elif self.__subdivisionVariableName == "Interpolation":
+				if isinstance( object, IECoreScene.CurvesPrimitive ) :
+					return str( object.basis().standardBasis() )
+				return object.interpolation
+
 		def children( self, target ) :
 
 			if target.path is None :
 				return []
 
 			object = target.object()
-			if not isinstance( object, IECoreScene.MeshPrimitive ) :
+			if not isinstance( object, ( IECoreScene.MeshPrimitive, IECoreScene.CurvesPrimitive ) ) :
 				return []
 
-			return [ self.__class__( k ) for k in ["Corners", "Creases"] ]
+			result = [ self.__class__( "Interpolation" ) ]
+
+			if isinstance( object, IECoreScene.MeshPrimitive ) :
+				result.append( self.__class__( "Corners" ) )
+				result.append( self.__class__( "Creases" ) )
+
+			return result
 
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 
