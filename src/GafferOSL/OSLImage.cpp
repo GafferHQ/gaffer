@@ -236,8 +236,13 @@ IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string 
 
 void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
+	ConstShadingEnginePtr shadingEngine;
+	if( auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		shadingEngine = shader->shadingEngine();
+	}
+
 	if( !shadingEngine )
 	{
 		h = shadingPlug()->defaultValue()->hash();
@@ -270,8 +275,12 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
+	ConstShadingEnginePtr shadingEngine;
+	if( auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		shadingEngine = shader->shadingEngine();
+	}
 
 	if( !shadingEngine )
 	{
