@@ -109,6 +109,10 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		const Gaffer::FloatVectorDataPlug *channelDataPlug() const;
 		//@}
 
+		/// @name Context management
+		/// Utilities for constructing contexts relevant to the evaluation
+		/// of the child plugs above.
+		////////////////////////////////////////////////////////////////////
 		/// The names used to specify the channel name and tile of
 		/// interest via a Context object. You should use these
 		/// variables rather than hardcoding string values - it is
@@ -116,6 +120,25 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		/// InternedStrings on every lookup.
 		static const IECore::InternedString channelNameContextName;
 		static const IECore::InternedString tileOriginContextName;
+		/// Utility class to scope a temporary copy of a context,
+		/// with tile/channel specific variables removed. This can be used
+		/// when evaluating plugs which must be global to the whole image,
+		/// and can improve performance by reducing pressure on the hash cache.
+		struct GlobalScope : public Gaffer::Context::EditableScope
+		{
+			GlobalScope( const Gaffer::Context *context );
+		};
+
+		/// Utility class to scope a temporary copy of a context,
+		/// with convenient accessors to set tileOrigin and channelName,
+		/// which you often need to do while accessing channelData
+		struct ChannelDataScope : public Gaffer::Context::EditableScope
+		{
+			ChannelDataScope( const Gaffer::Context *context );
+			void setTileOrigin( const Imath::V2i &tileOrigin );
+			void setChannelName( const std::string &channelName );
+		};
+		//@}
 
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying image:channelName
@@ -137,25 +160,9 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash imageHash() const;
 		//@}
 
-		/// Utility class to scope a temporary copy of a context,
-		/// with tile/channel specific variables removed. This can be used
-		/// when evaluating plugs which must be global to the whole image,
-		/// and can improve performance by reducing pressure on the hash cache
-		struct GlobalScope : public Gaffer::Context::EditableScope
-		{
-			GlobalScope( const Gaffer::Context *context );
-		};
-
-		/// Utility class to scope a temporary copy of a context,
-		/// with convenient accessors to set tileOrigin and channelName,
-		/// which you often need to do while accessing channelData
-		struct ChannelDataScope : public Gaffer::Context::EditableScope
-		{
-			ChannelDataScope( const Gaffer::Context *context );
-			void setTileOrigin( const Imath::V2i &tileOrigin );
-			void setChannelName( const std::string &channelName );
-		};
-
+		/// @name Tile utilities
+		////////////////////////////////////////////////////////////////////
+		//@{
 		static int tileSize() { return 1 << tileSizeLog2(); };
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
@@ -172,6 +179,7 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		{
 			return tileIndex( point ) * tileSize();
 		}
+		//@}
 
 	private :
 
