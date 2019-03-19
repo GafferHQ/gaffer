@@ -482,8 +482,6 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatNumbers( values )
 		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
-		elif isinstance( values[0], IECoreScene.PrimitiveVariable ) :
-			return self.__formatPrimitiveVariables( values )
 		else :
 			return [ cgi.escape( str( v ) ) for v in values ]
 
@@ -606,23 +604,6 @@ class TextDiff( SideBySideDiff ) :
 				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
 
 		return [ aFormatted, bFormatted ]
-
-	def __formatPrimitiveVariables( self, values ) :
-
-		result = []
-		for value in values :
-			s = str( value.interpolation )
-			s += " " + value.data.typeName()
-			if hasattr( value.data, "getInterpretation" ) :
-				s += " (" + str( value.data.getInterpretation() ) + ")"
-
-			if value.indices :
-				numElements = len( value.data )
-				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
-
-			result.append( s )
-
-		return result
 
 	def __numbersToAlignedStrings( self, values ) :
 
@@ -1900,6 +1881,29 @@ class _SubdivisionTextDiff( TextDiff ) :
 
 		return TextDiff._formatValues( self, [ len( v["sharpnesses"] ) for v in values ] )
 
+class _PrimitiveVariableTextDiff( TextDiff ) :
+
+	def __init__( self, highlightDiffs=True, **kw ) :
+
+		TextDiff.__init__( self, highlightDiffs, **kw )
+
+	def _formatValues( self, values ) :
+
+		result = []
+		for value in values :
+			s = str( value["interpolation"] )
+			s += " " + value["data"].typeName()
+			if hasattr( value["data"], "getInterpretation" ) :
+				s += " (" + str( value["data"].getInterpretation() ) + ")"
+
+			if value["indices"] :
+				numElements = len( value["data"] )
+				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
+
+			result.append( s )
+
+		return result
+
 class __ObjectSection( LocationSection ) :
 
 	def __init__( self ) :
@@ -1920,6 +1924,7 @@ class __ObjectSection( LocationSection ) :
 
 			DiffColumn(
 				self.__PrimitiveVariablesInspector(),
+				diffCreator = _PrimitiveVariableTextDiff,
 				label = "Primitive Variables"
 			)
 
@@ -2123,7 +2128,15 @@ class __ObjectSection( LocationSection ) :
 			if self.__primitiveVariableName not in object :
 				return None
 
-			return object[self.__primitiveVariableName]
+			primitiveVariable = object[self.__primitiveVariableName]
+
+			return IECore.CompoundData(
+				{
+					"interpolation" : str( primitiveVariable.interpolation ),
+					"data" : primitiveVariable.data,
+					"indices" : primitiveVariable.indices
+				}
+			)
 
 		def children( self, target ) :
 
