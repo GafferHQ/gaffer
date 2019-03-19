@@ -2431,6 +2431,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// This doesn't get checked, so we set it just in-case.
 			m_session->params.samples = m_sessionParams.samples;
+			// No checking on denoise settings either
+			m_session->params.denoising = m_denoiseParams;
+			m_sessionParams.denoising = m_denoiseParams;
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
 			    m_session->params.modified( m_sessionParams ) )
