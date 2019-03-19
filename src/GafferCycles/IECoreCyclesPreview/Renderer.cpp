@@ -1818,6 +1818,43 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
+			#define OPTION_BOOL(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
+				if( value == nullptr ) { \
+					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+					return; } \
+				if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) ) { \
+					CATEGORY.OPTION = data->readable(); } \
+				return; }
+			#define OPTION_FLOAT(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
+				if( value == nullptr ) { \
+					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+					return; } \
+				if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) ) { \
+					CATEGORY.OPTION = data->readable(); } \
+				return; }
+			#define OPTION_INT(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
+				if( value == nullptr ) { \
+					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+					return; } \
+				if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) ) { \
+					CATEGORY.OPTION = data->readable(); } \
+				return; }
+			#define OPTION_INT_C(CATEGORY, OPTIONNAME, OPTION, CAST) if( name == OPTIONNAME ) { \
+				if( value == nullptr ) { \
+					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+					return; } \
+				if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) ) { \
+					CATEGORY.OPTION = (CAST)data->readable(); } \
+				return; }
+			#define OPTION_V2I(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
+				if( value == nullptr ) { \
+					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+					return; } \
+				if ( const V2iData *data = reportedCast<const V2iData>( value, "option", name ) ) { \
+					auto d = data->readable(); \
+					CATEGORY.OPTION = ccl::make_int2( d.x, d.y ); } \
+				return; }
+
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
 			auto *film = m_scene->film;
@@ -1925,444 +1962,65 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:session:" ) )
 			{
-				if( name == g_featureSetOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.experimental = m_sessionParamsDefault.experimental;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.experimental = data->readable();
+				OPTION_BOOL (m_sessionParams, g_featureSetOptionName,               experimental);
+				OPTION_BOOL (m_sessionParams, g_progressiveRefineOptionName,        progressive_refine);
+				OPTION_BOOL (m_sessionParams, g_progressiveOptionName,              progressive);
+				OPTION_BOOL (m_sessionParams, g_samplesOptionName,                  samples);
+				OPTION_V2I  (m_sessionParams, g_tileSizeOptionName,                 tile_size);
+				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
+				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
+				OPTION_INT  (m_sessionParams, g_pixelSizeOptionName,                pixel_size);
+				OPTION_INT  (m_sessionParams, g_threadsOptionName,                  threads);
+				OPTION_BOOL (m_sessionParams, g_displayBufferLinearOptionName,      display_buffer_linear);
+				OPTION_BOOL (m_sessionParams, g_runDenoisingOptionName,             run_denoising);
+				OPTION_BOOL (m_sessionParams, g_writeDenoisingPassesOptionName,     write_denoising_passes);
+				OPTION_BOOL (m_sessionParams, g_fullDenoisingOptionName,            full_denoising);
+				OPTION_FLOAT(m_sessionParams, g_cancelTimeoutOptionName,            cancel_timeout);
+				OPTION_FLOAT(m_sessionParams, g_resetTimeoutOptionName,             reset_timeout);
+				OPTION_FLOAT(m_sessionParams, g_textTimeoutOptionName,              text_timeout);
+				OPTION_FLOAT(m_sessionParams, g_progressiveUpdateTimeoutOptionName, progressive_update_timeout);
+
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 					return;
-				}
-				else if( name == g_progressiveRefineOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.progressive_refine = m_sessionParamsDefault.progressive_refine;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.progressive_refine = data->readable();
-					return;
-				}
-				else if( name == g_progressiveOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.progressive = m_sessionParamsDefault.progressive;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.progressive = data->readable();
-					return;
-				}
-				else if( name == g_samplesOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.samples = m_sessionParamsDefault.samples;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sessionParams.samples = data->readable();
-					return;
-				}
-				else if( name == g_tileSizeOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.tile_size = m_sessionParamsDefault.tile_size;
-						return;
-					}
-					if ( const V2iData *data = reportedCast<const V2iData>( value, "option", name ) )
-					{
-						auto d = data->readable();
-						m_sessionParams.tile_size = ccl::make_int2( d.x, d.y );
-					}
-					return;
-				}
-				else if( name == g_tileOrderOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.tile_order = m_sessionParamsDefault.tile_order;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sessionParams.tile_order = (ccl::TileOrder)data->readable();
-					return;
-				}
-				else if( name == g_startResolutionOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.start_resolution = m_sessionParamsDefault.start_resolution;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sessionParams.start_resolution = data->readable();
-					return;
-				}
-				else if( name == g_pixelSizeOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.pixel_size = m_sessionParamsDefault.pixel_size;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sessionParams.pixel_size = data->readable();
-					return;
-				}
-				else if( name == g_threadsOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.threads = m_sessionParamsDefault.threads;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sessionParams.threads = data->readable();
-					return;
-				}
-				else if( name == g_displayBufferLinearOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.display_buffer_linear = m_sessionParamsDefault.display_buffer_linear;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.display_buffer_linear = data->readable();
-					return;
-				}
-				else if( name == g_runDenoisingOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.run_denoising = m_sessionParamsDefault.run_denoising;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.run_denoising = data->readable();
-					return;
-				}
-				else if( name == g_writeDenoisingPassesOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.write_denoising_passes = m_sessionParamsDefault.write_denoising_passes;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.write_denoising_passes = data->readable();
-					return;
-				}
-				else if( name == g_fullDenoisingOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.full_denoising = m_sessionParamsDefault.full_denoising;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sessionParams.full_denoising = data->readable();
-					return;
-				}
-				else if( name == g_cancelTimeoutOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.cancel_timeout = m_sessionParamsDefault.cancel_timeout;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_sessionParams.cancel_timeout = (double)data->readable();
-					return;
-				}
-				else if( name == g_resetTimeoutOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.reset_timeout = m_sessionParamsDefault.reset_timeout;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_sessionParams.reset_timeout = (double)data->readable();
-					return;
-				}
-				else if( name == g_textTimeoutOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.text_timeout = m_sessionParamsDefault.text_timeout;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_sessionParams.text_timeout = (double)data->readable();
-				}
-				else if( name == g_progressiveUpdateTimeoutOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sessionParams.progressive_update_timeout = m_sessionParamsDefault.progressive_update_timeout;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_sessionParams.progressive_update_timeout = (double)data->readable();
-				}
-				else
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-					return;
-				}
 			}
 			else if( boost::starts_with( name.string(), "ccl:scene:" ) )
 			{
-				if( name == g_bvhTypeOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.bvh_type = m_sceneParamsDefault.bvh_type;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sceneParams.bvh_type = (ccl::SceneParams::BVHType)data->readable();
+				OPTION_INT_C(m_sceneParams, g_bvhTypeOptionName,              bvh_type, ccl::SceneParams::BVHType);
+				OPTION_INT_C(m_sceneParams, g_bvhLayoutOptionName,            bvh_layout, ccl::BVHLayout);
+				OPTION_BOOL (m_sceneParams, g_useBvhSpatialSplitOptionName,   use_bvh_spatial_split);
+				OPTION_BOOL (m_sceneParams, g_useBvhUnalignedNodesOptionName, use_bvh_unaligned_nodes);
+				OPTION_INT  (m_sceneParams, g_numBvhTimeStepsOptionName,      num_bvh_time_steps);
+				OPTION_BOOL (m_sceneParams, g_persistentDataOptionName,       persistent_data);
+				OPTION_INT  (m_sceneParams, g_textureLimitOptionName,         texture_limit);
+
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 					return;
-				}
-				else if( name == g_bvhLayoutOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.bvh_layout = m_sceneParamsDefault.bvh_layout;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sceneParams.bvh_layout = (ccl::BVHLayout)data->readable();
-					return;
-				}
-				else if( name == g_useBvhSpatialSplitOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.use_bvh_spatial_split = m_sceneParamsDefault.use_bvh_spatial_split;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sceneParams.use_bvh_spatial_split = data->readable();
-					return;
-				}
-				else if( name == g_useBvhUnalignedNodesOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.use_bvh_unaligned_nodes = m_sceneParamsDefault.use_bvh_unaligned_nodes;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sceneParams.use_bvh_unaligned_nodes = data->readable();
-					return;
-				}
-				else if( name == g_numBvhTimeStepsOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.num_bvh_time_steps = m_sceneParamsDefault.num_bvh_time_steps;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sceneParams.num_bvh_time_steps = data->readable();
-					return;
-				}
-				else if( name == g_persistentDataOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.persistent_data = m_sceneParamsDefault.persistent_data;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_sceneParams.persistent_data = data->readable();
-					return;
-				}
-				else if( name == g_textureLimitOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.texture_limit = m_sceneParamsDefault.texture_limit;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_sceneParams.texture_limit = data->readable();
-					return;
-				}
-				else
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-					return;
-				}
 			}
 			else if( boost::starts_with( name.string(), "ccl:denoise:" ) )
 			{
-				if( name == g_denoiseRadiusOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_denoiseParams.radius = m_denoiseParamsDefault.radius;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_denoiseParams.radius = data->readable();
+				OPTION_INT  (m_denoiseParams, g_denoiseRadiusOptionName,          radius);
+				OPTION_FLOAT(m_denoiseParams, g_denoiseStrengthOptionName,        strength);
+				OPTION_FLOAT(m_denoiseParams, g_denoiseFeatureStrengthOptionName, feature_strength);
+				OPTION_BOOL (m_denoiseParams, g_denoiseRelativePcaOptionName,     relative_pca);
+				OPTION_INT  (m_denoiseParams, g_denoiseNeighborFramesOptionName,  neighbor_frames);
+				OPTION_BOOL (m_denoiseParams, g_denoiseClampInputOptionName,      clamp_input);
+
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 					return;
-				}
-				else if( name == g_denoiseStrengthOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_denoiseParams.strength = m_denoiseParamsDefault.strength;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_denoiseParams.strength = data->readable();
-					return;
-				}
-				else if( name == g_denoiseFeatureStrengthOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_denoiseParams.feature_strength = m_denoiseParamsDefault.feature_strength;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						m_denoiseParams.feature_strength = data->readable();
-					return;
-				}
-				else if( name == g_denoiseRelativePcaOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_denoiseParams.relative_pca = m_denoiseParamsDefault.relative_pca;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_denoiseParams.relative_pca = data->readable();
-					return;
-				}
-				else if( name == g_denoiseNeighborFramesOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_denoiseParams.neighbor_frames = m_denoiseParamsDefault.neighbor_frames;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						m_denoiseParams.neighbor_frames = data->readable();
-					return;
-				}
-				else if( name == g_denoiseClampInputOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_denoiseParams.clamp_input = m_denoiseParamsDefault.clamp_input;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						m_denoiseParams.clamp_input = data->readable();
-					return;
-				}
 			}
 			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
 			{
-				if( name == g_useCurvesOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->use_curves = m_curveSystemManagerDefault.use_curves;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						curveSystemManager->use_curves = data->readable();
+				OPTION_BOOL (m_curveSystemManager, g_useCurvesOptionType,         use_curves);
+				OPTION_FLOAT(m_curveSystemManager, g_curveMinimumWidthOptionType, minimum_width);
+				OPTION_FLOAT(m_curveSystemManager, g_curveMaximumWidthOptionType, maximum_width);
+				OPTION_INT_C(m_curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
+				OPTION_INT_C(m_curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
+				OPTION_INT  (m_curveSystemManager, g_curveResolutionOptionType,   resolution);
+				OPTION_INT  (m_curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
+				OPTION_BOOL (m_curveSystemManager, g_curveCullBackfacing,         use_backfacing);
+
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 					return;
-				}
-				else if( name == g_curveMinimumWidthOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->minimum_width = m_curveSystemManagerDefault.minimum_width;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						curveSystemManager->minimum_width = data->readable();
-					return;
-				}
-				else if( name == g_curveMaximumWidthOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->maximum_width = m_curveSystemManagerDefault.maximum_width;
-						return;
-					}
-					if ( const FloatData *data = reportedCast<const FloatData>( value, "option", name ) )
-						curveSystemManager->maximum_width = data->readable();
-					return;
-				}
-				else if( name == g_curvePrimitiveOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->primitive = m_curveSystemManagerDefault.primitive;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						curveSystemManager->primitive = (ccl::CurvePrimitiveType)data->readable();
-					return;
-				}
-				else if( name == g_curveShapeOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->curve_shape = m_curveSystemManagerDefault.curve_shape;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						curveSystemManager->curve_shape = (ccl::CurveShapeType)data->readable();
-					return;
-				}
-				else if( name == g_curveResolutionOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->resolution = m_curveSystemManagerDefault.resolution;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						curveSystemManager->resolution = data->readable();
-					return;
-				}
-				else if( name == g_curveSubdivisionsOptionType )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->subdivisions = m_curveSystemManagerDefault.subdivisions;
-						return;
-					}
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-						curveSystemManager->subdivisions = data->readable();
-					return;
-				}
-				else if( name == g_curveCullBackfacing )
-				{
-					if( value == nullptr )
-					{
-						curveSystemManager->use_backfacing = m_curveSystemManagerDefault.use_backfacing;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-						curveSystemManager->use_backfacing = data->readable();
-					return;
-				}
 			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
 			else if( boost::starts_with( name.string(), "ccl:background:" ) )
@@ -2486,6 +2144,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
 			}
+			#undef OPTION_BOOL
+			#undef OPTION_FLOAT
+			#undef OPTION_INT
+			#undef OPTION_INT_C
+			#undef OPTION_V2I
 		}
 
 		void output( const IECore::InternedString &name, const Output *output ) override
