@@ -323,12 +323,14 @@ def __nodeMetadata( node, name ) :
 
 def __plugMetadata( plug, name ) :
 
-	if name == "noduleLayout:visible" and plug.getInput() is not None :
+	if name == "noduleLayout:visible" and plug.getInput() is not None and not plug.node().getName().startswith( "__" ) :
 		# Before the introduction of nodule visibility controls,
 		# users may have made connections to plugs which are now
 		# hidden by default. Make sure we continue to show them
 		# by default - they can still be hidden explicitly by
 		# adding an instance metadata value.
+		# For private nodes this behaviour is skipped as their
+		# inputs might be driven by the parent.
 		return True
 
 	node = plug.node()
