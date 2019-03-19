@@ -155,7 +155,9 @@ class Instancer::EngineData : public Data
 			{
 				for( size_t i = 0; i<numPoints(); ++i )
 				{
-					m_idsToPointIndices[(*m_ids)[i]] = i;
+					// Iterate in reverse order so that in case of duplicates, the first one will override
+					size_t reverseI = numPoints() - 1 - i;
+					m_idsToPointIndices[(*m_ids)[reverseI]] = reverseI;
 				}
 			}
 
@@ -582,23 +584,34 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// of instances.
 		ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug()->getValue() );
 		ConstInternedStringVectorDataPtr instanceNames = instancesPlug()->childNames( ScenePath() );
-		vector<vector<InternedString> *> indexedInstanceChildNames;
 
-		CompoundDataPtr result = new CompoundData;
-		for( const auto &instanceName : instanceNames->readable() )
-		{
-			InternedStringVectorDataPtr instanceChildNames = new InternedStringVectorData;
-			result->writable()[instanceName] = instanceChildNames;
-			indexedInstanceChildNames.push_back( &instanceChildNames->writable() );
-		}
+		vector<vector<size_t>> indexedInstanceChildIds;
 
-		if( indexedInstanceChildNames.size() )
+		int numInstanceTypes = instanceNames->readable().size();
+		if( numInstanceTypes )
 		{
+			indexedInstanceChildIds.resize( numInstanceTypes );
 			for( size_t i = 0, e = engine->numPoints(); i < e; ++i )
 			{
-				size_t instanceIndex = engine->instanceIndex( i ) % indexedInstanceChildNames.size();
-				indexedInstanceChildNames[instanceIndex]->push_back( InternedString( engine->instanceId( i ) ) );
+				size_t instanceIndex = engine->instanceIndex( i ) % numInstanceTypes;
+				indexedInstanceChildIds[instanceIndex].push_back( engine->instanceId( i ) );
 			}
+		}
+
+		CompoundDataPtr result = new CompoundData;
+		for( int i = 0; i < numInstanceTypes; i++ )
+		{
+			// Sort and uniquify ids before converting to string			
+			std::sort( indexedInstanceChildIds[i].begin(), indexedInstanceChildIds[i].end() );
+			auto last = std::unique( indexedInstanceChildIds[i].begin(), indexedInstanceChildIds[i].end() );
+			indexedInstanceChildIds[i].erase( last, indexedInstanceChildIds[i].end() ); 
+
+			InternedStringVectorDataPtr instanceChildNames = new InternedStringVectorData;
+			for( size_t id : indexedInstanceChildIds[i] )
+			{
+				instanceChildNames->writable().push_back( InternedString( id ) );
+			}
+			result->writable()[instanceNames->readable()[i]] = instanceChildNames;
 		}
 
 		static_cast<AtomicCompoundDataPlug *>( output )->setValue( result );
