@@ -141,15 +141,35 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		//@}
 
 		/// @name Convenience accessors
-		/// These functions create temporary Contexts specifying image:channelName
-		/// and image:tileOrigin, and use them to return useful output.
-		/// They therefore only make sense for output plugs or inputs which
-		/// have an input connection - if called on an unconnected input plug,
-		/// an Exception will be thrown.
+		/// These functions create a GlobalScope or ChannelDataScope
+		/// as appropriate, and return the value or hash from one of
+		/// the child plugs.
+		/// > Note : If you wish to evaluate multiple plugs in the same
+		/// > context, you can get improved performance by creating the
+		/// > the appropriate scope class manually and then calling
+		/// > `getValue()` or `hash()` directly.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		/// Calls `channelDataPlug()->getValue()` using a ChannelDataScope.
 		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		/// Calls `channelDataPlug()->hash()` using a ChannelDataScope.
 		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		/// Calls `formatPlug()->getValue()` using a GlobalScope.
+		GafferImage::Format format() const;
+		/// Calls `formatPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash formatHash() const;
+		/// Calls `dataWindowPlug()->getValue()` using a GlobalScope.
+		Imath::Box2i dataWindow() const;
+		/// Calls `dataWindowPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash dataWindowHash() const;
+		/// Calls `channelNamesPlug()->getValue()` using a GlobalScope.
+		IECore::ConstStringVectorDataPtr channelNames() const;
+		/// Calls `channelNamesPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash channelNamesHash() const;
+		/// Calls `metadataPlug()->getValue()` using a GlobalScope.
+		IECore::ConstCompoundDataPtr metadata() const;
+		/// Calls `metadataPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash metadataHash() const;
 		/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
 		/// coordinate system will be converted to the OpenEXR and Cortex specification
 		/// and have it's origin in the top left of it's display window with the positive

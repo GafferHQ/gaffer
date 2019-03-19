@@ -323,6 +323,54 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 	return channelDataPlug()->hash();
 }
 
+GafferImage::Format ImagePlug::format() const
+{
+	GlobalScope globalScope( Context::current() );
+	return formatPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::formatHash() const
+{
+	GlobalScope globalScope( Context::current() );
+	return formatPlug()->hash();
+}
+
+Imath::Box2i ImagePlug::dataWindow() const
+{
+	GlobalScope globalScope( Context::current() );
+	return dataWindowPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::dataWindowHash() const
+{
+	GlobalScope globalScope( Context::current() );
+	return dataWindowPlug()->hash();
+}
+
+IECore::ConstStringVectorDataPtr ImagePlug::channelNames() const
+{
+	GlobalScope globalScope( Context::current() );
+	return channelNamesPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::channelNamesHash() const
+{
+	GlobalScope globalScope( Context::current() );
+	return channelNamesPlug()->hash();
+}
+
+IECore::ConstCompoundDataPtr ImagePlug::metadata() const
+{
+	GlobalScope globalScope( Context::current() );
+	return metadataPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::metadataHash() const
+{
+	GlobalScope globalScope( Context::current() );
+	return metadataPlug()->hash();
+}
+
 IECoreImage::ImagePrimitivePtr ImagePlug::image() const
 {
 	Format format = formatPlug()->getValue();

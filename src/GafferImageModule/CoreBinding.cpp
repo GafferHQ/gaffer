@@ -75,6 +75,56 @@ IECore::MurmurHash channelDataHash( const ImagePlug &plug, const std::string &ch
 	return plug.channelDataHash( channelName, tileOrigin );
 }
 
+GafferImage::Format format( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.format();
+}
+
+IECore::MurmurHash formatHash( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.formatHash();
+}
+
+Imath::Box2i dataWindow( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.dataWindow();
+}
+
+IECore::MurmurHash dataWindowHash( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.dataWindowHash();
+}
+
+IECore::StringVectorDataPtr channelNames( const ImagePlug &plug, bool copy )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstStringVectorDataPtr d = plug.channelNames();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::StringVectorData>( d );
+}
+
+IECore::MurmurHash channelNamesHash( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.channelNamesHash();
+}
+
+IECore::CompoundDataPtr metadata( const ImagePlug &plug, bool copy )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstCompoundDataPtr d = plug.metadata();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::CompoundData>( d );
+}
+
+IECore::MurmurHash metadataHash( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.metadataHash();
+}
+
 IECoreImage::ImagePrimitivePtr image( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -189,6 +239,14 @@ void GafferImageModule::bindCore()
 		)
 		.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
 		.def( "channelDataHash", &channelDataHash )
+		.def( "format", &format )
+		.def( "formatHash", &formatHash )
+		.def( "dataWindow", &dataWindow )
+		.def( "dataWindowHash", &dataWindowHash )
+		.def( "channelNames", &channelNames, ( arg( "_copy" ) = true ) )
+		.def( "channelNamesHash", &channelNamesHash )
+		.def( "metadata", &metadata, ( arg( "_copy" ) = true ) )
+		.def( "metadataHash", &metadataHash )
 		.def( "image", &image )
 		.def( "imageHash", &imageHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
