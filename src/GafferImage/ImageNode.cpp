@@ -118,31 +118,18 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		}
 		else if( output == imagePlug->formatPlug() )
 		{
-			// The asserts in these 4 conditionals can be uncommented to catch anywhere that these
-			// global plugs are being hashed with unnecessary tile specific context.  This can be
-			// a performance hazard because it means we can't reuse hashes from the hash cache
-			// nearly as effectively
-
-			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
-			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashFormat( imagePlug, context, h );
 		}
 		else if( output == imagePlug->dataWindowPlug() )
 		{
-			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
-			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashDataWindow( imagePlug, context, h );
 		}
 		else if( output == imagePlug->metadataPlug() )
 		{
-			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
-			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashMetadata( imagePlug, context, h );
 		}
 		else if( output == imagePlug->channelNamesPlug() )
 		{
-			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
-			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashChannelNames( imagePlug, context, h );
 		}
 	}
