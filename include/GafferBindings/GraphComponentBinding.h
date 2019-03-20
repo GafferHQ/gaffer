@@ -133,6 +133,28 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			return WrappedType::parentChanging( newParent );
 		}
 
+		void parentChanged( Gaffer::GraphComponent *oldParent ) override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "_parentChanged" );
+					if( f )
+					{
+						f( Gaffer::GraphComponentPtr( oldParent ) );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			WrappedType::parentChanged( oldParent );
+		}
+
 };
 
 } // namespace GafferBindings

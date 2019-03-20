@@ -72,6 +72,7 @@ GraphComponent::~GraphComponent()
 	{
 		(*it)->m_parent = nullptr;
 		(*it)->parentChanging( nullptr );
+		(*it)->parentChanged( nullptr );
 		(*it)->parentChangedSignal()( (*it).get(), nullptr );
 	}
 }
@@ -307,6 +308,7 @@ void GraphComponent::addChildInternal( GraphComponentPtr child, size_t index )
 	child->m_parent = this;
 	child->setName( child->m_name.value() ); // to force uniqueness
 	childAddedSignal()( this, child.get() );
+	child->parentChanged( previousParent );
 	child->parentChangedSignal()( child.get(), previousParent );
 }
 
@@ -371,6 +373,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	childRemovedSignal()( this, child.get() );
 	if( emitParentChanged )
 	{
+		child->parentChanged( this );
 		child->parentChangedSignal()( child.get(), this );
 	}
 }
@@ -470,6 +473,10 @@ GraphComponent::BinarySignal &GraphComponent::parentChangedSignal()
 }
 
 void GraphComponent::parentChanging( Gaffer::GraphComponent *newParent )
+{
+}
+
+void GraphComponent::parentChanged( Gaffer::GraphComponent *oldParent )
 {
 }
 

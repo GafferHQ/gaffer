@@ -69,8 +69,6 @@ ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr elem
 			MetadataAlgo::copyColors( element.get() , p.get() , /* overwrite = */ false  );
 		}
 	}
-
-	parentChangedSignal().connect( boost::bind( &ArrayPlug::parentChanged, this ) );
 }
 
 ArrayPlug::~ArrayPlug()
@@ -116,8 +114,10 @@ size_t ArrayPlug::maxSize() const
 	return m_maxSize;
 }
 
-void ArrayPlug::parentChanged()
+void ArrayPlug::parentChanged( GraphComponent *oldParent )
 {
+	Plug::parentChanged( oldParent );
+
 	if( !node() )
 	{
 		return;

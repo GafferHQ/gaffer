@@ -225,6 +225,21 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// a protected signal is that there is less overhead in the virtual
 		/// function.
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		/// Called just after the parent of this GraphComponent is changed,
+		/// and just before `parentChangedSignal()` is emitted. This gives
+		/// derived classes a chance to make any necessary adjustments before
+		/// outside observers are notified of the change. In the special case
+		/// of a child being removed from the destructor of the parent,
+		/// `oldParent` will be null.
+		///
+		/// Implementations should call the base class implementation before
+		/// doing their own work.
+		///
+		/// The rationale for having this in addition to `parentChangedSignal()`
+		/// is that it has lower overhead than the signal, and allows GraphComponents
+		/// to maintain a consistent state even if badly behaved observers are
+		/// connected to the signal.
+		virtual void parentChanged( Gaffer::GraphComponent *oldParent );
 
 		/// It is common for derived classes to provide accessors for
 		/// constant-time access to specific children, as this can be

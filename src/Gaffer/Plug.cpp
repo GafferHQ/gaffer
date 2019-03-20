@@ -112,7 +112,6 @@ Plug::Plug( const std::string &name, Direction direction, unsigned flags )
 	:	GraphComponent( name ), m_direction( direction ), m_input( nullptr ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )
 {
 	setFlags( flags );
-	parentChangedSignal().connect( boost::bind( &Plug::parentChanged, this ) );
 }
 
 Plug::~Plug()
@@ -688,8 +687,10 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 
 }
 
-void Plug::parentChanged()
+void Plug::parentChanged( Gaffer::GraphComponent *oldParent )
 {
+	GraphComponent::parentChanged( oldParent );
+
 	if( getFlags( Dynamic ) )
 	{
 		if( node() )

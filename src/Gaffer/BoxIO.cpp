@@ -183,8 +183,6 @@ BoxIO::BoxIO( Plug::Direction direction, const std::string &name )
 	// with the name of the promotedPlug().
 	plugSetSignal().connect( boost::bind( &BoxIO::plugSet, this, ::_1 ) );
 	plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );
-
-	parentChangedSignal().connect( boost::bind( &BoxIO::parentChanged, this, ::_2 ) );
 }
 
 BoxIO::~BoxIO()
@@ -407,6 +405,8 @@ void BoxIO::plugSet( Plug *plug )
 
 void BoxIO::parentChanged( GraphComponent *oldParent )
 {
+	Node::parentChanged( oldParent );
+
 	// Manage inputChanged connections on our parent box,
 	// so we can discover our promoted plug when an output
 	// connection is made to it.
