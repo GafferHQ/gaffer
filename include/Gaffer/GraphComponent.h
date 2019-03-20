@@ -46,6 +46,8 @@
 
 #include "boost/signals.hpp"
 
+#include <memory>
+
 namespace Gaffer
 {
 
@@ -264,17 +266,10 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		void removeChildInternal( GraphComponentPtr child, bool emitParentChanged );
 		size_t index() const;
 
-		/// \todo The memory overhead of all these signals may become too great.
-		/// At this point we need to reimplement the signal returning functions to
-		/// create the signals on the fly (and possibly to delete signals when they have
-		/// no connections). One method might be to store a static map from this to signal *.
-		/// Or alternatively we could make all the signals static. Both these trade off
-		/// reduced memory usage for slower execution.
-		UnarySignal m_nameChangedSignal;
-		BinarySignal m_childAddedSignal;
-		BinarySignal m_childRemovedSignal;
-		BinarySignal m_parentChangedSignal;
+		struct Signals;
+		Signals *signals();
 
+		std::unique_ptr<Signals> m_signals;
 		IECore::InternedString m_name;
 		GraphComponent *m_parent;
 		ChildContainer m_children;
