@@ -590,5 +590,36 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		assertConnection( script2 )
 
+	def testDefaultHash( self ) :
+
+		s1 = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		s2 = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 0.5, 0.95 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		self.assertEqual( Gaffer.SplineffPlug().defaultHash(), Gaffer.SplineffPlug().defaultHash() )
+		self.assertNotEqual( Gaffer.SplineffPlug().defaultHash(), Gaffer.SplineffPlug( defaultValue = s1 ).defaultHash() )
+
+		p = Gaffer.SplineffPlug( defaultValue = s1 )
+		h = p.defaultHash()
+		p.setValue( s2 )
+		self.assertEqual( p.defaultHash(), h )
+
 if __name__ == "__main__":
 	unittest.main()

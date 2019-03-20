@@ -16,12 +16,14 @@ API
 ---
 
 - TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
+- ValuePlug : Added `defaultHash()` virtual method.
 - ValuePlugSerialiser : Added `valueRepr()` method.
 
 Breaking Changes
 ----------------
 
 - TransformPlug/Transform2DPlug : Added constructor arguments.
+- ValuePlug : Added virtual method.
 
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========

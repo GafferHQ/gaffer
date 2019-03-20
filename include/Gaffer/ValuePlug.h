@@ -102,6 +102,13 @@ class GAFFER_API ValuePlug : public Plug
 		/// based on the value.
 		/// \undoable
 		virtual void resetDefault();
+		/// Returns a hash representing the default value. The default
+		/// implementation is sufficient for all subclasses except those
+		/// where the number of child plugs varies based on the value.
+		/// The results of `defaultHash()` may not be comparable to those
+		/// of `hash()`; use `isSetToDefault()` to determine if a plug is
+		/// currently at its default value.
+		virtual IECore::MurmurHash defaultHash() const;
 
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.

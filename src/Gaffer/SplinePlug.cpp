@@ -397,6 +397,20 @@ bool SplinePlug<T>::isSetToDefault() const
 }
 
 template<typename T>
+IECore::MurmurHash SplinePlug<T>::defaultHash() const
+{
+	IECore::MurmurHash result;
+	result.append( typeId() );
+	result.append( m_defaultValue.interpolation );
+	for( auto &p : m_defaultValue.points )
+	{
+		result.append( p.first );
+		result.append( p.second );
+	}
+	return result;
+}
+
+template<typename T>
 void SplinePlug<T>::setValue( const T &value )
 {
 	interpolationPlug()->setValue( value.interpolation );

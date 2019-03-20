@@ -1080,6 +1080,23 @@ void ValuePlug::resetDefault()
 	}
 }
 
+IECore::MurmurHash ValuePlug::defaultHash() const
+{
+	if( m_defaultValue != nullptr )
+	{
+		return m_defaultValue->hash();
+	}
+	else
+	{
+		IECore::MurmurHash h;
+		for( ValuePlugIterator it( this ); !it.done(); ++it )
+		{
+			h.append( (*it)->defaultHash() );
+		}
+		return h;
+	}
+}
+
 IECore::MurmurHash ValuePlug::hash() const
 {
 	if( !m_staticValue )

@@ -39,6 +39,8 @@ import gc
 import inspect
 import imath
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -791,6 +793,23 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		finally:
 			Gaffer.ValuePlug.setHashCacheMode( defaultHashCacheMode )
+
+	def testDefaultHash( self ) :
+
+		# Plug with single value
+
+		self.assertNotEqual( Gaffer.IntPlug().defaultHash(), IECore.MurmurHash() )
+		self.assertEqual( Gaffer.IntPlug().defaultHash(), Gaffer.IntPlug().defaultHash() )
+		self.assertNotEqual( Gaffer.IntPlug().defaultHash(), Gaffer.IntPlug( defaultValue = 2 ).defaultHash() )
+		self.assertEqual( Gaffer.IntPlug().defaultHash(), Gaffer.IntPlug().hash() )
+
+		# Compound plugs
+
+		self.assertNotEqual( Gaffer.V2iPlug().defaultHash(), IECore.MurmurHash() )
+		self.assertEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V2iPlug().defaultHash() )
+		self.assertNotEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V2iPlug( defaultValue = imath.V2i( 0, 1 ) ).defaultHash() )
+		self.assertNotEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V3iPlug().defaultHash() )
+		self.assertEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V2iPlug().hash() )
 
 	def setUp( self ) :
 
