@@ -2190,7 +2190,7 @@ class __ObjectSection( LocationSection ) :
 
 			result = [ self.__class__( "Interpolation" ) ]
 
-			if isinstance( object, IECoreScene.MeshPrimitive ) :
+			if isinstance( object, IECoreScene.MeshPrimitive ) and hasattr( object, "creaseIds" ):
 				result.append( self.__class__( "Corners" ) )
 				result.append( self.__class__( "Creases" ) )
 
