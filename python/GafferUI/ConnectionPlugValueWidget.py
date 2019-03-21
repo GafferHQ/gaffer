@@ -87,10 +87,11 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 				srcNode = input.node()
 
 		if srcNode is not None :
-			result += "<ul>"
-			result += "<li>Left drag to drag source plug.</li>"
-			result += "<li>Left click to edit source node.</li>"
-			result += "<ul>"
+			if result :
+				result += "\n"
+			result += "## Actions\n\n"
+			result += " - Left drag to drag source plug\n"
+			result += " - Left click to edit source node\n"
 
 		return result
 

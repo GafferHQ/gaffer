@@ -171,8 +171,6 @@ class Widget( object ) :
 
  		self.__visible = not isinstance( self, GafferUI.Window )
 
-		self.setToolTip( toolTip )
-
 		# perform automatic parenting if necessary. we don't want to do this
 		# for menus, because they don't have the same parenting semantics. if other
 		# types end up with similar requirements then we should probably just have
@@ -194,6 +192,8 @@ class Widget( object ) :
 				self.__ensureEventFilter()
 				break
 			c = c.__bases__[0]
+
+		self.setToolTip( toolTip )
 
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
@@ -584,6 +584,12 @@ class Widget( object ) :
 
 		self._qtWidget().setToolTip( toolTip )
 
+		if toolTip :
+			# Qt does have a default event handler for tooltips,
+			# but we install our own so we can support markdown
+			# formatting automatically.
+			self.__ensureEventFilter()
+
 	## Returns the current position of the mouse. If relativeTo
 	# is not specified, then the position will be in screen coordinates,
 	# otherwise it will be in the local coordinate system of the
@@ -944,6 +950,7 @@ class _EventFilter( QtCore.QObject ) :
 		widget = Widget._owner( qObject )
 		toolTip = widget.getToolTip()
 		if toolTip :
+			toolTip = GafferUI.DocumentationAlgo.markdownToHTML( toolTip )
 			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 			return True
 		else :

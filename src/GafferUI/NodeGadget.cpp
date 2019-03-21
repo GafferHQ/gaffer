@@ -194,7 +194,7 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 		title = &*(r.end());
 	}
 
-	result = "<h3>" + title + "</h3>";
+	result = "# " + title;
 
 	if( ConstStringDataPtr description = Gaffer::Metadata::value<StringData>( m_node, "description" ) )
 	{

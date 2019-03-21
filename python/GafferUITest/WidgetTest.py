@@ -146,6 +146,16 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w.setToolTip( "a" )
 		self.assertEqual( w.getToolTip(), "a" )
 
+	def testMarkdownToolTips( self ) :
+
+		markdownToolTip = "# header\n\n- list 1\nlist 2"
+
+		w = TestWidget()
+		w.setToolTip( markdownToolTip )
+		# We don't want any conversion to HTML to be "baked in" - we expect
+		# to get back exactly the same thing as we saved.
+		self.assertEqual( w.getToolTip(), markdownToolTip )
+
 	def testEnabledState( self ) :
 
 		w = TestWidget()

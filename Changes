@@ -1,3 +1,37 @@
+0.53.3.0 (relative to 0.53.2.0)
+========
+
+Features
+--------
+
+- ArnoldOptions : Added settings for enabling GPU rendering (#3076).
+
+Improvements
+------------
+
+- GraphEditor : Added navigation items to the connection context menu. These allow
+  quick navigation to the source or destination node (#3064).
+- SceneInspector : Added fields for subdivision creases and corners (#3067).
+- GafferUI : Added Markdown support in tooltips (#3065).
+
+Fixes
+-----
+
+- Render : Fixed bug which prevented non-SceneNodes (for instance, Switches or
+  ContextVariables nodes) from rendering (#3061).
+- ValuePlug : Fixed GIL management bugs. These were most visible in a hang caused
+  by toggling exposure in the ImageView while background processing was being performed (#3068).
+- SceneInspector : Fixed drag and drop of PrimitiveVariables (#3067).
+- Instancer (#3072) :
+  - Fixed crashes caused by duplicate ids. Duplicates are now ignored.
+  - Fixed child ordering to be ascending by id.
+- GraphEditor : Fixed bug drawing auxiliary connections to sizeless parent nodules (#3069).
+
+API
+---
+
+- DocumentationAlgo : Added `markdownToHTML()` method (#3065).
+
 0.53.2.0 (relative to 0.53.1.1)
 ========
 

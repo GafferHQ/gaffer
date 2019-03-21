@@ -457,19 +457,19 @@ class TextDiff( SideBySideDiff ) :
 
 		self.__values = values
 
-		formattedValues = self.__formatValues( values )
+		formattedValues = self._formatValues( values )
 		for i, value in enumerate( formattedValues ) :
 			self.getValueWidget( i ).setText( self.__htmlHeader + value + self.__htmlFooter )
 
-	def __formatValues( self, values ) :
+	def _formatValues( self, values ) :
 
 		if len( values ) == 0 :
 			return []
 		elif len( values ) == 2 and type( values[0] ) != type( values[1] ) :
 			# different types - format each separately
-			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
+			return self._formatValues( [ values[0] ] ) + self._formatValues( [ values[1] ] )
 		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
-			return self.__formatValues( [ v.value for v in values ] )
+			return self._formatValues( [ v.value for v in values ] )
 		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i, imath.Color4f ) ) :
 			return self.__formatVectors( values )
 		elif isinstance( values[0], ( imath.M44f, imath.M44d ) ) :
@@ -482,8 +482,6 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatNumbers( values )
 		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
-		elif isinstance( values[0], IECoreScene.PrimitiveVariable ) :
-			return self.__formatPrimitiveVariables( values )
 		else :
 			return [ cgi.escape( str( v ) ) for v in values ]
 
@@ -606,23 +604,6 @@ class TextDiff( SideBySideDiff ) :
 				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
 
 		return [ aFormatted, bFormatted ]
-
-	def __formatPrimitiveVariables( self, values ) :
-
-		result = []
-		for value in values :
-			s = str( value.interpolation )
-			s += " " + value.data.typeName()
-			if hasattr( value.data, "getInterpretation" ) :
-				s += " (" + str( value.data.getInterpretation() ) + ")"
-
-			if value.indices :
-				numElements = len( value.data )
-				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
-
-			result.append( s )
-
-		return result
 
 	def __numbersToAlignedStrings( self, values ) :
 
@@ -1890,6 +1871,42 @@ class _VDBGridInspector( Inspector ) :
 	def children ( self, target ) :
 		return []
 
+class _PrimitiveVariableTextDiff( TextDiff ) :
+
+	def __init__( self, highlightDiffs=True, **kw ) :
+
+		TextDiff.__init__( self, highlightDiffs, **kw )
+
+	def _formatValues( self, values ) :
+
+		result = []
+		for value in values :
+			s = str( value["interpolation"] )
+			s += " " + value["data"].typeName()
+			if hasattr( value["data"], "getInterpretation" ) :
+				s += " (" + str( value["data"].getInterpretation() ) + ")"
+
+			if value["indices"] :
+				numElements = len( value["data"] )
+				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
+
+			result.append( s )
+
+		return result
+
+class _SubdivisionTextDiff( TextDiff ) :
+
+	def __init__( self, highlightDiffs=True, **kw ) :
+
+		TextDiff.__init__( self, highlightDiffs, **kw )
+
+	def _formatValues( self, values ) :
+
+		if isinstance( values[0], IECore.CompoundData ) :
+			return TextDiff._formatValues( self, [ len( v["sharpnesses"] ) for v in values ] )
+
+		return TextDiff._formatValues( self, values )
+
 class __ObjectSection( LocationSection ) :
 
 	def __init__( self ) :
@@ -1910,7 +1927,14 @@ class __ObjectSection( LocationSection ) :
 
 			DiffColumn(
 				self.__PrimitiveVariablesInspector(),
+				diffCreator = _PrimitiveVariableTextDiff,
 				label = "Primitive Variables"
+			)
+
+			DiffColumn(
+				self.__SubdivisionInspector(),
+				diffCreator = _SubdivisionTextDiff,
+				label = "Subdivision"
 			)
 
 			DiffColumn(
@@ -1980,9 +2004,6 @@ class __ObjectSection( LocationSection ) :
 			if self.__interpolation is not None :
 				return object.variableSize( self.__interpolation ) if isinstance( object, IECoreScene.Primitive ) else None
 			else :
-				if self.__property == "interpolation" and isinstance( object, IECoreScene.CurvesPrimitive ) :
-					return str( object.basis().standardBasis() )
-
 				return getattr( object, self.__property, None )
 
 		def children( self, target ) :
@@ -1995,9 +2016,6 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			result = []
-
-			if isinstance( object, IECoreScene.MeshPrimitive ) or isinstance( object, IECoreScene.CurvesPrimitive ) :
-				result.append( self.__class__( property = "interpolation" ) )
 
 			for i in [
 				IECoreScene.PrimitiveVariable.Interpolation.Constant,
@@ -2107,7 +2125,15 @@ class __ObjectSection( LocationSection ) :
 			if self.__primitiveVariableName not in object :
 				return None
 
-			return object[self.__primitiveVariableName]
+			primitiveVariable = object[self.__primitiveVariableName]
+
+			return IECore.CompoundData(
+				{
+					"interpolation" : str( primitiveVariable.interpolation ),
+					"data" : primitiveVariable.data,
+					"indices" : primitiveVariable.indices
+				}
+			)
 
 		def children( self, target ) :
 
@@ -2119,6 +2145,56 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			return [ self.__class__( k ) for k in object.keys() ]
+
+
+	class __SubdivisionInspector( Inspector ) :
+
+		def __init__( self, subdivisionVariableName = None ) :
+
+			Inspector.__init__( self )
+
+			self.__subdivisionVariableName = subdivisionVariableName
+
+		def name( self ) :
+
+			return self.__subdivisionVariableName
+
+		def __call__( self, target ) :
+
+			if target.path is None :
+				return None
+
+			object = target.object()
+			if not isinstance( object, ( IECoreScene.MeshPrimitive, IECoreScene.CurvesPrimitive ) ) :
+				return None
+
+			if self.__subdivisionVariableName == "Corners" :
+				return IECore.CompoundData( { "sharpnesses" : object.cornerSharpnesses(), "ids" : object.cornerIds() } )
+
+			elif self.__subdivisionVariableName == "Creases" :
+				return IECore.CompoundData( { "sharpnesses" : object.creaseSharpnesses(), "ids" : object.creaseIds(), "lengths" : object.creaseLengths() } )
+
+			elif self.__subdivisionVariableName == "Interpolation":
+				if isinstance( object, IECoreScene.CurvesPrimitive ) :
+					return str( object.basis().standardBasis() )
+				return object.interpolation
+
+		def children( self, target ) :
+
+			if target.path is None :
+				return []
+
+			object = target.object()
+			if not isinstance( object, ( IECoreScene.MeshPrimitive, IECoreScene.CurvesPrimitive ) ) :
+				return []
+
+			result = [ self.__class__( "Interpolation" ) ]
+
+			if isinstance( object, IECoreScene.MeshPrimitive ) and hasattr( object, "creaseIds" ):
+				result.append( self.__class__( "Corners" ) )
+				result.append( self.__class__( "Creases" ) )
+
+			return result
 
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 

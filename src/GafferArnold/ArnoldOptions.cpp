@@ -159,6 +159,11 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:abort_on_license_fail", new IECore::BoolData( false ), "abortOnLicenseFail", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:skip_license_check", new IECore::BoolData( false ), "skipLicenseCheck", Gaffer::Plug::Default, false );
 
+	// GPU
+
+	options->addOptionalMember( "ai:render_device", new IECore::StringData( "CPU" ), "renderDevice", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:gpu_max_texture_resolution", new IECore::IntData( 0 ), "gpuMaxTextureResolution", Gaffer::Plug::Default, false );
+
 }
 
 ArnoldOptions::~ArnoldOptions()
