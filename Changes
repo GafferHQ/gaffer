@@ -17,6 +17,8 @@ Improvements
   - Added `-cacheMemoryLimit` and `-hashCacheSizeLimit` arguments for controlling
     cache limits (#3033).
   - Added support for render output profiling via `-scene` argument (#3053).
+  - Added a `-contextSanitiser` argument, used to check for common context handling
+    errors (#3060).
 - ArnoldTextureBake (#3026) : Added optional median filter.
 - Hash cache (#3033) : Reduced memory usage and improved performance.
 
@@ -34,6 +36,8 @@ Fixes
   - Connected external dispatcher settings to internal render task.
   - Connected preTasks plug to internal tasks.
   - Fixed leakage of internal context variables.
+- Scene : Fixed context handling bugs in Transform, SceneWriter, SceneAlgo, Set,
+  Isolate and Prune. This improves performance on some complex scenes (#3060).
 
 Documentation
 -------------
@@ -47,6 +51,8 @@ Documentation
 API
 ---
 
+- ContextSanitiser : Added a new ContextSanitiser class to GafferSceneTest. This
+  is a Monitor which warns about common context handling mistakes (#3060).
 - TaskNode (#3024, #3025) :
   - Simplified implementation requirements for `preTasks()` and `postTasks()`
     methods. It is now sufficient to construct `Tasks` directly from the input
@@ -60,6 +66,18 @@ API
   GraphEditor annotations.
 - ValuePlug : Added `set/getHashCacheSizeLimit()` methods for controlling hash cache
   memory usage (#3033).
+- Context (#3060) : Added `EditableScope::context()` method.
+- SceneTestCase (#3060) :
+  - Added a ContextSanitiser that is active for the duration of the tests.
+  - Improved assert methods.
+
+Build
+-----
+
+- Improved debugging support (#3070) :
+  - Added support for using ASAN option with GCC.
+  - Enabled TBB debugging features in DEBUG builds.
+  - Added `-fno-omit-frame-pointer` compiler flag for RELWITHDEBINFO builds.
 
 Breaking Changes
 ----------------
@@ -71,6 +89,47 @@ Breaking Changes
   - The equality operator now compares plug and context instead of
     hash.
 - BackdropNodeGadget/StandardNodeGadget (#3028) : Removed private member variables.
+- SceneTestCase (#3060) : Changed signatures for the following functions :
+  - `assertPathsEqual()`
+  - `assertScenesEqual()`
+  - `assertPathHashesEqual()`
+  - `assertPathHashesNotEqual()`
+  - `assertSceneHashesEqual()`
+  - `assertSceneHashesNotEqual()`
+
+0.53.3.0 (relative to 0.53.2.0)
+========
+
+Features
+--------
+
+- ArnoldOptions : Added settings for enabling GPU rendering (#3076).
+
+Improvements
+------------
+
+- GraphEditor : Added navigation items to the connection context menu. These allow
+  quick navigation to the source or destination node (#3064).
+- SceneInspector : Added fields for subdivision creases and corners (#3067).
+- GafferUI : Added Markdown support in tooltips (#3065).
+
+Fixes
+-----
+
+- Render : Fixed bug which prevented non-SceneNodes (for instance, Switches or
+  ContextVariables nodes) from rendering (#3061).
+- ValuePlug : Fixed GIL management bugs. These were most visible in a hang caused
+  by toggling exposure in the ImageView while background processing was being performed (#3068).
+- SceneInspector : Fixed drag and drop of PrimitiveVariables (#3067).
+- Instancer (#3072) :
+  - Fixed crashes caused by duplicate ids. Duplicates are now ignored.
+  - Fixed child ordering to be ascending by id.
+- GraphEditor : Fixed bug drawing auxiliary connections to sizeless parent nodules (#3069).
+
+API
+---
+
+- DocumentationAlgo : Added `markdownToHTML()` method (#3065).
 
 0.53.2.0 (relative to 0.53.1.1)
 ========
