@@ -603,7 +603,7 @@ Gaffer.Metadata.registerNode(
 			A global override for the maximum polymesh.subdiv_iterations.
 			""",
 
-			"layout:section", "Subdivision", 
+			"layout:section", "Subdivision",
 			"label", "Max Subdivisions",
 		],
 
@@ -820,7 +820,7 @@ Gaffer.Metadata.registerNode(
 
 		"options.abortOnError" : [
 
-			"description", 
+			"description",
 			"""
 			Aborts the render if an error is encountered.
 			""",
@@ -945,7 +945,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		#GPU 
+		# GPU
 
 		"options.renderDevice" : [
 
@@ -969,10 +969,11 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			If non-zero, this will omit the high res mipmaps when in GPU mode, to avoid runnig out of GPU memory.
+			If non-zero, this will omit the high resolution mipmaps when in GPU mode, to avoid running out of GPU memory.
 			""",
 
 			"layout:section", "GPU",
+			"label", "Max Texture Resolution",
 
 		],
 
