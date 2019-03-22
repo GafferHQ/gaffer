@@ -94,7 +94,6 @@ OSLObject::OSLObject( const std::string &name )
 	GafferScene::ResamplePrimitiveVariablesPtr resample = new ResamplePrimitiveVariables( "__resample" );
 	addChild( resample );
 
-	//todo only resample variables which we've read from in the OSL shader
 	resample->namesPlug()->setInput( resampledNamesPlug() );
 	resample->inPlug()->setInput( inPlug() );
 	resample->interpolationPlug()->setInput( interpolationPlug() );
