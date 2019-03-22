@@ -41,6 +41,8 @@
 
 #include "GafferScene/ResamplePrimitiveVariables.h"
 
+#include "Gaffer/Metadata.h"
+
 #include "IECoreScene/Primitive.h"
 
 using namespace Imath;
@@ -79,7 +81,22 @@ CompoundDataPtr prepareShadingPoints( const Primitive *primitive, const ShadingE
 	return shadingPoints;
 }
 
-};
+/// Historically, we evaluated `OSLObject::shaderPlug()` in a context containing "scene:path",
+/// but for performance reasons we now want to evaluate it using `ScenePlug::GlobalScope`.
+/// The GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY environment variable provides temporary
+/// backwards compatibility for anyone who may have taken advantage of "scene:path". But for
+/// all newly created nodes we use a userDefault to turn off compatibility at the node level.
+/// See further comments in ShaderAssignment.cpp, where we adopt the same strategy.
+bool initContextCompatibility()
+{
+	Gaffer::Metadata::registerValue( OSLObject::staticTypeId(), "__contextCompatibility", "userDefault", new BoolData( false ) );
+	const char *e = getenv( "GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY" );
+	return e && !strcmp( e, "1" );
+}
+
+const bool g_contextCompatibilityEnabled = initContextCompatibility();
+
+} // namespace
 
 OSLObject::OSLObject( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
@@ -88,8 +105,8 @@ OSLObject::OSLObject( const std::string &name )
 	addChild( new ShaderPlug( "shader" ) );
 	addChild( new IntPlug( "interpolation", Plug::In, PrimitiveVariable::Vertex, PrimitiveVariable::Invalid, PrimitiveVariable::FaceVarying ) );
 	addChild( new ScenePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-
 	addChild( new StringPlug( "__resampleNames", Plug::Out ) );
+	addChild( new BoolPlug( "__contextCompatibility", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
 
 	GafferScene::ResamplePrimitiveVariablesPtr resample = new ResamplePrimitiveVariables( "__resample" );
 	addChild( resample );
@@ -150,6 +167,16 @@ const StringPlug *OSLObject::resampledNamesPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::BoolPlug *OSLObject::contextCompatibilityPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *OSLObject::contextCompatibilityPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
@@ -158,7 +185,8 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 		input == shaderPlug() ||
 		input == inPlug()->transformPlug() ||
 		input == interpolationPlug() ||
-		input == resampledInPlug()->objectPlug()
+		input == resampledInPlug()->objectPlug() ||
+		input == contextCompatibilityPlug()
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -167,6 +195,7 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	if(
 		input == shaderPlug() ||
 		input == inPlug()->objectPlug() ||
+		input == contextCompatibilityPlug()
 	)
 	{
 		outputs.push_back( resampledNamesPlug() );
@@ -229,9 +258,7 @@ bool OSLObject::processesObject() const
 
 void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
-
+	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
 	if( !shadingEngine )
 	{
 		return;
@@ -253,9 +280,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
-
+	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
 	if( !shadingEngine )
 	{
 		return inputObject;
@@ -293,7 +318,15 @@ void OSLObject::hash( const ValuePlug *output, const Context *context, IECore::M
 	if( output == resampledNamesPlug() )
 	{
 		inPlug()->objectPlug()->hash( h );
-		h.append( shaderPlug()->attributesHash() );
+		if( g_contextCompatibilityEnabled && contextCompatibilityPlug()->getValue() )
+		{
+			h.append( shaderPlug()->attributesHash() );
+		}
+		else
+		{
+			ScenePlug::GlobalScope globalScope( context );
+			h.append( shaderPlug()->attributesHash() );
+		}
 	}
 }
 
@@ -309,11 +342,9 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			return;
 		}
 
+		ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
+
 		std::string primitiveVariablesToResample;
-
-		const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-		ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
-
 		for( PrimitiveVariableMap::const_iterator it = prim->variables.begin(); it != prim->variables.end(); ++it )
 		{
 			if( it->second.interpolation == PrimitiveVariable::Constant )
@@ -334,4 +365,23 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	}
 
 	SceneElementProcessor::compute( output, context );
+}
+
+ConstShadingEnginePtr OSLObject::shadingEngine( const Gaffer::Context *context ) const
+{
+	auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
+	if( !shader )
+	{
+		return nullptr;
+	}
+
+	if( g_contextCompatibilityEnabled && contextCompatibilityPlug()->getValue() )
+	{
+		return shader->shadingEngine();
+	}
+	else
+	{
+		ScenePlug::GlobalScope globalScope( context );
+		return shader->shadingEngine();
+	}
 }

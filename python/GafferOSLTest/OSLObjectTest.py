@@ -36,6 +36,7 @@
 
 import os
 import imath
+import subprocess
 
 import IECore
 import IECoreScene
@@ -749,6 +750,74 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 			outPoints["Cs"].data,
 			IECore.Color3fVectorData( [ imath.Color3f( 1, 2, 3 ), imath.Color3f( 5, 6, 7 ) ] )
 		)
+
+	def testContextCompatibility( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Network to assign the length of "scene:path" as a primvar called "id"
+
+		script["outInt"] = GafferOSL.OSLShader()
+		script["outInt"].loadShader( "ObjectProcessing/OutInt" )
+
+		script["outObject"] = GafferOSL.OSLShader()
+		script["outObject"].loadShader( "ObjectProcessing/OutObject" )
+		script["outObject"]["parameters"]["in0"].setInput( script["outInt"]["out"]["primitiveVariable"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'parent["outInt"]["parameters"]["value"] = len( context.get( "scene:path", [] ) )' )
+
+		# OSLObject node to apply network
+
+		script["plane"] = GafferScene.Plane()
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		script["oslObject"] = GafferOSL.OSLObject()
+		script["oslObject"]["in"].setInput( script["plane"]["out"] )
+		script["oslObject"]["filter"].setInput( script["filter"]["out"] )
+		script["oslObject"]["shader"].setInput( script["outObject"]["out"] )
+
+		# SceneWriter to save the result for later perusal
+
+		script["writer"] = GafferScene.SceneWriter()
+		script["writer"]["in"].setInput( script["oslObject"]["out"] )
+		script["writer"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.scc" ) )
+
+		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script.save()
+
+		# Assertions
+
+		def assertContextCompatibility( expected, envVar ) :
+
+			env = os.environ.copy()
+			if envVar is not None :
+				env["GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY"] = envVar
+
+			subprocess.check_call(
+				[ "gaffer", "execute", script["fileName"].getValue(), "-nodes", "writer" ],
+				env = env
+			)
+
+			scene = IECoreScene.SceneCache( script["writer"]["fileName"].getValue(), IECore.IndexedIO.OpenMode.Read )
+			plane = scene.child( "plane" )
+
+			self.assertEqual( plane.readObject( 0 )["id"].data[0], 1 if expected else 0 )
+
+		assertContextCompatibility( False, envVar = None )
+		assertContextCompatibility( False, envVar = "0" )
+		assertContextCompatibility( False, envVar = "?" )
+		assertContextCompatibility( True, envVar = "1" )
+
+		Gaffer.NodeAlgo.applyUserDefaults( script["oslObject"] )
+		script.save()
+
+		assertContextCompatibility( False, envVar = None )
+		assertContextCompatibility( False, envVar = "0" )
+		assertContextCompatibility( False, envVar = "?" )
+		assertContextCompatibility( False, envVar = "1" )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -49,6 +49,8 @@
 namespace GafferOSL
 {
 
+IE_CORE_FORWARDDECLARE( ShadingEngine )
+
 class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 {
 
@@ -89,6 +91,11 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 
 		Gaffer::StringPlug *resampledNamesPlug();
 		const Gaffer::StringPlug *resampledNamesPlug() const;
+
+		Gaffer::BoolPlug *contextCompatibilityPlug();
+		const Gaffer::BoolPlug *contextCompatibilityPlug() const;
+
+		ConstShadingEnginePtr shadingEngine( const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;
 
