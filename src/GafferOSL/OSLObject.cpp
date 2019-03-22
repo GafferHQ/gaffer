@@ -155,23 +155,25 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == shaderPlug() )
-	{
-		outputs.push_back( resampledNamesPlug() );
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-	else if (input == inPlug()->transformPlug() ||
+	if(
+		input == shaderPlug() ||
+		input == inPlug()->transformPlug() ||
 		input == interpolationPlug() ||
 		input == resampledInPlug()->objectPlug()
-		)
+	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
-	else if( input == inPlug()->objectPlug() )
+
+	if(
+		input == shaderPlug() ||
+		input == inPlug()->objectPlug() ||
+	)
 	{
 		outputs.push_back( resampledNamesPlug() );
 	}
-	else if( input == outPlug()->objectPlug() )
+
+	if( input == outPlug()->objectPlug() )
 	{
 		outputs.push_back( outPlug()->boundPlug() );
 	}
