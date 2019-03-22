@@ -1115,7 +1115,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	shaderGlobals.dPdx = uniformValue<V3f>( points, "dPdx" );
 	shaderGlobals.dPdy = uniformValue<V3f>( points, "dPdy" );
-	shaderGlobals.dPdz = uniformValue<V3f>( points, "dPdy" );
+	shaderGlobals.dPdz = uniformValue<V3f>( points, "dPdz" );
 
 	shaderGlobals.I = uniformValue<V3f>( points, "I" );
 	shaderGlobals.dIdx = uniformValue<V3f>( points, "dIdx" );
