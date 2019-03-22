@@ -134,7 +134,17 @@ class TweakPlugAdder : public PlugAdder
 				{
 					continue;
 				}
-				if( MetadataAlgo::readOnly( tweakPlug->valuePlug() ) )
+
+				ValuePlug *valuePlug = tweakPlug->valuePlug();
+				if( !valuePlug )
+				{
+					// It's possible that the TweakPlug is in an invalid state
+					// when we're getting called here. Ignore the plug if that's
+					// the case.
+					continue;
+				}
+
+				if( MetadataAlgo::readOnly( valuePlug ) )
 				{
 					continue;
 				}
