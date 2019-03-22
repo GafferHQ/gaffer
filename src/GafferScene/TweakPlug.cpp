@@ -122,11 +122,21 @@ const Gaffer::IntPlug *TweakPlug::modePlug() const
 
 Gaffer::ValuePlug *TweakPlug::valuePlugInternal()
 {
+	if( children().size() <= 3 )
+	{
+		return nullptr;
+	}
+
 	return getChild<ValuePlug>( 3 );
 }
 
 const Gaffer::ValuePlug *TweakPlug::valuePlugInternal() const
 {
+	if( children().size() <= 3 )
+	{
+		return nullptr;
+	}
+
 	return getChild<ValuePlug>( 3 );
 }
 
