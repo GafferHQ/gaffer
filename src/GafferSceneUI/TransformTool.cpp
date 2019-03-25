@@ -329,6 +329,7 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 		m_handles( new HandlesGadget() ),
 		m_handlesDirty( true ),
 		m_selectionDirty( true ),
+		m_priorityPathsDirty( true ),
 		m_dragging( false ),
 		m_mergeGroupId( 0 )
 {
@@ -435,6 +436,7 @@ void TransformTool::contextChanged( const IECore::InternedString &name )
 		m_selectionDirty = true;
 		selectionChangedSignal()( *this );
 		m_handlesDirty = true;
+		m_priorityPathsDirty = true;
 	}
 }
 
@@ -455,6 +457,7 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 			selectionChangedSignal()( *this );
 		}
 		m_handlesDirty = true;
+		m_priorityPathsDirty = true;
 	}
 	else if( plug == sizePlug() )
 	{
@@ -479,6 +482,8 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 		{
 			m_preRenderConnection.disconnect();
 			m_handles->setVisible( false );
+			SceneGadget *sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
+			sceneGadget->setPriorityPaths( IECore::PathMatcher() );
 		}
 	}
 }
@@ -642,6 +647,19 @@ void TransformTool::preRender()
 		// and also that it would be very confusing for the edited plug to be
 		// changed mid-drag.
 		updateSelection();
+		if( m_priorityPathsDirty )
+		{
+			m_priorityPathsDirty = false;
+			SceneGadget *sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
+			if( selection().size() )
+			{
+				sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
+			}
+			else
+			{
+				sceneGadget->setPriorityPaths( IECore::PathMatcher() );
+			}
+		}
 	}
 
 	if( m_selection.empty() )

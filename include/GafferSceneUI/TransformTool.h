@@ -204,6 +204,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 		mutable std::vector<Selection> m_selection;
 		mutable bool m_selectionDirty;
+		bool m_priorityPathsDirty;
 		SelectionChangedSignal m_selectionChangedSignal;
 
 		bool m_dragging;
