@@ -110,6 +110,11 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void setBlockingPaths( const IECore::PathMatcher &blockingPaths );
 		const IECore::PathMatcher &getBlockingPaths() const;
 
+		/// Specifies a set of paths that are given priorty when performing
+		/// asynchronous updates.
+		void setPriorityPaths( const IECore::PathMatcher &priorityPaths );
+		const IECore::PathMatcher &getPriorityPaths() const;
+
 		enum State
 		{
 			Paused,
@@ -173,6 +178,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		bool m_paused;
 		IECore::PathMatcher m_blockingPaths;
+		IECore::PathMatcher m_priorityPaths;
 		SceneGadgetSignal m_stateChangedSignal;
 
 		IECoreScenePreview::RendererPtr m_renderer;
