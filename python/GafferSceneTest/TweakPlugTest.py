@@ -145,5 +145,10 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.keys(), p.keys() )
 
+	def testOldSerialisation( self ) :
+
+		# Old scripts call a constructor with an outdated signature as below.
+		plug = GafferScene.TweakPlug( "exposure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
 if __name__ == "__main__":
 	unittest.main()
