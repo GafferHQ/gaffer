@@ -172,6 +172,8 @@ class GAFFER_API ValuePlug : public Plug
 		/// not be changed following the call.
 		void setObjectValue( IECore::ConstObjectPtr value );
 
+		/// Reimplemented to emit `plugSetSignal()` for the parent plugs.
+		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
 		/// Reimplemented for cache management.
 		void dirty() override;
 

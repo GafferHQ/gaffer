@@ -93,7 +93,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 			entry.error = error;
 			if( !entry.parentChangedConnection.connected() )
 			{
-				entry.parentChangedConnection = plug->parentChangedSignal().connect( boost::bind( &ErrorGadget::parentChanged, this, ::_1 ) );
+				entry.parentChangedConnection = plug->parentChangedSignal().connect( boost::bind( &ErrorGadget::plugParentChanged, this, ::_1 ) );
 			}
 			m_image->setVisible( true );
 		}
@@ -130,7 +130,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 
 	private :
 
-		void parentChanged( GraphComponent *plug )
+		void plugParentChanged( GraphComponent *plug )
 		{
 			if( !plug->parent() )
 			{

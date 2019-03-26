@@ -54,6 +54,41 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace std;
 
+//////////////////////////////////////////////////////////////////////////
+// GraphComponent::Signals
+//
+// We allocate these separately because they have a significant overhead
+// in both memory and construction time, and for many GraphComponent
+// instances they are never actually used.
+//////////////////////////////////////////////////////////////////////////
+
+struct GraphComponent::Signals : boost::noncopyable
+{
+
+	UnarySignal nameChangedSignal;
+	BinarySignal childAddedSignal;
+	BinarySignal childRemovedSignal;
+	BinarySignal parentChangedSignal;
+
+	// Utility to emit a signal if it has been created, but do nothing
+	// if it hasn't.
+	template<typename SignalMemberPointer, typename... Args>
+	static void emitLazily( Signals *signals, SignalMemberPointer signalMemberPointer, Args&&... args )
+	{
+		if( !signals )
+		{
+			return;
+		}
+		auto &signal = signals->*signalMemberPointer;
+		signal( std::forward<Args>( args )... );
+	}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// GraphComponent
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( GraphComponent );
 
 GraphComponent::GraphComponent( const std::string &name )
@@ -72,7 +107,8 @@ GraphComponent::~GraphComponent()
 	{
 		(*it)->m_parent = nullptr;
 		(*it)->parentChanging( nullptr );
-		(*it)->parentChangedSignal()( (*it).get(), nullptr );
+		(*it)->parentChanged( nullptr );
+		Signals::emitLazily( (*it)->m_signals.get(), &Signals::parentChangedSignal, (*it).get(), nullptr );
 	}
 }
 
@@ -149,7 +185,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 void GraphComponent::setNameInternal( const IECore::InternedString &name )
 {
 	m_name = name;
-	nameChangedSignal()( this );
+	Signals::emitLazily( m_signals.get(), &Signals::nameChangedSignal, this );
 }
 
 const IECore::InternedString &GraphComponent::getName() const
@@ -181,7 +217,7 @@ std::string GraphComponent::relativeName( const GraphComponent *ancestor ) const
 
 GraphComponent::UnarySignal &GraphComponent::nameChangedSignal()
 {
-	return m_nameChangedSignal;
+	return signals()->nameChangedSignal;
 }
 
 bool GraphComponent::acceptsChild( const GraphComponent *potentialChild ) const
@@ -306,8 +342,9 @@ void GraphComponent::addChildInternal( GraphComponentPtr child, size_t index )
 	m_children.insert( m_children.begin() + min( index, m_children.size() ), child );
 	child->m_parent = this;
 	child->setName( child->m_name.value() ); // to force uniqueness
-	childAddedSignal()( this, child.get() );
-	child->parentChangedSignal()( child.get(), previousParent );
+	Signals::emitLazily( m_signals.get(), &Signals::childAddedSignal, this, child.get() );
+	child->parentChanged( previousParent );
+	Signals::emitLazily( child->m_signals.get(), &Signals::parentChangedSignal, child.get(), previousParent );
 }
 
 void GraphComponent::removeChild( GraphComponentPtr child )
@@ -368,10 +405,11 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	}
 	m_children.erase( it );
 	child->m_parent = nullptr;
-	childRemovedSignal()( this, child.get() );
+	Signals::emitLazily( m_signals.get(), &Signals::childRemovedSignal, this, child.get() );
 	if( emitParentChanged )
 	{
-		child->parentChangedSignal()( child.get(), this );
+		child->parentChanged( this );
+		Signals::emitLazily( child->m_signals.get(), &Signals::parentChangedSignal, child.get(), this );
 	}
 }
 
@@ -456,20 +494,24 @@ bool GraphComponent::isAncestorOf( const GraphComponent *other ) const
 
 GraphComponent::BinarySignal &GraphComponent::childAddedSignal()
 {
-	return m_childAddedSignal;
+	return signals()->childAddedSignal;
 }
 
 GraphComponent::BinarySignal &GraphComponent::childRemovedSignal()
 {
-	return m_childRemovedSignal;
+	return signals()->childRemovedSignal;
 }
 
 GraphComponent::BinarySignal &GraphComponent::parentChangedSignal()
 {
-	return m_parentChangedSignal;
+	return signals()->parentChangedSignal;
 }
 
 void GraphComponent::parentChanging( Gaffer::GraphComponent *newParent )
+{
+}
+
+void GraphComponent::parentChanged( Gaffer::GraphComponent *oldParent )
 {
 }
 
@@ -497,4 +539,13 @@ std::string GraphComponent::unprefixedTypeName( const char *typeName )
 		result.erase( 0, colonPos + 1 );
 	}
 	return result;
+}
+
+GraphComponent::Signals *GraphComponent::signals()
+{
+	if( !m_signals )
+	{
+		m_signals.reset( new Signals );
+	}
+	return m_signals.get();
 }

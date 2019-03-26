@@ -79,9 +79,12 @@ class GAFFER_API ArrayPlug : public Plug
 		size_t minSize() const;
 		size_t maxSize() const;
 
+	protected :
+
+		void parentChanged( GraphComponent *oldParent ) override;
+
 	private :
 
-		void parentChanged();
 		void inputChanged( Gaffer::Plug *plug );
 
 		size_t m_minSize;

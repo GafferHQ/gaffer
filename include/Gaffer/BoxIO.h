@@ -157,6 +157,7 @@ class GAFFER_API BoxIO : public Node
 		const BoolPlug *enabledPlugInternal() const;
 
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
+		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
 
 	private :
 
@@ -177,7 +178,6 @@ class GAFFER_API BoxIO : public Node
 		void setupBoxEnabledPlug();
 		void scriptExecuted( ScriptNode *script );
 		void plugSet( Plug *plug );
-		void parentChanged( GraphComponent *oldParent );
 		void plugInputChanged( Plug *plug );
 		void promotedPlugNameChanged( GraphComponent *graphComponent );
 		void promotedPlugParentChanged( GraphComponent *graphComponent );

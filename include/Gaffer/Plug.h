@@ -196,6 +196,7 @@ class GAFFER_API Plug : public GraphComponent
 	protected :
 
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
+		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
 
 		/// Initiates the propagation of dirtiness from the specified
 		/// plug to its outputs and affected plugs (as defined by
@@ -212,7 +213,6 @@ class GAFFER_API Plug : public GraphComponent
 
 	private :
 
-		void parentChanged();
 		static void propagateDirtinessForParentChange( Plug *plugToDirty );
 
 		void setFlagsInternal( unsigned flags );

@@ -280,6 +280,8 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// Emits renderRequestSignal() as necessary for this and all ancestors.
 		/// Use this rather than emit the signal manually.
 		void requestRender();
+		/// Implemented to request a render for both the old and the new parent.
+		void parentChanged( GraphComponent *oldParent ) override;
 
 		/// Should be implemented by subclasses to draw themselves as appropriate
 		/// for the specified layer. Child gadgets will be drawn automatically
@@ -297,7 +299,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		void renderLayer( Layer layer, const Style *currentStyle = nullptr ) const;
 
 		void styleChanged();
-		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
 		void emitDescendantVisibilityChanged();
 
 		ConstStylePtr m_style;
