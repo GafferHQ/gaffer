@@ -82,7 +82,7 @@ struct VectorWarp::Engine : public Warp::Engine
 		else
 		{
 			V2f result = m_vectorMode == Relative ? outputPixel : V2f( 0.0f );
-			
+
 			result += m_vectorUnits == Screen ?
 				screenToPixel( V2f( m_x[i], m_y[i] ) ) :
 				V2f( m_x[i], m_y[i] );
@@ -231,7 +231,7 @@ const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, con
 {
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
-	
+
 	Box2i validTileBound;
 	ConstStringVectorDataPtr channelNames;
 	Box2i displayWindow;

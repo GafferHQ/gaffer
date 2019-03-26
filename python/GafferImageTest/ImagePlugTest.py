@@ -179,5 +179,29 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
 			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
 
+	def testGlobalConvenienceMethods( self ) :
+
+		checker = GafferImage.Checkerboard()
+
+		metadata = GafferImage.ImageMetadata()
+		metadata["in"].setInput( checker["out"] )
+		metadata["metadata"].addMember( "test", 10 )
+
+		self.assertEqual( metadata["out"].format(), metadata["out"]["format"].getValue() )
+		self.assertEqual( metadata["out"].formatHash(), metadata["out"]["format"].hash() )
+
+		self.assertEqual( metadata["out"].dataWindow(), metadata["out"]["dataWindow"].getValue() )
+		self.assertEqual( metadata["out"].dataWindowHash(), metadata["out"]["dataWindow"].hash() )
+
+		self.assertEqual( metadata["out"].channelNames(), metadata["out"]["channelNames"].getValue() )
+		self.assertFalse( metadata["out"].channelNames().isSame( metadata["out"]["channelNames"].getValue( _copy = False ) ) )
+		self.assertTrue( metadata["out"].channelNames( _copy = False ).isSame( metadata["out"]["channelNames"].getValue( _copy = False ) ) )
+		self.assertEqual( metadata["out"].channelNamesHash(), metadata["out"]["channelNames"].hash() )
+
+		self.assertEqual( metadata["out"].metadata(), metadata["out"]["metadata"].getValue() )
+		self.assertFalse( metadata["out"].metadata().isSame( metadata["out"]["metadata"].getValue( _copy = False ) ) )
+		self.assertTrue( metadata["out"].metadata( _copy = False ).isSame( metadata["out"]["metadata"].getValue( _copy = False ) ) )
+		self.assertEqual( metadata["out"].metadataHash(), metadata["out"]["metadata"].hash() )
+
 if __name__ == "__main__":
 	unittest.main()

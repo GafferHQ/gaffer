@@ -42,8 +42,18 @@ import IECoreImage
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
 class ImageTestCase( GafferTest.TestCase ) :
+
+
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		sanitiser = GafferImageTest.ContextSanitiser()
+		sanitiser.__enter__()
+		self.addCleanup( sanitiser.__exit__, None, None, None )
 
 	def assertImageHashesEqual( self, imageA, imageB ) :
 

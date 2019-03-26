@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,47 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef GAFFERIMAGETEST_CONTEXTSANITISER_H
+#define GAFFERIMAGETEST_CONTEXTSANITISER_H
 
-#include "OpenImageIO/filter.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/Plug.h"
 
+#include "tbb/concurrent_unordered_set.h"
 
-namespace GafferImage
+namespace GafferImageTest
 {
 
-Imath::Box2f FilterAlgo::filterSupport( const Imath::V2f &p, float dx, float dy, float filterWidth )
+/// A monitor which warns about common context handling mistakes.
+class GAFFER_API ContextSanitiser : public Gaffer::Monitor
 {
-	return Imath::Box2f (
-		p - 0.5f * filterWidth * Imath::V2f( dx, dy ),
-		p + 0.5f * filterWidth * Imath::V2f( dx, dy ) );
 
-}
+	public :
 
-Imath::V2f FilterAlgo::derivativesToAxisAligned( const Imath::V2f &p, const Imath::V2f &dpdx, const Imath::V2f &dpdy )
-{
-	float dxLength = dpdx.length();
-	float dyLength = dpdy.length();
+		ContextSanitiser();
 
-	float minLength;
-	Imath::V2f majorVector;
-	if( dxLength == 0 && dyLength == 0 )
-	{
-		minLength = 1.0f;
-		majorVector = Imath::V2f(0.0f);
-	}
-	else if( dxLength > dyLength )
-	{
-		minLength = std::max( dyLength, 1.0f );
-		majorVector = ( dpdx / dxLength ) * std::max( 0.0f, dxLength - minLength );
-	}
-	else
-	{
-		minLength = std::max( dxLength, 1.0f );
-		majorVector = ( dpdy / dyLength ) * std::max( 0.0f, dyLength - minLength );
-	}
+	protected :
 
-	return Imath::V2f( minLength ) + Imath::V2f( fabs( majorVector.x ), fabs( majorVector.y ) );
-}
+		void processStarted( const Gaffer::Process *process ) override;
+		void processFinished( const Gaffer::Process *process ) override;
 
-}
+	private :
 
+		/// First is the upstream plug where the problem was detected. Second
+		/// is the plug from the parent process responsible for calling upstream.
+		typedef std::pair<Gaffer::ConstPlugPtr, Gaffer::ConstPlugPtr> PlugPair;
+		typedef std::pair<PlugPair, IECore::InternedString> Warning;
 
+		void warn( const Gaffer::Process &process, const IECore::InternedString &contextVariable );
+
+		typedef tbb::concurrent_unordered_set<Warning> WarningSet;
+		WarningSet m_warningsEmitted;
+
+};
+
+} // namespace GafferImageTest
+
+#endif // GAFFERIMAGETEST_CONTEXTSANITISER_H

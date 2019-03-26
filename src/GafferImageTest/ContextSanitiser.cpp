@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,76 +34,88 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
 #include "GafferImageTest/ContextSanitiser.h"
 
-#include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
 
-#include "Gaffer/Node.h"
+#include "Gaffer/Process.h"
+#include "Gaffer/ScriptNode.h"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "IECore/MessageHandler.h"
 
-using namespace boost::python;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferImageTest;
 
-namespace
+namespace IECore
 {
 
-struct TilesEvaluateFunctor
+/// \todo Move to Cortex
+size_t tbb_hasher( const InternedString &s )
 {
-	bool operator()( const GafferImage::ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
+	return tbb::tbb_hasher( s.string() );
+}
+
+} // namespace IECore
+
+ContextSanitiser::ContextSanitiser()
+{
+}
+
+void ContextSanitiser::processStarted( const Gaffer::Process *process )
+{
+	if( const ImagePlug *image = process->plug()->parent<ImagePlug>() )
 	{
-		imagePlug->channelDataPlug()->getValue();
-		return true;
-	}
-};
+		if( process->plug() != image->channelDataPlug() )
+		{
+			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
+			{
+				warn( *process, ImagePlug::channelNameContextName );
+			}
+			if( process->context()->get<IECore::Data>( ImagePlug::tileOriginContextName, nullptr ) )
+			{
+				warn( *process, ImagePlug::tileOriginContextName );
+			}
+		}
 
-void processTiles( const GafferImage::ImagePlug *imagePlug )
+	}
+}
+
+void ContextSanitiser::processFinished( const Gaffer::Process *process )
 {
-	TilesEvaluateFunctor f;
-	ImageAlgo::parallelProcessTiles(
-		imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(),
-		f,
-		imagePlug->dataWindowPlug()->getValue(),
-		ImageAlgo::TopToBottom
+}
+
+void ContextSanitiser::warn( const Gaffer::Process &process, const IECore::InternedString &contextVariable )
+{
+	const Warning warning(
+		PlugPair( process.plug(), process.parent() ? process.parent()->plug() : nullptr ),
+		contextVariable
 	);
-}
 
-void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )
-{
-	if( dirtiedPlug == image.get() )
+	if( m_warningsEmitted.insert( warning ).second )
 	{
-		processTiles( image.get() );
+		std::string message = boost::str(
+			boost::format( "%s in context for %s %s" )
+				% contextVariable.string()
+				% process.plug()->relativeName(
+					process.plug()->ancestor<ScriptNode>()
+				)
+				% process.type()
+		);
+		if( process.parent() )
+		{
+			message += boost::str(
+				boost::format( " (called from %s %s)" )
+					% process.parent()->plug()->relativeName(
+						process.parent()->plug()->ancestor<ScriptNode>()
+					)
+					% process.parent()->type()
+			);
+		}
+		IECore::msg(
+			IECore::Msg::Warning, "ContextSanitiser",
+			message
+		);
 	}
-}
-
-void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	processTiles( imagePlug );
-}
-
-boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
-{
-	const Node *node = image->node();
-	if( !node )
-	{
-		throw IECore::Exception( "Plug does not belong to a node." );
-	}
-
-	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &processTilesOnDirty, ::_1, image ) );
-}
-
-} // namespace
-
-BOOST_PYTHON_MODULE( _GafferImageTest )
-{
-	class_<ContextSanitiser, bases<Gaffer::Monitor>, boost::noncopyable>( "ContextSanitiser" );
-
-	def( "processTiles", &processTilesWrapper );
-	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );
 }

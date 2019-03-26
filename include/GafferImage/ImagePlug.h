@@ -109,6 +109,10 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		const Gaffer::FloatVectorDataPlug *channelDataPlug() const;
 		//@}
 
+		/// @name Context management
+		/// Utilities for constructing contexts relevant to the evaluation
+		/// of the child plugs above.
+		////////////////////////////////////////////////////////////////////
 		/// The names used to specify the channel name and tile of
 		/// interest via a Context object. You should use these
 		/// variables rather than hardcoding string values - it is
@@ -116,31 +120,10 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		/// InternedStrings on every lookup.
 		static const IECore::InternedString channelNameContextName;
 		static const IECore::InternedString tileOriginContextName;
-
-		/// @name Convenience accessors
-		/// These functions create temporary Contexts specifying image:channelName
-		/// and image:tileOrigin, and use them to return useful output.
-		/// They therefore only make sense for output plugs or inputs which
-		/// have an input connection - if called on an unconnected input plug,
-		/// an Exception will be thrown.
-		////////////////////////////////////////////////////////////////////
-		//@{
-		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
-		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
-		/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
-		/// coordinate system will be converted to the OpenEXR and Cortex specification
-		/// and have it's origin in the top left of it's display window with the positive
-		/// Y axis pointing downwards rather than Gaffer's internal representation where
-		/// the origin is in the bottom left of the display window with the Y axis
-		/// ascending towards the top of the display window.
-		IECoreImage::ImagePrimitivePtr image() const;
-		IECore::MurmurHash imageHash() const;
-		//@}
-
 		/// Utility class to scope a temporary copy of a context,
 		/// with tile/channel specific variables removed. This can be used
 		/// when evaluating plugs which must be global to the whole image,
-		/// and can improve performance by reducing pressure on the hash cache
+		/// and can improve performance by reducing pressure on the hash cache.
 		struct GlobalScope : public Gaffer::Context::EditableScope
 		{
 			GlobalScope( const Gaffer::Context *context );
@@ -155,7 +138,51 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 			void setTileOrigin( const Imath::V2i &tileOrigin );
 			void setChannelName( const std::string &channelName );
 		};
+		//@}
 
+		/// @name Convenience accessors
+		/// These functions create a GlobalScope or ChannelDataScope
+		/// as appropriate, and return the value or hash from one of
+		/// the child plugs.
+		/// > Note : If you wish to evaluate multiple plugs in the same
+		/// > context, you can get improved performance by creating the
+		/// > the appropriate scope class manually and then calling
+		/// > `getValue()` or `hash()` directly.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Calls `channelDataPlug()->getValue()` using a ChannelDataScope.
+		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		/// Calls `channelDataPlug()->hash()` using a ChannelDataScope.
+		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		/// Calls `formatPlug()->getValue()` using a GlobalScope.
+		GafferImage::Format format() const;
+		/// Calls `formatPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash formatHash() const;
+		/// Calls `dataWindowPlug()->getValue()` using a GlobalScope.
+		Imath::Box2i dataWindow() const;
+		/// Calls `dataWindowPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash dataWindowHash() const;
+		/// Calls `channelNamesPlug()->getValue()` using a GlobalScope.
+		IECore::ConstStringVectorDataPtr channelNames() const;
+		/// Calls `channelNamesPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash channelNamesHash() const;
+		/// Calls `metadataPlug()->getValue()` using a GlobalScope.
+		IECore::ConstCompoundDataPtr metadata() const;
+		/// Calls `metadataPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash metadataHash() const;
+		/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
+		/// coordinate system will be converted to the OpenEXR and Cortex specification
+		/// and have it's origin in the top left of it's display window with the positive
+		/// Y axis pointing downwards rather than Gaffer's internal representation where
+		/// the origin is in the bottom left of the display window with the Y axis
+		/// ascending towards the top of the display window.
+		IECoreImage::ImagePrimitivePtr image() const;
+		IECore::MurmurHash imageHash() const;
+		//@}
+
+		/// @name Tile utilities
+		////////////////////////////////////////////////////////////////////
+		//@{
 		static int tileSize() { return 1 << tileSizeLog2(); };
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
@@ -172,10 +199,10 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		{
 			return tileIndex( point ) * tileSize();
 		}
-
-
+		//@}
 
 	private :
+
 		static int tileSizeLog2() { return 6; };
 
 		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );

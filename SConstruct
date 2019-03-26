@@ -745,7 +745,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX",  ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferImage" ],
+			"LIBS" : [ "GafferImage", "GafferImageTest" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferImageTest/scripts/*" ) + glob.glob( "python/GafferImageTest/images/*" ) + glob.glob( "python/GafferImageTest/openColorIO/luts/*" ) + glob.glob( "python/GafferImageTest/openColorIO/*" ),
 	},
