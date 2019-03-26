@@ -267,6 +267,11 @@
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
+	gaffer.layout.section.Top.collapsed BOOL false
+	gaffer.layout.section.Right.collapsed BOOL false
+	gaffer.layout.section.Bottom.collapsed BOOL false
+	gaffer.layout.section.Left.collapsed BOOL false
+
 	[attr barndoor_top_left]
 		page STRING "Top"
 		label STRING "Left"
@@ -518,6 +523,9 @@
 
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
+
+	gaffer.layout.section.Near.collapsed BOOL false
+	gaffer.layout.section.Far.collapsed BOOL false
 
 	[attr use_near_atten]
 		page STRING "Near"
