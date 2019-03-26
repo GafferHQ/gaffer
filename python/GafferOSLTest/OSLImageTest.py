@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
-import GafferScene
+import GafferImageTest
 import GafferOSL
 import GafferOSLTest
 
@@ -393,6 +393,33 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		s = pm.plugStatistics( constant["out"]["channelData"] )
 		self.assertEqual( s.computeCount, 1 )
+
+	def testShaderNetworkGeneratedInGlobalContext( self ) :
+
+		constant = GafferImage.Constant()
+
+		outLayer = GafferOSL.OSLCode()
+		outLayer["out"]["layer"] = GafferOSL.ClosurePlug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		outLayer["code"].setValue( 'layer = outLayer( "", color( 0, 1, 0) )' )
+
+		outImage = GafferOSL.OSLShader()
+		outImage.loadShader( "ImageProcessing/OutImage" )
+		outImage["parameters"]["in0"].setInput( outLayer["out"]["layer"] )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["in"].setInput( constant["out"] )
+		oslImage["shader"].setInput( outImage["out"] )
+
+		with Gaffer.ContextMonitor( outImage) as cm :
+			GafferImageTest.processTiles( oslImage["out"] )
+
+		cs = cm.combinedStatistics()
+		self.assertEqual( cs.numUniqueContexts(), 1 )
+		self.assertNotIn( "image:tileOrigin", cs.variableNames() )
+		self.assertNotIn( "image:channelName", cs.variableNames() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -39,6 +39,7 @@
 #include "GafferScene/Shader.h"
 
 #include "Gaffer/BoxIO.h"
+#include "Gaffer/Context.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
@@ -136,15 +137,17 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 IECore::MurmurHash ShaderPlug::attributesHash() const
 {
-	const Gaffer::Plug *p = shaderOutPlug();
-
 	IECore::MurmurHash h;
-	if (p)
+	if( const Gaffer::Plug *p = shaderOutPlug() )
 	{
-		const GafferScene::Shader *s = runTimeCast<const GafferScene::Shader>( p->node() );
-		if( s )
+		if( auto s = runTimeCast<const GafferScene::Shader>( p->node() ) )
 		{
-			s->attributesHash( p, h );
+			Context::EditableScope scope( Context::current() );
+			if( p != s->outPlug() )
+			{
+				scope.set( Shader::g_outputParameterContextName, p->relativeName( s->outPlug() ) );
+			}
+			h = s->outAttributesPlug()->hash();
 		}
 	}
 
@@ -153,13 +156,16 @@ IECore::MurmurHash ShaderPlug::attributesHash() const
 
 IECore::ConstCompoundObjectPtr ShaderPlug::attributes() const
 {
-	const Gaffer::Plug *p = shaderOutPlug();
-	if (p)
+	if( const Gaffer::Plug *p = shaderOutPlug() )
 	{
-		const GafferScene::Shader* s = runTimeCast<const GafferScene::Shader>(p->node());
-		if (s)
+		if( auto s = runTimeCast<const GafferScene::Shader>( p->node() ) )
 		{
-			return s->attributes( p );
+			Context::EditableScope scope( Context::current() );
+			if( p != s->outPlug() )
+			{
+				scope.set( Shader::g_outputParameterContextName, p->relativeName( s->outPlug() ) );
+			}
+			return s->outAttributesPlug()->getValue();
 		}
 	}
 	return new CompoundObject;

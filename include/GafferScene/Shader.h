@@ -43,8 +43,9 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "IECoreScene/Shader.h"
 
@@ -63,7 +64,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
+class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 {
 
 	public :
@@ -71,7 +72,7 @@ class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 		Shader( const std::string &name=defaultName<Shader>() );
 		~Shader() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Shader, ShaderTypeId, Gaffer::DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Shader, ShaderTypeId, Gaffer::ComputeNode );
 
 		/// A plug defining the name of the shader.
 		Gaffer::StringPlug *namePlug();
@@ -89,13 +90,6 @@ class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 		Gaffer::Plug *parametersPlug();
 		const Gaffer::Plug *parametersPlug() const;
 
-		/// Plug which defines the shader's output - this should
-		/// be connected to a ShaderAssignment::shaderPlug() or
-		/// in the case of shaders which support networking it may
-		/// be connected to a parameter plug of another shader.
-		Gaffer::Plug *outPlug();
-		const Gaffer::Plug *outPlug() const;
-
 		/// Shaders can be enabled and disabled. A disabled shader
 		/// returns an empty object from the state() method, causing
 		/// any downstream ShaderAssignments to act as if they've been
@@ -105,6 +99,13 @@ class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 		/// to allow disabled shaders to act as a pass-through instead.
 		Gaffer::BoolPlug *enabledPlug() override;
 		const Gaffer::BoolPlug *enabledPlug() const override;
+
+		/// Plug which defines the shader's output - this should
+		/// be connected to a ShaderAssignment::shaderPlug() or
+		/// in the case of shaders which support networking it may
+		/// be connected to a parameter plug of another shader.
+		Gaffer::Plug *outPlug();
+		const Gaffer::Plug *outPlug() const;
 
 		/// Implemented so that the children of parametersPlug() affect
 		/// outPlug().
@@ -130,6 +131,9 @@ class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 		IECore::ConstCompoundObjectPtr attributes() const;
 
 	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		/// Called when computing the hash for this node. May be reimplemented in derived classes
 		/// to deal with special cases, in which case parameterValue() should be reimplemented too.
@@ -161,6 +165,11 @@ class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 		// during compute.
 		Gaffer::Color3fPlug *nodeColorPlug();
 		const Gaffer::Color3fPlug *nodeColorPlug() const;
+		/// Output plug where the shader network will be generated.
+		Gaffer::CompoundObjectPlug *outAttributesPlug();
+		const Gaffer::CompoundObjectPlug *outAttributesPlug() const;
+
+		static const IECore::InternedString g_outputParameterContextName;
 
 		static size_t g_firstPlugIndex;
 
