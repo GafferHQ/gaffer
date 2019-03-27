@@ -36,6 +36,8 @@
 #ifndef IECOREPREVIEW_LRUCACHE_INL
 #define IECOREPREVIEW_LRUCACHE_INL
 
+#include "Gaffer/Private/IECorePreview/TaskMutex.h"
+
 #include "IECore/Exception.h"
 
 #include "boost/multi_index/hashed_index.hpp"
@@ -160,11 +162,32 @@ class Serial
 
 			// Write access to the underlying cache entry.
 			// Note that write access is not always permitted
-			// - see documentation for `acquire()` and
-			// AcquireMode.
+			// - see documentation for `isWritable()`.
 			CacheEntry &writable()
 			{
 				return m_it->cacheEntry;
+			}
+
+			// Returns true if it is OK to call `writable()`.
+			// This is typically determined by the AcquireMode
+			// passed to `acquire()`, with special cases for
+			// recursion.
+			bool isWritable() const
+			{
+				// Because this policy is serial, it would technically
+				// always be OK to write. But we return false for recursive
+				// calls to avoid unnecessary overhead updating the LRU list
+				// for inner calls.
+				return m_it->handleCount == 1;
+			}
+
+			// Executes the functor F. This is used to
+			// execute the GetterFunction, and allows the
+			// TaskParallel policy to support work sharing.
+			template<typename F>
+			void execute( F &&f )
+			{
+				f();
 			}
 
 			void release()
@@ -367,6 +390,17 @@ class Parallel
 			{
 				assert( m_writable );
 				return m_item->cacheEntry;
+			}
+
+			bool isWritable() const
+			{
+				return m_writable;
+			}
+
+			template<typename F>
+			void execute( F &&f )
+			{
+				f();
 			}
 
 			void release()
@@ -581,6 +615,385 @@ class Parallel
 
 };
 
+
+/// Used to determine if `GetterFunction( key )` will spawn tasks.
+/// If it is specialised to return false for certain keys, then
+/// some significant TBB task sharing overhead is avoided.
+template<typename Key>
+bool spawnsTasks( const Key &key )
+{
+	return true;
+}
+
+/// Thread-safe policy that uses TaskMutex so that threads waiting on
+/// the cache can still perform useful work.
+/// \todo This uses the same binned approach to map storage as the
+/// standard Parallel policy. Can we share the code by introducing some
+/// sort of ConcurrentBinnedMap? Alternatively, should we just replace
+/// the Parallel policy with the TaskParallel one?
+template<typename LRUCache>
+class TaskParallel
+{
+
+	public :
+
+		typedef typename LRUCache::CacheEntry CacheEntry;
+		typedef typename LRUCache::KeyType Key;
+		typedef tbb::atomic<typename LRUCache::Cost> AtomicCost;
+
+		struct Item
+		{
+			Item() : recentlyUsed() {}
+			Item( const Key &key ) : key( key ), recentlyUsed() {}
+			Item( const Item &other ) : key( other.key ), cacheEntry( other.cacheEntry ), recentlyUsed() {}
+			Key key;
+			mutable CacheEntry cacheEntry;
+			// Mutex to protect cacheEntry.
+			typedef TaskMutex Mutex;
+			mutable Mutex mutex;
+			// Flag used in second-chance algorithm.
+			mutable tbb::atomic<bool> recentlyUsed;
+		};
+
+		// We would love to use one of TBB's concurrent containers as
+		// our map, but we need the ability to insert, erase and iterate
+		// concurrently. The concurrent_unordered_map doesn't provide
+		// concurrent erase, and the concurrent_hash_map doesn't provide
+		// concurrent iteration. Instead we choose a non-threadsafe
+		// container, but split our storage into multiple bins with a
+		// container in each bin. This way concurrent operations do not
+		// contend on a lock unless they happen to target the same bin.
+		typedef boost::multi_index::multi_index_container<
+			Item,
+			boost::multi_index::indexed_by<
+				// Equivalent to std::unordered_map, using Item::key
+				// as the key. This actually has a couple of benefits
+				// over std::unordered_map :
+				//
+				// - Insertion does not invalidate existing iterators.
+				//   This allows us to store m_popIterator.
+				// - Lookup can be performed using types other than the
+				//   key. This provides the possibility of creating a
+				//   prehashed key prior to taking a Bin lock, although
+				//   this is not implemented here yet.
+				boost::multi_index::hashed_unique<
+					boost::multi_index::member<Item, Key, &Item::key>
+				>
+			>
+		> Map;
+
+		typedef typename Map::iterator MapIterator;
+
+		struct Bin
+		{
+			Bin() {}
+			Bin( const Bin &other ) : map( other.map ) {}
+			Bin &operator = ( const Bin &other ) { map = other.map; return *this; }
+			Map map;
+			typedef tbb::spin_rw_mutex Mutex;
+			Mutex mutex;
+		};
+
+		typedef std::vector<Bin> Bins;
+
+		TaskParallel()
+		{
+			m_bins.resize( tbb::tbb_thread::hardware_concurrency() );
+			m_popBinIndex = 0;
+			m_popIterator = m_bins[0].map.begin();
+			currentCost = 0;
+		}
+
+		struct Handle : private boost::noncopyable
+		{
+
+			Handle()
+				:	m_item( nullptr ), m_spawnsTasks( false )
+			{
+			}
+
+			~Handle()
+			{
+			}
+
+			const CacheEntry &readable()
+			{
+				return m_item->cacheEntry;
+			}
+
+			CacheEntry &writable()
+			{
+				assert( m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Write );
+				return m_item->cacheEntry;
+			}
+
+			// May return false for AcquireMode::Insert if a GetterFunction recurses.
+			bool isWritable() const
+			{
+				return m_itemLock.lockType() == Item::Mutex::ScopedLock::LockType::Write;
+			}
+
+			template<typename F>
+			void execute( F &&f )
+			{
+				if( m_spawnsTasks && m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Write )
+				{
+					// The getter function will spawn tasks. Execute
+					// it via the TaskMutex, so that other threads trying
+					// to access this cache item can help out. This also
+					// means that the getter is executed inside a task_arena,
+					// preventing it from stealing outer tasks that might try
+					// to get this item from the cache, leading to deadlock.
+					m_itemLock.execute( f );
+				}
+				else
+				{
+					// The getter won't do anything involving TBB tasks.
+					// Avoid the overhead of executing via the TaskMutex.
+					f();
+				}
+			}
+
+			void release()
+			{
+				if( m_item )
+				{
+					m_itemLock.release();
+					m_item = nullptr;
+				}
+			}
+
+			private :
+
+				bool acquire( Bin &bin, const Key &key, AcquireMode mode, bool spawnsTasks )
+				{
+					assert( !m_item );
+
+					// Acquiring a handle requires taking two
+					// locks, first the lock for the Bin, and
+					// second the lock for the Item. We must be
+					// careful to avoid deadlock in the case of
+					// a GetterFunction which reenters the cache.
+
+					typename Bin::Mutex::scoped_lock binLock;
+					while( true )
+					{
+						// Acquire a lock on the bin, and get an iterator
+						// from the key. We optimistically assume the item
+						// may already be in the cache and first do a find()
+						// using a bin read lock. This gives us much better
+						// performance when many threads contend for items
+						// that are already in the cache.
+						binLock.acquire( bin.mutex, /* write = */ false );
+						MapIterator it = bin.map.find( key );
+						bool inserted = false;
+						if( it == bin.map.end() )
+						{
+							if( mode != Insert && mode != InsertWritable )
+							{
+								return false;
+							}
+							binLock.upgrade_to_writer();
+							std::tie<MapIterator, bool>( it, inserted ) = bin.map.insert( Item( key ) );
+						}
+
+						// Now try to get a lock on the item we want to
+						// acquire. When we've just inserted a new item
+						// we take a write lock directly, because we know
+						// we'll need to write to the new item. When insertion
+						// found a pre-existing item we optimistically take
+						// just a read lock, because it is faster when
+						// many threads just need to read from the same
+						// cached item. We accept WorkerRead locks when necessary,
+						// to support Getter recursion.
+						TaskMutex::ScopedLock::LockType lockType = TaskMutex::ScopedLock::LockType::WorkerRead;
+						if( inserted || mode == FindWritable || mode == InsertWritable )
+						{
+							lockType = TaskMutex::ScopedLock::LockType::Write;
+						}
+
+						const bool acquired = m_itemLock.acquireOr(
+							it->mutex, lockType,
+							// Work accepter
+							[&binLock, &spawnsTasks] ( bool workAvailable ) {
+								if( workAvailable )
+								{
+									assert( spawnsTasks );
+								}
+								// Release the bin lock prior to accepting work, because
+								// the work might involve recursion back into the cache,
+								// thus requiring the bin lock.
+								binLock.release();
+								return true;
+							}
+						);
+
+						if( acquired )
+						{
+							if(
+								m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Read &&
+								mode == Insert && it->cacheEntry.status() == LRUCache::Uncached
+							)
+							{
+								// We found an old item that doesn't have
+								// a value. This can either be because it
+								// was erased but hasn't been popped yet,
+								// or because the item was too big to fit
+								// in the cache. Upgrade to writer status
+								// so it can be updated in get().
+								m_itemLock.upgradeToWriter();
+							}
+							// Success!
+							m_item = &*it;
+							m_spawnsTasks = spawnsTasks;
+							return true;
+						}
+					}
+				}
+
+				friend class TaskParallel;
+
+				const Item *m_item;
+				typename Item::Mutex::ScopedLock m_itemLock;
+				bool m_spawnsTasks;
+
+		};
+
+		/// Templated so that we can be called with the GetterKey as
+		/// well as the regular Key.
+		template<typename K>
+		bool acquire( const K &key, Handle &handle, AcquireMode mode )
+		{
+			return handle.acquire(
+				bin( key ), key, mode,
+				/// Only accept work for Insert mode, because that is
+				/// the one used by `get()`. We don't want to attempt
+				/// to do work in `set()`, because there will be no work
+				/// to do. `TaskMutex::ScopedLock::execute()` has significant
+				/// overhead, so we also want to avoid it if tasks won't
+				/// be spawned for a particular key.
+				mode == AcquireMode::Insert && spawnsTasks( key )
+			);
+		}
+
+		void push( Handle &handle )
+		{
+			// Simply mark the item as having been used
+			// recently. We will then give it a second chance
+			// in pop(), so it will not be evicted immediately.
+			// We don't need the handle to be writable to write
+			// here, because `recentlyUsed` is atomic.
+			handle.m_item->recentlyUsed = true;
+		}
+
+		bool pop( Key &key, CacheEntry &cacheEntry )
+		{
+			// Popping works by iterating the map until an item
+			// that has not been recently used is found. We store
+			// the current iteration position as m_popIterator and
+			// protect it with m_popMutex, taking the position that
+			// it is sufficient for only one thread to be limiting
+			// cost at any given time.
+			PopMutex::scoped_lock lock;
+			if( !lock.try_acquire( m_popMutex ) )
+			{
+				return false;
+			}
+
+			Bin *bin = &m_bins[m_popBinIndex];
+			typename Bin::Mutex::scoped_lock binLock( bin->mutex );
+
+			typename Item::Mutex::ScopedLock itemLock;
+			int numFullIterations = 0;
+			while( true )
+			{
+				// If we're at the end of this bin, advance to
+				// the next non-empty one.
+				const MapIterator emptySentinel = bin->map.end();
+				while( m_popIterator == bin->map.end() )
+				{
+					binLock.release();
+					m_popBinIndex = ( m_popBinIndex + 1 ) % m_bins.size();
+					bin = &m_bins[m_popBinIndex];
+					binLock.acquire( bin->mutex );
+					m_popIterator = bin->map.begin();
+					if( m_popIterator == emptySentinel )
+					{
+						// We've come full circle and all bins were empty.
+						return false;
+					}
+					else if( m_popBinIndex == 0 )
+					{
+						if( numFullIterations++ > 50 )
+						{
+							// We're not empty, but we've been around and around
+							// without finding anything to pop. This could happen
+							// if other threads are frantically setting
+							// the `recentlyUsed` flag or if `clear()` is
+							// called from `get()`, while `get()` holds the lock
+							// on the only item we could pop.
+							return false;
+						}
+					}
+				}
+
+				if( itemLock.tryAcquire( m_popIterator->mutex ) )
+				{
+					if( !m_popIterator->recentlyUsed )
+					{
+						// Pop this item.
+						key = m_popIterator->key;
+						cacheEntry = m_popIterator->cacheEntry;
+						// Now erase it from the bin.
+						// We must release the lock on the Item before erasing it,
+						// because we cannot release a lock on a mutex that is
+						// already destroyed. We know that no other thread can
+						// gain access to the item though, because they must
+						// acquire the Bin lock to do so, and we still hold the
+						// Bin lock.
+						itemLock.release();
+						m_popIterator = bin->map.erase( m_popIterator );
+						return true;
+					}
+					else
+					{
+						// Item has been used recently. Flag it so we
+						// can pop it next time round, unless another
+						// thread resets the flag.
+						m_popIterator->recentlyUsed = false;
+						itemLock.release();
+					}
+				}
+				else
+				{
+					// Failed to acquire the item lock. Some other
+					// thread is busy with this item, so we consider
+					// it to be recently used and just skip over it.
+				}
+
+				++m_popIterator;
+			}
+		}
+
+		AtomicCost currentCost;
+
+	private :
+
+		Bins m_bins;
+
+		Bin &bin( const Key &key )
+		{
+			size_t binIndex = boost::hash<Key>()( key ) % m_bins.size();
+			return m_bins[binIndex];
+		};
+
+		typedef tbb::spin_mutex PopMutex;
+		PopMutex m_popMutex;
+		size_t m_popBinIndex;
+		MapIterator m_popIterator;
+
+};
+
 } // namespace LRUCachePolicy
 
 // CacheEntry
@@ -676,22 +1089,28 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 		Cost cost = 0;
 		try
 		{
-			value = m_getter( key, cost );
+			handle.execute( [this, &value, &key, &cost] { value = m_getter( key, cost ); } );
 		}
 		catch( ... )
 		{
-			handle.writable().state = std::current_exception();
+			if( handle.isWritable() )
+			{
+				handle.writable().state = std::current_exception();
+			}
 			throw;
 		}
 
-		assert( cacheEntry.status() != Cached ); // this would indicate that another thread somehow
-		assert( cacheEntry.status() != Failed ); // loaded the same thing as us, which is not the intention.
+		if( handle.isWritable() )
+		{
+			assert( cacheEntry.status() != Cached ); // this would indicate that another thread somehow
+			assert( cacheEntry.status() != Failed ); // loaded the same thing as us, which is not the intention.
 
-		setInternal( key, handle.writable(), value, cost );
-		m_policy.push( handle );
+			setInternal( key, handle.writable(), value, cost );
+			m_policy.push( handle );
 
-		handle.release();
-		limitCost( m_maxCost );
+			handle.release();
+			limitCost( m_maxCost );
+		}
 
 		return value;
 	}
@@ -711,6 +1130,7 @@ bool LRUCache<Key, Value, Policy, GetterKey>::set( const Key &key, const Value &
 {
 	typename Policy<LRUCache>::Handle handle;
 	m_policy.acquire( key, handle, LRUCachePolicy::InsertWritable );
+	assert( handle.isWritable() );
 	bool result = setInternal( key, handle.writable(), value, cost );
 	m_policy.push( handle );
 	handle.release();
@@ -759,6 +1179,7 @@ bool LRUCache<Key, Value, Policy, GetterKey>::erase( const Key &key )
 		return false;
 	}
 
+	assert( handle.isWritable() );
 	return eraseInternal( key, handle.writable() );
 }
 

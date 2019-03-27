@@ -58,6 +58,18 @@ class Serial;
 template<typename LRUCache>
 class Parallel;
 
+/// Threadsafe, `get()` collaborates on TBB tasks if another
+/// thread is already computing the value. Key type must have
+/// a `hash_value` implementation as described in the boost
+/// documentation.
+///
+/// > Note : There is measurable overhead in the task collaboration
+/// > mechanism, so if it is known that tasks will not be spawned for
+/// > `GetterFunction( getterKey )` you may define a `bool spawnsTasks( const GetterKey & )`
+/// > function that will be used to avoid the overhead.
+template<typename LRUCache>
+class TaskParallel;
+
 } // namespace LRUCachePolicy
 
 /// A mapping from keys to values, where values are computed from keys using a user
