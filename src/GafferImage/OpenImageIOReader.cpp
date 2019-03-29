@@ -234,81 +234,6 @@ class File
 			}
 		}
 
-		// Fill the data array with all data for the specified subImage and target region,
-		// setting the dataRegion to represent the actual bounds of the data read ( which may have had to
-		// be enlarged to match tile boundaries ), and returning the number of channels read
-		//
-		// This is currenly only used by readTileBatch below - we always cache to tile batches when reading
-		// channel data.
-		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, Box2i &dataRegion )
-		{
-			ImageSpec subImageSpec;
-			m_imageInput->seek_subimage( subImage, 0, subImageSpec );
-
-			const V2i fileDataOrigin( m_imageSpec.x, m_imageSpec.y );
-			const Box2i fileDataWindow( fileDataOrigin,
-				fileDataOrigin + V2i( m_imageSpec.width, m_imageSpec.height )
-			);
-
-			// Convert target region in Gaffer into a region of the file that we are trying to read
-			const Box2i fileTargetRegion = BufferAlgo::intersection(
-				flopDisplayWindow( targetRegion, m_imageSpec.full_y, m_imageSpec.full_height ), fileDataWindow
-			);
-
-			Box2i fileDataRegion;
-
-			if( !m_tiled )
-			{
-				fileDataRegion = fileTargetRegion;
-
-				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
-
-				if( !m_imageInput->read_scanlines( fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0] ) )
-				{
-					throw IECore::Exception( boost::str (
-						boost::format( "OpenImageIOReader : Failed to read scanlines %i to %i.  Error: %s" ) %
-						fileDataRegion.min.y % fileDataRegion.max.y %
-						m_imageInput->geterror()
-					) );
-				}
-			}
-			else
-			{
-				V2i tileSize( m_imageSpec.tile_width, m_imageSpec.tile_height );
-
-				// Round the target region coordinates outwards to the tile boundaries in the file
-				// ( these are sized based on m_imageSpec.tile_(width/height), and spaced relative to
-				// the data window origin ).
-				//
-				// Then clamp them back to the data window.
-				// ( read_tiles requires that the coordinates lie on either a tile boundary OR the image boundary )
-
-				fileDataRegion = BufferAlgo::intersection( fileDataWindow, Box2i(
-					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin,
-					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
-				) );
-
-				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
-
-				if( !m_imageInput->read_tiles (
-					fileDataRegion.min.x, fileDataRegion.max.x,
-					fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
-				) )
-				{
-					throw IECore::Exception( boost::str (
-						boost::format( "OpenImageIOReader : Failed to read tiles %i,%i to %i,%i.  Error: %s" ) %
-						fileDataRegion.min.x % fileDataRegion.min.y %
-						fileDataRegion.max.x % fileDataRegion.max.y %
-						m_imageInput->geterror()
-					) );
-				}
-			}
-
-			dataRegion = flopDisplayWindow( fileDataRegion, m_imageSpec.full_y, m_imageSpec.full_height );
-
-			return subImageSpec.nchannels;
-		}
-
 		// Read a chunk of data from the file, formatted as a tile batch that will be stored on the tile batch plug
 		ConstObjectVectorPtr readTileBatch( V3i tileBatchIndex )
 		{
@@ -424,6 +349,78 @@ class File
 		}
 
 	private:
+
+		// Fill the data array with all data for the specified subImage and target region,
+		// setting the dataRegion to represent the actual bounds of the data read ( which may have had to
+		// be enlarged to match tile boundaries ), and returning the number of channels read.
+		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, Box2i &dataRegion )
+		{
+			ImageSpec subImageSpec;
+			m_imageInput->seek_subimage( subImage, 0, subImageSpec );
+
+			const V2i fileDataOrigin( m_imageSpec.x, m_imageSpec.y );
+			const Box2i fileDataWindow( fileDataOrigin,
+				fileDataOrigin + V2i( m_imageSpec.width, m_imageSpec.height )
+			);
+
+			// Convert target region in Gaffer into a region of the file that we are trying to read
+			const Box2i fileTargetRegion = BufferAlgo::intersection(
+				flopDisplayWindow( targetRegion, m_imageSpec.full_y, m_imageSpec.full_height ), fileDataWindow
+			);
+
+			Box2i fileDataRegion;
+
+			if( !m_tiled )
+			{
+				fileDataRegion = fileTargetRegion;
+
+				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
+
+				if( !m_imageInput->read_scanlines( fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0] ) )
+				{
+					throw IECore::Exception( boost::str (
+						boost::format( "OpenImageIOReader : Failed to read scanlines %i to %i.  Error: %s" ) %
+						fileDataRegion.min.y % fileDataRegion.max.y %
+						m_imageInput->geterror()
+					) );
+				}
+			}
+			else
+			{
+				V2i tileSize( m_imageSpec.tile_width, m_imageSpec.tile_height );
+
+				// Round the target region coordinates outwards to the tile boundaries in the file
+				// ( these are sized based on m_imageSpec.tile_(width/height), and spaced relative to
+				// the data window origin ).
+				//
+				// Then clamp them back to the data window.
+				// ( read_tiles requires that the coordinates lie on either a tile boundary OR the image boundary )
+
+				fileDataRegion = BufferAlgo::intersection( fileDataWindow, Box2i(
+					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin,
+					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
+				) );
+
+				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
+
+				if( !m_imageInput->read_tiles (
+					fileDataRegion.min.x, fileDataRegion.max.x,
+					fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
+				) )
+				{
+					throw IECore::Exception( boost::str (
+						boost::format( "OpenImageIOReader : Failed to read tiles %i,%i to %i,%i.  Error: %s" ) %
+						fileDataRegion.min.x % fileDataRegion.min.y %
+						fileDataRegion.max.x % fileDataRegion.max.y %
+						m_imageInput->geterror()
+					) );
+				}
+			}
+
+			dataRegion = flopDisplayWindow( fileDataRegion, m_imageSpec.full_y, m_imageSpec.full_height );
+
+			return subImageSpec.nchannels;
+		}
 
 		// Given a subImage index, and a tile origin, return an index to identify the tile batch which
 		// where this channel data will be found
