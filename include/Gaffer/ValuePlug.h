@@ -191,10 +191,6 @@ class GAFFER_API ValuePlug : public Plug
 		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
 		/// use with care.
 		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
-		/// As above, but returns null if the value is not already cached.
-		/// This method is likely to be removed in a future version - use only
-		/// if absolutely necessary.
-		IECore::ConstObjectPtr getObjectValueIfCached( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.

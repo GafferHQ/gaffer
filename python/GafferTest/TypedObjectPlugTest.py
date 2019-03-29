@@ -216,16 +216,5 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( p1.acceptsChild( p2 ) )
 		self.assertRaises( RuntimeError, p1.addChild, p2 )
 
-	def testGetValueIfCached( self ) :
-
-		n = GafferTest.CachingTestNode()
-		n["in"].setValue( "TypedObjectPlugTest.testGetValueIfCached" )
-
-		self.assertTrue( n["out"].getValueIfCached() is None )
-		v = n["out"].getValue()
-		self.assertIsInstance( v, IECore.StringData )
-		self.assertEqual( v.value, n["in"].getValue() )
-		self.assertEqual( n["out"].getValueIfCached(), v )
-
 if __name__ == "__main__":
 	unittest.main()

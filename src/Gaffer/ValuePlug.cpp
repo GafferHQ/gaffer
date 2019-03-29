@@ -431,7 +431,7 @@ class ValuePlug::ComputeProcess : public Process
 			g_cache.clear();
 		}
 
-		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash, bool cachedOnly )
+		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash )
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
@@ -455,19 +455,12 @@ class ValuePlug::ComputeProcess : public Process
 
 			if( processKey.cachePolicy == CachePolicy::Uncached )
 			{
-				if( !cachedOnly )
-				{
-					return ComputeProcess( processKey ).m_result;
-				}
-				else
-				{
-					return nullptr;
-				}
+				return ComputeProcess( processKey ).m_result;
 			}
 			else
 			{
 				IECore::ConstObjectPtr result = g_cache.get( processKey );
-				if( result || cachedOnly )
+				if( result )
 				{
 					return result;
 				}
@@ -860,12 +853,7 @@ const IECore::Object *ValuePlug::defaultObjectValue() const
 
 IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	return ComputeProcess::value( this, precomputedHash, /* cachedOnly = */ false );
-}
-
-IECore::ConstObjectPtr ValuePlug::getObjectValueIfCached( const IECore::MurmurHash *precomputedHash ) const
-{
-	return ComputeProcess::value( this, precomputedHash, /* cachedOnly = */ true );
+	return ComputeProcess::value( this, precomputedHash );
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
