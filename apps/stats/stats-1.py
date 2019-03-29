@@ -535,11 +535,12 @@ class stats( Gaffer.Application ) :
 		self.__timers["Image generation"] = imageTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
 
-		items = [
-			( "Format", image["format"].getValue() ),
-			( "Data window", image["dataWindow"].getValue() ),
-			( "Channel names", image["channelNames"].getValue() ),
-		]
+		with self.__context( script, args ) as context :
+			items = [
+				( "Format", image["format"].getValue() ),
+				( "Data window", image["dataWindow"].getValue() ),
+				( "Channel names", image["channelNames"].getValue() ),
+			]
 
 		self.__output.write( "\nImage :\n\n" )
 		self.__writeItems( items )
