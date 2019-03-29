@@ -252,10 +252,6 @@ class File
 			}
 
 			// Do the actual read of data
-			//
-			// Note - this method is not thread-safe, but because this is a private plug is only computed from
-			// the computeChannelData method, it is safe to assume that we have already acquired m_mutex
-			// at this point
 			std::vector<float> fileData;
 			Box2i fileDataRegion;
 			const int nchannels = readRegion( tileBatchIndex.z, targetRegion, fileData, fileDataRegion );
@@ -333,11 +329,6 @@ class File
 			return m_imageSpec;
 		}
 
-		tbb::mutex &mutex()
-		{
-			return m_mutex;
-		}
-
 		std::string formatName() const
 		{
 			return m_imageInput->format_name();
@@ -355,6 +346,11 @@ class File
 		// be enlarged to match tile boundaries ), and returning the number of channels read.
 		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, Box2i &dataRegion )
 		{
+			/// \todo OIIO 2.0 introduces thread-safe `read_*()` methods that
+			/// are passed the subimage directly. Upgrade to use those and remove
+			/// this lock entirely.
+			tbb::mutex::scoped_lock lock( m_mutex );
+
 			ImageSpec subImageSpec;
 			m_imageInput->seek_subimage( subImage, 0, subImageSpec );
 
@@ -761,6 +757,17 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 	}
 }
 
+Gaffer::ValuePlug::CachePolicy OpenImageIOReader::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == tileBatchPlug() )
+	{
+		// Request blocking compute for tile batches, to avoid concurrent threads loading
+		// the same batch redundantly.
+		return ValuePlug::CachePolicy::Standard;
+	}
+	return ImageNode::computeCachePolicy( output );
+}
+
 void OpenImageIOReader::hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	// since fileName excludes frame substitutions
@@ -946,32 +953,7 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 
 	c.set( g_tileBatchIndexContextName, tileBatchIndex );
 
-	ConstObjectVectorPtr tileBatch;
-
-	// We never want two threads to both read the same tile batch from disk, so it's important to lock
-	// on file->m_mutex before calling tileBatchPlug()->getValue().
-	//
-	// This however has the potential to create some serious performance hazards when the cache is contended
-	// by multiple threads trying to load different parts of the same image.  We can alleviate this using
-	// the temporary special purpose method getValueIfCached(), which allows us to immediately return if the
-	// value is already cached, without needing to acquire the lock.  In extreme cases, this can be a 10X
-	// speedup, because waiting on the lock when the data we need is in the cache could result in the data
-	// being evicted before we get to it.
-	//
-	// In the long run, we are hoping that we will be able to automatically make sure two threads never
-	// recompute the same plug value for any plug, and then all of this locking and short-circuiting will
-	// be unnecessary.
-	ConstObjectPtr tileBatchCached = tileBatchPlug()->getValueIfCached();
-	if( tileBatchCached )
-	{
-		tileBatch = IECore::runTimeCast< const ObjectVector >( tileBatchCached );
-	}
-	else
-	{
-		tbb::mutex::scoped_lock lock( file->mutex() );
-		tileBatch = tileBatchPlug()->getValue();
-	}
-
+	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 	ConstObjectPtr curTileChannel = tileBatch->members()[ subIndex ];
 	return IECore::runTimeCast< const FloatVectorData >( curTileChannel );
 }
