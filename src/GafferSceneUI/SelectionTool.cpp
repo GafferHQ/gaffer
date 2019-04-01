@@ -196,7 +196,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 	PathMatcher selection = sg->getSelection();
 
-	const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
+	const bool shiftHeld = event.modifiers & ButtonEvent::Shift;
 	if( !objectUnderMouse.size() )
 	{
 		// background click - clear the selection unless
