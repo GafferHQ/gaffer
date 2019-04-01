@@ -194,7 +194,7 @@ boost::python::object executionDict( ScriptNodePtr script, NodePtr parent )
 	result["script"] = boost::python::object( script );
 	result["parent"] = boost::python::object( parent );
 
-	return result;
+	return std::move( result );
 }
 
 std::string serialise( const Node *parent, const Set *filter )
