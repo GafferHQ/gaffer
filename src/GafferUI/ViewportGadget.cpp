@@ -1117,7 +1117,7 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 {
 	m_dragTrackingThreshold = limits<float>::max();
 
-	if ( !(event.modifiers & ModifiableEvent::Alt) && m_lastButtonPressGadget )
+	if ( !(event.modifiers == ModifiableEvent::Alt) && m_lastButtonPressGadget )
 	{
 		// see if a child gadget would like to start a drag
 		RunTimeTypedPtr data = dispatchEvent( m_lastButtonPressGadget, &Gadget::dragBeginSignal, event );
