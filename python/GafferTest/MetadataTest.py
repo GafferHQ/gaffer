@@ -348,6 +348,7 @@ class MetadataTest( GafferTest.TestCase ) :
 		# test node registrations
 
 		node = MetadataTestNodeB()
+		preExistingRegistrations = Gaffer.Metadata.registeredValues( node )
 
 		Gaffer.Metadata.registerValue( node, "nodeSeven", 7 )
 		Gaffer.Metadata.registerValue( node, "nodeEight", 8 )
@@ -363,7 +364,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual(
 			Gaffer.Metadata.registeredValues( node ),
-			[
+			preExistingRegistrations + [
 				# base class values first, in order of their registration
 				"nodeOne",
 				"nodeTwo",
@@ -381,6 +382,8 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		# test plug registrations
 
+		preExistingRegistrations = Gaffer.Metadata.registeredValues( node["a"] )
+
 		Gaffer.Metadata.registerValue( node["a"], "plugSeven", 7 )
 		Gaffer.Metadata.registerValue( node["a"], "plugEight", 8 )
 		Gaffer.Metadata.registerValue( node["a"], "plugNine", 9 )
@@ -395,7 +398,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual(
 			Gaffer.Metadata.registeredValues( node["a"] ),
-			[
+			preExistingRegistrations + [
 				# base class values first, in order of their registration
 				"plugOne",
 				"plugTwo",
@@ -476,6 +479,9 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		IECore.registerRunTimeTyped( MetadataTestNodeC )
 
+		n = MetadataTestNodeC()
+		preExistingRegistrations = Gaffer.Metadata.registeredValues( n["a"] )
+
 		Gaffer.Metadata.registerNode(
 
 			MetadataTestNodeC,
@@ -511,8 +517,6 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		)
 
-		n = MetadataTestNodeC()
-
 		self.assertEqual( Gaffer.Metadata.value( n, "description" ), "I am a multi\nline description" )
 		self.assertEqual( Gaffer.Metadata.value( n, "nodeGadget:color" ), imath.Color3f( 1, 0, 0 ) )
 
@@ -520,7 +524,10 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( n["a"], "preset:One" ), 1 )
 		self.assertEqual( Gaffer.Metadata.value( n["a"], "preset:Two" ), 2 )
 		self.assertEqual( Gaffer.Metadata.value( n["a"], "preset:Three" ), 3 )
-		self.assertEqual( Gaffer.Metadata.registeredValues( n["a"] ), [ "description", "preset:One", "preset:Two", "preset:Three" ] )
+		self.assertEqual(
+			Gaffer.Metadata.registeredValues( n["a"] ),
+			preExistingRegistrations + [ "description", "preset:One", "preset:Two", "preset:Three" ]
+		)
 
 		self.assertEqual( Gaffer.Metadata.value( n["b"], "description" ), "I am the first paragraph.\n\nI am the second paragraph." )
 		self.assertEqual( Gaffer.Metadata.value( n["b"], "otherValue" ), 100 )

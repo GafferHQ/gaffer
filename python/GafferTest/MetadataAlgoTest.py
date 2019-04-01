@@ -301,21 +301,29 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( s, "b", "b" )
 		Gaffer.Metadata.registerValue( s, "c", "c", persistent = False )
 
+		def registeredTestValues( node ) :
+
+			# We don't know what metadata might have been registered to the node
+			# before we run, so here we strip out any values that we're not interested in.
+			return set( Gaffer.Metadata.registeredValues( t ) ).intersection(
+				{ "metadataAlgoTest", "a", "a2", "b", "c" }
+			)
+
 		t = Gaffer.Node()
 		Gaffer.MetadataAlgo.copy( s, t )
-		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "a", "a2", "b" } )
+		self.assertEqual( registeredTestValues( t ), { "metadataAlgoTest", "a", "a2", "b" } )
 
 		t = Gaffer.Node()
 		Gaffer.MetadataAlgo.copy( s, t, persistentOnly = False )
-		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "a", "a2", "b", "c" } )
+		self.assertEqual( registeredTestValues( t ), { "metadataAlgoTest", "a", "a2", "b", "c" } )
 
 		t = Gaffer.Node()
 		Gaffer.MetadataAlgo.copy( s, t, exclude = "a*" )
-		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "b" } )
+		self.assertEqual( registeredTestValues( t ), { "metadataAlgoTest", "b" } )
 
 		t = Gaffer.Node()
 		Gaffer.MetadataAlgo.copy( s, t, exclude = "a b" )
-		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "a2" } )
+		self.assertEqual( registeredTestValues( t ), { "metadataAlgoTest", "a2" } )
 
 		t = Gaffer.Node()
 		Gaffer.MetadataAlgo.copy( s, t )
