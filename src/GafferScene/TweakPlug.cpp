@@ -66,12 +66,8 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( TweakPlug );
 
 TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode, bool enabled )
-	:	TweakPlug( "tweak", In, Default | Dynamic )
+	:	TweakPlug( valuePlug, "tweak", In, Default | Dynamic )
 {
-	valuePlug->setName( "value" );
-	valuePlug->setFlags( Dynamic, true );
-	addChild( valuePlug );
-
 	namePlug()->setValue( tweakName );
 	modePlug()->setValue( mode );
 	enabledPlug()->setValue( enabled );
@@ -82,12 +78,18 @@ TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, M
 {
 }
 
-TweakPlug::TweakPlug( const std::string &name, Direction direction, unsigned flags )
+TweakPlug::TweakPlug( Gaffer::ValuePlugPtr valuePlug, const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
 {
 	addChild( new StringPlug( "name" ) );
 	addChild( new BoolPlug( "enabled", Plug::In, true ) );
 	addChild( new IntPlug( "mode", Plug::In, Replace, Replace, Remove ) );
+
+	if( valuePlug )
+	{
+		valuePlug->setName( "value" );
+		addChild( valuePlug );
+	}
 }
 
 Gaffer::StringPlug *TweakPlug::namePlug()
@@ -122,11 +124,21 @@ const Gaffer::IntPlug *TweakPlug::modePlug() const
 
 Gaffer::ValuePlug *TweakPlug::valuePlugInternal()
 {
+	if( children().size() <= 3 )
+	{
+		return nullptr;
+	}
+
 	return getChild<ValuePlug>( 3 );
 }
 
 const Gaffer::ValuePlug *TweakPlug::valuePlugInternal() const
 {
+	if( children().size() <= 3 )
+	{
+		return nullptr;
+	}
+
 	return getChild<ValuePlug>( 3 );
 }
 
@@ -175,12 +187,10 @@ bool TweakPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) con
 
 Gaffer::PlugPtr TweakPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	PlugPtr result = new TweakPlug( name, direction, getFlags() );
-	if( const Plug *p = valuePlug() )
-	{
-		result->addChild( p->createCounterpart( p->getName(), direction ) );
-	}
-	return result;
+	const Plug *p = valuePlug();
+	PlugPtr plugCounterpart = p->createCounterpart( p->getName(), direction );
+
+	return new TweakPlug( runTimeCast<ValuePlug>( plugCounterpart.get() ), name, direction, getFlags() );
 }
 
 IECore::MurmurHash TweakPlug::hash() const

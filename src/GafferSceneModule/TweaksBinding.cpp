@@ -34,6 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <boost/algorithm/string.hpp>
 #include "boost/python.hpp"
 
 #include "TweaksBinding.h"
@@ -44,6 +45,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
+#include "GafferBindings/SerialisationBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -76,6 +79,32 @@ void applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData
 	tweaksPlug.applyTweaks( &parameters, requireExists );
 }
 
+class TweakPlugSerialiser : public ValuePlugSerialiser
+{
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		return false;
+	}
+
+	std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+	{
+		auto tweaksPlug = static_cast<const TweakPlug *>( graphComponent );
+
+		const Serialiser *valuePlugSerialiser = Serialisation::acquireSerialiser( tweaksPlug->valuePlug() );
+		std::string result = ValuePlugSerialiser::constructor( graphComponent, serialisation );
+
+		// Pass the value plug into the constructor directly so that there's
+		// never a moment in which the TweakPlug is in an invalid state.
+		result = boost::algorithm::replace_first_copy(
+			result,
+			"TweakPlug(",
+			"TweakPlug( " + valuePlugSerialiser->constructor( tweaksPlug->valuePlug(), serialisation ) + ","
+		);
+
+		return result;
+	}
+};
+
 } // namespace
 
 void GafferSceneModule::bindTweaks()
@@ -98,8 +127,9 @@ void GafferSceneModule::bindTweaks()
 
 	tweakPlugClass
 		.def(
-			init<const char *, Plug::Direction, unsigned>(
+			init<ValuePlug *, const char *, Plug::Direction, unsigned>(
 				(
+					boost::python::arg_( "valuePlug" ),
 					boost::python::arg_( "name" )=GraphComponent::defaultName<TweakPlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "flags" )=Plug::Default
@@ -133,6 +163,8 @@ void GafferSceneModule::bindTweaks()
 		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
 		.staticmethod( "applyTweaks" )
 	;
+
+	Serialisation::registerSerialiser( TweakPlug::staticTypeId(), new TweakPlugSerialiser );
 
 	PlugClass<TweaksPlug>()
 		.def(
