@@ -29,17 +29,19 @@ NodeEditor Layout
 -----------------
 
 ```eval_rst
-=================== =============================== ============================
-Name                Purpose                         Example Values
-=================== =============================== ============================
-layout:divider      Places a divider after the plug True
-layout:index        Integer index in the layout     0 (first), -1 (last)
-                    order
-layout:section      Specifies the section the plug  TabName.SectionName
-                    belongs in
-layout:accessory    Places widget on same line as   True
-                    previous widget
-=================== =============================== ============================
+=============================== =============================== ==================================
+Name                            Purpose                         Example Values
+=============================== =============================== ==================================
+layout:divider                  Places a divider after the plug True
+layout:index                    Integer index in the layout     0 (first), -1 (last)
+                                order
+layout:section                  Specifies the section the plug  TabName.SectionName
+                                belongs in
+layout:section:<name>:collapsed Specifies whether the section   True (collapsed), False (expanded)
+                                is collapsed
+layout:accessory                Places widget on same line as   True
+                                previous widget
+=============================== =============================== ==================================
 ```
 
 GraphEditor Layout

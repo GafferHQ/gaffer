@@ -354,7 +354,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		splitContainer = self.ancestor( _SplitContainer )
 		splitContainerParent = splitContainer.parent()
 		if isinstance( splitContainerParent, _SplitContainer ) :
-			m.append( "Remove Panel", { "command" : functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) } )
+			m.append( "Remove Panel", { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
 			removeItemAdded = True
 
 		currentTab = self.getCurrent()
@@ -491,3 +491,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def __removeCurrentTab( self ) :
 
 		self.remove( self.getCurrent() )
+
+	def __removePanel( self ) :
+
+		splitContainer = self.ancestor( _SplitContainer )
+		splitContainerParent = splitContainer.parent()
+		# we defer the call to an idle callback to workaround widget lifetime
+		# issues in certain circumstances (eg hosting Gaffer in other Qt DCC).
+		## \todo: consider doing this for all Menu commands in GafferUI.Menu
+		GafferUI.EventLoop.addIdleCallback( functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) )

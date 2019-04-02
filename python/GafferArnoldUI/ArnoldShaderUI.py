@@ -174,6 +174,13 @@ def __translateNodeMetadata( nodeEntry ) :
 		if page is not None :
 			__metadata[paramPath]["layout:section"] = page
 
+			# Uncollapse sections if desired
+
+			collapsed = __aiMetadataGetBool( nodeEntry, None, "gaffer.layout.section.%s.collapsed" % page )
+			if collapsed == False :
+				parent = paramPath.rsplit( '.', 1 )[0]
+				__metadata[parent]["layout:section:%s:collapsed" % page] = collapsed
+
 		# Label from OSL "label"
 		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
 		if label is None :

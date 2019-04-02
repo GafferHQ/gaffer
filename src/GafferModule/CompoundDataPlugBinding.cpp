@@ -108,11 +108,13 @@ tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPlug::Mem
 
 void fillCompoundData( const CompoundDataPlug &p, IECore::CompoundData *d )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	p.fillCompoundData( d->writable() );
 }
 
 void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObject *o )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	p.fillCompoundObject( o->members() );
 }
 

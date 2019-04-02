@@ -267,6 +267,59 @@
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
+	gaffer.layout.section.Top.collapsed BOOL false
+	gaffer.layout.section.Right.collapsed BOOL false
+	gaffer.layout.section.Bottom.collapsed BOOL false
+	gaffer.layout.section.Left.collapsed BOOL false
+
+	[attr barndoor_top_left]
+		page STRING "Top"
+		label STRING "Left"
+
+	[attr barndoor_top_right]
+		page STRING "Top"
+		label STRING "Right"
+
+	[attr barndoor_top_edge]
+		page STRING "Top"
+		label STRING "Edge"
+
+	[attr barndoor_right_top]
+		page STRING "Right"
+		label STRING "Top"
+
+	[attr barndoor_right_bottom]
+		page STRING "Right"
+		label STRING "Bottom"
+
+	[attr barndoor_right_edge]
+		page STRING "Right"
+		label STRING "Edge"
+
+	[attr barndoor_bottom_left]
+		page STRING "Bottom"
+		label STRING "Left"
+
+	[attr barndoor_bottom_right]
+		page STRING "Bottom"
+		label STRING "Right"
+
+	[attr barndoor_bottom_edge]
+		page STRING "Bottom"
+		label STRING "Edge"
+
+	[attr barndoor_left_top]
+		page STRING "Left"
+		label STRING "Top"
+
+	[attr barndoor_left_bottom]
+		page STRING "Left"
+		label STRING "Bottom"
+
+	[attr barndoor_left_edge]
+		page STRING "Left"
+		label STRING "Edge"
+
 
 [node blackbody]
 
@@ -471,6 +524,32 @@
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
+	gaffer.layout.section.Near.collapsed BOOL false
+	gaffer.layout.section.Far.collapsed BOOL false
+
+	[attr use_near_atten]
+		page STRING "Near"
+		label STRING "Enable"
+
+	[attr use_far_atten]
+		page STRING "Far"
+		label STRING "Enable"
+
+	[attr near_start]
+		page STRING "Near"
+		label STRING "Start"
+
+	[attr near_end]
+		page STRING "Near"
+		label STRING "End"
+
+	[attr far_start]
+		page STRING "Far"
+		label STRING "Start"
+
+	[attr far_end]
+		page STRING "Far"
+		label STRING "End"
 
 [node log]
 
