@@ -1,19 +1,19 @@
-# Tutorial: Startup Configs, Part 3 # 
+# Tutorial: Startup Config 3, Custom Node Menu Entries # 
 
-In this final part of the startup config tutorial, we will demonstrate a startup config that adds a custom entry to the node menu.
+In this final part of the multi-part startup config tutorial, we will demonstrate a startup config that adds a custom entry to the node menu.
 
 ![A custom entry in the node menu](images/tutorialNodeMenuCustomEntry.png "A custom entry in the node menu")
 
-The entry will insert a Reference node and load a reference script into it. The sub-graph inside the Reference node consists of an OSLCode node that procedurally generates a texture of a Macbeth chart. This "custom" node should come in handy for lookdev shader development, and, as a bonus, provides a simple demonstration of procedural texture generation in OSL.
+For your convenience, we've shipped Gaffer with a "MacbethTexture" reference graph. Using OSL, this reference procedurally generates a texture of a Macbeth chart on-the-fly, which should come in handy in lookdev and lighting graphs. Our custom node menu entry will insert a Reference node, and then load this reference graph.
 
-Functionally, this node will be like a new node that came from a custom module. However, since the node is basically just an in-graph wrapper made of standard nodes, it will remain portable between Gaffer deployments, meaning that if it is saved inside a script, other users will not need to install additional modules in order to open that script.
+From a user's perspective, the node's custom icon, colour, name, and its presence in the node menu will make it appear and behave like it came from a compiled module. Since it is merely a disguised Reference node, no additional code development or compilation was actually needed to build it. Its only requirement is that the end user or system has the reference graph on disk (already fulfilled, since we will use a reference that shipped with Gaffer). In a studio context, a node menu entry like this would require the reference file to be distributed on the file system, or otherwise shared in some way.
 
-We hope that this simple config will be a springboard for adding further entries to the node menu. This solution is very powerful, as it allows you to customize existing nodes or insert References to your Gaffer deployment, without needing to code or compile Gaffer modules.
+We hope that you can use this config as a springboard for adding other custom entries to the node menu. With this solution's simplicity, TDs and artists alike can publish new nodes and add them to the menu.
 
 
-## Startup Config #3: Custom Node Menu Entry ##
+## customNodes.py ##
 
-As with the other startup configs, this one will run in the GUI app. Copy this code to a new a `customNodes.py` file in `~/gaffer/startup/gui`:
+As with the other startup configs in this tutorial, this one will run in the GUI app. Copy this code to a new `customNodes.py` file in `~/gaffer/startup/gui`:
 
 ```eval_rst
 .. code-block:: python
@@ -21,146 +21,134 @@ As with the other startup configs, this one will run in the GUI app. Copy this c
 
     import Gaffer
     import GafferUI
-    import IECore
     import os
-
-    def MacbethTexture( menu ) :
-
-        graphEditor = menu.ancestor( GafferUI.GraphEditor )
-        assert( graphEditor is not None )
-
-        script = graphEditor.graphGadget().getRoot()
-        node = Gaffer.Reference( "MacbethTexture" )
-        script.addChild( node )
-        node.load( os.path.expandvars( "$GAFFER_ROOT/resources/references/macbethTexture.grf" ) )
-
-        return node
-
-    nodeMenu = GafferUI.NodeMenu.acquire( application )
-    nodeMenu.append( "/Custom/MacbethTexture", MacbethTexture, searchText = "MacbethTexture" )
-
-```
-
-The code only does two things: declare a function to add the node menu, then add it. Let's break it down.
-
-
-### The node menu function ###
-
-After first `import`ing the necessary modules, the config declares a function for creating the node: 
-
-```eval_rst
-.. code-block:: python
-    :lineno-start: 6
-
-    def MacbethTexture( menu ) :
-
-```
-
-When the user chooses our custom entry in the node menu, this is the function that the menu object will call. The only parameter for this function should be an implicit `menu` keyword.
-
-> Caution :
-> Do not declare any parameters other than `menu` in a node menu function. Otherwise, it will return an error.
-
-Normally, all a node menu function needs to do is instance a node from an existing module, modify its plugs, and return it. The node menu's `append()` method takes care of the rest. 
-
-However, due to a limitation in the current implementation of the way the `append()` method handles Reference nodes, we must parent the Reference node to the graph's root, otherwise it won't load the reference script. So, we need to guarantee that a _Graph Editor_ object exists, and then assign a variable to its graph root:
-
-```eval_rst
-.. code-block:: python
-    :lineno-start: 8
-
-        graphEditor = menu.ancestor( GafferUI.GraphEditor ) 
-        assert( graphEditor is not None ) # Test for a parent graph editor object
-
-        script = graphEditor.graphGadget().getRoot() # Grab the root of the graph
     
+    def __macbethTexture() :
+    
+    	return Gaffer.Reference( "MacbethTexture" )
+    
+    def __macbethTexturePostCreator( node, menu ) :
+    
+    	node.load(
+    		os.path.expandvars( "$GAFFER_ROOT/resources/references/macbethTexture.grf" )
+    	)
+    
+    nodeMenu = GafferUI.NodeMenu.acquire( application )
+    nodeMenu.append(
+    	path = "/Custom/MacbethTexture",
+    	nodeCreator = __macbethTexture,
+    	postCreator = __macbethTexturePostCreator,
+    	searchText = "MacbethTexture"
+    )
 ```
 
-Next, the remainder of the function. We instance a Reference node, and load a reference script into it:
+There are three parts to this simple config: a function for adding a node, a function for modifying the node after it's created, and the call that adds these functions to the node menu. Let's take a quick look at each.
+
+
+### The node creation function ###
+
+After `import`ing the necessary modules, the first and simplest step is to declare the menu function. When the user selects the custom entry from the node menu, this is the function that the menu calls. All this function must do is return a node type. It has no relevant arguments for us here.
 
 ```eval_rst
 .. code-block:: python
-    :lineno-start: 12
-
-        node = Gaffer.Reference( "MacbethTexture" )
-        script.addChild( node ) # Make sure the node is parented to the graph root
-        node.load( os.path.expandvars( "$GAFFER_ROOT/resources/references/macbethTexture.grf" ) )
-        
-        return node
+    :lineno-start: 5
+    
+    def __macbethTexture() :
+    
+    	return Gaffer.Reference( "MacbethTexture" )
 ```
 
-There are two things that you should note here:
+There is one small detail we should note. On load, references can modify their containing Reference node's UI metadata, but not the node's name. We therefore have to set the node's name ourselves (line 8, `"MacbethTexture"`). Otherwise, the node would appear in the graph with the generic name _Reference_. The same must be done when renaming any standard node.
 
-First, reference scripts can modify their containing Reference node's UI metadata, but not the node's name. We therefore have to set the Reference node's name ourselves (line 12, `"MacbethTexture"`). Otherwise, the node would appear in the graph with the generic name _Reference_. Any node menu function that requires a custom node name must do the same.
 
-Second, on line 13 we add the node as a child of the graph's root. As mentioned earlier, if this were any other type of node, this step would be unnecessary, as `append()` would cover this for us.
+### The node post-creation function ###
+
+Next, onto the post-creation function, which modifies the recently-created node. It requires two implicit keyword arguments, `node` and `menu`. The first simply refers to the node. The second refers to the node menu, which we will cover in the next section. For this entry, all we need to do is load a reference script into our new Reference node:
+
+```eval_rst
+.. code-block:: python
+    :lineno-start: 9
+    
+    def __macbethTexturePostCreator( node, menu ) :
+    
+    	node.load(
+    		os.path.expandvars( "$GAFFER_ROOT/resources/references/macbethTexture.grf" )
+    	)
+```
 
 ```eval_rst
 .. tip::
 
-    You may have noticed on line 14 that we use ``os.path.expandvars`` to expand ``$GAFFER_ROOT``. If you kept the startup config from Part 1 of this tutorial, you could instead use:
+    You may have noticed that on line 12 we use ``os.path.expandvars`` to expand ``$GAFFER_ROOT``. If you kept the startup config from Part 1 of this tutorial, you can instead use:
 
     .. code-block:: python
-        :lineno-start: 14
+        :lineno-start: 11
 
         resourcesPath = script["variables"]["projectResources"]["value"].getValue()
         node.load( resourcesPath + "/references/macbethTexture.grf" )
 
-    This way, you can reuse variables added to the script itself, and make your code more portable.
+    With this approach, you can integrate contextual paths from your pipeline directly into the config.
 ```
 
-In this particular example of a node menu function, we don't modify any of the node's plugs, but we could – such as automatically setting the `mode` plug to 1. Any such additional code would go here. For our function, though, this is the end.
+In this particular example of a node menu function, we don't modify any of the node's plugs, but we could – such as automatically setting its _Mode_ plug to 1. Any such additional node customization would go into the function, here.
 
 
-### Adding the function to the node menu ###
+### Adding the functions to the node menu ###
 
-At the end of the config, we add our function to the node menu. This part is as simple as grabbing the node menu object and making an `append()` call:
+To finish the config, we add both functions to the node menu. This part is as simple as grabbing calling `append()` on the node menu itself:
 
 ```eval_rst
 .. code-block:: python
-    :lineno-start: 18
+    :lineno-start: 15
 
-    nodeMenu = GafferUI.NodeMenu.acquire( application ) # Make sure to use the node menu of the current application
-    nodeMenu.append( "/Custom/MacbethTexture", MacbethTexture, searchText = "MacbethTexture" )
+    nodeMenu = GafferUI.NodeMenu.acquire( application )
+    nodeMenu.append(
+    	path = "/Custom/MacbethTexture",
+    	nodeCreator = __macbethTexture,
+    	postCreator = __macbethTexturePostCreator,
+    	searchText = "MacbethTexture"
+    )
 ```
 
-Line 18 merely grabs the node menu from the `application` variable. Recall that we used this variable in Parts 1 and 2 of this tutorial.
+Line 14 merely grabs the node menu object from the `application` variable. Recall that we did the same in the custom bookmarks startup config.
 
-The `append()` convenience method is quite useful, as it wraps several other behind-the-scenes utility functions, and makes the node's creation undoable. There are typically only 3 arguments you would want to pass to it:
+The `append()` convenience method is quite useful, as it wraps several other behind-the-scenes utility functions and makes the node's creation undoable. We pass four arguments to it:
 
-  1. The path to the node within the node menu's hierarchy. Each position in the hierarchy is separated by a forward slash. If a parent position doesn't exist yet, it will be created.
-  2. The function itself. Note that we don't pass any arguments to it.
-  3. `searchText`: the node's search keyword, for when the user searches for the node with the keyboard.
+1. `path`: The path to the node within the node menu's hierarchy. Each position in the hierarchy is separated by a forward slash. If a parent position doesn't exist yet, it will be created automatically.
+2. `nodeCreator`: The node creation function. We don't pass any arguments to it.
+3. `postCreator`: The node post-creation function. We don't pass any arguments to this one, either, but both the node and the menu itself are implicitly passed to it; recall the `node` and `menu` keyword arguments we mentioned earlier.
+4. `searchText`: The menu entry's keyword search text. This is typically the same as the node name. Capitalization is ignored.
 
-You can add more customized nodes to this config with similar ease, as long as each is managed by its own separate function and registered to the node menu with an `append()` call.
+That's all! You can add more customized nodes to this config with similar ease, as long as each is managed by its own separate function and registered to the node menu with an `append()` call.
 
 
 ## Testing the Node Menu Entry ##
 
-Now you can test the custom node. If you haven't already, save the startup config, then launch a new instance of Gaffer. In the _Graph Editor_, the new entry should appear in the node menu under _Custom_ > _MacbethTexture_, and create a MacbethTexture node when selected.
+Let's try testing the custom node. If you haven't already, save the startup config, then launch a new instance of Gaffer. In the _Graph Editor_, the new entry should appear in the node menu under _Custom_ > _MacbethTexture_, and will create a MacbethTexture node when selected.
 
 ![The MacbethTexture node in the Graph Editor](images/tutorialMacbethTextureNode.png "The MacbethTexture node in the Graph Editor")
 
 
 ## Demo: Procedural Macbeth Chart ##
 
-![Demo of the Macbeth texture assigned to a plane, to make a Macbeth chart](images/demoMacbethChart.png "Demo of the Macbeth texture assigned to a plane, to make a Macbeth cha")
+![Demo of the Macbeth texture assigned to a plane, to make a Macbeth chart](images/demoMacbethChart.png "Demo of the Macbeth texture assigned to a plane, to make a Macbeth chart")
 
-In this demo, we create a procedurally-generated Macbeth chart by connecting a MacbethTexture node to the _color_ input plug of a surface shader, and then assigning the shader to a plane mesh with a width:height proportion of 3:2.
+Here is a demo of the MacbethTexture node in action. We procedurally generate a Macbeth chart in a 3D scene by connecting the node's output to the _color_ input plug of a surface shader, and then assigning the shader to a plane mesh.
 
 ```eval_rst
     :download:`Download demo <demos/demoMacbethChart.gfr>`
+
+    :download:`Download MacbethTexture reference <../../../../../resources/references/macbethTexture.grf>`
 ```
 
 
 ## Recap ##
 
-All three parts of this tutorial provided relatively simple examples, but we hope to have demonstrated that with just a bit of Python and a few files, you can easily customize the startup of the various Gaffer apps.
+Each of the three startup configs in this tutorial series provided relatively simple examples, but we hope to have demonstrated that with just a bit of Python and a few files, you can easily customize the startup of the Gaffer's apps to suit your worklflow and pipeline needs.
 
 
 ## See Also ##
 
-- [MacbethTexture reference script](../../../../../resources/references/macbethTexture.grf)
-- [Tutorial: Startup Configs, Part 1](../CreatingConfigurationFiles/index.md)
-- [Tutorial: Startup Configs, Part 2](../CreatingConfigurationFiles2/index.md)
+- [Tutorial: Startup Config 1, Custom Global Context Variables](../CreatingConfigurationFiles1/index.md)
+- [Tutorial: Startup Config 2, Custom Bookmarks](../CreatingConfigurationFiles2/index.md)
 - [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup)
