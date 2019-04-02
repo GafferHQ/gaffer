@@ -443,6 +443,30 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			Pointer::setCurrent( "" );
 		}
 
+		/// Determine the type of motion based on current events
+		MotionType cameraMotionType( const ButtonEvent &event, bool variableAspectZoom )
+		{
+			if(
+				( event.modifiers == ModifiableEvent::Alt ) ||
+				( event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None ) ||
+				( variableAspectZoom && event.modifiers & ModifiableEvent::Shift && event.modifiers & ModifiableEvent::Alt && event.buttons == ButtonEvent::Right )
+			)
+			{
+				switch( event.buttons )
+				{
+					case ButtonEvent::Left :
+						return ViewportGadget::CameraController::Tumble;
+					case ButtonEvent::Middle :
+						return CameraController::Track;
+					case ButtonEvent::Right :
+						return CameraController::Dolly;
+					default :
+						return CameraController::None;
+				}
+			}
+
+			return CameraController::None;
+		}
 
 	private:
 
@@ -966,7 +990,10 @@ void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child
 
 bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 {
-	if( event.modifiers == ModifiableEvent::Alt || ( getVariableAspectZoom() && event.modifiers & ModifiableEvent::Shift && event.modifiers & ModifiableEvent::Alt && event.buttons == ButtonEvent::Right ) )
+	// A child's interaction with an unmodifier MMB drag takes precedence over camera moves
+	bool unmodifiedMiddleDrag = event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None;
+
+	if( !unmodifiedMiddleDrag && m_cameraController->cameraMotionType( event, m_variableAspectZoom ) )
 	{
 		// accept press so we get a dragBegin opportunity for camera movement
 		return true;
@@ -984,7 +1011,7 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		return true;
 	}
 
-	if ( event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None )
+	if( unmodifiedMiddleDrag )
 	{
 		// accept press so we get a dragBegin opportunity for camera movement
 		return true;
@@ -1117,9 +1144,12 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 {
 	m_dragTrackingThreshold = limits<float>::max();
 
-	if ( !(event.modifiers == ModifiableEvent::Alt) && m_lastButtonPressGadget )
+	CameraController::MotionType cameraMotionType = m_cameraController->cameraMotionType( event, m_variableAspectZoom );
+	bool unmodifiedMiddleDrag = event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None;
+
+	if( ( !cameraMotionType || unmodifiedMiddleDrag ) && m_lastButtonPressGadget )
 	{
-		// see if a child gadget would like to start a drag
+		// see if a child gadget would like to start a drag because the camera doesn't handle the event
 		RunTimeTypedPtr data = dispatchEvent( m_lastButtonPressGadget, &Gadget::dragBeginSignal, event );
 		if( data )
 		{
@@ -1129,55 +1159,33 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 		}
 	}
 
-	if ( event.modifiers == ModifiableEvent::Alt || ( event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None ) || ( getVariableAspectZoom() && event.modifiers & ModifiableEvent::Shift && event.modifiers & ModifiableEvent::Alt && event.buttons == ButtonEvent::Right ) )
+	if( cameraMotionType )
 	{
-		// start camera motion
+		m_cameraInMotion = true;
 
-		CameraController::MotionType motionType = CameraController::None;
-		switch( event.buttons )
+		// the const_cast is necessary because we don't want to give all the other
+		// Gadget types non-const access to the event, but we do need the ViewportGadget
+		// to assign destination and source gadgets. the alternative would be a different
+		// set of non-const signals on the ViewportGadget, or maybe even having ViewportGadget
+		// not derived from Gadget at all. this seems the lesser of two evils.
+		const_cast<DragDropEvent &>( event ).sourceGadget = this;
+
+		// we only actually update the camera if it's editable, but we still go through
+		// the usual dragEnter/dragMove/dragEnd process so that we can swallow the events.
+		// it would be confusing for users if they tried to edit a non-editable camera and
+		// their gestures fell through and affected the viewport contents.
+		if( getCameraEditable() )
 		{
-			case ButtonEvent::Left :
-				motionType = CameraController::Tumble;
-				break;
-			case ButtonEvent::Middle :
-				motionType = CameraController::Track;
-				break;
-			case ButtonEvent::Right :
-				motionType = CameraController::Dolly;
-				break;
-			default :
-				motionType = CameraController::None;
-				break;
+			m_cameraController->motionStart( cameraMotionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 		}
 
-		if( motionType )
-		{
-			m_cameraInMotion = true;
-
-			// the const_cast is necessary because we don't want to give all the other
-			// Gadget types non-const access to the event, but we do need the ViewportGadget
-			// to assign destination and source gadgets. the alternative would be a different
-			// set of non-const signals on the ViewportGadget, or maybe even having ViewportGadget
-			// not derived from Gadget at all. this seems the lesser of two evils.
-			const_cast<DragDropEvent &>( event ).sourceGadget = this;
-
-			// we only actually update the camera if it's editable, but we still go through
-			// the usual dragEnter/dragMove/dragEnd process so that we can swallow the events.
-			// it would be confusing for users if they tried to edit a non-editable camera and
-			// their gestures fell through and affected the viewport contents.
-			if( getCameraEditable() )
-			{
-				m_cameraController->motionStart( motionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
-			}
-
-			// we have to return something to start the drag, but we return something that
-			// noone else will accept to make sure we keep the drag to ourself.
-			return IECore::NullObject::defaultNullObject();
-		}
-		else
-		{
-			return nullptr;
-		}
+		// we have to return something to start the drag, but we return something that
+		// noone else will accept to make sure we keep the drag to ourself.
+		return IECore::NullObject::defaultNullObject();
+	}
+	else
+	{
+		return nullptr;
 	}
 
 	return nullptr;
