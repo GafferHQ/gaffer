@@ -1,6 +1,21 @@
 0.54.0.0 (relative to 0.53.x)
 ========
 
+> Caution :
+>
+> This release brings substantial performance improvements in the generation
+> of ShaderAssignments, but at the expense of removing support for using the `scene:path`
+> context variable in shader networks. We recommend migrating such setups to use a
+> CustomAttributes node to generate a context-varying attribute which is then referenced
+> by the shader. This approach improves scene generation performance in Gaffer and
+> prevents the passing of large numbers of unique shader networks to the renderer.
+> Temporary backwards compatibility for old networks can be enabled by setting the
+> `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable to `1`.
+>
+> The same optimisation applies to the OSLObject node, with temporary backwards compatibility
+> being available separately by setting the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment
+> variable to `1`.
+
 Improvements
 ------------
 
@@ -21,6 +36,12 @@ Improvements
     errors (#3060).
 - ArnoldTextureBake (#3026) : Added optional median filter.
 - Hash cache (#3033) : Reduced memory usage and improved performance.
+- GraphComponent : Reduced memory usage and improved script loading times (#3080).
+- Shader : Improved performance of network generation (#3074).
+- ShaderAssignment : Improved performance by removing support for varying shader networks
+  by scene location (via the "scene:path" context variable) (#3074).
+- OSLImage : Improved performance of shader input evaluation (#3074).
+- OSLObject : Improved performance of shader input evaluation (#3074).
 
 Fixes
 -----
@@ -36,8 +57,13 @@ Fixes
   - Connected external dispatcher settings to internal render task.
   - Connected preTasks plug to internal tasks.
   - Fixed leakage of internal context variables.
+- Viewer : Fixed keyboard modifier handling for object selection. Previously, holding
+  down any modifier key whilst drag selecting or clicking an object in the Viewer would
+  modify the current selection. This behaviour was only intended to be triggered by the
+  Shift key (#3095).
 - Scene : Fixed context handling bugs in Transform, SceneWriter, SceneAlgo, Set,
   Isolate and Prune. This improves performance on some complex scenes (#3060).
+- Offset : Fixed context handling bug (#3073).
 
 Documentation
 -------------
@@ -51,8 +77,9 @@ Documentation
 API
 ---
 
-- ContextSanitiser : Added a new ContextSanitiser class to GafferSceneTest. This
-  is a Monitor which warns about common context handling mistakes (#3060).
+- ContextSanitisers : Added new ContextSanitiser classes to GafferSceneTest and
+  GafferImageTest. These are Monitors which warn about common context handling mistakes
+  (#3060, #3073).
 - TaskNode (#3024, #3025) :
   - Simplified implementation requirements for `preTasks()` and `postTasks()`
     methods. It is now sufficient to construct `Tasks` directly from the input
@@ -70,6 +97,8 @@ API
 - SceneTestCase (#3060) :
   - Added a ContextSanitiser that is active for the duration of the tests.
   - Improved assert methods.
+- GraphComponent : Added protected `parentChanged()` virtual method (#3080).
+- ImagePlug : Added convenience methods for evaluating global image properties (#3073).
 
 Build
 -----
@@ -78,10 +107,21 @@ Build
   - Added support for using ASAN option with GCC.
   - Enabled TBB debugging features in DEBUG builds.
   - Added `-fno-omit-frame-pointer` compiler flag for RELWITHDEBINFO builds.
+- Fixed warnings when building with XCode 10.2 (#3094).
 
 Breaking Changes
 ----------------
 
+- ShaderAssignment : Removed support for using the "scene:path" context variable in shader
+  networks. Temporary backwards compatibility can be enabled by setting the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable to `1` (#3074).
+- OSLObject : Removed support for using the "scene:path" context variable in shader
+  networks. Temporary backwards compatibility can be enabled by setting the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable to `1` (#3074).
+- GraphComponent :
+  - Added `parentChanged()` virtual method (#3080).
+    > Caution : Experience in the Gaffer codebase suggests that `parentChanged()` was a
+    > relatively common method name, which may now be inadvertently overriding the new
+    > virtual method. Clang will warn for these cases if `-Wall` is used, but GCC requires
+    > `-Woverloaded-virtual` to be used.
 - TaskNode::Task (#3024, #3025) :
   - Removed `hash()` method and associated member data.
   - Removed deprecated `node()` method.
@@ -96,6 +136,30 @@ Breaking Changes
   - `assertPathHashesNotEqual()`
   - `assertSceneHashesEqual()`
   - `assertSceneHashesNotEqual()`
+- Shader : Changed base class to ComputeNode (#3074).
+- TweakPlug : Added compulsory ValuePlug argument to constructor used for serialisation (#3084).
+
+0.53.4.0 (relative to 0.53.3.0)
+========
+
+Improvements
+------------
+
+- ArnoldShaderUI (#3087) :
+  - Added support for `gaffer.layout.section.<sectionName>.collapsed`
+    metadata.
+  - Improved NodeEditor layout for barndoor and light_decay shaders.
+
+Fixes
+-----
+
+- Layout menu : Fixed crashes removing a panel while using Gaffer in Maya (#3091).
+- ShaderTweaks : Fixed crashes when copying and pasting a ShaderTweaks node (#3084).
+- OSL ShadingEngine :
+  - Fixed initialisation of `dPdz` in shader globals (#3083).
+  - Fixed intermittent crashes seen at shutdown (#3093).
+- CompoundDataPlug : Fixed GIL management bugs for `fill*()` methods (#3079).
+- Documentation : Fixed typos in ArnoldOptions documentation (#3081).
 
 0.53.3.0 (relative to 0.53.2.0)
 ========
