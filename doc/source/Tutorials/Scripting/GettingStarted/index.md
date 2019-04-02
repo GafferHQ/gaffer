@@ -55,12 +55,12 @@ Helpfully, once you import a module, it will remain loaded in that _Python Edito
 
 ```python
 myShader = GafferScene.OpenGLShader()
-myAssignment = GafferScene.ShaderAssignment()
+myShaderAssignment = GafferScene.ShaderAssignment()
 myFilter = GafferScene.PathFilter()
 myCamera = GafferScene.Camera()
 myGroup = GafferScene.Group()
 root.addChild( myShader )
-root.addChild( myAssignment )
+root.addChild( myShaderAssignment )
 root.addChild( myFilter )
 root.addChild( myCamera )
 root.addChild( myGroup )
@@ -205,7 +205,7 @@ myShaderAssignment['filter'].setInput( myFilter['out'] ) # Filter input/output
 A node that takes multiple input scenes, like the Group node, is slightly different. Its `in` plug is an `ArrayPlug` that consists of multiple children, each a separate scene input accessed via integer index:
 
 ```python
-myGroup['in'][0].setInput( myAssignment['out'] )
+myGroup['in'][0].setInput( myShaderAssignment['out'] )
 myGroup['in'][1].setInput( myCamera['out'] )
 ```
 
