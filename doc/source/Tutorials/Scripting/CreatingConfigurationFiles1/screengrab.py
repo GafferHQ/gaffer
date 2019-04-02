@@ -1,3 +1,4 @@
+# BuildTarget: images/tutorialSettingsWindowDefaultContextVariables.png
 # BuildTarget: images/tutorialSettingsWindowCustomContextVariable.png
 # BuildTarget: images/tutorialVariableSubstitutionInStringPlug.png
 # BuildTarget: images/tutorialVariableSubstitutionExpression.png
@@ -49,7 +50,15 @@ def __dispatchScript( script, tasks, settings ) :
 # TODO: Automate `images/illustrationStartupConfigDirectoryTree.png` when these tools become available:
 # - Launching/controlling/screengrabbing other applications
 
-# Tutorial: a custom context variable in Settings window
+# Interface: the default context variables in the Settings window
+GafferUI.FileMenu.showSettings( scriptWindow.getLayout() )
+__settingsWindow = scriptWindow.childWindows()[0]
+__settingsWindow.getChild().plugValueWidget( script["variables"] ).reveal()
+__settingsWindow.setVisible( True )
+GafferUI.WidgetAlgo.grab( widget = __settingsWindow, imagePath = "images/tutorialSettingsWindowDefaultContextVariables.png" )
+__settingsWindow.setVisible( False )
+
+# Tutorial: a custom context variable in the Settings window
 script["variables"].addMember( "project:resources", "${GAFFER_ROOT}/resources/", "projectResources" )
 Gaffer.MetadataAlgo.setReadOnly( script["variables"]["projectResources"]["name"], True )
 GafferUI.FileMenu.showSettings( scriptWindow.getLayout() )
