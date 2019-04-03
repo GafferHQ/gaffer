@@ -1449,6 +1449,9 @@ class _PresetsEditor( GafferUI.Widget ) :
 			nameWidget.setText( oldName )
 			return True
 
+		# Sanitize name
+		newName = newName.replace( "/", "_")
+
 		items = self.__pathListing.getPath().dict().items()
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
