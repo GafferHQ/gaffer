@@ -154,16 +154,8 @@ void callOnUIThread( boost::python::object f )
 	);
 }
 
-void registerUIThreadCallHandler( boost::python::object handler )
+void pushUIThreadCallHandler( boost::python::object handler )
 {
-	if( handler == object() )
-	{
-		// `None` passed - register null handler.
-		IECorePython::ScopedGILRelease gilRelease;
-		Gaffer::ParallelAlgo::registerUIThreadCallHandler( ParallelAlgo::UIThreadCallHandler() );
-		return;
-	}
-
 	// The lambda below needs to own a reference to `handler`,
 	// and in turn will be owned by the ParallelAlgo C++ API.
 	// Wrap `handler` so we acquire the GIL when the lambda is
@@ -178,7 +170,7 @@ void registerUIThreadCallHandler( boost::python::object handler )
 
 	IECorePython::ScopedGILRelease gilRelease;
 
-	Gaffer::ParallelAlgo::registerUIThreadCallHandler(
+	Gaffer::ParallelAlgo::pushUIThreadCallHandler(
 		[handlerPtr] ( const ParallelAlgo::UIThreadFunction &function ) {
 			IECorePython::ScopedGILLock gilLock;
 			boost::python::object pythonFunction = make_function(
@@ -263,7 +255,8 @@ void GafferModule::bindParallelAlgo()
 	scope moduleScope( module );
 
 	def( "callOnUIThread", &callOnUIThread );
-	def( "registerUIThreadCallHandler", &registerUIThreadCallHandler );
+	def( "pushUIThreadCallHandler", &pushUIThreadCallHandler );
+	def( "popUIThreadCallHandler", &ParallelAlgo::popUIThreadCallHandler );
 	def( "callOnBackgroundThread", &callOnBackgroundThread );
 
 }

@@ -45,9 +45,8 @@ import GafferTest
 class ParallelAlgoTest( GafferTest.TestCase ) :
 
 	# Context manager used to run code which is expected to generate a
-	# call to `ParallelAlgo.callOnUIThread()`. This emulates the connection
-	# to `ParallelAlgo.callOnUIThreadSignal()` that would otherwise be
-	# made by GafferUI.EventLoop.
+	# call to `ParallelAlgo.callOnUIThread()`. This emulates the
+	# UIThreadCallHandler that would otherwise be provided by GafferUI.
 	class ExpectedUIThreadCall( object ) :
 
 		__conditionStack = []
@@ -64,7 +63,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 			self.__registeredCallHandler = False
 			if not self.__class__.__callHandlerRegistered :
-				Gaffer.ParallelAlgo.registerUIThreadCallHandler( self.__callOnUIThread )
+				Gaffer.ParallelAlgo.pushUIThreadCallHandler( self.__callOnUIThread )
 				self.__class__.__callHandlerRegistered = True
 				self.__registeredCallHandler = True
 
@@ -80,7 +79,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 			if self.__registeredCallHandler :
 				assert( self.__class__.__callHandlerRegistered == True )
-				Gaffer.ParallelAlgo.registerUIThreadCallHandler( None )
+				Gaffer.ParallelAlgo.popUIThreadCallHandler()
 				self.__class__.__callHandlerRegistered = False
 
 		@classmethod

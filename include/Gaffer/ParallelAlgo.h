@@ -64,14 +64,15 @@ namespace ParallelAlgo
 typedef std::function<void ()> UIThreadFunction;
 GAFFER_API void callOnUIThread( const UIThreadFunction &function );
 
-/// Registers a handler to service requests made to `callOnUIThread()`. We
+/// Push/pop a handler to service requests made to `callOnUIThread()`. We
 /// register the default handler in GafferUI.EventLoop.py.
 ///
 /// > Note : This is an implementation detail. It is only exposed to allow
 /// > emulation of the UI in unit tests, and theoretically to allow an
 /// > alternative UI framework to be connected.
 typedef std::function<void ( const UIThreadFunction & )> UIThreadCallHandler;
-GAFFER_API void registerUIThreadCallHandler( const UIThreadCallHandler &handler );
+GAFFER_API void pushUIThreadCallHandler( const UIThreadCallHandler &handler );
+GAFFER_API void popUIThreadCallHandler();
 
 /// Runs the specified function asynchronously on a background thread,
 /// using a copy of the current Context from the calling thread. This
