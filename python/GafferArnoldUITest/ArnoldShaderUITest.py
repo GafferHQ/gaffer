@@ -61,7 +61,7 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual(
 			Gaffer.Metadata.value( shader["parameters"]["amplitude"], "nodule:type" ),
-			"GafferUI::StandardNodule"
+			None
 		)
 
 		self.assertEqual(
