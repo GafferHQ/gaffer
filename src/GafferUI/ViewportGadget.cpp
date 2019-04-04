@@ -444,6 +444,15 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		}
 
 		/// Determine the type of motion based on current events
+		/// \todo: The original separation of responsibilities was that
+		/// CameraController knew how to perform camera movement, and
+		/// ViewportGadgets knew how to handle events, and decided how to map
+		/// those to camera movement requests. This breaks that original
+		/// separation. Full separation would mean that the CameraController
+		/// made its own connections to buttonPressSignal/dragBeginSignal etc,
+		/// "stealing" any events it wanted before they were processed by the
+		/// ViewportGadget. There are a few complications regarding drag
+		/// tracking and unmodified MMB drags, though.
 		MotionType cameraMotionType( const ButtonEvent &event, bool variableAspectZoom )
 		{
 			if(
