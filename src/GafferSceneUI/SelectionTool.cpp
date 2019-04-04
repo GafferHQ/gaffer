@@ -213,7 +213,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 		if( objectSelectedAlready )
 		{
-			if( shiftHeld )
+			if( controlHeld )
 			{
 				selection.removePath( objectUnderMouse );
 				ContextAlgo::setSelectedPaths( view()->getContext(), selection );
@@ -221,7 +221,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 		}
 		else
 		{
-			if( !shiftHeld )
+			if( !controlHeld && !shiftHeld )
 			{
 				ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
 			}
