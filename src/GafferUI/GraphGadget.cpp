@@ -966,14 +966,14 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 			if( nodeSelected )
 			{
-				if( shiftHeld )
+				if( controlHeld )
 				{
 					m_scriptNode->selection()->remove( affectedNodes.begin(), affectedNodes.end() );
 				}
 			}
 			else
 			{
-				if( !shiftHeld )
+				if( !controlHeld && !shiftHeld )
 				{
 					m_scriptNode->selection()->clear();
 				}
