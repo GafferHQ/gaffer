@@ -952,10 +952,10 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 				}
 			}
 
-			if( ( event.modifiers & ButtonEvent::Alt ) || ( controlHeld ) )
+			if( ( event.modifiers & ButtonEvent::Alt ) && ( controlHeld || shiftHeld ) )
 			{
 				std::vector<NodeGadget *> connected;
-				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Alt ? Gaffer::Plug::In : Gaffer::Plug::Out );
+				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Shift ? Gaffer::Plug::In : Gaffer::Plug::Out );
 				for( std::vector<NodeGadget *>::const_iterator it = connected.begin(), eIt = connected.end(); it != eIt; ++it )
 				{
 					affectedNodes.push_back( (*it)->node() );
