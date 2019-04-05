@@ -21,8 +21,8 @@ Plugs
 =================== ======================================== ================================
 Operation           Python                                   OSL
 =================== ======================================== ================================
-Get value           value = root["NodeName"]["plugName"]     value = root.NodeName.plugName
-Set value           root["NodeName"]["plugName"] = value     root.NodeName.plugName = value
+Get value           value = parent["NodeName"]["plugName"]   value = parent.NodeName.plugName
+Set value           parent["NodeName"]["plugName"] = value   parent.NodeName.plugName = value
 =================== ======================================== ================================
 ```
 
