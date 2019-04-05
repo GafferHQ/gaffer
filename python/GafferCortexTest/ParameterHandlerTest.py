@@ -238,5 +238,43 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		self.assertNotEqual( hash1, hash3 )
 		self.assertNotEqual( hash2, hash3 )
 
+	def testUserDefault( self ) :
+
+		# IntPlug
+
+		p = IECore.IntParameter( "i", "d", 10 )
+
+		n = Gaffer.Node()
+		h = GafferCortex.ParameterHandler.create( p )
+		h.setupPlug( n )
+
+		self.assertEqual( Gaffer.Metadata.value( h.plug(), "userDefault" ), None )
+
+		p.userData()["gaffer"] = IECore.CompoundObject( {
+			"userDefault" : IECore.IntData( 42 ),
+		} )
+
+		h.setupPlug( n )
+
+		self.assertEqual( Gaffer.Metadata.value( h.plug(), "userDefault" ), 42 )
+
+		# BoolPlug
+
+		p = IECore.BoolParameter( "i", "d", True )
+
+		n = Gaffer.Node()
+		h = GafferCortex.ParameterHandler.create( p )
+		h.setupPlug( n )
+
+		self.assertEqual( Gaffer.Metadata.value( h.plug(), "userDefault" ), None )
+
+		p.userData()["gaffer"] = IECore.CompoundObject( {
+			"userDefault" : IECore.BoolData( False ),
+		} )
+
+		h.setupPlug( n )
+
+		self.assertEqual( Gaffer.Metadata.value( h.plug(), "userDefault" ), False )
+
 if __name__ == "__main__":
 	unittest.main()
