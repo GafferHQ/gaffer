@@ -85,6 +85,7 @@ Gaffer::Plug *NumericParameterHandler<T>::setupPlug( Gaffer::GraphComponent *plu
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
+	setupPlugMetadata( m_plug.get() );
 
 	return m_plug.get();
 }
