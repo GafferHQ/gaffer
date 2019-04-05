@@ -252,6 +252,7 @@ AnimationGadget::AnimationGadget()
 	dragEnterSignal().connect( boost::bind( &AnimationGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &AnimationGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &AnimationGadget::dragEnd, this, ::_1, ::_2 ) );
+	leaveSignal().connect( boost::bind( &AnimationGadget::leave, this ) );
 
 	m_editablePlugs->memberAcceptanceSignal().connect( boost::bind( &AnimationGadget::plugSetAcceptor, this, ::_1, ::_2 ) );
 	m_editablePlugs->memberAddedSignal().connect( boost::bind( &AnimationGadget::editablePlugAdded, this, ::_1, ::_2 ) );
@@ -1072,6 +1073,16 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 	requestRender();
 
+	return true;
+}
+
+bool AnimationGadget::leave()
+{
+	if( m_frameIndicatorPreviewFrame )
+	{
+		m_frameIndicatorPreviewFrame = boost::none;
+		requestRender();
+	}
 	return true;
 }
 
