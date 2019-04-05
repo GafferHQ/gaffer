@@ -37,6 +37,7 @@
 #include "GafferCortex/ParameterHandler.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ValuePlug.h"
 
@@ -78,6 +79,19 @@ void ParameterHandler::setupPlugFlags( Gaffer::Plug *plug, unsigned flags )
 		if( readOnly )
 		{
 			Gaffer::MetadataAlgo::setReadOnly( plug, readOnly->readable() );
+		}
+	}
+}
+
+void ParameterHandler::setupPlugMetadata( Gaffer::Plug *plug )
+{
+	const CompoundObject *ud = parameter()->userData()->member<CompoundObject>( "gaffer" );
+	if( ud )
+	{
+		const Data *userDefault = ud->member<Data>( "userDefault" );
+		if( userDefault )
+		{
+			Gaffer::Metadata::registerValue( plug, "userDefault", userDefault );
 		}
 	}
 }

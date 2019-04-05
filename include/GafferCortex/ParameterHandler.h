@@ -97,6 +97,9 @@ class GAFFERCORTEX_API ParameterHandler : public IECore::RefCounted
 		/// Should be called by derived classes in setupPlug().
 		void setupPlugFlags( Gaffer::Plug *plug, unsigned flags );
 
+		/// Should be called by derived classes in setupPlug().
+		void setupPlugMetadata( Gaffer::Plug *plug );
+
 		/// Create a static instance of this to automatically register a derived class
 		/// with the factory mechanism. Derived class must have a constructor of the form
 		/// Derived( ParameterType::Ptr parameter, GraphComponentPtr plugParent ).
