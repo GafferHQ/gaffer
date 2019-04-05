@@ -103,6 +103,7 @@ Gaffer::Plug *TypedParameterHandler<T>::setupPlug( Gaffer::GraphComponent *plugP
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
+	setupPlugMetadata( m_plug.get() );
 
 	return m_plug.get();
 }
