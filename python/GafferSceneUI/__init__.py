@@ -149,6 +149,7 @@ import CollectTransformsUI
 import UDIMQueryUI
 import WireframeUI
 import SetVisualiserUI
+import LightFilterUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
