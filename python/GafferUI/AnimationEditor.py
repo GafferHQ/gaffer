@@ -165,7 +165,6 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			self.__splitter.setSizes( betterSize )
 
 		# set initial state
-		self.__visiblePlugs = None
 		self.__editablePlugs = None
 		self._updateFromSet()
 		self._updateFromContext( [ "frame" ] )
@@ -192,27 +191,24 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		paths = pathListing.getExpandedPaths()
 
-		plugList = []
-
+		visiblePlugs = set()
 		for path in paths:
 			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
 			for child in graphComponent.children() :
 				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
-					plugList.append( child )
-
-		self.__visiblePlugs = set( plugList )
+					visiblePlugs.add( child )
 
 		visible = self.__animationGadget.visiblePlugs()
 		editable = self.__animationGadget.editablePlugs()
 
 		visible.clear()
-		for plug in plugList :
+		for plug in visiblePlugs :
 			visible.add( self.__sourceCurvePlug( plug ) )
 
 		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
 
 			editable.clear()
-			for plug in ( self.__editablePlugs or set() ) & self.__visiblePlugs :
+			for plug in ( self.__editablePlugs or set() ) & visiblePlugs :
 				editable.add( self.__sourceCurvePlug( plug ) )
 
 	def __selectionChanged( self, pathListing ) :
