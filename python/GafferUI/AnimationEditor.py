@@ -176,7 +176,10 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
 	def connectedCurvePlug( self, plug ) :
-		return plug.getInput().parent()
+
+		result = plug.source().parent()
+		assert( isinstance( result, Gaffer.Animation.CurvePlug ) )
+		return result
 
 	def _updateFromSet( self ) :
 
@@ -210,17 +213,13 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		visible.clear()
 		for plug in plugList :
-			curvePlug = self.connectedCurvePlug( plug )
-			if curvePlug :
-				visible.add( curvePlug )
+			visible.add( self.connectedCurvePlug( plug ) )
 
 		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
 
 			editable.clear()
 			for plug in ( self.__editablePlugs or set() ) & self.__visiblePlugs :
-				curvePlug = self.connectedCurvePlug( plug )
-				if curvePlug :
-					editable.add( curvePlug )
+				editable.add( self.connectedCurvePlug( plug ) )
 
 	def __selectionChanged( self, pathListing ) :
 
@@ -248,12 +247,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 			editable.clear()
 			for plug in plugList :
-				if plug in editable :
-					continue
-
-				curvePlug = self.connectedCurvePlug( plug )
-				if curvePlug :
-					editable.add( curvePlug )
+				editable.add( self.connectedCurvePlug( plug ) )
 
 	def __editablePlugAdded( self, standardSet, curvePlug ) :
 
