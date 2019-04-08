@@ -1807,6 +1807,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Set path to find shaders
 			ccl::path_init( getenv("GAFFERCYCLES") );
+			// Define internal device names
+			getCyclesDevices();
 			// Session Defaults
 			m_sessionParams.display_buffer_linear = true;
 			m_bufferParamsModified = m_bufferParams;
@@ -2195,6 +2197,54 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
+			else if( boost::starts_with( name.string(), "ccl:multidevice:" ) )
+			{
+				string deviceName = name.string().c_str() + 16;
+				if( value == nullptr )
+				{
+					for( ccl::DeviceInfo& device : m_multiDevices )
+					{
+						if( m_deviceMap[deviceName].id == device.id )
+						{
+							m_multiDevices.erase( std::remove( m_multiDevices.begin(), m_multiDevices.end(), device ) );
+							return;
+						}
+					}
+					return;
+				}
+				if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+				{
+					ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+					for( ccl::DeviceInfo& device : devices ) 
+					{
+						if( m_deviceMap[deviceName].id == device.id ) 
+						{
+							for( ccl::DeviceInfo& existingDevice : m_multiDevices )
+							{
+								if( m_deviceMap[deviceName].id == existingDevice.id )
+								{
+									if( !data->readable() )
+									{
+										m_multiDevices.erase( std::remove( m_multiDevices.begin(), m_multiDevices.end(), existingDevice ) );
+										return;
+									}
+									else
+									{
+										return;
+									}
+								}
+							}
+							if( data->readable() )
+							{
+								m_multiDevices.push_back( device );
+							}
+							return;
+						}
+					}
+				}
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown device \"%s\"." ) % deviceName );
+				return;
+			}
 			else if( boost::starts_with( name.string(), "ccl:" ) )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
@@ -2455,15 +2505,34 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					break;
 				}
 			}
-			for( ccl::DeviceInfo& device : devices ) 
+
+			if( m_deviceName == "MULTI" )
 			{
-				if( m_deviceName ==  device.id ) 
+				if( m_sessionParams.progressive )
 				{
-					m_sessionParams.device = device;
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Multi-device is only compatible with Branched Path mode and progressive refine disabled, reverting to CPU." );
+					device_available = false;
+				}
+				else
+				{
+					ccl::DeviceInfo multidevice = ccl::Device::get_multi_device( m_multiDevices, m_sessionParams.threads, m_sessionParams.background );
+					m_sessionParams.device = multidevice;
 					device_available = true;
-					break;
 				}
 			}
+			else
+			{
+				for( ccl::DeviceInfo& device : devices ) 
+				{
+					if( m_deviceName ==  device.id ) 
+					{
+						m_sessionParams.device = device;
+						device_available = true;
+						break;
+					}
+				}
+			}
+
 			if( !device_available )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", boost::format( "Cannot find the device \"%s\" requested, reverting to CPU." ) % m_deviceName );
@@ -2500,9 +2569,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateSceneObjects()
 		{
+			m_scene->mutex.lock();
 			m_shaderCache->update( m_scene );
 			m_lightCache->update( m_scene );
 			m_instanceCache->update( m_scene );
+			m_scene->mutex.unlock();
 		}
 
 		void updateOptions()
@@ -2666,6 +2737,37 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			IECore::msg( IECore::Msg::Info, "CyclesRenderer", boost::format( "Progress %05.2f   %s" ) % (double)(progress * 100.0f ) % status );
 		}
 
+		void getCyclesDevices()
+		{
+			DeviceMap retvar;
+			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+			int indexCuda = 0;
+			int indexOpenCL = 0;
+			for( const ccl::DeviceInfo &device : devices ) 
+			{
+				if( device.type == ccl::DEVICE_CPU )
+				{
+					m_deviceMap["CPU"] = device;
+					continue;
+				}
+				string deviceName = ccl::Device::string_from_type( device.type ).c_str();
+				if( device.type == ccl::DEVICE_CUDA )
+				{
+					auto optionName = boost::format( "%s%02i" ) % deviceName % indexCuda;
+					m_deviceMap[optionName.str()] = device;
+					++indexCuda;
+					continue;
+				}
+				if( device.type == ccl::DEVICE_OPENCL )
+				{
+					auto optionName = boost::format( "%s%02i" ) % deviceName % indexOpenCL;
+					m_deviceMap[optionName.str()] = device;
+					++indexOpenCL;
+					continue;
+				}
+			}
+		}
+
 		// Cycles core objects.
 		ccl::Session *m_session;
 		ccl::Scene *m_scene;
@@ -2707,6 +2809,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// Outputs
 		OutputMap m_outputs;
+
+		// Multi-Devices
+		typedef unordered_map<string, ccl::DeviceInfo> DeviceMap;
+		DeviceMap m_deviceMap;
+		ccl::vector<ccl::DeviceInfo> m_multiDevices;
 
 		// Cameras (Cycles can only know of one camera at a time)
 		typedef unordered_map<string, ConstCameraPtr> CameraMap;

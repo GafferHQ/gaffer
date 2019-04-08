@@ -35,6 +35,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/CyclesOptions.h"
+#include "boost/algorithm/string.hpp"
+
+// Cycles
+#include "device/device.h"
 
 using namespace Imath;
 using namespace GafferCycles;
@@ -58,7 +62,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "featureSet", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
-	//options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "progressive", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "method", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:samples", new IECore::IntData( 8 ), "samples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), "tileSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:session:tile_order", new IECore::IntData( 0 ), "tileOrder", Gaffer::Plug::Default, false );
@@ -141,8 +145,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:integrator:sample_all_lights_indirect", new IECore::BoolData( true ), "sampleAllLightsIndirect", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:integrator:light_sampling_threshold", new IECore::FloatData( 0.05f ), "lightSamplingThreshold", Gaffer::Plug::Default, false );
 
-	options->addOptionalMember( "ccl:integrator:method", new IECore::IntData( 0 ), "method", Gaffer::Plug::Default, false );
-
 	options->addOptionalMember( "ccl:integrator:sampling_pattern", new IECore::IntData( 0 ), "samplingPattern", Gaffer::Plug::Default, false );
 
 	// Curves
@@ -181,6 +183,35 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addOptionalMember( "ccl:film:use_sample_clamp", new IECore::BoolData( false ), "useSampleClamp", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:film:denoising_data_pass", new IECore::BoolData( false ), "denoisingDataPass", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:film:denoising_clean_pass", new IECore::BoolData( false ), "denoisingCleanPass", Gaffer::Plug::Default, false );
+
+	// Multi-Device
+	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+	int indexCuda = 0;
+	int indexOpenCL = 0;
+	for( const ccl::DeviceInfo &device : devices ) 
+	{
+		if( device.type == ccl::DEVICE_CPU )
+		{
+			options->addOptionalMember( "ccl:multidevice:CPU", new IECore::BoolData( true ), "multideviceCPU", Gaffer::Plug::Default, false );
+			continue;
+		}
+		if( device.type == ccl::DEVICE_CUDA )
+		{
+			auto internalName = boost::format( "ccl:multidevice:CUDA%02i" ) % indexCuda;
+			auto optionName = boost::format( "multideviceCUDA%02i" ) % indexCuda;
+			options->addOptionalMember( internalName.str(), new IECore::BoolData( false ), optionName.str(), Gaffer::Plug::Default, false );
+			++indexCuda;
+			continue;
+		}
+		if( device.type == ccl::DEVICE_OPENCL )
+		{
+			auto internalName = boost::format( "ccl:multidevice:OPENCL%02i" ) % indexOpenCL;
+			auto optionName = boost::format( "multideviceOPENCL%02i" ) % indexOpenCL;
+			options->addOptionalMember( internalName.str(), new IECore::BoolData( false ), optionName.str(), Gaffer::Plug::Default, false );
+			++indexOpenCL;
+			continue;
+		}
+	}
 }
 
 CyclesOptions::~CyclesOptions()

@@ -66,6 +66,7 @@ static py::list getDevices()
 	py::list result;
 
 	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+	devices.push_back( ccl::Device::get_multi_device( devices, 0, true ) );
 	for( const ccl::DeviceInfo &device : devices ) 
 	{
 		py::dict d;
@@ -84,7 +85,6 @@ static py::list getDevices()
 
 		result.append(d);
 	}
-
 	return result;
 }
 

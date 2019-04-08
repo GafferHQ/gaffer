@@ -385,6 +385,39 @@ def __devicePresetValues( plug ) :
 
 	return presetValues
 
+def __multideviceNames() :
+
+	indexCuda = 0
+	indexOpenCL = 0
+	for device in GafferCycles.devices :
+		if device["type"] == "MULTI" :
+			continue
+		optionName = IECore.InternedString
+		if device["type"] == "CPU" :
+			optionName = "options.multideviceCPU"
+		elif device["type"] == "CUDA" :
+			optionName = "options.multidevice%s%02i" % ( device["type"], indexCuda )
+			++indexCuda
+		elif device["type"] == "OPENCL" :
+			optionName = "options.multidevice%s%02i" % ( device["type"], indexOpenCL )
+			++indexOpenCL
+		else :
+			continue
+
+		Gaffer.Metadata.registerPlugValue( 
+			GafferCycles.CyclesOptions, 
+			optionName,
+			[ "description",
+			"""
+			Device to use for multi-device rendering.
+			Note: Device must be set to Multi-Device.
+			""",
+			"layout:section",
+			"Multi-Device",
+			"label", 
+			"%s - %s" % ( device["type"], device["description"] ) ]
+			)
+
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesOptions,
@@ -1789,3 +1822,5 @@ Gaffer.Metadata.registerNode(
 		],
 	}
 )
+
+__multideviceNames()
