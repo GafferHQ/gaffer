@@ -81,7 +81,15 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"volume_indirect",
 		"cryptomatte_asset",
 		"cryptomatte_object",
-		"cryptomatte_material"
+		"cryptomatte_material",
+		"denoise_rgba",
+		"denoise_normal",
+		"denoise_albedo",
+		"denoise_depth",
+		"denoise_shadowing",
+		"denoise_variance",
+		"denoise_intensity",
+		"denoise_clean"
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )

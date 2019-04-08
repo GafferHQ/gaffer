@@ -249,6 +249,22 @@ ccl::PassType nameToPassType( const std::string &name )
 	return ccl::PASS_NONE;
 }
 
+int nameToDenoisePassType( const std::string &name )
+{
+#define MAP_PASS(passname, offset) if(name == passname) return offset;
+	MAP_PASS( "denoise_rgba", ccl::DENOISING_PASS_PREFILTERED_COLOR );
+	MAP_PASS( "denoise_normal", ccl::DENOISING_PASS_PREFILTERED_NORMAL );
+	MAP_PASS( "denoise_albedo", ccl::DENOISING_PASS_PREFILTERED_ALBEDO );
+	MAP_PASS( "denoise_depth", ccl::DENOISING_PASS_PREFILTERED_DEPTH );
+	MAP_PASS( "denoise_shadowing", ccl::DENOISING_PASS_PREFILTERED_SHADOWING );
+	MAP_PASS( "denoise_variance", ccl::DENOISING_PASS_PREFILTERED_VARIANCE );
+	MAP_PASS( "denoise_intensity", ccl::DENOISING_PASS_PREFILTERED_INTENSITY );
+	MAP_PASS( "denoise_clean", ccl::DENOISING_PASS_CLEAN );
+#undef MAP_PASS
+
+	return -1;
+}
+
 int passComponents( ccl::PassType type )
 {
 	switch( type )
@@ -310,6 +326,31 @@ int passComponents( ccl::PassType type )
 	}
 }
 
+int denoiseComponents( ccl::DenoisingPassOffsets type )
+{
+	switch( type )
+	{
+		case ccl::DENOISING_PASS_PREFILTERED_COLOR:
+			return 4;
+		case ccl::DENOISING_PASS_PREFILTERED_NORMAL:
+			return 3;
+		case ccl::DENOISING_PASS_PREFILTERED_ALBEDO:
+			return 3;
+		case ccl::DENOISING_PASS_PREFILTERED_DEPTH:
+			return 1;
+		case ccl::DENOISING_PASS_PREFILTERED_SHADOWING:
+			return 1;
+		case ccl::DENOISING_PASS_PREFILTERED_VARIANCE:
+			return 3;
+		case ccl::DENOISING_PASS_PREFILTERED_INTENSITY:
+			return 1;
+		case ccl::DENOISING_PASS_CLEAN:
+			return 3;
+		default:
+			return 0;
+	}
+}
+
 class CyclesOutput : public IECore::RefCounted
 {
 
@@ -322,7 +363,15 @@ class CyclesOutput : public IECore::RefCounted
 			m_type = output->getType();
 			m_data = output->getData();
 			m_passType = nameToPassType( m_data );
-			m_components = passComponents( m_passType );
+			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
+			if( ( m_passType == ccl::PASS_NONE ) && ( m_denoisingPassOffsets > 0 ) )
+			{
+				m_components = denoiseComponents( (ccl::DenoisingPassOffsets)m_denoisingPassOffsets );
+			}
+			else
+			{
+				m_components = passComponents( m_passType );
+			}
 			m_parameters = output->parametersData()->copy();
 			if( m_type == "ieDisplay" )
 				m_interactive = true;
@@ -418,6 +467,7 @@ class CyclesOutput : public IECore::RefCounted
 		std::string m_type;
 		std::string m_data;
 		ccl::PassType m_passType;
+		int m_denoisingPassOffsets;
 		ccl::TypeDesc m_quantize;
 		ImageDisplayDriverPtr m_image;
 		CompoundDataPtr m_parameters;
@@ -621,12 +671,29 @@ class RenderCallback : public IECore::RefCounted
 			int outChannelOffset = 0;
 			for( auto &output : m_outputs )
 			{
+				bool read = false;
 				if( m_interactive && !output.second->m_interactive )
 					continue;
 				if( !m_interactive && output.second->m_interactive )
 					continue;
 				int numChannels = output.second->m_components;
-				buffers->get_pass_rect( output.second->m_passType, 0.5f, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
+				if( output.second->m_passType != ccl::PASS_NONE )
+				{
+					read = buffers->get_pass_rect( output.second->m_passType, 0.5f, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
+				}
+				else
+				{
+					if( output.second->m_denoisingPassOffsets >= 0 )
+					{
+						read = buffers->get_denoising_pass_rect( output.second->m_denoisingPassOffsets, 0.5f, sample, numChannels, &tileData[0] );
+					}
+				}
+
+				if( !read )
+				{
+					memset( &tileData[0], 0, tileData.size()*sizeof(float) );
+				}
+				
 				if( m_interactive )
 				{
 					for( int c = 0; c < numChannels; c++ )
@@ -1766,6 +1833,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// The interactive renderer also runs in the background. Having
 			// this off makes more sense if we were to use Cycles as a
 			// viewport alternative to the OpenGL viewer.
+			// TODO: Cycles will disable background mode when a GPU device is 
+			// used.
+			// Unfortunately it means it renders black in preview as it wants
+			// to render to a GL buffer and not to CPU.
 			m_sessionParams.background = true;
 			// We almost-always want persistent data.
 			m_sceneParams.persistent_data = true;
@@ -1965,7 +2036,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_BOOL (m_sessionParams, g_featureSetOptionName,               experimental);
 				OPTION_BOOL (m_sessionParams, g_progressiveRefineOptionName,        progressive_refine);
 				OPTION_BOOL (m_sessionParams, g_progressiveOptionName,              progressive);
-				OPTION_BOOL (m_sessionParams, g_samplesOptionName,                  samples);
+				OPTION_INT  (m_sessionParams, g_samplesOptionName,                  samples);
 				OPTION_V2I  (m_sessionParams, g_tileSizeOptionName,                 tile_size);
 				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
@@ -1981,7 +2052,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_FLOAT(m_sessionParams, g_progressiveUpdateTimeoutOptionName, progressive_update_timeout);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-					return;
+				return;
 			}
 			else if( boost::starts_with( name.string(), "ccl:scene:" ) )
 			{
@@ -1994,7 +2065,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_INT  (m_sceneParams, g_textureLimitOptionName,         texture_limit);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-					return;
+				return;
 			}
 			else if( boost::starts_with( name.string(), "ccl:denoise:" ) )
 			{
@@ -2006,7 +2077,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_BOOL (m_denoiseParams, g_denoiseClampInputOptionName,      clamp_input);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-					return;
+				return;
 			}
 			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
 			{
@@ -2020,7 +2091,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_BOOL (m_curveSystemManager, g_curveCullBackfacing,         use_backfacing);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-					return;
+				return;
 			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
 			else if( boost::starts_with( name.string(), "ccl:background:" ) )
@@ -2184,7 +2255,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			auto passType = nameToPassType( output->getData() );
 			if( passType == ccl::PASS_NONE )
+			{
+				int denoiseOffset = nameToDenoisePassType( output->getData() );
+				if( denoiseOffset > 0 )
+				{
+					m_outputs[name] = new CyclesOutput( output );
+				}
 				return;
+			}
 
 			ccl::vector<ccl::Pass> passes;
 			// Beauty
@@ -2429,8 +2507,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
-			// This doesn't get checked, so we set it just in-case.
-			m_session->params.samples = m_sessionParams.samples;
+			m_session->set_samples( m_sessionParams.samples );
 			// No checking on denoise settings either
 			m_session->params.denoising = m_denoiseParams;
 			m_sessionParams.denoising = m_denoiseParams;
@@ -2459,6 +2536,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( film->modified( m_film ) )
 			{
 				film->tag_update( m_scene );
+				integrator->tag_update( m_scene );
 				m_film = *film;
 			}
 
@@ -2485,9 +2563,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_bufferParamsModified.height = (int)(border.top * (float)height) - m_bufferParamsModified.full_y;
 
 			if( !m_bufferParams.modified( m_bufferParamsModified ) )
+			{
 				return;
+			}
 			else
+			{
 				m_bufferParams = m_bufferParamsModified;
+				m_scene->film->tag_passes_update( m_scene, m_bufferParams.passes );
+			}
 
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
 			m_renderCallback->updateOutputs( m_outputs );

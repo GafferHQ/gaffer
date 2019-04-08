@@ -56,6 +56,9 @@ def __sessionSummary( plug ) :
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
 
+	if plug["progressiveRefine"]["enabled"].getValue() :
+		info.append( "Progressive Refine {}".format( plug["progressiveRefine"]["value"].getValue() ) )
+
 	if plug["numThreads"]["enabled"].getValue() :
 		info.append( "Threads {}".format( plug["numThreads"]["value"].getValue() ) )
 
@@ -479,6 +482,20 @@ Gaffer.Metadata.registerNode(
 			"preset:SVM", "SVM",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.progressiveRefine" : [
+
+			"description",
+			"""
+			"Instead of rendering each tile until it is finished, "
+            "refine the whole image progressively "
+            "(this renders somewhat slower, "
+            "but time can be saved by manually stopping the render when the noise is low enough)",
+			""",
+
+			"layout:section", "Session",
 
 		],
 
