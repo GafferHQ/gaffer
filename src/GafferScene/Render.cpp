@@ -300,6 +300,11 @@ void Render::execute() const
 	RendererAlgo::outputLights( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
 	RendererAlgo::outputObjects( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
 
+	if( renderScope.sceneTranslationOnly() )
+	{
+		return;
+	}
+
 	// Now we have generated the scene, flush Cortex and Gaffer caches to
 	// provide more memory to the renderer.
 	/// \todo This is not ideal. If dispatch is batched then multiple
@@ -312,11 +317,7 @@ void Render::execute() const
 	ObjectPool::defaultObjectPool()->clear();
 	ValuePlug::clearCache();
 
-	if( !renderScope.sceneTranslationOnly() )
-	{
-		renderer->render();
-	}
-
+	renderer->render();
 	renderer.reset();
 
 	if( performanceMonitor )
