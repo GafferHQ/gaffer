@@ -15,7 +15,7 @@ The following is a list of input device controls and shortcuts for manipulating 
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 New node graph                        :kbd:`Ctrl` + :kbd:`N`
 Open node graph                       :kbd:`Ctrl` + :kbd:`O`
@@ -26,6 +26,7 @@ Redo                                  :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`Z`
 Step one frame forward                :kbd:`→`
 Step one frame backward               :kbd:`←`
 Fullscreen mode                       :raw-html:`<kbd>&#96;</kbd>`
+Hide tabs of current panel            :kbd:`Ctrl` + :kbd:`T`
 ===================================== =============================================
 ```
 
@@ -39,7 +40,7 @@ Fullscreen mode                       :raw-html:`<kbd>&#96;</kbd>`
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Pan                                   :kbd:`Alt` + click and drag
 Zoom                                  :kbd:`Alt` + right-click and drag
@@ -48,7 +49,7 @@ Zoom                                  :kbd:`Alt` + right-click and drag
                                       
                                       Mouse wheel up/down
 Frame selected nodes                  :kbd:`F`
-Enter `Box` node (subgraph)	          :kbd:`↓`
+Enter `Box` node (subgraph)           :kbd:`↓`
 Leave `Box` node (subgraph)           :kbd:`↑`
 Search for nodes                      :kbd:`Ctrl` + :kbd:`F`
 Frame to numeric bookmark             :kbd:`1` … :kbd:`9`
@@ -56,13 +57,11 @@ Frame to numeric bookmark             :kbd:`1` … :kbd:`9`
 ```
 
 
-### Node Creation ###
-
-<!-- TODO: Add note explaining that Box nodes and custom-authored shaders don't support enabling/disabling without some additional setup. -->
+### Node creation ###
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Show node menu                        Right-click
                                       
@@ -78,11 +77,11 @@ Insert `Dot` at connection            :kbd:`Ctrl` + click connection
 ```
 
 
-### Node Selection ###
+### Node selection ###
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Select all                            :kbd:`Ctrl` + :kbd:`A`
 Clear selection                       :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`A`
@@ -96,14 +95,29 @@ Select downstream nodes               :kbd:`Shift` + :kbd:`Ctrl` + click node
 ===================================== =============================================
 ```
 
+### Node dispatch ###
 
-### Node Copying and Deletion ###
-
-<!-- TODO: Once http://shotgun/detail/Ticket/12251 is resolved, add note explaining that Box nodes and custom-authored shaders don't support enabling/disabling without some additional setup. -->
+> Note :
+> For these dispatch-related shortcuts, the cursor does **not** need to hover over the _Graph Editor_.
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
+===================================== =============================================
+Dispatch selected node(s)             :kbd:`Ctrl` + :kbd:`E`
+Redo last dispatch                    :kbd:`Ctrl` + :kbd:`R`
+===================================== =============================================
+```
+
+
+### Node copying and deletion ###
+
+> Tip :
+> For a Box node to be disableable, it must first be <a href="../../WorkingWithTheNodeGraph/Box/index.html#setting-up-a-box-for-pass-through">set up for pass-through</a>.
+
+```eval_rst
+===================================== =============================================
+Action                                Control or Shortcut
 ===================================== =============================================
 Cut node(s)                           :kbd:`Ctrl` + :kbd:`X`
 Copy node(s)                          :kbd:`Ctrl` + :kbd:`C`
@@ -118,11 +132,11 @@ Enable/disable node(s)                :kbd:`D`
 ```
 
 
-### Node Connections and Layout ###
+### Node connections and layout ###
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Connect plug                          Click and drag plug to another plug
 Disconnect plug                       Click and drag connection to background
@@ -134,11 +148,11 @@ Duplicate outgoing connection         :kbd:`Shift`-click and drag connection jus
 ```
 
 
-### Node Bookmarks ###
+### Node bookmarks ###
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Bookmark node                         Right-click node > *Bookmark*
 Connect to bookmarked node            Right-click plug > *Connect Bookmark* > select
@@ -160,7 +174,7 @@ Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ## _Node Editor_ ##
 
 
-### Numeric Plugs ###
+### Numeric plugs ###
 
 ```eval_rst
 ============================================== ===============================================
@@ -172,11 +186,12 @@ Scrub value, coarse precision                  :kbd:`Ctrl` + click and drag the 
                                                left/right
 Scrub value, fine precision                    :kbd:`Ctrl` + :kbd:`Shift` + click and drag
                                                the field left/right
+Gang plugs together                            :kbd:`Ctrl` + :kbd:`G`
 ============================================== ===============================================
 ```
 
 
-### Path Plugs ###
+### Path plugs ###
 
 ```eval_rst
 ==================================== ================================================
@@ -200,11 +215,11 @@ Path hierarchy menu                  Select all
 > For the following controls and shortcuts, the cursor must hover over the _Viewer_.
 
 
-### General Controls ###
+### General controls ###
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Pan                                   :kbd:`Alt` + click and drag
 Zoom/dolly                            :kbd:`Alt` + right-click and drag
@@ -224,12 +239,11 @@ Pin to numeric bookmark               :kbd:`1` … :kbd:`9`
 ===================================== =============================================
 ```
 
-
-### 3D Scenes ###
+### 3D scenes ###
 
 ```eval_rst
 ====================================================== =====================================
-Action			                                       Control or Shortcut
+Action                                                 Control or Shortcut
 ====================================================== =====================================
 Tumble                                                 :kbd:`Alt` + click and drag
 Expand selection                                       :kbd:`↓`
@@ -251,12 +265,27 @@ Reset clipping planes                                  Right-click > *Clipping 
 ====================================================== =====================================
 ```
 
+### Transform tool ###
 
-### 2D Images ###
+> Note :
+> For the following controls and shortcuts, the Transform Tool must be active.
+
+```eval_rst
+==================================================== =============================================
+Action                                               Control or Shortcut
+==================================================== =============================================
+Increase manipulator size                            :kbd:`+`
+Decrease manipulator size                            :kbd:`-`
+Add animation key to transform of selected object(s) :kbd:`S`
+==================================================== =============================================
+```
+
+
+### 2D images ###
 
 ```eval_rst
 ===================================== =============================================
-Action			                      Control or Shortcut
+Action                                Control or Shortcut
 ===================================== =============================================
 Isolate red channel                   :kbd:`R`
 Isolate green channel                 :kbd:`G`
@@ -270,7 +299,7 @@ Center image at 1:1 scale             :kbd:`Home`
 ## _Python Editor_ ##
 
 
-### Text Entry ###
+### Text entry ###
 
 > Note :
 > When using the following drag and drop controls and shortcuts, drop the UI element onto the input field of the _Python Editor_.
