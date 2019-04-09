@@ -1,6 +1,7 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,66 +34,69 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-
 import os
-import sys
-import unittest
+import functools
+import collections
+import IECore
 
-import GafferTest
+import Gaffer
 import GafferUI
 
-## A useful base class for creating test cases for the ui.
-class TestCase( GafferTest.TestCase ) :
+__examples = collections.OrderedDict()
 
-	def tearDown( self ) :
+def registerExample( key, absFilePath, description = "", notableNodes = None ) :
 
-		GafferTest.TestCase.tearDown( self )
+	__examples[ key ] = {
+		"filePath" : absFilePath,
+		"description" : description,
+		"notableNodes" : notableNodes or []
+	}
 
-		# Here we check that there are no Widget instances knocking
-		# around after each test has run. this provides good coverage
-		# for the Widget lifetime problems that are all too easy to
-		# create. Our base class has already taken care of clearing
-		# any exceptions which might be inadvertently holding
-		# references to widget instances.
+def deregisterExample( key ) :
 
-		widgetInstances = self.__widgetInstances()
-		self.assertEqual( widgetInstances, [] )
+	if key in __examples:
+		del __examples[ key ]
 
-	def waitForIdle( self, count = 1 ) :
+def registeredExamples( node = None ) :
 
-		self.__idleCount = 0
-		def f() :
+	if node :
+		filtered = collections.OrderedDict()
+		for k, e in __examples.items() :
+			if node in e['notableNodes'] :
+				filtered[ k ] = e
+		return filtered
 
-			self.__idleCount += 1
+	else :
+		return collections.OrderedDict( __examples )
 
-			if self.__idleCount >= count :
-				GafferUI.EventLoop.mainEventLoop().stop()
-				return False
+def appendExamplesSubmenuDefinition( menuDefinition, root, forNode = None ) :
 
-			return True
+	callback = functools.partial( __buildExamplesMenu, forNode )
+	menuDefinition.append( root,  { "subMenu" : callback } )
 
-		GafferUI.EventLoop.addIdleCallback( f )
-		GafferUI.EventLoop.mainEventLoop().start()
+def __buildExamplesMenu( nodeOrNone, menu ) :
 
-	def assertExampleFilesExist( self ) :
+	result = IECore.MenuDefinition()
 
-		examples = GafferUI.Examples.registeredExamples()
-		for e in examples.values():
-			self.assertIsNotNone( e['filePath'] )
-			self.assertNotEqual( e['filePath'], "" )
-			expanded = os.path.expandvars( e['filePath'] )
-			self.assertTrue( os.path.exists( expanded ), "%s does not exist" % expanded )
+	examples = GafferUI.Examples.registeredExamples( node = nodeOrNone )
+	if examples :
 
-	@staticmethod
-	def __widgetInstances() :
+		for menuPath, data in examples.items() :
+			filePath = os.path.expandvars( data['filePath'] )
+			result.append(
+				"/%s" % menuPath,
+				{
+					"command" : functools.partial( __openGafferScript, filePath ),
+					"description" : data['description'] or None,
+					"active" : os.path.isfile( filePath )
+				}
+			)
+	else:
+		result.append( "/No Examples Available", { "active" : False } )
 
-		result = []
-		# yes, this is accessing Widget internals. we could add a public method
-		# to the widget to expose this information, but i'd rather not add yet
-		# more methods if we can avoid it.
-		for w in GafferUI.Widget._Widget__qtWidgetOwners.values() :
-			if w() is not None :
-				result.append( w() )
+	return result
 
-		return result
-
+def __openGafferScript( path, menu ) :
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	app = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	GafferUI.FileMenu.addScript( app, path )
