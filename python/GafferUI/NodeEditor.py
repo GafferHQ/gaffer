@@ -172,9 +172,10 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 	def __menuDefinition( self ) :
 
+		node = self.nodeUI().node()
 		result = IECore.MenuDefinition()
 
-		url = Gaffer.Metadata.value( self.nodeUI().node(), "documentation:url" )
+		url = Gaffer.Metadata.value( node, "documentation:url" )
 		result.append(
 			"/Documentation...",
 			{
@@ -182,6 +183,9 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				"command" : functools.partial( GafferUI.showURL, url ),
 			}
 		)
+
+		nodeCls = type( node )
+		GafferUI.Examples.appendExamplesSubmenuDefinition( result, "/Examples", forNode = nodeCls )
 
 		result.append( "/DocumentationDivider", { "divider" : True } )
 
