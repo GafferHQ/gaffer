@@ -43,6 +43,7 @@
 #include "GafferScene/GlobalShader.h"
 #include "GafferScene/Outputs.h"
 #include "GafferScene/Set.h"
+#include "GafferScene/SetVisualiser.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -111,6 +112,7 @@ void GafferSceneModule::bindGlobals()
 			;
 	}
 
+	DependencyNodeClass<SetVisualiser>();
 	DependencyNodeClass<GlobalShader>();
 
 }
