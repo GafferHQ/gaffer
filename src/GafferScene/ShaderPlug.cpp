@@ -52,6 +52,58 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+bool isShaderOutPlug( const Plug *plug )
+{
+	auto shader = runTimeCast<const Shader>( plug->node() );
+	if( !shader )
+	{
+		return false;
+	}
+	const Plug *outPlug = shader->outPlug();
+	if( !outPlug )
+	{
+		return false;
+	}
+	return plug == shader->outPlug() || shader->outPlug()->isAncestorOf( plug );
+}
+
+bool isParameterType( const Plug *plug )
+{
+	switch( (int)plug->typeId() )
+	{
+		case PlugTypeId :      // These two could be used to represent
+		case ValuePlugTypeId : // struct parameters
+		case FloatPlugTypeId :
+		case IntPlugTypeId :
+		case StringPlugTypeId :
+		case V2fPlugTypeId :
+		case V3fPlugTypeId :
+		case V2iPlugTypeId :
+		case V3iPlugTypeId :
+		case Color3fPlugTypeId :
+		case Color4fPlugTypeId :
+		case M33fPlugTypeId :
+		case M44fPlugTypeId :
+		case BoolPlugTypeId :
+			return true;
+		default :
+			// Use typeName query to avoid hard dependency on
+			// GafferOSL. It may be that we should move ClosurePlug
+			// to GafferScene anyway.s
+			return plug->isInstanceOf( "GafferOSL::ClosurePlug" );
+	}
+	return false;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // ShaderPlug
 //////////////////////////////////////////////////////////////////////////
 
@@ -91,10 +143,9 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 	// We only want to accept connections from the output
 	// plug of a shader.
 	const Plug *sourcePlug = input->source();
-	const Node *sourceNode = sourcePlug->node();
-	if( const Shader *shader = runTimeCast<const Shader>( sourceNode ) )
+	if( isShaderOutPlug( sourcePlug ) )
 	{
-		return sourcePlug == shader->outPlug() || shader->outPlug()->isAncestorOf( sourcePlug );
+		return true;
 	}
 
 	// But we also accept intermediate connections from
@@ -111,6 +162,23 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 	{
 		if( sourcePlug == switchNode->outPlug() || sourcePlug->parent() == switchNode->inPlugs() )
 		{
+			// Reject switches which have inputs from non-shader nodes.
+			for( PlugIterator it( switchNode->inPlugs() ); !it.done(); ++it )
+			{
+				if( (*it)->getInput() && !isShaderOutPlug( (*it)->source() ) )
+				{
+					return false;
+				}
+			}
+			// For switches without any inputs, we have to assume that
+			// the user might connect a shader in the future. But there
+			// are certain plug types we know a shader can never be connected
+			// to. Reject those, otherwise stupid things happen, like the
+			// ShaderView trying to display scenes and images.
+			if( !isParameterType( sourcePlug ) )
+			{
+				return false;
+			}
 			return true;
 		}
 	}
@@ -128,6 +196,7 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 		return false;
 	}
 
+	const Node *sourceNode = sourcePlug->node();
 	return
 		runTimeCast<const SubGraph>( sourceNode ) ||
 		runTimeCast<const Dot>( sourceNode ) ||
