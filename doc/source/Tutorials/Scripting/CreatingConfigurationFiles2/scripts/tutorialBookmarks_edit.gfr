@@ -1,0 +1,33 @@
+import Gaffer
+import GafferDispatch
+import GafferImage
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 53, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["ImageReader"] = GafferImage.ImageReader( "ImageReader" )
+parent.addChild( __children["ImageReader"] )
+__children["Rectangle"] = GafferImage.Rectangle( "Rectangle" )
+parent.addChild( __children["Rectangle"] )
+__children["ImageWriter"] = GafferImage.ImageWriter( "ImageWriter" )
+parent.addChild( __children["ImageWriter"] )
+__children["ImageReader"]["colorSpace"].setValue( 'raw' )
+__children["Rectangle"]["out"].setInput( __children["Rectangle"]["__merge"]["out"] )
+__children["Rectangle"]["in"].setInput( __children["ImageReader"]["out"] )
+__children["Rectangle"]["color"].setValue( imath.Color4f( 0.964699984, 0.57249999, 0.113700002, 1 ) )
+__children["Rectangle"]["area"].setValue( imath.Box2f( imath.V2f( 21, 276 ), imath.V2f( 163, 407 ) ) )
+__children["Rectangle"]["cornerRadius"].setValue( 4.0 )
+__children["ImageWriter"]["in"].setInput( __children["Rectangle"]["out"] )
+__children["ImageWriter"]["channels"].setValue( ' R G B' )
+Gaffer.Metadata.registerValue( __children["ImageWriter"]["channels"], 'channelMaskPlugValueWidget:custom', True )
+__children["ImageWriter"]["colorSpace"].setValue( 'raw' )
+__children["ImageWriter"]["png"]["compressionLevel"].setValue( 9 )
+
+
+del __children

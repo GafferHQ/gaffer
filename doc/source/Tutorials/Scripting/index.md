@@ -12,8 +12,9 @@ There is a direct one to one correspondence between the C++ and Python APIs for 
     :titlesonly:
 
     GettingStarted/index.md
-    CreatingConfigurationFiles/index.md
-    AddingAMenuItem/index.md
+    CreatingConfigurationFiles1/index.md
+    CreatingConfigurationFiles2/index.md
+    CreatingConfigurationFiles3/index.md
     QueryingAScene/index.md
     UsingTheOSLCodeNode/index.md
 ```
