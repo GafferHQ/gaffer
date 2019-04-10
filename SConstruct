@@ -784,7 +784,9 @@ libraries = {
 		},
 	},
 
-	"GafferArnoldUITest" : {},
+	"GafferArnoldUITest" : {
+		"additionalFiles" : glob.glob( "python/GafferArnoldUITest/metadata/*" ),
+	},
 
 	"GafferOSL" : {
 		"envAppends" : {

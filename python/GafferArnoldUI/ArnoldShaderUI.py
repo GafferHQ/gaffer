@@ -42,6 +42,7 @@ import collections
 import arnold
 
 import IECore
+import imath
 import IECoreArnold
 
 import Gaffer
@@ -66,6 +67,58 @@ def __aiMetadataGetBool( nodeEntry, paramName, name, defaultValue = None ) :
 	value = ctypes.c_bool()
 	if arnold.AiMetaDataGetBool( nodeEntry, paramName, name, value ) :
 		return bool( value )
+
+	return defaultValue
+
+def __aiMetadataGetInt( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = ctypes.c_int()
+	if arnold.AiMetaDataGetInt( nodeEntry, paramName, name, value ) :
+		return int( value.value )
+
+	return defaultValue
+
+def __aiMetadataGetFlt( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = ctypes.c_float()
+	if arnold.AiMetaDataGetFlt( nodeEntry, paramName, name, value ) :
+		return float( value.value )
+
+	return defaultValue
+
+def __aiMetadataGetRGB( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = arnold.AtRGB()
+	if arnold.AiMetaDataGetRGB( nodeEntry, paramName, name, value ) :
+		return imath.Color3f( value.r, value.g, value.b )
+
+	return defaultValue
+
+# SolidAngle does not appear to have wrapped AiMetaDataGetRGBA in Python, so we don't
+# support the RGBA case
+"""
+def __aiMetadataGetRGBA( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = arnold.AtRGBA()
+	if arnold.AiMetaDataGetRGBA( nodeEntry, paramName, name, value ) :
+		return imath.Color4f( value.r, value.g, value.b, value.a )
+
+	return defaultValue
+"""
+
+def __aiMetadataGetVec2( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = arnold.AtVector2()
+	if arnold.AiMetaDataGetVec2( nodeEntry, paramName, name, value ) :
+		return imath.V2f( value.x, value.y )
+
+	return defaultValue
+
+def __aiMetadataGetVec( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = arnold.AtVector()
+	if arnold.AiMetaDataGetVec( nodeEntry, paramName, name, value ) :
+		return imath.V3f( value.x, value.y, value.z )
 
 	return defaultValue
 
@@ -208,6 +261,30 @@ def __translateNodeMetadata( nodeEntry ) :
 		visible = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.graphEditorLayout.visible", visible )
 		if visible is not None :
 			__metadata[paramPath]["noduleLayout:visible"] = visible
+
+		userDefault = None
+		if paramType in [ arnold.AI_TYPE_BYTE, arnold.AI_TYPE_INT, arnold.AI_TYPE_UINT ]:
+			userDefault = __aiMetadataGetInt( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_BOOLEAN:
+			userDefault = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_FLOAT:
+			userDefault = __aiMetadataGetFlt( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_RGB:
+			userDefault = __aiMetadataGetRGB( nodeEntry, paramName, "gaffer.userDefault" )
+		#elif paramType == arnold.AI_TYPE_RGBA:
+		#	userDefault = __aiMetadataGetRGBA( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_VECTOR:
+			userDefault = __aiMetadataGetVec( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_VECTOR2:
+			userDefault = __aiMetadataGetVec2( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_STRING:
+			userDefault = __aiMetadataGetStr( nodeEntry, paramName, "gaffer.userDefault" )
+		elif paramType == arnold.AI_TYPE_ENUM:
+			userDefault = __aiMetadataGetStr( nodeEntry, paramName, "gaffer.userDefault" )
+
+		if userDefault:
+			__metadata[paramPath]["userDefault"] = userDefault
+			
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 
