@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferUITest
+import GafferImage
 import GafferScene
 import GafferSceneTest
 import GafferSceneUI
@@ -193,6 +194,23 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ShaderView.registerScene( "test", "HiRes", functools.partial( shaderBallCreator, 4096 ) )
 		self.assertEqual( view.scene()["resolution"].getValue(), 4096 )
+
+	def testCannotViewCatalogue( self ) :
+
+		view = GafferSceneUI.ShaderView()
+		catalogue = GafferImage.Catalogue()
+		self.assertFalse( view["in"].acceptsInput( catalogue["out"] ) )
+
+	def testCannotViewSceneSwitch( self ) :
+
+		view = GafferSceneUI.ShaderView()
+
+		sphere = GafferScene.Sphere()
+		switch = Gaffer.Switch()
+		switch.setup( sphere["out"] )
+
+		self.assertFalse( view["in"].acceptsInput( sphere["out"] ) )
+		self.assertFalse( view["in"].acceptsInput( switch["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

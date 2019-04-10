@@ -441,5 +441,36 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 				"shader2"
 			)
 
+	def testInputRejectsNonShaderSwitch( self ) :
+
+		assignment = GafferScene.ShaderAssignment()
+
+		add = GafferTest.AddNode()
+		switch = Gaffer.Switch()
+		switch.setup( add["sum"] )
+
+		# We have to accept the input at this point, because all we know is
+		# that it's from a switch that provides ints. Later on a shader might
+		# be connected as an input.
+		self.assertTrue( assignment["shader"].acceptsInput( switch["out"] ) )
+
+		# But if the switch has a non-shader input, then we should
+		# reject the connection.
+		switch["in"][0].setInput( add["sum"] )
+		self.assertFalse( assignment["shader"].acceptsInput( switch["out"] ) )
+
+		# And this should hold true even if the switch has a context-varying
+		# index.
+		random = Gaffer.Random()
+		random["contextEntry"].setValue( "frame" )
+		switch["index"].setInput( random["outFloat"] )
+		self.assertFalse( assignment["shader"].acceptsInput( switch["out"] ) )
+
+		# Remove the switch input, and we should be able to connect.
+		# But once connected, the switch should reject a non-shader input.
+		switch["in"][0].setInput( None )
+		assignment["shader"].setInput( switch["out"] )
+		self.assertFalse( switch["in"][0].acceptsInput( add["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
