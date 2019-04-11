@@ -67,6 +67,17 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		return GraphComponentPath( self.__rootComponent, self[:], self.root(), self.getFilter() )
 
+	def propertyNames( self ) :
+
+		return Gaffer.Path.propertyNames( self ) + [ "graphComponent:graphComponent" ]
+
+	def property( self, name ) :
+
+		if name == "graphComponent:graphComponent" :
+			return self.__graphComponent()
+		else :
+			return Gaffer.Path.property( self, name )
+
 	def _children( self ) :
 
 		try :
