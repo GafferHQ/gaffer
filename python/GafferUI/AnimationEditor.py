@@ -112,10 +112,9 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
-		self.__main = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 5, spacing = 5 )
-		self.__scriptNode = scriptNode
+		mainRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 5, spacing = 5 )
 
-		GafferUI.NodeSetEditor.__init__( self, self.__main, self.__scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, mainRow, scriptNode, **kw )
 
 		# Set up widget for curve names on the left
 		self.__animationFilter = _AnimationPathFilter( scriptNode )
@@ -148,7 +147,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		# Assemble UI
 		self.__splitter = GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal )
-		self.__main.addChild( self.__splitter )
+		mainRow.addChild( self.__splitter )
 
 		self.__splitter.append( self.__curveList )
 		self.__splitter.append( self.__gadgetWidget )
@@ -193,7 +192,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		visiblePlugs = set()
 		for path in paths:
-			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
+			graphComponent = self.scriptNode().descendant( str( path ).replace( '/', '.' ) )
 			for child in graphComponent.children() :
 				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
 					visiblePlugs.add( child )
@@ -220,7 +219,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		plugList = []
 
 		for path in paths :
-			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
+			graphComponent = self.scriptNode().descendant( str( path ).replace( '/', '.' ) )
 
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
 				plugList.append( graphComponent )
@@ -251,7 +250,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			return
 
 		previousSelection = self.__curveList.getSelectedPaths()
-		newPath =  Gaffer.GraphComponentPath( self.__scriptNode, connected[0].relativeName( self.__scriptNode ).replace( '.', '/' ) )
+		newPath = Gaffer.GraphComponentPath( self.scriptNode(), connected[0].relativeName( self.scriptNode() ).replace( '.', '/' ) )
 		previousSelection.append( newPath )
 
 	 	self.__curveList.setSelectedPaths( previousSelection )
