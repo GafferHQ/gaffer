@@ -138,7 +138,10 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		# Set up signals needed to update selection state in PathListingWidget
 		editable = self.__animationGadget.editablePlugs()
-		self.__editablePlugAddedConnection = editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ) )
+		self.__editablePlugsConnections = [
+			editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ) ),
+			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ) )
+		]
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
 			bufferOptions = set(
@@ -223,7 +226,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		for plug in visiblePlugs :
 			visible.add( self.__sourceCurvePlug( plug ) )
 
-		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
+		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
 
 			editable.clear()
 			for plug in ( self.__editablePlugs or set() ) & visiblePlugs :
@@ -251,7 +254,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		editable = self.__animationGadget.editablePlugs()
 
-		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
+		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
 
 			editable.clear()
 			for plug in plugList :
@@ -264,6 +267,19 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		selection = self.__curveList.getSelection()
 		for output in curvePlug["out"].outputs() :
 			selection.addPath(
+				output.relativeName( root ).replace( ".", "/" )
+			)
+
+		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__curveList.setSelection( selection )
+
+	def __editablePlugRemoved( self, standardSet, curvePlug ) :
+
+		root = self.__curveList.getPath().property( "graphComponent:graphComponent" )
+
+		selection = self.__curveList.getSelection()
+		for output in curvePlug["out"].outputs() :
+			selection.removePath(
 				output.relativeName( root ).replace( ".", "/" )
 			)
 
