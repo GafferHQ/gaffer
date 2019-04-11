@@ -240,20 +240,14 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def __editablePlugAdded( self, standardSet, curvePlug ) :
 
-		curves = curvePlug.children()
-		if not curves :
-			return
+		selection = self.__curveList.getSelection()
+		for output in curvePlug["out"].outputs() :
+			selection.addPath(
+				output.relativeName( self.scriptNode() ).replace( ".", "/" )
+			)
 
-		connected = curves[0].outputs()
-
-		if not connected :
-			return
-
-		previousSelection = self.__curveList.getSelectedPaths()
-		newPath = Gaffer.GraphComponentPath( self.scriptNode(), connected[0].relativeName( self.scriptNode() ).replace( '.', '/' ) )
-		previousSelection.append( newPath )
-
-	 	self.__curveList.setSelectedPaths( previousSelection )
+		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__curveList.setSelection( selection )
 
 	def __sourceCurvePlug( self, plug ) :
 
