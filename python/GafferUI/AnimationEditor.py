@@ -67,8 +67,11 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 			if isinstance( graphComponent, Gaffer.Node ) :
 
 				for selected in self.__selection :
-					if graphComponent == selected or graphComponent.isAncestorOf( selected ) :
+					if graphComponent.isAncestorOf( selected ) :
 						return True
+					elif graphComponent == selected :
+						if self.__hasAnimation( graphComponent ) :
+							return True
 				return False
 
 			else :
@@ -92,12 +95,16 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 
 		return result
 
-	def __hasAnimation( self, plug ) :
+	def __hasAnimation( self, graphComponent ) :
 
-		if isinstance( plug, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( plug ) :
+		if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
 			return True
 		else :
-			for childPlug in plug.children() :
+			# We recurse only to child plugs, because for our purposes we don't
+			# consider the presence of animated child nodes to mean that the parent
+			# node is animated. This makes the curve listing more intuitive, and avoids
+			# potentially huge recursion through deeply nested node graphs.
+			for childPlug in graphComponent.children( Gaffer.Plug ) :
 				if self.__hasAnimation( childPlug ) :
 					return True
 
