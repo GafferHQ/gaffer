@@ -2309,9 +2309,15 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with open( self.temporaryDirectory() + "/test/test_stats.json", "r" ) as statsHandle:
 			stats = json.load( statsHandle )["render 0000"]
-			self.assertTrue( "scene creation time microseconds" in stats )
-			self.assertTrue( "frame time microseconds" in stats )
-			self.assertTrue( "memory consumed MB" in stats )
+			if arnold.AiCheckAPIVersion( "5", "3", "0" ):
+				self.assertTrue( "microseconds" in stats["scene creation time"] )
+				self.assertTrue( "microseconds" in stats["frame time"] )
+				self.assertTrue( "peak CPU memory used" in stats )
+			else:
+				self.assertTrue( "scene creation time microseconds" in stats )
+				self.assertTrue( "frame time microseconds" in stats )
+				self.assertTrue( "memory consumed MB" in stats )
+
 			self.assertTrue( "ray counts" in stats )
 
 	def testProcedural( self ) :
