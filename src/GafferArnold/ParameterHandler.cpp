@@ -198,12 +198,14 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 	bool defaultOverridden = false;
 	if( std::is_same< ValueType, Color4f >::value )
 	{
+		#if AI_VERSION_ARCH_NUM >= 6 || ( AI_VERSION_ARCH_NUM == 5 && AI_VERSION_MAJOR_NUM >= 3 )
 		AtRGBA metadataDefault;
 		if( AiMetaDataGetRGBA( node, name, g_gafferDefaultArnoldString, &metadataDefault ) )
 		{
 			memcpy( &defaultValue, &metadataDefault.r, sizeof( ValueType ) );
 			defaultOverridden = true;
 		}
+		#endif
 	}
 	else
 	{  
