@@ -1,4 +1,0 @@
-# Ignore everything by default
-*
-# And then explicitly include just what we want
-!build.py

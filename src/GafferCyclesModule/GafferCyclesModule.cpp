@@ -75,7 +75,7 @@ static py::list getDevices()
 		d["id"] = device.id;
 		d["num"] = device.num;
 		d["display_device"] = device.display_device;
-		d["advanced_shading"] = device.advanced_shading;
+		//d["advanced_shading"] = device.advanced_shading;
 		d["has_half_images"] = device.has_half_images;
 		d["has_volume_decoupled"] = device.has_volume_decoupled;
 		d["has_osl"] = device.has_osl;

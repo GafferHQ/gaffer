@@ -86,7 +86,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
 	else
 		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeDesc::TypePoint, ccl::ATTR_ELEMENT_CORNER );
-	ccl::float3 *fdata = uv_attr->data_float3();
+	ccl::float2 *fdata = uv_attr->data_float2();
 
 	if( subdivision_uvs )
 		uv_attr->flags |= ccl::ATTR_SUBDIVIDED;
@@ -101,17 +101,17 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		{
 			const vector<int> &indices = uvVariable.indices->readable();
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				*(fdata++) = ccl::make_float3(uvs[indices[vertex]].x, uvs[indices[vertex]].y, 0.0);
+				*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
 		}
 		else if( uvVariable.interpolation == PrimitiveVariable::FaceVarying )
 		{
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				*(fdata++) = ccl::make_float3(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y, 0.0);
+				*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
 		}
 		else
 		{
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				*(fdata++) = ccl::make_float3(uvs[vertex].x, uvs[vertex].y, 0.0);
+				*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
 		}
 	}
 }
