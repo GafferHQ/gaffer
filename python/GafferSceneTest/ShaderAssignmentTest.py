@@ -540,5 +540,15 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		assignment["shader"].setInput( switch["out"] )
 		self.assertFalse( switch["in"][0].acceptsInput( add["sum"] ) )
 
+	def testBogusSwitchConnections( self ) :
+
+		assignment = GafferScene.ShaderAssignment()
+
+		switch = Gaffer.Switch()
+		switch.setup( assignment["shader"] )
+
+		shader = GafferSceneTest.TestShader()
+		self.assertFalse( switch["in"].acceptsInput( shader["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -369,6 +369,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		assertInput( n["b"], n["a"] )
 
 	def testArrayPlugCopiesColors( self ) :
+
 		n = Gaffer.Node()
 
 		n2 = Gaffer.Node()
@@ -393,6 +394,12 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
 		self.assertTrue( p.acceptsChild( Gaffer.IntPlug() ) )
 		self.assertFalse( p.acceptsChild( Gaffer.FloatPlug() ) )
+
+	def testDenyInputFromNonArrayPlugs( self ) :
+
+		a = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		p = Gaffer.V2iPlug()
+		self.assertFalse( a.acceptsInput( p ) )
 
 	def tearDown( self ) :
 
