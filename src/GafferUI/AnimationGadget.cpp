@@ -241,8 +241,6 @@ IE_CORE_DEFINERUNTIMETYPED( AnimationGadget );
 AnimationGadget::AnimationGadget()
 	: m_context( nullptr ), m_visiblePlugs( new StandardSet() ), m_editablePlugs( new StandardSet() ), m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( DragMode::None ), m_moveAxis( MoveAxis::Both ), m_snappingClosestKey( nullptr ), m_highlightedKey( nullptr ), m_highlightedCurve( nullptr ), m_mergeGroupId( 0 ), m_keyPreview( false ), m_keyPreviewLocation( 0 ), m_xMargin( 60 ), m_yMargin( 20 ), m_textScale( 10 ), m_labelPadding( 5 ), m_frameIndicatorPreviewFrame( boost::none )
 {
-	// parentChangedSignal().connect( boost::bind( &AnimationGadget::parentChanged, this, ::_1, ::_2 ) );
-
 	buttonPressSignal().connect( boost::bind( &AnimationGadget::buttonPress, this, ::_1,  ::_2 ) );
 	buttonReleaseSignal().connect( boost::bind( &AnimationGadget::buttonRelease, this, ::_1,  ::_2 ) );
 
@@ -254,6 +252,7 @@ AnimationGadget::AnimationGadget()
 	dragEnterSignal().connect( boost::bind( &AnimationGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &AnimationGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &AnimationGadget::dragEnd, this, ::_1, ::_2 ) );
+	leaveSignal().connect( boost::bind( &AnimationGadget::leave, this ) );
 
 	m_editablePlugs->memberAcceptanceSignal().connect( boost::bind( &AnimationGadget::plugSetAcceptor, this, ::_1, ::_2 ) );
 	m_editablePlugs->memberAddedSignal().connect( boost::bind( &AnimationGadget::editablePlugAdded, this, ::_1, ::_2 ) );
@@ -1074,6 +1073,16 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 	requestRender();
 
+	return true;
+}
+
+bool AnimationGadget::leave()
+{
+	if( m_frameIndicatorPreviewFrame )
+	{
+		m_frameIndicatorPreviewFrame = boost::none;
+		requestRender();
+	}
 	return true;
 }
 

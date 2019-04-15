@@ -102,9 +102,10 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		bool mouseMove( GadgetPtr gadget, const ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event ); 
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		bool leave();
 
 		// Find elements at certain positions
 		Gaffer::Animation::ConstKeyPtr keyAt( const IECore::LineSegment3f &position ) const;

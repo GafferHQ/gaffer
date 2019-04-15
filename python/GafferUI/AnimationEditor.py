@@ -50,31 +50,63 @@ from Qt import QtWidgets
 # of a path has changed. That probably makes less sense and should be looked into. \todo
 class _AnimationPathFilter( Gaffer.PathFilter ) :
 
-	def __init__( self, scriptNode, userData = {}, selection = None ) :
+	def __init__( self, selection, userData = {} ) :
 
 		Gaffer.PathFilter.__init__( self, userData )
 
-		self.__scriptNode = scriptNode
-		self.__selection = selection or []
-
-		self.__plugInputChangedConnections = []
-		self.__nameChangedConnections = []
-
-	def setSelection( self, selection ) :
 		self.__selection = selection
 		self.__plugInputChangedConnections = [ node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) ) for node in selection ]
 
-		self.changedSignal()( self )
+		self.__nameChangedConnections = []
 
-	def __hasAnimatedChild( self, graphComponent ) :
+	def _filter( self, paths ) :
 
-		for child in graphComponent.children() :
+		def shouldKeep( path ) :
 
-			if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
-				return True
+			graphComponent = path.property( "graphComponent:graphComponent" )
+			if isinstance( graphComponent, Gaffer.Node ) :
 
-			if self.__hasAnimatedChild( child ) :
-				return True
+				for selected in self.__selection :
+					if graphComponent.isAncestorOf( selected ) :
+						return True
+					elif graphComponent == selected :
+						if self.__hasAnimation( graphComponent ) :
+							return True
+				return False
+
+			else :
+
+				assert( isinstance( graphComponent, Gaffer.Plug ) )
+				return graphComponent.node() in self.__selection and self.__hasAnimation( graphComponent )
+
+		result = []
+		for path in paths :
+
+			if not shouldKeep( path ) :
+				continue
+
+			result.append( path )
+
+			# Hack to report name changes on paths we keep. Really this
+			# should be dealt with for us by GraphComponentPath.
+			self.__nameChangedConnections.append(
+				path.property( "graphComponent:graphComponent" ).nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+			)
+
+		return result
+
+	def __hasAnimation( self, graphComponent ) :
+
+		if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
+			return True
+		else :
+			# We recurse only to child plugs, because for our purposes we don't
+			# consider the presence of animated child nodes to mean that the parent
+			# node is animated. This makes the curve listing more intuitive, and avoids
+			# potentially huge recursion through deeply nested node graphs.
+			for childPlug in graphComponent.children( Gaffer.Plug ) :
+				if self.__hasAnimation( childPlug ) :
+					return True
 
 		return False
 
@@ -84,43 +116,20 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 		self.changedSignal()( self )
 
 	def __nameChanged( self, graphComponent ) :
-		# TODO: Conceptually it doesn't make a lot of sense to have this here. I'm sure there's a better way.
+
 		self.changedSignal()( self )
-
-	def _filter( self, paths ) :
-		result = []
-
-		for path in paths :
-			candidateGraphComponent = self.__scriptNode.descendant( str( path )[1:].replace('/', '.') )
-
-			if not isinstance( candidateGraphComponent, ( Gaffer.Node, Gaffer.Plug ) ) :
-				continue
-
-			for selected in self.__selection :
-
-				if not candidateGraphComponent == selected and not selected.isAncestorOf( candidateGraphComponent ) and not candidateGraphComponent.isAncestorOf( selected ) :
-					continue
-
-				if ( isinstance( candidateGraphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( candidateGraphComponent ) ) or self.__hasAnimatedChild( candidateGraphComponent ) :
-					# If we show this component, we should be aware when its name is changes.
-					self.__nameChangedConnections.append( candidateGraphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
-					result.append( path )
-
-		return result
 
 class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
-		self.__main = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 5, spacing = 5 )
-		self.__scriptNode = scriptNode
+		mainRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 5, spacing = 5 )
 
-		GafferUI.NodeSetEditor.__init__( self, self.__main, self.__scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, mainRow, scriptNode, **kw )
 
 		# Set up widget for curve names on the left
-		self.__animationFilter = _AnimationPathFilter( scriptNode )
 		self.__curveList = GafferUI.PathListingWidget(
-			Gaffer.GraphComponentPath( scriptNode, '/', filter = self.__animationFilter ),
+			Gaffer.DictPath( {}, "/" ), # placeholder, updated in `_updateFromSet()`.
 			columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			allowMultipleSelection=True
@@ -136,7 +145,10 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		# Set up signals needed to update selection state in PathListingWidget
 		editable = self.__animationGadget.editablePlugs()
-		self.__editablePlugAddedConnection = editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ) )
+		self.__editablePlugsConnections = [
+			editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ) ),
+			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ) )
+		]
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
 			bufferOptions = set(
@@ -148,7 +160,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		# Assemble UI
 		self.__splitter = GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal )
-		self.__main.addChild( self.__splitter )
+		mainRow.addChild( self.__splitter )
 
 		self.__splitter.append( self.__curveList )
 		self.__splitter.append( self.__gadgetWidget )
@@ -165,7 +177,6 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			self.__splitter.setSizes( betterSize )
 
 		# set initial state
-		self.__visiblePlugs = None
 		self.__editablePlugs = None
 		self._updateFromSet()
 		self._updateFromContext( [ "frame" ] )
@@ -175,15 +186,28 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		bound = imath.Box3f( imath.V3f( -1, -1, 0 ), imath.V3f( 10, 10, 0 ) )
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
-	def connectedCurvePlug( self, plug ) :
-		return plug.getInput().parent()
-
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
 
-		nodeList = list( self.getNodeSet() )
-		self.__animationFilter.setSelection( nodeList )
+		nodeSet = self.getNodeSet()
+		if len( nodeSet ) == 0 :
+			pathRoot = self.scriptNode()
+		else :
+			pathRoot = nodeSet[0].parent()
+			for node in nodeSet[1:] :
+				if not pathRoot.isAncestorOf( node ) :
+					pathRoot = pathRoot.commonAncestor( node )
+
+		self.__curveList.setPath(
+			Gaffer.GraphComponentPath(
+				pathRoot, "/",
+				filter = _AnimationPathFilter( nodeSet )
+			)
+		)
+
+		# Trigger sychronization onto self.__animationGadget
+		self.__expansionChanged( self.__curveList )
 
 	def _updateFromContext( self, modifiedItems ) :
 
@@ -195,32 +219,25 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		paths = pathListing.getExpandedPaths()
 
-		plugList = []
-
+		visiblePlugs = set()
 		for path in paths:
-			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
-			for child in graphComponent.children() :
+			for childPath in path.children() :
+				child = childPath.property( "graphComponent:graphComponent" )
 				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
-					plugList.append( child )
-
-		self.__visiblePlugs = set( plugList )
+					visiblePlugs.add( child )
 
 		visible = self.__animationGadget.visiblePlugs()
 		editable = self.__animationGadget.editablePlugs()
 
 		visible.clear()
-		for plug in plugList :
-			curvePlug = self.connectedCurvePlug( plug )
-			if curvePlug :
-				visible.add( curvePlug )
+		for plug in visiblePlugs :
+			visible.add( self.__sourceCurvePlug( plug ) )
 
-		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
+		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
 
 			editable.clear()
-			for plug in ( self.__editablePlugs or set() ) & self.__visiblePlugs :
-				curvePlug = self.connectedCurvePlug( plug )
-				if curvePlug :
-					editable.add( curvePlug )
+			for plug in ( self.__editablePlugs or set() ) & visiblePlugs :
+				editable.add( self.__sourceCurvePlug( plug ) )
 
 	def __selectionChanged( self, pathListing ) :
 
@@ -231,7 +248,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		plugList = []
 
 		for path in paths :
-			graphComponent = self.__scriptNode.descendant( str( path ).replace( '/', '.' ) )
+			graphComponent = path.property( "graphComponent:graphComponent" )
 
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
 				plugList.append( graphComponent )
@@ -244,33 +261,43 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		editable = self.__animationGadget.editablePlugs()
 
-		with Gaffer.BlockedConnection( self.__editablePlugAddedConnection ) :
+		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
 
 			editable.clear()
 			for plug in plugList :
-				if plug in editable :
-					continue
-
-				curvePlug = self.connectedCurvePlug( plug )
-				if curvePlug :
-					editable.add( curvePlug )
+				editable.add( self.__sourceCurvePlug( plug ) )
 
 	def __editablePlugAdded( self, standardSet, curvePlug ) :
 
-		curves = curvePlug.children()
-		if not curves :
-			return
+		root = self.__curveList.getPath().property( "graphComponent:graphComponent" )
 
-		connected = curves[0].outputs()
+		selection = self.__curveList.getSelection()
+		for output in curvePlug["out"].outputs() :
+			selection.addPath(
+				output.relativeName( root ).replace( ".", "/" )
+			)
 
-		if not connected :
-			return
+		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__curveList.setSelection( selection )
 
-		previousSelection = self.__curveList.getSelectedPaths()
-		newPath =  Gaffer.GraphComponentPath( self.__scriptNode, connected[0].relativeName( self.__scriptNode ).replace( '.', '/' ) )
-		previousSelection.append( newPath )
+	def __editablePlugRemoved( self, standardSet, curvePlug ) :
 
-	 	self.__curveList.setSelectedPaths( previousSelection )
+		root = self.__curveList.getPath().property( "graphComponent:graphComponent" )
+
+		selection = self.__curveList.getSelection()
+		for output in curvePlug["out"].outputs() :
+			selection.removePath(
+				output.relativeName( root ).replace( ".", "/" )
+			)
+
+		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__curveList.setSelection( selection )
+
+	def __sourceCurvePlug( self, plug ) :
+
+		result = plug.source().parent()
+		assert( isinstance( result, Gaffer.Animation.CurvePlug ) )
+		return result
 
 	def __repr__( self ) :
 
