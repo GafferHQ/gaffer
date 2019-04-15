@@ -1150,6 +1150,51 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		assertReferenceConnections()
 
+	def testSearchPaths( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		referenceFile = "test.grf"
+
+		boxA = Gaffer.Box( "BoxA" )
+		boxA["p"] = Gaffer.StringPlug( defaultValue = "a", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s.addChild( boxA )
+		boxPathA = os.path.join( self.temporaryDirectory(), "a" )
+		os.makedirs( boxPathA )
+		fileA = os.path.join( boxPathA, referenceFile )
+		boxA.exportForReference( fileA )
+
+		boxB = Gaffer.Box( "BoxB" )
+		boxB["p"] = Gaffer.StringPlug( defaultValue = "b", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s.addChild( boxB )
+		boxPathB = os.path.join(self.temporaryDirectory(), "b")
+		os.makedirs( boxPathB )
+		fileB = os.path.join( boxPathB, referenceFile )
+		boxB.exportForReference( fileB )
+
+		searchPathA = ":".join( [boxPathA, boxPathB] )
+		searchPathB = ":".join( [boxPathB, boxPathA] )
+
+		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
+		s["r"] = Gaffer.Reference()
+
+		s["r"].load(referenceFile)
+		self.assertEqual( s["r"].fileName(), referenceFile )
+		self.assertEqual( s["r"]["p"].getValue(), "a" )
+
+		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathB
+		s["r"].load( referenceFile )
+		self.assertEqual( s["r"].fileName(), referenceFile )
+		self.assertEqual( s["r"]["p"].getValue(), "b" )
+
+	def testLoadThrowsOnMissingFile( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+
+		with self.assertRaisesRegexp( Exception, "Could not find file 'thisFileDoesntExist.grf'" ) :
+			s["r"].load( "thisFileDoesntExist.grf" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
