@@ -187,6 +187,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Light Linking",
 			"label", "Linked Lights",
+			"ui:scene:acceptsSetExpression", True,
 
 		],
 
@@ -200,8 +201,9 @@ Gaffer.Metadata.registerNode(
 			contribute to illumination by default.
 			""",
 
-			"layout:section", "LightFilters",
+			"layout:section", "Light Linking",
 			"label", "Filtered Lights",
+			"ui:scene:acceptsSetExpression", True,
 
 		],
 
