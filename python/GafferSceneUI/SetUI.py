@@ -202,7 +202,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	with plugValueWidget.getContext() :
 		for node in nodes :
 			for scenePlug in __scenePlugs( node ) :
-				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() ] )
+				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() if not str( n ).startswith( "__" ) ] )
 
 	if not setNames :
 		return
