@@ -303,6 +303,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
+		self._qtWidget().setTabsClosable( True )
+		self.__tabCloseRequestedConnection = self._qtWidget().tabCloseRequested.connect( Gaffer.WeakMethod( self.__closeTab ) )
+
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, basestring ) :
@@ -500,3 +503,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		# issues in certain circumstances (eg hosting Gaffer in other Qt DCC).
 		## \todo: consider doing this for all Menu commands in GafferUI.Menu
 		GafferUI.EventLoop.addIdleCallback( functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) )
+
+	def __closeTab( self, index ) :
+
+		self.remove( self[index] )
