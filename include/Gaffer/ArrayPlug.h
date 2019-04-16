@@ -73,6 +73,7 @@ class GAFFER_API ArrayPlug : public Plug
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ArrayPlug, ArrayPlugTypeId, Plug );
 
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		bool acceptsInput( const Plug *input ) const override;
 		void setInput( PlugPtr input ) override;
 		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 

@@ -85,6 +85,15 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 	return children().size() == 0 || potentialChild->typeId() == children()[0]->typeId();
 }
 
+bool ArrayPlug::acceptsInput( const Plug *input ) const
+{
+	if( !Plug::acceptsInput( input ) )
+	{
+		return false;
+	}
+	return !input || IECore::runTimeCast<const ArrayPlug>( input );
+}
+
 void ArrayPlug::setInput( PlugPtr input )
 {
 	// Plug::setInput() will be managing the inputs of our children,
