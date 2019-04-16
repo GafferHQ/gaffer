@@ -783,7 +783,7 @@ libraries = {
 
 	"GafferArnoldUI" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferOSL", "GafferSceneUI" ],
+			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferOSL", "GafferSceneUI" ],
 			},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferArnoldUI", "GafferSceneUI" ],
