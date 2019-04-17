@@ -42,17 +42,20 @@
 #include "boost/make_unique.hpp"
 
 #include <mutex>
+#include <stack>
 
 using namespace Gaffer;
 
 namespace
 {
 
-std::unique_lock<std::mutex> lockUIThreadCallHandler( ParallelAlgo::UIThreadCallHandler *&handler )
+using UIThreadCallHandlers = std::stack<ParallelAlgo::UIThreadCallHandler>;
+
+std::unique_lock<std::mutex> lockUIThreadCallHandlers( UIThreadCallHandlers *&handlers )
 {
 	static std::mutex g_mutex;
-	static ParallelAlgo::UIThreadCallHandler g_handler;
-	handler = &g_handler;
+	static UIThreadCallHandlers g_handlers;
+	handlers = &g_handlers;
 	return std::unique_lock<std::mutex>( g_mutex );
 }
 
@@ -60,21 +63,37 @@ std::unique_lock<std::mutex> lockUIThreadCallHandler( ParallelAlgo::UIThreadCall
 
 void ParallelAlgo::callOnUIThread( const UIThreadFunction &function )
 {
-	UIThreadCallHandler *handler = nullptr;
-	auto lock = lockUIThreadCallHandler( handler );
-	(*handler)( function );
+	UIThreadCallHandlers *handlers = nullptr;
+	auto lock = lockUIThreadCallHandlers( handlers );
+	if( handlers->size() )
+	{
+		handlers->top()( function );
+	}
+	else
+	{
+		throw IECore::Exception( "No UIThreadCallHandler installed" );
+	}
 }
 
-void ParallelAlgo::registerUIThreadCallHandler( const UIThreadCallHandler &handler )
+void ParallelAlgo::pushUIThreadCallHandler( const UIThreadCallHandler &handler )
 {
-	UIThreadCallHandler *h = nullptr;
-	auto lock = lockUIThreadCallHandler( h );
+	UIThreadCallHandlers *handlers = nullptr;
+	auto lock = lockUIThreadCallHandlers( handlers );
+	handlers->push( handler );
+}
 
-	if( *h && handler )
+void ParallelAlgo::popUIThreadCallHandler()
+{
+	UIThreadCallHandlers *handlers = nullptr;
+	auto lock = lockUIThreadCallHandlers( handlers );
+	if( handlers->size() )
 	{
-		throw IECore::Exception( "Replacing the handler is not allowed" );
+		handlers->pop();
 	}
-	*h = handler;
+	else
+	{
+		throw IECore::Exception( "No UIThreadCallHandler to pop" );
+	}
 }
 
 GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread( const Plug *subject, BackgroundFunction function )

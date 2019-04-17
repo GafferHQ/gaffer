@@ -86,7 +86,8 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 	def execute( self ) :
 
 		executionDict = self.__executionDict()
-		exec( _codeObjectCache.get( self["command"].getValue() ), executionDict, executionDict )
+		with executionDict["context"] :
+			exec( _codeObjectCache.get( self["command"].getValue() ), executionDict, executionDict )
 
 	def executeSequence( self, frames ) :
 
@@ -100,7 +101,8 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 			return
 
 		executionDict = self.__executionDict( frames )
-		exec( self["command"].getValue(), executionDict, executionDict )
+		with executionDict["context"] :
+			exec( self["command"].getValue(), executionDict, executionDict )
 
 	def requiresSequenceExecution( self ) :
 
@@ -108,16 +110,18 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 	def __executionDict( self, frames = None ) :
 
+		context = Gaffer.Context( Gaffer.Context.current() )
+
 		result = {
 			"IECore" : IECore,
 			"Gaffer" : Gaffer,
 			"imath" : imath,
 			"self" : self,
-			"context" : Gaffer.Context.current(),
+			"context" : context,
 			"variables" : _VariablesDict(
 				self["variables"],
-				Gaffer.Context.current(),
-				validFrames = set( frames ) if frames is not None else { Gaffer.Context.current().getFrame() }
+				context,
+				validFrames = set( frames ) if frames is not None else { context.getFrame() }
 			)
 		}
 

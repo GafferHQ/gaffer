@@ -587,7 +587,6 @@ class BoxTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["b"] = Gaffer.Box()
-		self.assertEqual( Gaffer.Metadata.value( s["b"], "description" ), None )
 
 		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
 
@@ -643,8 +642,8 @@ class BoxTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
 		p = b.promotePlug( b["n"]["op1"] )
 
-		self.assertEqual( Gaffer.Metadata.value( b, "description" ), None )
-		self.assertEqual( Gaffer.Metadata.value( p, "description" ), None )
+		originalBoxDescription = Gaffer.Metadata.value( b, "description" )
+		originalPlugDescription = Gaffer.Metadata.value( p, "description" )
 
 		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( b, "description", "d" )
@@ -667,8 +666,8 @@ class BoxTest( GafferTest.TestCase ) :
 
 		s.undo()
 
-		self.assertEqual( Gaffer.Metadata.value( b, "description" ), None )
-		self.assertEqual( Gaffer.Metadata.value( p, "description" ), None )
+		self.assertEqual( Gaffer.Metadata.value( b, "description" ), originalBoxDescription )
+		self.assertEqual( Gaffer.Metadata.value( p, "description" ), originalPlugDescription )
 
 		s.redo()
 
@@ -757,6 +756,9 @@ class BoxTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = Gaffer.Node()
 
+		defaultDescription = Gaffer.Metadata.value( s["b"], "description" )
+		defaultNodeColor = Gaffer.Metadata.value( s["b"], "nodeGadget:color" )
+
 		Gaffer.Metadata.registerValue( s["b"], "description", "Test description" )
 		Gaffer.Metadata.registerValue( s["b"], "nodeGadget:color", imath.Color3f( 1, 0, 0 ) )
 
@@ -766,8 +768,8 @@ class BoxTest( GafferTest.TestCase ) :
 		s.execute( ss, parent = s["b2"] )
 
 		self.assertTrue( "n" in s["b2"] )
-		self.assertEqual( Gaffer.Metadata.value( s["b2"], "description" ), None )
-		self.assertEqual( Gaffer.Metadata.value( s["b2"], "nodeGadget:color" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["b2"], "description" ), defaultDescription )
+		self.assertEqual( Gaffer.Metadata.value( s["b2"], "nodeGadget:color" ), defaultNodeColor )
 
 	def testPromoteDynamicBoxPlugAndSerialise( self ) :
 

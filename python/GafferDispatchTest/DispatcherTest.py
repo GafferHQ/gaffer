@@ -103,6 +103,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		GafferDispatch.Dispatcher.registerDispatcher( "testDispatcher", functools.partial( create, self.temporaryDirectory() ) )
 
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcher" )
+		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcherWithCustomPlugs" )
+
 	def testBadJobDirectory( self ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )

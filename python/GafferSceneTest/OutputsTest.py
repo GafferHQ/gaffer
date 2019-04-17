@@ -106,10 +106,12 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 
 	def testRegistry( self ) :
 
+		preExistingOutputs = GafferScene.Outputs.registeredOutputs()
+
 		GafferScene.Outputs.registerOutput( "test", IECoreScene.Output( "test.exr", "exr", "rgba" ) )
 		GafferScene.Outputs.registerOutput( "test2", IECoreScene.Output( "test.exr", "exr", "rgba" ) )
 
-		self.assertEqual( GafferScene.Outputs.registeredOutputs(), ( "test", "test2" ) )
+		self.assertEqual( GafferScene.Outputs.registeredOutputs(), preExistingOutputs + ( "test", "test2" ) )
 
 		o = GafferScene.Outputs()
 		p = o.addOutput( "test" )
@@ -118,14 +120,14 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["data"].getValue(), "rgba" )
 
 		GafferScene.Outputs.deregisterOutput( "test" )
-		self.assertEqual( GafferScene.Outputs.registeredOutputs(), ( "test2", ) )
+		self.assertEqual( GafferScene.Outputs.registeredOutputs(), preExistingOutputs + ( "test2", ) )
 
 		o = GafferScene.Outputs()
 		with self.assertRaisesRegexp( RuntimeError, "Output not registered" ) :
 			o.addOutput( "test" )
 
 		GafferScene.Outputs.deregisterOutput( "test2" )
-		self.assertEqual( GafferScene.Outputs.registeredOutputs(), () )
+		self.assertEqual( GafferScene.Outputs.registeredOutputs(), preExistingOutputs )
 
 	def testHashPassThrough( self ) :
 

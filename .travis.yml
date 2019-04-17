@@ -41,25 +41,29 @@ script:
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
-    - source ./config/travis/runGafferTest GafferTest
-    - source ./config/travis/runGafferTest GafferUITest
-    - source ./config/travis/runGafferTest GafferDispatchTest
-    - source ./config/travis/runGafferTest GafferDispatchUITest
-    - source ./config/travis/runGafferTest GafferCortexTest
-    - source ./config/travis/runGafferTest GafferCortexUITest
-    - source ./config/travis/runGafferTest GafferImageTest
-    - source ./config/travis/runGafferTest GafferImageUITest
-    - source ./config/travis/runGafferTest GafferSceneTest
-    - source ./config/travis/runGafferTest GafferSceneUITest
-    - source ./config/travis/runGafferTest GafferOSLTest
-    - source ./config/travis/runGafferTest GafferOSLUITest
-    - source ./config/travis/runGafferTest GafferAppleseedTest
-    - source ./config/travis/runGafferTest GafferAppleseedUITest
-    - source ./config/travis/runGafferTest GafferDelightTest
-    - source ./config/travis/runGafferTest GafferDelightUITest
-    - source ./config/travis/runGafferTest GafferVDBTest
-    - source ./config/travis/runGafferTest GafferVDBUITest
-    - ./config/travis/printTestResults
+    # Run GafferUI tests separately, because mixing them with GafferImageUI tests
+    # causes problems on Travis. We think these relate to OpenGL/Mesa but haven't
+    # been able to get to the bottom of it yet.
+    - ./install/gaffer-*/bin/gaffer test
+      GafferUITest
+    - ./install/gaffer-*/bin/gaffer test
+      GafferTest
+      GafferDispatchTest
+      GafferDispatchUITest
+      GafferCortexTest
+      GafferCortexUITest
+      GafferImageTest
+      GafferImageUITest
+      GafferSceneTest
+      GafferSceneUITest
+      GafferOSLTest
+      GafferOSLUITest
+      GafferAppleseedTest
+      GafferAppleseedUITest
+      GafferDelightTest
+      GafferDelightUITest
+      GafferVDBTest
+      GafferVDBUITest
 
 before_cache:
     # This is run just before uploading the cache for next time.

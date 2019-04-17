@@ -351,5 +351,13 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( { str( x ) for x in ( neitherHash, aHash, bHash, bothHash ) } ), 4 )
 
+	def testContextModificationsDontLeak( self ) :
+
+		command = Gaffer.PythonCommand()
+		command["command"].setValue( "context.setFrame( 2 )" )
+		command["task"].execute()
+
+		self.assertEqual( Gaffer.Context.current(), Gaffer.Context() )
+
 if __name__ == "__main__":
 	unittest.main()
