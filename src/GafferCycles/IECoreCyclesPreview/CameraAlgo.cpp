@@ -143,7 +143,7 @@ namespace CameraAlgo
 
 {
 
-ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName )
+ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName, const ccl::Scene *scene )
 {
 	return convertCommon( camera, nodeName );
 }

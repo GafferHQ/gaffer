@@ -43,6 +43,8 @@
 
 // Cycles
 #include "render/object.h"
+// Currently only VDBs need scene to get to the image manager
+#include "render/scene.h"
 
 namespace IECoreCycles
 {
@@ -55,16 +57,16 @@ namespace ObjectAlgo
 /// Cycles' internal Node/Socket API to form connections or apply parameters.
 
 /// Converts the specified IECore::Object into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECore::Object *object, const std::string &nodeName );
+IECORECYCLES_API ccl::Object *convert( const IECore::Object *object, const std::string &nodeName, const ccl::Scene *scene = nullptr );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
+IECORECYCLES_API ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName, const ccl::Scene *scene = nullptr );
 
 /// Signature of a function which can convert into a Cycles Object.
-typedef ccl::Object * (*Converter)( const IECore::Object *, const std::string &nodeName );
+typedef ccl::Object * (*Converter)( const IECore::Object *, const std::string &nodeName, const ccl::Scene *scene );
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving Cycles object.
-typedef ccl::Object * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName );
+typedef ccl::Object * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::string &nodeName, const ccl::Scene *scene );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -80,8 +82,8 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		typedef ccl::Object *(*Converter)( const T *, const std::string& );
-		typedef ccl::Object *(*MotionConverter)( const std::vector<const T *> &, const std::string& );
+		typedef ccl::Object *(*Converter)( const T *, const std::string&, const ccl::Scene* );
+		typedef ccl::Object *(*MotionConverter)( const std::vector<const T *> &, const std::string&, const ccl::Scene* );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{

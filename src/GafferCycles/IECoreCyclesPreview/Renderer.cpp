@@ -1229,7 +1229,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-				cobject = ObjectAlgo::convert( object, "instance:" + hash.toString() );
+				cobject = ObjectAlgo::convert( object, "instance:" + hash.toString(), m_scene );
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
 			else
@@ -1269,7 +1269,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-				cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString() );
+				cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString(), m_scene );
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
 			else

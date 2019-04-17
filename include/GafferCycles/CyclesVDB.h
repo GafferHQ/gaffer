@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Alex Fuller. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Alex Fuller. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,26 +35,60 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_TYPEIDS_H
-#define GAFFERCYCLES_TYPEIDS_H
+#ifndef GAFFERCYCLES_CYCLESVDB_H
+#define GAFFERCYCLES_CYCLESVDB_H
+
+#include "GafferCycles/Export.h"
+#include "GafferCycles/TypeIds.h"
+
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferCycles
 {
 
-enum TypeId
+class GAFFERCYCLES_API CyclesVDB : public GafferScene::ObjectSource
 {
-	CyclesAttributesTypeId = 400000,
-	CyclesOptionsTypeId = 400001,
-	CyclesRenderTypeId = 400002,
-	InteractiveCyclesRenderTypeId = 400003,
-	CyclesShaderTypeId = 400004,
-	CyclesLightTypeId = 400005,
-	CyclesBackgroundTypeId = 400006,
-	CyclesVDBTypeId = 400007,
 
-	LastTypeId = 400049
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesVDB, CyclesVDBTypeId, GafferScene::ObjectSource );
+
+		CyclesVDB( const std::string &name=defaultName<CyclesVDB>() );
+		~CyclesVDB() override;
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		Gaffer::StringPlug *gridsPlug();
+		const Gaffer::StringPlug *gridsPlug() const;
+
+		Gaffer::StringPlug *velocityGridsPlug();
+		const Gaffer::StringPlug *velocityGridsPlug() const;
+
+		Gaffer::FloatPlug *velocityScalePlug();
+		const Gaffer::FloatPlug *velocityScalePlug() const;
+
+		Gaffer::FloatPlug *stepSizePlug();
+		const Gaffer::FloatPlug *stepSizePlug() const;
+
+		Gaffer::FloatPlug *stepScalePlug();
+		const Gaffer::FloatPlug *stepScalePlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( CyclesVDB )
 
 } // namespace GafferCycles
 
-#endif // GAFFERCYCLES_TYPEIDS_H
+#endif // GAFFERCYCLES_CYCLESVDB_H

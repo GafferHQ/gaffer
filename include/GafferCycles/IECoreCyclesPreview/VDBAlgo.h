@@ -6,19 +6,17 @@
 //  modification, are permitted provided that the following conditions are
 //  met:
 //
-//      * Redistributions of source code must retain the above
-//        copyright notice, this list of conditions and the following
-//        disclaimer.
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
 //
-//      * Redistributions in binary form must reproduce the above
-//        copyright notice, this list of conditions and the following
-//        disclaimer in the documentation and/or other materials provided with
-//        the distribution.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
-//        any other contributors to this software may be used to endorse or
-//        promote products derived from this software without specific prior
-//        written permission.
+//     * Neither the name of Image Engine Design nor the names of any
+//       other contributors to this software may be used to endorse or
+//       promote products derived from this software without specific prior
+//       written permission.
 //
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -34,26 +32,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_TYPEIDS_H
-#define GAFFERCYCLES_TYPEIDS_H
+#ifndef IECORECYCLES_VDBALGO_H
+#define IECORECYCLES_VDBALGO_H
 
-namespace GafferCycles
+#include "GafferCycles/IECoreCyclesPreview/Export.h"
+
+#include "IECoreVDB/VDBObject.h"
+
+// Cycles
+#include "render/object.h"
+
+namespace IECoreCycles
 {
 
-enum TypeId
+namespace VDBAlgo
 {
-	CyclesAttributesTypeId = 400000,
-	CyclesOptionsTypeId = 400001,
-	CyclesRenderTypeId = 400002,
-	InteractiveCyclesRenderTypeId = 400003,
-	CyclesShaderTypeId = 400004,
-	CyclesLightTypeId = 400005,
-	CyclesBackgroundTypeId = 400006,
-	CyclesVDBTypeId = 400007,
 
-	LastTypeId = 400049
-};
+/// Converts the specified IECoreVDB::VDBObject into a ccl::Object.
+IECORECYCLES_API ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, const ccl::Scene *scene );
 
-} // namespace GafferCycles
+} // namespace VDBAlgo
 
-#endif // GAFFERCYCLES_TYPEIDS_H
+} // namespace IECoreCycles
+
+#endif // IECORECYCLES_VDBALGO_H

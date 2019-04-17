@@ -127,7 +127,7 @@ namespace CurvesAlgo
 
 {
 
-ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName )
+ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, const ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
 	cobject->mesh = convertCommon(curve);
@@ -135,7 +135,7 @@ ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::stri
 	return cobject;
 }
 
-ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName )
+ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName, const ccl::Scene *scene )
 {
 	ccl::Mesh *cmesh = convertCommon(curves[0]);
 
