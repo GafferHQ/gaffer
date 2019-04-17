@@ -59,9 +59,39 @@ GadgetPtr getPrimaryChild( ViewportGadget &v )
 	return v.getPrimaryChild();
 }
 
+void setCamera( ViewportGadget &v, IECoreScene::Camera &camera )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.setCamera( &camera );
+}
+
 IECoreScene::CameraPtr getCamera( const ViewportGadget &v )
 {
 	return v.getCamera()->copy();
+}
+
+void setCameraTransform( ViewportGadget &v, const Imath::M44f &transform )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.setCameraTransform( transform );
+}
+
+void frame1( ViewportGadget &v, const Imath::Box3f &box )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.frame( box );
+}
+
+void frame2( ViewportGadget &v, const Imath::Box3f &box, const Imath::V3f &viewDirection, Imath::V3f &upVector )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.frame( box, viewDirection, upVector );
+}
+
+void fitClippingPlanes( ViewportGadget &v, const Imath::Box3f &box )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.fitClippingPlanes( box );
 }
 
 list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
@@ -99,8 +129,6 @@ void render( const ViewportGadget &v )
 	v.render();
 }
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( frameOverloads, frame, 2, 3 );
-
 } // namespace
 
 void GafferUIModule::bindViewportGadget()
@@ -116,17 +144,17 @@ void GafferUIModule::bindViewportGadget()
 		.def( "getPlanarMovement", &ViewportGadget::getPlanarMovement )
 		.def( "setPlanarMovement", &ViewportGadget::setPlanarMovement )
 		.def( "getCamera", &getCamera )
-		.def( "setCamera", &ViewportGadget::setCamera )
+		.def( "setCamera", &setCamera )
 		.def( "getCameraTransform", &ViewportGadget::getCameraTransform, return_value_policy<copy_const_reference>() )
-		.def( "setCameraTransform", &ViewportGadget::setCameraTransform )
+		.def( "setCameraTransform", &setCameraTransform )
 		.def( "cameraChangedSignal", &ViewportGadget::cameraChangedSignal, return_internal_reference<1>() )
 		.def( "getCameraEditable", &ViewportGadget::getCameraEditable )
 		.def( "setCameraEditable", &ViewportGadget::setCameraEditable )
 		.def( "setCenterOfInterest", &ViewportGadget::setCenterOfInterest )
 		.def( "getCenterOfInterest", &ViewportGadget::getCenterOfInterest )
-		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f & ))&ViewportGadget::frame )
-		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f &, const Imath::V3f &, const Imath::V3f & ))&ViewportGadget::frame, frameOverloads() )
-		.def( "fitClippingPlanes", &ViewportGadget::fitClippingPlanes )
+		.def( "frame", &frame1 )
+		.def( "frame", &frame2, ( arg_( "box" ), arg_( "viewDirection" ), arg_( "upVector" ) = Imath::V3f( 0, 1, 0 ) ) )
+		.def( "fitClippingPlanes", &fitClippingPlanes )
 		.def( "setDragTracking", &ViewportGadget::setDragTracking )
 		.def( "getDragTracking", &ViewportGadget::getDragTracking )
 		.def( "setVariableAspectZoom", &ViewportGadget::setVariableAspectZoom )
