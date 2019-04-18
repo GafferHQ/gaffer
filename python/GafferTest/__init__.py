@@ -53,6 +53,7 @@ except AttributeError :
 		return wrapper
 
 from TestCase import TestCase
+from TestRunner import TestRunner
 from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GraphComponentTest import GraphComponentTest
