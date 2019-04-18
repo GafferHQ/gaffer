@@ -1,3 +1,4 @@
+import IECore
 import Gaffer
 import GafferScene
 import GafferUI

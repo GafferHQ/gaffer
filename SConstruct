@@ -1310,14 +1310,14 @@ else :
 # Example files
 #########################################################################################################
 
-exampleFiles = (
-	glob.glob( "doc/examples/*.gfr" ) +
-	glob.glob( "doc/examples/*/*.gfr" ) +
-	glob.glob( "doc/examples/*/*/*.gfr" )
-)
+exampleFiles = []
+for ext in ( 'gfr', 'grf', 'png' ) :
+	exampleFiles += glob.glob( "doc/examples/*.%s" % ext )
+	exampleFiles += glob.glob( "doc/examples/*/*.%s" % ext )
+	exampleFiles += glob.glob( "doc/examples/*/*/*.%s" % ext )
 
-for file in exampleFiles :
-	fileInstall = env.Command( file.replace( "doc/", "$BUILD_DIR/resources/", 1 ), file, Copy( "$TARGET", "$SOURCE" ) )
+for f in exampleFiles :
+	fileInstall = env.Command( f.replace( "doc/", "$BUILD_DIR/resources/", 1 ), f, Copy( "$TARGET", "$SOURCE" ) )
 	env.Alias( "build", fileInstall )
 
 #########################################################################################################
