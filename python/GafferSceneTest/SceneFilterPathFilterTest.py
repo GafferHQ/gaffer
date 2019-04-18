@@ -70,6 +70,7 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( path.children(), [] )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testManyPaths( self ) :
 
 		plane = GafferScene.Plane()
@@ -92,12 +93,7 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.SceneFilterPathFilter( scenePathFilter )
 		)
 
-		t = IECore.Timer()
 		self.assertEqual( len( path.children() ), 251001 )
-
-		# This test can be useful when benchmarking SceneFilterPathFilter
-		# performance. Uncomment to get timing information.
-		# print t.stop()
 
 if __name__ == "__main__":
 	unittest.main()

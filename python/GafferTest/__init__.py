@@ -69,7 +69,6 @@ from FileSystemPathTest import FileSystemPathTest
 from PathTest import PathTest
 from PathFilterTest import PathFilterTest
 from UndoTest import UndoTest
-from SpeedTest import SpeedTest
 from KeywordPlugNode import KeywordPlugNode
 from CompoundNumericPlugTest import CompoundNumericPlugTest
 from CompoundNumericNode import CompoundNumericNode

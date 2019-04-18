@@ -332,6 +332,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( cs[3][0].isSame( n["o"]["z"] ) )
 		self.assertTrue( cs[4][0].isSame( n["o"] ) )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testEfficiency( self ) :
 
 		# Node with compound plugs where every child
