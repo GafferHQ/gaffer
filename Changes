@@ -139,6 +139,39 @@ Breaking Changes
 - Shader : Changed base class to ComputeNode (#3074).
 - TweakPlug : Added compulsory ValuePlug argument to constructor used for serialisation (#3084).
 
+0.53.5.0 (relative to 0.53.4.0)
+========
+
+Features
+--------
+
+- Reference : Added support for fileName search paths (#3049).
+  - Set the new `GAFFER_REFERENCE_PATHS` environment variable in order to load relative Reference files.
+
+Fixes
+-----
+
+- Catalogue : Fixed bug when viewing a Catalogue after a ShaderView (#3113).
+  - Note this is actually a change to ShaderPlug itself, not to Catalogue.
+- Camera : Fixed bug in compatibility config (#3100).
+- Wedge : Fixed to work without compatibility configs (#3122).
+- AnimationEditor : Fixed bug affecting animated promoted plugs (#3106).
+- UIEditor : Fixed bug with '/' in presets (we now replace '/' with '_') (#3103).
+- Viewer : Fixed potential deadlocks when editing the camera in the Viewer (#3121).
+- Arnold :
+  - Exposed the geometry parameters in the NodeEditor (#3104).
+  - Added support for "gaffer.default" and "gaffer.userDefault" metadata (#3112).
+    - There is an example .mtd file which provides Arnold 5.2 compatibility in contrib/arnold (#3115).
+
+Documentation
+-------------
+
+- Added "Anatomy of a Camera" article to "Working with Scenes" section (#3050).
+- Added missing shortguts for "Controls and Shortcuts" (#3111).
+- Fixed recent screengrab errors and build targets (#3066).
+- Fixed shader assignment variable in Python tutorial (#3099).
+- Fixed reference to 'root' in Expression Scripting Reference (#3107).
+
 0.53.4.0 (relative to 0.53.3.0)
 ========
 
