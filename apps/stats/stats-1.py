@@ -583,6 +583,17 @@ class stats( Gaffer.Application ) :
 			( "", "" ),
 			( "Object pool limit", _Memory( objectPool.getMaxMemoryUsage() ) ),
 			( "Object pool usage", _Memory( objectPool.memoryUsage() ) ),
+		] )
+
+		import IECoreScene
+		if "IECoreScene" in sys.modules :
+			items.extend( [
+				( "", "" ),
+				( "Scene interface limit", IECoreScene.SharedSceneInterfaces.getMaxScenes() ),
+				( "Scene interfaces", IECoreScene.SharedSceneInterfaces.numScenes() ),
+			] )
+
+		items.extend( [
 			( "", "" ),
 			( "Max resident size", _Memory.maxRSS() ),
 		] )
