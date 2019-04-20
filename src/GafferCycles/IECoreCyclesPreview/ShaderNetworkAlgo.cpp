@@ -44,7 +44,9 @@
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
+#include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/SplineData.h"
 #include "IECore/VectorTypedData.h"
@@ -52,6 +54,7 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/filesystem.hpp"
 #include "boost/unordered_map.hpp"
 
 // Cycles
@@ -65,6 +68,25 @@ using namespace IECoreCycles;
 
 namespace
 {
+
+std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
+{
+	cost = 1;
+	const char *oslShaderPaths = getenv( "OSL_SHADER_PATHS" );
+	SearchPath searchPath( oslShaderPaths ? oslShaderPaths : "" );
+	boost::filesystem::path path = searchPath.find( shaderName + ".oso" );
+	if( path.empty() )
+	{
+		return shaderName;
+	}
+	else
+	{
+		return path.string();
+	}
+}
+
+typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
+ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 ccl::ShaderNode *getShaderNode( const std::string &name )
 {
@@ -226,7 +248,7 @@ InternedString partitionEnd( const InternedString &s, char c )
 	}
 }
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::Scene *scene, ccl::Shader *cshader, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::ShaderManager *shaderManager, ccl::Shader *cshader, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. It is ideal for all assigned
 	// shaders in the graph to funnel through the default "output" so
@@ -251,16 +273,21 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	else if( isOSLShader )
 	{
 #ifdef WITH_OSL
-		if( scene->params.shadingsystem == ccl::SHADINGSYSTEM_OSL )
+		if( shaderManager )
 		{
-			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)scene->shader_manager;
-			node = manager->osl_node( shader->getName().c_str(), "" );
+			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
+			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
+			node = manager->osl_node( shaderFileName.c_str() );
 			node = cshader->graph->add( node );
 		}
 		else
 #endif
 		{
+#ifdef WITH_OSL
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
+#else
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
+#endif
 			return node;
 		}
 	}
@@ -292,10 +319,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// We needed to change any "." found in the socket input names to
 		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( namedParameter.first.string(), "__", "." );
-		if( isOSLShader )
-		{
-			parameterName = "param_" + parameterName;
-		}
 
 		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
 		{
@@ -316,7 +339,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, cshader, converted );
+		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, cshader, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -391,7 +414,7 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	return nullptr;
 }
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::Scene *scene, const std::string &namePrefix )
+ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::ShaderManager *shaderManager, const std::string &namePrefix )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) // todo : make conditional on OSL < 1.10
@@ -416,7 +439,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 			// The first shader is an emission node
 			for( const auto &connection : shaderNetwork->inputConnections( output ) )
 			{
-				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, result, converted );
+				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, result, converted );
 				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)result->graph->output();
 				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "emission" ) )
 					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
@@ -425,7 +448,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 			}
 		}
 		else
-			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, scene, result, converted );
+			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, result, converted );
 	}
 	return result;
 }

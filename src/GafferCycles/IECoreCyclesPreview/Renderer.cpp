@@ -174,27 +174,6 @@ inline const T *dataCast( const char *name, const IECore::Data *data )
 	return nullptr;
 }
 
-/*
-std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
-{
-	cost = 1;
-	const char *oslShaderPaths = getenv( "OSL_SHADER_PATHS" );
-	SearchPath searchPath( oslShaderPaths ? oslShaderPaths : "" );
-	boost::filesystem::path path = searchPath.find( shaderName + ".oso" );
-	if( path.empty() )
-	{
-		return shaderName;
-	}
-	else
-	{
-		return path.string();
-	}
-}
-*/
-
-//typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
-//ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -754,9 +733,19 @@ class ShaderCache : public IECore::RefCounted
 
 	public :
 
-		ShaderCache( ccl::Scene* scene )
-			: m_scene( scene )
+		ShaderCache( ccl::Scene *scene )
+			: m_scene( scene ), m_shaderManager( nullptr )
 		{
+			#ifdef WITH_OSL
+			m_shaderManager = new ccl::OSLShaderManager();
+			#endif
+		}
+
+		~ShaderCache()
+		{
+			#ifdef WITH_OSL
+			delete m_shaderManager;
+			#endif
 		}
 
 		void update( ccl::Scene *scene )
@@ -775,7 +764,7 @@ class ShaderCache : public IECore::RefCounted
 				if( shader )
 				{
 					const std::string namePrefix = "shader:" + a->first.toString() + ":";
-					a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_scene, namePrefix ) );
+					a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_shaderManager, namePrefix ) );
 				}
 				else
 				{
@@ -876,9 +865,10 @@ class ShaderCache : public IECore::RefCounted
 			}
 		}
 
-		ccl::Scene* m_scene;
+		ccl::Scene *m_scene;
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCShaderPtr> Cache;
 		Cache m_cache;
+		ccl::ShaderManager *m_shaderManager;
 
 };
 
@@ -1866,13 +1856,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
 
-			m_attributesCache.reset();
-			m_instanceCache.reset();
-			m_shaderCache.reset();
-			m_lightCache.reset();
-			m_cameraCache.reset();
-			m_outputs.clear();
-
 			// Gaffer has already deleted these, so we can't double-delete
 			m_scene->shaders.clear();
 			m_scene->meshes.clear();
@@ -1881,6 +1864,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 
 			// The rest should be cleaned up by Cycles.
+			delete m_scene->default_surface;
+			delete m_scene->default_light;
+			delete m_scene->default_background;
+			delete m_scene->default_empty;
 			delete m_session;
 		}
 
