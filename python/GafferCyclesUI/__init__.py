@@ -41,6 +41,7 @@ import CyclesLightUI
 import CyclesOptionsUI
 import CyclesRenderUI
 import CyclesShaderUI
+import CyclesVDBUI
 import InteractiveCyclesRenderUI
 import ShaderMenu
 

@@ -71,6 +71,7 @@ if moduleSearchPath.find( "GafferCycles" ) :
 			searchText = "CyclesRender"
 		)
 		nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
+		nodeMenu.append( "/Cycles/VDB", GafferCycles.CyclesVDB, searchText = "CyclesVDB" )
 		#nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
 
 	except Exception, m :

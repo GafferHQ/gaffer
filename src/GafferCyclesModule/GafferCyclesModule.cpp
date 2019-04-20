@@ -47,6 +47,7 @@
 #include "GafferCycles/CyclesLight.h"
 #include "GafferCycles/CyclesShader.h"
 #include "GafferCycles/CyclesRender.h"
+#include "GafferCycles/CyclesVDB.h"
 #include "GafferCycles/InteractiveCyclesRender.h"
 
 // Cycles
@@ -442,6 +443,7 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 		.def( "loadShader", (void (CyclesLight::*)( const std::string & ) )&CyclesLight::loadShader )
 	;
 	DependencyNodeClass<CyclesShader>();
+	DependencyNodeClass<CyclesVDB>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
 

@@ -39,7 +39,8 @@
 
 #include "Gaffer/StringPlug.h"
 
-#include "IECoreScene/ExternalProcedural.h"
+//#include "IECoreScene/ExternalProcedural.h"
+#include "IECoreVDB/VDBObject.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/StringAlgo.h"
@@ -50,7 +51,7 @@
 
 using namespace Imath;
 using namespace IECore;
-using namespace IECoreScene;
+using namespace IECoreVDB;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferCycles;
@@ -209,7 +210,7 @@ void CyclesVDB::hashSource( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstObjectPtr CyclesVDB::computeSource( const Context *context ) const
 {
-	IECoreScene::ExternalProceduralPtr result = new ExternalProcedural( "volume" );
+	IECoreVDB::VDBObjectPtr result = new VDBObject( "volume" );
 	const std::string fileName = fileNamePlug()->getValue();
 	const std::string gridsString = gridsPlug()->getValue();
 	if( fileName.empty() || gridsString.empty() )
