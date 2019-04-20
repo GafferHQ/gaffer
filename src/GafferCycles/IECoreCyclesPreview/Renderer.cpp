@@ -1793,7 +1793,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session( nullptr ),
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
-				m_rendering( false )
+				m_rendering( false ),
+				m_deviceDirty( false )
 		{
 			// Set path to find shaders
 			ccl::path_init( getenv("GAFFERCYCLES") );
@@ -1967,20 +1968,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_deviceOptionName )
 			{
-				if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+				if( value == nullptr )
+				{
+					m_deviceName = "CPU";
+				}
+				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 				{
 					auto device_name = data->readable();
 					m_deviceName = device_name;
-				}
-				else if( value == nullptr )
-				{
-					m_deviceName = "CPU";
 				}
 				else
 				{
 					m_deviceName = "CPU";
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
 				}
+				m_deviceDirty = true;
 				return;
 			}
 			else if( name == g_shadingsystemOptionName )
@@ -2396,6 +2398,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
+			if( object->typeId() == IECoreScene::Camera::staticTypeId() )
+			{
+				return nullptr;
+			}
 			Instance instance = m_instanceCache->get( object, name );
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
@@ -2405,6 +2411,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
 		{
+			if( samples.front()->typeId() == IECoreScene::Camera::staticTypeId() )
+			{
+				return nullptr;
+			}
 			Instance instance = m_instanceCache->get( samples, times, name );
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
@@ -2571,8 +2581,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_sessionParams.denoising = m_denoiseParams;
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
-			    m_session->params.modified( m_sessionParams ) )
+			    m_session->params.modified( m_sessionParams ) ||
+				m_deviceDirty )
 			{
+				m_deviceDirty = false;
 				reset();
 			}
 
@@ -2785,6 +2797,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_frame;
 		string m_camera;
 		bool m_rendering;
+		bool m_deviceDirty;
 
 		// Caches.
 		CameraCachePtr m_cameraCache;

@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
-
+#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/Camera.h"
@@ -54,6 +54,7 @@ namespace
 
 ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string &nodeName )
 {
+	assert( camera->typeId() == IECoreScene::Camera::staticTypeId() );
 	ccl::Camera *ccam = new ccl::Camera();
 	ccam->name = ccl::ustring(nodeName.c_str());
 

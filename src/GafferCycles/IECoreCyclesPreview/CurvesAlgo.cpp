@@ -56,6 +56,7 @@ namespace
 
 ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 {
+	assert( curve->typeId() == IECoreScene::CurvesPrimitive::staticTypeId() );
 	ccl::Mesh *cmesh = new ccl::Mesh();
 
 	size_t numCurves = curve->numCurves();

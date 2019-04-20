@@ -118,6 +118,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 
 ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 {
+	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
 	ccl::Mesh *cmesh = new ccl::Mesh();
 
 	const size_t numFaces = mesh->numFaces();
