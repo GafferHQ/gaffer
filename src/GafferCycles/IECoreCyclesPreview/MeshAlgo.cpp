@@ -85,7 +85,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 	if( uvSet == "uv" )
 		uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
 	else
-		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeDesc::TypePoint, ccl::ATTR_ELEMENT_CORNER );
+		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeFloat2, ccl::ATTR_ELEMENT_CORNER );
 	ccl::float2 *fdata = uv_attr->data_float2();
 
 	if( subdivision_uvs )
@@ -101,17 +101,23 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		{
 			const vector<int> &indices = uvVariable.indices->readable();
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			{
 				*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
+			}
 		}
 		else if( uvVariable.interpolation == PrimitiveVariable::FaceVarying )
 		{
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			{
 				*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
+			}
 		}
 		else
 		{
 			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			{
 				*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
+			}
 		}
 	}
 }
@@ -121,13 +127,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
 	ccl::Mesh *cmesh = new ccl::Mesh();
 
-	const size_t numFaces = mesh->numFaces();
-
-	const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-	const vector<Imath::V3f> &points = p->readable();
-	const vector<int> &vertexIds = mesh->vertexIds()->readable();
-	const size_t numVerts = points.size();
-
 	bool subdivision = false;
 	bool triangles = ( mesh->maxVerticesPerFace() == 3 ) ? true : false;
 
@@ -136,6 +135,11 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	if( ( mesh->interpolation() == "catmullClark" ) )//|| !triangles )
 	{
+		const size_t numFaces = mesh->numFaces();
+		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		const vector<Imath::V3f> &points = p->readable();
+		const vector<int> &vertexIds = mesh->vertexIds()->readable();
+		const size_t numVerts = points.size();
 		subdivision = true;
 		cmesh->subdivision_type = (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR;
 
@@ -147,6 +151,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			ngons += ( vertsPerFace[i] == 4 ) ? 0 : 1;
 			ncorners += vertsPerFace[i];
 		}
+		cmesh->reserve_mesh( numVerts, numFaces );
 		cmesh->reserve_subd_faces(numFaces, ngons, ncorners);
 
 		for( size_t i = 0; i < numVerts; i++ )
@@ -167,10 +172,14 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		{
 			// triangulate primitive
 			trimesh = IECoreScene::MeshAlgo::triangulate( mesh );
+			const size_t numFaces = trimesh->numFaces();
+			const V3fVectorData *p = trimesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			const vector<Imath::V3f> &points = p->readable();
+			const size_t numVerts = points.size();
 			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
 
 			const size_t triNumFaces = trimesh->numFaces();
-			cmesh->reserve_mesh(numVerts, triNumFaces);
+			cmesh->reserve_mesh( numVerts, triNumFaces );
 
 			for( size_t i = 0; i < numVerts; i++ )
 				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
@@ -180,6 +189,11 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		}
 		else
 		{
+			const size_t numFaces = mesh->numFaces();
+			const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			const vector<Imath::V3f> &points = p->readable();
+			const vector<int> &vertexIds = mesh->vertexIds()->readable();
+			const size_t numVerts = points.size();
 			cmesh->reserve_mesh(numVerts, numFaces);
 
 			for( size_t i = 0; i < numVerts; i++ )

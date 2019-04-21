@@ -221,17 +221,17 @@ def __subdivisionSummary( plug ) :
 
 	info = []
 
-	if plug["dicingRate"]["enabled"].getValue() :
-		info.append( "Dicing Rate {}".format( plug["dicingRate"]["value"].getValue() ) )
+	#if plug["dicingRate"]["enabled"].getValue() :
+	#	info.append( "Dicing Rate {}".format( plug["dicingRate"]["value"].getValue() ) )
 
-	if plug["maxSubdivisions"]["enabled"].getValue() :
-		info.append( "Max Subdivisions {}".format( plug["maxSubdivisions"]["value"].getValue() ) )
+	#if plug["maxSubdivisions"]["enabled"].getValue() :
+	#	info.append( "Max Subdivisions {}".format( plug["maxSubdivisions"]["value"].getValue() ) )
 
 	if plug["dicingCamera"]["enabled"].getValue() :
 		info.append( "Dicing Camera {}".format( plug["dicingCamera"]["value"].getValue() ) )
 
-	if plug["offscreenDicingScale"]["enabled"].getValue() :
-		info.append( "Offscreen Dicing Scale {}".format( plug["offscreenDicingScale"]["value"].getValue() ) )
+	#if plug["offscreenDicingScale"]["enabled"].getValue() :
+	#	info.append( "Offscreen Dicing Scale {}".format( plug["offscreenDicingScale"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -1148,28 +1148,28 @@ Gaffer.Metadata.registerNode(
 
 		# Subdivision
 
-		"options.dicingRate" : [
+		#"options.dicingRate" : [
 
-			"description",
-			"""
-			Size of a micropolygon in pixels.
-			""",
+		#	"description",
+		#	"""
+		#	Size of a micropolygon in pixels.
+		#	""",
 
-			"layout:section", "Subdivision",
+		#	"layout:section", "Subdivision",
 
-		],
+		#],
 
-		"options.maxSubdivisions" : [
+		#"options.maxSubdivisions" : [
 
-			"description",
-			"""
-			Stop subdividing when this level is reached even if the dice rate
-			would produce finer tessellation.
-			""",
+		#	"description",
+		#	"""
+		#	Stop subdividing when this level is reached even if the dice rate
+		#	would produce finer tessellation.
+		#	""",
 
-			"layout:section", "Subdivision",
+		#	"layout:section", "Subdivision",
 
-		],
+		#],
 
 		"options.dicingCamera" : [
 
@@ -1184,20 +1184,29 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.offscreenDicingScale" : [
+		"options.dicingCamera.value" : [
 
-			"description",
-			"""
-			Multiplier for dicing rate of geometry outside of the camera view. 
-			The dicing rate of objects is gradually increased the further they 
-			are outside the camera view. Lower values provide higher quality 
-			reflections and shadows for off screen objects, while higher values
-			use less memory.
-			""",
-
-			"layout:section", "Subdivision",
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"path:valid", True,
+			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
 
 		],
+
+		#"options.offscreenDicingScale" : [
+
+		#	"description",
+		#	"""
+		#	Multiplier for dicing rate of geometry outside of the camera view. 
+		#	The dicing rate of objects is gradually increased the further they 
+		#	are outside the camera view. Lower values provide higher quality 
+		#	reflections and shadows for off screen objects, while higher values
+		#	use less memory.
+		#	""",
+
+		#	"layout:section", "Subdivision",
+
+		#],
 
 		# Background
 

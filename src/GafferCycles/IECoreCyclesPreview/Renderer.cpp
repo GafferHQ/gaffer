@@ -927,7 +927,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_cclVisibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f )
+			:	m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f )
 		{
 			for( const auto &name : g_shaderAttributeNames )
 			{
@@ -958,11 +958,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
 					{
-						if( const IntData *data = static_cast<const IntData *>( d ) )
+						if( const BoolData *data = static_cast<const BoolData *>( d ) )
 						{
 							auto &vis = data->readable();
-							auto ray = nameToRayType( m.first.string().c_str() + 15 );
-							m_cclVisibility = vis ? m_cclVisibility |= ray : m_cclVisibility & ~ray;
+							auto rayType = nameToRayType( m.first.string().c_str() + 15 );
+							m_visibility = vis ? m_visibility |= rayType : m_visibility & ~rayType;
 						}
 					}
 				}
@@ -993,7 +993,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						}
 						else if( m.first == g_maxLevelAttributeName )
 						{
-							if ( const BoolData *data = static_cast<const BoolData *>( d ) )
+							if ( const IntData *data = static_cast<const IntData *>( d ) )
 								m_maxLevel = data->readable();
 						}
 						else if( m.first == g_dicingRateAttributeName )
@@ -1026,7 +1026,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes ) const
 		{
 			//const ccl::NodeType *nodeType = node->type;
-			object->visibility = m_cclVisibility;
+			object->visibility = m_visibility;
 			object->use_holdout = m_useHoldout;
 			object->is_shadow_catcher = m_isShadowCatcher;
 
@@ -1076,14 +1076,65 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
+		// Generates a signature for the work done by applyGeometry.
+		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
+		{
+			const IECore::TypeId objectType = object->typeId();
+			switch( (int)objectType )
+			{
+				case IECoreScene::MeshPrimitiveTypeId :
+					if( static_cast<const IECoreScene::MeshPrimitive *>( object )->interpolation() == "catmullClark" )
+					{
+						h.append( m_dicingRate );
+						h.append( m_maxLevel );
+					}
+					break;
+				case IECoreScene::CurvesPrimitiveTypeId :
+					break;
+				case IECoreScene::SpherePrimitiveTypeId :
+					break;
+				case IECoreScene::ExternalProceduralTypeId :
+					break;
+				//case IECoreVDB::VDBObjectTypeId :
+				//	break;
+				default :
+					// No geometry attributes for this type.
+					break;
+			}
+		}
+
+		// Returns true if the given geometry can be instanced.
+		bool canInstanceGeometry( const IECore::Object *object ) const
+		{
+			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
+			{
+				return false;
+			}
+
+			if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
+			{
+				if( mesh->interpolation() == "catmullClark" )
+				{
+					// For now we treat all subdiv surfaces as unique because they are all treated as adaptive.
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			return true;
+		}
+
 	private :
 
 		CLightPtr m_light;
 		SharedCShaderPtr m_shader;
-		unsigned m_cclVisibility;
+		unsigned m_visibility;
 		bool m_useHoldout;
 		bool m_isShadowCatcher;
-		bool m_maxLevel;
+		int m_maxLevel;
 		float m_dicingRate;
 
 };
@@ -1208,14 +1259,31 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		Instance get( const IECore::Object *object, const std::string &nodeName )
+		Instance get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
+			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
+
 			ccl::Object *cobject = nullptr;
 
-			const IECore::MurmurHash hash = object->Object::hash();
+			if( !cyclesAttributes->canInstanceGeometry( object ) )
+			{
+				cobject = ObjectAlgo::convert( object, nodeName );
+				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
+				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
+				// Push-back to vector needs thread locking.
+				{
+					tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
+					m_objects.push_back( cobjectPtr );
+					m_uniqueMeshes.push_back( cmeshPtr );
+				}
+				return Instance( cobjectPtr, cmeshPtr );
+			}
 
-			MeshCache::accessor a;
-			m_meshes.insert( a, hash );
+			IECore::MurmurHash hash = object->hash();
+			cyclesAttributes->hashGeometry( object, hash );
+
+			Cache::accessor a;
+			m_instancedMeshes.insert( a, hash );
 
 			if( !a->second )
 			{
@@ -1226,10 +1294,11 @@ class InstanceCache : public IECore::RefCounted
 			{
 				cobject = new ccl::Object();
 				cobject->mesh = a->second.get();
-				cobject->name = ccl::ustring( nodeName.c_str() );
+				string instanceName = "instance:" + hash.toString();
+				cobject->name = ccl::ustring( instanceName.c_str() );
 			}
 
-			auto cobjectPtr = SharedCObjectPtr( cobject );
+			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 			// Push-back to vector needs thread locking.
 			{
 				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
@@ -1240,9 +1309,25 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const std::string &nodeName )
+		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
+			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
+
 			ccl::Object *cobject = nullptr;
+
+			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
+			{
+				cobject = ObjectAlgo::convert( samples, nodeName );
+				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
+				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
+				// Push-back to vector needs thread locking.
+				{
+					tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
+					m_objects.push_back( cobjectPtr );
+					m_uniqueMeshes.push_back( cmeshPtr );
+				}
+				return Instance( cobjectPtr, cmeshPtr );
+			}
 
 			IECore::MurmurHash hash;
 			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
@@ -1253,9 +1338,10 @@ class InstanceCache : public IECore::RefCounted
 			{
 				hash.append( *it );
 			}
+			cyclesAttributes->hashGeometry( samples.front(), hash );
 
-			MeshCache::accessor a;
-			m_meshes.insert( a, hash );
+			Cache::accessor a;
+			m_instancedMeshes.insert( a, hash );
 
 			if( !a->second )
 			{
@@ -1266,7 +1352,8 @@ class InstanceCache : public IECore::RefCounted
 			{
 				cobject = new ccl::Object();
 				cobject->mesh = a->second.get();
-				cobject->name = ccl::ustring( nodeName.c_str() );
+				string instanceName = "instance:" + hash.toString();
+				cobject->name = ccl::ustring( instanceName.c_str() );
 			}
 
 			auto cobjectPtr = SharedCObjectPtr( cobject );
@@ -1282,9 +1369,19 @@ class InstanceCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			// Meshes
+			// Unique meshes
+			vector<SharedCMeshPtr> meshesKeep;
+			for( vector<SharedCMeshPtr>::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
+			{
+				if( !it->unique() )
+				{
+					meshesKeep.push_back( *it );
+				}
+			}
+
+			// Instanced meshes
 			vector<IECore::MurmurHash> toErase;
-			for( MeshCache::iterator it = m_meshes.begin(), eIt = m_meshes.end(); it != eIt; ++it )
+			for( Cache::iterator it = m_instancedMeshes.begin(), eIt = m_instancedMeshes.end(); it != eIt; ++it )
 			{
 				if( it->second.unique() )
 				{
@@ -1296,11 +1393,14 @@ class InstanceCache : public IECore::RefCounted
 			}
 			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
 			{
-				m_meshes.erase( *it );
+				m_instancedMeshes.erase( *it );
 			}
 
-			if( toErase.size() )
+			if( toErase.size() || meshesKeep.size() )
+			{
+				m_uniqueMeshes = meshesKeep;
 				updateMeshes();
+			}
 
 			// Objects
 			vector<SharedCObjectPtr> objectsKeep;
@@ -1317,6 +1417,19 @@ class InstanceCache : public IECore::RefCounted
 				m_objects = objectsKeep;
 				updateObjects();
 			}
+		}
+
+		void updateDicingCamera( ccl::Camera *camera )
+		{
+			auto &meshes = m_scene->meshes;
+			for( ccl::Mesh *mesh : meshes )
+			{
+				if( mesh->subd_params )
+				{
+					mesh->subd_params->camera = camera;
+				}
+			}
+			m_scene->mesh_manager->tag_update( m_scene );
 		}
 
 	private :
@@ -1339,7 +1452,18 @@ class InstanceCache : public IECore::RefCounted
 		{
 			auto &meshes = m_scene->meshes;
 			meshes.clear();
-			for( MeshCache::const_iterator it = m_meshes.begin(), eIt = m_meshes.end(); it != eIt; ++it )
+
+			// Unique meshes
+			for( vector<SharedCMeshPtr>::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
+			{
+				if( it->get() )
+				{
+					meshes.push_back( it->get() );
+				}
+			}
+
+			// Instanced meshes
+			for( Cache::const_iterator it = m_instancedMeshes.begin(), eIt = m_instancedMeshes.end(); it != eIt; ++it )
 			{
 				if( it->second )
 				{
@@ -1351,8 +1475,9 @@ class InstanceCache : public IECore::RefCounted
 
 		ccl::Scene *m_scene;
 		vector<SharedCObjectPtr> m_objects;
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCMeshPtr> MeshCache;
-		MeshCache m_meshes;
+		vector<SharedCMeshPtr> m_uniqueMeshes;
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCMeshPtr> Cache;
+		Cache m_instancedMeshes;
 		tbb::spin_mutex m_objectsMutex;
 
 };
@@ -1528,6 +1653,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object )
 				return;
 			object->tfm = SocketAlgo::setTransform( transform );
+			if( object->mesh->subd_params )
+			{
+				object->mesh->subd_params->objecttoworld = object->tfm;
+			}
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1536,9 +1665,14 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object )
 				return;
 			const size_t numSamples = samples.size();
+			object->tfm = SocketAlgo::setTransform( samples.front() );
 			object->motion = ccl::array<ccl::Transform>( numSamples );
 			for( size_t i = 0; i < numSamples; ++i )
 				object->motion[i] = SocketAlgo::setTransform( samples[i] );
+			if( object->mesh->subd_params )
+			{
+				object->mesh->subd_params->objecttoworld = object->tfm;
+			}
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -1774,6 +1908,8 @@ std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
 	"ccl:integrator:subsurface_samples",
 	"ccl:integrator:volume_samples",
 } };
+// Dicing camera
+IECore::InternedString g_dicingCameraOptionName( "ccl::dicing_camera" );
 
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
@@ -1942,6 +2078,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 				{
 					m_camera = data->readable();
+				}
+				return;
+			}
+			else if( name == g_dicingCameraOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_dicingCamera = "";
+				}
+				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+				{
+					m_dicingCamera = data->readable();
 				}
 				return;
 			}
@@ -2402,7 +2550,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
-			Instance instance = m_instanceCache->get( object, name );
+			Instance instance = m_instanceCache->get( object, attributes, name );
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
 			result->attributes( attributes );
@@ -2415,7 +2563,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
-			Instance instance = m_instanceCache->get( samples, times, name );
+			Instance instance = m_instanceCache->get( samples, times, attributes, name );
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
 			result->attributes( attributes );
@@ -2685,28 +2833,51 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Check that the camera we want to use exists,
 			// and if not, create a default one.
-			const auto cameraIt = m_cameras.find( m_camera );
-			if( cameraIt == m_cameras.end() )
 			{
-				if( !m_camera.empty() )
+				const auto cameraIt = m_cameras.find( m_camera );
+				if( cameraIt == m_cameras.end() )
 				{
-					IECore::msg(
-						IECore::Msg::Warning, "CyclesRenderer",
-						boost::format( "Camera \"%s\" does not exist" ) % m_camera
-					);
+					if( !m_camera.empty() )
+					{
+						IECore::msg(
+							IECore::Msg::Warning, "CyclesRenderer",
+							boost::format( "Camera \"%s\" does not exist" ) % m_camera
+						);
+					}
+					m_scene->camera = m_defaultCamera;
 				}
-				m_scene->camera = m_defaultCamera;
+				else
+				{
+					auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
+					if( m_scene->camera != ccamera.get() )
+					{
+						m_scene->camera = ccamera.get();
+					}
+				}
+				m_scene->camera->need_update = true;
+				m_scene->camera->update( m_scene );
 			}
-			else
+
+			// Dicing camera update
 			{
-				auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
-				if( m_scene->camera != ccamera.get() )
+				const auto cameraIt = m_cameras.find( m_dicingCamera );
+				if( cameraIt == m_cameras.end() )
 				{
-					m_scene->camera = ccamera.get();
+					if( !m_camera.empty() )
+					{
+						IECore::msg(
+							IECore::Msg::Warning, "CyclesRenderer",
+							boost::format( "Dicing camera \"%s\" does not exist" ) % m_dicingCamera
+						);
+					}
+					m_instanceCache->updateDicingCamera( nullptr );
+				}
+				else
+				{
+					auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
+					m_instanceCache->updateDicingCamera( ccamera.get() );
 				}
 			}
-			m_scene->camera->need_update = true;
-			m_scene->camera->update( m_scene );
 		}
 
 		void writeImages()
@@ -2819,6 +2990,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		typedef unordered_map<string, ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		tbb::spin_mutex m_camerasMutex;
+		string m_dicingCamera;
 
 		// RenderCallback
 		RenderCallbackPtr m_renderCallback;

@@ -97,8 +97,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Scene/BVH
 
-	//options->addOptionalMember( "ccl:scene:dicing_camera", new IECore::StringData( "dicingCamera" ), "", Gaffer::Plug::Default, false );
-
 	//options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), "bvhLayout", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
@@ -212,6 +210,9 @@ CyclesOptions::CyclesOptions( const std::string &name )
 			continue;
 		}
 	}
+
+	// Dicing camera
+	options->addOptionalMember( "ccl:dicing_camera", new IECore::StringData(), "dicingCamera", Gaffer::Plug::Default, false );
 }
 
 CyclesOptions::~CyclesOptions()
