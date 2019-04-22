@@ -828,7 +828,6 @@
 		page STRING "Coat"
 	[attr coat_normal]
 		gaffer.graphEditorLayout.visible BOOL true
-		widget STRING "null"
 		page STRING "Coat"
 	[attr coat_affect_color]
 		page STRING "Coat"
@@ -858,11 +857,9 @@
 		page STRING "Geometry"
 	[attr normal]
 		gaffer.graphEditorLayout.visible BOOL true
-		widget STRING "null"
 		page STRING "Geometry"
 	[attr tangent]
 		gaffer.graphEditorLayout.visible BOOL true
-		widget STRING "null"
 		page STRING "Geometry"
 
 	[attr caustics]

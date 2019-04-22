@@ -44,6 +44,7 @@
 
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/SearchPath.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
@@ -153,6 +154,14 @@ Reference::~Reference()
 
 void Reference::load( const std::string &fileName )
 {
+	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
+	IECore::SearchPath sp( s ? s : "" );
+	boost::filesystem::path path = sp.find( fileName );
+	if( path.empty() )
+	{
+		throw Exception( "Could not find file '" + fileName + "'" );
+	}
+
 	ScriptNode *script = scriptNode();
 	if( !script )
 	{
@@ -240,9 +249,12 @@ void Reference::loadInternal( const std::string &fileName )
 	// exception that we throw.
 
 	bool errors = false;
-	if( !fileName.empty() )
+	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
+	IECore::SearchPath sp( s ? s : "" );
+	boost::filesystem::path path = sp.find( fileName );
+	if( !path.empty() )
 	{
-		errors = script->executeFile( fileName, this, /* continueOnError = */ true );
+		errors = script->executeFile( path.string(), this, /* continueOnError = */ true );
 	}
 
 	// Do a little bit of post processing on everything that was loaded.

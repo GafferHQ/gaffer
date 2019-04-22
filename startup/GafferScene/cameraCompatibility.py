@@ -42,6 +42,7 @@ import GafferScene
 
 def __compatibilityFunc( node, oldParent ):
 	parentNode = node.ancestor( Gaffer.Node )
+	gafferVersion = None
 	while parentNode :
 		gafferVersion = (
 			Gaffer.Metadata.value( parentNode, "serialiser:milestoneVersion" ),
