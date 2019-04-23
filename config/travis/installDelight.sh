@@ -2,8 +2,8 @@
 
 set -e
 
-version=1.1.7
-directory=free/beta/2018-10-05-Y88MpygF
+version=1.1.12
+directory=free/beta/2018-11-01-oIDoJTpO
 
 if [[ `uname` = "Linux" ]] ; then
 	package=3DelightNSI-$version-Linux-x86_64
