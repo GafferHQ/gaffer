@@ -53,6 +53,7 @@ except AttributeError :
 		return wrapper
 
 from TestCase import TestCase
+from TestRunner import TestRunner
 from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GraphComponentTest import GraphComponentTest
@@ -68,7 +69,6 @@ from FileSystemPathTest import FileSystemPathTest
 from PathTest import PathTest
 from PathFilterTest import PathFilterTest
 from UndoTest import UndoTest
-from SpeedTest import SpeedTest
 from KeywordPlugNode import KeywordPlugNode
 from CompoundNumericPlugTest import CompoundNumericPlugTest
 from CompoundNumericNode import CompoundNumericNode

@@ -41,6 +41,7 @@ import sys
 
 import IECore
 import Gaffer
+import GafferTest
 
 class test( Gaffer.Application ) :
 
@@ -90,6 +91,29 @@ class test( Gaffer.Application ) :
 					description = "The number of times to repeat the tests.",
 					defaultValue = 1,
 				),
+
+				IECore.BoolParameter(
+					name = "performanceOnly",
+					description = "Skips tests that don't compute performance metrics.",
+					defaultValue = False,
+				),
+
+				IECore.FileNameParameter(
+					name = "outputFile",
+					description = "The name of a JSON file that the results are written to.",
+					defaultValue = "",
+					allowEmptyString = True,
+					extensions = "json",
+				),
+
+				IECore.FileNameParameter(
+					name = "previousOutputFile",
+					description = "The name of a JSON file containing the results of a previous test run. "
+						"This will be used to detect and report performance regressions.",
+					defaultValue = "",
+					allowEmptyString = True,
+					extensions = "json",
+				)
 			]
 
 		)
@@ -109,9 +133,17 @@ class test( Gaffer.Application ) :
 			testCase = unittest.defaultTestLoader.loadTestsFromName( name )
 			testSuite.addTest( testCase )
 
+		if args["performanceOnly"].value :
+			GafferTest.TestRunner.filterPerformanceTests( testSuite )
+
 		for i in range( 0, args["repeat"].value ) :
-			testRunner = unittest.TextTestRunner( verbosity=2 )
+
+			testRunner = GafferTest.TestRunner( previousResultsFile = args["previousOutputFile"].value )
 			testResult = testRunner.run( testSuite )
+
+			if args["outputFile"].value :
+				testResult.save( args["outputFile"].value )
+
 			if not testResult.wasSuccessful() :
 				return 1
 

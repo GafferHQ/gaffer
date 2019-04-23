@@ -961,5 +961,31 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( len( c.parentChanges ), 1 )
 		self.assertEqual( c.parentChanges[-1], ( None, None ) )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testMakeNamesUnique( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		for i in range( 0, 1000 ) :
+			n = GafferTest.AddNode()
+			s.addChild( n )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testGetChild( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		for i in range( 0, 1000 ) :
+			# explicitly setting the name to something unique
+			# avoids the overhead incurred by the example
+			# in testMakeNamesUnique
+			n = GafferTest.AddNode( "AddNode" + str( i ) )
+			s.addChild( n )
+
+		for i in range( 0, 1000 ) :
+			n = "AddNode" + str( i )
+			c = s[n]
+			self.assertEqual( c.getName(), n )
+
 if __name__ == "__main__":
 	unittest.main()
