@@ -138,6 +138,7 @@ from UDIMQueryTest import UDIMQueryTest
 from WireframeTest import WireframeTest
 from TweakPlugTest import TweakPlugTest
 from ContextSanitiserTest import ContextSanitiserTest
+from SetVisualiserTest import SetVisualiserTest
 
 from IECoreGLPreviewTest import *
 
