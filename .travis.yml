@@ -31,6 +31,7 @@ install:
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install scons; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install doxygen; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew cask install inkscape; fi
+    - if [ "$BUILD_DOCS" == "1" ]; then pip install --user sphinx==1.4 sphinx_rtd_theme recommonmark docutils==0.12; fi
     - ./config/travis/installDependencies.sh
     - ./config/travis/installDelight.sh
     - export DELIGHT=`pwd`/3delight
@@ -83,10 +84,10 @@ matrix:
     # We can then simply list the exact builds we want.
     include:
         - os: linux
-          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=RELEASE
+          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=RELEASE BUILD_DOCS=0
         - os: linux
-          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=DEBUG
+          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=DEBUG BUILD_DOCS=0
         - os: linux
-          env: COMPILER=g++-6 CXXSTD=c++14 BUILD_TYPE=RELEASE
+          env: COMPILER=g++-6 CXXSTD=c++14 BUILD_TYPE=RELEASE BUILD_DOCS=1
         - os: osx
-          env: COMPILER=clang++ CXXSTD=c++11 BUILD_TYPE=RELEASE
+          env: COMPILER=clang++ CXXSTD=c++11 BUILD_TYPE=RELEASE BUILD_DOCS=0
