@@ -19,6 +19,9 @@
 Improvements
 ------------
 
+- Menu search (#2986) :
+  - Added an improved "fuzzy matching" search algorithm.
+  - Added an error indicator when a search matches nothing.
 - Text : Added support for unicode characters (#2999).
 - TextWidget/MultiLineTextWidget : Added support for unicode characters. In this
   case the `getText()` method will return a UTF8 encoded string (#2999).
@@ -42,6 +45,11 @@ Improvements
   by scene location (via the "scene:path" context variable) (#3074).
 - OSLImage : Improved performance of shader input evaluation (#3074).
 - OSLObject : Improved performance of shader input evaluation (#3074).
+- AnimationEditor : Improved behaviour of the plug listing (#3106).
+  - Only selected nodes are shown, not their descendants.
+  - The ancestor node hierarchy is not shown redundantly.
+  - Improved performance.
+- Test app : All tests are now run by default (#3101).
 
 Fixes
 -----
@@ -64,6 +72,12 @@ Fixes
 - Scene : Fixed context handling bugs in Transform, SceneWriter, SceneAlgo, Set,
   Isolate and Prune. This improves performance on some complex scenes (#3060).
 - Offset : Fixed context handling bug (#3073).
+- AnimationEditor (#3106) :
+  - Fixed visibility glitch in timeline hover indicator. It wasn't being
+    hidden when the mouse left the editor.
+  - Fixed bug when deselecting a curve - the plug listing selection was not being updated
+    to reflect the change.
+- PythonCommand : Prevented inadvertent modification of outer context (#3101).
 
 Documentation
 -------------
@@ -99,6 +113,7 @@ API
   - Improved assert methods.
 - GraphComponent : Added protected `parentChanged()` virtual method (#3080).
 - ImagePlug : Added convenience methods for evaluating global image properties (#3073).
+- GraphComponentPath : Added property for accessing the GraphComponent (#3106).
 
 Build
 -----
@@ -108,6 +123,8 @@ Build
   - Enabled TBB debugging features in DEBUG builds.
   - Added `-fno-omit-frame-pointer` compiler flag for RELWITHDEBINFO builds.
 - Fixed warnings when building with XCode 10.2 (#3094).
+- Fixed problem where some Arnold modules were installed when ARNOLD_ROOT was
+  not specified (#3101).
 
 Breaking Changes
 ----------------
@@ -128,6 +145,7 @@ Breaking Changes
   - Removed less-than operator.
   - The equality operator now compares plug and context instead of
     hash.
+- ArrayPlug : Inputs are now required to be ArrayPlugs too (#3116).
 - BackdropNodeGadget/StandardNodeGadget (#3028) : Removed private member variables.
 - SceneTestCase (#3060) : Changed signatures for the following functions :
   - `assertPathsEqual()`
@@ -138,6 +156,8 @@ Breaking Changes
   - `assertSceneHashesNotEqual()`
 - Shader : Changed base class to ComputeNode (#3074).
 - TweakPlug : Added compulsory ValuePlug argument to constructor used for serialisation (#3084).
+- AnimationEditor : Removed `connectedCurvePlug()` method (#3106).
+- ParallelAlgo : Replaced `registerUIThreadCallHandler()` with `push/popUIThreadCallHandler()` (#3101).
 
 0.53.5.0 (relative to 0.53.4.0)
 ========
@@ -147,6 +167,14 @@ Features
 
 - Reference : Added support for fileName search paths (#3049).
   - Set the new `GAFFER_REFERENCE_PATHS` environment variable in order to load relative Reference files.
+
+Improvements
+------------
+
+- ArnoldShader/ArnoldLight :
+  - Added support for "gaffer.default" and "gaffer.userDefault" metadata (#3112).
+    There is an example .mtd file which provides Arnold 5.2 compatibility in contrib/arnold (#3115).
+  - Exposed the geometry parameters for the `standard_surface` shader in the NodeEditor (#3104).
 
 Fixes
 -----
@@ -158,10 +186,6 @@ Fixes
 - AnimationEditor : Fixed bug affecting animated promoted plugs (#3106).
 - UIEditor : Fixed bug with '/' in presets (we now replace '/' with '_') (#3103).
 - Viewer : Fixed potential deadlocks when editing the camera in the Viewer (#3121).
-- Arnold :
-  - Exposed the geometry parameters in the NodeEditor (#3104).
-  - Added support for "gaffer.default" and "gaffer.userDefault" metadata (#3112).
-    - There is an example .mtd file which provides Arnold 5.2 compatibility in contrib/arnold (#3115).
 
 Documentation
 -------------
