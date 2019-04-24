@@ -99,4 +99,4 @@ def __buildExamplesMenu( nodeOrNone, menu ) :
 def __openGafferScript( path, menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	app = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
-	GafferUI.FileMenu.addScript( app, path )
+	GafferUI.FileMenu.addScript( app, path, asNew = True )
