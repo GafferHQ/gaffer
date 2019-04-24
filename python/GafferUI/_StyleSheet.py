@@ -499,6 +499,12 @@ _styleSheet = string.Template(
 
 	}
 
+	QTabBar::close-button {
+
+		image: url($GAFFER_ROOT/graphics/delete.png)
+
+	}
+
 	QSplitter::handle:vertical {
 
 		background-color: $backgroundDark;
