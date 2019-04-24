@@ -486,7 +486,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		context = self.__context
 		plug = self.getPlug()
-		if plug is None or plug.getInput() is None :
+		if plug is None or ( plug.getInput() is None and plug.direction() == Gaffer.Plug.Direction.In ):
 			context = None
 
 		if context is not None :
