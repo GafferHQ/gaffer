@@ -85,13 +85,15 @@ parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V
 		defaultCubeOff2 = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( 1.5 ), imath.V3f( 2.5 ) ) )
 
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "Cs" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "Cs" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
+		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["N"], defaultCube["N"] )
+		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["uv"], defaultCube["uv"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs"].data.value, imath.Color3f( 0 ) )
 
 		script["CollectPrimitiveVariables"]["suffixes"].setValue( IECore.StringVectorData( [ '_suffix1', '_suffix2' ] ) )
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "P_suffix1", "P_suffix2", "Cs" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "P_suffix1", "P_suffix2", "Cs" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P_suffix1"], defaultCubeOff1["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P_suffix2"], defaultCubeOff2["P"] )
@@ -99,7 +101,7 @@ parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V
 
 		script["CollectPrimitiveVariables"]["primitiveVariables"].setValue( "P Cs" )
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "P_suffix1", "P_suffix2", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "P_suffix1", "P_suffix2", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P_suffix1"], defaultCubeOff1["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P_suffix2"], defaultCubeOff2["P"] )
@@ -109,7 +111,7 @@ parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V
 
 		script["CollectPrimitiveVariables"]["primitiveVariables"].setValue( "Cs" )
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs"].data.value, imath.Color3f( 0 ) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs_suffix1"].data.value, imath.Color3f( 1 ) )
@@ -117,7 +119,7 @@ parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V
 
 		script["CollectPrimitiveVariables"]["suffixContextVariable"].setValue( "collect:customVar" )
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs"].data.value, imath.Color3f( 0 ) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs_suffix1"].data.value, imath.Color3f( 0 ) )
@@ -125,7 +127,7 @@ parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V
 
 		script["CollectPrimitiveVariables"]["requireVariation"].setValue( True )
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "Cs" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "Cs" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs"].data.value, imath.Color3f( 0 ) )
 
@@ -139,7 +141,7 @@ i = int( s[7] )
 parent["Transform"]["transform"]["translate"] = imath.V3f( i )
 parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V3f( i )""", "python" )
 
-		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
+		self.assertEqual( set(script["CollectPrimitiveVariables"]["out"].object( "/cube" ).keys()), set([ "P", "N", "uv", "Cs", "Cs_suffix1", "Cs_suffix2" ]) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["P"], defaultCube["P"] )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs"].data.value, imath.Color3f( 0 ) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs_suffix1"].data.value, imath.Color3f( 1 ) )

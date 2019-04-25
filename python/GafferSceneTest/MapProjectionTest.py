@@ -52,8 +52,12 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 		camera = GafferScene.Camera()
 		camera["transform"]["translate"]["z"].setValue( 2 )
 
+		deleteUV = GafferScene.DeletePrimitiveVariables()
+		deleteUV["in"].setInput( cube["out"] )
+		deleteUV["names"].setValue( "uv" )
+
 		group = GafferScene.Group()
-		group["in"][0].setInput( cube["out"] )
+		group["in"][0].setInput( deleteUV["out"] )
 		group["in"][1].setInput( camera["out"] )
 
 		map = GafferScene.MapProjection()
