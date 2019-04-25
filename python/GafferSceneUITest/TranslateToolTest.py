@@ -36,6 +36,7 @@
 
 import inspect
 import math
+import os
 
 import imath
 
@@ -680,6 +681,50 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].path, "/group/sphere" )
 
 		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+
+	def testSelectionSorting( self ) :
+
+		# This test exposes a bug we had when sorting the selection internal
+		# to the TransformTool, triggering a heap-buffer-overflow report in
+		# ASAN builds.
+
+		# Craft a scene containing 26 spheres underneath a group.
+
+		script = Gaffer.ScriptNode()
+		script["sphere"] = GafferScene.Sphere()
+		script["group"] = GafferScene.Group()
+
+		selection = IECore.PathMatcher()
+		for i in range( 0, 26 ) :
+			script["group"]["in"][i].setInput( script["sphere"]["out"] )
+			selection.addPath( "/group/sphere" + ( str( i ) if i else "" ) )
+
+		# Write it out to disk and read it back in again. This gives us the
+		# same scene, but now the individual spheres aren't transformable on
+		# their own - the only editable transform is now the root.
+
+		script["writer"] = GafferScene.SceneWriter()
+		script["writer"]["in"].setInput( script["group"]["out"] )
+		script["writer"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.abc" ) )
+		script["writer"]["task"].execute()
+
+		script["reader"] = GafferScene.SceneReader()
+		script["reader"]["fileName"].setInput( script["writer"]["fileName"] )
+
+		# Set up a TransformTool and tell it to transform each of the spheres.
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["reader"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), selection )
+
+		# The tool should instead choose to transform the root location.
+
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].transformPlug, script["reader"]["transform"] )
 
 if __name__ == "__main__":
 	unittest.main()
