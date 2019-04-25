@@ -38,8 +38,9 @@
 #ifndef GAFFERSCENE_BRANCHCREATOR_H
 #define GAFFERSCENE_BRANCHCREATOR_H
 
-#include "GafferScene/Filter.h"
-#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/FilteredSceneProcessor.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "IECore/CompoundData.h"
 
@@ -53,16 +54,15 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API BranchCreator : public SceneProcessor
+class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 {
 
 	public :
 
 		~BranchCreator() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::BranchCreator, BranchCreatorTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::BranchCreator, BranchCreatorTypeId, FilteredSceneProcessor );
 
-		/// \todo Allow multiple parents to be specified.
 		Gaffer::StringPlug *parentPlug();
 		const Gaffer::StringPlug *parentPlug() const;
 
@@ -132,10 +132,19 @@ class GAFFERSCENE_API BranchCreator : public SceneProcessor
 
 	private :
 
+		/// All the results from `filterPlug()`.
+		Gaffer::PathMatcherDataPlug *filteredPathsPlug();
+		const Gaffer::PathMatcherDataPlug *filteredPathsPlug() const;
+
+		/// All the parent locations at which we need to create a branch.
+		Gaffer::PathMatcherDataPlug *parentPathsPlug();
+		const Gaffer::PathMatcherDataPlug *parentPathsPlug() const;
+
 		/// Used to calculate the name remapping needed to prevent name clashes with
-		/// the existing scene.
-		Gaffer::ObjectPlug *mappingPlug();
-		const Gaffer::ObjectPlug *mappingPlug() const;
+		/// the existing scene. Must be evaluated in a context where "scene:path" is
+		/// one of the parent paths.
+		Gaffer::AtomicCompoundDataPlug *mappingPlug();
+		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
 
 		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
@@ -156,14 +165,14 @@ class GAFFERSCENE_API BranchCreator : public SceneProcessor
 		//
 		// DescendantMatch
 		//
-		// The path is above the parent, parentPath will be filled in
-		// appropriately and branchPath will be empty.
+		// The path is above one or more parents. Neither parentPath nor branchPath
+		// will be filled in.
 		//
 		// NoMatch
 		//
 		// The path is a direct pass through from the input - neither
 		// parentPath nor branchPath will be filled in.
-		IECore::PathMatcher::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+		IECore::PathMatcher::Result parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 

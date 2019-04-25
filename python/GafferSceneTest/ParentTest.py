@@ -97,7 +97,6 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p["in"].setInput( c["out"] )
 
 		self.assertScenesEqual( p["out"], c["out"] )
-		self.assertSceneHashesEqual( p["out"], c["out"], checks = self.allSceneChecks - { "sets" } )
 
 	def testNameUniqueification( self ) :
 
@@ -317,6 +316,83 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotEqual( p["out"].setHash( "test" ), h )
 		self.assertEqual( p["out"].set( "test" ).value, IECore.PathMatcher( [ "/cube" ] ) )
+
+	def testFilter( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		group = GafferScene.Group()
+		for i in range( 0, 6 ) :
+			group["in"][i].setInput( sphere["out"] )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "setA" )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere[1-4]" ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["child"].setInput( cube["out"] )
+		parent["filter"].setInput( filter["out"] )
+
+		self.assertSceneValid( parent["out"] )
+
+		self.assertEqual( parent["out"].childNames( "/group/sphere" ), IECore.InternedStringVectorData() )
+		for i in range( 1, 5 ) :
+			self.assertEqual( parent["out"].childNames( "/group/sphere{0}".format( i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+		self.assertIn( "setA", parent["out"]["setNames"].getValue() )
+		self.assertEqual(
+			parent["out"].set( "setA" ).value,
+			IECore.PathMatcher( [
+				"/group/sphere1/cube",
+				"/group/sphere2/cube",
+				"/group/sphere3/cube",
+				"/group/sphere4/cube",
+			] )
+		)
+
+	def testMultipleAncestorMatches( self ) :
+
+		innerGroup = GafferScene.Group()
+		innerGroup["name"].setValue( "inner" )
+
+		outerGroup = GafferScene.Group()
+		outerGroup["in"][0].setInput( innerGroup["out"] )
+		outerGroup["name"].setValue( "outer" )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/outer", "/outer/inner" ] ) )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "setA" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( outerGroup["out"] )
+		parent["child"].setInput( cube["out"] )
+		parent["filter"].setInput( filter["out"] )
+
+		self.assertSceneValid( parent["out"] )
+
+		self.assertEqual( parent["out"].childNames( "/outer" ), IECore.InternedStringVectorData( [ "inner", "cube" ] ) )
+		self.assertEqual( parent["out"].childNames( "/outer/inner" ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+	def testFilterConnectionDisablesParentPlug( self ) :
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( cube["out"] )
+		parent["child"].setInput( cube["out"] )
+		parent["parent"].setValue( "/" )
+
+		self.assertEqual( parent["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube", "cube1" ] ) )
+
+		filter = GafferScene.PathFilter()
+		parent["filter"].setInput( filter["out"] )
+
+		self.assertEqual( parent["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

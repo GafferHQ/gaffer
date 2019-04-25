@@ -203,7 +203,6 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["name"].setValue( "" )
 
 		self.assertScenesEqual( instancer["out"], plane["out"] )
-		self.assertSceneHashesEqual( instancer["out"], plane["out"], checks = self.allSceneChecks - { "sets" } )
 
 	def testEmptyParent( self ) :
 
@@ -986,6 +985,22 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["parent"].setValue( "/plane" )
 
 		self.assertEqual( instancer["out"].set( "A" ).value.paths(), [ "/plane" ] )
+
+	def testDirtyPropagation( self ) :
+
+		plane = GafferScene.Plane()
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instances"].setInput( plane["out"] )
+
+		cs = GafferTest.CapturingSlot( instancer.plugDirtiedSignal() )
+		instancer["parent"].setValue( "plane" )
+		self.assertIn( instancer["out"]["childNames"], { x[0] for x in cs } )
+
+		del cs[:]
+		filter = GafferScene.PathFilter()
+		instancer["filter"].setInput( filter["out"] )
+		self.assertIn( instancer["out"]["childNames"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()

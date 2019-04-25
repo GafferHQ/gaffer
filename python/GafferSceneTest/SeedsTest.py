@@ -165,7 +165,6 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		s["name"].setValue( "" )
 
 		self.assertScenesEqual( s["out"], p["out"] )
-		self.assertSceneHashesEqual( s["out"], p["out"] )
 
 	def testEmptyParent( self ) :
 
