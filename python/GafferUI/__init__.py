@@ -287,6 +287,7 @@ import _PlugAdder
 from Backups import Backups
 from AnimationEditor import AnimationEditor
 import CompoundNumericNoduleUI
+import Examples
 
 # and then specific node uis
 

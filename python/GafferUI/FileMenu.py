@@ -89,11 +89,14 @@ def open( menu ) :
 
 ## Opens a script and adds it to the application, as if the user
 # had done so via the File Open dialogue.
-def addScript( application, fileName ) :
+#
+# :param asNew When true, the scripts file name/dirty state will be reset
+#    upon load. Effectively creating an untitled copy.
+def addScript( application, fileName, asNew = False ) :
 
-	return __addScript( application, fileName )
+	return __addScript( application, fileName, asNew = asNew )
 
-def __addScript( application, fileName, dialogueParentWindow = None ) :
+def __addScript( application, fileName, dialogueParentWindow = None, asNew = False ) :
 
 	recoveryFileName = None
 	backups = GafferUI.Backups.acquire( application, createIfNecessary = False )
@@ -123,15 +126,16 @@ def __addScript( application, fileName, dialogueParentWindow = None ) :
 	) :
 		script.load( continueOnError = True )
 
-	if recoveryFileName :
-		# If we loaded a backup, give the script the original
-		# filename so the user can resave and continue as before.
-		script["fileName"].setValue( fileName )
+	if asNew or recoveryFileName :
+		# If we loaded a backup (or as new), rename the script to the old
+		# filename (or nothing) so the user can resave and continue as before.
+		script["fileName"].setValue( "" if asNew else fileName )
 		script["unsavedChanges"].setValue( True )
 
 	application["scripts"].addChild( script )
 
-	addRecentFile( application, fileName )
+	if not asNew:
+		addRecentFile( application, fileName )
 
 	return script
 

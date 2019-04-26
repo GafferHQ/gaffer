@@ -66,28 +66,38 @@ GafferUI.Backups.acquire( application )
 ## Help menu
 ###########################################################################
 
-for menuItem, url in [
+def addHelpMenuItems( items ) :
+
+	for menuItem, url in items:
+
+		if url and "://" not in url :
+			url = os.path.expandvars( url )
+			url = "file://" + url if os.path.isfile( url ) else ""
+
+		scriptWindowMenu.append(
+			"/Help/" + menuItem,
+			{
+				"divider" : url is None,
+				"command" : functools.partial( GafferUI.showURL, url ),
+				"active" : bool( url )
+			}
+		)
+
+addHelpMenuItems( [
 		( "User Guide", "$GAFFER_ROOT/doc/gaffer/html/index.html" ),
-		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/Reference/NodeReference/index.html" ),
+		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/Reference/NodeReference/index.html" )
+] )
+
+GafferUI.Examples.appendExamplesSubmenuDefinition( scriptWindowMenu, "/Help/Examples" )
+
+addHelpMenuItems( [
 		( "License", "$GAFFER_ROOT/doc/gaffer/html/Appendices/License/index.html" ),
 		( "LocalDocsDivider", None ),
 		( "Forum", "https://groups.google.com/forum/#!forum/gaffer-dev" ),
 		( "Issue Tracker", "https://github.com/GafferHQ/gaffer/issues" ),
-		( "CoreDocsDivider", None ),
-	] :
+		( "CoreDocsDivider", None )
+] )
 
-	if url and "://" not in url :
-		url = os.path.expandvars( url )
-		url = "file://" + url if os.path.isfile( url ) else ""
-
-	scriptWindowMenu.append(
-		"/Help/" + menuItem,
-		{
-			"divider" : url is None,
-			"command" : functools.partial( GafferUI.showURL, url ),
-			"active" : bool( url )
-		}
-	)
 
 ## Node creation menu
 ###########################################################################

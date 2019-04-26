@@ -248,9 +248,7 @@ To export a Box as a reference script, or import a reference script into a Box:
 
 ![Box Basics demo](images/demoBoxBasics.png "Box Basics demo")
 
-```eval_rst
-    :download:`Download demo <demos/demoBoxBasics.gfr>`
-```
+This can be loaded in Gaffer from _Help_ > _Examples_ > _Box Basics_.
 
 A very simple Box with _in_ and _out_ plugs, promoted plugs, and custom UI.
 

@@ -1307,6 +1307,20 @@ else :
 	sys.stderr.write( "WARNING : Sphinx not found - not building docs. Check SPHINX build variable.\n" )
 
 #########################################################################################################
+# Example files
+#########################################################################################################
+
+exampleFiles = []
+for ext in ( 'gfr', 'grf', 'png' ) :
+	exampleFiles += glob.glob( "doc/examples/*.%s" % ext )
+	exampleFiles += glob.glob( "doc/examples/*/*.%s" % ext )
+	exampleFiles += glob.glob( "doc/examples/*/*/*.%s" % ext )
+
+for f in exampleFiles :
+	fileInstall = env.Command( f.replace( "doc/", "$BUILD_DIR/resources/", 1 ), f, Copy( "$TARGET", "$SOURCE" ) )
+	env.Alias( "build", fileInstall )
+
+#########################################################################################################
 # Installation
 #########################################################################################################
 

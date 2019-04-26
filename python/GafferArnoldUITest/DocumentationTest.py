@@ -50,5 +50,9 @@ class DocumentationTest( GafferUITest.TestCase ) :
 			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, )
 		)
 
+	def testExamples( self ) :
+
+		self.assertExampleFilesExist()
+
 if __name__ == "__main__":
 	unittest.main()

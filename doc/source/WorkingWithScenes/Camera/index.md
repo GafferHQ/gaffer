@@ -199,16 +199,14 @@ To add a camera tweak:
     - Value: The new value to use in the operation.
 
 
-## Demos ##
+## Example Graphs ##
 
 
 ### Anamorphic camera setup ###
 
 ![Preview of anamorphic camera setup demo](images/renderAnamorphicCameraSetup.png "Preview of anamorphic camera setup demo")
 
-```eval_rst
-    :download:`Download demo <demos/demoAnamorphicCameraSetup.gfr>`
-```
+This can be loaded in Gaffer from _Help_ > _Examples_ > _Rendering_ > _Anamorphic Cameras_.
 
 A setup that replicates an anamorphic camera and lens, by rendering with a non-square pixel aspect ratio.
 
@@ -217,9 +215,7 @@ A setup that replicates an anamorphic camera and lens, by rendering with a non-s
 
 ![Preview of Arnold spherical camera demo](images/renderSphericalCameraSetupArnold.png "Preview of Arnold spherical camera demo")
 
-```eval_rst
-    :download:`Download demo <demos/demoSphericalCameraSetupArnold.gfr>`
-```
+This can be loaded in Gaffer from _Help_ > _Examples_ > _Rendering_ > _Spherical Cameras (Arnold)_.
 
 A camera with spherical projection that is compatible with the Arnold renderer. To achieve this, a CameraTweaks node overrides certain camera parameters to create a custom projection type. The tweaks are:
 
