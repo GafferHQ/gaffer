@@ -93,7 +93,7 @@ namespace IECorePreview
 /// 		{
 /// 			lock.execute( []{ performExpensiveInitialisationUsingTBB(); } );
 /// 			g_initialised = true;
-///			}
+/// 		}
 /// 	}
 /// 	// Use resource here, while lock is still held.
 /// ```
@@ -147,7 +147,8 @@ class TaskMutex : boost::noncopyable
 				}
 
 				/// Upgrades a previously-acquired reader lock to a full writer
-				/// lock.
+				/// lock. Returns true if the upgrade was achieved without
+				/// temporarily releasing the lock, and false otherwise.
 				bool upgradeToWriter()
 				{
 					assert( m_mutex && !m_writer && !m_recursive );
@@ -234,12 +235,18 @@ class TaskMutex : boost::noncopyable
 						return true;
 					}
 
+					// Failed to acquire the mutex by regular means. We now need to
+					// consider our interaction with any execution state introduced by a
+					// current call to `execute()`.
+
 					ExecutionStateMutex::scoped_lock executionStateLock( mutex.m_executionStateMutex );
 					if( mutex.m_executionState && mutex.m_executionState->arenaObserver.containsThisThread() )
 					{
+						// We're already doing work on behalf of `execute()`, so we can
+						// take a recursive lock.
 						m_mutex = &mutex;
-						m_writer = false;
 						m_recursive = true;
+						m_writer = false;
 						return true;
 					}
 
@@ -248,6 +255,8 @@ class TaskMutex : boost::noncopyable
 					{
 						return false;
 					}
+
+					// Perform work on behalf of `execute()`.
 
 					ExecutionStatePtr executionState = mutex.m_executionState;
 					executionStateLock.release();
@@ -269,8 +278,7 @@ class TaskMutex : boost::noncopyable
 
 	private :
 
-		// The actual mutex that is held
-		// by the scoped_lock.
+		// The actual mutex that is held by the ScopedLock.
 		InternalMutex m_mutex;
 
 		// Tracks worker threads as they enter and exit an arena, so we can determine
@@ -347,7 +355,7 @@ class TaskMutex : boost::noncopyable
 		typedef std::shared_ptr<ExecutionState> ExecutionStatePtr;
 
 		typedef tbb::spin_mutex ExecutionStateMutex;
-		ExecutionStateMutex m_executionStateMutex;
+		ExecutionStateMutex m_executionStateMutex; // Protects m_executionState
 		ExecutionStatePtr m_executionState;
 
 };
