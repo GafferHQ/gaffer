@@ -129,6 +129,7 @@ class GAFFERBINDINGS_API Serialisation
 		const Gaffer::GraphComponent *m_parent;
 		const std::string m_parentName;
 		const Gaffer::Set *m_filter;
+		const bool m_protectParentNamespace;
 
 		std::string m_hierarchyScript;
 		std::string m_connectionScript;

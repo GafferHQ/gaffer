@@ -198,5 +198,35 @@ class SerialisationTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:minorVersion" ), None )
 		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:patchVersion" ), None )
 
+	def testProtectParentNamespace( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = GafferTest.AddNode()
+		n["b"] = GafferTest.AddNode()
+		n["b"]["op1"].setInput( n["a"]["sum"] )
+
+		serialisationWithProtection = Gaffer.Serialisation( n ).result()
+
+		with Gaffer.Context() as c :
+			c["serialiser:protectParentNamespace"] = IECore.BoolData( False )
+			serialisationWithoutProtection = Gaffer.Serialisation( n ).result()
+
+		scope = { "parent" : Gaffer.Node() }
+		scope["parent"]["a"] = Gaffer.StringPlug()
+		exec( serialisationWithProtection, scope, scope )
+
+		self.assertIsInstance( scope["parent"]["a"], Gaffer.StringPlug )
+		self.assertIn( "a1", scope["parent"] )
+		self.assertEqual( scope["parent"]["b"]["op1"].getInput(), scope["parent"]["a1"]["sum"] )
+
+		scope = { "parent" : Gaffer.Node() }
+		scope["parent"]["a"] = Gaffer.StringPlug()
+		exec( serialisationWithoutProtection, scope, scope )
+
+		self.assertIsInstance( scope["parent"]["a"], GafferTest.AddNode )
+		self.assertNotIn( "a1", scope["parent"] )
+		self.assertEqual( scope["parent"]["b"]["op1"].getInput(), scope["parent"]["a"]["sum"] )
+
+
 if __name__ == "__main__":
 	unittest.main()
