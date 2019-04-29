@@ -39,6 +39,7 @@
 
 #include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
+#include "Gaffer/Context.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
@@ -134,6 +135,8 @@ bool shouldSerialiseInput( const Plug *plug )
 	return true;
 }
 
+const IECore::InternedString g_includeParentPlugMetadata( "plugSerialiser:includeParentPlugMetadata" );
+
 } // namespace
 
 void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
@@ -161,7 +164,16 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 		}
 	}
 
-	result += metadataSerialisation( plug, identifier );
+	bool shouldSerialiseMetadata = true;
+	if( plug->node() == serialisation.parent() )
+	{
+		shouldSerialiseMetadata = Context::current()->get<bool>( g_includeParentPlugMetadata, true );
+	}
+	if( shouldSerialiseMetadata )
+	{
+		result += metadataSerialisation( plug, identifier );
+	}
+
 	return result;
 }
 
