@@ -173,5 +173,30 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Serialisation.classPath( self.Outer.Inner ), "GafferTest.SerialisationTest.Outer.Inner" )
 
+	def testVersionMetadata( self ) :
+
+		n = Gaffer.Node()
+		serialisationWithMetadata = Gaffer.Serialisation( n ).result()
+
+		with Gaffer.Context() as c :
+			c["serialiser:includeVersionMetadata"] = IECore.BoolData( False )
+			serialisationWithoutMetadata = Gaffer.Serialisation( n ).result()
+
+		scope = { "parent" : Gaffer.Node() }
+		exec( serialisationWithMetadata, scope, scope )
+
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+
+		scope = { "parent" : Gaffer.Node() }
+		exec( serialisationWithoutMetadata, scope, scope )
+
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:milestoneVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:majorVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:minorVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "serialiser:patchVersion" ), None )
+
 if __name__ == "__main__":
 	unittest.main()

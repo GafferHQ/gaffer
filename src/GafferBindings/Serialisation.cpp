@@ -97,7 +97,8 @@ std::string Serialisation::result() const
 	}
 
 	if(
-		runTimeCast<const Node>( m_parent )
+		runTimeCast<const Node>( m_parent ) &&
+		Context::current()->get<bool>( "serialiser:includeVersionMetadata", true )
 	)
 	{
 		boost::format formatter( "Gaffer.Metadata.registerValue( %s, \"%s\", %d, persistent=False )\n" );
