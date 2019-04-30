@@ -48,34 +48,34 @@ DelightOptions::DelightOptions( const std::string &name )
 
 	// Rendering
 
-	options->addOptionalMember( "dl:bucketorder", new IECore::StringData( "horizontal" ), "bucketOrder", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:numberofthreads", new IECore::IntData( 0 ), "numberOfThreads", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "dl:bucketorder", new IECore::StringData( "horizontal" ), false, "bucketOrder" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:numberofthreads", new IECore::IntData( 0 ), false, "numberOfThreads" ) );
 
 	// Quality
 
-	options->addOptionalMember( "dl:oversampling", new IECore::IntData( 9 ), "oversampling", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:quality.shadingsamples", new IECore::IntData( 64 ), "shadingSamples", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "dl:oversampling", new IECore::IntData( 9 ), false, "oversampling" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:quality.shadingsamples", new IECore::IntData( 64 ), false, "shadingSamples" ) );
 
 	// Ray depth
 
-	options->addOptionalMember( "dl:maximumraydepth.diffuse", new IECore::IntData( 1 ), "maximumRayDepthDiffuse", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:maximumraydepth.hair", new IECore::IntData( 4 ), "maximumRayDepthHair", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:maximumraydepth.reflection", new IECore::IntData( 1 ), "maximumRayDepthReflection", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:maximumraydepth.refraction", new IECore::IntData( 4 ), "maximumRayDepthRefraction", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.diffuse", new IECore::IntData( 1 ), false, "maximumRayDepthDiffuse" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.hair", new IECore::IntData( 4 ), false, "maximumRayDepthHair" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.reflection", new IECore::IntData( 1 ), false, "maximumRayDepthReflection" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.refraction", new IECore::IntData( 4 ), false, "maximumRayDepthRefraction" ) );
 
 	// Texturing
 
-	options->addOptionalMember( "dl:texturememory", new IECore::IntData( 250 ), "textureMemory", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "dl:texturememory", new IECore::IntData( 250 ), false, "textureMemory" ) );
 
 	// Network cache
 
-	options->addOptionalMember( "dl:networkcache.size", new IECore::IntData( 15 ), "networkCacheSize", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:networkcache.directory", new IECore::StringData( "" ), "networkCacheDirectory", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "dl:networkcache.size", new IECore::IntData( 15 ), false, "networkCacheSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:networkcache.directory", new IECore::StringData( "" ), false, "networkCacheDirectory" ) );
 
 	// Licensing
 
-	options->addOptionalMember( "dl:license.server", new IECore::StringData( "" ), "licenseServer", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "dl:license.wait", new IECore::BoolData( true ), "licenseWait", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "dl:license.server", new IECore::StringData( "" ), false, "licenseServer" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:license.wait", new IECore::BoolData( true ), false, "licenseWait" ) );
 
 }
 

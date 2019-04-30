@@ -100,7 +100,7 @@ IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::C
 	const std::string prefix = computePrefix( context );
 
 	std::string name;
-	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
+	for( NameValuePlugIterator it( p ); !it.done(); ++it )
 	{
 		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if( d )

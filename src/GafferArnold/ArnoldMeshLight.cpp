@@ -67,7 +67,7 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 	ArnoldAttributesPtr attributes = new ArnoldAttributes( "__attributes" );
 	attributes->inPlug()->setInput( inPlug() );
 	attributes->filterPlug()->setInput( filterPlug() );
-	for( CompoundDataPlug::MemberPlugIterator it( attributes->attributesPlug() ); !it.done(); ++it )
+	for( NameValuePlugIterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
 		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) && (*it)->getName() != "cameraVisibility" )
 		{

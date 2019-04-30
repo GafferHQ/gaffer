@@ -50,20 +50,20 @@ StandardAttributes::StandardAttributes( const std::string &name )
 
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
-	attributes->addOptionalMember( "scene:visible", new IECore::BoolData( true ), "visibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "doubleSided", new IECore::BoolData( true ), "doubleSided", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "scene:visible", new IECore::BoolData( true ), false, "visibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "doubleSided", new IECore::BoolData( true ), false, "doubleSided" ) );
 
 	// motion blur
 
-	attributes->addOptionalMember( "gaffer:transformBlur", new IECore::BoolData( true ), "transformBlur", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "gaffer:transformBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), "transformBlurSegments", false );
+	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:transformBlur", new IECore::BoolData( true ), false, "transformBlur" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:transformBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), false, "transformBlurSegments" ) );
 
-	attributes->addOptionalMember( "gaffer:deformationBlur", new IECore::BoolData( true ), "deformationBlur", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "gaffer:deformationBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), "deformationBlurSegments", false );
+	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:deformationBlur", new IECore::BoolData( true ), false, "deformationBlur" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:deformationBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), false, "deformationBlurSegments" ) );
 
 	// light linking
 
-	attributes->addOptionalMember( "linkedLights", new IECore::StringData( "" ), "linkedLights", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "linkedLights", new IECore::StringData( "" ), false, "linkedLights" ) );
 
 	plugSetSignal().connect( boost::bind( &StandardAttributes::plugSet, this, ::_1 ) );
 

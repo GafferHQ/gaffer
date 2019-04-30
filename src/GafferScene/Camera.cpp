@@ -74,18 +74,18 @@ Camera::Camera( const std::string &name )
 	addChild( new V2fPlug( "clippingPlanes", Plug::In, V2f( 0.01, 100000 ), V2f( 0 ) ) );
 
 	addChild( new CompoundDataPlug( "renderSettingOverrides" ) );
-	renderSettingOverridesPlug()->addOptionalMember( "filmFit", new IntData( IECoreScene::Camera::Horizontal ), "filmFit", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "shutter", new V2fData( V2f( -0.5, 0.5 ) ), "shutter", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "resolution", new V2iData( V2i( 1024, 1024 ) ), "resolution", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "pixelAspectRatio", new FloatData( 1.0f ), "pixelAspectRatio", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "resolutionMultiplier", new FloatData( 1.0f ), "resolutionMultiplier", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "overscan", new BoolData( false ), "overscan", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "overscanLeft", new FloatData( 0.0f ), "overscanLeft", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "overscanRight", new FloatData( 0.0f ), "overscanRight", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "overscanTop", new FloatData( 0.0f ), "overscanTop", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "overscanBottom", new FloatData( 0.0f ), "overscanBottom", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "cropWindow", new Box2fData( Box2f( V2f(0.0f), V2f(1.0f) ) ), "cropWindow", Plug::Default );
-	renderSettingOverridesPlug()->addOptionalMember( "depthOfField", new BoolData( false ), "depthOfField", Plug::Default );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "filmFit",  new IntData( IECoreScene::Camera::Horizontal ), false, "filmFit" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "shutter", new V2fData( V2f( -0.5, 0.5 ) ), false, "shutter" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "resolution", new V2iData( V2i( 1024, 1024 ) ), false, "resolution" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "pixelAspectRatio", new FloatData( 1.0f ), false, "pixelAspectRatio" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "resolutionMultiplier", new FloatData( 1.0f ), false, "resolutionMultiplier" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "overscan", new BoolData( false ), false, "overscan" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "overscanLeft", new FloatData( 0.0f ), false, "overscanLeft" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "overscanRight", new FloatData( 0.0f ), false, "overscanRight" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "overscanTop", new FloatData( 0.0f ), false, "overscanTop" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "overscanBottom", new FloatData( 0.0f ), false, "overscanBottom" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "cropWindow", new Box2fData( Box2f( V2f(0.0f), V2f(1.0f) ) ), false, "cropWindow" ) );
+	renderSettingOverridesPlug()->addChild( new NameValuePlug( "depthOfField", new BoolData( false ), false, "depthOfField" ) );
 }
 
 Camera::~Camera()
