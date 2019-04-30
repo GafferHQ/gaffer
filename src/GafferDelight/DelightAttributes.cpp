@@ -50,17 +50,17 @@ DelightAttributes::DelightAttributes( const std::string &name )
 
 	// Visibility parameters
 
-	attributes->addOptionalMember( "dl:visibility.camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "dl:visibility.diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "dl:visibility.hair", new IECore::BoolData( true ), "hairVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "dl:visibility.reflection", new IECore::BoolData( true ), "reflectionVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "dl:visibility.refraction", new IECore::BoolData( true ), "refractionVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "dl:visibility.shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "dl:visibility.specular", new IECore::BoolData( true ), "specularVisibility", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.hair", new IECore::BoolData( true ), false, "hairVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.reflection", new IECore::BoolData( true ), false, "reflectionVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.refraction", new IECore::BoolData( true ), false, "refractionVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.shadow", new IECore::BoolData( true ), false, "shadowVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.specular", new IECore::BoolData( true ), false, "specularVisibility" ) );
 
 	// Shading parameters
 
-	attributes->addOptionalMember( "dl:matte", new IECore::BoolData( false ), "matte", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "dl:matte", new IECore::BoolData( false ), false, "matte" ) );
 
 }
 

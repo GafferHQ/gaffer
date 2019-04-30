@@ -165,7 +165,7 @@ OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::Co
 	std::string name;
 	std::string value;
 
-	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
+	for( NameValuePlugIterator it( p ); !it.done(); ++it )
 	{
 		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if( d )

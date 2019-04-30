@@ -136,7 +136,8 @@ class Catalogue::InternalImage : public ImageNode
 			// Adds on a description to the output
 			addChild( new ImageMetadata() );
 			imageMetadata()->inPlug()->setInput( imageSwitch()->outPlug() );
-			CompoundDataPlug::MemberPlug *meta = imageMetadata()->metadataPlug()->addMember( "ImageDescription", new StringData() );
+			NameValuePlugPtr meta = new NameValuePlug( "ImageDescription", new StringData(), "member1" );
+			imageMetadata()->metadataPlug()->addChild( meta );
 			meta->valuePlug<StringPlug>()->setInput( descriptionPlug() );
 
 			outPlug()->setInput( imageMetadata()->outPlug() );
