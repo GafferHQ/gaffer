@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,32 +34,23 @@
 #
 ##########################################################################
 
-import unittest
-
 import Gaffer
-import GafferUI
-import GafferUITest
 
-class CompoundDataPlugValueWidgetTest( GafferUITest.TestCase ) :
+def addMember( self, name, defaultValueOrValuePlug, plugName = "member1", plugFlags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ):
+	n = Gaffer.NameValuePlug( name, defaultValueOrValuePlug, plugName,
+		**( { "flags" : plugFlags } if not isinstance( defaultValueOrValuePlug, Gaffer.Plug ) else {} )
+	)
+	self.addChild( n )
+	return n
+	
+def addOptionalMember( self, name, defaultValueOrValuePlug, plugName = "member1", plugFlags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, enabled = False ):
+	n = Gaffer.NameValuePlug( name, defaultValueOrValuePlug, enabled, plugName,
+		**( { "flags" : plugFlags } if not isinstance( defaultValueOrValuePlug, Gaffer.Plug ) else {} )
+	)
+	self.addChild( n )
+	return n
 
-	def testSetPlug( self ) :
-
-		n = Gaffer.Node()
-		n["user"]["p1"] = Gaffer.CompoundDataPlug()
-		n["user"]["p2"] = Gaffer.CompoundDataPlug()
-
-		m1 = Gaffer.NameValuePlug( "test", 10 )
-		n["user"]["p1"].addChild( m1 )
-		m2 = Gaffer.NameValuePlug( "test", 10 )
-		n["user"]["p2"].addChild( m2 )
-
-		w = GafferUI.CompoundDataPlugValueWidget( n["user"]["p1"] )
-		w1 = w.childPlugValueWidget( m1, lazy = False )
-		self.assertTrue( w1.getPlug().isSame( m1 ) )
-
-		w.setPlug( n["user"]["p2"] )
-		w2 = w.childPlugValueWidget( m2, lazy = False )
-		self.assertTrue( w2.getPlug().isSame( m2 ) )
-
-if __name__ == "__main__":
-	unittest.main()
+# CompoundDataPlug.MemberPlug has been pulled out into a generally useful NameValuePlug
+Gaffer.CompoundDataPlug.MemberPlug = Gaffer.NameValuePlug
+Gaffer.CompoundDataPlug.addMember = addMember
+Gaffer.CompoundDataPlug.addOptionalMember = addOptionalMember
