@@ -288,6 +288,7 @@ from Backups import Backups
 from AnimationEditor import AnimationEditor
 import CompoundNumericNoduleUI
 import Examples
+from NameValuePlugValueWidget import NameValuePlugValueWidget
 
 # and then specific node uis
 
