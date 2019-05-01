@@ -211,7 +211,7 @@ GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = "images/taskC
 __nodeEditorWindow.parent().close()
 
 # Demo: anamorphic camera setup
-__imageName = "renderAnamorphicCameraSetup"
+__imageName = "demoAnamorphicCameraSetup"
 __dispatchScript(
 	script = "demos/{}.gfr".format( __imageName ),
 	tasks = [ "AppleseedRender" ],

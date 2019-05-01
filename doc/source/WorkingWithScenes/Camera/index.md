@@ -204,7 +204,7 @@ To add a camera tweak:
 
 ### Anamorphic camera setup ###
 
-![Preview of anamorphic camera setup demo](images/renderAnamorphicCameraSetup.png "Preview of anamorphic camera setup demo")
+![Preview of anamorphic camera setup demo](images/demoAnamorphicCameraSetup.png "Preview of anamorphic camera setup demo")
 
 This can be loaded in Gaffer from _Help_ > _Examples_ > _Rendering_ > _Anamorphic Cameras_.
 
