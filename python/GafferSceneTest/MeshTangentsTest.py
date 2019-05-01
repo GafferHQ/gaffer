@@ -52,9 +52,15 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		verticesPerFace = IECore.IntVectorData( [3] )
 		vertexIds = IECore.IntVectorData( [0, 1, 2] )
 		p = IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( 0, 1, 0 )] )
+		n = IECore.V3fVectorData( [imath.V3f( 0, 0, -1 ), imath.V3f( 0, 0, -1 ), imath.V3f( 0, 0, -1 )] )
 		prefData = IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 0, -1, 0 ), imath.V3f( 1, 0, 0 )] )
 
 		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
+
+		mesh["N"] =  IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			n
+		)
 
 		mesh["uv"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
@@ -79,7 +85,7 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 
 		return objectToScene
 
-	def test( self ) :
+	def testModeUV( self ) :
 
 		meshTangents = GafferScene.MeshTangents()
 
@@ -90,6 +96,8 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
 
 		meshTangents["filter"].setInput( pathFilter["out"] )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.UV )
 
 		object = meshTangents['out'].object( "/object" )
 
@@ -104,6 +112,91 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 
 		for v in vTangent.data :
 			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
+
+	def testModeFirstEdge( self ) :
+
+		meshTangents = GafferScene.MeshTangents()
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.FirstEdge )
+
+		object = meshTangents['out'].object( "/object" )
+
+		tangent = object["tangent"]
+		biTangent = object["biTangent"]
+
+		self.assertEqual( len( tangent.data ), 3 )
+		self.assertEqual( len( biTangent.data ), 3 )
+
+		for v, v1 in zip( tangent.data, [imath.V3f( 1, 0, 0 ), imath.V3f( -1, 0, 0 ), imath.V3f( 0, -1, 0 ) ] ):
+			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+
+		for v, v1 in zip( biTangent.data, [imath.V3f( 0, -1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( -1, 0, 0 ) ] ):
+			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+
+	def testModeTwoEdges( self ) :
+
+		meshTangents = GafferScene.MeshTangents()
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.TwoEdges )
+
+		object = meshTangents['out'].object( "/object" )
+
+		tangent = object["tangent"]
+		biTangent = object["biTangent"]
+
+		self.assertEqual( len( tangent.data ), 3 )
+		self.assertEqual( len( biTangent.data ), 3 )
+
+		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
+			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+
+		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
+			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+
+	def testModeCentroid( self ) :
+
+		meshTangents = GafferScene.MeshTangents()
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.PrimitiveCentroid )
+
+		object = meshTangents['out'].object( "/object" )
+
+		tangent = object["tangent"]
+		biTangent = object["biTangent"]
+
+		self.assertEqual( len( tangent.data ), 3 )
+		self.assertEqual( len( biTangent.data ), 3 )
+
+		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
+			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+
+		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
+			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+
 
 	def testCanRenameOutputTangents( self ) :
 
@@ -190,3 +283,68 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 
 		for v in vTangent.data :
 			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
+
+
+	def testHandedness( self ) :
+
+		isLeftHanded = lambda u, v, n : u.cross( v ).dot( n ) < 0
+
+		meshTangents = GafferScene.MeshTangents()
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+		meshTangents['orthogonal'].setValue( True )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.UV )
+
+		meshTangents['leftHanded'].setValue( True )
+		object = meshTangents['out'].object( "/object" )
+		n = imath.V3f(0,0,1)
+		for u, v in zip( object['uTangent'].data, object['vTangent'].data ) :
+			self.assertTrue( isLeftHanded( u, v, n ) )
+
+		meshTangents['leftHanded'].setValue( False )
+		object = meshTangents['out'].object( "/object" )
+		for u, v in zip( object['uTangent'].data, object['vTangent'].data ) :
+			self.assertFalse( isLeftHanded( u, v, n ) )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.FirstEdge )
+
+		meshTangents['leftHanded'].setValue( True )
+		object = meshTangents['out'].object( "/object" )
+		for u, v, n in zip( object['tangent'].data, object['biTangent'].data, object['N'].data ) :
+			self.assertTrue( isLeftHanded( u, v, n ) )
+
+		meshTangents['leftHanded'].setValue( False )
+		object = meshTangents['out'].object( "/object" )
+		for u, v, n in zip( object['tangent'].data, object['biTangent'].data, object['N'].data ) :
+			self.assertFalse( isLeftHanded( u, v, n ) )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.TwoEdges )
+
+		meshTangents['leftHanded'].setValue( True )
+		object = meshTangents['out'].object( "/object" )
+		for u, v, n in zip( object['tangent'].data, object['biTangent'].data, object['N'].data ) :
+			self.assertTrue( isLeftHanded( u, v, n ) )
+
+		meshTangents['leftHanded'].setValue( False )
+		object = meshTangents['out'].object( "/object" )
+		for u, v, n in zip( object['tangent'].data, object['biTangent'].data, object['N'].data ) :
+			self.assertFalse( isLeftHanded( u, v, n ) )
+
+		meshTangents['mode'].setValue( GafferScene.MeshTangents.Mode.PrimitiveCentroid )
+
+		meshTangents['leftHanded'].setValue( True )
+		object = meshTangents['out'].object( "/object" )
+		for u, v, n in zip( object['tangent'].data, object['biTangent'].data, object['N'].data ) :
+			self.assertTrue( isLeftHanded( u, v, n ) )
+
+		meshTangents['leftHanded'].setValue( False )
+		object = meshTangents['out'].object( "/object" )
+		for u, v, n in zip( object['tangent'].data, object['biTangent'].data, object['N'].data ) :
+			self.assertFalse( isLeftHanded( u, v, n ) )
