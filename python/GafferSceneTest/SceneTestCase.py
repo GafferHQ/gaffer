@@ -178,9 +178,15 @@ class SceneTestCase( GafferTest.TestCase ) :
 		assert( checks.issubset( self.allPathChecks ) )
 
 		for childPlugName in checks :
-			getFn1 = getattr( scenePlug1, childPlugName )
-			getFn2 = getattr( scenePlug2, childPlugName )
-			self.assertEqual( getFn1( scenePath1 ), getFn2( scenePath2 ) )
+			value1 = getattr( scenePlug1, childPlugName )( scenePath1 )
+			value2 = getattr( scenePlug2, childPlugName )( scenePath2 )
+			self.assertEqual(
+				value1, value2,
+				"{0} != {1} : comparing {childPlugName} at {paths}".format(
+					unittest.util.safe_repr( value1 ), unittest.util.safe_repr( value2 ),
+					childPlugName = childPlugName, paths = self.__formatPaths( scenePath1, scenePath2 )
+				)
+			)
 
 	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
 
@@ -221,18 +227,30 @@ class SceneTestCase( GafferTest.TestCase ) :
 		assert( checks.issubset( self.allPathChecks ) )
 
 		for childPlugName in checks :
-			hashFn1 = getattr( scenePlug1, childPlugName + "Hash" )
-			hashFn2 = getattr( scenePlug2, childPlugName + "Hash" )
-			self.assertEqual( hashFn1( scenePath1 ), hashFn2( scenePath2 ) )
+			hash1 = getattr( scenePlug1, childPlugName + "Hash" )( scenePath1 )
+			hash2 = getattr( scenePlug2, childPlugName + "Hash" )( scenePath2 )
+			self.assertEqual(
+				hash1, hash2,
+				"{0} != {1} : comparing {childPlugName}Hash at {paths}".format(
+					unittest.util.safe_repr( hash1 ), unittest.util.safe_repr( hash2 ),
+					childPlugName = childPlugName, paths = self.__formatPaths( scenePath1, scenePath2 )
+				)
+			)
 
 	def assertPathHashesNotEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, checks = allPathChecks ) :
 
 		assert( checks.issubset( self.allPathChecks ) )
 
 		for childPlugName in checks :
-			hashFn1 = getattr( scenePlug1, childPlugName + "Hash" )
-			hashFn2 = getattr( scenePlug2, childPlugName + "Hash" )
-			self.assertNotEqual( hashFn1( scenePath1 ), hashFn2( scenePath2 ) )
+			hash1 = getattr( scenePlug1, childPlugName + "Hash" )( scenePath1 )
+			hash2 = getattr( scenePlug2, childPlugName + "Hash" )( scenePath2 )
+			self.assertNotEqual(
+				hash1, hash2,
+				"{0} == {1} : comparing {childPlugName}Hash at {paths}".format(
+					unittest.util.safe_repr( hash1 ), unittest.util.safe_repr( hash2 ),
+					childPlugName = childPlugName, paths = self.__formatPaths( scenePath1, scenePath2 )
+				)
+			)
 
 	def assertSceneHashesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
 
@@ -337,3 +355,16 @@ class SceneTestCase( GafferTest.TestCase ) :
 	def __pathToString( self, path ) :
 
 		return "/" + "/".join( [ p.value() for p in path ] )
+
+	def __formatPaths( self, path1, path2 ) :
+
+		if not isinstance( path1, basestring ) :
+			path1 = self.__pathToString( path1 )
+
+		if not isinstance( path2, basestring ) :
+			path2 = self.__pathToString( path2 )
+
+		if path1 == path2 :
+			return "\"{0}\"".format( path1 )
+		else :
+			return "\"{0}\" and \"{1}\"".format( path1, path2 )
