@@ -41,7 +41,6 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
     WorkingWithTheNodeGraph/index.md
     WorkingWithScenes/index.md
     WorkingWithImages/index.md
-    ScriptPerformance/index.md
 ```
 
 ```eval_rst
