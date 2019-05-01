@@ -94,6 +94,35 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 
 		self.assertRaises( ValueError, t.index, b3 )
 
+	def testMoveTracking( self ) :
+
+		t = GafferUI.TabbedContainer()
+		t._qtWidget().tabBar().setMovable( True )
+
+		b1 = GafferUI.Button()
+		b2 = GafferUI.Button()
+		b3 = GafferUI.Button()
+
+		t.append( b1 )
+		t.append( b2 )
+		t.append( b3 )
+
+		self.assertEqual( t.index( b1 ), 0 )
+		self.assertEqual( t.index( b2 ), 1 )
+		self.assertEqual( t.index( b3 ), 2 )
+
+		t._qtWidget().tabBar().moveTab( 0, 1 )
+
+		self.assertEqual( t.index( b1 ), 1 )
+		self.assertEqual( t.index( b2 ), 0 )
+		self.assertEqual( t.index( b3 ), 2 )
+
+		t._qtWidget().tabBar().moveTab( 2, 0 )
+
+		self.assertEqual( t.index( b1 ), 2 )
+		self.assertEqual( t.index( b2 ), 1 )
+		self.assertEqual( t.index( b3 ), 0 )
+
 	def testCurrentChangedSignal( self ) :
 
 		tc = GafferUI.TabbedContainer()
