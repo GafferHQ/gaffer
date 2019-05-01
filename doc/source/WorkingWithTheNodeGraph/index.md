@@ -5,7 +5,7 @@
 
 Here you can learn the fundamentals of constructing and editing node graphs in Gaffer.
 
-- [Box Node](Box/index.md)
+- [Box Node](BoxNode/index.md)
 
 
 ## Node Graph Performance ##
@@ -23,7 +23,7 @@ As with all VFX processes and software, a Gaffer node graph is subject to perfor
     :hidden:
     :maxdepth: 1
 
-    Box/index.md
+    BoxNode/index.md
     PerformanceBestPractices/index.md
     UsingThePerformanceMonitor/index.md
 ```
