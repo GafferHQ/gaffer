@@ -51,7 +51,10 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 	def __init__( self, cornerWidget=None, **kw ) :
 
-		GafferUI.ContainerWidget.__init__( self, _TabWidget(), **kw )
+		tabWidget = _TabWidget()
+		self.__tabMovedConnection = tabWidget.tabMovedSignal().connect( Gaffer.WeakMethod( self.__moveWidget ) )
+
+		GafferUI.ContainerWidget.__init__( self, tabWidget, **kw )
 
 		self.__tabBar = GafferUI.Widget( QtWidgets.QTabBar() )
 		self.__tabBar._qtWidget().setDrawBase( False )
@@ -129,6 +132,12 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			return None
 
 		return self.__widgets[ self._qtWidget().currentIndex() ]
+
+	def __moveWidget( self, fromIndex, toIndex ) :
+
+		w = self.__widgets[ fromIndex ]
+		del self.__widgets[ fromIndex ]
+		self.__widgets.insert( toIndex, w )
 
 	def __getitem__( self, index ) :
 
@@ -266,6 +275,29 @@ class _TabWidget( QtWidgets.QTabWidget ) :
 
 		QtWidgets.QTabWidget.__init__( self, parent )
 
+		# We have to track tab-moves and propagate them
+		# to our parent TabbedContainer so it can re-order
+		# it's widget list
+		self.__weakTabMoved = Gaffer.WeakMethod( self.__tabMoved )
+		self.tabBar().tabMoved.connect( self.__weakTabMoved )
+		self._tabMovedSignal = None
+
+	def tabMovedSignal( self ) :
+
+		if self._tabMovedSignal is None :
+			self._tabMovedSignal = GafferUI.WidgetEventSignal()
+		return self._tabMovedSignal
+
+
+	# If we have a new tabBar we need to make sure we follow that
+	# one for moves too...
+	def setTabBar( self, tabBar ) :
+
+		self.tabBar().tabMoved.disconnect( self.__weakTabMoved )
+		tabBar.tabMoved.connect( self.__weakTabMoved )
+
+		QtWidgets.QTabWidget.setTabBar( self, tabBar )
+
 	# Reimplemented so that the tabs aren't taken into
 	# account when they're not visible.
 	def sizeHint( self ) :
@@ -291,3 +323,9 @@ class _TabWidget( QtWidgets.QTabWidget ) :
 				result.setWidth( result.width() - self.tabBar().minimumSizeHint().width() )
 
 		return result
+
+	def __tabMoved( self, fromIndex, toIndex ) :
+
+		if self._tabMovedSignal is not None :
+			self._tabMovedSignal( fromIndex, toIndex )
+
