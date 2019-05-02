@@ -1994,23 +1994,34 @@ public :
 	// Record changes. These can be called concurrently.
 	void registerLight( const std::string &lightName, ArnoldLight *light );
 	void deregisterLight( const std::string &lightName );
-	void registerLightFilter( const std::vector<std::string> &lightNames, ArnoldLightFilter *lightFilter );
-	void deregisterLightFilter( const std::vector<std::string> &lightNames, ArnoldLightFilter *lightFilter );
+	void registerLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter );
+	void deregisterLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter );
 
 	// Communicate with Arnold. This needs to get called non-concurrently before rendering.
 	void update();
 
 private:
 
+	// Mapping between many lights and many filters to avoid N*M growth in
+	// memory consumption for N lights and M filters. Every filter is put in a
+	// group that collects all filters that affect the same set of lights. Each
+	// light is then linked to all groups that affect the particular light.
+	using FilterGroup = std::unordered_set<ArnoldLightFilter*>;
+	using FilterGroupPtr = std::shared_ptr<FilterGroup>;
+	using FilterGroups = tbb::concurrent_hash_map<const IECore::StringVectorData*, FilterGroupPtr>;
+
 	struct Filters
 	{
 		ArnoldLight *light;
-		std::unordered_set<ArnoldLightFilter*> lightFilters;
+		std::unordered_set<FilterGroup*> lightFilterGroups;
 		bool dirty;
 	};
 
 	using ConnectionsMap = tbb::concurrent_hash_map<const std::string, Filters>;
 	ConnectionsMap m_connections;
+
+	FilterGroups m_filterGroups;
+
 	bool m_ownConnections;
 	tbb::concurrent_vector<ArnoldObjectPtr> m_arnoldObjects;
 };
@@ -2031,7 +2042,7 @@ class ArnoldLightFilter : public ArnoldObject
 		~ArnoldLightFilter() override
 		{
 			const IECore::StringVectorData *filteredLightsData = m_attributes->filteredLights();
-			m_connections->deregisterLightFilter( filteredLightsData->readable(), this );
+			m_connections->deregisterLightFilter( filteredLightsData, this );
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -2064,7 +2075,7 @@ class ArnoldLightFilter : public ArnoldObject
 				const IECore::StringVectorData *previouslyFilteredLightsData = m_attributes->filteredLights();
 				if( previouslyFilteredLightsData )
 				{
-					m_connections->deregisterLightFilter( previouslyFilteredLightsData->readable(), this );
+					m_connections->deregisterLightFilter( previouslyFilteredLightsData, this );
 				}
 			}
 
@@ -2086,7 +2097,7 @@ class ArnoldLightFilter : public ArnoldObject
 			m_lightFilterShader = new ArnoldShader( arnoldAttributes->lightFilterShader(), m_nodeDeleter, "lightFilter:" + m_name + ":", m_parentNode );
 
 			// Make sure light filter is registered so lights can use it
-			m_connections->registerLightFilter( filteredLightsData->readable(), this );
+			m_connections->registerLightFilter( filteredLightsData, this );
 
 			// Simplify name for the root shader, for ease of reading of ass files.
 			const std::string name = "lightFilter:" + m_name;
@@ -2271,7 +2282,7 @@ class ArnoldLight : public ArnoldObject
 			}
 		}
 
-		void updateFilters( std::unordered_set<ArnoldLightFilter*> &lightFilters )
+		void updateFilters( std::vector<ArnoldLightFilter*> &lightFilters )
 		{
 			if( !m_lightShader )
 			{
@@ -2371,9 +2382,28 @@ void LightFilterConnections::deregisterLight( const std::string &lightName )
 	}
 }
 
-void LightFilterConnections::registerLightFilter( const std::vector<std::string> &lightNames, ArnoldLightFilter *lightFilter )
+void LightFilterConnections::registerLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter )
 {
-	for( const std::string &lightName : lightNames )
+	// Add filter to group of filters stored for the given lights
+	bool newFilterGroup( false );
+	FilterGroup *filterGroup;
+	{
+		FilterGroups::accessor fga;
+		m_filterGroups.insert( fga, lightNames );
+
+		if( !fga->second )
+		{
+			fga->second = std::make_shared<FilterGroup>();
+			newFilterGroup = true;
+		}
+
+		filterGroup = fga->second.get();
+		filterGroup->insert( lightFilter );
+	}
+
+	// \todo: We're currently locking on the light and make other threads wait
+	// although they could handle other lights already?
+	for( const std::string &lightName : lightNames->readable() )
 	{
 		ConnectionsMap::accessor a;
 		if( !m_connections.find( a, lightName ) )
@@ -2381,7 +2411,10 @@ void LightFilterConnections::registerLightFilter( const std::vector<std::string>
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "Can not register light filter connection for non-existing light \"%s\"" ) % lightName.c_str() ) );
 		}
 
-		a->second.lightFilters.insert( lightFilter );
+		if( newFilterGroup )
+		{
+			a->second.lightFilterGroups.insert( filterGroup );
+		}
 
 		// Even if we knew about the light filter already we need to dirty the light
 		// as the filter itself might have been updated.
@@ -2394,18 +2427,42 @@ void LightFilterConnections::registerLightFilter( const std::vector<std::string>
 	}
 }
 
-void LightFilterConnections::deregisterLightFilter( const std::vector<std::string> &lightNames, ArnoldLightFilter *lightFilter )
+void LightFilterConnections::deregisterLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter )
 {
-	for( const std::string &lightName : lightNames )
+	bool filterErased( false );
+	bool groupEmptied( false );
+	FilterGroup *filterGroup;
+	{
+		FilterGroups::accessor fga;
+		if( m_filterGroups.find( fga, lightNames ) )
+		{
+			filterGroup = fga->second.get();
+			filterErased = filterGroup->erase( lightFilter );
+			groupEmptied = filterGroup->empty();
+		}
+	}
+
+	if( !filterErased )
+	{
+		return;
+	}
+
+	for( const std::string &lightName : lightNames->readable() )
 	{
 		ConnectionsMap::accessor a;
-		if( m_connections.find( a, lightName ) ) 
+		if( m_connections.find( a, lightName ) )
 		{
-			if( a->second.lightFilters.erase( lightFilter ) )
+			if( groupEmptied )
 			{
-				a->second.dirty = true;
+				a->second.lightFilterGroups.erase( filterGroup );
 			}
+			a->second.dirty = true;
 		}
+	}
+
+	if( groupEmptied )
+	{
+		m_filterGroups.erase( lightNames );
 	}
 }
 
@@ -2434,7 +2491,13 @@ void LightFilterConnections::update()
 					continue;
 				}
 
-				a->second.light->updateFilters( a->second.lightFilters );
+				std::vector<ArnoldLightFilter*> allFilters;
+				for( FilterGroup *filterGroup : a->second.lightFilterGroups )
+				{
+					allFilters.insert( allFilters.end(), filterGroup->begin(), filterGroup->end() );
+				}
+
+				a->second.light->updateFilters( allFilters );
 				a->second.dirty = false;
 			}
 		},
