@@ -38,6 +38,7 @@
 #include "GafferScene/BranchCreator.h"
 
 #include "GafferScene/FilterResults.h"
+#include "GafferScene/SceneAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -160,6 +161,24 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
+boost::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
+{
+	const string parentAsString = parentPlug()->getValue();
+	if( parentAsString.empty() )
+	{
+		return boost::none;
+	}
+
+	ScenePlug::ScenePath parent;
+	ScenePlug::stringToPath( parentAsString, parent );
+	if( SceneAlgo::exists( inPlug(), parent ) )
+	{
+		return parent;
+	}
+
+	return boost::none;
+}
+
 void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FilteredSceneProcessor::hash( output, context, h );
@@ -168,9 +187,15 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 	{
 		ScenePlug::GlobalScope globalScope( context );
 		filteredPathsPlug()->hash( h );
+
 		if( !filterPlug()->getInput() )
 		{
-			parentPlug()->hash( h );
+			const auto parent = parentPlugPath();
+			if( parent )
+			{
+				h.append( parent->data(), parent->size() );
+				h.append( parent->size() );
+			}
 		}
 	}
 	else if( output == mappingPlug() )
@@ -189,10 +214,10 @@ void BranchCreator::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 
 		if( !filterPlug()->getInput() )
 		{
-			const string parentAsString = parentPlug()->getValue();
-			if( !parentAsString.empty() )
+			const auto parent = parentPlugPath();
+			if( parent )
 			{
-				parentPaths->writable().addPath( parentAsString );
+				parentPaths->writable().addPath( *parent );
 			}
 		}
 		static_cast<Gaffer::PathMatcherDataPlug *>( output )->setValue( parentPaths );

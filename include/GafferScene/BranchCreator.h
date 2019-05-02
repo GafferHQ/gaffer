@@ -44,6 +44,8 @@
 
 #include "IECore/CompoundData.h"
 
+#include "boost/optional.hpp"
+
 namespace Gaffer
 {
 
@@ -131,6 +133,10 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		//@}
 
 	private :
+
+		/// Returns the path specified by `parentPlug()`, only if it is non-empty
+		/// and is valid within the input scene.
+		boost::optional<ScenePlug::ScenePath> parentPlugPath() const;
 
 		/// All the results from `filterPlug()`.
 		Gaffer::PathMatcherDataPlug *filteredPathsPlug();

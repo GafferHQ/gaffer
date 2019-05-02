@@ -394,5 +394,18 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( parent["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 
+	def testInvalidParent( self ) :
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "setA" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( cube["out"] )
+		parent["child"].setInput( cube["out"] )
+		parent["parent"].setValue( "/invalidLocation" )
+
+		self.assertSceneValid( parent["out"] )
+		self.assertScenesEqual( parent["out"], cube["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
