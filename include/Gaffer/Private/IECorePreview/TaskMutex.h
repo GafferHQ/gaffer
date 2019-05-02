@@ -117,7 +117,7 @@ class TaskMutex : boost::noncopyable
 			public :
 
 				ScopedLock()
-					:	m_mutex( nullptr ), m_writer( false ), m_recursive( false )
+					:	m_mutex( nullptr ), m_lockType( LockType::None )
 				{
 				}
 
@@ -139,8 +139,9 @@ class TaskMutex : boost::noncopyable
 				/// work on behalf of `execute()` while waiting.
 				void acquire( TaskMutex &mutex, bool write = true, bool acceptWork = true )
 				{
+					const LockType l = write ? LockType::Write : LockType::Read;
 					tbb::internal::atomic_backoff backoff;
-					while( !acquireOr( mutex, write, [acceptWork]( bool workAvailable ){ return acceptWork; } ) )
+					while( !acquireOr( mutex, l, [acceptWork]( bool workAvailable ){ return acceptWork; } ) )
 					{
 						backoff.pause();
 					}
@@ -151,8 +152,8 @@ class TaskMutex : boost::noncopyable
 				/// temporarily releasing the lock, and false otherwise.
 				bool upgradeToWriter()
 				{
-					assert( m_mutex && !m_writer && !m_recursive );
-					m_writer = true;
+					assert( m_mutex && (m_lockType == LockType::Read) );
+					m_lockType = LockType::Write;
 					return m_lock.upgrade_to_writer();
 				}
 
@@ -161,7 +162,7 @@ class TaskMutex : boost::noncopyable
 				template<typename F>
 				void execute( F &&f )
 				{
-					assert( m_mutex && m_writer && !m_recursive );
+					assert( m_mutex && m_lockType == LockType::Write );
 
 					ExecutionStateMutex::scoped_lock executionStateLock( m_mutex->m_executionStateMutex );
 					assert( !m_mutex->m_executionState );
@@ -186,7 +187,8 @@ class TaskMutex : boost::noncopyable
 				/// Acquires mutex or returns false. Never does TBB tasks.
 				bool tryAcquire( TaskMutex &mutex, bool write = true )
 				{
-					return acquireOr( mutex, write, []( bool workAvailable ){ return false; } );
+					const LockType l = write ? LockType::Write : LockType::Read;
+					return acquireOr( mutex, l, []( bool workAvailable ){ return false; } );
 				}
 
 				/// Releases the lock. This will be done automatically
@@ -195,11 +197,12 @@ class TaskMutex : boost::noncopyable
 				void release()
 				{
 					assert( m_mutex );
-					if( !m_recursive )
+					if( m_lockType != LockType::WorkerRead )
 					{
 						m_lock.release();
 					}
 					m_mutex = nullptr;
+					m_lockType = LockType::None;
 				}
 
 				/// Advanced API
@@ -209,13 +212,22 @@ class TaskMutex : boost::noncopyable
 				/// in Gaffer's LRUCache. They should not be considered part of the canonical
 				/// API.
 
-				/// Returns true if `acquire()` obtained a recursive lock rather
-				/// than a unique lock. Recursive locks are available to any thread
-				/// performing work on behalf of `execute()`.
-				bool recursive() const
+				enum class LockType
 				{
-					return m_recursive;
-				}
+					None,
+					// Multiple readers may coexist.
+					Read,
+					// Only a single writer can exist at a time, and the presence
+					// of a writer prevents read locks being acquired.
+					Write,
+					// Artificial read lock, available only to threads performing
+					// TBB tasks on behalf of `execute()`. These readers are
+					// protected only by the original write lock held by the caller
+					// of `execute()`. This means the caller of `execute()` _must_
+					// delay any writes until _after_ `execute()` has returned.
+					// A WorkerRead lock can not be upgraded via `upgradeToWriter()`.
+					WorkerRead,
+				};
 
 				/// Tries to acquire the mutex, returning true on success. On failure,
 				/// calls `workNotifier( bool workAvailable )`. If work is available and
@@ -223,15 +235,17 @@ class TaskMutex : boost::noncopyable
 				/// spawned by `execute()` until the work is complete. Returns false on
 				/// failure regardless of whether or not work is done.
 				template<typename WorkNotifier>
-				bool acquireOr( TaskMutex &mutex, bool write, WorkNotifier &&workNotifier )
+				bool acquireOr( TaskMutex &mutex, LockType lockType, WorkNotifier &&workNotifier )
 				{
 					assert( !m_mutex );
-					if( m_lock.try_acquire( mutex.m_mutex, write ) )
+					assert( m_lockType == LockType::None );
+					assert( lockType != LockType::None );
+
+					if( m_lock.try_acquire( mutex.m_mutex, /* write = */ lockType == LockType::Write ) )
 					{
 						// Success!
 						m_mutex = &mutex;
-						m_recursive = false;
-						m_writer = write;
+						m_lockType = lockType == LockType::WorkerRead ? LockType::Read : lockType;
 						return true;
 					}
 
@@ -240,13 +254,12 @@ class TaskMutex : boost::noncopyable
 					// current call to `execute()`.
 
 					ExecutionStateMutex::scoped_lock executionStateLock( mutex.m_executionStateMutex );
-					if( mutex.m_executionState && mutex.m_executionState->arenaObserver.containsThisThread() )
+					if( lockType == LockType::WorkerRead && mutex.m_executionState && mutex.m_executionState->arenaObserver.containsThisThread() )
 					{
 						// We're already doing work on behalf of `execute()`, so we can
-						// take a recursive lock.
+						// take a WorkerRead lock.
 						m_mutex = &mutex;
-						m_recursive = true;
-						m_writer = false;
+						m_lockType = lockType;
 						return true;
 					}
 
@@ -267,12 +280,20 @@ class TaskMutex : boost::noncopyable
 					return false;
 				}
 
+				/// Returns the type of the lock currently held. If `acquireOr( WorkerRead )`
+				/// is called successfully, this will return `Read` for an external lock and
+				/// `WorkerRead` for an internal lock acquired by virtue of performing tasks
+				/// for `execute()`.
+				LockType lockType() const
+				{
+					return m_lockType;
+				}
+
 			private :
 
 				InternalMutex::scoped_lock m_lock;
 				TaskMutex *m_mutex;
-				bool m_writer;
-				bool m_recursive;
+				LockType m_lockType;
 
 		};
 

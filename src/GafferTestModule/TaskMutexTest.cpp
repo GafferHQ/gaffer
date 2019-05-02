@@ -75,9 +75,13 @@ void testTaskMutex()
 		TaskMutex::ScopedLock lock( mutex, /* write = */ false );
 		gotLock.local() = true;
 
+		GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Read )
+
 		if( !initialised )
 		{
 			lock.upgradeToWriter();
+			GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Write );
+
 			if( !initialised ) // Check again, because upgrading to writer may lose the lock temporarily.
 			{
 				// Simulate an expensive multithreaded
@@ -131,6 +135,7 @@ void testTaskMutexWithinIsolate()
 		ParallelAlgo::isolate(
 			[&mutex]() {
 				TaskMutex::ScopedLock lock( mutex );
+				GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Write )
 				std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 			}
 		);
@@ -171,6 +176,7 @@ void testTaskMutexJoiningOuterTasks()
 
 		TaskMutex::ScopedLock lock( mutex );
 		gotLock.local() = true;
+		GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Write )
 
 		if( !initialised )
 		{
@@ -208,6 +214,7 @@ void testTaskMutexJoiningOuterTasks()
 			for( size_t i = r.begin(); i < r.end(); ++i )
 			{
 				TaskMutex::ScopedLock lock( *independentTasks[i] );
+				GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Write )
 				lock.execute(
 					[&]() {
 						initialise();
@@ -241,33 +248,10 @@ void testTaskMutexHeavyContention( bool acceptWork )
 			for( size_t i = r.begin(); i < r.end(); ++i )
 			{
 				TaskMutex::ScopedLock lock( mutex, /* write = */ false, acceptWork );
+				GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Read );
 				GAFFERTEST_ASSERTEQUAL( initialised, true );
 			}
 		}
-	);
-}
-
-void testTaskMutexRecursion()
-{
-	TaskMutex mutex;
-
-	std::function<void ( int )> recurse;
-	recurse = [&mutex, &recurse]( int depth ) {
-		TaskMutex::ScopedLock lock( mutex );
-		GAFFERTEST_ASSERT( lock.recursive() );
-		if( depth > 100 )
-		{
-			return;
-		}
-		else
-		{
-			recurse( depth + 1 );
-		}
-	};
-
-	TaskMutex::ScopedLock lock( mutex );
-	lock.execute(
-		[&recurse] { recurse( 0 ); }
 	);
 }
 
@@ -279,8 +263,15 @@ void testTaskMutexWorkerRecursion()
 	std::function<void ( int )> recurse;
 	recurse = [&mutex, &gotLock, &recurse] ( int depth ) {
 
-		TaskMutex::ScopedLock lock( mutex );
-		GAFFERTEST_ASSERT( lock.recursive() );
+		TaskMutex::ScopedLock lock;
+		const bool acquired = lock.acquireOr(
+			mutex, TaskMutex::ScopedLock::LockType::WorkerRead,
+			[]( bool workAvailable ) { return true; }
+		);
+
+		GAFFERTEST_ASSERT( acquired );
+		GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::WorkerRead );
+
 		gotLock.local() = true;
 
 		if( depth > 4 )
@@ -315,7 +306,7 @@ void testTaskMutexAcquireOr()
 	TaskMutex::ScopedLock lock2;
 	bool workAvailable = true;
 	const bool acquired = lock2.acquireOr(
-		mutex, /* write = */ true,
+		mutex, TaskMutex::ScopedLock::LockType::Write,
 		[&workAvailable] ( bool wa ) { workAvailable = wa; return true; }
 	);
 
@@ -332,7 +323,6 @@ void GafferTestModule::bindTaskMutexTest()
 	def( "testTaskMutexWithinIsolate", &testTaskMutexWithinIsolate );
 	def( "testTaskMutexJoiningOuterTasks", &testTaskMutexJoiningOuterTasks );
 	def( "testTaskMutexHeavyContention", &testTaskMutexHeavyContention );
-	def( "testTaskMutexRecursion", &testTaskMutexRecursion );
 	def( "testTaskMutexWorkerRecursion", &testTaskMutexWorkerRecursion );
 	def( "testTaskMutexAcquireOr", &testTaskMutexAcquireOr );
 }
