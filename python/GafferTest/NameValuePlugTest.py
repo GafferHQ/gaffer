@@ -70,7 +70,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 		if isinstance( plug, Gaffer.IntPlug ):
 			self.assertEqual( s2["n"]["p"]["value"].minValue(), plug.minValue() )
 			self.assertEqual( s2["n"]["p"]["value"].maxValue(), plug.maxValue() )
-			
+
 
 	def assertCounterpart( self, plug ):
 		p2 = plug.createCounterpart( "testName", Gaffer.Plug.Direction.Out )
@@ -95,7 +95,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 		if isinstance( plug, Gaffer.IntPlug ):
 			self.assertEqual( p2.minValue(), plug.minValue() )
 			self.assertEqual( p2.maxValue(), plug.maxValue() )
-			
+
 
 	def test( self ) :
 
@@ -125,7 +125,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 			defa = constructed["defaults"][k]
 			spec = constructed["specified"][k]
 			numChildren = 3 if "Enable" in k else 2
-			if k == "empty":	
+			if k == "empty":
 				numChildren = 0
 			self.assertEqual( len( spec.children() ), numChildren )
 			self.assertEqual( len( defa.children() ), numChildren )
@@ -136,8 +136,8 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 			self.assertEqual( spec.direction(), Gaffer.Plug.Direction.Out )
 			self.assertEqual( defa.getFlags(), Gaffer.Plug.Flags.Default )
 			self.assertEqual( spec.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-			
-			if k == "empty":	
+
+			if k == "empty":
 				self.assertNotIn( "name", defa )
 				self.assertNotIn( "name", spec )
 				self.assertNotIn( "value", defa )
@@ -162,7 +162,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 				self.assertPlugSerialises( spec )
 				self.assertCounterpart( defa )
 				self.assertCounterpart( spec )
-			
+
 	def testBasicRepr( self ) :
 		p = Gaffer.NameValuePlug( "key", IECore.StringData( "value" ) )
 		self.assertEqual( repr( p ),
@@ -176,7 +176,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 
 	def testValueTypes( self ) :
 
-		for v in [ 
+		for v in [
 				IECore.FloatVectorData( [ 1, 2, 3 ] ),
 				IECore.IntVectorData( [ 1, 2, 3 ] ),
 				IECore.StringVectorData( [ "1", "2", "3" ] ),

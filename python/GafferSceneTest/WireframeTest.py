@@ -122,8 +122,8 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 		primitiveVariables = GafferScene.PrimitiveVariables()
 		primitiveVariables["in"].setInput( plane["out"] )
 		primitiveVariables["filter"].setInput( filter["out"] )
-		primitiveVariables["primitiveVariables"].addMember( "constantV3f", IECore.V3fVectorData( [ imath.V3f( 1 ) ] ) )
-		primitiveVariables["primitiveVariables"].addMember( "constantString", "test" )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "constantV3f", IECore.V3fVectorData( [ imath.V3f( 1 ) ] ) ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "constantString", "test" ) )
 
 		wireframe = GafferScene.Wireframe()
 		wireframe["in"].setInput( primitiveVariables["out"] )

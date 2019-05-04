@@ -65,7 +65,7 @@ class CollectTransformsTest( GafferSceneTest.SceneTestCase ) :
 		script["CustomAttributes"] = GafferScene.CustomAttributes( "CustomAttributes" )
 		script["CustomAttributes"]["in"].setInput( script["Transform"]["out"] )
 		script["CustomAttributes"]["filter"].setInput( script["PathFilter"]["out"] )
-		script['CustomAttributes']['attributes'].addMember( "existingAttr", IECore.StringData( "test" ) )
+		script['CustomAttributes']['attributes'].addChild( Gaffer.NameValuePlug( "existingAttr", IECore.StringData( "test" ) ) )
 		script["CollectTransforms"] = GafferScene.CollectTransforms( "CollectTransforms" )
 		script["CollectTransforms"]["in"].setInput( script["CustomAttributes"]["out"] )
 		script["CollectTransforms"]["filter"].setInput( script["PathFilter"]["out"] )

@@ -1697,7 +1697,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["cv"] = Gaffer.ContextVariables()
 		s["cv"].setup( s["n1"]["task"] )
 		s["cv"]["in"].setInput( s["n1"]["task"] )
-		s["cv"]["variables"].addMember( "test", 10 )
+		s["cv"]["variables"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
 
 		s["n2"] = GafferDispatchTest.LoggingTaskNode()
 		s["n2"]["preTasks"][0].setInput( s["cv"]["out"] )

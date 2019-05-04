@@ -185,7 +185,7 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 		metadata = GafferImage.ImageMetadata()
 		metadata["in"].setInput( checker["out"] )
-		metadata["metadata"].addMember( "test", 10 )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
 
 		self.assertEqual( metadata["out"].format(), metadata["out"]["format"].getValue() )
 		self.assertEqual( metadata["out"].formatHash(), metadata["out"]["format"].hash() )

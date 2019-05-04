@@ -392,7 +392,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# First variant:  bake everything, covering the whole 1001 UDIM
 
 		customAttributes1 = GafferScene.CustomAttributes()
-		customAttributes1["attributes"].addMember( 'bake:fileName', IECore.StringData( '${bakeDirectory}/complete/<AOV>/<AOV>.<UDIM>.exr' ) )
+		customAttributes1["attributes"].addChild( Gaffer.NameValuePlug( 'bake:fileName', IECore.StringData( '${bakeDirectory}/complete/<AOV>/<AOV>.<UDIM>.exr' ) ) )
 		customAttributes1["in"].setInput( collectScenes["out"] )
 
 		# Second vaiant: bake just 2 of the 4 meshes, leaving lots of holes that will need filling
@@ -405,21 +405,21 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 
 
 		customAttributes2 = GafferScene.CustomAttributes()
-		customAttributes2["attributes"].addMember( 'bake:fileName', IECore.StringData( '${bakeDirectory}/incomplete/<AOV>/<AOV>.<UDIM>.exr' ) )
+		customAttributes2["attributes"].addChild( Gaffer.NameValuePlug( 'bake:fileName', IECore.StringData( '${bakeDirectory}/incomplete/<AOV>/<AOV>.<UDIM>.exr' ) ) )
 		customAttributes2["in"].setInput( prune["out"] )
 
 
 		# Third variant: bake everything, but with one mesh at a higher resolution
 		
 		customAttributes3 = GafferScene.CustomAttributes()
-		customAttributes3["attributes"].addMember( 'bake:fileName', IECore.StringData( '${bakeDirectory}/mismatch/<AOV>/<AOV>.<UDIM>.exr' ) )
+		customAttributes3["attributes"].addChild( Gaffer.NameValuePlug( 'bake:fileName', IECore.StringData( '${bakeDirectory}/mismatch/<AOV>/<AOV>.<UDIM>.exr' ) ) )
 		customAttributes3["in"].setInput( collectScenes["out"] )
 
 		pathFilter2 = GafferScene.PathFilter()
 		pathFilter2["paths"].setValue( IECore.StringVectorData( [ '/2' ] ) )
 
 		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["attributes"].addMember( 'bake:resolution', IECore.IntData( 200 ) )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( 'bake:resolution', IECore.IntData( 200 ) ) )
 		customAttributes["filter"].setInput( pathFilter2["out"] )
 		customAttributes["in"].setInput( customAttributes3["out"] )
 

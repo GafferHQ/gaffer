@@ -144,7 +144,7 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.CustomAttributes()
 		a["in"].setInput( d["out"] )
-		a["attributes"].addMember( "user:a", 10 )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "user:a", 10 ) )
 		a["filter"].setInput( f["out"] )
 
 		# We haven't deleted the set yet, so we should get

@@ -195,8 +195,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addMember( "renderDirectory", self.temporaryDirectory() + "/renderTests" )
-		s["variables"].addMember( "assDirectory", self.temporaryDirectory() + "/assTests" )
+		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", self.temporaryDirectory() + "/renderTests" ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "assDirectory", self.temporaryDirectory() + "/assTests" ) )
 
 		s["plane"] = GafferScene.Plane()
 

@@ -62,9 +62,9 @@ class DeleteOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		# test that we can delete options
 
-		options["options"].addMember( "test1", 1 )
-		options["options"].addMember( "test2", 2 )
-		options["options"].addMember( "test3", 3 )
+		options["options"].addChild( Gaffer.NameValuePlug( "test1", 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		options["options"].addChild( Gaffer.NameValuePlug( "test2", 2, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		options["options"].addChild( Gaffer.NameValuePlug( "test3", 3, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		g = deleteOptions["out"]["globals"].getValue()
 

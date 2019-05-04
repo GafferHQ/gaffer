@@ -75,10 +75,10 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.CustomAttributes()
 		a["in"].setInput( p["out"] )
 
-		a["attributes"].addMember( "a1", 1 )
-		a["attributes"].addMember( "a2", 2 )
-		a["attributes"].addMember( "b1", 1 )
-		a["attributes"].addMember( "b2", 1 )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "a1", 1 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "a2", 2 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "b1", 1 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "b2", 1 ) )
 
 		d = GafferScene.DeleteAttributes()
 		d["in"].setInput( a["out"] )

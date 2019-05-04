@@ -107,7 +107,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 	def testOutputDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addMember( "renderDirectory", self.temporaryDirectory() + "/openGLRenderTest" )
+		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", self.temporaryDirectory() + "/openGLRenderTest" ) )
 
 		s["plane"] = GafferScene.Plane()
 

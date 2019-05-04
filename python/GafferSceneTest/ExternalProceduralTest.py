@@ -40,6 +40,7 @@ import imath
 import IECore
 import IECoreScene
 
+import Gaffer
 import GafferScene
 import GafferSceneTest
 
@@ -54,7 +55,7 @@ class ExternalProceduralTest( GafferSceneTest.SceneTestCase ) :
 
 		n["bound"].setValue( imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ) )
 		n["fileName"].setValue( "test.so" )
-		n["parameters"].addMember( "testFloat", 1.0 )
+		n["parameters"].addChild( Gaffer.NameValuePlug( "testFloat", 1.0 ) )
 
 		p = n["out"].object( "/procedural" )
 

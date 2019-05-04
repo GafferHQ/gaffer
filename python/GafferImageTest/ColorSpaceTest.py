@@ -208,8 +208,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		# override context
 		s["writer"]["fileName"].setValue( contextOverrideImageFile )
-		s["cs"]["context"].addOptionalMember("LUT", "cineon.spi1d", "LUT", enabled=True)
-		s["cs"]["context"].addOptionalMember("CDL", "rec709.spi1d", "CDL", enabled=True)
+		s["cs"]["context"].addChild( Gaffer.NameValuePlug("LUT", "cineon.spi1d", True, "LUT", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["cs"]["context"].addChild( Gaffer.NameValuePlug("CDL", "rec709.spi1d", True, "CDL", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s.save()
 
 		subprocess.check_call(

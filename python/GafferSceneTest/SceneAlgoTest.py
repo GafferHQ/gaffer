@@ -231,7 +231,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferScene.StandardAttributes()
 		attributes["in"].setInput( plane["out"] )
 		attributes["filter"].setInput( attributesFilter["out"] )
-		attributes["attributes"].addMember( "test", 10 )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( attributes["out"] )

@@ -94,7 +94,7 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		inMetadata = r["out"]["metadata"].getValue()
 
 		a = GafferImage.ImageMetadata()
-		a["metadata"].addMember( "compression", IECore.StringData( "extraFancyCompressor" ) )
+		a["metadata"].addChild( Gaffer.NameValuePlug( "compression", IECore.StringData( "extraFancyCompressor" ) ) )
 
 		m = GafferImage.CopyImageMetadata()
 		m["in"].setInput( r["out"] )

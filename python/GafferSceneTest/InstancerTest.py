@@ -398,10 +398,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		with Gaffer.Context() as c :
 
 			c.setFrame( 1 )
-			script["attributes"]["attributes"].addMember( "test1", IECore.IntData( 10 ) )
+			script["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "test1", IECore.IntData( 10 ) ) )
 
 			c.setFrame( 2 )
-			script["attributes"]["attributes"].addOptionalMember( "test2", IECore.IntData( 20 ) )
+			script["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "test2", IECore.IntData( 20 ), True ) )
 
 			c.setFrame( 3 )
 			script["attributes"]["attributes"].addMembers(

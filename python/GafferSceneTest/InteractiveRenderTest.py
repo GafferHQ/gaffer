@@ -378,7 +378,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["a"] = GafferScene.CustomAttributes()
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["filter"].setInput( s["f"]["out"] )
-		visibilityPlug = s["a"]["attributes"].addMember( self._cameraVisibilityAttribute(), False )
+		visibilityPlug = Gaffer.NameValuePlug( self._cameraVisibilityAttribute(), False )
+		s["a"]["attributes"].addChild( visibilityPlug )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -1270,7 +1271,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["a"] = GafferScene.CustomAttributes()
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["global"].setValue( True )
-		visibilityPlug = s["a"]["attributes"].addMember( self._cameraVisibilityAttribute(), True )
+		visibilityPlug = Gaffer.NameValuePlug( self._cameraVisibilityAttribute(), True )
+		s["a"]["attributes"].addChild( visibilityPlug )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -1438,7 +1440,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"] = GafferScene.CustomOptions()
 		s["options"]["in"].setInput( s["set"]["out"] )
 		for o in self._traceDepthOptions() :
-			s["options"]["options"].addMember( o, IECore.IntData( 1 ) )
+			s["options"]["options"].addChild( Gaffer.NameValuePlug( o, IECore.IntData( 1 ) ) )
 
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(

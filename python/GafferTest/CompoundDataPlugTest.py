@@ -374,7 +374,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 				Gaffer.NameValuePlug( "test", 10, "test",
 					Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 				)
-			) 
+			)
 
 		assertPostconditions( s )
 
