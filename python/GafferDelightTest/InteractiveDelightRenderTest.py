@@ -93,7 +93,7 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		light["shape"].setValue( light.Shape.Sphere )
 		light["radius"].setValue( 0.01 )
 		light.loadShader( "maya/osl/pointLight" )
-		light["attributes"].addMember( "dl:visibility.camera", False )
+		light["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False ) )
 
 		return light, light["parameters"]["i_color"]
 

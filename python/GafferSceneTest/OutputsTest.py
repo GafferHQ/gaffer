@@ -70,7 +70,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		# check that we have some outputs
 
 		output = outputs.addOutput( "beauty", IECoreScene.Output( "beauty.exr", "exr", "rgba" ) )
-		output["parameters"].addMember( "test", IECore.FloatData( 10 ) )
+		output["parameters"].addChild( Gaffer.NameValuePlug( "test", IECore.FloatData( 10 ) ) )
 
 		outputs.addOutput( "diffuse", IECoreScene.Output( "diffuse.exr", "exr", "color aov_diffuse" ) )
 
@@ -91,7 +91,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["outputsNode"] = GafferScene.Outputs()
 		output = s["outputsNode"].addOutput( "beauty", IECoreScene.Output( "beauty.exr", "exr", "rgba" ) )
-		output["parameters"].addMember( "test", IECore.FloatData( 10 ) )
+		output["parameters"].addChild( Gaffer.NameValuePlug( "test", IECore.FloatData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		ss = s.serialise()
 

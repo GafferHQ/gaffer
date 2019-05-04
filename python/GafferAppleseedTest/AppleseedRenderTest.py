@@ -190,8 +190,8 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addMember( "renderDirectory", self.temporaryDirectory() + "/renderTests" )
-		s["variables"].addMember( "appleseedDirectory", self.temporaryDirectory() + "/appleseedTests" )
+		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", self.temporaryDirectory() + "/renderTests",  Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "appleseedDirectory", self.temporaryDirectory() + "/appleseedTests", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["plane"] = GafferScene.Plane()
 

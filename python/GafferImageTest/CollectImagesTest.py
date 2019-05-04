@@ -103,7 +103,7 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 
 		metadata1 = GafferImage.ImageMetadata()
 		metadata1["in"].setInput( constant1["out"] )
-		metadata1["metadata"].addMember( "test", 1 )
+		metadata1["metadata"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
 
 		constant2 = GafferImage.Constant()
 		constant2['color'].setValue( imath.Color4f( 0.2, 0.4, 0.6, 0.8 ) )
@@ -111,7 +111,7 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 
 		metadata2 = GafferImage.ImageMetadata()
 		metadata2["in"].setInput( constant2["out"] )
-		metadata2["metadata"].addMember( "test", 2 )
+		metadata2["metadata"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
 
 		switch = Gaffer.Switch()
 		switch.setup( GafferImage.ImagePlug() )

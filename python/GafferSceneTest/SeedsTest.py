@@ -221,7 +221,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		# Add the primitive variable, it should take effect.
 
-		primitiveVariables["primitiveVariables"].addMember( "d", IECore.FloatData( 0.5 ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ) ) )
 		self.assertLessEqual( seeds["out"].object( "/plane/seeds" ).numPoints, p.numPoints )
 
 if __name__ == "__main__":

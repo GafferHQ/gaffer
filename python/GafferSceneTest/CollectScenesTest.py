@@ -127,7 +127,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 	def testGlobals( self ) :
 
 		options = GafferScene.CustomOptions()
-		options["options"].addMember( "user:test", "${collect:rootName}" )
+		options["options"].addChild( Gaffer.NameValuePlug( "user:test", "${collect:rootName}" ) )
 		self.assertTrue( "option:user:test" in options["out"]["globals"].getValue() )
 
 		collect = GafferScene.CollectScenes()
@@ -142,7 +142,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		primitiveVariables = GafferScene.PrimitiveVariables()
 		primitiveVariables["in"].setInput( sphere["out"] )
-		primitiveVariables["primitiveVariables"].addMember( "color", "${collect:rootName}" )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "color", "${collect:rootName}" ) )
 
 		collect = GafferScene.CollectScenes()
 		collect["in"].setInput( primitiveVariables["out"] )

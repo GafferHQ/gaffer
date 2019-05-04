@@ -61,7 +61,7 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( parameters["out"], group["out"] )
 		self.assertSceneHashesEqual( parameters["out"], group["out"] )
 
-		parameters["parameters"].addMember( "test", 10 )
+		parameters["parameters"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/*" ] ) )
@@ -90,7 +90,8 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 	def testAffects( self ) :
 
 		parameters = GafferScene.Parameters()
-		p = parameters["parameters"].addOptionalMember( "test", 10 )
+		p = Gaffer.NameValuePlug( "test", 10, True )
+		parameters["parameters"].addChild( p )
 
 		self.assertEqual( parameters.affects( p["name"] ), [ parameters["out"]["object"] ] )
 		self.assertEqual( parameters.affects( p["enabled"] ), [ parameters["out"]["object"] ] )

@@ -56,7 +56,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		n["in"].setValue( "$a" )
 		self.assertEqual( c["out"].getValue(), "" )
 
-		c["variables"].addMember( "a", IECore.StringData( "A" ) )
+		c["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "A" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( c["out"].getValue(), "A" )
 
 	def testDirtyPropagation( self ) :
@@ -69,7 +69,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 		# adding a variable should dirty the output:
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
-		c["variables"].addMember( "a", IECore.StringData( "A" ) )
+		c["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "A" ), "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
 
 		# modifying the variable should dirty the output:
@@ -94,7 +94,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		s["n"]["in"].setValue( "$a" )
 		self.assertEqual( s["c"]["out"].getValue(), "" )
 
-		s["c"]["variables"].addMember( "a", IECore.StringData( "A" ) )
+		s["c"]["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "A" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( s["c"]["out"].getValue(), "A" )
 
 		s2 = Gaffer.ScriptNode()
@@ -121,7 +121,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		self.assertEqual( s["c"]["out"].getValue(), "A" )
 
 		# Extra variables trump regular variables of the same name
-		s["c"]["variables"].addMember( "a", IECore.StringData( "B" ) )
+		s["c"]["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "B" ) ) )
 		self.assertEqual( s["c"]["out"].getValue(), "A" )
 
 		s2 = Gaffer.ScriptNode()

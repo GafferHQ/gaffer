@@ -106,7 +106,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.ImageMetadata()
 		m["in"].setInput( c["out"] )
-		m["metadata"].addMember( "ImageDescription", "i am a description" )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "ImageDescription", "i am a description" ) )
 
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( m["out"] )

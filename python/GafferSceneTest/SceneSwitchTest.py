@@ -194,7 +194,8 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		primitiveVariables = GafferScene.PrimitiveVariables()
 		primitiveVariables["in"].setInput( plane["out"] )
-		pv = primitiveVariables["primitiveVariables"].addMember( "test", IECore.IntData( 0 ) )
+		pv = Gaffer.NameValuePlug( "test", IECore.IntData( 0 ) )
+		primitiveVariables["primitiveVariables"].addChild( pv )
 
 		# DeleteFaces has a dependency between the object and the
 		# bound, so dirtying the input object also dirties the

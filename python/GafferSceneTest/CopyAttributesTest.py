@@ -50,8 +50,8 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		customAttributes = GafferScene.CustomAttributes()
 		customAttributes["in"].setInput( plane["out"] )
-		customAttributes["attributes"].addMember( "a", IECore.IntData( 1 ) )
-		customAttributes["attributes"].addMember( "b", IECore.IntData( 2 ) )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", IECore.IntData( 1 ) ) )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "b", IECore.IntData( 2 ) ) )
 
 		# Node should do nothing without a filter applied.
 
@@ -82,11 +82,13 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		aAttributes = GafferScene.CustomAttributes()
 		aAttributes["in"].setInput( plane["out"] )
-		a = aAttributes["attributes"].addMember( "a", IECore.IntData( 1 ) )
+		a = Gaffer.NameValuePlug( "a", IECore.IntData( 1 ) )
+		aAttributes["attributes"].addChild( a )
 
 		bAttributes = GafferScene.CustomAttributes()
 		bAttributes["in"].setInput( plane["out"] )
-		b = bAttributes["attributes"].addMember( "b", IECore.IntData( 2 ) )
+		b = Gaffer.NameValuePlug( "b", IECore.IntData( 2 ) )
+		bAttributes["attributes"].addChild( b )
 
 		copyAttributes = GafferScene.CopyAttributes()
 		copyAttributes["in"][0].setInput( aAttributes["out"] )
@@ -134,7 +136,7 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		sphereAttributes = GafferScene.CustomAttributes()
 		sphereAttributes["in"].setInput( sphere["out"] )
-		sphereAttributes["attributes"].addMember( "a", IECore.IntData( 2 ) )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", IECore.IntData( 2 ) ) )
 
 		parent = GafferScene.Parent()
 		parent["parent"].setValue( "/" )

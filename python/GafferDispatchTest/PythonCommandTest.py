@@ -78,9 +78,9 @@ class PythonCommandTest( GafferTest.TestCase ) :
 	def testVariables( self ) :
 
 		n = GafferDispatch.PythonCommand()
-		n["variables"].addMember( "testInt", 1 )
-		n["variables"].addMember( "testFloat", 2.5 )
-		n["variables"].addMember( "testColor", imath.Color3f( 1, 2, 3 ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testInt", 1 ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testFloat", 2.5 ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testColor", imath.Color3f( 1, 2, 3 ) ) )
 		n["command"].setValue( inspect.cleandoc(
 			"""
 			self.testInt = variables["testInt"]
@@ -259,7 +259,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		# because that would mean that PythonCommand.hash() was no longer accurate.
 
 		n = GafferDispatch.PythonCommand()
-		n["variables"].addMember( "testInt", 1 )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testInt", 1 ) )
 		n["command"].setValue( inspect.cleandoc(
 			"""
 			context.setFrame( context.getFrame() + 1 )
@@ -291,7 +291,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["variables"].addMember( "frameString", "###" )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "frameString", "###" ) )
 		s["n"]["command"].setValue( 'self.frameString = variables["frameString"]' )
 
 		with Gaffer.Context() as c :

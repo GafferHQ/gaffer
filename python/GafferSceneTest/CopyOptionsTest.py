@@ -36,6 +36,7 @@
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferScene
 import GafferSceneTest
@@ -58,9 +59,9 @@ class CopyOptionsTest( GafferSceneTest.SceneTestCase ) :
 		copyOptions["source"].setInput( options["out"] )
 
 		# set up some options that we can delete and copy
-		options["options"].addMember( "test1", 1 )
-		options["options"].addMember( "test2", 2 )
-		options["options"].addMember( "test3", 3 )
+		options["options"].addChild( Gaffer.NameValuePlug( "test1", 1 ) )
+		options["options"].addChild( Gaffer.NameValuePlug( "test2", 2 ) )
+		options["options"].addChild( Gaffer.NameValuePlug( "test3", 3 ) )
 
 		# verify result
 		g = deleteOptions["out"]["globals"].getValue()

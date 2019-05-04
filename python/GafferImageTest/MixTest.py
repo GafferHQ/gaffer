@@ -209,7 +209,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		f["in"].setInput( c["out"] )
 		f["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 1 ) )
 		d = GafferImage.ImageMetadata()
-		d["metadata"].addMember( "comment", IECore.StringData( "reformated and metadata updated" ) )
+		d["metadata"].addChild( Gaffer.NameValuePlug( "comment", IECore.StringData( "reformated and metadata updated" ) ) )
 		d["in"].setInput( f["out"] )
 
 		m = GafferImage.Mix()

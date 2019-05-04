@@ -58,7 +58,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		n = GafferDispatch.SystemCommand()
 		n["command"].setValue( "env > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
-		n["environmentVariables"].addMember( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) )
+		n["environmentVariables"].addChild( Gaffer.NameValuePlug( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) ) )
 
 		n["task"].execute()
 
@@ -69,8 +69,8 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		n = GafferDispatch.SystemCommand()
 		n["command"].setValue( "echo {adjective} {noun} > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
-		n["substitutions"].addMember( "adjective", IECore.StringData( "red" ) )
-		n["substitutions"].addMember( "noun", IECore.StringData( "truck" ) )
+		n["substitutions"].addChild( Gaffer.NameValuePlug( "adjective", IECore.StringData( "red" ) ) )
+		n["substitutions"].addChild( Gaffer.NameValuePlug( "noun", IECore.StringData( "truck" ) ) )
 
 		n["task"].execute()
 		self.assertEqual( "red truck\n", open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines()[0] )
@@ -88,10 +88,10 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		n["command"].setValue( "echo abc" )
 		hashes.append( n["task"].hash() )
 
-		n["substitutions"].addMember( "test", IECore.StringData( "value" ) )
+		n["substitutions"].addChild( Gaffer.NameValuePlug( "test", IECore.StringData( "value" ) ) )
 		hashes.append( n["task"].hash() )
 
-		n["environmentVariables"].addMember( "test", IECore.StringData( "value" ) )
+		n["environmentVariables"].addChild( Gaffer.NameValuePlug( "test", IECore.StringData( "value" ) ) )
 		hashes.append( n["task"].hash() )
 
 		# check that all hashes are unique
