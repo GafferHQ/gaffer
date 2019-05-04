@@ -242,7 +242,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 def __scriptAdded( parent, script ) :
 
 	if "imageCataloguePort" not in script["variables"] :
-		portNumberPlug = script["variables"].addMember( "image:catalogue:port", 0, "imageCataloguePort" )
+		portNumberPlug = Gaffer.NameValuePlug( "image:catalogue:port", 0, "imageCataloguePort", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["variables"].addChild( portNumberPlug )
 		Gaffer.MetadataAlgo.setReadOnly( portNumberPlug, True )
 	else :
 		portNumberPlug = script["variables"]["imageCataloguePort"]
