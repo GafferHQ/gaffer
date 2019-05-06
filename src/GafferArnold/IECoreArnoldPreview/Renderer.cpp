@@ -2477,28 +2477,25 @@ void LightFilterConnections::update()
 		{
 			for( auto it = range.begin(); it != range.end(); ++it )
 			{
-				ConnectionsMap::accessor a;
-				m_connections.find( a, it->first );
-
-				if( !a->second.light )
+				if( !it->second.light )
 				{
-					deregistered.push_back( a->first );
+					deregistered.push_back( it->first );
 					continue;
 				}
 
-				if( !a->second.dirty )
+				if( !it->second.dirty )
 				{
 					continue;
 				}
 
 				std::vector<ArnoldLightFilter*> allFilters;
-				for( FilterGroup *filterGroup : a->second.lightFilterGroups )
+				for( FilterGroup *filterGroup : it->second.lightFilterGroups )
 				{
 					allFilters.insert( allFilters.end(), filterGroup->begin(), filterGroup->end() );
 				}
 
-				a->second.light->updateFilters( allFilters );
-				a->second.dirty = false;
+				it->second.light->updateFilters( allFilters );
+				it->second.dirty = false;
 			}
 		},
 		tbb::auto_partitioner()
