@@ -98,7 +98,7 @@ class Serial
 		struct Item
 		{
 			Item( const Key &key )
-				:	key( key ), hasHandle( false )
+				:	key( key ), handleCount( 0 )
 			{
 			}
 
@@ -109,7 +109,7 @@ class Serial
 			// as a key, so can safely make it mutable to
 			// get non-const access to it.
 			mutable CacheEntry cacheEntry;
-			mutable bool hasHandle;
+			mutable size_t handleCount;
 		};
 
 		typedef boost::multi_index_container<
@@ -171,8 +171,8 @@ class Serial
 			{
 				if( m_inited )
 				{
-					assert( m_it->hasHandle );
-					m_it->hasHandle = false;
+					assert( m_it->handleCount );
+					m_it->handleCount--;
 					m_inited = false;
 				}
 			}
@@ -183,8 +183,7 @@ class Serial
 				{
 					assert( !m_inited );
 					m_it = it;
-					assert( !m_it->hasHandle );
-					m_it->hasHandle = true;
+					m_it->handleCount++;
 					m_inited = true;
 				}
 
@@ -243,7 +242,7 @@ class Serial
 			// to `get( someOtherKey )`, and this inner call has
 			// then entered `limitCost()`.
 			typename List::iterator it = list.begin();
-			while( it != list.end() && it->hasHandle )
+			while( it != list.end() && it->handleCount )
 			{
 				++it;
 			}
