@@ -80,8 +80,6 @@
 
 #include "Gaffer/Backdrop.h"
 
-#include "tbb/tbb.h"
-
 #ifdef __linux__
 #include <sys/prctl.h>
 #endif
