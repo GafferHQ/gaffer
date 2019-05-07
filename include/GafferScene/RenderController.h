@@ -82,7 +82,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		typedef std::function<void ( Gaffer::BackgroundTask::Status progress )> ProgressCallback;
 
 		void update( const ProgressCallback &callback = ProgressCallback() );
-		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const ProgressCallback &callback = ProgressCallback() );
+		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const ProgressCallback &callback = ProgressCallback(), const IECore::PathMatcher &priorityPaths = IECore::PathMatcher()  );
 
 		void updateMatchingPaths( const IECore::PathMatcher &pathsToUpdate, const ProgressCallback &callback = ProgressCallback() );
 

@@ -1067,7 +1067,7 @@ void RenderController::update( const ProgressCallback &callback )
 	updateInternal( callback );
 }
 
-std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( const ProgressCallback &callback )
+std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( const ProgressCallback &callback, const IECore::PathMatcher &priorityPaths )
 {
 	if( !m_scene || !m_context )
 	{
@@ -1083,7 +1083,11 @@ std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( co
 	m_backgroundTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
 		m_scene.get(),
-		[this, callback] {
+		[this, callback, priorityPaths] {
+			if( !priorityPaths.isEmpty() )
+			{
+				updateInternal( callback, &priorityPaths );
+			}
 			updateInternal( callback );
 		}
 	);

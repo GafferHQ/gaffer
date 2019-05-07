@@ -197,12 +197,14 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		bool keyPress( const GafferUI::KeyEvent &event );
 
 		boost::signals::scoped_connection m_contextChangedConnection;
+		boost::signals::scoped_connection m_preRenderConnection;
 
 		GafferUI::GadgetPtr m_handles;
 		bool m_handlesDirty;
 
 		mutable std::vector<Selection> m_selection;
 		mutable bool m_selectionDirty;
+		bool m_priorityPathsDirty;
 		SelectionChangedSignal m_selectionChangedSignal;
 
 		bool m_dragging;
