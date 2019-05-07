@@ -497,6 +497,13 @@ _styleSheet = string.Template(
 
 	}
 
+	/* Ensures the QSplitter border is visible if we need to highlight */
+	QSplitter#gafferCompoundEditor[gafferNumChildren="1"] {
+
+		padding: 1px;
+
+	}
+
 	QSplitter::handle:vertical {
 
 		background-color: $backgroundDark;
@@ -1110,6 +1117,12 @@ _styleSheet = string.Template(
 
 		border-top-right-radius: 0px;
 		border-bottom-right-radius: 0px;
+
+	}
+
+	*[gafferHover="true"] {
+
+		border: 1px solid $brightColor;
 
 	}
 

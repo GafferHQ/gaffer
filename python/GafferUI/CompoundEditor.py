@@ -35,8 +35,9 @@
 #
 ##########################################################################
 
-import functools
 import collections
+import functools
+import weakref
 
 import imath
 
@@ -45,9 +46,10 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
+from Qt import QtGui
 from Qt import QtWidgets
 
-## \todo Implement an option to float in a new window, and an option to anchor back - drag and drop of tabs?
 class CompoundEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, children=None, **kw ) :
@@ -231,6 +233,7 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 	def __init__( self, **kw ) :
 
 		GafferUI.SplitContainer.__init__( self, **kw )
+		self._qtWidget().setObjectName( "gafferCompoundEditor" )
 
 	def isSplit( self ) :
 
@@ -300,6 +303,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
+		self.__tabDragBehaviour = _TabDragBehaviour( self )
+
+
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, basestring ) :
@@ -314,6 +320,11 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 
 		return editor
+
+	def removeEditor( self, editor ) :
+
+		editor.__titleChangedConnection = None
+		self.removeChild( editor )
 
 	def setTabsVisible( self, tabsVisible ) :
 
@@ -495,3 +506,309 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		# issues in certain circumstances (eg hosting Gaffer in other Qt DCC).
 		## \todo: consider doing this for all Menu commands in GafferUI.Menu
 		GafferUI.EventLoop.addIdleCallback( functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) )
+
+
+
+## An internal eventFilter class managing all tab drag-drop events and logic.
+# Tab dragging is an exception and is implemented entirely using native Qt
+# events. This was decided after trying all combinations of Qt-only/Gaffer-only
+# and Gaffer/Qt hybrid as:
+#
+#  - We wanted the visual sophistication of QTabBar.setMovable() for
+#    re-arranging tabs within their parent container.
+#  - Qt doesn't use its own drag mechanism for setMoveable so we have to
+#    interact at a lower level that we'd otherwise like.
+#  - We can't programmatically start a Gaffer drag.
+#  - We had issues propagating style-changes during a Gaffer drag.
+#
+# As such, it is somewhat of an outlier compared to how the rest of the
+# application works. To avoid polluting the code base, it has been structured
+# so that as much logic and Qt interaction is contained within this class.
+#
+# The broad responsibilities of the _TabDragEventManager are:
+#
+#  - Capture the starting state of any TabBar drag.
+#  - Abort the built-in tab-move behaviour of QTabBar when the cursor leaves
+#    the logical are of the TabbedContainer in-which the tab lives.
+#  - Manage hover states during a drag operation.
+#  - Coordinate the re-parenting of Tab widgets.
+#  - Manage the life-cycle of detached panels affected by the drag.
+#
+class _TabDragBehaviour( QtCore.QObject ) :
+
+	__tabMimeType = "application/x-gaffer.compoundEditor.tab"
+
+	def __init__( self, tabbedContainer ) :
+
+		QtCore.QObject.__init__( self )
+
+		self.__eventMask = set ( (
+			QtCore.QEvent.MouseButtonPress,
+			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.MouseMove,
+			QtCore.QEvent.DragEnter,
+			QtCore.QEvent.DragLeave,
+			QtCore.QEvent.Drop
+		) )
+
+		self.__abortedInitialRearrange = False
+
+		self.__tabbedContainer = weakref.ref( tabbedContainer )
+
+		# Install ourselves as an event filter
+
+		# Gaffer.Widget makes use of a custom event filter, but it is
+		# initialised lazily. Fortunately, TabbedContainer connects to tabBar
+		# signals during __init__ before were created, so we should then always
+		# be a 'later' handler, and so called first.
+		tabWidget = tabbedContainer._qtWidget()
+		tabWidget.installEventFilter( self )
+		tabWidget.setAcceptDrops( True )
+
+		tabBar = tabWidget.tabBar()
+		tabBar.installEventFilter( self )
+		tabBar.setMovable( True )
+		tabBar.setAcceptDrops( True )
+
+	def eventFilter( self, qObject, qEvent ) :
+
+		qEventType = qEvent.type()
+		if qEventType not in self.__eventMask :
+			return False
+
+		if isinstance( qObject, QtWidgets.QTabBar ) :
+
+			if qEventType == qEvent.MouseButtonPress :
+
+				return self.__tabBarMousePress( qObject, qEvent )
+
+			elif qEventType == qEvent.MouseButtonRelease :
+
+				return self.__tabBarMouseRelease( qObject, qEvent )
+
+			elif qEventType == qEvent.MouseMove :
+
+				return self.__tabBarMouseMove( qObject, qEvent )
+
+		if qEventType == qEvent.DragEnter :
+
+			return self.__dragEnter( qEvent )
+
+		elif qEventType == qEvent.DragLeave :
+
+			return self.__dragLeave( qEvent )
+
+		elif qEventType == qEvent.Drop :
+
+			return self.__drop( qObject, qEvent )
+
+		return False
+
+
+	def __tabBarMousePress( self, qTabBar, event ) :
+
+		if event.button() == QtCore.Qt.LeftButton :
+
+			self.__abortedInitialRearrange = False
+
+			# As the tab the user clicks on to drag may have been re-ordered
+			# before they leave the bounds of the widget, we track which tab
+			# was originally picked, and where it started. Then we can put it
+			# back if we need to later. We also track which tab was current as
+			# the user can initiate a drag from an unselected tab.
+
+			self.__draggedTab = None
+			self.__currentTabAtDragStart = None
+
+			self.__draggedTabOriginalIndex = qTabBar.tabAt( event.pos() )
+			if self.__draggedTabOriginalIndex > -1 :
+				tabbedContainer = self.__tabbedContainer()
+				self.__draggedTab = tabbedContainer[ self.__draggedTabOriginalIndex ]
+				self.__currentTabAtDragStart = tabbedContainer.getCurrent()
+
+		# We never consume this event to allow the native Qt drag-rearrange
+		# implementation to work (which is internally done in press/move/release)
+		return False
+
+	def __tabBarMouseRelease( self, qTabBar, event ) :
+
+		# State reset
+		self.__draggedTab = None
+		self.__draggedTabOriginalIndex = -1
+		self.__currentTabAtDragStart = None
+
+		# We only consume this event if we've been messing with events and
+		# starting drags. This ensures we don't send the QTabBar a double release
+		if self.__abortedInitialRearrange :
+			return True
+
+		return False
+
+	def __tabBarMouseMove( self, qTabBar, event ):
+
+		# This is only called during initial dragging whilst re-ordering the
+		# tab bar the user clicked on.
+		#
+		# If the user moves the mouse out of the tab bar, we need to make the
+		# underlying TabBar think the user let go of the mouse so it aborts
+		# any in-progress move of the tab (constrained to this TabBar) So we
+		# can venture off into our own brave new world.
+		#
+		# All further mouse moves need be handled (by this class) in
+		# response to DragMove if any in-drag logic is required.
+
+		if not self.__abortedInitialRearrange \
+			and event.buttons() & QtCore.Qt.LeftButton \
+			and self.__shouldAbortInitialRearrange( qTabBar, event ) :
+
+			self.__abortTabBarRearrange( qTabBar )
+			self.__abortedInitialRearrange = True
+
+			# Remove the dragged tab from container to make sure its obvious to
+			# the user that it will move as opposed to copy.
+			self.__tabbedContainer().removeEditor( self.__draggedTab )
+
+			self.__doDragForTabBarMove( qTabBar )
+
+			return True
+
+		if self.__abortedInitialRearrange :
+			# We don't want the underlying widget to see the continuing moves
+			# after we faked the end of the mouse-down move
+			return True
+
+		return False
+
+	def __handleDropAction( self, dropAction ) :
+
+		tabbedContainer = self.__tabbedContainer()
+
+		if dropAction == QtCore.Qt.MoveAction :
+
+
+			# If the dragged tab wasn't current, restore the original
+			# widget, unless the dragged tab was re-placed in this container.
+			# We do this as the drag-rearrange/remove can change the current tab
+			if not tabbedContainer.hasChild( self.__getSharedDragWidget() ) \
+			   and tabbedContainer.hasChild( self.__currentTabAtDragStart ) :
+				tabbedContainer.setCurrent( self.__currentTabAtDragStart )
+
+		else :
+
+			# If the tab wasn't accepted by wherever it went, we can re-insert
+			# it into the widget at its old position, and reset the active tab
+			# (again) so it's like nothing happened.
+			widget = self.__getSharedDragWidget()
+			if not tabbedContainer.hasChild( widget ) :
+				tabbedContainer.insert( self.__draggedTabOriginalIndex, widget, widget.getTitle() )
+			tabbedContainer.setCurrent( self.__currentTabAtDragStart )
+
+	def __dragEnter( self, event ) :
+
+		if not event.mimeData().hasFormat( self.__tabMimeType ) :
+			return False
+
+		if self.__getSharedDragWidget() :
+			event.acceptProposedAction()
+			self.__setHover( True )
+		else :
+			event.ignore()
+
+		return True
+
+	def __dragLeave( self, event ) :
+
+		self.__setHover( None )
+		return True
+
+	def __drop( self, qWidget, event ) :
+
+		if not event.mimeData().hasFormat( self.__tabMimeType ) :
+			return False
+
+		event.acceptProposedAction()
+
+		widget = self.__getSharedDragWidget()
+		if not self.__tabbedContainer().hasChild( widget ) :
+			self.__tabbedContainer().addEditor( widget )
+
+		self.__setHover( None )
+		self.__setSharedDragWidget( None )
+
+		return True
+
+	def __setHover( self, hover ) :
+
+		# We set the hover state on the split that contains the TabbedContainer
+		# As it gives a nice outline around the whole tab container. Otherwise
+		# its a mere trying to get the border to look any good due to the tabs
+		# and corner widgets.
+		w = self.__tabbedContainer().parent()._qtWidget()
+		w.setProperty( "gafferHover", GafferUI._Variant.toVariant( hover ) )
+		w.style().polish( w )
+
+	def __shouldAbortInitialRearrange( self, qTabBar, event ) :
+
+		if qTabBar.geometry().contains( event.pos() ) :
+			return False
+
+		# To avoid aborting as soon as the user slips off the tab bar (which
+		# can be annoying as its easily done) we don't abort if they slip into
+		# the parent tab container.
+
+		return not qTabBar.parent().geometry().contains( event.pos() )
+
+	def __abortTabBarRearrange( self, qTabBar ) :
+
+		# We don't reliably have much of the data we need in the incoming
+		# event (eg: dragLeave) so we make all of it up. Telling the tabbar
+		# the user has released the mouse (in the implementation at the time
+		# of going to press) stops the re-arrange. The tabs are moved (in terms
+		# of indices) on the fly during mouseMove.
+
+		pos = qTabBar.mapFromGlobal( QtGui.QCursor.pos() )
+
+		fakeReleaseEvent = QtGui.QMouseEvent(
+			QtCore.QEvent.MouseButtonRelease,
+			pos,
+			QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
+			QtCore.Qt.NoModifier
+		)
+		qTabBar.mouseReleaseEvent( fakeReleaseEvent )
+
+	def __doDragForTabBarMove( self, qTabBar ) :
+
+		# As we can't send pointers though the dray data system, we store it
+		# in a dark and dirty place. This means we don't actually have any data
+		# to send in the end...
+
+		mimeData = QtCore.QMimeData()
+		mimeData.setData( self.__tabMimeType, "" )
+		self.__setSharedDragWidget( self.__draggedTab )
+
+		drag = QtGui.QDrag( qTabBar )
+		drag.setMimeData( mimeData )
+		self.__handleDropAction( drag.exec_( QtCore.Qt.MoveAction ) )
+
+	# nasty-fudge
+	#
+	# We can't pass widgets around using Gaffer or Qt's drag systems, but during a
+	# drag we wish to re-parent the existing widget. So, we stash the currently
+	# dragged tab widget in the script window. This makes it easy to prevent
+	# cross-document drag.
+
+	def __setSharedDragWidget( self, widget ) :
+
+		e = self.__tabbedContainer().ancestor( GafferUI.CompoundEditor )
+		e._sharedDraggedWidget = widget
+
+	def __getSharedDragWidget( self ) :
+
+		e = self.__tabbedContainer().ancestor( GafferUI.CompoundEditor )
+		if hasattr( e, '_sharedDraggedWidget' ) :
+			return e._sharedDraggedWidget
+
+		return None
+
+	# /nasty-fudge
+
