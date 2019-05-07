@@ -2468,18 +2468,24 @@ void LightFilterConnections::deregisterLightFilter( const IECore::StringVectorDa
 		return;
 	}
 
-	for( const std::string &lightName : lightNames->readable() )
-	{
-		ConnectionsMap::accessor a;
-		if( m_connections.find( a, lightName ) )
+	const std::vector<std::string> &lights = lightNames->readable();
+	tbb::parallel_for(
+		size_t(0),
+		lights.size(),
+		[this, lights, groupEmptied, filterGroup]( size_t i)
 		{
-			if( groupEmptied )
+			const std::string &lightName = lights[i];
+			ConnectionsMap::accessor a;
+			if( m_connections.find( a, lightName ) )
 			{
-				a->second.lightFilterGroups.erase( filterGroup );
+				if( groupEmptied )
+				{
+					a->second.lightFilterGroups.erase( filterGroup );
+				}
+				a->second.dirty = true;
 			}
-			a->second.dirty = true;
 		}
-	}
+	);
 
 	if( groupEmptied )
 	{
