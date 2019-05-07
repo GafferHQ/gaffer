@@ -596,7 +596,7 @@ void TransformTool::updateSelection() const
 			{
 				return false;
 			}
-			return a.path == lastSelectedPath;
+			return ( a.path != lastSelectedPath ) < ( b.path != lastSelectedPath );
 		}
 	);
 
