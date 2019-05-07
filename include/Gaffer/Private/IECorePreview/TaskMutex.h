@@ -49,6 +49,7 @@
 #define TBB_PREVIEW_LOCAL_OBSERVER 1
 #include "tbb/task_scheduler_observer.h"
 
+#include <iostream>
 #include <thread>
 
 namespace IECorePreview
@@ -169,19 +170,39 @@ class TaskMutex : boost::noncopyable
 					m_mutex->m_executionState = std::make_shared<ExecutionState>();
 					executionStateLock.release();
 
+					// Wrap `f` to capture any exceptions it throws. If we allow
+					// `task_group::wait()` to see them, we hit a thread-safety
+					// bug in `tbb::task_group_context::reset()`.
+					std::exception_ptr exception;
+					auto fWrapper = [&f, &exception] {
+						try
+						{
+							f();
+						}
+						catch( ... )
+						{
+							exception = std::current_exception();
+						}
+					};
+
 					m_mutex->m_executionState->arena.execute(
-						[this, &f] {
+						[this, &fWrapper] {
 							// Note : We deliberately call `run()` and `wait()` separately
 							// instead of calling `run_and_wait()`. The latter is buggy until
 							// TBB 2018 Update 3, causing calls to `wait()` on other threads to
 							// return immediately rather than do the work we want.
-							m_mutex->m_executionState->taskGroup.run( f );
+							m_mutex->m_executionState->taskGroup.run( fWrapper );
 							m_mutex->m_executionState->taskGroup.wait();
 						}
 					);
 
 					executionStateLock.acquire( m_mutex->m_executionStateMutex );
 					m_mutex->m_executionState = nullptr;
+
+					if( exception )
+					{
+						std::rethrow_exception( exception );
+					}
 				}
 
 				/// Acquires mutex or returns false. Never does TBB tasks.
@@ -277,6 +298,7 @@ class TaskMutex : boost::noncopyable
 					executionState->arena.execute(
 						[&executionState]{ executionState->taskGroup.wait(); }
 					);
+
 					return false;
 				}
 

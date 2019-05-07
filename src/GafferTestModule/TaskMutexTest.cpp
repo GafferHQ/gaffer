@@ -48,6 +48,8 @@
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
 
+#include <atomic>
+#include <iostream>
 #include <thread>
 
 using namespace IECorePreview;
@@ -312,6 +314,113 @@ void testTaskMutexAcquireOr()
 
 	GAFFERTEST_ASSERT( !acquired );
 	GAFFERTEST_ASSERT( !workAvailable );
+}
+
+void testTaskMutexExceptions()
+{
+	TaskMutex mutex;
+	bool initialised = false;
+
+	// Check that exceptions from `execute()` propagate
+	// back to the caller.
+
+	bool caughtException = false;
+	try
+	{
+		TaskMutex::ScopedLock lock( mutex );
+		lock.execute(
+			[]{ throw IECore::Exception( "Oops!" ); }
+		);
+	}
+	catch( const IECore::Exception &e )
+	{
+		caughtException = true;
+		GAFFERTEST_ASSERTEQUAL( e.what(), std::string( "Oops!" ) );
+	}
+
+	GAFFERTEST_ASSERTEQUAL( caughtException, true );
+
+	// Test that a subsequent non-throwing call can
+	// still succeed.
+
+	TaskMutex::ScopedLock lock( mutex );
+	lock.execute(
+		[&initialised]{ initialised = true; }
+	);
+
+	GAFFERTEST_ASSERTEQUAL( initialised, true );
+
+}
+
+void testTaskMutexWorkerExceptions()
+{
+	TaskMutex mutex;
+	bool initialised = false;
+	std::thread::id initialisingThread;
+	std::atomic_int numAcquisitionExceptions( 0 );
+	std::string executionException;
+
+	// Check that exceptions thrown from worker threads propagate
+	// back to the caller of `execute()`, and aren't thrown back
+	// out to the poor worker thread who is just trying to acquire
+	// the lock.
+
+	auto initialise = [&]() {
+
+		TaskMutex::ScopedLock lock;
+		try
+		{
+			lock.acquire( mutex );
+		}
+		catch( ... )
+		{
+			numAcquisitionExceptions++;
+			return;
+		}
+
+		if( !initialised )
+		{
+			initialisingThread = std::this_thread::get_id();
+			try
+			{
+				lock.execute(
+					[&]() {
+						tbb::parallel_for(
+							0, 1000,
+							[&]( size_t i )
+							{
+								if( std::this_thread::get_id() != initialisingThread )
+								{
+									throw IECore::Exception( "Oops!" );
+								}
+								else
+								{
+									// Wait a bit so we don't just run through all the tasks
+									// ourselves on the main thread.
+									std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+								}
+							}
+						);
+					}
+				);
+			}
+			catch( const IECore::Exception &e )
+			{
+				executionException = e.what();
+			}
+			initialised = true;
+		}
+	};
+
+	tbb::parallel_for(
+		0, 1000,
+		[&initialise] ( int i ) {
+			initialise();
+		}
+	);
+
+	GAFFERTEST_ASSERTEQUAL( numAcquisitionExceptions.load(), 0 );
+	GAFFERTEST_ASSERTEQUAL( executionException, "Oops!" );
 
 }
 
@@ -325,4 +434,6 @@ void GafferTestModule::bindTaskMutexTest()
 	def( "testTaskMutexHeavyContention", &testTaskMutexHeavyContention );
 	def( "testTaskMutexWorkerRecursion", &testTaskMutexWorkerRecursion );
 	def( "testTaskMutexAcquireOr", &testTaskMutexAcquireOr );
+	def( "testTaskMutexExceptions", &testTaskMutexExceptions );
+	def( "testTaskMutexWorkerExceptions", &testTaskMutexWorkerExceptions );
 }

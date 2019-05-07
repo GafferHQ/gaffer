@@ -70,5 +70,13 @@ class TaskMutexTest( GafferTest.TestCase ) :
 
 		GafferTest.testTaskMutexAcquireOr()
 
+	def testExceptions( self ) :
+
+		GafferTest.testTaskMutexExceptions()
+
+	def testWorkerExceptions( self ) :
+
+		GafferTest.testTaskMutexWorkerExceptions()
+
 if __name__ == "__main__":
 	unittest.main()
