@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,36 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_ASSERT_H
-#define GAFFERTEST_ASSERT_H
+#ifndef GAFFERTESTMODULE_TASKMUTEXTEST_H
+#define GAFFERTESTMODULE_TASKMUTEXTEST_H
 
-#include "IECore/Exception.h"
-
-#include "boost/format.hpp"
-
-namespace GafferTest
+namespace GafferTestModule
 {
 
-#define GAFFERTEST_ASSERT( x ) \
-	if( !( x ) ) \
-	{ \
-		throw IECore::Exception( boost::str( \
-			boost::format( "Failed assertion \"%s\" : %s line %d" ) % #x % __FILE__ % __LINE__ \
-		) ); \
-	}
+void bindTaskMutexTest();
 
-#define GAFFERTEST_ASSERTEQUAL( x, y ) \
-	{ \
-		const auto xx = x; /* evaluate macro arguments */ \
-		const auto yy = y; /* only once */ \
-		if( xx != yy ) \
-		{ \
-			throw IECore::Exception( boost::str( \
-				boost::format( "Failed assertion \"%1% == %2%\" : %3% line %4%" ) % (xx) % (yy) % __FILE__ % __LINE__ \
-			) ); \
-		} \
-	}
+} // namespace GafferTestModule
 
-} // namespace GafferTest
-
-#endif // GAFFERTEST_ASSERT_H
+#endif // GAFFERTESTMODULE_TASKMUTEXTEST_H

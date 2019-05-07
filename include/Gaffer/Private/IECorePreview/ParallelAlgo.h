@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,36 +34,35 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_ASSERT_H
-#define GAFFERTEST_ASSERT_H
+#ifndef IECOREPREVIEW_PARALLELALGO_H
+#define IECOREPREVIEW_PARALLELALGO_H
 
-#include "IECore/Exception.h"
+#include "tbb/task_arena.h"
 
-#include "boost/format.hpp"
-
-namespace GafferTest
+namespace IECorePreview
 {
 
-#define GAFFERTEST_ASSERT( x ) \
-	if( !( x ) ) \
-	{ \
-		throw IECore::Exception( boost::str( \
-			boost::format( "Failed assertion \"%s\" : %s line %d" ) % #x % __FILE__ % __LINE__ \
-		) ); \
-	}
+namespace ParallelAlgo
+{
 
-#define GAFFERTEST_ASSERTEQUAL( x, y ) \
-	{ \
-		const auto xx = x; /* evaluate macro arguments */ \
-		const auto yy = y; /* only once */ \
-		if( xx != yy ) \
-		{ \
-			throw IECore::Exception( boost::str( \
-				boost::format( "Failed assertion \"%1% == %2%\" : %3% line %4%" ) % (xx) % (yy) % __FILE__ % __LINE__ \
-			) ); \
-		} \
-	}
+// Calls `f` such that any TBB tasks it spawns will run in isolation,
+// and cannot steal work from outer tasks. This is of fundamental importance
+// if you hold a lock while running any TBB code. See :
+//
+//  https://software.intel.com/en-us/blogs/2018/08/16/the-work-isolation-functionality-in-intel-threading-building-blocks-intel-tbb
+template<typename F>
+void isolate( const F &f )
+{
+#if TBB_INTERFACE_VERSION >= 10000
+	tbb::this_task_arena::isolate( f );
+#else
+	tbb::task_arena arena;
+	arena.execute( f );
+#endif
+}
 
-} // namespace GafferTest
+} // namespace ParallelAlgo
 
-#endif // GAFFERTEST_ASSERT_H
+} // namespace IECorePreview
+
+#endif // IECOREPREVIEW_PARALLELALGO_H

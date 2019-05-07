@@ -45,10 +45,13 @@
 #include "GafferTest/MultiplyNode.h"
 #include "GafferTest/RecursiveChildIteratorTest.h"
 
+#include "TaskMutexTest.h"
+
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace GafferTest;
+using namespace GafferTestModule;
 
 static void testMetadataThreadingWrapper()
 {
@@ -71,5 +74,7 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testEditableScope", &testEditableScope );
 	def( "testComputeNodeThreading", &testComputeNodeThreading );
 	def( "testDownstreamIterator", &testDownstreamIterator );
+
+	bindTaskMutexTest();
 
 }
