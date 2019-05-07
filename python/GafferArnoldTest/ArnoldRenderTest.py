@@ -1047,6 +1047,59 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			goboName = arnold.AiNodeGetName( linkedGobo )
 			self.assertTrue( goboName.startswith( "shader:" ) and goboName.endswith( ":gobo" ) )
 
+	def testLightFiltersMany( self ) :
+
+		# \todo: this can easily be turned into a performance test
+
+		s = Gaffer.ScriptNode()
+
+		s["lightFilter"] = GafferArnold.ArnoldLightFilter()
+		s["lightFilter"].loadShader( "light_blocker" )
+		s["lightFilter"]["filteredLights"].setValue( "defaultLights" )
+
+		s["planeFilters"] = GafferScene.Plane( "Plane" )
+		s["planeFilters"]["divisions"].setValue( imath.V2i( 9 ) )
+
+		s["instancerFilters"] = GafferScene.Instancer( "Instancer" )
+		s["instancerFilters"]["in"].setInput( s["planeFilters"]["out"] )
+		s["instancerFilters"]["instances"].setInput( s["lightFilter"]["out"] )
+		s["instancerFilters"]["parent"].setValue( "/plane" )
+
+		s["light"] = GafferArnold.ArnoldLight()
+		s["light"].loadShader( "point_light" )
+
+		s["planeLights"] = GafferScene.Plane( "Plane" )
+		s["planeLights"]["divisions"].setValue( imath.V2i( 9 ) )
+
+		s["instancerLights"] = GafferScene.Instancer( "Instancer" )
+		s["instancerLights"]["in"].setInput( s["planeLights"]["out"] )
+		s["instancerLights"]["instances"].setInput( s["light"]["out"] )
+		s["instancerLights"]["parent"].setValue( "/plane" )
+
+		s["group"] = GafferScene.Group( "Group" )
+		s["group"]["in"][0].setInput( s["instancerFilters"]["out"] )
+		s["group"]["in"][1].setInput( s["instancerLights"]["out"] )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["group"]["out"] )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/testMany.ass" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			foo = self.temporaryDirectory() + "/testMany.ass" 
+			print foo
+			arnold.AiASSLoad( foo )
+
+			for i in range( 100 ) :
+				light = arnold.AiNodeLookUpByName( "light:/group/plane1/instances/light/%s" % i )
+				linkedFilters = arnold.AiNodeGetArray( light, "filters" )
+				numFilters = arnold.AiArrayGetNumElements( linkedFilters.contents )
+
+				self.assertEqual( numFilters, 100 )
+
 	def testAbortRaises( self ) :
 
 		s = Gaffer.ScriptNode()
