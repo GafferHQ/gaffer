@@ -2432,6 +2432,24 @@ void LightFilterConnections::registerLightFilter( const IECore::StringVectorData
 
 void LightFilterConnections::deregisterLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter )
 {
+	// This optimization is a little bit dodgy but provides a fair bit of
+	// performance improvement. What m_ownConnections essentially means
+	// currently is that we're running a batch render and not an IPR session. In
+	// that case, instead of deregistering all filters one by one, we can just
+	// throw away all data we've gathered to manage connections at once.
+	// \todo: It's dodgy because this behaviour is not part of the contract we
+	// have with our environment. Maybe we just rename m_ownConnections?
+	if( m_filterGroups.empty() )
+	{
+		return;
+	}
+
+	if( m_ownConnections )
+	{
+		m_filterGroups.clear();
+		return;
+	}
+
 	bool filterErased( false );
 	bool groupEmptied( false );
 	FilterGroup *filterGroup;
