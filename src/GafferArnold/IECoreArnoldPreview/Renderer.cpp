@@ -2042,7 +2042,10 @@ class ArnoldLightFilter : public ArnoldObject
 		~ArnoldLightFilter() override
 		{
 			const IECore::StringVectorData *filteredLightsData = m_attributes->filteredLights();
-			m_connections->deregisterLightFilter( filteredLightsData, this );
+			if( filteredLightsData )
+			{
+				m_connections->deregisterLightFilter( filteredLightsData, this );
+			}
 		}
 
 		void transform( const Imath::M44f &transform ) override
