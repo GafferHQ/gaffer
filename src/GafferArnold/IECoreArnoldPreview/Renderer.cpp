@@ -2006,7 +2006,13 @@ private:
 	// memory consumption for N lights and M filters. Every filter is put in a
 	// group that collects all filters that affect the same set of lights. Each
 	// light is then linked to all groups that affect the particular light.
-	using FilterGroup = std::unordered_set<ArnoldLightFilter*>;
+	struct FilterGroup
+	{
+		std::unordered_set<ArnoldLightFilter*> filters;
+		bool brandNew;
+		bool dirty;
+	};
+
 	using FilterGroupPtr = std::shared_ptr<FilterGroup>;
 	using FilterGroups = tbb::concurrent_hash_map<const IECore::StringVectorData*, FilterGroupPtr>;
 
@@ -2387,41 +2393,27 @@ void LightFilterConnections::deregisterLight( const std::string &lightName )
 
 void LightFilterConnections::registerLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter )
 {
-	// Add filter to group of filters stored for the given lights
-	bool newFilterGroup( false );
-	FilterGroup *filterGroup;
+	if( !lightNames )
 	{
-		FilterGroups::accessor fga;
-		m_filterGroups.insert( fga, lightNames );
-
-		if( !fga->second )
-		{
-			fga->second = std::make_shared<FilterGroup>();
-			newFilterGroup = true;
-		}
-
-		filterGroup = fga->second.get();
-		filterGroup->insert( lightFilter );
+		return;
 	}
 
-	// \todo: We're currently locking on the light and make other threads wait
-	// although they could handle other lights already?
-	for( const std::string &lightName : lightNames->readable() )
+	// Add filter to group of filters stored for the given lights
 	{
-		ConnectionsMap::accessor a;
-		if( !m_connections.find( a, lightName ) )
+		FilterGroups::accessor filterGroupAccessor;
+		m_filterGroups.insert( filterGroupAccessor, lightNames );
+
+		if( !filterGroupAccessor->second )
 		{
-			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "Can not register light filter connection for non-existing light \"%s\"" ) % lightName.c_str() ) );
+			filterGroupAccessor->second = std::make_shared<FilterGroup>();
+			filterGroupAccessor->second->brandNew = true;
 		}
 
-		if( newFilterGroup )
-		{
-			a->second.lightFilterGroups.insert( filterGroup );
-		}
+		filterGroupAccessor->second->filters.insert( lightFilter );
 
-		// Even if we knew about the light filter already we need to dirty the light
-		// as the filter itself might have been updated.
-		a->second.dirty = true;
+		// Even if we knew about the light filter already we need to dirty the
+		// group as the filter itself might have been updated.
+		filterGroupAccessor->second->dirty = true;
 	}
 
 	if( m_ownConnections )
@@ -2450,52 +2442,100 @@ void LightFilterConnections::deregisterLightFilter( const IECore::StringVectorDa
 		return;
 	}
 
-	bool filterErased( false );
-	bool groupEmptied( false );
 	FilterGroup *filterGroup;
 	{
 		FilterGroups::accessor fga;
 		if( m_filterGroups.find( fga, lightNames ) )
 		{
 			filterGroup = fga->second.get();
-			filterErased = filterGroup->erase( lightFilter );
-			groupEmptied = filterGroup->empty();
+
+			if( !filterGroup->filters.erase( lightFilter ) )
+			{
+				return;
+			}
+			filterGroup->dirty = true;
+
+			if( !filterGroup->filters.empty() )
+			{
+				// Nothing to do here. Changes to group will be handled in `update()`.
+				return;
+			}
+		}
+		else
+		{
+			return;
 		}
 	}
 
-	if( !filterErased )
-	{
-		return;
-	}
-
+	// If a filter was removed and the group is now empty, we need to remove it
+	// from the lights and then throw it away.
 	const std::vector<std::string> &lights = lightNames->readable();
 	tbb::parallel_for(
 		size_t(0),
 		lights.size(),
-		[this, lights, groupEmptied, filterGroup]( size_t i)
+		[this, lights, filterGroup]( size_t i )
 		{
 			const std::string &lightName = lights[i];
-			ConnectionsMap::accessor a;
-			if( m_connections.find( a, lightName ) )
+
+			ConnectionsMap::accessor lightAccessor;
+			if( m_connections.find( lightAccessor, lightName ) )
 			{
-				if( groupEmptied )
-				{
-					a->second.lightFilterGroups.erase( filterGroup );
-				}
-				a->second.dirty = true;
+				lightAccessor->second.lightFilterGroups.erase( filterGroup );
+				lightAccessor->second.dirty = true;
 			}
 		}
 	);
 
-	if( groupEmptied )
-	{
-		m_filterGroups.erase( lightNames );
-	}
+	m_filterGroups.erase( lightNames );
 }
 
 // Can not be called concurrently.
 void LightFilterConnections::update()
 {
+	// We've probably registered or deregistered some light filters. Push those
+	// changes onto the affected lights.
+	parallel_for(
+		m_filterGroups.range(),
+		[this]( FilterGroups::range_type &range )
+		{
+			for( auto it = range.begin(); it != range.end(); ++it )
+			{
+
+				FilterGroup *filterGroup = it->second.get();
+
+				if( !filterGroup->brandNew && !filterGroup->dirty )
+				{
+					continue;
+				}
+
+				const std::vector<std::string> &lights = it->first->readable();
+
+				for( const std::string &lightName : lights )
+				{
+
+					ConnectionsMap::accessor lightAccessor;
+					if( !m_connections.find( lightAccessor, lightName ) )
+					{
+						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "Can not update light filter connection for non-existing light \"%s\"" ) % lightName.c_str() ) );
+					}
+
+					if( filterGroup->brandNew )
+					{
+						lightAccessor->second.lightFilterGroups.insert( filterGroup );
+					}
+
+					lightAccessor->second.dirty = true;
+				}
+
+				filterGroup->brandNew = false;
+				filterGroup->dirty = false;
+			}
+		}
+	);
+
+	// Now, for all lights, communicate the changes to the respective nodes on
+	// the arnold side.
+
 	tbb::concurrent_vector<std::string> deregistered;
 
 	parallel_for(
@@ -2518,7 +2558,7 @@ void LightFilterConnections::update()
 				std::vector<ArnoldLightFilter*> allFilters;
 				for( FilterGroup *filterGroup : it->second.lightFilterGroups )
 				{
-					allFilters.insert( allFilters.end(), filterGroup->begin(), filterGroup->end() );
+					allFilters.insert( allFilters.end(), filterGroup->filters.begin(), filterGroup->filters.end() );
 				}
 
 				it->second.light->updateFilters( allFilters );
