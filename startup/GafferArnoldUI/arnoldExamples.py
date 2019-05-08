@@ -26,3 +26,22 @@ GafferUI.Examples.registerExample(
 	]
 )
 
+GafferUI.Examples.registerExample(
+	"Lighting/Light Linking Basics (Arnold)",
+	"$GAFFER_ROOT/resources/examples/lighting/lightLinkingBasicsArnold.gfr",
+	description = "Demonstrates each of the basic permutations of linked lights",
+	notableNodes = [
+		GafferScene.StandardAttributes,
+		GafferArnold.ArnoldLight
+	]
+)
+
+GafferUI.Examples.registerExample(
+	"Lighting/Light Linking City Attack (Arnold)",
+	"$GAFFER_ROOT/resources/examples/lighting/lightLinkingCityAttackArnold.gfr",
+	description = "A scene in which light linking is required to achieve two hero highlights",
+	notableNodes = [
+		GafferScene.StandardAttributes,
+		GafferArnold.ArnoldLight
+	]
+)
