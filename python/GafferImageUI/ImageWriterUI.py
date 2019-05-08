@@ -349,6 +349,8 @@ Gaffer.Metadata.registerNode(
 			"preset:PXR24", "pxr24",
 			"preset:B44", "b44",
 			"preset:B44A", "b44a",
+			"preset:DWAA", "dwaa",
+			"preset:DWAB", "dwab",
 
 		],
 
