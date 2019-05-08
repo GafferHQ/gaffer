@@ -115,7 +115,7 @@ class BleedFill( GafferImage.ImageProcessor ) :
 
 		self["__reverseLoopContext"] = GafferImage.ImageContextVariables()
 		self["__reverseLoopContext"]["in"].setInput( self["__blurLoop"]["previous"] )
-		self["__reverseLoopContext"]["variables"].addMember( "loop:index", IECore.IntData( 0 ), "loopIndex" )
+		self["__reverseLoopContext"]["variables"].addChild( Gaffer.NameValuePlug( "loop:index", IECore.IntData( 0 ), "loopIndex" ) )
 
 		self["__reverseLoopExpression"] = Gaffer.Expression()
 		self["__reverseLoopExpression"].setExpression( inspect.cleandoc(
