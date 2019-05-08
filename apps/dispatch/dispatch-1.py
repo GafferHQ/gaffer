@@ -282,7 +282,7 @@ class dispatch( Gaffer.Application ) :
 		if context :
 			## \todo: this eval isn't ideal. we should have a way of parsing values
 			# and setting them onto plugs.
-			parent["variables"].addMember( identifier, eval( value ) )
+			parent["variables"].addChild( Gaffer.NameValuePlug( identifier, eval( value ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 			return 0
 
 		plug = parent.descendant( identifier )
