@@ -308,8 +308,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# Set up variables so the dispatcher knows that the render and image dispatches depend on
 		# the file paths ( in case they are varying in a wedge )
 		for redispatch in [ self["__RenderDispatcher"], self["__ImageDispatcher"] ]:
-			redispatch["variables"].addMember( "bakeDirectory", "", "bakeDirectoryVar" )
-			redispatch["variables"].addMember( "defaultFileName", "", "defaultFileNameVar" )
+			redispatch["variables"].addChild( Gaffer.NameValuePlug( "bakeDirectory", "", "bakeDirectoryVar" ) )
+			redispatch["variables"].addChild( Gaffer.NameValuePlug( "defaultFileName", "", "defaultFileNameVar" ) )
 	
 		# Connect the variables via an expression so that get expanded ( this also means that
 		# if you put #### in a filename you will get per frame tasks, because the hash will depend	
@@ -378,11 +378,11 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		), "python" )
 
 		self["__outputIndexCommand"] = Gaffer.PythonCommand()
-		self["__outputIndexCommand"]["variables"].addMember( "bakeDirectory", Gaffer.StringPlug() )
+		self["__outputIndexCommand"]["variables"].addChild( Gaffer.NameValuePlug( "bakeDirectory", Gaffer.StringPlug() ) )
 		self["__outputIndexCommand"]["variables"][0]["value"].setInput( self["bakeDirectory"] )
-		self["__outputIndexCommand"]["variables"].addMember( "indexFilePath", Gaffer.StringPlug() )
+		self["__outputIndexCommand"]["variables"].addChild( Gaffer.NameValuePlug( "indexFilePath", Gaffer.StringPlug() ) )
 		self["__outputIndexCommand"]["variables"][1]["value"].setInput( self["__indexFilePath"] )
-		self["__outputIndexCommand"]["variables"].addMember( "fileList", Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
+		self["__outputIndexCommand"]["variables"].addChild( Gaffer.NameValuePlug( "fileList", Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) ) )
 		self["__outputIndexCommand"]["variables"][2]["value"].setInput( self["__CameraSetup"]["renderFileList"] )
 		self["__outputIndexCommand"]["command"].setValue( inspect.cleandoc(
 			"""
@@ -406,7 +406,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__arnoldRender"]["in"].setInput( self["__CameraSetup"]["out"] )
 
 		self["__bakeDirectoryContext"] = GafferDispatch.TaskContextVariables()
-		self["__bakeDirectoryContext"]["variables"].addMember( "bakeDirectory", Gaffer.StringPlug() )
+		self["__bakeDirectoryContext"]["variables"].addChild( Gaffer.NameValuePlug( "bakeDirectory", Gaffer.StringPlug() ) )
 		self["__bakeDirectoryContext"]["variables"][0]["value"].setInput( self["bakeDirectory"] )
 		self["__bakeDirectoryContext"]["preTasks"][0].setInput( self["__arnoldRender"]["task"] )
 
@@ -494,8 +494,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 		# Convert result to texture
 		self["__ConvertCommand"] = GafferDispatch.SystemCommand()
-		self["__ConvertCommand"]["substitutions"].addMember( "inFile", IECore.StringData() )
-		self["__ConvertCommand"]["substitutions"].addMember( "outFile", IECore.StringData() )
+		self["__ConvertCommand"]["substitutions"].addChild( Gaffer.NameValuePlug( "inFile", IECore.StringData(), "member1" ) )
+		self["__ConvertCommand"]["substitutions"].addChild( Gaffer.NameValuePlug( "outFile", IECore.StringData(), "member1" ) )
 		self["__ConvertCommand"]["preTasks"][0].setInput( self["__ImageWriter"]["task"] )
 		self["__ConvertCommand"]["command"].setValue( 'maketx --wrap clamp {inFile} -o {outFile}' )
 
@@ -523,7 +523,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 		self["__CleanUpCommand"] = GafferDispatch.PythonCommand()
 		self["__CleanUpCommand"]["preTasks"][0].setInput( self["__ImageWedge"]["task"] )
-		self["__CleanUpCommand"]["variables"].addMember( "filesToDelete", Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
+		self["__CleanUpCommand"]["variables"].addChild( Gaffer.NameValuePlug( "filesToDelete", Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ), "member1" ) )
 		self["__CleanUpCommand"]["command"].setValue( inspect.cleandoc(
 			"""
 			import os
