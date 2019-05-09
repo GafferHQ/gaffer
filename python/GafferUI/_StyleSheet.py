@@ -468,11 +468,9 @@ _styleSheet = string.Template(
 
 	}
 
-	/* indent the first tab. can't do this using QTabWidget::tab-bar:left */
-	/* as that messes up the alignment of the corner widget (makes it overlap) */
-	QTabBar::tab:first, QTabBar::tab:only-one {
+	QTabWidget::tab-bar:top {
 
-		margin-left: 10px;
+		left: 10px;
 
 	}
 
@@ -1112,6 +1110,14 @@ _styleSheet = string.Template(
 
 		border-top-right-radius: 0px;
 		border-bottom-right-radius: 0px;
+
+	}
+
+	/* Utility */
+
+	#gafferOpaqueBackgroundMid {
+
+		background: $backgroundMid;
 
 	}
 

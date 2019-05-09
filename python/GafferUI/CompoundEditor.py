@@ -294,6 +294,11 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ) ) )
 			layoutButton.setToolTip( "Click to modify the layout" )
 
+			# There is an issue where by using left: Xpx positioning with the tab bar results
+			# in a small under-lap of the tabs with the corner widget. As a work-around we
+			# set a solid background on the corner widget to mask this.
+			cornerWidget._qtWidget().setObjectName( "gafferOpaqueBackgroundMid" )
+
 		self.setCornerWidget( cornerWidget )
 
 		self.__pinningButtonClickedConnection = self.__pinningButton.clickedSignal().connect( Gaffer.WeakMethod( self.__pinningButtonClicked ) )
