@@ -491,6 +491,7 @@ class Parallel
 			typename Bin::Mutex::scoped_lock binLock( bin->mutex );
 
 			typename Item::Mutex::scoped_lock itemLock;
+			int numFullIterations = 0;
 			while( true )
 			{
 				// If we're at the end of this bin, advance to
@@ -507,6 +508,19 @@ class Parallel
 					{
 						// We've come full circle and all bins were empty.
 						return false;
+					}
+					else if( m_popBinIndex == 0 )
+					{
+						if( numFullIterations++ > 50 )
+						{
+							// We're not empty, but we've been around and around
+							// without finding anything to pop. This could happen
+							// if other threads are frantically setting
+							// the `recentlyUsed` flag or if `clear()` is
+							// called from `get()`, while `get()` holds the lock
+							// on the only item we could pop.
+							return false;
+						}
 					}
 				}
 
