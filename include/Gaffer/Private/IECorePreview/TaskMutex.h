@@ -167,7 +167,7 @@ class TaskMutex : boost::noncopyable
 
 					ExecutionStateMutex::scoped_lock executionStateLock( m_mutex->m_executionStateMutex );
 					assert( !m_mutex->m_executionState );
-					m_mutex->m_executionState = std::make_shared<ExecutionState>();
+					m_mutex->m_executionState = new ExecutionState;
 					executionStateLock.release();
 
 					// Wrap `f` to capture any exceptions it throws. If we allow
@@ -375,7 +375,7 @@ class TaskMutex : boost::noncopyable
 
 		// The mechanism we use to allow waiting threads
 		// to participate in the work done by `execute()`.
-		struct ExecutionState : private boost::noncopyable
+		struct ExecutionState : public IECore::RefCounted
 		{
 			ExecutionState()
 				:	arenaObserver( arena )
@@ -395,7 +395,7 @@ class TaskMutex : boost::noncopyable
 			// currently inside the arena.
 			ArenaObserver arenaObserver;
 		};
-		typedef std::shared_ptr<ExecutionState> ExecutionStatePtr;
+		IE_CORE_DECLAREPTR( ExecutionState );
 
 		typedef tbb::spin_mutex ExecutionStateMutex;
 		ExecutionStateMutex m_executionStateMutex; // Protects m_executionState
