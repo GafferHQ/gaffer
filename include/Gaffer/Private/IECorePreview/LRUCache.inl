@@ -819,6 +819,7 @@ class TaskParallel
 								if( workAvailable )
 								{
 									assert( spawnsTasks );
+									(void)spawnsTasks;
 								}
 								// Release the bin lock prior to accepting work, because
 								// the work might involve recursion back into the cache,
