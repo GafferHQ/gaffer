@@ -316,11 +316,11 @@ struct TestLRUCacheRecursionOnOneItem
 					cost = 1;
 					if( ++recursionDepth == 100 )
 					{
-					return key;
+						return key;
 					}
 					else
 					{
-					return cache->get( key );
+						return cache->get( key );
 					}
 				},
 				// Max cost is small enough that we'll be trying to evict
@@ -329,15 +329,10 @@ struct TestLRUCacheRecursionOnOneItem
 			)
 		);
 
-		for( int i = 0; i < 100000; ++i )
-		{
-			recursionDepth = 0;
-			cache->clear();
-			GAFFERTEST_ASSERTEQUAL( cache->currentCost(), 0 );
-			GAFFERTEST_ASSERTEQUAL( cache->get( i ), i );
-			GAFFERTEST_ASSERTEQUAL( recursionDepth, 100 );
-			GAFFERTEST_ASSERTEQUAL( cache->currentCost(), 1 );
-		}
+		GAFFERTEST_ASSERTEQUAL( cache->currentCost(), 0 );
+		GAFFERTEST_ASSERTEQUAL( cache->get( 1 ), 1 );
+		GAFFERTEST_ASSERTEQUAL( recursionDepth, 100 );
+		GAFFERTEST_ASSERTEQUAL( cache->currentCost(), 1 );
 	}
 
 };
@@ -353,7 +348,6 @@ struct TestLRUCacheClearFromGet
 
 	void operator()()
 	{
-
 		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
 		typedef std::unique_ptr<Cache> CachePtr;
 
@@ -369,11 +363,7 @@ struct TestLRUCacheClearFromGet
 			)
 		);
 
-		for( int i = 0; i < 100000; ++i )
-		{
-			GAFFERTEST_ASSERTEQUAL( cache->get( i ), i );
-		}
-
+		GAFFERTEST_ASSERTEQUAL( cache->get( 0 ), 0 );
 	}
 
 };
