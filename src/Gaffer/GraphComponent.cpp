@@ -316,7 +316,7 @@ void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild 
 
 	if( !acceptsChild( potentialChild ) )
 	{
-		string what = boost::str( boost::format( "Parent \"%s\" rejects child \"%s\"." ) % m_name.value() % potentialChild->m_name.value() );
+		string what = boost::str( boost::format( "Parent \"%s\" ( of type %s ) rejects child \"%s\" ( of type %s )." ) % m_name.value() % typeName() % potentialChild->m_name.value() % potentialChild->typeName() );
 		throw Exception( what );
 	}
 
