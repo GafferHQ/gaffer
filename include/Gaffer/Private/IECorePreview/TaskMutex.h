@@ -187,12 +187,24 @@ class TaskMutex : boost::noncopyable
 
 					m_mutex->m_executionState->arena.execute(
 						[this, &fWrapper] {
-							// Note : We deliberately call `run()` and `wait()` separately
-							// instead of calling `run_and_wait()`. The latter is buggy until
+#if TBB_INTERFACE_VERSION >= 10003
+							m_mutex->m_executionState->taskGroup.run_and_wait( fWrapper );
+#else
+							// The `run_and_wait()` method is buggy until
 							// TBB 2018 Update 3, causing calls to `wait()` on other threads to
 							// return immediately rather than do the work we want.
+							// So we call `run()` and `wait()` separately. This has a
+							// downside though : it appears to trigger a TBB bug whereby
+							// it is sometimes unable to destroy the internals of the
+							// `task_arena`. It then spends increasing amounts of time
+							// in `market::try_destroy_arena()`, doing a linear search
+							// through all the zombie arenas until it finds the one it
+							// wants to destroy, decides for some reason it can't destroy it,
+							// and gives up. With large numbers of arenas this can add
+							// huge overhead.
 							m_mutex->m_executionState->taskGroup.run( fWrapper );
 							m_mutex->m_executionState->taskGroup.wait();
+#endif
 						}
 					);
 
