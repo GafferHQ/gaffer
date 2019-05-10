@@ -66,6 +66,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		  {
 			  "command" : functools.partial( __assignNumericBookmark, node, i ),
 			  "shortCut" : "Ctrl+%i" % i,
+			  "active" : not Gaffer.MetadataAlgo.readOnly( node ),
 		  }
 	  )
 
