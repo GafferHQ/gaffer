@@ -45,25 +45,16 @@
 namespace Gaffer
 {
 
-class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
+class GAFFER_API NameValuePlug : public Gaffer::Plug
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::NameValuePlug, NameValuePlugTypeId, Gaffer::ValuePlug );
-
-		// Bare constructor required for compatibility with old CompoundDataPlug::MemberPlug constructor.
-		// Deprecated, and dangerous, since if you don't manually construct child plugs in the expected order of
-		// "name", "value", and optionally "enabled" then you will get a crash.
-		NameValuePlug(
-			const std::string &name=defaultName<NameValuePlug>(),
-			Direction direction=In,
-			unsigned flags=Default
-		);
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::NameValuePlug, NameValuePlugTypeId, Gaffer::Plug );
 
 		// Construct a NameValuePlug with the "name" and "value" children.  The value plug
 		// can be constructed either based on a IECore::Data default value, or by supplying
-		// a plug.  In the variant which takes a ValuePlug, NameValuePlug will take ownership
+		// a plug.  In the variant which takes a Plug, NameValuePlug will take ownership
 		// of this plug ( so be careful about using it afterwards ).
 		NameValuePlug(
 			const std::string &nameDefault,
@@ -97,12 +88,21 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 			const std::string &name=defaultName<NameValuePlug>()
 		);
 
+		// Bare constructor required for compatibility with old CompoundDataPlug::MemberPlug constructor.
+		// Deprecated, and dangerous, since if you don't manually construct child plugs in the expected order of
+		// "name", "value", and optionally "enabled" then you will get a crash.
+		NameValuePlug(
+			const std::string &name=defaultName<NameValuePlug>(),
+			Direction direction=In,
+			unsigned flags=Default
+		);
+
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
-		template<typename T>
+		template<typename T = Gaffer::Plug>
 		T *valuePlug();
-		template<typename T>
+		template<typename T = Gaffer::Plug>
 		const T *valuePlug() const;
 
 		Gaffer::BoolPlug *enabledPlug();
@@ -110,6 +110,10 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+
+	protected:
+		/// Reimplemented to emit `plugSetSignal()` for the parent CompoundDataPlugs.
+		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
 
 };
 

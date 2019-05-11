@@ -38,6 +38,7 @@
 
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -46,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( NameValuePlug );
 
 NameValuePlug::NameValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	ValuePlug( name, direction, flags )
+	:	Plug( name, direction, flags )
 {
 }
 
@@ -135,12 +136,12 @@ bool NameValuePlug::acceptsChild( const Gaffer::GraphComponent *potentialChild )
 
 PlugPtr NameValuePlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	if( !namePlug() || !valuePlug<Plug>() )
+	if( !namePlug() || !valuePlug() )
 	{
 		throw IECore::Exception( "Cannot create counterpart for : " + fullName() + " - NameValuePlug must have name and value." );
 	}
 
-	PlugPtr valueCounterpart = valuePlug<Plug>()->createCounterpart( "value", direction );
+	PlugPtr valueCounterpart = valuePlug()->createCounterpart( "value", direction );
 
 	if( enabledPlug() )
 	{
@@ -155,3 +156,22 @@ PlugPtr NameValuePlug::createCounterpart( const std::string &name, Direction dir
 		);
 	}
 }
+
+void NameValuePlug::parentChanged( Gaffer::GraphComponent *oldParent )
+{
+    Plug::parentChanged( oldParent );
+
+    // Addition or removal of a child is considered to change a plug's value,
+    // so we emit the appropriate signal. This is for CompoundDataPlug, where
+	// points and data members are added and removed by adding and removing plugs.
+    if( auto p = IECore::runTimeCast<CompoundDataPlug>( oldParent ) )
+    {
+        p->emitPlugSet();
+    }
+    if( auto p = parent<CompoundDataPlug>() )
+    {
+        p->emitPlugSet();
+    }
+}
+
+
