@@ -57,13 +57,13 @@ using namespace GafferScene;
 namespace
 {
 
-ValuePlugPtr addOutputWrapper( Outputs &o, const std::string &name )
+PlugPtr addOutputWrapper( Outputs &o, const std::string &name )
 {
 	ScopedGILRelease gilRelease;
 	return o.addOutput( name );
 }
 
-ValuePlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECoreScene::Output *output )
+PlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECoreScene::Output *output )
 {
 	ScopedGILRelease gilRelease;
 	return o.addOutput( name, output );

@@ -71,7 +71,7 @@ class NameValuePlugSerialiser : public ValuePlugSerialiser
 
 		static std::string repr( const Gaffer::NameValuePlug *plug, const Serialisation *serialisation )
 		{
-			if( !plug->namePlug() || !plug->valuePlug<Plug>() )
+			if( !plug->namePlug() || !plug->valuePlug() )
 			{
 				throw IECore::Exception( "Cannot serialize: " + plug->fullName() + " - NameValuePlug must have name and value." );
 			}
@@ -79,7 +79,7 @@ class NameValuePlugSerialiser : public ValuePlugSerialiser
 			std::string result = "Gaffer.NameValuePlug( ";
 			result += "\"" + plug->namePlug()->getValue() + "\", ";
 
-			result += Serialisation::acquireSerialiser( plug->valuePlug<Plug>() )->constructor( plug->valuePlug<Plug>(), *serialisation ) + ", ";
+			result += Serialisation::acquireSerialiser( plug->valuePlug() )->constructor( plug->valuePlug(), *serialisation ) + ", ";
 
 			if( plug->enabledPlug() )
 			{

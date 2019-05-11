@@ -42,6 +42,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
@@ -84,7 +85,7 @@ Expression::Expression( const std::string &name )
 		)
 	);
 
-	addChild( new ValuePlug( "__in", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( new Plug( "__in", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new ValuePlug( "__out", Plug::Out ) );
 	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
 
@@ -130,7 +131,8 @@ void Expression::setExpression( const std::string &expression, const std::string
 		) );
 	}
 
-	std::vector<ValuePlug *> inPlugs, outPlugs;
+	std::vector<Plug *> inPlugs;
+	std::vector<ValuePlug *> outPlugs;
 	std::vector<IECore::InternedString> contextNames;
 
 	engine->parse( this, expression, inPlugs, outPlugs, contextNames );
@@ -139,7 +141,7 @@ void Expression::setExpression( const std::string &expression, const std::string
 	// to the same plug, since circular dependencies aren't allowed.
 	if( inPlugs.size() )
 	{
-		std::vector<ValuePlug *> sortedInPlugs( inPlugs );
+		std::vector<Plug *> sortedInPlugs( inPlugs );
 		std::sort( sortedInPlugs.begin(), sortedInPlugs.end() );
 		for( std::vector<ValuePlug *>::const_iterator it = outPlugs.begin(), eIt = outPlugs.end(); it != eIt; ++it )
 		{
@@ -227,14 +229,14 @@ const StringPlug *Expression::expressionPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-ValuePlug *Expression::inPlug()
+Plug *Expression::inPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
-const ValuePlug *Expression::inPlug() const
+const Plug *Expression::inPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
 ValuePlug *Expression::outPlug()
@@ -289,13 +291,29 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 	{
 		enginePlug()->hash( h );
 		expressionPlug()->hash( h );
-		for( ValuePlugIterator it( inPlug() ); !it.done(); ++it )
+		for( PlugIterator it( inPlug() ); !it.done(); ++it )
 		{
-			(*it)->hash( h );
+			if( runTimeCast<ValuePlug>( *it ) )
+			{
+				runTimeCast<ValuePlug>( *it )->hash( h );
+			}
+			else if( runTimeCast<CompoundDataPlug>( *it ) )
+			{
+				runTimeCast<CompoundDataPlug>( *it )->hash( h );
+			}
+			else
+			{
+				throw Exception( boost::str(
+					boost::format(
+						"Invalid expression input plug: %s of type %s\nExpression inputs must be ValuePlug or CompoundDataPlug"
+					) % (*it)->fullName() % (*it)->typeName()
+				) );
+			}
 			// We must hash the types of the input plugs, because
 			// an identical expression but with different input plug
 			// types may yield a different result from Engine::execute().
 			h.append( (*it)->typeId() );
+
 		}
 		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
@@ -333,8 +351,8 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( m_engine )
 		{
-			std::vector<const ValuePlug *> inputs;
-			for( ValuePlugIterator it( inPlug() ); !it.done(); ++it )
+			std::vector<const Plug *> inputs;
+			for( PlugIterator it( inPlug() ); !it.done(); ++it )
 			{
 				inputs.push_back( it->get() );
 			}
@@ -386,7 +404,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	ComputeNode::compute( output, context );
 }
 
-void Expression::updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs )
+void Expression::updatePlugs( const std::vector<Plug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs )
 {
 	for( size_t i = 0, e = inPlugs.size(); i < e; ++i )
 	{
@@ -401,7 +419,7 @@ void Expression::updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std
 	removeChildren( outPlug(), outPlugs.size() );
 }
 
-void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug )
+void Expression::updatePlug( Plug *parentPlug, size_t childIndex, Plug *plug )
 {
 	if( parentPlug->children().size() > childIndex )
 	{
@@ -436,7 +454,7 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 	}
 }
 
-void Expression::removeChildren( ValuePlug *parentPlug, size_t startChildIndex )
+void Expression::removeChildren( Plug *parentPlug, size_t startChildIndex )
 {
 	// Remove backwards, because children() is a vector and
 	// it's therefore cheaper to remove from the end.
@@ -513,7 +531,8 @@ void Expression::plugSet( const Plug *plug )
 	m_contextNames.clear();
 	m_engine = Engine::create( engineType );
 	expression = transcribe( expression, /* toInternalForm = */ false );
-	std::vector<ValuePlug *> inPlugs, outPlugs;
+	std::vector<Plug *> inPlugs;
+	std::vector<ValuePlug *> outPlugs;
 	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
 }
 

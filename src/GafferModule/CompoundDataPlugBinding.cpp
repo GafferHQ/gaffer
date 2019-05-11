@@ -94,6 +94,22 @@ void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObject *o )
 	p.fillCompoundObject( o->members() );
 }
 
+IECore::MurmurHash hash( CompoundDataPlug *plug )
+{
+    // we use a GIL release here to prevent a lock in the case where this triggers a graph
+    // evaluation which decides to go back into python on another thread:
+    IECorePython::ScopedGILRelease r;
+    return plug->hash();
+}
+
+void hash2( CompoundDataPlug *plug, IECore::MurmurHash &h )
+{
+    // we use a GIL release here to prevent a lock in the case where this triggers a graph
+    // evaluation which decides to go back into python on another thread:
+    IECorePython::ScopedGILRelease r;
+    plug->hash( h);
+}
+
 } // namespace
 
 void GafferModule::bindCompoundDataPlug()
@@ -113,5 +129,7 @@ void GafferModule::bindCompoundDataPlug()
 		.def( "memberDataAndName", &memberDataAndNameWrapper )
 		.def( "fillCompoundData", &fillCompoundData )
 		.def( "fillCompoundObject", &fillCompoundObject )
+		.def( "hash", &hash )
+		.def( "hash", &hash2 )
 	;
 }

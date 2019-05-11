@@ -90,24 +90,24 @@ Outputs::Outputs( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ValuePlug( "outputs" ) );
+	addChild( new Plug( "outputs" ) );
 }
 
 Outputs::~Outputs()
 {
 }
 
-Gaffer::ValuePlug *Outputs::outputsPlug()
+Gaffer::Plug *Outputs::outputsPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
-const Gaffer::ValuePlug *Outputs::outputsPlug() const
+const Gaffer::Plug *Outputs::outputsPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
-Gaffer::ValuePlug *Outputs::addOutput( const std::string &name )
+Gaffer::Plug *Outputs::addOutput( const std::string &name )
 {
 	OutputMap::nth_index<0>::type &index = outputMap().get<0>();
 	OutputMap::const_iterator it = index.find( name );
@@ -118,9 +118,9 @@ Gaffer::ValuePlug *Outputs::addOutput( const std::string &name )
 	return addOutput( it->first, it->second.get() );
 }
 
-Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECoreScene::Output *output )
+Gaffer::Plug *Outputs::addOutput( const std::string &name, const IECoreScene::Output *output )
 {
-	ValuePlugPtr outputPlug = new ValuePlug( "output1" );
+	PlugPtr outputPlug = new Plug( "output1" );
 	outputPlug->setFlags( Plug::Dynamic, true );
 
 	StringPlugPtr namePlug = new StringPlug( "name" );
@@ -169,12 +169,29 @@ void Outputs::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 
 void Outputs::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	outputsPlug()->hash( h );
+	for( InputPlugIterator output( outputsPlug() ); !output.done(); ++output )
+	{
+		for( InputPlugIterator child( output->get() ); !child.done(); ++child )
+		{
+			ValuePlug *valueChild = runTimeCast<ValuePlug>( child->get() );
+			if( valueChild )
+			{
+				valueChild->hash( h );
+				continue;
+			}
+
+			CompoundDataPlug *compoundChild = runTimeCast<CompoundDataPlug>( child->get() );
+			if( compoundChild )
+			{
+				compoundChild->hash( h );
+			}
+		}
+	}
 }
 
 IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	const ValuePlug *dsp = outputsPlug();
+	const Plug *dsp = outputsPlug();
 	if( !dsp->children().size() )
 	{
 		return inputGlobals;
@@ -188,9 +205,9 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 	result->members() = inputGlobals->members();
 
 	// add our outputs to the result
-	for( InputValuePlugIterator it( dsp ); !it.done(); ++it )
+	for( InputPlugIterator it( dsp ); !it.done(); ++it )
 	{
-		const ValuePlug *outputPlug = it->get();
+		const Plug *outputPlug = it->get();
 		if( outputPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
 			const StringPlug *namePlug = outputPlug->getChild<StringPlug>( "name" );

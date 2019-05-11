@@ -197,7 +197,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 	def __plug( self, node, plugPath ) :
 
 		plug = node.parent().descendant( plugPath )
-		if isinstance( plug, Gaffer.ValuePlug ) :
+		if isinstance( plug, ( Gaffer.ValuePlug, Gaffer.CompoundDataPlug ) ) :
 			return plug
 
 		if plug is None :

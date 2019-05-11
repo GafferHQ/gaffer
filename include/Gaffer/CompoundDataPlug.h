@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 /// This plug provides an easy means of building CompoundData containing
 /// arbitrary keys and values, where each key and value is represented
 /// by an individual Gaffer::NameValuePlug.
-class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
+class GAFFER_API CompoundDataPlug : public Gaffer::Plug
 {
 
 	public :
@@ -64,7 +64,7 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 		);
 		~CompoundDataPlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::ValuePlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::Plug );
 
 		/// Accepts only children that can generate values for the CompoundData.
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
@@ -83,8 +83,10 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 		/// As above but fills a CompoundObjectMap instead.
 		void fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const;
 
-		IECore::MurmurHash hash() const override;
+		IECore::MurmurHash hash() const;
 		void hash( IECore::MurmurHash &h ) const;
+
+		void emitPlugSet();
 
 };
 

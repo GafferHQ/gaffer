@@ -39,6 +39,7 @@
 
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Node.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -51,7 +52,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( CompoundDataPlug )
 
 CompoundDataPlug::CompoundDataPlug( const std::string &name, Direction direction, unsigned flags )
-	:	ValuePlug( name, direction, flags )
+	:	Plug( name, direction, flags )
 {
 }
 
@@ -61,7 +62,7 @@ CompoundDataPlug::~CompoundDataPlug()
 
 bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	if( !ValuePlug::acceptsChild( potentialChild ) )
+	if( !Plug::acceptsChild( potentialChild ) )
 	{
 		return false;
 	}
@@ -115,12 +116,16 @@ IECore::MurmurHash CompoundDataPlug::hash() const
 		bool active = true;
 		if( plug->children().size() == 3 )
 		{
-			active = plug->getChild<BoolPlug>( 2 )->getValue();
+			active = plug->enabledPlug()->getValue();
 		}
 		if( active )
 		{
-			plug->getChild<ValuePlug>( 0 )->hash( h );
-			plug->getChild<ValuePlug>( 1 )->hash( h );
+			plug->namePlug()->hash( h );
+			const ValuePlug* valuePlug = plug->valuePlug<ValuePlug>();
+			if( valuePlug )
+			{
+				valuePlug->hash( h );
+			}
 		}
 	}
 	return h;
@@ -146,15 +151,12 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 
 IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parameterPlug, std::string &name ) const
 {
-	if( parameterPlug->children().size() == 3 )
+	if( parameterPlug->enabledPlug() && !parameterPlug->enabledPlug()->getValue() )
 	{
-		if( !parameterPlug->getChild<BoolPlug>( 2 )->getValue() )
-		{
-			return nullptr;
-		}
+		return nullptr;
 	}
 
-	if( parameterPlug->children().size() < 2 )
+	if( !parameterPlug->namePlug() || !parameterPlug->valuePlug() )
 	{
 		// we can end up here either if someone has very naughtily deleted
 		// some plugs, or if we're being called during loading and the
@@ -162,13 +164,42 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parame
 		return nullptr;
 	}
 
-	name = parameterPlug->getChild<StringPlug>( 0 )->getValue();
+	name = parameterPlug->namePlug()->getValue();
 	if( !name.size() )
 	{
 		return nullptr;
 	}
 
-	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( 1 );
+	const ValuePlug *valuePlug = parameterPlug->valuePlug<ValuePlug>();
+	if( !valuePlug )
+	{
+		return nullptr;
+	}
+
 	return PlugAlgo::extractDataFromPlug( valuePlug );
+}
+
+void CompoundDataPlug::emitPlugSet()
+{
+    if( Node *n = node() )
+    {
+        Plug *p = this;
+        while( p )
+        {
+            n->plugSetSignal()( p );
+            p = p->parent<Plug>();
+        }
+    }
+
+    // take a copy of the outputs, owning a reference - because who
+    // knows what will be added and removed by the connected slots.
+    std::vector<PlugPtr> o( outputs().begin(), outputs().end() );
+    for( std::vector<PlugPtr>::const_iterator it=o.begin(), eIt=o.end(); it!=eIt; ++it )
+    {
+        if( CompoundDataPlug *output = IECore::runTimeCast<CompoundDataPlug>( it->get() ) )
+        {
+            output->emitPlugSet();
+        }
+    }
 }
 

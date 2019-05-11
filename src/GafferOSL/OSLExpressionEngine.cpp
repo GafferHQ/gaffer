@@ -78,7 +78,7 @@ struct RenderState
 
 	const vector<ustring> *inParameters;
 	const Gaffer::Context *context;
-	const vector<const Gaffer::ValuePlug *> *inPlugs;
+	const vector<const Gaffer::Plug *> *inPlugs;
 
 };
 
@@ -163,7 +163,7 @@ class RendererServices : public OSL::RendererServices
 			if( value )
 			{
 				const size_t index = it - renderState->inParameters->begin();
-				const ValuePlug *plug = (*renderState->inPlugs)[index];
+				const Plug *plug = (*renderState->inPlugs)[index];
 				switch( (Gaffer::TypeId)plug->typeId() )
 				{
 					case BoolPlugTypeId :
@@ -225,7 +225,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		{
 		}
 
-		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
+		void parse( Expression *node, const std::string &expression, std::vector<Plug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
 		{
 			m_inParameters.clear();
 			m_outSymbols.clear();
@@ -315,7 +315,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		}
 
-		IECore::ConstObjectVectorPtr execute( const Gaffer::Context *context, const std::vector<const Gaffer::ValuePlug *> &proxyInputs ) const override
+		IECore::ConstObjectVectorPtr execute( const Gaffer::Context *context, const std::vector<const Gaffer::Plug *> &proxyInputs ) const override
 		{
 			ShadingSystem *s = shadingSystem();
 			OSL::ShadingContext *shadingContext = s->get_context();
@@ -614,7 +614,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			return result;
 		}
 
-		static string parameterType( const ValuePlug *plug, string &defaultValue )
+		static string parameterType( const Plug *plug, string &defaultValue )
 		{
 			switch( (Gaffer::TypeId)plug->typeId() )
 			{
@@ -646,7 +646,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		static string shaderSource(
 			const std::string &expression,
-			const vector<string> &inPlugPaths, const vector<ValuePlug *> &inPlugs,
+			const vector<string> &inPlugPaths, const vector<Plug *> &inPlugs,
 			const vector<string> &outPlugPaths, const vector<ValuePlug *> outPlugs,
 			std::string &shaderName,
 			vector<ustring> &inParameters,

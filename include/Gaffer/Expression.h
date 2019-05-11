@@ -113,13 +113,13 @@ class GAFFER_API Expression : public ComputeNode
 				/// that are read from and written to by the expression, and the
 				/// contextVariables array with the names of context variables the
 				/// expression will access.
-				virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) = 0;
+				virtual void parse( Expression *node, const std::string &expression, std::vector<Plug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) = 0;
 				/// Executes the last parsed expression in the specified context, using the values
 				/// provided by proxyInputs and returning an array containing a value for
 				/// each output plug. The results returned will later be passed to apply()
 				/// to apply them to each of the individual output plugs.
 				/// \threading This function may be called concurrently.
-				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const = 0;
+				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const Plug *> &proxyInputs ) const = 0;
 				//@}
 
 				/// @name Language utilities
@@ -193,8 +193,8 @@ class GAFFER_API Expression : public ComputeNode
 
 		// For each input to the expression, we add a child plug
 		// below this one, and connect it to the outside world.
-		ValuePlug *inPlug();
-		const ValuePlug *inPlug() const;
+		Plug *inPlug();
+		const Plug *inPlug() const;
 
 		// For each output from the expression, we add a child plug
 		// below this one, and connect it to the outside world.
@@ -210,9 +210,9 @@ class GAFFER_API Expression : public ComputeNode
 		ObjectVectorPlug *executePlug();
 		const ObjectVectorPlug *executePlug() const;
 
-		void updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
-		void updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug );
-		void removeChildren( ValuePlug *parentPlug, size_t startChildIndex );
+		void updatePlugs( const std::vector<Plug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
+		void updatePlug( Plug *parentPlug, size_t childIndex, Plug *plug );
+		void removeChildren( Plug *parentPlug, size_t startChildIndex );
 
 		std::string transcribe( const std::string &expression, bool toInternalForm ) const;
 

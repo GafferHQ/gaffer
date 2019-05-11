@@ -115,7 +115,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 		{
 		}
 
-		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
+		void parse( Expression *node, const std::string &expression, std::vector<Plug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
 		{
 			if( isSubclassed() )
 			{
@@ -143,7 +143,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::parse() python method not defined" );
 		}
 
-		IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const override
+		IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const Plug *> &proxyInputs ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -154,9 +154,9 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 					if( f )
 					{
 						list pythonProxyInputs;
-						for( std::vector<const ValuePlug *>::const_iterator it = proxyInputs.begin(); it!=proxyInputs.end(); it++ )
+						for( std::vector<const Plug *>::const_iterator it = proxyInputs.begin(); it!=proxyInputs.end(); it++ )
 						{
-							pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+							pythonProxyInputs.append( PlugPtr( const_cast<Plug *>( *it ) ) );
 						}
 
 						object result = f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs );
