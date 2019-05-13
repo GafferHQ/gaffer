@@ -56,7 +56,7 @@ def restore( menu, name ) :
 
 	scriptWindow.setLayout( layout )
 
-## A function suitable as the command for a Layout/Save... menu item. It must be invoked from
+## A function suitable as the command for a 'Layout/Save...' menu item. It must be invoked from
 # a menu which has a ScriptWindow in its ancestry.
 def save( menu ) :
 
@@ -77,8 +77,16 @@ def save( menu ) :
 	if not t :
 		return
 
+	saveAs( t, menu )
+
+## A function suitable as the command for a 'Layout/Save As <name>' menu item where the name
+# is already known. It must be invoked from a menu which has a ScriptWindow in its ancestry.
+def saveAs( name, menu ) :
+
+	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
+
 	layout = scriptWindow.getLayout()
-	layouts.add( t, layout, persistent = True )
+	layouts.add( name, layout, persistent = True )
 
 def fullScreen( menu, checkBox ) :
 
@@ -137,7 +145,7 @@ def layoutMenuCallable( menu ) :
 		menuDefinition.append(
 			"/Save As/saveAs:" + name,
 			{
-				"command" : functools.partial( layouts.add, name, scriptWindow.getLayout(), persistent = True ),
+				"command" : functools.partial( saveAs, name ),
 				"label" : name
 			}
 		)
