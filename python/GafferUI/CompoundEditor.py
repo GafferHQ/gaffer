@@ -37,6 +37,7 @@
 
 import collections
 import functools
+import sys
 import weakref
 
 import imath
@@ -50,13 +51,18 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
+# Note: 'preferredBound' is a bottom-left origin NDC (available area)
+# representation of a windows on-screen geometry. This is persisted in saved
+# layouts to maximise compatibility between different screen configurations.
+# @see _preferredBound
+
 class CompoundEditor( GafferUI.Editor ) :
 
 	class _DetachedPanel( GafferUI.Window ) :
 
-		def __init__( self, scriptNode, *args, **kwargs ) :
+		def __init__( self, scriptNode, children = None, preferredBound = None, **kwargs ) :
 
-			GafferUI.Window.__init__( self, *args, **kwargs )
+			GafferUI.Window.__init__( self, **kwargs )
 			self.__titleManger = GafferUI.ScriptWindow._WindowTitleBehaviour( self, scriptNode )
 
 			self.__splitContainer = _SplitContainer()
@@ -64,6 +70,11 @@ class CompoundEditor( GafferUI.Editor ) :
 			self.setChild( self.__splitContainer )
 
 			self._gafferParent = None
+
+			if children :
+				self.__splitContainer.addChildren( children )
+
+			self.__preferredBound = preferredBound or {}
 
 		## As were technically not in the Qt hierarchy, but do want to be logically
 		# owned by a CompoundEditor, we re-implement this to re-direct ancestor
@@ -86,6 +97,15 @@ class CompoundEditor( GafferUI.Editor ) :
 			self.__splitContainer = splitContainer
 			self.setChild( self.__splitContainer )
 
+		def restorePreferredBound( self ) :
+
+			if self.__preferredBound :
+				_restorePreferredBound( self, self.__preferredBound )
+
+		def updatePreferredBound( self ) :
+
+			self.__preferredBound = _preferredBound( self )
+
 		# A detached panel is considered empty if it has a single split with
 		# no editors.
 		def isEmpty( self ) :
@@ -103,7 +123,15 @@ class CompoundEditor( GafferUI.Editor ) :
 			if gafferWidget :
 				self._gafferParent = weakref.ref( gafferWidget )
 
-	def __init__( self, scriptNode, children=None, **kw ) :
+		def __repr__( self ) :
+
+			return "GafferUI.CompoundEditor._DetachedPanel( scriptNode, children=%s, preferredBound=%s )" \
+					% (
+						_serialiseSplits( self.__splitContainer ),
+						_imathRepr( self.__preferredBound )
+					)
+
+	def __init__( self, scriptNode, children=None, detachedPanels=None, preferredBound=None, **kw ) :
 
 		self.__splitContainer = _SplitContainer()
 
@@ -116,9 +144,15 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		if children :
-			self.__addChildren( self.__splitContainer, children )
+			self.__splitContainer.addChildren( children )
+
+		self.__preferredBound = preferredBound or {}
 
 		self.__detachedPanels = []
+
+		if detachedPanels :
+			for p in detachedPanels :
+				self._addDetachedPanel( p )
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
@@ -143,6 +177,27 @@ class CompoundEditor( GafferUI.Editor ) :
 	def nodeSetMenuSignal( cls ) :
 
 		return CompoundEditor.__nodeSetMenuSignal
+
+	# Restores the preferred geometry, if this is known for the main window and
+	# any detached panels. This must only be called when the editor is part of a
+	# window hierarchy so that screen affinity can be properly applied.
+	def restorePreferredBound( self ) :
+
+		if self.__preferredBound :
+			_restorePreferredBound( self.ancestor( GafferUI.ScriptWindow ), self.__preferredBound )
+
+		for p in self.__detachedPanels :
+			p.restorePreferredBound()
+
+	# Updates the stored preferred geometry for this layout
+	def updatePreferredBound( self ) :
+
+		window = self.ancestor( GafferUI.ScriptWindow )
+		if window :
+			self.__preferredBound = _preferredBound( window )
+
+		for p in self.__detachedPanels :
+			p.updatePreferredBound()
 
 	def _detachedPanels( self ) :
 
@@ -172,40 +227,26 @@ class CompoundEditor( GafferUI.Editor ) :
 		panel.__removeOnCloseConnection = None
 		panel._applyVisibility()
 
+	def _preferredBound( self ) :
+
+		return self.__preferredBound
+
 	def __visibilityChanged(self, widget) :
 
 		v = self.visible()
 		for p in self._detachedPanels() :
 			p.setVisible( v )
 
-	def __serialise( self, w ) :
-
-		assert( isinstance( w, _SplitContainer ) )
-
-		if w.isSplit() :
-			sizes = w.getSizes()
-			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
-			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, self.__serialise( w[0] ), self.__serialise( w[1] ) )
-		else :
-			# not split - a tabbed container full of editors
-			tabbedContainer = w[0]
-			tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
-			if tabbedContainer.getCurrent() is not None :
-				tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
-			tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
-
-			tabDict["pinned"] = []
-			for editor in tabbedContainer :
-				if isinstance( editor, GafferUI.NodeSetEditor ) :
-					tabDict["pinned"].append( not editor.getNodeSet().isSame( self.scriptNode().selection() ) )
-				else :
-					tabDict["pinned"].append( None )
-
-			return repr( tabDict )
-
 	def __repr__( self ) :
 
-		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % self.__serialise( self.__splitContainer )
+		window = self.ancestor( GafferUI.ScriptWindow )
+
+		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, preferredBound = %s )" \
+				% (
+					_serialiseSplits( self.__splitContainer ),
+					self._detachedPanels(),
+					_imathRepr( _preferredBound( window ) ) if window else {}
+				)
 
 	def __keyPress( self, unused, event ) :
 
@@ -252,31 +293,6 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		return False
 
-	def __addChildren( self, splitContainer, children ) :
-
-		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
-
-			splitContainer.split( children[0], 0 )
-			self.__addChildren( splitContainer[0], children[2][0] )
-			self.__addChildren( splitContainer[1], children[2][1] )
-			splitContainer.setSizes( [ children[1], 1.0 - children[1] ] )
-
-		else :
-			if isinstance( children, tuple ) :
-				# backwards compatibility - tabs provided as a tuple
-				for c in children :
-					splitContainer[0].addEditor( c )
-			else :
-				# new format - various fields provided by a dictionary
-				for i, c in enumerate( children["tabs"] ) :
-					editor = splitContainer[0].addEditor( c )
-					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
-						editor.setNodeSet( Gaffer.StandardSet() )
-
-				if "currentTab" in children :
-					splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
-
-				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
 
 	@staticmethod
 	def __handlePosition( splitContainer ) :
@@ -372,6 +388,32 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 		container = ideal if ideal is not None else backup
 
 		container[0].addEditor( editor )
+
+	def addChildren( self, children ) :
+
+		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
+
+			self.split( children[0], 0 )
+			self[0].addChildren( children[2][0] )
+			self[1].addChildren( children[2][1] )
+			self.setSizes( [ children[1], 1.0 - children[1] ] )
+
+		else :
+			if isinstance( children, tuple ) :
+				# backwards compatibility - tabs provided as a tuple
+				for c in children :
+					self[0].addEditor( c )
+			else :
+				# new format - various fields provided by a dictionary
+				for i, c in enumerate( children["tabs"] ) :
+					editor = self[0].addEditor( c )
+					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
+						editor.setNodeSet( Gaffer.StandardSet() )
+
+				if "currentTab" in children :
+					self[0].setCurrent( self[0][children["currentTab"]] )
+
+				self[0].setTabsVisible( children.get( "tabsVisible", True ) )
 
 # The internal class used to keep a bunch of editors in tabs, updating the titles
 # when appropriate, and keeping a track of the pinning of nodes.
@@ -998,3 +1040,126 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 	# /nasty-fudge
 
+
+## Returns the preferred bound for a widget's window in NDC space
+# (relative to the available screen area). We use the relative area to
+# help with portability between platforms/window managers.
+# '-1' is used to indicate windows that are on the primary screen.
+# If a window is full screen, we still include the bound as otherwise
+# the resultant placement when the window is un-fullscreen'd can be a bit small.
+#
+# Note: We use bottom-left NDC coordinates to be consistent with Gaffer
+def _preferredBound( gafferWindow ) :
+
+	qWidget = gafferWindow._qtWidget()
+
+	window = qWidget.windowHandle()
+	if not window :
+		return {}
+
+	widgetScreen = window.screen()
+	widgetScreenNumber = QtWidgets.QApplication.desktop().screenNumber( qWidget )
+
+	if widgetScreen == QtWidgets.QApplication.primaryScreen():
+		widgetScreenNumber = -1
+
+	screenGeom = widgetScreen.availableGeometry()
+	screenW = float( screenGeom.width() )
+	screenH = float( screenGeom.height() )
+
+	# Ideally we'd use frameGeometry for portability, but have seen a variety
+	# of issues where the window has been made visible, but doesn't yet
+	# have a frame, as we rely on asking for the margins (as you can't
+	# setFrameGeometry) we end up with unreliable window placement. As such
+	# we compromise and store the widgets geometry instead.
+	windowGeom = qWidget.normalGeometry()
+
+	x = ( windowGeom.x() - screenGeom.x() ) / screenW
+	y = 1.0 - ( ( windowGeom.y() - screenGeom.y() ) / screenH )
+	w = windowGeom.width() / screenW
+	h = windowGeom.height() / screenH
+
+	return {
+		"screen" :  widgetScreenNumber,
+		"fullScreen" : gafferWindow.getFullScreen(),
+		"maximized" : bool(window.windowState() & QtCore.Qt.WindowMaximized),
+		# As we're bottom-left not top-left the y values are the other way around
+		"bound" : imath.Box2f( imath.V2f( x, y - h ), imath.V2f( x + w, y ) )
+	}
+
+def _imathRepr( data ) :
+
+	# Neither IECore.repr or repr include the module name
+	s = IECore.repr( data )
+	for ss in ( 'Box2f', 'V2f' ) :
+		s = s.replace( ss, "imath.%s" % ss )
+	return s
+
+def _restorePreferredBound( gafferWindow, boundData ) :
+
+	window = gafferWindow._qtWidget().windowHandle()
+	if not window :
+		return
+
+	# If we don't clear the full-screen flag then restoring geometry won't
+	# work, as its overridden by the full-screen state.  Doing it conditionally
+	# improves fullscreen - fullscreen layout transitions (avoids pointless
+	# re-scale animations), but does mean that we don't properly restore the
+	# non-fullscreen size of the window and it will keep that of the first
+	# fullscreen layout loaded. Seems a reasonable trade-off though.
+	if not ( boundData["fullScreen"] and window.windowState() == QtCore.Qt.WindowFullScreen ) :
+		window.setWindowState( QtCore.Qt.WindowNoState )
+
+	targetScreen = QtWidgets.QApplication.primaryScreen()
+
+	if boundData["screen"] > -1 :
+		screens = QtWidgets.QApplication.screens()
+		if boundData["screen"] < len(screens) :
+			targetScreen = screens[ boundData["screen"] ]
+			window.setScreen( targetScreen )
+
+	screenGeom = targetScreen.availableGeometry()
+	window.setGeometry(
+		( boundData["bound"].min()[0] * screenGeom.width() ) + screenGeom.x(),
+		( ( 1.0 - boundData["bound"].max()[1] ) * screenGeom.height() ) + screenGeom.y(),
+		( boundData["bound"].size()[0] * screenGeom.width() ),
+		( boundData["bound"].size()[1] * screenGeom.height() )
+	)
+
+	if boundData["fullScreen"] :
+		window.setWindowState( QtCore.Qt.WindowFullScreen )
+	elif boundData["maximized"] and sys.platform != "darwin" :
+		window.setWindowState( QtCore.Qt.WindowMaximized )
+	else :
+		window.setWindowState( QtCore.Qt.WindowNoState )
+
+def _serialiseSplits( splitContainer, scriptNode = None ) :
+
+	assert( isinstance( splitContainer, _SplitContainer ) )
+
+	if not scriptNode :
+		scriptNode = splitContainer.ancestor( GafferUI.CompoundEditor ).scriptNode()
+
+	if splitContainer.isSplit() :
+		sizes = splitContainer.getSizes()
+		splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
+		return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % (
+			str( splitContainer.getOrientation() ), splitPosition,
+			_serialiseSplits( splitContainer[0], scriptNode ), _serialiseSplits( splitContainer[1], scriptNode )
+		)
+	else :
+		# not split - a tabbed container full of editors
+		tabbedContainer = splitContainer[0]
+		tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
+		if tabbedContainer.getCurrent() is not None :
+			tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
+		tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
+
+		tabDict["pinned"] = []
+		for editor in tabbedContainer :
+			if isinstance( editor, GafferUI.NodeSetEditor ) :
+				tabDict["pinned"].append( not editor.getNodeSet().isSame( scriptNode.selection() ) )
+			else :
+				tabDict["pinned"].append( None )
+
+		return repr( tabDict )

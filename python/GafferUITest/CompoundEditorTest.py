@@ -37,6 +37,8 @@
 import unittest
 import weakref
 
+import imath
+
 import Gaffer
 import GafferTest
 import GafferUI
@@ -113,6 +115,24 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		del c
 
 		self.assertEqual( wc(), None )
+
+	def testBoundCompatability( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		sw = GafferUI.ScriptWindow.acquire( s )
+		sw.setLayout( c )
+		sw.setVisible( True )
+
+		c.updatePreferredBound()
+		d = c._preferredBound()
+
+		self.assertIsInstance( d, dict )
+		self.assertIsInstance( d["fullScreen"], bool )
+		self.assertIsInstance( d["maximized"], bool )
+		self.assertIsInstance( d["screen"], int )
+		self.assertIsInstance( d["bound"], imath.Box2f )
 
 if __name__ == "__main__":
 	unittest.main()

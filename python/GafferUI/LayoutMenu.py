@@ -55,6 +55,8 @@ def restore( menu, name ) :
 	layout = layouts.create( name, scriptWindow.scriptNode() )
 
 	scriptWindow.setLayout( layout )
+	# This only works after the layout is on-screen
+	layout.restorePreferredBound()
 
 ## A function suitable as the command for a 'Layout/Save...' menu item. It must be invoked from
 # a menu which has a ScriptWindow in its ancestry.
@@ -86,6 +88,10 @@ def saveAs( name, menu ) :
 	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
 
 	layout = scriptWindow.getLayout()
+
+	if hasattr( layout, 'updatePreferredBound' ) :
+		layout.updatePreferredBound()
+
 	layouts.add( name, layout, persistent = True )
 
 def fullScreen( menu, checkBox ) :
