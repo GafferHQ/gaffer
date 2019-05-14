@@ -418,6 +418,12 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		painter.endNativePainting()
 
+	## QGraphicsScene consumes all drag events by default, which is unhelpful
+	# for us as it breaks any Qt based drag-drop we may be attempting.
+	def dragEnterEvent( self, event ) :
+
+		event.ignore()
+
 	def __sceneRectChanged( self, sceneRect ) :
 
 		for proxy in self.__overlays.values() :
