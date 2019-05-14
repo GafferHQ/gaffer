@@ -838,11 +838,6 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 		return;
 	}
 
-	if( IECoreGL::Selector::currentSelector() )
-	{
-		return;
-	}
-
 	// Compute what we need, and abort rendering if
 	// there are any computation errors.
 
@@ -890,6 +885,13 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	}
 
 	// Draw the image tiles over the top.
+
+	if( IECoreGL::Selector::currentSelector() )
+	{
+		// The rectangle we drew above is sufficient for
+		// selection rendering.
+		return;
+	}
 
 	renderTiles();
 
