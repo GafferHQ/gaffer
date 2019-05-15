@@ -1601,6 +1601,9 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 
 void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform, IECoreGL::Selector::Mode mode )
 {
+	glPushAttrib( GL_ALL_ATTRIB_BITS );
+	glPushClientAttrib( GL_CLIENT_ALL_ATTRIB_BITS );
+
 	V2f viewport = viewportGadget->getViewport();
 	Box2f ndcRegion( rasterRegion.min / viewport, rasterRegion.max / viewport );
 
@@ -1629,6 +1632,9 @@ void ViewportGadget::SelectionScope::end()
 	glPopMatrix();
 	m_selector = SelectorPtr();
 
+	glPopClientAttrib();
+	glPopAttrib();
+
 	if( m_depthSort )
 	{
 		std::sort( m_selection.begin(), m_selection.end() );
@@ -1637,7 +1643,6 @@ void ViewportGadget::SelectionScope::end()
 	{
 		std::reverse( m_selection.begin(), m_selection.end() );
 	}
-
 }
 
 ViewportGadget::RasterScope::RasterScope( const ViewportGadget *viewportGadget )
