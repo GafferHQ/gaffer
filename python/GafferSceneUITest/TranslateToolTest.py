@@ -430,8 +430,8 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 	def testContext( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["variables"].addMember( "enabled", True )
-		script["variables"].addMember( "x", 1.0 )
+		script["variables"].addChild( Gaffer.NameValuePlug( "enabled", True ) )
+		script["variables"].addChild( Gaffer.NameValuePlug( "x", 1.0 ) )
 
 		script["plane"] = GafferScene.Plane()
 
@@ -471,7 +471,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		script["variables"] = Gaffer.ContextVariables()
 		script["variables"].setup( GafferScene.ScenePlug() )
 		script["variables"]["in"].setInput( script["plane"]["out"] )
-		script["variables"]["variables"].addMember( "x", 1.0 )
+		script["variables"]["variables"].addChild( Gaffer.NameValuePlug( "x", 1.0 ) )
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["variables"]["out"] )

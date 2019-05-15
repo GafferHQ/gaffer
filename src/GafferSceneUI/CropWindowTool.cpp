@@ -630,9 +630,9 @@ bool CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, 
 		return false;
 	}
 
-	for( CompoundDataPlug::MemberPlugIterator it( options->optionsPlug() ); !it.done(); ++it )
+	for( NameValuePlugIterator it( options->optionsPlug() ); !it.done(); ++it )
 	{
-		CompoundDataPlug::MemberPlug *memberPlug = it->get();
+		NameValuePlug *memberPlug = it->get();
 		if( memberPlug->namePlug()->getValue() != "render:cropWindow" )
 		{
 			continue;

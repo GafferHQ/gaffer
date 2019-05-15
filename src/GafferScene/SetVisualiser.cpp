@@ -71,7 +71,7 @@ std::vector<Override> unpackOverrides( const CompoundDataPlug *plug )
 	std::vector<Override> overrides;
 
 	std::string name;
-	for( CompoundDataPlug::MemberPlugIterator it( plug ); !it.done(); ++it )
+	for( NameValuePlugIterator it( plug ); !it.done(); ++it )
 	{
 		// This will fail if the member has been disabled, or has no name
 		if( ConstDataPtr plugData =  plug->memberDataAndName( it->get(), name ) )

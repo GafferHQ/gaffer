@@ -86,7 +86,7 @@ bool ContextVariables::affectsContext( const Plug *input ) const
 void ContextVariables::processContext( Context::EditableScope &context ) const
 {
 	std::string name;
-	for( CompoundDataPlug::MemberPlugIterator it( variablesPlug() ); !it.done(); ++it )
+	for( NameValuePlugIterator it( variablesPlug() ); !it.done(); ++it )
 	{
 		IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
 		if( data )

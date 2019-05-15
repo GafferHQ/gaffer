@@ -75,6 +75,7 @@
 #include "TypedPlugBinding.h"
 #include "UndoScopeBinding.h"
 #include "ValuePlugBinding.h"
+#include "NameValuePlugBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -214,6 +215,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindParallelAlgo();
 	bindContextProcessor();
 	bindProcessMessageHandler();
+	bindNameValuePlug();
 
 	NodeClass<Backdrop>();
 

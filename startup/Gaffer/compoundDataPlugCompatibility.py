@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,36 +34,23 @@
 #
 ##########################################################################
 
-import unittest
-import imath
-
-import IECore
-import IECoreScene
-
 import Gaffer
-import GafferScene
-import GafferSceneTest
 
-class ExternalProceduralTest( GafferSceneTest.SceneTestCase ) :
+def addMember( self, name, defaultValueOrValuePlug, plugName = "member1", plugFlags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ):
+	n = Gaffer.NameValuePlug( name, defaultValueOrValuePlug, plugName,
+		**( { "flags" : plugFlags } if not isinstance( defaultValueOrValuePlug, Gaffer.Plug ) else {} )
+	)
+	self.addChild( n )
+	return n
+	
+def addOptionalMember( self, name, defaultValueOrValuePlug, plugName = "member1", plugFlags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, enabled = False ):
+	n = Gaffer.NameValuePlug( name, defaultValueOrValuePlug, enabled, plugName,
+		**( { "flags" : plugFlags } if not isinstance( defaultValueOrValuePlug, Gaffer.Plug ) else {} )
+	)
+	self.addChild( n )
+	return n
 
-	def test( self ) :
-
-		n = GafferScene.ExternalProcedural()
-		self.assertTrue( n["name"].getValue(), "procedural" )
-
-		self.assertSceneValid( n["out"] )
-
-		n["bound"].setValue( imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ) )
-		n["fileName"].setValue( "test.so" )
-		n["parameters"].addChild( Gaffer.NameValuePlug( "testFloat", 1.0 ) )
-
-		p = n["out"].object( "/procedural" )
-
-		self.assertTrue( isinstance( p, IECoreScene.ExternalProcedural ) )
-		self.assertEqual( p.getFileName(), "test.so" )
-		self.assertEqual( p.getBound(), imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ) )
-		self.assertEqual( p.parameters().keys(), [ "testFloat" ] )
-		self.assertEqual( p.parameters()["testFloat"], IECore.FloatData( 1.0 ) )
-
-if __name__ == "__main__":
-	unittest.main()
+# CompoundDataPlug.MemberPlug has been pulled out into a generally useful NameValuePlug
+Gaffer.CompoundDataPlug.MemberPlug = Gaffer.NameValuePlug
+Gaffer.CompoundDataPlug.addMember = addMember
+Gaffer.CompoundDataPlug.addOptionalMember = addOptionalMember

@@ -49,7 +49,7 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 
 		script["frameRange"]["start"].setValue( 10 )
 		script["frameRange"]["end"].setValue( 50 )
-		script["variables"].addMember( "test", 20.5 )
+		script["variables"].addChild( Gaffer.NameValuePlug( "test", 20.5, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		script["n"] = GafferTest.AddNode()
 		script["b"] = Gaffer.Box()

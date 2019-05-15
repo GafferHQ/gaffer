@@ -47,60 +47,60 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 
 	// main
-	options->addOptionalMember( "as:cfg:generic_frame_renderer:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "qmc" ), "sampler", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), "aaSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), "lightingEngine", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:mesh_file_format", new IECore::StringData( "binarymesh" ), "meshFileFormat", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:shading_engine:override_shading:mode", new IECore::StringData( "no_override" ), "shadingOverride", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:generic_frame_renderer:passes", new IECore::IntData( 1 ), false, "renderPasses" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sampling_mode", new IECore::StringData( "qmc" ), false, "sampler" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), false, "aaSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), false, "lightingEngine" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:mesh_file_format", new IECore::StringData( "binarymesh" ), false, "meshFileFormat" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:shading_engine:override_shading:mode", new IECore::StringData( "no_override" ), false, "shadingOverride" ) );
 
 	// environment
-	options->addOptionalMember( "as:environment_edf", new IECore::StringData(), "environmentEDF", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:environment_edf_background", new IECore::BoolData( false ), "environmentEDFBackground", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:environment_edf", new IECore::StringData(), false, "environmentEDF" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:environment_edf_background", new IECore::BoolData( false ), false, "environmentEDFBackground" ) );
 
 	// path tracing
-	options->addOptionalMember( "as:cfg:pt:enable_dl", new IECore::BoolData( true ), "ptDirectLighting", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:enable_ibl", new IECore::BoolData( true ), "ptIBL", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:enable_caustics", new IECore::BoolData( false ), "ptCaustics", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:max_bounces", new IECore::IntData( -1 ), "ptMaxBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:max_diffuse_bounces", new IECore::IntData( -1 ), "ptMaxDiffuseBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:max_glossy_bounces", new IECore::IntData( -1 ), "ptMaxGlossyBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:max_specular_bounces", new IECore::IntData( -1 ), "ptMaxSpecularBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:dl_light_samples", new IECore::FloatData( 1.0f ), "ptLightingSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:ibl_env_samples", new IECore::FloatData( 1.0f ), "ptIBLSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:max_ray_intensity", new IECore::FloatData( 0.0f ), "ptMaxRayIntensity", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:enable_dl", new IECore::BoolData( true ), false, "ptDirectLighting" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:enable_ibl", new IECore::BoolData( true ), false, "ptIBL" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:enable_caustics", new IECore::BoolData( false ), false, "ptCaustics" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:max_bounces", new IECore::IntData( -1 ), false, "ptMaxBounces" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:max_diffuse_bounces", new IECore::IntData( -1 ), false, "ptMaxDiffuseBounces" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:max_glossy_bounces", new IECore::IntData( -1 ), false, "ptMaxGlossyBounces" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:max_specular_bounces", new IECore::IntData( -1 ), false, "ptMaxSpecularBounces" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:dl_light_samples", new IECore::FloatData( 1.0f ), false, "ptLightingSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:ibl_env_samples", new IECore::FloatData( 1.0f ), false, "ptIBLSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:pt:max_ray_intensity", new IECore::FloatData( 0.0f ), false, "ptMaxRayIntensity" ) );
 
 	// sppm
-	options->addOptionalMember( "as:cfg:sppm:photon_type", new IECore::StringData( "mono" ), "photonType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:dl_type", new IECore::StringData( "rt" ), "sppmDirectLighting", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:enable_ibl", new IECore::BoolData( true ), "sppmIBL", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:enable_caustics", new IECore::BoolData( true ), "sppmCaustics", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:photon_tracing_max_bounces", new IECore::IntData( -1 ), "sppmPhotonMaxBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:path_tracing_max_bounces", new IECore::IntData( -1 ), "sppmPathMaxBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:light_photons_per_pass", new IECore::IntData( 1000000 ), "sppmLightPhotons", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:env_photons_per_pass", new IECore::IntData( 1000000 ), "sppmEnvPhotons", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:initial_radius", new IECore::FloatData( 1.0f ), "sppmInitialRadius", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:max_photons_per_estimate", new IECore::IntData( 100 ), "sppmMaxPhotons", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:alpha", new IECore::FloatData( 0.7f ), "sppmAlpha", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:photon_type", new IECore::StringData( "mono" ), false, "photonType" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:dl_type", new IECore::StringData( "rt" ), false, "sppmDirectLighting" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:enable_ibl", new IECore::BoolData( true ), false, "sppmIBL" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:enable_caustics", new IECore::BoolData( true ), false, "sppmCaustics" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:photon_tracing_max_bounces", new IECore::IntData( -1 ), false, "sppmPhotonMaxBounces" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:path_tracing_max_bounces", new IECore::IntData( -1 ), false, "sppmPathMaxBounces" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:light_photons_per_pass", new IECore::IntData( 1000000 ), false, "sppmLightPhotons" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:env_photons_per_pass", new IECore::IntData( 1000000 ), false, "sppmEnvPhotons" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:initial_radius", new IECore::FloatData( 1.0f ), false, "sppmInitialRadius" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:max_photons_per_estimate", new IECore::IntData( 100 ), false, "sppmMaxPhotons" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:sppm:alpha", new IECore::FloatData( 0.7f ), false, "sppmAlpha" ) );
 
 	// denoiser
-	options->addOptionalMember( "as:frame:denoiser", new IECore::StringData( "off" ), "denoiserMode", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:frame:skip_denoised", new IECore::BoolData( true ), "denoiserSkipPixels", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:frame:random_pixel_order", new IECore::BoolData( true ), "denoiserRandomPixelOrder", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:frame:denoise_scales", new IECore::IntData( 3 ), "denoiserScales", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:frame:denoiser", new IECore::StringData( "off" ), false, "denoiserMode" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:frame:skip_denoised", new IECore::BoolData( true ), false, "denoiserSkipPixels" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:frame:random_pixel_order", new IECore::BoolData( true ), false, "denoiserRandomPixelOrder" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:frame:denoise_scales", new IECore::IntData( 3 ), false, "denoiserScales" ) );
 
 	// system parameters
-	options->addOptionalMember( "as:searchpath", new IECore::StringData( "" ), "searchPath", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:rendering_threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:progressive_frame_renderer:max_fps", new IECore::FloatData( 5.0f ), "interactiveRenderFps", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:texture_store:max_size", new IECore::IntData( 1024 * 1024 * 1024 ), "textureMem", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "spiral" ), "tileOrdering", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:searchpath", new IECore::StringData( "" ), false, "searchPath" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:rendering_threads", new IECore::IntData( 0 ), false, "numThreads" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:progressive_frame_renderer:max_fps", new IECore::FloatData( 5.0f ), false, "interactiveRenderFps" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:texture_store:max_size", new IECore::IntData( 1024 * 1024 * 1024 ), false, "textureMem" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "spiral" ), false, "tileOrdering" ) );
 
 	// logging
-	options->addOptionalMember( "as:log:level", new IECore::StringData( "info" ), "logLevel", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:log:filename", new IECore::StringData( "" ), "logFileName", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:log:level", new IECore::StringData( "info" ), false, "logLevel" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:log:filename", new IECore::StringData( "" ), false, "logFileName" ) );
 
 	// currently being used by the ShaderBall preview,
 	// not exposed in the options node UI,
-	options->addOptionalMember( "as:cfg:progressive_frame_renderer:max_samples", new IECore::IntData( 0 ), "interactiveRenderMaxSamples", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "as:cfg:progressive_frame_renderer:max_samples", new IECore::IntData( 0 ), false, "interactiveRenderMaxSamples" ) );
 }

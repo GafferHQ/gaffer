@@ -52,12 +52,12 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.Attributes()
 		a["in"].setInput( p["out"] )
-		a["attributes"].addMember( "user:something", IECore.StringData( "$a" ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "user:something", IECore.StringData( "$a" ) ) )
 
 		c = Gaffer.ContextVariables()
 		c.setup( GafferScene.ScenePlug() )
 		c["in"].setInput( a["out"] )
-		c["variables"].addMember( "a", IECore.StringData( "aardvark" ) )
+		c["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "aardvark" ) ) )
 
 		self.assertEqual( a["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
 		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "aardvark" ) )
@@ -69,7 +69,7 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 		c = Gaffer.ContextVariables()
 		c.setup( GafferScene.ScenePlug() )
 		c["in"].setInput( p["out"] )
-		c["variables"].addMember( "", IECore.StringData( "aardvark" ) )
+		c["variables"].addChild( Gaffer.NameValuePlug( "", IECore.StringData( "aardvark" ) ) )
 
 		self.assertSceneValid( c["out"] )
 
@@ -83,7 +83,7 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 		script["contextVariables"] = Gaffer.ContextVariables()
 		script["contextVariables"].setup( GafferScene.ScenePlug() )
 		script["contextVariables"]["in"].setInput( script["plane"]["out"] )
-		script["contextVariables"]["variables"].addOptionalMember( "a", IECore.StringData( "aardvark" ), plugName = "a" )
+		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "aardvark" ), True, "a" ) )
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( inspect.cleandoc(

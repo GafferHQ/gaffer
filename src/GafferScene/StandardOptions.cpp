@@ -51,31 +51,31 @@ StandardOptions::StandardOptions( const std::string &name )
 
 	// Camera
 
-	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, false );
-	options->addOptionalMember( "render:filmFit", new IECore::IntData( IECoreScene::Camera::Horizontal ), "filmFit", Plug::Default, false );
-	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, false );
-	options->addOptionalMember( "render:pixelAspectRatio", new IECore::FloatData( 1.0f ), "pixelAspectRatio", Plug::Default, false );
-	options->addOptionalMember( "render:resolutionMultiplier", new IECore::FloatData( 1.0f ), "resolutionMultiplier", Plug::Default, false );
-	options->addOptionalMember( "render:cropWindow", new Box2fPlug( "value", Plug::In, Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ), Imath::V2f( 0 ), Imath::V2f( 1 ) ), "renderCropWindow", false );
+	options->addChild( new Gaffer::NameValuePlug( "render:camera", new IECore::StringData(), false, "renderCamera" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:filmFit", new IECore::IntData( IECoreScene::Camera::Horizontal ), false, "filmFit" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), false, "renderResolution" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:pixelAspectRatio", new IECore::FloatData( 1.0f ), false, "pixelAspectRatio" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:resolutionMultiplier", new IECore::FloatData( 1.0f ), false, "resolutionMultiplier" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:cropWindow", new Box2fPlug( "value", Plug::In, Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ), Imath::V2f( 0 ), Imath::V2f( 1 ) ), false, "renderCropWindow" ) );
 
-	options->addOptionalMember( "render:overscan", new IECore::BoolData( false ), "overscan", Plug::Default, false );
-	options->addOptionalMember( "render:overscanTop", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanTop", false );
-	options->addOptionalMember( "render:overscanBottom", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanBottom", false );
-	options->addOptionalMember( "render:overscanLeft", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanLeft", false );
-	options->addOptionalMember( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanRight", false );
-	options->addOptionalMember( "render:depthOfField", new IECore::BoolData( false ), "depthOfField", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "render:overscan", new IECore::BoolData( false ), false, "overscan" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:overscanTop", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanTop" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:overscanBottom", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanBottom" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:overscanLeft", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanLeft" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanRight" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:depthOfField", new IECore::BoolData( false ), false, "depthOfField" ) );
 
 	// Motion blur
 
-	options->addOptionalMember( "render:cameraBlur", new IECore::BoolData( false ), "cameraBlur", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "render:transformBlur", new IECore::BoolData( false ), "transformBlur", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "render:deformationBlur", new IECore::BoolData( false ), "deformationBlur", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), "shutter", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "sampleMotion", new IECore::BoolData( true ), "sampleMotion", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "render:cameraBlur", new IECore::BoolData( false ), false, "cameraBlur" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:transformBlur", new IECore::BoolData( false ), false, "transformBlur" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:deformationBlur", new IECore::BoolData( false ), false, "deformationBlur" ) );
+	options->addChild( new Gaffer::NameValuePlug( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), false, "shutter" ) );
+	options->addChild( new Gaffer::NameValuePlug( "sampleMotion", new IECore::BoolData( true ), false, "sampleMotion" ) );
 
 	// Statistics
 
-	options->addOptionalMember( "render:performanceMonitor", new IECore::BoolData( false ), "performanceMonitor", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "render:performanceMonitor", new IECore::BoolData( false ), false, "performanceMonitor" ) );
 
 }
 

@@ -616,7 +616,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertFalse( os.path.isfile( self.temporaryDirectory() + "/out.txt" ) )
 
-		foo = s["variables"].addMember( "foo", IECore.StringData( "foo" ) )
+		foo = s["variables"].addChild( Gaffer.NameValuePlug( "foo", IECore.StringData( "foo" ) ) )
 
 		dispatcher.jobPool().waitForAll()
 
@@ -805,7 +805,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		) )
 
 		s["v"] = GafferDispatch.TaskContextVariables()
-		s["v"]["variables"].addMember( "c", imath.Color3f( 0, 1, 2 ) )
+		s["v"]["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 0, 1, 2 ) ) )
 		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
 
 		d = self.__createLocalDispatcher()

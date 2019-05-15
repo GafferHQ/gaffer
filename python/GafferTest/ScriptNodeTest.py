@@ -939,7 +939,8 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		p = s["variables"].addMember( "test", IECore.IntData( 10 ) )
+		p = Gaffer.NameValuePlug( "test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
 		self.assertEqual( s.context().get( "test" ), 10 )
 		p["value"].setValue( 20 )
 		self.assertEqual( s.context().get( "test" ), 20 )
@@ -965,7 +966,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testReloadWithCustomVariables( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addMember( "test", IECore.IntData( 10 ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
@@ -980,7 +981,8 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		p = s["variables"].addMember( "test", IECore.IntData( 10 ) )
+		p = Gaffer.NameValuePlug( "test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
 		self.assertEqual( s.context().get( "test" ), 10 )
 
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
@@ -1420,7 +1422,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s1["p"] = Gaffer.Plug()
 		s1["frameRange"]["start"].setValue( -10 )
 		s1["frameRange"]["end"].setValue( 101 )
-		s1["variables"].addMember( "test", "test" )
+		s1["variables"].addChild( Gaffer.NameValuePlug( "test", "test" ) )
 
 		fileName = self.temporaryDirectory() + "/toImport.gfr"
 		s1.serialiseToFile( fileName )

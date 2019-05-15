@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,36 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/DelightAttributes.h"
+#ifndef GAFFERMODULE_NAMEVALUEPLUGBINDING_H
+#define GAFFERMODULE_NAMEVALUEPLUGBINDING_H
 
-#include "Gaffer/StringPlug.h"
-
-using namespace Gaffer;
-using namespace GafferDelight;
-
-IE_CORE_DEFINERUNTIMETYPED( DelightAttributes );
-
-DelightAttributes::DelightAttributes( const std::string &name )
-	:	GafferScene::Attributes( name )
+namespace GafferModule
 {
-	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
-	// Visibility parameters
+void bindNameValuePlug();
 
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.hair", new IECore::BoolData( true ), false, "hairVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.reflection", new IECore::BoolData( true ), false, "reflectionVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.refraction", new IECore::BoolData( true ), false, "refractionVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.shadow", new IECore::BoolData( true ), false, "shadowVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.specular", new IECore::BoolData( true ), false, "specularVisibility" ) );
+} // namespace GafferModule
 
-	// Shading parameters
-
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:matte", new IECore::BoolData( false ), false, "matte" ) );
-
-}
-
-DelightAttributes::~DelightAttributes()
-{
-}
+#endif // GAFFERMODULE_NAMEVALUEPLUGBINDING_H

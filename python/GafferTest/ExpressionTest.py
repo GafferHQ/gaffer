@@ -1273,7 +1273,8 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["user"]["p"] = Gaffer.CompoundDataPlug()
-		m = s["n"]["user"]["p"].addMember( "test", 10, plugName = "m" )
+		m = Gaffer.NameValuePlug( "test", 10, "m" )
+		s["n"]["user"]["p"].addChild( m )
 
 		e = """parent["n"]["user"]["p"]["m"]["value"] = 10"""
 		s["e"] = Gaffer.Expression()
@@ -1366,12 +1367,14 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["s"].getValue(), "" )
 
 		cs = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
-		m1 = s["n"]["c"].addOptionalMember( "a", 1, enabled = True )
+		m1 = Gaffer.NameValuePlug( "a", 1, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["c"].addChild( m1 )
 		self.assertTrue( s["n"]["s"] in { x[0] for x in cs } )
 		self.assertEqual( s["n"]["s"].getValue(), "a:1" )
 
 		del cs[:]
-		m2 = s["n"]["c"].addOptionalMember( "b", 2, enabled = True )
+		m2 = Gaffer.NameValuePlug( "b", 2, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["c"].addChild( m2 )
 		self.assertTrue( s["n"]["s"] in { x[0] for x in cs } )
 		self.assertEqual( s["n"]["s"].getValue(), "a:1,b:2" )
 

@@ -271,7 +271,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		) )
 
 		s["v"] = GafferDispatch.TaskContextVariables()
-		s["v"]["variables"].addMember( "c", imath.Color3f( 0, 1, 2 ) )
+		s["v"]["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 0, 1, 2 ) ) )
 		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
 
 		job = self.__job( [ s["v" ] ] )

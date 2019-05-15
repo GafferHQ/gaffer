@@ -137,6 +137,7 @@ from ParallelAlgoTest import ParallelAlgoTest
 from BackgroundTaskTest import BackgroundTaskTest
 from ProcessMessageHandlerTest import ProcessMessageHandlerTest
 from MonitorAlgoTest import MonitorAlgoTest
+from NameValuePlugTest import NameValuePlugTest
 
 from IECorePreviewTest import *
 

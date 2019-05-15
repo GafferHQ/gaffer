@@ -113,7 +113,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		# create node inheriting from SceneNode:
 		node = GafferScene.CustomAttributes()
-		node["attributes"].addOptionalMember( "user:foobar", True, enabled = True )
+		node["attributes"].addChild( Gaffer.NameValuePlug( "user:foobar", True, True ) )
 
 		# scene nodes always have passthrough behaviour for attributes at the root, so this particular one should return an empty compound object:
 		context = Gaffer.Context()

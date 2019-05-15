@@ -48,24 +48,24 @@ AppleseedAttributes::AppleseedAttributes( const std::string &name )
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
 	// visibility parameters
-	attributes->addOptionalMember( "as:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:visibility:light", new IECore::BoolData( true ), "lightVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:visibility:specular", new IECore::BoolData( true ), "specularVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:visibility:camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:visibility:light", new IECore::BoolData( true ), false, "lightVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:visibility:shadow", new IECore::BoolData( true ), false, "shadowVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:visibility:diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:visibility:specular", new IECore::BoolData( true ), false, "specularVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:visibility:glossy", new IECore::BoolData( true ), false, "glossyVisibility" ) );
 
 	// shading parameters
-	attributes->addOptionalMember( "as:shading_samples", new IECore::IntData( 1 ), "shadingSamples", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:double_sided", new IECore::BoolData( true ), "doubleSided", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:medium_priority", new IECore::IntData( 0 ), "mediumPriority", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:shading_samples", new IECore::IntData( 1 ), false, "shadingSamples" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:double_sided", new IECore::BoolData( true ), false, "doubleSided" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:medium_priority", new IECore::IntData( 0 ), false, "mediumPriority" ) );
 
 	// alpha map parameters
-	attributes->addOptionalMember( "as:alpha_map", new IECore::StringData(), "alphaMap", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:alpha_map", new IECore::StringData(), false, "alphaMap" ) );
 
 	// mesh parameters
-	attributes->addOptionalMember( "as:smooth_normals", new IECore::BoolData(), "smoothNormals", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:smooth_tangents", new IECore::BoolData(), "smoothTangents", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:smooth_normals", new IECore::BoolData(), false, "smoothNormals" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:smooth_tangents", new IECore::BoolData(), false, "smoothTangents" ) );
 }
 
 AppleseedAttributes::~AppleseedAttributes()

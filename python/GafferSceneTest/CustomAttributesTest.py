@@ -78,7 +78,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# when we specify some, they should be applied to everything because
 		# we haven't specified a filter yet. but not to the root because it
 		# isn't allowed attributes.
-		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( 0.25 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
 		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
@@ -111,8 +111,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.CustomAttributes()
 		a["in"].setInput( input["out"] )
 
-		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
-		a["attributes"].addMember( "user:something", IECore.IntData( 1 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( 0.25 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "user:something", IECore.IntData( 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual(
 			a["out"].attributes( "/ball1" ),
 			IECore.CompoundObject( {
@@ -132,8 +132,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		a2["attributes"].addMember( "ri:shadingRate", IECore.FloatData( .5 ) )
-		a2["attributes"].addMember( "user:somethingElse", IECore.IntData( 10 ) )
+		a2["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( .5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		a2["attributes"].addChild( Gaffer.NameValuePlug( "user:somethingElse", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		self.assertEqual(
 			a2["out"].attributes( "/ball1" ),
@@ -172,7 +172,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		# when we have some attributes, everything except the attributes plug should
 		# be a pass-through.
-		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 2.0 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( 2.0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertSceneHashesEqual( input["out"], a["out"], checks = self.allSceneChecks - { "attributes" } )
 		self.assertSceneHashesNotEqual( input["out"], a["out"], checks = { "attributes" } )
 
@@ -195,7 +195,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["a"] = GafferScene.CustomAttributes()
-		s["a"]["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 1.0 ) )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( 1.0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -234,7 +234,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s["p"] = GafferScene.Plane()
 		s["f"] = GafferScene.PathFilter()
 		s["a"] = GafferScene.CustomAttributes()
-		s["a"]["attributes"].addMember( "user:test", IECore.IntData( 10 ) )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "user:test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 
@@ -251,7 +251,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s["p"] = GafferScene.Plane()
 		s["f"] = GafferScene.PathFilter()
 		s["a"] = GafferScene.CustomAttributes()
-		s["a"]["attributes"].addMember( "user:test", IECore.IntData( 10 ) )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "user:test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 
@@ -280,7 +280,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["a"] = GafferScene.CustomAttributes()
-		p = s["a"]["attributes"].addMember( "user:test", 10 )
+		p = Gaffer.NameValuePlug( "user:test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["a"]["attributes"].addChild( p )
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
 
 		s["a"]["global"].setValue( True )

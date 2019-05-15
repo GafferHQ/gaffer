@@ -79,7 +79,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		# Add an attribute
 		udimQuery["attributes"].setValue( 'attributeA attributeB attributeC' )
 		customAttributes0 = GafferScene.CustomAttributes()
-		customAttributes0["attributes"].addMember( "attributeA", "test" )
+		customAttributes0["attributes"].addChild( Gaffer.NameValuePlug( "attributeA", "test" ) )
 		customAttributes0["in"].setInput( plane0["out"] )
 		group["in"][0].setInput( customAttributes0["out"] )
 
@@ -116,8 +116,8 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		customAttributes1 = GafferScene.CustomAttributes( "CustomAttributes1" )
 		customAttributes1["in"].setInput( plane1["out"] )
 		customAttributes1["filter"].setInput( allFilter["out"] )
-		customAttributes1["attributes"].addMember( "attributeA", "baz" )
-		customAttributes1["attributes"].addMember( "attributeB", 12 )
+		customAttributes1["attributes"].addChild( Gaffer.NameValuePlug( "attributeA", "baz" ) )
+		customAttributes1["attributes"].addChild( Gaffer.NameValuePlug( "attributeB", 12 ) )
 
 		plane2 = GafferScene.Plane()
 		plane2["transform"]["translate"].setValue( imath.V3f( 8, 4, 0 ) )
@@ -130,7 +130,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		customAttributes2 = GafferScene.CustomAttributes( "CustomAttributes2" )
 		customAttributes2["in"].setInput( group["out"] )
 		customAttributes2["filter"].setInput( rootFilter["out"] )
-		customAttributes2["attributes"].addMember( "attributeC", "inherited" )
+		customAttributes2["attributes"].addChild( Gaffer.NameValuePlug( "attributeC", "inherited" ) )
 		
 		mapProjection["in"].setInput( customAttributes2["out"] )
 

@@ -45,82 +45,6 @@ using namespace IECore;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
-// CompoundData::MemberPlug implementation.
-//////////////////////////////////////////////////////////////////////////
-
-IE_CORE_DEFINERUNTIMETYPED( CompoundDataPlug::MemberPlug );
-
-CompoundDataPlug::MemberPlug::MemberPlug( const std::string &name, Direction direction, unsigned flags )
-	:	ValuePlug( name, direction, flags )
-{
-}
-
-StringPlug *CompoundDataPlug::MemberPlug::namePlug()
-{
-	return getChild<StringPlug>( 0 );
-}
-
-const StringPlug *CompoundDataPlug::MemberPlug::namePlug() const
-{
-	return getChild<StringPlug>( 0 );
-}
-
-BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug()
-{
-	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : nullptr;
-}
-
-const BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug() const
-{
-	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : nullptr;
-}
-
-bool CompoundDataPlug::MemberPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
-{
-	if( !ValuePlug::acceptsChild( potentialChild ) )
-	{
-		return false;
-	}
-
-	if(
-		potentialChild->isInstanceOf( StringPlug::staticTypeId() ) &&
-		potentialChild->getName() == "name" &&
-		!getChild<Plug>( "name" )
-	)
-	{
-		return true;
-	}
-	else if(
-		potentialChild->isInstanceOf( ValuePlug::staticTypeId() ) &&
-		potentialChild->getName() == "value" &&
-		!getChild<Plug>( "value" )
-	)
-	{
-		return true;
-	}
-	else if(
-		potentialChild->isInstanceOf( BoolPlug::staticTypeId() ) &&
-		potentialChild->getName() == "enabled" &&
-		!getChild<Plug>( "enabled" )
-	)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-PlugPtr CompoundDataPlug::MemberPlug::createCounterpart( const std::string &name, Direction direction ) const
-{
-	PlugPtr result = new MemberPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); !it.done(); ++it )
-	{
-		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
-	}
-	return result;
-}
-
-//////////////////////////////////////////////////////////////////////////
 // CompoundDataPlug implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -142,7 +66,7 @@ bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) cons
 		return false;
 	}
 
-	return potentialChild->isInstanceOf( MemberPlug::staticTypeId() );
+	return potentialChild->isInstanceOf( NameValuePlug::staticTypeId() );
 }
 
 PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction direction ) const
@@ -155,41 +79,6 @@ PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction 
 	return result;
 }
 
-CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName, unsigned plugFlags )
-{
-	return addMember( name, PlugAlgo::createPlugFromData( "value", direction(), plugFlags, defaultValue ).get(), plugName );
-}
-
-CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
-{
-	MemberPlugPtr plug = new MemberPlug( plugName, direction(), valuePlug->getFlags() );
-
-	StringPlugPtr namePlug = new StringPlug( "name", direction(), name, valuePlug->getFlags() );
-	plug->addChild( namePlug );
-
-	valuePlug->setName( "value" );
-	plug->addChild( valuePlug );
-
-	addChild( plug );
-	return plug.get();
-}
-
-CompoundDataPlug::MemberPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName, unsigned plugFlags, bool enabled )
-{
-	MemberPlug *plug = addMember( name, defaultValue, plugName, plugFlags );
-	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, plugFlags );
-	plug->addChild( e );
-	return plug;
-}
-
-CompoundDataPlug::MemberPlug *CompoundDataPlug::addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
-{
-	MemberPlug *plug = addMember( name, valuePlug, plugName );
-	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, valuePlug->getFlags() );
-	plug->addChild( e );
-	return plug;
-}
-
 void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool useNameAsPlugName )
 {
 	std::string plugName = "member1";
@@ -200,14 +89,14 @@ void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool 
 			plugName = it->first;
 			std::replace_if( plugName.begin(), plugName.end(), []( char c ) { return !::isalnum( c ); }, '_' );
 		}
-		addMember( it->first, it->second.get(), plugName );
+		addChild( new NameValuePlug( it->first.string(), it->second.get(), plugName ) );
 	}
 }
 
 void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const
 {
 	std::string name;
-	for( MemberPlugIterator it( this ); !it.done(); ++it )
+	for( NameValuePlugIterator it( this ); !it.done(); ++it )
 	{
 		IECore::DataPtr data = memberDataAndName( it->get(), name );
 		if( data )
@@ -220,9 +109,9 @@ void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMa
 IECore::MurmurHash CompoundDataPlug::hash() const
 {
 	IECore::MurmurHash h;
-	for( MemberPlugIterator it( this ); !it.done(); ++it )
+	for( NameValuePlugIterator it( this ); !it.done(); ++it )
 	{
-		const MemberPlug *plug = it->get();
+		const NameValuePlug *plug = it->get();
 		bool active = true;
 		if( plug->children().size() == 3 )
 		{
@@ -245,7 +134,7 @@ void CompoundDataPlug::hash( IECore::MurmurHash &h ) const
 void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const
 {
 	std::string name;
-	for( MemberPlugIterator it( this ); !it.done(); ++it )
+	for( NameValuePlugIterator it( this ); !it.done(); ++it )
 	{
 		IECore::DataPtr data = memberDataAndName( it->get(), name );
 		if( data )
@@ -255,7 +144,7 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 	}
 }
 
-IECore::DataPtr CompoundDataPlug::memberDataAndName( const MemberPlug *parameterPlug, std::string &name ) const
+IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parameterPlug, std::string &name ) const
 {
 	if( parameterPlug->children().size() == 3 )
 	{

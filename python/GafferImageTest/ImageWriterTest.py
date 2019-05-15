@@ -652,11 +652,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# have any effect on the content of images themselves.
 		misleadingMetadata = GafferImage.ImageMetadata()
 		misleadingMetadata["in"].setInput( regularMetadata["out"] )
-		misleadingMetadata["metadata"].addMember( "PixelAspectRatio", IECore.FloatData( 2 ) )
-		misleadingMetadata["metadata"].addMember( "oiio:ColorSpace", IECore.StringData( "Rec709" ) )
-		misleadingMetadata["metadata"].addMember( "oiio:BitsPerSample", IECore.IntData( 8 ) )
-		misleadingMetadata["metadata"].addMember( "oiio:UnassociatedAlpha", IECore.IntData( 1 ) )
-		misleadingMetadata["metadata"].addMember( "oiio:Gamma", IECore.FloatData( 0.25 ) )
+		misleadingMetadata["metadata"].addChild( Gaffer.NameValuePlug( "PixelAspectRatio", IECore.FloatData( 2 ) ) )
+		misleadingMetadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:ColorSpace", IECore.StringData( "Rec709" ) ) )
+		misleadingMetadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:BitsPerSample", IECore.IntData( 8 ) ) )
+		misleadingMetadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:UnassociatedAlpha", IECore.IntData( 1 ) ) )
+		misleadingMetadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:Gamma", IECore.FloatData( 0.25 ) ) )
 
 		# Create ImageWriters to write out the images with regular
 		# and misleading metadata.
@@ -1029,7 +1029,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.ImageMetadata()
 		m["in"].setInput( c["out"] )
-		m["metadata"].addMember( "test", IECore.StringData( "popplewell" ) )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "test", IECore.StringData( "popplewell" ) ) )
 
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( m["out"] )
@@ -1100,7 +1100,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.ImageMetadata()
 		m["in"].setInput( c["out"] )
-		m["metadata"].addMember( "test", IECore.StringData( "test" ) )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "test", IECore.StringData( "test" ) ) )
 
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( m["out"] )

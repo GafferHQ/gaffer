@@ -49,120 +49,120 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	// Rendering parameters
 
-	options->addOptionalMember( "ai:bucket_size", new IECore::IntData( 64 ), "bucketSize", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:bucket_scanning", new IECore::StringData( "spiral" ), "bucketScanning", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:parallel_node_init", new IECore::BoolData( true ), "parallelNodeInit", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:threads", new IECore::IntData( 0 ), "threads", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:bucket_size", new IECore::IntData( 64 ), false, "bucketSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:bucket_scanning", new IECore::StringData( "spiral" ), false, "bucketScanning" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:parallel_node_init", new IECore::BoolData( true ), false, "parallelNodeInit" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:threads", new IECore::IntData( 0 ), false, "threads" ) );
 
 	// Sampling parameters
 
-	options->addOptionalMember( "ai:AA_samples", new IECore::IntData( 3 ), "aaSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), "giDiffuseSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_specular_samples", new IECore::IntData( 2 ), "giSpecularSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_transmission_samples", new IECore::IntData( 2 ), "giTransmissionSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_sss_samples", new IECore::IntData( 2 ), "giSSSSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_volume_samples", new IECore::IntData( 2 ), "giVolumeSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:AA_seed", new IECore::IntData( 1 ), "aaSeed", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:AA_sample_clamp", new IECore::FloatData( 10 ), "aaSampleClamp", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), "aaSampleClampAffectsAOVs", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:indirect_sample_clamp", new IECore::FloatData( 10 ), "indirectSampleClamp", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:low_light_threshold", new IECore::FloatData( 0.001 ), "lowLightThreshold", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:AA_samples", new IECore::IntData( 3 ), false, "aaSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), false, "giDiffuseSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_specular_samples", new IECore::IntData( 2 ), false, "giSpecularSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_transmission_samples", new IECore::IntData( 2 ), false, "giTransmissionSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_sss_samples", new IECore::IntData( 2 ), false, "giSSSSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_volume_samples", new IECore::IntData( 2 ), false, "giVolumeSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:AA_seed", new IECore::IntData( 1 ), false, "aaSeed" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:AA_sample_clamp", new IECore::FloatData( 10 ), false, "aaSampleClamp" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), false, "aaSampleClampAffectsAOVs" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:indirect_sample_clamp", new IECore::FloatData( 10 ), false, "indirectSampleClamp" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:low_light_threshold", new IECore::FloatData( 0.001 ), false, "lowLightThreshold" ) );
 
 	// Adaptive sampling parameters
-	options->addOptionalMember( "ai:enable_adaptive_sampling", new IECore::BoolData( false ), "enableAdaptiveSampling", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:AA_samples_max", new IECore::IntData( 0 ), "aaSamplesMax", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:AA_adaptive_threshold", new IECore::FloatData( 0.05 ), "aaAdaptiveThreshold", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:enable_adaptive_sampling", new IECore::BoolData( false ), false, "enableAdaptiveSampling" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:AA_samples_max", new IECore::IntData( 0 ), false, "aaSamplesMax" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:AA_adaptive_threshold", new IECore::FloatData( 0.05 ), false, "aaAdaptiveThreshold" ) );
 
 	// Ray depth parameters
 
-	options->addOptionalMember( "ai:GI_total_depth", new IECore::IntData( 10 ), "giTotalDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_diffuse_depth", new IECore::IntData( 2 ), "giDiffuseDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_specular_depth", new IECore::IntData( 2 ), "giSpecularDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_transmission_depth", new IECore::IntData( 2 ), "giTransmissionDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_volume_depth", new IECore::IntData( 0 ), "giVolumeDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:auto_transparency_depth", new IECore::IntData( 10 ), "autoTransparencyDepth", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_total_depth", new IECore::IntData( 10 ), false, "giTotalDepth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_diffuse_depth", new IECore::IntData( 2 ), false, "giDiffuseDepth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_specular_depth", new IECore::IntData( 2 ), false, "giSpecularDepth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_transmission_depth", new IECore::IntData( 2 ), false, "giTransmissionDepth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:GI_volume_depth", new IECore::IntData( 0 ), false, "giVolumeDepth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:auto_transparency_depth", new IECore::IntData( 10 ), false, "autoTransparencyDepth" ) );
 
 	// Subdivision
 
-	options->addOptionalMember( "ai:max_subdivisions", new IECore::IntData(999), "maxSubdivisions", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:max_subdivisions", new IECore::IntData(999), false, "maxSubdivisions" ) );
 
 	// Texturing parameters
 
-	options->addOptionalMember( "ai:texture_max_memory_MB", new IECore::FloatData( 2048 ), "textureMaxMemoryMB", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:texture_per_file_stats", new IECore::BoolData( false ), "texturePerFileStats", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:texture_max_sharpen", new IECore::FloatData( 1.5 ), "textureMaxSharpen", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:texture_max_memory_MB", new IECore::FloatData( 2048 ), false, "textureMaxMemoryMB" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:texture_per_file_stats", new IECore::BoolData( false ), false, "texturePerFileStats" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:texture_max_sharpen", new IECore::FloatData( 1.5 ), false, "textureMaxSharpen" ) );
 
 	// Ignore parameters
 
-	options->addOptionalMember( "ai:ignore_textures", new IECore::BoolData( false ), "ignoreTextures", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_shaders", new IECore::BoolData( false ), "ignoreShaders", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_atmosphere", new IECore::BoolData( false ), "ignoreAtmosphere", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_lights", new IECore::BoolData( false ), "ignoreLights", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_shadows", new IECore::BoolData( false ), "ignoreShadows", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_subdivision", new IECore::BoolData( false ), "ignoreSubdivision", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_displacement", new IECore::BoolData( false ), "ignoreDisplacement", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_bump", new IECore::BoolData( false ), "ignoreBump", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_motion_blur", new IECore::BoolData( false ), "ignoreMotionBlur", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:ignore_sss", new IECore::BoolData( false ), "ignoreSSS", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_textures", new IECore::BoolData( false ), false, "ignoreTextures" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_shaders", new IECore::BoolData( false ), false, "ignoreShaders" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_atmosphere", new IECore::BoolData( false ), false, "ignoreAtmosphere" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_lights", new IECore::BoolData( false ), false, "ignoreLights" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_shadows", new IECore::BoolData( false ), false, "ignoreShadows" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_subdivision", new IECore::BoolData( false ), false, "ignoreSubdivision" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_displacement", new IECore::BoolData( false ), false, "ignoreDisplacement" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_bump", new IECore::BoolData( false ), false, "ignoreBump" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_motion_blur", new IECore::BoolData( false ), false, "ignoreMotionBlur" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_sss", new IECore::BoolData( false ), false, "ignoreSSS" ) );
 
 	// Searchpath parameters
 
-	options->addOptionalMember( "ai:texture_searchpath", new IECore::StringData( "" ), "textureSearchPath", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:procedural_searchpath", new IECore::StringData( "" ), "proceduralSearchPath", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:plugin_searchpath", new IECore::StringData( "" ), "pluginSearchPath", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:texture_searchpath", new IECore::StringData( "" ), false, "textureSearchPath" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:procedural_searchpath", new IECore::StringData( "" ), false, "proceduralSearchPath" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:plugin_searchpath", new IECore::StringData( "" ), false, "pluginSearchPath" ) );
 
 	// Error handling
 
-	options->addOptionalMember( "ai:abort_on_error", new IECore::BoolData( true ), "abortOnError", Gaffer::Plug::Default,  false);
-	options->addOptionalMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ), "errorColorBadTexture", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ), "errorColorBadPixel", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ), "errorColorBadShader", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:abort_on_error", new IECore::BoolData( true ), false, "abortOnError" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ), false, "errorColorBadTexture" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ), false, "errorColorBadPixel" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ), false, "errorColorBadShader" ) );
 
 	// Logging
 
-	options->addOptionalMember( "ai:log:filename", new IECore::StringData( "" ), "logFileName", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:max_warnings", new IECore::IntData( 100 ), "logMaxWarnings", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:filename", new IECore::StringData( "" ), false, "logFileName" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:max_warnings", new IECore::IntData( 100 ), false, "logMaxWarnings" ) );
 
-	options->addOptionalMember( "ai:log:info", new IECore::BoolData( true ), "logInfo", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:warnings", new IECore::BoolData( true ), "logWarnings", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:errors", new IECore::BoolData( true ), "logErrors", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:debug", new IECore::BoolData( true ), "logDebug", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:ass_parse", new IECore::BoolData( true ), "logAssParse", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:plugins", new IECore::BoolData( true ), "logPlugins", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:progress", new IECore::BoolData( true ), "logProgress", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:nan", new IECore::BoolData( true ), "logNAN", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:timestamp", new IECore::BoolData( true ), "logTimestamp", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:stats", new IECore::BoolData( true ), "logStats", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:backtrace", new IECore::BoolData( true ), "logBacktrace", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:memory", new IECore::BoolData( true ), "logMemory", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:log:color", new IECore::BoolData( true ), "logColor", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:info", new IECore::BoolData( true ), false, "logInfo" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:warnings", new IECore::BoolData( true ), false, "logWarnings" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:errors", new IECore::BoolData( true ), false, "logErrors" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:debug", new IECore::BoolData( true ), false, "logDebug" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:ass_parse", new IECore::BoolData( true ), false, "logAssParse" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:plugins", new IECore::BoolData( true ), false, "logPlugins" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:progress", new IECore::BoolData( true ), false, "logProgress" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:nan", new IECore::BoolData( true ), false, "logNAN" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:timestamp", new IECore::BoolData( true ), false, "logTimestamp" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:stats", new IECore::BoolData( true ), false, "logStats" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:backtrace", new IECore::BoolData( true ), false, "logBacktrace" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:memory", new IECore::BoolData( true ), false, "logMemory" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:color", new IECore::BoolData( true ), false, "logColor" ) );
 
-	options->addOptionalMember( "ai:console:info", new IECore::BoolData( false ), "consoleInfo", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:warnings", new IECore::BoolData( true ), "consoleWarnings", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:errors", new IECore::BoolData( true ), "consoleErrors", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:debug", new IECore::BoolData( false ), "consoleDebug", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:ass_parse", new IECore::BoolData( false ), "consoleAssParse", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:plugins", new IECore::BoolData( false ), "consolePlugins", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:progress", new IECore::BoolData( false ), "consoleProgress", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:nan", new IECore::BoolData( false ), "consoleNAN", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:timestamp", new IECore::BoolData( true ), "consoleTimestamp", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:stats", new IECore::BoolData( false ), "consoleStats", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:backtrace", new IECore::BoolData( true ), "consoleBacktrace", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:memory", new IECore::BoolData( true ), "consoleMemory", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:color", new IECore::BoolData( true ), "consoleColor", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:info", new IECore::BoolData( false ), false, "consoleInfo" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:warnings", new IECore::BoolData( true ), false, "consoleWarnings" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:errors", new IECore::BoolData( true ), false, "consoleErrors" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:debug", new IECore::BoolData( false ), false, "consoleDebug" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:ass_parse", new IECore::BoolData( false ), false, "consoleAssParse" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:plugins", new IECore::BoolData( false ), false, "consolePlugins" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:progress", new IECore::BoolData( false ), false, "consoleProgress" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:nan", new IECore::BoolData( false ), false, "consoleNAN" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:timestamp", new IECore::BoolData( true ), false, "consoleTimestamp" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:stats", new IECore::BoolData( false ), false, "consoleStats" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:backtrace", new IECore::BoolData( true ), false, "consoleBacktrace" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:memory", new IECore::BoolData( true ), false, "consoleMemory" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:console:color", new IECore::BoolData( true ), false, "consoleColor" ) );
 
 	// Statistics
-	options->addOptionalMember( "ai:statisticsFileName", new IECore::StringData( "" ), "statisticsFileName", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:statisticsFileName", new IECore::StringData( "" ), false, "statisticsFileName" ) );
 
 	// Licensing
 
-	options->addOptionalMember( "ai:abort_on_license_fail", new IECore::BoolData( false ), "abortOnLicenseFail", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:skip_license_check", new IECore::BoolData( false ), "skipLicenseCheck", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:abort_on_license_fail", new IECore::BoolData( false ), false, "abortOnLicenseFail" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:skip_license_check", new IECore::BoolData( false ), false, "skipLicenseCheck" ) );
 
 	// GPU
 
-	options->addOptionalMember( "ai:render_device", new IECore::StringData( "CPU" ), "renderDevice", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:gpu_max_texture_resolution", new IECore::IntData( 0 ), "gpuMaxTextureResolution", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ai:render_device", new IECore::StringData( "CPU" ), false, "renderDevice" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:gpu_max_texture_resolution", new IECore::IntData( 0 ), false, "gpuMaxTextureResolution" ) );
 
 }
 

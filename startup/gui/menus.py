@@ -192,11 +192,12 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 				Gaffer.Metadata.registerValue( node["geometryParameters"], "plugValueWidget:type", "" )
 
 				if shape == "distant" :
-					node["geometryParameters"].addMember( "angle", 0.0, plugName = "angle" )
+					node["geometryParameters"].addChild( Gaffer.NameValuePlug( "angle", 0.0, plugName = "angle", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 			Gaffer.Metadata.registerValue( node["shape"], "plugValueWidget:type", "" )
 
-			visibilityPlug = node["attributes"].addMember( "dl:visibility.camera", False, "cameraVisibility" )
+			visibilityPlug = Gaffer.NameValuePlug( "dl:visibility.camera", False, "cameraVisibility", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			node["attributes"].addChild( visibilityPlug )
 			Gaffer.MetadataAlgo.setReadOnly( visibilityPlug["name"], True )
 
 			return node

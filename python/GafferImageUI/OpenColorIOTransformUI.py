@@ -122,4 +122,4 @@ class _ContextFooter( GafferUI.Widget ) :
 			return
 
 		with Gaffer.UndoScope( self.__node.ancestor( Gaffer.ScriptNode ) ) :
-			self.__node["context"].addOptionalMember( "", "", enabled = True )
+			self.__node["context"].addChild( Gaffer.NameValuePlug( "", "", True, "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,24 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_COMPOUNDDATAPLUG_INL
-#define GAFFER_COMPOUNDDATAPLUG_INL
+#ifndef GAFFER_NAMEVALUEPLUG_INL
+#define GAFFER_NAMEVALUEPLUG_INL
 
 namespace Gaffer
 {
 
 template<typename T>
-T *CompoundDataPlug::MemberPlug::valuePlug()
+T *NameValuePlug::valuePlug()
 {
-	return getChild<T>( 1 );
+	return children().size() > 1 ? getChild<T>( 1 ) : nullptr;
 }
 
 template<typename T>
-const T *CompoundDataPlug::MemberPlug::valuePlug() const
+const T *NameValuePlug::valuePlug() const
 {
-	return getChild<T>( 1 );
+	return children().size() > 1 ? getChild<T>( 1 ) : nullptr;
 }
 
 } // namespace Gaffer
 
-#endif // GAFFER_COMPOUNDDATAPLUG_INL
+#endif // GAFFER_NAMEVALUEPLUG_INL

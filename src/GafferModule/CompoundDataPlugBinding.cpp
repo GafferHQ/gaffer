@@ -65,37 +65,13 @@ CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::Directi
 	return result;
 }
 
-Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string &plugName, unsigned plugFlags )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return p.addMember( name, value.get(), plugName, plugFlags );
-}
-
-Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return p.addMember( name, valuePlug, plugName );
-}
-
-Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string plugName, unsigned plugFlags, bool enabled )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return p.addOptionalMember( name, value.get(), plugName, plugFlags, enabled );
-}
-
-Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return p.addOptionalMember( name, valuePlug, plugName, enabled );
-}
-
 void addMembersWrapper( CompoundDataPlug &p, const IECore::CompoundData *members, bool useNameAsPlugName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	p.addMembers( members, useNameAsPlugName );
 }
 
-tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPlug::MemberPlug *member )
+tuple memberDataAndNameWrapper( CompoundDataPlug &p, const NameValuePlug *member )
 {
 	std::string name;
 	IECore::DataPtr d;
@@ -118,20 +94,6 @@ void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObject *o )
 	p.fillCompoundObject( o->members() );
 }
 
-class MemberPlugSerialiser : public ValuePlugSerialiser
-{
-
-	public :
-
-		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
-		{
-			// if the parent is dynamic then all the children will need construction.
-			const Plug *parent = child->parent<Plug>();
-			return parent->getFlags( Gaffer::Plug::Dynamic );
-		}
-
-};
-
 } // namespace
 
 void GafferModule::bindCompoundDataPlug()
@@ -147,28 +109,9 @@ void GafferModule::bindCompoundDataPlug()
 				)
 			)
 		)
-		.def( "addMember", &addMemberWrapper, ( arg_( "name" ), arg_( "defaultValue" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic ) )
-		.def( "addMember", &addMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1" ) )
-		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "defaultValue" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic, arg_( "enabled" ) = false ) )
-		.def( "addOptionalMember", &addOptionalMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1", arg_( "enabled" ) = false ) )
 		.def( "addMembers", &addMembersWrapper, ( arg_( "members" ), arg_( "useNameAsPlugName" ) = false ) )
 		.def( "memberDataAndName", &memberDataAndNameWrapper )
 		.def( "fillCompoundData", &fillCompoundData )
 		.def( "fillCompoundObject", &fillCompoundObject )
 	;
-
-	PlugClass<CompoundDataPlug::MemberPlug>()
-		.def( init<const char *, Plug::Direction, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<CompoundDataPlug::MemberPlug>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-		.attr( "__qualname__" ) = "CompoundDataPlug.MemberPlug"
-	;
-
-	Serialisation::registerSerialiser( Gaffer::CompoundDataPlug::MemberPlug::staticTypeId(), new MemberPlugSerialiser );
-
 }

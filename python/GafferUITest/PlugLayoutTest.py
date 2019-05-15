@@ -253,7 +253,8 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		)
 
 		s = Gaffer.ScriptNode()
-		p = s["variables"].addMember( "bVariable", False )
+		p = Gaffer.NameValuePlug( "bVariable", False )
+		s["variables"].addChild( p )
 
 		s["n"] = SummaryAndActivatorTestNode()
 

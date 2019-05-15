@@ -84,13 +84,13 @@ class SceneProcessorTest( GafferTest.TestCase ) :
 
 				self["__red"] = GafferScene.StandardAttributes()
 				self["__red"]["in"].setInput( self["in"] )
-				self["__red"]["attributes"].addMember( "user:matteColor", imath.Color3f( 1, 0, 0 ) )
+				self["__red"]["attributes"].addChild( Gaffer.NameValuePlug( "user:matteColor", imath.Color3f( 1, 0, 0 ) ) )
 				self["redFilter"] = self["__red"]["filter"].createCounterpart( "redFilter", Gaffer.Plug.Direction.In )
 				self["__red"]["filter"].setInput( self["redFilter"] )
 
 				self["__green"] = GafferScene.StandardAttributes()
 				self["__green"]["in"].setInput( self["__red"]["out"] )
-				self["__green"]["attributes"].addMember( "user:matteColor", imath.Color3f( 0, 1, 0 ) )
+				self["__green"]["attributes"].addChild( Gaffer.NameValuePlug( "user:matteColor", imath.Color3f( 0, 1, 0 ) ) )
 				self["greenFilter"] = self["__green"]["filter"].createCounterpart( "greenFilter", Gaffer.Plug.Direction.In )
 				self["__green"]["filter"].setInput( self["greenFilter"] )
 
