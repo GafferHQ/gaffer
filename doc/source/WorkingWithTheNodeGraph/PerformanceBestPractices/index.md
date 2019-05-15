@@ -1,11 +1,13 @@
 # Performance Best Practices #
 
+As with most VFX processes and software, a Gaffer node graph is subject to performance considerations. Both its stucture and the expressions and statements that go into it can result in undesirably slow evaluation. Since the cause(s) of a slow graph might not be immediately apparent, developing a basic understanding of how Gaffer evaluates graphs, as well as the complexity pitfalls users commonly encounter, will help you ensure optimum performance.
+
+Here we will discuss the performance implications of various choices you might make in your Gaffer graphs, and provide some guidelines for keeping them running smoothly.
+
+
+## Scene complexity and node graph structure ##
+
 Gaffer is designed to gracefully handle very large scenes by deferring the generation of each location until requested by the user or the renderer. It is also designed to be flexible, affording the user a great deal of control in how scenes are generated. These two goals can sometimes be at odds. 
-
-Here we will discuss the performance implications of various choices you might make in your Gaffer scripts, and provide some guidelines for keeping them running smoothly.
-
-
-## Complexity and node graph structure ##
 
 A very rough estimate for the complexity of a scene can be made by considering the number of its locations, and the number of nodes through which each location passes. For instance, we might say that 10 locations passing through 10 nodes – `10 * 10 = 100` – is roughly equivalent to 20 locations passing through 5 nodes – `20 * 5 = 100`. When you consider that most scenes are comprised of a number of assets, each with an associated shader look, you can use this knowledge to structure your node graphs for the best performance.
 
@@ -89,7 +91,7 @@ Keep in mind the rough complexity metric of `complexity = numberOfLocations * nu
 
 ## Performance monitor ##
 
-Gaffer has a [performance monitor](../UsingThePerformanceMonitor/index.md) and a [stats app](../../References/CommandLineReference/stats.md) that can be used to measure and compare the real performance of your graph.
+Gaffer has a [performance monitor](../UsingThePerformanceMonitor/index.md) and a [stats app](../../Reference/CommandLineReference/stats.md) that can be used to measure and compare the real performance of your graph.
 
 > Tip :
 > When performance is critical, use the performance monitor or the stats app.
