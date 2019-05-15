@@ -49,6 +49,7 @@
 #define TBB_PREVIEW_LOCAL_OBSERVER 1
 #include "tbb/task_scheduler_observer.h"
 
+#include <iostream>
 #include <thread>
 
 namespace IECorePreview
@@ -166,22 +167,54 @@ class TaskMutex : boost::noncopyable
 
 					ExecutionStateMutex::scoped_lock executionStateLock( m_mutex->m_executionStateMutex );
 					assert( !m_mutex->m_executionState );
-					m_mutex->m_executionState = std::make_shared<ExecutionState>();
+					m_mutex->m_executionState = new ExecutionState;
 					executionStateLock.release();
 
+					// Wrap `f` to capture any exceptions it throws. If we allow
+					// `task_group::wait()` to see them, we hit a thread-safety
+					// bug in `tbb::task_group_context::reset()`.
+					std::exception_ptr exception;
+					auto fWrapper = [&f, &exception] {
+						try
+						{
+							f();
+						}
+						catch( ... )
+						{
+							exception = std::current_exception();
+						}
+					};
+
 					m_mutex->m_executionState->arena.execute(
-						[this, &f] {
-							// Note : We deliberately call `run()` and `wait()` separately
-							// instead of calling `run_and_wait()`. The latter is buggy until
+						[this, &fWrapper] {
+#if TBB_INTERFACE_VERSION >= 10003
+							m_mutex->m_executionState->taskGroup.run_and_wait( fWrapper );
+#else
+							// The `run_and_wait()` method is buggy until
 							// TBB 2018 Update 3, causing calls to `wait()` on other threads to
 							// return immediately rather than do the work we want.
-							m_mutex->m_executionState->taskGroup.run( f );
+							// So we call `run()` and `wait()` separately. This has a
+							// downside though : it appears to trigger a TBB bug whereby
+							// it is sometimes unable to destroy the internals of the
+							// `task_arena`. It then spends increasing amounts of time
+							// in `market::try_destroy_arena()`, doing a linear search
+							// through all the zombie arenas until it finds the one it
+							// wants to destroy, decides for some reason it can't destroy it,
+							// and gives up. With large numbers of arenas this can add
+							// huge overhead.
+							m_mutex->m_executionState->taskGroup.run( fWrapper );
 							m_mutex->m_executionState->taskGroup.wait();
+#endif
 						}
 					);
 
 					executionStateLock.acquire( m_mutex->m_executionStateMutex );
 					m_mutex->m_executionState = nullptr;
+
+					if( exception )
+					{
+						std::rethrow_exception( exception );
+					}
 				}
 
 				/// Acquires mutex or returns false. Never does TBB tasks.
@@ -277,6 +310,7 @@ class TaskMutex : boost::noncopyable
 					executionState->arena.execute(
 						[&executionState]{ executionState->taskGroup.wait(); }
 					);
+
 					return false;
 				}
 
@@ -353,7 +387,7 @@ class TaskMutex : boost::noncopyable
 
 		// The mechanism we use to allow waiting threads
 		// to participate in the work done by `execute()`.
-		struct ExecutionState : private boost::noncopyable
+		struct ExecutionState : public IECore::RefCounted
 		{
 			ExecutionState()
 				:	arenaObserver( arena )
@@ -373,7 +407,7 @@ class TaskMutex : boost::noncopyable
 			// currently inside the arena.
 			ArenaObserver arenaObserver;
 		};
-		typedef std::shared_ptr<ExecutionState> ExecutionStatePtr;
+		IE_CORE_DECLAREPTR( ExecutionState );
 
 		typedef tbb::spin_mutex ExecutionStateMutex;
 		ExecutionStateMutex m_executionStateMutex; // Protects m_executionState

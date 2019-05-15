@@ -37,48 +37,76 @@
 
 #include "boost/function.hpp"
 #include "boost/noncopyable.hpp"
-#include "boost/unordered_map.hpp"
-
-#include "tbb/spin_mutex.h"
-#include "tbb/spin_rw_mutex.h"
-
-#include <functional>
-#include <memory>
-#include <vector>
+#include "boost/variant.hpp"
 
 namespace IECorePreview
 {
 
+namespace LRUCachePolicy
+{
+
+/// Not threadsafe. Either use from only a single thread
+/// or protect with an external mutex. Key type must have
+/// a `hash_value` implementation as described in the boost
+/// documentation.
+template<typename LRUCache>
+class Serial;
+
+/// Threadsafe, `get()` blocks if another thread is already
+/// computing the value. Key type must have a `hash_value`
+/// implementation as described in the boost documentation.
+template<typename LRUCache>
+class Parallel;
+
+/// Threadsafe, `get()` collaborates on TBB tasks if another
+/// thread is already computing the value. Key type must have
+/// a `hash_value` implementation as described in the boost
+/// documentation.
+///
+/// > Note : There is measurable overhead in the task collaboration
+/// > mechanism, so if it is known that tasks will not be spawned for
+/// > `GetterFunction( getterKey )` you may define a `bool spawnsTasks( const GetterKey & )`
+/// > function that will be used to avoid the overhead.
+template<typename LRUCache>
+class TaskParallel;
+
+} // namespace LRUCachePolicy
+
 /// A mapping from keys to values, where values are computed from keys using a user
 /// supplied function. Recently computed values are stored in the cache to accelerate
 /// subsequent lookups. Each value has a cost associated with it, and the cache has
-/// a maximum total cost above which it will remove the (approximately) least recently
-/// accessed items.
-///
-/// The Key type must be hashable using boost::hash().
+/// a maximum total cost above which it will remove the least recently accessed items.
 ///
 /// The Value type must be default constructible, copy constructible and assignable.
 /// Note that Values are returned by value, and erased by assigning a default constructed
 /// value. In practice this means that a smart pointer is the best choice of Value.
 ///
-/// \threading It is safe to call the methods of LRUCache from concurrent threads.
+/// The Policy determines the thread safety, eviction and performance characteristics
+/// of the cache. See the documentation for each individual policy in the LRUCachePolicy
+/// namespace.
+///
+/// The GetterKey may be used where the GetterFunction requires some auxiliary information
+/// in addition to the Key. It must be implicitly castable to Key, and all GetterKeys
+/// which yield the same Key must also yield the same results from the GetterFunction.
+///
 /// \ingroup utilityGroup
-template<typename Key, typename Value>
+template<typename Key, typename Value, template <typename> class Policy=LRUCachePolicy::Parallel, typename GetterKey=Key>
 class LRUCache : private boost::noncopyable
 {
 	public:
 
 		typedef size_t Cost;
+		typedef Key KeyType;
 
 		/// The GetterFunction is responsible for computing the value and cost for a cache entry
 		/// when given the key. It should throw a descriptive exception if it can't get the data for
-		/// any reason. It is unsafe to access the LRUCache itself from the GetterFunction.
-		typedef std::function<Value ( const Key &key, Cost &cost )> GetterFunction;
+		/// any reason.
+		typedef boost::function<Value ( const GetterKey &key, Cost &cost )> GetterFunction;
 		/// The optional RemovalCallback is called whenever an item is discarded from the cache.
-		///  It is unsafe to access the LRUCache itself from the RemovalCallback.
-		typedef std::function<void ( const Key &key, const Value &data )> RemovalCallback;
+		typedef boost::function<void ( const Key &key, const Value &data )> RemovalCallback;
 
-		LRUCache( GetterFunction getter, Cost maxCost = 500 );
+		LRUCache( GetterFunction getter );
+		LRUCache( GetterFunction getter, Cost maxCost );
 		LRUCache( GetterFunction getter, RemovalCallback removalCallback, Cost maxCost );
 		virtual ~LRUCache();
 
@@ -87,7 +115,7 @@ class LRUCache : private boost::noncopyable
 		/// cache at any time by operations on another thread, or may not
 		/// even be stored in the cache if it exceeds the maximum cost.
 		/// Throws if the item can not be computed.
-		Value get( const Key &key );
+		Value get( const GetterKey &key );
 
 		/// Adds an item to the cache directly, bypassing the GetterFunction.
 		/// Returns true for success and false on failure - failure can occur
@@ -125,6 +153,9 @@ class LRUCache : private boost::noncopyable
 		// Data
 		//////////////////////////////////////////////////////////////////////////
 
+		// Give Policy access to CacheEntry definitions.
+		friend class Policy<LRUCache>;
+
 		// A function for computing values, and one for notifying of removals.
 		GetterFunction m_getter;
 		RemovalCallback m_removalCallback;
@@ -132,244 +163,51 @@ class LRUCache : private boost::noncopyable
 		// Status of each item in the cache.
 		enum Status
 		{
-			New, // brand new unpopulated entry
-			Cached, // entry complete with value
-			TooCostly, // entry cost exceeds m_maxCost and therefore isn't stored
+			Uncached, // entry without valid value
+			Cached, // entry with valid value
 			Failed // m_getter failed when computing entry
 		};
 
-		// CacheEntry implementation - a single item of the cache.
+		// The type used to store a single cached item.
 		struct CacheEntry
 		{
-			CacheEntry(); // status == New
-			CacheEntry( const CacheEntry &other );
+			CacheEntry();
 
-			Value value; // value for this item
+			// We use a boost::variant to compactly store
+			// a union of the data needed for each Status.
+			//
+			// - Uncached : A boost::blank instance
+			// - Cached : The Value itself
+			// - Failed ; The exception thrown by the GetterFn
+			typedef boost::variant<boost::blank, Value, std::exception_ptr> State;
+
+			State state;
 			Cost cost; // the cost for this item
 
-			char status; // status of this item
-			bool recentlyUsed;
-		};
-
-		// Map from keys to items - this forms the basis of
-		// our cache.
-		typedef boost::unordered_map<Key, CacheEntry> Map;
-		typedef typename Map::value_type MapValue;
-
-		// In various use cases we need to support
-		// concurrent access from many threads, and it's
-		// important that we do this efficiently. Our
-		// map type is not threadsafe, and a global mutex
-		// would be inefficient, so we take a binned approach.
-		// We store N internal maps, and use the hash of the
-		// key to determine which particular map that key
-		// should be stored in. This means that provided
-		// different threads are accessing different map
-		// values, they don't contend for a mutex at all.
-		struct Bin
-		{
-			typedef tbb::spin_rw_mutex Mutex;
-			Map map;
-			Mutex mutex;
-		};
-
-		typedef std::vector<std::unique_ptr<Bin> > Bins;
-		Bins m_bins;
-
-		// Handle class to abstract away the binned
-		// storage strategy. Internally holds an iterator
-		// into one of the maps and holds the lock for
-		// that map. All access to the bins must be
-		// made through this class. Similar to an iterator
-		// interface, but without any copy or assignment
-		// operations, since those would require transfer
-		// of the internal lock, which is problematic.
-		class Handle : public boost::noncopyable
-		{
-
-			public :
-
-				Handle()
-					:	m_cache( nullptr ), m_binIndex( 0 )
-				{
-				}
-
-				~Handle()
-				{
-					release();
-				}
-
-				void begin( LRUCache *cache )
-				{
-					release();
-					m_cache = cache;
-					acquireBin( 0 );
-					m_it = map().begin();
-					whileAtEndMoveToNextBin();
-				}
-
-				// If write == false and createIfMissing == true, then a read lock is acquired
-				// if the item exists already, otherwise a write lock is acquired on a newly
-				// created item. Returns true if an item was created, false otherwise.
-				bool acquire( LRUCache *cache, const Key &key, bool write = true, bool createIfMissing = false )
-				{
-					release();
-					m_cache = cache;
-					acquireBin( binIndex( key ), write );
-
-					if( write && createIfMissing )
-					{
-						const std::pair<Iterator, bool> i = map().insert( MapValue( key, CacheEntry() ) );
-						m_it = i.first;
-						return i.second;
-					}
-					else
-					{
-						m_it = map().find( key );
-						if( m_it != map().end() )
-						{
-							return false;
-						}
-						else if( createIfMissing )
-						{
-							assert( write == false );
-							m_binLock.upgrade_to_writer();
-							m_it = map().insert( MapValue( key, CacheEntry() ) ).first;
-							return true;
-						}
-						else
-						{
-							release();
-							return false;
-						}
-					}
-				}
-
-				void upgradeToWriter()
-				{
-					const Key key = m_it->first;
-					if( m_binLock.upgrade_to_writer() )
-					{
-						// Clean upgrade to writer status
-						// without giving up read lock.
-						return;
-					}
-					else
-					{
-						// We have been upgraded to writer
-						// status, but we had to temporarily
-						// give up our lock to get there. Another
-						// thread may have invalidated our iterator,
-						// so get it again.
-						m_it = map().insert( MapValue( key, CacheEntry() ) ).first;
-					}
-				}
-
-				void release()
-				{
-					if( m_cache )
-					{
-						releaseBin();
-						m_cache = nullptr;
-					}
-				}
-
-				void increment()
-				{
-					m_it++;
-					whileAtEndMoveToNextBin();
-				}
-
-				void erase()
-				{
-					map().erase( m_it );
-				}
-
-				void eraseAndIncrement()
-				{
-					Iterator nextIt = m_it; nextIt++;
-					map().erase( m_it );
-					m_it = nextIt;
-					whileAtEndMoveToNextBin();
-				}
-
-				bool valid()
-				{
-					return m_cache && m_it != map().end();
-				}
-
-				MapValue &operator*()
-				{
-					return *m_it;
-				}
-
-				MapValue *operator->()
-				{
-					return &(*m_it);
-				}
-
-			private :
-
-				typedef typename Map::iterator Iterator;
-
-				LRUCache *m_cache;
-				size_t m_binIndex;
-				typename Bin::Mutex::scoped_lock m_binLock;
-				Iterator m_it;
-
-				Map &map()
-				{
-					return m_cache->m_bins[m_binIndex]->map;
-				}
-
-				void whileAtEndMoveToNextBin()
-				{
-					while( m_it == m_cache->m_bins[m_binIndex]->map.end() && m_binIndex < m_cache->m_bins.size() - 1 )
-					{
-						releaseBin();
-						acquireBin( m_binIndex + 1 );
-						m_it = map().begin();
-					}
-				}
-
-				void acquireBin( size_t binIndex, bool write = true )
-				{
-					m_binIndex = binIndex;
-					m_binLock.acquire( m_cache->m_bins[binIndex]->mutex, write );
-				}
-
-				void releaseBin()
-				{
-					m_binLock.release();
-				}
-
-				size_t binIndex( const Key &key ) const
-				{
-					return boost::hash<Key>()( key ) % m_cache->m_bins.size();
-				}
+			Status status() const;
 
 		};
 
-		// Total cost. We store the current cost atomically so it can be updated
-		// concurrently by multiple threads.
-		typedef tbb::atomic<Cost> AtomicCost;
-		AtomicCost m_currentCost;
+		// Policy. This is responsible for
+		// the internal storage for the cache.
+		Policy<LRUCache> m_policy;
+
 		Cost m_maxCost;
 
-		// These methods set/erase a cached value, updating the current
-		// cost appropriately. The caller must hold the lock for the bin
-		// containing the value.
-		bool setInternal( MapValue &mapValue, const Value &value, Cost cost );
-		bool eraseInternal( MapValue &mapValue );
+		// Methods
+		// =======
 
-		// When our current cost goes over the limit, we must discard
-		// cached values until the cost is back under the threshold.
-		// We do this by cycling through our cache using a "second chance"
-		// algorithm to determine what to remove. No locks must be held
-		// when calling limitCost().
-		tbb::spin_mutex m_limitCostMutex;
-		Key m_limitCostSweepPosition;
-		void limitCost();
+		// Updates the cached value and updates the current
+		// total cost.
+		bool setInternal( const Key &key, CacheEntry &cacheEntry, const Value &value, Cost cost );
+
+		// Removes any cached value and updates the current total
+		// cost.
+		bool eraseInternal( const Key &key, CacheEntry &cacheEntry );
+
+		// Removes items from the cache until the current cost is
+		// at or below the specified limit.
+		void limitCost( Cost cost );
 
 		static void nullRemovalCallback( const Key &key, const Value &value );
 
