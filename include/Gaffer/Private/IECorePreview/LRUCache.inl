@@ -1207,6 +1207,19 @@ void LRUCache<Key, Value, Policy, GetterKey>::limitCost( Cost cost )
 	{
 		if( !m_policy.pop( key, cacheEntry ) )
 		{
+			// Policy was unable to pop, so we give up.
+			// This behaviour is used by the Parallel and TaskParallel
+			// policies to avoid a single thread being stuck with
+			// all the cleanup while other threads continually add
+			// items. They can "pass the baton" via m_popMutex` on
+			// each iteration of our loop; if one thread fails to
+			// acquire the mutex, it knows that another thread will
+			// be taking up the work.
+			//
+			// We cannot achieve the same thing outside the policy
+			// by simply capping the maximum number of iterations
+			// here, because that leads to abandoned cleanup if we
+			// are the last or only thread to access the cache.
 			break;
 		}
 
