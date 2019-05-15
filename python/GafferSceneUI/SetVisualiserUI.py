@@ -222,7 +222,7 @@ class _OverridesFooter( GafferUI.PlugValueWidget ) :
 	def __addOverride( self, _ ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addOptionalMember( "", imath.Color3f( 1.0 ) , enabled=True )
+			self.getPlug().addChild( Gaffer.NameValuePlug( "", imath.Color3f( 1.0 ), True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 # A single-row that holds a Color swatch and a text label
 class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
@@ -274,7 +274,7 @@ class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
 		targetPlug, _ = self.__colorOverridesPlug()
 		if targetPlug:
 			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
-				targetPlug.addOptionalMember( self.__label.getText(), imath.Color3f( 1.0 ) , enabled=True )
+				targetPlug.addChild( Gaffer.NameValuePlug( self.__label.getText(), imath.Color3f( 1.0 ), True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 			editor = self.ancestor( GafferUI.NodeUI )
 			if editor:
 				editor.plugValueWidget( targetPlug ).reveal()

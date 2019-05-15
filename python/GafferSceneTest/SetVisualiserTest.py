@@ -160,9 +160,9 @@ class SetVisualiserTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( visualiser["includeInherited"].getValue(), True )
 
-		visualiser["colorOverrides"].addOptionalMember( "setA", red, enabled = True )
-		visualiser["colorOverrides"].addOptionalMember( "setB", green, enabled = True )
-		visualiser["colorOverrides"].addOptionalMember( "setC", blue, enabled = True )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setA", red, True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setB", green, True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setC", blue, True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		self.assertEqual( visualiser["out"].attributes( "/group" )["gl:surface"].outputShader().parameters["colors"][0], red )
 		self.assertEqual( visualiser["out"].attributes( "/group/sphere" )["gl:surface"].outputShader().parameters["colors"][0], red )
@@ -173,7 +173,6 @@ class SetVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].outputShader().parameters["colors"][0], red )
 		self.assertEqual( visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].outputShader().parameters["colors"][1], green )
 		self.assertEqual( visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].outputShader().parameters["colors"][2], blue )
-
 
 	def testColorOverrides( self ) :
 
@@ -195,7 +194,7 @@ class SetVisualiserTest( GafferSceneTest.SceneTestCase ) :
 			i = d["names"].index( name )
 			return d["colors"][i]
 
-		visualiser["colorOverrides"].addOptionalMember( "setA", white, enabled = True )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setA", white, True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( colorForSetName( "setA" ), white )
 		self.assertNotEqual( colorForSetName( "setB" ), white )
 		self.assertNotEqual( colorForSetName( "setC" ), white )
@@ -226,17 +225,17 @@ class SetVisualiserTest( GafferSceneTest.SceneTestCase ) :
 
 		# None of these should error as empty names or disabled should be fine
 
-		visualiser["colorOverrides"].addOptionalMember( "setA", imath.Color3f( 1.0 ), enabled = True )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setA", imath.Color3f( 1.0 ), True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		visualiser["__outSets"].getValue()
 
-		visualiser["colorOverrides"].addOptionalMember( "setB", imath.Color3f( 1.0 ), enabled = False )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setB", imath.Color3f( 1.0 ), False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		visualiser["__outSets"].getValue()
 
-		visualiser["colorOverrides"].addOptionalMember( "", imath.Color3f( 1.0 ), enabled = True )
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "", imath.Color3f( 1.0 ), True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		visualiser["__outSets"].getValue()
 
-		# Non-color3f types should errror
-		visualiser["colorOverrides"].addOptionalMember( "setB", "notAColor", enabled = True )
+		# Non-color3f types should error
+		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setB", "notAColor", True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertRaises( RuntimeError, visualiser["__outSets"].getValue )
 
 	__testSetNames = [ 'setA', 'setB', 'setC' ]
