@@ -24,5 +24,5 @@ As an alternative, the [stats app](../../Reference/CommandLineReference/stats.md
 
 ## See also ##
 
-- [Script Performance](../index.md)
+- [Performance Best Practices](../PerformanceBestPractices/index.md)
 - [Stats App](../../Reference/CommandLineReference/stats.md)

@@ -23,7 +23,7 @@ To start, you should:
 If you are are looking to automate VFX processes or develop with Gaffer's API, you should also:
 
 * Complete the [Node Graph Editing in Python tutorial](Tutorials/Scripting/GettingStarted/index.md)
-* Familiarize yourself with the [Performance Best Practices](ScriptPerformance/PerformanceBestPractices/index.md) for node graphs.
+* Familiarize yourself with the [Performance Best Practices](WorkingWithTheNodeGraph/PerformanceBestPractices/index.md) for node graphs.
 
 
 <!-- TOC -->
