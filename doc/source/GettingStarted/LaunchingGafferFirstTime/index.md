@@ -39,7 +39,7 @@ To launch Gaffer for the first time in OSX:
 Gaffer will launch in a new window.
 
 
-## See Also ##
+## See also ##
 
 - [Installing Gaffer](../InstallingGaffer/index.md)
 - [Setting Up the "gaffer" Command](../SettingUpGafferCommand/index.md)

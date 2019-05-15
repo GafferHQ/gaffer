@@ -122,7 +122,7 @@ The `append()` convenience method is quite useful, as it wraps several other beh
 That's all! You can add more customized nodes to this config with similar ease, as long as each is managed by its own separate function and registered to the node menu with an `append()` call.
 
 
-## Testing the Node Menu Entry ##
+## Testing the node menu entry ##
 
 Let's try testing the custom node. If you haven't already, save the startup config, then launch a new instance of Gaffer. In the _Graph Editor_, the new entry should appear in the node menu under _Custom_ > _MacbethTexture_, and will create a MacbethTexture node when selected.
 
@@ -134,7 +134,7 @@ Let's try testing the custom node. If you haven't already, save the startup conf
 Each of the three startup configs in this tutorial series provided relatively simple examples, but we hope to have demonstrated that with just a bit of Python and a few files, you can easily customize the startup of the Gaffer's apps to suit your worklflow and pipeline needs.
 
 
-## See Also ##
+## See also ##
 
 - [Tutorial: Startup Config 1, Custom Global Context Variables](../CreatingConfigurationFiles1/index.md)
 - [Tutorial: Startup Config 2, Custom Bookmarks](../CreatingConfigurationFiles2/index.md)

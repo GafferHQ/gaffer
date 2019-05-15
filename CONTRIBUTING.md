@@ -5,7 +5,7 @@ The Gaffer team always welcomes quality contributions and issue reports. The fol
 Feel free to join the discussion on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). It is the main public space for Gaffer-related questions, issues, and requests. If you are new to Gaffer development, we recommend browsing the latest discussions to develop a sense for the current priorities and familiarize yourself with the development flow.
 
 
-## Reporting Bugs ##
+## Reporting bugs ##
 
 If you discover behaviour in Gaffer that you suspect is a bug, first:
 
@@ -21,9 +21,9 @@ If your Issue requires a debug log, you must run Gaffer in a debugger (GDB) and 
 3. When an error or a crash occurs, copy the output of the log.
 
 
-## Contributing Code ##
+## Contributing code ##
 
-### Pull Requests ###
+### Pull requests ###
 
 If you have a fork of Gaffer and have made improvements, and you would like to see them merged with the main project, you can create a new [Pull Request](https://github.com/GafferHQ/gaffer/pulls) (PR). Make sure to fill out the PR template on GitHub.
 
@@ -45,7 +45,7 @@ Each commit in your PR must perform one logically distinct set of changes. It mu
 We have several message best practices, which, if followed, result in a succinct, informative commit history that can be natively displayed in a variety of disparate protocols and applications, such as email and IDEs. The goal is for anyone to be able to look through the commit log on its own and have a reasonably detailed idea of what was changed and why.
 
 
-#### Commit Message Best Practices ####
+#### Commit message best practices ####
 
 - Each line of the message should be 72 characters or less.
 - The first line's message should start with the name of the module or area of the project being affected, followed by a space, a colon, another space, and finally by a _general_ description. Example: `Interface : Add MyButton`.
@@ -53,7 +53,7 @@ We have several message best practices, which, if followed, result in a succinct
 - If the commit makes several small but important changes, list them line-by-line, with each line starting with a hyphen followed by a space, followed by a description of the change.
 
 
-### Example Commits for a New Feature ###
+### Example commits for a new Feature ###
 
 #### Commit 1 ####
 

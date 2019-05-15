@@ -27,14 +27,14 @@ Compiled binary releases are available for download from the [releases page](htt
 Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, make sure you have the following prerequisites installed on your system, which will be used to perform the build itself.
 
 
-### Build Requirements ###
+### Build requirements ###
 
 From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
 
 > **Note:** Specific package names may differ depending on your Linux distribution and repository.
 
 
-#### Main Build Requirements ####
+#### Main build requirements ####
 
 > **Note:** Large Linux distros focused on usability, such as CentOS and Ubuntu, ship with many of these packages by default.
 
@@ -51,7 +51,7 @@ Package Name | Minimum Version
 [mesa-libGLU-devel](https://www.mesa3d.org) |
 
 
-#### Documentation Build Requirements ####
+#### Documentation build requirements ####
 
 > **Note:** Building the documentation is optional.
 
@@ -68,7 +68,7 @@ sphinx_rtd_theme |
 recommonmark |
 
 
-### Build Process ###
+### Build process ###
 
 Gaffer also depends on a number of 3rd-party libraries and python modules, many of which are not entirely straightforward to build. We therefore recommend using the latest pre-built dependencies from the [Gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up-to-date with Gaffer's requirements.
 
@@ -88,22 +88,22 @@ scons BUILD_DIR=<BUILD_DIR> build
 ```
 
 
-## Questions and Troubleshooting ##
+## Questions and troubleshooting ##
 
 If you have any questions about using Gaffer, or encounter problems setting it up, feel free to ask on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). Our users and contributors are happy to help.
 
 
-## Requesting Features ##
+## Requesting features ##
 
 If there is a feature you would like to see in Gaffer, request it on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). Do not create an Issue for it on GitHub.
 
 
-## Contributions and Bugs Reports ##
+## Contributions and bugs reports ##
 
 Please see the project's [contribution guidelines](CONTRIBUTING.md).
 
 
-## Copyright and License ##
+## Copyright and license ##
 
 © 2011–2019 John Haddon. All rights reserved.
 

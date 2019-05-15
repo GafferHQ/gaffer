@@ -11,7 +11,7 @@ When lighting a scene, you will sometimes need to selectively control whether a 
 > Maya users will be familiar with the concept of light-centric (light-to-object) and object-centric (object-to-light) light linking. The procedure for linking lights in Gaffer is similar to object-centric linking.
 
 
-## Mechanics of Light Linking ##
+## Mechanics of light linking ##
 
 From the light side of things, by default, each light is a member of a set named **"defaultLights"**, and will cast light on every object in the scene. Each light's node has a _Default Light_ plug, which is checked by default. If unchecked, the light is removed from "defaultLights", and, from then on, will only illuminate objects that are expressly linked to it.
 
@@ -72,7 +72,7 @@ Be aware that if an object belongs to multiple sets with light linking, the obje
 ![A graph where an object belongs to multiple sets, each with different linked lights](images/illustrationLightLinkingMultipleSets.png "A graph where an object belongs to multiple sets, each with different linked lights")
 
 
-## Example Scenario ##
+## Example scenario ##
 
 Here we'll explore an example scenario where link lighting would be appropriate, and then propose a way to set it up.
 
@@ -147,7 +147,7 @@ Object                                                         Linked lights
 ```
 
 
-## Example Graphs ##
+## Example graphs ##
 
 ### Light linking basics ###
 
@@ -174,6 +174,6 @@ This example contains the various permutations of light linking on objects:
 In this example, a supersized version of our mascot, Gaffy, is throwing a tantrum, and attacking a city. Two special and unrealistic light sources are added to the scene, in order to add highlights to  Gaffy's eyes and chest logo. This graph contains the light-link setup described in the above example scenario.
 
 
-## See Also ##
+## See also ##
 
 - [Set Expressions Reference](../../Reference/ScriptingReference/SetExpressions/index.md)

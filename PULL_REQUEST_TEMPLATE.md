@@ -2,7 +2,7 @@ Generally describe what this PR will do, and why it is needed
 
 - List specific new features and changes to project components
 
-### Related Issues ###
+### Related issues ###
 
 - List any Issues this PR addresses or solves
 
@@ -10,7 +10,7 @@ Generally describe what this PR will do, and why it is needed
 
 - List any other unmerged PRs that this PR depends on
 
-### Breaking Changes ###
+### Breaking changes ###
 
 - List any breaking API/ABI changes  (and apply the pr-majorVersion label)
 

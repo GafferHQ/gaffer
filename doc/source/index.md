@@ -13,7 +13,7 @@ For the purposes of this document, we will assume you have intermediate knowledg
 Gaffer is open source software hosted and maintained on GitHub: [https://github.com/gafferhq](https://github.com/gafferhq). We strive to keep Gaffer and its documentation bug-free and up-to-date. If you find any bugs with the software, or inaccuracies with this document, we would very much appreciate it if you report it to us on our [Issues page](https://github.com/gafferhq/gaffer/issues).
 
 
-## Start Using Gaffer ##
+## Start using gaffer ##
 
 To start, you should:
 

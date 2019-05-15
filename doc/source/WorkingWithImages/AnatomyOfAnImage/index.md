@@ -15,7 +15,7 @@ This is merely a conceptual division to help understand how Gaffer processes ima
 > Users familiar with [OpenEXR](http://www.openexr.com) will recognize that Gaffer shares many of the same image property terms. The main divergence is that Gaffer refers to them generically as properties rather than attributes.
 
 
-## Image Properties ##
+## Image properties ##
 
 ### Format ###
 
@@ -24,17 +24,17 @@ This is merely a conceptual division to help understand how Gaffer processes ima
 The format property can be conceived of as the combination of OpenEXR's **display window** and **pixel aspect ratio** attributes.
 
 
-#### Display Window ####
+#### Display window ####
 
 Display window is the rectangular region that represents the final boundary of the output image. Its values are the coordinates of the bottom-left and top-right corners of the region.
 
 
-#### Pixel Aspect Ratio ####
+#### Pixel aspect ratio ####
 
 Pixel aspect ratio is a floating-point value that specifies the ratio between the width and height of a pixel. The default value is 1.0 (square pixels), which is the most commonly used. Non-default values would typically only be used when working with anamorphic source images.
 
 
-### Data Window ###
+### Data window ###
 
 **Data window** is the rectangular region that defines the usable processing area of the image. Its values are the coordinates of the bottom-left and top-right corners of the region.
 
@@ -59,7 +59,7 @@ Gaffer can read, add, and remove metadata from an image, but it assigns no speci
 > Gaffer follows the OpenImageIO conventions for metadata naming, as specified in [Appendix B](../../../../../share/doc/OpenImageIO/openimageio.pdf#page=397) of the project's _Programmer Documentation_.
 
 
-### Channel Names ###
+### Channel names ###
 
 Channel names is a list of arbitrary names specifying the channels in the image. The default channel names are `R`, `G`, `B`, and `A` for standard additive color images.
 
@@ -69,14 +69,14 @@ Additional channels are grouped into layers using a prefix-based naming conventi
 > Gaffer follows the [OpenEXR convention for channel names](http://www.openexr.com/documentation/InterpretingDeepPixels.pdf).
 
 
-### Channel Data ###
+### Channel data ###
 
 **Channel data** contains each channel's list of pixel values. Internally, Gaffer represents pixels as 32-bit floating point values, which are converted to and from other bit depths by the Image Reader or Image Writer nodes, as needed.
 
 Channel data contains no positional information. When an image's pixel data is processed by a computation, the pixels of each channel are grouped into 64x64 pixel tiles, which are arranged in rows and columns to form the complete image. Images can be computed in parallel, on a per-tile, per-channel basis.
 
 
-### Image Coordinate System ###
+### Image coordinate system ###
 
 ```eval_rst
 .. figure:: images/gafferImageCoordinates.png
@@ -100,6 +100,6 @@ When sub-pixel values are needed for a process, such as rotating an image on a p
 > In order to make manipulating images more intuitive for users, the Gaffer coordinate system differs from these aspects by design.
 
 
-## See Also ##
+## See also ##
 
 - [Anatomy of a Scene](../../WorkingWithScenes/AnatomyOfAScene/index.md)

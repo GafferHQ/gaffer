@@ -6,14 +6,14 @@ After you have installed Gaffer, it will remain a collection of files and direct
 > For these instructions, we will assume you have Gaffer installed to the `/opt/` directory. If you have installed it elsewhere, replace `/opt/` with the directory you installed it to.
 
 
-### Environment Variables ###
+### Environment variables ###
 
 An environment variable is simply a value, such as a string, number, boolean, or location that your terminal is aware of. For instance, when you ran the `tar` command to extract the downloaded Gaffer package, the `tar` command was not located in your `~/Downloads` directory, but actually in `/usr/bin/`. Whenever you open your terminal, several folders are added to your terminal's `PATH` environment variable, which provides it with a list of locations in the file system from which it can source commands.
 
 In order for the `gaffer` command to work in your terminal, you will need to add Gaffer's directory to the `PATH` environment variable.
 
 
-## Setting Up the "gaffer" Command in Linux ##
+## Setting up the "gaffer" command in Linux ##
 
 The particular terminal on your system depends on your Linux distribution and how it was configured. Most distributions of Linux use _bash_, but there are other common terminals available, like _tcsh_. Because we cannot accommodate every available terminal, we will only provide instructions for adding to the `PATH` variable in _bash_ and _tcsh_.
 
@@ -49,7 +49,7 @@ To set up the `gaffer` command in Linux:
 You can now execute `gaffer` as a command from any directory in the terminal.
 
 
-## Setting Up the "gaffer" Command in OSX ##
+## Setting up the "gaffer" command in OSX ##
 
 The default terminal in OSX is _bash_, so you will need to add to the `PATH` variable in the _bash_ user config.
 
@@ -74,7 +74,7 @@ To set up the `gaffer` command in OSX:
 You can now execute `gaffer` as a command from any directory in the terminal.
 
 
-## Using the "gaffer" Command ##
+## Using the "gaffer" command ##
 
 Once you have added the Gaffer directory to the `PATH` variable, you can launch Gaffer anywhere in the terminal:
 
@@ -85,7 +85,7 @@ gaffer
 You can also use the command to open Gaffer scripts, as outlined in the [Command Line Reference](../../Reference/CommandLineReference/index.md).
 
 
-## See Also ##
+## See also ##
 
 - [Installing Gaffer](../InstallingGaffer/index.md)
 - [Configuring Gaffer for Third-Party Tools](../ConfiguringGafferForThirdPartyTools/index.md)

@@ -13,7 +13,7 @@ In this first config, we will add a global context variable called `${project:re
 ![A global context variable in a string plug](images/tutorialVariableSubstitutionInStringPlug.png "A global context variable in a string plug")
 
 
-## Global Context Variables ##
+## Global context variables ##
 
 Before we begin, a quick aside. A **global** context variables is a context variable that exists at the node graph's root, and which is available to every node and plug at every point in the graph. You can view all of a graph's global context variable in the _Variables_ tab of the the settings menu (_File_ > _Settings_).
 
@@ -131,7 +131,7 @@ We wrap up the config by adding our function to an event signal that fires when 
 Notice the use of the `application` variable. This is a special variable that refers to the startup config's parent application.
 
 
-## Testing the Global Context Variable ##
+## Testing the global context variable ##
 
 Now we can test the startup config in a live graph. If you haven't already, save `customVariables.py`, then launch a new instance of Gaffer. In the empty graph, take a look at the global context variables found in the _Variables_ tab of the graph's settings (_File_ > _Settings_). You should see the new `project:resources` variable pointing to the correct path.
 
@@ -149,7 +149,7 @@ If all went well, Gaffy's geometry cache should have loaded in the graph.
 As mentioned earlier, if we wanted to, we could make the path more granular, perhaps by assigning a global context variable to each its child directories.
 
 
-## Environment Variables and Context Variables ##
+## Environment variables and context variables ##
 
 Before concluding the first startup config of this tutorial, we should clarify one point about variable substitutions and path components.
 
@@ -169,14 +169,14 @@ Notice how this is standard Python, and the lack of `${}` characters.
 If your studio uses environments variables to define file system directories or path components, it might be a better choice to use them, rather than global context variables, in your file paths inside graphs.
 
 
-## Quick Recap ##
+## Quick recap ##
 
 Adding custom global context variables to your node graphs is a fairly simple affair. With them, you can add any typed value, such as strings, and introduce modularity to your graphs' default values.
 
 In the next part of this tutorial, we will demonstrate some actual GUI modification, with a startup config that adds bookmarks to Gaffer's file browsers.
 
 
-## See Also ##
+## See also ##
 
 - [Tutorial: Startup Config 2, Custom Bookmarks](../CreatingConfigurationFiles2/index.md)
 - [Tutorial: Startup Config 3, Custom Node Menu Entries](../CreatingConfigurationFiles3/index.md)

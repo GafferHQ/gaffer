@@ -18,7 +18,7 @@ By the end of this tutorial you will have built a basic scene with Gaffer's robo
 > This tutorial uses Appleseed, a free renderer included with Gaffer. While the Appleseed-specific nodes described here can be substituted with equivalents from Arnold or 3Delight, we recommend that you complete this tutorial using Appleseed before moving on to your preferred renderer.
 
 
-## Starting a New Script ##
+## Starting a new script ##
 
 After [installing Gaffer](../../GettingStarted/InstallingGaffer/index.md), launch Gaffer [from its directory](../../GettingStarted/LaunchingGafferFirstTime/index.md) or by using the ["gaffer" command](../../GettingStarted/SettingUpGafferCommand/index.md). Gaffer will start, and you will be presented with an empty script in the default UI layout.
 
@@ -28,7 +28,7 @@ After [installing Gaffer](../../GettingStarted/InstallingGaffer/index.md), launc
 > To avoid confusion between Gaffer files, its UI, and node graphs in general, we refer to the files you work on as **scripts**.
 
 
-## Importing a Geometry Scene Cache ##
+## Importing a geometry scene cache ##
 
 As Gaffer is a tool primarily designed for lookdev, lighting, and VFX process automation, we expect that your sequence's modelling and animation will be created in an external tool like Maya, and then imported into Gaffer as a geometry/animation cache. Gaffer supports Alembic (.abc) and USD (.usdc and .usda) file formats, as well as its own native SceneCache (.scc) file format. Most scenes begin by importing geometry or images via one of the two types of Reader nodes: [SceneReader](../../Reference/NodeReference/GafferScene/SceneReader.md) or [ImageReader](../../Reference/NodeReference/GafferScene/ImageReader.md).
 
@@ -52,7 +52,7 @@ The SceneReader node has loaded, and the _Viewer_ is showing a bounding box, but
 > By default, the _Viewer_, _Node Editor_, and _Hierarchy View_ update to reflect the last selected node, and go blank when no node is selected.
 
 
-## The Scene Hierarchy ##
+## The scene hierarchy ##
 
 When you load a geometry cache, Gaffer only reads its 3D data: at no point does it write to the file. This lets you manipulate the scene without risk to the file.
 
@@ -119,7 +119,7 @@ You may have noticed that when you expanded and collapsed parts of the scene usi
 > Selecting, expanding, and collapsing scene locations through the _Hierarchy View_ and the _Viewer_  are one and the same.
 
 
-## Adjusting the View in the _Viewer_ ##
+## Adjusting the view in the _Viewer_ ##
 
 Like in other 3D tools, you can adjust the angle, field of view, and the position of the virtual camera in the _Viewer_.
 
@@ -131,7 +131,7 @@ Like in other 3D tools, you can adjust the angle, field of view, and the positio
 > If you lose sight of the scene and cannot find your place again, you can always refocus on the currently selected location by hovering the cursor over the _Viewer_ and hitting <kbd>F</kbd>.
 
 
-## Creating a Camera ##
+## Creating a camera ##
 
 Before you can begin rendering the scene, you will need to create a camera. Just like how you created a SceneReader node to load in the geometry, you will create another node to add a camera.
 
@@ -151,7 +151,7 @@ Earlier, you learned how to create a node by navigating the node creation menu i
 As before, the newly created node will be selected automatically, and the _Viewer_, _Hierarchy View_, and _Node Editor_ will update to reflect this new selection.
 
 
-## Node Data Flow ##
+## Node data flow ##
 
 So far, your script is as such: the SceneReader node is outputting a scene with Gaffy's geometry, and the Camera node is outputting a camera object. In fact, the Camera node is outputting a _whole scene_ containing a camera object. As such, any node that sends or receives scene data is classified as a **scene node**. This paradigm may be a bit confusing compared to other DCCs, but it is one of Gaffer's strengths.
 
@@ -186,7 +186,7 @@ The inputs and outputs of a node are called **plugs**, and are represented in th
 For your two nodes to occupy the same scene (and later render together), you will need to combine them into a single scene. You can connect both of their output plugs to a Group node, and you can also rearrange the nodes to better visually represent the data flow in the graph.
 
 
-## Connecting Plugs ##
+## Connecting plugs ##
 
 It's time to connect the SceneReader and Camera nodes to combine their scenes:
 
@@ -214,7 +214,7 @@ You may have noticed that you can intuitively click and drag the nodes around in
 - To focus on the currently selected node, hover the cursor over the _Graph Editor_ and hit <kbd>F</kbd>.
 
 
-## Positioning the Camera ##
+## Positioning the camera ##
 
 Next, you should reposition the camera so that it frames Gaffy. You can accomplish this using the built-in 3D manipulation tools in the _Viewer_.
 
@@ -241,7 +241,7 @@ Next, rotate the camera using the _RotateTool:_
 ![The camera, rotated, in the Viewer](images/viewerCameraRotated.png "The camera, rotated, in the Viewer")
 
 
-### More Precise Camera Adjustment ###
+### More precise camera adjustment ###
 
 For more precise positioning and rotation, you can set the Translate and Rotate values in the _Transform_ tab of the _Node Editor:_
 
@@ -251,7 +251,7 @@ For more precise positioning and rotation, you can set the Translate and Rotate 
 > In the prior section _Connecting Plugs_, we referred to the main inputs and outputs of a node as plugs. In actuality, **all** the values you see in the _Node Editor_, including the camera's transform, are plugs. For ease of use, only a subset of a node's available plugs appear in the _Graph Editor_.
 
 
-## Rendering Your First Image ##
+## Rendering your first image ##
 
 Now that you have defined the layout of your scene, you should perform a quick test-render to check that everything is working as expected. In order to do that, you need to place some render-related nodes to define your script's render settings.
 
@@ -304,7 +304,7 @@ With all the settings complete, start the interactive renderer:
 Congratulations! You have successfully rendered your first image. Gaffy is currently lacking shading, lighting, and texturing. We will move on to those soon. First, you should adjust the UI to provide yourself a more optimal workflow.
 
 
-## Pinning an Editor to a Node ##
+## Pinning an editor to a node ##
 
 As mentioned earlier, the _Viewer_, _Hierarchy View_, and _Node Editor_ (each an **editor**) show their respective outputs of the currently selected node. This is not always convenient, because often you will need to edit one node while viewing the output of another. You can solve this by **pinning** an editor while a node is selected, which keeps that editor focused on the node.
 
@@ -345,7 +345,7 @@ Now you can switch between the scene's geometry (first _Viewer_) and the rendere
 Now it is time to shade Gaffy.
 
 
-## Adding Shaders and Lighting ##
+## Adding shaders and lighting ##
 
 It's time to add shaders and lighting. Lights are created at their own location, and can be added anywhere in the graph. For efficiency, shaders should be added to the geometry as early as possible.
 
@@ -520,7 +520,7 @@ You should now have a basic understanding of Gaffer's interface, the flow of dat
 You should now have a solid basis for further learning and exploration.
 
 
-## See Also ##
+## See also ##
 
 - [Installing Gaffer](../../Installation/index.md)
 - [Controls and Shorcuts](../../Interface/ControlsAndShortcuts/index.md)

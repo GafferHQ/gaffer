@@ -5,7 +5,7 @@ Gaffer is designed to gracefully handle very large scenes by deferring the gener
 Here we will discuss the performance implications of various choices you might make in your Gaffer scripts, and provide some guidelines for keeping them running smoothly.
 
 
-## Complexity and Node Graph Structure ##
+## Complexity and node graph structure ##
 
 A very rough estimate for the complexity of a scene can be made by considering the number of its locations, and the number of nodes through which each location passes. For instance, we might say that 10 locations passing through 10 nodes – `10 * 10 = 100` – is roughly equivalent to 20 locations passing through 5 nodes – `20 * 5 = 100`. When you consider that most scenes are comprised of a number of assets, each with an associated shader look, you can use this knowledge to structure your node graphs for the best performance.
 
@@ -44,7 +44,7 @@ Formally, we can state that grouping second has linear complexity with respect t
 The above guideline applies primarily to applying looks to published assets, and should not discourage you from editing large scenes. Much of Gaffer's flexibility and power comes from the ability to edit a large scene after it is built, which is invaluable when making edits on a per-shot or per-sequence basis.
 
 
-## Path Wildcards ##
+## Path wildcards ##
 
 The `'...'` wildcard in a path expression means "match any number of names." So, in a large geographical scene, `'/world/.../house'` would return:
 
@@ -87,7 +87,7 @@ Keep in mind the rough complexity metric of `complexity = numberOfLocations * nu
 - Try and assign shaders and set attributes at a location in the scene hierarchy above all the instances, rather than on a per-instance basis.
 
 
-## Performance Monitor ##
+## Performance monitor ##
 
 Gaffer has a [performance monitor](../UsingThePerformanceMonitor/index.md) and a [stats app](../../References/CommandLineReference/stats.md) that can be used to measure and compare the real performance of your graph.
 
@@ -95,7 +95,7 @@ Gaffer has a [performance monitor](../UsingThePerformanceMonitor/index.md) and a
 > When performance is critical, use the performance monitor or the stats app.
 
 
-## See Also ##
+## See also ##
 
 <!-- TODO: - [Multithreading](Multithreading/index.md) -->
 <!-- TODO: - [Deferred execution](DeferredExecution/index.md) -->
