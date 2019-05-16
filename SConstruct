@@ -278,6 +278,15 @@ options.Add(
 # general variables
 
 options.Add(
+	BoolVariable(
+		"GAFFERCORTEX",
+		"Builds and installs the GafferCortex modules. These are deprecated and will "
+		"be removed completely in a future version.",
+		True
+	)
+)
+
+options.Add(
 	"ENV_VARS_TO_IMPORT",
 	"By default SCons ignores the environment it is run in, to avoid it contaminating the "
 	"build process. This can be problematic if some of the environment is critical for "
@@ -694,17 +703,22 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferCortex", "GafferDispatch" ],
 		},
+		"requiredOptions" : [ "GAFFERCORTEX" ],
 	},
 
 	"GafferCortexTest" : {
 		"additionalFiles" : glob.glob( "python/GafferCortexTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
+		"requiredOptions" : [ "GAFFERCORTEX" ],
 	},
 
 	"GafferCortexUI" : {
 		"apps" : [ "op" ],
+		"requiredOptions" : [ "GAFFERCORTEX" ],
 	},
 
-	"GafferCortexUITest" : {},
+	"GafferCortexUITest" : {
+		"requiredOptions" : [ "GAFFERCORTEX" ],
+	},
 
 	"GafferScene" : {
 		"envAppends" : {
