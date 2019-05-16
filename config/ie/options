@@ -123,7 +123,10 @@ if targetApp :
 	compiler = targetAppReg["compiler"]
 	compilerVersion = targetAppReg["compilerVersion"]
 	pythonVersion = targetAppReg["pythonVersion"]
-	targetAppMajorVersion = targetAppReg.get( "majorVersion", targetAppVersion )
+	if targetApp in ( "nuke", ):
+		targetAppMajorVersion = targetAppReg.get( "compatibilityVersion", targetAppReg.get( "majorVersion", targetAppVersion ) )
+	else:
+		targetAppMajorVersion = targetAppReg.get( "majorVersion", targetAppVersion )
 
 	if "compilerFlags" in targetAppReg :
 		CXXFLAGS = CXXFLAGS + targetAppReg["compilerFlags"]
