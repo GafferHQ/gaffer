@@ -244,6 +244,10 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// \todo Should object be typed as Primitive?
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
 
+		/// Adds a named light filter with the initially supplied set of attributes, which are expected
+		/// to provide at least a light filter shader.
+		virtual ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
+
 		/// Adds a named object to the render with the initally supplied set of attributes.
 		/// The attributes may subsequently be edited in interactive mode using
 		/// ObjectInterface::attributes().
