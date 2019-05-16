@@ -49,6 +49,7 @@ class ScriptWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, **kw )
 
 		self.__script = script
+		self.__titleManager = ScriptWindow._WindowTitleBehaviour( self, script )
 
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 
@@ -65,11 +66,6 @@ class ScriptWindow( GafferUI.Window ) :
 		self.setChild( self.__listContainer )
 
 		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
-
-		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
-		self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
-
-		self.__updateTitle()
 
 		ScriptWindow.__instances.append( weakref.ref( self ) )
 
@@ -109,31 +105,6 @@ class ScriptWindow( GafferUI.Window ) :
 		scriptParent = self.__script.parent()
 		if scriptParent is not None :
 			scriptParent.removeChild( self.__script )
-
-	def __scriptPlugChanged( self, plug ) :
-
-		if plug.isSame( self.__script["fileName"] ) or plug.isSame( self.__script["unsavedChanges"] ) :
-			self.__updateTitle()
-
-	def __metadataChanged( self, nodeTypeId, key, node ) :
-
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__script, nodeTypeId, key, node ) :
-			self.__updateTitle()
-
-	def __updateTitle( self ) :
-
-		f = self.__script["fileName"].getValue()
-		if not f :
-			f = "untitled"
-			d = ""
-		else :
-			d, n, f = f.rpartition( "/" )
-			d = " - " + d
-
-		u = " *" if self.__script["unsavedChanges"].getValue() else ""
-		ro = " (read only) " if Gaffer.MetadataAlgo.readOnly( self.__script ) else ""
-
-		self.setTitle( "Gaffer : %s%s%s%s" % ( f, ro, u, d ) )
 
 	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one
@@ -198,3 +169,48 @@ class ScriptWindow( GafferUI.Window ) :
 
 		if not len( scriptContainer.children() ) and GafferUI.EventLoop.mainEventLoop().running() :
 			GafferUI.EventLoop.mainEventLoop().stop()
+
+
+	## A convenience class to manage window titles based on changes to the script state.
+	# This is protected such that it can be used by other GafferUI windows.
+	class _WindowTitleBehaviour :
+
+		def __init__( self, window, script ) :
+
+			self.__window = weakref.ref( window )
+			self.__script = weakref.ref( script )
+
+			self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
+			self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
+
+			self.__updateTitle()
+
+		def __updateTitle( self ) :
+
+			w = self.__window()
+			if not w :
+				return
+
+			f = self.__script()["fileName"].getValue()
+			if not f :
+				f = "untitled"
+				d = ""
+			else :
+				d, n, f = f.rpartition( "/" )
+				d = " - " + d
+
+			u = " *" if self.__script()["unsavedChanges"].getValue() else ""
+			ro = " (read only) " if Gaffer.MetadataAlgo.readOnly( self.__script() ) else ""
+
+			w.setTitle( "Gaffer : %s%s%s%s" % ( f, ro, u, d ) )
+
+		def __scriptPlugChanged( self, plug ) :
+
+			if plug.isSame( self.__script()["fileName"] ) or plug.isSame( self.__script()["unsavedChanges"] ) :
+				self.__updateTitle()
+
+		def __metadataChanged( self, nodeTypeId, key, node ) :
+
+			if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__script(), nodeTypeId, key, node ) :
+				self.__updateTitle()
+

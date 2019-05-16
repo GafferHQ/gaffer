@@ -83,6 +83,25 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( wc(), None )
 		self.assertEqual( wn(), None )
 
+	def testDetachedPanelsLifetime( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		p = GafferUI.CompoundEditor._DetachedPanel( s )
+		c._addDetachedPanel( p )
+
+		wp = weakref.ref( p )
+
+		ps = c._detachedPanels()
+		self.assertTrue( ps[0] is p )
+
+		del ps
+		del p
+		del c
+
+		self.assertEqual( wp(), None )
+
 	def testReprLifetime( self ) :
 
 		s = Gaffer.ScriptNode()

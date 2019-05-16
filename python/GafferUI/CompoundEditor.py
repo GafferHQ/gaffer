@@ -52,11 +52,64 @@ from Qt import QtWidgets
 
 class CompoundEditor( GafferUI.Editor ) :
 
+	class _DetachedPanel( GafferUI.Window ) :
+
+		def __init__( self, scriptNode, *args, **kwargs ) :
+
+			GafferUI.Window.__init__( self, *args, **kwargs )
+			self.__titleManger = GafferUI.ScriptWindow._WindowTitleBehaviour( self, scriptNode )
+
+			self.__splitContainer = _SplitContainer()
+			self.__splitContainer.append( _TabbedContainer() )
+			self.setChild( self.__splitContainer )
+
+			self._gafferParent = None
+
+		## As were technically not in the Qt hierarchy, but do want to be logically
+		# owned by a CompoundEditor, we re-implement this to re-direct ancestor
+		# calls to which ever editor we were added to (CompoundEditor fills this
+		# in for us when we're added).
+		def parent( self ) :
+
+			return self._gafferParent() if self._gafferParent else None
+
+		def editors( self, type = GafferUI.Editor ) :
+
+			return self.__splitContainer.editors( type = type )
+
+		def addEditor( self, editor ) :
+
+			self.__splitContainer.addEditor( editor )
+
+		def replaceEditors( self, splitContainer ) :
+
+			self.__splitContainer = splitContainer
+			self.setChild( self.__splitContainer )
+
+		# A detached panel is considered empty if it has a single split with
+		# no editors.
+		def isEmpty( self ) :
+
+			if len(self.__splitContainer) == 1 :
+				c = self.__splitContainer[0]
+				if isinstance( c, _TabbedContainer ) and len(c) == 0 :
+					return True
+
+			return False
+
+		def _setGafferParent( self, gafferWidget ) :
+
+			self._gafferParent = None
+			if gafferWidget :
+				self._gafferParent = weakref.ref( gafferWidget )
+
 	def __init__( self, scriptNode, children=None, **kw ) :
 
 		self.__splitContainer = _SplitContainer()
 
 		GafferUI.Editor.__init__( self, self.__splitContainer, scriptNode, **kw )
+
+		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 		self.__splitContainer.append( _TabbedContainer() )
 
@@ -65,39 +118,22 @@ class CompoundEditor( GafferUI.Editor ) :
 		if children :
 			self.__addChildren( self.__splitContainer, children )
 
+		self.__detachedPanels = []
+
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
 	def editors( self, type = GafferUI.Editor ) :
 
-		def __recurse( w ) :
-			assert( isinstance( w, _SplitContainer ) )
-			if w.isSplit() :
-				return __recurse( w[0] ) + __recurse( w[1] )
-			else :
-				return [ e for e in w[0] if isinstance( e, type ) ]
-
-		return __recurse( self.__splitContainer )
+		editors = self.__splitContainer.editors( type = type )
+		for p in self._detachedPanels() :
+			editors.extend( p.editors( type = type ) )
+		return editors
 
 	## Adds an editor to the layout, trying to place it in the same place
 	# as editors of the same type.
 	def addEditor( self, editor ) :
 
-		def __findContainer( w, editorType ) :
-			if w.isSplit() :
-				ideal, backup = __findContainer( w[0], editorType )
-				if ideal is not None :
-					return ideal, backup
-				return __findContainer( w[1], editorType )
-			else :
-				for e in w[0] :
-					if isinstance( e, editorType ) :
-						return w, w
-				return None, w
-
-		ideal, backup = __findContainer( self.__splitContainer, editor.__class__ )
-		container = ideal if ideal is not None else backup
-
-		container[0].addEditor( editor )
+		self.__splitContainer.addEditor( editor )
 
 	__nodeSetMenuSignal = Gaffer.Signal2()
 	## A signal emitted to populate a menu for manipulating
@@ -107,6 +143,40 @@ class CompoundEditor( GafferUI.Editor ) :
 	def nodeSetMenuSignal( cls ) :
 
 		return CompoundEditor.__nodeSetMenuSignal
+
+	def _detachedPanels( self ) :
+
+		return list(self.__detachedPanels)
+
+	def _addDetachedPanel( self, panel ) :
+
+		oldParent = panel.parent()
+		if oldParent is self :
+			return
+
+		if oldParent is not None :
+			oldParent._removeDetachedPanel( panel )
+
+		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ) )
+
+		# Technically the widget isn't in the Qt hierarchy, but we want
+		# to be able to use GafferUI.Widget.ancestor, so we sneak ourselves
+		# in there. @see _DetachedPanel.parent
+		panel._setGafferParent( self )
+		self.__detachedPanels.append( panel )
+
+	def _removeDetachedPanel( self, panel ) :
+
+		panel._setGafferParent( None )
+		self.__detachedPanels.remove( panel )
+		panel.__removeOnCloseConnection = None
+		panel._applyVisibility()
+
+	def __visibilityChanged(self, widget) :
+
+		v = self.visible()
+		for p in self._detachedPanels() :
+			p.setVisible( v )
 
 	def __serialise( self, w ) :
 
@@ -273,6 +343,36 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 		self.setOrientation( subPanelToKeepFrom.getOrientation() )
 
+	def editors( self, type = GafferUI.Editor ) :
+
+		def __recurse( w ) :
+			assert( isinstance( w, _SplitContainer ) )
+			if w.isSplit() :
+				return __recurse( w[0] ) + __recurse( w[1] )
+			else :
+				return [ e for e in w[0] if isinstance( e, type ) ]
+
+		return __recurse( self )
+
+	def addEditor( self, editor ) :
+
+		def __findContainer( w, editorType ) :
+			if w.isSplit() :
+				ideal, backup = __findContainer( w[0], editorType )
+				if ideal is not None :
+					return ideal, backup
+				return __findContainer( w[1], editorType )
+			else :
+				for e in w[0] :
+					if isinstance( e, editorType ) :
+						return w, w
+				return None, w
+
+		ideal, backup = __findContainer( self, editor.__class__ )
+		container = ideal if ideal is not None else backup
+
+		container[0].addEditor( editor )
+
 # The internal class used to keep a bunch of editors in tabs, updating the titles
 # when appropriate, and keeping a track of the pinning of nodes.
 class _TabbedContainer( GafferUI.TabbedContainer ) :
@@ -304,7 +404,6 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		self.__tabDragBehaviour = _TabDragBehaviour( self )
-
 
 	def addEditor( self, nameOrEditor ) :
 
@@ -355,21 +454,35 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		m.append( "/divider", { "divider" : True } )
 
-		removeItemAdded = False
-
 		splitContainer = self.ancestor( _SplitContainer )
 		splitContainerParent = splitContainer.parent()
+		currentTab = self.getCurrent()
+
+		detatchItemAdded = False
+
+		if isinstance( splitContainerParent, _SplitContainer ) :
+			m.append( "/Detach Panel", { "command" : Gaffer.WeakMethod( self.__detachPanel ) } )
+			detatchItemAdded = True
+
+		if currentTab is not None :
+			m.append( "/Detach " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachCurrentTab ) } )
+			detatchItemAdded = True
+
+		if detatchItemAdded :
+			m.append( "/divider2", { "divider" : True } )
+
+		removeItemAdded = False
+
 		if isinstance( splitContainerParent, _SplitContainer ) :
 			m.append( "Remove Panel", { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
 			removeItemAdded = True
 
-		currentTab = self.getCurrent()
 		if currentTab is not None :
 			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeCurrentTab ) } )
 			removeItemAdded = True
 
 		if removeItemAdded :
-			m.append( "/divider2", { "divider" : True } )
+			m.append( "/divider3", { "divider" : True } )
 
 		tabsVisible = self.getTabsVisible()
 		# Because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
@@ -493,6 +606,48 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__pinningButton.setHighlighted( False )
 
 		return True
+
+	def __detachCurrentTab( self ) :
+
+		editor = self.getCurrent()
+
+		window = CompoundEditor._DetachedPanel( editor.scriptNode() )
+		self.__moveWindowOverWidget( window, editor, 10 )
+
+		self.ancestor( GafferUI.CompoundEditor )._addDetachedPanel( window )
+
+		self.remove( editor )
+
+		window.addEditor( editor )
+		window.setVisible( True )
+
+	def __detachPanel( self ) :
+
+		# Fetch them now, or we'll be out of the hierarchy after we have
+		# collapsed our old parent split container and won't be able to find them
+		splitContainer = self.ancestor( _SplitContainer )
+		compoundEditor = self.ancestor( GafferUI.CompoundEditor )
+
+		window = CompoundEditor._DetachedPanel( self.ancestor( GafferUI.ScriptWindow ).scriptNode() )
+		self.__moveWindowOverWidget( window, splitContainer, 10 )
+
+		compoundEditor._addDetachedPanel( window )
+
+		# We must join the parent or we end up with nested split containers in the hierarchy
+		parent = splitContainer.parent()
+		parent.join( 1 - parent.index( splitContainer ) )
+
+		window.replaceEditors( splitContainer )
+		window.setVisible( True )
+
+	@staticmethod
+	def __moveWindowOverWidget( window, targetWidget, offsetPixels ) :
+
+		# TODO: Does this need to consider which screen we're on if its not a
+		# virtual desktop spanning multiple?
+		qWidget = targetWidget._qtWidget()
+		topLeft = qWidget.mapToGlobal( qWidget.rect().topLeft() )
+		window.setPosition( imath.V2i( topLeft.x() + offsetPixels, topLeft.y() + offsetPixels ) )
 
 	def __removeCurrentTab( self ) :
 
@@ -657,9 +812,9 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		# All further mouse moves need be handled (by this class) in
 		# response to DragMove if any in-drag logic is required.
 
-		if not self.__abortedInitialRearrange \
-			and event.buttons() & QtCore.Qt.LeftButton \
-			and self.__shouldAbortInitialRearrange( qTabBar, event ) :
+		if event.buttons() & QtCore.Qt.LeftButton \
+		   and not self.__abortedInitialRearrange \
+		   and self.__shouldAbortInitialRearrange( qTabBar, event ) :
 
 			self.__abortTabBarRearrange( qTabBar )
 			self.__abortedInitialRearrange = True
@@ -668,13 +823,27 @@ class _TabDragBehaviour( QtCore.QObject ) :
 			# the user that it will move as opposed to copy.
 			self.__tabbedContainer().removeEditor( self.__draggedTab )
 
+			# If the dragged editor was in a detached panel, hide it if its now empty.
+			# We can't delete it now as Qt references it in DropEvent and we get a crash
+			# We'll come back and delete it on idle later.
+			cleanupCallback = None
+			detachedPanel = self.__tabbedContainer().ancestor( CompoundEditor._DetachedPanel )
+			if detachedPanel and detachedPanel.isEmpty() :
+				detachedPanel.setVisible( False )
+				parentEditor = detachedPanel.ancestor( CompoundEditor )
+				cleanupCallback = functools.partial( parentEditor._removeDetachedPanel, detachedPanel )
+
+			# Initiate the drag of the tab and handle the drop action
 			self.__doDragForTabBarMove( qTabBar )
+
+			if cleanupCallback :
+				GafferUI.EventLoop.addIdleCallback( cleanupCallback )
 
 			return True
 
-		if self.__abortedInitialRearrange :
+		elif self.__abortedInitialRearrange :
 			# We don't want the underlying widget to see the continuing moves
-			# after we faked the end of the mouse-down move
+			# after we faked the end of the mouse-down move...
 			return True
 
 		return False
@@ -685,23 +854,33 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 		if dropAction == QtCore.Qt.MoveAction :
 
-
 			# If the dragged tab wasn't current, restore the original
 			# widget, unless the dragged tab was re-placed in this container.
 			# We do this as the drag-rearrange/remove can change the current tab
 			if not tabbedContainer.hasChild( self.__getSharedDragWidget() ) \
 			   and tabbedContainer.hasChild( self.__currentTabAtDragStart ) :
 				tabbedContainer.setCurrent( self.__currentTabAtDragStart )
-
 		else :
 
-			# If the tab wasn't accepted by wherever it went, we can re-insert
-			# it into the widget at its old position, and reset the active tab
-			# (again) so it's like nothing happened.
-			widget = self.__getSharedDragWidget()
-			if not tabbedContainer.hasChild( widget ) :
-				tabbedContainer.insert( self.__draggedTabOriginalIndex, widget, widget.getTitle() )
-			tabbedContainer.setCurrent( self.__currentTabAtDragStart )
+			# Create a new window. We want the center of the tab title to be
+			# roughly under the cursor
+			draggedEditor = self.__getSharedDragWidget()
+			parentEditor = tabbedContainer.ancestor( GafferUI.CompoundEditor )
+
+			window = CompoundEditor._DetachedPanel( draggedEditor.scriptNode() )
+
+			# We have to add the editor early so we can work out the center of
+			# the tab header widget otherwise it has no parent so no tab bar...
+			window.addEditor( draggedEditor )
+
+			tabCenter = self.__getTabCenter( draggedEditor )
+			windowPos = QtGui.QCursor.pos() - tabCenter
+			window.setPosition( imath.V2i( windowPos.x(), windowPos.y() ) )
+
+			parentEditor._addDetachedPanel( window )
+			window.setVisible( True )
+
+		self.__setSharedDragWidget( None )
 
 	def __dragEnter( self, event ) :
 
@@ -789,6 +968,13 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		drag = QtGui.QDrag( qTabBar )
 		drag.setMimeData( mimeData )
 		self.__handleDropAction( drag.exec_( QtCore.Qt.MoveAction ) )
+
+	@staticmethod
+	def __getTabCenter( targetTab ) :
+
+		container = targetTab.ancestor( GafferUI.TabbedContainer )
+		tabBar = container._qtWidget().tabBar()
+		return tabBar.tabRect( container.index( targetTab ) ).center()
 
 	# nasty-fudge
 	#
