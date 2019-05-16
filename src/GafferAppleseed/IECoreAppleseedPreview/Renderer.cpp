@@ -1973,6 +1973,14 @@ class ProceduralRenderer : public AppleseedRendererBase
 			return nullptr;
 		}
 
+
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call lightFilter()" );
+			return nullptr;
+		}
+
+
 		void render() override
 		{
 			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call render()" );
@@ -2839,6 +2847,12 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				}
 			}
 
+			return new AppleseedNullObject( *m_project, name, isInteractiveRender() );
+		}
+
+		ObjectInterfacePtr lightFilter( const string &name, const Object *object, const AttributesInterface *attributes ) override
+		{
+			// There is no support for light filters in Appleseed
 			return new AppleseedNullObject( *m_project, name, isInteractiveRender() );
 		}
 
