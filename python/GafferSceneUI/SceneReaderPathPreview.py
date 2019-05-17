@@ -59,7 +59,10 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		# for reading more generic single object files (cob, ptc, pdc, etc)
 		## \todo: can we unify all file input to SceneReader by creating a SceneInterface that makes
 		# single object scenes using Reader ops behind the scenes?
-		self.__script["ObjectPreview"] = _ObjectPreview()
+		try :
+			self.__script["ObjectPreview"] = _ObjectPreview()
+		except ImportError :
+			pass
 
 		# display points and curves GL style rather than disks and ribbons
 		self.__script["OpenGLAttributes"] = GafferScene.OpenGLAttributes( "OpenGLAttributes" )
@@ -94,16 +97,18 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 			ext = str(path).split( "." )[-1]
 
 		supported = set( GafferScene.SceneReader.supportedExtensions() )
-		supported.update( IECore.Reader.supportedExtensions() )
-		# no reason to preview a single image as a 3D scene
-		supported.difference_update( IECore.Reader.supportedExtensions( IECoreImage.ImageReader.staticTypeId() ) )
+		if "ObjectPreview" in self.__script :
+			supported.update( IECore.Reader.supportedExtensions() )
+			# no reason to preview a single image as a 3D scene
+			supported.difference_update( IECore.Reader.supportedExtensions( IECoreImage.ImageReader.staticTypeId() ) )
 
 		return ext in supported
 
 	def _updateFromPath( self ) :
 
 		self.__script["SceneReader"]["fileName"].setValue( "" )
-		self.__script["ObjectPreview"]["fileName"].setValue( "" )
+		if "ObjectPreview" in self.__script :
+			self.__script["ObjectPreview"]["fileName"].setValue( "" )
 
 		if not self.isValid() :
 			self.__script.selection().clear()
@@ -148,7 +153,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 					startFrame = int( round( scene.boundSampleTime( 0 ) * 24.0 ) )
 					endFrame = int( round( scene.boundSampleTime( numSamples - 1 ) * 24.0 ) )
 
-		elif ext in IECore.Reader.supportedExtensions() :
+		elif "ObjectPreview" in self.__script and ext in IECore.Reader.supportedExtensions() :
 
 			self.__script["ObjectPreview"]["fileName"].setValue( fileName )
 			outPlug = self.__script["ObjectPreview"]["out"]
@@ -296,12 +301,14 @@ class _ObjectPreview( Gaffer.Node ) :
 
 		Gaffer.Node.__init__( self, name )
 
+		import GafferCortex
+
 		self["fileName"] = Gaffer.StringPlug( defaultValue = "", substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
 		self["frameRate"] = Gaffer.FloatPlug( defaultValue = 24.0 )
 		self["samplesPerFrame"] = Gaffer.IntPlug( defaultValue = 1, minValue = 1 )
 
 		# single object scenes using Reader ops behind the scenes?
-		self["ObjectReader"] = Gaffer.ObjectReader()
+		self["ObjectReader"] = GafferCortex.ObjectReader()
 		self["ObjectReaderExpression"] = Gaffer.Expression( "Expression" )
 		self["ObjectReaderExpression"].setExpression(
 '''
