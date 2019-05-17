@@ -323,6 +323,22 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		p.fillCompoundObject( o )
 		self.assertEqual( o, IECore.CompoundObject( { "one" : IECore.IntData( 1 ) } ) )
 
+	def testAddMembersSerialisation( self ) :
+
+		d1 = IECore.CompoundData( { "one" : 1, "two" : 2 } )
+
+		s1 = Gaffer.ScriptNode()
+		s1["n"] = Gaffer.Node()
+		s1["n"]["user"]["p"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s1["n"]["user"]["p"].addMembers( d1 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s1.serialise() )
+		d2 = IECore.CompoundData()
+		s2["n"]["user"]["p"].fillCompoundData( d2 )
+
+		self.assertEqual( d1, d2 )
+
 	def testBoxTypes( self ) :
 
 		p = Gaffer.CompoundDataPlug()

@@ -89,7 +89,7 @@ void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool 
 			plugName = it->first;
 			std::replace_if( plugName.begin(), plugName.end(), []( char c ) { return !::isalnum( c ); }, '_' );
 		}
-		addChild( new NameValuePlug( it->first.string(), it->second.get(), plugName ) );
+		addChild( new NameValuePlug( it->first.string(), it->second.get(), plugName, Plug::In, Plug::Default | Plug::Dynamic ) );
 	}
 }
 
