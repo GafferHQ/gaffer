@@ -53,6 +53,7 @@ size_t EvaluateLightLinks::g_firstPlugIndex = 0;
 
 IECore::InternedString m_lightLinkAttrName = "linkedLights";
 IECore::InternedString m_shadowGroupAttrName = "ai:visibility:shadow_group";
+IECore::InternedString m_filteredLightsAttrName = "filteredLights";
 
 IECore::InternedString g_lightsSetName( "__lights" );
 IECore::InternedString g_defaultLightsSetName( "defaultLights" );
@@ -188,8 +189,9 @@ void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Co
 
 	ConstStringDataPtr illuminationExpressionData = inputAttributes->member<StringData>( m_lightLinkAttrName );
 	ConstStringDataPtr shadowExpressionData = inputAttributes->member<StringData>( m_shadowGroupAttrName );
+	ConstStringDataPtr filteredLightsExpressionData = inputAttributes->member<StringData>( m_filteredLightsAttrName );
 
-	if( !illuminationExpressionData && !shadowExpressionData && path.size() != 1 )
+	if( !illuminationExpressionData && !shadowExpressionData && path.size() != 1 && !filteredLightsExpressionData )
 	{
 		// Pass through.
 		h = inputHash;
@@ -224,6 +226,12 @@ void EvaluateLightLinks::hashAttributes( const ScenePath &path, const Gaffer::Co
 
 		h.append( lightNamesPlug()->hash() );
 	}
+
+	if( filteredLightsExpressionData )
+	{
+		scope.set<std::string>( g_expressionContextEntryName, filteredLightsExpressionData->readable() );
+		h.append( lightNamesPlug()->hash() );
+	}
 }
 
 IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -232,6 +240,7 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 
 	ConstStringDataPtr illuminationExpressionData = inputAttributes->member<StringData>( m_lightLinkAttrName );
 	ConstStringDataPtr shadowExpressionData = inputAttributes->member<StringData>( m_shadowGroupAttrName );
+	ConstStringDataPtr filteredLightsExpressionData = inputAttributes->member<StringData>( m_filteredLightsAttrName );
 
 	// In addition to locations that have SetExpressions assigned that need
 	// evaluating, locations at the root level of the hierarchy need to consider
@@ -241,7 +250,7 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 	// otherwise anyway. The resulting linking is propagated through the hierarchy
 	// via inheritance.
 
-	if( !illuminationExpressionData && !shadowExpressionData && path.size() != 1 )
+	if( !illuminationExpressionData && !shadowExpressionData && path.size() != 1 && !filteredLightsExpressionData )
 	{
 		// Pass through
 		return inputAttributes;
@@ -284,6 +293,15 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 			const StringVectorData *tmp = static_cast<const StringVectorData *>( object.get() );
 			result->members()[ m_shadowGroupAttrName ] = const_cast<StringVectorData *>( tmp );
 		}
+	}
+
+	if( filteredLightsExpressionData )
+	{
+		scope.set<std::string>( g_expressionContextEntryName, filteredLightsExpressionData->readable() );
+		ConstObjectPtr object = lightNamesPlug()->getValue();
+
+		const StringVectorData *tmp = static_cast<const StringVectorData *>( object.get() );
+		result->members()[ m_filteredLightsAttrName ] = const_cast<StringVectorData *>( tmp );
 	}
 
 	return result;

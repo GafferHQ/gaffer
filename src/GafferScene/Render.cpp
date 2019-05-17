@@ -298,6 +298,7 @@ void Render::execute() const
 
 	RendererAlgo::outputCameras( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
 	RendererAlgo::outputLights( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputLightFilters( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
 	RendererAlgo::outputObjects( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
 
 	if( renderScope.sceneTranslationOnly() )

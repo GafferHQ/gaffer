@@ -322,5 +322,24 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		light.loadShader( "point_light" )
 		return light, light["parameters"]["color"]
 
+	def _createSpotLight( self ) :
+
+		light = GafferArnold.ArnoldLight()
+		light.loadShader( "spot_light" )
+		return light, light["parameters"]["color"]
+
+	def _createLightFilter( self ) :
+
+		lightFilter = GafferArnold.ArnoldLightFilter()
+		lightFilter.loadShader( "light_blocker" )
+		return lightFilter, lightFilter["parameters"]["density"]
+
+	def _createGobo( self ) :
+
+		gobo = GafferArnold.ArnoldShader()
+		gobo.loadShader( "gobo" )
+
+		return gobo, gobo["parameters"]["slidemap"]
+
 if __name__ == "__main__":
 	unittest.main()

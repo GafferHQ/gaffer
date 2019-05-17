@@ -73,10 +73,13 @@
 
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_vector.h"
+#include "tbb/partitioner.h"
 #include "tbb/spin_mutex.h"
 
 #include <memory>
 #include <thread>
+#include <functional>
+#include <unordered_set>
 
 using namespace std;
 using namespace boost::filesystem;
@@ -246,6 +249,7 @@ const AtString g_lightGroupArnoldString( "light_group" );
 const AtString g_shadowGroupArnoldString( "shadow_group" );
 const AtString g_linearArnoldString( "linear" );
 const AtString g_matrixArnoldString( "matrix" );
+const AtString g_geometryMatrixArnoldString( "geometry_matrix" );
 const AtString g_matteArnoldString( "matte" );
 const AtString g_meshArnoldString( "mesh" );
 const AtString g_modeArnoldString( "mode" );
@@ -318,6 +322,11 @@ class Instance;
 IE_CORE_FORWARDDECLARE( ShaderCache );
 IE_CORE_FORWARDDECLARE( InstanceCache );
 IE_CORE_FORWARDDECLARE( LightListCache );
+IE_CORE_FORWARDDECLARE( ArnoldObject );
+IE_CORE_FORWARDDECLARE( LightFilterConnections );
+
+class ArnoldLight;
+class ArnoldLightFilter;
 
 /// This class implements the basics of outputting attributes
 /// and objects to Arnold, but is not a complete implementation
@@ -337,17 +346,19 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
 
 	protected :
 
-		ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode = nullptr );
+		ArnoldRendererBase( NodeDeleter nodeDeleter, LightFilterConnectionsPtr lightFilterConnections, AtNode *parentNode = nullptr );
 
 		NodeDeleter m_nodeDeleter;
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
 		LightListCachePtr m_lightListCache;
+		LightFilterConnectionsPtr m_connections;
 
 	private :
 
@@ -582,7 +593,7 @@ class ArnoldShader : public IECore::RefCounted
 			}
 		}
 
-		AtNode *root()
+		AtNode *root() const
 		{
 			return !m_nodes.empty() ? m_nodes.back() : nullptr;
 		}
@@ -662,6 +673,7 @@ class ShaderCache : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( ShaderCache )
+
 
 // The LightListCache stores std::vectors of AtNode pointers to lights.
 // We rely on lights getting handled before other objects and if
@@ -743,6 +755,7 @@ IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
 IECore::InternedString g_arnoldFilterMapAttributeName( "ai:filtermap" );
 IECore::InternedString g_arnoldUVRemapAttributeName( "ai:uv_remap" );
+IECore::InternedString g_arnoldLightFilterShaderAttributeName( "ai:lightFilter:filter" );
 
 IECore::InternedString g_arnoldReceiveShadowsAttributeName( "ai:receive_shadows" );
 IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
@@ -783,13 +796,14 @@ IECore::InternedString g_sssSetNameName( "ai:sss_setname" );
 IECore::InternedString g_linkedLights( "linkedLights" );
 IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
+IECore::InternedString g_filteredLights( "filteredLights" );
 
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
 	public :
 
-		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache, LightListCache *lightLinkCache )
+		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache, LightListCache *lightLinkCache, LightFilterConnections *lightFilterConnections )
 			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes ), m_lightListCache( lightLinkCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
@@ -833,6 +847,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECoreScene::ShaderNetwork>( g_lightShaderAttributeName, attributes );
 
+			m_lightFilterShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightFilterShaderAttributeName, attributes );
+
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
 			m_stepSize = attributeValue<float>( g_shapeVolumeStepSizeAttributeName, attributes, 0.0f );
@@ -841,6 +857,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
 			m_shadowGroup = attribute<IECore::StringVectorData>( g_shadowGroup, attributes );
+			m_filteredLights = attribute<IECore::StringVectorData>( g_filteredLights, attributes );
 			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
@@ -852,7 +869,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						m_user[it->first] = data;
 					}
 				}
-				if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
+
+				if( it->first.string() == g_arnoldLightFilterShaderAttributeName )
+				{
+					continue;
+				}
+				else if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
 				{
 					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it->second.get() ) );
 					m_lightFilterShaders.push_back( filter );
@@ -1137,6 +1159,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeResetParameter( node, g_shadowGroupArnoldString );
 					AiNodeResetParameter( node, g_useShadowGroupArnoldString );
 				}
+
 			}
 
 			// Add camera specific parameters.
@@ -1176,6 +1199,18 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_lightShader.get();
 		}
 
+		/// Return the shader assigned to a world space light filter
+		const IECoreScene::ShaderNetwork *lightFilterShader() const
+		{
+			return m_lightFilterShader.get();
+		}
+
+		const IECore::StringVectorData *filteredLights() const
+		{
+			return m_filteredLights.get();
+		}
+
+		/// Return the shaders for filters directly assigned to a light
 		const std::vector<ArnoldShaderPtr>& lightFilterShaders() const
 		{
 			return m_lightFilterShaders;
@@ -1571,6 +1606,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		ArnoldShaderPtr m_filterMap;
 		ArnoldShaderPtr m_uvRemap;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
+		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
 		IECore::ConstStringDataPtr m_transformType;
@@ -1583,6 +1619,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Volume m_volume;
 		IECore::ConstStringVectorDataPtr m_linkedLights;
 		IECore::ConstStringVectorDataPtr m_shadowGroup;
+		IECore::ConstStringVectorDataPtr m_filteredLights;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;
@@ -1842,8 +1879,8 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		ArnoldObject( const Instance &instance )
-			:	m_instance( instance ), m_attributes( nullptr ), m_supportsLinkedLights( true )
+		ArnoldObject( const Instance &instance, bool supportsLinkedLights = true )
+			:	m_instance( instance ), m_attributes( nullptr ), m_supportsLinkedLights( supportsLinkedLights )
 		{
 		}
 
@@ -1891,12 +1928,12 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	protected :
 
-		void applyTransform( AtNode *node, const Imath::M44f &transform )
+		void applyTransform( AtNode *node, const Imath::M44f &transform, const AtString matrixParameterName = g_matrixArnoldString )
 		{
-			AiNodeSetMatrix( node, g_matrixArnoldString, reinterpret_cast<const AtMatrix&>( transform.x ) );
+			AiNodeSetMatrix( node, matrixParameterName, reinterpret_cast<const AtMatrix&>( transform.x ) );
 		}
 
-		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times, const AtString matrixParameterName = g_matrixArnoldString )
 		{
 			const size_t numSamples = samples.size();
 			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
@@ -1904,7 +1941,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				AiArraySetMtx( matricesArray, i, reinterpret_cast<const AtMatrix&>( samples[i].x ) );
 			}
-			AiNodeSetArray( node, g_matrixArnoldString, matricesArray );
+			AiNodeSetArray( node, matrixParameterName, matricesArray );
 
 			NodeAlgo::ensureUniformTimeSamples( times );
 			AiNodeSetFlt( node, g_motionStartArnoldString, times[0] );
@@ -1924,12 +1961,205 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 		//    `attributes()`.
 		ConstArnoldAttributesPtr m_attributes;
 
+	private :
+
 		// Derived classes are allowed to reject having lights linked to them
 		bool m_supportsLinkedLights;
 
 };
 
 IE_CORE_FORWARDDECLARE( ArnoldObject )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ArnoldLightFilter
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// The LightFilterConnections can be used to record changes regarding connections
+/// between world space light filters and lights and to communicate them to Arnold.
+class LightFilterConnections : public IECore::RefCounted
+{
+
+public :
+
+	LightFilterConnections( bool ownConnections )
+		: m_ownConnections( ownConnections )
+	{
+	}
+
+	// Record changes. These can be called concurrently.
+	void registerLight( const std::string &lightName, ArnoldLight *light );
+	void deregisterLight( const std::string &lightName );
+	void registerLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter );
+	void deregisterLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter );
+
+	// Communicate with Arnold. This needs to get called non-concurrently before rendering.
+	void update();
+
+private:
+
+	// Mapping between many lights and many filters to avoid N*M growth in
+	// memory consumption for N lights and M filters. Every filter is put in a
+	// group that collects all filters that affect the same set of lights. Each
+	// light is then linked to all groups that affect the particular light.
+	struct FilterGroup
+	{
+		std::unordered_set<ArnoldLightFilter*> filters;
+		bool brandNew;
+		bool dirty;
+	};
+
+	using FilterGroupPtr = std::shared_ptr<FilterGroup>;
+	using FilterGroups = tbb::concurrent_hash_map<const IECore::StringVectorData*, FilterGroupPtr>;
+
+	struct Filters
+	{
+		ArnoldLight *light;
+		std::unordered_set<FilterGroup*> lightFilterGroups;
+		bool dirty;
+	};
+
+	using ConnectionsMap = tbb::concurrent_hash_map<const std::string, Filters>;
+	ConnectionsMap m_connections;
+
+	FilterGroups m_filterGroups;
+
+	bool m_ownConnections;
+	tbb::concurrent_vector<ArnoldObjectPtr> m_arnoldObjects;
+};
+
+IE_CORE_DECLAREPTR( LightFilterConnections )
+
+
+class ArnoldLightFilter : public ArnoldObject
+{
+
+	public :
+
+		ArnoldLightFilter( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode, LightFilterConnections *lightFilterConnections )
+			:	ArnoldObject( instance, /* supportsLinkedLights */ false ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode ), m_connections( lightFilterConnections )
+		{
+		}
+
+		~ArnoldLightFilter() override
+		{
+			const IECore::StringVectorData *filteredLightsData = m_attributes->filteredLights();
+			if( filteredLightsData )
+			{
+				m_connections->deregisterLightFilter( filteredLightsData, this );
+			}
+		}
+
+		void transform( const Imath::M44f &transform ) override
+		{
+			ArnoldObject::transform( transform );
+			m_transformMatrices.clear();
+			m_transformTimes.clear();
+			m_transformMatrices.push_back( transform );
+			applyLightFilterTransform();
+		}
+
+		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		{
+			ArnoldObject::transform( samples, times );
+			m_transformMatrices = samples;
+			m_transformTimes = times;
+			applyLightFilterTransform();
+		}
+
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
+		{
+			if( !ArnoldObject::attributes( attributes ) )
+			{
+				return false;
+			}
+
+			if( m_attributes )
+			{
+				// We have registered this light filter before, - undo that.
+				const IECore::StringVectorData *previouslyFilteredLightsData = m_attributes->filteredLights();
+				if( previouslyFilteredLightsData )
+				{
+					m_connections->deregisterLightFilter( previouslyFilteredLightsData, this );
+				}
+			}
+
+			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+			m_attributes = arnoldAttributes;
+
+			// Update light filter shader if it is actually used to filter lights.
+
+			const IECore::StringVectorData *filteredLightsData = arnoldAttributes->filteredLights();
+
+			// Reset light filter until we know that we have all necessary data
+			m_lightFilterShader = nullptr;
+
+			if( !filteredLightsData || !arnoldAttributes->lightFilterShader() )
+			{
+				return true;
+			}
+
+			m_lightFilterShader = new ArnoldShader( arnoldAttributes->lightFilterShader(), m_nodeDeleter, "lightFilter:" + m_name + ":", m_parentNode );
+
+			// Make sure light filter is registered so lights can use it
+			m_connections->registerLightFilter( filteredLightsData, this );
+
+			// Simplify name for the root shader, for ease of reading of ass files.
+			const std::string name = "lightFilter:" + m_name;
+			AiNodeSetStr( m_lightFilterShader->root(), g_nameArnoldString, AtString( name.c_str() ) );
+
+			applyLightFilterTransform();
+
+			return true;
+		}
+
+		void nodesCreated( vector<AtNode *> &nodes ) const
+		{
+			if( m_lightFilterShader )
+			{
+				m_lightFilterShader->nodesCreated( nodes );
+			}
+		}
+
+		ArnoldShader *lightFilterShader() const
+		{
+			return m_lightFilterShader.get();
+		}
+
+	private :
+
+		void applyLightFilterTransform()
+		{
+			if( !m_lightFilterShader || m_transformMatrices.empty() )
+			{
+				return;
+			}
+			AtNode *root = m_lightFilterShader->root();
+			if( m_transformTimes.empty() )
+			{
+				assert( m_transformMatrices.size() == 1 );
+				applyTransform( root, m_transformMatrices[0], g_geometryMatrixArnoldString );
+			}
+			else
+			{
+				applyTransform( root, m_transformMatrices, m_transformTimes, g_geometryMatrixArnoldString );
+			}
+		}
+
+		std::string m_name;
+		vector<Imath::M44f> m_transformMatrices;
+		vector<float> m_transformTimes;
+		NodeDeleter m_nodeDeleter;
+		const AtNode *m_parentNode;
+		ArnoldShaderPtr m_lightFilterShader;
+		LightFilterConnections *m_connections;
+};
+
+IE_CORE_DECLAREPTR( ArnoldLightFilter )
 
 } // namespace
 
@@ -1945,10 +2175,10 @@ class ArnoldLight : public ArnoldObject
 
 	public :
 
-		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode )
-			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
+		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode, LightFilterConnections *lightFilterConnections )
+			:	ArnoldObject( instance, /* supportsLinkedLights */ false ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode ), m_connections( lightFilterConnections )
 		{
-			// Explicitly opt out of having lights linked to us, for two reasons :
+			// Explicitly opted out of having lights linked to us, for two reasons :
 			//
 			// - It doesn't make much sense, because we're a light ourself.
 			// - We can only apply light linking correctly once all lights have
@@ -1958,7 +2188,11 @@ class ArnoldLight : public ArnoldObject
 			//
 			/// \todo There is an argument for dealing with this in `GafferScene::RendererAlgo`
 			/// instead. Reconsider when adding light linking to other renderer backends.
-			m_supportsLinkedLights = false;
+		}
+
+		~ArnoldLight() override
+		{
+			m_connections->deregisterLight( m_name );
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -1986,6 +2220,7 @@ class ArnoldLight : public ArnoldObject
 			}
 
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+			m_attributes = arnoldAttributes;
 
 			// Update light shader.
 
@@ -2035,18 +2270,16 @@ class ArnoldLight : public ArnoldObject
 				}
 			}
 
-			// Deal with light filters.
+			// Deal with light filter connections
 
-			const std::vector<ArnoldShaderPtr> &lightFilterShaders = arnoldAttributes->lightFilterShaders();
-			AtArray *linkedFilterNodes = AiArrayAllocate( lightFilterShaders.size(), 1, AI_TYPE_NODE );
-			for( unsigned i = 0; i < lightFilterShaders.size(); ++i )
-			{
-				AiArraySetPtr( linkedFilterNodes, i, lightFilterShaders[i]->root() );
-			}
-
-			AiNodeSetArray( m_lightShader->root(), g_filtersArnoldString, linkedFilterNodes );
+			// We re-register the light here because the light shader has been
+			// replaced above. Without re-registering we wouldn't get a chance
+			// to set the connections on that new shader in our `updateFilters`
+			// method.
+			m_connections->registerLight( m_name, this );
 
 			applyLightTransform();
+
 			return true;
 		}
 
@@ -2056,6 +2289,36 @@ class ArnoldLight : public ArnoldObject
 			{
 				m_lightShader->nodesCreated( nodes );
 			}
+		}
+
+		void updateFilters( std::vector<ArnoldLightFilter*> &lightFilters )
+		{
+			if( !m_lightShader )
+			{
+				return;
+			}
+
+			// In the following we're combining the world space light filters
+			// with the ones that are assigned to the lights directly and live
+			// in light space
+
+			const std::vector<ArnoldShaderPtr> &lightFilterShaders = m_attributes->lightFilterShaders();
+
+			size_t numShaders = lightFilters.size() + lightFilterShaders.size();
+			AtArray *linkedFilterNodes = AiArrayAllocate( numShaders, 1, AI_TYPE_NODE );
+
+			int idx = 0;
+			for( const ArnoldLightFilter *lightFilter : lightFilters )
+			{
+				AiArraySetPtr( linkedFilterNodes, idx++, lightFilter->lightFilterShader()->root() );
+			}
+
+			for( const ArnoldShaderPtr &filter : lightFilterShaders )
+			{
+				AiArraySetPtr( linkedFilterNodes, idx++, filter->root() );
+			}
+
+			AiNodeSetArray( m_lightShader->root(), g_filtersArnoldString, linkedFilterNodes );
 		}
 
 	private :
@@ -2087,10 +2350,229 @@ class ArnoldLight : public ArnoldObject
 		NodeDeleter m_nodeDeleter;
 		const AtNode *m_parentNode;
 		ArnoldShaderPtr m_lightShader;
+		LightFilterConnections *m_connections;
 
 };
 
 IE_CORE_DECLAREPTR( ArnoldLight )
+
+} // namespace
+
+
+namespace
+{
+
+void LightFilterConnections::registerLight( const std::string &lightName, ArnoldLight *light )
+{
+	ConnectionsMap::accessor a;
+	m_connections.insert( a, lightName );
+
+	a->second.light = light;
+	a->second.dirty = true;
+
+	if( m_ownConnections )
+	{
+		m_arnoldObjects.emplace_back( light );
+	}
+}
+
+void LightFilterConnections::deregisterLight( const std::string &lightName )
+{
+
+	ConnectionsMap::accessor a;
+	if( m_connections.find( a, lightName ) )
+	{
+		a->second.light = nullptr;
+		a->second.dirty = true;
+	}
+	else
+	{
+		IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "Can not deregister light filter connections for non-existing light \"%s\"" ) % lightName.c_str() ) );
+	}
+}
+
+void LightFilterConnections::registerLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter )
+{
+	if( !lightNames )
+	{
+		return;
+	}
+
+	// Add filter to group of filters stored for the given lights
+	{
+		FilterGroups::accessor filterGroupAccessor;
+		m_filterGroups.insert( filterGroupAccessor, lightNames );
+
+		if( !filterGroupAccessor->second )
+		{
+			filterGroupAccessor->second = std::make_shared<FilterGroup>();
+			filterGroupAccessor->second->brandNew = true;
+		}
+
+		filterGroupAccessor->second->filters.insert( lightFilter );
+
+		// Even if we knew about the light filter already we need to dirty the
+		// group as the filter itself might have been updated.
+		filterGroupAccessor->second->dirty = true;
+	}
+
+	if( m_ownConnections )
+	{
+		m_arnoldObjects.emplace_back( lightFilter );
+	}
+}
+
+void LightFilterConnections::deregisterLightFilter( const IECore::StringVectorData *lightNames, ArnoldLightFilter *lightFilter )
+{
+	if( m_filterGroups.empty() )
+	{
+		return;
+	}
+
+	FilterGroup *filterGroup;
+	{
+		FilterGroups::accessor fga;
+		if( m_filterGroups.find( fga, lightNames ) )
+		{
+			filterGroup = fga->second.get();
+
+			if( !filterGroup->filters.erase( lightFilter ) )
+			{
+				return;
+			}
+			filterGroup->dirty = true;
+
+			if( !filterGroup->filters.empty() )
+			{
+				// Nothing to do here. Changes to group will be handled in `update()`.
+				return;
+			}
+		}
+		else
+		{
+			return;
+		}
+	}
+
+	// If a filter was removed and the group is now empty, we need to remove it
+	// from the lights and then throw it away.
+	const std::vector<std::string> &lights = lightNames->readable();
+	tbb::parallel_for(
+		size_t(0),
+		lights.size(),
+		[this, lights, filterGroup]( size_t i )
+		{
+			const std::string &lightName = lights[i];
+
+			ConnectionsMap::accessor lightAccessor;
+			if( m_connections.find( lightAccessor, lightName ) )
+			{
+				lightAccessor->second.lightFilterGroups.erase( filterGroup );
+				lightAccessor->second.dirty = true;
+			}
+		}
+	);
+
+	m_filterGroups.erase( lightNames );
+}
+
+// Can not be called concurrently.
+void LightFilterConnections::update()
+{
+	// We've probably registered or deregistered some light filters. Push those
+	// changes onto the affected lights.
+	parallel_for(
+		m_filterGroups.range(),
+		[this]( FilterGroups::range_type &range )
+		{
+			for( auto it = range.begin(); it != range.end(); ++it )
+			{
+
+				FilterGroup *filterGroup = it->second.get();
+
+				if( !filterGroup->brandNew && !filterGroup->dirty )
+				{
+					continue;
+				}
+
+				const std::vector<std::string> &lights = it->first->readable();
+
+				for( const std::string &lightName : lights )
+				{
+
+					ConnectionsMap::accessor lightAccessor;
+					if( !m_connections.find( lightAccessor, lightName ) )
+					{
+						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "Can not update light filter connection for non-existing light \"%s\"" ) % lightName.c_str() ) );
+					}
+
+					if( filterGroup->brandNew )
+					{
+						lightAccessor->second.lightFilterGroups.insert( filterGroup );
+					}
+
+					lightAccessor->second.dirty = true;
+				}
+
+				filterGroup->brandNew = false;
+				filterGroup->dirty = false;
+			}
+		}
+	);
+
+	// Now, for all lights, communicate the changes to the respective nodes on
+	// the arnold side.
+
+	tbb::concurrent_vector<std::string> deregistered;
+
+	parallel_for(
+		m_connections.range(),
+		[this, &deregistered]( ConnectionsMap::range_type &range )
+		{
+			for( auto it = range.begin(); it != range.end(); ++it )
+			{
+				if( !it->second.light )
+				{
+					deregistered.push_back( it->first );
+					continue;
+				}
+
+				if( !it->second.dirty )
+				{
+					continue;
+				}
+
+				std::vector<ArnoldLightFilter*> allFilters;
+				for( FilterGroup *filterGroup : it->second.lightFilterGroups )
+				{
+					allFilters.insert( allFilters.end(), filterGroup->filters.begin(), filterGroup->filters.end() );
+				}
+
+				it->second.light->updateFilters( allFilters );
+				it->second.dirty = false;
+			}
+		},
+		tbb::auto_partitioner()
+	);
+
+	if( m_ownConnections )
+	{
+		// This optimization is a little bit dodgy but provides a fair bit of
+		// performance improvement. What m_ownConnections essentially means
+		// currently is that we're running a batch render and not an IPR session. In
+		// that case, instead of deregistering all filters one by one, we can just
+		// throw away all data we've gathered to manage connections at once.
+		m_filterGroups.clear();
+
+		m_arnoldObjects.clear();
+		return;
+	}
+
+	for( const std::string &lightName : deregistered )
+	{
+		m_connections.erase( lightName );
+	}
+}
 
 } // namespace
 
@@ -2113,7 +2595,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		/// and a new instance cache. Can we share with the parent
 		/// renderer instead?
 		ProceduralRenderer( AtNode *procedural )
-			:	ArnoldRendererBase( nullNodeDeleter, procedural )
+			:	ArnoldRendererBase( nullNodeDeleter, LightFilterConnectionsPtr( new LightFilterConnections( /* ownConnections = */ false ) ), procedural )
 		{
 		}
 
@@ -2137,6 +2619,18 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		{
 			ArnoldLightPtr result = static_pointer_cast<ArnoldLight>(
 				ArnoldRendererBase::light( name, object, attributes )
+			);
+
+			NodesCreatedMutex::scoped_lock lock( m_nodesCreatedMutex );
+			result->instance().nodesCreated( m_nodesCreated );
+			result->nodesCreated( m_nodesCreated );
+			return result;
+		}
+
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			ArnoldLightFilterPtr result = static_pointer_cast<ArnoldLightFilter>(
+				ArnoldRendererBase::lightFilter( name, object, attributes )
 			);
 
 			NodesCreatedMutex::scoped_lock lock( m_nodesCreatedMutex );
@@ -3016,11 +3510,12 @@ class ArnoldGlobals
 namespace
 {
 
-ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode )
+ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, LightFilterConnectionsPtr lightFilterConnections, AtNode *parentNode )
 	:	m_nodeDeleter( nodeDeleter ),
 		m_shaderCache( new ShaderCache( nodeDeleter, parentNode ) ),
 		m_instanceCache( new InstanceCache( nodeDeleter, parentNode ) ),
 		m_lightListCache( new LightListCache() ),
+		m_connections( lightFilterConnections ),
 		m_parentNode( parentNode )
 {
 }
@@ -3036,7 +3531,7 @@ IECore::InternedString ArnoldRendererBase::name() const
 
 ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const IECore::CompoundObject *attributes )
 {
-	return new ArnoldAttributes( attributes, m_shaderCache.get(), m_lightListCache.get() );
+	return new ArnoldAttributes( attributes, m_shaderCache.get(), m_lightListCache.get(), m_connections.get() );
 }
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
@@ -3051,8 +3546,17 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
 	Instance instance = m_instanceCache->get( object, attributes, name );
-	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_parentNode );
+	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_parentNode, m_connections.get() );
 	result->attributes( attributes );
+	return result;
+}
+
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+{
+	Instance instance = m_instanceCache->get( object, attributes, name );
+	ObjectInterfacePtr result = new ArnoldLightFilter( name, instance, m_nodeDeleter, m_parentNode, m_connections.get() );
+	result->attributes( attributes );
+
 	return result;
 }
 
@@ -3088,7 +3592,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 	public :
 
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
-			:	ArnoldRendererBase( nodeDeleter( renderType ) ),
+			:	ArnoldRendererBase( nodeDeleter( renderType ), LightFilterConnectionsPtr( new LightFilterConnections( renderType != IECoreScenePreview::Renderer::Interactive ) ) ),
 				m_globals( new ArnoldGlobals( renderType, fileName, m_shaderCache.get() ) )
 		{
 		}
@@ -3119,6 +3623,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
 			m_lightListCache->clear();
+			m_connections->update();
 			m_globals->render();
 		}
 

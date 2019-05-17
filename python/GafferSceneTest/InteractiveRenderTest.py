@@ -1543,6 +1543,166 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
+	def testLightFilters( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"], colorPlug = self._createSpotLight()
+		colorPlug.setValue( imath.Color3f( 1, 1, 0 ) )
+		script["light"]["transform"]["translate"]["z"].setValue( 1 )
+
+		script["gobo"], goboColorPlug = self._createGobo()
+		goboColorPlug.setValue( imath.Color3f( 0, 1, 1 ) )
+		script["gobo"]["enabled"].setValue( False )
+
+		script["goboAssignment"] = GafferScene.ShaderAssignment()
+		script["goboAssignment"]["in"].setInput( script["light"]["out"] )
+		script["goboAssignment"]["shader"].setInput( script["gobo"]["out"] )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["cam"] = GafferScene.Camera()
+		script["cam"]["transform"]["translate"]["z"].setValue( 1 )
+
+		lightFilter, lightFilterDensityPlug = self._createLightFilter()
+		script["lightFilter"] = lightFilter
+		lightFilterDensityPlug.setValue( 0.0 )  # looking at unfiltered result first
+
+		script["attributes"] = GafferScene.StandardAttributes()
+		script["attributes"]["in"].setInput( script["lightFilter"]["out"] )
+
+		# This will link the light filter to just the one spot light.
+		script["attributes"]["attributes"]["filteredLights"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["goboAssignment"]["out"] )
+		script["group"]["in"][1].setInput( script["plane"]["out"] )
+		script["group"]["in"][2].setInput( script["cam"]["out"] )
+		script["group"]["in"][3].setInput( script["attributes"]["out"] )
+
+		script["shader"], unused = self._createMatteShader()
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["group"]["out"] )
+		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightFilterTest",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["assignment"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["options"]["out"] )
+
+		# Render and give it some time to finish.
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+
+		c = self._color4fAtUV( image, imath.V2f( 0.5 ) )
+		unfilteredIntensity = c[0]
+		self.__assertColorsAlmostEqual( c, imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Use a dense light filter and let renderer update
+
+		lightFilterDensityPlug.setValue( 1.0 )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Disable light filter and let renderer update
+
+		script["lightFilter"]["enabled"].setValue( False )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Enable light filter and let renderer update
+
+		script["lightFilter"]["enabled"].setValue( True )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Add a gobo and disable light filter
+
+		script["gobo"]["enabled"].setValue( True )
+		script["lightFilter"]["enabled"].setValue( False )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Look at combined result of light filter and gobo
+
+		script["lightFilter"]["enabled"].setValue( True )
+		lightFilterDensityPlug.setValue( 0.5 )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity * 0.5, 0, 1 ), delta = 0.01 )
+
+		# Change attribute on light (recreates light shader, filters need to be reconnected properly)
+
+		script["light"]["parameters"]["intensity"].setValue( 2.0 )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Change light filter transformation
+
+		script["lightFilter"]["transform"]["rotate"]["x"].setValue( 0.1 )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Change light filter parameter
+
+		script["lightFilter"]["parameters"]["geometry_type"].setValue( "sphere" )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Disable light
+
+		script["light"]["enabled"].setValue( False )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Reenable light
+
+		script["light"]["enabled"].setValue( True )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
 	def testAdaptors( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1716,6 +1876,13 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	# an appropriate Light node with a point light loaded,
 	# along with the plug for the colour parameter.
 	def _createPointLight( self ) :
+
+		raise NotImplementedError
+
+	# Should be implemented by derived classes to return
+	# an appropriate LightFilter node along with the plug
+	# controlling the light filter's density
+	def _createLightFilter( self ) :
 
 		raise NotImplementedError
 

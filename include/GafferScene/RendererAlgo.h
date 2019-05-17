@@ -110,7 +110,8 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 			NothingChanged = 0,
 			CamerasSetChanged = 1,
 			LightsSetChanged = 2,
-			RenderSetsChanged = 4
+			LightFiltersSetChanged = 4,
+			RenderSetsChanged = 8
 		};
 
 		/// Returns a bitmask describing which sets
@@ -120,6 +121,7 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 
 		const IECore::PathMatcher &camerasSet() const;
 		const IECore::PathMatcher &lightsSet() const;
+		const IECore::PathMatcher &lightFiltersSet() const;
 
 		IECore::ConstInternedStringVectorDataPtr setsAttribute( const std::vector<IECore::InternedString> &path ) const;
 
@@ -140,11 +142,13 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 		Sets m_sets;
 		Set m_camerasSet;
 		Set m_lightsSet;
+		Set m_lightFiltersSet;
 
 };
 
 GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.

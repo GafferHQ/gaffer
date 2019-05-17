@@ -135,7 +135,11 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 		std::vector<std::string> tokens;
 		boost::split( tokens, attributeName, boost::is_any_of(":") );
 		const IECoreScene::ShaderNetwork *lightShaderNetwork = attributes->member<IECoreScene::ShaderNetwork>( tokens.front() + ":light" );
-		if( !lightShaderNetwork || !lightShaderNetwork->outputShader() )
+
+		// It's possible that we found a light filter defined in world space
+		// that isn't assigned to a light just yet. If we found a filter in
+		// light space it must have a valid light shader, though.
+		if( lightShaderNetwork && !lightShaderNetwork->outputShader() )
 		{
 			continue;
 		}

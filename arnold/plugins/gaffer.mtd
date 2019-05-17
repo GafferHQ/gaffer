@@ -517,7 +517,32 @@
 
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	[attr width_edge]
+
+		page STRING "Falloff"
+
+	[attr height_edge]
+
+		page STRING "Falloff"
+
+	[attr ramp]
+
+		gaffer.graphEditorLayout.visible BOOL false
+		page STRING "Falloff"
+
+	[attr axis]
+
+		page STRING "Falloff"
+
+	[attr geometry_matrix]
+
+		widget STRING "null"
+
+	[attr shader]
+
+		gaffer.graphEditorLayout.visible BOOL true
 
 [node light_decay]
 

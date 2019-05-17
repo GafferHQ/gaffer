@@ -65,6 +65,10 @@ StandardAttributes::StandardAttributes( const std::string &name )
 
 	attributes->addChild( new Gaffer::NameValuePlug( "linkedLights", new IECore::StringData( "" ), false, "linkedLights" ) );
 
+	// light filter linking
+
+	attributes->addChild( new Gaffer::NameValuePlug( "filteredLights", new IECore::StringData( "" ), false, "filteredLights" ) );
+
 	plugSetSignal().connect( boost::bind( &StandardAttributes::plugSet, this, ::_1 ) );
 
 }

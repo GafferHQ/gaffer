@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,32 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#include "GafferArnold/ArnoldLightFilter.h"
 
-namespace GafferArnold
+#include "GafferArnold/ArnoldShader.h"
+
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace GafferArnold;
+
+IE_CORE_DEFINERUNTIMETYPED( ArnoldLightFilter );
+
+ArnoldLightFilter::ArnoldLightFilter( const std::string &name )
+	:	GafferScene::LightFilter( new ArnoldShader(), name )
 {
+}
 
-enum TypeId
+ArnoldLightFilter::~ArnoldLightFilter()
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
-	ArnoldBackgroundTypeId = 110911,
-	ArnoldCameraShadersTypeId = 110912,
-	ArnoldLightFilterTypeId = 110913,
-
-	LastTypeId = 110924
-};
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_TYPEIDS_H
+}

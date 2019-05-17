@@ -124,7 +124,8 @@ class RenderController::SceneGraph
 		{
 			CameraType = 0,
 			LightType = 1,
-			ObjectType = 2,
+			LightFilterType = 2,
+			ObjectType = 3,
 			FirstType = CameraType,
 			LastType = ObjectType,
 			NoType = LastType + 1
@@ -492,7 +493,7 @@ class RenderController::SceneGraph
 			m_objectHash = objectHash;
 
 			const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
-			if( (type != LightType) && nullObject )
+			if( (type != LightType && type != LightFilterType) && nullObject )
 			{
 				m_objectInterface = nullptr;
 				return hadObjectInterface;
@@ -538,6 +539,10 @@ class RenderController::SceneGraph
 			else if( type == LightType )
 			{
 				m_objectInterface = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+			}
+			else if( type == LightFilterType )
+			{
+				m_objectInterface = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
 			}
 			else
 			{
@@ -808,6 +813,8 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 					return m_controller->m_renderSets.camerasSet().match( m_scenePath );
 				case SceneGraph::LightType :
 					return m_controller->m_renderSets.lightsSet().match( m_scenePath );
+				case SceneGraph::LightFilterType :
+					return m_controller->m_renderSets.lightFiltersSet().match( m_scenePath );
 				case SceneGraph::ObjectType :
 				{
 					unsigned m = m_controller->m_renderSets.lightsSet().match( m_scenePath ) |

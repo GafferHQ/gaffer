@@ -1,0 +1,129 @@
+##########################################################################
+#
+#  Copyright (c) 2019, Image Engine. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+##########################################################################
+
+import Gaffer
+import GafferArnold
+
+def __parameterUserDefault( plug ) :
+
+	lightFilter = plug.node()
+	return Gaffer.Metadata.value(
+		"ai:lightFilter:filter:light_blocker" + ":" + plug.relativeName( lightFilter["parameters"] ),
+		"userDefault"
+	)
+
+# Activators specific to Arnold's "light_blocker" shader.
+
+def __activateRoundness( parent ) :
+
+	if 'geometry_type' in parent :
+		return parent["geometry_type"].getValue() == "plane" and not parent["shader"].getInput()
+	return True
+
+def __activateEdges( parent ) :
+
+	if parent["shader"].getInput() :
+		return parent["geometry_type"].getValue() == "box"
+
+	return True
+
+
+Gaffer.Metadata.registerNode(
+
+	GafferArnold.ArnoldLightFilter,
+
+	"description",
+
+	"""
+	LightFilter that can be positioned in space to filter light in a particular
+	region. Note that this is a non-physical effect. LightFilters need to get
+	linked to lights which you can do via a StandardAttributes node.
+	""",
+
+	plugs = {
+
+		# Activators need to live on the parent of the affected plug.
+		"parameters" : [
+
+			"layout:activator:roundnessActivator", __activateRoundness,
+			"layout:activator:edgeActivator", __activateEdges,
+
+		],
+
+		"parameters..." : [
+
+			"userDefault", __parameterUserDefault,
+
+		],
+
+		# Parameters specific to Arnold's "light_blocker" shader
+
+		"parameters.shader" : [
+
+			"description",
+			"""
+			Shader to be used for the light_blocker filter. UVs are only
+			available if the geometry type is set to "box". Shading will need
+			to be based on P otherwise.
+			""",
+
+		],
+
+		"parameters.roundness" : [
+
+			"layout:visibilityActivator", "roundnessActivator",
+
+		],
+
+		"parameters.width_edge" : [
+
+			"layout:activator", "edgeActivator",
+
+		],
+
+		"parameters.height_edge" : [
+
+			"layout:activator", "edgeActivator",
+
+		],
+
+		"parameters.density" : [
+
+			"userDefault", 1
+
+		],
+	}
+)

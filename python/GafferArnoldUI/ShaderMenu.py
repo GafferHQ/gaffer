@@ -70,7 +70,10 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
 			if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
 				menuPath = "Shader"
-				nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader )
+				if shaderName == "light_blocker" :
+					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLightFilter )
+				else :
+					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader )
 			else :
 				menuPath = "Light"
 				if shaderName != "mesh_light" :

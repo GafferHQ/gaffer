@@ -63,6 +63,13 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		pass
 
+	# Disable this test for now as we don't have light filter support in
+	# 3Delight, yet.
+	@unittest.skip( "No light filter support just yet" )
+	def testLightFilters( self ) :
+
+		pass
+
 	def _createInteractiveRender( self ) :
 
 		return GafferDelight.InteractiveDelightRender()
