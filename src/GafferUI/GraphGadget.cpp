@@ -921,10 +921,9 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 		if( !gadgetsUnderMouse.size() || gadgetsUnderMouse[0] == this )
 		{
-			// background click. clear selection unless shift is
-			// held, in which case we're expecting a shift drag
-			// to add to the selection.
-			if( !(event.modifiers & ButtonEvent::Shift) )
+			// background click. clear selection unless a modifier is held, in
+			// which case we're expecting a drag to modify the selection.
+			if( !(event.modifiers & ButtonEvent::Shift) && !(event.modifiers & ButtonEvent::Control) )
 			{
 				m_scriptNode->selection()->clear();
 			}
@@ -953,10 +952,10 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 				}
 			}
 
-			if( ( event.modifiers & ButtonEvent::Alt ) || ( controlHeld ) )
+			if( ( event.modifiers & ButtonEvent::Alt ) && ( controlHeld || shiftHeld ) )
 			{
 				std::vector<NodeGadget *> connected;
-				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Alt ? Gaffer::Plug::In : Gaffer::Plug::Out );
+				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Shift ? Gaffer::Plug::In : Gaffer::Plug::Out );
 				for( std::vector<NodeGadget *>::const_iterator it = connected.begin(), eIt = connected.end(); it != eIt; ++it )
 				{
 					affectedNodes.push_back( (*it)->node() );
@@ -967,14 +966,14 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 			if( nodeSelected )
 			{
-				if( shiftHeld )
+				if( controlHeld )
 				{
 					m_scriptNode->selection()->remove( affectedNodes.begin(), affectedNodes.end() );
 				}
 			}
 			else
 			{
-				if( !shiftHeld )
+				if( !controlHeld && !shiftHeld )
 				{
 					m_scriptNode->selection()->clear();
 				}
@@ -1159,7 +1158,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		// we're drag selecting
 		m_lastDragPosition = V2f( i.x, i.y );
-		updateDragSelection( false );
+		updateDragSelection( false, event.modifiers );
  		requestRender();
 		return true;
 	}
@@ -1296,7 +1295,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	else if( dragMode == Selecting )
 	{
-		updateDragSelection( true );
+		updateDragSelection( true, event.modifiers );
  		requestRender();
 	}
 
@@ -1450,7 +1449,7 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 	}
 }
 
-void GraphGadget::updateDragSelection( bool dragEnd )
+void GraphGadget::updateDragSelection( bool dragEnd, ModifiableEvent::Modifiers modifiers )
 {
 	Box2f selectionBound;
 	selectionBound.extendBy( m_dragStartPosition );
@@ -1463,8 +1462,20 @@ void GraphGadget::updateDragSelection( bool dragEnd )
 		const Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
 		if( boxContains( selectionBound, nodeBound2 ) )
 		{
-			nodeGadget->setHighlighted( true );
-			if( dragEnd )
+			bool removeFromSelection = modifiers & DragDropEvent::Control;
+
+			nodeGadget->setHighlighted( !removeFromSelection );
+
+			if( !dragEnd )
+			{
+				continue;
+			}
+
+			if( removeFromSelection )
+			{
+				m_scriptNode->selection()->remove( const_cast<Gaffer::Node *>( it->first ) );
+			}
+			else
 			{
 				m_scriptNode->selection()->add( const_cast<Gaffer::Node *>( it->first ) );
 			}

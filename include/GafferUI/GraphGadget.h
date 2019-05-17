@@ -219,7 +219,8 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		void calculateDragSnapOffsets( Gaffer::Set *nodes );
 		void offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset );
-		void updateDragSelection( bool dragEnd );
+
+		void updateDragSelection( bool dragEnd, ModifiableEvent::Modifiers modifiers );
 
 		void updateGraph();
 		/// May return nullptr if NodeGadget::create() returns nullptr, signifying that

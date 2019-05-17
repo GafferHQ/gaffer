@@ -197,12 +197,12 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	PathMatcher selection = sg->getSelection();
 
 	const bool shiftHeld = event.modifiers & ButtonEvent::Shift;
+	const bool controlHeld = event.modifiers & ButtonEvent::Control;
 	if( !objectUnderMouse.size() )
 	{
-		// background click - clear the selection unless
-		// shift is held in which case we might be starting
-		// a drag to add more.
-		if( !shiftHeld )
+		// background click - clear the selection unless a modifier is held, in
+		// which case we might be starting a drag to add more or remove some.
+		if( !shiftHeld && !controlHeld )
 		{
 			ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
 		}
@@ -213,7 +213,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 		if( objectSelectedAlready )
 		{
-			if( shiftHeld )
+			if( controlHeld )
 			{
 				selection.removePath( objectUnderMouse );
 				ContextAlgo::setSelectedPaths( view()->getContext(), selection );
@@ -221,7 +221,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 		}
 		else
 		{
-			if( !shiftHeld )
+			if( !controlHeld && !shiftHeld )
 			{
 				ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
 			}
@@ -283,9 +283,19 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 
 	SceneGadget *sg = sceneGadget();
 	PathMatcher selection = sg->getSelection();
+	PathMatcher inDragRegion;
 
-	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), selection ) )
+	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), inDragRegion ) )
 	{
+		if( event.modifiers & DragDropEvent::Control )
+		{
+			selection.removePaths( inDragRegion );
+		}
+		else
+		{
+			selection.addPaths( inDragRegion );
+		}
+
 		ContextAlgo::setSelectedPaths( view()->getContext(), selection );
 	}
 

@@ -86,12 +86,15 @@ Action                                Control or Shortcut
 Select all                            :kbd:`Ctrl` + :kbd:`A`
 Clear selection                       :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`A`
 Select node                           Click
-Add/remove node from selection        :kbd:`Shift` + click
+Add node to selection                 :kbd:`Shift` + click
+Add/remove node from selection        :kbd:`Ctrl` + click
 Select nodes                          Click and drag marquee, then release
 Add nodes                             :kbd:`Shift` + click and drag marquee, then 
                                       release
+Deselect nodes                        :kbd:`Ctrl` + click and drag marquee, then
+                                      release
 Select upstream nodes                 :kbd:`Shift` + :kbd:`Alt` + click node
-Select downstream nodes               :kbd:`Shift` + :kbd:`Ctrl` + click node
+Select downstream nodes               :kbd:`Ctrl` + :kbd:`Alt` + click node
 ===================================== =============================================
 ```
 
@@ -246,6 +249,12 @@ Pin to numeric bookmark               :kbd:`1` … :kbd:`9`
 Action                                                 Control or Shortcut
 ====================================================== =====================================
 Tumble                                                 :kbd:`Alt` + click and drag
+Select objects                                         Click and drag marquee, then release
+Add/remove object from selection                       :kbd:`Ctrl` + click
+Add objects to selection                               :kbd:`Shift` + click and drag marquee, then
+                                                       release
+Deselect objects                                       :kbd:`Ctrl` + click and drag marquee, then
+                                                       release
 Expand selection                                       :kbd:`↓`
 Fully expand selection                                 :kbd:`Shift` + :kbd:`↓`
 Collapse selection                                     :kbd:`↑`
