@@ -35,11 +35,18 @@
 ##########################################################################
 
 import Gaffer
-import GafferCortex
 
-# Backwards compatibility - import classes from GafferCortex into
-# the Gaffer namespace.
-for name in dir( GafferCortex ) :
-	if name.endswith( "__" ) :
-		continue
-	setattr( Gaffer, name, getattr( GafferCortex, name ) )
+try :
+
+	import GafferCortex
+
+	# Backwards compatibility - import classes from GafferCortex into
+	# the Gaffer namespace.
+	for name in dir( GafferCortex ) :
+		if name.endswith( "__" ) :
+			continue
+		setattr( Gaffer, name, getattr( GafferCortex, name ) )
+
+except ImportError :
+
+	pass

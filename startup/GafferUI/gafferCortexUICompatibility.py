@@ -37,18 +37,25 @@
 import re
 
 import GafferUI
-import GafferCortexUI
 
-# Backwards compatibility - import things from GafferCortexUI into
-# the GafferUI namespace where appropriate.
+try :
 
-for name in dir( GafferCortexUI ) :
-	if name.endswith( "__" ) :
-		continue
-	setattr( GafferUI, name, getattr( GafferCortexUI, name ) )
+	import GafferCortexUI
 
-def __appendParameterisedHolders( self, path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
+	# Backwards compatibility - import things from GafferCortexUI into
+	# the GafferUI namespace where appropriate.
 
-	GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders( self.definition(), path, searchPathEnvVar, parameterisedHolderType, matchExpression )
+	for name in dir( GafferCortexUI ) :
+		if name.endswith( "__" ) :
+			continue
+		setattr( GafferUI, name, getattr( GafferCortexUI, name ) )
 
-GafferUI.NodeMenu.appendParameterisedHolders = __appendParameterisedHolders
+	def __appendParameterisedHolders( self, path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
+
+		GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders( self.definition(), path, searchPathEnvVar, parameterisedHolderType, matchExpression )
+
+	GafferUI.NodeMenu.appendParameterisedHolders = __appendParameterisedHolders
+
+except ImportError :
+
+	pass
