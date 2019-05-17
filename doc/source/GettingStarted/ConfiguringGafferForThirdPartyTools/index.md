@@ -7,9 +7,7 @@ Gaffer is compatible with the following commercial and open-source third-party t
 - [3Delight](http://www.3delight.com/)
 - [Tractor](https://renderman.pixar.com/tractor)
 
-```eval_rst
-Gaffer comes with Appleseed, so it will require no additional configuration. For the rest of the tools in this list, you will need to set some additional :ref:`environment variables<Environment Variables>`.
-```
+Gaffer comes with Appleseed, so it will require no additional configuration. For the rest of the tools in this list, you will need to set some additional environment variables.
 
 > Note :
 > For the the following Linux instructions, we will assume you are using the _bash_ shell and are familiar with terminal commands. Other shells will have comparable methods for setting environment variables.
