@@ -40,6 +40,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/SimpleTypedData.h"
@@ -226,10 +227,22 @@ void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
 
 void setNumericBookmark( ScriptNode *scriptNode, int bookmark, Node *node )
 {
+	if( scriptNode->isExecuting() && node && node->ancestor<Reference>() )
+	{
+		return;
+	}
+
 	// No other node can have the same bookmark value assigned
 	IECore::InternedString metadataName( numericBookmarkMetadataName( bookmark ) );
 	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, metadataName, /* instanceOnly = */ true ) )
 	{
+		// During deserialisation, we need to be careful as to not override
+		// existing numeric bookmarks.
+		if( scriptNode->isExecuting() )
+		{
+			return;
+		}
+
 		Metadata::deregisterValue( nodeWithMetadata, metadataName );
 	}
 
@@ -245,12 +258,12 @@ void setNumericBookmark( ScriptNode *scriptNode, int bookmark, Node *node )
 		Metadata::deregisterValue( node, numericBookmarkMetadataName( currentValue) );
 	}
 
-	Metadata::registerValue( node, metadataName, new BoolData( true ), /* persistent = */ false );
+	Metadata::registerValue( node, metadataName, new BoolData( true ), /* persistent = */ true );
 }
 
 Node *getNumericBookmark( ScriptNode *scriptNode, int bookmark )
 {
-	// Return the first one we find. There should only ever be just one matching node.
+	// Return the first valid one we find. There should only ever be just one valid matching node.
 	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, numericBookmarkMetadataName( bookmark ), /* instanceOnly = */ true ) )
 	{
 		return nodeWithMetadata;
@@ -261,7 +274,7 @@ Node *getNumericBookmark( ScriptNode *scriptNode, int bookmark )
 
 int numericBookmark( const Node *node )
 {
-	// Return the first one we find. There should only ever be just one matching value.
+	// Return the first one we find. There should only ever be just one valid matching value.
 	for( int bookmark = 1; bookmark < 10; ++bookmark )
 	{
 		if( Metadata::value<BoolData>( node, numericBookmarkMetadataName( bookmark ) ) )

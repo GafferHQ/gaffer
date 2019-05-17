@@ -42,6 +42,7 @@
 #include "GafferBindings/Serialisation.h"
 
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
 
@@ -86,12 +87,27 @@ std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent,
 		object repr = boost::python::import( "IECore" ).attr( "repr" );
 		std::string stringValue = extract<std::string>( repr( pythonValue ) );
 
-		result += boost::str(
-			boost::format( "Gaffer.Metadata.registerValue( %s, %s, %s )\n" ) %
+		// \todo: To clean this up we might add a registerSerialisation( key,
+		// functionReturningSerialiser ) method. Once there's a second use case
+		// we'll have more information about what the API should look like.
+		if( MetadataAlgo::numericBookmarkAffectedByChange( *it ) )
+		{
+			result += boost::str(
+				boost::format( "Gaffer.MetadataAlgo.setNumericBookmark( %s.scriptNode(), %s, %s )\n" ) %
+				identifier %
+				MetadataAlgo::numericBookmark( IECore::runTimeCast<const Node>( graphComponent ) ) %
+				identifier
+			);
+		}
+		else
+		{
+			result += boost::str(
+				boost::format( "Gaffer.Metadata.registerValue( %s, %s, %s )\n" ) %
 				identifier %
 				key %
 				stringValue
-		);
+			);
+		}
 	}
 
 	return result;

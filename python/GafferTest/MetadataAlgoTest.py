@@ -465,6 +465,66 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
 		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n2"] ), 0 )
 
+	def testNumericBookmarksSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["n1"] )
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 2, s["n2"] )
+
+		# Copying within script doesn't copy numeric bookmarks
+		s.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["n1"] )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 2 ), s["n2"] )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n3"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n4"] ), 0 )
+
+		del s["n3"]
+		del s["n4"]
+
+		# Copying to new script preserves numeric bookmarks
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s2, 1 ), s2["n1"] )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s2, 2 ), s2["n2"] )
+
+	def testNumericBookmarksInReferences( self ) :
+
+		# Numeric bookmarks are removed when loading References.
+
+		s = Gaffer.ScriptNode()
+		s["box"] = Gaffer.Box()
+		s["box"]["n"] = Gaffer.Node()
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["box"]["n"] )
+
+		s["box"].exportForReference( self.temporaryDirectory() + "/bookmarked.grf" )
+
+		# Bring reference back in
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/bookmarked.grf" )
+
+		# Clashing Metadata was completely removed
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["n"], "numericBookmark1" ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["r"]["n"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["box"]["n"] )
+
+		# Even without the clash, the metadata is removed
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, None )
+
+		s["r2"] = Gaffer.Reference()
+		s["r2"].load( self.temporaryDirectory() + "/bookmarked.grf" )
+
+		self.assertEqual( Gaffer.Metadata.value( s["r2"]["n"], "numericBookmark1" ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["r2"]["n"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
+
 	def testNumericBookmarkAffectedByChange( self ) :
 
 		# The naming convention for valid numeric bookmarks is "numericBookmark<1-9>"
