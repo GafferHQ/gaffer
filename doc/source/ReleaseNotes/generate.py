@@ -4,6 +4,7 @@ import re
 import inspect
 
 changes = open( "../../../Changes" )
+# remove me
 
 versionFile = None
 
@@ -13,7 +14,7 @@ for line in changes :
 
 	m = re.match( r"^(Gaffer )?(([0-9]+\.){2,3}[0-9]+)", line )
 	if m :
-		versionIndex += ( "\n\t{0}.md".format( m.group( 2 ) ) )
+		versionIndex += ( "\n{}{}.md".format( " " * 4, m.group( 2 ) ) )
 		versionFile = open( m.group( 2 ) + ".md", "w" )
 		versionFile.write( m.group( 2 ) + "\n" )
 		continue
