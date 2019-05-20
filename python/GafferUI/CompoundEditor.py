@@ -60,8 +60,6 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
-		self.__editorAddedSignal = Gaffer.Signal2()
-
 		if children :
 			self.__addChildren( self.__splitContainer, children )
 
@@ -98,12 +96,6 @@ class CompoundEditor( GafferUI.Editor ) :
 		container = ideal if ideal is not None else backup
 
 		container[0].addEditor( editor )
-
-	## A signal emitted whenever an editor is added -
-	# the signature is ( compoundEditor, childEditor ).
-	def editorAddedSignal( self ) :
-
-		return self.__editorAddedSignal
 
 	__nodeSetMenuSignal = Gaffer.Signal2()
 	## A signal emitted to populate a menu for manipulating
@@ -320,8 +312,6 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		self.setLabel( editor, editor.getTitle() )
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
-
-		self.ancestor( CompoundEditor ).editorAddedSignal()( self.ancestor( CompoundEditor ), editor )
 
 		return editor
 
