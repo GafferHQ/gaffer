@@ -22,7 +22,7 @@ When you dispatch your script to the renderer, performance data will output to t
 As an alternative, the [stats app](../../Reference/CommandLineReference/stats.md) allows the same monitoring to be performed from the command line, without the need to dispatch the script.
 
 
-## See Also ##
+## See also ##
 
-- [Script Performance](../index.md)
+- [Performance Best Practices](../PerformanceBestPractices/index.md)
 - [Stats App](../../Reference/CommandLineReference/stats.md)

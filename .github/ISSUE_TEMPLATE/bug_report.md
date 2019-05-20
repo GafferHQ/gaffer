@@ -14,12 +14,12 @@ about: Create a report to help us improve
 Provide a description of the problem/bug
 
 
-### Steps to Reproduce ###
+### Steps to reproduce ###
 
 1. List the steps required for others to reproduce the issue
 
 
-### Debug Log ###
+### Debug log ###
 
 <details>
 <summary>Click to Expand</summary><p>

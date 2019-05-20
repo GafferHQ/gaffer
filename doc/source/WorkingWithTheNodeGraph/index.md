@@ -10,4 +10,6 @@ Here you can learn the fundamentals of constructing and editing node graphs in G
     :maxdepth: 1
 
     Box/index.md
+    PerformanceBestPractices/index.md
+    UsingThePerformanceMonitor/index.md
 ```

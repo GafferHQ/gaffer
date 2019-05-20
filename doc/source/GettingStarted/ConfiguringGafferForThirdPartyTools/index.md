@@ -183,7 +183,7 @@ Once the tractor folder has been added to your `PYTHONPATH`, you can then verify
 <!-- TODO: ![Tractor dispatch](images/tractorDispatch.png) -->
 
 
-## See Also ##
+## See also ##
 
 - [Setting Up the "gaffer" Command](../SettingUpGafferCommand/index.md)
 - [Installing Gaffer](../InstallingGaffer/index.md)

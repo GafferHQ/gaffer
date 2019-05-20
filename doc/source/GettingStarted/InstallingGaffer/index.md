@@ -42,7 +42,7 @@ To install Gaffer in OSX:
 Gaffer is now installed to `/opt/gaffer-!GAFFER_VERSION!-osx`.
 
 
-## See Also ##
+## See also ##
 
 - [Launching Gaffer for the First Time](../LaunchingGafferFirstTime/index.md)
 - [Setting Up the "gaffer" Command](../SettingUpGafferCommand/index.md)

@@ -20,7 +20,7 @@ By the end of this tutorial, you should have an understanding of the following t
 Before you begin, we highly recommend you complete the [Assembling the Gaffer Bot tutorial](../../../Tutorials/BeginnerTutorial/index.md).
 
 
-## The Python Editor ##
+## The _Python Editor_ ##
 
 With the built-in _Python Editor_, you can build and modify the node graph, test API code and syntax, return plug values, and query scenes and images. In the default layout, the editor is in the bottom-right panel, under a tab next to the _Hierarchy View_.
 
@@ -32,7 +32,7 @@ The bottom-half of the _Python Editor_ is the code input field. The top-half is 
 ![The Python Editor with “Hello, World!”](images/pythonEditorHelloWorld.png "The Python Editor with “Hello, World!”")
 
 
-## Creating Nodes ##
+## Creating nodes ##
 
 In the Gaffer API, each node is an instance (in the programming sense) of a class, with each class belonging to a particular Python module. In order to create a node sourced from a module, you will first need to import that module.
 
@@ -69,7 +69,7 @@ root.addChild( myGroup )
 ![All nodes in the Graph Editor, unconnected](images/graphEditorAllNodes.png "All nodes in the Graph Editor, unconnected")
 
 
-## Referencing Nodes without Variables ##
+## Referencing nodes without variables ##
 
 Nodes that do not have variables can be referenced by dragging and dropping them in the interface:
 
@@ -77,7 +77,7 @@ Nodes that do not have variables can be referenced by dragging and dropping them
 2. Release the selection onto the input field of the _Python Editor_.
 
 
-## Loading Shaders ##
+## Loading shaders ##
 
 Before we move on to plugs, you should complete the node creation process by loading a shader into the OpenGLShader node. Shader nodes start out blank, so there is one additional step required, which is to load a shader configuration. For this graph, all you need is a simple color. Load a constant shader with the `loadShader()` method:
 
@@ -86,7 +86,7 @@ myShader.loadShader( 'Constant' )
 ```
 
 
-## Referencing Plugs ##
+## Referencing plugs ##
 
 Since a node's default plugs are created automatically, they have no assigned variables, so you will need to reference them another way. In the API, plugs in the graph (and also, in fact, the nodes and the `root` variable) can each be treated like a Python dictionary, with key-value pairs. When editing plug values, it is usually necessary to first reference them in dictionary syntax.
 
@@ -113,7 +113,7 @@ A reference to `root['Sphere']['radius']` will be inserted. This is identical to
 > Dragging and dropping plugs is a core technique when using the _Python Editor_. It can speed up your node graph editing and inspecting considerably.
 
 
-## Retrieving a Plug Value ##
+## Retrieving a plug value ##
 
 The `getValue()` method retrieves a plug's value. Try it on the `Cs` (colour) plug of the OpenGLShader node:
 
@@ -129,7 +129,7 @@ There is also a shortcut for grabbing a plug value, which involves <kbd>Shift</k
 > The above shortcut can also be very handy in regular use. For instance, if you need to know the type and format of a particular plug's value, dragging it into the _Python Editor_ will reveal it.
 
 
-## Editing a Plug Value ##
+## Editing a plug value ##
 
 The `setValue()` method edits plug values. It functions on plugs with both single and multi-element data types.
 
@@ -146,7 +146,7 @@ mySphere['radius'].setValue( 4 )
 When editing a plug with multiple elements, such as a vector, color, matrix, etc., you can either edit all the values at once, or one at a time. Editing all the values at once requires formatting the value in the type's syntax. Most of the multi-element types belong to the `imath` utility module, so before you can edit them, you will first need to import it.
 
 
-## Editing the Remaining Plugs ##
+## Editing the remaining plugs ##
 
 In this next part, we will step you through the remaining plug edits for your node graph. For each of the following plugs you edit, you will see little to no change, because the nodes are not yet connected. Think of these steps as preparing the plugs.
 
@@ -177,7 +177,7 @@ myFilter['paths'].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
 The above code is more advanced than what we have shown so far, but you will likely need it at some point when editing node graphs. Any time you edit a plug that can take multiple strings, you will need to format the strings as a list, with `IECore.StringVectorData()`. When using this method, remember to first import the `IECore` module.
 
 
-## Connecting Nodes ##
+## Connecting nodes ##
 
 Nodes do not connect together: their plugs do. The `setInput()` method connects a destination plug to a source plug. 
 
@@ -228,7 +228,7 @@ Here is the final graph:
 ![The final scene](images/mainWindowFinalScene.png "The final scene")
 
 
-## Deleting Nodes ##
+## Deleting nodes ##
 
 There's one final common operation you may want to perform on nodes using Python: deletion. Nodes and plugs both have a `removeChild()` method. Try removing the Sphere node: 
 
@@ -242,7 +242,7 @@ root.removeChild( mySphere )
 That covers the most common methods and tasks when using Python to edit node graphs. As we have shown, you have the capacity to accomplish almost all interface actions in Python, demonstrating the power and flexibility of the API.
 
 
-## See Also ##
+## See also ##
 
 - [Node Reference](../../../Reference/NodeReference/index.md)
 - [_Python Editor_ Shorcuts](../../../Interface/ControlsAndShortcuts/index.html#script-editor)

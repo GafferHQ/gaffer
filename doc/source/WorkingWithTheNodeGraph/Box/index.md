@@ -21,7 +21,7 @@ In more advanced uses, Boxes serve to export (and occasionally import) saved sub
 ![Importing reference scripts into your node graph](images/illustrationBoxReferences.png "Importing reference scripts into your node graph")
 
 
-## Box Data Flow ##
+## Box data flow ##
 
 Like any other node, a Box can have _in_ and _out_ plugs. It can take plugs from the main graph, make their data available to the sub-graph, and then output them back into the main graph. 
 
@@ -33,7 +33,7 @@ While you can connect the nodes inside a Box to the main graph, you cannot view 
 ![Left: the in and out plugs in the main graph. Right: the corresponding BoxIn and BoxOut nodes in the sub-graph.](images/illustrationBoxInBoxOutNodes.png "Left: the in and out plugs in the main graph. Right: the corresponding BoxIn and BoxOut nodes in the sub-graph.")
 
 
-### Promoted Plugs ###
+### Promoted plugs ###
 
 When boxing up portions of your node graph, the _in_ plugs of the top-most node(s) and _out_ plugs of the bottom-most node(s) are promoted up to the Box. These **promoted plugs** pass data between the main graph and the sub-graph. This is not limited to main _in_ and _out_ plugs: any plug in the sub-graph can be promoted to the Box.
 
@@ -206,17 +206,16 @@ To **relabel** a plug:
 3. Type a new label.
 
 
-#### Name, Description, documentation URL, and color ####
+#### Metadata and appearance ####
 
 The metadata plugs of a Box, which comprise its name, description, documentation URL, and color, can be edited to better describe and provide support information for it. These plugs are preserved when the Box is exported as a reference script, so their values are crucial for authoring custom Reference nodes.
 
 - Name: The node's name. Same as the name plug.
 - Description: Text that appears in the tooltip and the _Node Editor_. Can be adjusted to explain the Box's purpose, contents, and connections.
+    > Tip :
+    > You can format the _Description_ plug using [Markdown](https://commonmark.org) syntax.
 - Documentation URL: The main help link for the Box (visited by clicking ![the info button](images/info.png "the info button") in the _Node Editor_). Can be edited to point to a location with custom documentation on your studio filesystem or the internet.
 - Color: Determines the color of the Box in the _Graph Editor_.
-
-> Tip :
-> The _Description_ plug will interpret basic HTML tags for marking up the tooltip with elements like headings, lists, divs, and bold and italic text. It even supports inline CSS.
 
 To edit the metadata and appearance of a Box:
 
@@ -244,9 +243,9 @@ To export a Box as a reference script, or import a reference script into a Box:
 
 ## Demos ##
 
-### Box Basics ###
+### Box basics ###
 
-![Box Basics demo](images/demoBoxBasics.png "Box Basics demo")
+![Box basics demo](images/demoBoxBasics.png "Box basics demo")
 
 This can be loaded in Gaffer from _Help_ > _Examples_ > _Box Basics_.
 

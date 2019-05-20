@@ -13,7 +13,7 @@ For the purposes of this document, we will assume you have intermediate knowledg
 Gaffer is open source software hosted and maintained on GitHub: [https://github.com/gafferhq](https://github.com/gafferhq). We strive to keep Gaffer and its documentation bug-free and up-to-date. If you find any bugs with the software, or inaccuracies with this document, we would very much appreciate it if you report it to us on our [Issues page](https://github.com/gafferhq/gaffer/issues).
 
 
-## Start Using Gaffer ##
+## Start using gaffer ##
 
 To start, you should:
 
@@ -23,7 +23,7 @@ To start, you should:
 If you are are looking to automate VFX processes or develop with Gaffer's API, you should also:
 
 * Complete the [Node Graph Editing in Python tutorial](Tutorials/Scripting/GettingStarted/index.md)
-* Familiarize yourself with the [Performance Best Practices](ScriptPerformance/PerformanceBestPractices/index.md) for node graphs.
+* Familiarize yourself with the [Performance Best Practices](WorkingWithTheNodeGraph/PerformanceBestPractices/index.md) for node graphs.
 
 
 <!-- TOC -->
@@ -37,11 +37,11 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
 
     GettingStarted/index.md
     Tutorials/index.md
-    Interface/index.md
     WorkingWithTheNodeGraph/index.md
     WorkingWithScenes/index.md
     WorkingWithImages/index.md
     ScriptPerformance/index.md
+    Interface/index.md
 ```
 
 ```eval_rst

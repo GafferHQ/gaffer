@@ -11,7 +11,7 @@ General
 
 ```eval_rst
 =================== =============================== ============================
-Name                Purpose                         Example Values
+Name                Purpose                         Example values
 =================== =============================== ============================
 label               Label used instead of plug name "My Label"
 description         Describes the purpose of a      "Turns on the thingammajig"
@@ -30,7 +30,7 @@ NodeEditor Layout
 
 ```eval_rst
 =============================== =============================== ==================================
-Name                            Purpose                         Example Values
+Name                            Purpose                         Example values
 =============================== =============================== ==================================
 layout:divider                  Places a divider after the plug True
 layout:index                    Integer index in the layout     0 (first), -1 (last)
@@ -49,7 +49,7 @@ GraphEditor Layout
 
 ```eval_rst
 ====================== ================================ ================================
-Name                   Purpose                          Example Values
+Name                   Purpose                          Example values
 ====================== ================================ ================================
 nodule:color           The colour of the plug           imath.Color3f( 0, 1, 0 )
 connectionGadget:color The colour of input connections  imath.Color3f( 1, 0, 0 )
@@ -64,7 +64,7 @@ Viewer Layout
 
 ```eval_rst
 ====================== ================================ ================================
-Name                   Purpose                          Example Values
+Name                   Purpose                          Example values
 ====================== ================================ ================================
 layout:divider         Places a divider after the plug  True
 layout:index           Integer index in the layout      0 (first), -1 (last)

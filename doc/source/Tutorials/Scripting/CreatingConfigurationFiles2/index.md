@@ -131,12 +131,12 @@ If all goes well, the file path should default to `~/Pictures`.
 > We recommend removing this last line from the config, as it will override the default file browser paths for image nodes with an unrealistic filesystem path that has little utility in a studio environment.
 
 
-## Quick Recap ##
+## Quick recap ##
 
 As you can see, the runtime Python objects of an app, in this case the GUI's bookmarks, can be modified easily with startup configs. In the last startup config of this tutorial, we will edit the node menu by adding a custom node to it.
 
 
-## See Also ##
+## See also ##
 
 - [Tutorial: Startup Config 3, Custom Node Menu Entries](../CreatingConfigurationFiles3/index.md)
 - [Tutorial: Startup Config 1, Custom Global Context Variables](../CreatingConfigurationFiles1/index.md)

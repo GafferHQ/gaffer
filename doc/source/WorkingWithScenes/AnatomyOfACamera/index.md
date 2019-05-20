@@ -12,7 +12,7 @@ Fundamentally, current mainstream renderers use the CG camera model. However, ma
 Therefore, when using Gaffer, and in its scene data, a camera can be thought in terms of, and defined by, aperture and focal length. Cameras in Gaffer are also fully compatible with the Alembic and USD scene formats. Within a scene, a camera's properties are stored as special values known as **parameters**.
 
 
-## Camera Model ##
+## Camera model ##
 
 
 ### Projection ###
@@ -93,7 +93,7 @@ lens aperture = (focalLength × focalLengthWorldScale) / fStop
 For example, assume a lens with a focalLength of 50mm, an fStop of 4, and a world space measured in centimeters (default for Alembic/USD). First, we need to scale the focal length from mm to cm. Using a focalLengthWorldScale of 0.1 yields `50mm × 0.1 = 0.5cm`. This is the lens aperture at its widest. Dividing by the fStop of 4 results in the stopped-down lens aperture of `0.5cm / 4 = 0.125cm`.
 
 
-## Cameras in the Scene ##
+## Cameras in the scene ##
 
 
 ### Camera data ###
@@ -131,7 +131,7 @@ At a later point in the graph, a StandardOptions node selects the camera to use,
 Finally, all camera parameters and render options are passed to the renderer. All these data are used in combination by the renderer to calculate the image projection map, the image size, the motion blur, and the depth of field blur in the render.
 
 
-## See Also ##
+## See also ##
 
 - [Camera](../Camera/index.md)
 - [Camera node reference]()

@@ -87,7 +87,7 @@ GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/taskBoxUpNod
 # - KB/M recording and simulated playback
 # - On-screen keystroke monitor
 
-# Task animation of demoting a plug
+# Task animation of demoting a plug1
 # script["fileName"].setValue( os.path.abspath( "scripts/taskDemotePlug.gfr" ) )
 # TODO: Automate `images/taskDemotePlug.gif` when these tools become available:
 # - KB/M recording and simulated playback
