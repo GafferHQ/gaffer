@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,28 +34,10 @@
 #
 ##########################################################################
 
-import re
-
-import GafferUI
+import GafferImageUI # For ImageReaderPathPreview
+import GafferSceneUI # For SceneReaderPathPreview
 
 try :
-
 	import GafferCortexUI
-
-	# Backwards compatibility - import things from GafferCortexUI into
-	# the GafferUI namespace where appropriate.
-
-	for name in dir( GafferCortexUI ) :
-		if name.endswith( "__" ) :
-			continue
-		setattr( GafferUI, name, getattr( GafferCortexUI, name ) )
-
-	def __appendParameterisedHolders( self, path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
-
-		GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders( self.definition(), path, searchPathEnvVar, parameterisedHolderType, matchExpression )
-
-	GafferUI.NodeMenu.appendParameterisedHolders = __appendParameterisedHolders
-
 except ImportError :
-
 	pass

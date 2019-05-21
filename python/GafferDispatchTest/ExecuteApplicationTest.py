@@ -71,13 +71,11 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "thisScriptDoesNotExist" in "".join( p.stderr.readlines() ) )
 		self.failUnless( p.returncode )
 
-	def testExecuteObjectWriter( self ) :
+	def testExecuteTextWriter( self ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["object"] = GafferTest.CachingTestNode()
-		s["write"] = Gaffer.ObjectWriter()
-		s["write"]["in"].setInput( s["object"]["out"] )
+		s["write"] = GafferDispatchTest.TextWriter()
 		s["write"]["fileName"].setValue( self.__outputFileSeq.fileName )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -99,10 +97,10 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 	def testFramesParameter( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["object"] = GafferTest.CachingTestNode()
-		s["write"] = Gaffer.ObjectWriter()
-		s["write"]["in"].setInput( s["object"]["out"] )
+
+		s["write"] = GafferDispatchTest.TextWriter()
 		s["write"]["fileName"].setValue( self.__outputFileSeq.fileName )
+		s["write"]["text"].setValue( "test" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -127,12 +125,12 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 	def testContextParameter( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["string"] = GafferTest.CachingTestNode()
-		s["e"] = Gaffer.Expression()
-		s["e"].setExpression( "parent['string']['in'] = '{} {}'.format( context.get( 'valueOne', 0 ), context.get( 'valueTwo', 0 ) )" )
-		s["write"] = Gaffer.ObjectWriter()
-		s["write"]["in"].setInput( s["string"]["out"] )
+
+		s["write"] = GafferDispatchTest.TextWriter()
 		s["write"]["fileName"].setValue( self.__outputFileSeq.fileName )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['write']['text'] = '{} {}'.format( context.get( 'valueOne', 0 ), context.get( 'valueTwo', 0 ) )" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -150,15 +148,16 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.failIf( p.returncode )
 		self.failUnless( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 
-		string = IECore.ObjectReader( self.__outputFileSeq.fileNameForFrame( 1 ) ).read()
-		self.failUnless( string.isInstanceOf( IECore.StringData ) )
-		self.assertEqual( string.value, "1 2" )
+		with open( self.__outputFileSeq.fileNameForFrame( 1 ) ) as f :
+			string = f.read()
+
+		self.assertEqual( string, "1 2" )
 
 	def testErrorReturnStatusForBadContext( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( self.__scriptFileName )
-		s["write"] = Gaffer.ObjectWriter()
+		s["write"] = GafferDispatchTest.TextWriter()
 		s.save()
 
 		p = subprocess.Popen(

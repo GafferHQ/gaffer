@@ -278,6 +278,15 @@ options.Add(
 # general variables
 
 options.Add(
+	BoolVariable(
+		"GAFFERCORTEX",
+		"Builds and installs the GafferCortex modules. These are deprecated and will "
+		"be removed completely in a future version.",
+		True
+	)
+)
+
+options.Add(
 	"ENV_VARS_TO_IMPORT",
 	"By default SCons ignores the environment it is run in, to avoid it contaminating the "
 	"build process. This can be problematic if some of the environment is critical for "
@@ -643,6 +652,7 @@ libraries = {
 			"LIBS" : [ "GafferTest", "GafferBindings" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferTest/*/*/*" ),
+		"apps" : [ "cli", "env", "license", "python", "stats", "test" ],
 	},
 
 	"GafferUI" : {
@@ -655,6 +665,7 @@ libraries = {
 			 # this if we move to boost::signals2.
 			 "CXXFLAGS" : [ "-DQT_NO_KEYWORDS" ],
 		},
+		"apps" : [ "browser", "gui", "screengrab", "view" ],
 	},
 
 	"GafferUITest" : {
@@ -670,6 +681,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferDispatch" ],
 		},
+		"apps" : [ "execute" ],
 	},
 
 	"GafferDispatchTest" : {
@@ -678,7 +690,9 @@ libraries = {
 
 	},
 
-	"GafferDispatchUI" : {},
+	"GafferDispatchUI" : {
+		"apps" : [ "dispatch" ],
+	},
 
 	"GafferDispatchUITest" : {},
 
@@ -689,15 +703,22 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferCortex", "GafferDispatch" ],
 		},
+		"requiredOptions" : [ "GAFFERCORTEX" ],
 	},
 
 	"GafferCortexTest" : {
 		"additionalFiles" : glob.glob( "python/GafferCortexTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
+		"requiredOptions" : [ "GAFFERCORTEX" ],
 	},
 
-	"GafferCortexUI" : {},
+	"GafferCortexUI" : {
+		"apps" : [ "op" ],
+		"requiredOptions" : [ "GAFFERCORTEX" ],
+	},
 
-	"GafferCortexUITest" : {},
+	"GafferCortexUITest" : {
+		"requiredOptions" : [ "GAFFERCORTEX" ],
+	},
 
 	"GafferScene" : {
 		"envAppends" : {
@@ -892,16 +913,8 @@ libraries = {
 		"additionalFiles" : glob.glob( "python/GafferVDBUITest/*/*" ),
 	},
 
-	"apps" : {
-		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
-	},
-
 	"scripts" : {
 		"additionalFiles" : [ "bin/gaffer", "bin/gaffer.py" ],
-	},
-
-	"startupScripts" : {
-		"additionalFiles" : glob.glob( "startup/*/*.py" ),
 	},
 
 	"misc" : {
@@ -1076,6 +1089,19 @@ for libraryName, libraryDef in libraries.items() :
 	for pythonFile in pythonFiles :
 		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		env.Alias( "build", pythonFileInstall )
+
+	# apps
+
+	for app in libraryDef.get( "apps", [] ) :
+		appInstall = env.InstallAs("$BUILD_DIR/apps/{app}/{app}-1.py".format( app=app ), "apps/{app}/{app}-1.py".format( app=app ) )
+		env.Alias( "build", appInstall )
+
+	# startup files
+
+	for startupDir in libraryDef.get( "apps", [] ) + [ libraryName ] :
+		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) :
+			startupFileInstall = env.InstallAs( "$BUILD_DIR/" + startupFile, startupFile )
+			env.Alias( "build", startupFileInstall )
 
 	# additional files
 
