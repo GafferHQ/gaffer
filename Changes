@@ -1,3 +1,23 @@
+0.53.6.0 (relative to 0.53.5.0)
+========
+
+Improvements
+------------
+
+- FileSequenceParameterValueWidget: Added support for typeHint:includeSequences
+
+Fixes
+-----
+
+- ViewportGadget::SelectionScope : Fixed bug causing GL attribute state to leak
+- GafferUI::PlugValueWidget : Fixed bug causing output plugs to be unaffected by context
+- GafferImage::BleedFill : Fixed bug regarding negative inputs
+- TransformTool
+  - Fixed issue causing unnecessary work when disabled
+  - Fixed crash in selection processing code
+- Stats app : Fixed context management bug when computing image properties
+- Docs : Fixed broken link in introduction
+
 0.53.5.0 (relative to 0.53.4.0)
 ========
 
