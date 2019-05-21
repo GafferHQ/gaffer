@@ -506,11 +506,8 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __rootParentChanged( self, root, oldParent ) :
 
-		# root has been deleted
-		## \todo I'm not sure if we should be responsible for removing ourselves or not.
-		# Perhaps we should just signal that we're not valid in some way and the CompoundEditor should
-		# remove us? Consider how this relates to NodeEditor.__deleteWindow() too.
-		self.parent().removeChild( self )
+		# Root has been deleted.
+		self.graphGadget().setRoot( self.scriptNode() )
 
 	def __preRender( self, viewportGadget ) :
 
