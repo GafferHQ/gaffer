@@ -2527,7 +2527,7 @@ void LightFilterConnections::update()
 
 	parallel_for(
 		m_connections.range(),
-		[this, &deregistered]( ConnectionsMap::range_type &range )
+		[&deregistered]( ConnectionsMap::range_type &range )
 		{
 			for( auto it = range.begin(); it != range.end(); ++it )
 			{
