@@ -730,10 +730,33 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 #  - Manage hover states during a drag operation.
 #  - Coordinate the re-parenting of Tab widgets.
 #  - Manage the life-cycle of detached panels affected by the drag.
+#  - Correct the cursor appearance as much as possible.
 #
 class _TabDragBehaviour( QtCore.QObject ) :
 
 	__tabMimeType = "application/x-gaffer.compoundEditor.tab"
+
+	# Qt has a somewhat hard-coded handling of the drag/drop cursor which draws
+	# the 'forbidden' shape when outside of our windows. QDragManager also
+	# uses setOverrideCursor so setCursor doesn't have any effect. This is a
+	# nasty brute-force global event filter that attempts to wrangle back some
+	# control over the mouse cursor during a drag.
+	class _CursorBehaviour( QtCore.QObject ) :
+
+		def eventFilter( self, o, e ) :
+			# We always get a MetaCall as well as Move. This helps us trump
+			# DragManager which seems to update in Move - lol.
+			if e.type() in ( QtCore.QEvent.MetaCall, QtCore.QEvent.Move ) :
+				# We use the DragMoveCursor to minimise visual flicker
+				# (as its the 'allowed' version of the 'forbidden' cursor
+				# it's overriding).
+				QtWidgets.QApplication.instance().changeOverrideCursor(  QtCore.Qt.DragMoveCursor )
+
+			return False
+
+		def cleanup( self ) :
+			# Sometimes we end up with a lingering override cursor
+			QtWidgets.QApplication.instance().restoreOverrideCursor()
 
 	def __init__( self, tabbedContainer ) :
 
@@ -766,6 +789,8 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		tabBar.installEventFilter( self )
 		tabBar.setMovable( True )
 		tabBar.setAcceptDrops( True )
+
+		self.__dragCursorBehaviour = _TabDragBehaviour._CursorBehaviour()
 
 	def eventFilter( self, qObject, qEvent ) :
 
@@ -1009,7 +1034,17 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 		drag = QtGui.QDrag( qTabBar )
 		drag.setMimeData( mimeData )
-		self.__handleDropAction( drag.exec_( QtCore.Qt.MoveAction ) )
+
+		# Install our cursor behaviour so we can override Qt's
+		app = QtWidgets.QApplication.instance()
+		app.installEventFilter( self.__dragCursorBehaviour )
+		try :
+
+			self.__handleDropAction( drag.exec_( QtCore.Qt.MoveAction ) )
+
+		finally :
+			app.removeEventFilter( self.__dragCursorBehaviour )
+			self.__dragCursorBehaviour.cleanup()
 
 	@staticmethod
 	def __getTabCenter( targetTab ) :
