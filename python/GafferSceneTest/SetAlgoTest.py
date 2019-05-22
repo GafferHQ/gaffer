@@ -159,6 +159,53 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertCorrectEvaluation( setA["out"], "MySets:setA.set", [ "/MyObject:sphere1.model" ] )
 		self.assertCorrectEvaluation( setA["out"], "/MyObject:sphere1.model", [ "/MyObject:sphere1.model" ] )
 
+	def testWildcardInSetName( self ) :
+
+		sphereA = GafferScene.Sphere( "SphereA" )
+		sphereA["sets"].setValue( 'sphereA' )
+		sphereA["name"].setValue( 'sphereA' )
+
+		sphereB = GafferScene.Sphere( "SphereB" )
+		sphereB["sets"].setValue( 'sphereB' )
+		sphereB["name"].setValue( 'sphereB' )
+
+		sphereC = GafferScene.Sphere( "SphereC" )
+		sphereC["sets"].setValue( 'sphereC' )
+		sphereC["name"].setValue( 'sphereC' )
+
+		sphereC2 = GafferScene.Sphere( "SphereC2" )
+		sphereC2["sets"].setValue( 'sphereC' )
+		sphereC2["name"].setValue( 'sphereC2' )
+
+		# sphere that we don't want in the resulting set
+		undesired = GafferScene.Sphere( "undesired" )
+		undesired["sets"].setValue( 'undesired' )
+		undesired["name"].setValue( 'undesired' )
+
+		group = GafferScene.Group( "Group" )
+		group["in"][0].setInput( sphereA["out"] )
+		group["in"][1].setInput( sphereB["out"] )
+		group["in"][2].setInput( sphereC["out"] )
+		group["in"][3].setInput( sphereC2["out"] )
+		group["in"][4].setInput( undesired["out"] )
+
+		oldHash = GafferScene.SetAlgo.setExpressionHash( "sphere*", group["out"] )
+
+		# Test different features of StringAlgo.
+		# Note that '-' is reserved as a SetExpression operator and the
+		# respective range related feature of StringAlgo isn't supported ("myFoo[A-Z]").
+
+		self.assertCorrectEvaluation( group["out"], "sphere*", ["/group/sphereA", "/group/sphereB", "/group/sphereC", "/group/sphereC2"] )
+		self.assertCorrectEvaluation( group["out"], "sphere* | undesired", ["/group/sphereA", "/group/sphereB", "/group/sphereC", "/group/sphereC2", "/group/undesired"] )
+		self.assertCorrectEvaluation( group["out"], "sphere[AB]", ["/group/sphereA", "/group/sphereB"] )
+		self.assertCorrectEvaluation( group["out"], "sphere[!AB]", ["/group/sphereC", "/group/sphereC2"] )
+		self.assertCorrectEvaluation( group["out"], "sphere?", ["/group/sphereA", "/group/sphereB", "/group/sphereC", "/group/sphereC2"] )
+
+		sphereC2["sets"].setValue( 'sphere?' )
+
+		self.assertCorrectEvaluation( group["out"], "sphere\?", ["/group/sphereC2"] )
+		self.assertNotEqual( oldHash, GafferScene.SetAlgo.setExpressionHash( "sphere*", group["out"] ) )
+
 	def assertCorrectEvaluation( self, scenePlug, expression, expectedContents ) :
 
 		result = set( GafferScene.SetAlgo.evaluateSetExpression( expression, scenePlug ).paths() )
