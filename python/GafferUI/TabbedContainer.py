@@ -185,6 +185,10 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		child._qtWidget().setParent( None )
 		child._applyVisibility()
 
+	def hasChild( self, child ) :
+
+		return child in self.__widgets
+
 	def setCornerWidget( self, cornerWidget ) :
 
 		if self.__cornerWidget is not None :
