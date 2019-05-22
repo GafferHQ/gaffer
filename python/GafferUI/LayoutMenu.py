@@ -55,8 +55,9 @@ def restore( menu, name ) :
 	layout = layouts.create( name, scriptWindow.scriptNode() )
 
 	scriptWindow.setLayout( layout )
-	# This only works after the layout is on-screen
-	layout.restorePreferredBound()
+
+	if not GafferUI.Keyboard.modifiersDown( GafferUI.Keyboard.Modifiers.Alt ) :
+		layout.restorePreferredBound()
 
 ## A function suitable as the command for a 'Layout/Save...' menu item. It must be invoked from
 # a menu which has a ScriptWindow in its ancestry.

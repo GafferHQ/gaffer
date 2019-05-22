@@ -289,6 +289,7 @@ from AnimationEditor import AnimationEditor
 import CompoundNumericNoduleUI
 import Examples
 from NameValuePlugValueWidget import NameValuePlugValueWidget
+from Keyboard import Keyboard
 
 # and then specific node uis
 
