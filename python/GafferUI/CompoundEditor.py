@@ -310,6 +310,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return editor
 
+	def removeEditor( self, editor ) :
+
+		editor.__titleChangedConnection = None
+		self.removeChild( editor )
+		self.__updatePinningButton( None )
+
 	def setTabsVisible( self, tabsVisible ) :
 
 		GafferUI.TabbedContainer.setTabsVisible( self, tabsVisible )
@@ -480,7 +486,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 	def __removeCurrentTab( self ) :
 
-		self.remove( self.getCurrent() )
+		self.removeEditor( self.getCurrent() )
 
 	def __removePanel( self ) :
 
