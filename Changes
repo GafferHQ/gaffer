@@ -16,9 +16,19 @@
 > being available separately by setting the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment
 > variable to `1`.
 
+Features
+--------
+
+- Extended support for Arnold's light filters by adding blockers (#3020) :
+  - Added new node representing Arnold's blockers.
+  - Added attribute for specifying filtered lights to StandardAttributes node.
+  - Added special visualisation for blockers.
+- SetVisualiser node : Added node allowing to visualise set membership in the Viewer (#3117). 
+
 Improvements
 ------------
 
+- Viewer : Prioritised update of objects being manipulated resulting in much more fluid update (#3144).
 - Menu search (#2986) :
   - Added an improved "fuzzy matching" search algorithm.
   - Added an error indicator when a search matches nothing.
@@ -26,9 +36,12 @@ Improvements
 - TextWidget/MultiLineTextWidget : Added support for unicode characters. In this
   case the `getText()` method will return a UTF8 encoded string (#2999).
 - PythonCommand : Improved performance (#3029).
-- GraphEditor : Added support for arbitrary node annotations specified by metadata.
-  Use "annotation:<name>:text" to specify the text to render, and "annotation:<name>:color"
-  to specify an associated colour (#3028).
+- GraphEditor :
+  - Added support for arbitrary node annotations specified by metadata.
+    Use "annotation:<name>:text" to specify the text to render, and "annotation:<name>:color"
+    to specify an associated colour (#3028).
+  - Added Ctrl-Drag functionality to deselect nodes (#3090).
+  - Made it show the root instead of removing the GraphEditor when the viewed Box is deleted (#3163).
 - Stats app :
   - Added `annotatedScript` argument to allow the saving of the script with
     monitor annotations added to it (#3028).
@@ -37,6 +50,7 @@ Improvements
   - Added support for render output profiling via `-scene` argument (#3053).
   - Added a `-contextSanitiser` argument, used to check for common context handling
     errors (#3060).
+  - Added entries for SharedSceneInterface limits and usage (#3126).
 - ArnoldTextureBake (#3026) : Added optional median filter.
 - Hash cache (#3033) : Reduced memory usage and improved performance.
 - GraphComponent : Reduced memory usage and improved script loading times (#3080).
@@ -49,7 +63,12 @@ Improvements
   - Only selected nodes are shown, not their descendants.
   - The ancestor node hierarchy is not shown redundantly.
   - Improved performance.
-- Test app : All tests are now run by default (#3101).
+- Test app :
+  - All tests are now run by default (#3101).
+  - Added support for detecting performance regression/improvement (#3127).
+- MeshTangents : Added support for additional computation modes (#3030).
+- GafferImageUI: Added DWA compression presets (#3153).
+- Numeric Bookmarks : Added serialisation to preserve numeric bookmarks across sessions (#3157).
 
 Fixes
 -----
@@ -87,6 +106,13 @@ Documentation
 - Added a "Camera" section to "Working with Scenes" which covers usage and task information
   about the Camera node, manipulating camera objects, the CameraTweaks node, render overrides,
   and demos of a spherical and anamorphic camera setup (#3050).
+- Added "Light Linking" which shows how light linking is set up and runs through an example
+  scenario that would necessitate light links (#3114).
+- Added mechanism for providing example node networks in the help menu. Examples can optionally be
+  associated with certain node types. The Cog menu in the Node Editor lists any applicable
+  Examples for the node type being edited (#3108).
+- Added general improvements to readability and appearance in the stylesheet. Most notably,
+  this makes the headings consistent, and the spacing between elements uniform (#3149).
 
 API
 ---
@@ -114,6 +140,8 @@ API
 - GraphComponent : Added protected `parentChanged()` virtual method (#3080).
 - ImagePlug : Added convenience methods for evaluating global image properties (#3073).
 - GraphComponentPath : Added property for accessing the GraphComponent (#3106).
+- LightFilter : Added LightFilter class used as base for renderer-specific implementations (#3020).
+- NameValuePlug : Introduced new plug type for associating a name with a value (#3161).
 
 Build
 -----
@@ -125,6 +153,7 @@ Build
 - Fixed warnings when building with XCode 10.2 (#3094).
 - Fixed problem where some Arnold modules were installed when ARNOLD_ROOT was
   not specified (#3101).
+- Made GafferCortex an optional component at build time (#3168).
 
 Breaking Changes
 ----------------
@@ -158,6 +187,31 @@ Breaking Changes
 - TweakPlug : Added compulsory ValuePlug argument to constructor used for serialisation (#3084).
 - AnimationEditor : Removed `connectedCurvePlug()` method (#3106).
 - ParallelAlgo : Replaced `registerUIThreadCallHandler()` with `push/popUIThreadCallHandler()` (#3101).
+- Renderer API : Added `lightBlocker()` virtual method (#3020).
+- CompoundDataPlug : Removed MemberPlug and `addMember()` as well as `addOptionalMember()`. Use NameValuePlug instead (#3161).
+- TransformTool : Added private members (ABI change only - source compatibility is maintained) (#3144).
+- RenderController : Added argument to `updateInBackground()` (ABI change only, source compatibility is maintained) (#3144).
+- SceneGadget : Added new private member (ABI change only, source compatibility is maintained) (#3144).
+
+0.53.6.0 (relative to 0.53.5.0)
+========
+
+Improvements
+------------
+
+- FileSequenceParameterValueWidget : Added support for typeHint:includeSequences (#3164).
+
+ Fixes
+-----
+
+- ViewportGadget::SelectionScope : Fixed bug causing GL attribute state to leak (#2991).
+- GafferUI::PlugValueWidget : Fixed bug causing output plugs to be unaffected by context (#3132).
+- GafferImage::BleedFill : Fixed bug regarding negative inputs (#3132).
+- TransformTool :
+  - Fixed issue causing unnecessary work when disabled (#3144).
+  - Fixed crash in selection processing code (#3136).
+- Stats app : Fixed context management bug when computing image properties (#3147).
+- Docs : Fixed broken link in introduction (#3140).
 
 0.53.5.0 (relative to 0.53.4.0)
 ========
