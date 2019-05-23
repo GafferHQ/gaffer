@@ -56,6 +56,7 @@ class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget 
 		return Gaffer.FileSystemPath.createStandardFilter( includeSequenceFilter = True )
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.FileSequenceParameter, FileSequenceParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.PathParameter, FileSequenceParameterValueWidget, uiTypeHint="includeSequences" )
 
 # we've copied this list of node types from
 # ParameterisedHolderUI because it seemed
@@ -78,7 +79,15 @@ def __isFileSequence( plug ) :
 	for p in plug.relativeName( plug.node() ).split( "." )[1:] :
 		parameter = parameter[p]
 
-	return isinstance( parameter, IECore.FileSequenceParameter )
+	if isinstance( parameter, IECore.FileSequenceParameter ) :
+		return True
+
+	if isinstance( parameter, IECore.PathParameter ) :
+		with IECore.IgnoredExceptions( KeyError ) :
+			return parameter.userData()["UI"]["typeHint"].value == "includeSequences"
+
+	return False
+
 
 def __includeFrameRange( plug ) :
 

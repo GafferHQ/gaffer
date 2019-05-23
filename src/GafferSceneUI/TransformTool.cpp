@@ -333,6 +333,7 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 		m_mergeGroupId( 0 )
 {
 	view->viewportGadget()->addChild( m_handles );
+	m_handles->setVisible( false );
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -341,7 +342,6 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 
 	scenePlug()->setInput( view->inPlug<ScenePlug>() );
 
-	view->viewportGadget()->preRenderSignal().connect( boost::bind( &TransformTool::preRender, this ) );
 	view->viewportGadget()->keyPressSignal().connect( boost::bind( &TransformTool::keyPress, this, ::_2 ) );
 	plugDirtiedSignal().connect( boost::bind( &TransformTool::plugDirtied, this, ::_1 ) );
 
@@ -468,6 +468,19 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 	{
 		m_handlesDirty = true;
 	}
+
+	if( plug == activePlug() )
+	{
+		if( activePlug()->getValue() )
+		{
+			view()->viewportGadget()->preRenderSignal().connect( boost::bind( &TransformTool::preRender, this ) );
+		}
+		else
+		{
+			view()->viewportGadget()->preRenderSignal().disconnect( boost::bind( &TransformTool::preRender, this ) );
+			m_handles->setVisible( false );
+		}
+	}
 }
 
 void TransformTool::metadataChanged( IECore::InternedString key )
@@ -578,7 +591,7 @@ void TransformTool::updateSelection() const
 			{
 				return false;
 			}
-			return a.path == lastSelectedPath;
+			return ( a.path != lastSelectedPath ) < ( b.path != lastSelectedPath );
 		}
 	);
 

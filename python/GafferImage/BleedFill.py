@@ -107,6 +107,7 @@ class BleedFill( GafferImage.ImageProcessor ) :
 		self["__grade"] = GafferImage.Grade( "Grade" )
 		self["__grade"]['channels'].setValue( "*" )
 		self["__grade"]['multiply'].setValue( imath.Color4f( 0.1 ) )
+		self["__grade"]['blackClamp'].setValue( False )
 		self["__grade"]["in"].setInput( self["__downsample"]["out"] )
 
 		self["__blurLoop"]["next"].setInput( self["__grade"]["out"] )
