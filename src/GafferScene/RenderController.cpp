@@ -403,6 +403,24 @@ class RenderController::SceneGraph
 			ConstCompoundObjectPtr attributes = attributesPlug->getValue( &attributesHash );
 			CompoundObject::ObjectMap &fullAttributes = m_fullAttributes->members();
 			fullAttributes = m_parent->m_fullAttributes->members();
+
+			// Light shaders are attributes that shouldn't be inherited
+			std::vector<IECore::InternedString> toRemove;
+			for( auto it = fullAttributes.begin(), eIt = fullAttributes.end(); it != eIt; ++it )
+			{
+				if( !boost::ends_with( it->first.string(), ":light" ) )
+				{
+					continue;
+				}
+
+				toRemove.push_back( it->first );
+			}
+
+			for( const IECore::InternedString &superfluous : toRemove )
+			{
+				fullAttributes.erase( superfluous );
+			}
+
 			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
 				fullAttributes[it->first] = it->second;
