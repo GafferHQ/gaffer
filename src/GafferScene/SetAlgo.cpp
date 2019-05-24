@@ -218,13 +218,40 @@ struct AstEvaluator
 	typedef PathMatcher result_type;
 
 	AstEvaluator( const ScenePlug *scene )
+		: m_scene( scene )
 	{
-		m_scene = scene;
 	}
 
 	result_type operator()( const SetName &set ) const
 	{
-		return m_scene->set( set.name )->readable();
+		if( !StringAlgo::hasWildcards( set.name ) )
+		{
+			return m_scene->set( set.name )->readable();
+		}
+
+		result_type result;
+
+		IECore::ConstInternedStringVectorDataPtr setNamesData = m_scene->setNamesPlug()->getValue();
+		const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
+		if( setNames.empty() )
+		{
+			return result;
+		}
+
+		ScenePlug::SetScope setScope( Context::current() );
+		for( const IECore::InternedString &setName : setNames )
+		{
+			if( !StringAlgo::match( setName.string(), set.name ) )
+			{
+				continue;
+			}
+
+			setScope.setSetName( setName );
+			ConstPathMatcherDataPtr setData = m_scene->setPlug()->getValue();
+			result.addPaths( setData->readable() );
+		}
+
+		return result;
 	}
 
 	result_type operator()( const ObjectName &object ) const
@@ -299,7 +326,30 @@ struct AstHasher
 			throw IECore::Exception( "SetAlgo: Invalid scene given. Can not hash set expression." );
 		}
 
-		m_hash.append( m_scene->setHash( n.name ) );
+		if( !StringAlgo::hasWildcards( n.name ) )
+		{
+			m_hash.append( m_scene->setHash( n.name ) );
+			return;
+		}
+
+		IECore::ConstInternedStringVectorDataPtr setNamesData = m_scene->setNamesPlug()->getValue();
+		const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
+		if( setNames.empty() )
+		{
+			return;
+		}
+
+		ScenePlug::SetScope setScope( Context::current() );
+		for( const IECore::InternedString &setName : setNames )
+		{
+			if( !StringAlgo::match( setName.string(), n.name ) )
+			{
+				continue;
+			}
+
+			setScope.setSetName( setName );
+			m_hash.append( m_scene->setPlug()->hash() );
+		}
 	}
 
 	void operator()( const ExpressionAst &ast )
@@ -373,7 +423,7 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 
 
 		setName %= setNameToken;
-		setNameToken %= char_( "a-zA-Z_" ) >> *char_( "a-zA-Z_0-9:." );
+		setNameToken %= char_( "a-zA-Z_*?[\\" ) >> *char_( "a-zA-Z_0-9:.*?[]!\\" );
 
 		objectName %= objectNameToken;
 		objectNameToken %= char_( "/" ) >> *char_( "a-zA-Z_0-9/:." );
@@ -426,7 +476,15 @@ void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 	{
 		int offset = iter - setExpression.begin();
 		std::string errorIndication( offset, ' ' );
-		errorIndication += '|' + std::string(setExpression.end() - iter - 2, '-') + '|';
+		int indicationSize = setExpression.end() - iter;
+		if( indicationSize <= 2 )
+		{
+			errorIndication += std::string( indicationSize, '|');
+		}
+		else
+		{
+			errorIndication += '|' + std::string( indicationSize - 2, '-') + '|';
+		}
 
 		throw IECore::Exception( boost::str( boost::format( "Syntax error in indicated part of SetExpression.\n%s\n%i\n." ) % setExpression % errorIndication ) ) ;
 	}
