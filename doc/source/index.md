@@ -40,6 +40,7 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
     WorkingWithTheNodeGraph/index.md
     WorkingWithScenes/index.md
     WorkingWithImages/index.md
+    WorkingWithThePythonScriptingAPI/index.md
     ScriptPerformance/index.md
     Interface/index.md
 ```
