@@ -58,7 +58,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The location which the child is parented under.
+			The location which the child is parented under. This is
+			ignored when a filter is connected, in which case the child
+			is parented under all the locations matched by the filter.
 			""",
 
 			"userDefault", "/",

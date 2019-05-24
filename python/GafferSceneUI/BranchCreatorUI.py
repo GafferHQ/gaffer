@@ -52,6 +52,8 @@ Gaffer.Metadata.registerNode(
 	Base class for nodes creating a new branch in the scene hierarchy.
 	""",
 
+	"layout:activator:filterNotConnected", lambda node : node["filter"].getInput() is None,
+
 	plugs = {
 
 		"parent" : [
@@ -61,6 +63,7 @@ Gaffer.Metadata.registerNode(
 			# derived class.
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"layout:activator", "filterNotConnected",
 
 		],
 
