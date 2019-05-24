@@ -426,7 +426,15 @@ void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 	{
 		int offset = iter - setExpression.begin();
 		std::string errorIndication( offset, ' ' );
-		errorIndication += '|' + std::string(setExpression.end() - iter - 2, '-') + '|';
+		int indicationSize = setExpression.end() - iter;
+		if( indicationSize <= 2 )
+		{
+			errorIndication += std::string( indicationSize, '|');
+		}
+		else
+		{
+			errorIndication += '|' + std::string( indicationSize - 2, '-') + '|';
+		}
 
 		throw IECore::Exception( boost::str( boost::format( "Syntax error in indicated part of SetExpression.\n%s\n%i\n." ) % setExpression % errorIndication ) ) ;
 	}
