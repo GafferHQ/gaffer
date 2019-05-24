@@ -13,3 +13,18 @@ In Gaffer, a **script** is a set of serial Python instructions for building a no
 Gaffer node graphs are stored on disk as Python scripts with the `.gfr` file extension. References stored on disk are also Python scripts, but with the `.grf` extension and a slightly different structure.
 
 Do not confuse scripts with active node graphs or expressions: when a node graph is open in Gaffer, or in the middle of executing, its nodes and plugs are stored in memory as C++ objects. All a scripts does is provide a list of instructions Gaffer on how to **build** a graph, which Gaffer can interpret.
+
+
+## Python scripting API basics ##
+
+- [The Python Editor](ThePythonEditor/index.md)
+
+<!-- TOC -->
+
+```eval_rst
+.. toctree::
+    :titlesonly:
+    :hidden:
+
+    ThePythonEditor/index.md
+```
