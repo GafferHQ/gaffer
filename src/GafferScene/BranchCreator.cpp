@@ -194,7 +194,7 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 			if( parent )
 			{
 				h.append( parent->data(), parent->size() );
-				h.append( parent->size() );
+				h.append( (uint64_t)parent->size() );
 			}
 		}
 	}
