@@ -67,6 +67,13 @@ Duplicate::Duplicate( const std::string &name )
 	parentPlug()->setInput( outParentPlug() );
 	parentPlug()->setFlags( Plug::Serialisable, false );
 
+	// Make the filter plug private. We do want to support this one
+	// day, but the filter should be specifying the objects to duplicate,
+	// not the parent locations to duplicate them under. Until we implement
+	// that, its best not to allow folks to become dependent upon behaviour
+	// that will change.
+	filterPlug()->setName( "__filter" );
+
 	// Since we don't introduce any new sets, but just duplicate parts
 	// of existing ones, we can save the BranchCreator base class some
 	// trouble by making the setNamesPlug into a pass-through.
