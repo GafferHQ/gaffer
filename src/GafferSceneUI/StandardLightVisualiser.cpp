@@ -246,10 +246,17 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	///   and not the rendering - no out-of-the-box light has one that I know of. Perhaps it should
 	///   be an attribute that the `GafferScene::light()` node sets?
 	/// - We don't actually want to apply it to the area light shapes created below for "quad" etc.
+	/// - We should find a better way to opt out of expensive visualisations (in particular for
+	///   large environment light textures)
 	///
 	/// Since this feature is only used by lights internal to Image Engine, we can ignore all this for
 	/// now, but it would be good to address in the future.
 	const float locatorScale = parameter<float>( metadataTarget, shaderParameters, "locatorScaleParameter", 1 );
+	if( locatorScale == 0 )
+	{
+		return result;
+	}
+
 	Imath::M44f topTrans;
 	if( orientation )
 	{
