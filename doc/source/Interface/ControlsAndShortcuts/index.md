@@ -116,7 +116,7 @@ Redo last dispatch                    :kbd:`Ctrl` + :kbd:`R`
 ### Node copying and deletion ###
 
 > Tip :
-> For a Box node to be disableable, it must first be <a href="../../WorkingWithTheNodeGraph/Box/index.html#setting-up-a-box-for-pass-through">set up for pass-through</a>.
+> For a Box node to be disableable, it must first be <a href="../../WorkingWithTheNodeGraph/BoxNode/index.html#setting-up-a-box-for-pass-through">set up for pass-through</a>.
 
 ```eval_rst
 ===================================== =============================================
