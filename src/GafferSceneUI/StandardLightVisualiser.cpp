@@ -240,19 +240,16 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 
 	/// \todo This is problematic for a few reasons :
 	///
-	/// - The name "locatorScale" doesn't fit Gaffer's terminology - perhaps "visualiserScale"
-	///    would be better?
-	/// - It doesn't make much sense to have a shader parameter which affects only the visualisation
-	///   and not the rendering - no out-of-the-box light has one that I know of. Perhaps it should
-	///   be an attribute that the `GafferScene::light()` node sets?
 	/// - We don't actually want to apply it to the area light shapes created below for "quad" etc.
 	/// - We should find a better way to opt out of expensive visualisations (in particular for
 	///   large environment light textures)
 	///
 	/// Since this feature is only used by lights internal to Image Engine, we can ignore all this for
 	/// now, but it would be good to address in the future.
-	const float locatorScale = parameter<float>( metadataTarget, shaderParameters, "locatorScaleParameter", 1 );
-	if( locatorScale == 0 )
+	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
+	float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
+
+	if( visualiserScale == 0 )
 	{
 		return result;
 	}
@@ -262,7 +259,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	{
 		topTrans = orientation->readable();
 	}
-	topTrans.scale( V3f( locatorScale ) );
+	topTrans.scale( V3f( visualiserScale ) );
 	result->setTransform( topTrans );
 
 	if( type && type->readable() == "environment" )
@@ -274,7 +271,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	{
 		float innerAngle, outerAngle, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / locatorScale ) ) );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale ) ) );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
