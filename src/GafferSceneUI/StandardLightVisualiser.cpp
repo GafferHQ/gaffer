@@ -237,74 +237,75 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	const Color3f finalColor = color * intensity * pow( 2.0f, exposure );
 
 	GroupPtr result = new Group;
+	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
+	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
+	result->addChild( ornaments );
+	result->addChild( geometry );
 
-	/// \todo This is problematic for a few reasons :
-	///
-	/// - We don't actually want to apply it to the area light shapes created below for "quad" etc.
-	/// - We should find a better way to opt out of expensive visualisations (in particular for
-	///   large environment light textures)
-	///
-	/// Since this feature is only used by lights internal to Image Engine, we can ignore all this for
-	/// now, but it would be good to address in the future.
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
 	float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
 
+	/// \todo: We should find a better way to opt out of expensive visualisations
+	///        (in particular for large environment light textures)
 	if( visualiserScale == 0 )
 	{
 		return result;
 	}
 
-	Imath::M44f topTrans;
+	Imath::M44f topTransform;
 	if( orientation )
 	{
-		topTrans = orientation->readable();
+		topTransform = orientation->readable();
 	}
-	topTrans.scale( V3f( visualiserScale ) );
-	result->setTransform( topTrans );
+	result->setTransform( topTransform );
+
+	Imath::M44f ornamentsTransform;
+	ornamentsTransform.scale( V3f( visualiserScale ) );
+	ornaments->setTransform( ornamentsTransform );
 
 	if( type && type->readable() == "environment" )
 	{
 		const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphere( finalColor, textureName ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphere( finalColor, textureName ) ) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
 		float innerAngle, outerAngle, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale ) ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
 	else if( type && type->readable() == "quad" )
 	{
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( quadShape() ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadShape() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
 	else if( type && type->readable() == "disk" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( diskShape( radius ) ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskShape( radius ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
 	else if( type && type->readable() == "cylinder" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius ) ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
 	else
 	{
 		// Treat everything else as a point light.
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays() ) );
-		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
 	}
 
 	return result;
