@@ -222,7 +222,7 @@ StandardLightVisualiser::~StandardLightVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
 	InternedString metadataTarget;
 	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderNetwork, metadataTarget );

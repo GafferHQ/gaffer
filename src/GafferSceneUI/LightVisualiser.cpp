@@ -149,7 +149,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 		}
 
 		IECoreGL::ConstStatePtr curState = nullptr;
-		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( it->first, shaderNetwork, curState );
+		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( it->first, shaderNetwork, attributes, curState );
 
 		if( curVis )
 		{
