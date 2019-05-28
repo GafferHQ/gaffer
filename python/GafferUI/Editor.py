@@ -45,7 +45,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtWidgets
 
-class _EditorMetaclass( type ) :
+class _EditorMetaclass( Gaffer.Trackable.__class__ ) :
 
 	def __call__( cls, *args, **kw ) :
 

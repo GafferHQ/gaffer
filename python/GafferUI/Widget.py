@@ -99,7 +99,7 @@ from Qt import QtWidgets
 # have identical signatures in as many places as possible, with the possibility of perhaps having
 # a common base class in the future. Right now the signatures are the same for the event signals and
 # for the tool tips.
-class Widget( object ) :
+class Widget( Gaffer.Trackable ) :
 
 	## All GafferUI.Widget instances must hold a corresponding QtWidgets.QWidget instance
 	# which provides the top level implementation for the widget, and to which other
@@ -114,6 +114,8 @@ class Widget( object ) :
 	# the parenting argument may be passed as a dictionay of optional keywords for the
 	# automatic `parent.addChild()` call.
 	def __init__( self, topLevelWidget, toolTip="", parenting = None ) :
+
+		Gaffer.Trackable.__init__( self )
 
 		assert( isinstance( topLevelWidget, ( QtWidgets.QWidget, Widget ) ) )
 
