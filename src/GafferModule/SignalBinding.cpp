@@ -197,6 +197,8 @@ struct UnusableFromNone
 void GafferModule::bindSignal()
 {
 
+	class_<GafferBindings::Detail::Trackable, boost::noncopyable>( "Trackable" );
+
 	typedef boost::signal<object (), PythonResultCombiner > Signal0;
 	typedef boost::signal<object ( object ), PythonResultCombiner > Signal1;
 	typedef boost::signal<object ( object, object ), PythonResultCombiner > Signal2;

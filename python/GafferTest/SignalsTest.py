@@ -398,5 +398,26 @@ class SignalsTest( GafferTest.TestCase ) :
 		del s
 		self.assertTrue( w() is None )
 
+	def testTrackable( self ) :
+
+		class TrackableTest( Gaffer.Trackable ) :
+
+			def f( self ) :
+
+				pass
+
+		s = Gaffer.Signal0()
+		t = TrackableTest()
+		w = weakref.ref( t )
+
+		c = s.connect( Gaffer.WeakMethod( t.f ), scoped = False )
+
+		self.assertTrue( c.connected() )
+		del t
+		self.assertIsNone( w() )
+		self.assertFalse( c.connected() )
+
+		s() # Would throw if an expired WeakMethod remained connected
+
 if __name__ == "__main__":
 	unittest.main()
