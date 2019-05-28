@@ -89,6 +89,17 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Light Linking",
 
+		],
+
+		"visualiserScale" : [
+
+			"description",
+			"""
+			The scale of the visualisation in the viewport.
+			""",
+
+			"layout:section", "Visualisation",
+
 		]
 
 	}
