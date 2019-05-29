@@ -1126,14 +1126,6 @@ _styleSheet = string.Template(
 
 	}
 
-	/* Utility */
-
-	#gafferOpaqueBackgroundMid {
-
-		background: $backgroundMid;
-
-	}
-
 	"""
 
 ).substitute( substitutions )

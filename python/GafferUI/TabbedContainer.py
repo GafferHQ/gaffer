@@ -77,6 +77,16 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		self.__widgets = []
 
+		# There is an issue where by using left: Xpx positioning with the tab
+		# bar results in a small under-lap of the tabs with the corner widget.
+		# As a work-around we create a persistent container widget with a solid
+		# background that corner widgets are placed in to mask this.
+		cornerWidgetHolder = QtWidgets.QWidget()
+		cornerLayout = QtWidgets.QHBoxLayout()
+		cornerLayout.setContentsMargins( 12, 0, 0, 0 )
+		cornerWidgetHolder.setLayout( cornerLayout )
+		self._qtWidget().setCornerWidget( cornerWidgetHolder )
+
 		self.__cornerWidget = None
 		self.setCornerWidget( cornerWidget )
 
@@ -176,7 +186,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		assert( child is self.__cornerWidget or child in self.__widgets )
 
 		if child is self.__cornerWidget :
-			self._qtWidget().setCornerWidget( None )
+			self._qtWidget().cornerWidget().layout().removeWidget( child._qtWidget() )
 			self.__cornerWidget = None
 		else :
 			self._qtWidget().removeTab( self.__widgets.index( child ) )
@@ -194,15 +204,18 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		if self.__cornerWidget is not None :
 			self.removeChild( self.__cornerWidget )
 
+		containerQWidget = self._qtWidget().cornerWidget()
+
 		if cornerWidget is not None :
 			oldParent = cornerWidget.parent()
 			if oldParent is not None :
 				oldParent.removeChild( cornerWidget )
-			self._qtWidget().setCornerWidget( cornerWidget._qtWidget() )
+			containerQWidget.layout().addWidget( cornerWidget._qtWidget() )
 			cornerWidget._applyVisibility()
-			assert( cornerWidget._qtWidget().parent() is self._qtWidget() )
+			assert( cornerWidget._qtWidget().parent() is containerQWidget )
 		else :
-			self._qtWidget().setCornerWidget( None )
+			for c in containerQWidget.layout().children():
+				containerQWidget.layout().removeWidget( c )
 
 		self.__cornerWidget = cornerWidget
 
