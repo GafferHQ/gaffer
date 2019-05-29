@@ -119,12 +119,10 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		for e in editors[:2] :
 			c.addEditor( e )
 
-		p = GafferUI.CompoundEditor._DetachedPanel( s )
+		p = c._createDetachedPanel()
 
 		for e in editors[2:] :
 			p.addEditor( e )
-
-		c._addDetachedPanel( p )
 
 		self.assertEqual( len(c._detachedPanels()), 1 )
 		self.assertEqual( c.editors(), editors )

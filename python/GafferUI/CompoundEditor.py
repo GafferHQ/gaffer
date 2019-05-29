@@ -51,87 +51,14 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-# Note: 'preferredBound' is a bottom-left origin NDC (available area)
+# Note: 'windowState' is a bottom-left origin NDC (available area)
 # representation of a windows on-screen geometry. This is persisted in saved
 # layouts to maximise compatibility between different screen configurations.
-# @see _preferredBound
+# @see _getWindowState
 
 class CompoundEditor( GafferUI.Editor ) :
 
-	class _DetachedPanel( GafferUI.Window ) :
-
-		def __init__( self, scriptNode, children = None, preferredBound = None, **kwargs ) :
-
-			GafferUI.Window.__init__( self, **kwargs )
-			self.__titleBehaviour = GafferUI.ScriptWindow._WindowTitleBehaviour( self, scriptNode )
-
-			self.__splitContainer = _SplitContainer()
-			self.__splitContainer.append( _TabbedContainer() )
-			self.setChild( self.__splitContainer )
-
-			self._gafferParent = None
-
-			if children :
-				self.__splitContainer.restoreChildren( children )
-
-			self.__preferredBound = preferredBound or {}
-
-		## As were technically not in the Qt hierarchy, but do want to be logically
-		# owned by a CompoundEditor, we re-implement this to re-direct ancestor
-		# calls to which ever editor we were added to (CompoundEditor fills this
-		# in for us when we're added).
-		def parent( self ) :
-
-			return self._gafferParent() if self._gafferParent else None
-
-		def editors( self, type = GafferUI.Editor ) :
-
-			return self.__splitContainer.editors( type = type )
-
-		def addEditor( self, editor ) :
-
-			self.__splitContainer.addEditor( editor )
-
-		def replaceEditors( self, splitContainer ) :
-
-			self.__splitContainer = splitContainer
-			self.setChild( self.__splitContainer )
-
-		def restorePreferredBound( self ) :
-
-			if self.__preferredBound :
-				_restorePreferredBound( self, self.__preferredBound )
-
-		def updatePreferredBound( self ) :
-
-			self.__preferredBound = _preferredBound( self )
-
-		# A detached panel is considered empty if it has a single split with
-		# no editors.
-		def isEmpty( self ) :
-
-			if len(self.__splitContainer) == 1 :
-				c = self.__splitContainer[0]
-				if isinstance( c, _TabbedContainer ) and len(c) == 0 :
-					return True
-
-			return False
-
-		def _setGafferParent( self, gafferWidget ) :
-
-			self._gafferParent = None
-			if gafferWidget :
-				self._gafferParent = weakref.ref( gafferWidget )
-
-		def __repr__( self ) :
-
-			return "GafferUI.CompoundEditor._DetachedPanel( scriptNode, children=%s, preferredBound=%s )" \
-					% (
-						self.__splitContainer.serialiseChildren(),
-						_imathRepr( self.__preferredBound )
-					)
-
-	def __init__( self, scriptNode, children=None, detachedPanels=None, preferredBound=None, **kw ) :
+	def __init__( self, scriptNode, children=None, detachedPanels=None, windowState=None, **kw ) :
 
 		self.__splitContainer = _SplitContainer()
 
@@ -146,20 +73,20 @@ class CompoundEditor( GafferUI.Editor ) :
 		if children :
 			self.__splitContainer.restoreChildren( children )
 
-		self.__preferredBound = preferredBound or {}
+		self.__windowState = windowState or {}
 
 		self.__detachedPanels = []
 
 		if detachedPanels :
-			for p in detachedPanels :
-				self._addDetachedPanel( p )
+			for panelArgs in detachedPanels  :
+				self._createDetachedPanel( **panelArgs )
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
 	def editors( self, type = GafferUI.Editor ) :
 
 		editors = self.__splitContainer.editors( type = type )
-		for p in self._detachedPanels() :
+		for p in self.__detachedPanels :
 			editors.extend( p.editors( type = type ) )
 		return editors
 
@@ -181,72 +108,58 @@ class CompoundEditor( GafferUI.Editor ) :
 	# Restores the preferred geometry, if this is known for the main window and
 	# any detached panels. This must only be called when the editor is part of a
 	# window hierarchy so that screen affinity can be properly applied.
-	def restorePreferredBound( self ) :
+	def restoreWindowState( self ) :
 
-		if self.__preferredBound :
-			_restorePreferredBound( self.ancestor( GafferUI.ScriptWindow ), self.__preferredBound )
-
-		for p in self.__detachedPanels :
-			p.restorePreferredBound()
-
-	# Updates the stored preferred geometry for this layout
-	def updatePreferredBound( self ) :
-
-		window = self.ancestor( GafferUI.ScriptWindow )
-		if window :
-			self.__preferredBound = _preferredBound( window )
+		if self.__windowState :
+			_restoreWindowState( self.ancestor( GafferUI.ScriptWindow ), self.__windowState )
 
 		for p in self.__detachedPanels :
-			p.updatePreferredBound()
+			p.restoreWindowState()
 
+	# Test Harness use only
 	def _detachedPanels( self ) :
 
 		return list(self.__detachedPanels)
 
-	def _addDetachedPanel( self, panel ) :
+	def _createDetachedPanel( self, *args, **kwargs ) :
 
-		oldParent = panel.parent()
-		if oldParent is self :
-			return
-
-		if oldParent is not None :
-			oldParent._removeDetachedPanel( panel )
-
+		panel = _DetachedPanel( self,  *args, **kwargs )
 		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ) )
-
-		# Technically the widget isn't in the Qt hierarchy, but we want
-		# to be able to use GafferUI.Widget.ancestor, so we sneak ourselves
-		# in there. @see _DetachedPanel.parent
-		panel._setGafferParent( self )
 		self.__detachedPanels.append( panel )
+		return panel
 
 	def _removeDetachedPanel( self, panel ) :
 
-		panel._setGafferParent( None )
 		self.__detachedPanels.remove( panel )
 		panel.__removeOnCloseConnection = None
 		panel._applyVisibility()
 
-	def _preferredBound( self ) :
-
-		return self.__preferredBound
-
 	def __visibilityChanged(self, widget) :
 
 		v = self.visible()
-		for p in self._detachedPanels() :
+		for p in self.__detachedPanels :
 			p.setVisible( v )
 
 	def __repr__( self ) :
 
-		window = self.ancestor( GafferUI.ScriptWindow )
-
-		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, preferredBound = %s )" \
+		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, windowState = %s )" \
 				% (
 					self.__splitContainer.serialiseChildren(),
-					self._detachedPanels(),
-					_imathRepr( _preferredBound( window ) ) if window else {}
+					self.__serialiseDetachedPanels(),
+					self._serializeWindowState()
 				)
+
+	# visibility for Test Harness
+	def _serializeWindowState( self ) :
+
+		window = self.ancestor( GafferUI.ScriptWindow )
+		return _reprDict( _getWindowState( window ) if window else {} )
+
+	def __serialiseDetachedPanels( self ) :
+
+		return "( %s, )" % ", ".join(
+			[ p.reprArgs() for p in self.__detachedPanels ]
+		)
 
 	def __keyPress( self, unused, event ) :
 
@@ -678,10 +591,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		editor = self.getCurrent()
 
-		window = CompoundEditor._DetachedPanel( editor.scriptNode() )
+		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
 		self.__moveWindowOverWidget( window, editor, 10 )
-
-		self.ancestor( GafferUI.CompoundEditor )._addDetachedPanel( window )
 
 		self.removeEditor( editor )
 
@@ -693,12 +604,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		# Fetch them now, or we'll be out of the hierarchy after we have
 		# collapsed our old parent split container and won't be able to find them
 		splitContainer = self.ancestor( _SplitContainer )
-		compoundEditor = self.ancestor( GafferUI.CompoundEditor )
 
-		window = CompoundEditor._DetachedPanel( self.ancestor( GafferUI.ScriptWindow ).scriptNode() )
+		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
 		self.__moveWindowOverWidget( window, splitContainer, 10 )
-
-		compoundEditor._addDetachedPanel( window )
 
 		# We must join the parent or we end up with nested split containers in the hierarchy
 		parent = splitContainer.parent()
@@ -729,7 +637,69 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		## \todo: consider doing this for all Menu commands in GafferUI.Menu
 		GafferUI.EventLoop.addIdleCallback( functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) )
 
+class _DetachedPanel( GafferUI.Window ) :
 
+	def __init__( self, parentEditor, children = None, windowState = None ) :
+
+		GafferUI.Window.__init__( self )
+		self.__titleBehaviour = GafferUI.ScriptWindow._WindowTitleBehaviour( self, parentEditor.scriptNode() )
+
+		self.__splitContainer = _SplitContainer()
+		self.__splitContainer.append( _TabbedContainer() )
+		self.setChild( self.__splitContainer )
+
+		# see parent() As we can't be moved between CompoundEditors
+		# (scripts will be wrong), we can set-and-forget.
+		self._gafferParent = weakref.ref( parentEditor )
+
+		if children :
+			self.__splitContainer.restoreChildren( children )
+
+		self.__windowState = windowState or {}
+
+	## As were technically not in the Qt hierarchy, but do want to be logically
+	# owned by a CompoundEditor, we re-implement this to re-direct ancestor
+	# calls to which ever editor we were added to (CompoundEditor fills this
+	# in for us when we're added).
+	def parent( self ) :
+
+		return self._gafferParent() if self._gafferParent else None
+
+	def editors( self, type = GafferUI.Editor ) :
+
+		return self.__splitContainer.editors( type = type )
+
+	def addEditor( self, editor ) :
+
+		self.__splitContainer.addEditor( editor )
+
+	def replaceEditors( self, splitContainer ) :
+
+		self.__splitContainer = splitContainer
+		self.setChild( self.__splitContainer )
+
+	def restoreWindowState( self ) :
+
+		if self.__windowState :
+			_restoreWindowState( self, self.__windowState )
+
+	# A detached panel is considered empty if it has a single split with
+	# no editors.
+	def isEmpty( self ) :
+
+		if len(self.__splitContainer) == 1 :
+			c = self.__splitContainer[0]
+			if isinstance( c, _TabbedContainer ) and len(c) == 0 :
+				return True
+
+		return False
+
+	def reprArgs( self ) :
+
+		return "{ 'children' : %s, 'windowState' : %s }" % (
+			self.__splitContainer.serialiseChildren(),
+			_reprDict( _getWindowState( self ) )
+		)
 
 ## An internal eventFilter class managing all tab drag-drop events and logic.
 # Tab dragging is an exception and is implemented entirely using native Qt
@@ -919,7 +889,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 			# We can't delete it now as Qt references it in DropEvent and we get a crash
 			# We'll come back and delete it on idle later.
 			cleanupCallback = None
-			detachedPanel = self.__tabbedContainer().ancestor( CompoundEditor._DetachedPanel )
+			detachedPanel = self.__tabbedContainer().ancestor( _DetachedPanel )
 			if detachedPanel and detachedPanel.isEmpty() :
 				detachedPanel.setVisible( False )
 				parentEditor = detachedPanel.ancestor( CompoundEditor )
@@ -958,9 +928,8 @@ class _TabDragBehaviour( QtCore.QObject ) :
 			# Create a new window. We want the center of the tab title to be
 			# roughly under the cursor
 			draggedEditor = self.__getSharedDragWidget()
-			parentEditor = tabbedContainer.ancestor( GafferUI.CompoundEditor )
 
-			window = CompoundEditor._DetachedPanel( draggedEditor.scriptNode() )
+			window = tabbedContainer.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
 
 			# We have to add the editor early so we can work out the center of
 			# the tab header widget otherwise it has no parent so no tab bar...
@@ -970,7 +939,6 @@ class _TabDragBehaviour( QtCore.QObject ) :
 			windowPos = QtGui.QCursor.pos() - tabCenter
 			window.setPosition( imath.V2i( windowPos.x(), windowPos.y() ) )
 
-			parentEditor._addDetachedPanel( window )
 			window.setVisible( True )
 
 		self.__setSharedDragWidget( None )
@@ -1099,7 +1067,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 # the resultant placement when the window is un-fullscreen'd can be a bit small.
 #
 # Note: We use bottom-left NDC coordinates to be consistent with Gaffer
-def _preferredBound( gafferWindow ) :
+def _getWindowState( gafferWindow ) :
 
 	qWidget = gafferWindow._qtWidget()
 
@@ -1137,15 +1105,7 @@ def _preferredBound( gafferWindow ) :
 		"bound" : imath.Box2f( imath.V2f( x, y - h ), imath.V2f( x + w, y ) )
 	}
 
-def _imathRepr( data ) :
-
-	# Neither IECore.repr or repr include the module name
-	s = IECore.repr( data )
-	for ss in ( 'Box2f', 'V2f' ) :
-		s = s.replace( ss, "imath.%s" % ss )
-	return s
-
-def _restorePreferredBound( gafferWindow, boundData ) :
+def _restoreWindowState( gafferWindow, boundData ) :
 
 	window = gafferWindow._qtWidget().windowHandle()
 	if not window :
@@ -1182,4 +1142,14 @@ def _restorePreferredBound( gafferWindow, boundData ) :
 		window.setWindowState( QtCore.Qt.WindowMaximized )
 	else :
 		window.setWindowState( QtCore.Qt.WindowNoState )
+
+
+def _reprDict( d ) :
+
+	# IECore.repr has a bug in that it won't 'fix' dict values
+	# TODO: replace call sites with `IECore.repr( d )` when fixed
+
+	return "{ %s }" % ", ".join( [
+		"'%s' : %s" % ( k, IECore.repr(v) ) for k,v in d.items()
+	] )
 

@@ -90,8 +90,7 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		c = GafferUI.CompoundEditor( s )
 
-		p = GafferUI.CompoundEditor._DetachedPanel( s )
-		c._addDetachedPanel( p )
+		p = c._createDetachedPanel()
 
 		wp = weakref.ref( p )
 
@@ -116,7 +115,7 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( wc(), None )
 
-	def testBoundCompatability( self ) :
+	def testWindowStateCompatability( self ) :
 
 		s = Gaffer.ScriptNode()
 		c = GafferUI.CompoundEditor( s )
@@ -125,8 +124,7 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		sw.setLayout( c )
 		sw.setVisible( True )
 
-		c.updatePreferredBound()
-		d = c._preferredBound()
+		d = eval( c._serializeWindowState() )
 
 		self.assertIsInstance( d, dict )
 		self.assertIsInstance( d["fullScreen"], bool )
