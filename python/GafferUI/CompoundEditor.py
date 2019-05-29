@@ -953,7 +953,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 		if self.__getSharedDragWidget() :
 			event.acceptProposedAction()
-			self.__setHover( True )
+			self.__tabbedContainer().parent().setHighlighted( True )
 		else :
 			event.ignore()
 
@@ -961,7 +961,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 	def __dragLeave( self, event ) :
 
-		self.__setHover( None )
+		self.__tabbedContainer().parent().setHighlighted( False )
 		return True
 
 	def __drop( self, qWidget, event ) :
@@ -975,19 +975,9 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		if widget.parent() is not self.__tabbedContainer() :
 			self.__tabbedContainer().addEditor( widget )
 
-		self.__setHover( None )
+		self.__tabbedContainer().parent().setHighlighted( False )
 
 		return True
-
-	def __setHover( self, hover ) :
-
-		# We set the hover state on the split that contains the TabbedContainer
-		# As it gives a nice outline around the whole tab container. Otherwise
-		# its a mere trying to get the border to look any good due to the tabs
-		# and corner widgets.
-		w = self.__tabbedContainer().parent()._qtWidget()
-		w.setProperty( "gafferHover", GafferUI._Variant.toVariant( hover ) )
-		w.style().polish( w )
 
 	def __shouldAbortInitialRearrange( self, qTabBar, event ) :
 

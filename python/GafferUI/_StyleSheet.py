@@ -536,6 +536,12 @@ _styleSheet = string.Template(
 
 	}
 
+	QSplitter[gafferHighlighted="true"] {
+
+		border: 1px solid $brightColor;
+
+	}
+
 	/* tab widget frame has a line at the top, tweaked up 1 pixel */
 	/* so that it sits underneath the bottom of the tabs.         */
 	/* this means the active tab can blend into the frame.        */
@@ -1117,12 +1123,6 @@ _styleSheet = string.Template(
 
 		border-top-right-radius: 0px;
 		border-bottom-right-radius: 0px;
-
-	}
-
-	*[gafferHover="true"] {
-
-		border: 1px solid $brightColor;
 
 	}
 
