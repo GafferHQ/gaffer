@@ -63,7 +63,7 @@ class CompoundEditor( GafferUI.Editor ) :
 		def __init__( self, scriptNode, children = None, preferredBound = None, **kwargs ) :
 
 			GafferUI.Window.__init__( self, **kwargs )
-			self.__titleManger = GafferUI.ScriptWindow._WindowTitleBehaviour( self, scriptNode )
+			self.__titleBehaviour = GafferUI.ScriptWindow._WindowTitleBehaviour( self, scriptNode )
 
 			self.__splitContainer = _SplitContainer()
 			self.__splitContainer.append( _TabbedContainer() )
@@ -718,7 +718,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 # application works. To avoid polluting the code base, it has been structured
 # so that as much logic and Qt interaction is contained within this class.
 #
-# The broad responsibilities of the _TabDragEventManager are:
+# The broad responsibilities of the _TabDragBehaviour are:
 #
 #  - Capture the starting state of any TabBar drag.
 #  - Abort the built-in tab-move behaviour of QTabBar when the cursor leaves
