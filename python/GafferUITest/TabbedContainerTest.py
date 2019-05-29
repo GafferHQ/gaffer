@@ -78,25 +78,6 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		self.failUnless( b2.parent() is t )
 		self.failUnless( b.parent() is None )
 
-	def testHasChild ( self ) :
-
-		t = GafferUI.TabbedContainer()
-		b1 = GafferUI.Button()
-		b2 = GafferUI.Button()
-
-		self.assertFalse( t.hasChild( b1 ) )
-		self.assertFalse( t.hasChild( b2 ) )
-
-		t.append( b1 )
-
-		self.assertTrue( t.hasChild( b1 ) )
-		self.assertFalse( t.hasChild( b2 ) )
-
-		t.append( b2 )
-
-		self.assertTrue( t.hasChild( b1 ) )
-		self.assertTrue( t.hasChild( b2 ) )
-
 	def testIndex( self ) :
 
 		t = GafferUI.TabbedContainer()

@@ -920,9 +920,10 @@ class _TabDragBehaviour( QtCore.QObject ) :
 			# If the dragged tab wasn't current, restore the original
 			# widget, unless the dragged tab was re-placed in this container.
 			# We do this as the drag-rearrange/remove can change the current tab
-			if not tabbedContainer.hasChild( self.__getSharedDragWidget() ) \
-			   and tabbedContainer.hasChild( self.__currentTabAtDragStart ) :
+			if self.__getSharedDragWidget().parent() is not tabbedContainer \
+			   and self.__currentTabAtDragStart.parent() is tabbedContainer :
 				tabbedContainer.setCurrent( self.__currentTabAtDragStart )
+
 		else :
 
 			# Create a new window. We want the center of the tab title to be
@@ -971,11 +972,10 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		event.acceptProposedAction()
 
 		widget = self.__getSharedDragWidget()
-		if not self.__tabbedContainer().hasChild( widget ) :
+		if widget.parent() is not self.__tabbedContainer() :
 			self.__tabbedContainer().addEditor( widget )
 
 		self.__setHover( None )
-		self.__setSharedDragWidget( None )
 
 		return True
 

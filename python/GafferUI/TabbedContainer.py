@@ -169,10 +169,6 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		return len( self.__widgets )
 
-	def hasChild( self, child ) :
-
-		return child in self.__widgets
-
 	def index( self, child ) :
 
 		return self.__widgets.index( child )
@@ -194,10 +190,6 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		child._qtWidget().setParent( None )
 		child._applyVisibility()
-
-	def hasChild( self, child ) :
-
-		return child in self.__widgets
 
 	def setCornerWidget( self, cornerWidget ) :
 
