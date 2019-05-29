@@ -175,9 +175,8 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def selectedText( self ) :
 
 		cursor = self._qtWidget().textCursor()
-		text = cursor.selectedText()
-		text = text.replace( u"\u2029", "\n" )
-		return str( text )
+		text = cursor.selection().toPlainText()
+		return text.encode( "utf-8" )
 
 	def linkAt( self, position ) :
 
