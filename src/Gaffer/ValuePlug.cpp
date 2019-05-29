@@ -126,6 +126,18 @@ size_t hash_value( const HashCacheKey &key )
 // construct a HashProcess. We access our caches via this augmented
 // key so that we have all the information we need in our getter
 // functions.
+//
+// Note the requirements the LRUCache places on a GetterKey like this :
+// "it must be implicitly castable to Key, and all GetterKeys
+// which yield the same Key must also yield the same results
+// from the GetterFunction". We meet these requirements as follows :
+//
+// - `computeNode` and `cachePolicy` are properties of the plug which
+//   is included in the HashCacheKey. We store them explicitly only
+//   for convenience and performance.
+// - `context` is represented in HashCacheKey via `contextHash`.
+// - `downstreamPlug` does not influence the results of the computation
+//   in any way. It is merely used for error reporting.
 struct HashProcessKey : public HashCacheKey
 {
 	HashProcessKey( const ValuePlug *plug, const ValuePlug *downstreamPlug, const Context *context, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy )
