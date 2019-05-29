@@ -53,8 +53,6 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 
-#include "tbb/task.h"
-
 using namespace std;
 using namespace Imath;
 using namespace IECore;
