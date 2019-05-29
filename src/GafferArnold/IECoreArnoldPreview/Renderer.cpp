@@ -2224,6 +2224,12 @@ class ArnoldLight : public ArnoldObject
 
 			// Update light shader.
 
+			// We're currently seeing crashes that we suspect to be related to
+			// the comment below. In order to track down what's really
+			// happening, we'll explicitly compare the pointers and emit a
+			// warning if they don't match.
+			const AtNode *oldRoot = m_lightShader ? m_lightShader->root() : nullptr;
+
 			// Delete current light shader, destroying all AtNodes it owns. It
 			// is crucial that we do this _before_ constructing a new
 			// ArnoldShader (and therefore AtNodes) below, because we are
@@ -2249,6 +2255,11 @@ class ArnoldLight : public ArnoldObject
 			}
 
 			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name + ":", m_parentNode );
+
+			if( oldRoot && oldRoot != m_lightShader->root() )
+			{
+				IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "When updating ArnoldShader, Arnold's memory allocation didn't meet our expectations: %p != %p" ) % oldRoot % m_lightShader->root() ) );
+			}
 
 			// Simplify name for the root shader, for ease of reading of ass files.
 			const std::string name = "light:" + m_name;
