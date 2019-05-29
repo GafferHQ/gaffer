@@ -2309,7 +2309,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with open( self.temporaryDirectory() + "/test/test_stats.json", "r" ) as statsHandle:
 			stats = json.load( statsHandle )["render 0000"]
-			if arnold.AiCheckAPIVersion( "5", "3", "0" ):
+			if arnold.AiCheckAPIVersion( "5", "2", "2" ) :
 				self.assertTrue( "microseconds" in stats["scene creation time"] )
 				self.assertTrue( "microseconds" in stats["frame time"] )
 				self.assertTrue( "peak CPU memory used" in stats )
