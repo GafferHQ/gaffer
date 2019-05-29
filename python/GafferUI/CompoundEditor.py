@@ -72,7 +72,7 @@ class CompoundEditor( GafferUI.Editor ) :
 			self._gafferParent = None
 
 			if children :
-				self.__splitContainer.addChildren( children )
+				self.__splitContainer.restoreChildren( children )
 
 			self.__preferredBound = preferredBound or {}
 
@@ -127,7 +127,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 			return "GafferUI.CompoundEditor._DetachedPanel( scriptNode, children=%s, preferredBound=%s )" \
 					% (
-						_serialiseSplits( self.__splitContainer ),
+						self.__splitContainer.serialiseChildren(),
 						_imathRepr( self.__preferredBound )
 					)
 
@@ -144,7 +144,7 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		if children :
-			self.__splitContainer.addChildren( children )
+			self.__splitContainer.restoreChildren( children )
 
 		self.__preferredBound = preferredBound or {}
 
@@ -243,7 +243,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, preferredBound = %s )" \
 				% (
-					_serialiseSplits( self.__splitContainer ),
+					self.__splitContainer.serialiseChildren(),
 					self._detachedPanels(),
 					_imathRepr( _preferredBound( window ) ) if window else {}
 				)
@@ -389,13 +389,42 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 		container[0].addEditor( editor )
 
-	def addChildren( self, children ) :
+	def serialiseChildren( self, scriptNode = None ) :
+
+		if not scriptNode :
+			scriptNode = self.ancestor( GafferUI.CompoundEditor ).scriptNode()
+
+		if self.isSplit() :
+			sizes = self.getSizes()
+			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
+			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % (
+				str( self.getOrientation() ), splitPosition,
+				self[0].serialiseChildren( scriptNode ), self[1].serialiseChildren( scriptNode )
+			)
+		else :
+			# not split - a tabbed container full of editors
+			tabbedContainer = self[0]
+			tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
+			if tabbedContainer.getCurrent() is not None :
+				tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
+			tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
+
+			tabDict["pinned"] = []
+			for editor in tabbedContainer :
+				if isinstance( editor, GafferUI.NodeSetEditor ) :
+					tabDict["pinned"].append( not editor.getNodeSet().isSame( scriptNode.selection() ) )
+				else :
+					tabDict["pinned"].append( None )
+
+			return repr( tabDict )
+
+	def restoreChildren( self, children ) :
 
 		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
 
 			self.split( children[0], 0 )
-			self[0].addChildren( children[2][0] )
-			self[1].addChildren( children[2][1] )
+			self[0].restoreChildren( children[2][0] )
+			self[1].restoreChildren( children[2][1] )
 			self.setSizes( [ children[1], 1.0 - children[1] ] )
 
 		else :
@@ -1154,33 +1183,3 @@ def _restorePreferredBound( gafferWindow, boundData ) :
 	else :
 		window.setWindowState( QtCore.Qt.WindowNoState )
 
-def _serialiseSplits( splitContainer, scriptNode = None ) :
-
-	assert( isinstance( splitContainer, _SplitContainer ) )
-
-	if not scriptNode :
-		scriptNode = splitContainer.ancestor( GafferUI.CompoundEditor ).scriptNode()
-
-	if splitContainer.isSplit() :
-		sizes = splitContainer.getSizes()
-		splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
-		return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % (
-			str( splitContainer.getOrientation() ), splitPosition,
-			_serialiseSplits( splitContainer[0], scriptNode ), _serialiseSplits( splitContainer[1], scriptNode )
-		)
-	else :
-		# not split - a tabbed container full of editors
-		tabbedContainer = splitContainer[0]
-		tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
-		if tabbedContainer.getCurrent() is not None :
-			tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
-		tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
-
-		tabDict["pinned"] = []
-		for editor in tabbedContainer :
-			if isinstance( editor, GafferUI.NodeSetEditor ) :
-				tabDict["pinned"].append( not editor.getNodeSet().isSame( scriptNode.selection() ) )
-			else :
-				tabDict["pinned"].append( None )
-
-		return repr( tabDict )
