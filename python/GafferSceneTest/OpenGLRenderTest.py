@@ -46,7 +46,7 @@ import GafferImage
 import GafferScene
 import GafferSceneTest
 
-@unittest.skipIf( "TRAVIS" in os.environ, "OpenGL not set up on Travis" )
+@unittest.skipIf( "TRAVIS" in os.environ or "TF_BUILD" in os.environ, "OpenGL not set up" )
 class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
