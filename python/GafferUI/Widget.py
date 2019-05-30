@@ -604,6 +604,26 @@ class Widget( object ) :
 
 		return p
 
+	@staticmethod
+	def currentModifiers() :
+
+		return Widget._modifiers( QtWidgets.QApplication.queryKeyboardModifiers() )
+
+
+	@staticmethod
+	def modifiersDown( modifierOrModifiers ) :
+
+		if not isinstance( modifierOrModifiers, ( list, tuple ) ) :
+			modifierOrModifiers = [ modifierOrModifiers, ]
+
+		current = Widget.currentModifiers()
+
+		for m in modifierOrModifiers :
+			if not m & current:
+				return False
+
+		return True
+
 	## Returns the widget at the specified screen position.
 	# If widgetType is specified, then it is used to find
 	# an ancestor of the widget at the position.
