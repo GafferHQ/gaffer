@@ -45,6 +45,25 @@ using namespace IECore;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+const ValuePlug *valuePlug( const NameValuePlug *p )
+{
+	if( auto v = p->valuePlug<Gaffer::ValuePlug>() )
+	{
+		return v;
+	}
+
+	throw IECore::Exception( "Not a ValuePlug" );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // CompoundDataPlug implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +139,7 @@ IECore::MurmurHash CompoundDataPlug::hash() const
 		if( active )
 		{
 			plug->namePlug()->hash( h );
-			plug->valuePlug()->hash( h );
+			valuePlug( plug )->hash( h );
 		}
 	}
 	return h;
@@ -169,6 +188,6 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parame
 		return nullptr;
 	}
 
-	return PlugAlgo::extractDataFromPlug( parameterPlug->valuePlug() );
+	return PlugAlgo::extractDataFromPlug( valuePlug( parameterPlug ) );
 }
 

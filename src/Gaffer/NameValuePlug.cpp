@@ -55,7 +55,7 @@ NameValuePlug::NameValuePlug( const std::string &nameDefault, const IECore::Data
 {
 }
 
-NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::ValuePlugPtr valuePlug, const std::string &name )
+NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::PlugPtr valuePlug, const std::string &name )
 	:	NameValuePlug( name, valuePlug->direction(), valuePlug->getFlags() )
 {
 	addChild( new StringPlug( "name", valuePlug->direction(), nameDefault, valuePlug->getFlags() ) );
@@ -70,7 +70,7 @@ NameValuePlug::NameValuePlug( const std::string &nameDefault, const IECore::Data
 	addChild( new BoolPlug( "enabled", direction, enabled ) );
 }
 
-NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::ValuePlugPtr valuePlug, bool enabled, const std::string &name )
+NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::PlugPtr valuePlug, bool enabled, const std::string &name )
 	:	NameValuePlug( nameDefault, valuePlug, name )
 {
 	addChild( new BoolPlug( "enabled", valuePlug->direction(), enabled, valuePlug->getFlags() ) );
@@ -100,13 +100,19 @@ const BoolPlug *NameValuePlug::enabledPlug() const
 
 bool NameValuePlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
-	if( !ValuePlug::acceptsChild( potentialChild ) )
+	if( !Plug::acceptsChild( potentialChild ) )
 	{
+		// We should be calling `ValuePlug::acceptsChild()` here,
+		// rather than `Plug::acceptsChild()`. But we want to exempt
+		// ourselves from the obligation that the child be a ValuePlug,
+		// because some use cases require the use of regular Plugs.
+		// This is certainly not ideal, but it's the lesser of the evils
+		// compared to the other options - see PR #3150 for further
+		// discussion.
 		return false;
 	}
 
 	if(
-		
 		potentialChild->isInstanceOf( StringPlug::staticTypeId() ) &&
 		potentialChild->getName() == "name" &&
 		( children().size() == 0 )
@@ -143,9 +149,7 @@ PlugPtr NameValuePlug::createCounterpart( const std::string &name, Direction dir
 		throw IECore::Exception( "Cannot create counterpart for : " + fullName() + " - NameValuePlug must have name and value." );
 	}
 
-	ValuePlugPtr valueCounterpart = IECore::runTimeCast<ValuePlug>(
-		valuePlug()->createCounterpart( "value", direction ).get()
-	);
+	PlugPtr valueCounterpart = valuePlug()->createCounterpart( "value", direction );
 
 	if( enabledPlug() )
 	{

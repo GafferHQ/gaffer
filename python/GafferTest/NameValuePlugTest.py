@@ -232,5 +232,38 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 		self.assertTrue( m["name"].defaultValue(), "c" )
 		self.assertTrue( m["name"].getValue(), "c" )
 
+	def testNonValuePlugs( self ) :
+
+		p1 = Gaffer.NameValuePlug( "name", Gaffer.Plug(), name = "p1", defaultEnabled = False )
+		p2 = p1.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+
+		self.assertTrue( p1.settable() )
+		self.assertTrue( p2.settable() )
+
+		p2.setInput( p1 )
+		self.assertEqual( p2["name"].getInput(), p1["name"] )
+		self.assertEqual( p2["value"].getInput(), p1["value"] )
+		self.assertTrue( p1.settable() )
+		self.assertFalse( p2.settable() )
+
+		p2.setInput( None )
+		self.assertTrue( p2.settable() )
+
+		self.assertTrue( p1.isSetToDefault() )
+		p1["name"].setValue( "nonDefault" )
+		self.assertFalse( p1.isSetToDefault() )
+		p1.setToDefault()
+		self.assertTrue( p1.isSetToDefault() )
+
+		p1["name"].setValue( "nonDefault" )
+		p1["enabled"].setValue( True )
+		p2.setFrom( p1 )
+		self.assertEqual( p2["name"].getValue(), p1["name"].getValue() )
+		self.assertEqual( p2["enabled"].getValue(), p1["enabled"].getValue() )
+
+		self.assertEqual( p1.hash(), p2.hash() )
+		p2["enabled"].setValue( False )
+		self.assertNotEqual( p1.hash(), p2.hash() )
+
 if __name__ == "__main__":
 	unittest.main()

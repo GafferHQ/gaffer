@@ -475,5 +475,17 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p["test_A"]["value"].getValue(), 10 )
 		self.assertEqual( p["_j"]["value"].getValue(), 20 )
 
+	def testNonValuePlugs( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+		p["test"] = Gaffer.NameValuePlug( "name", Gaffer.Plug() )
+
+		with self.assertRaisesRegexp( RuntimeError, "Not a ValuePlug" ) :
+			p.hash()
+
+		d = IECore.CompoundData()
+		with self.assertRaisesRegexp( RuntimeError, "Not a ValuePlug" ) :
+			p.fillCompoundData( d )
+
 if __name__ == "__main__":
 	unittest.main()

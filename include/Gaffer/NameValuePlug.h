@@ -66,7 +66,7 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 
 		NameValuePlug(
 			const std::string &nameDefault,
-			Gaffer::ValuePlugPtr valuePlug,
+			Gaffer::PlugPtr valuePlug,
 			const std::string &name=defaultName<NameValuePlug>()
 		);
 
@@ -83,7 +83,7 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 
 		NameValuePlug(
 			const std::string &nameDefault,
-			Gaffer::ValuePlugPtr valuePlug,
+			Gaffer::PlugPtr valuePlug,
 			bool defaultEnabled,
 			const std::string &name=defaultName<NameValuePlug>()
 		);
@@ -100,9 +100,9 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
-		template<typename T = Gaffer::ValuePlug>
+		template<typename T = Gaffer::Plug>
 		T *valuePlug();
-		template<typename T = Gaffer::ValuePlug>
+		template<typename T = Gaffer::Plug>
 		const T *valuePlug() const;
 
 		Gaffer::BoolPlug *enabledPlug();
