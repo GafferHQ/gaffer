@@ -67,7 +67,7 @@ class NameValuePlugSerialiser : public ValuePlugSerialiser
 		{
 			return repr( static_cast<const NameValuePlug *>( graphComponent ), &serialisation );
 		}
-	
+
 
 		static std::string repr( const Gaffer::NameValuePlug *plug, const Serialisation *serialisation )
 		{
@@ -105,7 +105,7 @@ NameValuePlugPtr nameValuePlugConstructor1( const std::string &nameDefault, cons
 	return new NameValuePlug( nameDefault, valueDefault.get(), name, direction, flags );
 }
 
-NameValuePlugPtr nameValuePlugConstructor2( const std::string &nameDefault, const Gaffer::ValuePlugPtr valuePlug, const std::string &name )
+NameValuePlugPtr nameValuePlugConstructor2( const std::string &nameDefault, const Gaffer::PlugPtr valuePlug, const std::string &name )
 {
 	return new NameValuePlug( nameDefault, valuePlug, name );
 }
@@ -115,7 +115,7 @@ NameValuePlugPtr nameValuePlugConstructor3( const std::string &nameDefault, cons
 	return new NameValuePlug( nameDefault, valueDefault.get(), defaultEnabled, name, direction, flags );
 }
 
-NameValuePlugPtr nameValuePlugConstructor4( const std::string &nameDefault, const Gaffer::ValuePlugPtr valuePlug, bool defaultEnabled, const std::string &name )
+NameValuePlugPtr nameValuePlugConstructor4( const std::string &nameDefault, const Gaffer::PlugPtr valuePlug, bool defaultEnabled, const std::string &name )
 {
 	return new NameValuePlug( nameDefault, valuePlug, defaultEnabled, name );
 }

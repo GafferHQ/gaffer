@@ -795,9 +795,16 @@ void ValuePlug::setFrom( const ValuePlug *other )
 	ChildContainer::const_iterator it, otherIt;
 	for( it = children().begin(), otherIt = typedOther->children().begin(); it!=children().end() && otherIt!=typedOther->children().end(); it++, otherIt++ )
 	{
-		ValuePlug *child = static_cast<ValuePlug *>( it->get() );
-		const ValuePlug *otherChild = static_cast<ValuePlug *>( otherIt->get() );
-		child->setFrom( otherChild );
+		// We use `runTimeCast()` here as a concession to NameValuePlug,
+		// which egregiously ignores the wishes of our `acceptsChild()`
+		// implementation. See `NameValuePlug::acceptsChild()` for more
+		// details.
+		ValuePlug *child = IECore::runTimeCast<ValuePlug>( it->get() );
+		const ValuePlug *otherChild = IECore::runTimeCast<ValuePlug>( otherIt->get() );
+		if( child && otherChild )
+		{
+			child->setFrom( otherChild );
+		}
 	}
 }
 

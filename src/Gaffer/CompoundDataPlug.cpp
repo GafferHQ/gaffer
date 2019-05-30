@@ -45,6 +45,25 @@ using namespace IECore;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+const ValuePlug *valuePlug( const NameValuePlug *p )
+{
+	if( auto v = p->valuePlug<Gaffer::ValuePlug>() )
+	{
+		return v;
+	}
+
+	throw IECore::Exception( "Not a ValuePlug" );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // CompoundDataPlug implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -113,14 +132,14 @@ IECore::MurmurHash CompoundDataPlug::hash() const
 	{
 		const NameValuePlug *plug = it->get();
 		bool active = true;
-		if( plug->children().size() == 3 )
+		if( auto enabledPlug = plug->enabledPlug() )
 		{
-			active = plug->getChild<BoolPlug>( 2 )->getValue();
+			active = enabledPlug->getValue();
 		}
 		if( active )
 		{
-			plug->getChild<ValuePlug>( 0 )->hash( h );
-			plug->getChild<ValuePlug>( 1 )->hash( h );
+			plug->namePlug()->hash( h );
+			valuePlug( plug )->hash( h );
 		}
 	}
 	return h;
@@ -146,9 +165,9 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 
 IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parameterPlug, std::string &name ) const
 {
-	if( parameterPlug->children().size() == 3 )
+	if( auto enabledPlug = parameterPlug->enabledPlug() )
 	{
-		if( !parameterPlug->getChild<BoolPlug>( 2 )->getValue() )
+		if( !enabledPlug->getValue() )
 		{
 			return nullptr;
 		}
@@ -156,19 +175,19 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parame
 
 	if( parameterPlug->children().size() < 2 )
 	{
-		// we can end up here either if someone has very naughtily deleted
-		// some plugs, or if we're being called during loading and the
-		// child plugs haven't been fully constructed.
+		// Serialisations made prior to the introduction of NameValuePlug
+		// add the child plugs _after_ the NameValuePlug has been parented
+		// to us, exposing us to incomplete plugs. Ignore them. More recent
+		// serialisations do not have this problem.
 		return nullptr;
 	}
 
-	name = parameterPlug->getChild<StringPlug>( 0 )->getValue();
+	name = parameterPlug->namePlug()->getValue();
 	if( !name.size() )
 	{
 		return nullptr;
 	}
 
-	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( 1 );
-	return PlugAlgo::extractDataFromPlug( valuePlug );
+	return PlugAlgo::extractDataFromPlug( valuePlug( parameterPlug ) );
 }
 
