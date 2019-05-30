@@ -50,7 +50,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__splineWidget._qtWidget().setFixedHeight( 20 )
 
-		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 
 		self.__editorWindow = None
 
@@ -117,8 +117,8 @@ class _SplinePlugValueDialogue( GafferUI.Dialogue ) :
 		# `acquire()` should even be responsible for building the
 		# dialogues, so it's able to build a dialogue around any
 		# PlugValueWidget?
-		self.__plugParentChangedConnection = plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
-		self.__nodeParentChangedConnection = plug.node().parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+		plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
+		plug.node().parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
 
 	@classmethod
 	def acquire( cls, plug ) :

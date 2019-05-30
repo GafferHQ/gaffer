@@ -76,7 +76,7 @@ class ColorSwatch( GafferUI.Widget ) :
 		self.__useDisplayTransform = useDisplayTransform
 		self.__color = color
 
-		self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
+		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
 
 		self.__updateCheckerColors()
 

@@ -220,11 +220,11 @@ class DispatcherWindow( GafferUI.Window ) :
 					self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 					self.__dispatchersMenu.append( self.__dispatchers.keys() )
 					self.__dispatchersMenu.setSelection( [ defaultType ] )
-					self.__dispatchersMenuSelectionChangedConnection = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
+					self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ), scoped = False )
 
 				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
-				self.__dispatchClickedConnection = self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ) )
+				self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ), scoped = False )
 
 		self.__update( resizeToFit = True )
 
@@ -342,7 +342,7 @@ class _DispatchButton( GafferUI.Button ) :
 		GafferUI.Button.__init__( self, "Execute", **kw )
 
 		self.__node = node
-		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
 	def __clicked( self, button ) :
 

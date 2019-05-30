@@ -55,9 +55,9 @@ class NameLabel( GafferUI.Label ) :
 		self.__graphComponent = False # force setGraphComponent() to update no matter what
 		self.setGraphComponent( graphComponent )
 
-		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
-		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 
 	## Calling setText() disables the name tracking behaviour.
 	## \deprecated. Use a custom formatter to override the text.

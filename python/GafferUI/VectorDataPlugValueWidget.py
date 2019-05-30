@@ -49,7 +49,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
-		self.__dataChangedConnection = self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
+		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
 
 		self._updateFromPlug()
 

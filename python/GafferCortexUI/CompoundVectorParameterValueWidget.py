@@ -95,8 +95,8 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 			sizeEditable = sizeEditable,
 		)
 
-		self.__editConnection = self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
-		self.__dataChangedConnection = self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
+		self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ), scoped = False )
+		self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
 
 		self._updateFromPlug()
 
@@ -304,4 +304,4 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 			},
 		)
 
-__parameterPopupMenuConnection = GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )
+GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu, scoped = False )

@@ -49,8 +49,6 @@ class AboutWindow( GafferUI.Window ) :
 
 		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Manual, borderWidth = 6, **kw )
 
-		self.__linkActivatedConnections = []
-
 		with self :
 
 			with GafferUI.TabbedContainer() :
@@ -162,7 +160,7 @@ class AboutWindow( GafferUI.Window ) :
 		text = header + text + footer
 
 		label = GafferUI.Label( text, **kw )
-		self.__linkActivatedConnections.append( label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ) ) )
+		label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ), scoped = False )
 		return label
 
 	def __linkActivated( self, label, url ) :

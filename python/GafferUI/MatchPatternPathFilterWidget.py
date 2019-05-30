@@ -52,7 +52,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		with self.__row :
 
 			self.__enabledWidget = GafferUI.BoolWidget()
-			self.__enabledStateChangedConnection = self.__enabledWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__enabledStateChanged ) )
+			self.__enabledWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__enabledStateChanged ), scoped = False )
 
 			self.__propertyButton = GafferUI.MenuButton(
 				image = "collapsibleArrowDown.png",
@@ -66,8 +66,8 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
 				self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
 
-			self.__patternEditingFinishedConnection = self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-			self.__patternTextChangedConnection = self.__patternWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__patternTextChanged ) )
+			self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
+			self.__patternWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__patternTextChanged ), scoped = False )
 
 		self._updateFromPathFilter()
 

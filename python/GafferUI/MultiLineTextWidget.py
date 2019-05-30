@@ -73,10 +73,10 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.setFixedLineHeight( fixedLineHeight )
 		self.setRole( role )
 
-		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
-		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
 
@@ -252,7 +252,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			return self.__activatedSignal
 		except :
 			self.__activatedSignal = GafferUI.WidgetSignal()
-			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		return self.__activatedSignal
 
@@ -262,8 +262,8 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			return self.__linkActivatedSignal
 		except :
 			self.__linkActivatedSignal = GafferUI.WidgetEventSignal()
-			self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
-			self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
+			self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 
 		return self.__linkActivatedSignal
 

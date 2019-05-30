@@ -120,11 +120,11 @@ class __PlugCreationWidget( GafferUI.Widget ) :
 
 		self.__plugParent = plugParent
 
-		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__nodeMetadataChanged )
+		Gaffer.Metadata.nodeValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False
 		)
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__plugMetadataChanged )
+		Gaffer.Metadata.plugValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
 		)
 
 		self.__updateReadOnly()

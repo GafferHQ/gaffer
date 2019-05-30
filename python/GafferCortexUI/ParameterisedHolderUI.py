@@ -115,7 +115,7 @@ class _InfoButton( GafferUI.Button ) :
 
 		self.__node = node
 		self.__window = None
-		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
 	def getToolTip( self ) :
 

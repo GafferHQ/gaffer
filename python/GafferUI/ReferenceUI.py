@@ -111,13 +111,13 @@ class _FileNameWidget( GafferUI.Widget ) :
 
 			loadButton = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
 			loadButton.setToolTip( "Load" )
-			self.__loadButtonClickedConnection = loadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__loadClicked ) )
+			loadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__loadClicked ), scoped = False )
 
 			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
 			self.__reloadButton.setToolTip( "Reload" )
-			self.__reloadButtonClickedConnection = self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadClicked ) )
+			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadClicked ), scoped = False )
 
-		self.__referenceLoadedConnection = node.referenceLoadedSignal().connect( Gaffer.WeakMethod( self.__referenceLoaded ) )
+		node.referenceLoadedSignal().connect( Gaffer.WeakMethod( self.__referenceLoaded ), scoped = False )
 
 	def __loadClicked( self, button ) :
 

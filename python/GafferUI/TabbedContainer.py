@@ -55,9 +55,9 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		self.__tabBar = GafferUI.Widget( QtWidgets.QTabBar() )
 		self.__tabBar._qtWidget().setDrawBase( False )
-		self.__tabBarDragEnterConnection = self.__tabBar.dragEnterSignal().connect( Gaffer.WeakMethod( self.__tabBarDragEnter ) )
-		self.__tabBarDragMoveConnection = self.__tabBar.dragMoveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragMove ) )
-		self.__tabBarDragLeaveConnection = self.__tabBar.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragLeave ) )
+		self.__tabBar.dragEnterSignal().connect( Gaffer.WeakMethod( self.__tabBarDragEnter ), scoped = False )
+		self.__tabBar.dragMoveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragMove ), scoped = False )
+		self.__tabBar.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragLeave ), scoped = False )
 		self.__tabBarDragState = self.__DragState.None
 
 		# See comments in Button.py

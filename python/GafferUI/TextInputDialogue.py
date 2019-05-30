@@ -47,7 +47,7 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 		self.__textWidget = GafferUI.TextWidget( initialText )
 		self.__textWidget.setSelection( None, None ) # all text
 		self._setWidget( self.__textWidget )
-		self.__textActivatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
+		self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ), scoped = False )
 
 		self.__cancelButton = self._addButton( cancelLabel )
 		self.__confirmButton = self._addButton( confirmLabel )

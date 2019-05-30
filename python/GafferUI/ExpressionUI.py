@@ -142,7 +142,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-__popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
 
 # ExpressionWidget
 ##########################################################################
@@ -167,15 +167,15 @@ class ExpressionWidget( GafferUI.Widget ) :
 			self.__textWidget = GafferUI.MultiLineTextWidget( role = GafferUI.MultiLineTextWidget.Role.Code )
 			self.__textWidget.setEditable( not Gaffer.MetadataAlgo.readOnly( node ) )
 
-			self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
-			self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
-			self.__dropTextConnection = self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
-			self.__contextMenuConnection = self.__textWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__expressionContextMenu ) )
+			self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
+			self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
+			self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
+			self.__textWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__expressionContextMenu ), scoped = False )
 
 			self.__messageWidget = GafferUI.MessageWidget()
 
-		self.__expressionChangedConnection = self.__node.expressionChangedSignal().connect( Gaffer.WeakMethod( self.__expressionChanged ) )
-		self.__errorConnection = self.__node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
+		self.__node.expressionChangedSignal().connect( Gaffer.WeakMethod( self.__expressionChanged ), scoped = False )
+		self.__node.errorSignal().connect( Gaffer.WeakMethod( self.__error ), scoped = False )
 
 		self.__update()
 

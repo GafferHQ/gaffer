@@ -146,8 +146,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		# query tools from a view anyway?
 		self.__currentView = None
 
-		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__contextMenuConnection = self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
 
 		self._updateFromSet()
 
@@ -313,12 +313,11 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.tools = [ GafferUI.Tool.create( n, view ) for n in GafferUI.Tool.registeredTools( view.typeId() ) ]
 			self.tools.sort( key = lambda v : Gaffer.Metadata.value( v, "order" ) if Gaffer.Metadata.value( v, "order" ) is not None else 999 )
 
-			self.__toolPlugSetConnections = [
-				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet, fallbackResult = lambda plug : None ) ) for t in self.tools
-			]
-			self.__toolPlugDirtiedConnections = [
-				t.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__toolPlugDirtied, fallbackResult = lambda plug : None ) ) for t in self.tools
-			]
+			for t in self.tools :
+				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet, fallbackResult = lambda plug : None ), scoped = False )
+
+			for t in self.tools :
+				t.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__toolPlugDirtied, fallbackResult = lambda plug : None ), scoped = False )
 
 			with GafferUI.ListContainer( spacing = 1 ) as self.widgets :
 

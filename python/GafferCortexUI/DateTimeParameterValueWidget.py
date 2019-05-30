@@ -71,7 +71,7 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._qtWidget().calendarWidget().setWeekdayTextFormat( QtCore.Qt.Saturday, QtGui.QTextCharFormat() )
 		self._qtWidget().calendarWidget().setWeekdayTextFormat( QtCore.Qt.Sunday, QtGui.QTextCharFormat() )
 
-		self.__dateTimeChangedConnection = self._qtWidget().dateTimeChanged.connect( Gaffer.WeakMethod( self.__dateTimeChanged ) )
+		self._qtWidget().dateTimeChanged.connect( Gaffer.WeakMethod( self.__dateTimeChanged ) )
 
 		self._addPopupMenu()
 

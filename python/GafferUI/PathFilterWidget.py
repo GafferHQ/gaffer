@@ -111,7 +111,7 @@ class BasicPathFilterWidget( PathFilterWidget ) :
 
 		PathFilterWidget.__init__( self, self.__checkBox, pathFilter )
 
-		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
+		self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
 
 		self._updateFromPathFilter()
 

@@ -173,8 +173,8 @@ class _ImagesPath( Gaffer.Path ) :
 		# Connect to all the signals we need to in order
 		# to emit pathChangedSignal at the appropriate times.
 
-		self.__childAddedConnection = self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ) )
-		self.__childRemovedConnection = self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ) )
+		self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ), scoped = False )
+		self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ), scoped = False )
 		self.__nameChangedConnections = {
 			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
 			for image in self.__images
@@ -220,55 +220,45 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListing.setDragPointer( "" )
 			self.__pathListing.setSortable( False )
 			self.__pathListing.setHeaderVisible( False )
-			self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingSelectionChanged )
+			self.__pathListing.selectionChangedSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingSelectionChanged ), scoped = False
 			)
-			self.__pathListingDragEnterConnection = self.__pathListing.dragEnterSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDragEnter )
+			self.__pathListing.dragEnterSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDragEnter ), scoped = False
 			)
-			self.__pathListingDragLeaveConnection = self.__pathListing.dragLeaveSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDragLeave )
+			self.__pathListing.dragLeaveSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDragLeave ), scoped = False
 			)
-			self.__pathListingMoveConnection = self.__pathListing.dragMoveSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDragMove )
+			self.__pathListing.dragMoveSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDragMove ), scoped = False
 			)
-			self.__pathListingDropConnection = self.__pathListing.dropSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDrop )
+			self.__pathListing.dropSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDrop ), scoped = False
 			)
-			self.__pathListingKeyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 				addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
-				self.__addClickedConnection = addButton.clickedSignal().connect(
-					Gaffer.WeakMethod( self.__addClicked )
-				)
+				addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ), scoped = False )
 
 				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image" )
 				self.__duplicateButton.setEnabled( False )
-				self.__duplicateButtonClickedConnection = self.__duplicateButton.clickedSignal().connect(
-					Gaffer.WeakMethod( self.__duplicateClicked )
-				)
+				self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ), scoped = False )
 
 				self.__exportButton = GafferUI.Button( image = "export.png", hasFrame = False, toolTip = "Export selected image" )
 				self.__exportButton.setEnabled( False )
-				self.__exportButtonClickedConnection = self.__exportButton.clickedSignal().connect(
-					Gaffer.WeakMethod( self.__exportClicked )
-				)
+				self.__exportButton.clickedSignal().connect( Gaffer.WeakMethod( self.__exportClicked ), scoped = False )
 
 				self.__extractButton = GafferUI.Button( image = "extract.png", hasFrame = False, toolTip = "Create CatalogueSelect node for selected image" )
 				self.__extractButton.setEnabled( False )
-				self.__extractButtonClickedConnection = self.__extractButton.clickedSignal().connect(
-					Gaffer.WeakMethod( self.__extractClicked )
-				)
+				self.__extractButton.clickedSignal().connect( Gaffer.WeakMethod( self.__extractClicked ), scoped = False )
 
 				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 				self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image" )
 				self.__removeButton.setEnabled( False )
-				self.__removeClickedConnection = self.__removeButton.clickedSignal().connect(
-					Gaffer.WeakMethod( self.__removeClicked )
-				)
+				self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
 
 			GafferUI.Divider()
 

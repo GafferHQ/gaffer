@@ -63,7 +63,7 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 		self.__useDisplayTransform = useDisplayTransform
 
 		if self.__useDisplayTransform :
-			self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
+			GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
 
 	def setColor( self, color ) :
 
@@ -143,18 +143,18 @@ class ColorChooser( GafferUI.Widget ) :
 					self.__sliders[component] = slider
 
 					self.__componentValueChangedConnections.append(
-						numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
+						numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
 					)
 
 					self.__componentValueChangedConnections.append(
-						slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
+						slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
 					)
 
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, parenting = { "expand" : True } ) :
 
 				self.__initialColorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
-				self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
+				self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ), scoped = False )
 
 				GafferUI.Spacer( imath.V2i( 4, 40 ) )
 

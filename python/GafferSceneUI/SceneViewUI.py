@@ -442,8 +442,8 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__settingsWindow = None
 
 		# Must connect with group 0 so we get called before PlugValueWidget's default handlers
-		self.__dragEnterConnection = self.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dropConnection = self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ) )
+		self.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		self._updateFromPlug()
 
@@ -814,13 +814,8 @@ class _StateWidget( GafferUI.Widget ) :
 
 		self.__sceneGadget = sceneView.viewportGadget().getPrimaryChild()
 
-		self.__buttonClickedConnection = self.__button.clickedSignal().connect(
-			Gaffer.WeakMethod( self.__buttonClick )
-		)
-
-		self.__stateChangedConnection = self.__sceneGadget.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged )
-		)
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ), scoped = False )
+		self.__sceneGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
 
 		self.__update()
 

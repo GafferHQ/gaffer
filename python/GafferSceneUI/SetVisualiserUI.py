@@ -137,13 +137,13 @@ class _OutSetsPlugValueWidget( GafferUI.Widget ) :
 
 	def __init__( self, node, **kw ) :
 
-		self.__node = node
-		self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
+
+		self.__node = node
 		self.__swatches = []
 
-		GafferUI.Widget.__init__( self, self.__column, **kw )
+		node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
 
 		self._update()
 
@@ -209,9 +209,7 @@ class _OverridesFooter( GafferUI.PlugValueWidget ) :
 			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
-			self.__addButtonClickedConnection = self.__addButton.clickedSignal().connect(
-				Gaffer.WeakMethod( self.__addOverride )
-			)
+			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addOverride ), scoped = False )
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
@@ -245,7 +243,7 @@ class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
 
 		# Allow right-click to add an override for the target set
 		self.__menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
-		self.__contextMenuConnection = self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__menu.popup ) )
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__menu.popup ), scoped = False )
 
 	def setColorAndLabel( self, color, label ) :
 

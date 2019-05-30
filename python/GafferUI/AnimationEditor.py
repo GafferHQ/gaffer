@@ -137,8 +137,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )
 		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored )
-		self.__expansionChangedConnection = self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
-		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
+		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
 
 		# Set up the widget responsible for actual curve drawing
 		self.__animationGadget = GafferUI.AnimationGadget()
@@ -146,8 +146,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# Set up signals needed to update selection state in PathListingWidget
 		editable = self.__animationGadget.editablePlugs()
 		self.__editablePlugsConnections = [
-			editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ) ),
-			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ) )
+			editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ), scoped = False ),
+			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ), scoped = False )
 		]
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(

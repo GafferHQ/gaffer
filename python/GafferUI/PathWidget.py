@@ -57,10 +57,10 @@ class PathWidget( GafferUI.TextWidget ) :
 		# than the other things that go in TextWidgets.
 		self.setPreferredCharacterWidth( 60 )
 
-		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__selectingFinishedConnection = self.selectingFinishedSignal().connect( Gaffer.WeakMethod( self.__selectingFinished ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.selectingFinishedSignal().connect( Gaffer.WeakMethod( self.__selectingFinished ), scoped = False )
 
-		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
+		self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 
 		self.__popupMenu = None
 

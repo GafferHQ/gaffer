@@ -258,7 +258,7 @@ class _CodePlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
 
 		self.textWidget().setRole( GafferUI.MultiLineTextWidget.Role.Code )
 
-		self.__dropTextConnection = self.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+		self.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
 
 	def __dropText( self, widget, dragData ) :
 
@@ -286,8 +286,8 @@ class _ErrorWidget( GafferUI.Widget ) :
 		self.__messageWidget = GafferUI.MessageWidget()
 		GafferUI.Widget.__init__( self, self.__messageWidget, **kw )
 
-		self.__errorConnection = node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
-		self.__shaderCompiledConnection = node.shaderCompiledSignal().connect( Gaffer.WeakMethod( self.__shaderCompiled ) )
+		node.errorSignal().connect( Gaffer.WeakMethod( self.__error ), scoped = False )
+		node.shaderCompiledSignal().connect( Gaffer.WeakMethod( self.__shaderCompiled ), scoped = False )
 
 		self.__messageWidget.setVisible( False )
 
@@ -352,7 +352,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			},
 		)
 
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -388,4 +388,4 @@ def __exportOSLShader( nodeEditor, node ) :
 			with nodeEditor.getContext() :
 				f.write( node.source( os.path.splitext( os.path.basename( path ) )[0] ) )
 
-__nodeEditorToolMenuConnection = GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )
+GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu, scoped = False )

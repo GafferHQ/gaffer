@@ -181,7 +181,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with row :
 
 			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
-			self.__clickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
 			if not isinstance( plug, Gaffer.BoolPlug ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
@@ -263,12 +263,12 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__pixel = imath.V2f( 0 )
 
 		viewportGadget = plug.parent().viewportGadget()
-		self.__mouseMoveConnection = viewportGadget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+		viewportGadget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
 
 		imageGadget = viewportGadget.getPrimaryChild()
-		self.__buttonPressSignal = imageGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__dragBeginSignal = imageGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
-		self.__dragEndSignal = imageGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		imageGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		imageGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		imageGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 
 		self.__updateLabels( imath.V2i( 0 ), imath.Color4f( 0, 0, 0, 1 ) )
 
@@ -475,13 +475,9 @@ class _StateWidget( GafferUI.Widget ) :
 
 		self.__imageGadget = imageView.viewportGadget().getPrimaryChild()
 
-		self.__buttonClickedConnection = self.__button.clickedSignal().connect(
-			Gaffer.WeakMethod( self.__buttonClick )
-		)
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ), scoped = False )
 
-		self.__stateChangedConnection = self.__imageGadget.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged )
-		)
+		self.__imageGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
 
 		self.__update()
 

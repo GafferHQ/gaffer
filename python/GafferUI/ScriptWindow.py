@@ -64,10 +64,10 @@ class ScriptWindow( GafferUI.Window ) :
 
 		self.setChild( self.__listContainer )
 
-		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
+		self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ), scoped = False )
 
-		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
-		self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
+		script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ), scoped = False )
+		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ), scoped = False )
 
 		self.__updateTitle()
 
@@ -173,13 +173,11 @@ class ScriptWindow( GafferUI.Window ) :
 	# the UI. Once called, new ScriptWindows will be instantiated for each
 	# script added to the application, and EventLoop.mainEventLoop().stop() will
 	# be called when the last script is removed.
-	__scriptAddedConnections = []
-	__scriptRemovedConnections = []
 	@classmethod
 	def connect( cls, applicationRoot ) :
 
-		cls.__scriptAddedConnections.append( applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded ) )
-		cls.__scriptRemovedConnections.append( applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved ) )
+		applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded, scoped = False )
+		applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved, scoped = False )
 
 	__automaticallyCreatedInstances = [] # strong references to instances made by __scriptAdded()
 	@staticmethod

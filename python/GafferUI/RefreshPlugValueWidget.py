@@ -47,7 +47,7 @@ class RefreshPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
-		self.__clickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
 	def _updateFromPlug( self ) :
 
