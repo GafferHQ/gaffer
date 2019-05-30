@@ -212,6 +212,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
 		void compute( ValuePlug *output, const Context *context ) const override;
+		ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
 	private :
 

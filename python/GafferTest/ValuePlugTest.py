@@ -616,6 +616,11 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		n["user"]["c"].setInput( None )
 		self.assertTrue( n["user"]["c"]["i"].getInput() is None )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testContentionForOneItem( self ) :
+
+		GafferTest.testValuePlugContentionForOneItem()
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

@@ -198,7 +198,6 @@ Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, u
 	:	ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
-	outPlug()->setFlags( Plug::Cacheable, false );
 }
 
 void Animation::CurvePlug::addKey( const KeyPtr &key )
@@ -595,4 +594,14 @@ void Animation::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	ComputeNode::compute( output, context );
+}
+
+ValuePlug::CachePolicy Animation::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output->parent<CurvePlug>() )
+	{
+		return ValuePlug::CachePolicy::Uncached;
+	}
+
+	return ComputeNode::computeCachePolicy( output );
 }

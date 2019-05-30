@@ -78,6 +78,13 @@ class GAFFER_API ComputeNode : public DependencyNode
 		/// an appropriate value and apply it using output->setValue().
 		virtual void compute( ValuePlug *output, const Context *context ) const = 0;
 
+		/// Called to determine how calls to `hash()` should be cached. If `hash( output )`
+		/// will spawn TBB tasks then one of the task-based policies _must_ be used.
+		virtual ValuePlug::CachePolicy hashCachePolicy( const ValuePlug *output ) const;
+		/// Called to determine how calls to `compute()` should be cached. If `compute( output )`
+		/// will spawn TBB tasks then one of the task-based policies _must_ be used.
+		virtual ValuePlug::CachePolicy computeCachePolicy( const ValuePlug *output ) const;
+
 	private :
 
 		friend class ValuePlug;

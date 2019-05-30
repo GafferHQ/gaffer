@@ -84,6 +84,8 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		/// Implemented to call computeMatch() below when computing the value of outPlug().
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		/// Implemented to disable compute caching for the filter result.
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 

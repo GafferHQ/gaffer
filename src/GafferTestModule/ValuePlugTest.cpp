@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,50 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "boost/python.hpp"
 
-#include "GafferTest/ComputeNodeTest.h"
-#include "GafferTest/ContextTest.h"
-#include "GafferTest/DownstreamIteratorTest.h"
-#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
-#include "GafferTest/MetadataTest.h"
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
-
-#include "LRUCacheTest.h"
-#include "TaskMutexTest.h"
 #include "ValuePlugTest.h"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "GafferTest/MultiplyNode.h"
+
+#include "Gaffer/ValuePlug.h"
+
+#include "tbb/parallel_for.h"
 
 using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferTest;
-using namespace GafferTestModule;
 
-static void testMetadataThreadingWrapper()
+namespace
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	testMetadataThreading();
+
+void testValuePlugContentionForOneItem()
+{
+	MultiplyNodePtr node = new MultiplyNode;
+
+	tbb::parallel_for(
+		tbb::blocked_range<int>( 0, 10000000 ),
+		[&node]( const tbb::blocked_range<int> &r ) {
+			for( int i = r.begin(); i < r.end(); ++i )
+			{
+				node->productPlug()->getValue();
+			}
+		}
+	);
 }
 
-BOOST_PYTHON_MODULE( _GafferTest )
+} // namespace
+
+void GafferTestModule::bindValuePlugTest()
 {
-
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
-
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
-	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreadingWrapper );
-	def( "testManyContexts", &testManyContexts );
-	def( "testManySubstitutions", &testManySubstitutions );
-	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
-	def( "testScopingNullContext", &testScopingNullContext );
-	def( "testEditableScope", &testEditableScope );
-	def( "testComputeNodeThreading", &testComputeNodeThreading );
-	def( "testDownstreamIterator", &testDownstreamIterator );
-
-	bindTaskMutexTest();
-	bindLRUCacheTest();
-	bindValuePlugTest();
-
+	def( "testValuePlugContentionForOneItem", &testValuePlugContentionForOneItem );
 }

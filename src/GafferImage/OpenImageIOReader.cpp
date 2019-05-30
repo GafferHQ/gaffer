@@ -234,81 +234,6 @@ class File
 			}
 		}
 
-		// Fill the data array with all data for the specified subImage and target region,
-		// setting the dataRegion to represent the actual bounds of the data read ( which may have had to
-		// be enlarged to match tile boundaries ), and returning the number of channels read
-		//
-		// This is currenly only used by readTileBatch below - we always cache to tile batches when reading
-		// channel data.
-		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, Box2i &dataRegion )
-		{
-			ImageSpec subImageSpec;
-			m_imageInput->seek_subimage( subImage, 0, subImageSpec );
-
-			const V2i fileDataOrigin( m_imageSpec.x, m_imageSpec.y );
-			const Box2i fileDataWindow( fileDataOrigin,
-				fileDataOrigin + V2i( m_imageSpec.width, m_imageSpec.height )
-			);
-
-			// Convert target region in Gaffer into a region of the file that we are trying to read
-			const Box2i fileTargetRegion = BufferAlgo::intersection(
-				flopDisplayWindow( targetRegion, m_imageSpec.full_y, m_imageSpec.full_height ), fileDataWindow
-			);
-
-			Box2i fileDataRegion;
-
-			if( !m_tiled )
-			{
-				fileDataRegion = fileTargetRegion;
-
-				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
-
-				if( !m_imageInput->read_scanlines( fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0] ) )
-				{
-					throw IECore::Exception( boost::str (
-						boost::format( "OpenImageIOReader : Failed to read scanlines %i to %i.  Error: %s" ) %
-						fileDataRegion.min.y % fileDataRegion.max.y %
-						m_imageInput->geterror()
-					) );
-				}
-			}
-			else
-			{
-				V2i tileSize( m_imageSpec.tile_width, m_imageSpec.tile_height );
-
-				// Round the target region coordinates outwards to the tile boundaries in the file
-				// ( these are sized based on m_imageSpec.tile_(width/height), and spaced relative to
-				// the data window origin ).
-				//
-				// Then clamp them back to the data window.
-				// ( read_tiles requires that the coordinates lie on either a tile boundary OR the image boundary )
-
-				fileDataRegion = BufferAlgo::intersection( fileDataWindow, Box2i(
-					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin,
-					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
-				) );
-
-				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
-
-				if( !m_imageInput->read_tiles (
-					fileDataRegion.min.x, fileDataRegion.max.x,
-					fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
-				) )
-				{
-					throw IECore::Exception( boost::str (
-						boost::format( "OpenImageIOReader : Failed to read tiles %i,%i to %i,%i.  Error: %s" ) %
-						fileDataRegion.min.x % fileDataRegion.min.y %
-						fileDataRegion.max.x % fileDataRegion.max.y %
-						m_imageInput->geterror()
-					) );
-				}
-			}
-
-			dataRegion = flopDisplayWindow( fileDataRegion, m_imageSpec.full_y, m_imageSpec.full_height );
-
-			return subImageSpec.nchannels;
-		}
-
 		// Read a chunk of data from the file, formatted as a tile batch that will be stored on the tile batch plug
 		ConstObjectVectorPtr readTileBatch( V3i tileBatchIndex )
 		{
@@ -327,10 +252,6 @@ class File
 			}
 
 			// Do the actual read of data
-			//
-			// Note - this method is not thread-safe, but because this is a private plug is only computed from
-			// the computeChannelData method, it is safe to assume that we have already acquired m_mutex
-			// at this point
 			std::vector<float> fileData;
 			Box2i fileDataRegion;
 			const int nchannels = readRegion( tileBatchIndex.z, targetRegion, fileData, fileDataRegion );
@@ -408,11 +329,6 @@ class File
 			return m_imageSpec;
 		}
 
-		tbb::mutex &mutex()
-		{
-			return m_mutex;
-		}
-
 		std::string formatName() const
 		{
 			return m_imageInput->format_name();
@@ -424,6 +340,83 @@ class File
 		}
 
 	private:
+
+		// Fill the data array with all data for the specified subImage and target region,
+		// setting the dataRegion to represent the actual bounds of the data read ( which may have had to
+		// be enlarged to match tile boundaries ), and returning the number of channels read.
+		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, Box2i &dataRegion )
+		{
+			/// \todo OIIO 2.0 introduces thread-safe `read_*()` methods that
+			/// are passed the subimage directly. Upgrade to use those and remove
+			/// this lock entirely.
+			tbb::mutex::scoped_lock lock( m_mutex );
+
+			ImageSpec subImageSpec;
+			m_imageInput->seek_subimage( subImage, 0, subImageSpec );
+
+			const V2i fileDataOrigin( m_imageSpec.x, m_imageSpec.y );
+			const Box2i fileDataWindow( fileDataOrigin,
+				fileDataOrigin + V2i( m_imageSpec.width, m_imageSpec.height )
+			);
+
+			// Convert target region in Gaffer into a region of the file that we are trying to read
+			const Box2i fileTargetRegion = BufferAlgo::intersection(
+				flopDisplayWindow( targetRegion, m_imageSpec.full_y, m_imageSpec.full_height ), fileDataWindow
+			);
+
+			Box2i fileDataRegion;
+
+			if( !m_tiled )
+			{
+				fileDataRegion = fileTargetRegion;
+
+				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
+
+				if( !m_imageInput->read_scanlines( fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0] ) )
+				{
+					throw IECore::Exception( boost::str (
+						boost::format( "OpenImageIOReader : Failed to read scanlines %i to %i.  Error: %s" ) %
+						fileDataRegion.min.y % fileDataRegion.max.y %
+						m_imageInput->geterror()
+					) );
+				}
+			}
+			else
+			{
+				V2i tileSize( m_imageSpec.tile_width, m_imageSpec.tile_height );
+
+				// Round the target region coordinates outwards to the tile boundaries in the file
+				// ( these are sized based on m_imageSpec.tile_(width/height), and spaced relative to
+				// the data window origin ).
+				//
+				// Then clamp them back to the data window.
+				// ( read_tiles requires that the coordinates lie on either a tile boundary OR the image boundary )
+
+				fileDataRegion = BufferAlgo::intersection( fileDataWindow, Box2i(
+					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin,
+					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
+				) );
+
+				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
+
+				if( !m_imageInput->read_tiles (
+					fileDataRegion.min.x, fileDataRegion.max.x,
+					fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
+				) )
+				{
+					throw IECore::Exception( boost::str (
+						boost::format( "OpenImageIOReader : Failed to read tiles %i,%i to %i,%i.  Error: %s" ) %
+						fileDataRegion.min.x % fileDataRegion.min.y %
+						fileDataRegion.max.x % fileDataRegion.max.y %
+						m_imageInput->geterror()
+					) );
+				}
+			}
+
+			dataRegion = flopDisplayWindow( fileDataRegion, m_imageSpec.full_y, m_imageSpec.full_height );
+
+			return subImageSpec.nchannels;
+		}
 
 		// Given a subImage index, and a tile origin, return an index to identify the tile batch which
 		// where this channel data will be found
@@ -597,10 +590,6 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
 	addChild( new ObjectVectorPlug( "__tileBatch", Plug::Out, new ObjectVector ) );
 
-	// disable caching on channelDataPlug, since it is just a redirect to the correct tile of
-	// the private tileBatchPlug, which is already being cached
-	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
-
 	plugSetSignal().connect( boost::bind( &OpenImageIOReader::plugSet, this, ::_1 ) );
 }
 
@@ -762,6 +751,23 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 	{
 		ImageNode::compute( output, context );
 	}
+}
+
+Gaffer::ValuePlug::CachePolicy OpenImageIOReader::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == tileBatchPlug() )
+	{
+		// Request blocking compute for tile batches, to avoid concurrent threads loading
+		// the same batch redundantly.
+		return ValuePlug::CachePolicy::Standard;
+	}
+	else if( output == outPlug()->channelDataPlug() )
+	{
+		// Disable caching on channelDataPlug, since it is just a redirect to the correct tile of
+		// the private tileBatchPlug, which is already being cached.
+		return ValuePlug::CachePolicy::Uncached;
+	}
+	return ImageNode::computeCachePolicy( output );
 }
 
 void OpenImageIOReader::hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -949,32 +955,7 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 
 	c.set( g_tileBatchIndexContextName, tileBatchIndex );
 
-	ConstObjectVectorPtr tileBatch;
-
-	// We never want two threads to both read the same tile batch from disk, so it's important to lock
-	// on file->m_mutex before calling tileBatchPlug()->getValue().
-	//
-	// This however has the potential to create some serious performance hazards when the cache is contended
-	// by multiple threads trying to load different parts of the same image.  We can alleviate this using
-	// the temporary special purpose method getValueIfCached(), which allows us to immediately return if the
-	// value is already cached, without needing to acquire the lock.  In extreme cases, this can be a 10X
-	// speedup, because waiting on the lock when the data we need is in the cache could result in the data
-	// being evicted before we get to it.
-	//
-	// In the long run, we are hoping that we will be able to automatically make sure two threads never
-	// recompute the same plug value for any plug, and then all of this locking and short-circuiting will
-	// be unnecessary.
-	ConstObjectPtr tileBatchCached = tileBatchPlug()->getValueIfCached();
-	if( tileBatchCached )
-	{
-		tileBatch = IECore::runTimeCast< const ObjectVector >( tileBatchCached );
-	}
-	else
-	{
-		tbb::mutex::scoped_lock lock( file->mutex() );
-		tileBatch = tileBatchPlug()->getValue();
-	}
-
+	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 	ConstObjectPtr curTileChannel = tileBatch->members()[ subIndex ];
 	return IECore::runTimeCast< const FloatVectorData >( curTileChannel );
 }

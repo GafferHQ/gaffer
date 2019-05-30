@@ -53,7 +53,7 @@ Filter::Filter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
-	addChild( new FilterPlug( "out", Gaffer::Plug::Out, Plug::Default & ( ~Plug::Cacheable ) ) );
+	addChild( new FilterPlug( "out", Gaffer::Plug::Out ) );
 }
 
 Filter::~Filter()
@@ -139,6 +139,15 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	ComputeNode::compute( output, context );
+}
+
+Gaffer::ValuePlug::CachePolicy Filter::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug() )
+	{
+		return ValuePlug::CachePolicy::Uncached;
+	}
+	return ComputeNode::computeCachePolicy( output );
 }
 
 void Filter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const

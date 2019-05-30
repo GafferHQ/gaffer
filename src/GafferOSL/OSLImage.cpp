@@ -65,11 +65,6 @@ OSLImage::OSLImage( const std::string &name )
 
 	addChild( new Gaffer::ObjectPlug( "__shading", Gaffer::Plug::Out, new CompoundData() ) );
 
-	// we disable caching for the channel data plug, because our compute
-	// simply references data direct from the shading plug, which will itself
-	// be cached. we don't want to count the memory usage for that twice.
-	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
-
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
@@ -175,6 +170,19 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	}
 
 	ImageProcessor::compute( output, context );
+}
+
+Gaffer::ValuePlug::CachePolicy OSLImage::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug()->channelDataPlug() )
+	{
+		// We disable caching for the channel data plug, because our compute
+		// simply references data direct from the shading plug, which will itself
+		// be cached. We don't want to count the memory usage for that twice.
+		return ValuePlug::CachePolicy::Uncached;
+	}
+
+	return ImageProcessor::computeCachePolicy( output );
 }
 
 void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

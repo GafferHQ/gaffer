@@ -102,12 +102,6 @@ typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const I
 }
 
 template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValueIfCached( const IECore::MurmurHash *precomputedHash ) const
-{
-	return boost::static_pointer_cast<const ValueType>( getObjectValueIfCached( precomputedHash ) );
-}
-
-template<class T>
 void TypedObjectPlug<T>::setFrom( const ValuePlug *other )
 {
 	const TypedObjectPlug<T> *tOther = IECore::runTimeCast<const TypedObjectPlug>( other );

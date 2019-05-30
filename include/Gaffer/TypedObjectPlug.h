@@ -115,10 +115,6 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 		/// avoids unnecessary conversions, but it also avoids churn in
 		/// the ValuePlug cache.
 		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
-		/// As above, but returns null if the value is not already cached.
-		/// This method is likely to be removed in a future version - use only
-		/// if absolutely necessary.
-		ConstValuePtr getValueIfCached( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
 		void setFrom( const ValuePlug *other ) override;
 

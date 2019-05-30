@@ -77,3 +77,19 @@ void ComputeNode::hash( const ValuePlug *output, const Context *context, IECore:
 void ComputeNode::compute( ValuePlug *output, const Context *context ) const
 {
 }
+
+ValuePlug::CachePolicy ComputeNode::hashCachePolicy( const ValuePlug *output ) const
+{
+	return ValuePlug::CachePolicy::Standard;
+}
+
+ValuePlug::CachePolicy ComputeNode::computeCachePolicy( const ValuePlug *output ) const
+{
+	if( !output->getFlags( Plug::Cacheable ) )
+	{
+		return ValuePlug::CachePolicy::Uncached;
+	}
+	/// \todo Return `Standard` once all task-spawning computes are
+	/// known to be declaring an appropriate policy.
+	return ValuePlug::CachePolicy::Legacy;
+}
