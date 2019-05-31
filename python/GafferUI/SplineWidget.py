@@ -234,4 +234,5 @@ class SplineWidget( GafferUI.Widget ) :
 
 	def __displayTransformChanged( self ) :
 
+		self.__gradientToDraw = None
 		self._qtWidget().update()
