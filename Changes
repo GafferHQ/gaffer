@@ -1,3 +1,11 @@
+0.53.6.1 (relative to 0.53.6.0)
+========
+
+Improvements
+------------
+
+- Light Linking: Added a warning about potential crashes to make debugging easier.
+
 0.53.6.0 (relative to 0.53.5.0)
 ========
 
