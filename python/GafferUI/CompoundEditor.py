@@ -455,12 +455,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		detatchItemAdded = False
 
-		if isinstance( splitContainerParent, _SplitContainer ) :
-			m.append( "/Detach Panel", { "command" : Gaffer.WeakMethod( self.__detachPanel ) } )
-			detatchItemAdded = True
-
 		if currentTab is not None :
 			m.append( "/Detach " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachTab ) } )
+			detatchItemAdded = True
+
+		if isinstance( splitContainerParent, _SplitContainer ) :
+			m.append( "/Detach Panel", { "command" : Gaffer.WeakMethod( self.__detachPanel ) } )
 			detatchItemAdded = True
 
 		if detatchItemAdded :
@@ -468,12 +468,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		removeItemAdded = False
 
-		if isinstance( splitContainerParent, _SplitContainer ) :
-			m.append( "Remove Panel", { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
-			removeItemAdded = True
-
 		if currentTab is not None :
 			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeTab ) } )
+			removeItemAdded = True
+
+		if isinstance( splitContainerParent, _SplitContainer ) :
+			m.append( "Remove Panel", { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
 			removeItemAdded = True
 
 		if removeItemAdded :
