@@ -104,7 +104,10 @@ void GafferUIModule::bindPlugAdder()
 		.def( init<>() )
 		.def( "plugMenuSignal", &PlugAdder::plugMenuSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugMenuSignal" )
+		.def( "menuSignal", &PlugAdder::menuSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "menuSignal" )
 	;
 
 	SignalClass<PlugAdder::PlugMenuSignal, PlugMenuSignalCaller, PlugMenuSlotCaller>( "PlugMenuSignal" );
+	SignalClass<PlugAdder::MenuSignal>( "MenuSignal" );
 }

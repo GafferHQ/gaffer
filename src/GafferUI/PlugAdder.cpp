@@ -212,6 +212,12 @@ PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
 	return s;
 }
 
+PlugAdder::MenuSignal &PlugAdder::menuSignal()
+{
+	static MenuSignal s;
+	return s;
+}
+
 void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 {
 	switch( layer )

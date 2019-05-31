@@ -64,6 +64,10 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 		typedef boost::signal<Gaffer::Plug *( const std::string &title, const std::vector<Gaffer::Plug *> & )> PlugMenuSignal;
 		static PlugMenuSignal &plugMenuSignal();
 
+		/// A simpler menu that just shows a list of strings.  Should the previous form be deprecated?
+		typedef boost::signal<std::string ( const std::string &title, const std::vector<std::string> & )> MenuSignal;
+		static MenuSignal &menuSignal();
+
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
