@@ -81,6 +81,9 @@ class GAFFERSCENE_API Light : public ObjectSource
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const = 0;
 
+		Gaffer::FloatPlug *visualiserScalePlug();
+		const Gaffer::FloatPlug *visualiserScalePlug() const;
+
 	private :
 
 		static size_t g_firstPlugIndex;
