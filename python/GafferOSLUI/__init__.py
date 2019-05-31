@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+from _GafferOSLUI import *
+
 import OSLShaderUI
 import OSLImageUI
 import OSLObjectUI
