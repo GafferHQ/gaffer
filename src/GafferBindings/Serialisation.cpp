@@ -63,7 +63,8 @@ using namespace boost::python;
 //////////////////////////////////////////////////////////////////////////
 
 Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName, const Gaffer::Set *filter )
-	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter )
+	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter ),
+		m_protectParentNamespace( Context::current()->get<bool>( "serialiser:protectParentNamespace", true ) )
 {
 	IECorePython::ScopedGILLock gilLock;
 	walk( parent, parentName, acquireSerialiser( parent ) );
@@ -97,7 +98,8 @@ std::string Serialisation::result() const
 	}
 
 	if(
-		runTimeCast<const Node>( m_parent )
+		runTimeCast<const Node>( m_parent ) &&
+		Context::current()->get<bool>( "serialiser:includeVersionMetadata", true )
 	)
 	{
 		boost::format formatter( "Gaffer.Metadata.registerValue( %s, \"%s\", %d, persistent=False )\n" );
@@ -109,7 +111,10 @@ std::string Serialisation::result() const
 		result += boost::str( formatter % m_parentName % "serialiser:patchVersion" % GAFFER_PATCH_VERSION );
 	}
 
-	result += "\n__children = {}\n\n";
+	if( m_protectParentNamespace )
+	{
+		result += "\n__children = {}\n\n";
+	}
 
 	result += m_hierarchyScript;
 
@@ -117,7 +122,10 @@ std::string Serialisation::result() const
 
 	result += m_postScript;
 
-	result += "\n\ndel __children\n\n";
+	if( m_protectParentNamespace )
+	{
+		result += "\n\ndel __children\n\n";
+	}
 
 	return result;
 }
@@ -241,7 +249,7 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		}
 
 		std::string childIdentifier;
-		if( parent == m_parent && childConstructor.size() )
+		if( parent == m_parent && childConstructor.size() && m_protectParentNamespace )
 		{
 			childIdentifier = "__children[\"" + child->getName().string() + "\"]";
 		}
@@ -252,10 +260,17 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 
 		if( childConstructor.size() )
 		{
-			if( parent == m_parent)
+			if( parent == m_parent )
 			{
-				m_hierarchyScript += childIdentifier + " = " + childConstructor + "\n";
-				m_hierarchyScript += parentIdentifier + ".addChild( " + childIdentifier + " )\n";
+				if( m_protectParentNamespace )
+				{
+					m_hierarchyScript += childIdentifier + " = " + childConstructor + "\n";
+					m_hierarchyScript += parentIdentifier + ".addChild( " + childIdentifier + " )\n";
+				}
+				else
+				{
+					m_hierarchyScript += childIdentifier + " = " + childConstructor + "\n";
+				}
 			}
 			else
 			{
@@ -284,7 +299,7 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 				return "";
 			}
 			const Serialiser *parentSerialiser = acquireSerialiser( parent );
-			if( parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
+			if( m_protectParentNamespace && parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
 			{
 				return "__children[\"" + graphComponent->getName().string() + "\"]" + result;
 			}

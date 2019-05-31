@@ -54,5 +54,6 @@ from GraphComponentPath import GraphComponentPath
 from OutputRedirection import OutputRedirection
 
 import NodeAlgo
+import ExtensionAlgo
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )

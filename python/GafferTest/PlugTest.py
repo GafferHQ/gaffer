@@ -832,5 +832,24 @@ class PlugTest( GafferTest.TestCase ) :
 		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
 
+	def testSerialiseOmittingParentPlugMetadata( self ) :
+
+		n = Gaffer.Node()
+		n["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["a"] = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( n["p"], "test", 10 )
+		Gaffer.Metadata.registerValue( n["a"]["op1"], "test", 10 )
+
+		with Gaffer.Context() as c :
+			c["plugSerialiser:includeParentPlugMetadata"] = IECore.BoolData( False )
+			s = Gaffer.Serialisation( n ).result()
+
+		scope = { "parent" : Gaffer.Node() }
+		exec( s, scope, scope )
+
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"]["p"], "test" ), None )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"]["a"]["op1"], "test" ), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
