@@ -291,5 +291,34 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"], s["a"]["out"]["globals"] ] ) )
 
+	def testExtraAttributes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["a"] = GafferScene.CustomAttributes()
+		s["f"] = GafferScene.PathFilter()
+		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["a"]["filter"].setInput( s["f"]["out"] )
+		s["a"]["extraAttributes"].setValue(IECore.CompoundData({
+			"a1" : IECore.StringData( "from extra" ),
+			"a2" : IECore.IntData( 2 ),
+		}))
+		s["a"]["attributes"].addChild(
+			Gaffer.NameValuePlug( "a1", IECore.StringData( "from attributes" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		s["a"]["attributes"].addChild(
+			Gaffer.NameValuePlug( "a3", IECore.IntData( 5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		self.assertEqual(
+			s["a"]["out"].attributes( "/sphere" ),
+			IECore.CompoundObject( {
+				"a1" : IECore.StringData( "from extra" ),
+				"a2" : IECore.IntData( 2 ),
+				"a3" : IECore.IntData( 5 ),
+			} )
+		)
+
+
 if __name__ == "__main__":
 	unittest.main()
