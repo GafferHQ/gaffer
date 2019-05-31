@@ -393,6 +393,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
+		tabBar = self._qtWidget().tabBar()
+		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__tabContextMenu ) )
+
 		self.__tabDragBehaviour = _TabDragBehaviour( self )
 
 	def addEditor( self, nameOrEditor ) :
@@ -456,7 +460,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			detatchItemAdded = True
 
 		if currentTab is not None :
-			m.append( "/Detach " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachCurrentTab ) } )
+			m.append( "/Detach " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachTab ) } )
 			detatchItemAdded = True
 
 		if detatchItemAdded :
@@ -469,7 +473,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			removeItemAdded = True
 
 		if currentTab is not None :
-			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeCurrentTab ) } )
+			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeTab ) } )
 			removeItemAdded = True
 
 		if removeItemAdded :
@@ -550,6 +554,17 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return True
 
+	def __tabContextMenu( self, pos ) :
+
+		tabIndex = self._qtWidget().tabBar().tabAt( pos )
+
+		m = IECore.MenuDefinition()
+		m.append( '/Detach', { "command" : functools.partial( Gaffer.WeakMethod( self.__detachTab ), tabIndex ) } )
+		m.append( '/Remove', { "command" : functools.partial( Gaffer.WeakMethod( self.__removeTab ), tabIndex ) } )
+
+		self.__popupMenu = GafferUI.Menu( m, title = "Tab Actions" )
+		self.__popupMenu.popup( parent = self )
+
 	def __dragEnter( self, tabbedContainer, event ) :
 
 		currentEditor = self.getCurrent()
@@ -598,9 +613,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return True
 
-	def __detachCurrentTab( self ) :
+	def __detachTab( self, index = None ) :
 
-		editor = self.getCurrent()
+		editor = self.getCurrent() if index is None else self[ index ]
 
 		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
 		self.__matchWindowToWidget( window, editor, 10 )
@@ -637,9 +652,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		window.setPosition( imath.V2i( topLeft.x() + offsetPixels, topLeft.y() + offsetPixels ) )
 		window._qtWidget().resize( targetRect.width(), targetRect.height() )
 
-	def __removeCurrentTab( self ) :
+	def __removeTab( self, index = None ) :
 
-		self.removeEditor( self.getCurrent() )
+		self.removeEditor( self.getCurrent() if index is None else self[ index ] )
 
 	def __removePanel( self ) :
 
