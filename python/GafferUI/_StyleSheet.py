@@ -1134,15 +1134,23 @@ _styleSheet = string.Template(
 	/* Corner Rounding - also allow squaring based on adjacency of other widgets */
 
 	*[gafferClass="GafferSceneUI.PrimitiveInspector"] #gafferNodeFrame,
-	*[gafferClass="GafferSceneUI.PrimitiveInspector"] #gafferLocationFrame,
-	*[gafferClass="GafferSceneUI.SceneInspector.SideBySideDiff"] *[gafferClass="GafferUI.Frame"],
-	*[gafferClass="GafferSceneUI.SceneInspector._SetDiff"] *[gafferClass="GafferUI.Frame"] {
+	*[gafferClass="GafferSceneUI.PrimitiveInspector"] #gafferLocationFrame {
 		border-radius: $roundedCornerRadius;
 	}
+
+	/* Selector specificity bites us here as we can't easily layer this on */
+	/* rules like the above, as they are more specific, so we require that */
+	/* classes that wish to make use of specific-edge styling to set the   */
+	/* relevant adjoining properties to false, rather than omitting them   */
 
 	*[gafferAdjoinedTop="true"] {
 		border-top-left-radius: 0px;
 		border-top-right-radius: 0px;
+	}
+
+	*[gafferAdjoinedTop="false"] {
+		border-top-left-radius: $widgetCornerRadius;
+		border-top-right-radius: $widgetCornerRadius;
 	}
 
 	*[gafferAdjoinedBottom="true"] {
@@ -1150,14 +1158,29 @@ _styleSheet = string.Template(
 		border-bottom-right-radius: 0px;
 	}
 
+	*[gafferAdjoinedBottom="false"] {
+		border-bottom-left-radius: $widgetCornerRadius;
+		border-bottom-right-radius: $widgetCornerRadius;
+	}
+
 	*[gafferAdjoinedLeft="true"] {
 		border-top-left-radius: 0px;
 		border-bottom-left-radius: 0px;
 	}
 
+	*[gafferAdjoinedLeft="false"] {
+		border-top-left-radius: $widgetCornerRadius;
+		border-bottom-left-radius: $widgetCornerRadius;
+	}
+
 	*[gafferAdjoinedRight="true"] {
 		border-top-right-radius: 0px;
 		border-bottom-right-radius: 0px;
+	}
+
+	*[gafferAdjoinedRight="false"] {
+		border-top-right-radius: $widgetCornerRadius;
+		border-bottom-right-radius: $widgetCornerRadius;
 	}
 
 	/* PathChooseWidget */
