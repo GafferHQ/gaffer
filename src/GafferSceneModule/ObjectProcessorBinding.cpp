@@ -38,6 +38,7 @@
 
 #include "ObjectProcessorBinding.h"
 
+#include "GafferScene/CopyPrimitiveVariables.h"
 #include "GafferScene/Deformer.h"
 #include "GafferScene/DeleteCurves.h"
 #include "GafferScene/DeleteFaces.h"
@@ -81,6 +82,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<DeleteObject>();
 	GafferBindings::DependencyNodeClass<UDIMQuery>();
 	GafferBindings::DependencyNodeClass<Wireframe>();
+	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
