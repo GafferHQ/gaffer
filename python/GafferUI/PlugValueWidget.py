@@ -56,6 +56,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def __init__( self, topLevelWidget, plug, **kw ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+		self._qtWidget().setProperty( "gafferPlugValueWidget", True )
 
 		# we don't want to call _updateFromPlug yet because the derived
 		# classes haven't constructed yet. they can call it themselves

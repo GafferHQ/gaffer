@@ -96,6 +96,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.__tableView.horizontalHeader().setVisible( bool( header ) )
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
+		self.__tableView.horizontalHeader().setObjectName( "vectorDataWidgetHorizontalHeader" )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
 		QtCompat.setSectionResizeMode( self.__tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )

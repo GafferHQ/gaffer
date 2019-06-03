@@ -41,19 +41,48 @@ import string
 from Qt import QtGui
 
 _styleColors = {
+
 	"backgroundDarkest" : (0, 0, 0),
-	"backgroundDark" : (60, 60, 60),
-	"backgroundDarkTransparent" : (60, 60, 60, 100),
-	"backgroundMid" : (76, 76, 76),
-	"backgroundLighter" : (108, 108, 108),
-	"backgroundLight" : (125, 125, 125),
+
+	"backgroundDarker" : (45, 45, 45),
+
+	"backgroundDark" : (56, 56, 56),
+	"backgroundDarkTransparent" : (56, 56, 56, 100),
+	"backgroundDarkHighlight" : (62, 62, 62),
+
+	"backgroundLowlight" : (68, 68, 68),
+	"background" : (76, 76, 76),
+	"backgroundHighlight" : (88, 88, 88),
+
+	"backgroundRaisedLowlight" : (70, 70, 70),
+	"backgroundRaised" : (82, 82, 82),
+	"backgroundRaisedHighlight" : (96, 96, 96),
+
+	"backgroundLightLowlight" : (82, 82, 82),
+	"backgroundLight" : (96, 96, 96),
+	"backgroundLightHighlight" : (106, 106, 106),
+
+	"backgroundLighter" : (125, 125, 125),
+
 	"brightColor" : (119, 156, 189),
 	"brightColorTransparent" : (119, 156, 189, 100),
+
 	"foreground" : (224, 224, 224),
 	"foregroundFaded" : (153, 153, 153),
-	"alternateColor" : (69, 69, 69),
+
 	"errorColor" : (255, 85, 85),
 	"animatedColor" : (128, 152, 94),
+
+	"tintLighter" :         ( 255, 255, 255, 20 ),
+	"tintLighterStrong" :   ( 255, 255, 255, 40 ),
+	"tintLighterStronger" : ( 255, 255, 255, 100 ),
+	"tintDarker" :          ( 0, 0, 0, 20 ),
+	"tintDarkerStrong" :    ( 0, 0, 0, 40 ),
+}
+
+_themeVariables = {
+	"widgetCornerRadius" : "4px",
+	"controlCornerRadius" : "2px"
 }
 
 substitutions = {
@@ -65,6 +94,8 @@ for k, v in _styleColors.items() :
 		substitutions[k] = "rgb({0}, {1}, {2})".format( *v )
 	elif len( v ) == 4 :
 		substitutions[k] = "rgba({0}, {1}, {2}, {3})".format( *v )
+
+substitutions.update( _themeVariables )
 
 def styleColor( key ) :
 	color = _styleColors.get( key, (0, 0, 0,) )
@@ -85,7 +116,7 @@ _styleSheet = string.Template(
 		color: $foreground;
 		font: 10px;
 		etch-disabled-text: 0;
-		background-color: $backgroundMid;
+		background-color: $backgroundLowlight;
 		border: 1px solid #555555;
 	}
 
@@ -100,7 +131,6 @@ _styleSheet = string.Template(
 		color: $foreground;
 		font: 10px;
 		etch-disabled-text: 0;
-		alternate-background-color: $alternateColor;
 		selection-background-color: $brightColor;
 		outline: none;
 
@@ -119,6 +149,12 @@ _styleSheet = string.Template(
 		background-position: left;
 		padding-left: 20px;
 
+	}
+
+
+	QLabel[gafferItemName="true"] {
+
+		font-weight: bold;
 	}
 
 	QMenuBar {
@@ -142,7 +178,7 @@ _styleSheet = string.Template(
 		border: 1px solid $backgroundDark;
 		padding-bottom: 5px;
 		padding-top: 5px;
-
+		background-color: $backgroundLight;
 	}
 
 	QMenu[gafferHasTitle=\"true\"] {
@@ -174,6 +210,7 @@ _styleSheet = string.Template(
 
 	QMenu::item {
 
+		color: $foreground;
 		background-color: transparent;
 		border: 0px;
 		padding: 2px 25px 2px 20px;
@@ -182,7 +219,7 @@ _styleSheet = string.Template(
 
 	QMenu::item:disabled {
 
-		color: $foregroundFaded;
+		color: $tintLighterStronger;
 
 	}
 
@@ -194,7 +231,7 @@ _styleSheet = string.Template(
 	QMenu::separator {
 
 		height: 1px;
-		background: $backgroundDark;
+		background: $backgroundLowlight;
 		margin-left: 10px;
 		margin-right: 10px;
 		margin-top: 5px;
@@ -215,29 +252,21 @@ _styleSheet = string.Template(
 		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
 	}
 
-	QMenu, QTabBar::tab:selected, QHeaderView::section {
+	QLineEdit, QPlainTextEdit {
+		padding: 0px;
+		border: 1px solid transparent;
+		border-bottom-color: $backgroundLightLowlight;
+		border-right-color: $backgroundLightLowlight;
+		background-color: $backgroundLight;
 
-		background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLight, stop: 1 $backgroundMid);
-
+		border-radius: ${controlCornerRadius};
 	}
 
-	QPlainTextEdit {
 
-		border: 1px solid $backgroundDark;
-
-	}
-
-	QLineEdit, QPlainTextEdit[readOnly="false"] {
-
-		border: 1px solid $backgroundDark;
-		padding: 1px;
-		margin: 0px;
-
-	}
-
-	QLineEdit[readOnly="false"], QPlainTextEdit[readOnly="false"] {
-
-		background-color: $backgroundLighter;
+	QLineEdit[readOnly="true"], QPlainTextEdit[readOnly="true"] {
+		padding: 0px;
+		background-color: transparent;
+		border-color: transparent;
 
 	}
 
@@ -249,6 +278,8 @@ _styleSheet = string.Template(
 
 	QLineEdit[gafferAnimated="true"] {
 
+		padding: 0px;
+		border: 1px solid transparent;
 		background-color: $animatedColor;
 
 	}
@@ -261,7 +292,7 @@ _styleSheet = string.Template(
 
 	QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted=\"true\"] {
 
-		border: 2px solid $brightColor;
+		border: 1px solid $brightColor;
 		padding: 0px;
 
 	}
@@ -338,29 +369,38 @@ _styleSheet = string.Template(
 
 	/* buttons */
 
-	QPushButton, QComboBox {
-
-		font-weight: bold;
-
-	}
-
-	QPushButton#gafferWithFrame, QComboBox {
-
-		border: 1px solid $backgroundDark;
-		border-radius: 3px;
+	QPushButton#gafferWithFrame,
+	QComboBox
+	{
+		border: 1px solid $backgroundDarkHighlight;
+		border-top-color: $backgroundLightHighlight;
+		border-left-color: $backgroundLightHighlight;
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLightHighlight, stop: 0.1 $backgroundLight, stop: 0.90 $backgroundLightLowlight);
+		border-radius: 4px;
 		padding: 4px;
 		margin: 1px;
-		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLight, stop: 0.5 $backgroundLighter);
 
+		font-weight: bold;
 	}
 
-	QPushButton#gafferWithFrame:hover, QPushButton#gafferWithFrame:focus, QComboBox:hover {
-
-		border: 2px solid $brightColor;
-		margin: 0px;
+	QPushButton#gafferWithFrame[gafferMenuButton="true"]
+	{
+		padding: 2px;
 	}
 
-	QPushButton#gafferWithFrame:pressed {
+	*[gafferPlugValueWidget="true"] QPushButton#gafferWithFrame[gafferMenuButton="true"]
+	{
+		font-weight: normal;
+		text-align: left;
+	}
+
+	QPushButton#gafferWithFrame:focus
+	{
+		border: 1px solid $brightColor;
+	}
+
+	QPushButton#gafferWithFrame:pressed
+	{
 
 		color: white;
 		background-color:	$brightColor;
@@ -384,13 +424,13 @@ _styleSheet = string.Template(
 	QPushButton:disabled, QComboBox:disabled, QLabel::disabled {
 
 		color: $foregroundFaded;
-
 	}
 
-	QPushButton#gafferWithFrame:disabled {
-
-		background-color: $backgroundLighter;
-
+	QPushButton#gafferWithFrame:disabled
+	{
+		color: $tintLighterStrong;
+		background-color: $tintDarker;
+		border-color: transparent;
 	}
 
 	QPushButton::menu-indicator {
@@ -400,7 +440,8 @@ _styleSheet = string.Template(
 		left: -4px;
 	}
 
-	QPushButton#gafferWithFrame[gafferMenuIndicator="true"] {
+	QPushButton#gafferWithFrame[gafferMenuIndicator="true"]
+	{
 
 		background-image: url($GAFFER_ROOT/graphics/menuIndicator.png);
 		background-repeat: none;
@@ -413,7 +454,6 @@ _styleSheet = string.Template(
 
 		padding: 0;
 		padding-left:3px;
-
 	}
 
 	QComboBox::drop-down {
@@ -425,18 +465,16 @@ _styleSheet = string.Template(
 
 		border: 1px solid $backgroundDark;
 		selection-background-color: $backgroundLighter;
-		background-color: $backgroundMid;
+		background-color: $background;
 		height:40px;
 		margin:0;
-
+		text-align: left;
 	}
 
 	QComboBox QAbstractItemView::item {
 
 		border: none;
 		padding: 2px;
-		font-weight: bold;
-
 	}
 
 	/* tabs */
@@ -444,7 +482,13 @@ _styleSheet = string.Template(
 	QTabWidget::tab-bar {
 
 		left: 0px;
+	}
 
+	QTabWidget #gafferCompoundEditorTools  {
+
+		margin: 0;
+		padding: 0;
+		border: none;
 	}
 
 	QTabBar {
@@ -453,50 +497,116 @@ _styleSheet = string.Template(
 		font-weight: bold;
 		outline:none;
 		background-color: transparent;
-
 	}
 
 	QTabBar::tab {
 
-		border: 1px solid $backgroundDark;
 		padding: 4px;
 		padding-left: 8px;
 		padding-right: 8px;
-		border-top-left-radius: 3px;
-		border-top-right-radius: 3px;
+		border-top-left-radius: 4px;
+		border-top-right-radius: 4px;
 		margin: 0px;
+		margin-right: 1px;
 
+		border: 1px solid $backgroundHighlight;
+		border-right-color: $backgroundLowlight;
+		border-bottom-color: $background /* blend into frame below */
 	}
 
-	/* indent the first tab. can't do this using QTabWidget::tab-bar:left */
-	/* as that messes up the alignment of the corner widget (makes it overlap) */
-	QTabBar::tab:first, QTabBar::tab:only-one {
+	QTabBar::tab:disabled {
 
-		margin-left: 10px;
+		color: $tintLighter;
 
 	}
 
 	QTabBar::tab:selected {
 
-		border-bottom-color: $backgroundMid; /* blend into frame below */
+		background-color: $background;
 
+	}
+
+	QTabWidget QTabWidget > QTabBar::tab:selected {
+
+		background-color: $backgroundRaised;
+
+		border-color: $backgroundRaisedHighlight;
+		border-right-color: $backgroundRaisedLowlight;
+		border-bottom-color: $backgroundRaised; /* blend into frame below */
 	}
 
 	QTabBar::tab:!selected {
 
-		color: $foregroundFaded;
+		color: $tintLighterStronger;
 		background-color: $backgroundDark;
+
 		border-color: transparent;
-		border-radius: 0px;
-		padding-bottom: 2px;
-		padding-top: 2px;
-		margin-top: 4px;
+		border-bottom-color: $background;
 	}
 
-	QTabBar::tab:disabled {
+	QTabBar::tab:!selected:hover {
 
-		color: $foregroundFaded;
+		background-color: $backgroundDarkHighlight;
 
+	}
+
+	QTabWidget QTabWidget > QTabBar::tab:!selected {
+
+		color: $tintLighterStronger;
+		background-color: $backgroundDarkHighlight;
+
+		border-color: transparent;
+		border-bottom-color: $backgroundRaisedHighlight;
+	}
+
+	QTabWidget QTabWidget > QTabBar::tab:!selected:hover {
+		background-color: $backgroundDarkHighlight;
+	}
+
+	QSplitter[gafferHighlighted="true"] {
+
+		border: 1px solid $brightColor;
+	}
+
+	QTabWidget::pane {
+
+		background-color: $background;
+
+		/* tab widget frame has a line at the top, tweaked up 1 pixel */
+		/* so that it sits underneath the bottom of the tabs.         */
+		/* this means the active tab can blend into the frame.        */
+
+		top: -1px;
+
+		border-radius: 2px;
+		border-top-left-radius: 0;
+
+		border: 1px solid $backgroundHighlight;
+		border-right-color: $backgroundLowlight;
+		border-bottom-color: $backgroundLowlight;
+
+	}
+
+	QTabWidget[gafferNumChildren="0"]::pane {
+		background-color: $backgroundDarker;
+		border-color: $backgroundDarker;
+	}
+
+	QTabWidget QTabWidget::pane {
+
+		background-color: $backgroundRaised;
+
+		border-radius: $widgetCornerRadius;
+		border-top-left-radius: 0;
+
+		border-color: $backgroundRaisedHighlight;
+		border-right-color: $backgroundRaisedLowlight;
+		border-bottom-color: $backgroundRaisedLowlight;
+	}
+
+	QSplitter {
+
+		background-color: $backgroundDarker;
 	}
 
 	/* Ensures the QSplitter border is visible if we need to highlight */
@@ -508,51 +618,29 @@ _styleSheet = string.Template(
 
 	QSplitter::handle:vertical {
 
-		background-color: $backgroundDark;
 		height: 2px;
-		margin-top: 2px;
-		margin-bottom: 2px;
-		/* i don't know why the padding has to be here */
-		padding-top: -2px;
-		padding-bottom: -2px;
+		border: 1px $backgroundDarker solid;
+		margin: 1px;
+		padding: -2px;
 	}
 
 	QSplitter::handle:horizontal {
-
-		background-color: $backgroundDark;
+		background-color: $backgroundDarker;
 		width: 2px;
-		margin-left: 2px;
-		margin-right: 2px;
-
+		margin: 1px;
+		padding: -2px;
 	}
 
 	/* I'm not sure why this is necessary, but it works around a problem where the */
 	/* style for QSplitter::handle:hover isn't always accepted.                    */
 	QSplitterHandle:hover {}
 
-	QTabBar::tab:hover, QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover,
-	QComboBox QAbstractItemView::item:hover {
+	QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover {
 
 		color: white;
 		background-color:	$brightColor;
 
 	}
-
-	QSplitter[gafferHighlighted="true"] {
-
-		border: 1px solid $brightColor;
-
-	}
-
-	/* tab widget frame has a line at the top, tweaked up 1 pixel */
-	/* so that it sits underneath the bottom of the tabs.         */
-	/* this means the active tab can blend into the frame.        */
-	QTabWidget::pane {
-		border: 1px solid $backgroundDark;
-		border-top: 1px solid $backgroundDark;
-		top: -1px;
-	}
-
 	QTabWidget[gafferHighlighted=\"true\"]::pane {
 		border: 1px solid $brightColor;
 		border-top: 1px solid $brightColor;
@@ -560,8 +648,11 @@ _styleSheet = string.Template(
 	}
 
 	QTabWidget[gafferHighlighted=\"true\"] > QTabBar::tab:selected {
-		border: 1px solid $brightColor;
-		border-bottom-color: $backgroundMid; /* blend into frame below */
+		border-bottom-color: $background; /* blend into frame below */
+	}
+
+	QTabwidget QTabWidget[gafferHighlighted=\"true\"] > QTabBar::tab:selected {
+		border-bottom-color: $backgroundRaised; /* blend into frame below */
 	}
 
 	QTabWidget[gafferHighlighted=\"true\"] > QTabBar::tab:!selected {
@@ -575,8 +666,7 @@ _styleSheet = string.Template(
 
 	QWidget#gafferCollapsible QWidget#gafferCollapsible > QCheckBox#gafferCollapsibleToggle {
 
-		margin-left: 12px;
-		font-weight: normal;
+		margin-left: 10px;
 
 	}
 
@@ -622,41 +712,55 @@ _styleSheet = string.Template(
 
 		border: 0px;
 		margin: 0px;
-
 	}
 
 	QHeaderView::section {
 
-		border: 1px solid $backgroundDark;
-		padding: 6px;
+		border: 1px solid $backgroundLowlight;
+		border-radius: 0;
+		padding: 3px;
 		font-weight: bold;
 		margin: 0px;
 
+		background-color: $tintLighter;
+	}
+	
+	QHeaderView::section:first#vectorDataWidgetVerticalHeader {
+		border-top-left-radius: $widgetCornerRadius;
+	}
+
+	QHeaderView::section:last#vectorDataWidgetVerticalHeader {
+		border-bottom-left-radius: $widgetCornerRadius;
+	}
+
+	QHeaderView::section:only-one#vectorDataWidgetVerticalHeader {
+		border-top-left-radius: $widgetCornerRadius;
+		border-bottom-left-radius: $widgetCornerRadius;
+	}
+
+	QHeaderView::section:first#vectorDataWidgetHorizontalHeader {
+		border-top-left-radius: $widgetCornerRadius;
+	}
+
+	QHeaderView::section:last#vectorDataWidgetHorizontalHeader {
+		border-top-right-radius: $widgetCornerRadius;
+	}
+
+	QHeaderView::section:only-one#vectorDataWidgetHorizontalHeader {
+		border-top-left-radius: $widgetCornerRadius;
+		border-top-right-radius: $widgetCornerRadius;
 	}
 
 	/* tuck adjacent header sections beneath one another so we only get */
 	/* a single width line between them                                 */
-	QHeaderView::section:horizontal:!first {
 
+	QHeaderView::section:horizontal:!first:!only-one {
 		margin-left: -1px;
 
 	}
 
-	QHeaderView::section:horizontal:only-one {
-
-		margin-left: 0px;
-
-	}
-
-	QHeaderView::section:vertical:!first {
-
+	QHeaderView::section:vertical:!first:!only-one {
 		margin-top: -1px;
-
-	}
-
-	QHeaderView::section:vertical:only-one {
-
-		margin-top: 0px;
 
 	}
 
@@ -674,22 +778,22 @@ _styleSheet = string.Template(
 
 	QScrollBar {
 
-		border: 1px solid $backgroundDark;
-		background-color: $backgroundDark;
-
+		border: none;
+		border-radius: 4px;
+		background-color: $tintDarker;
 	}
 
 	QScrollBar:vertical {
 
-		width: 14px;
-		margin: 0px 0px 28px 0px;
+		width: 16px;
+		margin: 4px;
 
 	}
 
 	QScrollBar:horizontal {
 
-		height: 14px;
-		margin: 0px 28px 0px 0px;
+		height: 16px;
+		margin: 4px;
 
 	}
 
@@ -699,18 +803,18 @@ _styleSheet = string.Template(
 	}
 
 	QScrollBar::add-line, QScrollBar::sub-line {
-		background-color: $backgroundLight;
-		border: 1px solid $backgroundDark;
+		background-color: none;
+		border: none;
 	}
 
 	QScrollBar::add-line:vertical {
-		height: 14px;
+		height: 8px;
 		subcontrol-position: bottom;
 		subcontrol-origin: margin;
 	}
 
 	QScrollBar::add-line:horizontal {
-		width: 14px;
+		width: 8px;
 		subcontrol-position: right;
 		subcontrol-origin: margin;
 	}
@@ -731,39 +835,18 @@ _styleSheet = string.Template(
 		right: 15px;
 	}
 
-	QScrollBar::down-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
-	}
-
-	QScrollBar::up-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowUp10.png);
-	}
-
-	QScrollBar::left-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowLeft10.png);
-	}
-
-	QScrollBar::right-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
-	}
-
 	QScrollBar::handle {
-		background-color: $backgroundLight;
-		border: 1px solid $backgroundDark;
+		background-color: $tintLighterStrong;
+		border-radius: 4px;
+		border: none;
 	}
 
 	QScrollBar::handle:vertical {
 		min-height: 14px;
-		border-left: none;
-		border-right: none;
-		margin-top: -1px;
 	}
 
 	QScrollBar::handle:horizontal {
 		min-width: 14px;
-		border-top: none;
-		border-bottom: none;
-		margin-left: -1px;
 	}
 
 	QScrollBar::handle:hover, QScrollBar::add-line:hover, QScrollBar::sub-line:hover {
@@ -907,13 +990,13 @@ _styleSheet = string.Template(
 
 	.QFrame#borderStyleNone {
 		border: 1px solid transparent;
-		border-radius: 4px;
+		border-radius: $widgetCornerRadius;
 		padding: 2px;
 	}
 
 	.QFrame#borderStyleFlat {
 		border: 1px solid $backgroundDark;
-		border-radius: 4px;
+		border-radius: $widgetCornerRadius;
 		padding: 2px;
 	}
 
@@ -922,7 +1005,9 @@ _styleSheet = string.Template(
 	}
 
 	.QFrame#gafferDivider {
-		color: $backgroundDark;
+		color: $tintDarkerStrong;
+		margin-left: 10px;
+		margin-right: 10px;
 	}
 
 	QToolTip {
@@ -933,9 +1018,25 @@ _styleSheet = string.Template(
 
 	}
 
+
+	/* Tree/Table views */
+
 	QTreeView {
-		border: 1px solid $backgroundDark;
-		padding: 0px;
+
+		background-color: $backgroundRaised;
+
+		border: 1px solid $backgroundRaisedHighlight;
+		border-bottom-color: $backgroundRaisedLowlight;
+		border-right-color: $backgroundRaisedLowlight;
+
+		padding: 0;
+
+		alternate-background-color: $backgroundLowlight;
+
+	}
+
+	QTreeView::item {
+		padding: 2px;
 	}
 
 	QTreeView::item:selected {
@@ -943,9 +1044,11 @@ _styleSheet = string.Template(
 	}
 
 	QTableView {
+		border: 1px solid transparent;
+	}
 
-		border: 0px solid transparent;
-
+	QTableView::item {
+		background-color: $background;
 	}
 
 	QTableView::item:selected {
@@ -953,23 +1056,23 @@ _styleSheet = string.Template(
 	}
 
 	QTableView QTableCornerButton::section {
-		background-color: $backgroundMid;
-		border: 1px solid $backgroundMid;
+		background-color: transparent;
+		border: none;
 	}
 
 	QTableView#vectorDataWidget {
-		gridline-color: $backgroundDark;
+		gridline-color: $backgroundLowlight;
 		padding: 0px;
-		background-color: transparent;
+		background-color: $backgroundRaised;
 	}
 
 	QTableView#vectorDataWidgetEditable {
 		padding: 0px;
-		gridline-color: $backgroundDark;
+		gridline-color: $backgroundLowlight;
 	}
 
 	QTableView::item#vectorDataWidgetEditable {
-		background-color: $backgroundLighter;
+		background-color: $backgroundLight;
 	}
 
 	QTableView::item:selected#vectorDataWidgetEditable {
@@ -977,7 +1080,6 @@ _styleSheet = string.Template(
 	}
 
 	QHeaderView::section#vectorDataWidgetVerticalHeader {
-		background-color: transparent;
 		padding: 2px;
 	}
 
@@ -1128,6 +1230,26 @@ _styleSheet = string.Template(
 
 	}
 
+	/* PythonEditor */
+
+	QSplitter#gafferPythonEditor {
+		background-color: $background;
+	}
+
+	QPlainTextEdit#gafferPythonEditorOutput {
+		border-radius: 0;
+		border-top-left-radius: $widgetCornerRadius;
+		border-top-right-radius: $widgetCornerRadius;
+		background-color: rbg( 30, 30, 30 );
+	}
+
+	QPlainTextEdit#gafferPythonEditorInput {
+		border-radius: 0;
+		border-bottom-left-radius: $widgetCornerRadius;
+		border-bottom-right-radius: $widgetCornerRadius;
+	}
+
 	"""
 
 ).substitute( substitutions )
+
