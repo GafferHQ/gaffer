@@ -443,6 +443,10 @@ _styleSheet = string.Template(
 		border-bottom-color: $background /* blend into frame below */
 	}
 
+	QTabBar[gafferHasTabCloseButtons="true"]::tab {
+		padding-right: 3px;
+	}
+
 	QTabBar::tab:disabled {
 		color: $tintLighter;
 	}

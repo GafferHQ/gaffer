@@ -4423,6 +4423,16 @@
          width="16"
          id="rect5736-0-2" />
     </g>
+    <g
+       id="forExport:deleteSmall"
+       transform="matrix(0.49818887,-0.49818887,0.49818887,0.49818887,-44.252357,207.19317)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3271-4"
+         d="m 410.75,205.36218 v 5 h -5 v 4 h 5 v 5 h 4 v -5 h 5 v -4 h -5 v -5 z"
+         style="fill:#ffffff;fill-opacity:0.11764706;fill-rule:nonzero;stroke:none"
+         sodipodi:nodetypes="ccccccccccccc" />
+    </g>
     <path
        inkscape:connector-curvature="0"
        id="path2986"

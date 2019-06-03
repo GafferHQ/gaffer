@@ -397,6 +397,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		tabBar = self._qtWidget().tabBar()
+		tabBar.setProperty( "gafferHasTabCloseButtons", GafferUI._Variant.toVariant( True ) )
 		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__tabContextMenu ) )
 
@@ -418,6 +419,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 
 		self.__updateStyles()
+
+		self.__configureTab( editor )
 
 		return editor
 
@@ -452,6 +455,20 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		# Had issues using ints
 		self._qtWidget().setProperty( "gafferNumChildren", GafferUI._Variant.toVariant( "%d" % len(self) ) )
 		self._repolish()
+
+	def __configureTab( self, editor ) :
+
+		button = GafferUI.Button( image="deleteSmall.png", hasFrame=False )
+		button._qtWidget().setFixedSize( 11, 11 )
+
+		editor.__removeButton = button
+		editor.__removeButtonConnection = button.clickedSignal().connect( functools.partial(
+			lambda editor, container, _ : container().removeEditor( editor() ),
+			weakref.ref( editor ), weakref.ref( self )
+		) )
+
+		tabIndex = self.index( editor )
+		self._qtWidget().tabBar().setTabButton( tabIndex, QtWidgets.QTabBar.RightSide, button._qtWidget() )
 
 	def __layoutMenuDefinition( self ) :
 
