@@ -352,6 +352,37 @@ struct Slot : public SlotBase<Signal::slot_function_type::arity, Signal, Caller>
 	}
 };
 
+// Ideally we would bind `boost::signals::trackable` to Python
+// directly, but its protected destructor prevents that. So we
+// bind this little derived class instead.
+struct Trackable : public boost::signals::trackable
+{
+};
+
+// Overload boost's `visit_each()` function for all our Slot types.
+// Boost will call this to discover slots which refer to trackable
+// objects, and will use it to automatically remove the connection
+// when the `trackable` object dies.
+template<typename Visitor, typename Signal, typename Caller>
+void visit_each( Visitor &visitor, const Slot<Signal, Caller> &slot, int )
+{
+	// Check to see if slot contains a WeakMethod referring to a trackable
+	// object. There is no point checking for regular methods, because they
+	// prevent the trackable object from dying until it has been disconnected
+	// manually.
+	boost::python::object gaffer = boost::python::import( "Gaffer" );
+	boost::python::object weakMethod = gaffer.attr( "WeakMethod" );
+	if( PyObject_IsInstance( slot.m_slot.get(), weakMethod.ptr() ) )
+	{
+		boost::python::object self = boost::python::object( slot.m_slot ).attr( "instance" )();
+		boost::python::extract<Trackable &> e( self );
+		if( e.check() )
+		{
+			boost::visit_each( visitor, e(), 0 );
+		}
+	}
+}
+
 GAFFERBINDINGS_API boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped );
 
 template<typename Signal, typename SlotCaller>

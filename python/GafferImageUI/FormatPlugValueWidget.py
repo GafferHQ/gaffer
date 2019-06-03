@@ -74,7 +74,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# sensitive to contex changes and omits calls to _updateFromPlug(). But the default
 		# format mechanism uses the context, so we must arrange to do updates ourselves when
 		# necessary.
-		self.__contextChangedConnection = self.getContext().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.getContext().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
 
 		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()

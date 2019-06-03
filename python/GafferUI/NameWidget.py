@@ -54,7 +54,7 @@ class NameWidget( GafferUI.TextWidget ) :
 		self.__graphComponent = None
 		self.setGraphComponent( graphComponent )
 
-		self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ) )
+		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ), scoped = False )
 
 	def setGraphComponent( self, graphComponent ) :
 

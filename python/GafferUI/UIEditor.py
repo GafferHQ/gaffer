@@ -104,13 +104,13 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as self.__plugTab :
 
 				self.__plugListing = _PlugListing()
-				self.__plugListingSelectionChangedConnection = self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ) )
+				self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ), scoped = False )
 
 				with GafferUI.TabbedContainer() as self.__plugAndSectionEditorsContainer :
 
 					self.__plugEditor = _PlugEditor()
 					self.__sectionEditor = _SectionEditor()
-					self.__sectionEditorNameChangedConnection = self.__sectionEditor.nameChangedSignal().connect( Gaffer.WeakMethod( self.__sectionEditorNameChanged ) )
+					self.__sectionEditor.nameChangedSignal().connect( Gaffer.WeakMethod( self.__sectionEditorNameChanged ), scoped = False )
 
 				self.__plugAndSectionEditorsContainer.setTabsVisible( False )
 
@@ -276,7 +276,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		}
 	)
 
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
 ##########################################################################
 # Simple fixed width label and row classes
@@ -430,8 +430,8 @@ class _BoolMetadataWidget( _MetadataWidget ) :
 		self.__boolWidget = GafferUI.BoolWidget()
 		_MetadataWidget.__init__( self, self.__boolWidget, key, target, **kw )
 
-		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged )
+		self.__boolWidget.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__stateChanged ), scoped = False
 		)
 
 	def _updateFromValue( self, value ) :
@@ -451,8 +451,8 @@ class _StringMetadataWidget( _MetadataWidget ) :
 
 		self.__acceptEmptyString = acceptEmptyString
 
-		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished )
+		self.__textWidget.editingFinishedSignal().connect(
+			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
 		)
 
 	def textWidget( self ) :
@@ -478,8 +478,8 @@ class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 		self.__textWidget = GafferUI.MultiLineTextWidget( role = role )
 		_MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
 
-		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished )
+		self.__textWidget.editingFinishedSignal().connect(
+			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
 		)
 
 	def textWidget( self ) :
@@ -506,7 +506,7 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
 		self.__value = None
 
-		self.__buttonReleaseConnection = self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
 	def _updateFromValue( self, value ) :
 
@@ -772,17 +772,17 @@ class _PlugListing( GafferUI.Widget ) :
 				)
 
 				self.__deleteButton = GafferUI.Button( image = "minus.png", hasFrame = False )
-				self.__deleteButtonClickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
+				self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ), scoped = False )
 
 		self.__parent = None # the parent of the plugs we're listing
 		self.__dragItem = None
 		self.__selectionChangedSignal = Gaffer.Signal1()
 
-		self.__dragEnterConnection = self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dragMoveConnection = self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
-		self.__dragEndConnection = self.__pathListing.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
-		self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
-		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+		self.__pathListing.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
@@ -1255,25 +1255,25 @@ class _PresetsEditor( GafferUI.Widget ) :
 				self.__pathListing._qtWidget().setFixedWidth( 200 )
 				self.__pathListing._qtWidget().setFixedHeight( 200 )
 
-				self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
-				self.__dragEnterConnection = self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-				self.__dragMoveConnection = self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
-				self.__dragEndConnection = self.__pathListing.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+				self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
+				self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+				self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+				self.__pathListing.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 					self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
-					self.__addButtonClickedConnection = self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
+					self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ), scoped = False )
 
 					self.__deleteButton = GafferUI.Button( image = "minus.png", hasFrame = False )
-					self.__deleteButtonClickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
+					self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ), scoped = False )
 
 			with GafferUI.ListContainer( spacing = 4 ) as self.__editingColumn :
 
 				GafferUI.Label( "Name" )
 
 				self.__nameWidget = GafferUI.TextWidget()
-				self.__nameEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameEditingFinished ) )
+				self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameEditingFinished ), scoped = False )
 
 				GafferUI.Spacer( imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 
@@ -1573,7 +1573,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 			GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		self.__plug = None
 
@@ -1764,7 +1764,7 @@ class _SectionEditor( GafferUI.Widget ) :
 				_Label( "Name" )
 
 				self.__nameWidget = GafferUI.TextWidget()
-				self.__nameWidgetEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
+				self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ), scoped = False )
 
 			with _Row() :
 

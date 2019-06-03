@@ -45,7 +45,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtWidgets
 
-class _EditorMetaclass( type ) :
+class _EditorMetaclass( Gaffer.Trackable.__class__ ) :
 
 	def __call__( cls, *args, **kw ) :
 
@@ -76,8 +76,8 @@ class Editor( GafferUI.Widget ) :
 		self.__title = ""
 		self.__titleChangedSignal = GafferUI.WidgetSignal()
 
-		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
-		self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
+		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 
 		self.__setContextInternal( scriptNode.context(), callUpdate=False )
 

@@ -75,7 +75,7 @@ class Window( GafferUI.ContainerWidget ) :
 		if len( self.__caughtKeys() ):
 			# set up a key press handler, so we can catch various key presses and stop them being handled by the
 			# host application
-			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 
 		# \todo Does this hurt performance? Maybe keyPressSignal() should set this up when it's called?
@@ -212,7 +212,7 @@ class Window( GafferUI.ContainerWidget ) :
 			childWindow._applyVisibility()
 
 		if removeOnClose :
-			childWindow.__removeOnCloseConnection = childWindow.closedSignal().connect( lambda w : w.parent().removeChild( w ) )
+			childWindow.closedSignal().connect( lambda w : w.parent().removeChild( w ), scoped = False )
 
 	## Returns a list of all the windows parented to this one.
 	def childWindows( self ) :

@@ -248,10 +248,10 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__selectingFinishedSignal
 		except :
 			self.__selectingFinishedSignal = GafferUI.WidgetSignal()
-			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-			self.__keyReleaseConnection = self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ) )
-			self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-			self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+			self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ), scoped = False )
+			self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+			self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 			self.__lastSelection = self.getSelection()
 			self.__numSelectionPossiblyFinishedEvents = 0
 

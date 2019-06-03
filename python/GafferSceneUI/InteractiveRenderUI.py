@@ -53,8 +53,8 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__startPauseButton = GafferUI.Button( image = 'timelinePlay.png' )
 			self.__stopButton = GafferUI.Button( image = 'timelineStop.png' )
 
-			self.__startPauseClickedConnection = self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ) )
-			self.__pauseClickedConnection = self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ) )
+			self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ), scoped = False )
+			self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ), scoped = False )
 
 		self._updateFromPlug()
 

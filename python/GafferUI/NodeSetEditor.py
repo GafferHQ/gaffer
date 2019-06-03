@@ -262,8 +262,8 @@ class _EditorWindow( GafferUI.Window ) :
 
 		self.setChild( editor )
 
-		self.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ) )
-		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
+		editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ), scoped = False )
+		editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ), scoped = False )
 
 		parentWindow.addChildWindow( self, removeOnClose=True )
 

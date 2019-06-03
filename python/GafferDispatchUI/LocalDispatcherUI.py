@@ -221,7 +221,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 					allowMultipleSelection=True
 				)
 				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
-				self.__jobSelectionChangedConnection = self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ) )
+				self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ), scoped = False )
 
 				with GafferUI.TabbedContainer() as self.__tabs :
 
@@ -242,24 +242,24 @@ class _LocalJobsWindow( GafferUI.Window ) :
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Messages" } ) as self.__messagesTab :
 						self.__messageWidget = GafferUI.MessageWidget()
 
-				self.__tabChangedConnection = self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ) )
+				self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ), scoped = False )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
 					self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
 					self.__killButton.setEnabled( False )
-					self.__killClickedConnection = self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
+					self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ), scoped = False )
 					self.__removeButton = GafferUI.Button( "Remove Failed Jobs" )
 					self.__removeButton.setEnabled( False )
-					self.__removedClickedConnection = self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ) )
+					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
 
 		self.setTitle( "Local Dispatcher Jobs" )
 
 		self.__updateTimer = QtCore.QTimer()
 		self.__updateTimer.timeout.connect( Gaffer.WeakMethod( self.__update ) )
-		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
-		self.__jobAddedConnection = jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ) )
-		self.__jobRemovedConnection = jobPool.jobRemovedSignal().connect( Gaffer.WeakMethod( self.__jobRemoved ) )
+		jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ), scoped = False )
+		jobPool.jobRemovedSignal().connect( Gaffer.WeakMethod( self.__jobRemoved ), scoped = False )
 
 	## Acquires the LocalJobsWindow for the specified application.
 	@staticmethod

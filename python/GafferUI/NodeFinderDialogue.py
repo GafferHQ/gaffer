@@ -77,9 +77,9 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 			self.__matchPattern =  GafferUI.TextWidget( parenting = { "index" : ( 1, 2 ) } )
 			self.__matchPattern.setToolTip( "Use * to match any text and ? to match any single character.\nDrag a node here to get the text for selecting similar nodes." )
 
-			self.__dragEnterConnection = self.__matchPattern.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-			self.__dragLeaveConnection = self.__matchPattern.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
-			self.__dropConnection = self.__matchPattern.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+			self.__matchPattern.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+			self.__matchPattern.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+			self.__matchPattern.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		self._setWidget( grid )
 
@@ -87,13 +87,13 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 		self.__selectNextButton = self._addButton( "Select Next" )
 		self.__selectAllButton = self._addButton( "Select All" )
 
-		self.__activatedConnection = self.__matchPattern.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+		self.__matchPattern.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
 
-		self.__cancelButtonClickedSignal = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__selectNextButtonClickedSignal = self.__selectNextButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__selectAllButtonClickedSignal = self.__selectAllButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__selectNextButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__selectAllButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
-		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
 		self.__scope = None
 		self.setScope( scope )

@@ -109,16 +109,16 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# we need to connect to the childAdded/childRemoved signals on
 		# the parent so we can update the ui when plugs are added and removed.
-		self.__childAddedConnection = parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
- 		self.__childRemovedConnection = parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+		parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = False )
+		parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = False )
 
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
-		self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		# and since our activations are driven by plug values, we must respond
 		# when the plugs are dirtied.
-		self.__plugDirtiedConnection = self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+		self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
 
 		# frequently events that trigger a ui update come in batches, so we
 		# perform the update lazily using a LazyMethod. the dirty variables
@@ -707,8 +707,9 @@ class _CollapsibleLayout( _Layout ) :
 				if subsection.restoreState( "collapsed" ) is False :
 					collapsible.setCollapsed( False )
 
-				collapsible.__stateChangedConnection = collapsible.stateChangedSignal().connect(
-					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection )
+				collapsible.stateChangedSignal().connect(
+					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection ),
+					scoped = False
 				)
 
 				self.__collapsibles[name] = collapsible

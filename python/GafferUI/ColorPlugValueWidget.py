@@ -52,7 +52,7 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 
 		self._row().append( self.__swatch, expand=True )
 
-		self.__buttonReleaseConnection = self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
 		self.__blinkBehaviour = None
 

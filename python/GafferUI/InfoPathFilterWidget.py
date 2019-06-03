@@ -54,7 +54,7 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 		with self.__row :
 
 			filterButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False )
-			self.__filterButtonClickedConnection = filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+			filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 			self.__filterText = GafferUI.TextWidget()
 
@@ -62,8 +62,8 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
 				self.__filterText._qtWidget().setPlaceholderText( "Filter..." )
 
-			self.__filterEditingFinishedConnection = self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
-			self.__filterTextChangedConnection = self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
+			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ), scoped = False )
+			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ), scoped = False )
 
 	def _updateFromPathFilter( self ) :
 

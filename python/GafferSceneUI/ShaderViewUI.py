@@ -131,7 +131,7 @@ class _SettingsWindow( GafferUI.Window ) :
 				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__shaderView = shaderView
-		self.__sceneChangedConnection = shaderView.sceneChangedSignal().connect( Gaffer.WeakMethod( self.__sceneChanged ) )
+		shaderView.sceneChangedSignal().connect( Gaffer.WeakMethod( self.__sceneChanged ), scoped = False )
 		self.__updateNodeUI()
 
 	def __updateNodeUI( self ) :

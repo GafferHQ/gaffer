@@ -67,7 +67,6 @@ class MessageWidget( GafferUI.Widget ) :
 					( IECore.Msg.Level.Debug, "Debug information. You may find this very dull. Click to scroll to the next item." ),
 				]
 				self.__levelButtons = {}
-				self.__buttonClickedConnections = []
 				for buttonSpec in buttonSpecs :
 					button = GafferUI.Button(
 						image = IECore.Msg.levelAsString( buttonSpec[0] ).lower() + "Notification.png",
@@ -75,7 +74,7 @@ class MessageWidget( GafferUI.Widget ) :
 					)
 					button.__level = buttonSpec[0]
 					self.__levelButtons[buttonSpec[0]] = button
-					self.__buttonClickedConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
+					button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 					button.setVisible( False )
 					button.setToolTip( buttonSpec[1] )
 

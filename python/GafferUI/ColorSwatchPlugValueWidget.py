@@ -53,10 +53,10 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__swatch )
 
-		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__dragBeginConnection = self.__swatch.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
-		self.__dragEndConnection = self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
-		self.__buttonReleaseConnection = self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.__swatch.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
 		self._updateFromPlug()
 
@@ -123,14 +123,14 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
-		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
-		self.__confirmClickedConnection = self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__cancelClickedConnection = self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ), scoped = False )
+		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 		self.__plug = plug
 
 		node = plug.node()
-		self.__nodeParentChangedConnection = node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+		node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
 		self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 		self.setTitle( plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) ) )

@@ -191,7 +191,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
 
 			self.__button = GafferUI.Button( "Reload" )
-			self.__buttonClickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 		self._updateFromPlug()
 
