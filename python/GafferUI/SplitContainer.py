@@ -195,6 +195,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	
 	def __updateStyles( self ) :
 
+		# Had issues using ints
 		self._qtWidget().setProperty( "gafferNumChildren", GafferUI._Variant.toVariant( "%d" % len(self) ) )
 		self._repolish()
 

@@ -55,7 +55,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, children=None, detachedPanels=None, windowState=None, **kw ) :
 
-		self.__splitContainer = _SplitContainer()
+		self.__splitContainer = _SplitContainer( borderWidth = 2 )
 
 		GafferUI.Editor.__init__( self, self.__splitContainer, scriptNode, **kw )
 
@@ -376,7 +376,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
 
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2, borderWidth=1 ) as cornerWidget :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth=4 ) as cornerWidget :
 
 			self.__pinningButton = GafferUI.Button( image="targetNodesUnlocked.png", hasFrame=False )
 
@@ -384,6 +384,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ) ) )
 			layoutButton.setToolTip( "Click to modify the layout" )
 
+		cornerWidget._qtWidget().setObjectName( "gafferCompoundEditorTools" )
 		self.setCornerWidget( cornerWidget )
 
 		self.__pinningButtonClickedConnection = self.__pinningButton.clickedSignal().connect( Gaffer.WeakMethod( self.__pinningButtonClicked ) )
@@ -399,6 +400,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		self.__tabDragBehaviour = _TabDragBehaviour( self )
 
+		self.__updateStyles()
+
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, basestring ) :
@@ -412,6 +415,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.setLabel( editor, editor.getTitle() )
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 
+		self.__updateStyles()
+
 		return editor
 
 	def removeEditor( self, editor ) :
@@ -419,6 +424,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		editor.__titleChangedConnection = None
 		self.removeChild( editor )
 		self.__updatePinningButton( None )
+		self.__updateStyles()
 
 	def setTabsVisible( self, tabsVisible ) :
 
@@ -438,6 +444,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by Qt.py, but needed to remove fixed height
 				self._qtWidget().setFixedHeight( QWIDGETSIZE_MAX )
 				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
+
+	def __updateStyles( self ) :
+
+		# Had issues using ints
+		self._qtWidget().setProperty( "gafferNumChildren", GafferUI._Variant.toVariant( "%d" % len(self) ) )
+		self._repolish()
 
 	def __layoutMenuDefinition( self ) :
 
@@ -681,7 +693,7 @@ class _DetachedPanel( GafferUI.Window ) :
 
 		GafferUI.Window.__init__( self )
 
-		self.__splitContainer = _SplitContainer()
+		self.__splitContainer = _SplitContainer( borderWidth = 2 )
 		self.__splitContainer.append( _TabbedContainer() )
 		self.setChild( self.__splitContainer )
 
