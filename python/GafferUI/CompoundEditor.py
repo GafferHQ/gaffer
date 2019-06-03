@@ -376,13 +376,15 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
 
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth=4 ) as cornerWidget :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth=2 ) as cornerWidget :
 
 			self.__pinningButton = GafferUI.Button( image="targetNodesUnlocked.png", hasFrame=False )
+			self.__pinningButton._qtWidget().setFixedHeight( 15 )
 
 			layoutButton = GafferUI.MenuButton( image="layoutButton.png", hasFrame=False )
 			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ) ) )
 			layoutButton.setToolTip( "Click to modify the layout" )
+			layoutButton._qtWidget().setFixedHeight( 15 )
 
 		cornerWidget._qtWidget().setObjectName( "gafferCompoundEditorTools" )
 		self.setCornerWidget( cornerWidget )
