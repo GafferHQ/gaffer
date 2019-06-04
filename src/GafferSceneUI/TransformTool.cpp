@@ -48,8 +48,6 @@
 #include "Gaffer/Animation.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/Monitor.h"
-#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "OpenEXR/ImathMatrixAlgo.h"
@@ -57,8 +55,6 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/unordered_map.hpp"
-
-#include "tbb/spin_mutex.h"
 
 #include <memory>
 #include <unordered_set>
