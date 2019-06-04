@@ -69,6 +69,8 @@ class GAFFER_API ContextMonitor : public Monitor
 		ContextMonitor( const GraphComponent *root = nullptr );
 		~ContextMonitor() override;
 
+		IE_CORE_DECLAREMEMBERPTR( ContextMonitor )
+
 		struct Statistics
 		{
 
@@ -124,6 +126,8 @@ class GAFFER_API ContextMonitor : public Monitor
 		mutable Statistics m_combinedStatistics;
 
 };
+
+IE_CORE_DECLAREPTR( ContextMonitor )
 
 } // namespace Gaffer
 

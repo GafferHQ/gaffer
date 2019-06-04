@@ -60,7 +60,9 @@ static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
 BOOST_PYTHON_MODULE( _GafferSceneTest )
 {
 
-	class_<ContextSanitiser, bases<Gaffer::Monitor>, boost::noncopyable>( "ContextSanitiser" );
+	IECorePython::RefCountedClass<ContextSanitiser, Gaffer::Monitor>( "ContextSanitiser" )
+		.def( init<>() )
+	;
 
 	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
 	GafferBindings::NodeClass<TestShader>();

@@ -53,6 +53,8 @@ class GAFFER_API ContextSanitiser : public Gaffer::Monitor
 
 		ContextSanitiser();
 
+		IE_CORE_DECLAREMEMBERPTR( ContextSanitiser )
+
 	protected :
 
 		void processStarted( const Gaffer::Process *process ) override;
@@ -71,6 +73,8 @@ class GAFFER_API ContextSanitiser : public Gaffer::Monitor
 		WarningSet m_warningsEmitted;
 
 };
+
+IE_CORE_DECLAREPTR( ContextSanitiser )
 
 } // namespace GafferImageTest
 

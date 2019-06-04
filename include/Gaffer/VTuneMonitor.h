@@ -53,6 +53,8 @@ class GAFFER_API VTuneMonitor : public Monitor
 		VTuneMonitor( bool monitorHashProcess = false );
 		~VTuneMonitor() override;
 
+		IE_CORE_DECLAREMEMBERPTR( VTuneMonitor )
+
 	protected :
 
 		void processStarted( const Process *process ) override;
@@ -63,6 +65,8 @@ class GAFFER_API VTuneMonitor : public Monitor
 		bool m_monitorHashProcess;
 
 };
+
+IE_CORE_DECLAREPTR( VTuneMonitor )
 
 } // namespace Gaffer
 

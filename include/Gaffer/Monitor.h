@@ -39,7 +39,7 @@
 
 #include "Gaffer/Export.h"
 
-#include "boost/noncopyable.hpp"
+#include "IECore/RefCounted.h"
 
 namespace Gaffer
 {
@@ -47,13 +47,14 @@ namespace Gaffer
 class Process;
 
 /// Base class for monitoring node graph processes.
-class GAFFER_API Monitor : boost::noncopyable
+class GAFFER_API Monitor : public IECore::RefCounted
 {
 
 	public :
 
-		Monitor();
 		virtual ~Monitor();
+
+		IE_CORE_DECLAREMEMBERPTR( Monitor )
 
 		void setActive( bool active );
 		bool getActive() const;
@@ -77,6 +78,8 @@ class GAFFER_API Monitor : boost::noncopyable
 
 	protected :
 
+		Monitor();
+
 		friend class Process;
 
 		/// Implementations must be safe to call concurrently.
@@ -85,6 +88,8 @@ class GAFFER_API Monitor : boost::noncopyable
 		virtual void processFinished( const Process *process ) = 0;
 
 };
+
+IE_CORE_DECLAREPTR( Monitor )
 
 } // namespace Gaffer
 

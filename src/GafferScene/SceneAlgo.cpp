@@ -348,6 +348,8 @@ class CapturingMonitor : public Monitor
 		{
 		}
 
+		IE_CORE_DECLAREMEMBERPTR( CapturingMonitor )
+
 		const CapturedProcess::PtrVector &rootProcesses()
 		{
 			return m_rootProcesses;
@@ -410,6 +412,8 @@ class CapturingMonitor : public Monitor
 		CapturedProcess::PtrVector m_rootProcesses;
 
 };
+
+IE_CORE_DECLAREPTR( CapturingMonitor )
 
 InternedString g_contextUniquefierName = "__sceneAlgoHistory:uniquefier";
 uint64_t g_contextUniquefierValue = 0;
@@ -503,16 +507,16 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 		) );
 	}
 
-	CapturingMonitor monitor;
+	CapturingMonitorPtr monitor = new CapturingMonitor;
 	{
 		ScenePlug::PathScope pathScope( Context::current(), path );
 		// Trick to bypass the hash cache and get a full upstream evaluation.
 		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
-		Monitor::Scope monitorScope( &monitor );
+		Monitor::Scope monitorScope( monitor );
 		scenePlugChild->hash();
 	}
-	assert( monitor.rootProcesses().size() == 1 );
-	return historyWalk( monitor.rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
+	assert( monitor->rootProcesses().size() == 1 );
+	return historyWalk( monitor->rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
 }
 
 ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath &path )
