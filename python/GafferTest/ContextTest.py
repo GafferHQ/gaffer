@@ -354,6 +354,7 @@ class ContextTest( GafferTest.TestCase ) :
 
 		self.assertEqual( cc.names(), cc.keys() )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testManyContexts( self ) :
 
 		GafferTest.testManyContexts()
@@ -547,10 +548,12 @@ class ContextTest( GafferTest.TestCase ) :
 		c["ui:test"] = 1
 		self.assertEqual( h, c.hash() )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testManySubstitutions( self ) :
 
 		GafferTest.testManySubstitutions()
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testManyEnvironmentSubstitutions( self ) :
 
 		GafferTest.testManyEnvironmentSubstitutions()
