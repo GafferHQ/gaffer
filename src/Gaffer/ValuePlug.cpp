@@ -143,14 +143,12 @@ struct HashProcessKey : public HashCacheKey
 	HashProcessKey( const ValuePlug *plug, const ValuePlug *downstreamPlug, const Context *context, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy )
 		:	HashCacheKey( plug, context ),
 			downstreamPlug( downstreamPlug ),
-			context( context ),
 			computeNode( computeNode ),
 			cachePolicy( cachePolicy )
 	{
 	}
 
 	const ValuePlug *downstreamPlug;
-	const Context *context;
 	const ComputeNode *computeNode;
 	const ValuePlug::CachePolicy cachePolicy;
 };
@@ -265,7 +263,7 @@ class ValuePlug::HashProcess : public Process
 	private :
 
 		HashProcess( const HashProcessKey &key )
-			:	Process( staticType, key.plug, key.downstreamPlug, key.context )
+			:	Process( staticType, key.plug, key.downstreamPlug )
 		{
 			try
 			{
@@ -379,10 +377,9 @@ namespace
 // function.
 struct ComputeProcessKey
 {
-	ComputeProcessKey( const ValuePlug *plug, const ValuePlug *downstreamPlug, const Context *context, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy, const IECore::MurmurHash *precomputedHash )
+	ComputeProcessKey( const ValuePlug *plug, const ValuePlug *downstreamPlug, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy, const IECore::MurmurHash *precomputedHash )
 		:	plug( plug ),
 			downstreamPlug( downstreamPlug ),
-			context( context ),
 			computeNode( computeNode ),
 			cachePolicy( cachePolicy ),
 			m_hash( precomputedHash ? *precomputedHash : IECore::MurmurHash() )
@@ -391,7 +388,6 @@ struct ComputeProcessKey
 
 	const ValuePlug *plug;
 	const ValuePlug *downstreamPlug;
-	const Context *context;
 	const ComputeNode *computeNode;
 	const ValuePlug::CachePolicy cachePolicy;
 
@@ -463,7 +459,7 @@ class ValuePlug::ComputeProcess : public Process
 			// it with a ComputeProcess.
 
 			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
-			const ComputeProcessKey processKey( p, plug, Context::current(), computeNode, computeNode ? computeNode->computeCachePolicy( p ) : CachePolicy::Uncached, precomputedHash );
+			const ComputeProcessKey processKey( p, plug, computeNode, computeNode ? computeNode->computeCachePolicy( p ) : CachePolicy::Uncached, precomputedHash );
 
 			if( processKey.cachePolicy == CachePolicy::Uncached )
 			{
@@ -527,7 +523,7 @@ class ValuePlug::ComputeProcess : public Process
 	private :
 
 		ComputeProcess( const ComputeProcessKey &key )
-			:	Process( staticType, key.plug, key.downstreamPlug, key.context )
+			:	Process( staticType, key.plug, key.downstreamPlug )
 		{
 			try
 			{

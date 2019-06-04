@@ -38,12 +38,9 @@
 #define GAFFER_PROCESS_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/ThreadState.h"
 
 #include "IECore/InternedString.h"
-
-#include "boost/noncopyable.hpp"
-
-#include "tbb/enumerable_thread_specific.h"
 
 namespace Gaffer
 {
@@ -60,7 +57,7 @@ class Monitor;
 /// considered to be entirely an internal implementation
 /// detail - they are exposed publicly only so they can
 /// be used by the Monitor classes.
-class GAFFER_API Process : public boost::noncopyable
+class GAFFER_API Process : private ThreadState::Scope
 {
 
 	public :
@@ -72,13 +69,10 @@ class GAFFER_API Process : public boost::noncopyable
 		const Plug *plug() const { return m_plug; }
 		/// The context in which the process is being
 		/// performed.
-		const Context *context() const { return m_context; }
+		const Context *context() const { return m_threadState->m_context; }
 
 		/// Returns the parent process for this process - that
 		/// is, the process that invoked this one.
-		/// \todo Currently this does not track parent/child
-		/// relationships correctly when a parent process spawns
-		/// child processes on separate threads.
 		const Process *parent() const { return m_parent; }
 
 		/// Returns the Process currently being performed on
@@ -88,9 +82,7 @@ class GAFFER_API Process : public boost::noncopyable
 	protected :
 
 		/// Protected constructor for use by derived classes only.
-		/// If `Context::current()` has already been retrieved it can be passed
-		/// via `currentContext` to avoid a second lookup.
-		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = nullptr, const Context *currentContext = nullptr );
+		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = nullptr );
 		~Process();
 
 		/// Derived classes should catch exceptions thrown
@@ -113,16 +105,10 @@ class GAFFER_API Process : public boost::noncopyable
 
 		void emitError( const std::string &error ) const;
 
-		struct ThreadData;
-
 		IECore::InternedString m_type;
 		const Plug *m_plug;
 		const Plug *m_downstream;
-		const Context *m_context;
 		const Process *m_parent;
-		ThreadData *m_threadData;
-
-		static tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<Process::ThreadData>, tbb::ets_key_per_instance> g_threadData;
 
 };
 

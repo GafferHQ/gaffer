@@ -41,10 +41,6 @@
 
 #include "boost/lexical_cast.hpp"
 
-#include "tbb/enumerable_thread_specific.h"
-
-#include <stack>
-
 // Headers needed to access environment - these differ
 // between OS X and Linux.
 #ifdef __APPLE__
@@ -552,41 +548,37 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 // Scope and current context implementation
 //////////////////////////////////////////////////////////////////////////
 
-typedef std::stack<const Context *> ContextStack;
-typedef tbb::enumerable_thread_specific<ContextStack, tbb::cache_aligned_allocator<ContextStack>, tbb::ets_key_per_instance> ThreadSpecificContextStack;
-
-static ThreadSpecificContextStack g_threadContexts;
-static ContextPtr g_defaultContext = new Context;
-
-Context::Scope::Scope( const Context *context ) : m_context( context )
+Context::Scope::Scope( const Context *context )
+	:	ThreadState::Scope( /* push = */ static_cast<bool>( context ) )
 {
-	if( context )
+	if( m_threadState )
 	{
-		ContextStack &stack = g_threadContexts.local();
-		stack.push( context );
+		// The `push` argument to our base class should mean that we only
+		// end up in here if we have a context to scope. If not, we are
+		// a no-op.
+		assert( context );
+		m_threadState->m_context = context;
 	}
 }
 
 Context::Scope::~Scope()
 {
-	if( m_context )
-	{
-		ContextStack &stack = g_threadContexts.local();
-		stack.pop();
-	}
 }
 
 Context::EditableScope::EditableScope( const Context *context )
 	:	m_context( new Context( *context, Borrowed ) )
 {
-	ContextStack &stack = g_threadContexts.local();
-	stack.push( m_context.get() );
+	m_threadState->m_context = m_context.get();
+}
+
+Context::EditableScope::EditableScope( const ThreadState &threadState )
+	:	ThreadState::Scope( threadState ), m_context( new Context( *threadState.m_context, Borrowed ) )
+{
+	m_threadState->m_context = m_context.get();
 }
 
 Context::EditableScope::~EditableScope()
 {
-	ContextStack &stack = g_threadContexts.local();
-	stack.pop();
 }
 
 void Context::EditableScope::setFrame( float frame )
@@ -616,10 +608,5 @@ void Context::EditableScope::removeMatching( const StringAlgo::MatchPattern &pat
 
 const Context *Context::current()
 {
-	ContextStack &stack = g_threadContexts.local();
-	if( !stack.size() )
-	{
-		return g_defaultContext.get();
-	}
-	return stack.top();
+	return ThreadState::current().m_context;
 }

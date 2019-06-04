@@ -38,6 +38,7 @@
 #define GAFFER_CONTEXT_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/ThreadState.h"
 
 #include "IECore/Canceller.h"
 #include "IECore/Data.h"
@@ -232,7 +233,7 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
-		class Scope : boost::noncopyable
+		class Scope : private ThreadState::Scope
 		{
 
 			public :
@@ -241,10 +242,6 @@ class GAFFER_API Context : public IECore::RefCounted
 				Scope( const Context *context );
 				/// Destruction of the Scope pops the previously pushed context.
 				~Scope();
-
-			private :
-
-				const Context *m_context;
 
 		};
 
@@ -256,7 +253,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// because it is harder to provide the necessary lifetime
 		/// guarantees there, and performance critical code should
 		/// not be implemented in Python in any case.
-		class EditableScope : boost::noncopyable
+		class EditableScope : private ThreadState::Scope
 		{
 
 			public :
@@ -265,6 +262,11 @@ class GAFFER_API Context : public IECore::RefCounted
 				/// guarantee that `context` outlives
 				/// the EditableScope.
 				EditableScope( const Context *context );
+				/// Copies the specified thread state to this thread,
+				/// and scopes an editable copy of the context contained
+				/// therein. It is the caller's responsibility to ensure
+				/// that `threadState` outlives the EditableScope.
+				EditableScope( const ThreadState &threadState );
 				~EditableScope();
 
 				template<typename T>
