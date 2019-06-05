@@ -368,30 +368,15 @@ class CapturingMonitor : public Monitor
 
 			m_processMap[process] = capturedProcess.get();
 
-			if( process->parent() )
+			ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+			if( it != m_processMap.end() )
 			{
-				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-				if( it != m_processMap.end() )
-				{
-					it->second->children.push_back( std::move( capturedProcess ) );
-				}
-				else
-				{
-					// We've been called for a process whose parent we have not
-					// been called for. This shouldn't happen, but currently it
-					// can if another thread is doing unrelated computes while we're
-					// trying to capture the transform computes on the UI thread.
-					// We need our scope to be limited to processes that originate
-					// from the thread our Process::Scope is on, but that is not the
-					// case (see #2806). The best we can do is ignore this, but we
-					// could still crash if a background process accesses us after
-					// we're destroyed. Output a warning so we have a trail of
-					// breadcrumbs for the future.
-					IECore::msg( IECore::Msg::Warning, "CapturingMonitor", "Unscoped process encountered" );
-				}
+				it->second->children.push_back( std::move( capturedProcess ) );
 			}
 			else
 			{
+				// Either `process->parent()` was null, or was started
+				// before we were made active via `Monitor::Scope`.
 				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
 		}

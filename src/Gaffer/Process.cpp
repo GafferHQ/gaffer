@@ -36,7 +36,6 @@
 
 #include "Gaffer/Process.h"
 
-#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Node.h"
@@ -44,17 +43,12 @@
 
 #include "IECore/Canceller.h"
 
-#include "boost/container/flat_set.hpp"
-
 #include "tbb/enumerable_thread_specific.h"
 
 using namespace Gaffer;
 
 namespace
 {
-
-typedef boost::container::flat_set<Monitor *> Monitors;
-Monitors g_activeMonitors;
 
 // Used by `handleException()/emitError()` to track the original (most upstream)
 // source of an error.
@@ -86,17 +80,17 @@ Process::Process( const IECore::InternedString &type, const Plug *plug, const Pl
 	m_parent = m_threadState->m_process;
 	m_threadState->m_process = this;
 
-	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
+	for( const auto &m : *m_threadState->m_monitors )
 	{
-		(*it)->processStarted( this );
+		m->processStarted( this );
 	}
 }
 
 Process::~Process()
 {
-	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
+	for( const auto &m : *m_threadState->m_monitors )
 	{
-		(*it)->processFinished( this );
+		m->processFinished( this );
 	}
 	if( !parent() )
 	{
@@ -158,37 +152,3 @@ void Process::emitError( const std::string &error ) const
 		plug = plug != m_plug ? plug->getInput() : nullptr;
 	}
 }
-
-void Process::registerMonitor( Monitor *monitor )
-{
-	// Because `g_activeMonitors` is global state, we can't modify it
-	// while other threads are creating processes. So we cancel all BackgroundTasks
-	// to make sure that is not the case. This is needed by the TransformTool,
-	// which attaches a monitor temporarily at a point when the viewer is likely
-	// to be updating asynchronously. Without this workaround, at best the TransformTool
-	// ends up monitoring processes it doesn't want to, and at worst we get
-	// crashes.
-	//
-	// This is a bit of a hack, but it represents progress towards an improved Monitor API.
-	// When making a monitor active, ideally it should only be active for processes launched from
-	// _the current thread_, and any processes that those processes launch (potentially on other
-	// threads). In other words, we only want to monitor process trees that originate from
-	// inside the monitor's active scope. To do this properly we need to be able to track
-	// `Process::parent()` accurately when a process uses TBB to launch child processes on
-	// other threads. So for now we use this poor man's version whereby we at least prevent
-	// background tasks from being monitored inadvertently.
-	BackgroundTask::cancelAllTasks();
-	g_activeMonitors.insert( monitor );
-}
-
-void Process::deregisterMonitor( Monitor *monitor )
-{
-	BackgroundTask::cancelAllTasks();
-	g_activeMonitors.erase( monitor );
-}
-
-bool Process::monitorRegistered( const Monitor *monitor )
-{
-	return g_activeMonitors.find( const_cast<Monitor *>( monitor ) ) != g_activeMonitors.end();
-}
-

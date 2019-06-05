@@ -329,22 +329,3 @@ void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
 		it = nextIt;
 	}
 }
-
-void BackgroundTask::cancelAllTasks()
-{
-	const ActiveTasks &a = activeTasks();
-	// Call cancel for everything first.
-	for( const auto &t : a )
-	{
-		t.task->cancel();
-	}
-	// And then perform all the waits. This way the wait on one
-	// task doesn't delay the start of cancellation for the next.
-	for( auto it = a.begin(); it != a.end(); )
-	{
-		// Wait invalidates iterator, so must increment first.
-		auto nextIt = std::next( it );
-		it->task->wait();
-		it = nextIt;
-	}
-}

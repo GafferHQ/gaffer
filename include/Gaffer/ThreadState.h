@@ -39,6 +39,9 @@
 
 #include "Gaffer/Export.h"
 
+#include "IECore/RefCounted.h"
+
+#include "boost/container/flat_set.hpp"
 #include "boost/noncopyable.hpp"
 
 #include <stack>
@@ -48,6 +51,7 @@ namespace Gaffer
 
 class Context;
 class Process;
+IE_CORE_FORWARDDECLARE( Monitor );
 
 /// ThreadState provides the foundations for multi-threaded compute
 /// in Gaffer. Typically you will not interact with ThreadStates directly,
@@ -74,7 +78,7 @@ class GAFFER_API ThreadState
 	public :
 
 		/// Constructs a default thread state, with no current Process,
-		/// and a default constructed Context.
+		/// no active monitors, and a default constructed Context.
 		ThreadState();
 
 		class Scope : public boost::noncopyable
@@ -116,10 +120,15 @@ class GAFFER_API ThreadState
 
 		friend class Process;
 		friend class Context;
+		friend class Monitor;
+
+		using MonitorSet = boost::container::flat_set<MonitorPtr>;
 
 		const Context *m_context;
 		const Process *m_process;
+		const MonitorSet *m_monitors;
 
+		static const MonitorSet g_defaultMonitors;
 		static const ThreadState g_defaultState;
 
 };

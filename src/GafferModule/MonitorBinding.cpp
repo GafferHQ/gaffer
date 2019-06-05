@@ -58,18 +58,6 @@ using namespace Gaffer::MonitorAlgo;
 namespace
 {
 
-void enterScope( Monitor &m )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	m.setActive( true );
-}
-
-void exitScope( Monitor &m, object type, object value, object traceBack )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	m.setActive( false );
-}
-
 std::string repr( PerformanceMonitor::Statistics &s )
 {
 	return boost::str(
@@ -212,12 +200,12 @@ void GafferModule::bindMonitor()
 		);
 	}
 
-	IECorePython::RefCountedClass<Monitor, IECore::RefCounted>( "Monitor" )
-		.def( "setActive", &Monitor::setActive )
-		.def( "getActive", &Monitor::getActive )
-		.def( "__enter__", &enterScope, return_self<>() )
-		.def( "__exit__", &exitScope )
-	;
+	{
+		scope s = IECorePython::RefCountedClass<Monitor, IECore::RefCounted>( "Monitor" );
+
+		class_<Monitor::Scope, boost::noncopyable>( "_Scope", init<Monitor *>() )
+		;
+	}
 
 	{
 		scope s = IECorePython::RefCountedClass<PerformanceMonitor, Monitor>( "PerformanceMonitor" )

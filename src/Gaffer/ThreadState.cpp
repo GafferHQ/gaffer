@@ -37,6 +37,7 @@
 #include "Gaffer/ThreadState.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Monitor.h"
 
 #include "tbb/enumerable_thread_specific.h"
 
@@ -52,10 +53,11 @@ ContextPtr g_defaultContext = new Context;
 
 } // namespace
 
+const ThreadState::MonitorSet ThreadState::g_defaultMonitors;
 const ThreadState ThreadState::g_defaultState;
 
 ThreadState::ThreadState()
-	:	m_context( g_defaultContext.get() ), m_process( nullptr )
+	:	m_context( g_defaultContext.get() ), m_process( nullptr ), m_monitors( &g_defaultMonitors )
 {
 }
 
