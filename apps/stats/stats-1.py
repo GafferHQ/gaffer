@@ -234,8 +234,6 @@ class stats( Gaffer.Application ) :
 			}
 		)
 
-		self.__vtuneMonitor = None
-
 	def _run( self, args ) :
 
 		if args["cacheMemoryLimit"].value :
@@ -278,8 +276,8 @@ class stats( Gaffer.Application ) :
 		if args["vtune"].value :
 			try:
 				self.__vtuneMonitor = Gaffer.VTuneMonitor()
-				self.__vtuneMonitor.setActive(True)
 			except AttributeError:
+				self.__vtuneMonitor = None
 				IECore.msg( IECore.Msg.Level.Error, "gui", "unable to create requested VTune monitor" )
 
 		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
@@ -488,7 +486,7 @@ class stats( Gaffer.Application ) :
 
 		memory = _Memory.maxRSS()
 		with _Timer() as sceneTimer :
-			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
 				with contextSanitiser :
 					computeScene()
 
@@ -528,7 +526,7 @@ class stats( Gaffer.Application ) :
 
 		memory = _Memory.maxRSS()
 		with _Timer() as imageTimer :
-			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
 				with contextSanitiser :
 					computeImage()
 
@@ -562,7 +560,7 @@ class stats( Gaffer.Application ) :
 
 		memory = _Memory.maxRSS()
 		with _Timer() as taskTimer :
-			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
 				with Gaffer.Context( script.context() ) as context :
 					for frame in self.__frames( script, args ) :
 						context.setFrame( frame )
