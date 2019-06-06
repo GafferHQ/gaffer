@@ -459,5 +459,29 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.SceneAlgo.objectTweaks( camera2Tweaks["out"], "/group/camera1" ), camera1Tweaks )
 		self.assertEqual( GafferScene.SceneAlgo.objectTweaks( camera2Tweaks["out"], "/group/camera2" ), camera2Tweaks )
 
+	def testMonitorMatchingPaths( self ) :
+
+		plane = GafferScene.Plane()
+		plane["divisions"].setValue( imath.V2i( 1000, 100 ) )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instances"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/plane" )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/sphere/*" ] ) )
+
+		paths = IECore.PathMatcher()
+		with Gaffer.PerformanceMonitor() as m :
+			GafferScene.SceneAlgo.matchingPaths( filter["out"], instancer["out"], paths )
+
+		self.assertEqual(
+			m.plugStatistics( filter["out"] ).computeCount,
+			len( instancer["out"].childNames( "/plane/instances/sphere" ) ) + 4,
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -223,37 +223,6 @@ bool GafferScene::SceneAlgo::setExists( const ScenePlug *scene, const IECore::In
 	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
 }
 
-namespace
-{
-
-struct Sets
-{
-
-	Sets( const ScenePlug *scene, const Context *context, const std::vector<InternedString> &names, std::vector<IECore::ConstPathMatcherDataPtr> &sets )
-		:	m_scene( scene ), m_context( context ), m_names( names ), m_sets( sets )
-	{
-	}
-
-	void operator()( const tbb::blocked_range<size_t> &r ) const
-	{
-		Context::Scope scopedContext( m_context );
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			m_sets[i] = m_scene->set( m_names[i] );
-		}
-	}
-
-	private :
-
-		const ScenePlug *m_scene;
-		const Context *m_context;
-		const std::vector<InternedString> &m_names;
-		std::vector<IECore::ConstPathMatcherDataPtr> &m_sets;
-
-} ;
-
-} // namespace
-
 IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scene )
 {
 	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
@@ -265,11 +234,26 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 	std::vector<IECore::ConstPathMatcherDataPtr> setsVector;
 	setsVector.resize( setNames.size(), nullptr );
 
-	Sets setsCompute( scene, Context::current(), setNames, setsVector );
+	const ThreadState &threadState = ThreadState::current();
+
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_for(
-		tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute,
+
+		tbb::blocked_range<size_t>( 0, setsVector.size() ),
+
+		[scene, &setNames, &threadState, &setsVector]( const tbb::blocked_range<size_t> &r ) {
+
+			ScenePlug::SetScope setScope( threadState );
+			for( size_t i=r.begin(); i!=r.end(); ++i )
+			{
+				setScope.setSetName( setNames[i] );
+				setsVector[i] = scene->setPlug()->getValue();
+			}
+
+		},
+
 		taskGroupContext // Prevents outer tasks silently cancelling our tasks
+
 	);
 
 	CompoundDataPtr result = new CompoundData;
