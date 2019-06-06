@@ -61,6 +61,11 @@ class TestCase( unittest.TestCase ) :
 		self.addCleanup( functools.partial( self.__messageHandlerCleanup, IECore.MessageHandler.getDefaultHandler() ) )
 		IECore.MessageHandler.setDefaultHandler( IECore.CapturingMessageHandler() )
 
+		# Clear the cache so that each test starts afresh. This is
+		# important for tests which use monitors to assert that specific
+		# processes are being invoked as expected.
+		Gaffer.ValuePlug.clearCache()
+
 	def tearDown( self ) :
 
 		# Clear any previous exceptions, as they can be holding
