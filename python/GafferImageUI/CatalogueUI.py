@@ -173,8 +173,8 @@ class _ImagesPath( Gaffer.Path ) :
 		# Connect to all the signals we need to in order
 		# to emit pathChangedSignal at the appropriate times.
 
-		self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ), scoped = False )
-		self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ), scoped = False )
+		self.__childAddedConnection = self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ) )
+		self.__childRemovedConnection = self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ) )
 		self.__nameChangedConnections = {
 			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
 			for image in self.__images
