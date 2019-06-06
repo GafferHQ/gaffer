@@ -38,6 +38,7 @@
 
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Monitor.h"
 
 #include "boost/make_unique.hpp"
 
@@ -99,15 +100,18 @@ void ParallelAlgo::popUIThreadCallHandler()
 GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread( const Plug *subject, BackgroundFunction function )
 {
 	ContextPtr backgroundContext = new Context( *Context::current() );
+	Monitor::MonitorSet backgroundMonitors = Monitor::current();
 
 	return boost::make_unique<BackgroundTask>(
 
 		subject,
 
-		[backgroundContext, function] ( const IECore::Canceller &canceller ) {
+		[backgroundContext, backgroundMonitors, function] ( const IECore::Canceller &canceller ) {
 
 			ContextPtr c = new Context( *backgroundContext, canceller );
 			Context::Scope contextScope( c.get() );
+			Monitor::Scope monitorScope( backgroundMonitors );
+
 			function();
 
 		}

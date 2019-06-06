@@ -207,5 +207,31 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 		del backgroundTask
 
+	def testBackgroundThreadMonitoring( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.MultiplyNode()
+		s["n"]["op2"].setValue( 1 )
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( """parent["n"]["op1"] = context["op1"]""" )
+
+		def backgroundFunction() :
+
+			with Gaffer.Context() as c :
+				for i in range( 0, 10000 ) :
+					c["op1"] = i
+					self.assertEqual( s["n"]["product"].getValue(), i )
+
+		with Gaffer.PerformanceMonitor() as m :
+			t = Gaffer.ParallelAlgo.callOnBackgroundThread(
+				s["n"]["product"], backgroundFunction
+			)
+		t.wait()
+
+		# The monitor was active when we launched the background
+		# process, so we expect it to have been transferred to the
+		# background thread and remained active there for the duration.
+		self.assertEqual( m.plugStatistics( s["n"]["product"] ).computeCount, 10000 )
+
 if __name__ == "__main__":
 	unittest.main()

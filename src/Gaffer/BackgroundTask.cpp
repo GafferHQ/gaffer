@@ -36,6 +36,7 @@
 
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/ThreadState.h"
 
 #include "IECore/MessageHandler.h"
 
@@ -177,6 +178,11 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 
 			taskData->status = Running;
 			lock.unlock();
+
+			// Reset thread state rather then inherit the random
+			// one that TBB task-stealing might present us with.
+			const ThreadState defaultThreadState;
+			ThreadState::Scope threadStateScope( defaultThreadState );
 
 			Status status;
 			try
