@@ -83,6 +83,27 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"extraAttributes" : [
+
+			"description",
+			"""
+			An additional set of attributes to be added. Arbitrary numbers
+			of attributes may be specified within a single IECore::CompoundData
+			object, where each key/value pair in the object defines an attribute.
+			This is convenient when using an expression to define the attributes
+			and the attribute count might be dynamic.
+
+			If the same attribute is defined by both the attributes and the
+			extraAttributes plugs, then the value from the extraAttributes
+			is taken.
+			""",
+
+			"plugValueWidget:type", "",
+			"layout:section", "Extra",
+			"nodule:type", "",
+
+		],
+
 	}
 
 )

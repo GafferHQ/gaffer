@@ -41,6 +41,7 @@
 #include "GafferScene/SceneElementProcessor.h"
 
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferScene
 {
@@ -60,6 +61,9 @@ class GAFFERSCENE_API Attributes : public SceneElementProcessor
 
 		Gaffer::BoolPlug *globalPlug();
 		const Gaffer::BoolPlug *globalPlug() const;
+
+		Gaffer::AtomicCompoundDataPlug *extraAttributesPlug();
+		const Gaffer::AtomicCompoundDataPlug *extraAttributesPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
