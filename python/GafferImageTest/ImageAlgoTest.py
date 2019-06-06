@@ -39,6 +39,7 @@ import imath
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
@@ -250,6 +251,27 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			self.assertIsInstance( tile, IECore.FloatVectorData )
 
 		GafferImage.ImageAlgo.parallelGatherTiles( constant["out"], [ "R", "G", "B", "A" ], computeTile, gatherTile )
+
+	def testMonitorParallelProcessTiles( self ) :
+
+		numTilesX = 50
+		numTilesY = 50
+
+		c = GafferImage.Checkerboard()
+		c["format"].setValue(
+			GafferImage.Format(
+				numTilesX * GafferImage.ImagePlug.tileSize(),
+				numTilesY * GafferImage.ImagePlug.tileSize(),
+			)
+		)
+
+		with Gaffer.PerformanceMonitor() as m :
+			GafferImageTest.processTiles( c["out"] )
+
+		self.assertEqual(
+			m.plugStatistics( c["out"]["channelData"] ).computeCount,
+			numTilesX * numTilesY * 4
+		)
 
 if __name__ == "__main__":
 	unittest.main()
