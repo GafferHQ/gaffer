@@ -283,9 +283,11 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		p = Gaffer.NameValuePlug( "user:test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["a"]["attributes"].addChild( p )
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
+		self.assertEqual( set( s["a"].affects( s["a"]["extraAttributes"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
 
 		s["a"]["global"].setValue( True )
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["globals"] ] ) )
+		self.assertEqual( set( s["a"].affects( s["a"]["extraAttributes"] ) ), set( [ s["a"]["out"]["globals"] ] ) )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( """parent["a"]["global"] = context.getFrame() > 10""" )

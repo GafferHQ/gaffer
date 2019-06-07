@@ -105,7 +105,7 @@ void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() )
+	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() || input == extraAttributesPlug() )
 	{
 		// We can only affect a particular output if we haven't
 		// connected it as a pass-through in updateInternalConnections().
