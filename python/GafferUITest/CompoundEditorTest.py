@@ -37,6 +37,8 @@
 import unittest
 import weakref
 
+import imath
+
 import Gaffer
 import GafferTest
 import GafferUI
@@ -83,6 +85,24 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( wc(), None )
 		self.assertEqual( wn(), None )
 
+	def testDetachedPanelsLifetime( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		p = c._createDetachedPanel()
+
+		wp = weakref.ref( p )
+
+		ps = c._detachedPanels()
+		self.assertTrue( ps[0] is p )
+
+		del ps
+		del p
+		del c
+
+		self.assertEqual( wp(), None )
+
 	def testReprLifetime( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -94,6 +114,23 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		del c
 
 		self.assertEqual( wc(), None )
+
+	def testWindowStateCompatibility ( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		sw = GafferUI.ScriptWindow.acquire( s )
+		sw.setLayout( c )
+		sw.setVisible( True )
+
+		d = eval( c._serializeWindowState() )
+
+		self.assertIsInstance( d, dict )
+		self.assertIsInstance( d["fullScreen"], bool )
+		self.assertIsInstance( d["maximized"], bool )
+		self.assertIsInstance( d["screen"], int )
+		self.assertIsInstance( d["bound"], imath.Box2f )
 
 if __name__ == "__main__":
 	unittest.main()

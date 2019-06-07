@@ -83,6 +83,8 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		child._applyVisibility()
 		assert( child._qtWidget().parent() is self._qtWidget() )
 
+		self.__updateStyles()
+
 	def remove( self, child ) :
 
 		self.removeChild( child )
@@ -100,6 +102,8 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		self._qtWidget().insertWidget( index,  child._qtWidget() )
 		child._applyVisibility()
 		assert( child._qtWidget().parent() is self._qtWidget() )
+
+		self.__updateStyles()
 
 	def index( self, child ) :
 
@@ -188,6 +192,11 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		# the way. we store the original size policy on the widget and reapply it in removeChild().
 		widget.__originalSizePolicy = widget._qtWidget().sizePolicy()
 		widget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
+	
+	def __updateStyles( self ) :
+
+		self._qtWidget().setProperty( "gafferNumChildren", GafferUI._Variant.toVariant( "%d" % len(self) ) )
+		self._repolish()
 
 # We inherit from QSplitter purely so that the handles can be created
 # in Python rather than C++. This seems to help PyQt and PySide in tracking

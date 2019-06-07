@@ -46,9 +46,13 @@ class ScriptWindow( GafferUI.Window ) :
 
 	def __init__( self, script, **kw ) :
 
+		self.__titleChangedSignal = GafferUI.WidgetEventSignal()
+
 		GafferUI.Window.__init__( self, **kw )
 
 		self.__script = script
+
+		self.__titleBehaviour = _WindowTitleBehaviour( self, script )
 
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 
@@ -65,11 +69,6 @@ class ScriptWindow( GafferUI.Window ) :
 		self.setChild( self.__listContainer )
 
 		self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ), scoped = False )
-
-		script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ), scoped = False )
-		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ), scoped = False )
-
-		self.__updateTitle()
 
 		ScriptWindow.__instances.append( weakref.ref( self ) )
 
@@ -88,6 +87,22 @@ class ScriptWindow( GafferUI.Window ) :
 	def getLayout( self ) :
 
 		return self.__listContainer[1]
+
+	# Calling this will disable automatic title updates when the script state
+	# changes name/dirty state.
+	def setTitle( self, title ) :
+
+		self.__titleBehaviour = None
+		self._setTitle( title )
+
+	def _setTitle( self, title ) :
+
+		GafferUI.Window.setTitle( self, title )
+		self.__titleChangedSignal( self, title )
+
+	def titleChangedSignal( self ) :
+
+		return self.__titleChangedSignal
 
 	def _acceptsClose( self ) :
 
@@ -109,31 +124,6 @@ class ScriptWindow( GafferUI.Window ) :
 		scriptParent = self.__script.parent()
 		if scriptParent is not None :
 			scriptParent.removeChild( self.__script )
-
-	def __scriptPlugChanged( self, plug ) :
-
-		if plug.isSame( self.__script["fileName"] ) or plug.isSame( self.__script["unsavedChanges"] ) :
-			self.__updateTitle()
-
-	def __metadataChanged( self, nodeTypeId, key, node ) :
-
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__script, nodeTypeId, key, node ) :
-			self.__updateTitle()
-
-	def __updateTitle( self ) :
-
-		f = self.__script["fileName"].getValue()
-		if not f :
-			f = "untitled"
-			d = ""
-		else :
-			d, n, f = f.rpartition( "/" )
-			d = " - " + d
-
-		u = " *" if self.__script["unsavedChanges"].getValue() else ""
-		ro = " (read only) " if Gaffer.MetadataAlgo.readOnly( self.__script ) else ""
-
-		self.setTitle( "Gaffer : %s%s%s%s" % ( f, ro, u, d ) )
 
 	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one
@@ -185,6 +175,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 		w = ScriptWindow( script )
 		w.setVisible( True )
+		w.getLayout().restoreWindowState()
 		ScriptWindow.__automaticallyCreatedInstances.append( w )
 
 	@staticmethod
@@ -196,3 +187,46 @@ class ScriptWindow( GafferUI.Window ) :
 
 		if not len( scriptContainer.children() ) and GafferUI.EventLoop.mainEventLoop().running() :
 			GafferUI.EventLoop.mainEventLoop().stop()
+
+
+class _WindowTitleBehaviour :
+
+	def __init__( self, window, script ) :
+
+		self.__window = weakref.ref( window )
+		self.__script = weakref.ref( script )
+
+		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
+		self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
+
+		self.__updateTitle()
+
+	def __updateTitle( self ) :
+
+		w = self.__window()
+		if not w :
+			return
+
+		f = self.__script()["fileName"].getValue()
+		if not f :
+			f = "untitled"
+			d = ""
+		else :
+			d, n, f = f.rpartition( "/" )
+			d = " - " + d
+
+		u = " *" if self.__script()["unsavedChanges"].getValue() else ""
+		ro = " (read only) " if Gaffer.MetadataAlgo.readOnly( self.__script() ) else ""
+
+		w._setTitle( "Gaffer : %s%s%s%s" % ( f, ro, u, d ) )
+
+	def __scriptPlugChanged( self, plug ) :
+
+		if plug.isSame( self.__script()["fileName"] ) or plug.isSame( self.__script()["unsavedChanges"] ) :
+			self.__updateTitle()
+
+	def __metadataChanged( self, nodeTypeId, key, node ) :
+
+		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__script(), nodeTypeId, key, node ) :
+			self.__updateTitle()
+

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,76 +34,44 @@
 #
 ##########################################################################
 
-import unittest
-import weakref
+import re
 
 import Gaffer
 import GafferUI
-import GafferUITest
 
-class ScriptWindowTest( GafferUITest.TestCase ) :
+import imath
 
-	def testLifetimeOfManuallyAcquiredWindows( self ) :
+if Gaffer.About.compatibilityVersion() < 54 :
 
-		s = Gaffer.ScriptNode()
-		sw = GafferUI.ScriptWindow.acquire( s )
+	# Remove new kwargs introduced to store positions/detached panels
+	def __initWrapper( originalInit ) :
 
-		wsw = weakref.ref( sw )
-		del sw
+		def init( self, *args, **kwargs ) :
+			for kw in ( "windowState", "detachedPanels" ) :
+				if kw in kwargs :
+					del kwargs[kw]
+			originalInit( self, *args, **kwargs )
 
-		self.assertEqual( wsw(), None )
+		return init
 
-	def testLifetimeOfDirectlyConstructedWindows( self ) :
+	GafferUI.CompoundEditor.__init__ = __initWrapper( GafferUI.CompoundEditor.__init__ )
 
-		s = Gaffer.ScriptNode()
-		sw = GafferUI.ScriptWindow( s )
+	# windowState requires imath, so we need to modify the eval environment
+	def __create( self, name, scriptNode ) :
 
-		wsw = weakref.ref( sw )
-		del sw
+		layout = self._Layouts__namedLayouts[name]
 
-		self.assertEqual( wsw(), None )
+		# first try to import the modules the layout needs
+		contextDict = { "scriptNode" : scriptNode, "imath" : imath }
+		imported = set()
+		classNameRegex = re.compile( "[a-zA-Z]*Gaffer[^(,]*\(" )
+		for className in classNameRegex.findall( layout.repr ) :
+			moduleName = className.partition( "." )[0]
+			if moduleName not in imported :
+				exec( "import %s" % moduleName, contextDict, contextDict )
+				imported.add( moduleName )
 
-	def testAcquire( self ) :
+		return eval( layout.repr, contextDict, contextDict )
 
-		s1 = Gaffer.ScriptNode()
-		s2 = Gaffer.ScriptNode()
-		s3 = Gaffer.ScriptNode()
+	GafferUI.Layouts.create = __create
 
-		w1 = GafferUI.ScriptWindow.acquire( s1 )
-		self.failUnless( w1.scriptNode().isSame( s1 ) )
-
-		w2 = GafferUI.ScriptWindow.acquire( s2 )
-		self.failUnless( w2.scriptNode().isSame( s2 ) )
-
-		w3 = GafferUI.ScriptWindow.acquire( s1 )
-		self.failUnless( w3 is w1 )
-
-		w4 = GafferUI.ScriptWindow.acquire( s1, createIfNecessary = False )
-		self.assertTrue( w4 is w1 )
-
-		w5 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = False )
-		self.assertTrue( w5 is None )
-
-		w6 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = True )
-		self.assertTrue( w6.scriptNode().isSame( s3 ) )
-
-	def testTitleChangedSignal( self ) :
-
-		self.__title = ""
-
-		s = Gaffer.ScriptNode()
-		w = GafferUI.ScriptWindow.acquire( s )
-
-		initialTitle = w.setTitle( "a" )
-		self.assertEqual( w.getTitle(), "a" )
-
-		def grabTitle( window, newTitle ) :
-			self.__title = newTitle
-
-		w.titleChangedSignal().connect( grabTitle, scoped = False )
-
-		w.setTitle( "b" )
-		self.assertEqual( self.__title, "b" )
-
-if __name__ == "__main__":
-	unittest.main()

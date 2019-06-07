@@ -606,6 +606,11 @@ class Widget( Gaffer.Trackable ) :
 
 		return p
 
+	@staticmethod
+	def currentModifiers() :
+
+		return Widget._modifiers( QtWidgets.QApplication.queryKeyboardModifiers() )
+
 	## Returns the widget at the specified screen position.
 	# If widgetType is specified, then it is used to find
 	# an ancestor of the widget at the position.

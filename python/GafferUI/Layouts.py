@@ -40,6 +40,8 @@ import os
 import re
 import weakref
 
+import imath
+
 import Gaffer
 import GafferUI
 
@@ -122,7 +124,7 @@ class Layouts( object ) :
 		layout = self.__namedLayouts[name]
 
 		# first try to import the modules the layout needs
-		contextDict = { "scriptNode" : scriptNode }
+		contextDict = { "scriptNode" : scriptNode, "imath" : imath }
 		imported = set()
 		classNameRegex = re.compile( "[a-zA-Z]*Gaffer[^(,]*\(" )
 		for className in classNameRegex.findall( layout.repr ) :
