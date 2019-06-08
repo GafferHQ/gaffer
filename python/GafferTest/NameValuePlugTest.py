@@ -193,7 +193,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 				IECore.Box3iData( imath.Box3i( imath.V3i( 0, 1, 2 ), imath.V3i( 3, 4, 5 ) ) ),
 				IECore.InternedStringVectorData( [ "a", "b" ] )
 				]:
-			if 'value' in dir( v ) and not isinstance( v, IECore.M44fData ):
+			if 'value' in dir( v ):
 				expected = v.value
 			else:
 				expected = v
