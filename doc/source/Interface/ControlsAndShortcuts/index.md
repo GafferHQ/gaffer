@@ -93,8 +93,12 @@ Add nodes                             :kbd:`Shift` + click and drag marquee, the
                                       release
 Deselect nodes                        :kbd:`Ctrl` + click and drag marquee, then
                                       release
-Select upstream nodes                 :kbd:`Shift` + :kbd:`Alt` + click node
-Select downstream nodes               :kbd:`Ctrl` + :kbd:`Alt` + click node
+Select node and upstream nodes        :kbd:`Ctrl` + :kbd:`Alt` + click node
+                                      
+                                      or
+                                      
+                                      :kbd:`Shift` + :kbd:`Alt` + click node
+Select node and downstream nodes      :kbd:`Ctrl` + click node
 ===================================== =============================================
 ```
 
