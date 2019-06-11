@@ -194,6 +194,16 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		# simply calls protected _PlugEditor implementation
 		_PlugEditor.registerPlugValueWidget( label, plugType, metadata )
 
+	## Register additional metadata for PlugValueWidgets
+	# label: string with the label to be displayed for this widget
+	# plugValueWidgetType: string with the "plugValueWidget:type" metadata value where this settings applies, or a pattern for it.
+	# widgetCreator: callable that receives the plug and returns a MetadataWidget (or another widget) to edit the metadata
+	@classmethod
+	def registerWidgetSetting( cls, label, plugValueWidgetType, widgetCreator ) :
+
+		# simply calls protected _PlugEditor implementation
+		_PlugEditor.registerWidgetSetting( label, plugValueWidgetType, widgetCreator )
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -1277,13 +1287,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 			with GafferUI.Collapsible( "Widget Settings", collapsed = True ) :
 
-				with GafferUI.ListContainer( spacing = 4 ) :
-
-					for m in self.__metadataDefinitions :
-
-						with _Row() :
-							_Label( m.label )
-							self.__metadataWidgets[m.key] = m.metadataWidgetType( key = m.key )
+				self.__widgetSettingsContainer = GafferUI.ListContainer( spacing = 4 )
 
 			with GafferUI.Collapsible( "Graph Editor", collapsed = True ) :
 
@@ -1360,6 +1364,17 @@ class _PlugEditor( GafferUI.Widget ) :
 
 		cls.__plugValueWidgets[plugType][label] = metadata
 
+	__widgetSettings = []
+
+	## Register additional metadata for PlugValueWidgets
+	# label: string with the label to be displayed for this widget
+	# plugValueWidgetType: string with the "plugValueWidget:type" metadata value where this settings applies, or a pattern for it.
+	# widgetCreator: callable that receives the plug and returns a MetadataWidget (or another widget) to edit the metadata
+	@classmethod
+	def registerWidgetSetting( cls, label, plugValueWidgetType, widgetCreator ) :
+
+		cls.__widgetSettings.append( ( label, plugValueWidgetType, widgetCreator ) )
+
 	## Returns a dictionary with the registered PlugValueWidgets for the given plug object or type
 	# the dictionary keys will be labels, and the values strings with the widget metadata
 	@classmethod
@@ -1414,13 +1429,23 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	def __updateWidgetSettings( self ) :
 
-		widgetType = ""
-		if self.getPlug() is not None :
-			widgetType = Gaffer.Metadata.value( self.getPlug(), "plugValueWidget:type" ) or ""
+		del self.__widgetSettingsContainer[:]
 
-		for m in self.__metadataDefinitions :
-			widget = self.__metadataWidgets[m.key]
-			widget.parent().setVisible( IECore.StringAlgo.match( widgetType, m.plugValueWidgetType ) )
+		if self.getPlug() is None :
+			return
+
+		widgetType = Gaffer.Metadata.value( self.getPlug(), "plugValueWidget:type" ) or ""
+
+		with self.__widgetSettingsContainer :
+
+			for label, plugValueWidgetType, widgetCreator in self.__widgetSettings :
+
+				if not IECore.StringAlgo.match( widgetType, plugValueWidgetType ) :
+					continue
+
+				with _Row() :
+					_Label( label )
+					widgetCreator( self.getPlug() )
 
 		self.__metadataWidgets["connectionGadget:color"].parent().setEnabled(
 			self.getPlug() is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In
@@ -1497,27 +1522,6 @@ class _PlugEditor( GafferUI.Widget ) :
 				Gaffer.Metadata.registerValue( self.getPlug(), key, value )
 			else :
 				Gaffer.Metadata.deregisterValue( self.getPlug(), key )
-
-	__MetadataDefinition = collections.namedtuple( "MetadataDefinition", ( "key", "label", "metadataWidgetType", "plugValueWidgetType" ) )
-	__metadataDefinitions = (
-		__MetadataDefinition( "fileSystemPath:extensions", "File Extensions", MetadataWidget.StringMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
-		__MetadataDefinition( "path:bookmarks", "Bookmarks Category", MetadataWidget.StringMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
-		__MetadataDefinition( "path:valid", "File Must Exist", MetadataWidget.BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
-		__MetadataDefinition( "path:leaf", "No Directories", MetadataWidget.BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
-		__MetadataDefinition( "fileSystemPath:includeSequences", "Allow sequences", MetadataWidget.BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
-		# Note that includeSequenceFrameRange is primarily used by GafferCortex.
-		# Think twice before using it elsewhere	as it may not exist in the future.
-		__MetadataDefinition( "fileSystemPath:includeSequenceFrameRange", "Sequences include frame range", MetadataWidget.BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
-		__MetadataDefinition(
-			"buttonPlugValueWidget:clicked",
-			"Button Click Code",
-			lambda key : MetadataWidget.MultiLineStringMetadataWidget( key, role = GafferUI.MultiLineTextWidget.Role.Code ),
-			"GafferUI.ButtonPlugValueWidget"
-		),
-		__MetadataDefinition( "layout:accessory", "Inline", MetadataWidget.BoolMetadataWidget,  "GafferUI.ButtonPlugValueWidget" ),
-		__MetadataDefinition( "divider", "Divider", MetadataWidget.BoolMetadataWidget,  "*" ),
-
-	)
 
 	__GadgetDefinition = collections.namedtuple( "GadgetDefinition", ( "label", "plugType", "metadata" ) )
 	__gadgetDefinitions = (
@@ -1647,3 +1651,54 @@ UIEditor.registerPlugValueWidget( "File Chooser", Gaffer.StringVectorDataPlug, "
 UIEditor.registerPlugValueWidget( "Presets Menu", Gaffer.ValuePlug, "GafferUI.PresetsPlugValueWidget" )
 UIEditor.registerPlugValueWidget( "Connection", Gaffer.Plug, "GafferUI.ConnectionPlugValueWidget" )
 UIEditor.registerPlugValueWidget( "Button", Gaffer.Plug, "GafferUI.ButtonPlugValueWidget" )
+
+##########################################################################
+# Registering standard Widget Settings for the UIEditor
+##########################################################################
+UIEditor.registerWidgetSetting(
+	"File Extensions",
+	"GafferUI.FileSystemPath*PlugValueWidget",
+	lambda plug : MetadataWidget.StringMetadataWidget( "fileSystemPath:extensions", target=plug ),
+)
+UIEditor.registerWidgetSetting(
+	"Bookmarks Category",
+	"GafferUI.FileSystemPath*PlugValueWidget",
+	lambda plug : MetadataWidget.StringMetadataWidget( "path:bookmarks", target=plug ),
+)
+UIEditor.registerWidgetSetting(
+	"File Must Exist",
+	"GafferUI.FileSystemPath*PlugValueWidget",
+	lambda plug : MetadataWidget.BoolMetadataWidget( "path:valid", target=plug ),
+)
+UIEditor.registerWidgetSetting(
+	"No Directories",
+	"GafferUI.FileSystemPath*PlugValueWidget",
+	lambda plug : MetadataWidget.BoolMetadataWidget( "path:leaf", target=plug ),
+)
+UIEditor.registerWidgetSetting(
+	"Allow sequences",
+	"GafferUI.FileSystemPath*PlugValueWidget",
+	lambda plug : MetadataWidget.BoolMetadataWidget( "fileSystemPath:includeSequences", target=plug ),
+)
+# Note that includeSequenceFrameRange is primarily used by GafferCortex.
+# Think twice before using it elsewhere	as it may not exist in the future.
+UIEditor.registerWidgetSetting(
+	"Sequences include frame range",
+	"GafferUI.FileSystemPath*PlugValueWidget",
+	lambda plug : MetadataWidget.BoolMetadataWidget( "fileSystemPath:includeSequenceFrameRange", target=plug ),
+)
+UIEditor.registerWidgetSetting(
+	"Button Click Code",
+	"GafferUI.ButtonPlugValueWidget",
+	lambda plug : MetadataWidget.MultiLineStringMetadataWidget( "buttonPlugValueWidget:clicked", target = plug, role = GafferUI.MultiLineTextWidget.Role.Code ),
+)
+UIEditor.registerWidgetSetting(
+	"Inline",
+	"GafferUI.ButtonPlugValueWidget",
+	lambda plug : MetadataWidget.BoolMetadataWidget( "layout:accessory", target=plug ),
+)
+UIEditor.registerWidgetSetting(
+	"Divider",
+	"*",
+	lambda plug : MetadataWidget.BoolMetadataWidget( "divider", target=plug ),
+)
