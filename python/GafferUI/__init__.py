@@ -280,6 +280,7 @@ from ButtonPlugValueWidget import ButtonPlugValueWidget
 import ViewUI
 import ToolUI
 from Playback import Playback
+import MetadataWidget
 from UIEditor import UIEditor
 import GraphBookmarksUI
 import DocumentationAlgo
