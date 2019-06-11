@@ -49,12 +49,13 @@ import GafferUI
 
 class MetadataWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, key, target = None, **kw ) :
+	def __init__( self, topLevelWidget, key, target = None, defaultValue = None, **kw ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		self.__key = key
 		self.__target = None
+		self.__defaultValue = defaultValue
 
 		self.setTarget( target )
 
@@ -94,6 +95,10 @@ class MetadataWidget( GafferUI.Widget ) :
 
 		return self.__key
 
+	def defaultValue( self ) :
+
+		return self.__defaultValue
+
 	## Must be implemented in derived classes to update
 	# the widget from the value.
 	def _updateFromValue( self, value ) :
@@ -123,7 +128,7 @@ class MetadataWidget( GafferUI.Widget ) :
 	def __update( self ) :
 
 		if self.__target is None :
-			self._updateFromValue( None )
+			self._updateFromValue( self.defaultValue() )
 			return
 
 		v = Gaffer.Metadata.value( self.__target, self.__key )
@@ -132,7 +137,7 @@ class MetadataWidget( GafferUI.Widget ) :
 			if k is not None :
 				v = Gaffer.Metadata.value( self.__target, k )
 
-		self._updateFromValue( v )
+		self._updateFromValue( v if v is not None else self.defaultValue() )
 
 	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
@@ -167,10 +172,10 @@ class MetadataWidget( GafferUI.Widget ) :
 
 class BoolMetadataWidget( MetadataWidget ) :
 
-	def __init__( self, key, target = None, **kw ) :
+	def __init__( self, key, target = None, defaultValue = False, **kw ) :
 
 		self.__boolWidget = GafferUI.BoolWidget()
-		MetadataWidget.__init__( self, self.__boolWidget, key, target, **kw )
+		MetadataWidget.__init__( self, self.__boolWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__boolWidget.stateChangedSignal().connect(
 			Gaffer.WeakMethod( self.__stateChanged ), scoped = False
@@ -178,7 +183,7 @@ class BoolMetadataWidget( MetadataWidget ) :
 
 	def _updateFromValue( self, value ) :
 
-		self.__boolWidget.setState( value if value is not None else False )
+		self.__boolWidget.setState( value )
 
 	def __stateChanged( self, *unused ) :
 
@@ -186,10 +191,10 @@ class BoolMetadataWidget( MetadataWidget ) :
 
 class StringMetadataWidget( MetadataWidget ) :
 
-	def __init__( self, key, target = None, acceptEmptyString = True, **kw ) :
+	def __init__( self, key, target = None, defaultValue = "", acceptEmptyString = True, **kw ) :
 
 		self.__textWidget = GafferUI.TextWidget()
-		MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
+		MetadataWidget.__init__( self, self.__textWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__acceptEmptyString = acceptEmptyString
 
@@ -203,7 +208,7 @@ class StringMetadataWidget( MetadataWidget ) :
 
 	def _updateFromValue( self, value ) :
 
-		self.__textWidget.setText( str( value ) if value is not None else "" )
+		self.__textWidget.setText( str( value ) )
 
 	def __editingFinished( self, *unused ) :
 
@@ -215,10 +220,10 @@ class StringMetadataWidget( MetadataWidget ) :
 
 class MultiLineStringMetadataWidget( MetadataWidget ) :
 
-	def __init__( self, key, target = None, role = GafferUI.MultiLineTextWidget.Role.Text, **kw ) :
+	def __init__( self, key, target = None, defaultValue = "", role = GafferUI.MultiLineTextWidget.Role.Text, **kw ) :
 
 		self.__textWidget = GafferUI.MultiLineTextWidget( role = role )
-		MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
+		MetadataWidget.__init__( self, self.__textWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__textWidget.editingFinishedSignal().connect(
 			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
@@ -230,7 +235,7 @@ class MultiLineStringMetadataWidget( MetadataWidget ) :
 
 	def _updateFromValue( self, value ) :
 
-		self.__textWidget.setText( value if value is not None else "" )
+		self.__textWidget.setText( str( value ) )
 
 	def __editingFinished( self, *unused ) :
 
@@ -238,11 +243,11 @@ class MultiLineStringMetadataWidget( MetadataWidget ) :
 
 class ColorSwatchMetadataWidget( MetadataWidget ) :
 
-	def __init__( self, key, target = None, **kw ) :
+	def __init__( self, key, target = None, defaultValue = imath.Color4f( 0, 0, 0, 0 ), **kw ) :
 
 		self.__swatch = GafferUI.ColorSwatch( useDisplayTransform = False )
 
-		MetadataWidget.__init__( self, self.__swatch, key, target, **kw )
+		MetadataWidget.__init__( self, self.__swatch, key, target, defaultValue = defaultValue, **kw )
 
 		self.__swatch._qtWidget().setFixedHeight( 18 )
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
@@ -251,11 +256,6 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
 	def _updateFromValue( self, value ) :
-
-		if value is not None :
-			self.__swatch.setColor( value )
-		else :
-			self.__swatch.setColor( imath.Color4f( 0, 0, 0, 0 ) )
 
 		self.__value = value
 
@@ -273,7 +273,7 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 
 class MenuMetadataWidget( MetadataWidget ) :
 
-	def __init__( self, key, labelsAndValues, target = None, **kw ) :
+	def __init__( self, key, labelsAndValues, target = None, defaultValue = None, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
@@ -282,7 +282,7 @@ class MenuMetadataWidget( MetadataWidget ) :
 		self.__labelsAndValues = labelsAndValues
 		self.__currentValue = None
 
-		MetadataWidget.__init__( self, self.__menuButton, key, target, **kw )
+		MetadataWidget.__init__( self, self.__menuButton, key, target, defaultValue = defaultValue, **kw )
 
 	def _updateFromValue( self, value ) :
 
@@ -317,14 +317,14 @@ class MenuMetadataWidget( MetadataWidget ) :
 
 class FileSystemPathMetadataWidget( MetadataWidget ) :
 
-	def __init__( self, key, target = None, acceptEmptyString = True, **kw ) :
+	def __init__( self, key, target = None, acceptEmptyString = True, defaultValue = "", **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		self.__path = Gaffer.FileSystemPath()
 		self.__pathWidget = GafferUI.PathWidget( self.__path )
 
-		MetadataWidget.__init__( self, self.__row, key, target, **kw )
+		MetadataWidget.__init__( self, self.__row, key, target, defaultValue = defaultValue, **kw )
 
 		self.__row.append( self.__pathWidget )
 
@@ -340,7 +340,7 @@ class FileSystemPathMetadataWidget( MetadataWidget ) :
 
 	def _updateFromValue( self, value ) :
 
-		self.__path.setFromString( str( value ) if value is not None else "" )
+		self.__path.setFromString( str( value ) )
 
 	def __editingFinished( self, *unused ) :
 
