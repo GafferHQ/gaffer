@@ -204,6 +204,37 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		# simply calls protected _PlugEditor implementation
 		_PlugEditor.registerWidgetSetting( label, plugValueWidgetType, widgetCreator )
 
+	## Utility to quickly register widgets to edit metadata for PlugValueWidgets
+	# It uses the defaultValue provided in order to determine the appropriate widget to be used
+	# label: string with the label to be displayed for this widget
+	# plugValueWidgetType: string with the "plugValueWidget:type" metadata value where this settings applies, or a pattern for it.
+	# key: metadata key to be set by the widget
+	# defaultValue: default value for the metadata
+	@classmethod
+	def registerWidgetMetadata( cls, label, plugValueWidgetType, key, defaultValue ) :
+
+		if isinstance( defaultValue, bool ) :
+
+			widgetClass = MetadataWidget.BoolMetadataWidget
+
+		elif isinstance( defaultValue, basestring ) :
+
+			widgetClass = MetadataWidget.StringMetadataWidget
+
+		elif isinstance( defaultValue, imath.Color4f ) :
+
+			widgetClass = MetadataWidget.ColorSwatchMetadataWidget
+
+		else :
+
+			raise Exception( "Could not determine the widget to use from defaultValue: {}.".format( repr( defaultValue ) ) )
+
+		cls.registerWidgetSetting(
+			label,
+			plugValueWidgetType,
+			lambda plug : widgetClass( key, target=plug, defaultValue=defaultValue )
+		)
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -1655,50 +1686,18 @@ UIEditor.registerPlugValueWidget( "Button", Gaffer.Plug, "GafferUI.ButtonPlugVal
 ##########################################################################
 # Registering standard Widget Settings for the UIEditor
 ##########################################################################
-UIEditor.registerWidgetSetting(
-	"File Extensions",
-	"GafferUI.FileSystemPath*PlugValueWidget",
-	lambda plug : MetadataWidget.StringMetadataWidget( "fileSystemPath:extensions", target=plug ),
-)
-UIEditor.registerWidgetSetting(
-	"Bookmarks Category",
-	"GafferUI.FileSystemPath*PlugValueWidget",
-	lambda plug : MetadataWidget.StringMetadataWidget( "path:bookmarks", target=plug ),
-)
-UIEditor.registerWidgetSetting(
-	"File Must Exist",
-	"GafferUI.FileSystemPath*PlugValueWidget",
-	lambda plug : MetadataWidget.BoolMetadataWidget( "path:valid", target=plug ),
-)
-UIEditor.registerWidgetSetting(
-	"No Directories",
-	"GafferUI.FileSystemPath*PlugValueWidget",
-	lambda plug : MetadataWidget.BoolMetadataWidget( "path:leaf", target=plug ),
-)
-UIEditor.registerWidgetSetting(
-	"Allow sequences",
-	"GafferUI.FileSystemPath*PlugValueWidget",
-	lambda plug : MetadataWidget.BoolMetadataWidget( "fileSystemPath:includeSequences", target=plug ),
-)
+UIEditor.registerWidgetMetadata( "File Extensions", "GafferUI.FileSystemPath*PlugValueWidget", "fileSystemPath:extensions", "" )
+UIEditor.registerWidgetMetadata( "Bookmarks Category", "GafferUI.FileSystemPath*PlugValueWidget", "path:bookmarks", "" )
+UIEditor.registerWidgetMetadata( "File Must Exist", "GafferUI.FileSystemPath*PlugValueWidget", "path:valid", False )
+UIEditor.registerWidgetMetadata( "No Directories", "GafferUI.FileSystemPath*PlugValueWidget", "path:leaf", False )
+UIEditor.registerWidgetMetadata( "Allow sequences", "GafferUI.FileSystemPath*PlugValueWidget", "fileSystemPath:includeSequences", False )
 # Note that includeSequenceFrameRange is primarily used by GafferCortex.
 # Think twice before using it elsewhere	as it may not exist in the future.
-UIEditor.registerWidgetSetting(
-	"Sequences include frame range",
-	"GafferUI.FileSystemPath*PlugValueWidget",
-	lambda plug : MetadataWidget.BoolMetadataWidget( "fileSystemPath:includeSequenceFrameRange", target=plug ),
-)
+UIEditor.registerWidgetMetadata( "Sequences include frame range", "GafferUI.FileSystemPath*PlugValueWidget", "fileSystemPath:includeSequenceFrameRange", False )
 UIEditor.registerWidgetSetting(
 	"Button Click Code",
 	"GafferUI.ButtonPlugValueWidget",
 	lambda plug : MetadataWidget.MultiLineStringMetadataWidget( "buttonPlugValueWidget:clicked", target = plug, role = GafferUI.MultiLineTextWidget.Role.Code ),
 )
-UIEditor.registerWidgetSetting(
-	"Inline",
-	"GafferUI.ButtonPlugValueWidget",
-	lambda plug : MetadataWidget.BoolMetadataWidget( "layout:accessory", target=plug ),
-)
-UIEditor.registerWidgetSetting(
-	"Divider",
-	"*",
-	lambda plug : MetadataWidget.BoolMetadataWidget( "divider", target=plug ),
-)
+UIEditor.registerWidgetMetadata( "Inline", "GafferUI.ButtonPlugValueWidget", "layout:accessory", False )
+UIEditor.registerWidgetMetadata( "Divider", "*", "divider", False )
