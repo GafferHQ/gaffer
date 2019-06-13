@@ -289,6 +289,16 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
 		self.assertEqual( len( history.predecessors ), 0 )
 
+	def testHistoryWithNoComputes( self ) :
+
+		plane = GafferScene.Plane()
+
+		switch = Gaffer.Switch()
+		switch.setup( plane["out"] )
+
+		history = GafferScene.SceneAlgo.history( switch["out"]["globals"], "" )
+		self.assertIsNone( history )
+
 	def testHistoryWithInvalidPlug( self ) :
 
 		plane = GafferScene.Plane()

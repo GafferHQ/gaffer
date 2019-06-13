@@ -249,7 +249,10 @@ TransformTool::Selection::Selection(
 	}
 
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scene->transformPlug(), path );
-	updateSelectionWalk( history.get(), *this );
+	if( history )
+	{
+		updateSelectionWalk( history.get(), *this );
+	}
 }
 
 Imath::M44f TransformTool::Selection::sceneToTransformSpace() const

@@ -484,6 +484,12 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 		Monitor::Scope monitorScope( monitor );
 		scenePlugChild->hash();
 	}
+
+	if( monitor->rootProcesses().size() == 0 )
+	{
+		return nullptr;
+	}
+
 	assert( monitor->rootProcesses().size() == 1 );
 	return historyWalk( monitor->rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
 }
@@ -491,16 +497,19 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	History::ConstPtr h = history( scene->objectPlug(), path );
-	const History *c = h.get();
-	while( c )
+	if( h )
 	{
-		if( c->predecessors.empty() )
+		const History *c = h.get();
+		while( c )
 		{
-			return c->scene.get();
-		}
-		else
-		{
-			c = c->predecessors.front().get();
+			if( c->predecessors.empty() )
+			{
+				return c->scene.get();
+			}
+			else
+			{
+				c = c->predecessors.front().get();
+			}
 		}
 	}
 	return nullptr;
@@ -509,7 +518,11 @@ ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath
 SceneProcessor *SceneAlgo::objectTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	History::ConstPtr h = history( scene->objectPlug(), path );
-	return objectTweaksWalk( h.get() );
+	if( h )
+	{
+		return objectTweaksWalk( h.get() );
+	}
+	return nullptr;
 }
 
 ShaderTweaks *SceneAlgo::shaderTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path, const IECore::InternedString &attributeName )
@@ -521,7 +534,10 @@ ShaderTweaks *SceneAlgo::shaderTweaks( const ScenePlug *scene, const ScenePlug::
 		if( attributes->member<Object>( attributeName ) )
 		{
 			History::ConstPtr h = history( scene->attributesPlug(), inheritancePath );
-			return shaderTweaksWalk( h.get(), attributeName );
+			if( h )
+			{
+				return shaderTweaksWalk( h.get(), attributeName );
+			}
 		}
 		inheritancePath.pop_back();
 	}
