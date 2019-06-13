@@ -8,7 +8,9 @@ Improvements
 - Expression : Improved error message when Python expression assigns an invalid value.
 - Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
 - Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
-- Timeline : Added support for sub-frame dragging with a <kbd>Ctrl</kbd> modifier, and fixed snapping of the frame indicator for regular drag operations.
+- Timeline :
+  - Added support for sub-frame dragging with a <kbd>Ctrl</kbd> modifier, and fixed snapping of the frame indicator for regular drag operations.
+  - The current frame is now drawn next to the playhead.
 
 Fixes
 -----
@@ -33,6 +35,7 @@ Breaking Changes
   - Removed `positionChangedSignal()` from `Slider`. Use `valueChangedSignal()` instead.
   - Removed `PositionChangedReason` from `Slider`. Use `ValueChangedReason` instead.
   - Removed `setPositionIncrement()/getPositionIncrement()` from `Slider`. Use `setIncrement()/getIncrement()` instead.
+  - Replaced `_drawPosition()` method with `_drawValue()`.
 - StandardOptions : Removed `cameraBlur` plug. This never functioned as advertised, as the regular `transformBlur` and `deformationBlur` blur settings were applied to cameras instead. As before, a StandardAttributes node may be used to customise blur for individual cameras.
 - SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
 - DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.

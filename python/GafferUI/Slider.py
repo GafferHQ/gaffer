@@ -260,7 +260,8 @@ class Slider( GafferUI.Widget ) :
 
 		return self.__hoverPositionVisible
 
-	## \todo Colours should come from some unified style somewhere
+	## May be overridden by derived classes to customise
+	# the drawing of the background.
 	def _drawBackground( self, painter ) :
 
 		size = self.size()
@@ -315,22 +316,31 @@ class Slider( GafferUI.Widget ) :
 			tickValue += tickStep
 			i += 1
 
-	def _drawPosition( self, painter, position, highlighted, opacity=1 ) :
+	## May be overridden by derived classes to customise the
+	# drawing of the value indicator.
+	#
+	# `value`    : The value itself.
+	# `position` : The widget-relative position where the
+	#              indicator should be drawn.
+	# `state`    : A GafferUI.Style.State. DisabledState is used
+	#              to draw hover indicators, since there is
+	#              currently no dedicated state for this purpose.
+	def _drawValue( self, painter, value, position, state ) :
 
 		size = self.size()
 
-		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 * opacity ) )
+		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
 		pen.setWidth( 1 )
 		painter.setPen( pen )
 
-		## \todo These colours need to come from the style, once we've
-		# unified the Gadget and Widget styling.
-		if highlighted :
-			brush = QtGui.QBrush( QtGui.QColor( 119, 156, 255, 255 * opacity ) )
+		if state == state.NormalState :
+			color = QtGui.QColor( 128, 128, 128, 255 )
 		else :
-			brush = QtGui.QBrush( QtGui.QColor( 128, 128, 128, 255 * opacity ) )
+			color = QtGui.QColor( 119, 156, 255, 255 )
+		painter.setBrush( QtGui.QBrush( color ) )
 
-		painter.setBrush( brush )
+		if state == state.DisabledState :
+			painter.setOpacity( 0.5 )
 
 		if position < 0 :
 			painter.drawPolygon(
@@ -543,26 +553,24 @@ class Slider( GafferUI.Widget ) :
 
 		indexUnderMouse = self.__indexUnderMouse()
 		for index, value in enumerate( self.getValues() ) :
-			self._drawPosition(
+			self._drawValue(
 				painter,
+				value,
 				self.__valueToPosition( value ),
-				highlighted = index == indexUnderMouse or index == self.getSelectedIndex()
+				GafferUI.Style.State.HighlightedState if index == indexUnderMouse or index == self.getSelectedIndex()
+				else GafferUI.Style.State.NormalState
 			)
 
 		if self.__hoverEvent is not None :
-
-			opacity = None
-			if self.getSizeEditable() and indexUnderMouse is None :
-				opacity = 0.5
-			elif self.getHoverPositionVisible() :
-				opacity = 0.25
-
-			if opacity :
-				self._drawPosition(
+			if (
+				self.getHoverPositionVisible() or
+				( self.getSizeEditable() and indexUnderMouse is None )
+			 ) :
+				self._drawValue(
 					painter,
+					self.__eventValue( self.__hoverEvent ),
 					self.__valueToPosition( self.__eventValue( self.__hoverEvent ) ),
-					highlighted = True,
-					opacity = opacity
+					state = GafferUI.Style.State.DisabledState
 				)
 
 class _Widget( QtWidgets.QWidget ) :
