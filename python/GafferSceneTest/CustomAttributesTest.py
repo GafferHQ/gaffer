@@ -306,12 +306,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			"a1" : IECore.StringData( "from extra" ),
 			"a2" : IECore.IntData( 2 ),
 		}))
-		s["a"]["attributes"].addChild(
-			Gaffer.NameValuePlug( "a1", IECore.StringData( "from attributes" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		)
-		s["a"]["attributes"].addChild(
-			Gaffer.NameValuePlug( "a3", IECore.IntData( 5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		)
+		s["a"]["attributes"].addMember( "a1", IECore.StringData( "from attributes" ) )
+		s["a"]["attributes"].addMember( "a3", IECore.IntData( 5 ) )
 		self.assertEqual(
 			s["a"]["out"].attributes( "/sphere" ),
 			IECore.CompoundObject( {
