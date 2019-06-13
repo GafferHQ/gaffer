@@ -70,6 +70,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"extraAttributes" : [
+
+			"plugValueWidget:type", None,
+
+		],
+
 	}
 
 )

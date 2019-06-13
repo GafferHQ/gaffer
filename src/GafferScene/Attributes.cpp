@@ -54,6 +54,7 @@ Attributes::Attributes( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "attributes" ) );
 	addChild( new BoolPlug( "global", Plug::In, false ) );
+	addChild( new AtomicCompoundDataPlug( "extraAttributes", Plug::In, new IECore::CompoundData ) );
 
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
@@ -90,11 +91,21 @@ const Gaffer::BoolPlug *Attributes::globalPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::AtomicCompoundDataPlug *Attributes::extraAttributesPlug()
+{
+	return getChild<Gaffer::AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::AtomicCompoundDataPlug *Attributes::extraAttributesPlug() const
+{
+	return getChild<Gaffer::AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+}
+
 void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() )
+	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() || input == extraAttributesPlug() )
 	{
 		// We can only affect a particular output if we haven't
 		// connected it as a pass-through in updateInternalConnections().
@@ -119,6 +130,7 @@ void Attributes::hashGlobals( const Gaffer::Context *context, const ScenePlug *p
 		SceneElementProcessor::hashGlobals( context, parent, h );
 		inPlug()->globalsPlug()->hash( h );
 		attributesPlug()->hash( h );
+		extraAttributesPlug()->hash( h );
 	}
 	else
 	{
@@ -153,6 +165,13 @@ IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context
 		}
 	}
 
+	IECore::ConstCompoundDataPtr extraAttributesData = extraAttributesPlug()->getValue();
+	const IECore::CompoundDataMap &extraAttributes = extraAttributesData->readable();
+	for( IECore::CompoundDataMap::const_iterator it = extraAttributes.begin(), eIt = extraAttributes.end(); it != eIt; ++it )
+	{
+		result->members()["attribute:" + it->first.string()] = it->second.get();
+	}
+
 	return result;
 }
 
@@ -160,18 +179,24 @@ bool Attributes::processesAttributes() const
 {
 	// Although the base class says that we should return a constant, it should
 	// be OK to return this because it's constant across the hierarchy.
-	return attributesPlug()->children().size() && !globalPlug()->getValue();
+	IECore::ConstCompoundDataPtr extraAttributesData = extraAttributesPlug()->getValue();
+	const IECore::CompoundDataMap &extraAttributes = extraAttributesData->readable();
+	return ( attributesPlug()->children().size() || !extraAttributes.empty() ) && !globalPlug()->getValue();
 }
 
 void Attributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	attributesPlug()->hash( h );
+	extraAttributesPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	const CompoundDataPlug *ap = attributesPlug();
-	if( !ap->children().size() )
+	IECore::ConstCompoundDataPtr extraAttributesData = extraAttributesPlug()->getValue();
+	const IECore::CompoundDataMap &extraAttributes = extraAttributesData->readable();
+
+	if( !ap->children().size() && extraAttributes.empty() )
 	{
 		return inputAttributes;
 	}
@@ -193,6 +218,11 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 	result->members() = inputAttributes->members();
 
 	ap->fillCompoundObject( result->members() );
+
+	for( IECore::CompoundDataMap::const_iterator it = extraAttributes.begin(), eIt = extraAttributes.end(); it != eIt; ++it )
+	{
+		result->members()[it->first] = it->second.get();
+	}
 
 	return result;
 }

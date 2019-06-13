@@ -282,14 +282,41 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s["a"] = GafferScene.CustomAttributes()
 		p = s["a"]["attributes"].addMember( "user:test", 10 )
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
+		self.assertEqual( set( s["a"].affects( s["a"]["extraAttributes"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
 
 		s["a"]["global"].setValue( True )
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["globals"] ] ) )
+		self.assertEqual( set( s["a"].affects( s["a"]["extraAttributes"] ) ), set( [ s["a"]["out"]["globals"] ] ) )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( """parent["a"]["global"] = context.getFrame() > 10""" )
 
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"], s["a"]["out"]["globals"] ] ) )
+
+	def testExtraAttributes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["a"] = GafferScene.CustomAttributes()
+		s["f"] = GafferScene.PathFilter()
+		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["a"]["filter"].setInput( s["f"]["out"] )
+		s["a"]["extraAttributes"].setValue(IECore.CompoundData({
+			"a1" : IECore.StringData( "from extra" ),
+			"a2" : IECore.IntData( 2 ),
+		}))
+		s["a"]["attributes"].addMember( "a1", IECore.StringData( "from attributes" ) )
+		s["a"]["attributes"].addMember( "a3", IECore.IntData( 5 ) )
+		self.assertEqual(
+			s["a"]["out"].attributes( "/sphere" ),
+			IECore.CompoundObject( {
+				"a1" : IECore.StringData( "from extra" ),
+				"a2" : IECore.IntData( 2 ),
+				"a3" : IECore.IntData( 5 ),
+			} )
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()

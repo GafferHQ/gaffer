@@ -82,9 +82,8 @@ void ArnoldLight::loadShader( const std::string &shaderName )
 		throw IECore::Exception( boost::str( boost::format( "Shader \"%s\" not found" ) % shaderName ) );
 	}
 
-	ParameterHandler::setupPlugs( shader, parametersPlug() );
-
 	shaderNamePlug()->setValue( shaderName );
+	ParameterHandler::setupPlugs( shader, parametersPlug() );
 }
 
 void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
