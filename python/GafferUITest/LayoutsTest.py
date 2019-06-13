@@ -102,5 +102,42 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		self.assertEqual( layouts.names( persistent = True ), [] )
 		self.assertGreater( len( layouts.names() ), 0 )
 
+	def testRestore( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		editors = list((
+			GafferUI.NodeEditor( s ),
+			GafferUI.AnimationEditor( s ),
+			GafferUI.GraphEditor( s ),
+			GafferUI.PythonEditor( s )
+		))
+
+		editorTypes = [ type(e) for e in editors ]
+
+		for e in editors[:2] :
+			c.addEditor( e )
+
+		p = c._createDetachedPanel()
+
+		for e in editors[2:] :
+			p.addEditor( e )
+
+		self.assertEqual( len(c._detachedPanels()), 1 )
+		self.assertEqual( c.editors(), editors )
+
+		a = Gaffer.ApplicationRoot( "testApp" )
+		l = GafferUI.Layouts.acquire( a )
+		l.add( "ReprTest", repr(c), persistent = False )
+
+		cc = l.create( "ReprTest", s )
+
+		self.assertEqual( len(cc._detachedPanels()), 1 )
+
+		ct = [ type(e) for e in cc.editors() ]
+		self.assertEqual( ct, editorTypes )
+		self.assertEqual( repr(cc.editors()), repr(editors) )
+
 if __name__ == "__main__":
 	unittest.main()

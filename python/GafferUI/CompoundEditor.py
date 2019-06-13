@@ -35,8 +35,10 @@
 #
 ##########################################################################
 
-import functools
 import collections
+import functools
+import sys
+import weakref
 
 import imath
 
@@ -45,12 +47,13 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
+from Qt import QtGui
 from Qt import QtWidgets
 
-## \todo Implement an option to float in a new window, and an option to anchor back - drag and drop of tabs?
 class CompoundEditor( GafferUI.Editor ) :
 
-	def __init__( self, scriptNode, children=None, **kw ) :
+	def __init__( self, scriptNode, children=None, detachedPanels=None, windowState=None, **kw ) :
 
 		self.__splitContainer = _SplitContainer()
 
@@ -58,52 +61,33 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__splitContainer.append( _TabbedContainer() )
 
-		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
-		self.__editorAddedSignal = Gaffer.Signal2()
+		self.__windowState = windowState or {}
 
 		if children :
-			self.__addChildren( self.__splitContainer, children )
+			self.__splitContainer.restoreChildren( children )
+
+		self.__detachedPanels = []
+		if detachedPanels :
+			for panelArgs in detachedPanels  :
+				self._createDetachedPanel( **panelArgs )
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
 	def editors( self, type = GafferUI.Editor ) :
 
-		def __recurse( w ) :
-			assert( isinstance( w, _SplitContainer ) )
-			if w.isSplit() :
-				return __recurse( w[0] ) + __recurse( w[1] )
-			else :
-				return [ e for e in w[0] if isinstance( e, type ) ]
-
-		return __recurse( self.__splitContainer )
+		editors = self.__splitContainer.editors( type = type )
+		for p in self.__detachedPanels :
+			editors.extend( p.editors( type = type ) )
+		return editors
 
 	## Adds an editor to the layout, trying to place it in the same place
 	# as editors of the same type.
 	def addEditor( self, editor ) :
 
-		def __findContainer( w, editorType ) :
-			if w.isSplit() :
-				ideal, backup = __findContainer( w[0], editorType )
-				if ideal is not None :
-					return ideal, backup
-				return __findContainer( w[1], editorType )
-			else :
-				for e in w[0] :
-					if isinstance( e, editorType ) :
-						return w, w
-				return None, w
-
-		ideal, backup = __findContainer( self.__splitContainer, editor.__class__ )
-		container = ideal if ideal is not None else backup
-
-		container[0].addEditor( editor )
-
-	## A signal emitted whenever an editor is added -
-	# the signature is ( compoundEditor, childEditor ).
-	def editorAddedSignal( self ) :
-
-		return self.__editorAddedSignal
+		self.__splitContainer.addEditor( editor )
 
 	__nodeSetMenuSignal = Gaffer.Signal2()
 	## A signal emitted to populate a menu for manipulating
@@ -114,34 +98,79 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		return CompoundEditor.__nodeSetMenuSignal
 
-	def __serialise( self, w ) :
+	# Restores the preferred size and position of the editor window and any
+	# detached panels if this is known.  This should only be called when the
+	# editor is part of a window hierarchy so that screen affinity can be
+	# properly applied.
+	def restoreWindowState( self ) :
 
-		assert( isinstance( w, _SplitContainer ) )
+		if self.__windowState :
+			_restoreWindowState( self.ancestor( GafferUI.ScriptWindow ), self.__windowState )
 
-		if w.isSplit() :
-			sizes = w.getSizes()
-			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
-			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, self.__serialise( w[0] ), self.__serialise( w[1] ) )
-		else :
-			# not split - a tabbed container full of editors
-			tabbedContainer = w[0]
-			tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
-			if tabbedContainer.getCurrent() is not None :
-				tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
-			tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
+		for p in self.__detachedPanels :
+			p.restoreWindowState()
 
-			tabDict["pinned"] = []
-			for editor in tabbedContainer :
-				if isinstance( editor, GafferUI.NodeSetEditor ) :
-					tabDict["pinned"].append( not editor.getNodeSet().isSame( self.scriptNode().selection() ) )
-				else :
-					tabDict["pinned"].append( None )
+	# Test Harness use only
+	def _detachedPanels( self ) :
 
-			return repr( tabDict )
+		return list(self.__detachedPanels)
+
+	# This method should be used by friend code to instantiate a new detached
+	# panel. Don't directly create a _DetachedPanel instance.
+	def _createDetachedPanel( self, *args, **kwargs ) :
+
+		panel = _DetachedPanel( self,  *args, **kwargs )
+		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ) )
+
+		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
+		if scriptWindow :
+			panel.setTitle( scriptWindow.getTitle() )
+			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
+			scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = False )
+
+		self.__detachedPanels.append( panel )
+		return panel
+
+	def _removeDetachedPanel( self, panel ) :
+
+		self.__detachedPanels.remove( panel )
+		panel.__removeOnCloseConnection = None
+		panel._applyVisibility()
+
+	def __visibilityChanged(self, widget) :
+
+		v = self.visible()
+		for p in self.__detachedPanels :
+			p.setVisible( v )
 
 	def __repr__( self ) :
 
-		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % self.__serialise( self.__splitContainer )
+		# Editors are public classes and so they are stored by repr.
+		# We don't want to expose the implementation of detached panels
+		# (considered private) so instead we save their construction args.
+		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, windowState = %s )" \
+				% (
+					self.__splitContainer.serialiseChildren(),
+					self.__serialiseDetachedPanels(),
+					self._serializeWindowState()
+				)
+
+	# visibility for Test Harness
+	def _serializeWindowState( self ) :
+
+		window = self.ancestor( GafferUI.ScriptWindow )
+		return _reprDict( _getWindowState( window ) if window else {} )
+
+	def __serialiseDetachedPanels( self ) :
+
+		if len(self.__detachedPanels) == 0 :
+			return "()"
+
+		# We need the 'force list' syntax or a single panel gets unwrapped
+		# when we restore later which errors if we try to pass to __init__.
+		return "( %s, )" % ", ".join(
+			[ p.reprArgs() for p in self.__detachedPanels ]
+		)
 
 	def __keyPress( self, unused, event ) :
 
@@ -188,31 +217,6 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		return False
 
-	def __addChildren( self, splitContainer, children ) :
-
-		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
-
-			splitContainer.split( children[0], 0 )
-			self.__addChildren( splitContainer[0], children[2][0] )
-			self.__addChildren( splitContainer[1], children[2][1] )
-			splitContainer.setSizes( [ children[1], 1.0 - children[1] ] )
-
-		else :
-			if isinstance( children, tuple ) :
-				# backwards compatibility - tabs provided as a tuple
-				for c in children :
-					splitContainer[0].addEditor( c )
-			else :
-				# new format - various fields provided by a dictionary
-				for i, c in enumerate( children["tabs"] ) :
-					editor = splitContainer[0].addEditor( c )
-					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
-						editor.setNodeSet( Gaffer.StandardSet() )
-
-				if "currentTab" in children :
-					splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
-
-				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
 
 	@staticmethod
 	def __handlePosition( splitContainer ) :
@@ -239,6 +243,7 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 	def __init__( self, **kw ) :
 
 		GafferUI.SplitContainer.__init__( self, **kw )
+		self._qtWidget().setObjectName( "gafferCompoundEditor" )
 
 	def isSplit( self ) :
 
@@ -278,6 +283,91 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 		self.setOrientation( subPanelToKeepFrom.getOrientation() )
 
+	def editors( self, type = GafferUI.Editor ) :
+
+		def __recurse( w ) :
+			assert( isinstance( w, _SplitContainer ) )
+			if w.isSplit() :
+				return __recurse( w[0] ) + __recurse( w[1] )
+			else :
+				return [ e for e in w[0] if isinstance( e, type ) ]
+
+		return __recurse( self )
+
+	def addEditor( self, editor ) :
+
+		def __findContainer( w, editorType ) :
+			if w.isSplit() :
+				ideal, backup = __findContainer( w[0], editorType )
+				if ideal is not None :
+					return ideal, backup
+				return __findContainer( w[1], editorType )
+			else :
+				for e in w[0] :
+					if isinstance( e, editorType ) :
+						return w, w
+				return None, w
+
+		ideal, backup = __findContainer( self, editor.__class__ )
+		container = ideal if ideal is not None else backup
+
+		container[0].addEditor( editor )
+
+	def serialiseChildren( self, scriptNode = None ) :
+
+		if not scriptNode :
+			scriptNode = self.ancestor( GafferUI.CompoundEditor ).scriptNode()
+
+		if self.isSplit() :
+			sizes = self.getSizes()
+			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
+			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % (
+				str( self.getOrientation() ), splitPosition,
+				self[0].serialiseChildren( scriptNode ), self[1].serialiseChildren( scriptNode )
+			)
+		else :
+			# not split - a tabbed container full of editors
+			tabbedContainer = self[0]
+			tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
+			if tabbedContainer.getCurrent() is not None :
+				tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
+			tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
+
+			tabDict["pinned"] = []
+			for editor in tabbedContainer :
+				if isinstance( editor, GafferUI.NodeSetEditor ) :
+					tabDict["pinned"].append( not editor.getNodeSet().isSame( scriptNode.selection() ) )
+				else :
+					tabDict["pinned"].append( None )
+
+			return repr( tabDict )
+
+	def restoreChildren( self, children ) :
+
+		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
+
+			self.split( children[0], 0 )
+			self[0].restoreChildren( children[2][0] )
+			self[1].restoreChildren( children[2][1] )
+			self.setSizes( [ children[1], 1.0 - children[1] ] )
+
+		else :
+			if isinstance( children, tuple ) :
+				# backwards compatibility - tabs provided as a tuple
+				for c in children :
+					self[0].addEditor( c )
+			else :
+				# new format - various fields provided by a dictionary
+				for i, c in enumerate( children["tabs"] ) :
+					editor = self[0].addEditor( c )
+					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
+						editor.setNodeSet( Gaffer.StandardSet() )
+
+				if "currentTab" in children :
+					self[0].setCurrent( self[0][children["currentTab"]] )
+
+				self[0].setTabsVisible( children.get( "tabsVisible", True ) )
+
 # The internal class used to keep a bunch of editors in tabs, updating the titles
 # when appropriate, and keeping a track of the pinning of nodes.
 class _TabbedContainer( GafferUI.TabbedContainer ) :
@@ -303,6 +393,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
+		tabBar = self._qtWidget().tabBar()
+		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__tabContextMenu ) )
+
+		self.__tabDragBehaviour = _TabDragBehaviour( self )
+
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, basestring ) :
@@ -316,9 +412,13 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.setLabel( editor, editor.getTitle() )
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 
-		self.ancestor( CompoundEditor ).editorAddedSignal()( self.ancestor( CompoundEditor ), editor )
-
 		return editor
+
+	def removeEditor( self, editor ) :
+
+		editor.__titleChangedConnection = None
+		self.removeChild( editor )
+		self.__updatePinningButton( None )
 
 	def setTabsVisible( self, tabsVisible ) :
 
@@ -349,21 +449,35 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		m.append( "/divider", { "divider" : True } )
 
-		removeItemAdded = False
-
 		splitContainer = self.ancestor( _SplitContainer )
 		splitContainerParent = splitContainer.parent()
+		currentTab = self.getCurrent()
+
+		detatchItemAdded = False
+
+		if currentTab is not None :
+			m.append( "/Detach " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachTab ) } )
+			detatchItemAdded = True
+
+		if isinstance( splitContainerParent, _SplitContainer ) :
+			m.append( "/Detach Panel", { "command" : Gaffer.WeakMethod( self.__detachPanel ) } )
+			detatchItemAdded = True
+
+		if detatchItemAdded :
+			m.append( "/divider2", { "divider" : True } )
+
+		removeItemAdded = False
+
+		if currentTab is not None :
+			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeTab ) } )
+			removeItemAdded = True
+
 		if isinstance( splitContainerParent, _SplitContainer ) :
 			m.append( "Remove Panel", { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
 			removeItemAdded = True
 
-		currentTab = self.getCurrent()
-		if currentTab is not None :
-			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeCurrentTab ) } )
-			removeItemAdded = True
-
 		if removeItemAdded :
-			m.append( "/divider2", { "divider" : True } )
+			m.append( "/divider3", { "divider" : True } )
 
 		tabsVisible = self.getTabsVisible()
 		# Because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
@@ -440,6 +554,17 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return True
 
+	def __tabContextMenu( self, pos ) :
+
+		tabIndex = self._qtWidget().tabBar().tabAt( pos )
+
+		m = IECore.MenuDefinition()
+		m.append( '/Detach', { "command" : functools.partial( Gaffer.WeakMethod( self.__detachTab ), tabIndex ) } )
+		m.append( '/Remove', { "command" : functools.partial( Gaffer.WeakMethod( self.__removeTab ), tabIndex ) } )
+
+		self.__popupMenu = GafferUI.Menu( m, title = "Tab Actions" )
+		self.__popupMenu.popup( parent = self )
+
 	def __dragEnter( self, tabbedContainer, event ) :
 
 		currentEditor = self.getCurrent()
@@ -488,9 +613,48 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return True
 
-	def __removeCurrentTab( self ) :
+	def __detachTab( self, index = None ) :
 
-		self.remove( self.getCurrent() )
+		editor = self.getCurrent() if index is None else self[ index ]
+
+		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
+		self.__matchWindowToWidget( window, editor, 10 )
+
+		self.removeEditor( editor )
+
+		window.addEditor( editor )
+		window.setVisible( True )
+
+	def __detachPanel( self ) :
+
+		# Fetch them now, or we'll be out of the hierarchy after we have
+		# collapsed our old parent split container and won't be able to find them
+		splitContainer = self.ancestor( _SplitContainer )
+
+		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
+		self.__matchWindowToWidget( window, splitContainer, 10 )
+
+		# We must join the parent or we end up with nested split containers in the hierarchy
+		parent = splitContainer.parent()
+		parent.join( 1 - parent.index( splitContainer ) )
+
+		window.replaceEditors( splitContainer )
+		window.setVisible( True )
+
+	@staticmethod
+	def __matchWindowToWidget( window, targetWidget, offsetPixels ) :
+
+		# TODO: Does this need to consider which screen we're on if its not a
+		# virtual desktop spanning multiple?
+		qWidget = targetWidget._qtWidget()
+		targetRect = qWidget.rect()
+		topLeft = qWidget.mapToGlobal( targetRect.topLeft() )
+		window.setPosition( imath.V2i( topLeft.x() + offsetPixels, topLeft.y() + offsetPixels ) )
+		window._qtWidget().resize( targetRect.width(), targetRect.height() )
+
+	def __removeTab( self, index = None ) :
+
+		self.removeEditor( self.getCurrent() if index is None else self[ index ] )
 
 	def __removePanel( self ) :
 
@@ -500,3 +664,586 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		# issues in certain circumstances (eg hosting Gaffer in other Qt DCC).
 		## \todo: consider doing this for all Menu commands in GafferUI.Menu
 		GafferUI.EventLoop.addIdleCallback( functools.partial( Gaffer.WeakMethod( splitContainerParent.join ), 1 - splitContainerParent.index( splitContainer ) ) )
+
+## A detached panel is a _SplitContainer in its own window. They are considered
+# child windows of a ScriptWindow, and as such, their lifetime and visibility
+# are managed by their parent CompoundEditor. By effect, they are logically
+# associated with a particular open script, rather than the Gaffer process.
+# They do not have a menu bar and their placement, size and editor list is
+# stored and recalled by a layout.
+#
+# They are considered a private implementation detail rather than a public API
+# and so are not directly serialised within a saved layout, only their
+# configuration is exposed.
+class _DetachedPanel( GafferUI.Window ) :
+
+	def __init__( self, parentEditor, children = None, windowState = None ) :
+
+		GafferUI.Window.__init__( self )
+
+		self.__splitContainer = _SplitContainer()
+		self.__splitContainer.append( _TabbedContainer() )
+		self.setChild( self.__splitContainer )
+
+		# @see parent() As we can't be moved between CompoundEditors
+		# (scriptNode references in editors will be wrong), we don't need
+		# accessors for this.
+		self.__parentEditor = weakref.ref( parentEditor )
+
+		if children :
+			self.__splitContainer.restoreChildren( children )
+
+		self.__windowState = windowState or {}
+
+	## As were technically not in the Qt hierarchy, but do want to be logically
+	# owned by a CompoundEditor, we re-implement this to re-direct ancestor
+	# calls to which ever editor we were added to (CompoundEditor fills this
+	# in for us when we're constructed).
+	def parent( self ) :
+
+		return self.__parentEditor() if self.__parentEditor else None
+
+	def editors( self, type = GafferUI.Editor ) :
+
+		return self.__splitContainer.editors( type = type )
+
+	def addEditor( self, editor ) :
+
+		self.__splitContainer.addEditor( editor )
+
+	def replaceEditors( self, splitContainer ) :
+
+		self.__splitContainer = splitContainer
+		self.setChild( self.__splitContainer )
+
+	def restoreWindowState( self ) :
+
+		if self.__windowState :
+			_restoreWindowState( self, self.__windowState )
+
+	# A detached panel is considered empty if it has a single split with no editors.
+	def isEmpty( self ) :
+
+		if len(self.__splitContainer) == 1 :
+			c = self.__splitContainer[0]
+			if isinstance( c, _TabbedContainer ) and len(c) == 0 :
+				return True
+
+		return False
+
+	## As not to leak ourselves as an implementation detail, we serialise
+	## ourselves as a list of constructor args instead of the usual repr.
+	def reprArgs( self ) :
+
+		return "{ 'children' : %s, 'windowState' : %s }" % (
+			self.__splitContainer.serialiseChildren(),
+			_reprDict( _getWindowState( self ) )
+		)
+
+## An internal eventFilter class managing all tab drag-drop events and logic.
+# Tab dragging is an exception and is implemented entirely using mouse-move
+# events. This was the only practical option after trying all combinations of
+# Qt-only/Gaffer-only and Gaffer/Qt hybrid as:
+#
+#  - We wanted the visual sophistication of QTabBar.setMovable() for
+#    re-arranging tabs within their parent container.
+#  - Qt doesn't use its own drag mechanism for setMoveable so we have to
+#    interact at a lower level that we'd otherwise like.
+#  - We had issues propagating style-changes during a Gaffer drag.
+#  - We can't programmatically start a Gaffer drag.
+#  - Even if we could, the widget hierarchy precludes the required event
+#    routing between TabbedContainer > TabBar.
+#  - Using Qt's drag mechanism:
+#     - Precludes cursor customisation (tried all sorts of hacks based on
+#       setOverrideCursor, but it fights qdnd).
+#     - Dragging out of a gaffer window fully interacts with the desktop and
+#       other applications (which makes no sense).
+#  - Because were only ever dragging between _SplitContainers there is no need
+#    for public access to the in-drag data.
+#
+# As such, it is somewhat of an outlier compared to how the rest of the
+# application works. To avoid polluting the code base, it has been structured
+# so that as much logic and Qt interaction is contained within this class.
+#
+# The broad responsibilities of the _TabDragBehaviour are:
+#
+#  - Capture the starting state of any TabBar drag.
+#  - Abort the built-in tab-move behaviour of QTabBar when the cursor leaves
+#    the logical are of the TabbedContainer in-which the tab lives.
+#  - Capture the mouse such that we track all events (even outside the window)
+#    and ensure other widgets don't misinterpret the mouse-move as hover.
+#  - Manage hover states for potential recipients during a drag operation.
+#  - Coordinate the re-parenting of Tab widgets.
+#  - Manage the life-cycle of detached panels created/affected by the drag.
+#  - Manage cursor appearance.
+#
+class _TabDragBehaviour( QtCore.QObject ) :
+
+	def __init__( self, tabbedContainer ) :
+
+		QtCore.QObject.__init__( self )
+
+		self.__eventMask = set( (
+			QtCore.QEvent.MouseButtonPress,
+			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.MouseMove
+		) )
+
+		self.__tabbedContainer = weakref.ref( tabbedContainer )
+
+		self.__mouseGrabber = None
+		self.__initializeDragState()
+
+		# Install ourselves as an event filter only on the TabBar, as this
+		# is the only place drags can be initiated.
+
+		# Gaffer.Widget makes use of a custom event filter, but it is
+		# initialised lazily. Fortunately, TabbedContainer connects to tabBar
+		# signals during __init__ before were created, so we should then always
+		# be a 'later' handler, and so called first.
+		tabBar = tabbedContainer._qtWidget().tabBar()
+		tabBar.installEventFilter( self )
+		tabBar.setMovable( True )
+
+	def __initializeDragState( self, qTabBar = None ) :
+
+		# We keep a reference for the life of the drag to the originating
+		# QTabBar as we have to install ourselves on another widget during
+		# drag to ensure we don't loose events.
+		self.__qTabBar = qTabBar
+
+		# This tracks the transition from drag re-arrange to re-parenting
+		self.__abortedInitialRearrange = False
+
+		# As the user can re-arrange tabs before detaching/re-parenting them
+		# we need to track some initial state so we can ensure we 'fix up'
+		# the final state once drag is concluded.
+		self.__draggedTab = None
+		self.__currentTabAtDragStart = None
+		self.__draggedTabOriginalIndex = -1
+
+		# Tracks potential drop targets (TabbedContainers) so highlight state
+		# can be managed during a drag.
+		self.__lastTarget = None
+
+		# Depending on the final state, some cleanup may be required, that
+		# can't be performed at the time due to Qt lifetime management issues.
+		self.__cleanupCallback = None
+
+	def eventFilter( self, qObject, qEvent ) :
+
+		qEventType = qEvent.type()
+		if qEventType not in self.__eventMask :
+			return False
+
+		if qEventType == qEvent.MouseButtonPress :
+
+			return self.__mousePress( qObject, qEvent )
+
+		elif qEventType == qEvent.MouseMove :
+
+			return self.__mouseMove( qObject, qEvent )
+
+		elif qEventType == qEvent.MouseButtonRelease :
+
+			return self.__mouseRelease( qObject, qEvent )
+
+		return False
+
+	def __mousePress( self, qTabBar, event ) :
+
+		# If someone presses another mouse button whilst we're in a drag this
+		# won't be the case as we get moved up to the outer parent of the
+		# original tab bar once a re-parent drag has begun.
+		if not isinstance( qTabBar, QtWidgets.QTabBar ) :
+			return False
+
+		if event.button() != QtCore.Qt.LeftButton :
+			return False
+
+		self.__initializeDragState( qTabBar )
+
+		# Qt's setMovable allows you to drag a tab to the right, out of the
+		# TabBar which results in the tab being clipped some fraction of the
+		# way across the TabbedContainer, which looks terrible. We constrain
+		# the event.pos() seen by the TabBar to keep it looking nice.
+		self.__setTabDragConstraints( qTabBar, event )
+
+		# Ensure we can leave the UI in a predictable state for the user
+		# post-drag.
+
+		self.__draggedTabOriginalIndex = qTabBar.tabAt( event.pos() )
+		if self.__draggedTabOriginalIndex == -1 :
+			return False
+
+		tabbedContainer = self.__tabbedContainer()
+		self.__draggedTab = tabbedContainer[ self.__draggedTabOriginalIndex ]
+		self.__currentTabAtDragStart = tabbedContainer.getCurrent()
+
+		# Drags are considered modal so this ensures no-one else gets mouse
+		# events (@see qdnd-*.cpp).
+		self.__captureMouse( qTabBar )
+
+		# Only consume this event inside of our drags, this allows the native Qt
+		# drag-rearrange implementation to work (which is internally done in
+		# press/move/release) and for right-click, etc...
+		# This works even if we've just captured the mouse we did it after this
+		# event propagation chain started, so this particular one will continue...
+		return self.__abortedInitialRearrange
+
+	def __mouseRelease( self, _, event ) :
+
+		if event.button() != QtCore.Qt.LeftButton :
+			return False
+
+		try :
+
+			# We only consume this event if we've been messing with events and
+			# starting drags. This ensures we don't send the QTabBar a double release
+			#
+			# We need to forward this to our TabBar ourselves though as we've
+			# grabbed the mouse by this point so it won't get it otherwise.
+			# Don't forget qWidget is going to be the outer parent of the
+			# original QTabBar, not the QTabBar.
+			if not self.__abortedInitialRearrange :
+				self.__forwardTabBarEvent( 'mouseReleaseEvent', event )
+				return True
+
+			sourceContainer = self.__tabbedContainer()
+
+			if self.__lastTarget is not None :
+
+				self.__lastTarget.addEditor( self.__draggedTab )
+				self.__lastTarget.parent().setHighlighted( False )
+				self.__lastTarget = None
+
+			else :
+
+				# Create a new window. We want the center of the tab title to be
+				# roughly under the cursor
+
+				oldSize = self.__draggedTab._qtWidget().rect()
+
+				window = sourceContainer.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
+
+				# We have to add the editor early so we can work out the center of
+				# the tab header widget otherwise it has no parent so no tab bar...
+				window.addEditor( self.__draggedTab )
+
+				tabCenter = self.__getTabCenter( self.__draggedTab )
+				windowPos = QtGui.QCursor.pos() - tabCenter
+				window.setPosition( imath.V2i( windowPos.x(), windowPos.y() ) )
+				window._qtWidget().resize( oldSize.width(), oldSize.height() )
+
+				window.setVisible( True )
+
+			# If the dragged tab wasn't current, restore the original front tab
+			# We do this as the drag-rearrange/remove can change the current tab
+			if self.__currentTabAtDragStart.parent() is sourceContainer :
+				sourceContainer.setCurrent( self.__currentTabAtDragStart )
+
+		finally :
+
+			# Make sure we always clear our state regardless of how the drag ends
+
+			GafferUI.Pointer.setCurrent( None )
+
+			if self.__cleanupCallback is not None :
+				GafferUI.EventLoop.addIdleCallback( self.__cleanupCallback )
+
+			self.__initializeDragState()
+			self.__releaseMouse()
+
+		return True
+
+	def __mouseMove( self, _, event ):
+
+		if not event.buttons() & QtCore.Qt.LeftButton :
+			return False
+
+		# If the user moves the mouse out of the tab bar, we need to make the
+		# underlying TabBar think the user let go of the mouse so it aborts
+		# any in-progress move of the tab (constrained to this TabBar) So we
+		# can venture off into our own brave new world.
+
+		if not self.__abortedInitialRearrange \
+		   and self.__shouldAbortInitialRearrange( self.__qTabBar, event ) :
+
+			self.__abortTabBarRearrange( event )
+			self.__abortedInitialRearrange = True
+
+			if sys.platform == "darwin" and len(self.__tabbedContainer()) == 1 :
+				# We can't remove the last tab as the drag breaks, the trick
+				# of hoisting the mouse grabber that works on linux doesn't
+				# work on OSX... so we just to our best to 'hide' the tab...
+				index = self.__tabbedContainer().index( self.__draggedTab )
+				tabBar = self.__tabbedContainer()._qtWidget().tabBar()
+				tabBar.setTabEnabled( index, False )
+				self.__draggedTab._qtWidget().setVisible( False )
+			else :
+				# Remove the dragged tab from container to make sure its obvious to
+				# the user that it will move as opposed to copy.
+				self.__tabbedContainer().removeEditor( self.__draggedTab )
+
+			GafferUI.Pointer.setCurrent( "tab" )
+
+			# If the dragged editor was in a detached panel, that is now empty
+			# remove it after we're done.
+			# It'd be nice to hide it here, but haven't managed to work around
+			# an issue whereby we no longer receive events once we're hidden.
+			# Even spawning a new top level window and anchoring to that fails.
+			detachedPanel = self.__tabbedContainer().ancestor( _DetachedPanel )
+			if detachedPanel :
+				self.__cleanupCallback = functools.partial(
+					_TabDragBehaviour.__removeDetachedPanelIfEmpty,
+					detachedPanel
+				)
+
+		elif self.__abortedInitialRearrange :
+
+			# If we're over another TabbedContainer then we adjust focus etc...
+			target = self.__targetUnderMouse( event )
+			if target is not self.__lastTarget :
+
+				# Highlight is set on the Splitter, not the TabbedContainer
+				# otherwise it highlights the current tab.
+
+				if self.__lastTarget is not None :
+					self.__lastTarget.parent().setHighlighted( False )
+
+				self.__lastTarget = target
+
+				if target is None :
+					GafferUI.Pointer.setCurrent( "detachedPanel" )
+				else :
+					self.__tryToRaiseWindow( target._qtWidget().windowHandle() )
+					target.parent().setHighlighted( True )
+					GafferUI.Pointer.setCurrent( "tab" )
+
+		else :
+			# Because we've captured the mouse, we need to pass the event through
+			# to the underlying TabWidget to allow its own drag re-arrange behaviour
+			self.__forwardTabBarEvent( 'mouseMoveEvent', event )
+
+		return True
+
+	def __captureMouse( self, initialQWidget ) :
+
+		# There is an unusual happening, in that, if we pin all event handling
+		# on the originating QTabBar, in some situations, when the last tab is
+		# removed, and the mouse leaves the bounds of the parent QWindow, all
+		# events stop until the mouse re-enders the window. This doesn't always
+		# happen, generally when exiting the top left - and only when the last
+		# tab has been removed. Turns out, if you hoist the eventFilter up to
+		# the top widget in that window, it always works.
+
+		p = initialQWidget.parent()
+		while p.parent() :
+			p = p.parent()
+
+		p.grabMouse()
+		p.installEventFilter( self )
+
+		self.__mouseGrabber = p
+
+	def __releaseMouse( self ) :
+
+		if self.__mouseGrabber is None:
+			return
+
+		self.__mouseGrabber.removeEventFilter( self )
+		self.__mouseGrabber.releaseMouse()
+
+		self.__mouseGrabber = None
+
+	def __shouldAbortInitialRearrange( self, qTabBar, event ) :
+
+		# We don't reliably know where this event comes from
+		pos = qTabBar.mapFromGlobal( event.globalPos() )
+
+		if qTabBar.geometry().contains( pos ) :
+			return False
+
+		# To avoid aborting as soon as the user slips off the tab bar (which
+		# can be annoying as its easily done) we don't abort if they slip into
+		# the parent tab container.
+		return not qTabBar.parent().geometry().contains( pos )
+
+	def __abortTabBarRearrange( self, moveEvent ) :
+
+		# Telling the tabbar the user has released the mouse (in the Qt
+		# implementation at the time of going to press) stops the re-arrange.
+		# The tabs are moved (in terms of indices) on the fly during mouseMove.
+		# So they will already be in their correct places.
+
+		fakeReleaseEvent = QtGui.QMouseEvent(
+			QtCore.QEvent.MouseButtonRelease,
+			self.__constrainGlobalPosTo( moveEvent.globalPos(), self.__qTabBar ),
+			QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
+			QtCore.Qt.NoModifier
+		)
+		self.__qTabBar.mouseReleaseEvent( fakeReleaseEvent )
+
+	def __forwardTabBarEvent( self, method, event ) :
+
+		modifiedEvent = QtGui.QMouseEvent(
+			event.type(),
+			# Keep the mouse in sensible bounds to prevent tab clipping
+			self.__constrainGlobalPosTo( event.globalPos(), self.__qTabBar ),
+			event.button(), event.buttons(),
+			event.modifiers()
+		)
+		getattr( self.__qTabBar, method )( modifiedEvent )
+
+	def __setTabDragConstraints( self, qTabBar, event ) :
+
+		# We need to work out some min/max X coordinates (in the tab bars local
+		# space) such that when the user drags left/rigth the left/right edges
+		# of the tab never leave the TabBar.
+		tabRect = qTabBar.tabRect( qTabBar.currentIndex() )
+		self.__dragMinX = event.pos().x() - tabRect.x() # cursorToTabLeftEdge
+		cursorToTabRightEdge = tabRect.x() + tabRect.width() - event.pos().x()
+		self.__dragMaxX = qTabBar.width() - cursorToTabRightEdge
+
+	def __targetUnderMouse( self, event ) :
+
+		mousePos = imath.V2i( event.globalPos().x(), event.globalPos().y() )
+		target = GafferUI.Widget.widgetAt( mousePos, _TabbedContainer )
+
+		if target is not None :
+			# We need to check it is from the same ScriptWindow, as we can't move
+			# editors between ScriptWindows as their scriptNode references will be
+			# wrong, and does it really make any sense anyway?
+			ourScriptWindow = self.__tabbedContainer().ancestor( GafferUI.ScriptWindow )
+			if target.ancestor( GafferUI.ScriptWindow ) is ourScriptWindow :
+				return target
+
+		return None
+
+	def __constrainGlobalPosTo( self, globalPos, qTabBar ) :
+
+		pos = qTabBar.mapFromGlobal( globalPos )
+		return QtCore.QPoint( min( max( pos.x(), self.__dragMinX ), self.__dragMaxX ), pos.y() )
+
+	@staticmethod
+	def __removeDetachedPanelIfEmpty( detachedPanel ) :
+
+		if detachedPanel and detachedPanel.isEmpty() :
+			parentEditor = detachedPanel.ancestor( CompoundEditor )
+			parentEditor._removeDetachedPanel( detachedPanel )
+
+	@staticmethod
+	def __tryToRaiseWindow( qWindow ) :
+
+		if qWindow is None :
+			return
+		# Some versions of PySide2 dont suffix 'raise', lol
+		if hasattr( qWindow, 'raise_' ) :
+			qWindow.raise_()
+		elif hasattr( qWindow, 'raise' ) :
+			getattr( qWindow, 'raise' )()
+
+	@staticmethod
+	def __getTabCenter( targetTab ) :
+
+		container = targetTab.ancestor( GafferUI.TabbedContainer )
+		tabBar = container._qtWidget().tabBar()
+		return tabBar.tabRect( container.index( targetTab ) ).center()
+
+## Returns the preferred bound for a widget's window in NDC space
+# (relative to the available screen area). We use the relative area to
+# help with portability between platforms/window managers.
+# '-1' is used to indicate windows that are on the primary screen.
+# If a window is full screen, we still include the bound as otherwise
+# the resultant placement when the window is un-fullscreen'd can be a bit small.
+#
+# Note: We use bottom-left NDC coordinates to be consistent with Gaffer
+def _getWindowState( gafferWindow ) :
+
+	qWidget = gafferWindow._qtWidget()
+
+	window = qWidget.windowHandle()
+	if not window :
+		return {}
+
+	widgetScreen = window.screen()
+	widgetScreenNumber = QtWidgets.QApplication.desktop().screenNumber( qWidget )
+
+	if widgetScreen == QtWidgets.QApplication.primaryScreen():
+		widgetScreenNumber = -1
+
+	screenGeom = widgetScreen.availableGeometry()
+	screenW = float( screenGeom.width() )
+	screenH = float( screenGeom.height() )
+
+	# Ideally we'd use frameGeometry for portability, but have seen a variety
+	# of issues where the window has been made visible, but doesn't yet
+	# have a frame, as we rely on asking for the margins (as you can't
+	# setFrameGeometry) we end up with unreliable window placement. As such
+	# we compromise and store the widgets geometry instead.
+	windowGeom = qWidget.normalGeometry()
+
+	x = ( windowGeom.x() - screenGeom.x() ) / screenW
+	y = 1.0 - ( ( windowGeom.y() - screenGeom.y() ) / screenH )
+	w = windowGeom.width() / screenW
+	h = windowGeom.height() / screenH
+
+	return {
+		"screen" :  widgetScreenNumber,
+		"fullScreen" : gafferWindow.getFullScreen(),
+		"maximized" : bool(window.windowState() & QtCore.Qt.WindowMaximized),
+		# As we're bottom-left not top-left the y values are the other way around
+		"bound" : imath.Box2f( imath.V2f( x, y - h ), imath.V2f( x + w, y ) )
+	}
+
+def _restoreWindowState( gafferWindow, boundData ) :
+
+	window = gafferWindow._qtWidget().windowHandle()
+	if not window :
+		return
+
+	# If we don't clear the full-screen flag then restoring geometry won't
+	# work, as its overridden by the full-screen state.  Doing it conditionally
+	# improves fullscreen - fullscreen layout transitions (avoids pointless
+	# re-scale animations), but does mean that we don't properly restore the
+	# non-fullscreen size of the window and it will keep that of the first
+	# fullscreen layout loaded. Seems a reasonable trade-off though.
+	if not ( boundData["fullScreen"] and window.windowState() == QtCore.Qt.WindowFullScreen ) :
+		window.setWindowState( QtCore.Qt.WindowNoState )
+
+	targetScreen = QtWidgets.QApplication.primaryScreen()
+
+	if boundData["screen"] > -1 :
+		screens = QtWidgets.QApplication.screens()
+		if boundData["screen"] < len(screens) :
+			targetScreen = screens[ boundData["screen"] ]
+			window.setScreen( targetScreen )
+
+	screenGeom = targetScreen.availableGeometry()
+	window.setGeometry(
+		( boundData["bound"].min()[0] * screenGeom.width() ) + screenGeom.x(),
+		( ( 1.0 - boundData["bound"].max()[1] ) * screenGeom.height() ) + screenGeom.y(),
+		( boundData["bound"].size()[0] * screenGeom.width() ),
+		( boundData["bound"].size()[1] * screenGeom.height() )
+	)
+
+	if boundData["fullScreen"] :
+		window.setWindowState( QtCore.Qt.WindowFullScreen )
+	elif boundData["maximized"] and sys.platform != "darwin" :
+		window.setWindowState( QtCore.Qt.WindowMaximized )
+	else :
+		window.setWindowState( QtCore.Qt.WindowNoState )
+
+
+def _reprDict( d ) :
+
+	# IECore.repr has a bug in that it won't 'fix' dict values
+	# TODO: replace call sites with `IECore.repr( d )` when fixed
+
+	if not d :
+		return "{}"
+
+	return "{ %s }" % ", ".join( [
+		"'%s' : %s" % ( k, IECore.repr(v) ) for k,v in d.items()
+	] )
+

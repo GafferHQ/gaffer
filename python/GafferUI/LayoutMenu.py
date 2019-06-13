@@ -56,6 +56,9 @@ def restore( menu, name ) :
 
 	scriptWindow.setLayout( layout )
 
+	if not GafferUI.Widget.currentModifiers() & GafferUI.ModifiableEvent.Modifiers.Alt :
+		layout.restoreWindowState()
+
 ## A function suitable as the command for a 'Layout/Save...' menu item. It must be invoked from
 # a menu which has a ScriptWindow in its ancestry.
 def save( menu ) :
