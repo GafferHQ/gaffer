@@ -501,7 +501,7 @@ As your final lesson in this tutorial, add the metallic shader to the rest of th
 7. Release the selection over the PathFilter node. This will add the locations as new values fields on the plug.
 
 > Tip :
-> Just as locations can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Control</kbd> (the cursor will change to ![the "remove objects" icon](images/removeObjects.png "Remove objects")).
+> Just as locations can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Ctrl</kbd> (the cursor will change to ![the "remove objects" icon](images/removeObjects.png "Remove objects")).
 
 Add and remove locations to the filter as you see fit. Remember to switch between the two _Viewers_ to check the render output as it updates. After adding Gaffy's hands and bolts to the filter, you should achieve an image similar to this:
 

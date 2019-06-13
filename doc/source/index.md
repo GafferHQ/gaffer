@@ -17,13 +17,13 @@ Gaffer is open source software hosted and maintained on GitHub: [https://github.
 
 To start, you should:
 
-* [Install Gaffer](GettingStarted/InstallingGaffer/index.md)
-* Complete the [Getting Started tutorial](Tutorials/BeginnerTutorial/index.md)
+- [Install Gaffer](GettingStarted/InstallingGaffer/index.md).
+- Complete the [Assembling the Gaffer Bot](GettingStarted/TutorialAssemblingTheGafferBot/index.md) tutorial.
 
 If you are are looking to automate VFX processes or develop with Gaffer's API, you should also:
 
-* Complete the [Node Graph Editing in Python tutorial](Tutorials/Scripting/GettingStarted/index.md)
-* Familiarize yourself with the [Performance Best Practices](WorkingWithTheNodeGraph/PerformanceBestPractices/index.md) for node graphs.
+- Complete the [Node Graph Editing in Python tutorial](WorkingWithThePythonScriptingAPI/TutorialNodeGraphEditingInPython/index.md).
+- Familiarize yourself with the [Performance Best Practices](WorkingWithTheNodeGraph/PerformanceBestPractices/index.md) for node graphs.
 
 
 <!-- TOC -->
@@ -36,12 +36,10 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
     :caption: User Documentation
 
     GettingStarted/index.md
-    Tutorials/index.md
     WorkingWithTheNodeGraph/index.md
     WorkingWithScenes/index.md
     WorkingWithImages/index.md
     WorkingWithThePythonScriptingAPI/index.md
-    ScriptPerformance/index.md
     Interface/index.md
 ```
 

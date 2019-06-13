@@ -17,7 +17,7 @@ By the end of this tutorial, you should have an understanding of the following t
 > Note :
 > For this tutorial, we will assume you are familiar with the Python language.
 
-Before you begin, we highly recommend you complete the [Assembling the Gaffer Bot tutorial](../../../Tutorials/BeginnerTutorial/index.md).
+Before you begin, we highly recommend you complete the [Assembling the Gaffer Bot](../../../GettingStarted/TutorialAssemblingTheGafferBot/index.md) tutorial.
 
 
 ## The _Python Editor_ ##
@@ -27,7 +27,7 @@ With the built-in _Python Editor_, you can build and modify the node graph, test
 The bottom-half of the _Python Editor_ is the code input field. The top-half is the code output log. Try executing a "Hello, World!" command:
 
 1. Type `print "Hello, World!"` into the input field.
-2. Hit <kbd>Control</kbd> + <kbd>Enter</kbd> to execute the code.
+2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to execute the code.
 
 ![The Python Editor with “Hello, World!”](images/pythonEditorHelloWorld.png "The Python Editor with “Hello, World!”")
 
@@ -214,7 +214,7 @@ myGroup['in'][1].setInput( myCamera['out'] )
 > Caution :
 > Scene nodes with an `ArrayPlug` input automatically maintain one free child, so that there is always at least one input available. Make sure to connect their child plugs in order: `['in'][0]`, `['in'][1]`, `['in'][2]`, etc. Connecting them out-of-order will return an error.
 
-As you probably noticed, the graph looks tangled up, but that's a consequence of scripting a graph piece-by-piece. Correct this by selecting all the nodes, and then hitting <kbd>Control</kbd> + <kbd>L</kbd>.
+As you probably noticed, the graph looks tangled up, but that's a consequence of scripting a graph piece-by-piece. Correct this by selecting all the nodes, and then hitting <kbd>Ctrl</kbd> + <kbd>L</kbd>.
 
 ![The nodes, rearranged](images/graphEditorRearrangedNodes.png "The nodes, rearranged")
 
@@ -244,5 +244,6 @@ That covers the most common methods and tasks when using Python to edit node gra
 
 ## See also ##
 
+- [The Python Editor](../ThePythonEditor/index.md)
 - [Node Reference](../../../Reference/NodeReference/index.md)
 - [_Python Editor_ Shorcuts](../../../Interface/ControlsAndShortcuts/index.html#script-editor)

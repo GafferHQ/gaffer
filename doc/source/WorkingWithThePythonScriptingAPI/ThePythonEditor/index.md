@@ -31,7 +31,7 @@ Executing code will erase the input field, just like in a debug console. However
 To execute code with the _Python Editor:_
 
 1. Enter code into the input field.
-2. Hit <kbd>Control</kbd> + <kbd>Enter</kbd>.
+2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd>.
 
 > Tip :
 > A useful debugging trick is to highlight any part of the input code in order to preserve the whole input for reuse.
@@ -74,5 +74,7 @@ Scene data               *Scene Inspector* Click and drag         |values|     `
 
 ## See also ##
 
+- [Tutorial: Node Graph Editing in Python](../TutorialNodeGraphEditingInPython/index.md)
+- [Tutorial: Querying a Scene](../TutorialQueryingAScene/index.md)
 - [Scripting Reference](../../Reference/ScriptingReference/index.md)
 - [Controls and Shortcuts](../../Interface/ControlsAndShortcuts/index.md)
