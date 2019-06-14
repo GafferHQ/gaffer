@@ -37,9 +37,9 @@ The bottom-half of the _Python Editor_ is the code input field. The top-half is 
 In the Gaffer API, each node is an instance (in the programming sense) of a class, with each class belonging to a particular Python module. In order to create a node sourced from a module, you will first need to import that module.
 
 > Tip :
-> A list of each of Gaffer's default modules can be found in the [Node Reference](../../../Reference/NodeReference/index.html).
+> A list of each of Gaffer's default modules can be found in the [Node Reference](../../Reference/NodeReference/index.html).
 
-Since the scene will require a sphere primitive, import the [GafferScene](../../../Reference/NodeReference/GafferScene/index.md) module, and then create a Sphere node:
+Since the scene will require a sphere primitive, import the [GafferScene](../../Reference/NodeReference/GafferScene/index.md) module, and then create a Sphere node:
 
 ```python
 import GafferScene
@@ -245,5 +245,5 @@ That covers the most common methods and tasks when using Python to edit node gra
 ## See also ##
 
 - [The Python Editor](../ThePythonEditor/index.md)
-- [Node Reference](../../../Reference/NodeReference/index.md)
-- [_Python Editor_ Shorcuts](../../../Interface/ControlsAndShortcuts/index.html#script-editor)
+- [Node Reference](../../Reference/NodeReference/index.md)
+- [_Python Editor_ Shorcuts](../../Interface/ControlsAndShortcuts/index.html#script-editor)
