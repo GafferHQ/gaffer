@@ -98,11 +98,11 @@ For example, assume a lens with a focalLength of 50mm, an fStop of 4, and a worl
 
 ### Camera data ###
 
-Within the <a href="../AnatomyOfAScene/index.html#scene-hierarchy">scene paradigm</a>, a camera, just like any other scene component, starts with a location in the scene hierarchy. To define a camera, the location must have the following data:
+Within the [scene paradigm](../../../AnatomyOfAScene/index.html#scene-hierarchy), a camera, just like any other scene component, starts with a location in the scene hierarchy. To define a camera, the location must have the following data:
 
 - **Transform:** The vectors that define the position and orientation of the camera.
 - **Object:** A special camera object at the location. Instead of geometry, the object stores camera data, called parameters.
-    - **Parameters:** The crucial values that define a camera, such as the perspective type, field of view/aperture, and depth of field settings. If defined, a special kind of optional parameter, called a **render override**, will supercede one of the scene's **<a href="../AnatomyOfAScene/index.html#options">render options</a>** during computation and rendering.<br>
+    - **Parameters:** The crucial values that define a camera, such as the perspective type, field of view/aperture, and depth of field settings. If defined, a special kind of optional parameter, called a **render override**, will supercede one of the scene's **[render options](../../../AnatomyOfAScene/index.html#options)** during computation and rendering.<br>
     ![Camera parameters in the Scene Inspector](images/interfaceCameraParameters.png)
 - **Sets:** A list of sets the location belongs to. By default, every camera is assigned to an automatic "Cameras" set, accessible in the API by the `__cameras` variable.<br>
     ![Camera sets in the Scene Inspector](images/interfaceCameraSets.png)
@@ -134,5 +134,5 @@ Finally, all camera parameters and render options are passed to the renderer. Al
 ## See also ##
 
 - [Camera](../Camera/index.md)
-- [Camera node reference]()
+- [Camera node reference](../../Reference/NodeReference/GafferScene/Camera.md)
 - [Anatomy of a Scene](../AnatomyOfAScene/index.md)
