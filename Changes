@@ -69,6 +69,10 @@ Improvements
 - MeshTangents : Added support for additional computation modes (#3030).
 - GafferImageUI: Added DWA compression presets (#3153).
 - Numeric Bookmarks : Added serialisation to preserve numeric bookmarks across sessions (#3157).
+- SetExpressions : Support wildcard characters in set names (#3172).
+- LightVisualisers : Added "visualiserScale" attribute (#3180).
+- StandardLightVisualiser : Avoid computations entirely by setting visualiserScale to 0 (#3178).
+- CustomAttributes : Added extraAttributes plug (#3191).
 
 Fixes
 -----
@@ -97,6 +101,7 @@ Fixes
   - Fixed bug when deselecting a curve - the plug listing selection was not being updated
     to reflect the change.
 - PythonCommand : Prevented inadvertent modification of outer context (#3101).
+- Fixed widget signal/slot lifetime issues (#3179).
 
 Documentation
 -------------
@@ -192,6 +197,7 @@ Breaking Changes
 - TransformTool : Added private members (ABI change only - source compatibility is maintained) (#3144).
 - RenderController : Added argument to `updateInBackground()` (ABI change only, source compatibility is maintained) (#3144).
 - SceneGadget : Added new private member (ABI change only, source compatibility is maintained) (#3144).
+- LightVisualiser : The signature for `visualise()` now also includes the attributes (#3180).
 
 0.53.6.2 (relative to 0.53.6.1)
 ========
