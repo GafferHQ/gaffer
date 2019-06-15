@@ -193,6 +193,23 @@ Breaking Changes
 - RenderController : Added argument to `updateInBackground()` (ABI change only, source compatibility is maintained) (#3144).
 - SceneGadget : Added new private member (ABI change only, source compatibility is maintained) (#3144).
 
+0.53.6.2 (relative to 0.53.6.1)
+========
+
+Improvements
+------------
+
+- CustomAttributes : Added extraAttributes plug that can be set from CompoundData (#3191)
+- StandardLightVisualiser : Setting locatorScale to 0 now avoids costly computations (#3178)
+- GafferUI : Added compatibility patch to allow >0.54 layouts to load (#3206)
+
+Fixes
+-----
+
+- MultiLineTextWidget : Fixed unicode handling in `selectedText()` (#3183)
+- SplineWidget : Fixed display transform management bug (#3187)
+- ArnoldLight : Rejig `loadShader()` to fix "nodule:type" metadata (#3188)
+
 0.53.6.0 (relative to 0.53.5.0)
 ========
 
