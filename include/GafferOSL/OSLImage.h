@@ -39,6 +39,7 @@
 #define GAFFEROSL_OSLIMAGE_H
 
 #include "GafferOSL/Export.h"
+#include "GafferOSL/OSLCode.h"
 #include "GafferOSL/TypeIds.h"
 
 #include "GafferScene/ShaderPlug.h"
@@ -58,14 +59,12 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::ImageProcessor );
 
-		GafferScene::ShaderPlug *shaderPlug();
-		const GafferScene::ShaderPlug *shaderPlug() const;
+		Gaffer::Plug *channelsPlug();
+		const Gaffer::Plug *channelsPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
-
-		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 		bool enabled() const override;
 
@@ -80,6 +79,9 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 
 	private :
 
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
+
 		// computeChannelData() is called for individual channels at a time, but when we run a
 		// shader we get all the outputs at once. we therefore use this plug to compute (and
 		// automatically cache) the shading and then access it from computeChannelData(), which
@@ -91,6 +93,14 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 
 		void hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeShading( const Gaffer::Context *context ) const;
+
+		GafferOSL::OSLCode *oslCode();
+		const GafferOSL::OSLCode *oslCode() const;
+
+		void channelsAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void channelsRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+
+		void updateChannels();
 
 		static size_t g_firstPlugIndex;
 

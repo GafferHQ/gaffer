@@ -37,13 +37,20 @@
 
 #include "GafferOSL/OSLImage.h"
 
+#include "GafferOSL/ClosurePlug.h"
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/NameValuePlug.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/UndoScope.h"
 
 #include "IECore/CompoundData.h"
+#include "IECore/MessageHandler.h"
+
+#include "boost/bind.hpp"
 
 using namespace std;
 using namespace Imath;
@@ -61,9 +68,17 @@ OSLImage::OSLImage( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new GafferScene::ShaderPlug( "shader" ) );
+	addChild( new GafferScene::ShaderPlug( "__shader", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	addChild( new Gaffer::ObjectPlug( "__shading", Gaffer::Plug::Out, new CompoundData() ) );
+
+	addChild( new Plug( "channels", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( new OSLCode( "__oslCode" ) );
+	shaderPlug()->setInput( oslCode()->outPlug() );
+
+	channelsPlug()->childAddedSignal().connect( boost::bind( &OSLImage::channelsAdded, this, ::_1, ::_2 ) );
+	channelsPlug()->childRemovedSignal().connect( boost::bind( &OSLImage::channelsRemoved, this, ::_1, ::_2 ) );
+ 
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
@@ -95,6 +110,26 @@ const Gaffer::ObjectPlug *OSLImage::shadingPlug() const
 	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::Plug *OSLImage::channelsPlug()
+{
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::Plug *OSLImage::channelsPlug() const
+{
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 2 );
+}
+
+GafferOSL::OSLCode *OSLImage::oslCode()
+{
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 3 );
+}
+
+const GafferOSL::OSLCode *OSLImage::oslCode() const
+{
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 3 );
+}
+
 void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
@@ -113,30 +148,6 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( outPlug()->channelNamesPlug() );
 		outputs.push_back( outPlug()->channelDataPlug()	);
 	}
-}
-
-bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !ImageProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( !inputPlug )
-	{
-		return true;
-	}
-
-	if( plug == shaderPlug() )
-	{
-		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source()->node() ) )
-		{
-			const OSLShader *oslShader = runTimeCast<const OSLShader>( shader );
-			return oslShader && oslShader->typePlug()->getValue() == "osl:surface";
-		}
-	}
-
-	return true;
 }
 
 bool OSLImage::enabled() const
@@ -368,4 +379,94 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	}
 
 	return result;
+}
+
+void OSLImage::updateChannels()
+{
+	// Disable undo for the actions we perform, because anything that can
+	// trigger an update is undoable itself, and we will take care of everything as a whole
+	// when we are undone.
+	UndoScope undoDisabler( scriptNode(), UndoScope::Disabled );
+
+	// Currently the OSLCode node will recompile every time an input is added.
+	// We're hoping in the future to avoid doing this until the network is actually needed,
+	// but in the meantime, we can save some time by emptying the code first, so that at least
+	// all the redundant recompiles are of shorter code.
+	oslCode()->codePlug()->setValue( "" );
+
+	oslCode()->parametersPlug()->clearChildren();
+
+	std::string code = "Ci = 0;\n";
+
+	for( NameValuePlugIterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
+	{
+		std::string prefix = "";
+		BoolPlug* enabledPlug = (*inputPlug)->enabledPlug();
+		if( enabledPlug )
+		{
+			IntPlugPtr codeEnablePlug = new IntPlug( "enable" );
+			oslCode()->parametersPlug()->addChild( codeEnablePlug );
+			codeEnablePlug->setInput( enabledPlug );
+			prefix = "if( " + codeEnablePlug->getName().string() + " ) ";
+		}
+
+		Plug *valuePlug = (*inputPlug)->valuePlug();
+
+		if( valuePlug->typeId() == ClosurePlug::staticTypeId() )
+		{
+			// Closures are a special case that doesn't need a wrapper function
+			ClosurePlugPtr codeClosurePlug = new ClosurePlug( "closureIn" );
+			oslCode()->parametersPlug()->addChild( codeClosurePlug );
+			codeClosurePlug->setInput( valuePlug );
+
+			code += prefix + "Ci += " + codeClosurePlug->getName().string() + ";\n";
+			continue;
+		}
+
+		std::string outFunction;
+		PlugPtr codeValuePlug;
+		const Gaffer::TypeId valueType = (Gaffer::TypeId)valuePlug->typeId();
+		switch( (int)valueType )
+		{
+			case FloatPlugTypeId :
+				codeValuePlug = new FloatPlug( "value" );
+				outFunction = "outChannel";
+				break;
+			case Color3fPlugTypeId :
+				codeValuePlug = new Color3fPlug( "value" );
+				outFunction = "outLayer";
+				break;
+		}
+
+		if( codeValuePlug )
+		{
+
+			StringPlugPtr codeNamePlug = new StringPlug( "name" );
+			oslCode()->parametersPlug()->addChild( codeNamePlug );
+			codeNamePlug->setInput( (*inputPlug)->namePlug() );
+
+			oslCode()->parametersPlug()->addChild( codeValuePlug );
+			codeValuePlug->setInput( valuePlug );
+
+			code += prefix + "Ci += " + outFunction + "( " + codeNamePlug->getName().string() + ", "
+				+ codeValuePlug->getName().string() + ");\n";
+			continue;
+		}
+
+		IECore::msg( IECore::Msg::Warning, "OSLImage::updateChannels",
+			"Could not create channel from plug: " + (*inputPlug)->fullName()
+		);
+	}
+
+	oslCode()->codePlug()->setValue( code );
+}
+
+void OSLImage::channelsAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+{
+	updateChannels();
+}
+
+void OSLImage::channelsRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+{
+	updateChannels();
 }
