@@ -42,17 +42,22 @@ class __DummyShaderPlug( object ):
 		self.__node = node
 
 	def setInput( self, plug ):
-		if not "legacyClosure" in self.__node["primitiveVariables"]:
-			self.__node["primitiveVariables"].addChild(
+		if isinstance( self.__node, GafferOSL.OSLImage ):
+			parentPlug = self.__node["channels"]
+		else:
+			parentPlug = self.__node["primitiveVariables"]
+
+		if not "legacyClosure" in parentPlug:
+			parentPlug.addChild(
 				Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug( "closure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ), True, "legacyClosure" )
 			)
 
-		self.__node["primitiveVariables"]["legacyClosure"]["value"].setInput( plug )
+		parentPlug["legacyClosure"]["value"].setInput( plug )
 
 
 # Provides backwards compatibility by allowing access to closure plug
 # using its old name of "shader".
-def __oslObjectGetItem( originalGetItem ) :
+def __oslReplaceShaderGetItem( originalGetItem ) :
 
 	def getItem( self, key ) :
 		if key == "shader":
@@ -62,7 +67,8 @@ def __oslObjectGetItem( originalGetItem ) :
 
 	return getItem
 
-GafferOSL.OSLObject.__getitem__ = __oslObjectGetItem( GafferOSL.OSLObject.__getitem__ )
+GafferOSL.OSLObject.__getitem__ = __oslReplaceShaderGetItem( GafferOSL.OSLObject.__getitem__ )
+GafferOSL.OSLImage.__getitem__ = __oslReplaceShaderGetItem( GafferOSL.OSLImage.__getitem__ )
 
 def __oslShaderGetItem( originalGetItem ) :
 
@@ -70,7 +76,7 @@ def __oslShaderGetItem( originalGetItem ) :
 		if key != "out":
 			return originalGetItem( self, key )
 
-		if originalGetItem( self, "name" ).getValue() != "ObjectProcessing/OutObject":
+		if originalGetItem( self, "name" ).getValue() not in [ "ObjectProcessing/OutObject", "ImageProcessing/OutImage" ]:
 			return originalGetItem( self, key )
 
 		scriptNode = self.ancestor( Gaffer.ScriptNode )
