@@ -52,10 +52,10 @@ class TraverseTask : public tbb::task
 
 		TraverseTask(
 			const GafferScene::ScenePlug *scene,
-			const Gaffer::Context *context,
+			const Gaffer::ThreadState &threadState,
 			ThreadableFunctor &f
 		)
-			:	m_scene( scene ), m_context( context ), m_f( f )
+			:	m_scene( scene ), m_threadState( threadState ), m_f( f )
 		{
 		}
 
@@ -65,7 +65,7 @@ class TraverseTask : public tbb::task
 
 		task *execute() override
 		{
-			ScenePlug::PathScope pathScope( m_context, m_path );
+			ScenePlug::PathScope pathScope( m_threadState, m_path );
 
 			if( m_f( m_scene, m_path ) )
 			{
@@ -92,7 +92,7 @@ class TraverseTask : public tbb::task
 
 		TraverseTask( const TraverseTask &other, const ScenePlug::ScenePath &path )
 			:	m_scene( other.m_scene ),
-			m_context( other.m_context ),
+			m_threadState( other.m_threadState ),
 			m_f( other.m_f ),
 			m_path( path )
 		{
@@ -101,7 +101,7 @@ class TraverseTask : public tbb::task
 	private :
 
 		const GafferScene::ScenePlug *m_scene;
-		const Gaffer::Context *m_context;
+		const Gaffer::ThreadState &m_threadState;
 		ThreadableFunctor &m_f;
 		GafferScene::ScenePlug::ScenePath m_path;
 
@@ -115,11 +115,11 @@ class LocationTask : public tbb::task
 
 		LocationTask(
 			const GafferScene::ScenePlug *scene,
-			const Gaffer::Context *context,
+			const Gaffer::ThreadState &threadState,
 			const ScenePlug::ScenePath &path,
 			ThreadableFunctor &f
 		)
-			:	m_scene( scene ), m_context( context ), m_path( path ), m_f( f )
+			:	m_scene( scene ), m_threadState( threadState ), m_path( path ), m_f( f )
 		{
 		}
 
@@ -129,7 +129,7 @@ class LocationTask : public tbb::task
 
 		task *execute() override
 		{
-			ScenePlug::PathScope pathScope( m_context, m_path );
+			ScenePlug::PathScope pathScope( m_threadState, m_path );
 
 			if( !m_f( m_scene, m_path ) )
 			{
@@ -152,7 +152,7 @@ class LocationTask : public tbb::task
 			for( size_t i = 0, e = childNames.size(); i < e; ++i )
 			{
 				childPath.back() = childNames[i];
-				LocationTask *t = new( allocate_child() ) LocationTask( m_scene, m_context, childPath, childFunctors[i] );
+				LocationTask *t = new( allocate_child() ) LocationTask( m_scene, m_threadState, childPath, childFunctors[i] );
 				spawn( *t );
 			}
 			wait_for_all();
@@ -163,7 +163,7 @@ class LocationTask : public tbb::task
 	private :
 
 		const GafferScene::ScenePlug *m_scene;
-		const Gaffer::Context *m_context;
+		const Gaffer::ThreadState &m_threadState;
 		const GafferScene::ScenePlug::ScenePath m_path;
 		ThreadableFunctor &m_f;
 
@@ -243,7 +243,7 @@ template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
-	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), root, f );
+	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), root, f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 
@@ -251,7 +251,7 @@ template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
-	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::Context::current(), f );
+	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 

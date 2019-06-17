@@ -321,7 +321,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 	}
 
 	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
-	const Gaffer::Context *context = Gaffer::Context::current();
+	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
@@ -335,9 +335,9 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 
 			tbb::filter::parallel,
 
-			[ imagePlug, &functor, context ] ( const Imath::V2i &tileOrigin ) {
+			[ imagePlug, &functor, &threadState ] ( const Imath::V2i &tileOrigin ) {
 
-				ImagePlug::ChannelDataScope channelDataScope( context );
+				ImagePlug::ChannelDataScope channelDataScope( threadState );
 				channelDataScope.setTileOrigin( tileOrigin );
 				functor( imagePlug, tileOrigin );
 
@@ -365,7 +365,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 	}
 
 	Detail::TileChannelInputIterator tileIterator( processWindow, channelNames, tileOrder );
-	const Gaffer::Context *context = Gaffer::Context::current();
+	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline(
@@ -381,9 +381,9 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 
 			tbb::filter::parallel,
 
-			[ imagePlug, &functor, context ] ( const Detail::OriginAndName &input ) {
+			[ imagePlug, &functor, &threadState ] ( const Detail::OriginAndName &input ) {
 
-				ImagePlug::ChannelDataScope channelDataScope( context );
+				ImagePlug::ChannelDataScope channelDataScope( threadState );
 				channelDataScope.setTileOrigin( input.origin );
 				channelDataScope.setChannelName( input.name );
 				functor( imagePlug, input.name, input.origin );
@@ -415,7 +415,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 	typedef std::pair<Imath::V2i, TileFunctorResult> TileFilterResult;
 
 	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
-	const Gaffer::Context *context = Gaffer::Context::current();
+	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
@@ -429,9 +429,9 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 
 			tbb::filter::parallel,
 
-			[ imagePlug, &tileFunctor, context ] ( const Imath::V2i &tileOrigin ) {
+			[ imagePlug, &tileFunctor, &threadState ] ( const Imath::V2i &tileOrigin ) {
 
-				ImagePlug::ChannelDataScope channelDataScope( context );
+				ImagePlug::ChannelDataScope channelDataScope( threadState );
 				channelDataScope.setTileOrigin( tileOrigin );
 
 				return TileFilterResult(
@@ -445,9 +445,9 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 
 			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
 
-			[ imagePlug, &gatherFunctor, context ] ( const TileFilterResult &input ) {
+			[ imagePlug, &gatherFunctor, &threadState ] ( const TileFilterResult &input ) {
 
-				ImagePlug::ChannelDataScope channelDataScope( context );
+				ImagePlug::ChannelDataScope channelDataScope( threadState );
 				channelDataScope.setTileOrigin( input.first );
 
 				gatherFunctor( imagePlug, input.first, input.second );
@@ -479,7 +479,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 	typedef std::pair<Detail::OriginAndName, TileFunctorResult> TileFilterResult;
 
 	Detail::TileChannelInputIterator tileIterator( processWindow, channelNames, tileOrder );
-	const Gaffer::Context *context = Gaffer::Context::current();
+	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_pipeline(
@@ -495,9 +495,9 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 
 			tbb::filter::parallel,
 
-			[ imagePlug, &tileFunctor, context ] ( const Detail::OriginAndName &input ) {
+			[ imagePlug, &tileFunctor, &threadState ] ( const Detail::OriginAndName &input ) {
 
-				ImagePlug::ChannelDataScope channelDataScope( context );
+				ImagePlug::ChannelDataScope channelDataScope( threadState );
 				channelDataScope.setTileOrigin( input.origin );
 				channelDataScope.setChannelName( input.name );
 
@@ -513,9 +513,9 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 
 			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
 
-			[ imagePlug, &gatherFunctor, context ] ( const TileFilterResult &input ) {
+			[ imagePlug, &gatherFunctor, &threadState ] ( const TileFilterResult &input ) {
 
-				ImagePlug::ChannelDataScope channelDataScope( context );
+				ImagePlug::ChannelDataScope channelDataScope( threadState );
 				channelDataScope.setTileOrigin( input.first.origin );
 				channelDataScope.setChannelName( input.first.name );
 

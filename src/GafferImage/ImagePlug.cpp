@@ -286,8 +286,20 @@ ImagePlug::GlobalScope::GlobalScope( const Gaffer::Context *context )
 	remove( tileOriginContextName );
 }
 
+ImagePlug::GlobalScope::GlobalScope( const Gaffer::ThreadState &threadState )
+	:	EditableScope( threadState )
+{
+	remove( channelNameContextName );
+	remove( tileOriginContextName );
+}
+
 ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::Context *context )
 	:   EditableScope( context )
+{
+}
+
+ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::ThreadState &threadState )
+	:	EditableScope( threadState )
 {
 }
 

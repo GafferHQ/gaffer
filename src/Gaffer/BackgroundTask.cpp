@@ -36,6 +36,7 @@
 
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/ThreadState.h"
 
 #include "IECore/MessageHandler.h"
 
@@ -177,6 +178,11 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 
 			taskData->status = Running;
 			lock.unlock();
+
+			// Reset thread state rather then inherit the random
+			// one that TBB task-stealing might present us with.
+			const ThreadState defaultThreadState;
+			ThreadState::Scope threadStateScope( defaultThreadState );
 
 			Status status;
 			try
@@ -322,25 +328,6 @@ void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
 	// And then perform all the waits. This way the wait on one
 	// task doesn't delay the start of cancellation for the next.
 	for( auto it = range.first; it != range.second; )
-	{
-		// Wait invalidates iterator, so must increment first.
-		auto nextIt = std::next( it );
-		it->task->wait();
-		it = nextIt;
-	}
-}
-
-void BackgroundTask::cancelAllTasks()
-{
-	const ActiveTasks &a = activeTasks();
-	// Call cancel for everything first.
-	for( const auto &t : a )
-	{
-		t.task->cancel();
-	}
-	// And then perform all the waits. This way the wait on one
-	// task doesn't delay the start of cancellation for the next.
-	for( auto it = a.begin(); it != a.end(); )
 	{
 		// Wait invalidates iterator, so must increment first.
 		auto nextIt = std::next( it );

@@ -299,19 +299,19 @@ namespace RendererAlgo
 struct RenderSets::Updater
 {
 
-	Updater( const ScenePlug *scene, const Context *context, RenderSets &renderSets, unsigned changed )
-		:	changed( changed ), m_scene( scene ), m_context( context ), m_renderSets( renderSets )
+	Updater( const ScenePlug *scene, const ThreadState &threadState, RenderSets &renderSets, unsigned changed )
+		:	changed( changed ), m_scene( scene ), m_threadState( threadState ), m_renderSets( renderSets )
 	{
 	}
 
 	Updater( const Updater &updater, tbb::split )
-		:	changed( NothingChanged ), m_scene( updater.m_scene ), m_context( updater.m_context ), m_renderSets( updater.m_renderSets )
+		:	changed( NothingChanged ), m_scene( updater.m_scene ), m_threadState( updater.m_threadState ), m_renderSets( updater.m_renderSets )
 	{
 	}
 
 	void operator()( const tbb::blocked_range<size_t> &r )
 	{
-		ScenePlug::SetScope setScope( m_context );
+		ScenePlug::SetScope setScope( m_threadState );
 
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
@@ -366,7 +366,7 @@ struct RenderSets::Updater
 	private :
 
 		const ScenePlug *m_scene;
-		const Context *m_context;
+		const ThreadState &m_threadState;
 		RenderSets &m_renderSets;
 
 };
@@ -419,7 +419,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 
 	// Update all the sets we want in parallel.
 
-	Updater updater( scene, Context::current(), *this, changed );
+	Updater updater( scene, ThreadState::current(), *this, changed );
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_reduce(
 		tbb::blocked_range<size_t>( 0, m_sets.size() + 3 ),

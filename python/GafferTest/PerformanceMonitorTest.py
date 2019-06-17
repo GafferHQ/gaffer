@@ -63,21 +63,6 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 		while gc.collect() :
 			pass
 
-	def testActiveStatus( self ) :
-
-		m = Gaffer.PerformanceMonitor()
-
-		self.assertEqual( m.getActive(), False )
-		m.setActive( True )
-		self.assertEqual( m.getActive(), True )
-		m.setActive( False )
-		self.assertEqual( m.getActive(), False )
-
-		with m :
-			self.assertEqual( m.getActive(), True )
-
-		self.assertEqual( m.getActive(), False )
-
 	def testStatistics( self ) :
 
 		m = Gaffer.PerformanceMonitor()

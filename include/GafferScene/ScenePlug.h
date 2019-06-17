@@ -134,8 +134,14 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// specifying the scene path.
 		struct PathScope : public Gaffer::Context::EditableScope
 		{
+			/// Standard constructors, for modifying context on the current thread.
 			PathScope( const Gaffer::Context *context );
 			PathScope( const Gaffer::Context *context, const ScenePath &scenePath );
+
+			/// Specialised constructors used to transfer state to TBB tasks. See
+			/// ThreadState documentation for more details.
+			PathScope( const Gaffer::ThreadState &threadState );
+			PathScope( const Gaffer::ThreadState &threadState, const ScenePath &scenePath );
 
 			void setPath( const ScenePath &scenePath );
 		};
@@ -144,8 +150,14 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// specifying the set name.
 		struct SetScope : public Gaffer::Context::EditableScope
 		{
+			/// Standard constructors, for modifying context on the current thread.
 			SetScope( const Gaffer::Context *context );
 			SetScope( const Gaffer::Context *context, const IECore::InternedString &setName );
+
+			/// Specialised constructors used to transfer state to TBB tasks. See
+			/// ThreadState documentation for more details.
+			SetScope( const Gaffer::ThreadState &threadState );
+			SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString &setName );
 
 			void setSetName( const IECore::InternedString &setName );
 		};
@@ -157,7 +169,11 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// reducing pressure on the hash cache.
 		struct GlobalScope : public Gaffer::Context::EditableScope
 		{
+			/// Standard constructor, for modifying context on the current thread.
 			GlobalScope( const Gaffer::Context *context );
+			/// Specialised constructor used to transfer state to TBB tasks. See
+			/// ThreadState documentation for more details.
+			GlobalScope( const Gaffer::ThreadState &threadState );
 		};
 		//@}
 

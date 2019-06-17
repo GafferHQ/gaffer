@@ -43,6 +43,7 @@
 
 #include "Gaffer/Node.h"
 
+#include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
@@ -102,7 +103,9 @@ boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::
 
 BOOST_PYTHON_MODULE( _GafferImageTest )
 {
-	class_<ContextSanitiser, bases<Gaffer::Monitor>, boost::noncopyable>( "ContextSanitiser" );
+	IECorePython::RefCountedClass<ContextSanitiser, Gaffer::Monitor>( "ContextSanitiser" )
+		.def( init<>() )
+	;
 
 	def( "processTiles", &processTilesWrapper );
 	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );

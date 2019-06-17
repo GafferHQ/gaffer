@@ -63,6 +63,8 @@ class GAFFER_API PerformanceMonitor : public Monitor
 		PerformanceMonitor();
 		~PerformanceMonitor() override;
 
+		IE_CORE_DECLAREMEMBERPTR( PerformanceMonitor )
+
 		struct Statistics
 		{
 
@@ -122,6 +124,8 @@ class GAFFER_API PerformanceMonitor : public Monitor
 		mutable Statistics m_combinedStatistics;
 
 };
+
+IE_CORE_DECLAREPTR( PerformanceMonitor )
 
 } // namespace Gaffer
 

@@ -127,6 +127,7 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		struct GlobalScope : public Gaffer::Context::EditableScope
 		{
 			GlobalScope( const Gaffer::Context *context );
+			GlobalScope( const Gaffer::ThreadState &threadState );
 		};
 
 		/// Utility class to scope a temporary copy of a context,
@@ -135,6 +136,7 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		struct ChannelDataScope : public Gaffer::Context::EditableScope
 		{
 			ChannelDataScope( const Gaffer::Context *context );
+			ChannelDataScope( const Gaffer::ThreadState &threadState );
 			void setTileOrigin( const Imath::V2i &tileOrigin );
 			void setChannelName( const std::string &channelName );
 		};

@@ -46,6 +46,7 @@
 #include "Gaffer/Plug.h"
 #include "Gaffer/VTuneMonitor.h"
 
+#include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "boost/format.hpp"
@@ -56,18 +57,6 @@ using namespace Gaffer::MonitorAlgo;
 
 namespace
 {
-
-void enterScope( Monitor &m )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	m.setActive( true );
-}
-
-void exitScope( Monitor &m, object type, object value, object traceBack )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	m.setActive( false );
-}
 
 std::string repr( PerformanceMonitor::Statistics &s )
 {
@@ -211,15 +200,16 @@ void GafferModule::bindMonitor()
 		);
 	}
 
-	class_<Monitor, boost::noncopyable>( "Monitor", no_init )
-		.def( "setActive", &Monitor::setActive )
-		.def( "getActive", &Monitor::getActive )
-		.def( "__enter__", &enterScope, return_self<>() )
-		.def( "__exit__", &exitScope )
-	;
+	{
+		scope s = IECorePython::RefCountedClass<Monitor, IECore::RefCounted>( "Monitor" );
+
+		class_<Monitor::Scope, boost::noncopyable>( "_Scope", init<Monitor *>() )
+		;
+	}
 
 	{
-		scope s = class_<PerformanceMonitor, bases<Monitor>, boost::noncopyable >( "PerformanceMonitor" )
+		scope s = IECorePython::RefCountedClass<PerformanceMonitor, Monitor>( "PerformanceMonitor" )
+			.def( init<>() )
 			.def( "allStatistics", &allStatistics<PerformanceMonitor> )
 			.def( "plugStatistics", &PerformanceMonitor::plugStatistics, return_value_policy<copy_const_reference>() )
 			.def( "combinedStatistics", &PerformanceMonitor::combinedStatistics, return_value_policy<copy_const_reference>() )
@@ -246,7 +236,7 @@ void GafferModule::bindMonitor()
 	}
 
 	{
-		scope s = class_<ContextMonitor, bases<Monitor>, boost::noncopyable>( "ContextMonitor", no_init )
+		scope s = IECorePython::RefCountedClass<ContextMonitor, Monitor>( "ContextMonitor" )
 			.def( init<const GraphComponent *>( arg( "root" ) = object() ) )
 			.def( "allStatistics", &allStatistics<ContextMonitor> )
 			.def( "plugStatistics", &ContextMonitor::plugStatistics, return_value_policy<copy_const_reference>() )
@@ -264,7 +254,7 @@ void GafferModule::bindMonitor()
 
 #ifdef GAFFER_VTUNE
 	{
-		scope s = class_<VTuneMonitor, bases<Monitor>, boost::noncopyable>( "VTuneMonitor" )
+		scope s = IECorePython::RefCountedClass<VTuneMonitor, Monitor>( "VTuneMonitor" )
 			.def( init<bool>(
 					(
 						arg( "monitorHashProcess" ) = false )

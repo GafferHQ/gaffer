@@ -223,37 +223,6 @@ bool GafferScene::SceneAlgo::setExists( const ScenePlug *scene, const IECore::In
 	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
 }
 
-namespace
-{
-
-struct Sets
-{
-
-	Sets( const ScenePlug *scene, const Context *context, const std::vector<InternedString> &names, std::vector<IECore::ConstPathMatcherDataPtr> &sets )
-		:	m_scene( scene ), m_context( context ), m_names( names ), m_sets( sets )
-	{
-	}
-
-	void operator()( const tbb::blocked_range<size_t> &r ) const
-	{
-		Context::Scope scopedContext( m_context );
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			m_sets[i] = m_scene->set( m_names[i] );
-		}
-	}
-
-	private :
-
-		const ScenePlug *m_scene;
-		const Context *m_context;
-		const std::vector<InternedString> &m_names;
-		std::vector<IECore::ConstPathMatcherDataPtr> &m_sets;
-
-} ;
-
-} // namespace
-
 IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scene )
 {
 	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
@@ -265,11 +234,26 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 	std::vector<IECore::ConstPathMatcherDataPtr> setsVector;
 	setsVector.resize( setNames.size(), nullptr );
 
-	Sets setsCompute( scene, Context::current(), setNames, setsVector );
+	const ThreadState &threadState = ThreadState::current();
+
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_for(
-		tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute,
+
+		tbb::blocked_range<size_t>( 0, setsVector.size() ),
+
+		[scene, &setNames, &threadState, &setsVector]( const tbb::blocked_range<size_t> &r ) {
+
+			ScenePlug::SetScope setScope( threadState );
+			for( size_t i=r.begin(); i!=r.end(); ++i )
+			{
+				setScope.setSetName( setNames[i] );
+				setsVector[i] = scene->setPlug()->getValue();
+			}
+
+		},
+
 		taskGroupContext // Prevents outer tasks silently cancelling our tasks
+
 	);
 
 	CompoundDataPtr result = new CompoundData;
@@ -348,6 +332,8 @@ class CapturingMonitor : public Monitor
 		{
 		}
 
+		IE_CORE_DECLAREMEMBERPTR( CapturingMonitor )
+
 		const CapturedProcess::PtrVector &rootProcesses()
 		{
 			return m_rootProcesses;
@@ -366,30 +352,15 @@ class CapturingMonitor : public Monitor
 
 			m_processMap[process] = capturedProcess.get();
 
-			if( process->parent() )
+			ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+			if( it != m_processMap.end() )
 			{
-				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-				if( it != m_processMap.end() )
-				{
-					it->second->children.push_back( std::move( capturedProcess ) );
-				}
-				else
-				{
-					// We've been called for a process whose parent we have not
-					// been called for. This shouldn't happen, but currently it
-					// can if another thread is doing unrelated computes while we're
-					// trying to capture the transform computes on the UI thread.
-					// We need our scope to be limited to processes that originate
-					// from the thread our Process::Scope is on, but that is not the
-					// case (see #2806). The best we can do is ignore this, but we
-					// could still crash if a background process accesses us after
-					// we're destroyed. Output a warning so we have a trail of
-					// breadcrumbs for the future.
-					IECore::msg( IECore::Msg::Warning, "CapturingMonitor", "Unscoped process encountered" );
-				}
+				it->second->children.push_back( std::move( capturedProcess ) );
 			}
 			else
 			{
+				// Either `process->parent()` was null, or was started
+				// before we were made active via `Monitor::Scope`.
 				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
 		}
@@ -410,6 +381,8 @@ class CapturingMonitor : public Monitor
 		CapturedProcess::PtrVector m_rootProcesses;
 
 };
+
+IE_CORE_DECLAREPTR( CapturingMonitor )
 
 InternedString g_contextUniquefierName = "__sceneAlgoHistory:uniquefier";
 uint64_t g_contextUniquefierValue = 0;
@@ -503,16 +476,16 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 		) );
 	}
 
-	CapturingMonitor monitor;
+	CapturingMonitorPtr monitor = new CapturingMonitor;
 	{
 		ScenePlug::PathScope pathScope( Context::current(), path );
 		// Trick to bypass the hash cache and get a full upstream evaluation.
 		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
-		Monitor::Scope monitorScope( &monitor );
+		Monitor::Scope monitorScope( monitor );
 		scenePlugChild->hash();
 	}
-	assert( monitor.rootProcesses().size() == 1 );
-	return historyWalk( monitor.rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
+	assert( monitor->rootProcesses().size() == 1 );
+	return historyWalk( monitor->rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
 }
 
 ScenePlug *SceneAlgo::source( const ScenePlug *scene, const ScenePlug::ScenePath &path )

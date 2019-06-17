@@ -71,16 +71,13 @@ void GafferTest::testManyContexts()
 	// change a value or two, and then continue.
 
 	Timer t;
-	for( int i = 0; i < 100000; ++i )
+	for( int i = 0; i < 1000000; ++i )
 	{
 		ContextPtr tmp = new Context( *base, Context::Borrowed );
 		tmp->set( keys[i%numKeys], i );
 		GAFFERTEST_ASSERT( tmp->get<int>( keys[i%numKeys] ) == i );
 		GAFFERTEST_ASSERT( tmp->hash() != baseHash );
 	}
-
-	// uncomment to get timing information
-	//std::cerr << t.stop() << std::endl;
 }
 
 // Useful for assessing the performance of substitutions.
@@ -99,9 +96,6 @@ void GafferTest::testManySubstitutions()
 		const std::string s = context->substitute( phrase );
 		GAFFERTEST_ASSERT( s == expectedResult );
 	}
-
-	// uncomment to get timing information
-	//std::cerr << t.stop() << std::endl;
 }
 
 // Useful for assessing the performance of environment variable substitutions.
@@ -118,9 +112,6 @@ void GafferTest::testManyEnvironmentSubstitutions()
 		const std::string s = context->substitute( phrase );
 		GAFFERTEST_ASSERT( s == expectedResult );
 	}
-
-	// uncomment to get timing information
-	//std::cerr << t.stop() << std::endl;
 }
 
 // Tests that scoping a null context is a no-op

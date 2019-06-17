@@ -46,40 +46,61 @@ Monitor::Monitor()
 
 Monitor::~Monitor()
 {
-	Process::deregisterMonitor( this );
 }
 
-void Monitor::setActive( bool active )
+Monitor::Scope::Scope( const MonitorPtr &monitor, bool active )
+	:	ThreadState::Scope( (bool)monitor )
 {
+	if( !m_threadState )
+	{
+		// We didn't push state because `monitor` was null.
+		return;
+	}
+
+	m_monitors = *m_threadState->m_monitors;
 	if( active )
 	{
-		Process::registerMonitor( this );
+		m_monitors.insert( monitor );
 	}
 	else
 	{
-		Process::deregisterMonitor( this );
+		m_monitors.erase( monitor );
 	}
+	m_threadState->m_monitors = &m_monitors;
 }
 
-bool Monitor::getActive() const
+Monitor::Scope::Scope( const MonitorSet &monitors, bool active )
+	:	ThreadState::Scope( !monitors.empty() )
 {
-	return Process::monitorRegistered( this );
-}
-
-Monitor::Scope::Scope( Monitor *monitor )
-	:	m_monitor( monitor )
-{
-	if( m_monitor )
+	if( !m_threadState )
 	{
-		m_monitor->setActive( true );
+		// We didn't push state because `monitors` is empty.
+		return;
 	}
+
+	m_monitors = *m_threadState->m_monitors;
+	if( active )
+	{
+		for( const auto &m : monitors )
+		{
+			m_monitors.insert( m );
+		}
+	}
+	else
+	{
+		for( const auto &m : monitors )
+		{
+			m_monitors.erase( m );
+		}
+	}
+	m_threadState->m_monitors = &m_monitors;
 }
 
 Monitor::Scope::~Scope()
 {
-	if( m_monitor )
-	{
-		m_monitor->setActive( false );
-	}
 }
 
+const Monitor::MonitorSet &Monitor::current()
+{
+	return *ThreadState::current().m_monitors;
+}

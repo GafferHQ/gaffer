@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,70 +34,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_MONITOR_H
-#define GAFFER_MONITOR_H
-
-#include "Gaffer/Export.h"
 #include "Gaffer/ThreadState.h"
 
-#include "IECore/RefCounted.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Monitor.h"
 
-namespace Gaffer
+#include "tbb/enumerable_thread_specific.h"
+
+using namespace Gaffer;
+
+namespace
 {
 
-class Process;
+using Stack = std::stack<ThreadState>;
+tbb::enumerable_thread_specific<Stack, tbb::cache_aligned_allocator<Stack>, tbb::ets_key_per_instance> g_stack;
 
-/// Base class for monitoring node graph processes.
-class GAFFER_API Monitor : public IECore::RefCounted
+ContextPtr g_defaultContext = new Context;
+
+} // namespace
+
+const ThreadState::MonitorSet ThreadState::g_defaultMonitors;
+const ThreadState ThreadState::g_defaultState;
+
+ThreadState::ThreadState()
+	:	m_context( g_defaultContext.get() ), m_process( nullptr ), m_monitors( &g_defaultMonitors )
 {
+}
 
-	public :
+ThreadState::Scope::Scope( const ThreadState &state )
+	:	m_stack( &g_stack.local() )
+{
+	m_stack->push( state );
+	m_threadState = &m_stack->top();
+}
 
-		virtual ~Monitor();
+ThreadState::Scope::Scope( bool push )
+	:	m_threadState( nullptr ), m_stack( nullptr )
+{
+	if( push )
+	{
+		m_stack = &g_stack.local();
+		m_stack->push( m_stack->size() ? m_stack->top() : g_defaultState );
+		m_threadState = &m_stack->top();
+	}
+}
 
-		IE_CORE_DECLAREMEMBERPTR( Monitor )
+ThreadState::Scope::~Scope()
+{
+	if( m_stack )
+	{
+		m_stack->pop();
+	}
+}
 
-		using MonitorSet = boost::container::flat_set<MonitorPtr>;
-
-		class Scope : private ThreadState::Scope
-		{
-
-			public :
-
-				/// Constructs a Scope where the monitor has the specified
-				/// active state. If monitor is null, the scope is a no-op.
-				Scope( const MonitorPtr &monitor, bool active = true );
-				/// Constructs a Scope where each of `monitors` has the
-				/// specified `active` state.
-				Scope( const MonitorSet &monitors, bool active = true );
-				/// Returns to the previously active set of monitors.
-				~Scope();
-
-			private :
-
-				MonitorSet m_monitors;
-
-		};
-
-		/// Returns the set of monitors that are currently active
-		/// on this thread.
-		static const MonitorSet &current();
-
-	protected :
-
-		Monitor();
-
-		friend class Process;
-
-		/// Implementations must be safe to call concurrently.
-		virtual void processStarted( const Process *process ) = 0;
-		/// Implementations must be safe to call concurrently.
-		virtual void processFinished( const Process *process ) = 0;
-
-};
-
-IE_CORE_DECLAREPTR( Monitor )
-
-} // namespace Gaffer
-
-#endif // GAFFER_MONITOR_H
+const ThreadState &ThreadState::current()
+{
+	const Stack &stack = g_stack.local();
+	return stack.size() ? stack.top() : g_defaultState;
+}

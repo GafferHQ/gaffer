@@ -707,7 +707,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			SceneGraph *sceneGraph,
 			SceneGraph::Type sceneGraphType,
 			unsigned changedGlobalComponents,
-			const Context *context,
+			const ThreadState &threadState,
 			const ScenePlug::ScenePath &scenePath,
 			const ProgressCallback &callback,
 			const PathMatcher *pathsToUpdate
@@ -716,7 +716,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				m_sceneGraph( sceneGraph ),
 				m_sceneGraphType( sceneGraphType ),
 				m_changedGlobalComponents( changedGlobalComponents ),
-				m_context( context ),
+				m_threadState( threadState ),
 				m_scenePath( scenePath ),
 				m_callback( callback ),
 				m_pathsToUpdate( pathsToUpdate )
@@ -747,7 +747,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			// Set up a context to compute the scene at the right
 			// location.
 
-			ScenePlug::PathScope pathScope( m_context, m_scenePath );
+			ScenePlug::PathScope pathScope( m_threadState, m_scenePath );
 
 			// Update the scene graph at this location.
 
@@ -775,7 +775,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 				for( const auto &child : children )
 				{
 					childPath.back() = child->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_changedGlobalComponents, m_context, childPath, m_callback, m_pathsToUpdate );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_changedGlobalComponents, m_threadState, childPath, m_callback, m_pathsToUpdate );
 					spawn( *t );
 				}
 
@@ -837,7 +837,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 		SceneGraph *m_sceneGraph;
 		SceneGraph::Type m_sceneGraphType;
 		unsigned m_changedGlobalComponents;
-		const Context *m_context;
+		const ThreadState &m_threadState;
 		ScenePlug::ScenePath m_scenePath;
 		const ProgressCallback &m_callback;
 		const PathMatcher *m_pathsToUpdate;
@@ -1162,7 +1162,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 
 			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 			SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
-				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, Context::current(), ScenePlug::ScenePath(), callback, pathsToUpdate
+				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, ThreadState::current(), ScenePlug::ScenePath(), callback, pathsToUpdate
 			);
 			tbb::task::spawn_root_and_wait( *task );
 		}

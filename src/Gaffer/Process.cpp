@@ -36,7 +36,6 @@
 
 #include "Gaffer/Process.h"
 
-#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Node.h"
@@ -44,66 +43,64 @@
 
 #include "IECore/Canceller.h"
 
-#include "boost/container/flat_set.hpp"
-
-#include <stack>
+#include "tbb/enumerable_thread_specific.h"
 
 using namespace Gaffer;
 
 namespace
 {
 
-typedef boost::container::flat_set<Monitor *> Monitors;
-Monitors g_activeMonitors;
+// Used by `handleException()/emitError()` to track the original (most upstream)
+// source of an error.
+// \todo This assumes that each error propagates on a single thread, but when
+// TBB tasks are accounted for, this is not true. A better approach might be to
+// wrap exceptions in a ProcessException class in `handleException()`, storing
+// the error source in the ProcessException instance. There are a couple of obstacles
+// to this :
+//
+// - We wouldn't want a ProcessException to be stored inside ValuePlug's LRUCache,
+//   because the error source might have ceased to exist when it is rethrown on the
+//   next cache access. We might be able to deal with this by unwrapping and rewrapping
+//   the exception at the appropriate points in ValuePlug.
+// - Exception types are not preserved when a C++ exception enters Python and then
+//   gets translated back into C++. We would at least need to preserve ProcessException's
+//   exactly, if not other types.
+//
+// Still, it seems like the most promising approach, and ProcessException could have
+// other nice features, like including the plug name in the error message (which again,
+// we wouldn't want stored inside the ValuePlug cache).
+tbb::enumerable_thread_specific<const Plug *> g_errorSource( nullptr );
 
 } // namespace
 
-struct Process::ThreadData
+Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream )
+	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug )
 {
+	IECore::Canceller::check( context()->canceller() );
+	m_parent = m_threadState->m_process;
+	m_threadState->m_process = this;
 
-	typedef std::stack<const Process *> Stack;
-	Stack stack;
-
-	const Plug *errorSource;
-
-};
-
-tbb::enumerable_thread_specific<Process::ThreadData, tbb::cache_aligned_allocator<Process::ThreadData>, tbb::ets_key_per_instance> Process::g_threadData;
-
-Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream, const Context *currentContext )
-	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug ),
-		m_context( currentContext ? currentContext : Context::current() ),
-		m_threadData( &g_threadData.local() )
-{
-	IECore::Canceller::check( m_context->canceller() );
-	ThreadData::Stack &stack = m_threadData->stack;
-	m_parent = stack.size() ? stack.top() : nullptr;
-	m_threadData->stack.push( this );
-
-	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
+	for( const auto &m : *m_threadState->m_monitors )
 	{
-		(*it)->processStarted( this );
+		m->processStarted( this );
 	}
 }
 
 Process::~Process()
 {
-	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
+	for( const auto &m : *m_threadState->m_monitors )
 	{
-		(*it)->processFinished( this );
+		m->processFinished( this );
 	}
-
-	m_threadData->stack.pop();
-	if( m_threadData->stack.empty() )
+	if( !parent() )
 	{
-		m_threadData->errorSource = nullptr;
+		g_errorSource.local() = nullptr;
 	}
 }
 
 const Process *Process::current()
 {
-	const ThreadData::Stack &stack = g_threadData.local().stack;
-	return stack.size() ? stack.top() : nullptr;
+	return ThreadState::current().m_process;
 }
 
 void Process::handleException()
@@ -122,18 +119,18 @@ void Process::handleException()
 	}
 	catch( const std::exception &e )
 	{
-		if( !m_threadData->errorSource )
+		if( !g_errorSource.local() )
 		{
-			m_threadData->errorSource = plug();
+			g_errorSource.local() = plug();
 		}
 		emitError( e.what() );
 		throw;
 	}
 	catch( ... )
 	{
-		if( !m_threadData->errorSource )
+		if( !g_errorSource.local() )
 		{
-			m_threadData->errorSource = plug();
+			g_errorSource.local() = plug();
 		}
 		emitError( "Unknown error" );
 		throw;
@@ -149,43 +146,9 @@ void Process::emitError( const std::string &error ) const
 		{
 			if( const Node *node = plug->node() )
 			{
-				node->errorSignal()( plug, m_threadData->errorSource, error );
+				node->errorSignal()( plug, g_errorSource.local(), error );
 			}
 		}
 		plug = plug != m_plug ? plug->getInput() : nullptr;
 	}
 }
-
-void Process::registerMonitor( Monitor *monitor )
-{
-	// Because `g_activeMonitors` is global state, we can't modify it
-	// while other threads are creating processes. So we cancel all BackgroundTasks
-	// to make sure that is not the case. This is needed by the TransformTool,
-	// which attaches a monitor temporarily at a point when the viewer is likely
-	// to be updating asynchronously. Without this workaround, at best the TransformTool
-	// ends up monitoring processes it doesn't want to, and at worst we get
-	// crashes.
-	//
-	// This is a bit of a hack, but it represents progress towards an improved Monitor API.
-	// When making a monitor active, ideally it should only be active for processes launched from
-	// _the current thread_, and any processes that those processes launch (potentially on other
-	// threads). In other words, we only want to monitor process trees that originate from
-	// inside the monitor's active scope. To do this properly we need to be able to track
-	// `Process::parent()` accurately when a process uses TBB to launch child processes on
-	// other threads. So for now we use this poor man's version whereby we at least prevent
-	// background tasks from being monitored inadvertently.
-	BackgroundTask::cancelAllTasks();
-	g_activeMonitors.insert( monitor );
-}
-
-void Process::deregisterMonitor( Monitor *monitor )
-{
-	BackgroundTask::cancelAllTasks();
-	g_activeMonitors.erase( monitor );
-}
-
-bool Process::monitorRegistered( const Monitor *monitor )
-{
-	return g_activeMonitors.find( const_cast<Monitor *>( monitor ) ) != g_activeMonitors.end();
-}
-

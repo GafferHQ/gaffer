@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,26 +34,25 @@
 #
 ##########################################################################
 
-__import__( "IECore" )
+import Gaffer
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoScope import UndoScope
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from Monitor import Monitor
+# Add on methods to allow monitors to be used in "with" blocks.
+# In python we use this mechanism in preference to the Monitor::Scope
+# class used in C++.
 
-import NodeAlgo
-import ExtensionAlgo
+def __enter( self ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )
+	if not hasattr( self, "_scopes" ) :
+		self._scopes = []
+
+	self._scopes.append( Gaffer.Monitor._Scope( self ) )
+	return self
+
+def __exit( self, type, value, traceBack ) :
+
+	del self._scopes[-1]
+
+Gaffer.Monitor.__enter__ = __enter
+Gaffer.Monitor.__exit__ = __exit
+
+Monitor = Gaffer.Monitor
