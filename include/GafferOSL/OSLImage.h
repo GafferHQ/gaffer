@@ -45,6 +45,7 @@
 #include "GafferScene/ShaderPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
+#include "GafferImage/Constant.h"
 
 namespace GafferOSL
 {
@@ -59,6 +60,9 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::ImageProcessor );
 
+		GafferImage::FormatPlug *defaultFormatPlug();
+		const GafferImage::FormatPlug *defaultFormatPlug() const;
+
 		Gaffer::Plug *channelsPlug();
 		const Gaffer::Plug *channelsPlug() const;
 
@@ -71,11 +75,15 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 		IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
+		GafferImage::Format computeFormat( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
+		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 	private :
 
@@ -96,6 +104,15 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 
 		GafferOSL::OSLCode *oslCode();
 		const GafferOSL::OSLCode *oslCode() const;
+
+		GafferImage::Constant *defaultConstant();
+		const GafferImage::Constant *defaultConstant() const;
+
+		GafferImage::ImagePlug *defaultInPlug();
+		const GafferImage::ImagePlug *defaultInPlug() const;
+
+		// The in plug, set to the default if left unconnected
+		const GafferImage::ImagePlug *defaultedInPlug() const;
 
 		void channelsAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void channelsRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );

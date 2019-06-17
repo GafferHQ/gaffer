@@ -191,10 +191,17 @@ Gaffer.Metadata.registerNode(
 
 	"plugAdderOptions", IECore.CompoundData( _channelNamesOptions ),
 
+	"layout:activator:defaultFormatActive", lambda node : not node["in"].getInput(),
+
  	plugs = {
- 
+		"defaultFormat" : [
+			"description",
+			"""
+			The resolution and aspect ratio to output when there is no input image provided.
+			""",
+			"layout:activator", "defaultFormatActive",
+		],
 		"channels" : [
- 
  			"description",
  			"""
 			Define image channels to output by adding child plugs and connecting
