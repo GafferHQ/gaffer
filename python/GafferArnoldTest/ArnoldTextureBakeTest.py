@@ -114,7 +114,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		uvScaleOSL = GafferOSL.OSLObject()
 		uvScaleOSL["in"].setInput( shaderAssignment["out"] )
 		uvScaleOSL["filter"].setInput( allFilter["out"] )
-		uvScaleOSL["shader"].setInput( outObject2["out"] )
+		uvScaleOSL["shader"].setInput( outObject2["out"]["out"] )
 		uvScaleOSL["interpolation"].setValue( 5 )
 
 
@@ -270,7 +270,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		uvScaleOSL = GafferOSL.OSLObject()
 		uvScaleOSL["in"].setInput( sphere["out"] )
 		uvScaleOSL["filter"].setInput( allFilter["out"] )
-		uvScaleOSL["shader"].setInput( outObject2["out"] )
+		uvScaleOSL["shader"].setInput( outObject2["out"]["out"] )
 		uvScaleOSL["interpolation"].setValue( 5 )
 
 		mapOffset = GafferScene.MapOffset()
@@ -348,7 +348,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		oSLObject = GafferOSL.OSLObject()
 		oSLObject["in"].setInput( shaderAssignment["out"] )
 		oSLObject["filter"].setInput( allFilter["out"] )
-		oSLObject["shader"].setInput( outObject["out"] )
+		oSLObject["shader"].setInput( outObject["out"]["out"] )
 		oSLObject["interpolation"].setValue( 2 )
 
 		# Create 4 meshes by picking each of the 4 ids
@@ -379,7 +379,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		oSLObject1 = GafferOSL.OSLObject()
 		oSLObject1["in"].setInput( deleteContextVariables["out"] )
 		oSLObject1["filter"].setInput( allFilter["out"] )
-		oSLObject1["shader"].setInput( outObject1["out"] )
+		oSLObject1["shader"].setInput( outObject1["out"]["out"] )
 		oSLObject1["interpolation"].setValue( 2 )
 
 		deleteFaces = GafferScene.DeleteFaces()

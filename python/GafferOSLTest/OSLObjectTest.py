@@ -84,7 +84,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		primVarShader.loadShader( "ObjectProcessing/OutObject" )
 		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
 
-		o["shader"].setInput( primVarShader["out"] )
+		o["shader"].setInput( primVarShader["out"]["out"] )
 
 		self.assertScenesEqual( p["out"], o["out"] )
 
@@ -139,7 +139,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		primVarShader["parameters"]["in0"].setInput( outTransformed["out"]["primitiveVariable"] )
 		primVarShader["parameters"]["in1"].setInput( outTransformedBack["out"]["primitiveVariable"] )
 
-		o["shader"].setInput( primVarShader["out"] )
+		o["shader"].setInput( primVarShader["out"]["out"] )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
@@ -148,22 +148,6 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( o["out"].object( "/plane" )["transformed"].data, IECore.Color3fVectorData( [ imath.Color3f( 1.5, -0.5, 0 ), imath.Color3f( 2.5, -0.5, 0 ), imath.Color3f( 1.5, 0.5, 0 ), imath.Color3f( 2.5, 0.5, 0 ) ] ) )
 		self.assertEqual( o["out"].object( "/plane" )["transformedBack"].data, IECore.Color3fVectorData( [ imath.Color3f( -0.5, -0.5, 0 ), imath.Color3f( 0.5, -0.5, 0 ), imath.Color3f( -0.5, 0.5, 0 ), imath.Color3f( 0.5, 0.5, 0 ) ] ) )
-
-	def testOnlyAcceptsSurfaceShaders( self ) :
-
-		object = GafferOSL.OSLObject()
-		shader = GafferOSL.OSLShader()
-
-		shader.loadShader( "ObjectProcessing/OutPoint" )
-		self.assertFalse( object["shader"].acceptsInput( shader["out"] ) )
-
-		shader.loadShader( "ObjectProcessing/OutObject" )
-		self.assertTrue( object["shader"].acceptsInput( shader["out"] ) )
-
-	def testAcceptsNone( self ) :
-
-		object = GafferOSL.OSLObject()
-		self.assertTrue( object["shader"].acceptsInput( None ) )
 
 	def testAcceptsShaderSwitch( self ) :
 
@@ -175,7 +159,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		# We're testing a backwards compatibility special case that is
 		# only enabled when loading a script, hence the use of `execute()`.
 		script.execute( """script["object"]["shader"].setInput( script["switch"]["out"] )""" )
-		self.assertTrue( script["object"]["shader"].getInput().isSame( script["switch"]["out"] ) )
+		self.assertTrue( script["object"]["primitiveVariables"]["legacyClosure"]["value"].getInput().isSame( script["switch"]["out"] ) )
 
 	def testAcceptsDot( self ) :
 
@@ -189,7 +173,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		# We're testing a backwards compatibility special case that is
 		# only enabled when loading a script, hence the use of `execute()`.
 		script.execute( """script["object"]["shader"].setInput( script["dot"]["out"] )""" )
-		self.assertTrue( script["object"]["shader"].getInput().isSame( script["dot"]["out"] ) )
+		self.assertTrue( script["object"]["primitiveVariables"]["legacyClosure"]["value"].getInput().isSame( script["dot"]["out"] ) )
 
 	def testPrimitiveVariableWithZeroValue( self ) :
 
@@ -211,7 +195,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		o = GafferOSL.OSLObject()
 		o["in"].setInput( p["out"] )
-		o["shader"].setInput( primVarShader["out"] )
+		o["shader"].setInput( primVarShader["out"]["out"] )
 		o["filter"].setInput( filter["out"] )
 
 		for v in o["out"].object( "/plane" )["velocity"].data :
@@ -225,7 +209,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
 
-		o["shader"].setInput( s["out"] )
+		o["shader"].setInput( s["out"]["out"] )
 
 		self.assertTrue( o["out"]["object"] in set( x[0] for x in cs ) )
 		self.assertTrue( o["out"]["bound"] in set( x[0] for x in cs ) )
@@ -236,7 +220,8 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["o"] = GafferOSL.OSLObject()
-		p = Gaffer.PlugAlgo.promote( s["b"]["o"]["shader"] )
+		s["b"]["o"]["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ), "testClosure" ) )
+		p = Gaffer.PlugAlgo.promote( s["b"]["o"]["primitiveVariables"]["testClosure"]["value"] )
 		p.setName( "p" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -247,7 +232,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		s["s"] = GafferOSL.OSLShader()
 		s["s"].loadShader( "ObjectProcessing/OutObject" )
 
-		s["r"]["p"].setInput( s["s"]["out"] )
+		s["r"]["p"].setInput( s["s"]["out"]["out"] )
 
 	def testCanShadeVertexInterpolatedPrimitiveVariablesAsUniform( self ) :
 
@@ -293,7 +278,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		outObject.loadShader( "ObjectProcessing/OutObject" )
 		outObject["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
 
-		o["shader"].setInput( outObject["out"] )
+		o["shader"].setInput( outObject["out"]["out"] )
 
 		cubeObject = s['OSLObject']['out'].object( "/cube" )
 
@@ -344,7 +329,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		s["outObject"].loadShader( "ObjectProcessing/OutObject" )
 		s["outObject"]["parameters"]["in0"].setInput( s["outColor"]["out"]["primitiveVariable"] )
 
-		o["shader"].setInput( s["outObject"]["out"] )
+		o["shader"].setInput( s["outObject"]["out"]["out"] )
 
 		planeObject = s['OSLObject']['out'].object( "/plane" )
 
@@ -412,7 +397,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		outObject.loadShader( "ObjectProcessing/OutObject" )
 		outObject["parameters"]["in0"].setInput( outFloat["out"]["primitiveVariable"] )
 
-		o["shader"].setInput( outObject["out"] )
+		o["shader"].setInput( outObject["out"]["out"] )
 
 		planeObject = s['OSLObject']['out'].object( "/plane" )
 
@@ -451,7 +436,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		outObject = GafferOSL.OSLShader( "OutObject" )
 		outObject.loadShader( "ObjectProcessing/OutObject" )
 
-		oslObject["shader"].setInput( outObject["out"] )
+		oslObject["shader"].setInput( outObject["out"]["out"] )
 
 		outPoint["parameters"]["value"].setInput( inPoint["out"]["value"] )
 		outPoint["parameters"]["value"]["x"].setInput( inPoint["out"]["value"]["x"] )
@@ -501,7 +486,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		oslObject = GafferOSL.OSLObject()
 		oslObject["in"].setInput( resample["out"] )
-		oslObject["shader"].setInput( outObject["out"] )
+		oslObject["shader"].setInput( outObject["out"]["out"] )
 		oslObject["filter"].setInput( filter["out"] )
 
 		mesh = oslObject["out"].object( "/plane" )
@@ -552,7 +537,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		outObject.loadShader( "ObjectProcessing/OutObject" )
 		outObject["parameters"]["in0"].setInput( outMatrix["out"]["primitiveVariable"] )
 
-		o["shader"].setInput( outObject["out"] )
+		o["shader"].setInput( outObject["out"]["out"] )
 
 		matrixPrimvar = o['out'].object( "/plane" )["out_foo"]
 		for index, m in enumerate( matrixPrimvar.data ) :
@@ -578,7 +563,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		o2 = GafferOSL.OSLObject()
 		s.addChild(o2)
 		o2['in'].setInput( o["out"] )
-		o2["shader"].setInput( outObject2["out"] )
+		o2["shader"].setInput( outObject2["out"]["out"] )
 		o2["filter"].setInput( f["out"] )
 
 		matrixPrimvar = o2['out'].object( "/plane" )["out_foo2"]
@@ -627,7 +612,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		oslObject["in"].setInput( plane["out"] )
 		oslObject["filter"].setInput( pathFilter["out"] )
-		oslObject["shader"].setInput( outObject["out"] )
+		oslObject["shader"].setInput( outObject["out"]["out"] )
 		outString["parameters"]["value"].setInput( oslCode["out"]["foo"] )
 		outObject["parameters"]["in0"].setInput( outString["out"]["primitiveVariable"] )
 
@@ -645,13 +630,13 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		s['shader'] = GafferOSL.OSLShader()
 		s['shader'].loadShader( "ObjectProcessing/OutObject" )
 		s['object'] = GafferOSL.OSLObject()
-		s['object']['shader'].setInput( s['shader']['out'] )
-		self.assertEqual( s['object']['shader'].getInput(), s['shader']['out'] )
+		s['object']['shader'].setInput( s['shader']['out']['out'] )
+		self.assertEqual( s['object']['primitiveVariables']['legacyClosure']["value"].getInput(), s['shader']['out']['out'] )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2['object']['shader'].getInput(), s2['shader']['out'] )
+		self.assertEqual( s2['object']['primitiveVariables']['legacyClosure']["value"].getInput(), s2['shader']['out']['out'] )
 
 		# same network as above, but reverse the order of node construction
 
@@ -659,13 +644,13 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		s3['object'] = GafferOSL.OSLObject()
 		s3['shader'] = GafferOSL.OSLShader()
 		s3['shader'].loadShader( "ObjectProcessing/OutObject" )
-		s3['object']['shader'].setInput( s3['shader']['out'] )
-		self.assertEqual( s3['object']['shader'].getInput(), s3['shader']['out'] )
+		s3['object']['shader'].setInput( s3['shader']['out']['out'] )
+		self.assertEqual( s3['object']['primitiveVariables']['legacyClosure']["value"].getInput(), s3['shader']['out']['out'] )
 
 		s4 = Gaffer.ScriptNode()
 		s4.execute( s3.serialise() )
 
-		self.assertEqual( s4['object']['shader'].getInput(), s4['shader']['out'] )
+		self.assertEqual( s4['object']['primitiveVariables']['legacyClosure']["value"].getInput(), s4['shader']['out']['out'] )
 
 	def testWriteUV( self ) :
 
@@ -688,7 +673,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		oslObject = GafferOSL.OSLObject()
 		oslObject["in"].setInput( plane["out"] )
 		oslObject["filter"].setInput( filter["out"] )
-		oslObject["shader"].setInput( outObject["out"] )
+		oslObject["shader"].setInput( outObject["out"]["out"] )
 
 		mesh = oslObject["out"].object( "/plane" )
 		self.assertEqual( mesh["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex )
@@ -738,7 +723,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		oslObject = GafferOSL.OSLObject()
 		oslObject["in"].setInput( objectToScene["out"] )
 		oslObject["filter"].setInput( filter["out"] )
-		oslObject["shader"].setInput( outObject["out"] )
+		oslObject["shader"].setInput( outObject["out"]["out"] )
 
 		# Assertions
 
@@ -777,7 +762,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		script["oslObject"] = GafferOSL.OSLObject()
 		script["oslObject"]["in"].setInput( script["plane"]["out"] )
 		script["oslObject"]["filter"].setInput( script["filter"]["out"] )
-		script["oslObject"]["shader"].setInput( script["outObject"]["out"] )
+		script["oslObject"]["shader"].setInput( script["outObject"]["out"]["out"] )
 
 		# SceneWriter to save the result for later perusal
 
@@ -818,6 +803,115 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		assertContextCompatibility( False, envVar = "0" )
 		assertContextCompatibility( False, envVar = "?" )
 		assertContextCompatibility( False, envVar = "1" )
+
+	def testAllTypes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		c = GafferScene.Cube()
+		s.addChild( c )
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		f = GafferScene.PathFilter( "PathFilter" )
+		s.addChild( f )
+		f["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+		o["filter"].setInput( f["out"] )
+
+		o['in'].setInput( c["out"] )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testString", "blah" ) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testFloat", 42.42 ) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug(
+				"testVector", IECore.V3fData( imath.V3f(1,2,3), IECore.GeometricData.Interpretation.Vector )
+		) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug(
+				"testPoint", IECore.V3fData( imath.V3f(4,5,6), IECore.GeometricData.Interpretation.Point )
+		) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug(
+				"testNormal", IECore.V3fData( imath.V3f(7,8,9), IECore.GeometricData.Interpretation.Normal )
+		) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug(
+				"testUV", IECore.V3fData( imath.V3f(10,11,-42), IECore.GeometricData.Interpretation.UV )
+		) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testColor", imath.Color3f(12,13,14) ) )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testMatrix", imath.M44f(15) ) )
+
+		cubeObject = s['OSLObject']['out'].object( "/cube" )
+
+		self.assertEqual( cubeObject["testString"].data, IECore.StringVectorData( ["blah"]*8 ) )
+		self.assertEqual( cubeObject["testInt"].data, IECore.IntVectorData( [42]*8 ) )
+		self.assertEqual( cubeObject["testFloat"].data, IECore.FloatVectorData( [42.42]*8 ) )
+		self.assertEqual( cubeObject["testVector"].data, IECore.V3fVectorData( [ imath.V3f(1,2,3)] * 8, IECore.GeometricData.Interpretation.Vector ) )
+		self.assertEqual( cubeObject["testPoint"].data, IECore.V3fVectorData( [ imath.V3f(4,5,6)] * 8, IECore.GeometricData.Interpretation.Point ) )
+		self.assertEqual( cubeObject["testNormal"].data, IECore.V3fVectorData( [ imath.V3f(7,8,9)] * 8, IECore.GeometricData.Interpretation.Normal ) )
+		self.assertEqual( cubeObject["testUV"].data, IECore.V2fVectorData( [ imath.V2f(10,11)] * 8, IECore.GeometricData.Interpretation.UV ) )
+		self.assertEqual( cubeObject["testColor"].data, IECore.Color3fVectorData( [ imath.Color3f(12,13,14)] * 8 ) )
+		self.assertEqual( cubeObject["testMatrix"].data, IECore.M44fVectorData( [ imath.M44f(15)] * 8 ) )
+
+	def testClosure( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		c = GafferScene.Cube()
+		s.addChild( c )
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		f = GafferScene.PathFilter( "PathFilter" )
+		s.addChild( f )
+		f["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+		o["filter"].setInput( f["out"] )
+
+		o['in'].setInput( c["out"] )
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testClosure", GafferOSL.ClosurePlug() ) )
+
+		code = GafferOSL.OSLCode( "OSLCode" )
+		code["out"].addChild( GafferOSL.ClosurePlug( "output1", direction = Gaffer.Plug.Direction.Out ) )
+		code["code"].setValue( 'output1 = debug( "testString", "type", "string", "stringValue", "foo" )\n + debug( "testPoint", "type", "point", "value", vector( 1, 10, 100 ) );' )
+
+		o["primitiveVariables"][0]["value"].setInput( code["out"]["output1"] )
+
+		cubeObject = s['OSLObject']['out'].object( "/cube" )
+
+		self.assertEqual( cubeObject["testString"].data, IECore.StringVectorData( ["foo"]*8 ) )
+		self.assertEqual( cubeObject["testPoint"].data, IECore.V3fVectorData( [ imath.V3f(1,10,100)] * 8, IECore.GeometricData.Interpretation.Point ) )
+
+	def testUndo( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		self.assertFalse( s.undoAvailable() )
+
+		self.assertEqual( len( o["__oslCode"]["parameters"].children() ), 0 )
+
+		with Gaffer.UndoScope( s ) :
+			o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+			o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testFloat", 42.42 ) )
+
+		self.assertTrue( s.undoAvailable() )
+		self.assertEqual( len( o["__oslCode"]["parameters"].children() ), 4 )
+
+		with Gaffer.UndoScope( s ) :
+			del o["primitiveVariables"][0]
+			del o["primitiveVariables"][0]
+
+		self.assertEqual( len( o["__oslCode"]["parameters"].children() ), 0 )
+
+		# Test that the internal connections are recreated correctly when undoing adding and removing primVars
+		s.undo()
+
+		self.assertEqual( len( o["__oslCode"]["parameters"].children() ), 4 )
+
+		s.undo()
+
+		self.assertEqual( len( o["__oslCode"]["parameters"].children() ), 0 )
+
 
 if __name__ == "__main__":
 	unittest.main()

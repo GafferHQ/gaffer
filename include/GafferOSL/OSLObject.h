@@ -38,7 +38,9 @@
 #define GAFFEROSL_OSLOBJECT_H
 
 #include "GafferOSL/Export.h"
+#include "GafferOSL/OSLCode.h"
 #include "GafferOSL/TypeIds.h"
+
 
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/ShaderPlug.h"
@@ -61,17 +63,15 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
 
-		GafferScene::ShaderPlug *shaderPlug();
-		const GafferScene::ShaderPlug *shaderPlug() const;
-
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;
+
+		Gaffer::Plug *primitiveVariablesPlug();
+		const Gaffer::Plug *primitiveVariablesPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
-
-		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 		bool processesBound() const override;
 		void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -86,6 +86,9 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 
 	private :
 
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
+
 		GafferScene::ScenePlug *resampledInPlug();
 		const GafferScene::ScenePlug *resampledInPlug() const;
 
@@ -96,6 +99,14 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 		const Gaffer::BoolPlug *contextCompatibilityPlug() const;
 
 		ConstShadingEnginePtr shadingEngine( const Gaffer::Context *context ) const;
+
+		GafferOSL::OSLCode *oslCode();
+		const GafferOSL::OSLCode *oslCode() const;
+
+		void primitiveVariableAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void primitiveVariableRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+
+		void updatePrimitiveVariables();
 
 		static size_t g_firstPlugIndex;
 

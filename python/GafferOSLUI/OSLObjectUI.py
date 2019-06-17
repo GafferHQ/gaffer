@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2013-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,6 +42,120 @@ import GafferUI
 
 import GafferOSL
 
+import imath
+import functools
+
+_primitiveVariableNamesOptions = {
+	"P" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Point ),
+	"Pref" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Point ),
+	"N" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Normal ),
+	"velocity" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Vector ),
+	"uv" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.UV ),
+	"width" : IECore.FloatData(),
+	"Cs" : IECore.Color3fData(),
+	"customInt" : IECore.IntData(),
+	"customFloat" : IECore.FloatData(),
+	"customVector" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Vector ),
+	"customNormal" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Normal ),
+	"customPoint" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Point ),
+	"customUV" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.UV ),
+	"customColor" : IECore.Color3fData(),
+	"customMatrix" : IECore.M44fData(),
+	"customString" : IECore.StringData(),
+	"closure" : None,
+}
+
+##########################################################################
+# _PrimitiveVariablesFooter
+##########################################################################
+
+class _PrimitiveVariablesFooter( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+
+		GafferUI.PlugValueWidget.__init__( self, row, plug )
+
+		with row :
+
+				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+
+				menuButton = GafferUI.MenuButton(
+					image = "plus.png",
+					hasFrame = False,
+					menu = GafferUI.Menu(
+						Gaffer.WeakMethod( self.__menuDefinition ),
+						title = "Add Input"
+					),
+					toolTip = "Add Input"
+				)
+				menuButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( plug ) )
+
+				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
+
+	def _updateFromPlug( self ) :
+
+		self.setEnabled( self._editable() )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		usedNames = set()
+		for p in self.getPlug().children():
+			# TODO - this method for checking if a plug variesWithContext should probably live in PlugAlgo
+			# ( it's based on Switch::variesWithContext )
+			sourcePlug = p["name"].source()
+			variesWithContext = sourcePlug.direction() == Gaffer.Plug.Direction.Out and isinstance( ComputeNode, sourcePlug.node() )
+			if not variesWithContext:
+				usedNames.add( p["name"].getValue() )
+
+		categories = { "Standard" : [], "Custom" : [], "Advanced" : [] }
+		for label, defaultData in sorted( _primitiveVariableNamesOptions.items() ):
+			if label.startswith( "custom" ):
+				primVarName = label
+				if primVarName in usedNames:
+					suffix = 2
+					while True:
+						primVarName = label + str( suffix )
+						if not primVarName in usedNames:
+							break
+						suffix += 1
+				categories["Custom"].append( ( label[6:], primVarName, defaultData ) )
+			elif label == "closure":
+				categories["Advanced"].append( ( label, label, defaultData ) )
+			else:
+				if label in usedNames:
+					continue
+				categories["Standard"].append( ( label, label, defaultData ) )
+
+
+		for category in [ "Standard", "Custom", "Advanced" ]:
+			for ( menuLabel, primVarName, defaultData ) in categories[category]:
+				result.append(
+					"/" + category + "/" + menuLabel,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), primVarName, defaultData ),
+					}
+				)
+
+		return result
+
+	def __addPlug( self, name, defaultData ) :
+
+		if defaultData == None:
+			plugName = "closure"
+			name = ""
+			valuePlug = GafferOSL.ClosurePlug( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		else:
+			plugName = "primitiveVariable"
+			valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultData )
+
+		plug = Gaffer.NameValuePlug( name, valuePlug, True, plugName )
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().addChild( plug )
+
 ##########################################################################
 # Metadata
 ##########################################################################
@@ -56,22 +171,67 @@ Gaffer.Metadata.registerNode(
 	object and then write primitive variables back to it.
 	""",
 
+	"plugAdderOptions", IECore.CompoundData( _primitiveVariableNamesOptions ),
+
 	plugs = {
 
-		"shader" : [
+		"primitiveVariables" : [
 
 			"description",
 			"""
-			The shader to be executed - connect the output from an OSL network here.
-			A minimal shader network to process P would look like this :
+			Define primitive varibles to output by adding child plugs and connecting
+			corresponding OSL shaders.  Supported plug types are :
 
-				InPoint->ProcessingNodes->OutPoint->OutObject
+			- FloatPlug
+			- IntPlug
+			- ColorPlug
+			- V3fPlug ( outputting vector, normal or point )
+			- M44fPlug
+			- StringPlug
+
+			If you want to add multiple outputs at once, you can also add a closure plug,
+			which can accept a connection from an OSLCode with a combined output closure.
 			""",
-
-			"nodule:type", "GafferUI::StandardNodule",
+			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLObjectUI._PrimitiveVariablesFooter",
+			"layout:customWidget:footer:index", -1,
+			"nodule:type", "GafferUI::CompoundNodule",
 			"noduleLayout:section", "left",
+			"noduleLayout:spacing", 0.2,
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
+			# Add + button for showing and hiding parameters in the GraphEditor
+			"noduleLayout:customGadget:addButton:gadgetType", "GafferOSLUI.OSLObjectUI.PlugAdder",
 		],
+		"primitiveVariables.*" : [
+
+			# Although the parameters plug is positioned
+			# as we want above, we must also register
+			# appropriate values for each individual parameter,
+			# for the case where they get promoted to a box
+			# individually.
+			"noduleLayout:section", "left",
+			"nodule:type", "GafferUI::CompoundNodule",
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", lambda plug : isinstance( plug["value"], GafferOSL.ClosurePlug ),
+		],
+		"primitiveVariables.*.name" : [
+			"nodule:type", "",
+		],
+		"primitiveVariables.*.enabled" : [
+			"nodule:type", "",
+		],
+		"primitiveVariables.*.value" : [
+
+			# Although the parameters plug is positioned
+			# as we want above, we must also register
+			# appropriate values for each individual parameter,
+			# for the case where they get promoted to a box
+			# individually.
+			"noduleLayout:section", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:label", lambda plug : plug.parent().getName() if plug.typeId() == GafferOSL.ClosurePlug.staticTypeId() else plug.parent()["name"].getValue(),
+			"ui:visibleDimensions", lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
+		],
+
 		"interpolation" : [
 
 			"description",
@@ -93,4 +253,37 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+#########################################################################
+# primitiveVariable plug menu
+##########################################################################
+
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.parent().removeChild( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if not isinstance( plug.node(), GafferOSL.OSLObject ):
+		return
+
+	relativeName = plug.relativeName( plug.node() ).split( "." )
+	if relativeName[0] != "primitiveVariables" or len( relativeName ) < 2:
+		return
+
+	primVarPlug = plug.node()["primitiveVariables"][relativeName[1]]
+
+	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Delete",
+		{
+			"command" : functools.partial( __deletePlug, primVarPlug ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( primVarPlug ),
+		}
+	)
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+
 

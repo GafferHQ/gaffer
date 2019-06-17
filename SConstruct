@@ -830,7 +830,14 @@ libraries = {
 		"oslShaders" : glob.glob( "shaders/*/*.osl" ),
 	},
 
-	"GafferOSLUI" : {},
+	"GafferOSLUI" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferUI", "GafferOSL" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferBindings", "GafferScene", "GafferUI", "GafferImageUI", "GafferOSLUI" ],
+		},
+	},
 
 	"GafferOSLTest" : {
 		"additionalFiles" : glob.glob( "python/GafferOSLTest/*/*" ),

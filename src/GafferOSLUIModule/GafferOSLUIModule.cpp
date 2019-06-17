@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2019, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,42 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader OutObject
-(
-	closure color in0 = 0,
-	closure color in1 = 0,
-	closure color in2 = 0,
-	closure color in3 = 0,
-	closure color in4 = 0,
-	closure color in5 = 0,
-	closure color in6 = 0,
-	closure color in7 = 0,
-	closure color in8 = 0,
-	closure color in9 = 0,
-	closure color in10 = 0,
-	closure color in11 = 0,
-	closure color in12 = 0,
-	closure color in13 = 0,
-	closure color in14 = 0,
-	closure color in15 = 0,
-	output closure color out = 0
-)
+#include "boost/python.hpp"
+
+BOOST_PYTHON_MODULE( _GafferOSLUI )
 {
-	out =
-		in0 +
-		in1 +
-		in2 +
-		in3 +
-		in4 +
-		in5 +
-		in6 +
-		in7 +
-		in8 +
-		in9 +
-		in10 +
-		in11 +
-		in12 +
-		in13 +
-		in14 +
-		in15;
 }
+

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,9 @@
 #
 ##########################################################################
 
-from _GafferOSLUI import *
+import GafferSceneUI
+import IECore
 
-import OSLShaderUI
-import OSLImageUI
-import OSLObjectUI
-import OSLCodeUI
-import OSLExpressionEngineUI
-import OSLLightUI
-
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSLUI" )
+toHide = IECore.PathMatcher()
+toHide.addPath( "ObjectProcessing/Out*.oso" )
+GafferSceneUI.ShaderUI.hideShaders( toHide )

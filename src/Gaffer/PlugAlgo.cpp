@@ -336,6 +336,7 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 				static_cast<const M44fData *>( value )->readable(),
 				flags
 			);
+			return valuePlug;
 		}
 		case FloatVectorDataTypeId :
 		{
