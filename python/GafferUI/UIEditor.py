@@ -39,6 +39,7 @@ import functools
 import types
 import re
 import collections
+import os
 import imath
 
 import IECore
@@ -98,6 +99,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 					self.__nodeMetadataWidgets.append(
 						_ColorSwatchMetadataWidget( key = "nodeGadget:color" )
+					)
+
+				with _Row() as self.__iconRow :
+
+					_Label( "Icon" )
+
+					self.__nodeMetadataWidgets.append(
+						_FileSystemPathMetadataWidget( key = "icon" )
 					)
 
 			# Plugs tab
@@ -571,6 +580,53 @@ class _MenuMetadataWidget( _MetadataWidget ) :
 	def __setValue( self, unused, value ) :
 
 		self._updateFromWidget( value )
+
+class _FileSystemPathMetadataWidget( _MetadataWidget ) :
+
+	def __init__( self, key, target = None, acceptEmptyString = True, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		self.__path = Gaffer.FileSystemPath()
+		self.__pathWidget = GafferUI.PathWidget( self.__path )
+
+		_MetadataWidget.__init__( self, self.__row, key, target, **kw )
+
+		self.__row.append( self.__pathWidget )
+
+		button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__row.append( button )
+
+		self.__acceptEmptyString = acceptEmptyString
+
+		self.__pathWidget.editingFinishedSignal().connect(
+			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+		)
+
+	def _updateFromValue( self, value ) :
+
+		self.__path.setFromString( str( value ) if value is not None else "" )
+
+	def __editingFinished( self, *unused ) :
+
+		text = str( self.__path )
+		if text or self.__acceptEmptyString :
+			self._updateFromWidget( text )
+		else :
+			self._deregisterValue()
+
+	def __buttonClicked( self, widget ) :
+
+		path = str( self.__path )
+		path = path if os.path.exists( path ) else os.path.expanduser( "~" )
+
+		dialogue = GafferUI.PathChooserDialogue( Gaffer.FileSystemPath( path ) )
+		chosenPath = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
+
+		if chosenPath is not None :
+			self.__path.setFromString( str( chosenPath ) )
+			self.__editingFinished()
 
 ##########################################################################
 # Hierarchical representation of a plug layout, suitable for manipulating
