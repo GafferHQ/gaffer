@@ -210,7 +210,14 @@ class OSLObjectPlugAdder : public PlugAdder
 			const ValuePlug *valueInput = IECore::runTimeCast< const ValuePlug >( input );
 			if( valueInput )
 			{
-				matchingDataType = PlugAlgo::extractDataFromPlug( valueInput );
+				try
+				{
+					matchingDataType = PlugAlgo::extractDataFromPlug( valueInput );
+				}
+				catch( ... )
+				{
+					// If we can't extract data, then it doesn't match any of our accepted plug types
+				}
 			}
 
 			vector<std::string> result;
