@@ -178,7 +178,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		n = GafferScene.Instancer()
 		a = n.affects( n["name"] )
-		self.assertEqual( { x.relativeName( n ) for x in a }, { "out.childNames", "out.bound" } )
+		self.assertGreaterEqual( { x.relativeName( n ) for x in a }, { "out.childNames", "out.bound", "out.set" } )
 
 	def testParentBoundsWhenNoInstances( self ) :
 

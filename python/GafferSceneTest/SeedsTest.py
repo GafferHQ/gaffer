@@ -123,7 +123,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.Seeds()
 		a = s.affects( s["name"] )
-		self.assertEqual( [ x.relativeName( s ) for x in a ], [ "out.childNames" ] )
+		self.assertGreaterEqual( { x.relativeName( s ) for x in a }, { "out.childNames" } )
 
 	def testMultipleChildren( self ) :
 

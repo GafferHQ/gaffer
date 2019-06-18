@@ -38,6 +38,7 @@ import imath
 
 import IECore
 
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -406,6 +407,19 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( parent["out"] )
 		self.assertScenesEqual( parent["out"], cube["out"] )
+
+	def testChildNamesAffectMapping( self ) :
+
+		cube = GafferScene.Cube()
+		sphere = GafferScene.Sphere()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( cube["out"] )
+		parent["child"].setInput( sphere["out"] )
+
+		cs = GafferTest.CapturingSlot( parent.plugDirtiedSignal() )
+		sphere["name"].setValue( "ball" )
+		self.assertIn( parent["__mapping"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()

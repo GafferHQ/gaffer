@@ -109,25 +109,33 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		///   - Assign directly to the hash from an input hash to signify that the input will be
 		///     passed through unchanged by the corresponding computeBranch*() method.
 		///
+		/// \todo Make all these methods pure virtual.
 		//@{
+		virtual bool affectsBranchBound( const Gaffer::Plug *input ) const;
 		virtual void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchTransform( const Gaffer::Plug *input ) const;
 		virtual void hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Imath::M44f computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchAttributes( const Gaffer::Plug *input ) const;
 		virtual void hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstCompoundObjectPtr computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchObject( const Gaffer::Plug *input ) const;
 		virtual void hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstObjectPtr computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchChildNames( const Gaffer::Plug *input ) const;
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchSetNames( const Gaffer::Plug *input ) const;
 		virtual void hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 
+		virtual bool affectsBranchSet( const Gaffer::Plug *input ) const;
 		virtual void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		//@}

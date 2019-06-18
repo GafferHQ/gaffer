@@ -128,35 +128,82 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( input->parent<ScenePlug>() == inPlug() )
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-	}
-
 	if( input == parentPlug() || input == filteredPathsPlug() )
 	{
 		outputs.push_back( parentPathsPlug() );
 	}
 
-	if( input == parentPathsPlug() )
-	{
-		outputs.push_back( outPlug()->setNamesPlug() );
-	}
-
-	if( input == inPlug()->childNamesPlug() )
+	if( input == inPlug()->childNamesPlug() || affectsBranchChildNames( input ) )
 	{
 		outputs.push_back( mappingPlug() );
 	}
 
-	if( input == parentPathsPlug() || input == mappingPlug() )
+	if(
+		input == parentPathsPlug() ||
+		input == mappingPlug() ||
+		input == inPlug()->boundPlug() ||
+		affectsBranchBound( input )
+	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );
+	}
+
+	if(
+		input == parentPathsPlug() ||
+		input == mappingPlug() ||
+		input == inPlug()->transformPlug() ||
+		affectsBranchTransform( input )
+	)
+	{
 		outputs.push_back( outPlug()->transformPlug() );
+	}
+
+	if(
+		input == parentPathsPlug() ||
+		input == mappingPlug() ||
+		input == inPlug()->attributesPlug() ||
+		affectsBranchAttributes( input )
+	)
+	{
 		outputs.push_back( outPlug()->attributesPlug() );
+	}
+
+	if(
+		input == parentPathsPlug() ||
+		input == mappingPlug() ||
+		input == inPlug()->objectPlug() ||
+		affectsBranchObject( input )
+	)
+	{
 		outputs.push_back( outPlug()->objectPlug() );
+	}
+
+	if(
+		input == parentPathsPlug() ||
+		input == mappingPlug() ||
+		input == inPlug()->childNamesPlug() ||
+		affectsBranchChildNames( input )
+	)
+	{
 		outputs.push_back( outPlug()->childNamesPlug() );
-		// Globals plug deliberately omitted - because
-		// it's just a pass-through connection.
+	}
+
+	if(
+		input == parentPathsPlug() ||
+		input == inPlug()->setNamesPlug() ||
+		affectsBranchSetNames( input )
+	)
+	{
+		outputs.push_back( outPlug()->setNamesPlug() );
+	}
+
+	if(
+		input == parentPathsPlug() ||
+		input == mappingPlug() ||
+		input == inPlug()->setPlug() ||
+		affectsBranchSet( input )
+	)
+	{
 		outputs.push_back( outPlug()->setPlug() );
 	}
 }
@@ -549,6 +596,41 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 	}
 
 	return outputSetData;
+}
+
+bool BranchCreator::affectsBranchBound( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+bool BranchCreator::affectsBranchTransform( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+bool BranchCreator::affectsBranchAttributes( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+bool BranchCreator::affectsBranchObject( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+bool BranchCreator::affectsBranchChildNames( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+bool BranchCreator::affectsBranchSetNames( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+bool BranchCreator::affectsBranchSet( const Gaffer::Plug *input ) const
+{
+	return false;
 }
 
 void BranchCreator::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const

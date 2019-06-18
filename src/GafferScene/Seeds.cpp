@@ -106,18 +106,9 @@ const Gaffer::StringPlug *Seeds::pointTypePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
-void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+bool Seeds::affectsBranchBound( const Gaffer::Plug *input ) const
 {
-	BranchCreator::affects( input, outputs );
-
-	if( input == densityPlug() || input == densityPrimitiveVariablePlug() || input == pointTypePlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-	else if( input == namePlug() )
-	{
-		outputs.push_back( outPlug()->childNamesPlug() );
-	}
+	return input == inPlug()->boundPlug();
 }
 
 void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -139,6 +130,11 @@ Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const Scene
 	return b;
 }
 
+bool Seeds::affectsBranchTransform( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
 void Seeds::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
@@ -149,6 +145,11 @@ Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const Sc
 	return M44f();
 }
 
+bool Seeds::affectsBranchAttributes( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
 void Seeds::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	BranchCreator::hashBranchAttributes( parentPath, branchPath, context, h );
@@ -157,6 +158,16 @@ void Seeds::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &
 IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return outPlug()->attributesPlug()->defaultValue();
+}
+
+bool Seeds::affectsBranchObject( const Gaffer::Plug *input ) const
+{
+	return
+		input == inPlug()->objectPlug() ||
+		input == densityPlug() ||
+		input == densityPrimitiveVariablePlug() ||
+		input == pointTypePlug()
+	;
 }
 
 void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -196,6 +207,11 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 		return result;
 	}
 	return outPlug()->objectPlug()->defaultValue();
+}
+
+bool Seeds::affectsBranchChildNames( const Gaffer::Plug *input ) const
+{
+	return input == namePlug();
 }
 
 void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
