@@ -239,8 +239,8 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	GroupPtr result = new Group;
 	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
-	result->addChild( ornaments );
 	result->addChild( geometry );
+	result->addChild( ornaments );
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
 	float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
