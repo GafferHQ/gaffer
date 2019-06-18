@@ -99,7 +99,7 @@ struct HashCacheKey
 	{
 	}
 
-	const bool operator == ( const HashCacheKey &other ) const
+	bool operator == ( const HashCacheKey &other ) const
 	{
 		return other.plug == plug && other.contextHash == contextHash;
 	}
