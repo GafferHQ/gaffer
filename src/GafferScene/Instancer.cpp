@@ -561,10 +561,10 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		CompoundDataPtr result = new CompoundData;
 		for( int i = 0; i < numInstanceTypes; i++ )
 		{
-			// Sort and uniquify ids before converting to string			
+			// Sort and uniquify ids before converting to string
 			std::sort( indexedInstanceChildIds[i].begin(), indexedInstanceChildIds[i].end() );
 			auto last = std::unique( indexedInstanceChildIds[i].begin(), indexedInstanceChildIds[i].end() );
-			indexedInstanceChildIds[i].erase( last, indexedInstanceChildIds[i].end() ); 
+			indexedInstanceChildIds[i].erase( last, indexedInstanceChildIds[i].end() );
 
 			InternedStringVectorDataPtr instanceChildNames = new InternedStringVectorData;
 			for( size_t id : indexedInstanceChildIds[i] )
