@@ -24,11 +24,16 @@ Features
   - Added attribute for specifying filtered lights to StandardAttributes node.
   - Added special visualisation for blockers.
 - SetVisualiser node : Added node allowing to visualise set membership in the Viewer (#3117). 
+- ExtensionAlgo : Added mechanism to export Boxes as Gaffer extensions via `exportExtension()` (#3158).
+  - Gaffer extensions each define a new node type and are automatically integrated into the node menu.
 
 Improvements
 ------------
 
 - Viewer : Prioritised update of objects being manipulated resulting in much more fluid update (#3144).
+- CompoundEditor : Improved tab management (#3179).
+  - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu.
+  - Layouts will now store and recall detached panels, and all positions, sizes and maximised/full screen state.
 - Menu search (#2986) :
   - Added an improved "fuzzy matching" search algorithm.
   - Added an error indicator when a search matches nothing.
@@ -69,6 +74,9 @@ Improvements
 - MeshTangents : Added support for additional computation modes (#3030).
 - GafferImageUI: Added DWA compression presets (#3153).
 - Numeric Bookmarks : Added serialisation to preserve numeric bookmarks across sessions (#3157).
+- SetExpressions : Added support for wildcard characters in set names (#3172).
+- Lights : Added "visualiserScale" setting in new "Visualisation" tab (#3180).
+- StandardLightVisualiser : By setting "visualiserScale" to 0 all visualisation computations can now be avoided (#3178).
 
 Fixes
 -----
@@ -97,6 +105,9 @@ Fixes
   - Fixed bug when deselecting a curve - the plug listing selection was not being updated
     to reflect the change.
 - PythonCommand : Prevented inadvertent modification of outer context (#3101).
+- Fixed widget signal/slot lifetime issues (#3179).
+    - Using ScopedConnections is no longer needed as `Widget` now derives from `Trackable`.
+    - ScopedConnections can still be used when wanting to replace connections on the fly.
 
 Documentation
 -------------
@@ -192,6 +203,24 @@ Breaking Changes
 - TransformTool : Added private members (ABI change only - source compatibility is maintained) (#3144).
 - RenderController : Added argument to `updateInBackground()` (ABI change only, source compatibility is maintained) (#3144).
 - SceneGadget : Added new private member (ABI change only, source compatibility is maintained) (#3144).
+- LightVisualiser : The signature for `visualise()` now also includes the attributes (#3180).
+
+0.53.6.2 (relative to 0.53.6.1)
+========
+
+Improvements
+------------
+
+- CustomAttributes : Added extraAttributes plug that can be set from CompoundData (#3191)
+- StandardLightVisualiser : Setting locatorScale to 0 now avoids costly computations (#3178)
+- GafferUI : Added compatibility patch to allow >0.54 layouts to load (#3206)
+
+Fixes
+-----
+
+- MultiLineTextWidget : Fixed unicode handling in `selectedText()` (#3183)
+- SplineWidget : Fixed display transform management bug (#3187)
+- ArnoldLight : Nodules no longer disappear when copy/pasting Arnold quad_light and skydome_light nodes (#3188)
 
 0.53.6.0 (relative to 0.53.5.0)
 ========
