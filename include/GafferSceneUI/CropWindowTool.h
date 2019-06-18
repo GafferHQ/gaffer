@@ -40,6 +40,7 @@
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
 
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferUI/DragDropEvent.h"
@@ -80,7 +81,7 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 		void preRender();
 
 		void findCropWindowPlug();
-		bool findCropWindowPlug( GafferScene::ScenePlug *scene, bool enabledOnly  );
+		bool findCropWindowPlug( const GafferScene::SceneAlgo::History *history, bool enabledOnly  );
 		bool findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly  );
 
 		boost::signals::scoped_connection m_overlayRectangleChangedConnection;

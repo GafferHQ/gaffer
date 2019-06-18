@@ -560,9 +560,15 @@ void CropWindowTool::findCropWindowPlug()
 	}
 
 	m_cropWindowPlug = nullptr;
-	if( !findCropWindowPlug( scenePlug(), /* enabledOnly = */ true ) )
+
+	const GafferScene::ScenePlug::ScenePath rootPath;
+	SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
+	if( history )
 	{
-		findCropWindowPlug( scenePlug(), /* enabledOnly = */ false );
+		if( !findCropWindowPlug( history.get(), /* enabledOnly = */ true ) )
+		{
+			findCropWindowPlug( history.get(), /* enabledOnly = */ false );
+		}
 	}
 
 	if( m_cropWindowPlug )
@@ -581,29 +587,16 @@ void CropWindowTool::findCropWindowPlug()
 	}
 }
 
-bool CropWindowTool::findCropWindowPlug( GafferScene::ScenePlug *scene, bool enabledOnly )
+bool CropWindowTool::findCropWindowPlug( const SceneAlgo::History *history, bool enabledOnly )
 {
-	while( true )
+	if ( findCropWindowPlugFromNode( history->scene.get(), enabledOnly ) )
 	{
-		if( scene->getInput<ScenePlug>() )
-		{
-			scene = scene->source<ScenePlug>();
-		}
-		else if( DependencyNode *node = runTimeCast<DependencyNode>( scene->node() ) )
-		{
-			scene = runTimeCast<ScenePlug>( node->correspondingInput( scene ) );
-		}
-		else
-		{
-			scene = nullptr;
-		}
+		return true;
+	}
 
-		if( !scene )
-		{
-			return false;
-		}
-
-		if( findCropWindowPlugFromNode( scene, enabledOnly ) )
+	for( const auto &p : history->predecessors )
+	{
+		if( findCropWindowPlug( p.get(), enabledOnly ) )
 		{
 			return true;
 		}
@@ -612,14 +605,10 @@ bool CropWindowTool::findCropWindowPlug( GafferScene::ScenePlug *scene, bool ena
 	return false;
 }
 
+
 bool CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly )
 {
-	if( scene->direction() != Plug::Out )
-	{
-		return false;
-	}
-
-	Options *options = runTimeCast<Options>( scene->node() );
+	const Options *options = runTimeCast<const Options>( scene->node() );
 	if( !options )
 	{
 		return false;
