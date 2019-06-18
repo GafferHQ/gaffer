@@ -236,10 +236,10 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 ]
 
 if targetAppVersion :
-	# avoid the proper dependency order for Houdini 16.5 and earlier.
-	# this is not ideal, but we're too far along in the H16.5 lifecycle
-	##\ todo: Remove this clause once we're onto H17.0 across the studio.
-	if targetApp == "houdini" and distutils.version.LooseVersion(targetAppVersion) < distutils.version.LooseVersion("17.0") :
+	# for Houdini, we are favouring our dependency rather than sideFx's
+	# given that 17.5 is shipping with openExr mangled lib without python binding.
+	# We should reassess for next version of Houdini to see if that still holds true.
+	if targetApp == "houdini" :
 		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
 	else :
 		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
