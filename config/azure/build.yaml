@@ -1,0 +1,55 @@
+# Standard build + test job
+
+parameters:
+  name: ''
+  vmImage: ''
+  container: ''
+
+jobs:
+
+ - job: ${{ parameters.name }}
+
+   ${{ if ne(parameters.container, '') }}:
+      container: ${{ parameters.container }}
+
+   strategy:
+     matrix:
+       Release:
+         BUILD_TYPE: 'RELEASE'
+       Debug:
+         BUILD_TYPE: 'DEBUG'
+
+   pool:
+     vmImage: ${{ parameters.vmImage }}
+
+   variables:
+     ARNOLD_ROOT: $(System.DefaultWorkingDirectory)/arnoldRoot
+     DELIGHT: $(System.DefaultWorkingDirectory)/3delight
+
+   steps:
+
+   - script: |
+       ./config/travis/installDelight.sh &&
+       ./config/azure/installArnold.sh &&
+       ./config/travis/installDependencies.sh
+     displayName: 'Install dependencies'
+     env:
+       ARNOLD_LOGIN: $(arnoldLogin)
+       ARNOLD_PASSWORD: $(arnoldPassword)
+
+   - script: |
+       echo BUILD_TYPE=$BUILD_TYPE
+       g++ --version
+       Xvfb :99 -screen 0 1280x1024x24 &
+       metacity&
+       scons -j 2 install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=$BUILD_TYPE DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_CACHEDIR=sconsCache
+     displayName: 'Build'
+     env:
+       DISPLAY: :99.0
+
+   - script: |
+       ./install/gaffer-*/bin/gaffer test
+     displayName: 'Test'
+     env:
+       DISPLAY: :99.0
+       USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
