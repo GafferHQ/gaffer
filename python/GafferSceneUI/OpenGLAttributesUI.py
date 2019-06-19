@@ -362,6 +362,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.maxTextureResolution" : [
+
+			"description",
+			"""
+			Light visualisers that load textures will respect this setting to
+			limit their resolution.
+			""",
+
+			"layout:section", "Light Visualisers",
+			"label", "Max Texture Resolution",
+
+		],
+
 	}
 
 )
