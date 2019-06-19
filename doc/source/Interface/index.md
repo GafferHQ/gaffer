@@ -1,3 +1,5 @@
+<!-- !NO_SCROLLSPY -->
+
 # Interface #
 
 Here you can learn about Gaffer's interface and controls.

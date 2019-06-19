@@ -1,3 +1,5 @@
+<!-- !NO_SCROLLSPY -->
+
 # Getting Started #
 
 Here you can find information and instructions about how to install and configure Gaffer.
