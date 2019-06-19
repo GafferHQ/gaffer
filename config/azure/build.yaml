@@ -4,20 +4,15 @@ parameters:
   name: ''
   vmImage: ''
   container: ''
+  buildType: 'RELEASE'
+  threads: 2
 
 jobs:
 
- - job: ${{ parameters.name }}
+ - job: ${{ parameters.name }}_${{ parameters.buildType }}
 
    ${{ if ne(parameters.container, '') }}:
       container: ${{ parameters.container }}
-
-   strategy:
-     matrix:
-       Release:
-         BUILD_TYPE: 'RELEASE'
-       Debug:
-         BUILD_TYPE: 'DEBUG'
 
    pool:
      vmImage: ${{ parameters.vmImage }}
@@ -29,6 +24,13 @@ jobs:
    steps:
 
    - script: |
+       brew update &&
+       brew install scons doxygen &&
+       brew cask install xquartz inkscape
+     displayName: 'Install toolchain (Darwin)'
+     condition: eq( variables['Agent.OS'], 'Darwin' )
+
+   - script: |
        ./config/travis/installDelight.sh &&
        ./config/azure/installArnold.sh &&
        ./config/travis/installDependencies.sh
@@ -38,11 +40,17 @@ jobs:
        ARNOLD_PASSWORD: $(arnoldPassword)
 
    - script: |
-       echo BUILD_TYPE=$BUILD_TYPE
-       g++ --version
        Xvfb :99 -screen 0 1280x1024x24 &
        metacity&
-       scons -j 2 install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=$BUILD_TYPE DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_CACHEDIR=sconsCache
+     displayName: 'Start X (Linux)'
+     condition: eq( variables['Agent.OS'], 'Linux' )
+     env:
+       DISPLAY: :99.0
+
+   - script: |
+       echo BUILD_TYPE=${{ parameters.buildType }}
+       g++ --version
+       scons -j ${{ parameters.threads }} install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_CACHEDIR=sconsCache
      displayName: 'Build'
      env:
        DISPLAY: :99.0
