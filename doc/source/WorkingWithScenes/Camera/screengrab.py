@@ -153,6 +153,17 @@ __dispatchScript(
 ## TODO: Automate `images/taskApertureOffset.gif` when these tools become available:
 # - KB/M recording and simulated playback
 
+# Render: depth of field blur
+#
+__imageName = "renderDepthOfFieldBlur"
+__dispatchScript(
+	script = "scripts/{}.gfr".format( __imageName ),
+	tasks = [ "AppleseedRender" ],
+	settings = [
+		"-Outputs.outputs.output2.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
+		]
+  )
+
 # Task: the Depth of Field tab, with settings, in the Node Editor
 script["Camera"]["focusDistance"].setValue( 22.0 )
 script["Camera"]["fStop"].setValue( 2.8 )
