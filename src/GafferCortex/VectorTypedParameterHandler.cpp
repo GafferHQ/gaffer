@@ -126,3 +126,4 @@ template class GafferCortex::VectorTypedParameterHandler<IECore::IntVectorParame
 template class GafferCortex::VectorTypedParameterHandler<IECore::FloatVectorParameter>;
 template class GafferCortex::VectorTypedParameterHandler<IECore::StringVectorParameter>;
 template class GafferCortex::VectorTypedParameterHandler<IECore::V3fVectorParameter>;
+template class GafferCortex::VectorTypedParameterHandler<IECore::Color3fVectorParameter>;
