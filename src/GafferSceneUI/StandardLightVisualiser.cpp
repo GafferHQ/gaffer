@@ -239,8 +239,8 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	GroupPtr result = new Group;
 	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
-	result->addChild( ornaments );
 	result->addChild( geometry );
+	result->addChild( ornaments );
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
 	float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
@@ -304,8 +304,15 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	else
 	{
 		// Treat everything else as a point light.
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays() ) );
+		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
+		if( radius > 0 )
+		{
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
+		}
+
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
+
 	}
 
 	return result;
@@ -462,7 +469,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays()
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -481,7 +488,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays()
 	{
 		const float angle = M_PI * 2.0f * float(i)/(float)numRays;
 		const V2f dir( cos( angle ), sin( angle ) );
-		addRay( dir * .5, dir * 1, vertsPerCurve->writable(), p->writable() );
+		addRay( dir * (.5 + radius), dir * (1 + radius), vertsPerCurve->writable(), p->writable() );
 	}
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
@@ -750,6 +757,37 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 	vertsPerCurve.push_back( 2 );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+
+	group->addChild( curves );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+
+	IECore::CompoundObjectPtr parameters = new CompoundObject;
+	parameters->members()["aimType"] = new IntData( 1 );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
+	);
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	addCircle( V3f( 0 ), radius, vertsPerCurveData->writable(), pData->writable() );
+
+	M44f t = M44f().rotate( V3f( 0, M_PI * 0.5, 0 ) );
+	for( V3f &p : pData->writable() )
+	{
+		p *= t;
+	}
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
 
