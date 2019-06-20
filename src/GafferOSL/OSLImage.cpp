@@ -297,9 +297,23 @@ IECore::ConstStringVectorDataPtr OSLImage::computeChannelNames( const Gaffer::Co
 void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelData( output, context, h );
-	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	h.append( channelName );
 	shadingPlug()->hash( h );
-	defaultedInPlug()->channelDataPlug()->hash( h );
+
+	ConstStringVectorDataPtr channelNamesData;
+	{
+		ImagePlug::GlobalScope c( context );
+		channelNamesData = defaultedInPlug()->channelNamesPlug()->getValue();
+	}
+
+	if(
+		std::find( channelNamesData->readable().begin(), channelNamesData->readable().end(), channelName ) != 
+		channelNamesData->readable().end()
+	)
+	{
+		defaultedInPlug()->channelDataPlug()->hash( h );
+	}
 }
 
 IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
