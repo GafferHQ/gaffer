@@ -54,7 +54,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 		self.__titleBehaviour = _WindowTitleBehaviour( self, script )
 
-		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
+		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 0 )
 
 		menuDefinition = self.menuDefinition( script.applicationRoot() ) if script.applicationRoot() else IECore.MenuDefinition()
 		self.__listContainer.append( GafferUI.MenuBar( menuDefinition ) )

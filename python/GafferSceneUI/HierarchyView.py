@@ -54,7 +54,7 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8, spacing = 4 )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
 

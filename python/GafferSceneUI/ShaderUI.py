@@ -187,6 +187,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with row :
 
 			self.__label = GafferUI.Label( "" )
+			self.__label._qtWidget().setProperty( "gafferItemName", True )
 
 			GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
 
@@ -203,7 +204,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with self.getContext() :
 			shaderName = self.getPlug().getValue()
-			self.__label.setText( "<h3>Shader : " + shaderName + "</h3>" )
+			self.__label.setText( "Shader: " + shaderName )
 			self.__button.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __buttonClicked( self, button ) :
