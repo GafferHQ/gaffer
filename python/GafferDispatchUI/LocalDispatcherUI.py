@@ -207,7 +207,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, **kw )
 
 		with self :
-			with GafferUI.SplitContainer() :
+			with GafferUI.SplitContainer( borderWidth = 8 ) :
 
 				self.__jobListingWidget = GafferUI.PathListingWidget(
 					_LocalJobsPath( jobPool ),
