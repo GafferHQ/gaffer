@@ -309,7 +309,9 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 			"",
 			"",
 			goboFragSource(),
-			shaderParameters ) );
+			shaderParameters
+		)
+	);
 
 	float innerAngle;
 	float coneAngle;
