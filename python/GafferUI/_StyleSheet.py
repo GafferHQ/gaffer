@@ -512,10 +512,6 @@ _styleSheet = string.Template(
 		border-bottom-color: $backgroundRaisedLowlight;
 	}
 
-	QSplitter {
-		background-color: $backgroundDarker;
-	}
-
 	/* Ensures the QSplitter border is visible if we need to highlight */
 	QSplitter#gafferCompoundEditor[gafferNumChildren="1"] {
 		padding: 1px;
@@ -523,14 +519,14 @@ _styleSheet = string.Template(
 
 	QSplitter::handle:vertical {
 		height: 2px;
-		border: 1px $backgroundDarker solid;
+		border: 1px;
 		margin: 1px;
 		padding: -2px;
 	}
 
 	QSplitter::handle:horizontal {
-		background-color: $backgroundDarker;
 		width: 2px;
+		border: 1px;
 		margin: 1px;
 		padding: -2px;
 	}
@@ -610,7 +606,7 @@ _styleSheet = string.Template(
 		margin: 0px;
 		background-color: $tintLighter;
 	}
-	
+
 	QHeaderView::section:first#vectorDataWidgetVerticalHeader {
 		border-top-left-radius: $widgetCornerRadius;
 	}
