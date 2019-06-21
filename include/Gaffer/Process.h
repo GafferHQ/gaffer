@@ -45,8 +45,8 @@
 namespace Gaffer
 {
 
-class Context;
-class Plug;
+IE_CORE_FORWARDDECLARE( Context );
+IE_CORE_FORWARDDECLARE( Plug );
 
 /// Base class representing a node graph process being
 /// performed on behalf of a plug. Processes are never
@@ -95,12 +95,46 @@ class GAFFER_API Process : private ThreadState::Scope
 
 	private :
 
-		void emitError( const std::string &error ) const;
+		void emitError( const std::string &error, const Plug *source = nullptr ) const;
 
 		IECore::InternedString m_type;
 		const Plug *m_plug;
 		const Plug *m_downstream;
 		const Process *m_parent;
+
+};
+
+/// Used to wrap exceptions that occur during execution of a Process,
+/// adding plug name and process type to the original message.
+class GAFFER_API ProcessException : public std::runtime_error
+{
+
+	public :
+
+		ProcessException( const ProcessException &rhs ) = default;
+
+		const Plug *plug() const;
+		const Context *context() const;
+		IECore::InternedString processType() const;
+
+		/// Rethrows the original exception that was wrapped by `wrapCurrentException()`.
+		[[noreturn]] void rethrowUnwrapped() const;
+
+		/// Throws a ProcessException wrapping the current exception and storing
+		/// the specified process information.
+		[[noreturn]] static void wrapCurrentException( const Process &process );
+		[[noreturn]] static void wrapCurrentException( const ConstPlugPtr &plug, const Context *context, IECore::InternedString processType );
+
+	private :
+
+		ProcessException( const ConstPlugPtr &plug, const Context *context, IECore::InternedString processType, const std::exception_ptr &exception, const char *what );
+
+		static std::string formatWhat( const Plug *plug, const char *what );
+
+		ConstPlugPtr m_plug;
+		ConstContextPtr m_context;
+		const IECore::InternedString m_processType;
+		std::exception_ptr m_exception;
 
 };
 

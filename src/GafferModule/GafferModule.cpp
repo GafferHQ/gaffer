@@ -60,6 +60,7 @@
 #include "PathFilterBinding.h"
 #include "PlugAlgoBinding.h"
 #include "PlugBinding.h"
+#include "ProcessBinding.h"
 #include "RandomBinding.h"
 #include "ScriptNodeBinding.h"
 #include "SerialisationBinding.h"
@@ -216,6 +217,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindContextProcessor();
 	bindProcessMessageHandler();
 	bindNameValuePlug();
+	bindProcess();
 
 	NodeClass<Backdrop>();
 
