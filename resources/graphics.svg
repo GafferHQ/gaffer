@@ -507,16 +507,6 @@
        gradientUnits="userSpaceOnUse" />
     <linearGradient
        inkscape:collect="always"
-       xlink:href="#background"
-       id="linearGradient6219"
-       x1="130"
-       y1="91.86219"
-       x2="149"
-       y2="91.86219"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.8,0,0,0.8,27.9,18.372438)" />
-    <linearGradient
-       inkscape:collect="always"
        xlink:href="#backgroundLight"
        id="linearGradient6221"
        gradientUnits="userSpaceOnUse"
@@ -557,16 +547,16 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="286.77472"
-     inkscape:cy="715.04552"
+     inkscape:zoom="2"
+     inkscape:cx="165.58189"
+     inkscape:cy="955.97624"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1231"
-     inkscape:window-height="1092"
+     inkscape:window-height="1016"
      inkscape:window-x="689"
-     inkscape:window-y="44"
+     inkscape:window-y="27"
      inkscape:window-maximized="0"
      inkscape:snap-global="true"
      inkscape:snap-nodes="true"
@@ -602,7 +592,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -1038,7 +1028,7 @@
        style="fill:url(#backgroundLighter);fill-opacity:0.99215686;fill-rule:evenodd;stroke:#3c3c3c;stroke-opacity:0.99215686"
        inkscape:connector-curvature="0" />
     <rect
-       style="fill:url(#linearGradient6219);fill-opacity:1;stroke:#3c3c3c;stroke-width:0.80000001;stroke-opacity:1"
+       style="fill:#7d7d7d;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.80000001;stroke-opacity:1"
        id="forExport:layoutButton"
        width="14.4"
        height="14.4"
