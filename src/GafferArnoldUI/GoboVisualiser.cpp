@@ -88,14 +88,15 @@ struct OSLTextureCacheGetterKey
 {
 
 	OSLTextureCacheGetterKey()
-		:	shaderNetwork( nullptr )
+		:	shaderNetwork( nullptr ), resolution( 512 )
 	{
 	}
 
-	OSLTextureCacheGetterKey( IECoreScene::ShaderNetwork *shaderNetwork )
-		:	shaderNetwork( shaderNetwork )
+	OSLTextureCacheGetterKey( IECoreScene::ShaderNetwork *shaderNetwork, int resolution )
+		:	shaderNetwork( shaderNetwork ), resolution( resolution )
 	{
 		shaderNetwork->hash( hash );
+		hash.append( resolution );
 	}
 
 	operator const IECore::MurmurHash & () const
@@ -104,6 +105,7 @@ struct OSLTextureCacheGetterKey
 	}
 
 	IECoreScene::ShaderNetwork *shaderNetwork;
+	int resolution;
 	MurmurHash hash;
 
 };
@@ -111,7 +113,7 @@ struct OSLTextureCacheGetterKey
 CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 {
 	cost = 1;
-	return evalOSLTexture( key.shaderNetwork, 512 );
+	return evalOSLTexture( key.shaderNetwork, key.resolution );
 }
 
 typedef LRUCache<IECore::MurmurHash, CompoundDataPtr, LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
@@ -263,9 +265,12 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 		surfaceNetwork->addConnection( { slideMapInput, { surface, "Cs" } } );
 		surfaceNetwork->setOutput( { surface, "" } );
 
+		const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
+		const int resolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : 512;
+
 		try
 		{
-			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( surfaceNetwork.get() ) );
+			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( surfaceNetwork.get(), resolution ) );
 		}
 		catch( const Exception &e )
 		{
