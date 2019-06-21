@@ -902,7 +902,8 @@ _styleSheet = string.Template(
 	}
 
 	QTreeView::item {
-		padding: 2px;
+		padding-top: 2px;
+		padding-bottom: 2px;
 	}
 
 	QTreeView::item:selected {
