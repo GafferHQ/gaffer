@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-surface splineParameters
+shader splineParameters
 (
 
 	float floatSplinePositions[] = { 0, 0, 1, 1 },
@@ -45,9 +45,11 @@ surface splineParameters
 	float colorSplinePositions[] = { 0, 0, 0, 1, 1, 1  },
 	string colorSplineBasis = "bspline",
 
+	output closure color out = 0
 )
 {
 	float t = splineinverse( colorSplineBasis, v, colorSplinePositions  );
 	color c = spline( colorSplineBasis, t, colorSplineValues );
-	Ci = c * emission() + debug( "R", "type", "float", "value", color( c[0] ) );
+	out = c * emission() + debug( "R", "type", "float", "value", color( c[0] ) );
+	Ci = out;
 }

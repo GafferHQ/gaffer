@@ -717,7 +717,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		shader = n.attributes()["osl:surface"].outputShader()
+		shader = n.attributes()["osl:shader"].outputShader()
 
 		self.assertEqual(
 			shader.parameters["floatSpline"].value,
@@ -770,7 +770,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( constant["out"] )
 
-		image["shader"].setInput( n["out"] )
+		image["shader"].setInput( n["out"]["out"] )
 
 		for interpolation in [
 			Gaffer.SplineDefinitionInterpolation.Linear,
