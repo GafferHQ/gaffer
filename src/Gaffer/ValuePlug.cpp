@@ -221,7 +221,14 @@ class ValuePlug::HashProcess : public Process
 
 				// And then look up the result in our cache.
 
-				return threadData.cache.get( processKey );
+				try
+				{
+					return threadData.cache.get( processKey );
+				}
+				catch( ... )
+				{
+					ProcessException::wrapCurrentException( processKey.plug, Context::current(), staticType );
+				}
 			}
 		}
 
@@ -269,14 +276,14 @@ class ValuePlug::HashProcess : public Process
 			{
 				if( !key.computeNode )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no ComputeNode." ) % plug()->fullName() ) );
+					throw IECore::Exception( "Plug has no ComputeNode." );
 				}
 
 				key.computeNode->hash( key.plug, context(), m_result );
 
 				if( m_result == g_nullHash )
 				{
-					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % plug()->fullName() ) );
+					throw IECore::Exception( "ComputeNode::hash() not implemented." );
 				}
 			}
 			catch( ... )
@@ -287,49 +294,65 @@ class ValuePlug::HashProcess : public Process
 
 		static IECore::MurmurHash globalCacheGetter( const HashProcessKey &key, size_t &cost )
 		{
-			cost = 1;
-			IECore::MurmurHash result;
-			switch( key.cachePolicy )
+			try
 			{
-				case CachePolicy::TaskCollaboration :
+				cost = 1;
+				IECore::MurmurHash result;
+				switch( key.cachePolicy )
 				{
-					HashProcess process( key );
-					result = process.m_result;
-					break;
+					case CachePolicy::TaskCollaboration :
+					{
+						HashProcess process( key );
+						result = process.m_result;
+						break;
+					}
+					case CachePolicy::TaskIsolation :
+					{
+						IECorePreview::ParallelAlgo::isolate(
+							[&result, &key] {
+								HashProcess process( key );
+								result = process.m_result;
+							}
+						);
+						break;
+					}
+					default :
+						// Cache policy not valid for global cache.
+						assert( false );
+						break;
 				}
-				case CachePolicy::TaskIsolation :
-				{
-					IECorePreview::ParallelAlgo::isolate(
-						[&result, &key] {
-							HashProcess process( key );
-							result = process.m_result;
-						}
-					);
-					break;
-				}
-				default :
-					// Cache policy not valid for global cache.
-					assert( false );
-					break;
-			}
 
-			return result;
+				return result;
+			}
+			catch( const ProcessException &e )
+			{
+				// See comments in `ComputeProcess::cacheGetter()`
+				e.rethrowUnwrapped();
+			}
 		}
 
 		static IECore::MurmurHash localCacheGetter( const HashProcessKey &key, size_t &cost )
 		{
-			cost = 1;
-			switch( key.cachePolicy )
+			try
 			{
-				case CachePolicy::TaskCollaboration :
-				case CachePolicy::TaskIsolation :
-					return g_globalCache.get( key );
-				default :
+				cost = 1;
+				switch( key.cachePolicy )
 				{
-					assert( key.cachePolicy != CachePolicy::Uncached );
-					HashProcess process( key );
-					return process.m_result;
+					case CachePolicy::TaskCollaboration :
+					case CachePolicy::TaskIsolation :
+						return g_globalCache.get( key );
+					default :
+					{
+						assert( key.cachePolicy != CachePolicy::Uncached );
+						HashProcess process( key );
+						return process.m_result;
+					}
 				}
+			}
+			catch( const ProcessException &e )
+			{
+				// See comments in `ComputeProcess::cacheGetter()`
+				e.rethrowUnwrapped();
 			}
 		}
 
@@ -467,7 +490,17 @@ class ValuePlug::ComputeProcess : public Process
 			}
 			else
 			{
-				IECore::ConstObjectPtr result = g_cache.get( processKey );
+				IECore::ConstObjectPtr result;
+				try
+				{
+					result = g_cache.get( processKey );
+				}
+				catch( ... )
+				{
+					// See comments in `cacheGetter()`
+					ProcessException::wrapCurrentException( processKey.plug, Context::current(), staticType );
+				}
+
 				if( result )
 				{
 					return result;
@@ -537,7 +570,7 @@ class ValuePlug::ComputeProcess : public Process
 				{
 					if( !key.computeNode )
 					{
-						throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no ComputeNode." ) % key.plug->fullName() ) );
+						throw IECore::Exception( "Plug has no ComputeNode." );
 					}
 					// Cast is ok - see comment above.
 					key.computeNode->compute( const_cast<ValuePlug *>( key.plug ), context() );
@@ -548,7 +581,7 @@ class ValuePlug::ComputeProcess : public Process
 				// something has gone wrong and we should complain about it.
 				if( !m_result )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % key.plug->fullName() ) );
+					throw IECore::Exception( "Compute did not set plug value." );
 				}
 			}
 			catch( ... )
@@ -559,37 +592,57 @@ class ValuePlug::ComputeProcess : public Process
 
 		static IECore::ConstObjectPtr cacheGetter( const ComputeProcessKey &key, size_t &cost )
 		{
-			IECore::ConstObjectPtr result;
-			switch( key.cachePolicy )
+			try
 			{
-				case CachePolicy::Standard :
-				case CachePolicy::TaskCollaboration :
+				IECore::ConstObjectPtr result;
+				switch( key.cachePolicy )
 				{
-					ComputeProcess process( key );
-					result = process.m_result;
-					break;
+					case CachePolicy::Standard :
+					case CachePolicy::TaskCollaboration :
+					{
+						ComputeProcess process( key );
+						result = process.m_result;
+						break;
+					}
+					case CachePolicy::TaskIsolation :
+					{
+						IECorePreview::ParallelAlgo::isolate(
+							[&result, &key] {
+								ComputeProcess process( key );
+								result = process.m_result;
+							}
+						);
+						break;
+					}
+					case CachePolicy::Uncached :
+						// Should not have got here.
+						assert( false );
+						break;
+					default :
+						// Can't do the work inside the cache, because we don't know if
+						// the compute will lead to deadlock. We'll do the work outside.
+						break;
 				}
-				case CachePolicy::TaskIsolation :
-				{
-					IECorePreview::ParallelAlgo::isolate(
-						[&result, &key] {
-							ComputeProcess process( key );
-							result = process.m_result;
-						}
-					);
-					break;
-				}
-				case CachePolicy::Uncached :
-					// Should not have got here.
-					assert( false );
-					break;
-				default :
-					// Can't do the work inside the cache, because we don't know if
-					// the compute will lead to deadlock. We'll do the work outside.
-					break;
+				cost = result ? result->memoryUsage() : 0;
+				return result;
 			}
-			cost = result ? result->memoryUsage() : 0;
-			return result;
+			catch( const ProcessException &processException )
+			{
+				// The LRUCache caches any exceptions thrown by its getter.
+				// But the ProcessException thrown by `Process::handleException()`
+				// is unsuitable for caching because :
+				//
+				// - There isn't a one-to-one mapping between processes and cache
+				//   entries (different plugs can share the same entry).
+				// - ProcessException stores the plug name for return from `what()`,
+				//   but the plug may be renamed.
+				// - ProcessException holds a reference to the plug, and we don't
+				//   want the cache to extend the plug's lifetime.
+				//
+				// So we unwrap the exception here and rewrap it at the call site of
+				// `LRUCache::get()`.
+				processException.rethrowUnwrapped();
+			}
 		}
 
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
