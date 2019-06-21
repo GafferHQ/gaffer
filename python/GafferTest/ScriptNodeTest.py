@@ -1240,8 +1240,8 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		self.assertRaisesRegexp(
-			Exception,
-			"^Exception : Line 2",
+			IECore.Exception,
+			"^Line 2",
 			s.execute,
 			inspect.cleandoc(
 				"""

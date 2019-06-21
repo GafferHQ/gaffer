@@ -596,7 +596,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				output = "output"
 			) )
 
-		self.assertEqual( str(engineError.exception), "Exception : The following shaders can't be used as they are not OSL shaders: aiImage (shader), aiImage (shader)" )
+		self.assertEqual( str(engineError.exception), "The following shaders can't be used as they are not OSL shaders: aiImage (shader), aiImage (shader)" )
 
 	def testReadV2fUserData( self ) :
 
