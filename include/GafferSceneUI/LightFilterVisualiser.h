@@ -43,6 +43,8 @@
 
 #include "IECoreScene/ShaderNetwork.h"
 
+#include "IECore/CompoundObject.h"
+
 namespace GafferSceneUI
 {
 
@@ -65,7 +67,7 @@ class GAFFERSCENEUI_API LightFilterVisualiser : public IECore::RefCounted
 
 		/// Must be implemented by derived classes to visualise
 		/// the light filter contained within `filterShaderNetwork`.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const = 0;
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const = 0;
 
 		/// Registers a visualiser to visualise a particular type of light filter.
 		/// For instance, `registerLightFilterVisualiser( "ai:lightFilter", "gobo", visualiser )`
