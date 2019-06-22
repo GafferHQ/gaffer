@@ -66,6 +66,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
 
 		static void spotlightParameters( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius );
 
+		static IECore::CompoundDataPtr computeTextureFromOSLNetwork( const IECoreScene::ShaderNetwork *shaderNetwork, int resolution );
+
 	protected :
 
 		static const char *faceCameraVertexSource();
