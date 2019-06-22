@@ -37,10 +37,14 @@
 #ifndef GAFFERARNOLD_ARNOLDLIGHT_H
 #define GAFFERARNOLD_ARNOLDLIGHT_H
 
+#include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
 
 #include "GafferScene/Light.h"
+#include "GafferScene/ShaderPlug.h"
+
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferArnold
 {
@@ -55,14 +59,28 @@ class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
 		~ArnoldLight() override;
 
+		Gaffer::CompoundDataPlug *attributesPlug();
+		const Gaffer::CompoundDataPlug *attributesPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
 		void loadShader( const std::string &shaderName );
 
 	protected :
+
+		void hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const override;
 
 		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
 
 	private :
+
+		ArnoldShader *shaderNode();
+		const ArnoldShader *shaderNode() const;
+
+		GafferScene::ShaderPlug *shaderInPlug();
+		const GafferScene::ShaderPlug *shaderInPlug() const;
 
 		Gaffer::StringPlug *shaderNamePlug();
 		const Gaffer::StringPlug *shaderNamePlug() const;
