@@ -265,9 +265,7 @@ CompoundDataPtr evalOSL( const IECoreScene::ShaderNetwork *shaderNetwork, int re
 		for( int x = 0; x < resolution; ++x )
 		{
 			uWritable.push_back( (float)(x + 0.5f) / resolution );
-			// V is flipped because we're generating a Cortex image,
-			// and Cortex has the pixel origin at the top left.
-			vWritable.push_back( 1.0f - ( (y + 0.5f) / resolution ) );
+			vWritable.push_back( (y + 0.5f) / resolution );
 			pWritable.push_back( V3f( x + 0.5f, y + 0.5f, 0.0f ) );
 		}
 	}
