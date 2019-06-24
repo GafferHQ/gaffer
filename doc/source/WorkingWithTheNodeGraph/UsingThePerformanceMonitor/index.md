@@ -1,3 +1,5 @@
+<!-- !NO_SCROLLSPY -->
+
 # Using the Performance Monitor #
 
 Gaffer contains a built-in performance monitor, which can help diagnose and optimize a node graph's performance. With the monitor active, performance statistics will be sent to the standard output (stdout) during dispatched renders.

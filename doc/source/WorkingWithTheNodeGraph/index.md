@@ -1,3 +1,5 @@
+<!-- !NO_SCROLLSPY -->
+
 # Working with the Node Graph #
 
 Here you can learn the fundamentals of constructing and editing node graphs in Gaffer.

@@ -1,3 +1,5 @@
+<!-- !NO_SCROLLSPY -->
+
 # Installing Gaffer #
 
 The Gaffer package is a self-contained directory, so you will need to manually install it, and later manually configure it, if necessary. Once extracted, the Gaffer directory contains the complete application, ready for use.

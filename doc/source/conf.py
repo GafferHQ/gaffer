@@ -417,3 +417,4 @@ def setup( app ) :
     
     # Add the custom stylesheet; used in all .md and .rst files in source
     app.add_stylesheet( 'gaffer.css' )
+    app.add_javascript( 'scrollspy.js' )

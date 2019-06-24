@@ -104,6 +104,107 @@ body {
 }
 
 /* ========================================
+    Scrollspy navigation
+======================================== */
+
+/* Remove grey BG in article negative space */
+.wy-nav-content-wrap {
+    background-color: unset;
+}
+
+#nav-scroll {
+    visibility: hidden;
+    position: fixed;
+    padding: 1rem;
+    right: 0;
+    width: 287px;
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: 0 1px 15px 0 rgba(128,128,128,0.15);
+}
+
+/* Show scrollspy only on desktop */
+@media only screen and (min-width: 1400px) {
+    #nav-scroll {
+        visibility: visible;
+    }
+}
+
+#nav-scroll a {
+    outline: none;
+}
+
+#nav-scroll h1 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem 0;
+}
+
+#nav-scroll .nav {
+    font-size: 0.8125rem;
+}
+
+#nav-scroll .nav ul {
+    list-style-type: none;
+    margin-bottom: 0.5rem;
+}
+
+#nav-scroll .nav ul li {
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* No padding on H2 level */
+#nav-scroll .nav > ul > li {
+    padding-left: 0;
+}
+
+#nav-scroll .nav li:first-child {
+    margin-top: 0.5rem;
+}
+
+#nav-scroll .nav a {
+    display: block;
+    padding-left: 0.5rem;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    color: #b0b0b0;
+    line-height: 1.5;
+}
+
+#nav-scroll .nav li.active > a {
+    color: #404040;
+    border-left-color: #808080;
+}
+
+/* Hide the lists under H2-level links until active */
+#nav-scroll .nav > ul > li > ul {
+    /* visibility: hidden; */
+    display: none;
+    height: 0;
+}
+
+#nav-scroll .nav > ul > li.active > ul {
+    /* visibility: visible; */
+    display: initial;
+    height: initial;
+}
+
+/* Make sure the lists under H2-level links don't appear on mobile */
+@media only screen and (max-width: 1399px) {
+    #nav-scroll .nav > ul > li > ul {
+        visibility: hidden !important;
+    }
+}
+
+#nav-scroll .nav a:hover {
+    color: #b92227 !important;
+}
+
+#nav-scroll .nav li.active > a:hover {
+    border-left-color: #b92227;
+}
+
+/* ========================================
     Links
 ======================================== */
 

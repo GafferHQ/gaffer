@@ -1,3 +1,5 @@
+<!-- !NO_SCROLLSPY -->
+
 # Launching Gaffer for the First Time #
 
 Once Gaffer has been installed, you will probably want to try it out right away before performing any additional configuration. To launch it, you can run its application file directly from the binary directory.

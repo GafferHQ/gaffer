@@ -61,6 +61,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 				modules.append( module )
 
 	index = open( "%s/index.md" % directory, "w" )
+	index.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 	index.write( __heading( "Node Reference" ) )
 
 	tocIndex = ""
@@ -92,6 +93,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 		if moduleIndex :
 
 			with open( "%s/%s/index.md" % ( directory, module.__name__ ), "w" ) as f :
+				f.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 				f.write( __heading( module.__name__ ) )
 				f.write( __tocString( ).format( moduleIndex ) )
 
@@ -139,6 +141,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 	__makeDirs( directory )
 
 	index = open( "%s/index.md" % directory, "w" )
+	index.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 	index.write( __heading( "Command Line Reference" ) )
 
 	index.write( inspect.cleandoc(
