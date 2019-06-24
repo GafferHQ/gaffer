@@ -44,6 +44,7 @@ import IECoreScene
 import IECoreGL
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 import GafferScene
@@ -466,7 +467,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		IECoreGL.CachedConverter.defaultCachedConverter().setMaxMemory( self.__cachedConverterMaxMemory )
 
-if "TRAVIS" in os.environ :
+if GafferTest.inCI( { 'travis' } ) :
 	SceneGadgetTest.testExpansion = unittest.expectedFailure( SceneGadgetTest.testExpansion )
 
 if __name__ == "__main__":

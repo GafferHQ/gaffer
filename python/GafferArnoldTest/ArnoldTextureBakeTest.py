@@ -43,6 +43,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 import GafferArnold
@@ -311,7 +312,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 			self.assertGreater( l, 2 )
 			self.assertLess( l, 8 )
 
-	@unittest.skipIf( "TRAVIS" in os.environ or "TF_BUILD" in os.environ, "Arnold license not available" )
+	@unittest.skipIf( GafferTest.inCI(), "Arnold license not available" )
 	def testMerging( self ):
 
 		allFilter = GafferScene.PathFilter()

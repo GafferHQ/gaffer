@@ -44,7 +44,7 @@ import GafferSceneTest
 import GafferOSL
 import GafferDelight
 
-@unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
+@unittest.skipIf( GafferTest.inCI(), "No license available in cloud" )
 class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	# Temporarily disable this test (which is implemented in the

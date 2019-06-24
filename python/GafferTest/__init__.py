@@ -37,6 +37,7 @@
 
 from _GafferTest import *
 
+import os
 import unittest
 
 # workaround lack of expectedFailure decorator for
@@ -51,6 +52,26 @@ except AttributeError :
 			except :
 				print "Expected failure"
 		return wrapper
+
+## Determines if the tests are running in a Continuous Integration
+# environment. Valid platforms are 'azure' and 'travis'.
+#
+# There isn't a specific 'We're on Azure' var (other than some azure specific
+# vars that are set that would be 'magic words'), so we set our own in our
+# azure-pipelines.yaml
+def inCI( platforms = set() ) :
+
+	platformVars = {
+		'travis' : 'TRAVIS',
+		'azure' : 'AZURE'
+	}
+
+	targets = platforms or platformVars.keys()
+	for t in targets :
+		if platformVars[ t ] in os.environ :
+			return True
+
+	return False
 
 from TestCase import TestCase
 from TestRunner import TestRunner

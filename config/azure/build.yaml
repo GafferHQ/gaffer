@@ -38,6 +38,7 @@ jobs:
      env:
        ARNOLD_LOGIN: $(arnoldLogin)
        ARNOLD_PASSWORD: $(arnoldPassword)
+       AZURE: 1
 
    - script: |
        Xvfb :99 -screen 0 1280x1024x24 &
@@ -54,10 +55,12 @@ jobs:
      displayName: 'Build'
      env:
        DISPLAY: :99.0
+       AZURE: 1
 
    - script: |
        ./install/gaffer-*/bin/gaffer test
      displayName: 'Test'
      env:
        DISPLAY: :99.0
+       AZURE: 1
        USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
