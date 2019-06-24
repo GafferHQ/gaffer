@@ -42,6 +42,7 @@
 #include "IECoreGL/Group.h"
 
 #include "IECore/SimpleTypedData.h"
+#include "IECore/CompoundData.h"
 
 
 namespace GafferSceneUI
@@ -83,7 +84,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
 
 		/// \todo Expose publicly once we have enough uses to dictate
 		/// the most general set of parameters.
-		static IECoreGL::ConstRenderablePtr quadShape();
+		static IECoreGL::ConstRenderablePtr quadShape( IECore::CompoundData *imageData );
 		static IECoreGL::ConstRenderablePtr diskShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );

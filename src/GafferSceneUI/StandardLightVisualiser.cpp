@@ -48,9 +48,11 @@
 #include "IECoreGL/SpherePrimitive.h"
 #include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/ToGLMeshConverter.h"
+#include "IECoreGL/QuadPrimitive.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/LRUCache.h"
 
@@ -185,7 +187,7 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 	vertsPerCurve.push_back( 2 );
 }
 
-const char *environmentSphereFragSource()
+const char *lightGeometryFragSource()
 {
 	return
 		"#version 120\n"
@@ -403,9 +405,37 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	}
 	else if( type && type->readable() == "quad" )
 	{
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadShape() ) );
+		CompoundDataPtr imageData = new CompoundData;
+
+		const ShaderNetwork::Parameter colorInput = shaderNetwork->input( { shaderNetwork->getOutput().shader, "color" } );
+		if( colorInput )
+		{
+			IECoreScene::ShaderNetworkPtr surfaceNetwork = shaderNetwork->copy();
+
+			IECoreScene::Shader *multiplyShader = new IECoreScene::Shader( "Maths/MultiplyColor", "osl:shader" );
+			multiplyShader->parameters()["b"] = new Color3fData( Color3f( finalColor ) );
+			IECore::InternedString multiply = surfaceNetwork->addShader( "multiply", multiplyShader );
+			surfaceNetwork->addConnection( { colorInput, { multiply, "a" } } );
+
+			IECore::InternedString surface = surfaceNetwork->addShader( "surface", new IECoreScene::Shader( "Surface/Constant", "osl:shader" ) );
+			surfaceNetwork->addConnection( { { multiply, "out" }, { surface, "Cs" } } );
+			surfaceNetwork->setOutput( { surface, "" } );
+
+			ShaderNetworkAlgo::removeUnusedShaders( surfaceNetwork.get() );
+
+			const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
+			const int resolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : 512;
+
+			imageData = computeTextureFromOSLNetwork( surfaceNetwork.get(), resolution );
+		}
+
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadShape( imageData.get() ) ) );
+
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		if( imageData->readable().empty() )
+		{
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		}
 	}
 	else if( type && type->readable() == "disk" )
 	{
@@ -699,7 +729,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphere( const I
 	parameters->members()["mapSampler"] = new StringData( textureFileName );
 	parameters->members()["defaultColor"] = new Color3fData( Color3f( textureFileName == "" ? 1.0f : 0.0f ) );
 	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), IECoreGL::Shader::defaultVertexSource(), "", environmentSphereFragSource(), parameters )
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), IECoreGL::Shader::defaultVertexSource(), "", lightGeometryFragSource(), parameters )
 	);
 	group->getState()->add(
 		new IECoreGL::DoubleSidedStateComponent( false )
@@ -792,33 +822,51 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadShape()
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadShape( CompoundData *imageData )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-
 	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
 
-	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
-	V3fVectorDataPtr pData = new V3fVectorData;
+	if( imageData->readable().empty() )
+	{
+		addWireframeCurveState( group.get() );
 
-	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-	vector<V3f> &p = pData->writable();
+		group->getState()->add(
+			new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), parameters )
+		);
 
-	vertsPerCurve.push_back( 4 );
-	p.push_back( V3f( -1, -1, 0  ) );
-	p.push_back( V3f( 1, -1, 0  ) );
-	p.push_back( V3f( 1, 1, 0  ) );
-	p.push_back( V3f( -1, 1, 0  ) );
+		IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+		V3fVectorDataPtr pData = new V3fVectorData;
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
-	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+		vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+		vector<V3f> &p = pData->writable();
 
-	group->addChild( curves );
+		vertsPerCurve.push_back( 4 );
+		p.push_back( V3f( -1, -1, 0  ) );
+		p.push_back( V3f( 1, -1, 0  ) );
+		p.push_back( V3f( 1, 1, 0  ) );
+		p.push_back( V3f( -1, 1, 0  ) );
+
+		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+
+		group->addChild( curves );
+	}
+	else
+	{
+		parameters->members()["mapSampler"] = imageData;
+		parameters->members()["lightMultiplier"] = new Color3fData( Color3f( 1.0 ) );
+		parameters->members()["defaultColor"] = new Color3fData( Color3f( 0.0 ) );
+		parameters->members()["previewOpacity"] = new FloatData( 1.0 );
+
+		group->getState()->add(
+							   new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", lightGeometryFragSource(), parameters ) );
+		group->getState()->add(
+							   new IECoreGL::Primitive::Selectable( false ) );
+
+		group->addChild( new IECoreGL::QuadPrimitive( 2, 2 ) );
+	}
 
 	return group;
 }
