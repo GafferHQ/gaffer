@@ -163,6 +163,14 @@ void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, obje
 	return objectInterface.transform( samples, times );
 }
 
+void objectInterfaceLink( Renderer::ObjectInterface &objectInterface, const IECore::InternedString &type, object pythonObjectSet )
+{
+	std::vector<Renderer::ObjectInterfacePtr> objectVector;
+	container_utils::extend_container( objectVector, pythonObjectSet );
+	auto objectSet = std::make_shared<Renderer::ObjectSet>( objectVector.begin(), objectVector.end() );
+	objectInterface.link( type, objectSet );
+}
+
 class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>
 {
 
@@ -257,6 +265,7 @@ void GafferSceneModule::bindRender()
 				.def( "transform", objectInterfaceTransform1 )
 				.def( "transform", objectInterfaceTransform2 )
 				.def( "attributes", &Renderer::ObjectInterface::attributes )
+				.def( "link", &objectInterfaceLink )
 			;
 		}
 

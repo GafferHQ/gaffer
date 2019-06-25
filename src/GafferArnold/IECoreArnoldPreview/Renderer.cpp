@@ -1826,6 +1826,10 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			return false;
 		}
 
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
+		{
+		}
+
 		const Instance &instance() const
 		{
 			return m_instance;
