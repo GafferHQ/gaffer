@@ -57,54 +57,59 @@ class PathChooserWidget( GafferUI.Widget ) :
 		tmpPath = Gaffer.DictPath( {}, "/" )
 		with self.__column :
 
-			# row for manipulating current directory
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as browserFrame :
 
-				self.__displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
-				self.__displayModeButton.setToolTip( "Toggle between list and tree views" )
-				self.__displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ), scoped = False )
+				# Override this so we can customise the appearance of only this list container
+				browserFrame._qtWidget().setObjectName( "gafferPathListingContainer" )
 
-				self.__bookmarksButton = GafferUI.MenuButton(
-					image = "bookmarks.png",
-					hasFrame=False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__bookmarksMenuDefinition ) ),
-				)
-				self.__bookmarksButton.setToolTip( "Bookmarks" )
-				self.__bookmarksButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragEnter ), scoped = False )
-				self.__bookmarksButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragLeave ), scoped = False )
-				self.__bookmarksButton.dropSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDrop ), scoped = False )
+				# row for manipulating current directory
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth = 8 ) :
 
-				reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
-				reloadButton.setToolTip( "Refresh view" )
-				reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ), scoped = False )
+					self.__displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
+					self.__displayModeButton.setToolTip( "Toggle between list and tree views" )
+					self.__displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ), scoped = False )
 
-				upButton = GafferUI.Button( image = "pathUpArrow.png", hasFrame=False )
-				upButton.setToolTip( "Up one level" )
-				upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ), scoped = False )
+					self.__bookmarksButton = GafferUI.MenuButton(
+						image = "bookmarks.png",
+						hasFrame=False,
+						menu = GafferUI.Menu( Gaffer.WeakMethod( self.__bookmarksMenuDefinition ) ),
+					)
+					self.__bookmarksButton.setToolTip( "Bookmarks" )
+					self.__bookmarksButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragEnter ), scoped = False )
+					self.__bookmarksButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragLeave ), scoped = False )
+					self.__bookmarksButton.dropSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDrop ), scoped = False )
 
-				GafferUI.Spacer( imath.V2i( 2, 2 ) )
+					reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
+					reloadButton.setToolTip( "Refresh view" )
+					reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ), scoped = False )
 
-				self.__dirPathWidget = GafferUI.PathWidget( tmpPath )
+					upButton = GafferUI.Button( image = "pathUpArrow.png", hasFrame=False )
+					upButton.setToolTip( "Up one level" )
+					upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ), scoped = False )
 
-			# directory listing and preview widget
-			with GafferUI.SplitContainer(
-				GafferUI.SplitContainer.Orientation.Horizontal,
-				parenting = { "expand" : True }
-			) as splitContainer :
+					GafferUI.Spacer( imath.V2i( 2, 2 ) )
 
-				self.__directoryListing = GafferUI.PathListingWidget( tmpPath, allowMultipleSelection=allowMultipleSelection )
-				self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ), scoped = False )
-				if len( previewTypes ) :
-					self.__previewWidget = GafferUI.CompoundPathPreview( tmpPath, childTypes=previewTypes )
-				else :
-					self.__previewWidget = None
+					self.__dirPathWidget = GafferUI.PathWidget( tmpPath )
 
-			if len( splitContainer ) > 1 :
-				splitContainer.setSizes( [ 2, 1 ] ) # give priority to the listing over the preview
+				# directory listing and preview widget
+				with GafferUI.SplitContainer(
+					GafferUI.SplitContainer.Orientation.Horizontal,
+					parenting = { "expand" : True }
+				) as splitContainer :
 
-			# filter section
-			self.__filterFrame = GafferUI.Frame( borderWidth=0, borderStyle=GafferUI.Frame.BorderStyle.None )
-			self.__filter = None
+					self.__directoryListing = GafferUI.PathListingWidget( tmpPath, allowMultipleSelection=allowMultipleSelection )
+					self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ), scoped = False )
+					if len( previewTypes ) :
+						self.__previewWidget = GafferUI.CompoundPathPreview( tmpPath, childTypes=previewTypes )
+					else :
+						self.__previewWidget = None
+
+				if len( splitContainer ) > 1 :
+					splitContainer.setSizes( [ 2, 1 ] ) # give priority to the listing over the preview
+
+				# filter section
+				self.__filterFrame = GafferUI.Frame( borderWidth=4, borderStyle=GafferUI.Frame.BorderStyle.None )
+				self.__filter = None
 
 			# path
 			self.__pathWidget = GafferUI.PathWidget( tmpPath )

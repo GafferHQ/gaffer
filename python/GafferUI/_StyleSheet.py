@@ -1075,6 +1075,16 @@ _styleSheet = string.Template(
 		border-bottom-right-radius: 0px;
 	}
 
+	/* PathChooseWidget */
+
+	*[gafferClass="GafferUI.PathChooserWidget"] #gafferPathListingContainer {
+		border-radius: $widgetCornerRadius;
+		background-color: $background;
+		border: 1px solid $backgroundHighlight;
+		border-right-color: $backgroundLowlight;
+		border-bottom-color: $backgroundLowlight;
+	}
+
 	/* PythonEditor */
 
 	QSplitter#gafferPythonEditor {
