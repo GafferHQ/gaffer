@@ -46,17 +46,19 @@ _styleColors = {
 
 	"backgroundDarker" : (45, 45, 45),
 
-	"backgroundDark" : (56, 56, 56),
-	"backgroundDarkTransparent" : (56, 56, 56, 100),
+	"backgroundDark" : (52, 52, 52),
+	"backgroundDarkTransparent" : (52, 52, 52, 100),
 	"backgroundDarkHighlight" : (62, 62, 62),
 
-	"backgroundLowlight" : (68, 68, 68),
-	"background" : (76, 76, 76),
-	"backgroundHighlight" : (88, 88, 88),
+	"backgroundLowlight" : (56, 56, 56),
+	"background" : (66, 66, 66),
+	"backgroundAlt" : (60, 60, 60),
+	"backgroundHighlight" : (76, 76, 76),
 
-	"backgroundRaisedLowlight" : (70, 70, 70),
-	"backgroundRaised" : (82, 82, 82),
-	"backgroundRaisedHighlight" : (96, 96, 96),
+	"backgroundRaisedLowlight" : (52, 52, 52),
+	"backgroundRaised" : (72, 72, 72),
+	"backgroundRaisedAlt" : (66, 66, 66),
+	"backgroundRaisedHighlight" : (82, 82, 82),
 
 	"backgroundLightLowlight" : (82, 82, 82),
 	"backgroundLight" : (96, 96, 96),
@@ -73,6 +75,7 @@ _styleColors = {
 	"errorColor" : (255, 85, 85),
 	"animatedColor" : (128, 152, 94),
 
+	"tintLighterSubtle" :   ( 255, 255, 255, 10 ),
 	"tintLighter" :         ( 255, 255, 255, 20 ),
 	"tintLighterStrong" :   ( 255, 255, 255, 40 ),
 	"tintLighterStronger" : ( 255, 255, 255, 100 ),
@@ -115,7 +118,7 @@ _styleSheet = string.Template(
 		color: $foreground;
 		font: 10px;
 		etch-disabled-text: 0;
-		background-color: $backgroundLowlight;
+		background-color: $backgroundDark;
 		border: 1px solid #555555;
 	}
 
@@ -229,8 +232,8 @@ _styleSheet = string.Template(
 	QLineEdit, QPlainTextEdit {
 		padding: 0px;
 		border: 1px solid transparent;
-		border-bottom-color: $backgroundLightLowlight;
-		border-right-color: $backgroundLightLowlight;
+		border-bottom-color: $backgroundHighlight;
+		border-right-color: $backgroundHighlight;
 		background-color: $backgroundLight;
 		border-radius: ${controlCornerRadius};
 	}
@@ -238,7 +241,7 @@ _styleSheet = string.Template(
 
 	QLineEdit[readOnly="true"], QPlainTextEdit[readOnly="true"] {
 		padding: 0px;
-		background-color: transparent;
+		background-color: $tintLighterSubtle;
 		border-color: transparent;
 	}
 
@@ -369,8 +372,7 @@ _styleSheet = string.Template(
 
 	QPushButton#gafferWithFrame:disabled {
 		color: $tintLighterStrong;
-		background-color: $tintDarker;
-		border-color: transparent;
+		background-color: $backgroundHighlight;
 	}
 
 	QPushButton::menu-indicator {
@@ -444,7 +446,11 @@ _styleSheet = string.Template(
 	}
 
 	QTabBar[gafferHasTabCloseButtons="true"]::tab {
-		padding-right: 3px;
+		padding-right: 5px;
+	}
+
+	QTabBar::close-button {
+		margin: 10px;
 	}
 
 	QTabBar::tab:disabled {
@@ -464,9 +470,9 @@ _styleSheet = string.Template(
 
 	QTabBar::tab:!selected {
 		color: $tintLighterStronger;
-		background-color: $backgroundDark;
+		background-color: transparent;
 		border-color: transparent;
-		border-bottom-color: $background;
+		border-bottom-color: $backgroundHighlight;
 	}
 
 	QTabBar::tab:!selected:hover {
@@ -475,7 +481,7 @@ _styleSheet = string.Template(
 
 	QTabWidget QTabWidget > QTabBar::tab:!selected {
 		color: $tintLighterStronger;
-		background-color: $backgroundDarkHighlight;
+		background-color: transparent;
 		border-color: transparent;
 		border-bottom-color: $backgroundRaisedHighlight;
 	}
@@ -503,8 +509,8 @@ _styleSheet = string.Template(
 	}
 
 	QTabWidget[gafferNumChildren="0"]::pane {
-		background-color: $backgroundDarker;
-		border-color: $backgroundDarker;
+		background-color: $backgroundDark;
+		border-color: $backgroundDark;
 	}
 
 	QTabWidget QTabWidget::pane {
@@ -898,11 +904,11 @@ _styleSheet = string.Template(
 
 	QTreeView {
 		background-color: $backgroundRaised;
-		border: 1px solid $backgroundRaisedHighlight;
-		border-bottom-color: $backgroundRaisedLowlight;
-		border-right-color: $backgroundRaisedLowlight;
+		border: 1px solid transparent;
+		border-bottom-color: $backgroundRaisedAlt;
+		border-right-color: $backgroundRaisedAlt;
 		padding: 0;
-		alternate-background-color: $backgroundLowlight;
+		alternate-background-color: $backgroundRaisedAlt;
 	}
 
 	QTreeView::item {
