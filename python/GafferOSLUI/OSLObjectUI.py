@@ -248,8 +248,16 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 
-		]
+		],
 
+		"useAttributes" : [
+
+			"description",
+			"""
+			Make the Gaffer attributes at the object's location available to OSL through the getattribute function.  Once this is on, you can use OSL nodes such as inFloat or inString to retreive the attribute values.
+			""",
+
+		]
 	}
 
 )
