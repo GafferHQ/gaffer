@@ -1048,6 +1048,16 @@ _styleSheet = string.Template(
 		background-color: $brightColor;
 	}
 
+	*[gafferSolid="true"] {
+		background-color: $background;
+	}
+
+	*[gafferEmbossed="true"] {
+		border: 1px solid $backgroundHighlight;
+		border-right-color: $backgroundLowlight;
+		border-bottom-color: $backgroundLowlight;
+	}
+
 	/* turn off rounded corners based on adjacency of other widgets */
 
 	*[gafferRounded="true"] {
