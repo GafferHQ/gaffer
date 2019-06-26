@@ -76,7 +76,10 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test spot to persp cam
 		spotCam = lc["out"].object( "/group/spot1" )
-		self.assertEqual( spotCam.calculateFieldOfView(), imath.V2f( 65 ) )
+		# Equality test fails on Mac: 64.99999237060547 != 65
+		calculatedFieldOfView = spotCam.calculateFieldOfView()
+		self.assertAlmostEqual( calculatedFieldOfView[0], 65, 4 )
+		self.assertAlmostEqual( calculatedFieldOfView[1], 65, 4 )
 		self.assertEqual( spotCam.getClippingPlanes(), imath.V2f( 0.01, 100000 ) )
 		self.assertEqual( spotCam.getProjection(), 'perspective' )
 		self.assertEqual( spotCam.getFilmFit(), IECoreScene.Camera.FilmFit.Fit )
