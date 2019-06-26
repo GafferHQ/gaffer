@@ -494,6 +494,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 		# Convert result to texture
 		self["__ConvertCommand"] = GafferDispatch.SystemCommand()
+		# We shouldn't need a sub-shell and this prevents S.I.P on the Mac from
+		# blocking the dylibs loaded by maketx.
+		self["__ConvertCommand"]["shell"].setValue( False )
 		self["__ConvertCommand"]["substitutions"].addChild( Gaffer.NameValuePlug( "inFile", IECore.StringData(), "member1" ) )
 		self["__ConvertCommand"]["substitutions"].addChild( Gaffer.NameValuePlug( "outFile", IECore.StringData(), "member1" ) )
 		self["__ConvertCommand"]["preTasks"][0].setInput( self["__ImageWriter"]["task"] )
