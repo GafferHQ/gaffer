@@ -208,7 +208,7 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( m.allStatistics() ), 2 )
 
-		delta = 0.15 if GafferTest.inCI() else 0.01
+		delta = 0.2 if GafferTest.inCI() else 0.01
 
 		self.assertEqual( m.plugStatistics( n1["out"] ).hashCount, 1 )
 		self.assertEqual( m.plugStatistics( n1["out"] ).computeCount, 1 )
