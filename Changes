@@ -1,3 +1,17 @@
+0.53.6.3 (relative to 0.53.6.2)
+========
+
+Improvements
+------------
+
+- VectorTypedParameterHandler : Added support for Color3fVectorParameter (#3228)
+- CompoundVectorParameterValueWidget : Now preserves selection when editing data (#3228)
+
+Build
+-----
+
+- ie/options: Added support for Houdini 17.5 (#3215)
+
 0.53.6.2 (relative to 0.53.6.1)
 ========
 
