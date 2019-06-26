@@ -11,6 +11,10 @@ jobs:
 
  - job: ${{ parameters.name }}_${{ parameters.buildType }}
 
+   # We're seeing jobs take about an hour sometimes!
+   timeoutInMinutes: 100
+
+
    ${{ if ne(parameters.container, '') }}:
       container: ${{ parameters.container }}
 
