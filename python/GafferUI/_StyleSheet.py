@@ -42,6 +42,26 @@ from Qt import QtGui
 
 _styleColors = {
 
+	# The theme is built on the principal of using tonal variation and
+	# subtle embossing instead of lines to differentiate UI elements.
+	# There are a few holes in this, but it hopefully results in a lower overall
+	# visual complexity compared to a flat + borders approach.
+	#
+	# The base background color for UI elements is $background, and this should
+	# be used for 'default' height elements - ie: the main user interaction
+	# surface background in any window/panel. This is usually a top-level
+	# TabContainer or ListContainer. Depending on the nesting level of
+	# subsequent elements, the Light/Lighter variants should be used instead.
+	# Dark/Darker variants are for 'lower' elements, such as the background
+	# behind something considered as the primary surface.
+	#
+	# For each base background color, in order to facilitate relief effects,
+	# there are 'highlight' and 'lowlight' options. Highlight should be used
+	# on top/left borders and lowlight on bottom/right.
+	#
+	# The 'alt' suffixed colors are for use in UI elements such as table views
+	# that require subtle variation of the base background color.
+
 	"backgroundDarkest" : (0, 0, 0),
 
 	"backgroundDarker" : (45, 45, 45),
@@ -66,14 +86,25 @@ _styleColors = {
 
 	"backgroundLighter" : (125, 125, 125),
 
+	# $brightColor should be used to illustrated a selected or highlighted
+	# state, such as during a drag-hover or click-selection operation.
+
 	"brightColor" : (119, 156, 189),
 	"brightColorTransparent" : (119, 156, 189, 100),
+
+	# $foreground is the standard Text/marker color.
 
 	"foreground" : (224, 224, 224),
 	"foregroundFaded" : (153, 153, 153),
 
 	"errorColor" : (255, 85, 85),
 	"animatedColor" : (128, 152, 94),
+
+	# Controls and other UI elements may have to sit on a variety of background
+	# colors and as such should make use of the $tint* colors for tonal
+	# variation. This should be in preference to using $background* colors
+	# unless there are compositing issues or other overriding reasons as the
+	# control will not be portable across different backgrounds.
 
 	"tintLighterSubtle" :   ( 255, 255, 255, 10 ),
 	"tintLighter" :         ( 255, 255, 255, 20 ),
@@ -114,6 +145,40 @@ def styleColor( key ) :
 ## \todo Unify with GafferUI.Style for colours at least.
 _styleSheet = string.Template(
 
+	# General Rules:
+	#
+	#   - Custom properties should be used for compositional behaviour, in the
+	#     way traditional CSS classes are used.
+	#
+	#   - Custom objectNames should be used to allow the customisation of
+	#     specific instances of a widget, in the way traditional CSS IDs are
+	#     used.
+	#
+	#   - Custom objectNames or properties should all be prefixed with `gaffer`
+	#     and use camelCase.
+	#
+	#   - Any objectNames or properties set from the underlying implementation
+	#     should only convey information about the context of use, and not any
+	#     styling hints. For example, in the case of allowing control over the
+	#     styling of widgets based on their proximity to others, Gaffer sets the
+	#     appropriate `gafferAdjoined(Top|Bottom|Left|Right)` properties rather
+	#     than `gafferRounded`/`gafferFlat*`.
+	#
+	# We can't use `.<class>` selectors in the stylesheet in many cases as
+	# these reference the Qt Class hierarchy. To help here, GafferUI.Widgets
+	# set two custom properties on their QWidget:
+	#
+	#   - `gafferClass` : The class path of the widget, eg: `GafferUI.Button`
+	#
+	#   - `gafferClasses` : An array of classes in the widgets hierarchy, eg:
+	#        `[ 'GafferUI.Button', 'GafferUI.Widget' ]`
+	#
+	# This allows class-scope selectors in the style sheet, via property
+	# queries eg:
+	#
+	#   - `[gafferClass="GafferUI.Button"]` For an exact class.
+	#   - `[gafferClasses~="GafferUI.Window"]` For an inheritance match.
+	#
 	"""
 	*[gafferClasses~="GafferUI.Window"] {
 		color: $foreground;
