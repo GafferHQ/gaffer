@@ -50,6 +50,7 @@
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/ArnoldLightFilter.h"
 #include "GafferArnold/InteractiveArnoldRender.h"
+#include "GafferArnold/Private/IECoreArnoldPreview/ShaderNetworkAlgo.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -57,6 +58,7 @@
 
 using namespace boost::python;
 using namespace GafferArnold;
+using namespace IECoreArnoldPreview;
 
 namespace
 {
@@ -65,6 +67,33 @@ void flushCaches( int flags )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	InteractiveArnoldRender::flushCaches( flags );
+}
+
+boost::python::object atNodeToPythonObject( AtNode *node )
+{
+	if( !node )
+	{
+		return object();
+	}
+
+	object ctypes = import( "ctypes" );
+	object arnold = import( "arnold" );
+
+	object atNodeType = arnold.attr( "AtNode" );
+	object pointerType = ctypes.attr( "POINTER" )( atNodeType );
+	object converted = ctypes.attr( "cast" )( (size_t)node, pointerType );
+	return converted;
+}
+
+list shaderNetworkAlgoConvert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix )
+{
+	std::vector<AtNode *> nodes = ShaderNetworkAlgo::convert( shaderNetwork, namePrefix );
+	list result;
+	for( const auto &n : nodes )
+	{
+		result.append( atNodeToPythonObject( n ) );
+	}
+	return result;
 }
 
 } // namespace
@@ -93,5 +122,15 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 		.staticmethod( "flushCaches" )
 	;
 	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
+
+	object ieCoreArnoldPreviewModule( borrowed( PyImport_AddModule( "GafferArnold.IECoreArnoldPreview" ) ) );
+	scope().attr( "IECoreArnoldPreview" ) = ieCoreArnoldPreviewModule;
+	scope ieCoreArnoldPreviewScope( ieCoreArnoldPreviewModule );
+
+	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferArnold.IECoreArnoldPreview.ShaderNetworkAlgo" ) ) );
+	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
+	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+
+	def( "convert", &shaderNetworkAlgoConvert );
 
 }

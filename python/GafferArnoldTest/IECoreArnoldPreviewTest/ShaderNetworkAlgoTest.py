@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,48 @@
 #
 ##########################################################################
 
-from RendererTest import RendererTest
-from ShaderNetworkAlgoTest import ShaderNetworkAlgoTest
+import ctypes
+import unittest
+
+import arnold
+
+import IECore
+import IECoreScene
+import IECoreArnold
+
+import GafferTest
+import GafferArnold.IECoreArnoldPreview as IECoreArnoldPreview
+
+class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"noiseHandle" : IECoreScene.Shader( "noise" ),
+				"flatHandle" : IECoreScene.Shader( "flat" ),
+			},
+			connections = [
+				( ( "noiseHandle", "" ), ( "flatHandle", "color" ) ),
+			],
+			output = "flatHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, "test:" )
+
+			self.assertEqual( len( nodes ), 2 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "noise" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[1] ) ), "flat" )
+
+			self.assertEqual( arnold.AiNodeGetName( nodes[0] ), "test:noiseHandle" )
+			self.assertEqual( arnold.AiNodeGetName( nodes[1] ), "test:flatHandle" )
+
+			self.assertEqual(
+				ctypes.addressof( arnold.AiNodeGetLink( nodes[1], "color" ).contents ),
+				ctypes.addressof( nodes[0].contents )
+			)
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
