@@ -80,6 +80,26 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Settings.Environment Variables",
 
+		),
+
+		"shell" : (
+
+			"description",
+			"""
+			When enabled, the specified command is interpreted as a shell
+			command and run in a child shell. This allows semantics such
+			as pipes to be used.  Otherwise the supplied command is invoked
+			directly as an executable and its args.
+
+			> Note: On MacOS with System Integrity Protection enabled, child
+			> shells will not inherit `DYLD_LIBRARY_PATH` from the Gaffer
+			> process. If the executable you are running relies on this,
+			> disabling _shell_ should allow it to inherit the full Gaffer
+			> environment.
+			""",
+
+			"layout:section", "Advanced",
+
 		)
 
 	}

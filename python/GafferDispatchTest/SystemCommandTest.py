@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import subprocess32 as subprocess
 import unittest
 
 import IECore
@@ -114,6 +115,24 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		sequences = IECore.ls( self.temporaryDirectory() )
 		self.assertEqual( len( sequences ), 1 )
 		self.assertEqual( str( sequences[0] ), "systemCommandTest.####.txt 1-10" )
+
+	def testShell( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.SystemCommand()
+
+		self.assertEqual( s["n"]["shell"].getValue(), True )
+
+		# The following command is only valid when interpreted as a shell command
+		s["n"]["command"].setValue( "date | wc -l" )
+
+		s["n"].execute()
+
+		s["n"]["shell"].setValue( False )
+
+		with self.assertRaises( subprocess.CalledProcessError ) :
+			s["n"].execute()
 
 	def testEmptyCommand( self ) :
 
