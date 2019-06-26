@@ -85,14 +85,52 @@ boost::python::object atNodeToPythonObject( AtNode *node )
 	return converted;
 }
 
-list shaderNetworkAlgoConvert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix )
+AtNode *atNodeFromPythonObject( object o )
 {
-	std::vector<AtNode *> nodes = ShaderNetworkAlgo::convert( shaderNetwork, namePrefix );
+	object ctypes = import( "ctypes" );
+	object ctypesPointer = ctypes.attr( "POINTER" );
+	object arnoldAtNode = import( "arnold" ).attr( "AtNode" );
+	object atNodePtrType = ctypesPointer( arnoldAtNode );
+
+	if( !PyObject_IsInstance( o.ptr(), atNodePtrType.ptr() ) )
+	{
+		PyErr_SetString( PyExc_TypeError, "Expected an AtNode" );
+		throw_error_already_set();
+	}
+
+	object oContents = o.attr( "contents" );
+	object pythonAddress = ctypes.attr( "addressof" )( oContents );
+	const size_t address = extract<size_t>( pythonAddress );
+	return reinterpret_cast<AtNode *>( address );
+}
+
+list shaderNetworkAlgoConvert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name )
+{
+	std::vector<AtNode *> nodes = ShaderNetworkAlgo::convert( shaderNetwork, name );
 	list result;
 	for( const auto &n : nodes )
 	{
 		result.append( atNodeToPythonObject( n ) );
 	}
+	return result;
+}
+
+bool shaderNetworkAlgoUpdate( list pythonNodes, const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	std::vector<AtNode *> nodes;
+	for( size_t i = 0, l = len( pythonNodes ); i < l; ++i )
+	{
+		nodes.push_back( atNodeFromPythonObject( pythonNodes[i] ) );
+	}
+
+	bool result = ShaderNetworkAlgo::update( nodes, shaderNetwork );
+
+	del( pythonNodes[slice()] );
+	for( const auto &n : nodes )
+	{
+		pythonNodes.append( atNodeToPythonObject( n ) );
+	}
+
 	return result;
 }
 
@@ -132,5 +170,6 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
 
 	def( "convert", &shaderNetworkAlgoConvert );
+	def( "update", &shaderNetworkAlgoUpdate );
 
 }

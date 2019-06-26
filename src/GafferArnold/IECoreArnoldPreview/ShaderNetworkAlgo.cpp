@@ -67,6 +67,7 @@ const AtString g_linearArnoldString( "linear" );
 const AtString g_outputArnoldString( "output" );
 const AtString g_shaderNameArnoldString( "shadername" );
 const AtString g_oslArnoldString( "osl" );
+const AtString g_nameArnoldString( "name" );
 
 template<typename Spline>
 void setSplineParameter( AtNode *node, const std::string &name, const Spline &spline )
@@ -141,7 +142,8 @@ InternedString partitionEnd( const InternedString &s, char c )
 	}
 }
 
-AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode, vector<AtNode *> &nodes, ShaderMap &converted )
+template<typename NodeCreator>
+AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const NodeCreator &nodeCreator, vector<AtNode *> &nodes, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. OSL shaders
 	// can have multiple outputs, but each Arnold shader node
@@ -162,10 +164,11 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Create the AtNode for this shader output
 
-	string nodeName(
-		namePrefix +
-		outputParameter.shader.string()
-	);
+	string nodeName = name;
+	if( outputParameter != shaderNetwork->getOutput() )
+	{
+		nodeName += ":" + outputParameter.shader.string();
+	}
 	if( oslOutput.string().size() )
 	{
 		nodeName += ":" + oslOutput.string();
@@ -173,7 +176,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	if( isOSLShader )
 	{
-		node = AiNode( g_oslArnoldString, AtString( nodeName.c_str() ), parentNode );
+		node = nodeCreator( g_oslArnoldString, AtString( nodeName.c_str() ) );
 		if( oslOutput.string().size() )
 		{
 			AiNodeDeclare( node, g_outputArnoldString, "constant STRING" );
@@ -183,10 +186,9 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 	}
 	else
 	{
-		node = AiNode(
+		node = nodeCreator(
 			AtString( shader->getName().c_str() ),
-			AtString( nodeName.c_str() ),
-			parentNode
+			AtString( nodeName.c_str() )
 		);
 	}
 
@@ -229,7 +231,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		AtNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, parentNode, nodes, converted );
+		AtNode *sourceNode = convertWalk( connection.source, shaderNetwork, name, nodeCreator, nodes, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -259,6 +261,49 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 	return node;
 }
 
+AtString g_name( "name" );
+
+const std::vector<AtString> g_protectedLightParameters = {
+	AtString( "matrix" ),
+	AtString( "filters" ),
+	AtString( "mesh" )
+};
+
+// Similar to `AiNodeReset()`, but avoids resetting light parameters
+// which we know to be unrelated to ShaderNetwork translation.
+void resetNode( AtNode *node )
+{
+	const AtNodeEntry *nodeEntry = AiNodeGetNodeEntry( node );
+	const bool isLight = AiNodeEntryGetType( nodeEntry ) == AI_NODE_LIGHT;
+
+	AtParamIterator *it = AiNodeEntryGetParamIterator( nodeEntry );
+	while( !AiParamIteratorFinished( it ) )
+	{
+		const AtParamEntry *param = AiParamIteratorGetNext( it );
+		const AtString name = AiParamGetName( param );
+
+		if( name == g_name )
+		{
+			continue;
+		}
+
+		if(
+			isLight &&
+			std::find(
+				g_protectedLightParameters.begin(),
+				g_protectedLightParameters.end(),
+				name
+			) != g_protectedLightParameters.end()
+		)
+		{
+			continue;
+		}
+
+		AiNodeResetParameter( node, name );
+	}
+	AiParamIteratorDestroy( it );
+}
+
 } // namespace
 
 namespace IECoreArnoldPreview
@@ -267,7 +312,7 @@ namespace IECoreArnoldPreview
 namespace ShaderNetworkAlgo
 {
 
-std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode )
+std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const AtNode *parentNode )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) // todo : make conditional on OSL < 1.10
@@ -286,9 +331,61 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 	}
 	else
 	{
-		convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, parentNode, result, converted );
+		auto nodeCreator = [parentNode]( const AtString &nodeType, const AtString &nodeName ) {
+			return AiNode( nodeType, nodeName, parentNode );
+		};
+		convertWalk( shaderNetwork->getOutput(), shaderNetwork, name, nodeCreator, result, converted );
 	}
 	return result;
+}
+
+bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	assert( nodes.size() );
+	AtNode *parentNode = AiNodeGetParent( nodes.back() );
+	const std::string &name = AiNodeGetName( nodes.back() );
+
+	boost::unordered_map<AtString, AtNode *, AtStringHash> originalNodes;
+	for( const auto &n : nodes )
+	{
+		originalNodes[AtString(AiNodeGetName(n))] = n;
+	}
+	std::unordered_set<AtNode *> reusedNodes;
+	nodes.clear();
+
+	auto nodeCreator = [parentNode, &originalNodes, &reusedNodes]( const AtString &nodeType, const AtString &nodeName ) {
+		auto it = originalNodes.find( nodeName );
+		if( it != originalNodes.end() )
+		{
+			if( AtString( AiNodeEntryGetName( AiNodeGetNodeEntry( it->second ) ) ) == nodeType )
+			{
+				// Reuse original node
+				AtNode *node = it->second;
+				originalNodes.erase( it );
+				reusedNodes.insert( node );
+				resetNode( node );
+				return node;
+			}
+			else
+			{
+				// Can't reuse original node. Delete it so that we
+				// can reuse the name in `AiNode()` below.
+				AiNodeDestroy( it->second );
+				originalNodes.erase( it );
+			}
+		}
+		return AiNode( nodeType, nodeName, parentNode );
+	};
+
+	ShaderMap converted;
+	convertWalk( shaderNetwork->getOutput(), shaderNetwork, name, nodeCreator, nodes, converted );
+
+	for( const auto &n : originalNodes )
+	{
+		AiNodeDestroy( n.second );
+	}
+
+	return nodes.size() && reusedNodes.count( nodes.back() );
 }
 
 } // namespace ShaderNetworkAlgo
