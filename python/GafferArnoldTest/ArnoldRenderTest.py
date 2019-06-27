@@ -848,10 +848,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		light2.loadShader( "point_light" )
 
 		group = GafferScene.Group()
-		group["in"].addChild( GafferScene.ScenePlug( "in1" ) )
-		group["in"].addChild( GafferScene.ScenePlug( "in2" ) )
-		group["in"].addChild( GafferScene.ScenePlug( "in3" ) )
-		group["in"].addChild( GafferScene.ScenePlug( "in4" ) )
 
 		evaluate = GafferScene.EvaluateLightLinks()
 
@@ -859,10 +855,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		attributes["in"].setInput( sphere1["out"] )
 		arnoldAttributes["in"].setInput( attributes["out"] )
-		group["in"]["in1"].setInput( arnoldAttributes["out"] )
-		group["in"]["in2"].setInput( light1["out"] )
-		group["in"]["in3"].setInput( light2["out"] )
-		group["in"]["in4"].setInput( sphere2["out"] )
+		group["in"][0].setInput( arnoldAttributes["out"] )
+		group["in"][1].setInput( light1["out"] )
+		group["in"][2].setInput( light2["out"] )
+		group["in"][3].setInput( sphere2["out"] )
 		evaluate["in"].setInput( group["out"] )
 		render["in"].setInput( evaluate["out"] )
 
@@ -1089,7 +1085,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) :
 
-			foo = self.temporaryDirectory() + "/testMany.ass" 
+			foo = self.temporaryDirectory() + "/testMany.ass"
 			print foo
 			arnold.AiASSLoad( foo )
 
