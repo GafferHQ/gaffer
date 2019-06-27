@@ -77,12 +77,13 @@ Gaffer.Metadata.registerNode(
 
 def __setKey( plug, context ) :
 
-	with context :
-		value = plug.getValue()
+	keyablePlugs = plug.children() if __allChildrenKeyable( plug ) else [ plug ]
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve = Gaffer.Animation.acquire( plug )
-		curve.addKey( Gaffer.Animation.Key( context.getTime(), value ) )
+		for keyablePlug in keyablePlugs :
+			curve = Gaffer.Animation.acquire( keyablePlug )
+			with context :
+				curve.addKey( Gaffer.Animation.Key( context.getTime(), keyablePlug.getValue() ) )
 
 def __removeKey( plug, key ) :
 
@@ -90,11 +91,43 @@ def __removeKey( plug, key ) :
 		curve = Gaffer.Animation.acquire( plug )
 		curve.removeKey( key )
 
+def __allChildrenKeyable( plug ) :
+
+	children = plug.children()
+
+	if not children :
+		return False
+
+	for child in children :
+		if not Gaffer.Animation.canAnimate( child ) :
+			return False
+
+	return True
+
+def __allChildrenEditable( plug ) :
+
+	children = plug.children()
+
+	if not children :
+		return False
+
+	plugValueWidget = GafferUI.PlugValueWidget.acquire( plug )
+
+	for child in children :
+		childPlugValueWidget = plugValueWidget.childPlugValueWidget( child )
+		if not childPlugValueWidget._editable( canEditAnimation = True ) :
+			return False
+
+	return True
+
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
+	keyAllChildren = False
 	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) :
-		return
+		if not __allChildrenKeyable( plug ):
+			return
+		keyAllChildren = True
 
 	context = plugValueWidget.getContext()
 
@@ -144,7 +177,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 				plug,
 				context
 			),
-			"active" : plugValueWidget._editable( canEditAnimation = True ),
+			"active" : plugValueWidget._editable( canEditAnimation = True ) if not keyAllChildren else __allChildrenEditable( plug ),
 		}
 	)
 
