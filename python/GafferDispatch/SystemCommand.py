@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import shlex
 import subprocess32 as subprocess
 
 import IECore
@@ -49,6 +50,7 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 		GafferDispatch.TaskNode.__init__( self, name )
 
 		self["command"] = Gaffer.StringPlug()
+		self["shell"] = Gaffer.BoolPlug( defaultValue = True )
 		self["substitutions"] = Gaffer.CompoundDataPlug()
 		self["environmentVariables"] = Gaffer.CompoundDataPlug()
 
@@ -62,6 +64,7 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 
 		h.append( command )
 		self["substitutions"].hash( h )
+		self["shell"].hash( h )
 		self["environmentVariables"].hash( h )
 
 		return h
@@ -81,6 +84,10 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 		for name, value in environmentVariables.items() :
 			env[name] = str( value )
 
-		subprocess.check_call( command, shell = True, env = env )
+		useShell = self["shell"].getValue()
+		if useShell == False :
+			command = shlex.split( command )
+
+		subprocess.check_call( command, shell = useShell, env = env )
 
 IECore.registerRunTimeTyped( SystemCommand, typeName = "GafferDispatch::SystemCommand" )
