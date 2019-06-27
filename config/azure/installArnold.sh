@@ -12,7 +12,5 @@ fi
 
 mkdir -p arnoldRoot && cd arnoldRoot
 
-if [[ `uname` = "Linux" ]] ; then
-	curl https://${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@downloads.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.tgz > Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
-	tar -xzf Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
-fi
+curl https://${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@downloads.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.tgz > Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
+tar -xzf Arnold-${arnoldVersion}-${arnoldPlatform}.tgz

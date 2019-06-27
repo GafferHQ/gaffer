@@ -156,7 +156,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		time.sleep( 0.1 )
 
 		# Check that we can cancel them in reasonable time
-		acceptableCancellationDelay = 0.25 if "TRAVIS" not in os.environ else 4.0
+		acceptableCancellationDelay = 4.0 if GafferTest.inCI() else 0.25
 		t = time.time()
 		bt.cancelAndWait()
 		self.assertLess( time.time() - t, acceptableCancellationDelay )

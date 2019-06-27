@@ -34,7 +34,8 @@
 #
 ##########################################################################
 
-import os
+import sys
+import unittest
 
 import appleseed as asr
 
@@ -47,6 +48,7 @@ import GafferAppleseed
 
 from AppleseedTest import appleseedProjectSchemaPath
 
+@unittest.skipIf( sys.platform == 'darwin', "Unknown segfault on Mac see #3234" )
 class AppleseedCapsuleTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :

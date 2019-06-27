@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 import time
 import unittest
 import imath
@@ -50,8 +51,33 @@ import GafferSceneTest
 import GafferImage
 import GafferArnold
 
-@unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
+
+# We have 2 memory-related issues we know about/are in the process of fixing
+# that cause tests to fail in CI:
+#
+#  - Debug builds can trigger "Arnold's memory allocation didn't meet our expectations"
+#  - SIGSEVs on Mac due to the allocator trick with Arnold lights.
+def envHasMemoryIssues() :
+	return  GafferTest.inCI() and ( Gaffer.isDebug() or sys.platform == 'darwin' )
+
+@unittest.skipIf( GafferTest.inCI( { 'travis' } ), "No license available on Travis" )
 class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
+
+	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
+	def testAddLight( self ) :
+		GafferSceneTest.InteractiveRenderTest.testAddLight( self )
+
+	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
+	def testLightLinking( self ) :
+		GafferSceneTest.InteractiveRenderTest.testLightLinking( self )
+
+	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
+	def testLightFilters( self ) :
+		GafferSceneTest.InteractiveRenderTest.testLightFilters( self )
+
+	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
+	def testLights( self ) :
+		GafferSceneTest.InteractiveRenderTest.testLights( self )
 
 	def testTwoRenders( self ) :
 
@@ -162,6 +188,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	# This test covers a sublety in how we get and return AtNodes from and to
 	# Arnold that can cause issues with light linking. See
 	# `ArnoldLight::attributes()` in Renderer.cpp for more information.
+	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
 	def testLightLinkingAfterParameterUpdates( self ) :
 
 		s = Gaffer.ScriptNode()

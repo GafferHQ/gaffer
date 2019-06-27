@@ -1,0 +1,70 @@
+# Standard build + test job
+
+parameters:
+  name: ''
+  vmImage: ''
+  container: ''
+  buildType: 'RELEASE'
+  threads: 2
+
+jobs:
+
+ - job: ${{ parameters.name }}_${{ parameters.buildType }}
+
+   # We're seeing jobs take about an hour sometimes!
+   timeoutInMinutes: 100
+
+
+   ${{ if ne(parameters.container, '') }}:
+      container: ${{ parameters.container }}
+
+   pool:
+     vmImage: ${{ parameters.vmImage }}
+
+   variables:
+     ARNOLD_ROOT: $(System.DefaultWorkingDirectory)/arnoldRoot
+     DELIGHT: $(System.DefaultWorkingDirectory)/3delight
+
+   steps:
+
+   - script: |
+       brew update &&
+       brew install scons doxygen &&
+       brew cask install xquartz inkscape
+     displayName: 'Install toolchain (Darwin)'
+     condition: eq( variables['Agent.OS'], 'Darwin' )
+
+   - script: |
+       ./config/travis/installDelight.sh &&
+       ./config/azure/installArnold.sh &&
+       ./config/travis/installDependencies.sh
+     displayName: 'Install dependencies'
+     env:
+       ARNOLD_LOGIN: $(arnoldLogin)
+       ARNOLD_PASSWORD: $(arnoldPassword)
+       AZURE: 1
+
+   - script: |
+       Xvfb :99 -screen 0 1280x1024x24 &
+       metacity&
+     displayName: 'Start X (Linux)'
+     condition: eq( variables['Agent.OS'], 'Linux' )
+     env:
+       DISPLAY: :99.0
+
+   - script: |
+       echo BUILD_TYPE=${{ parameters.buildType }}
+       g++ --version
+       scons -j ${{ parameters.threads }} install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_CACHEDIR=sconsCache
+     displayName: 'Build'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+
+   - script: |
+       ./install/gaffer-*/bin/gaffer test
+     displayName: 'Test'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+       USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
