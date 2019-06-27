@@ -35,9 +35,9 @@ jobs:
      condition: eq( variables['Agent.OS'], 'Darwin' )
 
    - script: |
-       ./config/travis/installDelight.sh &&
-       ./config/azure/installArnold.sh &&
-       ./config/travis/installDependencies.sh
+       ./config/installDelight.sh &&
+       ./config/installArnold.sh &&
+       ./config/installDependencies.sh ./build
      displayName: 'Install dependencies'
      env:
        ARNOLD_LOGIN: $(arnoldLogin)
@@ -55,14 +55,14 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build BUILD_CACHEDIR=sconsCache
      displayName: 'Build'
      env:
        DISPLAY: :99.0
        AZURE: 1
 
    - script: |
-       ./install/gaffer-*/bin/gaffer test
+       ./build/bin/gaffer test
      displayName: 'Test'
      env:
        DISPLAY: :99.0
