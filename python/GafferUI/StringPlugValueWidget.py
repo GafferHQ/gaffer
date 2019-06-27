@@ -41,6 +41,7 @@ import GafferUI
 ## Supported Metadata :
 #
 # - "stringPlugValueWidget:continuousUpdate"
+# - "stringPlugValueWidget:placeholderText" : The text displayed when the string value is left empty
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -90,6 +91,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__textChangedConnection.block(
 				not Gaffer.Metadata.value( self.getPlug(), "stringPlugValueWidget:continuousUpdate" )
 			)
+
+			self.__textWidget._qtWidget().setPlaceholderText( Gaffer.Metadata.value( self.getPlug(), "stringPlugValueWidget:placeholderText" ) )
 
 		self.__textWidget.setEditable( self._editable() )
 

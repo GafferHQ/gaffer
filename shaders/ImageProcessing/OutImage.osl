@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-surface OutImage
+shader OutImage
 (
 	closure color in0 = 0,
 	closure color in1 = 0,
@@ -51,10 +51,11 @@ surface OutImage
 	closure color in12 = 0,
 	closure color in13 = 0,
 	closure color in14 = 0,
-	closure color in15 = 0
+	closure color in15 = 0,
+	output closure color out = 0
 )
 {
-	Ci =
+	out =
 		in0 +
 		in1 +
 		in2 +

@@ -35,7 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include "GafferOSL/OSLObject.h"
+#include "GafferOSL/OSLImage.h"
 #include "GafferOSL/ClosurePlug.h"
 
 #include "GafferUI/Nodule.h"
@@ -51,6 +51,7 @@
 
 #include "IECore/CompoundData.h"
 
+#include "boost/algorithm/string.hpp"
 #include "boost/bind.hpp"
 
 using namespace std;
@@ -60,19 +61,26 @@ using namespace GafferUI;
 namespace
 {
 
-class OSLObjectPlugAdder : public PlugAdder
+std::string cleanupChannelName( std::string s )
+{
+	boost::erase_all( s, "RGBA" );
+	boost::erase_all( s, "RGB" );
+	return s;
+}
+
+class OSLImagePlugAdder : public PlugAdder
 {
 
 	public :
 
-		OSLObjectPlugAdder( GraphComponentPtr plugsParent )
+		OSLImagePlugAdder( GraphComponentPtr plugsParent )
 			:   m_plugsParent( IECore::runTimeCast<Plug>( plugsParent ) )
 		{
 			if( ! m_plugsParent )
 			{
-				throw IECore::Exception( "OSLObjectUI::PlugAdder constructor must be passed plug" );
+				throw IECore::Exception( "OSLImageUI::PlugAdder constructor must be passed plug" );
 			}
-			buttonReleaseSignal().connect( boost::bind( &OSLObjectPlugAdder::buttonRelease, this, ::_2 ) );
+			buttonReleaseSignal().connect( boost::bind( &OSLImagePlugAdder::buttonRelease, this, ::_2 ) );
 		}
 
 	protected :
@@ -80,13 +88,13 @@ class OSLObjectPlugAdder : public PlugAdder
 		bool canCreateConnection( const Plug *endpoint ) const override
 		{
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
-			return !availablePrimVars( plugAdderOptions.get(), endpoint ).empty();
+			return !availableChannels( plugAdderOptions.get(), endpoint ).empty();
 		}
 
 		void createConnection( Plug *endpoint ) override
 		{
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
-			vector<std::string> names = availablePrimVars( plugAdderOptions.get(), endpoint );
+			vector<std::string> names = availableChannels( plugAdderOptions.get(), endpoint );
 
 			std::string picked = menuSignal()( "Connect To", names );
 			if( !picked.size() )
@@ -94,7 +102,7 @@ class OSLObjectPlugAdder : public PlugAdder
 				return;
 			}
 
-			NameValuePlug *newPlug = addPlug( picked, plugAdderOptions->member<IECore::Data>( picked ) );
+			NameValuePlug *newPlug = addPlug( cleanupChannelName( picked ), plugAdderOptions->member<IECore::Data>( picked ) );
 			newPlug->valuePlug()->setInput( endpoint );
 		}
 
@@ -116,26 +124,35 @@ class OSLObjectPlugAdder : public PlugAdder
 			return used;
 		}
 
-		NameValuePlug* addPlug( std::string primVarName, const IECore::Data *defaultData )
+		NameValuePlug* addPlug( std::string channelName, const IECore::Data *defaultData )
 		{
 			std::set<std::string> used = usedNames();
 
-			std::string plugName = "primitiveVariable";
+			std::string plugName = "channel";
 			PlugPtr valuePlug;
+			FloatPlugPtr alphaValuePlug;
 			if( defaultData )
 			{
-				if( used.find( primVarName ) != used.end() )
+				const IECore::Color4fData *color4fDefaultData = IECore::runTimeCast<const IECore::Color4fData>( defaultData );
+				if( color4fDefaultData )
+				{
+					const Imath::Color4f &default4 = color4fDefaultData->readable();
+					alphaValuePlug = new FloatPlug( "value", Plug::In, default4[3], Imath::limits<float>::min(), Imath::limits<float>::max(), Plug::Flags::Default | Plug::Flags::Dynamic );
+					defaultData = new IECore::Color3fData( Imath::Color3f( default4[0], default4[1], default4[2] ) );
+				}
+
+				if( used.find( channelName ) != used.end() )
 				{
 					std::string newName;
 					for( int i = 2; ; i++ )
 					{
-						newName = primVarName + std::to_string( i );
+						newName = channelName + std::to_string( i );
 						if( used.find( newName ) == used.end() )
 						{
 							break;
 						}
 					}
-					primVarName = newName;
+					channelName = newName;
 				}
 				valuePlug = PlugAlgo::createPlugFromData( "value", Plug::In, Plug::Flags::Default | Plug::Flags::Dynamic, defaultData );
 			}
@@ -143,20 +160,29 @@ class OSLObjectPlugAdder : public PlugAdder
 			{
 				valuePlug = new GafferOSL::ClosurePlug( "value", Plug::In, Plug::Flags::Default | Plug::Flags::Dynamic );
 				plugName = "closure";
-				primVarName = "";
+				channelName = "";
 			}
 
 			UndoScope undoScope( m_plugsParent->ancestor<ScriptNode>() );
 
-			NameValuePlugPtr created = new Gaffer::NameValuePlug( primVarName, valuePlug, true, plugName );
+			NameValuePlugPtr created = new Gaffer::NameValuePlug( channelName, valuePlug, true, plugName );
 			m_plugsParent->addChild( created );
+			if( alphaValuePlug )
+			{
+				std::string alphaChannelName = "A";
+				if( channelName.size() )
+				{
+					alphaChannelName = channelName + ".A";
+				}
+				m_plugsParent->addChild( new Gaffer::NameValuePlug( alphaChannelName, alphaValuePlug, true, plugName ) );
+			}
 			return created.get();
 		}
 
 		bool buttonRelease( const ButtonEvent &event )
 		{
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
-			vector<std::string> origNames = availablePrimVars( plugAdderOptions.get() );
+			vector<std::string> origNames = availableChannels( plugAdderOptions.get() );
 			map<std::string, std::string> nameMapping;
 			vector<std::string> standardMenuNames;
 			vector<std::string> customMenuNames;
@@ -193,17 +219,17 @@ class OSLObjectPlugAdder : public PlugAdder
 			}
 
 			std::string origName = nameMapping[picked];
-			addPlug( origName, plugAdderOptions->member<IECore::Data>(origName) );
+			addPlug( cleanupChannelName( origName ), plugAdderOptions->member<IECore::Data>(origName) );
 
 			return true;
 		}
 
-		// Which prim vars are available that haven't already been used, and that match the input plug if provided
-		vector<std::string> availablePrimVars( const IECore::CompoundData* plugAdderOptions, const Plug *input = nullptr ) const
+		// Which channels are available that haven't already been used, and that match the input plug if provided
+		vector<std::string> availableChannels( const IECore::CompoundData* plugAdderOptions, const Plug *input = nullptr ) const
 		{
 			if( !plugAdderOptions )
 			{
-				throw IECore::Exception( "OSLObjectUI::PlugAdder requires plugAdderOptions metadata" );
+				throw IECore::Exception( "OSLImageUI::PlugAdder requires plugAdderOptions metadata" );
 			}
 
 			IECore::DataPtr matchingDataType;
@@ -224,10 +250,11 @@ class OSLObjectPlugAdder : public PlugAdder
 			std::set<std::string> used = usedNames();
 			for( auto it=plugAdderOptions->readable().begin(); it!=plugAdderOptions->readable().end(); it++ )
 			{
-				std::string name = it->first;
+				std::string bareLabel = cleanupChannelName( it->first );
+
 				// For plugs that aren't closures or custom, we need to check if we've already
-				// used the primitive variable name
-				if( it->second && name.substr( 0, 6 ) != "custom" && used.find( name ) != used.end() )
+				// used the name
+				if( it->second && bareLabel.substr( 0, 6 ) != "custom" && used.find( bareLabel ) != used.end() )
 				{
 					// Already added
 					continue;
@@ -251,12 +278,27 @@ class OSLObjectPlugAdder : public PlugAdder
 					}
 				}
 
-				result.push_back( name );
+				result.push_back( it->first );
 			}
 
 			std::sort( result.begin(), result.end() );
+			vector<std::string> customSortResult;
+			for( const std::string &i : { "RGB", "RGBA", "R", "G", "B", "A" } )
+			{
+				if( std::find( result.begin(), result.end(), i ) != result.end() )
+				{
+					customSortResult.push_back( i );
+				}
+			}
+			for( const std::string &i : result )
+			{
+				if( std::find( customSortResult.begin(), customSortResult.end(), i ) == customSortResult.end() )
+				{
+					customSortResult.push_back( i );
+				}
+			}
 
-			return result;
+			return customSortResult;
 		}
 
 		PlugPtr m_plugsParent;
@@ -266,14 +308,14 @@ struct Registration
 {
 		Registration()
 		{
-			NoduleLayout::registerCustomGadget( "GafferOSLUI.OSLObjectUI.PlugAdder", boost::bind( &create, ::_1 ) );
+			NoduleLayout::registerCustomGadget( "GafferOSLUI.OSLImageUI.PlugAdder", boost::bind( &create, ::_1 ) );
 		}
 
 	private :
 
 		static GadgetPtr create( GraphComponentPtr parent )
 		{
-			return new OSLObjectPlugAdder( parent );
+			return new OSLImagePlugAdder( parent );
 		}
 };
 
