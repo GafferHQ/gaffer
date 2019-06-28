@@ -264,18 +264,32 @@ const GafferOSL::OSLCode *OSLObject::oslCode() const
 	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 7 );
 }
 
+namespace
+{
+	// Copied from Switch::variesWithContext.  Should be shared somewhere central
+	bool requiresCompute( const Plug *plug )
+	{
+		plug = plug->source<Gaffer::Plug>();
+		return plug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( plug->node() );
+	}
+}
+
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
+	bool attributeTrigger = input == inPlug()->attributesPlug() && (
+		requiresCompute( useAttributesPlug() ) || useAttributesPlug()->getValue()
+	);
+
 	if(
 		input == shaderPlug() ||
 		input == inPlug()->transformPlug() ||
-		input == inPlug()->attributesPlug() ||
 		input == interpolationPlug() ||
 		input == useAttributesPlug() ||
 		input == resampledInPlug()->objectPlug() ||
-		input == contextCompatibilityPlug()
+		input == contextCompatibilityPlug() || 
+		attributeTrigger
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
