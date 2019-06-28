@@ -58,7 +58,6 @@ class SplineWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtWidgets.QFrame(), **kw )
 
 		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding )
-		self._qtWidget().setObjectName( "gafferSplineWidget" )
 
 		self.setDrawMode( drawMode )
 

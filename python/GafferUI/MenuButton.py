@@ -46,7 +46,6 @@ class MenuButton( GafferUI.Button ) :
 	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
 
 		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
-		self._qtWidget().setProperty( "gafferMenuButton", True )
 
 		self.__menu = None
 		self.setMenu( menu )

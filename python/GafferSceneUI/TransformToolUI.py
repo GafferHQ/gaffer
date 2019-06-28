@@ -107,8 +107,6 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
 
-		self._qtWidget().setObjectName( "gafferDarker" )
-
 		self.__tool = tool
 
 		with self :

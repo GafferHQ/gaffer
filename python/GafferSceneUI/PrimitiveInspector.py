@@ -156,8 +156,8 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 			child = self.__nodeLabel
 		)
 
-		self.__nodeFrame._qtWidget().setProperty( "gafferRounded", True )
-		self.__nodeFrame._qtWidget().setObjectName( "gafferDiffOther" )
+		self.__nodeFrame._qtWidget().setObjectName( "gafferNodeFrame" )
+		self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 
 		nodeAndLocationContainer.append( self.__nodeFrame )
 
@@ -170,8 +170,8 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 			child = self.__locationLabel
 		)
 
-		self.__locationFrame._qtWidget().setProperty( "gafferRounded", True )
-		self.__locationFrame._qtWidget().setObjectName( "gafferDiffOther" )
+		self.__locationFrame._qtWidget().setObjectName( "gafferLocationFrame" )
+		self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 
 		nodeAndLocationContainer.append( self.__locationFrame )
 
@@ -281,9 +281,9 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 			self.__locationLabel.setText( "Select a location to inspect" )
 
-			self.__locationFrame._qtWidget().setObjectName( "gafferDiffOther" )
+			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 			self.__locationFrame._repolish()
-			self.__nodeFrame._qtWidget().setObjectName( "gafferDiffOther" )
+			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 			self.__nodeFrame._repolish()
 
 			headers = collections.OrderedDict()
@@ -294,13 +294,13 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 				self.__nodeLabel.setFormatter( _nodeLabelFormatter )
 				self.__nodeLabel.setGraphComponent( self.__scenePlug.node() )
-				self.__nodeFrame._qtWidget().setObjectName( "gafferDiffAB" )
+				self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "AB" )
 				self.__nodeFrame._repolish()
 
 				if len( targetPaths ) :
 
 					self.__locationLabel.setText( targetPaths[-1] )
-					self.__locationFrame._qtWidget().setObjectName( "gafferDiffAB" )
+					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
 					self.__locationFrame._repolish()
 
 					obj = self.__scenePlug.object( targetPaths[-1] )

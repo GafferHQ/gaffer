@@ -216,7 +216,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 		QtWidgets.QGraphicsView.__init__( self )
 
-		self.setObjectName( "gafferGLWidget" )
+		self.setProperty( "gafferGLWidget", True )
 		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 

@@ -48,8 +48,6 @@ class Divider( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QFrame(), **kw )
 
-		self._qtWidget().setObjectName( "gafferDivider" )
-
 		self.setOrientation( orientation )
 
 	def setOrientation( self, orientation ) :

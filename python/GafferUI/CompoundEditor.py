@@ -243,7 +243,6 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 	def __init__( self, **kw ) :
 
 		GafferUI.SplitContainer.__init__( self, **kw )
-		self._qtWidget().setObjectName( "gafferCompoundEditor" )
 
 	def isSplit( self ) :
 
