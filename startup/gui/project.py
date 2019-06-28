@@ -34,14 +34,14 @@
 #
 ##########################################################################
 
-import os
 import functools
+import os
+import sys
 
 import IECore
 
 import Gaffer
 import GafferImage
-import GafferUI
 import GafferDispatch
 
 ##########################################################################
@@ -93,9 +93,15 @@ def __projectBookmark( widget, location ) :
 	else :
 		return os.getcwd()
 
-GafferUI.Bookmarks.acquire( application ).add( "Project", functools.partial( __projectBookmark, location="${project:rootDirectory}" ) )
-GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( functools.partial( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
-GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( functools.partial( __projectBookmark, location="${project:rootDirectory}/references" ) )
+
+# We don't want to load UI modules unless we know we are in a UI context,
+# otherwise we force a connection to X. This situation arises as this startup
+# file is shared with the dispatch app, which has a headless mode.
+if 'GafferUI' in sys.modules :
+	import GafferUI
+	GafferUI.Bookmarks.acquire( application ).add( "Project", functools.partial( __projectBookmark, location="${project:rootDirectory}" ) )
+	GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( functools.partial( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
+	GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( functools.partial( __projectBookmark, location="${project:rootDirectory}/references" ) )
 
 ##########################################################################
 # Dispatchers
