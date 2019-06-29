@@ -147,6 +147,9 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		o["filter"].setInput( filter["out"] )
 
+		self.assertEqual( o["out"].object( "/plane" )["transformed"].data, IECore.Color3fVectorData( [ imath.Color3f( -0.5, -0.5, 0 ), imath.Color3f( 0.5, -0.5, 0 ), imath.Color3f( -0.5, 0.5, 0 ), imath.Color3f( 0.5, 0.5, 0 ) ] ) )
+
+		o["useTransform"].setValue( True )
 		self.assertEqual( o["out"].object( "/plane" )["transformed"].data, IECore.Color3fVectorData( [ imath.Color3f( 1.5, -0.5, 0 ), imath.Color3f( 2.5, -0.5, 0 ), imath.Color3f( 1.5, 0.5, 0 ), imath.Color3f( 2.5, 0.5, 0 ) ] ) )
 		self.assertEqual( o["out"].object( "/plane" )["transformedBack"].data, IECore.Color3fVectorData( [ imath.Color3f( -0.5, -0.5, 0 ), imath.Color3f( 0.5, -0.5, 0 ), imath.Color3f( -0.5, 0.5, 0 ), imath.Color3f( 0.5, 0.5, 0 ) ] ) )
 
@@ -1028,9 +1031,43 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( o["out"].object( "/plane" )["testString"].data[0], "NOT FOUND" )
 
 
+	def testAffects( self ) :
 
+		s = GafferScene.Sphere()
 
+		a = GafferScene.CustomAttributes()
+		a["attributes"].addChild( Gaffer.NameValuePlug( "a", 0 ) )
+		a["in"].setInput( s["out"] )
 
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( a["out"] )
+
+		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
+		
+		s["transform"]["translate"]["x"].setValue( 1 )
+		def checkAffected( expected ):
+			self.assertEqual( [ i[0].getName() for i in cs if i[0].parent() == o["out"] ], expected )
+			del cs[:]
+		checkAffected( ["transform", "bound" ] )
+
+		o["useTransform"].setValue( True )
+
+		checkAffected( ["object", "bound" ] )
+
+		s["transform"]["translate"]["x"].setValue( 2 )
+
+		checkAffected( ["transform", "object", "bound" ] )
+
+		a["attributes"][0]["value"].setValue( 1 )
+		checkAffected( ["attributes" ] )
+
+		o["useAttributes"].setValue( True )
+
+		checkAffected( ["object", "bound" ] )
+
+		a["attributes"][0]["value"].setValue( 2 )
+
+		checkAffected( ["attributes", "object", "bound" ] )
 
 if __name__ == "__main__":
 	unittest.main()

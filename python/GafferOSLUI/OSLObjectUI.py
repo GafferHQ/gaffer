@@ -250,14 +250,26 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"useTransform" : [
+
+			"description",
+			"""
+			Makes the object's transform available to OSL, so that you can use OSL functions that convert
+			from object to world space.
+			""",
+
+		],
+
 		"useAttributes" : [
 
 			"description",
 			"""
-			Make the Gaffer attributes at the object's location available to OSL through the getattribute function.  Once this is on, you can use OSL nodes such as inFloat or inString to retreive the attribute values.
+			Makes the Gaffer attributes at the object's location available to OSL through the getattribute
+			function.  Once this is on, you can use OSL nodes such as InFloat or InString to retrieve the
+			attribute values.
 			""",
 
-		]
+		],
 	}
 
 )

@@ -154,6 +154,7 @@ OSLObject::OSLObject( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new GafferScene::ShaderPlug( "__shader", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new IntPlug( "interpolation", Plug::In, PrimitiveVariable::Vertex, PrimitiveVariable::Invalid, PrimitiveVariable::FaceVarying ) );
+	addChild( new BoolPlug( "useTransform", Plug::In, false ) );
 	addChild( new BoolPlug( "useAttributes", Plug::In, false ) );
 	addChild( new ScenePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__resampleNames", Plug::Out ) );
@@ -204,64 +205,74 @@ const Gaffer::IntPlug *OSLObject::interpolationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::BoolPlug *OSLObject::useAttributesPlug()
+Gaffer::BoolPlug *OSLObject::useTransformPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *OSLObject::useTransformPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::BoolPlug *OSLObject::useAttributesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::BoolPlug *OSLObject::useAttributesPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 ScenePlug *OSLObject::resampledInPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
 const ScenePlug *OSLObject::resampledInPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
 StringPlug *OSLObject::resampledNamesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 const StringPlug *OSLObject::resampledNamesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::BoolPlug *OSLObject::contextCompatibilityPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::BoolPlug *OSLObject::contextCompatibilityPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::Plug *OSLObject::primitiveVariablesPlug()
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 6 );
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::Plug *OSLObject::primitiveVariablesPlug() const
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 6 );
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 7 );
 }
 
 GafferOSL::OSLCode *OSLObject::oslCode()
 {
-	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 7 );
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 8 );
 }
 
 const GafferOSL::OSLCode *OSLObject::oslCode() const
 {
-	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 7 );
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 8 );
 }
 
 namespace
@@ -278,17 +289,22 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 {
 	SceneElementProcessor::affects( input, outputs );
 
+	bool transformTrigger = input == inPlug()->transformPlug() && (
+		requiresCompute( useTransformPlug() ) || useTransformPlug()->getValue()
+	);
+
 	bool attributeTrigger = input == inPlug()->attributesPlug() && (
 		requiresCompute( useAttributesPlug() ) || useAttributesPlug()->getValue()
 	);
 
 	if(
 		input == shaderPlug() ||
-		input == inPlug()->transformPlug() ||
 		input == interpolationPlug() ||
+		input == useTransformPlug() ||
 		input == useAttributesPlug() ||
 		input == resampledInPlug()->objectPlug() ||
-		input == contextCompatibilityPlug() || 
+		input == contextCompatibilityPlug() ||
+		transformTrigger ||
 		attributeTrigger
 	)
 	{
@@ -345,9 +361,12 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 
 	shadingEngine->hash( h );
 	interpolationPlug()->hash( h );
-	h.append( inPlug()->fullTransformHash( path ) );
 	h.append( resampledInPlug()->objectPlug()->hash() );
 
+	if( useTransformPlug()->getValue() )
+	{
+		h.append( inPlug()->fullTransformHash( path ) );
+	}
 	if( useAttributesPlug()->getValue() )
 	{
 		h.append( inPlug()->fullAttributesHash( path ) );
@@ -385,7 +404,14 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	ShadingEngine::Transforms transforms;
 
-	transforms[ g_world ] = ShadingEngine::Transform( inPlug()->fullTransform( path ));
+	if( useTransformPlug()->getValue() )
+	{
+		transforms[ g_world ] = ShadingEngine::Transform( inPlug()->fullTransform( path ));
+	}
+	else
+	{
+		transforms[ g_world ] = ShadingEngine::Transform( Imath::M44f(), Imath::M44f() );
+	}
 
 	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get(), transforms );
 	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
