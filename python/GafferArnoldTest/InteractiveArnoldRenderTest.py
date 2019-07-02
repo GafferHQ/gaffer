@@ -51,33 +51,8 @@ import GafferSceneTest
 import GafferImage
 import GafferArnold
 
-
-# We have 2 memory-related issues we know about/are in the process of fixing
-# that cause tests to fail in CI:
-#
-#  - Debug builds can trigger "Arnold's memory allocation didn't meet our expectations"
-#  - SIGSEVs on Mac due to the allocator trick with Arnold lights.
-def envHasMemoryIssues() :
-	return  GafferTest.inCI() and ( Gaffer.isDebug() or sys.platform == 'darwin' )
-
 @unittest.skipIf( GafferTest.inCI( { 'travis' } ), "No license available on Travis" )
 class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
-
-	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
-	def testAddLight( self ) :
-		GafferSceneTest.InteractiveRenderTest.testAddLight( self )
-
-	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
-	def testLightLinking( self ) :
-		GafferSceneTest.InteractiveRenderTest.testLightLinking( self )
-
-	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
-	def testLightFilters( self ) :
-		GafferSceneTest.InteractiveRenderTest.testLightFilters( self )
-
-	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
-	def testLights( self ) :
-		GafferSceneTest.InteractiveRenderTest.testLights( self )
 
 	def testTwoRenders( self ) :
 
@@ -185,10 +160,6 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["objectToImage"]["object"].setValue( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ) )
 		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
 
-	# This test covers a sublety in how we get and return AtNodes from and to
-	# Arnold that can cause issues with light linking. See
-	# `ArnoldLight::attributes()` in Renderer.cpp for more information.
-	@unittest.skipIf( envHasMemoryIssues(), "Known memory management issues" )
 	def testLightLinkingAfterParameterUpdates( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -266,8 +237,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		self.assertEqual( c, imath.Color3f( 1.0 ) )
 
-		# Change a value on the light causing it to get reconstructed in the
-		# backend. At this point the light should still be linked to the sphere
+		# Change a value on the light. The light should still be linked to the sphere
 		# and we should get the same result as before.
 		s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
 
