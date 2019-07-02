@@ -48,6 +48,7 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
+#include "boost/make_unique.hpp"
 
 #include "tbb/task.h"
 
@@ -93,6 +94,62 @@ bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *
 
 	return *camera1 != *camera2;
 }
+
+/// Acts like an ObjectInterfacePtr, with additional functionality
+/// for calling an arbitrary function when changing pointee.
+struct ObjectInterfaceHandle : public boost::noncopyable
+{
+
+	using RemovalCallback = std::function<void ()>;
+
+	ObjectInterfaceHandle()
+	{
+	}
+
+	~ObjectInterfaceHandle()
+	{
+		if( m_removalCallback )
+		{
+			m_removalCallback();
+		}
+	}
+
+	void operator = ( const IECoreScenePreview::Renderer::ObjectInterfacePtr &p )
+	{
+		assign( p, RemovalCallback() );
+	}
+
+	void assign( const IECoreScenePreview::Renderer::ObjectInterfacePtr &p, const RemovalCallback &removalCallback )
+	{
+		if( m_removalCallback )
+		{
+			m_removalCallback();
+		}
+		m_objectInterface = p;
+		m_removalCallback = removalCallback;
+	}
+
+	IECoreScenePreview::Renderer::ObjectInterface *operator->() const
+	{
+		return m_objectInterface.get();
+	}
+
+	IECoreScenePreview::Renderer::ObjectInterface *get() const
+	{
+		return m_objectInterface.get();
+	}
+
+	operator bool () const
+	{
+		return m_objectInterface.get();
+	}
+
+	private :
+
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_objectInterface;
+		RemovalCallback m_removalCallback;
+
+};
 
 } // namespace
 
@@ -176,7 +233,7 @@ class RenderController::SceneGraph
 
 		// Called by SceneGraphUpdateTask to update this location. Returns true if
 		// anything changed.
-		bool update( const ScenePlug::ScenePath &path, unsigned changedGlobals, Type type, const RenderController *controller )
+		bool update( const ScenePlug::ScenePath &path, unsigned changedGlobals, Type type, RenderController *controller )
 		{
 			const unsigned originalChangedComponents = m_changedComponents;
 
@@ -242,7 +299,7 @@ class RenderController::SceneGraph
 
 			// Object
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -254,11 +311,19 @@ class RenderController::SceneGraph
 					// Apply attribute update to old object if necessary.
 					if( m_changedComponents & AttributesComponent )
 					{
-						if( !m_objectInterface->attributes( attributesInterface( controller->m_renderer.get() ) ) )
+						if( m_objectInterface->attributes( attributesInterface( controller->m_renderer.get() ) ) )
+						{
+							// Update succeeded. Update light filter links if necessary.
+							if( type == LightFilterType && controller->m_lightLinks )
+							{
+								controller->m_lightLinks->updateLightFilter( m_objectInterface.get(), m_fullAttributes.get() );
+							}
+						}
+						else
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get() ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 							}
@@ -271,6 +336,15 @@ class RenderController::SceneGraph
 				if( m_changedComponents & ( ObjectComponent | TransformComponent ) )
 				{
 					m_objectInterface->transform( m_fullTransform );
+				}
+
+				if( type == ObjectType && controller->m_lightLinks )
+				{
+					// Apply light links if necessary.
+					if( m_changedComponents & ( ObjectComponent | AttributesComponent ) || controller->m_lightLinks->lightLinksDirty() )
+					{
+						controller->m_lightLinks->outputLightLinks( controller->m_scene.get(), m_fullAttributes.get(), m_objectInterface.get(), &m_lightLinksHash );
+					}
 				}
 			}
 
@@ -367,7 +441,7 @@ class RenderController::SceneGraph
 		{
 			m_children.clear();
 			clearObject();
-			m_attributesHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
+			m_attributesHash = m_lightLinksHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
 			m_cleared = true;
 			m_expanded = false;
 			m_boundInterface = nullptr;
@@ -474,7 +548,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene )
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType )
@@ -538,11 +612,39 @@ class RenderController::SceneGraph
 			}
 			else if( type == LightType )
 			{
-				m_objectInterface = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+				auto light = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+				if( lightLinks )
+				{
+					lightLinks->addLight( name, light );
+					m_objectInterface.assign(
+						light,
+						[name, lightLinks]() {
+							lightLinks->removeLight( name );
+						}
+					);
+				}
+				else
+				{
+					m_objectInterface = light;
+				}
 			}
 			else if( type == LightFilterType )
 			{
-				m_objectInterface = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+				auto lightFilter = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+				if( lightLinks )
+				{
+					lightLinks->addLightFilter( lightFilter, m_fullAttributes.get() );
+					m_objectInterface.assign(
+						lightFilter,
+						[lightFilter, lightLinks]() {
+							lightLinks->removeLightFilter( lightFilter );
+						}
+					);
+				}
+				else
+				{
+					m_objectInterface = lightFilter;
+				}
 			}
 			else
 			{
@@ -655,11 +757,12 @@ class RenderController::SceneGraph
 		const SceneGraph *m_parent;
 
 		IECore::MurmurHash m_objectHash;
-		IECoreScenePreview::Renderer::ObjectInterfacePtr m_objectInterface;
+		ObjectInterfaceHandle m_objectInterface;
 
 		IECore::MurmurHash m_attributesHash;
 		IECore::CompoundObjectPtr m_fullAttributes;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_attributesInterface;
+		IECore::MurmurHash m_lightLinksHash;
 
 		IECore::MurmurHash m_transformHash;
 		Imath::M44f m_fullTransform;
@@ -703,7 +806,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 	public :
 
 		SceneGraphUpdateTask(
-			const RenderController *controller,
+			RenderController *controller,
 			SceneGraph *sceneGraph,
 			SceneGraph::Type sceneGraphType,
 			unsigned changedGlobalComponents,
@@ -833,7 +936,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			}
 		}
 
-		const RenderController *m_controller;
+		RenderController *m_controller;
 		SceneGraph *m_sceneGraph;
 		SceneGraph::Type m_sceneGraphType;
 		unsigned m_changedGlobalComponents;
@@ -861,6 +964,13 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_sceneGraphs.push_back( unique_ptr<SceneGraph>( new SceneGraph ) );
 	}
 
+	if( renderer->name() != g_openGLRendererName )
+	{
+		// We avoid light linking overhead for the GL renderer,
+		// because we know it doesn't support it.
+		m_lightLinks = boost::make_unique<LightLinks>();
+	}
+
 	CompoundObjectPtr boundAttributes = new CompoundObject;
 	boundAttributes->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
 	boundAttributes->members()["gl:primitive:solid"] = new BoolData( false );
@@ -882,6 +992,7 @@ RenderController::~RenderController()
 	m_renderer->pause();
 	m_sceneGraphs.clear();
 	m_defaultCamera.reset();
+	m_lightLinks.reset();
 }
 
 IECoreScenePreview::Renderer *RenderController::renderer()
@@ -1143,6 +1254,12 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			{
 				m_changedGlobalComponents |= RenderSetsGlobalComponent;
 			}
+			// Light linking expressions might refer to any set, so we
+			// must assume that linking needs to be recalculated.
+			if( m_lightLinks )
+			{
+				m_lightLinks->setsDirtied();
+			}
 		}
 
 		m_dirtyGlobalComponents = NoGlobalComponent;
@@ -1165,6 +1282,11 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, ThreadState::current(), ScenePlug::ScenePath(), callback, pathsToUpdate
 			);
 			tbb::task::spawn_root_and_wait( *task );
+
+			if( i == SceneGraph::LightFilterType && m_lightLinks && m_lightLinks->lightFilterLinksDirty() )
+			{
+				m_lightLinks->outputLightFilterLinks( m_scene.get() );
+			}
 		}
 
 		if( m_changedGlobalComponents & CameraOptionsGlobalComponent )
@@ -1178,6 +1300,10 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			// know our entire scene has been updated successfully.
 			m_changedGlobalComponents = NoGlobalComponent;
 			m_updateRequired = false;
+			if( m_lightLinks )
+			{
+				m_lightLinks->clean();
+			}
 		}
 
 		if( callback )
