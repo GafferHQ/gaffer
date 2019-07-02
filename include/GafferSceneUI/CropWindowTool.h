@@ -76,6 +76,8 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 
 		void viewportChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
+		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
 		void overlayRectangleChanged( unsigned reason );
 
 		void preRender();
