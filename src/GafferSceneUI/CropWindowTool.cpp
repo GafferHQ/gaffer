@@ -45,6 +45,8 @@
 #include "GafferUI/Style.h"
 
 #include "Gaffer/BlockedConnection.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/UndoScope.h"
@@ -421,6 +423,9 @@ CropWindowTool::CropWindowTool( SceneView *view, const std::string &name )
 	view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &CropWindowTool::viewportChanged, this ) );
 	view->viewportGadget()->preRenderSignal().connect( boost::bind( &CropWindowTool::preRender, this ) );
 	plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
+
+	Metadata::plugValueChangedSignal().connect( boost::bind( &CropWindowTool::metadataChanged, this, ::_3 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &CropWindowTool::metadataChanged, this, ::_2 ) );
 }
 
 CropWindowTool::~CropWindowTool()
@@ -457,6 +462,19 @@ void CropWindowTool::plugDirtied( const Gaffer::Plug *plug )
 	{
 		m_overlayDirty = true;
 	}
+}
+
+void CropWindowTool::metadataChanged( IECore::InternedString key )
+{
+	if( !MetadataAlgo::readOnlyAffectedByChange( key ) || m_needCropWindowPlugSearch )
+	{
+		return;
+	}
+
+	m_needCropWindowPlugSearch = m_overlayDirty = true;
+	view()->viewportGadget()->renderRequestSignal()(
+		view()->viewportGadget()
+	);
 }
 
 void CropWindowTool::overlayRectangleChanged( unsigned reason )
@@ -565,7 +583,11 @@ void CropWindowTool::findCropWindowPlug()
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
 	if( history )
 	{
-		if( !findCropWindowPlug( history.get(), /* enabledOnly = */ true ) )
+		const bool foundAnEnabledPlug = findCropWindowPlug( history.get(), /* enabledOnly = */ true );
+		// If we didn't find an enabled cropWindow plug upstream, or we did and it's
+		// read-only, look again for any other plugs that could be edited, but aren't
+		// enabled yet. We'll enable it if the user makes an edit.
+		if( !foundAnEnabledPlug || MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
 		{
 			findCropWindowPlug( history.get(), /* enabledOnly = */ false );
 		}
@@ -573,10 +595,29 @@ void CropWindowTool::findCropWindowPlug()
 
 	if( m_cropWindowPlug )
 	{
-		bool editable = m_cropWindowPlug->settable();
-		editable = m_cropWindowEnabledPlug ? editable || m_cropWindowEnabledPlug->settable() : editable;
-		m_overlay->setEditable( editable );
-		m_overlay->setCaption( m_cropWindowPlug->relativeName( m_cropWindowPlug->ancestor<ScriptNode>() ) );
+		const std::string plugName =  m_cropWindowPlug->relativeName( m_cropWindowPlug->ancestor<ScriptNode>() );
+
+		// Even after the second search, we could still be read-only
+		if( MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
+		{
+			m_overlay->setEditable( false );
+			m_overlay->setCaption( plugName + " is locked" );
+		}
+		else
+		{
+			bool plugEditable = m_cropWindowPlug->settable();
+
+			// If our cropWindow plug hasn't been enabled, we need to check if it's corresponding 'enabled'
+			// plug is editable, it could be expressioned or locked even if our value plug isn't.
+			if( m_cropWindowEnabledPlug && m_cropWindowEnabledPlug->getValue() == false )
+			{
+				plugEditable &= ( m_cropWindowEnabledPlug->settable() && !MetadataAlgo::readOnly( m_cropWindowEnabledPlug.get() ) );
+			}
+
+			m_overlay->setEditable( plugEditable );
+			m_overlay->setCaption( plugEditable ? plugName : ( plugName + " isn't editable" ) );
+		}
+
 		m_cropWindowPlugDirtiedConnection = m_cropWindowPlug->node()->plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
 	}
 	else
