@@ -40,6 +40,7 @@ import GafferTest
 
 class TaskMutexTest( GafferTest.TestCase ) :
 
+	@unittest.skipIf( GafferTest.inCI(), "Causes intermittent failures in CI due to limited core availability" )
 	def test( self ) :
 
 		GafferTest.testTaskMutex()
@@ -48,6 +49,7 @@ class TaskMutexTest( GafferTest.TestCase ) :
 
 		GafferTest.testTaskMutexWithinIsolate()
 
+	@unittest.skipIf( GafferTest.inCI(), "Causes intermittent failures in CI due to limited core availability" )
 	def testJoiningOuterTasks( self ) :
 
 		GafferTest.testTaskMutexJoiningOuterTasks()
