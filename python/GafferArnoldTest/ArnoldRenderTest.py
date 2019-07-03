@@ -849,8 +849,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 
-		evaluate = GafferScene.EvaluateLightLinks()
-
 		render = GafferArnold.ArnoldRender()
 
 		attributes["in"].setInput( sphere1["out"] )
@@ -859,8 +857,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( light1["out"] )
 		group["in"][2].setInput( light2["out"] )
 		group["in"][3].setInput( sphere2["out"] )
-		evaluate["in"].setInput( group["out"] )
-		render["in"].setInput( evaluate["out"] )
+
+		render["in"].setInput( group["out"] )
 
 		# Illumination
 		attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
@@ -869,17 +867,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Shadows
 		arnoldAttributes["attributes"]["shadowGroup"]["enabled"].setValue( True )
 		arnoldAttributes["attributes"]["shadowGroup"]["value"].setValue( "/group/light /group/light1" )
-
-		# make sure we pass correct data into the renderer
-		self.assertEqual(
-			set( render["in"].attributes( "/group/sphere" )["linkedLights"] ),
-			set( IECore.StringVectorData( ["/group/light", "/group/light1"] ) )
-		)
-
-		self.assertEqual(
-			set( render["in"].attributes( "/group/sphere" )["ai:visibility:shadow_group"] ),
-			set( IECore.StringVectorData( ["/group/light", "/group/light1"] ) )
-		)
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )

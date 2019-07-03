@@ -44,7 +44,6 @@
 #include "GafferScene/CopyAttributes.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteAttributes.h"
-#include "GafferScene/EvaluateLightLinks.h"
 #include "GafferScene/OpenGLAttributes.h"
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/StandardAttributes.h"
@@ -64,7 +63,6 @@ void GafferSceneModule::bindAttributes()
 	GafferBindings::DependencyNodeClass<CustomAttributes>();
 	GafferBindings::DependencyNodeClass<AttributeProcessor>();
 	GafferBindings::DependencyNodeClass<DeleteAttributes>();
-	GafferBindings::DependencyNodeClass<EvaluateLightLinks>();
 	GafferBindings::DependencyNodeClass<CopyAttributes>();
 
 	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
