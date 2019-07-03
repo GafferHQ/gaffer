@@ -31,9 +31,10 @@ Improvements
 ------------
 
 - Viewer : Prioritised update of objects being manipulated resulting in much more fluid update (#3144).
-- CompoundEditor : Improved tab management (#3179).
-  - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu.
-  - Layouts will now store and recall detached panels, and all positions, sizes and maximised/full screen state.
+- CompoundEditor : Improved tab management
+  - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu (#3179).
+  - Layouts will now store and recall detached panels, and all positions, sizes and maximised/full screen state (#3179).
+  - Added tab close buttons (#3211).
 - Menu search (#2986) :
   - Added an improved "fuzzy matching" search algorithm.
   - Added an error indicator when a search matches nothing.
@@ -76,7 +77,10 @@ Improvements
 - Numeric Bookmarks : Added serialisation to preserve numeric bookmarks across sessions (#3157).
 - SetExpressions : Added support for wildcard characters in set names (#3172).
 - Lights : Added "visualiserScale" setting in new "Visualisation" tab (#3180).
-- StandardLightVisualiser : By setting "visualiserScale" to 0 all visualisation computations can now be avoided (#3178).
+- StandardLightVisualiser :
+  - By setting "visualiserScale" to 0 all visualisation computations can now be avoided (#3178).
+  - Added visualisation for pointlight radius (#3199).
+- OSLObject : Improved interface (#3192).
 
 Fixes
 -----
@@ -108,6 +112,10 @@ Fixes
 - Fixed widget signal/slot lifetime issues (#3179).
     - Using ScopedConnections is no longer needed as `Widget` now derives from `Trackable`.
     - ScopedConnections can still be used when wanting to replace connections on the fly.
+- NodeMenu : Fixed Delight/Light/DistantLight menu item (#3216).
+- CropWindowTool (#3207) :
+  - Fixed incorrect results caused by a Switch node between viewed node and target.
+  - Fixed hangs caused by active CropWindowTool when viewing empty scene.
 
 Documentation
 -------------
@@ -124,6 +132,8 @@ Documentation
   Examples for the node type being edited (#3108).
 - Added general improvements to readability and appearance in the stylesheet. Most notably,
   this makes the headings consistent, and the spacing between elements uniform (#3149).
+- Added bootstrap scrollspy to improve signposting and to provide a mini-nav for articles (#3159).
+- Reduced the number of errors thrown during build (#3212).
 
 API
 ---
@@ -153,6 +163,8 @@ API
 - GraphComponentPath : Added property for accessing the GraphComponent (#3106).
 - LightFilter : Added LightFilter class used as base for renderer-specific implementations (#3020).
 - NameValuePlug : Introduced new plug type for associating a name with a value (#3161).
+- SceneAlgo : `history()` now returns a nullptr when called for empty scenes instead of precipitating a segfault (#3207).
+- StandardLightVisualiser : `pointRays()` now takes an optional argument specifying the light's radius (#3199).
 
 Build
 -----
@@ -204,6 +216,21 @@ Breaking Changes
 - RenderController : Added argument to `updateInBackground()` (ABI change only, source compatibility is maintained) (#3144).
 - SceneGadget : Added new private member (ABI change only, source compatibility is maintained) (#3144).
 - LightVisualiser : The signature for `visualise()` now also includes the attributes (#3180).
+- OSL Networks : Pre-0.45 OSLObject networks are no longer supported (#3192).
+
+0.53.6.3 (relative to 0.53.6.2)
+========
+
+Improvements
+------------
+
+- VectorTypedParameterHandler : Added support for Color3fVectorParameter (#3228)
+- CompoundVectorParameterValueWidget : Now preserves selection when editing data (#3228)
+
+Build
+-----
+
+- ie/options: Added support for Houdini 17.5 (#3215)
 
 0.53.6.2 (relative to 0.53.6.1)
 ========
