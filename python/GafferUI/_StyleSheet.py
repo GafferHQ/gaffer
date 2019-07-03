@@ -1169,6 +1169,12 @@ _styleSheet = string.Template(
 		border-bottom-color: $backgroundLowlight;
 	}
 
+	/* SceneInspector */
+
+	*[gafferClass="GafferSceneUI.SceneInspector"] *[gafferAlternate="true"] {
+		background: $tintLighterSubtle;
+	}
+
 	/* PythonEditor */
 
 	*[gafferClass="GafferUI.PythonEditor"] QSplitter {

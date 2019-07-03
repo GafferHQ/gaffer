@@ -688,7 +688,7 @@ class Row( GafferUI.Widget ) :
 			return
 
 		self.__alternate = alternate
-		self.__frame._qtWidget().setProperty( "gafferAlternate", alternate )
+		self.__frame._qtWidget().setProperty( "gafferAlternate", bool(alternate) )
 		self.__frame._repolish()
 
 	def getAlternate( self ) :
