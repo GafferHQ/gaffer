@@ -1123,9 +1123,10 @@ _styleSheet = string.Template(
 		background-color: $brightColor;
 	}
 
-	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
-	*[gafferClass="GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget"] {
-		background-color: $tintDarker;
+	#gafferColorInspector,
+	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"]
+	{
+		background: rgba( 42, 42, 42, 200 );
 		border-radius: 2px;
 		padding: 2px;
 	}

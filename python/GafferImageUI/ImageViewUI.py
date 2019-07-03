@@ -240,6 +240,10 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, frame, plug, **kw )
 
+		# Style selector specificity rules seem to preclude us styling this
+		# based on gafferClass.
+		frame._qtWidget().setObjectName( "gafferColorInspector" )
+
 		with frame :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
