@@ -6,6 +6,7 @@ parameters:
   container: ''
   buildType: 'RELEASE'
   threads: 2
+  publish: false
 
 jobs:
 
@@ -13,7 +14,6 @@ jobs:
 
    # We're seeing jobs take about an hour sometimes!
    timeoutInMinutes: 100
-
 
    ${{ if ne(parameters.container, '') }}:
       container: ${{ parameters.container }}
@@ -24,21 +24,26 @@ jobs:
    variables:
      ARNOLD_ROOT: $(System.DefaultWorkingDirectory)/arnoldRoot
      DELIGHT: $(System.DefaultWorkingDirectory)/3delight
+     BUILD_TYPE: ${{ parameters.buildType }}
 
    steps:
+
+   # Provides $(buildName) and $(buildSourceCommit)
+   - script: ./config/azure/setBuildVars.py
+     displayName: 'Set Custom Variables'
 
    - script: |
        brew update &&
        brew install scons doxygen &&
        brew cask install xquartz inkscape
-     displayName: 'Install toolchain (Darwin)'
+     displayName: 'Install Toolchain (Darwin)'
      condition: eq( variables['Agent.OS'], 'Darwin' )
 
    - script: |
-       ./config/travis/installDelight.sh &&
-       ./config/azure/installArnold.sh &&
-       ./config/travis/installDependencies.sh
-     displayName: 'Install dependencies'
+       ./config/installDelight.sh &&
+       ./config/installArnold.sh &&
+       ./config/installDependencies.sh ./build
+     displayName: 'Install Dependencies'
      env:
        ARNOLD_LOGIN: $(arnoldLogin)
        ARNOLD_PASSWORD: $(arnoldPassword)
@@ -55,16 +60,26 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} install ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(buildName) BUILD_CACHEDIR=sconsCache
      displayName: 'Build'
      env:
        DISPLAY: :99.0
        AZURE: 1
 
    - script: |
-       ./install/gaffer-*/bin/gaffer test
+       ./install/$(buildName)/bin/gaffer test
      displayName: 'Test'
      env:
        DISPLAY: :99.0
        AZURE: 1
        USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
+
+   - ${{ if eq(parameters.publish, true) }}:
+     - script: |
+         pip install --user azure-storage-blob PyGithub
+         ./config/azure/publishBuild.py --archive ./install/$(buildName).tar.gz --repo $(Build.Repository.Name) --commit $(buildSourceCommit)
+       displayName: "Publish Build"
+       env:
+         GITHUB_ACCESS_TOKEN: $(githubAccessToken)
+         AZURE_ACCESS_TOKEN: $(azureBlobAccessToken)
+
