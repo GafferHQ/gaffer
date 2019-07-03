@@ -40,6 +40,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+import os
+
 ## Supported plug metadata - used to provide arguments to a
 # PathChooserDialogue :
 #
@@ -135,7 +137,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if bookmarks is not None :
 				pathCopy.setFromString( bookmarks.getDefault() )
 			else :
-				pathCopy.setFromString( "/" )
+				pathCopy.setFromString( os.path.expanduser( "~" ) )
 
 		return GafferUI.PathChooserDialogue( pathCopy, **pathChooserDialogueKeywords )
 
