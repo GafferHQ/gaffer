@@ -737,31 +737,32 @@ _styleSheet = string.Template(
 	QScrollBar:vertical {
 		width: 16px;
 		margin: 4px;
+		margin-bottom: 30px;
 	}
 
 	QScrollBar:horizontal {
 		height: 16px;
 		margin: 4px;
+		margin-right: 30px;
 	}
 
 	QScrollBar::add-page, QScrollBar::sub-page {
-		background: none;
+		background: $tintDarker;
 		border: none;
 	}
 
 	QScrollBar::add-line, QScrollBar::sub-line {
-		background-color: none;
-		border: none;
+		background: transparent;
 	}
 
 	QScrollBar::add-line:vertical {
-		height: 8px;
+		height: 14px;
 		subcontrol-position: bottom;
 		subcontrol-origin: margin;
 	}
 
 	QScrollBar::add-line:horizontal {
-		width: 8px;
+		width: 14px;
 		subcontrol-position: right;
 		subcontrol-origin: margin;
 	}
@@ -773,7 +774,6 @@ _styleSheet = string.Template(
 		position: absolute;
 		bottom: 15px;
 	}
-
 	QScrollBar::sub-line:horizontal {
 		width: 14px;
 		subcontrol-position: top right;
@@ -799,6 +799,19 @@ _styleSheet = string.Template(
 	QScrollBar::handle:hover, QScrollBar::add-line:hover,
 	QScrollBar::sub-line:hover {
 		background-color: $brightColor;
+	}
+
+	QScrollBar::down-arrow {
+		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+	}
+	QScrollBar::up-arrow {
+		image: url($GAFFER_ROOT/graphics/arrowUp10.png);
+	}
+	QScrollBar::left-arrow {
+		image: url($GAFFER_ROOT/graphics/arrowLeft10.png);
+	}
+	QScrollBar::right-arrow {
+		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
 	}
 
 	QScrollArea {
