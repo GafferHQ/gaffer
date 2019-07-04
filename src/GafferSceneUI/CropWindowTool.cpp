@@ -585,6 +585,8 @@ void CropWindowTool::findCropWindowPlug()
 		m_overlay->setCaption( "No crop window found. Insert a StandardOptions node." );
 		m_cropWindowPlugDirtiedConnection.disconnect();
 	}
+
+	m_needCropWindowPlugSearch = false;
 }
 
 bool CropWindowTool::findCropWindowPlug( const SceneAlgo::History *history, bool enabledOnly )
