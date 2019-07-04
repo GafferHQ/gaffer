@@ -64,7 +64,7 @@ _styleColors = {
 
 	"backgroundDarkest" : (0, 0, 0),
 
-	"backgroundDarker" : (45, 45, 45),
+	"backgroundDarker" : (35, 35, 35),
 
 	"backgroundDark" : (52, 52, 52),
 	"backgroundDarkTransparent" : (52, 52, 52, 100),
@@ -185,7 +185,7 @@ _styleSheet = string.Template(
 		color: $foreground;
 		font: 10px;
 		etch-disabled-text: 0;
-		background-color: $backgroundDark;
+		background-color: $backgroundDarker;
 		border: 1px solid #555555;
 	}
 
@@ -543,7 +543,7 @@ _styleSheet = string.Template(
 	}
 
 	QTabBar::tab:!selected:hover {
-		background-color: $backgroundDarkHighlight;
+		background-color: $tintLighter;
 	}
 
 	QTabWidget QTabWidget > QTabBar::tab:!selected {
@@ -554,7 +554,7 @@ _styleSheet = string.Template(
 	}
 
 	QTabWidget QTabWidget > QTabBar::tab:!selected:hover {
-		background-color: $backgroundDarkHighlight;
+		background-color: $tintLighterSubtle;
 	}
 
 	QSplitter[gafferHighlighted="true"] {
@@ -1128,6 +1128,7 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"]
 	{
 		background: rgba( 42, 42, 42, 200 );
+		border-color: rgba( 30, 30, 30, 200 );
 		border-radius: 2px;
 		padding: 2px;
 	}
