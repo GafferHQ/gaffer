@@ -61,7 +61,7 @@ def getCommitHash() :
 	return commit
 
 formatVars = {
-	"buildType" : os.environ.get( "BUILD_TYPE", "UNKNOWN" ).title(),
+	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
 	"platform" : "MacOS" if sys.platform == "darwin" else "Linux",
 	"timestamp" : datetime.datetime.now().strftime( "%Y%m%d%H%M" ),
 	"pullRequest" : os.environ.get( "SYSTEM_PULLREQUEST_PULLREQUESTNUMBER", "UNKNOWN" ),
@@ -69,8 +69,8 @@ formatVars = {
 }
 
 nameFormats = {
-	"default" : "gaffer-{timestamp}-{commit}-{platform}-{buildType}",
-	"PullRequest" : "gaffer-PR{pullRequest}-{commit}-{platform}-{buildType}"
+	"default" : "gaffer-{timestamp}-{commit}-{platform}{buildTypeSuffix}",
+	"PullRequest" : "gaffer-PR{pullRequest}-{commit}-{platform}{buildTypeSuffix}"
 }
 
 trigger = os.environ.get( 'BUILD_REASON', 'Manual' )
