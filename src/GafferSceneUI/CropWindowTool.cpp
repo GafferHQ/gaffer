@@ -466,12 +466,12 @@ void CropWindowTool::plugDirtied( const Gaffer::Plug *plug )
 
 void CropWindowTool::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node* node )
 {
-	if( !m_cropWindowPlug || m_overlayDirty )
+	if( !m_cropWindowPlug || m_needCropWindowPlugSearch )
 	{
 		return;
 	}
 
-	if( node != m_cropWindowPlug->node() )
+	if( node != m_cropWindowPlug->node() && !node->isAncestorOf( m_cropWindowPlug->node() ) )
 	{
 		return;
 	}
@@ -487,7 +487,7 @@ void CropWindowTool::nodeMetadataChanged( IECore::InternedString key, const Gaff
 
 void CropWindowTool::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug* plug )
 {
-	if( !m_cropWindowPlug || m_overlayDirty )
+	if( !m_cropWindowPlug || m_needCropWindowPlugSearch )
 	{
 		return;
 	}
