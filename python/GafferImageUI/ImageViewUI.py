@@ -237,9 +237,12 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __init__( self, plug, **kw ) :
 
 		frame = GafferUI.Frame( borderWidth = 4 )
-		frame._qtWidget().setObjectName( "gafferDarker" )
 
 		GafferUI.PlugValueWidget.__init__( self, frame, plug, **kw )
+
+		# Style selector specificity rules seem to preclude us styling this
+		# based on gafferClass.
+		frame._qtWidget().setObjectName( "gafferColorInspector" )
 
 		with frame :
 

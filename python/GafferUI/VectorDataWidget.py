@@ -96,11 +96,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.__tableView.horizontalHeader().setVisible( bool( header ) )
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
-		self.__tableView.horizontalHeader().setObjectName( "vectorDataWidgetHorizontalHeader" )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
 		QtCompat.setSectionResizeMode( self.__tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
-		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
 
 		self.__tableView.setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 		self.__tableView.setVerticalScrollBarPolicy( GafferUI.ScrollMode._toQt( verticalScrollMode ) )
@@ -281,10 +279,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# non editable in terms of the style. hide the add/remove buttons
 		# if not editable.
 		if editable :
-			self.__tableView.setObjectName( "vectorDataWidgetEditable" )
+			self.__tableView.setProperty( "gafferEditable", True )
 			self.__buttonRow.setVisible( self.__sizeEditable )
 		else :
-			self.__tableView.setObjectName( "vectorDataWidget" )
+			self.__tableView.setProperty( "gafferEditable", False )
 			self.__buttonRow.setVisible( False )
 
 		# update the model
@@ -293,7 +291,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 	def getEditable( self ) :
 
-		return self.__tableView.objectName()=="vectorDataWidgetEditable"
+		return self.__tableView.property( "gafferEditable" )
 
 	def setSizeEditable( self, sizeEditable ) :
 

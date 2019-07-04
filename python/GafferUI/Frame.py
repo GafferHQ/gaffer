@@ -61,11 +61,11 @@ class Frame( GafferUI.ContainerWidget ) :
 
 	def setBorderStyle( self, borderStyle ) :
 
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
+		self._qtWidget().setProperty( "gafferBorderStyle", str( borderStyle ) )
 
 	def getBorderStyle( self ) :
 
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
+		n = self._qtWidget().property( "gafferBorderStyle" )
 		return getattr( self.BorderStyle, n )
 
 	def removeChild( self, child ) :

@@ -457,5 +457,23 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w.setVisible( 1 )
 		self.assertTrue( w.getVisible() is True )
 
+	def testStyleProperties( self ) :
+
+		w = GafferUI.Widget( QtWidgets.QLabel( "base" ))
+		self.assertEqual( w._qtWidget().property( 'gafferClass' ), 'GafferUI.Widget' )
+
+		w = TestWidget()
+		self.assertEqual( w._qtWidget().property( 'gafferClass' ), 'GafferUITest.WidgetTest.TestWidget' )
+
+		class TestWidgetChild( TestWidget ) :
+			pass
+
+		w = TestWidgetChild()
+		self.assertEqual( w._qtWidget().property( 'gafferClasses' ), [
+			'GafferUITest.WidgetTest.TestWidgetChild',
+			'GafferUITest.WidgetTest.TestWidget',
+			'GafferUI.Widget'
+		] )
+
 if __name__ == "__main__":
 	unittest.main()

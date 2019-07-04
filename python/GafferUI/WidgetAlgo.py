@@ -47,11 +47,11 @@ from Qt import QtWidgets
 def joinEdges( listContainer ) :
 
 	if listContainer.orientation() == listContainer.Orientation.Horizontal :
-		lowProperty = "gafferFlatLeft"
-		highProperty = "gafferFlatRight"
+		lowProperty = "gafferAdjoinedLeft"
+		highProperty = "gafferAdjoinedRight"
 	else :
-		lowProperty = "gafferFlatTop"
-		highProperty = "gafferFlatBottom"
+		lowProperty = "gafferAdjoinedTop"
+		highProperty = "gafferAdjoinedBottom"
 
 	visibleWidgets = [ w for w in listContainer if w.getVisible() ]
 	l = len( visibleWidgets )

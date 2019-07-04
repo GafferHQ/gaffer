@@ -207,7 +207,7 @@ class Menu( GafferUI.Widget ) :
 			self.__searchLine.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
-			self.__searchLine.setObjectName( "search" )
+			self.__searchLine.setObjectName( "gafferSearchField" )
 			if hasattr( self.__searchLine, "setPlaceholderText" ) :
 				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
 				self.__searchLine.setPlaceholderText( "Search..." )

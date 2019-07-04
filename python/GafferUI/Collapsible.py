@@ -50,8 +50,6 @@ class Collapsible( GafferUI.ContainerWidget ) :
 
 		GafferUI.ContainerWidget.__init__( self, QtWidgets.QWidget(), **kw )
 
-		self._qtWidget().setObjectName( "gafferCollapsible" )
-
 		layout = _VBoxLayout()
 		self._qtWidget().setLayout( layout )
 		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )

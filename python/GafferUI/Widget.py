@@ -197,6 +197,8 @@ class Widget( Gaffer.Trackable ) :
 
 		self.setToolTip( toolTip )
 
+		self.__applyQWidgetStyleClasses()
+
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
 	# visible explicitly after creation.
@@ -849,6 +851,38 @@ class Widget( Gaffer.Trackable ) :
 	def _setStyleSheet( self ):
 
 		self.__qtWidget.setStyleSheet( _styleSheet )
+
+	@classmethod
+	def __styleClassName( cls ) :
+
+		nameParts = []
+
+		if cls.__module__ != "__main__" :
+			nameParts.extend( cls.__module__.split( '.' ) )
+
+		# Avoid things like GafferUI.Button.Button -> GafferUI.Button
+		if not nameParts or cls.__name__ != nameParts[ -1 ] :
+			nameParts.append( cls.__name__ )
+
+		return ".".join( nameParts )
+
+	def __applyQWidgetStyleClasses( self ) :
+
+		# Expose our class as a custom property to allow stylesheets to target
+		# widgets by GafferUI class names (Qt's class is bound to the class
+		# selector, and class property).
+		# We include the module name to ensure we don't have collisions with
+		# custom widgets.
+
+		self._qtWidget().setProperty( "gafferClass", self.__styleClassName() )
+
+		allClasses = []
+
+		for cls in inspect.getmro( self.__class__ ) :
+			if hasattr( cls, '_Widget__styleClassName' ) :
+				allClasses.append( cls.__styleClassName() )
+
+		self._qtWidget().setProperty( "gafferClasses", allClasses )
 
 class _EventFilter( QtCore.QObject ) :
 

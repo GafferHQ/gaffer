@@ -345,7 +345,6 @@ class SideBySideDiff( Diff ) :
 					borderStyle = GafferUI.Frame.BorderStyle.None,
 					parenting = { "index" : ( 0, i ) }
 				)
-				frame._qtWidget().setProperty( "gafferRounded", True )
 
 	def setValueWidget( self, index, widget ) :
 
@@ -412,18 +411,17 @@ class SideBySideDiff( Diff ) :
 				continue
 
 			repolish = False
-			name = "gafferDiff" + str( backgrounds[i] )
-			if name != frame._qtWidget().objectName() :
-				frame._qtWidget().setObjectName( name )
+			if str(backgrounds[i]) != frame._qtWidget().property( "gafferDiff" ) :
+				frame._qtWidget().setProperty( "gafferDiff", str(backgrounds[i]) )
 				repolish = True
 
 			if i == 0 :
-				if frame._qtWidget().property( "gafferFlatBottom" ) != visibilities[1] :
-					frame._qtWidget().setProperty( "gafferFlatBottom", visibilities[1] )
+				if frame._qtWidget().property( "gafferAdjoinedBottom" ) != visibilities[1] :
+					frame._qtWidget().setProperty( "gafferAdjoinedBottom", visibilities[1] )
 					repolish = True
 			elif i == 1 :
-				if frame._qtWidget().property( "gafferFlatTop" ) != visibilities[0] :
-					frame._qtWidget().setProperty( "gafferFlatTop", visibilities[0] )
+				if frame._qtWidget().property( "gafferAdjoinedTop" ) != visibilities[0] :
+					frame._qtWidget().setProperty( "gafferAdjoinedTop", visibilities[0] )
 					repolish = True
 
 			if repolish :
@@ -690,7 +688,7 @@ class Row( GafferUI.Widget ) :
 			return
 
 		self.__alternate = alternate
-		self.__frame._qtWidget().setObjectName( "gafferLighter" if alternate else "" )
+		self.__frame._qtWidget().setProperty( "gafferAlternate", bool(alternate) )
 		self.__frame._repolish()
 
 	def getAlternate( self ) :
@@ -2427,11 +2425,10 @@ class _SetDiff( Diff ) :
 		Diff.__init__( self, self.__row, **kw )
 
 		with self.__row :
-			for i, name in enumerate( [ "gafferDiffA", "gafferDiffAB", "gafferDiffB" ] ) :
-				with GafferUI.Frame( borderWidth = 5 ) as frame :
+			for i, diffName in enumerate( [ "A", "AB", "B" ] ) :
+				with GafferUI.Frame( borderWidth = 5, borderStyle = GafferUI.Frame.BorderStyle.None ) as frame :
 
-					frame._qtWidget().setObjectName( name )
-					frame._qtWidget().setProperty( "gafferRounded", True )
+					frame._qtWidget().setProperty( "gafferDiff", diffName )
 
 					frame.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 					frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )

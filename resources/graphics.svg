@@ -15,7 +15,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
    sodipodi:docname="graphics.svg"
    enable-background="new">
   <defs
@@ -547,11 +547,11 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="2"
-     inkscape:cx="165.58189"
-     inkscape:cy="955.97624"
+     inkscape:zoom="32"
+     inkscape:cx="275.8409"
+     inkscape:cy="937.2701"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="deleteSmall"
      showgrid="true"
      inkscape:window-width="1231"
      inkscape:window-height="1016"
@@ -4424,14 +4424,24 @@
          id="rect5736-0-2" />
     </g>
     <g
-       id="forExport:deleteSmall"
-       transform="matrix(0.49818887,-0.49818887,0.49818887,0.49818887,-44.252357,207.19317)">
+       id="deleteSmall"
+       transform="matrix(0.49818887,-0.49818887,0.49818887,0.49818887,-44.252357,207.19317)"
+       inkscape:label="deleteSmall">
       <path
          inkscape:connector-curvature="0"
          id="path3271-4"
          d="m 410.75,205.36218 v 5 h -5 v 4 h 5 v 5 h 4 v -5 h 5 v -4 h -5 v -5 z"
          style="fill:#ffffff;fill-opacity:0.11764706;fill-rule:nonzero;stroke:none"
          sodipodi:nodetypes="ccccccccccccc" />
+      <rect
+         style="fill:#ffffff;fill-opacity:0;stroke-width:1.46863997"
+         id="forExport:deleteSmall"
+         width="16.719854"
+         height="12.727915"
+         x="435.6571"
+         y="-148.05954"
+         transform="rotate(45)"
+         inkscape:label="forExport:deleteSmall" />
     </g>
     <path
        inkscape:connector-curvature="0"
@@ -4439,7 +4449,7 @@
        d="m 170.19669,76.454588 c -0.43135,-0.109805 -0.69022,-0.361106 -1.31027,-1.271901 -0.65643,-0.964226 -1.33519,-1.836887 -2.02487,-2.603299 -0.52476,-0.583153 -0.91507,-1.161596 -1.00225,-1.48538 -0.191,-0.709291 0.39865,-1.562619 1.4473,-2.094536 0.47073,-0.238773 0.54816,-0.258015 1.03834,-0.258015 0.49709,0 0.56366,0.01721 1.082,0.280052 0.59482,0.301599 1.37342,0.965914 1.82292,1.555347 0.13651,0.178999 0.26603,0.325452 0.28783,0.325452 0.0218,0 0.16421,-0.274705 0.31648,-0.610464 0.33632,-0.741556 1.7286,-3.347638 2.31007,-4.32402 2.1563,-3.620682 4.53884,-6.626438 5.68071,-7.166624 0.42723,-0.202115 1.33862,-0.382904 2.38809,-0.473716 0.73272,-0.06338 0.81795,-0.05907 1.07584,0.05501 0.18422,0.0815 0.31819,0.197574 0.3914,0.339141 0.12782,0.247174 0.13951,0.679936 0.0244,0.901898 -0.0434,0.08357 -0.51977,0.601885 -1.0587,1.151771 -1.47567,1.505676 -2.29807,2.518125 -3.60446,4.437411 -1.74342,2.561359 -3.18888,5.206826 -4.45279,8.149473 -0.96967,2.257583 -0.98235,2.283931 -1.23312,2.561495 -0.12543,0.138843 -0.3802,0.319294 -0.56616,0.401018 -0.29933,0.131547 -0.45644,0.15059 -1.37014,0.16603 -0.56763,0.0097 -1.12681,-0.0066 -1.24262,-0.0362 z"
        style="fill:#666666;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-opacity:1" />
     <g
-       style="clip-rule:evenodd;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;fill:url(#backgroundLighter)"
+       style="clip-rule:evenodd;fill:url(#backgroundLighter);fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5"
        transform="matrix(0.8,0,0,0.8,-626.30839,-193.05238)"
        id="forExport:targetNodesUnlocked">
       <g
@@ -4474,7 +4484,7 @@
       </g>
     </g>
     <g
-       style="clip-rule:evenodd;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;fill:url(#foreground)"
+       style="clip-rule:evenodd;fill:url(#foreground);fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5"
        transform="matrix(0.8,0,0,0.8,-607.41407,-193.05238)"
        id="forExport:targetNodesLocked">
       <g
