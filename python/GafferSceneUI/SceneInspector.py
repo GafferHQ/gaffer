@@ -2426,7 +2426,7 @@ class _SetDiff( Diff ) :
 
 		with self.__row :
 			for i, diffName in enumerate( [ "A", "AB", "B" ] ) :
-				with GafferUI.Frame( borderWidth = 5 ) as frame :
+				with GafferUI.Frame( borderWidth = 5, borderStyle = GafferUI.Frame.BorderStyle.None ) as frame :
 
 					frame._qtWidget().setProperty( "gafferDiff", diffName )
 
