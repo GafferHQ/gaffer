@@ -112,6 +112,7 @@ _styleColors = {
 	"tintLighterStronger" : ( 255, 255, 255, 100 ),
 	"tintDarker" :          ( 0, 0, 0, 20 ),
 	"tintDarkerStrong" :    ( 0, 0, 0, 40 ),
+	"tintDarkerStronger" :    ( 0, 0, 0, 70 ),
 }
 
 _themeVariables = {
@@ -298,12 +299,11 @@ _styleSheet = string.Template(
 	QLineEdit, QPlainTextEdit {
 		padding: 0px;
 		border: 1px solid transparent;
-		border-bottom-color: $backgroundHighlight;
-		border-right-color: $backgroundHighlight;
+		border-bottom-color: $tintDarkerStronger;
+		border-right-color: $tintDarkerStronger;
 		background-color: $backgroundLight;
 		border-radius: $controlCornerRadius;
 	}
-
 
 	QLineEdit[readOnly="true"], QPlainTextEdit[readOnly="true"] {
 		padding: 0px;
@@ -407,6 +407,7 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferPlugValueWidget="true"] QPushButton[gafferWithFrame="true"][gafferClass="GafferUI.MenuButton"] {
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLighter, stop: 0.1 $backgroundLightHighlight, stop: 0.90 $backgroundLightLowlight);
 		font-weight: normal;
 		text-align: left;
 	}
