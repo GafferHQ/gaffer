@@ -950,11 +950,13 @@ bool Instancer::affectsBranchSetNames( const Gaffer::Plug *input ) const
 
 void Instancer::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	h = instancesPlug()->setNamesPlug()->hash();
 }
 
 IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	return instancesPlug()->setNamesPlug()->getValue();
 }
 

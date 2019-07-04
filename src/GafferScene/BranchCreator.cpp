@@ -53,6 +53,39 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString> &result )
+{
+	if( !toAdd )
+	{
+		return;
+	}
+
+	// This naive approach to merging set names preserves the order of the incoming names,
+	// but at the expense of using linear search. We assume that the number of sets is small
+	// enough and the InternedString comparison fast enough that this is OK.
+	for( const auto &setName : toAdd->readable() )
+	{
+		if( std::find( result.begin(), result.end(), setName ) == result.end() )
+		{
+			result.push_back( setName );
+		}
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// BranchCreator
+//////////////////////////////////////////////////////////////////////////
+
+
 IE_CORE_DEFINERUNTIMETYPED( BranchCreator );
 
 size_t BranchCreator::g_firstPlugIndex = 0;
@@ -465,13 +498,20 @@ void BranchCreator::hashSetNames( const Gaffer::Context *context, const ScenePlu
 	FilteredSceneProcessor::hashSetNames( context, parent, h );
 	inPlug()->setNamesPlug()->hash( h );
 
-	/// \todo In practice all BranchCreators in Gaffer have set names which do not vary
-	/// according to the parent path. Should we optimise for this case?
-	for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
+	if( constantBranchSetNames() )
 	{
 		MurmurHash branchSetNamesHash;
-		hashBranchSetNames( *it, context, branchSetNamesHash );
+		hashBranchSetNames( ScenePlug::ScenePath(), context, branchSetNamesHash );
 		h.append( branchSetNamesHash );
+	}
+	else
+	{
+		for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
+		{
+			MurmurHash branchSetNamesHash;
+			hashBranchSetNames( *it, context, branchSetNamesHash );
+			h.append( branchSetNamesHash );
+		}
 	}
 }
 
@@ -490,24 +530,17 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeSetNames( const G
 	InternedStringVectorDataPtr resultData = new InternedStringVectorData( inputSetNamesData->readable() );
 	vector<InternedString> &result = resultData->writable();
 
-	for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
+	if( constantBranchSetNames() )
 	{
-		ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( *it, context );
-		if( !branchSetNamesData )
+		ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( ScenePlug::ScenePath(), context );
+		mergeSetNames( branchSetNamesData.get(), result );
+	}
+	else
+	{
+		for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
 		{
-			continue;
-		}
-
-		const vector<InternedString> &branchSetNames = branchSetNamesData->readable();
-		// This naive approach to merging set names preserves the order of the incoming names,
-		// but at the expense of using linear search. We assume that the number of sets is small
-		// enough and the InternedString comparison fast enough that this is OK.
-		for( vector<InternedString>::const_iterator it = branchSetNames.begin(), eIt = branchSetNames.end(); it != eIt; ++it )
-		{
-			if( std::find( result.begin(), result.end(), *it ) == result.end() )
-			{
-				result.push_back( *it );
-			}
+			ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( *it, context );
+			mergeSetNames( branchSetNamesData.get(), result );
 		}
 	}
 
@@ -668,6 +701,11 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeBranchSetNames( c
 	// isn't used as the result of a compute(), and won't be stored on a plug.
 	// For the same reason, it's ok for hashBranchSetNames() to do nothing by default
 	return nullptr;
+}
+
+bool BranchCreator::constantBranchSetNames() const
+{
+	return true;
 }
 
 void BranchCreator::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const

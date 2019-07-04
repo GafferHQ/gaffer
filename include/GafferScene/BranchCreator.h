@@ -134,6 +134,11 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		virtual bool affectsBranchSetNames( const Gaffer::Plug *input ) const;
 		virtual void hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
+		/// Called to determine if all branches have the same set names. If it returns true,
+		/// `computeSetNames()` calls `computeBranchSetNames()` just once, with an empty `parentPath`,
+		/// rather than having to accumulate all names from all branches. The default implementation
+		/// returns true.
+		virtual bool constantBranchSetNames() const;
 
 		virtual bool affectsBranchSet( const Gaffer::Plug *input ) const;
 		virtual void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

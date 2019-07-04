@@ -145,11 +145,13 @@ bool Parent::affectsBranchSetNames( const Gaffer::Plug *input ) const
 
 void Parent::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	h = childPlug()->setNamesPlug()->hash();
 }
 
 IECore::ConstInternedStringVectorDataPtr Parent::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	return childPlug()->setNamesPlug()->getValue();
 }
 
