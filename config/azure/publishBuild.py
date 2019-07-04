@@ -118,12 +118,12 @@ if not args.githubAccessToken :
 
 
 formatVars = {
-	"type" : os.environ.get( "BUILD_TYPE", "UNKNOWN" ).title(),
+	"buildTypeSuffix" : " Debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
 	"platform" : "MacOS" if sys.platform == "darwin" else "Linux",
 }
 
 if not args.context :
-	args.context = "CI Build ({platform} {type})".format( **formatVars )
+	args.context = "CI Build ({platform}{buildTypeSuffix})".format( **formatVars )
 
 if not os.path.exists( args.archive ) :
 	parser.exit( 1, "The specified archive '%s' does not exist." % args.archive )
