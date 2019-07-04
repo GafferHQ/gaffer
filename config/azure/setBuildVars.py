@@ -62,7 +62,7 @@ def getCommitHash() :
 
 formatVars = {
 	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
-	"platform" : "MacOS" if sys.platform == "darwin" else "Linux",
+	"platform" : "macos" if sys.platform == "darwin" else "linux",
 	"timestamp" : datetime.datetime.now().strftime( "%Y%m%d%H%M" ),
 	"pullRequest" : os.environ.get( "SYSTEM_PULLREQUEST_PULLREQUESTNUMBER", "UNKNOWN" ),
 	"commit" : getCommitHash()
