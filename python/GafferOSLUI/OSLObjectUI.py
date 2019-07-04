@@ -248,8 +248,28 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 
-		]
+		],
 
+		"useTransform" : [
+
+			"description",
+			"""
+			Makes the object's transform available to OSL, so that you can use OSL functions that convert
+			from object to world space.
+			""",
+
+		],
+
+		"useAttributes" : [
+
+			"description",
+			"""
+			Makes the Gaffer attributes at the object's location available to OSL through the getattribute
+			function.  Once this is on, you can use OSL nodes such as InFloat or InString to retrieve the
+			attribute values.
+			""",
+
+		],
 	}
 
 )

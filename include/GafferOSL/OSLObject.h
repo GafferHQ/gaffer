@@ -66,6 +66,12 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;
 
+		Gaffer::BoolPlug *useTransformPlug();
+		const Gaffer::BoolPlug *useTransformPlug() const;
+
+		Gaffer::BoolPlug *useAttributesPlug();
+		const Gaffer::BoolPlug *useAttributesPlug() const;
+
 		Gaffer::Plug *primitiveVariablesPlug();
 		const Gaffer::Plug *primitiveVariablesPlug() const;
 

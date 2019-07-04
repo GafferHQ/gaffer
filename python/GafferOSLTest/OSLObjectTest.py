@@ -37,6 +37,7 @@
 import os
 import imath
 import subprocess
+import inspect
 
 import IECore
 import IECoreScene
@@ -146,6 +147,9 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		o["filter"].setInput( filter["out"] )
 
+		self.assertEqual( o["out"].object( "/plane" )["transformed"].data, IECore.Color3fVectorData( [ imath.Color3f( -0.5, -0.5, 0 ), imath.Color3f( 0.5, -0.5, 0 ), imath.Color3f( -0.5, 0.5, 0 ), imath.Color3f( 0.5, 0.5, 0 ) ] ) )
+
+		o["useTransform"].setValue( True )
 		self.assertEqual( o["out"].object( "/plane" )["transformed"].data, IECore.Color3fVectorData( [ imath.Color3f( 1.5, -0.5, 0 ), imath.Color3f( 2.5, -0.5, 0 ), imath.Color3f( 1.5, 0.5, 0 ), imath.Color3f( 2.5, 0.5, 0 ) ] ) )
 		self.assertEqual( o["out"].object( "/plane" )["transformedBack"].data, IECore.Color3fVectorData( [ imath.Color3f( -0.5, -0.5, 0 ), imath.Color3f( 0.5, -0.5, 0 ), imath.Color3f( -0.5, 0.5, 0 ), imath.Color3f( 0.5, 0.5, 0 ) ] ) )
 
@@ -912,6 +916,158 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( len( o["__oslCode"]["parameters"].children() ), 0 )
 
+	def testAttributes( self ):
+
+		p = GafferScene.Plane()
+
+		a = GafferScene.CustomAttributes()
+		a["attributes"].addChild( Gaffer.NameValuePlug( "a", 42.5 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "b", 12 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "c", True ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "d", "blah" ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "e", imath.V3f( 0.1, 0.2, 0.3 ) ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "f", imath.V2f( 0.4, 0.5 ) ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "g", imath.Color3f( 0.6, 0.7, 0.8 ) ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "h", imath.M44f( 3 ) ) )
+		# There's no Color4f type in OSL, so We can't currently get the 4th component, but we can
+		# get the first 3
+		a["attributes"].addChild( Gaffer.NameValuePlug( "i", imath.Color4f( 0.6, 0.7, 0.8, 0.9 ) ) )
+
+		a["in"].setInput( p["out"] )
+
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( p["out"] )
+		o["in"].setInput( a["out"] )
+
+		# shading network to output attributes as formatted string.
+
+		inPoint = GafferOSL.OSLShader()
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
+
+		code = GafferOSL.OSLCode()
+		code["out"].addChild( Gaffer.StringPlug( "testString", direction = Gaffer.Plug.Direction.Out ) )
+
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testString", "" ) )
+		o["primitiveVariables"][0]["value"].setInput( code["out"]["testString"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		a["filter"].setInput( f["out"] )
+		o["filter"].setInput( f["out"] )
+
+		code["code"].setValue( inspect.cleandoc(
+			"""
+			float a = -1;
+			getattribute( "a", a );
+			float ax = -1;
+			getattribute( "ax", ax );
+			int b = -1;
+			getattribute( "b", b );
+			int c = -1;
+			getattribute( "c", c );
+			string d = "";
+			getattribute( "d", d );
+			vector e = -1;
+			getattribute( "e", e );
+			vector f = -1;
+			getattribute( "f", f );
+			color g = -1;
+			getattribute( "g", g );
+			matrix h = -1;
+			getattribute( "h", h );
+			color i = -1;
+			getattribute( "i", i );
+			testString = format( "TEST STRING : <%.2f><%.2f><%i><%i><%s><%.2f><%.2f><%.2f><%.2f %.2f %.2f %.2f><%.2f>", a, ax, b, c, d, e, f, g, h[0][0], h[0][1], h[1][0], h[1][1], i );
+			"""
+		) )
+
+		self.assertEqual(
+			o["out"].object( "/plane" )["testString"].data[0],
+			"TEST STRING : <-1.00><-1.00><-1><-1><><-1.00 -1.00 -1.00><-1.00 -1.00 -1.00><-1.00 -1.00 -1.00><-1.00 0.00 0.00 -1.00><-1.00 -1.00 -1.00>"
+		)
+		o["useAttributes"].setValue( True )
+		self.assertEqual(
+			o["out"].object( "/plane" )["testString"].data[0],
+			"TEST STRING : <42.50><-1.00><12><1><blah><0.10 0.20 0.30><0.40 0.50 0.00><0.60 0.70 0.80><3.00 3.00 3.00 3.00><0.60 0.70 0.80>"
+		)
+
+		# Try some bogus attributes
+		code["code"].setValue( inspect.cleandoc(
+			"""
+			string badAttribute = "NOT FOUND";
+			getattribute( "badAttribute", badAttribute );
+			testString = badAttribute;
+			"""
+		) )
+
+		a["attributes"].addChild( Gaffer.NameValuePlug( "badAttribute", imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ) )
+
+		# Check that bad attribute isn't found
+		self.assertEqual( o["out"].object( "/plane" )["testString"].data[0], "NOT FOUND" )
+
+		while a["attributes"].children():
+			del a["attributes"][0]
+		a["attributes"].addChild( Gaffer.NameValuePlug( "badAttribute", IECore.FloatVectorData([0,1,2]) ) )
+
+		self.assertEqual( o["out"].object( "/plane" )["testString"].data[0], "NOT FOUND" )
+
+		# Try something that isn't even data
+		code["code"].setValue( inspect.cleandoc(
+			"""
+			string badAttribute = "NOT FOUND";
+			getattribute( "osl:surface", badAttribute );
+			testString = badAttribute;
+			"""
+		) )
+		c = GafferOSL.OSLShader()
+		c.loadShader( "Surface/Constant" )
+		s = GafferScene.ShaderAssignment()
+		s["shader"].setInput( c["out"] )
+		s["filter"].setInput( f["out"] )
+		s["in"].setInput( p["out"] )
+		o["in"].setInput( s["out"] )
+
+		self.assertEqual( o["out"].object( "/plane" )["testString"].data[0], "NOT FOUND" )
+
+
+	def testAffects( self ) :
+
+		s = GafferScene.Sphere()
+
+		a = GafferScene.CustomAttributes()
+		a["attributes"].addChild( Gaffer.NameValuePlug( "a", 0 ) )
+		a["in"].setInput( s["out"] )
+
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( a["out"] )
+
+		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
+		
+		s["transform"]["translate"]["x"].setValue( 1 )
+		def checkAffected( expected ):
+			self.assertEqual( [ i[0].getName() for i in cs if i[0].parent() == o["out"] ], expected )
+			del cs[:]
+		checkAffected( ["transform", "bound" ] )
+
+		o["useTransform"].setValue( True )
+
+		checkAffected( ["object", "bound" ] )
+
+		s["transform"]["translate"]["x"].setValue( 2 )
+
+		checkAffected( ["transform", "object", "bound" ] )
+
+		a["attributes"][0]["value"].setValue( 1 )
+		checkAffected( ["attributes" ] )
+
+		o["useAttributes"].setValue( True )
+
+		checkAffected( ["object", "bound" ] )
+
+		a["attributes"][0]["value"].setValue( 2 )
+
+		checkAffected( ["attributes", "object", "bound" ] )
 
 if __name__ == "__main__":
 	unittest.main()
