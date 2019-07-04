@@ -65,15 +65,21 @@ class GAFFER_API Reference : public SubGraph
 		/// Emitted when a reference is loaded (or unloaded following an undo).
 		ReferenceLoadedSignal &referenceLoadedSignal();
 
+		bool hasMetadataEdit( const Plug *plug, const IECore::InternedString key ) const;
+
 	private :
 
 		void loadInternal( const std::string &fileName );
 		bool isReferencePlug( const Plug *plug ) const;
+		void transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const;
 
 		void convertPersistentMetadata( Plug *plug ) const;
 
 		std::string m_fileName;
 		ReferenceLoadedSignal m_referenceLoadedSignal;
+
+		class PlugEdits;
+		std::unique_ptr<PlugEdits> m_plugEdits;
 
 };
 
