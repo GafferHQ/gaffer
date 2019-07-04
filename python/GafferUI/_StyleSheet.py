@@ -950,7 +950,7 @@ _styleSheet = string.Template(
 	/* frame */
 
 	*[gafferBorderStyle="None"] {
-		border: 1px solid transparent;
+		border: none;
 		border-radius: $widgetCornerRadius;
 		padding: 2px;
 	}
