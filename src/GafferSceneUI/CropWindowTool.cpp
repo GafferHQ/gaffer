@@ -627,7 +627,7 @@ void CropWindowTool::findCropWindowPlug()
 	{
 		const std::string plugName =  m_cropWindowPlug->relativeName( m_cropWindowPlug->ancestor<ScriptNode>() );
 
-		// If even after the second search, we could still be read-only
+		// Even after the second search, we could still be read-only
 		if( MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
 		{
 			m_overlay->setEditable( false );
