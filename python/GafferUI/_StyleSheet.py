@@ -1091,7 +1091,7 @@ _styleSheet = string.Template(
 
 	/* gl widget */
 
-	QGraphicsView[gafferGLWidget="true"] {
+	*[gafferClass="GafferUI.GlWidget"] QGraphicsView {
 		border: 0px;
 	}
 
