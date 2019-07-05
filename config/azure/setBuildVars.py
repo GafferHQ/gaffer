@@ -52,25 +52,23 @@ import sys
 # trigger. These variables can be referenced in a pipeline yaml file downstream
 # of the step that runs this script.
 
-def getCommitHash() :
-	commit = os.environ.get( 'BUILD_SOURCEVERSION' )
-	# Azure merges the branch into its target in PR build, so
-	# BUILD_SOURCEVERSION isn't correct as it references the ephemeral merge.
-	if os.environ.get( 'BUILD_REASON', '' ) == 'PullRequest' :
-		commit = os.environ.get( 'SYSTEM_PULLREQUEST_SOURCECOMMITID' )
-	return commit
+commit = os.environ.get( 'BUILD_SOURCEVERSION' )
+# Azure merges the branch into its target in PR build, so
+# BUILD_SOURCEVERSION isn't correct as it references the ephemeral merge.
+if os.environ.get( 'BUILD_REASON', '' ) == 'PullRequest' :
+	commit = os.environ.get( 'SYSTEM_PULLREQUEST_SOURCECOMMITID' )
 
 formatVars = {
 	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
 	"platform" : "macos" if sys.platform == "darwin" else "linux",
 	"timestamp" : datetime.datetime.now().strftime( "%Y%m%d%H%M" ),
 	"pullRequest" : os.environ.get( "SYSTEM_PULLREQUEST_PULLREQUESTNUMBER", "UNKNOWN" ),
-	"commit" : getCommitHash()
+	"shortCommit" : commit[:8]
 }
 
 nameFormats = {
-	"default" : "gaffer-{timestamp}-{commit}-{platform}{buildTypeSuffix}",
-	"PullRequest" : "gaffer-PR{pullRequest}-{commit}-{platform}{buildTypeSuffix}"
+	"default" : "gaffer-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
+	"PullRequest" : "gaffer-pr{pullRequest}-{shortCommit}-{platform}{buildTypeSuffix}"
 }
 
 trigger = os.environ.get( 'BUILD_REASON', 'Manual' )
@@ -80,6 +78,6 @@ print( "Setting $(buildName) to %s" % buildName )
 print( "##vso[task.setvariable variable=buildName;]%s" % buildName )
 
 # To make sure our publish always matches the one we use in the build name
-print( "Setting $(buildSourceCommit) to %s" % formatVars['commit'] )
-print( "##vso[task.setvariable variable=buildSourceCommit;]%s" % formatVars['commit'] )
+print( "Setting $(buildSourceCommit) to %s" % commit )
+print( "##vso[task.setvariable variable=buildSourceCommit;]%s" % commit )
 
