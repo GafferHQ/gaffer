@@ -572,10 +572,10 @@ class ArnoldShader : public IECore::RefCounted
 
 	public :
 
-		ArnoldShader( const IECoreScene::ShaderNetwork *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix, const AtNode *parentNode )
+		ArnoldShader( const IECoreScene::ShaderNetwork *shaderNetwork, NodeDeleter nodeDeleter, const std::string &name, const AtNode *parentNode )
 			:	m_nodeDeleter( nodeDeleter )
 		{
-			m_nodes = ShaderNetworkAlgo::convert( shaderNetwork, namePrefix, parentNode );
+			m_nodes = ShaderNetworkAlgo::convert( shaderNetwork, name, parentNode );
 		}
 
 		~ArnoldShader() override
@@ -584,6 +584,14 @@ class ArnoldShader : public IECore::RefCounted
 			{
 				m_nodeDeleter( *it );
 			}
+		}
+
+		bool update( const IECoreScene::ShaderNetwork *shaderNetwork )
+		{
+			// `ShaderNetworkAlgo::update()` will destroy unwanted nodes, so we can
+			// only call it if we're responsible for deleting them in the first place.
+			assert( m_nodeDeleter == AiNodeDestroy );
+			return ShaderNetworkAlgo::update( m_nodes, shaderNetwork );
 		}
 
 		AtNode *root() const
@@ -622,7 +630,7 @@ class ShaderCache : public IECore::RefCounted
 			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
-				const std::string namePrefix = "shader:" + a->first.toString() + ":";
+				const std::string namePrefix = "shader:" + a->first.toString();
 				a->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
 			}
 			return a->second;
@@ -736,7 +744,6 @@ IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
 IECore::InternedString g_sssSetNameName( "ai:sss_setname" );
 
-IECore::InternedString g_linkedLights( "linkedLights" );
 IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
 IECore::InternedString g_filteredLights( "filteredLights" );
@@ -1779,12 +1786,14 @@ namespace
 static IECore::InternedString g_surfaceAttributeName( "surface" );
 static IECore::InternedString g_aiSurfaceAttributeName( "ai:surface" );
 
-class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
+IE_CORE_FORWARDDECLARE( ArnoldLight )
+
+class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
 
-		ArnoldObject( const Instance &instance )
+		ArnoldObjectBase( const Instance &instance )
 			:	m_instance( instance ), m_attributes( nullptr )
 		{
 		}
@@ -1883,13 +1892,13 @@ IE_CORE_FORWARDDECLARE( ArnoldObject )
 namespace
 {
 
-class ArnoldLightFilter : public ArnoldObject
+class ArnoldLightFilter : public ArnoldObjectBase
 {
 
 	public :
 
 		ArnoldLightFilter( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode )
-			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
+			:	ArnoldObjectBase( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
 		{
 		}
 
@@ -1899,7 +1908,7 @@ class ArnoldLightFilter : public ArnoldObject
 
 		void transform( const Imath::M44f &transform ) override
 		{
-			ArnoldObject::transform( transform );
+			ArnoldObjectBase::transform( transform );
 			m_transformMatrices.clear();
 			m_transformTimes.clear();
 			m_transformMatrices.push_back( transform );
@@ -1908,7 +1917,7 @@ class ArnoldLightFilter : public ArnoldObject
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
 		{
-			ArnoldObject::transform( samples, times );
+			ArnoldObjectBase::transform( samples, times );
 			m_transformMatrices = samples;
 			m_transformTimes = times;
 			applyLightFilterTransform();
@@ -1916,7 +1925,7 @@ class ArnoldLightFilter : public ArnoldObject
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			if( !ArnoldObject::attributes( attributes ) )
+			if( !ArnoldObjectBase::attributes( attributes ) )
 			{
 				return false;
 			}
@@ -1926,19 +1935,35 @@ class ArnoldLightFilter : public ArnoldObject
 
 			// Update light filter shader.
 
-			m_lightFilterShader = nullptr;
-			if( !arnoldAttributes->lightFilterShader() )
+			if( arnoldAttributes->lightFilterShader() )
 			{
-				return true;
+				if( !m_lightFilterShader )
+				{
+					m_lightFilterShader = new ArnoldShader( arnoldAttributes->lightFilterShader(), m_nodeDeleter, "lightFilter:" + m_name, m_parentNode );
+					applyLightFilterTransform();
+				}
+				else
+				{
+					bool keptRootShader = m_lightFilterShader->update( arnoldAttributes->lightFilterShader() );
+					if( !keptRootShader )
+					{
+						// Couldn't update existing shader in place because the shader type
+						// was changed. This will leave dangling pointers in any `filters` lists
+						// held by lights. Return false to force the client to rebuild from
+						// scratch.
+						return false;
+					}
+				}
 			}
-
-			m_lightFilterShader = new ArnoldShader( arnoldAttributes->lightFilterShader(), m_nodeDeleter, "lightFilter:" + m_name + ":", m_parentNode );
-
-			// Simplify name for the root shader, for ease of reading of ass files.
-			const std::string name = "lightFilter:" + m_name;
-			AiNodeSetStr( m_lightFilterShader->root(), g_nameArnoldString, AtString( name.c_str() ) );
-
-			applyLightFilterTransform();
+			else
+			{
+				if( m_lightFilterShader )
+				{
+					// Removing `m_lightFilterShader` would create dangling pointers,
+					// so we can not make the edit.
+					return false;
+				}
+			}
 
 			return true;
 		}
@@ -1996,13 +2021,15 @@ IE_CORE_DECLAREPTR( ArnoldLightFilter )
 namespace
 {
 
-class ArnoldLight : public ArnoldObject
+IECore::InternedString g_lightFilters( "lightFilters" );
+
+class ArnoldLight : public ArnoldObjectBase
 {
 
 	public :
 
 		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode )
-			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
+			:	ArnoldObjectBase( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
 		{
 		}
 
@@ -2012,7 +2039,7 @@ class ArnoldLight : public ArnoldObject
 
 		void transform( const Imath::M44f &transform ) override
 		{
-			ArnoldObject::transform( transform );
+			ArnoldObjectBase::transform( transform );
 			m_transformMatrices.clear();
 			m_transformTimes.clear();
 			m_transformMatrices.push_back( transform );
@@ -2021,7 +2048,7 @@ class ArnoldLight : public ArnoldObject
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
 		{
-			ArnoldObject::transform( samples, times );
+			ArnoldObjectBase::transform( samples, times );
 			m_transformMatrices = samples;
 			m_transformTimes = times;
 			applyLightTransform();
@@ -2029,76 +2056,89 @@ class ArnoldLight : public ArnoldObject
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			if( !ArnoldObject::attributes( attributes ) )
+			ConstArnoldAttributesPtr oldAttributes = m_attributes;
+			if( !ArnoldObjectBase::attributes( attributes ) )
 			{
 				return false;
 			}
 
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 			m_attributes = arnoldAttributes;
 
 			// Update light shader.
 
-			// We're currently seeing crashes that we suspect to be related to
-			// the comment below. In order to track down what's really
-			// happening, we'll explicitly compare the pointers and emit a
-			// warning if they don't match.
-			const AtNode *oldRoot = m_lightShader ? m_lightShader->root() : nullptr;
-
-			// Delete current light shader, destroying all AtNodes it owns. It
-			// is crucial that we do this _before_ constructing a new
-			// ArnoldShader (and therefore AtNodes) below, because we are
-			// relying on a specific behaviour of the Arnold node allocator.
-			// When we destroy the light node, Arnold does not remove it from
-			// any of the `light_group` arrays we have assigned to geometry,
-			// meaning they will contain a dangling pointer. If we destroy the
-			// old AtNode first, we get lucky, and Arnold will allocate the new
-			// one at the _exact same address_ as the old one, keeping our
-			// arrays valid. We have been accidentally relying on this behaviour
-			// for some time, and for now continue to rely on it in lieu of a
-			// more complex fix which might involve a `LightLinkManager` that is
-			// able to track and patch up any affected light links. Because of
-			// the extra bookkeeping involved in such an approach, we would want
-			// to keep its use to a minimum. We could achieve that for the
-			// common case by editing the light node's parameters in place, only
-			// creating a new light node when the type has changed.
-			m_lightShader = nullptr;
-
-			if( !arnoldAttributes->lightShader() )
+			if( arnoldAttributes->lightShader() )
 			{
-				return true;
-			}
-
-			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name + ":", m_parentNode );
-
-			if( oldRoot && oldRoot != m_lightShader->root() )
-			{
-				IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", boost::str( boost::format( "When updating ArnoldShader, Arnold's memory allocation didn't meet our expectations: %p != %p" ) % oldRoot % m_lightShader->root() ) );
-			}
-
-			// Simplify name for the root shader, for ease of reading of ass files.
-			const std::string name = "light:" + m_name;
-			AiNodeSetStr( m_lightShader->root(), g_nameArnoldString, AtString( name.c_str() ) );
-
-			// Deal with mesh lights.
-
-			if( AiNodeIs( m_lightShader->root(), g_meshLightArnoldString ) )
-			{
-				if( m_instance.node() )
+				if( !m_lightShader )
 				{
-					AiNodeSetPtr( m_lightShader->root(), g_meshArnoldString, m_instance.node() );
+					m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name, m_parentNode );
+
+					applyLightTransform();
+
+					// Link mesh lights to the geometry held by ArnoldObjectBase.
+
+					if( AiNodeIs( m_lightShader->root(), g_meshLightArnoldString ) )
+					{
+						if( m_instance.node() )
+						{
+							AiNodeSetPtr( m_lightShader->root(), g_meshArnoldString, m_instance.node() );
+						}
+						else
+						{
+							// Don't output mesh lights from locations with no object
+							m_lightShader = nullptr;
+						}
+					}
 				}
 				else
 				{
-					// Don't output mesh lights from locations with no object
-					m_lightShader = nullptr;
-					return true;
+					bool keptRootShader = m_lightShader->update( arnoldAttributes->lightShader() );
+					if( !keptRootShader )
+					{
+						// Couldn't update existing shader in place because the shader type
+						// was changed. This will leave dangling pointers in any `light_group`
+						// lists held by objects. Return false to force the client to rebuild from
+						// scratch.
+						return false;
+					}
+				}
+			}
+			else
+			{
+				if( m_lightShader )
+				{
+					// Removing `m_lightShader` would create dangling light linking pointers,
+					// so we can not make the edit - the client must rebuild instead.
+					return false;
 				}
 			}
 
-			applyLightTransform();
+			// Update filter links if needed.
+
+			if(
+				( oldAttributes && oldAttributes->lightFilterShaders() != arnoldAttributes->lightFilterShaders() ) ||
+				( !oldAttributes && arnoldAttributes->lightFilterShaders().size() )
+			)
+			{
+				updateLightFilterLinks();
+			}
 
 			return true;
+		}
+
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lightFilters ) override
+		{
+			if( type != g_lightFilters || lightFilters == m_linkedLightFilters )
+			{
+				return;
+			}
+
+			m_linkedLightFilters = lightFilters;
+			updateLightFilterLinks();
+		}
+
+		const ArnoldShader *lightShader() const
+		{
+			return m_lightShader.get();
 		}
 
 		void nodesCreated( vector<AtNode *> &nodes ) const
@@ -2129,6 +2169,42 @@ class ArnoldLight : public ArnoldObject
 			}
 		}
 
+		void updateLightFilterLinks()
+		{
+			if( !m_lightShader )
+			{
+				return;
+			}
+
+			auto &attributesLightFilters = m_attributes->lightFilterShaders();
+			vector<AtNode *> lightFilterNodes;
+			lightFilterNodes.reserve(
+				( m_linkedLightFilters ? m_linkedLightFilters->size() : 0 ) + attributesLightFilters.size()
+			);
+
+			if( m_linkedLightFilters )
+			{
+				for( const auto &filter : *m_linkedLightFilters )
+				{
+					const ArnoldLightFilter *arnoldFilter = static_cast<const ArnoldLightFilter *>( filter.get() );
+					if( arnoldFilter->lightFilterShader() )
+					{
+						lightFilterNodes.push_back( arnoldFilter->lightFilterShader()->root() );
+					}
+				}
+			}
+
+			for( const auto &filterShader : attributesLightFilters )
+			{
+				lightFilterNodes.push_back( filterShader->root() );
+			}
+
+			AiNodeSetArray(
+				m_lightShader->root(), g_filtersArnoldString,
+				AiArrayConvert( lightFilterNodes.size(), 1, AI_TYPE_NODE, lightFilterNodes.data() )
+			);
+		}
+
 		// Because the AtNode for the light arrives via attributes(),
 		// we need to store the transform and name ourselves so we have
 		// them later when we need them.
@@ -2138,6 +2214,87 @@ class ArnoldLight : public ArnoldObject
 		NodeDeleter m_nodeDeleter;
 		const AtNode *m_parentNode;
 		ArnoldShaderPtr m_lightShader;
+		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLightFilters;
+
+};
+
+IE_CORE_DECLAREPTR( ArnoldLight )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ArnoldObject
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+IECore::InternedString g_lights( "lights" );
+
+class ArnoldObject : public ArnoldObjectBase
+{
+
+	public :
+
+		ArnoldObject( const Instance &instance )
+			:	ArnoldObjectBase( instance )
+		{
+		}
+
+		~ArnoldObject() override
+		{
+		}
+
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
+		{
+			AtNode *node = m_instance.node();
+			if( !node )
+			{
+				return;
+			}
+
+			AtString groupParameterName;
+			AtString useParameterName;
+			if( type == g_lights )
+			{
+				groupParameterName = g_lightGroupArnoldString;
+				useParameterName = g_useLightGroupArnoldString;
+			}
+			else if( type == g_shadowGroup )
+			{
+				groupParameterName = g_shadowGroupArnoldString;
+				useParameterName = g_useShadowGroupArnoldString;
+			}
+			else
+			{
+				return;
+			}
+
+			if( objects )
+			{
+				vector<AtNode *> lightNodes; lightNodes.reserve( objects->size() );
+				for( const auto &o : *objects )
+				{
+					auto arnoldLight = dynamic_cast<const ArnoldLight *>( o.get() );
+					if( arnoldLight && arnoldLight->lightShader() )
+					{
+						lightNodes.push_back( arnoldLight->lightShader()->root() );
+					}
+					else
+					{
+						IECore::msg( IECore::Msg::Warning, "ArnoldObject::link()", "Attempt to link nonexistent light" );
+					}
+				}
+
+				AiNodeSetArray( node, groupParameterName, AiArrayConvert( lightNodes.size(), 1, AI_TYPE_NODE, lightNodes.data() ) );
+				AiNodeSetBool( node, useParameterName, true );
+			}
+			else
+			{
+				AiNodeResetParameter( node, groupParameterName );
+				AiNodeResetParameter( node, useParameterName );
+			}
+		}
 
 };
 
