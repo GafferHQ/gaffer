@@ -45,6 +45,7 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Reference.h"
 
 #include "IECorePython/ScopedGILLock.h"
 
@@ -75,9 +76,21 @@ std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent,
 	std::vector<InternedString> keys;
 	Metadata::registeredValues( graphComponent, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
+	const Plug *plug = runTimeCast<const Plug>( graphComponent );
+	const Reference *reference = plug ? runTimeCast<const Reference>( plug->node() ) : nullptr;
+	bool requireEdits = reference && plug && plug != reference->userPlug() && !reference->userPlug()->isAncestorOf( plug );
+
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
+		// Metadata on Plugs that live on References only need to be
+		// serialised if they have been edited after loading the reference.
+		// Metadata on user plugs will always be serialised.
+		if( requireEdits && !reference->hasMetadataEdit( plug, *it ) )
+		{
+			continue;
+		}
+
 		object pythonKey( it->c_str() );
 		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
 
