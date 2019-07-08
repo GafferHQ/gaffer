@@ -179,7 +179,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.__currentView = None
 
-		node = self._lastAddedNode()
+		node = self._lastAffectedNode()
 		if node :
 			for plug in node.children( Gaffer.Plug ) :
 				if plug.direction() == Gaffer.Plug.Direction.Out and not plug.getName().startswith( "__" ) :
@@ -218,9 +218,9 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.__primaryToolChanged()
 
-	def _titleFormat( self ) :
+	def _affectedNodes( self, nodeSet ) :
 
-		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
+		return GafferUI.NodeSetEditor._nodeSetSubset( nodeSet, maxNodes = 1, reverseNodes = True )
 
 	def __primaryToolChanged( self, *unused ) :
 

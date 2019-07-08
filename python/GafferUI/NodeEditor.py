@@ -113,7 +113,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		self.__nodeUI = None
 		self.__nameWidget = None
 
-		node = self._lastAddedNode()
+		node = self._lastAffectedNode()
 		if not node :
 			with self.__column :
 				GafferUI.Spacer( imath.V2i( 0 ) )
@@ -166,9 +166,9 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		self.__nodeUI.setReadOnly( self.getReadOnly() )
 		frame.setChild( self.__nodeUI )
 
-	def _titleFormat( self ) :
+	def _affectedNodes( self, nodeSet ) :
 
-		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
+		return GafferUI.NodeSetEditor._nodeSetSubset( nodeSet, maxNodes = 1, reverseNodes = True )
 
 	def __menuDefinition( self ) :
 

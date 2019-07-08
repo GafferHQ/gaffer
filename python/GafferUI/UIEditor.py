@@ -189,9 +189,13 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		self.__updateFromSetInternal()
 
+	def _affectedNodes( self, nodeSet ) :
+
+		return GafferUI.NodeSetEditor._nodeSetSubset( nodeSet, maxNodes = 1, reverseNodes = True )
+
 	def __updateFromSetInternal( self, lazy=True ) :
 
-		node = self._lastAddedNode()
+		node = self._lastAffectedNode()
 
 		if lazy and node == self.__node :
 			return

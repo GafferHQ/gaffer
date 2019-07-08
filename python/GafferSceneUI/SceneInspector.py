@@ -225,7 +225,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__scenePlugs = []
 		self.__plugDirtiedConnections = []
 		self.__parentChangedConnections = []
-		for node in self.getNodeSet()[-2:] :
+		for node in self.affectedNodesSet() :
 			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ]
 			if len( outputScenePlugs ) :
 				self.__scenePlugs.append( outputScenePlugs[0] )
@@ -241,9 +241,9 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				self.__updateLazily()
 				break
 
-	def _titleFormat( self ) :
+	def _affectedNodes( self, nodeSet ) :
 
-		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 2, _reverseNodes = True, _ellipsis = False )
+		return GafferUI.NodeSetEditor._nodeSetSubset( nodeSet, maxNodes = 2, reverseNodes = True )
 
 	def __plugDirtied( self, plug ) :
 
@@ -1223,7 +1223,7 @@ class _SectionWindow( GafferUI.Window ) :
 		# tricky because sections resize lazily when they are first shown.
 		self._qtWidget().resize( 400, 250 )
 
-		editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ), scoped = False )
+		editor.affectedNodesSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ), scoped = False )
 
 	def __nodeSetMemberRemoved( self, set, node ) :
 

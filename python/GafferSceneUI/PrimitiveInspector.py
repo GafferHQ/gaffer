@@ -224,6 +224,10 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 		return "GafferSceneUI.PrimitiveInspector( scriptNode )"
 
+	def _affectedNodes( self, nodeSet ) :
+
+		return GafferUI.NodeSetEditor._nodeSetSubset( nodeSet, maxNodes = 1, reverseNodes = False )
+
 	def _updateFromSet( self ) :
 		GafferUI.NodeSetEditor._updateFromSet( self )
 
@@ -231,7 +235,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		self.__plugDirtiedConnections = []
 		self.__parentChangedConnections = []
 
-		node = self._lastAddedNode()
+		node = self._lastAffectedNode()
 
 		if node :
 

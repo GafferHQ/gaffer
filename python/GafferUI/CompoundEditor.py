@@ -413,9 +413,17 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		self.insert( len( self ), editor )
 		self.setCurrent( editor )
+		self.__updateTitle( editor )
 
-		self.setLabel( editor, editor.getTitle() )
-		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
+		weakUpdate = Gaffer.WeakMethod( self.__updateTitle )
+
+		editor.__titleChangedConnection = editor.titleChangedSignal().connect( weakUpdate )
+		if isinstance( editor, GafferUI.NodeSetEditor ) :
+			weakEditor = weakref.ref( editor )
+			def weakUpdateEditor( *args ) :
+				weakUpdate( weakEditor() )
+			editor.__affectedNodesAddedConnection = editor.affectedNodesSet().memberAddedSignal().connect( weakUpdateEditor )
+			editor.__affectedNodesRemovedConnection = editor.affectedNodesSet().memberRemovedSignal().connect( weakUpdateEditor )
 
 		self.__updateStyles()
 
@@ -426,6 +434,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def removeEditor( self, editor ) :
 
 		editor.__titleChangedConnection = None
+		editor.__affectedNodesAddedConnection = None
+		editor.__affectedNodesRemovedConnection = None
 		self.removeChild( editor )
 		self.__updatePinningButton( None )
 		self.__updateStyles()
@@ -522,9 +532,21 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return m
 
-	def __titleChanged( self, editor ) :
+	def __updateTitle( self, editor, *args ) :
 
-		self.setLabel( editor, editor.getTitle() )
+		title = editor.getTitle()
+
+		if self.__isPinned( editor ) :
+			title = Gaffer.NodeAlgo.appendNodeNames( title, editor.affectedNodesSet() )
+
+		self.setLabel( editor, title )
+
+	def __isPinned( self, editor ) :
+
+		if not isinstance( editor, GafferUI.NodeSetEditor ) or editor.scriptNode() is None :
+			return False
+
+		return not editor.getNodeSet().isSame( editor.scriptNode().selection() )
 
 	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
 
@@ -542,16 +564,18 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 			self.__pinningButton.setVisible( True )
 
-			if editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
-				self.__pinningButton.setToolTip( "Click to lock view to current selection" )
-				self.__pinningButton.setImage( "targetNodesUnlocked.png" )
-			else :
+			if self.__isPinned( editor ) :
 				self.__pinningButton.setToolTip( "Click to unlock view and follow selection" )
 				self.__pinningButton.setImage( "targetNodesLocked.png" )
+			else :
+				self.__pinningButton.setToolTip( "Click to lock view to current selection" )
+				self.__pinningButton.setImage( "targetNodesUnlocked.png" )
 
 		else :
 
 			self.__pinningButton.setVisible( False )
+
+		self.__updateTitle( editor )
 
 	def __pinningButtonClicked( self, button ) :
 

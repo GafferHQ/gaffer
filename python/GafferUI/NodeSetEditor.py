@@ -43,18 +43,20 @@ import GafferUI
 from Qt import QtCore
 
 ## The NodeSetEditor is a base class for all Editors which focus their
-# editing on a subset of nodes beneath a ScriptNode. This set defaults
-# to the ScriptNode.selection() but can be modified to be any Set of nodes.
+# editing on a subset of nodes beneath a ScriptNode. This set defaults to the
+# ScriptNode.selection() but can be modified to be any Set of nodes.  Derived
+# classes are responsible for deriving a working set of nodes that are affected
+# by the editor in the case that the selection contains more nodes that is
+# supported.
 class NodeSetEditor( GafferUI.Editor ) :
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
 		self.__nodeSet = Gaffer.StandardSet()
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
+		self.__affectedNodesSet = Gaffer.StandardSet()
 
 		GafferUI.Editor.__init__( self, topLevelWidget, scriptNode, **kw )
-
-		self.__titleFormat = None
 
 		self.__updateScheduled = False
 		# allow derived classes to call _updateFromSet() themselves after construction,
@@ -77,30 +79,17 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		return self.__nodeSetChangedSignal
 
-	## Overridden to display the names of the nodes being edited.
-	# Derived classes should override _titleFormat() rather than
-	# reimplement this again.
-	def getTitle( self ) :
+	## Returns the subset of the Editor's node set containing nodes that are
+	# considered as being 'edited' by the editor. eg: for Editors that only
+	# support a single node, it would be the node the editor exposed in the UI,
+	# regardless of how many nodes are in the nodeSet.
+	#
+	# Note: This set should be considered const, it is returned by reference
+	# rather than as a copy to allow observers to connect to the changed signals
+	# of the set.
+	def affectedNodesSet( self ) :
 
-		t = GafferUI.Editor.getTitle( self )
-		if t :
-			return t
-
-		if self.__titleFormat is None :
-			self.__titleFormat = self._titleFormat()
-			self.__nameChangedConnections = []
-			for n in self.__titleFormat :
-				if isinstance( n, Gaffer.GraphComponent ) :
-					self.__nameChangedConnections.append( n.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
-
-		result = ""
-		for t in self.__titleFormat :
-			if isinstance( t, basestring ) :
-				result += t
-			else :
-				result += t.getName()
-
-		return result
+		return self.__affectedNodesSet
 
 	## Ensures that the specified node has a visible editor of this class type editing
 	# it, creating one if necessary. The `floating` argument may be passed a value of
@@ -121,7 +110,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		if floating in ( None, False ) :
 			for editor in scriptWindow.getLayout().editors( type = cls ) :
-				if node.isSame( editor._lastAddedNode() ) :
+				if node.isSame( editor._lastAffectedNode() ) :
 					editor.reveal()
 					return editor
 
@@ -149,10 +138,10 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		return editor
 
-	def _lastAddedNode( self ) :
+	def _lastAffectedNode( self ) :
 
-		if len( self.__nodeSet ) :
-			return self.__nodeSet[-1]
+		if len( self.__affectedNodesSet ) :
+			return self.__affectedNodesSet[-1]
 
 		return None
 
@@ -165,12 +154,17 @@ class NodeSetEditor( GafferUI.Editor ) :
 	# All implementations must first call the base class implementation.
 	def _updateFromSet( self ) :
 
-		# flush information needed for making the title -
-		# we'll update it lazily in getTitle().
-		self.__nameChangedConnections = []
-		self.__titleFormat = None
+		affectedNodes = self._affectedNodes( self.__nodeSet )
+		if not self.__setMembersSame( affectedNodes, self.__affectedNodesSet ) :
+			self.__affectedNodesSet.clear()
+			self.__affectedNodesSet.add( affectedNodes )
 
-		self.titleChangedSignal()( self )
+	## This should be re-implemented as needed by derived classes to filter
+	# down the supplied set of nodes to those that the editor is capable of
+	# manipulating. A new Gaffer.StandardSet should be returned.
+	def _affectedNodes( self, nodeSet ) :
+
+		return self._nodeSetSubset( nodeSet )
 
 	# May be called to ensure that _updateFromSet() is called
 	# immediately if a lazy update has been scheduled but not
@@ -179,36 +173,26 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		self.__updateTimeout()
 
-	## May be reimplemented by derived classes to specify a combination of
-	# strings and node names to use in building the title. The NodeSetEditor
-	# will take care of updating the title appropriately as the nodes are renamed.
-	def _titleFormat( self, _prefix = None, _maxNodes = 2, _reverseNodes = False, _ellipsis = True ) :
+	## A convenience method to derive a subset of nodes from the supplied set
+	# using patterns common to many editors.
+	@staticmethod
+	def _nodeSetSubset( nodeSet, maxNodes = 2, reverseNodes = False ) :
 
-		if _prefix is None :
-			result = [ IECore.CamelCase.toSpaced( self.__class__.__name__ ) ]
-		else :
-			result = [ _prefix ]
+		affectedNodes = Gaffer.StandardSet()
 
-		numNames = min( _maxNodes, len( self.__nodeSet ) )
-		if numNames :
+		numNodes = min( maxNodes, len( nodeSet ) )
+		if numNodes :
 
-			result.append( " : " )
-
-			if _reverseNodes :
-				nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
+			if reverseNodes :
+				nodes = nodeSet[len(nodeSet)-numNodes:]
 				nodes.reverse()
 			else :
-				nodes = self.__nodeSet[:numNames]
+				nodes = nodeSet[:numNodes]
 
 			for i, node in enumerate( nodes ) :
-				result.append( node )
-				if i < numNames - 1 :
-					result.append( ", " )
+				affectedNodes.add( node )
 
-			if _ellipsis and len( self.__nodeSet ) > _maxNodes :
-				result.append( "..." )
-
-		return result
+		return affectedNodes
 
 	def __setNodeSetInternal( self, nodeSet, callUpdateFromSet ) :
 
@@ -222,17 +206,10 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		nodeSet.setRemoveOrphans( True )
 
-		if callUpdateFromSet :
-			# only update if the nodes being held have actually changed,
-			# so we don't get unnecessary flicker in any of the uis.
-			needsUpdate = len( prevSet ) != len( self.__nodeSet )
-			if not needsUpdate :
-				for i in range( 0, len( prevSet ) ) :
-					if not prevSet[i].isSame( self.__nodeSet[i] ) :
-						needsUpdate = True
-						break
-			if needsUpdate :
-				self._updateFromSet()
+		# only update if the nodes being held have actually changed,
+		# so we don't get unnecessary flicker in any of the uis.
+		if callUpdateFromSet and not self.__setMembersSame( prevSet, self.__nodeSet ) :
+			self._updateFromSet()
 
 		self.__nodeSetChangedSignal( self )
 
@@ -254,6 +231,20 @@ class NodeSetEditor( GafferUI.Editor ) :
 			self.__updateScheduled = False
 			self._updateFromSet()
 
+	# TODO: Should this go in SetAlgo or there be comparison methods/operators in Set?
+	@staticmethod
+	def __setMembersSame( setA, setB ) :
+
+		if len( setA ) != len( setB ) :
+			return False
+
+		for i in range( 0, len( setA ) ) :
+			if not setB[i].isSame( setA[i] ) :
+				return False
+
+		return True
+
+
 class _EditorWindow( GafferUI.Window ) :
 
 	def __init__( self, parentWindow, editor, **kw ) :
@@ -263,7 +254,12 @@ class _EditorWindow( GafferUI.Window ) :
 		self.setChild( editor )
 
 		editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ), scoped = False )
-		editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ), scoped = False )
+		# Logically we should use affectedNodesSet instead, but as this is updated asynchronously we can
+		# end up with 'c++ object already deleted' issues, so we just track the incoming node set. This
+		# could lead to a case where we haven't died, if the editor is very specific about what it
+		# affects.
+		editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self._nodesChanged ), scoped = False )
+		editor.getNodeSet().memberAddedSignal().connect( Gaffer.WeakMethod( self._nodesChanged ), scoped = False )
 
 		parentWindow.addChildWindow( self, removeOnClose=True )
 
@@ -271,9 +267,18 @@ class _EditorWindow( GafferUI.Window ) :
 
 	def __updateTitle( self, *unused ) :
 
-		self.setTitle( self.getChild().getTitle() )
+		editor = self.getChild()
 
-	def __nodeSetMemberRemoved( self, set, node ) :
+		title = editor.getTitle()
 
-		if not len( set ) :
+		if isinstance( editor, GafferUI.NodeSetEditor ) :
+			title = Gaffer.NodeAlgo.appendNodeNames( title, editor.affectedNodesSet() )
+
+		self.setTitle( title )
+
+	def _nodesChanged( self, set, node ) :
+
+		if len( set ) :
+			self.__updateTitle()
+		else :
 			self.parent().removeChild( self )

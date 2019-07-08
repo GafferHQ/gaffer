@@ -138,3 +138,15 @@ def __applyUserDefaults( graphComponent ) :
 
 	for plug in graphComponent.children( Gaffer.Plug ) :
 		__applyUserDefaults( plug )
+
+##########################################################################
+# Names
+##########################################################################
+
+def appendNodeNames( string, nodes ) :
+
+	if len(nodes) :
+		string += " [%s]" % ", ".join( [ n.getName() for n in nodes ] )
+
+	return string
+

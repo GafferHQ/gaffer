@@ -117,18 +117,6 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 	def _updateFromSet( self ) :
 
-		# first of all decide what plug we're viewing.
-		self.__plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ]
-			if len( outputScenePlugs ) :
-				self.__plug = outputScenePlugs[0]
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
-
-		# call base class update - this will trigger a call to _titleFormat(),
-		# hence the need for already figuring out the plug.
 		GafferUI.NodeSetEditor._updateFromSet( self )
 
 		# update our view of the hierarchy
@@ -148,14 +136,23 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 				self.__setPathListingPath()
 				break
 
-	def _titleFormat( self ) :
+	def _affectedNodes( self, nodeSet ) :
 
-		return GafferUI.NodeSetEditor._titleFormat(
-			self,
-			_maxNodes = 1 if self.__plug is not None else 0,
-			_reverseNodes = True,
-			_ellipsis = False
-		)
+		affected = Gaffer.StandardSet()
+
+		self.__plug = None
+		self.__plugParentChangedConnection = None
+		node = nodeSet[-1] if len(nodeSet) else None
+		if node is not None :
+			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ]
+			if len( outputScenePlugs ) :
+				self.__plug = outputScenePlugs[0]
+				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
+
+		if self.__plug :
+			affected.add( self.__plug.node() )
+
+		return affected
 
 	def __plugParentChanged( self, plug, oldParent ) :
 
