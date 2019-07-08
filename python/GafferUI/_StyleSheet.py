@@ -623,10 +623,12 @@ _styleSheet = string.Template(
 	}
 
 	QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
+		border-color: $brightColor;
 		border-bottom-color: $background; /* blend into frame below */
 	}
 
 	QTabwidget QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
+		border-color: $brightColor;
 		border-bottom-color: $backgroundRaised; /* blend into frame below */
 	}
 
