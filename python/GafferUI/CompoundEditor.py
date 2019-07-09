@@ -55,7 +55,8 @@ class CompoundEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, children=None, detachedPanels=None, windowState=None, **kw ) :
 
-		self.__splitContainer = _SplitContainer( borderWidth = 2 )
+		# We have 1px extra padding within the splits themselves to accommodate highlighting
+		self.__splitContainer = _SplitContainer( borderWidth = 5 )
 
 		GafferUI.Editor.__init__( self, self.__splitContainer, scriptNode, **kw )
 

@@ -43,7 +43,7 @@ from Qt import QtCore
 class Dialogue( GafferUI.Window ) :
 
 	## \todo Remove the deprecated resizeable argument
-	def __init__( self, title, borderWidth=8, resizeable=None, sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def __init__( self, title, borderWidth=6, resizeable=None, sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Window.__init__( self, title, borderWidth, resizeable, sizeMode=sizeMode, **kw )
 
@@ -51,7 +51,7 @@ class Dialogue( GafferUI.Window ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
 
-		self.__column.append( GafferUI.Frame(), True )
+		self.__column.append( GafferUI.Frame( borderWidth = 0 ), True )
 
 		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=8 )
 		self.__column.append( self.__buttonRow )

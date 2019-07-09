@@ -213,7 +213,7 @@ class DispatcherWindow( GafferUI.Window ) :
 
 		with self :
 
-			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) :
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 6 ) :
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Dispatcher" )
