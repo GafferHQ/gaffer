@@ -115,7 +115,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 		{
 		}
 
-		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
+		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables, bool external ) override
 		{
 			if( isSubclassed() )
 			{
@@ -126,7 +126,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 					if( f )
 					{
 						list pythonInputs, pythonOutputs, pythonContextVariables;
-						f( ExpressionPtr( node ), expression, pythonInputs, pythonOutputs, pythonContextVariables );
+						f( ExpressionPtr( node ), expression, pythonInputs, pythonOutputs, pythonContextVariables, external );
 
 						container_utils::extend_container( inputs, pythonInputs );
 						container_utils::extend_container( outputs, pythonOutputs );

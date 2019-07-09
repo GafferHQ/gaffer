@@ -113,7 +113,13 @@ class GAFFER_API Expression : public ComputeNode
 				/// that are read from and written to by the expression, and the
 				/// contextVariables array with the names of context variables the
 				/// expression will access.
-				virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) = 0;
+				///
+				/// If the "external" flag is set True, plug paths are relative to
+				/// the parent of the node, rather than the node itself.
+				/// Expressions in external format are not executed, but they do
+				/// need to be parsed in order to get the list of plugs to create
+				/// internal counterparts for while setting up an expression.
+				virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables, bool external = false ) = 0;
 				/// Executes the last parsed expression in the specified context, using the values
 				/// provided by proxyInputs and returning an array containing a value for
 				/// each output plug. The results returned will later be passed to apply()

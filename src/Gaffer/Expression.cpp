@@ -133,7 +133,7 @@ void Expression::setExpression( const std::string &expression, const std::string
 	std::vector<ValuePlug *> inPlugs, outPlugs;
 	std::vector<IECore::InternedString> contextNames;
 
-	engine->parse( this, expression, inPlugs, outPlugs, contextNames );
+	engine->parse( this, expression, inPlugs, outPlugs, contextNames, true );
 
 	// Validate that the expression doesn't read from and write
 	// to the same plug, since circular dependencies aren't allowed.
@@ -177,14 +177,17 @@ void Expression::setExpression( const std::string &expression, const std::string
 	// out in the wild. This allows us to account for changes to
 	// node/plug names in getExpression(), where we convert back
 	// to the external form.
-
-	expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
+	std::string internalExpression = transcribe( expression, /* toInternalForm = */ true );
+	expressionPlug()->setValue( internalExpression );
 
 	Action::enact(
 		this,
 		boost::bind( boost::ref( expressionChangedSignal() ), this ),
 		Action::Function() // does nothing
 	);
+
+	std::vector<ValuePlug *> internalInPlugs, internalOutPlugs;
+	engine->parse( this, internalExpression, internalInPlugs, internalOutPlugs, contextNames );
 }
 
 std::string Expression::getExpression( std::string &engine ) const
@@ -512,7 +515,6 @@ void Expression::plugSet( const Plug *plug )
 
 	m_contextNames.clear();
 	m_engine = Engine::create( engineType );
-	expression = transcribe( expression, /* toInternalForm = */ false );
 	std::vector<ValuePlug *> inPlugs, outPlugs;
 	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
 }
