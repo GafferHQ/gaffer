@@ -214,6 +214,28 @@ bool replacementGreater( const Replacement &lhs, const Replacement &rhs )
 	return lhs.first.size() > rhs.first.size();
 }
 
+std::pair<string, int> plugNameKey( const string &name )
+{
+	size_t lastLetter = name.find_last_not_of( "0123456789" );
+	if( lastLetter == string::npos )
+	{
+		return std::pair<string,int>( "", stoi( name ) );
+	}
+	else if( lastLetter == name.size() - 1 )
+	{
+		return std::pair<string,int>( name, -1 );
+	}
+	else
+	{
+		return std::pair<string,int>( name.substr( 0, lastLetter + 1 ), stoi( name.substr( lastLetter + 1 ) ) );
+	}
+}
+
+bool plugNameLess( const string &lhs, const string &rhs )
+{
+	return plugNameKey( lhs ) < plugNameKey( rhs );
+}
+
 class OSLExpressionEngine : public Gaffer::Expression::Engine
 {
 
@@ -225,7 +247,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		{
 		}
 
-		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
+		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables, bool external ) override
 		{
 			m_inParameters.clear();
 			m_outSymbols.clear();
@@ -239,11 +261,11 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			// Find the plugs from their paths, and fill inputs and outputs appropriately.
 			for( vector<string>::const_iterator it = inPlugPaths.begin(), eIt = inPlugPaths.end(); it != eIt; ++it )
 			{
-				inputs.push_back( plug( node, *it ) );
+				inputs.push_back( plug( node, *it, external ) );
 			}
 			for( vector<string>::const_iterator it = outPlugPaths.begin(), eIt = outPlugPaths.end(); it != eIt; ++it )
 			{
-				outputs.push_back( plug( node, *it ) );
+				outputs.push_back( plug( node, *it, external ) );
 			}
 
 			// Create the source code for an OSL shader containing our expression.
@@ -594,11 +616,23 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					inPaths.push_back( plugPath );
 				}
 			}
+
+			// Correctly sort plugs with numeric suffixes
+			// This is important because we rely on order of the list of plugs returned
+			// from parse to match the order the child plugs of the expression were
+			// created in ( p0, p1, ..., p10, p11, ... )
+			std::sort( inPaths.begin(), inPaths.end(), plugNameLess );
+			std::sort( outPaths.begin(), outPaths.end(), plugNameLess );
+			
 		}
 
-		static ValuePlug *plug( Expression *node, const std::string &plugPath )
+		static ValuePlug *plug( Expression *node, const std::string &plugPath, bool external )
 		{
-			Node *plugScope = node->parent<Node>();
+			Node *plugScope = node;
+			if( external )
+			{
+				plugScope = node->parent<Node>();
+			}
 			GraphComponent *descendant = plugScope->descendant( plugPath );
 			if( !descendant )
 			{
