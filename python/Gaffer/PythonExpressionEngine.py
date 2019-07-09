@@ -51,16 +51,25 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		Gaffer.Expression.Engine.__init__( self )
 
-	def parse( self, node, expression, inPlugs, outPlugs, contextNames ) :
+	def parse( self, node, expression, inPlugs, outPlugs, contextNames, external ) :
 
 		parser = _Parser( expression )
 
 		self.__expression = expression
-		self.__inPlugPaths = list( parser.plugReads )
-		self.__outPlugPaths = list( parser.plugWrites )
 
-		inPlugs.extend( [ self.__plug( node, p ) for p in self.__inPlugPaths ] )
-		outPlugs.extend( [ self.__plug( node, p ) for p in self.__outPlugPaths ] )
+		# Correctly sort plugs with numeric suffixes
+		# This is important because we rely on order of the list of plugs returned
+		# from parse to match the order the child plugs of the expression were
+		# created in ( p0, p1, ..., p10, p11, ... )
+		def numericKey( text ):
+			m = re.match( "^(.*[^0-9])?([0-9]*)$", text ).groups()
+			return ( m[0], int( m[1] or -1 ) )
+
+		self.__inPlugPaths = sorted( parser.plugReads, key = numericKey )
+		self.__outPlugPaths = sorted( parser.plugWrites, key = numericKey )
+
+		inPlugs.extend( [ self.__plug( node, p, external ) for p in self.__inPlugPaths ] )
+		outPlugs.extend( [ self.__plug( node, p, external ) for p in self.__outPlugPaths ] )
 		contextNames.extend( parser.contextReads )
 
 	def execute( self, context, inputs ) :
@@ -194,9 +203,12 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return result
 
-	def __plug( self, node, plugPath ) :
+	def __plug( self, node, plugPath, external ) :
 
-		plug = node.parent().descendant( plugPath )
+		if external:
+			plug = node.parent().descendant( plugPath )
+		else:
+			plug = node.descendant( plugPath )
 		if isinstance( plug, Gaffer.ValuePlug ) :
 			return plug
 
