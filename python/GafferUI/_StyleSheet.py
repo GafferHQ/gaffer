@@ -576,8 +576,8 @@ _styleSheet = string.Template(
 	}
 
 	QTabWidget[gafferNumChildren="0"]::pane {
-		background-color: $backgroundDark;
-		border-color: $backgroundDark;
+		background-color: transparent;
+		border-color: transparent;
 	}
 
 	QTabWidget QTabWidget::pane {
@@ -623,10 +623,12 @@ _styleSheet = string.Template(
 	}
 
 	QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
+		border-color: $brightColor;
 		border-bottom-color: $background; /* blend into frame below */
 	}
 
 	QTabwidget QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
+		border-color: $brightColor;
 		border-bottom-color: $backgroundRaised; /* blend into frame below */
 	}
 
