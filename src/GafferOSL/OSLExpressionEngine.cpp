@@ -702,7 +702,11 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 			for( int i = 0, e = inPlugPaths.size(); i < e; ++i )
 			{
-				string parameter = "_" + inPlugPaths[i];
+				string parameter = inPlugPaths[i];
+				if( parameter[0] != '_' )
+				{
+					parameter = "_" + parameter;
+				}
 				replace_all( parameter, ".", "_" );
 				replace_all( result, "parent." + inPlugPaths[i], parameter );
 				inParameters.push_back( ustring( parameter ) );
@@ -710,7 +714,11 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 			for( int i = 0, e = outPlugPaths.size(); i < e; ++i )
 			{
-				string parameter = "_" + outPlugPaths[i];
+				string parameter = outPlugPaths[i];
+				if( parameter[0] != '_' )
+				{
+					parameter = "_" + parameter;
+				}
 				replace_all( parameter, ".", "_" );
 				replace_all( result, "parent." + outPlugPaths[i], parameter );
 				outParameters.push_back( ustring( parameter ) );
