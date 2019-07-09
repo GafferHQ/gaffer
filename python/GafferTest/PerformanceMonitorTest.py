@@ -208,7 +208,11 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( m.allStatistics() ), 2 )
 
-		delta = 0.2 if GafferTest.inCI() else 0.01
+		# 1.0 is an excessively wide tolerance but we've seen huge variations
+		# in CI due to machine contention. We're leaving the test in as it
+		# would potentially still catch some catastrophic orders-of-magnitude
+		# timing increase bug...
+		delta = 1.0 if GafferTest.inCI() else 0.01
 
 		self.assertEqual( m.plugStatistics( n1["out"] ).hashCount, 1 )
 		self.assertEqual( m.plugStatistics( n1["out"] ).computeCount, 1 )
