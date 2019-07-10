@@ -51,8 +51,8 @@ class EditorTest( GafferUITest.TestCase ) :
 		scriptNode = Gaffer.ScriptNode()
 		application.root()["scripts"].addChild( scriptNode )
 
-		scriptNode["write"] = Gaffer.ObjectWriter()
-		scriptNode.selection().add( scriptNode["write"] )
+		scriptNode["random"] = Gaffer.Random()
+		scriptNode.selection().add( scriptNode["random"] )
 
 		for type in GafferUI.Editor.types() :
 			editor = GafferUI.Editor.create( type, scriptNode )
