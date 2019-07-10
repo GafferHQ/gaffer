@@ -139,6 +139,7 @@ from TweakPlugTest import TweakPlugTest
 from ContextSanitiserTest import ContextSanitiserTest
 from SetVisualiserTest import SetVisualiserTest
 
+from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *
 
 if __name__ == "__main__":
