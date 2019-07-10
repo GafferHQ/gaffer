@@ -64,6 +64,13 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"userDefault", "/",
+			# Base class hides this if its not in use, but it's still
+			# pretty useful for the Parent node, so we make it visible
+			# unconditionally again.
+			## \todo There is an argument that this usage could be
+			#  made redundant by a MergeHierarchy node of some sort.
+			#  See how that pans out.
+			"layout:visibilityActivator", "",
 
 		],
 

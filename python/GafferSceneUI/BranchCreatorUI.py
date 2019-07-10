@@ -53,6 +53,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"layout:activator:filterNotConnected", lambda node : node["filter"].getInput() is None,
+	"layout:activator:parentInUse", lambda node : node["parent"].getInput() is not None or node["parent"].getValue() != "",
 
 	plugs = {
 
@@ -64,6 +65,10 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
 			"layout:activator", "filterNotConnected",
+			# We'd prefer users to use the `filter` rather than the `parent` plug.
+			# Hide it if it isn't already being used (from a time before the introduction
+			# of the filter).
+			"layout:visibilityActivator", "parentInUse",
 
 		],
 
