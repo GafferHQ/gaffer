@@ -1454,6 +1454,18 @@ class ExpressionTest( GafferTest.TestCase ) :
 		finally:
 			Gaffer.ValuePlug.setCacheMemoryLimit( prevMemory )
 
+		# Now test that the expressions still serialise OK, because our process for loading
+		# expressions with misordered plugs could have messed something up
+		ss2 = s.serialise()
+		del s
+
+		s = Gaffer.ScriptNode()
+		s.execute( ss2 )
+		self.assertEqual( s["dest"]["p"].getValue(), imath.V3f( 1.1, 2.2, 3.3 ) )
+		self.assertEqual( s["dest1"]["p"].getValue(), imath.V3f( 1.1, 2.2, 3.3 ) )
+		self.assertEqual( s["dest2"]["p"].getValue(), imath.V3f( 1.1, 2.2, 3.3 ) )
+
+
 	def testIndependentOfOrderOfPlugNames( self ) :
 		# We shouldn't depend on p0 being the first plug mentioned in the expression - as long as p0 is assigned
 		# correctly, the expression should still work

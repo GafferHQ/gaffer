@@ -52,6 +52,52 @@
 using namespace IECore;
 using namespace Gaffer;
 
+namespace { 
+
+bool reorderChildren( ValuePlug *parent, std::vector<ValuePlug *> children )
+{
+	bool mismatch = false;
+	for( unsigned int i = 0; i < children.size(); i++ )
+	{
+		if( children[i] != parent->children()[i] )
+		{
+			mismatch = true;
+		}
+	}
+
+	if( mismatch )
+	{
+		// The order currently doesn't match - we can fix this by removing all children
+		// and readding them in order
+		for( auto i : children )
+		{
+			i->setName( "TEMP" );
+		}
+
+		int index = 0;
+		for( auto i : children )
+		{
+			Plug *input = i->getInput();
+			Plug::OutputContainer outputs = i->outputs();
+			for( auto j : outputs )
+			{
+				j->setInput( nullptr );
+			}
+			parent->removeChild( i );
+			parent->addChild( i );
+			i->setInput( input );
+			for( auto j : outputs )
+			{
+				j->setInput( i );
+			}
+			i->setName( "p" + std::to_string( index++ ) );
+		}
+	}
+	return mismatch;
+}
+
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
 // Expression implementation
 //////////////////////////////////////////////////////////////////////////
@@ -515,6 +561,44 @@ void Expression::plugSet( const Plug *plug )
 	expression = transcribe( expression, /* toInternalForm = */ false );
 	std::vector<ValuePlug *> inPlugs, outPlugs;
 	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
+
+
+	// We depend on the order of the inPlugs listed by the expression engine
+	// to match the order of our internal plugs, but expression engines
+	// can return arbitrary orders.  We need to reverse engineer the order
+	// of internal plugs that would be consistent with the order picked by
+	// the expression engine, and check if the order of
+	// our internal plugs still matches
+	std::vector<ValuePlug *> internalInPlugs, internalOutPlugs;
+
+	for( auto i : outPlugs )
+	{
+		internalOutPlugs.push_back( i->getInput<ValuePlug>() );
+	}
+
+	for( auto i : inPlugs )
+	{
+		
+		for( unsigned int j = 0; j < inPlug()->children().size(); j++ )
+		{
+			ValuePlug *child = inPlug()->getChild<ValuePlug>( j );
+			if( child->getInput() == i )
+			{
+				internalInPlugs.push_back( child );
+			}
+		}
+	}
+
+	bool needsUpdate = false;
+	needsUpdate |= reorderChildren( inPlug(), internalInPlugs );
+	needsUpdate |= reorderChildren( outPlug(), internalOutPlugs );
+
+	if( needsUpdate )
+	{
+		// We had to reorder the internal plugs, so now we also need to rewrite the 
+		// actual stored expression again.
+		expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
