@@ -282,7 +282,7 @@ options.Add(
 		"GAFFERCORTEX",
 		"Builds and installs the GafferCortex modules. These are deprecated and will "
 		"be removed completely in a future version.",
-		True
+		False
 	)
 )
 
