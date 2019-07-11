@@ -183,7 +183,7 @@ class GAFFERSCENEUI_API LightBlockerVisualiser : public LightFilterVisualiser
 		LightBlockerVisualiser();
 		~LightBlockerVisualiser() override;
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const override;
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -211,7 +211,7 @@ LightBlockerVisualiser::~LightBlockerVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr LightBlockerVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr LightBlockerVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
 	InternedString metadataTarget;
 	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, filterShaderNetwork, metadataTarget );

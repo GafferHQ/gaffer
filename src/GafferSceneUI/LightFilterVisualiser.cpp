@@ -164,7 +164,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 		}
 
 		IECoreGL::ConstStatePtr curState = nullptr;
-		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( attributeName, filterShaderNetwork, lightShaderNetwork, curState );
+		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( attributeName, filterShaderNetwork, lightShaderNetwork, attributes, curState );
 
 		if( curVis )
 		{
