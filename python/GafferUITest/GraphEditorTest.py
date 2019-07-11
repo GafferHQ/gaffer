@@ -113,7 +113,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 			graphEditor = GafferUI.GraphEditor( s )
 
 		w.setVisible( True )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		def assertLower( graphGadget, n1, n2 ) :
 
@@ -123,14 +123,14 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		assertLower( graphEditor.graphGadget(), s["n2"], s["n1"] )
 
 		graphEditor.graphGadget().setRoot( s["b"] )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		self.assertEqual( graphEditor.graphGadget().unpositionedNodeGadgets(), [] )
 		assertLower( graphEditor.graphGadget(), s["b"]["n2"], s["b"]["n1"] )
 
 		s["b"]["n3"] = GafferTest.AddNode()
 		s["b"]["n3"]["op1"].setInput( s["b"]["n2"]["sum"] )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		self.assertEqual( graphEditor.graphGadget().unpositionedNodeGadgets(), [] )
 		assertLower( graphEditor.graphGadget(), s["b"]["n3"], s["b"]["n2"] )
