@@ -78,6 +78,10 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	attributes->addChild( new NameValuePlug( "gl:curvesPrimitive:glLineWidth", new IECore::FloatData( 1.0 ), false, "curvesPrimitiveGLLineWidth" ) );
 	attributes->addChild( new NameValuePlug( "gl:curvesPrimitive:ignoreBasis", new IECore::BoolData( false ), false, "curvesPrimitiveIgnoreBasis" ) );
 
+	// light visualisers
+
+	attributes->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ), false, "maxTextureResolution" ) );
+
 }
 
 OpenGLAttributes::~OpenGLAttributes()

@@ -74,7 +74,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
 		static IECoreGL::ConstRenderablePtr pointRays( float radius = 0 );
 		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius );
-		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName );
+		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName, int maxTextureResolution );
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
 
 	private :

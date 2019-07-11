@@ -266,7 +266,9 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	if( type && type->readable() == "environment" )
 	{
 		const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphere( finalColor, textureName ) ) );
+		const IntData *textureMaxResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
+		const int textureMaxResolution = textureMaxResolutionData ? textureMaxResolutionData->readable() : std::numeric_limits<int>::max();
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphere( finalColor, textureName, textureMaxResolution ) ) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
@@ -563,7 +565,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphere( const Imath::Color3f &color, const std::string &textureFileName )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphere( const Imath::Color3f &color, const std::string &textureFileName, int textureMaxResolution )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 
@@ -578,8 +580,11 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphere( const I
 	IECore::CompoundObjectPtr parameters = new CompoundObject;
 	parameters->members()["lightMultiplier"] = new Color3fData( color );
 	parameters->members()["previewOpacity"] = new FloatData( 1 );
-	parameters->members()["mapSampler"] = new StringData( textureFileName );
 	parameters->members()["defaultColor"] = new Color3fData( Color3f( textureFileName == "" ? 1.0f : 0.0f ) );
+	parameters->members()["mapSampler"] = new StringData( textureFileName );
+
+	parameters->members()["mapSampler:maxResolution"] = new IntData( textureMaxResolution );
+
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), IECoreGL::Shader::defaultVertexSource(), "", environmentSphereFragSource(), parameters )
 	);
