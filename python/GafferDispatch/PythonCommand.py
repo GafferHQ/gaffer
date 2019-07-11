@@ -152,12 +152,13 @@ class _VariablesDict( dict ) :
 		return dict.__getitem__( self, key )
 
 	def __update( self ) :
+		frame = self.__context.get( "frame", "NO FRAME" )
 
-		if self.__frame == self.__context.getFrame() :
+		if self.__frame == frame :
 			return
 
-		if self.__context.getFrame() not in self.__validFrames :
-			raise ValueError( "Invalid frame" )
+		if frame != "NO FRAME" and frame not in self.__validFrames :
+			raise ValueError( "Cannot access variables at frame outside range specified for PythonCommand" )
 
 		self.clear()
 		for plug in self.__variables.children() :
@@ -169,7 +170,7 @@ class _VariablesDict( dict ) :
 
 			self[name] = value
 
-		self.__frame = self.__context.getFrame()
+		self.__frame = frame
 
 class _Parser( ast.NodeVisitor ) :
 

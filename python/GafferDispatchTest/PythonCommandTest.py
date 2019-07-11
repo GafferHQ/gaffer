@@ -253,6 +253,75 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"].frames, [ 1, 2, 3, 4, 5 ] )
 		self.assertEqual( s["n"].numCalls, 1 )
 
+	def testSequenceModeVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["sequence"].setValue( True )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['variables']['NameValuePlug']['value'] = context.getFrame() ** 2;", "python" )
+
+		commandLines = inspect.cleandoc(
+			"""
+			self.testInt = variables["testInt"]
+			self.frames = frames
+			try :
+				self.numCalls += 1
+			except AttributeError :
+				self.numCalls = 1
+			"""
+		).split( "\n" )
+		s["n"]["command"].setValue( "\n".join( commandLines ) )
+
+		d = self.__dispatcher( frameRange = "1-5" )
+		self.assertRaisesRegexp( Exception, "Context has no entry named \"frame\"", d.dispatch, [ s[ "n" ] ] )
+
+		commandLines = inspect.cleandoc(
+			"""
+			self.testInt = []
+			for f in frames:
+				context.setFrame( f )
+				self.testInt.append( variables['testInt'])
+			"""
+		).split( "\n" ) + commandLines[1:]
+
+		s["n"]["command"].setValue( "\n".join( commandLines ) )
+
+		d.dispatch( [ s[ "n" ] ] )
+		self.assertEqual( s["n"].testInt, [ 1, 4, 9, 16, 25 ] )
+		self.assertEqual( s["n"].frames, [ 1, 2, 3, 4, 5 ] )
+		self.assertEqual( s["n"].numCalls, 1 )
+
+	def testSequenceModeStaticVariable( self ) :
+
+		# We shouldn't need to set a frame in order to read a variable that doesn't depend on frame
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["sequence"].setValue( True )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+
+		commandLines = inspect.cleandoc(
+			"""
+			self.testInt = variables["testInt"]
+			self.frames = frames
+			try :
+				self.numCalls += 1
+			except AttributeError :
+				self.numCalls = 1
+			"""
+		).split( "\n" )
+		s["n"]["command"].setValue( "\n".join( commandLines ) )
+
+		d = self.__dispatcher( frameRange = "1-5" )
+		d.dispatch( [ s[ "n" ] ] )
+		self.assertEqual( s["n"].testInt, 42 )
+		self.assertEqual( s["n"].frames, [ 1, 2, 3, 4, 5 ] )
+		self.assertEqual( s["n"].numCalls, 1 )
+
 	def testCannotAccessVariablesOutsideFrameRange( self ) :
 
 		# We don't want to allow access to variables outside the frame range,
@@ -267,7 +336,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		self.assertRaisesRegexp( Exception, "Invalid frame", n.execute )
+		self.assertRaisesRegexp( Exception, "Cannot access variables at frame outside range specified for PythonCommand", n.execute )
 
 	def testNonSequenceDispatch( self ) :
 
