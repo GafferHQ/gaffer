@@ -103,11 +103,15 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 		constructed["defaults"] = {}
 		constructed["specified"] = {}
 		constructed["defaults"]["empty"] = Gaffer.NameValuePlug()
+		constructed["defaults"]["partialEmpty"] = Gaffer.NameValuePlug()
+		constructed["defaults"]["partialEmpty"].addChild( Gaffer.StringPlug( "name", defaultValue = "key") )
 
 		# Note that if we specify the direction and flags without specifying argument names, this is ambiguous
 		# with the later forms of the constructor.  I guess this is OK since the old serialised forms
 		# of MemberPlug do include the argument names, and we want to deprecate this form anyway
 		constructed["specified"]["empty"] = Gaffer.NameValuePlug( "foo", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		constructed["specified"]["partialEmpty"] = Gaffer.NameValuePlug( "foo", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		constructed["specified"]["partialEmpty"].addChild( Gaffer.StringPlug( "name", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = "key" ) )
 
 		constructed["defaults"]["fromData"] = Gaffer.NameValuePlug( "key", IECore.IntData(42) )
 		constructed["specified"]["fromData"] = Gaffer.NameValuePlug( "key", IECore.IntData(42), "foo", Gaffer.Plug.Direction.Out, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -142,6 +146,11 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 				self.assertNotIn( "name", spec )
 				self.assertNotIn( "value", defa )
 				self.assertNotIn( "value", spec )
+			elif k == "partialEmpty":
+				self.assertEqual( defa["name"].getValue(),  "key" )
+				self.assertEqual( spec["name"].getValue(),  "key" )
+				self.assertNotIn( "value", defa )
+				self.assertNotIn( "value", spec )
 			else:
 				self.assertEqual( defa["name"].getValue(),  "key" )
 				self.assertEqual( spec["name"].getValue(),  "key" )
@@ -154,7 +163,18 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 					self.assertEqual( spec["value"].getValue(),  42 )
 
 			if k == "empty":
-				# We don't support serialising NameValuePlugs without name or value
+				# A completely empty NameValuePlug is invalid, but we have to partially
+				# support it because old serialisation code will create these before
+				# the addChild's run to create name and value
+				self.assertCounterpart( defa )
+				self.assertCounterpart( spec )
+
+				# We shouldn't ever serialise invalid plugs though - if the children
+				# haven't been created by the time we try to serialise, that's a bug
+				self.assertRaises( RuntimeError, self.assertPlugSerialises, spec )
+			elif k == "partialEmpty":
+				# A NameValuePlug with a name but no value, on the other hand, is just
+				# broken
 				self.assertRaises( RuntimeError, self.assertPlugSerialises, spec )
 				self.assertRaises( RuntimeError, self.assertCounterpart, defa )
 				self.assertRaises( RuntimeError, self.assertCounterpart, spec )
