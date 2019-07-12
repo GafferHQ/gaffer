@@ -163,6 +163,10 @@ class execute( Gaffer.Application ) :
 		if not frames :
 			frames = [ scriptNode.context().getFrame() ]
 
+		# We want to use the frame set by executeSequence.   Remove any possibility of
+		# accidentally using the default frame set in the script
+		del context["frame"]
+
 		with context :
 			for node in nodes :
 				errorConnection = node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
