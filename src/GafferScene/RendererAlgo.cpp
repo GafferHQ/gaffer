@@ -722,7 +722,7 @@ void LightLinks::outputLightFilterLinks( const ScenePlug *scene )
 
 	tbb::parallel_for(
 		m_filterLinks.range(),
-		[this, scene]( FilterLinkMap::range_type &range )
+		[scene]( FilterLinkMap::range_type &range )
 		{
 			for( auto &f : range )
 			{

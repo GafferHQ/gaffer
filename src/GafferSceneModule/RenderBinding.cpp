@@ -253,9 +253,9 @@ object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, 
 	if( o.capturedLinks( type ) )
 	{
 		list l;
-		for( auto &o : *o.capturedLinks( type ) )
+		for( auto &s : *o.capturedLinks( type ) )
 		{
-			l.append( o );
+			l.append( s );
 		}
 		PyObject *set = PySet_New( l.ptr() );
 		return object( handle<>( set ) );
