@@ -1820,18 +1820,15 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			AtNode *node = m_instance.node();
-			if( !node )
-			{
-				return true;
-			}
-
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			if( arnoldAttributes->apply( node, m_attributes.get() ) )
+
+			AtNode *node = m_instance.node();
+			if( !node || arnoldAttributes->apply( node, m_attributes.get() ) )
 			{
 				m_attributes = arnoldAttributes;
 				return true;
 			}
+
 			return false;
 		}
 
@@ -1930,21 +1927,18 @@ class ArnoldLightFilter : public ArnoldObjectBase
 				return false;
 			}
 
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			m_attributes = arnoldAttributes;
-
 			// Update light filter shader.
 
-			if( arnoldAttributes->lightFilterShader() )
+			if( m_attributes->lightFilterShader() )
 			{
 				if( !m_lightFilterShader )
 				{
-					m_lightFilterShader = new ArnoldShader( arnoldAttributes->lightFilterShader(), m_nodeDeleter, "lightFilter:" + m_name, m_parentNode );
+					m_lightFilterShader = new ArnoldShader( m_attributes->lightFilterShader(), m_nodeDeleter, "lightFilter:" + m_name, m_parentNode );
 					applyLightFilterTransform();
 				}
 				else
 				{
-					bool keptRootShader = m_lightFilterShader->update( arnoldAttributes->lightFilterShader() );
+					bool keptRootShader = m_lightFilterShader->update( m_attributes->lightFilterShader() );
 					if( !keptRootShader )
 					{
 						// Couldn't update existing shader in place because the shader type
@@ -2062,15 +2056,13 @@ class ArnoldLight : public ArnoldObjectBase
 				return false;
 			}
 
-			m_attributes = arnoldAttributes;
-
 			// Update light shader.
 
-			if( arnoldAttributes->lightShader() )
+			if( m_attributes->lightShader() )
 			{
 				if( !m_lightShader )
 				{
-					m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name, m_parentNode );
+					m_lightShader = new ArnoldShader( m_attributes->lightShader(), m_nodeDeleter, "light:" + m_name, m_parentNode );
 
 					applyLightTransform();
 
@@ -2091,7 +2083,7 @@ class ArnoldLight : public ArnoldObjectBase
 				}
 				else
 				{
-					bool keptRootShader = m_lightShader->update( arnoldAttributes->lightShader() );
+					bool keptRootShader = m_lightShader->update( m_attributes->lightShader() );
 					if( !keptRootShader )
 					{
 						// Couldn't update existing shader in place because the shader type
@@ -2115,8 +2107,8 @@ class ArnoldLight : public ArnoldObjectBase
 			// Update filter links if needed.
 
 			if(
-				( oldAttributes && oldAttributes->lightFilterShaders() != arnoldAttributes->lightFilterShaders() ) ||
-				( !oldAttributes && arnoldAttributes->lightFilterShaders().size() )
+				( oldAttributes && oldAttributes->lightFilterShaders() != m_attributes->lightFilterShaders() ) ||
+				( !oldAttributes && m_attributes->lightFilterShaders().size() )
 			)
 			{
 				updateLightFilterLinks();
