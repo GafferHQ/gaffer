@@ -17,7 +17,15 @@ Do not confuse scripts with active node graphs or expressions: when a node graph
 
 ## Python scripting API basics ##
 
+- [Tutorial: Node Graph Editing in Python](TutorialNodeGraphEditingInPython/index.md)
 - [The Python Editor](ThePythonEditor/index.md)
+
+
+## Intermediate Python scripting API ##
+
+- [Tutorial: Startup Config 1; Custom Global Context Variables](TutorialStartupConfig1/index.md)
+- [Tutorial: Startup Config 2; Custom Global Context Variables](TutorialStartupConfig2/index.md)
+- [Tutorial: Startup Config 3; Custom Global Context Variables](TutorialStartupConfig3/index.md)
 
 <!-- TOC -->
 
@@ -27,4 +35,9 @@ Do not confuse scripts with active node graphs or expressions: when a node graph
     :hidden:
 
     ThePythonEditor/index.md
+    TutorialNodeGraphEditingInPython/index.md
+    TutorialQueryingAScene/index.md
+    TutorialStartupConfig1/index.md
+    TutorialStartupConfig2/index.md
+    TutorialStartupConfig3/index.md
 ```

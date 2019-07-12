@@ -1,4 +1,4 @@
-# Tutorial: Startup Config 3, Custom Node Menu Entries # 
+# Tutorial: Startup Config 3; Custom Node Menu Entries # 
 
 In this final part of the multi-part startup config tutorial, we will demonstrate a startup config that adds a custom entry to the node menu.
 
@@ -136,6 +136,6 @@ Each of the three startup configs in this tutorial series provided relatively si
 
 ## See also ##
 
-- [Tutorial: Startup Config 1, Custom Global Context Variables](../CreatingConfigurationFiles1/index.md)
-- [Tutorial: Startup Config 2, Custom Bookmarks](../CreatingConfigurationFiles2/index.md)
-- [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup)
+- [Tutorial: Startup Config 1; Custom Global Context Variables](../TutorialStartupConfig1/index.md)
+- [Tutorial: Startup Config 2; Custom Bookmarks](../TutorialStartupConfig2/index.md)
+- [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/master/startup)

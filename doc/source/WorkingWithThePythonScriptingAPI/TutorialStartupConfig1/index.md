@@ -1,12 +1,12 @@
-# Tutorial: Startup Config 1, Custom Global Context Variables #
+# Tutorial: Startup Config 1; Custom Global Context Variables #
 
 Gaffer actually consists of multiple applications split between its major functions, such as GUI (the main application interface), Dispatch, Execute, and Stats. These applications are easy to extend and customize. On startup, each can load any number of arbitrary Python scripts, called **startup configs**, from one or more paths. Each startup config can call API hooks for extending or adding functionality to its parent app.
 
 In this three-part tutorial, we will walk through the following example startup configs that extend the GUI app:
 
 1. <a href="#customvariables-py">customVariables.py</a>: Adds a custom global context variable to node graphs.
-2. [customBookmarks.py](../CreatingConfigurationFiles2/index.md): Adds file path bookmarks to the various file browsers in Gaffer's interface.
-3. [customNodes.py](../CreatingConfigurationFiles3/index.md): Adds a custom entry to the node menu.
+2. [customBookmarks.py](../TutorialStartupConfig2/index.md): Adds file path bookmarks to the various file browsers in Gaffer's interface.
+3. [customNodes.py](../TutorialStartupConfig3/index.md): Adds a custom entry to the node menu.
 
 In this first config, we will add a global context variable called `${project:resources}` that points to the `/resources` directory in the Gaffer installation directory. This context variable will make it slightly easier to reach the directory from any string plug that load files. Since we'll add the context variable using a startup config, it will be automatically added to every node graph Gaffer opens or creates.
 
@@ -178,6 +178,6 @@ In the next part of this tutorial, we will demonstrate some actual GUI modificat
 
 ## See also ##
 
-- [Tutorial: Startup Config 2, Custom Bookmarks](../CreatingConfigurationFiles2/index.md)
-- [Tutorial: Startup Config 3, Custom Node Menu Entries](../CreatingConfigurationFiles3/index.md)
-- [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup)
+- [Tutorial: Startup Config 2; Custom Bookmarks](../TutorialStartupConfig2/index.md)
+- [Tutorial: Startup Config 3; Custom Node Menu Entries](../TutorialStartupConfig3/index.md)
+- [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/master/startup)

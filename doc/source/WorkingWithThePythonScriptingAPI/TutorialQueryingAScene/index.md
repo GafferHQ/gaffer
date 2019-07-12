@@ -1,5 +1,4 @@
-Querying A Scene
-================
+# Tutorial: Querying a Scene #
 
 Gaffer has a simple API for querying the scenes that are output from nodes. In this tutorial we'll see how to use this API to traverse a scene hierarchy and examine its state.
 
@@ -303,3 +302,7 @@ visit( root["StandardOptions"]["out"], "/" )
 ```
 
 That's pretty much all there is to it. There's a little more to learn in terms of the APIs for the particular Cortex objects that might be returned by a query, but the above examples hopefully provide a good starting point for exploration.
+
+## See also ##
+
+- [The Python Editor](../ThePythonEditor/index.md)

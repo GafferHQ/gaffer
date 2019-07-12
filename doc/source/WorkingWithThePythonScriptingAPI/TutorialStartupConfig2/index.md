@@ -1,4 +1,4 @@
-# Tutorial: Startup Config 2, Custom Bookmarks ##
+# Tutorial: Startup Config 2; Custom Bookmarks ##
 
 In this second startup config of the tutorial, we will add default path bookmarks to Gaffer's file browsers.
 
@@ -138,7 +138,7 @@ As you can see, the runtime Python objects of an app, in this case the GUI's boo
 
 ## See also ##
 
-- [Tutorial: Startup Config 3, Custom Node Menu Entries](../CreatingConfigurationFiles3/index.md)
-- [Tutorial: Startup Config 1, Custom Global Context Variables](../CreatingConfigurationFiles1/index.md)
-- [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup)
+- [Tutorial: Startup Config 3; Custom Node Menu Entries](../TutorialStartupConfig3/index.md)
+- [Tutorial: Startup Config 1; Custom Global Context Variables](../TutorialStartupConfig1/index.md)
+- [Gaffer's default startup configs](https://github.com/GafferHQ/gaffer/tree/master/startup)
 

@@ -7,7 +7,7 @@
 
 The _Python Editor_ is a type of editor in the main Gaffer application that can execute arbitrary Python code with a built-in interpreter. It enables you to modify the node graph, try commands and syntax, and inspect data. In the default layout, it resides in the bottom-right panel, in a tab next to the _Hierarchy View_.
 
-Each _Python Editor_ is a separate instance. Python modules that you `import` will remain loaded in that particular editor for its lifetime. However, you never need to `import` the [Gaffer](../../Reference/NodeReference/Gaffer/index.md) or [IECore](../../Reference/NodeReference/IECore/index.md) modules. They are loaded by default.
+Each _Python Editor_ is a separate instance. Python modules that you `import` will remain loaded in that particular editor for its lifetime. However, you never need to `import` the [Gaffer](../../Reference/NodeReference/Gaffer/index.md) or IECore modules. They are loaded by default.
 
 The _Python Editor_ is split into two areas. The bottom-half is the input field. The top-half is the output. The input field of the _Python Editor_ functions like a basic plain text editor. You can type, select, cut, copy, paste, and execute code.
 
@@ -31,7 +31,7 @@ Executing code will erase the input field, just like in a debug console. However
 To execute code with the _Python Editor:_
 
 1. Enter code into the input field.
-2. Hit <kbd>Control</kbd> + <kbd>Enter</kbd>.
+2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd>.
 
 > Tip :
 > A useful debugging trick is to highlight any part of the input code in order to preserve the whole input for reuse.
@@ -74,5 +74,7 @@ Scene data               *Scene Inspector* Click and drag         |values|     `
 
 ## See also ##
 
+- [Tutorial: Node Graph Editing in Python](../TutorialNodeGraphEditingInPython/index.md)
+- [Tutorial: Querying a Scene](../TutorialQueryingAScene/index.md)
 - [Scripting Reference](../../Reference/ScriptingReference/index.md)
 - [Controls and Shortcuts](../../Interface/ControlsAndShortcuts/index.md)

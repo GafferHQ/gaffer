@@ -14,4 +14,5 @@ Here you can learn the fundamentals of constructing and editing node graphs in G
     BoxNode/index.md
     PerformanceBestPractices/index.md
     UsingThePerformanceMonitor/index.md
+    TutorialUsingTheOSLCodeNode/index.md
 ```

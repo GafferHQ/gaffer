@@ -27,7 +27,7 @@ After [installing Gaffer](../../GettingStarted/InstallingGaffer/index.md), launc
 
 ## Importing a geometry scene cache ##
 
-As Gaffer is a tool primarily designed for lookdev, lighting, and VFX process automation, we expect that your sequence's modelling and animation will be created in an external tool like Maya, and then imported into Gaffer as a geometry/animation cache. Gaffer supports Alembic (.abc) and USD (.usdc and .usda) file formats, as well as its own native SceneCache (.scc) file format. Most scenes begin by importing geometry or images via one of the two types of Reader nodes: [SceneReader](../../Reference/NodeReference/GafferScene/SceneReader.md) or [ImageReader](../../Reference/NodeReference/GafferScene/ImageReader.md).
+As Gaffer is a tool primarily designed for lookdev, lighting, and VFX process automation, we expect that your sequence's modelling and animation will be created in an external tool like Maya, and then imported into Gaffer as a geometry/animation cache. Gaffer supports Alembic (.abc) and USD (.usdc and .usda) file formats, as well as its own native SceneCache (.scc) file format. Most scenes begin by importing geometry or images via one of the two types of Reader nodes: [SceneReader](../../Reference/NodeReference/GafferScene/SceneReader.md) or [ImageReader](../../Reference/NodeReference/GafferImage/ImageReader.md).
 
 First, load Gaffy's geometry cache with a SceneReader node:
 
@@ -501,7 +501,7 @@ As your final lesson in this tutorial, add the metallic shader to the rest of th
 7. Release the selection over the PathFilter node. This will add the locations as new values fields on the plug.
 
 > Tip :
-> Just as locations can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Control</kbd> (the cursor will change to ![the "remove objects" icon](images/removeObjects.png "Remove objects")).
+> Just as locations can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Ctrl</kbd> (the cursor will change to ![the "remove objects" icon](images/removeObjects.png "Remove objects")).
 
 Add and remove locations to the filter as you see fit. Remember to switch between the two _Viewers_ to check the render output as it updates. After adding Gaffy's hands and bolts to the filter, you should achieve an image similar to this:
 
@@ -519,5 +519,5 @@ You should now have a solid basis for further learning and exploration.
 
 ## See also ##
 
-- [Installing Gaffer](../../Installation/index.md)
+- [Installing Gaffer](../InstallingGaffer/index.md)
 - [Controls and Shorcuts](../../Interface/ControlsAndShortcuts/index.md)
