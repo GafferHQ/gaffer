@@ -107,3 +107,54 @@ MyButton : Add unit test
 
 Files changed:
 - MyButtonTest.py
+
+
+## Code reviews and labels ##
+
+### Label guidelines ###
+For labels, our primary concern is to clearly and consistently distinguish between Issue labels and Pull Request (PR) labels. 
+
+For an up-to-date list of Gaffer's GitHub labels, see the project's [Labels](https://github.com/GafferHQ/gaffer/labels) page.
+
+We have the following general specs for labels:
+- Unfortunately, there is currently no way to maintain separate lists of labels based on their intended use. Therefore, PR labels are prefixed with `pr-`.
+- PR labels that communicate that the PR needs immediate attention have high-intensity colors.
+- PR labels that communicate that the PR should not be merged yet have medium-intensity colors.
+- Issue labels have no prefix, and have low-intensity colors.
+
+#### Issue labels ####
+Examples: `arnold` `bug`
+
+The purpose of Issue labels is to help us filter and sort our active Issues. We have chosen very subtle colors and short names for them.
+
+If you're creating an Issue, please apply as many of these labels that match. **Do not** apply these labels to PRs.
+
+#### Pull Request labels ####
+Examples: `pr-hold` `pr-revision`
+
+The purpose of PR labels is to signal which PRs can't be merged yet. A PR could be unready for merging for two reasons: the PR needs more work (`pr-revision` and `pr-docs`) or the PR must wait for something else to happen in the code base (`pr-hold` and `pr-blocked`).
+
+### Pull Request reviews ###
+In order to effectively and efficiently maintain our Pull Requests (PRs), our contributors and reviewers must follow these PR guidelines:
+
+#### When creating a PR (contributor) ####
+* Assign yourself as the PR's Assignee. The Assignee is the PR's stakeholder/owner.
+* Assign at least one contributor as a Reviewer. We will not merge any PRs that haven't been reviewed.
+
+#### When reviewing a PR (reviewer) ####
+* Make sure to _Start a review_. Do not simply leave comments on their own.
+> **Tip:** After making line-by-line comment(s) in the _Files changed_ tab of a PR, you can collect all your comment(s) into a review by clicking _Start a review_ on the comments themselves, and then finish by clicking _Review changes_ at the top-right of the tab.
+* If you have asked for any changes, apply the `pr-revision` and/or `pr-docs` label.
+* If you are a collaborator, do not merge a PR that has either the `pr-revision` or `pr-docs` labels.
+
+#### When addressing a PR review (contributor) ####
+* Once you have pushed new commits to address the review, reply to each review comment with "Fixed in <sha1>", linking to the relevant commit. Do **not** click _Resolve conversation_.
+* If you think there may be more to discuss with the remaining review comments, reply or leave them as-is.
+* Once you believe you've addressed all requests, remove the `pr-revision` and/or `pr-docs` label(s).
+* Notify your reviewers that your PR is ready for another look by clicking the re-request icon in the _Reviewers_ section:![Re-request review](https://help.github.com/assets/images/help/pull_requests/request-re-review.png)
+
+#### When re-reviewing a PR (reviewer) ####
+* Click _Resolve conversation_ on review comments that the Assignee has addressed in their update.
+* Resolve or ask for updates on any review comments the Assignee hasn't responded to.
+* If follow-up changes to the PR are required, re-apply the `pr-revision` and/or `pr-docs` label(s).
+* If you are a project collaborator, and all feedback is addressed, and the PR does not have any pending reviews, you can merge the PR.
