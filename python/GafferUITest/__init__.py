@@ -116,6 +116,7 @@ from LayoutsTest import LayoutsTest
 from CompoundNumericNoduleTest import CompoundNumericNoduleTest
 from DocumentationAlgoTest import DocumentationAlgoTest
 from ExamplesTest import ExamplesTest
+from NodeSetEditorTest import NodeSetEditorTest
 
 if __name__ == "__main__":
 	unittest.main()
