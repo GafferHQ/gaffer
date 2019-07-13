@@ -281,15 +281,15 @@ void Render::execute() const
 		GafferScene::RendererAlgo::createOutputDirectories( globals.get() );
 	}
 
-	std::unique_ptr<PerformanceMonitor> performanceMonitor;
+	PerformanceMonitorPtr performanceMonitor;
 	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
 	{
 		if( d->readable() )
 		{
-			performanceMonitor.reset( new PerformanceMonitor );
+			performanceMonitor = new PerformanceMonitor;
 		}
 	}
-	Monitor::Scope performanceMonitorScope( performanceMonitor.get() );
+	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	RendererAlgo::outputOptions( globals.get(), renderer.get() );
 	RendererAlgo::outputOutputs( globals.get(), renderer.get() );
