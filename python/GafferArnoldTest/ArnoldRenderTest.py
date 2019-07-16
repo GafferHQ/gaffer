@@ -1201,5 +1201,19 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		return result
 
+	def testPerformanceMonitorDoesntCrash( self ) :
+
+		options = GafferScene.StandardOptions()
+
+		options["options"]["performanceMonitor"]["value"].setValue( True )
+		options["options"]["performanceMonitor"]["enabled"].setValue( True )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( options["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		render["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()
