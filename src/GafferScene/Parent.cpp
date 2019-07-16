@@ -63,14 +63,9 @@ const ScenePlug *Parent::childPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-void Parent::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool Parent::affectsBranchBound( const Gaffer::Plug *input ) const
 {
-	BranchCreator::affects( input, outputs );
-
-	if( input->parent<Gaffer::Plug>() == childPlug() && input != childPlug()->globalsPlug() )
-	{
-		outputs.push_back( outPlug()->getChild<Gaffer::Plug>( input->getName() ) );
-	}
+	return input == childPlug()->boundPlug();
 }
 
 void Parent::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -83,6 +78,11 @@ Imath::Box3f Parent::computeBranchBound( const ScenePath &parentPath, const Scen
 	return childPlug()->bound( branchPath );
 }
 
+bool Parent::affectsBranchTransform( const Gaffer::Plug *input ) const
+{
+	return input == childPlug()->transformPlug();
+}
+
 void Parent::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = childPlug()->transformHash( branchPath );
@@ -91,6 +91,11 @@ void Parent::hashBranchTransform( const ScenePath &parentPath, const ScenePath &
 Imath::M44f Parent::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return childPlug()->transform( branchPath );
+}
+
+bool Parent::affectsBranchAttributes( const Gaffer::Plug *input ) const
+{
+	return input == childPlug()->attributesPlug();
 }
 
 void Parent::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -103,6 +108,11 @@ IECore::ConstCompoundObjectPtr Parent::computeBranchAttributes( const ScenePath 
 	return childPlug()->attributes( branchPath );
 }
 
+bool Parent::affectsBranchObject( const Gaffer::Plug *input ) const
+{
+	return input == childPlug()->objectPlug();
+}
+
 void Parent::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = childPlug()->objectHash( branchPath );
@@ -111,6 +121,11 @@ void Parent::hashBranchObject( const ScenePath &parentPath, const ScenePath &bra
 IECore::ConstObjectPtr Parent::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return childPlug()->object( branchPath );
+}
+
+bool Parent::affectsBranchChildNames( const Gaffer::Plug *input ) const
+{
+	return input == childPlug()->childNamesPlug();
 }
 
 void Parent::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -123,14 +138,26 @@ IECore::ConstInternedStringVectorDataPtr Parent::computeBranchChildNames( const 
 	return childPlug()->childNames( branchPath );
 }
 
+bool Parent::affectsBranchSetNames( const Gaffer::Plug *input ) const
+{
+	return input == childPlug()->setNamesPlug();
+}
+
 void Parent::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	h = childPlug()->setNamesPlug()->hash();
 }
 
 IECore::ConstInternedStringVectorDataPtr Parent::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	return childPlug()->setNamesPlug()->getValue();
+}
+
+bool Parent::affectsBranchSet( const Gaffer::Plug *input ) const
+{
+	return input == childPlug()->setPlug();
 }
 
 void Parent::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const

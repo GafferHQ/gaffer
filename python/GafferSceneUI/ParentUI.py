@@ -58,10 +58,19 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The location which the child is parented under.
+			The location which the child is parented under. This is
+			ignored when a filter is connected, in which case the child
+			is parented under all the locations matched by the filter.
 			""",
 
 			"userDefault", "/",
+			# Base class hides this if its not in use, but it's still
+			# pretty useful for the Parent node, so we make it visible
+			# unconditionally again.
+			## \todo There is an argument that this usage could be
+			#  made redundant by a MergeHierarchy node of some sort.
+			#  See how that pans out.
+			"layout:visibilityActivator", "",
 
 		],
 

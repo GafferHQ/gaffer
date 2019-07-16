@@ -109,6 +109,17 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( d["out"] )
 		self.assertScenesEqual( d["out"], d["in"] )
 
+	def testInvalidTargetParent( self ) :
+
+		r = GafferScene.SceneReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/alembicFiles/cube.abc" )
+
+		d = GafferScene.Duplicate()
+		d["in"].setInput( r["out"] )
+		d["target"].setValue( "/notGroup1/pCube1" )
+
+		self.assertScenesEqual( d["in"], d["out"] )
+
 	def testNamePlug( self ) :
 
 		s = GafferScene.Sphere()

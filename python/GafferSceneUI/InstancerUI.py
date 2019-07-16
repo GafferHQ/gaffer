@@ -64,7 +64,9 @@ Gaffer.Metadata.registerNode(
 			The object on which to make the instances. The
 			position, orientation and scale of the instances
 			are taken from per-vertex primitive variables on
-			this object.
+			this object. This is ignored when a filter is
+			connected, in which case the filter specifies
+			multiple objects to make the instances from.
 			"""
 
 		],

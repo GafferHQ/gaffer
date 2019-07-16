@@ -491,46 +491,6 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		outputs.push_back( instanceChildNamesPlug() );
 	}
 
-	if(
-		input == namePlug() ||
-		input == instanceChildNamesPlug() ||
-		input == instancesPlug()->childNamesPlug()
-	)
-	{
-		outputs.push_back( outPlug()->childNamesPlug() );
-	}
-
-	if(
-		input == enginePlug() ||
-		input == namePlug() ||
-		input == instancesPlug()->boundPlug() ||
-		input == instancesPlug()->transformPlug() ||
-		input == instanceChildNamesPlug()
-	)
-	{
-		outputs.push_back( outPlug()->boundPlug() );
-	}
-
-	if(
-		input == enginePlug() ||
-		input == instancesPlug()->transformPlug()
-	)
-	{
-		outputs.push_back( outPlug()->transformPlug() );
-	}
-
-	if( input == instancesPlug()->objectPlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-
-	if(
-		input == instancesPlug()->attributesPlug() ||
-		input == enginePlug()
-	)
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
 }
 
 void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -601,10 +561,10 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		CompoundDataPtr result = new CompoundData;
 		for( int i = 0; i < numInstanceTypes; i++ )
 		{
-			// Sort and uniquify ids before converting to string			
+			// Sort and uniquify ids before converting to string
 			std::sort( indexedInstanceChildIds[i].begin(), indexedInstanceChildIds[i].end() );
 			auto last = std::unique( indexedInstanceChildIds[i].begin(), indexedInstanceChildIds[i].end() );
-			indexedInstanceChildIds[i].erase( last, indexedInstanceChildIds[i].end() ); 
+			indexedInstanceChildIds[i].erase( last, indexedInstanceChildIds[i].end() );
 
 			InternedStringVectorDataPtr instanceChildNames = new InternedStringVectorData;
 			for( size_t id : indexedInstanceChildIds[i] )
@@ -619,6 +579,17 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	}
 
 	BranchCreator::compute( output, context );
+}
+
+bool Instancer::affectsBranchBound( const Gaffer::Plug *input ) const
+{
+	return
+		input == enginePlug() ||
+		input == namePlug() ||
+		input == instancesPlug()->boundPlug() ||
+		input == instancesPlug()->transformPlug() ||
+		input == instanceChildNamesPlug()
+	;
 }
 
 void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -726,6 +697,14 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	}
 }
 
+bool Instancer::affectsBranchTransform( const Gaffer::Plug *input ) const
+{
+	return
+		input == enginePlug() ||
+		input == instancesPlug()->transformPlug()
+	;
+}
+
 void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( branchPath.size() <= 2 )
@@ -778,6 +757,14 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 		InstanceScope instanceScope( context, branchPath );
 		return instancesPlug()->transformPlug()->getValue();
 	}
+}
+
+bool Instancer::affectsBranchAttributes( const Gaffer::Plug *input ) const
+{
+	return
+		input == instancesPlug()->attributesPlug() ||
+		input == enginePlug()
+	;
 }
 
 void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -851,6 +838,11 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	}
 }
 
+bool Instancer::affectsBranchObject( const Gaffer::Plug *input ) const
+{
+	return input == instancesPlug()->objectPlug();
+}
+
 void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( branchPath.size() <= 2 )
@@ -879,6 +871,15 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 		InstanceScope instanceScope( context, branchPath );
 		return instancesPlug()->objectPlug()->getValue();
 	}
+}
+
+bool Instancer::affectsBranchChildNames( const Gaffer::Plug *input ) const
+{
+	return
+		input == namePlug() ||
+		input == instanceChildNamesPlug() ||
+		input == instancesPlug()->childNamesPlug()
+	;
 }
 
 void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -942,14 +943,31 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	}
 }
 
+bool Instancer::affectsBranchSetNames( const Gaffer::Plug *input ) const
+{
+	return input == instancesPlug()->setNamesPlug();
+}
+
 void Instancer::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	h = instancesPlug()->setNamesPlug()->hash();
 }
 
 IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
 	return instancesPlug()->setNamesPlug()->getValue();
+}
+
+bool Instancer::affectsBranchSet( const Gaffer::Plug *input ) const
+{
+	return
+		input == instancesPlug()->childNamesPlug() ||
+		input == instancesPlug()->setPlug() ||
+		input == instanceChildNamesPlug() ||
+		input == namePlug()
+	;
 }
 
 void Instancer::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const

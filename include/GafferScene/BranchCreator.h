@@ -38,10 +38,13 @@
 #ifndef GAFFERSCENE_BRANCHCREATOR_H
 #define GAFFERSCENE_BRANCHCREATOR_H
 
-#include "GafferScene/Filter.h"
-#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/FilteredSceneProcessor.h"
+
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "IECore/CompoundData.h"
+
+#include "boost/optional.hpp"
 
 namespace Gaffer
 {
@@ -53,16 +56,15 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API BranchCreator : public SceneProcessor
+class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 {
 
 	public :
 
 		~BranchCreator() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::BranchCreator, BranchCreatorTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::BranchCreator, BranchCreatorTypeId, FilteredSceneProcessor );
 
-		/// \todo Allow multiple parents to be specified.
 		Gaffer::StringPlug *parentPlug();
 		const Gaffer::StringPlug *parentPlug() const;
 
@@ -107,35 +109,61 @@ class GAFFERSCENE_API BranchCreator : public SceneProcessor
 		///   - Assign directly to the hash from an input hash to signify that the input will be
 		///     passed through unchanged by the corresponding computeBranch*() method.
 		///
+		/// \todo Make all these methods pure virtual.
 		//@{
+		virtual bool affectsBranchBound( const Gaffer::Plug *input ) const;
 		virtual void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchTransform( const Gaffer::Plug *input ) const;
 		virtual void hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Imath::M44f computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchAttributes( const Gaffer::Plug *input ) const;
 		virtual void hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstCompoundObjectPtr computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchObject( const Gaffer::Plug *input ) const;
 		virtual void hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstObjectPtr computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchChildNames( const Gaffer::Plug *input ) const;
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
+		virtual bool affectsBranchSetNames( const Gaffer::Plug *input ) const;
 		virtual void hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
+		/// Called to determine if all branches have the same set names. If it returns true,
+		/// `computeSetNames()` calls `computeBranchSetNames()` just once, with an empty `parentPath`,
+		/// rather than having to accumulate all names from all branches. The default implementation
+		/// returns true.
+		virtual bool constantBranchSetNames() const;
 
+		virtual bool affectsBranchSet( const Gaffer::Plug *input ) const;
 		virtual void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		//@}
 
 	private :
 
+		/// Returns the path specified by `parentPlug()`, only if it is non-empty
+		/// and is valid within the input scene.
+		boost::optional<ScenePlug::ScenePath> parentPlugPath() const;
+
+		/// All the results from `filterPlug()`.
+		Gaffer::PathMatcherDataPlug *filteredPathsPlug();
+		const Gaffer::PathMatcherDataPlug *filteredPathsPlug() const;
+
+		/// All the parent locations at which we need to create a branch.
+		Gaffer::PathMatcherDataPlug *parentPathsPlug();
+		const Gaffer::PathMatcherDataPlug *parentPathsPlug() const;
+
 		/// Used to calculate the name remapping needed to prevent name clashes with
-		/// the existing scene.
-		Gaffer::ObjectPlug *mappingPlug();
-		const Gaffer::ObjectPlug *mappingPlug() const;
+		/// the existing scene. Must be evaluated in a context where "scene:path" is
+		/// one of the parent paths.
+		Gaffer::AtomicCompoundDataPlug *mappingPlug();
+		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
 
 		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
@@ -156,14 +184,14 @@ class GAFFERSCENE_API BranchCreator : public SceneProcessor
 		//
 		// DescendantMatch
 		//
-		// The path is above the parent, parentPath will be filled in
-		// appropriately and branchPath will be empty.
+		// The path is above one or more parents. Neither parentPath nor branchPath
+		// will be filled in.
 		//
 		// NoMatch
 		//
 		// The path is a direct pass through from the input - neither
 		// parentPath nor branchPath will be filled in.
-		IECore::PathMatcher::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+		IECore::PathMatcher::Result parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 
