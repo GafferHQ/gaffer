@@ -63,6 +63,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 			nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
 			shaderName = arnold.AiNodeEntryGetName( nodeEntry )
 			displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+			nodeName = displayName.replace( " ", "" )
 
 			category = __aiMetadataGetStr( nodeEntry, "", "gaffer.nodeMenu.category" )
 			if category == "" :
@@ -71,13 +72,13 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 			if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
 				menuPath = "Shader"
 				if shaderName == "light_blocker" :
-					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLightFilter )
+					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLightFilter, nodeName )
 				else :
-					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader )
+					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader, nodeName )
 			else :
 				menuPath = "Light"
 				if shaderName != "mesh_light" :
-					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLight )
+					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLight, nodeName )
 				else :
 					nodeCreator = GafferArnold.ArnoldMeshLight
 
@@ -112,11 +113,15 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 			}
 		)
 
-def __shaderCreator( name, nodeType ) :
+def __shaderCreator( shaderName, nodeType, nodeName ) :
 
-	shader = nodeType( name )
-	shader.loadShader( name )
-	return shader
+	node = nodeType( nodeName )
+	node.loadShader( shaderName )
+
+	if isinstance( node, GafferArnold.ArnoldLight ) :
+		node["name"].setValue( nodeName[:1].lower() + nodeName[1:] )
+
+	return node
 
 def __aiMetadataGetStr( nodeEntry, paramName, name ) :
 
