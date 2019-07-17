@@ -51,7 +51,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filmFit" : GafferSceneUI.CameraUI.filmFitMetadata,
+		"filmFit" : GafferSceneUI.StandardOptionsUI.plugsMetadata[ "options.filmFit" ] + GafferSceneUI.StandardOptionsUI.plugsMetadata[ "options.filmFit.value" ],
 
 		"filter" : [
 
