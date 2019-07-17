@@ -1997,9 +1997,6 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["renderer"] = self._createInteractiveRender()
 		s["renderer"]["in"].setInput( s["options"]["out"] )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
-		s.save()
-
 		# Start a render, give it time to finish, and check the output.
 		# We should get light only from the default light, and not the
 		# other one.
