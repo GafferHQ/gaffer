@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ##########################################################################
 #
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
@@ -40,7 +42,6 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI.CameraUI
 
 ##########################################################################
 # Metadata
@@ -96,6 +97,324 @@ def __statisticsSummary( plug ) :
 
 	return ", ".join( info )
 
+## This dictionary is shared with certain nodes that have options- and
+# camera-related plugs. We assume that the first metadata element for
+# each user-facing plug is the string `"description"`, so take care to
+# maintain this when updating these entries or adding new ones.
+plugsMetadata = {
+
+	# Section summaries
+
+	"options" : [
+
+		"layout:section:Camera:summary", __cameraSummary,
+		"layout:section:Motion Blur:summary", __motionBlurSummary,
+		"layout:section:Statistics:summary", __statisticsSummary,
+
+	],
+
+	# Camera plugs
+
+	"options.renderCamera" : [
+
+		"description",
+		"""
+		The primary camera to be used for rendering. If this
+		is not specified, then a default orthographic camera
+		positioned at the origin is used.
+		""",
+
+		"layout:section", "Camera",
+		"label", "Camera",
+
+	],
+
+	"options.renderCamera.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+		"path:valid", True,
+		"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+		"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+
+	],
+
+	"options.filmFit" : [
+
+		"description",
+		"""
+		How the aperture gate (the frame defined by the aperture) will
+		fit into the resolution gate (the framed defined by the data
+		window). Fitting is applied only if the respective aspect
+		ratios of the aperture and the resolution are different. The
+		following fitting modes are available:
+
+		- _Horizontal:_ The aperture gate will fit horizontally between
+		the left/right edges of the resolution gate, while preserving
+		its aspect ratio. If the aperture's aspect ratio is larger than
+		the resolution's, the top/bottom edges of the aperture will be
+		cropped. If it's smaller, then the top/bottom edges will
+		capture extra vertical scene content. 
+		- _Vertical:_ The aperture gate will fit vertically between the
+		top/bottom edges of the resolution gate, while preserving its
+		aspect ratio. If the aperture's aspect ratio is larger than the
+		resolution's, the left/right edges of the aperture will be
+		cropped. If it's smaller, then the left/right edges will
+		capture more horizontal scene content.
+		- _Fit_: The aperture gate will fit horizontally (like
+		_Horizontal_ mode) or vertically (like _Vertical_ mode) inside
+		the resolution gate to avoid cropping the aperture, while
+		preserving its aspect ratio. If the two gates' aspect ratios
+		differ, the aperture will capture extra horizontal or vertical
+		scene content.
+		- _Fill:_ The aperture gate will fill the resolution gate such
+		that none of the aperture captures extra scene content, while
+		preserving its aspect ratio. In other words, it will make the
+		opposite choice of the _Fit_ mode. If the two gates' aspect
+		ratios differ, the aperture will be horizontally or vertically
+		cropped. 
+		- _Distort:_ The aperture gate will match the size of the
+		resolution gate. If their aspect ratios differ, the resulting
+		image will appear vertically or horizontally stretched or
+		squeezed.
+		""",
+		"layout:section", "Camera",
+		"label", "Film Fit",
+
+	],
+
+	"options.filmFit.value" : [
+
+		"preset:Horizontal", IECoreScene.Camera.FilmFit.Horizontal,
+		"preset:Vertical", IECoreScene.Camera.FilmFit.Vertical,
+		"preset:Fit", IECoreScene.Camera.FilmFit.Fit,
+		"preset:Fill", IECoreScene.Camera.FilmFit.Fill,
+		"preset:Distort", IECoreScene.Camera.FilmFit.Distort,
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+	],
+
+	"options.renderResolution" : [
+
+		"description",
+		"""
+		The resolution of the image to be rendered.
+		""",
+
+		"layout:section", "Camera",
+		"label", "Resolution",
+
+	],
+
+	"options.pixelAspectRatio" : [
+
+		"description",
+		"""
+		The `width / height` aspect ratio of the individual pixels in
+		the rendered image.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.resolutionMultiplier" : [
+
+		"description",
+		"""
+		Multiplies the resolution of the render by this amount.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.renderCropWindow" : [
+
+		"description",
+		"""
+		Limits the render to a region of the image. The rendered image
+		will have the same resolution as usual, but areas outside the
+		crop will be rendered black. Coordinates range from (0,0) at
+		the top-left of the image to (1,1) at the bottom-right. The
+		crop window tool in the viewer may be used to set this
+		interactively.
+		""",
+
+		"layout:section", "Camera",
+		"label", "Crop Window",
+
+	],
+
+	"options.overscan" : [
+
+		"description",
+		"""
+		Whether to enable overscan, which adds extra pixels to the
+		sides of the rendered image.
+
+		Overscan can be useful when camera shake or blur will be added
+		as a post-process. This plug just enables overscan as a whole –
+		use the _Overscan Top_, _Overscan Bottom_, _Overscan Left_ and
+		_Overscan Right_ plugs to specify the amount of overscan on
+		each side of the image.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.overscanTop" : [
+
+		"description",
+		"""
+		The amount of overscan at the top of the image. Specified as a
+		0-1 proportion of the original image height.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.overscanBottom" : [
+
+		"description",
+		"""
+		The amount of overscan at the bottom of the image. Specified as
+		a 0-1 proportion of the original image height.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.overscanLeft" : [
+
+		"description",
+		"""
+		The amount of overscan at the left of the image. Specified as a
+		0-1 proportion of the original image width.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.overscanRight" : [
+
+		"description",
+		"""
+		The amount of overscan at the right of the image. Specified as
+		a 0-1 proportion of the original image width.
+		""",
+
+		"layout:section", "Camera",
+
+	],
+
+	"options.depthOfField" : [
+
+		"description",
+		"""
+		Whether to render with depth of field. To ensure the effect is
+		visible, you must also set an f-stop value greater than 0 on
+		this camera.
+		""",
+
+		"layout:section", "Camera",
+	],
+
+	# Motion blur plugs
+
+	"options.cameraBlur" : [
+
+		"description",
+		"""
+		Whether or not camera motion is taken into
+		account in the renderered image. To specify the
+		number of segments to use for camera motion, use
+		a StandardAttributes node filtered for the camera.
+		""",
+
+		"layout:section", "Motion Blur",
+		"label", "Camera",
+
+	],
+
+	"options.transformBlur" : [
+
+		"description",
+		"""
+		Whether or not transform motion is taken into
+		account in the renderered image. To specify the
+		number of transform segments to use for each
+		object in the scene, use a StandardAttributes node
+		with appropriate filters.
+		""",
+
+		"layout:section", "Motion Blur",
+		"label", "Transform",
+
+	],
+
+	"options.deformationBlur" : [
+
+		"description",
+		"""
+		Whether or not deformation motion is taken into
+		account in the renderered image. To specify the
+		number of deformation segments to use for each
+		object in the scene, use a StandardAttributes node
+		with appropriate filters.
+		""",
+
+		"layout:section", "Motion Blur",
+		"label", "Deformation",
+
+	],
+
+	"options.shutter" : [
+
+		"description",
+		"""
+		The interval over which the camera shutter is open. Measured
+		in frames, and specified relative to the frame being rendered.
+		""",
+
+		"layout:section", "Motion Blur",
+
+	],
+
+	"options.sampleMotion" : [
+
+		"description",
+		"""
+		Whether to actually render motion blur.  Disabling this
+		setting while motion blur is set up produces a render where
+		there is no blur, but there is accurate motion information.
+		Useful for rendering motion vector passes.
+		""",
+
+		"layout:section", "Motion Blur",
+
+	],
+
+	# Statistics plugs
+
+	"options.performanceMonitor" : [
+
+		"description",
+		"""
+		Enables a performance monitor and uses it to output
+		statistics about scene generation performance.
+		""",
+
+		"layout:section", "Statistics",
+
+	],
+
+}
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.StandardOptions,
@@ -106,271 +425,6 @@ Gaffer.Metadata.registerNode(
 	scene. These should be respected by all renderers.
 	""",
 
-	plugs = {
-
-		# Section summaries
-
-		"options" : [
-
-			"layout:section:Camera:summary", __cameraSummary,
-			"layout:section:Motion Blur:summary", __motionBlurSummary,
-			"layout:section:Statistics:summary", __statisticsSummary,
-
-		],
-
-		# Camera plugs
-
-		"options.renderCamera" : [
-
-			"description",
-			"""
-			The primary camera to be used for rendering. If this
-			is not specified, then a default orthographic camera
-			positioned at the origin is used.
-			""",
-
-			"layout:section", "Camera",
-			"label", "Camera",
-
-		],
-
-		"options.renderCamera.value" : [
-
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"path:valid", True,
-			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
-			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
-
-		],
-
-		"options.filmFit" : [
-			#Naughtily grab the description that I know comes first
-			"description", GafferSceneUI.CameraUI.filmFitMetadata[1],
-			"layout:section", "Camera",
-			"label", "Film Fit",
-		],
-
-		"options.filmFit.value" : GafferSceneUI.CameraUI.filmFitMetadata,
-
-		"options.renderResolution" : [
-
-			"description",
-			"""
-			The resolution of the image to be rendered. Use the
-			resolution multiplier as a convenient way to temporarily
-			render at multiples of this resolution.
-			""",
-
-			"layout:section", "Camera",
-			"label", "Resolution",
-
-		],
-
-		"options.pixelAspectRatio" : [
-
-			"description",
-			"""
-			The aspect ratio (x/y) of the pixels in the rendered image.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.resolutionMultiplier" : [
-
-			"description",
-			"""
-			Multiplier applied to the render resolution.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.renderCropWindow" : [
-
-			"description",
-			"""
-			Limits the render to a region of the image. The rendered
-			image will have the same resolution as usual, but areas
-			outside the crop will be rendered black. Coordinates
-			range from 0,0 at the top left of the image to 1,1 at the
-			bottom right. The crop window tool in the viewer may be
-			used to set this interactively.
-			""",
-
-			"layout:section", "Camera",
-			"label", "Crop Window",
-
-		],
-
-		"options.overscan" : [
-
-			"description",
-			"""
-			Adds extra pixels to the sides of the rendered image.
-			This can be useful when camera shake or blur will be
-			added as a post process. This plug just enables overscan
-			as a whole - use the overscanTop, overscanBottom, overscanLeft
-			and overscanRight plugs to specify the amount of overscan
-			on each side of the image.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.overscanTop" : [
-
-			"description",
-			"""
-			The amount of overscan at the top of the image. Specified
-			as a 0-1 proportion of the original image height.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.overscanBottom" : [
-
-			"description",
-			"""
-			The amount of overscan at the bottom of the image. Specified
-			as a 0-1 proportion of the original image height.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.overscanLeft" : [
-
-			"description",
-			"""
-			The amount of overscan at the left of the image. Specified
-			as a 0-1 proportion of the original image width.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.overscanRight" : [
-
-			"description",
-			"""
-			The amount of overscan at the right of the image. Specified
-			as a 0-1 proportion of the original image width.
-			""",
-
-			"layout:section", "Camera",
-
-		],
-
-		"options.depthOfField" : [
-
-			"description",
-			"""
-			Enable rendering with depth of field blur.  To get blur, you
-			must enable this setting, and set an f-stop on the camera you
-			are rendering.
-			""",
-
-			"layout:section", "Camera",
-		],
-
-		# Motion blur plugs
-
-		"options.cameraBlur" : [
-
-			"description",
-			"""
-			Whether or not camera motion is taken into
-			account in the renderered image. To specify the
-			number of segments to use for camera motion, use
-			a StandardAttributes node filtered for the camera.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Camera",
-
-		],
-
-		"options.transformBlur" : [
-
-			"description",
-			"""
-			Whether or not transform motion is taken into
-			account in the renderered image. To specify the
-			number of transform segments to use for each
-			object in the scene, use a StandardAttributes node
-			with appropriate filters.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Transform",
-
-		],
-
-		"options.deformationBlur" : [
-
-			"description",
-			"""
-			Whether or not deformation motion is taken into
-			account in the renderered image. To specify the
-			number of deformation segments to use for each
-			object in the scene, use a StandardAttributes node
-			with appropriate filters.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Deformation",
-
-		],
-
-		"options.shutter" : [
-
-			"description",
-			"""
-			The interval over which the camera shutter is open.
-			Measured in frames, and specified relative to the
-			frame being rendered.
-			""",
-
-			"layout:section", "Motion Blur",
-
-		],
-
-		"options.sampleMotion" : [
-
-			"description",
-			"""
-			Whether to actually render motion blur.  Disabling this
-			setting while motion blur is set up produces a render where
-			there is no blur, but there is accurate motion information.
-			Useful for rendering motion vector passes.
-			""",
-
-			"layout:section", "Motion Blur",
-
-		],
-
-		# Statistics plugs
-
-		"options.performanceMonitor" : [
-
-			"description",
-			"""
-			Enables a performance monitor and uses it to output
-			statistics about scene generation performance.
-			""",
-
-			"layout:section", "Statistics",
-
-		],
-
-	}
+	plugs = plugsMetadata
 
 )

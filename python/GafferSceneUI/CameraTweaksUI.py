@@ -57,10 +57,11 @@ def __populateMetadata():
 
 				"description",
 				"""
-				The tweaks to be made to the parameters of the camera.
+				Add a camera tweak.
+
 				Arbitrary numbers of user defined tweaks may be
 				added as children of this plug via the user
-				interface, or using the CameraTweaks API via python.
+				interface, or via the CameraTweaks API in Python.
 				""",
 
 				"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
@@ -122,7 +123,22 @@ def __populateMetadata():
 
 		"description",
 		"""
-		Makes modifications to camera parameter values.
+		Applies modifications, also known as "tweaks," to camera
+		parameters or render options in the scene. Supports any number
+		of tweaks, and custom camera parameters. Tweaks to camera
+		parameters apply to every camera specified by the filter.
+
+		Tweaks apply to every camera specified by the filter.
+
+		Can add new camera parameters or render options.
+
+		Any existing parameters/options can be replaced or removed.
+		Numeric parameters/options can also be added to, subtracted
+		from, or multiplied.
+
+		Tweaks are applied in order, so if there is more than one tweak
+		to the same parameter/option, the first tweak will be applied
+		first, then the second, etc.
 		""",
 
 		plugs = plugMetadata
