@@ -1663,7 +1663,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
 		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity * 0.5, 0, 1 ), delta = 0.01 )
 
-		# Change attribute on light (recreates light shader, filters need to be reconnected properly)
+		# Change parameter on light
 
 		script["light"]["parameters"]["intensity"].setValue( 2.0 )
 
@@ -1702,6 +1702,116 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 1 )
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
 		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Disable gobo, reset light and filter
+
+		script["gobo"]["enabled"].setValue( False )
+		script["light"]["parameters"]["intensity"].setValue( 1.0 )
+		lightFilterDensityPlug.setValue( 1 )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Unlink the filter
+
+		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "" )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Relink the filter
+
+		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
+
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+	def testLightFiltersAndSetEdits( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"], unused = self._createPointLight()
+		script["light"]["transform"]["translate"]["z"].setValue( 1 )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["shader"], unused = self._createMatteShader()
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["plane"]["out"] )
+		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 1 )
+
+		script["lightFilter"], lightFilterDensityPlug = self._createLightFilter()
+		lightFilterDensityPlug.setValue( 1 )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["light"]["out"] )
+		script["group"]["in"][1].setInput( script["camera"]["out"] )
+		script["group"]["in"][2].setInput( script["assignment"]["out"] )
+		script["group"]["in"][3].setInput( script["lightFilter"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightFilterTest",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["group"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["options"]["out"] )
+
+		# Render and give it some time to finish. Should be unfiltered, because
+		# by default, filters aren't linked.
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		unfilteredColor = self._color4fAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( unfilteredColor[0], 0.25 )
+
+		# Try to link the filter. Should still be unfiltered, because the set is
+		# empty.
+
+		script["lightFilter"]["filteredLights"].setValue( "mySet" )
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), unfilteredColor, delta = 0.01 )
+
+		# Add the light into the set. Now the filtering should happen.
+
+		script["light"]["sets"].setValue( "mySet" )
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Take the light out of the set. Goodbye filtering.
+
+		script["light"]["sets"].setValue( "" )
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( image, imath.V2f( 0.5 ) ), unfilteredColor, delta = 0.01 )
 
 	def testAdaptors( self ) :
 
@@ -1825,6 +1935,95 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# \todo: This should also test the light linking functionaly provided by
 		# StandardAttributes
+
+	def testHideLinkedLight( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# One default light and one non-default light, which will
+		# result in light links being emitted to the renderer.
+
+		s["defaultLight"], colorPlug = self._createPointLight()
+		s["defaultLight"]["name"].setValue( "defaultPointLight" )
+		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
+		s["defaultLight"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["defaultLightAttributes"] = GafferScene.StandardAttributes()
+		s["defaultLightAttributes"]["in"].setInput( s["defaultLight"]["out"] )
+
+		s["nonDefaultLight"], colorPlug = self._createPointLight()
+		s["nonDefaultLight"]["name"].setValue( "nonDefaultPointLight" )
+		s["nonDefaultLight"]["defaultLight"].setValue( False )
+		colorPlug.setValue( imath.Color3f( 0, 1, 0 ) )
+		s["nonDefaultLight"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["plane"] = GafferScene.Plane()
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["defaultLightAttributes"]["out"] )
+		s["group"]["in"][1].setInput( s["nonDefaultLight"]["out"] )
+		s["group"]["in"][2].setInput( s["plane"]["out"] )
+		s["group"]["in"][3].setInput( s["camera"]["out"] )
+
+		s["shader"], unused = self._createMatteShader()
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["group"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["shaderAssignment"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["options"]["in"].setInput( s["outputs"]["out"] )
+
+		s["renderer"] = self._createInteractiveRender()
+		s["renderer"]["in"].setInput( s["options"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+		# We should get light only from the default light, and not the
+		# other one.
+
+		s["renderer"]["state"].setValue( s["renderer"].State.Running )
+
+		time.sleep( 2 )
+
+		c = self._color3fAtUV(
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			imath.V2f( 0.5 ),
+		)
+		self.assertNotEqual( c[0], 0 )
+		self.assertEqual( c / c[0], imath.Color3f( 1, 0, 0 ) )
+
+		# Hide the default light. We should get a black render.
+
+		s["defaultLightAttributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["defaultLightAttributes"]["attributes"]["visibility"]["value"].setValue( False )
+
+		time.sleep( 1 )
+
+		c = self._color3fAtUV(
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			imath.V2f( 0.5 ),
+		)
+		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
 
 	def tearDown( self ) :
 

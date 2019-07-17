@@ -114,7 +114,6 @@ from ShaderTweaksTest import ShaderTweaksTest
 from FilterResultsTest import FilterResultsTest
 from RendererAlgoTest import RendererAlgoTest
 from SetAlgoTest import SetAlgoTest
-from EvaluateLightLinksTest import EvaluateLightLinksTest
 from MeshTangentsTest import MeshTangentsTest
 from ResamplePrimitiveVariablesTest import ResamplePrimitiveVariablesTest
 from DeleteFacesTest import DeleteFacesTest
@@ -140,6 +139,7 @@ from TweakPlugTest import TweakPlugTest
 from ContextSanitiserTest import ContextSanitiserTest
 from SetVisualiserTest import SetVisualiserTest
 
+from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *
 
 if __name__ == "__main__":

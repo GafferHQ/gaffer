@@ -134,7 +134,7 @@ enum TypeId
 	CopyOptionsTypeId = 110589,
 	LightToCameraTypeId = 110590,
 	FilterResultsTypeId = 110591,
-	EvaluateLightLinksTypeId = 110592,
+	EvaluateLightLinksTypeId = 110592, // Obsolete, available for reuse
 	MeshTangentsTypeId = 110593,
 	ResamplePrimitiveVariablesTypeId = 110594,
 	DeleteFacesTypeId = 110595,

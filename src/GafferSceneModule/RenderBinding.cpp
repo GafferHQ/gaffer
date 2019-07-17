@@ -40,6 +40,7 @@
 
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/OpenGLRender.h"
+#include "GafferScene/Private/IECoreScenePreview/CapturingRenderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -163,6 +164,14 @@ void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, obje
 	return objectInterface.transform( samples, times );
 }
 
+void objectInterfaceLink( Renderer::ObjectInterface &objectInterface, const IECore::InternedString &type, object pythonObjectSet )
+{
+	std::vector<Renderer::ObjectInterfacePtr> objectVector;
+	container_utils::extend_container( objectVector, pythonObjectSet );
+	auto objectSet = std::make_shared<Renderer::ObjectSet>( objectVector.begin(), objectVector.end() );
+	objectInterface.link( type, objectSet );
+}
+
 class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>
 {
 
@@ -203,6 +212,60 @@ class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePr
 		}
 
 };
+
+IECore::CompoundObjectPtr capturedAttributesAttributes( const CapturingRenderer::CapturedAttributes &a )
+{
+	return const_cast<IECore::CompoundObject *>( a.attributes() );
+}
+
+CapturingRenderer::CapturedObjectPtr capturingRendererCapturedObject( const CapturingRenderer &r, const std::string &name )
+{
+	return const_cast<CapturingRenderer::CapturedObject *>( r.capturedObject( name ) );
+}
+
+list capturedObjectCapturedSamples( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto s : o.capturedSamples() )
+	{
+		result.append( boost::const_pointer_cast<IECore::Object>( s ) );
+	}
+	return result;
+}
+
+list capturedObjectCapturedSampleTimes( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto t : o.capturedSampleTimes() )
+	{
+		result.append( t );
+	}
+	return result;
+}
+
+CapturingRenderer::CapturedAttributesPtr capturedObjectCapturedAttributes( const CapturingRenderer::CapturedObject &o )
+{
+	return const_cast<CapturingRenderer::CapturedAttributes *>( o.capturedAttributes() );
+}
+
+object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, const IECore::InternedString &type )
+{
+	if( o.capturedLinks( type ) )
+	{
+		list l;
+		for( auto &s : *o.capturedLinks( type ) )
+		{
+			l.append( s );
+		}
+		PyObject *set = PySet_New( l.ptr() );
+		return object( handle<>( set ) );
+	}
+	else
+	{
+		// Null pointer used to say "no linking" - return None
+		return object();
+	}
+}
 
 } // namespace
 
@@ -257,6 +320,7 @@ void GafferSceneModule::bindRender()
 				.def( "transform", objectInterfaceTransform1 )
 				.def( "transform", objectInterfaceTransform2 )
 				.def( "attributes", &Renderer::ObjectInterface::attributes )
+				.def( "link", &objectInterfaceLink )
 			;
 		}
 
@@ -309,6 +373,24 @@ void GafferSceneModule::bindRender()
 			.def( "setBound", &Geometry::setBound )
 			.def( "getBound", &Geometry::getBound, return_value_policy<copy_const_reference>() )
 			.def( "parameters", (IECore::CompoundData *(Geometry::*)())&Geometry::parameters, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		;
+
+		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )
+			.def( init<Renderer::RenderType, const std::string &>( ( arg( "renderType" ) = Renderer::RenderType::Interactive, arg( "fileName" ) = "" ) ) )
+			.def( "capturedObject", &capturingRendererCapturedObject )
+		;
+
+		IECorePython::RefCountedClass<CapturingRenderer::CapturedAttributes, Renderer::AttributesInterface>( "CapturedAttributes" )
+			.def( "attributes", &capturedAttributesAttributes )
+		;
+
+		IECorePython::RefCountedClass<CapturingRenderer::CapturedObject, Renderer::ObjectInterface>( "CapturedObject" )
+			.def( "capturedSamples", &capturedObjectCapturedSamples )
+			.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
+			.def( "capturedAttributes", &capturedObjectCapturedAttributes )
+			.def( "capturedLinks", &capturedObjectCapturedLinks )
+			.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
+			.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )
 		;
 
 	}

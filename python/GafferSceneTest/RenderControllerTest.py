@@ -36,9 +36,12 @@
 
 import unittest
 
+import imath
+
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -202,6 +205,172 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			renderer.command( "gl:queryBound", {} ),
 			lightSet["out"].bound( "/" )
 		)
+
+	def testLightLinks( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+		attributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+		attributes["attributes"]["doubleSided"]["value"].setValue( False )
+
+		lightA = GafferSceneTest.TestLight()
+		lightA["name"].setValue( "lightA" )
+		lightA["sets"].setValue( "A" )
+
+		lightB = GafferSceneTest.TestLight()
+		lightB["name"].setValue( "lightB" )
+		lightB["sets"].setValue( "B" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( attributes["out"] )
+		group["in"][1].setInput( lightA["out"] )
+		group["in"][2].setInput( lightB["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
+		capturedSphere = renderer.capturedObject( "/group/sphere" )
+		capturedLightA = renderer.capturedObject( "/group/lightA" )
+		capturedLightB = renderer.capturedObject( "/group/lightB" )
+
+		# Since the linking expression is "defaultLights" and there are
+		# no non-default lights, we don't expect to have light links.
+
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), None )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 1 )
+
+		# If we restrict to just one set of lights, then we expect an
+		# edit to update the links.
+
+		attributes["attributes"]["linkedLights"]["value"].setValue( "A" )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightA } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 2 )
+
+		# Likewise if we restrict to the other set of lights.
+
+		attributes["attributes"]["linkedLights"]["value"].setValue( "B" )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 3 )
+
+		# If we change an attribute which has no bearing on light linking,
+		# we don't want links to be emitted again. Attributes change frequently
+		# and light linking can be expensive.
+
+		attributes["attributes"]["doubleSided"]["value"].setValue( True )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 3 )
+
+		del capturedSphere, capturedLightA, capturedLightB
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testLightLinkPerformance( self ) :
+
+		numSpheres = 10000
+		numLights = 1000
+
+		# Make a bunch of spheres
+
+		sphere = GafferScene.Sphere()
+
+		spherePlane = GafferScene.Plane()
+		spherePlane["name"].setValue( "spheres" )
+		spherePlane["divisions"].setValue( imath.V2i( 1, numSpheres / 2 - 1 ) )
+
+		sphereInstancer = GafferScene.Instancer()
+		sphereInstancer["in"].setInput( spherePlane["out"] )
+		sphereInstancer["instances"].setInput( sphere["out"] )
+		sphereInstancer["parent"].setValue( "/spheres" )
+
+		# Make a bunch of lights
+
+		light = GafferSceneTest.TestLight()
+
+		lightPlane = GafferScene.Plane()
+		lightPlane["name"].setValue( "lights" )
+		lightPlane["divisions"].setValue( imath.V2i( 1, numLights / 2 - 1 ) )
+
+		lightInstancer = GafferScene.Instancer()
+		lightInstancer["in"].setInput( lightPlane["out"] )
+		lightInstancer["instances"].setInput( light["out"] )
+		lightInstancer["parent"].setValue( "/lights" )
+
+		# Make a single non-default light. This
+		# will trigger linking of all the others.
+
+		nonDefaultLight = GafferSceneTest.TestLight()
+		nonDefaultLight["defaultLight"].setValue( False )
+
+		# Group everything into one scene
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphereInstancer["out"] )
+		group["in"][1].setInput( lightInstancer["out"] )
+		group["in"][2].setInput( nonDefaultLight["out"] )
+
+		# See how quickly we can output those links
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			controller.update()
+
+		# Sanity check that we did output links as expected.
+
+		links = renderer.capturedObject( "/group/spheres/instances/sphere/0" ).capturedLinks( "lights" )
+		self.assertEqual( len( links ), numLights )
+
+	def testHideLinkedLight( self ) :
+
+		# One default light and one non-default light, which will
+		# result in light links being emitted to the renderer.
+
+		defaultLight = GafferSceneTest.TestLight()
+		defaultLight["name"].setValue( "defaultLight" )
+		defaultLightAttributes = GafferScene.StandardAttributes()
+		defaultLightAttributes["in"].setInput( defaultLight["out"] )
+
+		nonDefaultLight = GafferSceneTest.TestLight()
+		nonDefaultLight["name"].setValue( "nonDefaultLight" )
+		nonDefaultLight["defaultLight"].setValue( False )
+
+		plane = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( defaultLightAttributes["out"] )
+		group["in"][1].setInput( nonDefaultLight["out"] )
+		group["in"][2].setInput( plane["out"] )
+
+		# Output a scene. Only the default light should be linked.
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
+		capturedPlane = renderer.capturedObject( "/group/plane" )
+
+		self.assertEqual( capturedPlane.capturedLinks( "lights" ), { renderer.capturedObject( "/group/defaultLight" ) } )
+
+		# Hide the default light. It should be removed from the render,
+		# and the plane should be linked to an empty light set.
+
+		defaultLightAttributes["attributes"]["visibility"]["enabled"].setValue( True )
+		defaultLightAttributes["attributes"]["visibility"]["value"].setValue( False )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/defaultLight" ) )
+		self.assertEqual( capturedPlane.capturedLinks( "lights" ), set() )
 
 if __name__ == "__main__":
 	unittest.main()

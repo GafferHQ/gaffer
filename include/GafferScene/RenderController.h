@@ -130,6 +130,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		unsigned m_changedGlobalComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
 		RendererAlgo::RenderSets m_renderSets;
+		std::unique_ptr<RendererAlgo::LightLinks> m_lightLinks;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_boundAttributes;
 

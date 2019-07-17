@@ -172,7 +172,7 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 	IECore::ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
 	RendererAlgo::RenderSets renderSets( m_scene );
 	Context::Scope scope( m_context.get() );
-	RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, renderer, m_root );
+	RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, /* lightLinks = */ nullptr, renderer, m_root );
 }
 
 const ScenePlug *Capsule::scene() const

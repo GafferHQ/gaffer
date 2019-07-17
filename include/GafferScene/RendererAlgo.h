@@ -39,6 +39,8 @@
 
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -47,14 +49,10 @@
 
 #include "boost/container/flat_map.hpp"
 
+#include "tbb/concurrent_hash_map.h"
+#include "tbb/spin_mutex.h"
+
 #include <functional>
-
-namespace IECoreScenePreview
-{
-
-class Renderer;
-
-} // namespace IECoreScenePreview
 
 namespace GafferScene
 {
@@ -146,10 +144,124 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 
 };
 
+/// Utility class to declare light links to a renderer.
+class GAFFERSCENE_API LightLinks : boost::noncopyable
+{
+
+	public :
+
+		LightLinks();
+
+		/// Registration functions
+		/// ======================
+		///
+		/// These may be called concurrently with one another, and are used to inform the
+		/// LightLinks class of all lights and light filters present in a render.
+
+		void addLight( const std::string &path, const IECoreScenePreview::Renderer::ObjectInterfacePtr &light );
+		void removeLight( const std::string &path );
+
+		void addLightFilter( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const IECore::CompoundObject *attributes );
+		void updateLightFilter( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const IECore::CompoundObject *attributes );
+		void removeLightFilter( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter );
+
+		/// Output functions
+		/// ================
+		///
+		/// These output light links and light filter links, and should be called
+		/// once all lights and filters have been declared via the registration
+		/// methods above.
+
+		/// Outputs light links for the specified location. May be called concurrently
+		/// with respect to itself, but not other methods. The optional `hash` pointer
+		/// should be unique to `object`, and will be used to optimise subsequent calls
+		/// for the same object.
+		/// > Note : `hash` is an awkward implementation detail used to allow
+		/// > LightLinks to store some state in RenderController's scene graphs.
+		/// > The alternative would be to register all objects with LightLinks,
+		/// > but then we would have duplicate storage structures for the entire scene.
+		void outputLightLinks( const ScenePlug *scene, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::ObjectInterface *object, IECore::MurmurHash *hash = nullptr ) const;
+		/// Outputs all light filter links at once.
+		void outputLightFilterLinks( const ScenePlug *scene );
+
+		/// Dirty state
+		/// ===========
+		///
+		/// When using LightLinks in an interactive render, it is necessary to
+		/// track some state to determine when the output functions need to be
+		/// called. These methods take care of that.
+
+		/// Must be called when the scene sets have been dirtied.
+		void setsDirtied();
+		/// Returns true if calls to `outputLightLinks()` are necessary. Note
+		/// that this only considers light registrations and set dirtiness - as
+		/// the caller supplies the attributes, it is the caller's responsibility
+		/// to track attribute changes per location as necessary.
+		bool lightLinksDirty() const;
+		/// Returns true if a call to `outputLightFilterLinks()` is necessary.
+		bool lightFilterLinksDirty() const;
+		/// Must be called once all necessary calls to `outputLightLinks()`
+		/// and `outputLightFilterLinks()` have been made.
+		void clean();
+
+	private :
+
+		void addFilterLink( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const std::string &filteredLightsExpression );
+		void removeFilterLink( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const std::string &filteredLightsExpression );
+		std::string filteredLightsExpression( const IECore::CompoundObject *attributes ) const;
+		IECoreScenePreview::Renderer::ConstObjectSetPtr linkedLights( const std::string &linkedLightsExpression, const ScenePlug *scene ) const;
+		void outputLightFilterLinks( const std::string &lightName, IECoreScenePreview::Renderer::ObjectInterface *light ) const;
+		void clearLightLinks();
+
+		/// Storage for lights. This maps from the light name to the light itself.
+		using LightMap = tbb::concurrent_hash_map<std::string, IECoreScenePreview::Renderer::ObjectInterfacePtr>;
+		LightMap m_lights;
+
+		/// Storage for filters. This maps from filter to `filteredLights` set expression.
+		using FilterMap = tbb::concurrent_hash_map<IECoreScenePreview::Renderer::ObjectInterfacePtr, std::string>;
+		FilterMap m_filters;
+
+		/// Storage for light link sets
+		/// ===========================
+		///
+		/// This maps from `linkedLights` expressions to ObjectSets containing
+		/// the relevant lights.
+
+		using LightLinkMap = tbb::concurrent_hash_map<std::string, IECoreScenePreview::Renderer::ObjectSetPtr>;
+		mutable LightLinkMap m_lightLinks;
+		tbb::spin_mutex m_lightLinksClearMutex;
+
+		/// Storage for links between lights and light filters
+		/// ==================================================
+		///
+		/// A naive implementation might store an ObjectSet per light, but this
+		/// can have huge memory requirements where a large number of filters
+		/// are linked to a large number of lights. Instead we group filters
+		/// according to their assignments.
+
+		/// Object containing all filters which are linked
+		/// to the same set of lights.
+		struct FilterLink
+		{
+			IECore::PathMatcher filteredLights;
+			bool filteredLightsDirty;
+			IECoreScenePreview::Renderer::ObjectSetPtr lightFilters;
+		};
+
+		/// Maps from `filteredLights` set expressions to FilterLinks.
+		using FilterLinkMap = tbb::concurrent_hash_map<std::string, FilterLink>;
+		FilterLinkMap m_filterLinks;
+
+		/// Dirty state
+		std::atomic_bool m_lightLinksDirty;
+		std::atomic_bool m_lightFilterLinksDirty;
+
+};
+
 GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
 GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene );

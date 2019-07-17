@@ -294,12 +294,18 @@ void Render::execute() const
 	RendererAlgo::outputOptions( globals.get(), renderer.get() );
 	RendererAlgo::outputOutputs( globals.get(), renderer.get() );
 
-	RendererAlgo::RenderSets renderSets( adaptedInPlug() );
+	{
+		// Using nested scope so that we free the memory used by `renderSets`
+		// and `lightLinks` before we call `render()`.
+		RendererAlgo::RenderSets renderSets( adaptedInPlug() );
+		RendererAlgo::LightLinks lightLinks;
 
-	RendererAlgo::outputCameras( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
-	RendererAlgo::outputLights( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
-	RendererAlgo::outputLightFilters( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
-	RendererAlgo::outputObjects( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
+		RendererAlgo::outputCameras( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
+		RendererAlgo::outputLights( adaptedInPlug(), globals.get(), renderSets, &lightLinks, renderer.get() );
+		RendererAlgo::outputLightFilters( adaptedInPlug(), globals.get(), renderSets, &lightLinks, renderer.get() );
+		lightLinks.outputLightFilterLinks( adaptedInPlug() );
+		RendererAlgo::outputObjects( adaptedInPlug(), globals.get(), renderSets, &lightLinks, renderer.get() );
+	}
 
 	if( renderScope.sceneTranslationOnly() )
 	{

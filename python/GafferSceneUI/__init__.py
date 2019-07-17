@@ -128,7 +128,6 @@ import FilterResultsUI
 import TransformToolUI
 import TranslateToolUI
 import ScaleToolUI
-import EvaluateLightLinksUI
 import RotateToolUI
 import MeshTangentsUI
 import ResamplePrimitiveVariablesUI

@@ -39,6 +39,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
+#include "GafferScene/SetAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
@@ -61,6 +62,7 @@
 
 #include "tbb/blocked_range.h"
 #include "tbb/parallel_reduce.h"
+#include "tbb/parallel_for.h"
 #include "tbb/task.h"
 
 using namespace std;
@@ -479,6 +481,322 @@ ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IE
 } // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
+// LightLinks class
+///////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+IECore::InternedString g_linkedLightsAttributeName( "linkedLights" );
+IECore::InternedString g_filteredLightsAttributeName( "filteredLights" );
+IECore::InternedString g_defaultLightsSetName( "defaultLights" );
+IECore::InternedString g_shadowGroupAttributeName( "ai:visibility:shadow_group" );
+IECore::InternedString g_lights( "lights" );
+IECore::InternedString g_lightFilters( "lightFilters" );
+
+} // namespace
+
+namespace GafferScene
+{
+
+namespace RendererAlgo
+{
+
+LightLinks::LightLinks()
+	:	m_lightLinksDirty( true ), m_lightFilterLinksDirty( true )
+{
+}
+
+void LightLinks::addLight( const std::string &path, const IECoreScenePreview::Renderer::ObjectInterfacePtr &light )
+{
+	assert( light );
+	LightMap::accessor a;
+	m_lights.insert( a, path );
+	assert( !a->second ); // We expect `removeLight()` to be called before `addLight()` is called again
+	a->second = light;
+	m_lightLinksDirty = true;
+	m_lightFilterLinksDirty = true;
+	clearLightLinks();
+}
+
+void LightLinks::removeLight( const std::string &path )
+{
+	m_lights.erase( path );
+	m_lightLinksDirty = true;
+	m_lightFilterLinksDirty = true;
+	clearLightLinks();
+}
+
+void LightLinks::addLightFilter( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const IECore::CompoundObject *attributes )
+{
+	FilterMap::accessor a;
+	const bool inserted = m_filters.insert( a, lightFilter );
+	assert( inserted ); (void)inserted;
+
+	a->second = this->filteredLightsExpression( attributes );
+	addFilterLink( lightFilter, a->second );
+
+	m_lightFilterLinksDirty = true;
+}
+
+void LightLinks::updateLightFilter( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const IECore::CompoundObject *attributes )
+{
+	FilterMap::accessor a;
+	const bool found = m_filters.find( a, lightFilter );
+	assert( found ); (void)found;
+
+	const string e = this->filteredLightsExpression( attributes );
+	if( e == a->second )
+	{
+		return;
+	}
+
+	removeFilterLink( lightFilter, a->second );
+	a->second = e;
+	addFilterLink( lightFilter, a->second );
+
+	m_lightFilterLinksDirty = true;
+}
+
+void LightLinks::removeLightFilter( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter )
+{
+	FilterMap::accessor a;
+	const bool found = m_filters.find( a, lightFilter );
+	assert( found ); (void)found;
+
+	removeFilterLink( a->first, a->second );
+	m_filters.erase( a );
+
+	m_lightFilterLinksDirty = true;
+}
+
+void LightLinks::addFilterLink( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const std::string &filteredLightsExpression )
+{
+	if( filteredLightsExpression == "" )
+	{
+		return;
+	}
+
+	FilterLinkMap::accessor a;
+	const bool inserted = m_filterLinks.insert( a, filteredLightsExpression );
+	if( inserted )
+	{
+		a->second.filteredLightsDirty = true;
+		a->second.lightFilters = std::make_shared<IECoreScenePreview::Renderer::ObjectSet>();
+	}
+	a->second.lightFilters->insert( lightFilter );
+}
+
+void LightLinks::removeFilterLink( const IECoreScenePreview::Renderer::ObjectInterfacePtr &lightFilter, const std::string &filteredLightsExpression )
+{
+	if( filteredLightsExpression == "" )
+	{
+		return;
+	}
+
+	FilterLinkMap::accessor a;
+	bool found = m_filterLinks.find( a, filteredLightsExpression );
+	assert( found ); (void)found;
+	const bool erased = a->second.lightFilters->erase( lightFilter );
+	assert( erased ); (void)erased;
+
+	if( a->second.lightFilters->empty() )
+	{
+		m_filterLinks.erase( a );
+	}
+}
+
+void LightLinks::setsDirtied()
+{
+	for( auto &f : m_filterLinks )
+	{
+		f.second.filteredLightsDirty = true;
+	}
+	clearLightLinks();
+	m_lightLinksDirty = true;
+	m_lightFilterLinksDirty = true;
+}
+
+bool LightLinks::lightLinksDirty() const
+{
+	return m_lightLinksDirty;
+}
+
+bool LightLinks::lightFilterLinksDirty() const
+{
+	return m_lightFilterLinksDirty;
+}
+
+void LightLinks::clean()
+{
+	m_lightLinksDirty = false;
+	m_lightFilterLinksDirty = false;
+}
+
+void LightLinks::clearLightLinks()
+{
+	// We may be called concurrently from `addLight()/removeLight()`, and
+	// `clear()` is not threadsafe - hence the mutex.
+	tbb::spin_mutex::scoped_lock l( m_lightLinksClearMutex );
+	m_lightLinks.clear();
+}
+
+std::string LightLinks::filteredLightsExpression( const IECore::CompoundObject *attributes ) const
+{
+	const StringData *d = attributes->member<StringData>( g_filteredLightsAttributeName );
+	return d ? d->readable() : "";
+}
+
+void LightLinks::outputLightLinks( const ScenePlug *scene, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::ObjectInterface *object, IECore::MurmurHash *hash ) const
+{
+	const StringData *linkedLightsExpressionData = attributes->member<StringData>( g_linkedLightsAttributeName );
+	/// This is Arnold-specific. We could consider making it a standard,
+	/// or if we find we need to support other renderer-specific attributes, we
+	/// could add a mechanism for registering them.
+	const StringData *linkedShadowsExpressionData = attributes->member<StringData>( g_shadowGroupAttributeName );
+	const std::string linkedLightsExpression = linkedLightsExpressionData ? linkedLightsExpressionData->readable() : "defaultLights";
+	const std::string linkedShadowsExpression = linkedShadowsExpressionData ? linkedShadowsExpressionData->readable() : "__lights";
+
+	if( hash )
+	{
+		IECore::MurmurHash h;
+		h.append( linkedLightsExpression );
+		h.append( linkedShadowsExpression );
+		if( !m_lightLinksDirty && *hash == h )
+		{
+			// We're only being called because the attributes have changed as a whole, but the
+			// specific attributes we care about haven't changed. No need to relink anything.
+			/// \todo Investigate other optimisations. Perhaps `setExpressionHash()` is fast enough
+			/// that we could use it to avoid editing links when sets have been dirtied but the
+			/// specific sets we care about haven't changed?
+			return;
+		}
+		*hash = h;
+	}
+
+	IECoreScenePreview::Renderer::ConstObjectSetPtr objectSet = linkedLights( linkedLightsExpression, scene );
+	object->link( g_lights, objectSet );
+	objectSet = linkedLights( linkedShadowsExpression, scene );
+	object->link( g_shadowGroupAttributeName, objectSet );
+}
+
+IECoreScenePreview::Renderer::ConstObjectSetPtr LightLinks::linkedLights( const std::string &linkedLightsExpression, const ScenePlug *scene ) const
+{
+	LightLinkMap::accessor a;
+	if( !m_lightLinks.insert( a, linkedLightsExpression ) )
+	{
+		// Already did the work
+		return a->second;
+	}
+
+	PathMatcher paths = SetAlgo::evaluateSetExpression( linkedLightsExpression, scene );
+
+	auto objectSet = std::make_shared<IECoreScenePreview::Renderer::ObjectSet>();
+	for( PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		std::string pathString;
+		ScenePlug::pathToString( *it, pathString );
+		LightMap::const_accessor a;
+		if( m_lights.find( a, pathString ) )
+		{
+			objectSet->insert( a->second );
+		}
+	}
+	if( objectSet->size() == m_lights.size() )
+	{
+		// All lights are linked, in which case we can avoid
+		// explicitly listing all the links as an optimisation.
+		objectSet = nullptr;
+	}
+
+	a->second = objectSet;
+	return a->second;
+}
+
+void LightLinks::outputLightFilterLinks( const ScenePlug *scene )
+{
+
+	// Update the `filteredLights` fields in our FilterLinks.
+
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+
+	tbb::parallel_for(
+		m_filterLinks.range(),
+		[scene]( FilterLinkMap::range_type &range )
+		{
+			for( auto &f : range )
+			{
+				if( f.second.filteredLightsDirty )
+				{
+					f.second.filteredLights = SetAlgo::evaluateSetExpression( f.first, scene );
+					f.second.filteredLightsDirty = false;
+				}
+			}
+		},
+		tbb::auto_partitioner(),
+		taskGroupContext
+	);
+
+	// Loop over all our lights, outputting filter links as
+	// necessary.
+
+	tbb::parallel_for(
+		m_lights.range(),
+		[this]( const LightMap::range_type &range )
+		{
+			for( const auto &l : range )
+			{
+				outputLightFilterLinks( l.first, l.second.get() );
+			}
+		},
+		tbb::auto_partitioner(),
+		taskGroupContext
+	);
+}
+
+void LightLinks::outputLightFilterLinks( const std::string &lightName, IECoreScenePreview::Renderer::ObjectInterface *light ) const
+{
+	// Find the filter links that apply to this light
+
+	vector<const FilterLink *> filterLinks;
+	for( const auto &filterLink : m_filterLinks )
+	{
+		if( filterLink.second.filteredLights.match( lightName ) & PathMatcher::ExactMatch )
+		{
+			filterLinks.push_back( &filterLink.second );
+		}
+	}
+
+	// Combine the filters from all the links, and output them.
+
+	IECoreScenePreview::Renderer::ObjectSetPtr linkedFilters;
+	if( filterLinks.size() == 0 )
+	{
+		static IECoreScenePreview::Renderer::ObjectSetPtr emptySet = make_shared<IECoreScenePreview::Renderer::ObjectSet>();
+		linkedFilters = emptySet;
+	}
+	else if( filterLinks.size() == 1 )
+	{
+		// Optimisation for common case - no need to combine.
+		linkedFilters = filterLinks.front()->lightFilters;
+	}
+	else
+	{
+		linkedFilters = std::make_shared<IECoreScenePreview::Renderer::ObjectSet>();
+		for( const auto &filterLink : filterLinks )
+		{
+			linkedFilters->insert( filterLink->lightFilters->begin(), filterLink->lightFilters->end() );
+		}
+	}
+
+	light->link( g_lightFilters, linkedFilters );
+}
+
+} // namespace RendererAlgo
+
+} // namespace GafferScene
+
+//////////////////////////////////////////////////////////////////////////
 // Internal utilities
 ///////////////////////////////////////////////////////////////////////////
 
@@ -586,7 +904,12 @@ struct LocationOutput
 			return motionSegments( m_options.deformationBlur, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName );
 		}
 
-		IECoreScenePreview::Renderer::AttributesInterfacePtr attributes()
+		const IECore::CompoundObject *attributes() const
+		{
+			return m_attributes.get();
+		}
+
+		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface()
 		{
 			/// \todo Should we keep a cache of AttributesInterfaces so we can share
 			/// them between multiple objects, or should we rely on the renderers to
@@ -768,7 +1091,7 @@ struct CameraOutput : public LocationOutput
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->camera(
 					name( path ),
 					cameraCopy.get(),
-					attributes().get()
+					attributesInterface().get()
 				);
 
 				applyTransform( objectInterface.get() );
@@ -788,8 +1111,8 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightSet( renderSets.lightsSet() )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, GafferScene::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightSet( renderSets.lightsSet() ), m_lightLinks( lightLinks )
 	{
 	}
 
@@ -805,34 +1128,38 @@ struct LightOutput : public LocationOutput
 		{
 			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
 
+			const std::string name = this->name( path );
 			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->light(
-				name( path ),
+				name,
 				!runTimeCast<const NullObject>( object.get() ) ? object.get() : nullptr,
-				attributes().get()
+				attributesInterface().get()
 			);
 
 			applyTransform( objectInterface.get() );
+			if( m_lightLinks )
+			{
+				m_lightLinks->addLight( name, objectInterface );
+			}
 		}
 
 		return lightMatch & IECore::PathMatcher::DescendantMatch;
 	}
 
 	const PathMatcher &m_lightSet;
+	GafferScene::RendererAlgo::LightLinks *m_lightLinks;
 
 };
 
-// \todo: consolidate with LightOutput?
 struct LightFiltersOutput : public LocationOutput
 {
-	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightFiltersSet( renderSets.lightFiltersSet() )
+
+	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, GafferScene::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
 	{
 	}
 
 	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 	{
-
-
 		if( !LocationOutput::operator()( scene, path ) )
 		{
 			return false;
@@ -846,23 +1173,31 @@ struct LightFiltersOutput : public LocationOutput
 			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->lightFilter(
 				name( path ),
 				!runTimeCast<const NullObject>( object.get() ) ? object.get() : nullptr,
-				attributes().get()
+				attributesInterface().get()
 			);
 
 			applyTransform( objectInterface.get() );
+			if( m_lightLinks )
+			{
+				m_lightLinks->addLightFilter( objectInterface, attributes() );
+			}
 		}
 
 		return lightFilterMatch & IECore::PathMatcher::DescendantMatch;
 	}
 
-	const PathMatcher &m_lightFiltersSet;
+	private :
+
+		const PathMatcher &m_lightFiltersSet;
+		GafferScene::RendererAlgo::LightLinks *m_lightLinks;
+
 };
 
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const GafferScene::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
 	{
 	}
 
@@ -886,7 +1221,7 @@ struct ObjectOutput : public LocationOutput
 		}
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
-		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = attributes();
+		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = this->attributesInterface();
 		if( !sampleTimes.size() )
 		{
 			objectInterface = renderer()->object( name( path ), samples[0].get(), attributesInterface.get() );
@@ -904,6 +1239,10 @@ struct ObjectOutput : public LocationOutput
 		}
 
 		applyTransform( objectInterface.get() );
+		if( m_lightLinks )
+		{
+			m_lightLinks->outputLightLinks( scene, attributes(), objectInterface.get() );
+		}
 
 		return true;
 	}
@@ -911,6 +1250,7 @@ struct ObjectOutput : public LocationOutput
 	const PathMatcher &m_cameraSet;
 	const PathMatcher &m_lightSet;
 	const PathMatcher &m_lightFiltersSet;
+	const RendererAlgo::LightLinks *m_lightLinks;
 
 };
 
@@ -1083,23 +1423,23 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 }
 
-void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
+void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer )
 {
 	const ScenePlug::ScenePath root;
-	LightOutput output( renderer, globals, renderSets, root, scene );
+	LightFiltersOutput output( renderer, globals, renderSets, lightLinks, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
-void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
+void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer )
 {
 	const ScenePlug::ScenePath root;
-	LightFiltersOutput output( renderer, globals, renderSets, root, scene );
+	LightOutput output( renderer, globals, renderSets, lightLinks, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
-void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
+void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
 {
-	ObjectOutput output( renderer, globals, renderSets, root, scene );
+	ObjectOutput output( renderer, globals, renderSets, lightLinks, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output, root );
 }
 
@@ -1175,7 +1515,7 @@ void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObje
 	// \todo - switch to the form above once we have officially added the depthOfField parameter to Cortex.
 	// The plan then would be that the renderer backends should respect camera->getDepthOfField.
 	// For the moment we bake into fStop instead
-	bool depthOfField = false;	
+	bool depthOfField = false;
 	if( depthOfFieldData )
 	{
 		// First set from render globals

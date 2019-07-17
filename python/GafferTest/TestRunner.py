@@ -40,6 +40,8 @@ import json
 import time
 import collections
 
+import Gaffer
+
 # TestRunner capable of measuring performance of certain
 # tests and failing them if they contain regressions compared
 # to previous results.
@@ -70,9 +72,13 @@ class TestRunner( unittest.TextTestRunner ) :
 
 				timings = []
 				for i in range( 0, self.__repeat ) :
+					Gaffer.ValuePlug.clearCache() # Put each iteration on an equal footing
+					TestRunner.PerformanceScope._total = None
 					t = time.time()
 					result = method( *args, **kw )
-					timings.append( time.time() - t )
+					totalTime = time.time() - t
+					scopedTime = TestRunner.PerformanceScope._total
+					timings.append( scopedTime if scopedTime is not None else totalTime )
 
 				# Stash timings so they can be recovered
 				# by TestRunner.__Result.
@@ -90,6 +96,25 @@ class TestRunner( unittest.TextTestRunner ) :
 			wrapper.performanceTestMethod = True
 
 			return wrapper
+
+	# Context manager used to time only specific blocks
+	# within a PerformanceTestMethod.
+	class PerformanceScope( object ) :
+
+		# Protected to allow access by PerformanceTestMethod.
+		_total = None
+
+		def __enter__( self ) :
+
+			self.__startTime = time.time()
+
+		def __exit__( self, type, value, traceBack ) :
+
+			t = time.time() - self.__startTime
+			if TestRunner.PerformanceScope._total is not None :
+				TestRunner.PerformanceScope._total += t
+			else :
+				TestRunner.PerformanceScope._total = t
 
 	def run( self, test ) :
 
