@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ##########################################################################
 #
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
@@ -137,43 +139,47 @@ plugsMetadata = {
 	],
 
 	"options.filmFit" : [
+
 		"description",
 		"""
-		Determines how the size of the rendered image relates to the
-		camera aperture. If the aspect ratios of the aperture and the
-		output resolution are the same, then this has no effect,
-		otherwise it dictates what method is used to preserve the pixel
-		aspect ratio of the rendered image.
+		How the aperture gate (the frame defined by the aperture) will
+		fit into the resolution gate (the framed defined by the data
+		window). Fitting is applied only if the respective aspect
+		ratios of the aperture and the resolution are different. The
+		following fitting modes are available:
 
-		Horizontal
-		:   The frustum is adjusted so that the rendered image fills
-			the full width of the aperture and aspect ratio is
-			preserved.
-
-		Vertical
-		:   The frustum is adjusted so that the rendered image fills
-			the full height of the aperture and aspect ratio is
-			preserved.
-
-		Fit
-		:   Automatically picks Horizontal or Vertical such that all of
-			the aperture is contained within the output image. This may
-			result in seeing outside the aperture at the top and bottom
-			or left and right.
-
-		Fill
-		:   Automatically picks Horizontal or Vertical such that the
-			output image is fully covered by the aperture. Part of the
-			aperture may be cropped off at the top and bottom or left
-			and right.
-
-		Distort
-		:   Distorts the frustum so that the aperture is fitted exactly
-			to the output display window, resulting in non-square
-			pixels.
+		- _Horizontal:_ The aperture gate will fit horizontally between
+		the left/right edges of the resolution gate, while preserving
+		its aspect ratio. If the aperture's aspect ratio is larger than
+		the resolution's, the top/bottom edges of the aperture will be
+		cropped. If it's smaller, then the top/bottom edges will
+		capture extra vertical scene content. 
+		- _Vertical:_ The aperture gate will fit vertically between the
+		top/bottom edges of the resolution gate, while preserving its
+		aspect ratio. If the aperture's aspect ratio is larger than the
+		resolution's, the left/right edges of the aperture will be
+		cropped. If it's smaller, then the left/right edges will
+		capture more horizontal scene content.
+		- _Fit_: The aperture gate will fit horizontally (like
+		_Horizontal_ mode) or vertically (like _Vertical_ mode) inside
+		the resolution gate to avoid cropping the aperture, while
+		preserving its aspect ratio. If the two gates' aspect ratios
+		differ, the aperture will capture extra horizontal or vertical
+		scene content.
+		- _Fill:_ The aperture gate will fill the resolution gate such
+		that none of the aperture captures extra scene content, while
+		preserving its aspect ratio. In other words, it will make the
+		opposite choice of the _Fit_ mode. If the two gates' aspect
+		ratios differ, the aperture will be horizontally or vertically
+		cropped. 
+		- _Distort:_ The aperture gate will match the size of the
+		resolution gate. If their aspect ratios differ, the resulting
+		image will appear vertically or horizontally stretched or
+		squeezed.
 		""",
 		"layout:section", "Camera",
 		"label", "Film Fit",
+
 	],
 
 	"options.filmFit.value" : [
@@ -192,9 +198,7 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The resolution of the image to be rendered. Use the
-		resolution multiplier as a convenient way to temporarily
-		render at multiples of this resolution.
+		The resolution of the image to be rendered.
 		""",
 
 		"layout:section", "Camera",
@@ -206,7 +210,8 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The aspect ratio (x/y) of the pixels in the rendered image.
+		The `width / height` aspect ratio of the individual pixels in
+		the rendered image.
 		""",
 
 		"layout:section", "Camera",
@@ -217,7 +222,7 @@ plugsMetadata = {
 
 		"description",
 		"""
-		Multiplier applied to the render resolution.
+		Multiplies the resolution of the render by this amount.
 		""",
 
 		"layout:section", "Camera",
@@ -228,12 +233,12 @@ plugsMetadata = {
 
 		"description",
 		"""
-		Limits the render to a region of the image. The rendered
-		image will have the same resolution as usual, but areas
-		outside the crop will be rendered black. Coordinates
-		range from 0,0 at the top left of the image to 1,1 at the
-		bottom right. The crop window tool in the viewer may be
-		used to set this interactively.
+		Limits the render to a region of the image. The rendered image
+		will have the same resolution as usual, but areas outside the
+		crop will be rendered black. Coordinates range from (0,0) at
+		the top-left of the image to (1,1) at the bottom-right. The
+		crop window tool in the viewer may be used to set this
+		interactively.
 		""",
 
 		"layout:section", "Camera",
@@ -245,12 +250,14 @@ plugsMetadata = {
 
 		"description",
 		"""
-		Adds extra pixels to the sides of the rendered image.
-		This can be useful when camera shake or blur will be
-		added as a post process. This plug just enables overscan
-		as a whole - use the overscanTop, overscanBottom, overscanLeft
-		and overscanRight plugs to specify the amount of overscan
-		on each side of the image.
+		Whether to enable overscan, which adds extra pixels to the
+		sides of the rendered image.
+
+		Overscan can be useful when camera shake or blur will be added
+		as a post-process. This plug just enables overscan as a whole –
+		use the _Overscan Top_, _Overscan Bottom_, _Overscan Left_ and
+		_Overscan Right_ plugs to specify the amount of overscan on
+		each side of the image.
 		""",
 
 		"layout:section", "Camera",
@@ -261,8 +268,8 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The amount of overscan at the top of the image. Specified
-		as a 0-1 proportion of the original image height.
+		The amount of overscan at the top of the image. Specified as a
+		0-1 proportion of the original image height.
 		""",
 
 		"layout:section", "Camera",
@@ -273,8 +280,8 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The amount of overscan at the bottom of the image. Specified
-		as a 0-1 proportion of the original image height.
+		The amount of overscan at the bottom of the image. Specified as
+		a 0-1 proportion of the original image height.
 		""",
 
 		"layout:section", "Camera",
@@ -285,8 +292,8 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The amount of overscan at the left of the image. Specified
-		as a 0-1 proportion of the original image width.
+		The amount of overscan at the left of the image. Specified as a
+		0-1 proportion of the original image width.
 		""",
 
 		"layout:section", "Camera",
@@ -297,8 +304,8 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The amount of overscan at the right of the image. Specified
-		as a 0-1 proportion of the original image width.
+		The amount of overscan at the right of the image. Specified as
+		a 0-1 proportion of the original image width.
 		""",
 
 		"layout:section", "Camera",
@@ -309,9 +316,9 @@ plugsMetadata = {
 
 		"description",
 		"""
-		Enable rendering with depth of field blur.  To get blur, you
-		must enable this setting, and set an f-stop on the camera you
-		are rendering.
+		Whether to render with depth of field. To ensure the effect is
+		visible, you must also set an f-stop value greater than 0 on
+		this camera.
 		""",
 
 		"layout:section", "Camera",
@@ -370,9 +377,8 @@ plugsMetadata = {
 
 		"description",
 		"""
-		The interval over which the camera shutter is open.
-		Measured in frames, and specified relative to the
-		frame being rendered.
+		The interval over which the camera shutter is open. Measured
+		in frames, and specified relative to the frame being rendered.
 		""",
 
 		"layout:section", "Motion Blur",
