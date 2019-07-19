@@ -569,7 +569,7 @@ Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &tex
 	);
 }
 
-void StandardStyle::renderText( TextType textType, const std::string &text, State state, const Imath::Color3f *userColor ) const
+void StandardStyle::renderText( TextType textType, const std::string &text, State state, const Imath::Color4f *userColor ) const
 {
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
@@ -588,7 +588,14 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	/// automatically linearised before arriving in the shader.
 	glUniform1i( g_textureTypeParameter, 2 );
 
-	glColor( colorForState( ForegroundColor, state, userColor ) );
+	if( userColor )
+	{
+		glColor( *userColor );
+	}
+	else
+	{
+		glColor( colorForState( ForegroundColor, state ) );
+	}
 
 	glPushMatrix();
 
@@ -1037,7 +1044,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 }
 
 
-void StandardStyle::renderLine( const IECore::LineSegment3f &line, float width, const Imath::Color3f *userColor ) const
+void StandardStyle::renderLine( const IECore::LineSegment3f &line, float width, const Imath::Color4f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
@@ -1330,7 +1337,7 @@ static const std::string &fragmentSource()
 		"	}"
 		"	else if( textureType==2 )"
 		"	{"
-		"		OUTCOLOR = vec4( OUTCOLOR.rgb, texture2D( texture, gl_TexCoord[0].xy ).a );"
+		"		OUTCOLOR = vec4( OUTCOLOR.rgb, OUTCOLOR.a * texture2D( texture, gl_TexCoord[0].xy ).a );"
 		"	}\n"
 
 		"#if __VERSION__ >= 330\n"
