@@ -858,6 +858,10 @@
 		page STRING "Coat"
 	[attr coat_affect_roughness]
 		page STRING "Coat"
+	[attr coat_anisotropy]
+		page STRING "Coat"
+	[attr coat_rotation]
+		page STRING "Coat"
 
 	[attr sheen]
 		page STRING "Sheen"
@@ -955,6 +959,10 @@
 	[attr ior]
 		page STRING "Specular"
 	[attr shift]
+		page STRING "Specular"
+	[attr roughness_azimuthal]
+		page STRING "Specular"
+	[attr roughness_anisotropic]
 		page STRING "Specular"
 
 	[attr specular_tint]
