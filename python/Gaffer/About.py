@@ -129,7 +129,7 @@ class About :
 			{
 				"name" : "ilmbase",
 				"url" : "http://www.openexr.com/",
-				"license" : "$GAFFER_ROOT/doc/licenses/ilmbase",
+				"license" : "$GAFFER_ROOT/doc/licenses/IlmBase",
 			},
 
 			{
@@ -148,7 +148,7 @@ class About :
 			{
 				"name" : "openexr",
 				"url" : "http://www.openexr.com/",
-				"license" : "$GAFFER_ROOT/doc/licenses/openexr",
+				"license" : "$GAFFER_ROOT/doc/licenses/OpenEXR",
 			},
 
 			{
@@ -207,7 +207,7 @@ class About :
 			{
 				"name" : "OpenVDB",
 				"url" : "http://www.openvdb.org//",
-				"license" : "$GAFFER_ROOT/doc/licenses/openvdb",
+				"license" : "$GAFFER_ROOT/doc/licenses/OpenVDB",
 			},
 
 			{

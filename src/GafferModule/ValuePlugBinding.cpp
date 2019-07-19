@@ -104,7 +104,7 @@ void hash2( ValuePlug *plug, IECore::MurmurHash &h )
 
 void GafferModule::bindValuePlug()
 {
-	PlugClass<ValuePlug, PlugWrapper<ValuePlug> >()
+	scope s = PlugClass<ValuePlug, PlugWrapper<ValuePlug> >()
 		.def( boost::python::init<const std::string &, Plug::Direction, unsigned>(
 				(
 					boost::python::arg_( "name" ) = GraphComponent::defaultName<ValuePlug>(),
@@ -132,6 +132,14 @@ void GafferModule::bindValuePlug()
 		.def( "setHashCacheSizeLimit", &ValuePlug::setHashCacheSizeLimit )
 		.staticmethod( "setHashCacheSizeLimit" )
 		.def( "__repr__", &repr )
+	;
+
+	enum_<ValuePlug::CachePolicy>( "CachePolicy" )
+		.value( "Uncached", ValuePlug::CachePolicy::Uncached )
+		.value( "Standard", ValuePlug::CachePolicy::Standard )
+		.value( "TaskCollaboration", ValuePlug::CachePolicy::TaskCollaboration )
+		.value( "TaskIsolation", ValuePlug::CachePolicy::TaskIsolation )
+		.value( "Legacy", ValuePlug::CachePolicy::Legacy )
 	;
 
 	Serialisation::registerSerialiser( Gaffer::ValuePlug::staticTypeId(), new ValuePlugSerialiser );

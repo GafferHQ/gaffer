@@ -40,6 +40,7 @@
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECore/Canceller.h"
 
@@ -47,31 +48,9 @@
 
 using namespace Gaffer;
 
-namespace
-{
-
-// Used by `handleException()/emitError()` to track the original (most upstream)
-// source of an error.
-// \todo This assumes that each error propagates on a single thread, but when
-// TBB tasks are accounted for, this is not true. A better approach might be to
-// wrap exceptions in a ProcessException class in `handleException()`, storing
-// the error source in the ProcessException instance. There are a couple of obstacles
-// to this :
-//
-// - We wouldn't want a ProcessException to be stored inside ValuePlug's LRUCache,
-//   because the error source might have ceased to exist when it is rethrown on the
-//   next cache access. We might be able to deal with this by unwrapping and rewrapping
-//   the exception at the appropriate points in ValuePlug.
-// - Exception types are not preserved when a C++ exception enters Python and then
-//   gets translated back into C++. We would at least need to preserve ProcessException's
-//   exactly, if not other types.
-//
-// Still, it seems like the most promising approach, and ProcessException could have
-// other nice features, like including the plug name in the error message (which again,
-// we wouldn't want stored inside the ValuePlug cache).
-tbb::enumerable_thread_specific<const Plug *> g_errorSource( nullptr );
-
-} // namespace
+//////////////////////////////////////////////////////////////////////////
+// Process
+//////////////////////////////////////////////////////////////////////////
 
 Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream )
 	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug )
@@ -91,10 +70,6 @@ Process::~Process()
 	for( const auto &m : *m_threadState->m_monitors )
 	{
 		m->processFinished( this );
-	}
-	if( !parent() )
-	{
-		g_errorSource.local() = nullptr;
 	}
 }
 
@@ -117,27 +92,28 @@ void Process::handleException()
 		// to report via `emitError()`.
 		throw;
 	}
+	catch( const ProcessException &e )
+	{
+		emitError( e.what(), e.plug() );
+		throw;
+	}
 	catch( const std::exception &e )
 	{
-		if( !g_errorSource.local() )
-		{
-			g_errorSource.local() = plug();
-		}
 		emitError( e.what() );
-		throw;
+		// Wrap in a ProcessException. This allows us to correctly
+		// transport the source plug up the call chain, and also
+		// provides a more useful error message to the unlucky
+		// recipient.
+		ProcessException::wrapCurrentException( *this );
 	}
 	catch( ... )
 	{
-		if( !g_errorSource.local() )
-		{
-			g_errorSource.local() = plug();
-		}
 		emitError( "Unknown error" );
-		throw;
+		ProcessException::wrapCurrentException( *this );
 	}
 }
 
-void Process::emitError( const std::string &error ) const
+void Process::emitError( const std::string &error, const Plug *source ) const
 {
 	const Plug *plug = m_downstream;
 	while( plug )
@@ -146,9 +122,73 @@ void Process::emitError( const std::string &error ) const
 		{
 			if( const Node *node = plug->node() )
 			{
-				node->errorSignal()( plug, g_errorSource.local(), error );
+				node->errorSignal()( plug, source ? source : m_plug, error );
 			}
 		}
 		plug = plug != m_plug ? plug->getInput() : nullptr;
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// ProcessException
+//////////////////////////////////////////////////////////////////////////
+
+ProcessException::ProcessException( const ConstPlugPtr &plug, const Context *context, IECore::InternedString processType, const std::exception_ptr &exception, const char *what )
+	:	std::runtime_error( formatWhat( plug.get(), what ) ), m_plug( plug ), m_context( new Context( *context ) ), m_processType( processType ), m_exception( exception )
+{
+}
+
+const Plug *ProcessException::plug() const
+{
+	return m_plug.get();
+}
+
+const Context *ProcessException::context() const
+{
+	return m_context.get();
+}
+
+void ProcessException::rethrowUnwrapped() const
+{
+	std::rethrow_exception( m_exception );
+}
+
+IECore::InternedString ProcessException::processType() const
+{
+	return m_processType;
+}
+
+void ProcessException::wrapCurrentException( const Process &process )
+{
+	wrapCurrentException( process.plug(), process.context(), process.type() );
+}
+
+void ProcessException::wrapCurrentException( const ConstPlugPtr &plug, const Context *context, IECore::InternedString processType )
+{
+	assert( std::current_exception() );
+	try
+	{
+		throw;
+	}
+	catch( const IECore::Cancelled &e )
+	{
+		throw;
+	}
+	catch( const ProcessException &e )
+	{
+		throw;
+	}
+	catch( const std::exception &e )
+	{
+		throw ProcessException( plug, context, processType, std::current_exception(), e.what() );
+	}
+	catch( ... )
+	{
+		throw ProcessException( plug, context, processType, std::current_exception(), "Unknown error" );
+	}
+}
+
+std::string ProcessException::formatWhat( const Plug *plug, const char *what )
+{
+	return plug->relativeName( plug->ancestor<ScriptNode>() ) + " : " + what;
 }

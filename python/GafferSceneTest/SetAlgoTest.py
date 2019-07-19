@@ -137,7 +137,7 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 			# note the missing )
 			GafferScene.SetAlgo.evaluateSetExpression( 'setA - (/group/group/sphere2', group2["out"] )
 
-		self.assertEqual( str( e.exception ), 'Exception : Syntax error in indicated part of SetExpression.\nsetA - (/group/group/sphere2\n     |---------------------|\n.' )
+		self.assertEqual( str( e.exception ), 'Syntax error in indicated part of SetExpression.\nsetA - (/group/group/sphere2\n     |---------------------|\n.' )
 
 		# Sets that don't exist should be replaced with an empty PathMatcher
 		expressionCheck( 'A', [] )

@@ -116,6 +116,50 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 			WrappedType::compute( output, context );
 		}
 
+		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "hashCachePolicy" );
+					if( f )
+					{
+						boost::python::object policy = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ) );
+						return boost::python::extract<Gaffer::ValuePlug::CachePolicy>( policy );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::hashCachePolicy( output );
+		}
+
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "computeCachePolicy" );
+					if( f )
+					{
+						boost::python::object policy = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ) );
+						return boost::python::extract<Gaffer::ValuePlug::CachePolicy>( policy );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::computeCachePolicy( output );
+		}
+
 };
 
 } // namespace GafferBindings

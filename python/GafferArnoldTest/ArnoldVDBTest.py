@@ -40,6 +40,7 @@ import imath
 import IECore
 import IECoreScene
 
+import Gaffer
 import GafferSceneTest
 import GafferArnold
 
@@ -69,12 +70,14 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 
 		# Invalid grid names should create errors.
 		v["grids"].setValue( "notAGrid" )
-		self.assertRaisesRegexp( KeyError, "has no grid named \"notAGrid\"", v["out"].bound, "/volume" )
+		with self.assertRaisesRegexp( Gaffer.ProcessException, "has no grid named \"notAGrid\"" ) as caught :
+			v["out"].bound( "/volume" )
 
 		# As should invalid file names.
 		v["grids"].setValue( "density" )
 		v["fileName"].setValue( "notAFile.vdb" )
-		self.assertRaisesRegexp( IOError, "No such file or directory", v["out"].bound, "/volume" )
+		with self.assertRaisesRegexp( Gaffer.ProcessException, "No such file or directory" ) :
+			v["out"].bound( "/volume" )
 
 	def testStepSize( self ) :
 

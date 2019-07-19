@@ -59,7 +59,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		for i in range( 0, 6 ) :
 			tool.rotate( imath.Eulerf( 0, 90, 0 ) )
-			self.assertEqual( script["cube"]["transform"]["rotate"]["y"].getValue(), (i + 1) * 90 )
+			self.assertAlmostEqual( script["cube"]["transform"]["rotate"]["y"].getValue(), (i + 1) * 90, delta = 0.0001 )
 
 	def testInteractionWithGroupRotation( self ) :
 
