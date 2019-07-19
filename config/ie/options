@@ -211,6 +211,8 @@ if targetAppVersion :
 	BUILD_DIR = os.path.join( BUILD_DIR, targetAppMajorVersion )
 	INSTALL_DIR = os.path.join( INSTALL_DIR, targetAppMajorVersion )
 
+GAFFERCORTEX = True
+
 ##########################################################################
 # get include locations right
 ##########################################################################
