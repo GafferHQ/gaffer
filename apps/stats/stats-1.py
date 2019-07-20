@@ -279,6 +279,8 @@ class stats( Gaffer.Application ) :
 			except AttributeError:
 				self.__vtuneMonitor = None
 				IECore.msg( IECore.Msg.Level.Error, "gui", "unable to create requested VTune monitor" )
+		else :
+			self.__vtuneMonitor = None
 
 		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
 
