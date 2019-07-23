@@ -84,6 +84,9 @@ using namespace GafferSceneUI;
 // UVView::UVScene
 //////////////////////////////////////////////////////////////////////////
 
+// Captures the names of attributes referred to using `<attr:foo>` syntax.
+static const boost::regex g_attrRegex( "<attr:([^>]+)>" );
+
 class UVView::UVScene : public SceneProcessor
 {
 
@@ -252,11 +255,10 @@ class UVView::UVScene : public SceneProcessor
 			}
 			else if( output == udimQueryAttributesPlug() )
 			{
-				const boost::regex attrRegex( "<attr:([^>]+)>" );
 				const string fileName = textureFileNamePlug()->getValue();
 
 				string result;
-				boost::sregex_iterator it( fileName.begin(), fileName.end(), attrRegex );
+				boost::sregex_iterator it( fileName.begin(), fileName.end(), g_attrRegex );
 				while( it != boost::sregex_iterator() )
 				{
 					if( result.size() )
@@ -287,7 +289,6 @@ class UVView::UVScene : public SceneProcessor
 			}
 			else if( output == texturesPlug() )
 			{
-				const boost::regex attrRegex( "<attr:([^>]+)>" );
 				ConstCompoundObjectPtr udimQuery = udimQueryPlug()->getValue();
 				const string textureFileName = textureFileNamePlug()->getValue();
 
@@ -300,7 +301,7 @@ class UVView::UVScene : public SceneProcessor
 					{
 						string substitutedFileName = textureFileName;
 						const auto *attributes = static_cast<const CompoundObject *>( object.second.get() );
-						boost::sregex_iterator it( textureFileName.begin(), textureFileName.end(), attrRegex );
+						boost::sregex_iterator it( textureFileName.begin(), textureFileName.end(), g_attrRegex );
 						while( it != boost::sregex_iterator() )
 						{
 							string attribute;
