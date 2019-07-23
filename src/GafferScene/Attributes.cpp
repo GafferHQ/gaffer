@@ -179,9 +179,7 @@ bool Attributes::processesAttributes() const
 {
 	// Although the base class says that we should return a constant, it should
 	// be OK to return this because it's constant across the hierarchy.
-	IECore::ConstCompoundDataPtr extraAttributesData = extraAttributesPlug()->getValue();
-	const IECore::CompoundDataMap &extraAttributes = extraAttributesData->readable();
-	return ( attributesPlug()->children().size() || !extraAttributes.empty() ) && !globalPlug()->getValue();
+	return ( attributesPlug()->children().size() || !extraAttributesPlug()->isSetToDefault() ) && !globalPlug()->getValue();
 }
 
 void Attributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
