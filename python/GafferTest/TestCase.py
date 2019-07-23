@@ -280,7 +280,7 @@ class TestCase( unittest.TestCase ) :
 
 			for plug in node.children( Gaffer.Plug ) :
 
-				if plug.direction() != plug.Direction.In or not isinstance( plug, Gaffer.ValuePlug ) :
+				if plug.source().direction() != plug.Direction.In or not isinstance( plug, Gaffer.ValuePlug ) :
 					continue
 
 				if not plug.getFlags( plug.Flags.Serialisable ) :
