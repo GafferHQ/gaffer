@@ -986,9 +986,9 @@ _styleSheet = string.Template(
 
 	QTreeView {
 		background-color: $backgroundRaised;
-		border: 1px solid transparent;
-		border-bottom-color: $backgroundRaisedAlt;
-		border-right-color: $backgroundRaisedAlt;
+		border: 1px solid $backgroundRaisedHighlight;
+		border-bottom-color: $backgroundRaisedLowlight;
+		border-right-color: $backgroundRaisedLowlight;
 		padding: 0;
 		alternate-background-color: $backgroundRaisedAlt;
 	}
