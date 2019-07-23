@@ -241,11 +241,12 @@ To export a Box as a reference script, or import a reference script into a Box:
 4. Using the file dialogue, export or import a `.grf` file.
 
 
-## Demos ##
+## Example graphs ##
+
 
 ### Box basics ###
 
-![Box basics demo](images/demoBoxBasics.png "Box basics demo")
+![Box basics](images/exampleBoxBasics.png "Box basics example")
 
 This can be loaded in Gaffer from _Help_ > _Examples_ > _Box Basics_.
 
@@ -253,6 +254,7 @@ A very simple Box with _in_ and _out_ plugs, promoted plugs, and custom UI.
 
 
 ## Limitations ##
+
 
 ### Attribute history focus ###
 
