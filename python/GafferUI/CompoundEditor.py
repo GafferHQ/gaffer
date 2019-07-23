@@ -405,12 +405,22 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		self.__updateStyles()
 
+
+	# This method MUST be used (along with removeEditor) whenever the children
+	# of a _TabbedContainer are being changed. Do not use TabbedContainer methods
+	# such as add/remove/insert directly or state tracking will fail.
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, basestring ) :
 			editor = GafferUI.Editor.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
 		else :
 			editor = nameOrEditor
+
+		# We need to make sure we properly remove this, the base class won't
+		# call removeEditor, so we miss the appropriate cleanup
+		oldParent = editor.parent()
+		if oldParent is not None and isinstance( oldParent, _TabbedContainer ) :
+			oldParent.removeEditor( editor )
 
 		self.insert( len( self ), editor )
 		self.setCurrent( editor )
@@ -424,6 +434,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		return editor
 
+	# This method MUST be used (along with addEditor) whenever the children
+	# of a _TabbedContainer are being changed. Do not use TabbedContainer methods
+	# such as add/remove/insert directly or state tracking will fail.
 	def removeEditor( self, editor ) :
 
 		editor.__titleChangedConnection = None
