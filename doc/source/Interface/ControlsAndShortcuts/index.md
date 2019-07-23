@@ -275,10 +275,10 @@ Reset clipping planes                                  Right-click > *Clipping 
 ====================================================== =====================================
 ```
 
-### Transform tool ###
+### Transform tools ###
 
 > Note :
-> For the following controls and shortcuts, the Transform Tool must be active.
+> For the following controls and shortcuts, a Transform Tool must be active.
 
 ```eval_rst
 ==================================================== =============================================
@@ -287,6 +287,8 @@ Action                                               Control or shortcut
 Increase manipulator size                            :kbd:`+`
 Decrease manipulator size                            :kbd:`-`
 Add animation key to transform of selected object(s) :kbd:`S`
+Adjust, high precision                               :kbd:`Shift` + click and drag
+Adjust, snapping to rounded increments               :kbd:`Ctrl` + click and drag
 ==================================================== =============================================
 ```
 
