@@ -92,6 +92,9 @@ class GAFFER_API ValuePlug : public Plug
 		/// as the default value. The default implementation is sufficient
 		/// for all subclasses except those where the number of child plugs
 		/// varies based on the value.
+		/// > Note : If a plug's value is being driven by a ComputeNode,
+		/// > we always consider it to be non-default, because it may vary
+		/// > by context. `isSetToDefault()` does not trigger computes.
 		virtual bool isSetToDefault() const;
 
 		/// Returns a hash to represent the value of this plug

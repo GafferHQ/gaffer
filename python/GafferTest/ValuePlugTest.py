@@ -621,6 +621,44 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		GafferTest.testValuePlugContentionForOneItem()
 
+	def testIsSetToDefault( self ) :
+
+		n1 = GafferTest.AddNode()
+		self.assertTrue( n1["op1"].isSetToDefault() )
+		self.assertTrue( n1["op2"].isSetToDefault() )
+		self.assertFalse( n1["sum"].isSetToDefault() )
+
+		n1["op1"].setValue( 10 )
+		self.assertFalse( n1["op1"].isSetToDefault() )
+		self.assertTrue( n1["op2"].isSetToDefault() )
+
+		n1["op1"].setToDefault()
+		self.assertTrue( n1["op1"].isSetToDefault() )
+		self.assertTrue( n1["op2"].isSetToDefault() )
+
+		n2 = GafferTest.AddNode()
+		self.assertTrue( n2["op1"].isSetToDefault() )
+		self.assertTrue( n2["op2"].isSetToDefault() )
+		self.assertFalse( n2["sum"].isSetToDefault() )
+
+		n2["op1"].setInput( n1["op1"] )
+		# Receiving a static value via an input. We know
+		# it can have only one value for all contexts,
+		# and can be confident that it is set to the default.
+		self.assertTrue( n2["op1"].isSetToDefault() )
+		self.assertEqual( n2["op1"].getValue(), n2["op1"].defaultValue() )
+		n1["op1"].setValue( 1 )
+		# Until it provides a non-default value, that is.
+		self.assertFalse( n2["op1"].isSetToDefault() )
+
+		n1["op1"].setValue( 0 )
+		n2["op2"].setInput( n1["sum"] )
+		# Driven by a compute, so not considered to be
+		# at the default, even if it the result happens
+		# to be equal in this context.
+		self.assertFalse( n2["op2"].isSetToDefault() )
+		self.assertEqual( n2["op2"].getValue(), n2["op2"].defaultValue() )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
