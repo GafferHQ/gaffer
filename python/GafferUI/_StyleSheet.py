@@ -75,7 +75,7 @@ _styleColors = {
 	"backgroundAlt" : (60, 60, 60),
 	"backgroundHighlight" : (76, 76, 76),
 
-	"backgroundRaisedLowlight" : (52, 52, 52),
+	"backgroundRaisedLowlight" : (60, 60, 60),
 	"backgroundRaised" : (72, 72, 72),
 	"backgroundRaisedAlt" : (66, 66, 66),
 	"backgroundRaisedHighlight" : (82, 82, 82),
