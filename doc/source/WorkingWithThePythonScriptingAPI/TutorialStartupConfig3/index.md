@@ -129,6 +129,18 @@ Let's try testing the custom node. If you haven't already, save the startup conf
 ![The MacbethTexture node in the Graph Editor](images/tutorialMacbethTextureNode.png "The MacbethTexture node in the Graph Editor")
 
 
+## Example graphs ##
+
+
+### Macbeth chart ###
+
+![Preview of the Macbeth chart example](images/exampleMacbethChart.png)
+
+This can be loaded in Gaffer from _Help_ > _Examples_ > _Rendering_ > _Macbeth Chart_.
+
+A scene with a simulated Macbeth chart using the custom node in this tutorial.
+
+
 ## Recap ##
 
 Each of the three startup configs in this tutorial series provided relatively simple examples, but we hope to have demonstrated that with just a bit of Python and a few files, you can easily customize the startup of the Gaffer's apps to suit your worklflow and pipeline needs.
