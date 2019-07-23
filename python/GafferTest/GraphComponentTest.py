@@ -916,5 +916,18 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		s.undo()
 		assertPreconditions()
 
+	def testNoneIsNotAGraphComponent( self ) :
+
+		g = Gaffer.GraphComponent()
+
+		with self.assertRaisesRegexp( Exception, r"did not match C\+\+ signature" ) :
+			g.addChild( None )
+
+		with self.assertRaisesRegexp( Exception, r"did not match C\+\+ signature" ) :
+			g.setChild( "x", None )
+
+		with self.assertRaisesRegexp( Exception, r"did not match C\+\+ signature" ) :
+			g.removeChild( None )
+
 if __name__ == "__main__":
 	unittest.main()

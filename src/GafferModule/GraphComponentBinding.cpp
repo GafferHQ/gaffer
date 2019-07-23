@@ -114,22 +114,22 @@ boost::python::tuple children( GraphComponent &c, IECore::TypeId typeId )
 	return boost::python::tuple( l );
 }
 
-void addChild( GraphComponent &g, GraphComponentPtr c )
+void addChild( GraphComponent &g, GraphComponent &c )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	g.addChild( c );
+	g.addChild( &c );
 }
 
-void setChild( GraphComponent &g, const IECore::InternedString &n, GraphComponentPtr c )
+void setChild( GraphComponent &g, const IECore::InternedString &n, GraphComponent &c )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	g.setChild( n, c );
+	g.setChild( n, &c );
 }
 
-void removeChild( GraphComponent &g, GraphComponentPtr c )
+void removeChild( GraphComponent &g, GraphComponent &c )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	g.removeChild( c );
+	g.removeChild( &c );
 }
 
 void clearChildren( GraphComponent &g )
