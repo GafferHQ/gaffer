@@ -98,44 +98,53 @@ Imath::V3i ScaleHandle::axisMask() const
 
 Imath::V3f ScaleHandle::scaling( const DragDropEvent &event ) const
 {
+	float scale = 1;
+
+	if( m_axes != Style::XYZ )
+	{
+		scale = ( m_drag.position( event ) / m_drag.startPosition() - 1 );
+	}
+	else
+	{
+		const ViewportGadget *viewport = ancestor<ViewportGadget>();
+		const V2f p = viewport->gadgetToRasterSpace( event.line.p1, this );
+		scale = ( p.x - m_uniformDragStartPosition.x ) / (float)viewport->getViewport().x;
+		scale *= 3;
+	}
+
+	// snap to integers
+	if( event.modifiers & ButtonEvent::Control )
+	{
+		scale = std::round( scale );
+	}
+
+	// precision mode
+	if( event.modifiers & ButtonEvent::Shift )
+	{
+		scale *= 0.1;
+	}
+
+	scale = 1 + scale;
+
+	// guard against scaling to 0
+	scale = scale == 0 ? 1 : scale;
+
 	switch( m_axes )
 	{
 		case Style::X :
-			return V3f(
-				m_drag.position( event ) / m_drag.startPosition(),
-				1,
-				1
-			);
+			return V3f( scale, 1, 1 );
 		case Style::Y :
-			return V3f(
-				1,
-				m_drag.position( event ) / m_drag.startPosition(),
-				1
-			);
+			return V3f( 1, scale, 1 );
 		case Style::Z :
-			return V3f(
-				1,
-				1,
-				m_drag.position( event ) / m_drag.startPosition()
-			);
-		case Style::XY : {
-			const float s = m_drag.position( event ) / m_drag.startPosition();
-			return V3f( s, s, 1 );
-		}
-		case Style::XZ : {
-			const float s = m_drag.position( event ) / m_drag.startPosition();
-			return V3f( s, 1, s );
-		}
-		case Style::YZ : {
-			const float s = m_drag.position( event ) / m_drag.startPosition();
-			return V3f( 1, s, s );
-		}
-		case Style::XYZ : {
-			const ViewportGadget *viewport = ancestor<ViewportGadget>();
-			const V2f p = viewport->gadgetToRasterSpace( event.line.p1, this );
-			const float d = (p.x - m_uniformDragStartPosition.x) / (float)viewport->getViewport().x;
-			return V3f( 1.0f + d * 3.0f );
-		}
+			return V3f( 1, 1, scale );
+		case Style::XY :
+			return V3f( scale, scale, 1 );
+		case Style::XZ :
+			return V3f( scale, 1, scale );
+		case Style::YZ :
+			return V3f( 1, scale, scale );
+		case Style::XYZ :
+			return V3f( scale );
 		default :
 			return V3f( 1 );
 	}
