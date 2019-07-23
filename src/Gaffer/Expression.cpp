@@ -515,6 +515,17 @@ void Expression::plugSet( const Plug *plug )
 	expression = transcribe( expression, /* toInternalForm = */ false );
 	std::vector<ValuePlug *> inPlugs, outPlugs;
 	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
+
+	// Alas, it's not quite that simple. Nodes might have been renamed
+	// during deserialisation (to avoid name clashes between duplicates).
+	// And PythonExpressionEngine returns plugs in an order that depends
+	// on name, so our internal plugs may not correspond to what it is
+	// expecting. Call `updatePlugs()` to fix any mismatches. Transcribe
+	// to internal form to match the state that `setExpression()` leaves
+	// us in.
+	updatePlugs( inPlugs, outPlugs );
+	expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
+
 }
 
 //////////////////////////////////////////////////////////////////////////
