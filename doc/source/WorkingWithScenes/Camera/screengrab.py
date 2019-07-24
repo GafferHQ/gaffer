@@ -221,33 +221,30 @@ __nodeEditorWindow._qtWidget().setFocus()
 GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = "images/taskCameraTweaksTweaks.png" )
 __nodeEditorWindow.parent().close()
 
-# Demo: anamorphic camera setup
-__imageName = "demoAnamorphicCameraSetup"
+# Example: Anamorphic Camera Setup
 __dispatchScript(
-	script = "demos/{}.gfr".format( __imageName ),
+	script = os.path.abspath( "../../../examples/rendering/anamorphicCameraSetup.gfr" ),
 	tasks = [ "AppleseedRender" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.value.x '240'",
 		"-StandardOptions.options.renderResolution.value.y '270'",
-		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) ),
+		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/exampleAnamorphicCameraSetup.png" ) ),
 		"-Outputs.outputs.output1.type '\"png\"'"
 		]
 	)
 
-# Demo: spherical camera setup in Arnold
-# __imageName = "renderSphericalCameraSetupArnold"
+# Example: Spherical Camera Setup in Arnold
 # __dispatchScript(
-#	script = "demos/{}.gfr".format( __imageName ),
+#	script = "../../../examples/rendering/sphericalCameraSetupArnold.gfr",
 #	tasks = [ "ArnoldRender" ],
 #	settings = [
 #		"-StandardOptions.options.renderResolution.value.x '480'",
 #		"-StandardOptions.options.renderResolution.value.y '270'",
-#		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) )
-#		),
+#		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/exampleSphericalCameraSetupArnold.png" ) ),
 #		"-Outputs.outputs.output1.type '\"png\"'"
 #		]
 #	)
-## TODO: Automate `images/renderSphericalCameraSetupArnold.png` (the above) when these tools become available:
+## TODO: Automate `images/exampleSphericalCameraSetupArnold.png` (the above) when these tools become available:
 # - Support for spherical cameras in Appleseed
 
 # Task: the tweaks for a spherical Arnold camera in the Node Editor
@@ -270,6 +267,6 @@ Gaffer.Metadata.registerValue( script["CameraTweaks"]["tweaks"]["tweak_aperture"
 __nodeEditorWindow = GafferUI.NodeEditor.acquire( script["CameraTweaks"], floating=True )
 __nodeEditorWindow.parent()._qtWidget().resize( 500, 250 )
 __nodeEditorWindow._qtWidget().setFocus()
-GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = "images/demoSphericalCameraSetupArnoldTweaks.png" )
+GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = "images/exampleSphericalCameraSetupArnoldTweaks.png" )
 
 del __nodeEditorWindow

@@ -106,9 +106,9 @@ UIEditorWindow = GafferUI.UIEditor.acquire( script["mySurfaceShaders"], floating
 GafferUI.WidgetAlgo.grab( widget = UIEditorWindow, imagePath = "images/interfaceUIEditor.png" )
 del UIEditorWindow
 
-# Box Nodes Basics demo
-script["fileName"].setValue( os.path.abspath( "demos/demoBoxBasics.gfr" ) )
+# Box Node Basics example
+script["fileName"].setValue( os.path.abspath( "../../../examples/boxBasics.gfr" ) )
 script.load()
 script.removeChild( script[ "Backdrop" ] )
 graphEditor.frame( script.children( Gaffer.Node ) )
-GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/demoBoxBasics.png" )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/exampleBoxBasics.png" )
