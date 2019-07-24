@@ -75,7 +75,7 @@ _styleColors = {
 	"backgroundAlt" : (60, 60, 60),
 	"backgroundHighlight" : (76, 76, 76),
 
-	"backgroundRaisedLowlight" : (52, 52, 52),
+	"backgroundRaisedLowlight" : (60, 60, 60),
 	"backgroundRaised" : (72, 72, 72),
 	"backgroundRaisedAlt" : (66, 66, 66),
 	"backgroundRaisedHighlight" : (82, 82, 82),
@@ -986,9 +986,9 @@ _styleSheet = string.Template(
 
 	QTreeView {
 		background-color: $backgroundRaised;
-		border: 1px solid transparent;
-		border-bottom-color: $backgroundRaisedAlt;
-		border-right-color: $backgroundRaisedAlt;
+		border: 1px solid $backgroundRaisedHighlight;
+		border-bottom-color: $backgroundRaisedLowlight;
+		border-right-color: $backgroundRaisedLowlight;
 		padding: 0;
 		alternate-background-color: $backgroundRaisedAlt;
 	}
@@ -1004,10 +1004,6 @@ _styleSheet = string.Template(
 
 	QTableView {
 		border: 1px solid transparent;
-	}
-
-	QTableView::item {
-		background-color: $background;
 	}
 
 	QTableView::item:selected {
@@ -1094,8 +1090,8 @@ _styleSheet = string.Template(
 
 	/* gl widget */
 
-	*[gafferClass="GafferUI.GlWidget"] QGraphicsView {
-		border: 0px;
+	QGraphicsView {
+		border: none;
 	}
 
 	/* frame variants */

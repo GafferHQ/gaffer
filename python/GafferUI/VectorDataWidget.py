@@ -936,9 +936,9 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.BackgroundColorRole :
 
 			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
-				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("backgroundMid")  )
+				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("background")  )
 			else:
-				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("alternateColor") )
+				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("backgroundAlt") )
 
 		if (
 			role == QtCore.Qt.DisplayRole or
