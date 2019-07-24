@@ -101,7 +101,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		//////////////////////////////////////////////////////////////////////////
 		//@{
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const = 0;
-		virtual void renderLine( const IECore::LineSegment3f &line, float width=0.5, const Imath::Color3f *userColor = nullptr ) const = 0;
+		virtual void renderLine( const IECore::LineSegment3f &line, float width=0.5, const Imath::Color4f *userColor = nullptr ) const = 0;
 		virtual void renderSolidRectangle( const Imath::Box2f &box ) const = 0;
 		virtual void renderRectangle( const Imath::Box2f &box ) const = 0;
 		//@}
@@ -111,7 +111,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		//@{
 		virtual Imath::Box3f characterBound( TextType textType ) const = 0;
 		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
-		virtual void renderText( TextType textType, const std::string &text, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;
+		virtual void renderText( TextType textType, const std::string &text, State state = NormalState, const Imath::Color4f *userColor = nullptr ) const = 0;
 		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const = 0;
 		//@}
 

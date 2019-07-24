@@ -221,7 +221,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 			const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );
 
-			const Imath::Color3f textColor( 1.0f );
+			const Imath::Color4f textColor( 1.0f );
 			glPushMatrix();
 				IECoreGL::glTranslate( V2f( b.min.x + 1.0 - textBounds.size().x * 0.5, b.max.y - textBounds.size().y * 0.5 - 0.7 ) );
 				style->renderText( Style::BodyText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
@@ -233,7 +233,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			glPushMatrix();
 			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y - g_borderWidth ) );
 
-			const Color3f midGrey( 0.65 );
+			const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
 			const Color3f darkGrey( 0.05 );
 			float previousHeight = 0;
 			for( const auto &a : annotations.standardAnnotations )

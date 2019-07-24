@@ -610,12 +610,7 @@ void ImageView::insertDisplayTransform()
 	}
 	else
 	{
-		DisplayTransformCreatorMap &m = displayTransformCreators();
-		DisplayTransformCreatorMap::const_iterator it = m.find( displayTransformPlug()->getValue() );
-		if( it != m.end() )
-		{
-			displayTransform = it->second();
-		}
+		displayTransform = createDisplayTransform( name );
 		if( displayTransform )
 		{
 			m_displayTransforms[name] = displayTransform;
@@ -647,6 +642,17 @@ void ImageView::registeredDisplayTransforms( std::vector<std::string> &names )
 	{
 		names.push_back( it->first );
 	}
+}
+
+GafferImage::ImageProcessorPtr ImageView::createDisplayTransform( const std::string &name )
+{
+	const auto &m = displayTransformCreators();
+	auto it = m.find( name );
+	if( it != m.end() )
+	{
+		return it->second();
+	}
+	return nullptr;
 }
 
 ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()

@@ -97,21 +97,23 @@ float snapTimeToFrame( float fps, float time, float threshold=std::numeric_limit
 
 // \todo: Consider making the colorForAxes function in StandardStyle public?
 //        Include names for plugs representing color? (foo.r, foo.g, foo.b)
-void colorFromName( std::string name, Imath::Color3f &color )
+Color3f colorFromName( std::string name )
 {
 	if( boost::ends_with( name, ".x" ) )
 	{
-		color = Imath::Color3f( 0.73, 0.17, 0.17 );
+		return Imath::Color3f( 0.73, 0.17, 0.17 );
 	}
-
-	if( boost::ends_with( name, ".y" ) )
+	else if( boost::ends_with( name, ".y" ) )
 	{
-		color = Imath::Color3f( 0.2, 0.57, 0.2 );
+		return Imath::Color3f( 0.2, 0.57, 0.2 );
 	}
-
-	if( boost::ends_with( name, ".z" ) )
+	else if( boost::ends_with( name, ".z" ) )
 	{
-		color = Imath::Color3f( 0.2, 0.36, 0.74 );
+		return Imath::Color3f( 0.2, 0.36, 0.74 );
+	}
+	else
+	{
+		return Color3f( 1 );
 	}
 }
 
@@ -286,7 +288,7 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 		AxisDefinition xAxis, yAxis;
 		computeGrid( viewportGadget, m_context->getFramesPerSecond(), xAxis, yAxis );
 
-		Imath::Color3f axesColor( 60.0 / 255, 60.0 / 255, 60.0 / 255 );
+		Imath::Color4f axesColor( 60.0 / 255, 60.0 / 255, 60.0 / 255, 1.0f );
 
 		// drawing base grid
 		for( const auto &x : xAxis.main )
@@ -1307,18 +1309,18 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 			// \todo: needs tangent computation/hand-off as soon as we support more interpolation modes
 			//        consider passing interpolation into renderCurveSegment to handle all drawing there
 
-			Imath::Color3f userColor( 1.0 ); // curves render white per default
-			colorFromName( drivenPlugName( curvePlug ), userColor );
+			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
 			if( key.getType() == Gaffer::Animation::Linear )
 			{
-				style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &userColor );
+				style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
 			}
 			else if( key.getType() == Gaffer::Animation::Step )
 			{
+				const Color4f color4( color3[0], color3[1], color3[2], 1.0f );
 				// \todo: replace with linear curve segment to get highlighting
-				style->renderLine( IECore::LineSegment3f( V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, previousKeyPosition.y, 0) ), 0.5, &userColor );
-				style->renderLine( IECore::LineSegment3f( V3f( keyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ), 0.5, &userColor );
+				style->renderLine( IECore::LineSegment3f( V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, previousKeyPosition.y, 0) ), 0.5, &color4 );
+				style->renderLine( IECore::LineSegment3f( V3f( keyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ), 0.5, &color4 );
 			}
 		}
 
@@ -1333,14 +1335,14 @@ void AnimationGadget::renderFrameIndicator( int frame, const Style *style, bool 
 	Imath::V2i resolution = viewportGadget->getViewport();
 	ViewportGadget::RasterScope rasterScope( viewportGadget );
 
-	Imath::Color3f frameIndicatorColor = preview ? Imath::Color3f( 120 / 255.0 ) : Imath::Color3f( 240 / 255.0, 220 / 255.0, 40 / 255.0 );
+	const Imath::Color4f frameIndicatorColor = preview ? Imath::Color4f( 120 / 255.0f, 120 / 255.0f, 120 / 255.0f, 1.0f ) : Imath::Color4f( 240 / 255.0, 220 / 255.0, 40 / 255.0, 1.0f );
 
 	int currentFrameRasterPosition = viewportGadget->worldToRasterSpace( V3f( frameToTime<float>( m_context->getFramesPerSecond(), frame ), 0, 0 ) ).x;
 	style->renderLine( IECore::LineSegment3f( V3f( currentFrameRasterPosition, 0, 0 ), V3f( currentFrameRasterPosition, resolution.y, 0 ) ), lineWidth, &frameIndicatorColor );
 
 	if( !preview )
 	{
-		Imath::Color3f frameLabelColor( 60.0 / 255, 60.0 / 255, 60.0 / 255 );
+		Imath::Color4f frameLabelColor( 60.0 / 255, 60.0 / 255, 60.0 / 255, 1.0 );
 
 		Box3f frameLabelBound = style->textBound( Style::BodyText, std::to_string( frame ) );
 		style->renderSolidRectangle( Box2f( V2f( currentFrameRasterPosition, resolution.y - m_yMargin ), V2f( currentFrameRasterPosition + frameLabelBound.size().x * m_textScale + 2*m_labelPadding, resolution.y - m_yMargin - frameLabelBound.size().y * m_textScale - 2*m_labelPadding ) ) );
