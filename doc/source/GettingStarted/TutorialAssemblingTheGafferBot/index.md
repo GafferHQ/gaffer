@@ -419,13 +419,12 @@ The interactive render will now begin updating, and you will be able to see Gaff
 
 As Gaffy is looking a bit bland, you should drive the shader with some robot textures:
 
-1. Create an Appleseed Color Texture node (_Appleseed_ > _Shader_ > _Texture2d_ > *As_color_texture*).
+1. Create an Appleseed Color Texture node (_Appleseed_ > _Shader_ > _Texture2d_ > *asTexture*).
 
 2. In the _Node Editor_, point the node to the textures:
-    - For the Filename plug, type `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_`.
-    - Set the UDIM plug to _mari_.
+    - For the Filename plug, type `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_<UDIM>.tx`.
 
-3. In the _Graph Editor_, connect the Appleseed color texture node's ColorOut plug to the Disney Material node's BaseColor plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
+3. In the _Graph Editor_, connect the Appleseed color texture node's OutputColor plug to the Disney Material node's SurfaceColor plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
 
     ![](images/viewerRenderTextures.png "Gaffy with textures")
 
@@ -436,7 +435,7 @@ Right now, the physical surface of all of Gaffy's geometry looks the same, becau
 
 Begin by creating another shader:
 
-1. Create another Disney Surface shader and Closure2Surface nodes.
+1. Create another pair of Disney Surface shader and Closure2Surface nodes.
 
 2. Connect the outColor plug of the Disney Shader node to the input plug of the Closure2Surface node.
 
