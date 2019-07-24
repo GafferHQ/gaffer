@@ -1006,10 +1006,6 @@ _styleSheet = string.Template(
 		border: 1px solid transparent;
 	}
 
-	QTableView::item {
-		background-color: $background;
-	}
-
 	QTableView::item:selected {
 		background-color: $brightColor;
 	}
