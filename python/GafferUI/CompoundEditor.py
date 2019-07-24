@@ -127,7 +127,7 @@ class CompoundEditor( GafferUI.Editor ) :
 		if scriptWindow :
 			panel.setTitle( scriptWindow.getTitle() )
 			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
-			scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = False )
+			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ) )
 
 		self.__detachedPanels.append( panel )
 		return panel
@@ -136,6 +136,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__detachedPanels.remove( panel )
 		panel.__removeOnCloseConnection = None
+		panel.__titleChangedConnection = None
 		panel._applyVisibility()
 
 	def __visibilityChanged(self, widget) :
