@@ -65,6 +65,30 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		self.assertTrue( False )
 
+	# Disabled since appleseed does not support light filters.
+	@unittest.expectedFailure
+	def testLightFilters( self ) :
+
+		self.assertTrue( False )
+
+	# Disabled since appleseed does not support light filters.
+	@unittest.expectedFailure
+	def testLightFiltersAndSetEdits( self ) :
+
+		self.assertTrue( False )
+
+	# Disabled since appleseed does not support light linking.
+	@unittest.expectedFailure
+	def testHideLinkedLight( self ) :
+
+		self.assertTrue( False )
+
+	# Disabled since appleseed does not support light linking.
+	@unittest.expectedFailure
+	def testLightLinking( self ) :
+
+		self.assertTrue( False )
+
 	def _createInteractiveRender( self ) :
 
 		return GafferAppleseed.InteractiveAppleseedRender()
