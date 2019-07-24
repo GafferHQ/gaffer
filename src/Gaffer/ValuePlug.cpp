@@ -876,7 +876,18 @@ bool ValuePlug::isSetToDefault() const
 {
 	if( m_defaultValue != nullptr )
 	{
-		return getObjectValue()->isEqualTo( m_defaultValue.get() );
+		const ValuePlug *s = source<ValuePlug>();
+		if( s->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( s->node() ) )
+		{
+			// Value is computed, and therefore can vary by context. There is no
+			// single "current value", so no true concept of whether or not it's at
+			// the default.
+			return false;
+		}
+		return
+			s->m_staticValue == m_defaultValue ||
+			s->m_staticValue->isEqualTo( m_defaultValue.get() );
+		;
 	}
 	else
 	{
