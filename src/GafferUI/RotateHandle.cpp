@@ -43,9 +43,12 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathEuler.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
 #include "OpenEXR/ImathSphere.h"
+#include "OpenEXR/ImathQuat.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind.hpp"
+
+#include "math.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -136,18 +139,42 @@ Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event ) const
 		const LineSegment3f line = event.line * fullTransform() * m_dragBeginWorldTransform.inverse();
 		const M44f m = rotationMatrix( m_dragBeginPointOnSphere, pointOnSphere( line ) );
 		Eulerf e; e.extract( m );
+
+		// precision mode
+		if( event.modifiers & ButtonEvent::Shift )
+		{
+			Quatf q = e.toQuat();
+			Quatf interpolated = slerpShortestArc( Quatf(), q, 0.1f );
+			e.extract( interpolated );
+		}
+
 		return e;
 	}
 
-	const float r = closestRotation( m_drag.position( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f );
+	float rotate = ( closestRotation( m_drag.position( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f ) );
+
+	// snap to 30 degree increments
+	if( event.modifiers & ButtonEvent::Control )
+	{
+		float piOverSix = M_PI / 6.0;
+		rotate /= piOverSix;
+		rotate = std::round( rotate ) * piOverSix;
+	}
+
+	// precision mode
+	if( event.modifiers & ButtonEvent::Shift )
+	{
+		rotate *= 0.1;
+	}
+
 	switch( m_axes )
 	{
 		case Style::X :
-			return Eulerf( V3f( r, 0, 0 ) );
+			return Eulerf( V3f( rotate, 0, 0 ) );
 		case Style::Y :
-			return Eulerf( V3f( 0, r, 0 ) );
+			return Eulerf( V3f( 0, rotate, 0 ) );
 		case Style::Z :
-			return Eulerf( V3f( 0, 0, r ) );
+			return Eulerf( V3f( 0, 0, rotate ) );
 		default :
 			// Checks in `setAxes()` prevent us getting here
 			return Eulerf();
