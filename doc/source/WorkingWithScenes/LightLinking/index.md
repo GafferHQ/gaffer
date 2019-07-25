@@ -2,7 +2,7 @@
 
 When lighting a scene, you will sometimes need to selectively control whether a piece of geometry is illuminated by a particular light, both for artistic purposes and to cut down on rendering time. The relationships that determine whether a light applies to an object are collectively known as **light linking**, and are controlled by the object's `linkedLights` attribute.
 
-![A sphere, a cube, and two lights, but the second light only illuminates the cube](images/illustrationLightLinking.png "A sphere, a cube, and two lights, but the second light only illuminates the cube")
+![](images/illustrationLightLinking.png "A sphere, a cube, and two lights, but the second light only illuminates the cube")
 
 > Note :
 > The only supported renderer that currently implements light linking is Arnold.
@@ -15,7 +15,7 @@ When lighting a scene, you will sometimes need to selectively control whether a 
 
 From the light side of things, by default, each light is a member of a set named **"defaultLights"**, and will cast light on every object in the scene. Each light's node has a _Default Light_ plug, which is checked by default. If unchecked, the light is removed from "defaultLights", and, from then on, will only illuminate objects that are expressly linked to it.
 
-![The Default Light plug of a light](images/interfaceDefaultLightPlug.png "The Default Light plug of a light")
+![](images/interfaceDefaultLightPlug.png "The Default Light plug of a light")
 
 From the object side of things, by default, an object is lit by all lights belonging to the "defaultLights" set. To bring about any other behaviour, such as having the object only lit by one light, a `linkedLights` attribute must be added to the object's location in the hierarchy, and the attribute must specify one or more lights, or sets of lights. The `linkedLights` attribute follows standard [inheritance rules for attributes](../../../AnatomyOfAScene/index.html#attributes) in the hierarchy, so if the object doesn't have the `linkedLights` attribute, but one of its ancestors does, it will inherit the attribute.
 
@@ -32,9 +32,9 @@ From the object side of things, by default, an object is lit by all lights belon
 
 In a graph, in order to actually link a light to an object, you must connect a StandardAttributes node downstream of the object, filter for the object's location, and then add a set expression to the _Linked Lights_ plug.
 
-![A StandardAttributes node downstream of an object node](images/interfaceLightLinkSetupGraphEditor.png "A StandardAttributes node downstream of an object node")
+![](images/interfaceLightLinkSetupGraphEditor.png "A StandardAttributes node downstream of an object node")
 
-![The Linked Lights plug of an object](images/interfaceLinkedLightsPlug.png "The Linked Lights plug of an object")
+![](images/interfaceLinkedLightsPlug.png "The Linked Lights plug of an object")
 
 Once the _Linked Lights_ plug is toggled on, the `linkedLights` attribute is added to the object's location. The value of the _Linked Lights_ plug is a [set expression](../../Reference/ScriptingReference/SetExpressions/index.md), which can consist of individual light locations, set names, or both. We will cover how to filter for both types below.
 
@@ -47,7 +47,7 @@ Once the _Linked Lights_ plug is toggled on, the `linkedLights` attribute is add
 
 To link a light by location, simply add the light's full location to the set expression. No additional node is needed.
 
-![A light linking set expression with a location](images/taskLightLinkingSetExpressionLocation.png "A light linking set expression with a location")
+![](images/taskLightLinkingSetExpressionLocation.png "A light linking set expression with a location")
 
 > Important :
 > When linking a light by its location, the path you provide **must** be the final location of the light within the hierarchy **as delivered to the render node**. For example, if you link to a light at `/group/light`, but later in the graph you shuffle the hierarchy and the light exists at `/building/lights/light`, the renderer will look for the light at the original location, find nothing there, and then the link will fail. Therefore, you would unintuitively need to target a downstream location in an upstream part of the graph.
@@ -59,17 +59,17 @@ In setups with more than a few lights, managing a set expression with multiple l
 
 A light can be added to any number of custom sets using the _Sets_ plug on the light's node, or a separate Set node. Custom sets are separate and do not affect the "defaultLights" set.
 
-![A Set node downstream of a light node in the Graph Editor](images/interfaceLightSetGraphEditor.png "A Set node downstream of a light node in the Graph Editor")
+![](images/interfaceLightSetGraphEditor.png "A Set node downstream of a light node in the Graph Editor")
 
-![A Set node in the Node Editor](images/interfaceLightSetNodeEditor.png "A Set node in the Node Editor")
+![](images/interfaceLightSetNodeEditor.png "A Set node in the Node Editor")
 
 To link one or more lights by a set, simply add it to the set expression.
 
-![A light linking set expression with a set](images/taskLightLinkingSetExpressionSet.png "The light linking set expression with a set")
+![](images/taskLightLinkingSetExpressionSet.png "A light linking set expression with a set")
 
 Be aware that if an object belongs to multiple sets with light linking, the object will only inherit the `linkedLights` attribute from the last set that was linked in the graph, as shown in the illustration below.
 
-![A graph where an object belongs to multiple sets, each with different linked lights](images/illustrationLightLinkingMultipleSets.png "A graph where an object belongs to multiple sets, each with different linked lights")
+![](images/illustrationLightLinkingMultipleSets.png "A graph where an object belongs to multiple sets, each with different linked lights")
 
 
 ## Example scenario ##
@@ -81,7 +81,7 @@ Here we'll explore an example scenario where link lighting would be appropriate,
 
 Picture a scene where a giant robot attacks a highly detailed metropolitan city at night. For dramatic effect, let's say we want the robot's eyes to shine with some menacing red highlights. What's more, on the robot's chest is affixed the logo of its evil creator, and we want to make sure the audience can just make out the logo, regardless of the ambient illumination. With a photorealism mindset, both of these lights would be conceits, as they would have no plausible light source. Even so, with their inclusion, the scene becomes more evocative.
 
-![A preview of the example scenario in the Viewer](images/exampleGaffyAttacksScene.png "A preview of the example scenario in the Viewer")
+![](images/exampleGaffyAttacksScene.png "A preview of the example scenario in the Viewer")
 
 To achieve both of these highlights, we could add special lights in front of the robot's eyes and chest. But, by default, these lights would also illuminate the rest of the robot, and everything else in the scene. This may not achieve our artistic intent, and could also affect render time and memory usage.
 
@@ -123,7 +123,7 @@ Location                                                       `Linked Lights` e
 
 The above set expressions link the special lights and sets. The eyes are linked to all lights plus the eye light's set; the logo is linked to all lights plus the logo light's set. The result is that the special lights only illuminate the subjects we want them to: the eye light hits the eyes, and the logo light hits the logo.
 
-![The resulting render of the example scenario with the correct light links](images/exampleGaffyAttacksResults.png "The resulting render of the example scenario with the correct light links")
+![](images/exampleGaffyAttacksResults.png "The resulting render of the example scenario with the correct light links")
 
 ```eval_rst
 =============================== ==============================================================
@@ -153,7 +153,7 @@ Object                                                         Linked lights
 
 > _Help_ > _Examples_ > _Lighting_ > _Light Linking Basics (Arnold)_
 
-![Example: Light linking basics](images/exampleLightLinkingBasics.png)
+![](images/exampleLightLinkingBasics.png "Example: Light linking basics")
 
 This example contains the various permutations of light linking on objects:
 
@@ -169,7 +169,7 @@ This example contains the various permutations of light linking on objects:
 
 > _Help_ > _Examples_ > _Lighting_ > _Light Linking City Attack (Arnold)_
 
-![Example: Light linking city attack](images/exampleLightLinkingCityAttack.png)
+![](images/exampleLightLinkingCityAttack.png "Example: Light linking city attack")
 
 In this example, a supersized version of our mascot, Gaffy, is throwing a tantrum, and attacking a city. Two special and unrealistic light sources are added to the scene, in order to add highlights to  Gaffy's eyes and chest logo. This graph contains the light-link setup described in the above example scenario.
 

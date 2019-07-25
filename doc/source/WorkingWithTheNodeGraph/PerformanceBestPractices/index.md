@@ -15,11 +15,11 @@ Consider a scene containing 4 assets, with the geometry cache for each imported 
 
 - _Graph1:_ Group all the assets together, and then apply the lookdev nodes in series.
 
-![Grouping, then applying lookdev](images/graphEditorGroupFirst.png "Grouping, then applying lookdev")
+![](images/graphEditorGroupFirst.png "Grouping, then applying lookdev")
 
 - _Graph2:_ First apply the lookdev nodes, and then group all the resulting scenes together.
 
-![Applying lookdev, then grouping](images/graphEditorGroupSecond.png "Applying lookdev, then grouping")
+![](images/graphEditorGroupSecond.png "Applying lookdev, then grouping")
 
 For the sake of simplicity, let's assume that each asset's scene contains 1000 locations, and each lookdev subgraph contains 100 nodes. Now we can estimate each graph's performance load.
 

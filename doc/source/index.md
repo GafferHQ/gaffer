@@ -1,4 +1,4 @@
-![Gaffer Logo](_static/GafferLogo.svg)
+![](_static/GafferLogo.svg "Gaffer Logo")
 
 # Introduction #
 

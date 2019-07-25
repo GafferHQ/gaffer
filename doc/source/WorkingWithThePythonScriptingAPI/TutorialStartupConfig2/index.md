@@ -2,7 +2,7 @@
 
 In this second startup config of the tutorial, we will add default path bookmarks to Gaffer's file browsers.
 
-![The bookmarks in a Gaffer file browser](images/tutorialBookmarks.png "The bookmarks in a Gaffer file browser")
+![](images/tutorialBookmarks.png "The bookmarks in a Gaffer file browser")
 
 In the file browsers inside the Gaffer application, users have the option of bookmarking file paths. In a studio pipeline, it could be beneficial to provide artists with some centrally-deployed  bookmarks to relevant locations on the file system. Giving every artist a common set – or a project-specific set – of bookmarks could help standardize their workflows. User path bookmarks are maintained separately from default bookmarks, so the artists' personal bookmarks would not be at risk.
 
@@ -66,12 +66,12 @@ That's all we need to add a default bookmark to Gaffer's file browsers. Try test
 
 1. If you haven't already, save `customBookmarks.py`, then launch a new instance of Gaffer.
 2. Create a SceneReader node (_Scene_ > _File_ > _Reader_).
-3. In the _Node Editor_, click ![file browser](images/pathChooser.png "File browser").
-4. In the file browser, click ![bookmarks](images/bookmarks.png "Bookmarks").
+3. In the _Node Editor_, click ![](images/pathChooser.png "file browser").
+4. In the file browser, click ![](images/bookmarks.png "bookmarks").
 
 If all goes well, _Resources_ should be in the list of bookmarks:
 
-![A custom default bookmark in a file browser](images/tutorialDefaultBookmark.png "A custom default bookmark in a file browser")
+![](images/tutorialDefaultBookmark.png "A custom default bookmark in a file browser")
 
 You may have noticed that we used a global context variable for a path in the first startup config of this tutorial, but not here. The reason is simply that global context variables are plugs stored per-node graph, whereas path bookmarks are stored in the application.
 
@@ -94,10 +94,10 @@ To add a bookmark to a category, we acquire all of the application's the bookmar
 This should bookmark your `~/Pictures` direcotry for all image node file browsers. Try testing it:
 
 1. Create a Catalogue node.
-2. In the _Node Editor_, In the _Images_ tab, click ![file browser](images/pathChooser.png "File browser").
-3. In the file browser, click ![bookmark](images/bookmarks.png). _Pictures_ should be in the list of bookmarks.
+2. In the _Node Editor_, In the _Images_ tab, click ![](images/pathChooser.png "file browser").
+3. In the file browser, click ![](images/bookmarks.png "bookmark"). _Pictures_ should be in the list of bookmarks.
 
-![A custom default bookmark in an image node's file browser](images/tutorialDefaultImageNodeBookmark.png "A custom default bookmark in an image node's file browser")
+![](images/tutorialDefaultImageNodeBookmark.png "A custom default bookmark in an image node's file browser")
 
 Since this points to a directory in the user's home folder, this isn't the most realistic example for a bookmark in a studio pipeline, but it should provide an example basis from which to incorporate your own asset and resource locations as bookmarks. Using Python string manipulation, you can compose multi-component strings from several context variables or environment variables that point to locations in your file system.
 
@@ -121,11 +121,11 @@ Now, try testing an image node's default file browser path:
 
 1. Save `customBookmarks.py`, then launch a new instance of Gaffer.
 2. Create a Catalogue node.
-3. In the _Node Editor_, in the _Images_ tab, click ![file browser](images/pathChooser.png "File browser").
+3. In the _Node Editor_, in the _Images_ tab, click ![](images/pathChooser.png "file browser").
 
 If all goes well, the file path should default to `~/Pictures`.
 
-![A custom default path in an image node's file browser](images/tutorialDefaultImageNodePath.png "A custom default path in an image node's file browser")
+![](images/tutorialDefaultImageNodePath.png "A custom default path in an image node's file browser")
 
 > Caution :
 > We recommend removing this last line from the config, as it will override the default file browser paths for image nodes with an unrealistic filesystem path that has little utility in a studio environment.

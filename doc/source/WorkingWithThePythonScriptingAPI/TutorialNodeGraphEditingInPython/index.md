@@ -2,7 +2,7 @@
 
 In Gaffer, you can interactively manipulate node graphs in Python using the _Python Editor_. Gaffer's API is fairly frugal, so learning a few fundamental concepts and tasks will go a long way. In this tutorial, we will give you a quick tour of these fundamentals. Using only Python, you will create a simple graph that consists of a camera and a mauve sphere:
 
-![A preview of the final scene](images/viewerFinalScene.png "A preview of the final scene")
+![](images/viewerFinalScene.png "A preview of the final scene")
 
 By the end of this tutorial, you should have an understanding of the following topics in Python:
 
@@ -29,7 +29,7 @@ The bottom-half of the _Python Editor_ is the code input field. The top-half is 
 1. Type `print "Hello, World!"` into the input field.
 2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to execute the code.
 
-![The Python Editor with “Hello, World!”](images/pythonEditorHelloWorld.png "The Python Editor with “Hello, World!”")
+![](images/pythonEditorHelloWorld.png "The Python Editor with “Hello, World!”")
 
 
 ## Creating nodes ##
@@ -47,7 +47,7 @@ mySphere = GafferScene.Sphere()
 root.addChild( mySphere )
 ```
 
-![A new Sphere node in the main window](images/mainWindowSphereNode.png "A new Sphere node in the main window")
+![](images/mainWindowSphereNode.png "A new Sphere node in the main window")
 
 Notice that the node was added with the `addChild()` method to the `root` variable. The `addChild()` method is the core method for adding nodes and plugs to the node graph. The `root` variable references the root of the node graph. All nodes in the graph are ultimately children of the root. If you declared the node variable without adding it to the `root` variable, it would exist in memory (all variables in Python are objects), but it would not yet be part of the graph.
 
@@ -66,14 +66,14 @@ root.addChild( myCamera )
 root.addChild( myGroup )
 ```
 
-![All nodes in the Graph Editor, unconnected](images/graphEditorAllNodes.png "All nodes in the Graph Editor, unconnected")
+![](images/graphEditorAllNodes.png "All nodes in the Graph Editor, unconnected")
 
 
 ## Referencing nodes without variables ##
 
 Nodes that do not have variables can be referenced by dragging and dropping them in the interface:
 
-1. Middle-click and drag a node from the _Graph Editor_ (the cursor will change to ![the nodes icon](images/nodes.png "The nodes icon")).
+1. Middle-click and drag a node from the _Graph Editor_ (the cursor will change to ![](images/nodes.png "the nodes icon")).
 2. Release the selection onto the input field of the _Python Editor_.
 
 
@@ -96,7 +96,7 @@ For example, you could reference the radius plug of the Sphere node like this:
 mySphere['radius']
 ```
 
-![A plug reference in the Python Editor](images/pythonEditorPlugReference.png "A plug reference in the Python Editor")
+![](images/pythonEditorPlugReference.png "A plug reference in the Python Editor")
 
 > Caution :
 > Because Python dictionaries do not have built-in overwrite protection, you can accidentally and irrecoverably replace nodes and plugs with assignments that use existing node names, like `root['Sphere'] = ...`. Use dictionary syntax with care.
@@ -104,7 +104,7 @@ mySphere['radius']
 Just like with nodes, you can insert a reference to a plug by dragging. Try inserting a reference to radius plug of the Sphere node:
  
 1. Select the Sphere node in the _Graph Editor_.
-2. Click and drag the **label** of the radius plug from the _Node Editor_ (the cursor will change to ![a plug](images/plug.png "A plug")).
+2. Click and drag the **label** of the radius plug from the _Node Editor_ (the cursor will change to ![](images/plug.png "a plug")).
 3. Release it onto the input field of the _Python Editor_.
 
 A reference to `root['Sphere']['radius']` will be inserted. This is identical to `mySphere['radius']` from earlier. Notice how when you drag and drop plugs, the reference is formatted in dictionary syntax.
@@ -121,9 +121,9 @@ The `getValue()` method retrieves a plug's value. Try it on the `Cs` (colour) pl
 myShader['parameters']['Cs'].getValue()
 ```
 
-There is also a shortcut for grabbing a plug value, which involves <kbd>Shift</kbd> + clicking and dragging the plug label from a _Node Editor_ (the cursor will change to ![the values icon](images/values.png "The values icon")) and releasing it onto the input field of the _Python Editor:_
+There is also a shortcut for grabbing a plug value, which involves <kbd>Shift</kbd> + clicking and dragging the plug label from a _Node Editor_ (the cursor will change to ![](images/values.png "the values icon")) and releasing it onto the input field of the _Python Editor:_
 
-![A plug value reference in the Python Editor](images/pythonEditorPlugValueReference.png "A plug value reference in the Python Editor")
+![](images/pythonEditorPlugValueReference.png "A plug value reference in the Python Editor")
 
 > Tip :
 > The above shortcut can also be very handy in regular use. For instance, if you need to know the type and format of a particular plug's value, dragging it into the _Python Editor_ will reveal it.
@@ -141,7 +141,7 @@ Editing plugs with one element is simple. All you need to provide is the value. 
 mySphere['radius'].setValue( 4 )
 ```
 
-![The sphere with increased radius in the Viewer](images/viewerSphereRadius.png "The sphere with increased radius in the Viewer")
+![](images/viewerSphereRadius.png "The sphere with increased radius in the Viewer")
 
 When editing a plug with multiple elements, such as a vector, color, matrix, etc., you can either edit all the values at once, or one at a time. Editing all the values at once requires formatting the value in the type's syntax. Most of the multi-element types belong to the `imath` utility module, so before you can edit them, you will first need to import it.
 
@@ -157,7 +157,7 @@ import imath
 myShader['parameters']['Cs'].setValue( imath.Color3f( 0.25, 0.75, 0.25 ) )
 ```
 
-![The OpenGL node with an adjusted constant plug](images/nodeEditorOpenGLPlug.png "The OpenGL node with an adjusted constant plug")
+![](images/nodeEditorOpenGLPlug.png "The OpenGL node with an adjusted constant plug")
 
 Next, adjust the camera position, but this time specify only the _z_-axis value of the transform, with dictionary syntax:
 
@@ -165,7 +165,7 @@ Next, adjust the camera position, but this time specify only the _z_-axis value 
 myCamera['transform']['translate']['z'].setValue( 8 )
 ```
 
-![The camera node with an adjusted translate plug](images/viewerCameraPosition.png "The camera node with an adjusted translate plug")
+![](images/viewerCameraPosition.png "The camera node with an adjusted translate plug")
 
 Finally, add a location to the `paths` plug of the PathFilter node:
 
@@ -200,7 +200,7 @@ myShaderAssignment['shader'].setInput( myShader['out'] ) # Shader input/output
 myShaderAssignment['filter'].setInput( myFilter['out'] ) # Filter input/output
 ```
 
-![The ShaderAssignment node with new connections](images/graphEditorShaderAssignmentConnections.png "The ShaderAssignment node with new connections")
+![](images/graphEditorShaderAssignmentConnections.png "The ShaderAssignment node with new connections")
 
 A node that takes multiple input scenes, like the Group node, is slightly different. Its `in` plug is an `ArrayPlug` that consists of multiple children, each a separate scene input accessed via integer index:
 
@@ -209,14 +209,14 @@ myGroup['in'][0].setInput( myShaderAssignment['out'] )
 myGroup['in'][1].setInput( myCamera['out'] )
 ```
 
-![The Group node with new connections](images/graphEditorGroupConnections.png "The Group node with new connections")
+![](images/graphEditorGroupConnections.png "The Group node with new connections")
 
 > Caution :
 > Scene nodes with an `ArrayPlug` input automatically maintain one free child, so that there is always at least one input available. Make sure to connect their child plugs in order: `['in'][0]`, `['in'][1]`, `['in'][2]`, etc. Connecting them out-of-order will return an error.
 
 As you probably noticed, the graph looks tangled up, but that's a consequence of scripting a graph piece-by-piece. Correct this by selecting all the nodes, and then hitting <kbd>Ctrl</kbd> + <kbd>L</kbd>.
 
-![The nodes, rearranged](images/graphEditorRearrangedNodes.png "The nodes, rearranged")
+![](images/graphEditorRearrangedNodes.png "The nodes, rearranged")
 
 Much better!
 
@@ -225,7 +225,7 @@ Much better!
 
 Here is the final graph:
 
-![The final scene](images/mainWindowFinalScene.png "The final scene")
+![](images/mainWindowFinalScene.png "The final scene")
 
 
 ## Deleting nodes ##

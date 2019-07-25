@@ -8,17 +8,17 @@ A one line shader
 
 Start by creating an OSLCode node in the GraphEditor. With this selected, the NodeEditor will display a blank shader to be edited.
 
-![Blank Shader](images/blank.png)
+![](images/blank.png "Blank Shader")
 
 We'll start by adding some parameters (inputs and outputs) for the shader.
 
-- Click on the upper ![Plus icon](images/plus.png) and choose "Float" from the menu. This creates an input parameter which takes a floating point number.
+- Click on the upper ![](images/plus.png "Plus") and choose "Float" from the menu. This creates an input parameter which takes a floating point number.
 - Double click the "Input1" label that appears, and rename the parameter to `width`.
 - Enter the value `0.025` into the width field.
-- Click on the lower ![Plus Icon](images/plus.png) and choose "Color" from the menu. This creates an output color parameter.
+- Click on the lower ![](images/plus.png "Plus") and choose "Color" from the menu. This creates an output color parameter.
 - Double click the "Output1" label, and rename the parameter to "stripes".
 
-![Parameters](images/parameters.png)
+![](images/parameters.png "Parameters")
 
 We can now enter any OSL code we want to generate the output from the input. Start by entering the following :
 
@@ -28,7 +28,7 @@ stripes = aastep( 0, sin( v * M_PI / width ) )
 
 Now hit _Control + Enter_ to update the shader. The Viewer will update to show a shader ball with the shader on it, and adjusting the width parameter will update the render interactively.
 
-![Shader ball](images/shaderBallStripes.png)
+![](images/shaderBallStripes.png "Shader ball")
 
 > Tip : Enter the names for input and outputs into the code easily by dragging
 > their labels into the code editor. This is especially useful for color
@@ -53,7 +53,7 @@ stripes = mix( color1, color2, m );
 
 And as before, hit _Control + Enter_ to update the shader.
 
-![Shader ball](images/shaderBallColoredStripes.png)
+![](images/shaderBallColoredStripes.png "Shader ball")
 
 No doubt you didn't come here to learn how to make blue and red wobbly stripes, but you are now armed with the ability to add inputs and outputs, edit code and view the results interactively, so are hopefully in a position to create the shader you _do_ want.
 

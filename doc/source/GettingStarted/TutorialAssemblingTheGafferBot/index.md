@@ -22,7 +22,7 @@ By the end of this tutorial you will have built a basic scene with Gaffer's robo
 
 After [installing Gaffer](../../GettingStarted/InstallingGaffer/index.md), launch Gaffer [from its directory](../../GettingStarted/LaunchingGafferFirstTime/index.md) or by using the ["gaffer" command](../../GettingStarted/SettingUpGafferCommand/index.md). Gaffer will start, and you will be presented with an empty node graph in the default UI layout.
 
-![An empty node graph in the default layout](images/mainDefaultLayout.png "An empty node graph in the default layout")
+![](images/mainDefaultLayout.png "An empty node graph in the default layout")
 
 
 ## Importing a geometry scene cache ##
@@ -35,13 +35,13 @@ First, load Gaffy's geometry cache with a SceneReader node:
 
 2. Select _Scene_ > _File_ > _Reader_. The SceneReader node will appear in the _Graph Editor_ and be selected automatically.
 
-    ![A new SceneReader node](images/mainSceneReaderNode.png "A new SceneReader node") <!-- TODO: add annotation? -->
+    ![](images/mainSceneReaderNode.png "A new SceneReader node") <!-- TODO: add annotation? -->
 
 3. The _Node Editor_ in the top-right panel has now updated to display the SceneReader node's values. In the _File Name_ field, type `${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc`.
 
 4. Hover the cursor over the background of the _Viewer_ (in the top-left panel), and hit <kbd>F</kbd>. The view will reframe to cover the whole scene.
     
-    ![The bounding box of the selected SceneReader node](images/viewerSceneReaderBounding.png "The bounding box of the selected SceneReader node") <!-- TODO: add annotation -->
+    ![](images/viewerSceneReaderBounding.png "The bounding box of the selected SceneReader node") <!-- TODO: add annotation -->
 
 The SceneReader node has loaded, and the _Viewer_ is showing a bounding box, but the geometry remains invisible. You can confirm that the scene has loaded by examining the _Hierarchy View_ in the bottom-right panel. It too has updated, and shows that you have _GAFFERBOT_ at the root of the scene. In order to view the geometry, you will need to expand the scene's locations down to their leaves.
 
@@ -70,22 +70,22 @@ You can use the _Hierarchy View_ to expand the scene's locations:
 
 1. If the SceneReader node is deselected, select it by clicking it in the _Graph Editor_.
 
-2. In the _Hierarchy View_, click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to _GAFFERBOT_. The _GAFFERBOT_ location will expand to show a child location named *C_torso_GRP*.
+2. In the _Hierarchy View_, click ![](images/collapsibleArrowRight.png "the triangle") next to _GAFFERBOT_. The _GAFFERBOT_ location will expand to show a child location named *C_torso_GRP*.
 
-3. Click ![the triangle](images/collapsibleArrowRight.png "Triangle") next to *C_torso_GRP* to show its child locations.
+3. Click ![](images/collapsibleArrowRight.png "the triangle") next to *C_torso_GRP* to show its child locations.
 
-    ![The scene hierarchy, expanded down two levels](images/hierarchyViewExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
+    ![](images/hierarchyViewExpandedTwoLevels.png "The scene hierarchy, expanded down two levels") <!-- TODO: add annotation -->
 
 > Note :
 > Gaffy's geometry cache contains location names with affixes like _C_, _R_, _L_, _GRP_, _CPT_ and _REN_. Gaffer places no significance whatsoever on these names, and you are free to use whichever naming conventions you see fit.
 
 In the _Viewer_, you can now see the bounding boxes of the objects at several locations, revealing more of the scene's structure. However, it would be tedious to expand the whole scene, location-by-location, in this manner. Instead, you can expand a location, its children, and all its sub-children at once with a shortcut:
 
-1. In the _Hierarchy View_, <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *C_head_GRP*. All of the children of *C_head_GRP* will expand. Now the _Viewer_ shows all of the geometry that comprises Gaffy's head.
+1. In the _Hierarchy View_, <kbd>Shift</kbd> + click the ![](images/collapsibleArrowRight.png "triangle") next to *C_head_GRP*. All of the children of *C_head_GRP* will expand. Now the _Viewer_ shows all of the geometry that comprises Gaffy's head.
 
-2. <kbd>Shift</kbd> + click the ![triangle](images/collapsibleArrowRight.png "Triangle") next to *R_legUpper_GRP*. All the locations under *R_legUpper_GRP* will expand. Now the _Viewer_ also shows all of the geometry that comprises Gaffy's right leg.
+2. <kbd>Shift</kbd> + click the ![](images/collapsibleArrowRight.png "triangle") next to *R_legUpper_GRP*. All the locations under *R_legUpper_GRP* will expand. Now the _Viewer_ also shows all of the geometry that comprises Gaffy's right leg.
 
-![The geometry of the head and right leg, expanded](images/mainHeadAndLeftLegExpanded.png "The geometry of the head and right leg, expanded")
+![](images/mainHeadAndLeftLegExpanded.png "The geometry of the head and right leg, expanded")
 
 
 ### Navigating the scene using the _Viewer_ ###
@@ -100,7 +100,7 @@ You can expand the scene hierarchy using the arrow keys and the _Viewer:_
 
 3. Hit <kbd>Shift</kbd> + <kbd>↓</kbd> to fully expand all the left leg's child locations.
 
-    ![The head and leg geometry, expanded](images/viewerHeadAndLegsExpanded.png "The head and leg geometry, expanded")
+    ![](images/viewerHeadAndLegsExpanded.png "The head and leg geometry, expanded")
 
 You can also collapse locations in a similar manner through the _Viewer:_
 
@@ -143,7 +143,7 @@ Earlier, you learned how to create a node by navigating the node creation menu i
 
 3. Hit <kbd>Enter</kbd>. A Camera node will appear in the _Graph Editor_.
 
-    ![A new Camera node](images/mainCameraNode.png "A new Camera node")
+    ![](images/mainCameraNode.png "A new Camera node")
 
 As before, the newly created node will be selected automatically, and the _Viewer_, _Hierarchy View_, and _Node Editor_ will update to reflect this new selection.
 
@@ -178,7 +178,7 @@ When a scene node computes a scene, scene data passes through it like so:
 
 The inputs and outputs of a node are called **plugs**, and are represented in the _Graph Editor_ as colored circles around the node's edges.
 
-<!-- TODO: add close-up of node plugs ![A node's plug.](images/nodePlug.png) -->
+<!-- TODO: add close-up of node plugs ![](images/nodePlug.png "A node's plug") -->
 
 For your two nodes to occupy the same scene (and later render together), you will need to combine them into a single scene. You can connect both of their output plugs to a Group node, and you can also rearrange the nodes to better visually represent the data flow in the graph.
 
@@ -197,7 +197,7 @@ It's time to connect the SceneReader and Camera nodes to combine their scenes:
 
 The Group node is now computing a new scene combining the input scenes from the two nodes above it, under a new parent scene location called _group_. You can see this new hierarchy by selecting the Group node and examining the _Hierarchy View_.
 
-![A new Group node](images/mainGroupNode.png "A new Group node")
+![](images/mainGroupNode.png "A new Group node")
 
 Only the combined scene computed by the Group node is modified. The upstream nodes' scenes are unaffected. You can verify this by reselecting one of them and checking the _Hierarchy View_.
 
@@ -219,30 +219,30 @@ First, set the camera's position using the _TranslateTool:_
 
 1. Select the Group node in the _Graph Editor_.
 
-2. Fully expand all scene locations by <kbd>Shift</kbd> + clicking ![the triangle](images/collapsibleArrowRight.png "Triangle") next to _group_ in the _Hierarchy View_.
+2. Fully expand all scene locations by <kbd>Shift</kbd> + clicking ![](images/collapsibleArrowRight.png "the triangle") next to _group_ in the _Hierarchy View_.
 
 3. Click the camera object in the _Viewer_, or select the _camera_ location in the _Hierarchy View_.
 
-4. In the _Viewer_, click ![the TranslateTool button](images/gafferSceneUITranslateTool.png "The TranslateTool button"). The translation manipulators will appear on the camera.
+4. In the _Viewer_, click ![](images/gafferSceneUITranslateTool.png "the TranslateTool button"). The translation manipulators will appear on the camera.
 
 5. Using the manipulators, adjust the camera back and up.
 
-    ![The camera, repositioned, in the Viewer](images/viewerCameraRepositioned.png "The camera, repositioned, in the Viewer")
+    ![](images/viewerCameraRepositioned.png "The camera, repositioned, in the Viewer")
 
 Next, rotate the camera using the _RotateTool:_
 
-1. In the _Viewer_, click ![the RotateTool button](images/gafferSceneUIRotateTool.png "The RotateTool button"). The rotation manipulators will appear around the camera.
+1. In the _Viewer_, click ![](images/gafferSceneUIRotateTool.png "the RotateTool button"). The rotation manipulators will appear around the camera.
 
 2. Using the manipulators, rotate the camera so it points at Gaffy.
 
-![The camera, rotated, in the Viewer](images/viewerCameraRotated.png "The camera, rotated, in the Viewer")
+![](images/viewerCameraRotated.png "The camera, rotated, in the Viewer")
 
 
 ### More precise camera adjustment ###
 
 For more precise positioning and rotation, you can set the Translate and Rotate values in the _Transform_ tab of the _Node Editor:_
 
-![The camera's transform values](images/nodeEditorWindowCameraTransform.png "The camera's transform values")
+![](images/nodeEditorWindowCameraTransform.png "The camera's transform values")
 
 > Important :
 > In the prior section _Connecting Plugs_, we referred to the main inputs and outputs of a node as plugs. In actuality, **all** the values you see in the _Node Editor_, including the camera's transform, are plugs. For ease of use, only a subset of a node's available plugs appear in the _Graph Editor_.
@@ -264,7 +264,7 @@ Create the render settings nodes:
 
 3. Finally, create a Catalogue node (_Image_ > _Utility_ > _Catalogue_). This is an image node for listing and displaying a directory of images in the _Viewer_. By default, it points to the default output directory of your graph's rendered images. Place it next to the InteractiveAppleseedRender node.
 
-    ![The render-related nodes](images/graphEditorRenderSettings.png "The render-related nodes")
+    ![](images/graphEditorRenderSettings.png "The render-related nodes")
 
     > Note :
     > The Catalogue node is not a scene node, but an image node. It cannot be connected to a scene node.
@@ -284,19 +284,19 @@ Next, you need to add an image type to render:
 
 1. Select the Outputs node.
 
-2. In the _Node Editor_, click ![the plus button](images/plus.png "Plus") and select _Interactive_ > _Beauty_ from the drop-down menu.
+2. In the _Node Editor_, click ![](images/plus.png "the plus button") and select _Interactive_ > _Beauty_ from the drop-down menu.
 
 With all the settings complete, start the interactive renderer:
 
 1. Select the InteractiveAppleseedRender node in the _Graph Editor_.
 
-2. In the _Node Editor_, click ![the play button](images/timelinePlay.png "Play") to start the renderer.
+2. In the _Node Editor_, click ![](images/timelinePlay.png "the play button") to start the renderer.
 
 3. Select the Catalogue node.
 
 4. Hover the cursor over the _Viewer_ and hit <kbd>F</kbd> to frame the Catalogue node's live image of the interactive render.
 
-    ![The first render](images/mainRenderGrey.png "The first render")
+    ![](images/mainRenderGrey.png "The first render")
 
 Congratulations! You have successfully rendered your first image. Gaffy is currently lacking shading, lighting, and texturing. We will move on to those soon. First, you should adjust the UI to provide yourself a more optimal workflow.
 
@@ -309,8 +309,8 @@ To make switching between viewing Gaffy's geometry and the render easier, you ca
 
 1. Select the InteractiveAppleseedRender node.
 
-2. Click ![the pin button](images/targetNodesUnlocked.png "Pin button") at the top-right
-  of the top panel. The pin button will highlight: ![highlighted pin](images/targetNodesLocked.png "Highlighted pin").
+2. Click ![](images/targetNodesUnlocked.png "the pin button") at the top-right
+  of the top panel. The pin button will highlight: ![](images/targetNodesLocked.png "highlighted pin").
 
 <!-- TODO: Screenshot of pinned Viewer -->
 
@@ -329,7 +329,7 @@ As with the _Viewer_, the _Hierarchy View_ will now remain locked to the output 
 
 For the final adjustment to the UI, create another _Viewer_ in the top-left panel, and pin the Catalogue node to it:
 
-1. At the top-right of the top panel, click ![the layout menu button](images/layoutButton.png "Layout menu button") to open the layout menu.
+1. At the top-right of the top panel, click ![](images/layoutButton.png "the layout menu button") to open the layout menu.
 
 2. Select _Viewer_. A new _Viewer_ will appear on the panel next to the first one.
 
@@ -355,7 +355,7 @@ It will be best if you keep the render option nodes at the end of the graph. Sin
 
 2. Click and drag the nodes to move thme to a lower position in the graph.
 
-    ![The graph with some added space](images/mainRenderSettingsWithGap.png "The graph with some added space")
+    ![](images/mainRenderSettingsWithGap.png "The graph with some added space")
 
 
 ### Adding a shader ###
@@ -372,7 +372,7 @@ Now that you have more space, it's time to add some shading nodes:
 
 4. Click and drag the ShaderAssignment node onto the connector between the Group and StandardOptions nodes. The ShaderAssignment node will be interjected between them.
 
-    ![The ShaderAssignment and Disney Material nodes](images/graphEditorFirstShaderNodes.png "The ShaderAssignment and Disney Material nodes")
+    ![](images/graphEditorFirstShaderNodes.png "The ShaderAssignment and Disney Material nodes")
 
 > Important :
 > In the _Graph Editor_, shader data flows from left to right.
@@ -394,7 +394,7 @@ For lights to take effect, they need to be combined with the main scene. For sim
 
 4. Connect the PhysicalSky node's _out_ plug to the Group node's _in3_ plug.
 
-![A new environment light node](images/graphEditorEnvironmentLightNode.png "A new environment light node")
+![](images/graphEditorEnvironmentLightNode.png "A new environment light node")
 
 For the light to take effect, you will need to assign it:
 
@@ -408,7 +408,7 @@ For the light to take effect, you will need to assign it:
 
 The interactive render will now begin updating, and you will be able to see Gaffy with some basic shaders and lighting.
 
-![The first render with a shader and lighting](images/viewerRenderOneShader.png "The first render with a shader and lighting")
+![](images/viewerRenderOneShader.png "The first render with a shader and lighting")
 
 
 ### Adding textures ###
@@ -423,7 +423,7 @@ As Gaffy is looking a bit bland, you should drive the shader with some robot tex
 
 3. In the _Graph Editor_, connect the Appleseed color texture node's ColorOut plug to the Disney Material node's BaseColor plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
 
-    ![Gaffy with textures](images/viewerRenderTextures.png "Gaffy with textures")
+    ![](images/viewerRenderTextures.png "Gaffy with textures")
 
 
 ### Adding another shader ###
@@ -442,11 +442,11 @@ Begin by creating another shader:
 
 4. Interject the new ShaderAssignment node after the first ShaderAssignment node.
 
-    ![A second shader in the Graph Editor](images/graphEditorSecondShaderNodes.png "A second shader in the Graph Editor")
+    ![](images/graphEditorSecondShaderNodes.png "A second shader in the Graph Editor")
 
 The _Viewer_ will update to show the new shader.
 
-![The second shader, rendered](images/mainRenderTwoShaders.png "The second shader, rendered")
+![](images/mainRenderTwoShaders.png "The second shader, rendered")
 
 You will immediately notice something that now _all_ the geometry is metallic. The new shader has overridden the previous one.
 
@@ -460,13 +460,13 @@ In order to selectively apply a shader to only certain locations in the scene, y
 
 1. Create a PathFilter node (_Scene_ > _Filters_ > _PathFilter_).
 
-2. In the _Node Editor_, click ![the plus button](images/plus.png "Plus") next to _Paths_. This will add a new text field.
+2. In the _Node Editor_, click ![](images/plus.png "the plus button") next to _Paths_. This will add a new text field.
 
 3. In the text field, type `/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN`. This is the full path to Gaffy's left ear.
 
 4. Connect the PathFilter node's _out_ plug to the filter input on the right hand side of the ShaderAssignment1 node's filter plug (yellow, on the right).
 
-    ![The connected PathFilter node](images/graphEditorPathFilterNode.png "The connected PathFilter node")
+    ![](images/graphEditorPathFilterNode.png "The connected PathFilter node")
 
 Now when you check the render, you will see that the chrome shader is only applied to Gaffy's left ear. There are many other parts of Gaffy that could use the chrome treatment, but it would be tedious for you to manually enter multiple locations. Instead, we will demonstrate two easier ways to add locations to the filter: using text wildcards, and interacting directly with the geometry through the _Viewer_.
 
@@ -492,20 +492,20 @@ As your final lesson in this tutorial, add the metallic shader to the rest of th
 
 4. <kbd>Shift</kbd> + click Gaffy's mouth to add it to the selection.
 
-    ![The face, with selection](images/viewerSelectionFace.png "The face, with selection")
+    ![](images/viewerSelectionFace.png "The face, with selection")
 
-5. Click and drag the selection (the cursor will change to ![the "replace objects" icon](images/replaceObjects.png "Replace objects")), and hold it over the PathFilter node without releasing.
+5. Click and drag the selection (the cursor will change to ![](images/replaceObjects.png "Replace objects")), and hold it over the PathFilter node without releasing.
 
-6. While still holding the mouse button, hold <kbd>Shift</kbd> (the cursor will change to ![the "add objects" icon](images/addObjects.png "Add objects")). You are now adding to the path, rather than replacing it.
+6. While still holding the mouse button, hold <kbd>Shift</kbd> (the cursor will change to ![](images/addObjects.png "Add objects")). You are now adding to the path, rather than replacing it.
 
 7. Release the selection over the PathFilter node. This will add the locations as new values fields on the plug.
 
 > Tip :
-> Just as locations can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Ctrl</kbd> (the cursor will change to ![the "remove objects" icon](images/removeObjects.png "Remove objects")).
+> Just as locations can be added by holding <kbd>Shift</kbd>, they can be removed by holding <kbd>Ctrl</kbd> (the cursor will change to ![](images/removeObjects.png "Remove objects")).
 
 Add and remove locations to the filter as you see fit. Remember to switch between the two _Viewers_ to check the render output as it updates. After adding Gaffy's hands and bolts to the filter, you should achieve an image similar to this:
 
-![The final render](images/viewerRenderFinal.png "The final render")
+![](images/viewerRenderFinal.png "The final render")
 
 
 ## Recap ##

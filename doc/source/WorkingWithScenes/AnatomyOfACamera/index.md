@@ -5,7 +5,7 @@
 
 The camera in Gaffer is designed to accommodate two related but sometimes divergent conceptions of a camera: the idealized "CG" cameras that we use in software, and the real cameras used in photography and cinematography.
 
-![A real camera and CG camera](images/illustrationCamerasRealCG.png)
+![](images/illustrationCamerasRealCG.png "A real camera and CG camera")
 
 Fundamentally, current mainstream renderers use the CG camera model. However, many users are well-versed in the operating principles of real cameras, in particular the properties of aperture and focal length. Some DCC and scene format developers have made an effort to integrate these properties into their projects, to make camera construction easier for this audience. Gaffer does the same.
 
@@ -103,9 +103,9 @@ Within the [scene paradigm](../../../AnatomyOfAScene/index.html#scene-hierarchy)
 - **Transform:** The vectors that define the position and orientation of the camera.
 - **Object:** A special camera object at the location. Instead of geometry, the object stores camera data, called parameters.
     - **Parameters:** The crucial values that define a camera, such as the perspective type, field of view/aperture, and depth of field settings. If defined, a special kind of optional parameter, called a **render override**, will supercede one of the scene's **[render options](../../../AnatomyOfAScene/index.html#options)** during computation and rendering.<br>
-    ![Camera parameters in the Scene Inspector](images/interfaceCameraParameters.png)
+    ![](images/interfaceCameraParameters.png "Camera parameters in the Scene Inspector")
 - **Sets:** A list of sets the location belongs to. By default, every camera is assigned to an automatic "Cameras" set, accessible in the API by the `__cameras` variable.<br>
-    ![Camera sets in the Scene Inspector](images/interfaceCameraSets.png)
+    ![](images/interfaceCameraSets.png "Camera sets in the Scene Inspector")
 
 
 ### Data flow ###

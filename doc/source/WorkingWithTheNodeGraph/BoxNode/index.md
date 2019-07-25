@@ -1,7 +1,7 @@
 # Box Node #
 
 A Box node (_Utility_ > _Box_) is a container for holding a nested node network inside a node graph. The network contained by a Box is called a **sub-graph**. A sub-graph can only be viewed if you enter its containing Box. You can use Boxes to organize and add modularity to your node graphs.
-![A Box in the main graph, and its contents in a sub-graph](images/illustrationBoxBasics.png "A Box in the main graph, and its contents in a sub-graph")
+![](images/illustrationBoxBasics.png "A Box in the main graph, and its contents in a sub-graph")
 
 
 ## Usage ##
@@ -10,15 +10,15 @@ Boxes are powerful tools for structuring, organizing, and abstracting node graph
 
 In their most basic uses, you can simplify large graphs by wrapping up complicated portions in Boxes, or sub-divide a graph into a series of component sub-graphs.
 
-![Left: boxing up complex sections. Right: boxing up component sections.](images/illustrationBoxUses.png "Left: boxing up complex sections. Right: boxing up component sections.")
+![](images/illustrationBoxUses.png "Left: boxing up complex sections. Right: boxing up component sections")
 
 You can also nest Boxes, to maintain modularity and simplicity in your sub-graphs.
 
-![Boxes nested like Matryoshka dolls](images/illustrationBoxNesting.png "Boxes nested like Matryoshka dolls")
+![](images/illustrationBoxNesting.png "Boxes nested like Matryoshka dolls")
 
 In more advanced uses, Boxes serve to export (and occasionally import) saved sub-graphs, known as **reference scripts**. When you export a Box, it preserves any custom UI, descriptions, tooltips, and documentation links in the network and on the Box itself, giving you the ability to document the network's purpose and function for other users.
 
-![Importing reference scripts into your node graph](images/illustrationBoxReferences.png "Importing reference scripts into your node graph")
+![](images/illustrationBoxReferences.png "Importing reference scripts into your node graph")
 
 
 ## Box data flow ##
@@ -30,14 +30,14 @@ Like any other node, a Box can have _in_ and _out_ plugs. It can take plugs from
 
 While you can connect the nodes inside a Box to the main graph, you cannot view both the main graph and a sub-graph in the same _Graph Editor_. To compensate, a sub-graph's main input and output connections are represented by the special **BoxIn** (_Utility_ > _BoxIn_) and **BoxOut** (_Utility_ > _BoxOut_) nodes. When a Box has _in_ or _out_ plugs, these nodes behave as proxies for them in the sub-graph. The names of the BoxIn and BoxOut nodes will match the names of their corresponding plugs on the Box, and vice versa.
 
-![Left: the in and out plugs in the main graph. Right: the corresponding BoxIn and BoxOut nodes in the sub-graph.](images/illustrationBoxInBoxOutNodes.png "Left: the in and out plugs in the main graph. Right: the corresponding BoxIn and BoxOut nodes in the sub-graph.")
+![](images/illustrationBoxInBoxOutNodes.png "Left: the in and out plugs in the main graph. Right: the corresponding BoxIn and BoxOut nodes in the sub-graph")
 
 
 ### Promoted plugs ###
 
 When boxing up portions of your node graph, the _in_ plugs of the top-most node(s) and _out_ plugs of the bottom-most node(s) are promoted up to the Box. These **promoted plugs** pass data between the main graph and the sub-graph. This is not limited to main _in_ and _out_ plugs: any plug in the sub-graph can be promoted to the Box.
 
-![A promoted plug in the Node Editor, and how it appears on the Box in the Graph Editor](images/illustrationPromotedPlug.png "A promoted plug in the Node Editor, and how it appears on the Box in the Graph Editor")
+![](images/illustrationPromotedPlug.png "A promoted plug in the Node Editor, and how it appears on the Box in the Graph Editor")
 In the sub-graph, promoted plugs are read-only (they appear greyed out in the _Node Editor_). They can only be edited on the Box in the main graph. 
 
 
@@ -54,11 +54,11 @@ To box up a bunch of nodes:
 1. Select one or more nodes in the _Graph Editor_.
 2. Create a Box (_Utility_ > _Box_).
 
-![Boxing up some nodes](images/taskBoxUpNodes.gif "Boxing up some nodes")
+![](images/taskBoxUpNodes.gif "Boxing up some nodes")
 
 The selected nodes will be replaced by a Box. If they were connected to other nodes in the main graph, the Box and the sub-graph will automatically populate with corresponding _in_ and _out_ plugs to maintain the connections.
 
-![The resulting sub-graph after boxing up some nodes](images/taskBoxUpNodesResult.png "The resulting sub-graph after boxing up some nodes")
+![](images/taskBoxUpNodesResult.png "The resulting sub-graph after boxing up some nodes")
 
 
 ### Entering and exiting a Box ###
@@ -96,18 +96,18 @@ The simplest way to connect a Box to a main graph is to promote a node's main _i
     - If the plug is an _in_ array plug, such as the input of a Group node, you can instead select _Promote Array to Box_.
 3. Exit the Box, and connect the new plug to a node in the main graph.
 
-![Connecting a Box to the main graph, from sub-graph to main graph](images/taskConnectBox.gif "Connecting a Box to the main graph, from sub-graph to main graph")
+![](images/taskConnectBox.gif "Connecting a Box to the main graph, from sub-graph to main graph")
 
-Alternatively, dragging a connection to a ![plug adder](images/plugAdder.png "plug adder") on the Box creates a corresponding BoxIn or BoxOut node in the sub-graph:
+Alternatively, dragging a connection to a ![](images/plugAdder.png "Plug adder") on the Box creates a corresponding BoxIn or BoxOut node in the sub-graph:
 
-![Connecting a Box to the main graph, from main graph to sub-graph](images/taskConnectBoxAlt.gif "Connecting a Box to the main graph, from main graph to sub-graph")
+![](images/taskConnectBoxAlt.gif "Connecting a Box to the main graph, from main graph to sub-graph")
 
 
 ### Setting up a Box for pass-through ###
 
 By default, you cannot disable a Box. If it has _in_ and _out_ plugs set up, you also cannot automatically interject it by dropping it over a connection. The BoxOut node has a special _passThrough_ plug, which, when connected to a BoxIn node, provides data pass-through, which enables dropping onto connections and disabling.
 
-![The passThrough plug on a BoxOut node](images/interfacePassthroughPlug.png "The passThrough plug on a BoxOut node")
+![](images/interfacePassthroughPlug.png "The passThrough plug on a BoxOut node")
 
 > Important :
 > The BoxIn node and its connected BoxOut node with the _passThrough_ plug become the main plugs that connect when you drag and drop the Box over a connection.
@@ -117,7 +117,7 @@ To set up a Box for disabling and pass-through:
 1. Enter the Box.
 2. Connect the _passThrough_ plug to a BoxIn node.
 
-![Connecting a passThrough node, so that the Box can be dropped over connections and disabled](images/taskConnectPassthroughPlug.gif "Connecting a passThrough node, so that the Box can be dropped over connections and disabled")
+![](images/taskConnectPassthroughPlug.gif "Connecting a passThrough node, so that the Box can be dropped over connections and disabled")
 
 
 ### Promoting and demoting a plug ###
@@ -144,7 +144,7 @@ When promoted, the following plug types will also add a plug to the Box in the _
 
 Once promoted, you can set the name and value of the plug on the Box using the _Node Editor_. If the promotion added a plug to the Box in the _Graph Editor_, you can drive its value by connecting it to a node.
 
-![Promoting a plug to allow disabling a node using the Box](images/taskPromotePlug.gif "Promoting a plug to allow disabling a node using the Box")
+![](images/taskPromotePlug.gif "Promoting a plug to allow disabling a node using the Box")
 
 
 #### Demoting a plug ####
@@ -160,7 +160,7 @@ To demote a plug:
 2. Select the node with the promoted plug.
 3. In the _Node Editor_, right-click the plug label, then select _Unpromote from Box_ from the context menu.
 
-![Demoting a plug](images/taskDemotePlug.gif "Demoting a plug")
+![](images/taskDemotePlug.gif "Demoting a plug")
 
 > Tip :
 > For faster results, you can unpromote a plug on the Box itself by first right-clicking the plug label in the _Node Editor_, then selecting _Delete_ or _Unpromote from Box_ from the context menu.
@@ -173,7 +173,7 @@ To demote a plug:
 Like other utility nodes with addable plugs, you can reposition and rearrange the plugs on a Box. You can move a plug to any edge of the Box in the _Graph Editor_, or adjust the order of the plugs on an edge.
 
 > Note :
-> An addable plug (![addable plug](images/plugAdder.png "addable plug")) cannot be moved or re-ordered. You must connect or promote a plug to it first.
+> An addable plug (![](images/plugAdder.png "addable plug")) cannot be moved or re-ordered. You must connect or promote a plug to it first.
 
 To adjust the position of a plug on a node, first right-click the plug in the _Graph Editor_. The context menu will open. Then:
 
@@ -182,7 +182,7 @@ To adjust the position of a plug on a node, first right-click the plug in the _G
 - Re-order plugs on a node edge:
     - Select _Move Up_/_Move Down_, or _Move Left_/_Move Right_.
 
-![Adjusting plug position and order around the Box edge in the Graph Editor](images/taskAdjustPlugPosition.gif "Adjusting plug position and order around the Box edge in the Graph Editor")
+![](images/taskAdjustPlugPosition.gif "Adjusting plug position and order around the Box edge in the Graph Editor")
 
 
 #### Renaming and relabelling plugs ####
@@ -214,16 +214,16 @@ The metadata plugs of a Box, which comprise its name, description, documentation
 - Description: Text that appears in the tooltip and the _Node Editor_. Can be adjusted to explain the Box's purpose, contents, and connections.
     > Tip :
     > You can format the _Description_ plug using [Markdown](https://commonmark.org) syntax.
-- Documentation URL: The main help link for the Box (visited by clicking ![the info button](images/info.png "the info button") in the _Node Editor_). Can be edited to point to a location with custom documentation on your studio filesystem or the internet.
+- Documentation URL: The main help link for the Box (visited by clicking ![](images/info.png "Info") in the _Node Editor_). Can be edited to point to a location with custom documentation on your studio filesystem or the internet.
 - Color: Determines the color of the Box in the _Graph Editor_.
 
 To edit the metadata and appearance of a Box:
 
 1. Select the Box.
-2. In the _Node Editor_, click ![the gear](images/gear.png "the gear"), then select _Edit UI..._. The _UI Editor_ will open.
+2. In the _Node Editor_, click ![](images/gear.png "Gear"), then select _Edit UI..._. The _UI Editor_ will open.
 3. Edit the _Name_, _Description_, _Documentation URL_, and _Color_ values as needed.
 
-![The UIEditor with customized plugs](images/interfaceUIEditor.png "The UIEditor with customized plugs")
+![](images/interfaceUIEditor.png "The UIEditor with customized plugs")
 
 
 ### Exporting and importing a reference script ###
@@ -236,7 +236,7 @@ A Box, its sub-graph, its promoted plugs, and its metadata can all be exported a
 To export a Box as a reference script, or import a reference script into a Box:
 
 1. Select the Box.
-2. In the _Node Editor_, click ![the gear](images/gear.png "the gear").
+2. In the _Node Editor_, click ![](images/gear.png "Gear").
 3. Select _Export Reference_ or _Import Reference_. A file dialogue will open.
 4. Using the file dialogue, export or import a `.grf` file.
 
@@ -246,7 +246,7 @@ To export a Box as a reference script, or import a reference script into a Box:
 
 ### Box basics ###
 
-![Box basics](images/exampleBoxBasics.png "Box basics example")
+![](images/exampleBoxBasics.png "Box basics example")
 
 This can be loaded in Gaffer from _Help_ > _Examples_ > _Box Basics_.
 

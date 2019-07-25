@@ -10,14 +10,14 @@ In this three-part tutorial, we will walk through the following example startup 
 
 In this first config, we will add a global context variable called `${project:resources}` that points to the `/resources` directory in the Gaffer installation directory. This context variable will make it slightly easier to reach the directory from any string plug that load files. Since we'll add the context variable using a startup config, it will be automatically added to every node graph Gaffer opens or creates.
 
-![A global context variable in a string plug](images/tutorialVariableSubstitutionInStringPlug.png "A global context variable in a string plug")
+![](images/tutorialVariableSubstitutionInStringPlug.png "A global context variable in a string plug")
 
 
 ## Global context variables ##
 
 Before we begin, a quick aside. A **global** context variables is a context variable that exists at the node graph's root, and which is available to every node and plug at every point in the graph. You can view all of a graph's global context variable in the _Variables_ tab of the the settings menu (_File_ > _Settings_).
 
-![The default global context variable in the Settings window](images/tutorialSettingsWindowDefaultContextVariables.png "The default global context variable in the Settings window")
+![](images/tutorialSettingsWindowDefaultContextVariables.png "The default global context variable in the Settings window")
 
 All startup configs can modify not only their app, but graphs as well. For instance, all graphs automatically receive the above `project:name` and `project:rootDirectory` context variables from the GUI app's default startup config. These global context variables help determine where to save the graph, and where to export renders and caches. Thus, in their standard construction, Gaffer graphs already depend on file path substitutions.
 
@@ -135,7 +135,7 @@ Notice the use of the `application` variable. This is a special variable that re
 
 Now we can test the startup config in a live graph. If you haven't already, save `customVariables.py`, then launch a new instance of Gaffer. In the empty graph, take a look at the global context variables found in the _Variables_ tab of the graph's settings (_File_ > _Settings_). You should see the new `project:resources` variable pointing to the correct path.
 
-![The custom global context variable in the Settings window](images/tutorialSettingsWindowCustomContextVariable.png "The custom global context variable in the Settings window")
+![](images/tutorialSettingsWindowCustomContextVariable.png "The custom global context variable in the Settings window")
 
 Success! Now every node graph you open or create will have the `project:resources` global context variable added to it. Try using the variable to load Gaffy's scene cache:
 
@@ -144,7 +144,7 @@ Success! Now every node graph you open or create will have the `project:resource
 
 If all went well, Gaffy's geometry cache should have loaded in the graph.
 
-![Successfully reading Gaffy using variable substitution in a string](images/tutorialVariableSubstitutionTest.png "Successfully reading Gaffy using variable substitution in a string")
+![](images/tutorialVariableSubstitutionTest.png "Successfully reading Gaffy using variable substitution in a string")
 
 As mentioned earlier, if we wanted to, we could make the path more granular, perhaps by assigning a global context variable to each its child directories.
 
