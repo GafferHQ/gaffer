@@ -161,7 +161,7 @@
        id="backgroundLighter"
        osb:paint="solid">
       <stop
-         style="stop-color:#7d7d7d;stop-opacity:1;"
+         style="stop-color:#9e9e9e;stop-opacity:1;"
          offset="0"
          id="stop6023" />
     </linearGradient>
@@ -208,7 +208,7 @@
        id="backgroundLight"
        osb:paint="solid">
       <stop
-         style="stop-color:#606060;stop-opacity:1;"
+         style="stop-color:#818181;stop-opacity:1;"
          offset="0"
          id="stop5738" />
     </linearGradient>
@@ -539,6 +539,24 @@
        x2="121.48355"
        y2="578.07648"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#backgroundLight"
+       id="linearGradient2199"
+       gradientUnits="userSpaceOnUse"
+       x1="108.46148"
+       y1="578.07648"
+       x2="121.48355"
+       y2="578.07648" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#foreground"
+       id="linearGradient1500"
+       gradientUnits="userSpaceOnUse"
+       x1="108.46148"
+       y1="578.07648"
+       x2="121.48355"
+       y2="578.07648" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -547,16 +565,16 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="32"
-     inkscape:cx="275.8409"
-     inkscape:cy="937.2701"
+     inkscape:zoom="16"
+     inkscape:cx="33.270626"
+     inkscape:cy="974.47573"
      inkscape:document-units="px"
-     inkscape:current-layer="deleteSmall"
+     inkscape:current-layer="g4104"
      showgrid="true"
      inkscape:window-width="1231"
      inkscape:window-height="1016"
-     inkscape:window-x="689"
-     inkscape:window-y="27"
+     inkscape:window-x="472"
+     inkscape:window-y="30"
      inkscape:window-maximized="0"
      inkscape:snap-global="true"
      inkscape:snap-nodes="true"
@@ -2676,7 +2694,7 @@
     <g
        id="g4104">
       <rect
-         inkscape:label="#rect3307"
+         inkscape:label="#forExport:menuIndicator"
          y="72.362183"
          x="35"
          height="8.5"
@@ -2699,6 +2717,30 @@
          inkscape:randomized="0"
          d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-333.80333,151.72889)" />
+      <rect
+         style="opacity:0.5;fill:none;stroke:none"
+         id="forExport:menuIndicatorDisabled"
+         width="15"
+         height="8.5"
+         x="52"
+         y="72.362183"
+         inkscape:label="#forExport:menuIndicatorDisabled" />
+      <path
+         transform="matrix(0,-0.65333366,0.646633,0,-316.80333,151.72889)"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         inkscape:randomized="0"
+         inkscape:rounded="0"
+         inkscape:flatsided="true"
+         sodipodi:arg2="2.0943952"
+         sodipodi:arg1="1.0471976"
+         sodipodi:r2="5.7786927"
+         sodipodi:r1="7.1428571"
+         sodipodi:cy="578.07648"
+         sodipodi:cx="117.14286"
+         sodipodi:sides="3"
+         id="path1498"
+         style="opacity:0.4;fill:url(#linearGradient1500);fill-opacity:1;stroke:#3c3c3c;stroke-width:1.53852141;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         sodipodi:type="star" />
     </g>
     <g
        id="g4488"

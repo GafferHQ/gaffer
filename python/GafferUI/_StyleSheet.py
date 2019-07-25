@@ -95,7 +95,7 @@ _styleColors = {
 	# $foreground is the standard Text/marker color.
 
 	"foreground" : (224, 224, 224),
-	"foregroundFaded" : (153, 153, 153),
+	"foregroundFaded" : (163, 163, 163),
 
 	"errorColor" : (255, 85, 85),
 	"animatedColor" : (128, 152, 94),
@@ -434,7 +434,7 @@ _styleSheet = string.Template(
 	}
 
 	QPushButton:disabled, QComboBox:disabled, QLabel::disabled {
-		color: $foregroundFaded;
+		color: $tintLighterStrong;
 	}
 
 	QPushButton[gafferWithFrame="true"]:disabled {
@@ -454,6 +454,11 @@ _styleSheet = string.Template(
 		background-repeat: none;
 		background-position: center right;
 		padding-right: 20px
+	}
+
+	QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]:disabled {
+		color: $foregroundFaded;
+		background-image: url($GAFFER_ROOT/graphics/menuIndicatorDisabled.png);
 	}
 
 	QComboBox {
