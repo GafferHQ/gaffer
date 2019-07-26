@@ -2,7 +2,7 @@
 
 In this final part of the multi-part startup config tutorial, we will demonstrate a startup config that adds a custom entry to the node menu.
 
-![A custom entry in the node menu](images/tutorialNodeMenuCustomEntry.png "A custom entry in the node menu")
+![](images/tutorialNodeMenuCustomEntry.png "A custom entry in the node menu")
 
 For your convenience, we've shipped Gaffer with a "MacbethTexture" reference graph. Using OSL, this reference procedurally generates a texture of a Macbeth chart on-the-fly, which should come in handy in lookdev and lighting graphs. Our custom node menu entry will insert a Reference node, and then load this reference graph.
 
@@ -126,7 +126,7 @@ That's all! You can add more customized nodes to this config with similar ease, 
 
 Let's try testing the custom node. If you haven't already, save the startup config, then launch a new instance of Gaffer. In the _Graph Editor_, the new entry should appear in the node menu under _Custom_ > _MacbethTexture_, and will create a MacbethTexture node when selected.
 
-![The MacbethTexture node in the Graph Editor](images/tutorialMacbethTextureNode.png "The MacbethTexture node in the Graph Editor")
+![](images/tutorialMacbethTextureNode.png "The MacbethTexture node in the Graph Editor")
 
 
 ## Example graphs ##
@@ -134,7 +134,7 @@ Let's try testing the custom node. If you haven't already, save the startup conf
 
 ### Macbeth chart ###
 
-![Preview of the Macbeth chart example](images/exampleMacbethChart.png)
+![](images/exampleMacbethChart.png "Preview of the Macbeth chart example")
 
 This can be loaded in Gaffer from _Help_ > _Examples_ > _Rendering_ > _Macbeth Chart_.
 

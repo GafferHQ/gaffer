@@ -62,7 +62,7 @@ To create the `ARNOLD_ROOT` environment variable in OSX:
 
 The next time you start Gaffer, the Arnold nodes will be available from the node creation menu (right-click inside the _Graph Editor_).
 
-<!-- TODO: ![Arnold node menu](images/arnoldNodes.png) -->
+<!-- TODO: ![](images/arnoldNodes.png "Arnold node menu") -->
 
 
 ## Configuring Gaffer for 3Delight ##
@@ -114,7 +114,7 @@ To create the `DELIGHT` environment variable in OSX:
 
 The next time you start Gaffer, the 3Delight nodes will be available from the node creation menu (right-click inside the _Graph Editor_).
 
-<!-- TODO: ![Delight node menu](images/delightNodes.png) -->
+<!-- TODO: ![](images/delightNodes.png "Delight node menu") -->
 
 
 ## Configuring Gaffer for Tractor ##
@@ -180,7 +180,7 @@ Once the tractor folder has been added to your `PYTHONPATH`, you can then verify
 
 4. _Tractor_ will be available in the _Dispatcher_ drop-down menu.
 
-<!-- TODO: ![Tractor dispatch](images/tractorDispatch.png) -->
+<!-- TODO: ![](images/tractorDispatch.png "Tractor dispatch") -->
 
 
 ## See also ##

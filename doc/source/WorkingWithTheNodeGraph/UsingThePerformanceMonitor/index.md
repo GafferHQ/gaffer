@@ -17,7 +17,7 @@ To turn on the performance monitor:
 
 4. Toggle the Performance Monitor plug's switch, and then check its box.
 
-    ![The performance monitor, activated](images/nodeEditorWindowPerformanceMonitor.png "The performance monitor, activated")
+    ![](images/nodeEditorWindowPerformanceMonitor.png "The performance monitor, activated")
 
 When you dispatch your script to the renderer, performance data will output to the stdout in your terminal. If you are dispatching to a render farm, the farm will receive the stdout.
 
