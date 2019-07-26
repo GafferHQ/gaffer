@@ -1202,5 +1202,43 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render["task"].execute()
 
+	def testShaderSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+
+		s["shader"] = GafferArnold.ArnoldShader()
+		s["shader"].loadShader( "image" )
+		s["shader"]["parameters"]["filename"].setValue( "<attr:A>/path/<attr:B>.tx" )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["plane"]["out"] )
+		s["shaderAssignment"]["filter"].setInput( s["filter"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+
+		s["a"] = GafferScene.CustomAttributes()
+		s["a"]["in"].setInput( s["shaderAssignment"]["out"] )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "A", Gaffer.StringPlug( "value", defaultValue = 'bar' ) ) )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'foo' ) ) )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["a"]["out"] )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			plane = arnold.AiNodeLookUpByName( "/plane" )
+			shader = arnold.AiNodeGetPtr( plane, "shader" )
+			self.assertEqual( arnold.AiNodeGetStr( shader, "filename" ), "bar/path/foo.tx" )
+
+
 if __name__ == "__main__":
 	unittest.main()
