@@ -1171,7 +1171,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	OSLQuery query;
 	if( !query.open( key, searchPath ? searchPath : "" ) )
 	{
-		throw Exception( query.geterror() );
+		return nullptr;
 	}
 
 	CompoundDataPtr metadata = new CompoundData;

@@ -203,10 +203,20 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"indirect_diffuse",
 		"direct_glossy",
 		"indirect_glossy",
+		"albedo",
+
+		"npr_contour",
+		"npr_shading",
+
 		"depth",
 		"normal",
+		"position",
 		"uv",
-		"pixel_time"
+
+		"pixel_variation",
+		"pixel_sample_count",
+		"pixel_time",
+		"invalid_samples"
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )

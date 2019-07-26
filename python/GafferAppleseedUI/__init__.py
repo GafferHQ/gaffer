@@ -40,6 +40,7 @@ import AppleseedOptionsUI
 import AppleseedRenderUI
 import InteractiveAppleseedRenderUI
 import LightMenu
+import ShaderMenu
 import AppleseedShaderAdaptorUI
 import AppleseedShaderBallUI
 

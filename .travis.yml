@@ -83,10 +83,6 @@ matrix:
     # We can then simply list the exact builds we want.
     include:
         - os: linux
-          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=RELEASE
-        - os: linux
-          env: COMPILER=g++-4.8 CXXSTD=c++11 BUILD_TYPE=DEBUG
-        - os: linux
           env: COMPILER=g++-6 CXXSTD=c++14 BUILD_TYPE=RELEASE
         - os: osx
           env: COMPILER=clang++ CXXSTD=c++11 BUILD_TYPE=RELEASE

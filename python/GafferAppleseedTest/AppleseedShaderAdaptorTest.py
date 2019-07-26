@@ -57,7 +57,7 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		sphere = GafferScene.Sphere()
 
 		shader = GafferOSL.OSLShader( "blackbody" )
-		shader.loadShader( "color/as_blackbody" )
+		shader.loadShader( "as_blackbody" )
 
 		assignment = GafferScene.ShaderAssignment()
 		assignment["in"].setInput( sphere["out"] )
@@ -70,17 +70,13 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( adaptor["out"].attributes( "/sphere" ).keys(), [ "osl:surface" ] )
 
 		network = adaptor["out"].attributes( "/sphere" )["osl:surface"]
-		self.assertEqual( len( network ), 3 )
-		self.assertEqual( network.getShader( "blackbody" ).name, "color/as_blackbody" )
+		self.assertEqual( len( network ), 2 )
+		self.assertEqual( network.getShader( "blackbody" ).name, "as_blackbody" )
 		self.assertEqual( network.getShader( "blackbody" ).type, "osl:shader" )
 
-		self.assertEqual( network.getShader( "emission" ).name, "surface/as_emission_surface" )
-		self.assertEqual( network.getShader( "emission" ).type, "osl:shader" )
-		self.assertEqual( network.input( ( "emission", "Color" ) ), ( "blackbody", "ColorOut" ) )
-
-		self.assertEqual( network.getShader( "material" ).name, "material/as_material_builder" )
+		self.assertEqual( network.getShader( "material" ).name, "as_closure2surface" )
 		self.assertEqual( network.getShader( "material" ).type, "osl:surface" )
-		self.assertEqual( network.input( ( "material", "BSDF" ) ), ( "emission", "BSDF" ) )
+		self.assertEqual( network.input( ( "material", "in_input" ) ), ( "blackbody", "out_color" ) )
 
 		self.assertEqual( network.getOutput(), ( "material", "" ) )
 
@@ -102,16 +98,12 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( adaptor["out"].attributes( "/sphere" ).keys(), [ "osl:surface" ] )
 
 		network = adaptor["out"].attributes( "/sphere" )["osl:surface"]
-		self.assertEqual( len( network ), 2 )
-		self.assertEqual( network.getShader( "emission" ).name, "surface/as_emission_surface" )
-		self.assertEqual( network.getShader( "emission" ).type, "osl:shader" )
-		self.assertEqual( network.getShader( "emission" ).parameters["Color"].value, imath.Color3f( 1, 0, 0 ) )
+		self.assertEqual( len( network ), 1 )
+		self.assertEqual( network.getShader( "tex2Surface" ).name, "as_texture2surface" )
+		self.assertEqual( network.getShader( "tex2Surface" ).type, "osl:surface" )
+		self.assertEqual( network.getShader( "tex2Surface" ).parameters["in_color"].value, imath.Color3f( 1, 0, 0 ) )
 
-		self.assertEqual( network.getShader( "material" ).name, "material/as_material_builder" )
-		self.assertEqual( network.getShader( "material" ).type, "osl:surface" )
-		self.assertEqual( network.input( ( "material", "BSDF" ) ), ( "emission", "BSDF" ) )
-
-		self.assertEqual( network.getOutput(), ( "material", "" ) )
+		self.assertEqual( network.getOutput(), ( "tex2Surface", "" ) )
 
 if __name__ == "__main__":
 	unittest.main()

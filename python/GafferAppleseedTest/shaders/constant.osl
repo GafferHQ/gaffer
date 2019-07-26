@@ -1,0 +1,5 @@
+
+surface constant(color constant_color = color(1))
+{
+    Ci = constant_color * emission();
+}

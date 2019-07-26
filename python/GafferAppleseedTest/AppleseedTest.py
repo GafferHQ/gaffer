@@ -35,7 +35,20 @@
 ##########################################################################
 
 import os
+import subprocess32 as subprocess
 
 def appleseedProjectSchemaPath():
 
 	return os.path.join( os.environ["APPLESEED"], "schemas", "project.xsd" )
+
+def compileOSLShader( sourceFileName, tempDir ) :
+
+	outputFileName = tempDir + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
+
+	subprocess.check_call(
+		[ "oslc", "-q" ] +
+		[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( ":" ) ] +
+		[ "-o", outputFileName, sourceFileName ]
+	)
+
+	return os.path.splitext( outputFileName )[0]

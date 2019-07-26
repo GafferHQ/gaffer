@@ -80,8 +80,8 @@ def __mainSummary( plug ) :
 		info.append( "Passes %d" % plug["renderPasses"]["value"].getValue() )
 	if plug["sampler"]["enabled"].getValue() :
 		info.append( "Sampler %s" % plug["sampler"]["value"].getValue() )
-	if plug["aaSamples"]["enabled"].getValue() :
-		info.append( "AA Samples %d" % plug["aaSamples"]["value"].getValue() )
+	if plug["maxAASamples"]["enabled"].getValue() :
+		info.append( "AA Samples %d" % plug["maxAASamples"]["value"].getValue() )
 	if plug["lightingEngine"]["enabled"].getValue() :
 		info.append( "Lighting Engine %s" % plug["lightingEngine"]["value"].getValue() )
 
@@ -122,6 +122,8 @@ def __ptSummary( plug ) :
 		info.append( "IBL Samples %f" % plug["ptIBLSamples"]["value"].getValue() )
 	if plug["ptMaxRayIntensity"]["enabled"].getValue() :
 		info.append( "Max Ray Intensity %f" % plug["ptMaxRayIntensity"]["value"].getValue() )
+	if plug["ptClampRoughness"]["enabled"].getValue() :
+		info.append( "Clamp Roughness %f" % plug["ptClampRoughness"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -226,7 +228,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			__getDescriptionString(
-				"generic_frame_renderer:passes",
+				"passes",
 				"""
 				When using photon mapping this is the number of
 				progressive refinement passes used.
@@ -241,7 +243,7 @@ Gaffer.Metadata.registerNode(
 		"options.sampler" : [
 
 			"description",
-			__getDescriptionString( "sampling_mode" ),
+			"Antialiasing sampler",
 
 			"layout:section", "Main",
 
@@ -249,20 +251,50 @@ Gaffer.Metadata.registerNode(
 
 		"options.sampler.value" : [
 
-			"preset:Random", "rng",
-			"preset:QMC", "qmc",
+			"preset:Uniform", "generic",
+			"preset:Adaptive", "adaptive",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
-		"options.aaSamples" : [
+		"options.minAASamples" : [
 
 			"description",
-			__getDescriptionString( "uniform_pixel_renderer:samples" ),
+			__getDescriptionString( "adaptive_tile_renderer:min_samples" ),
 
 			"layout:section", "Main",
-			"label", "AA Samples",
+			"label", "Min Samples",
+
+		],
+
+		"options.maxAASamples" : [
+
+			"description",
+			__getDescriptionString( "adaptive_tile_renderer:max_samples" ),
+
+			"layout:section", "Main",
+			"label", "Max Samples",
+
+		],
+
+		"options.aaBatchSampleSize" : [
+
+			"description",
+			__getDescriptionString( "adaptive_tile_renderer:batch_size" ),
+
+			"layout:section", "Main",
+			"label", "Batch Sample Size",
+
+		],
+
+		"options.aaNoiseThresh" : [
+
+			"description",
+			__getDescriptionString( "adaptive_tile_renderer:noise_threshold" ),
+
+			"layout:section", "Main",
+			"label", "Noise Threshold",
 
 		],
 
@@ -281,21 +313,6 @@ Gaffer.Metadata.registerNode(
 			"preset:SPPM", "sppm",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.meshFileFormat" : [
-
-			"description",
-			"""
-			Mesh file format to use when exporting scenes to appleseed.
-			It is recommended to set it to BinaryMesh as it is more efficient than Obj.
-			""",
-
-			"layout:section", "Main",
-
-			# Hidden because it's not used in the new renderer.
-			"plugValueWidget:type", ""
 
 		],
 
@@ -472,6 +489,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.ptClampRoughness" : [
+
+			"description",
+			__getDescriptionString("pt:clamp_roughness"),
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Clamp Roughness",
+
+		],
+
 		# SPPM
 
 		"options.photonType" : [
@@ -640,7 +667,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Disabling this option will produce better results 
+			Disabling this option will produce better results
 			at the expense of slower processing time.
 			""",
 

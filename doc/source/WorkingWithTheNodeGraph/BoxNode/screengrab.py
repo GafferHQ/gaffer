@@ -1,4 +1,4 @@
-# BuildTarget: images/taskBoxUpNodesResult.png
+# BuildTarget: images/interfaceUIEditor.png
 
 import os
 
@@ -34,7 +34,7 @@ graphEditor = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 # Illustration of importing a saved Box reference, using the example mySurfaceShaders Box
 # script["fileName"].setValue( os.path.abspath( "scripts/illustrationBoxReferences.gfr" ) )
 # TODO: Automate `images/illustrationBoxReferences.svg` when these tools become available:
-# - Borders around images 
+# - Borders around images
 # - 2D curves with end caps
 # - Screengrabs containing the window frame
 
@@ -51,10 +51,10 @@ graphEditor = scriptWindow.getLayout().editors( GafferUI.GraphEditor )[0]
 # - On-screen keystroke monitor
 
 # Task result of boxing up nodes
-script["fileName"].setValue( os.path.abspath( "scripts/taskBoxUpNodesAfter.gfr" ) )
-script.load()
-graphEditor.frame( script.children( Gaffer.Node ) )
-GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/taskBoxUpNodesResult.png" )
+# script["fileName"].setValue( os.path.abspath( "scripts/taskBoxUpNodesAfter.gfr" ) )
+# script.load()
+# graphEditor.frame( script.children( Gaffer.Node ) )
+# GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/taskBoxUpNodesResult.png" )
 
 # Task animation of the quickest way to connect a Box
 # script["fileName"].setValue( os.path.abspath( "scripts/taskConnectBox.gfr" ) )

@@ -40,7 +40,7 @@ First, load Gaffy's geometry cache with a SceneReader node:
 3. The _Node Editor_ in the top-right panel has now updated to display the SceneReader node's values. In the _File Name_ field, type `${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc`.
 
 4. Hover the cursor over the background of the _Viewer_ (in the top-left panel), and hit <kbd>F</kbd>. The view will reframe to cover the whole scene.
-    
+
     ![](images/viewerSceneReaderBounding.png "The bounding box of the selected SceneReader node") <!-- TODO: add annotation -->
 
 The SceneReader node has loaded, and the _Viewer_ is showing a bounding box, but the geometry remains invisible. You can confirm that the scene has loaded by examining the _Hierarchy View_ in the bottom-right panel. It too has updated, and shows that you have _GAFFERBOT_ at the root of the scene. In order to view the geometry, you will need to expand the scene's locations down to their leaves.
@@ -158,7 +158,7 @@ So far, your graph is as such: the SceneReader node is outputting a scene with G
 
 ### Scenes ###
 
-In Gaffer, there is no single data set of locations and properties that comprise the sequence's scene. In fact, a Gaffer graph is not limited to a single scene. Instead, when a node is queried, a scene is dynamically computed as that node's output. You can test this by clicking the background of the _Graph Editor_. With no node selected, the _Hierarchy View_ goes blank, because there is no longer a scene requiring computation. Thus, no scene exists. Since scenes are computed only when needed, Gaffer has the flexibility to support an arbitrary quantity of them. 
+In Gaffer, there is no single data set of locations and properties that comprise the sequence's scene. In fact, a Gaffer graph is not limited to a single scene. Instead, when a node is queried, a scene is dynamically computed as that node's output. You can test this by clicking the background of the _Graph Editor_. With no node selected, the _Hierarchy View_ goes blank, because there is no longer a scene requiring computation. Thus, no scene exists. Since scenes are computed only when needed, Gaffer has the flexibility to support an arbitrary quantity of them.
 
 Since neither of your nodes is connected, each of their scenes remains separate. If you were to evaluate your graph right now, it would calculate two independent scenes. For them to interface, they must be joined somewhere later in the graph.
 
@@ -362,15 +362,19 @@ It will be best if you keep the render option nodes at the end of the graph. Sin
 
 Now that you have more space, it's time to add some shading nodes:
 
-1. Below and to the left of the Group node, create a Disney Material node (_Appleseed_ > _Shader_ > _Material_ > *As_Disney_Material*).
+1. Below and to the left of the Group node, create a Closure2Surface node (_Appleseed_ > _Shader_ > _Surface_ > *As_Closure2Surface*).
 
-2. In the _Node Editor_, give the shader reflective surface properties:
-    - Set the Specular plug to `0.6`.
-    - Set the Roughness plug to `0.35`.
+2. Create a Disney Shader node (_Appleseed_ > _Shader_ > _Shader_ > *As_Disney_Material*).
 
-3. With the Disney Material node still selected, create a ShaderAssignment node (_Scene_ > _Attributes_ > _ShaderAssignment_).
+3. In the _Node Editor_, give the shader reflective surface properties:
+    - Set the Specular Weight plug to `0.6`.
+    - Set the Surface Roughness plug to `0.35`.
 
-4. Click and drag the ShaderAssignment node onto the connector between the Group and StandardOptions nodes. The ShaderAssignment node will be interjected between them.
+4. Connect the outColor plug of the Disney Shader node to the input plug of the Closure2Surface node.
+
+5. Select the Closure2Surface node and create a ShaderAssignment node (_Scene_ > _Attributes_ > _ShaderAssignment_).
+
+6. Click and drag the ShaderAssignment node onto the connector between the Group and StandardOptions nodes. The ShaderAssignment node will be interjected between them.
 
     ![](images/graphEditorFirstShaderNodes.png "The ShaderAssignment and Disney Material nodes")
 
@@ -415,13 +419,12 @@ The interactive render will now begin updating, and you will be able to see Gaff
 
 As Gaffy is looking a bit bland, you should drive the shader with some robot textures:
 
-1. Create an Appleseed Color Texture node (_Appleseed_ > _Shader_ > _Texture2d_ > *As_color_texture*).
+1. Create an Appleseed Color Texture node (_Appleseed_ > _Shader_ > _Texture2d_ > *asTexture*).
 
 2. In the _Node Editor_, point the node to the textures:
-    - For the Filename plug, type `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_`.
-    - Set the UDIM plug to _mari_.
+    - For the Filename plug, type `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_<UDIM>.tx`.
 
-3. In the _Graph Editor_, connect the Appleseed color texture node's ColorOut plug to the Disney Material node's BaseColor plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
+3. In the _Graph Editor_, connect the Appleseed color texture node's OutputColor plug to the Disney Material node's SurfaceColor plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
 
     ![](images/viewerRenderTextures.png "Gaffy with textures")
 
@@ -432,15 +435,17 @@ Right now, the physical surface of all of Gaffy's geometry looks the same, becau
 
 Begin by creating another shader:
 
-1. Create another Disney Material node.
+1. Create another pair of Disney Surface shader and Closure2Surface nodes.
 
-2. Give the shader some metallic properties:
-    - Set Metallic to `0.8`.
-    - Set Roughness to `0.4`.
+2. Connect the outColor plug of the Disney Shader node to the input plug of the Closure2Surface node.
 
-3. With the new Disney Material node still selected, create another ShaderAssignment node.
+3. Give the shader some metallic properties:
+    - Set Metallicness to `0.8`.
+    - Set Surface Roughness to `0.4`.
 
-4. Interject the new ShaderAssignment node after the first ShaderAssignment node.
+4. Select the Closure2Surface and create another ShaderAssignment node.
+
+5. Interject the new ShaderAssignment node after the first ShaderAssignment node.
 
     ![](images/graphEditorSecondShaderNodes.png "A second shader in the Graph Editor")
 
