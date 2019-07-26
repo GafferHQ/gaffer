@@ -1202,5 +1202,61 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render["task"].execute()
 
+	def testShaderSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+
+		s["planeAttrs"] = GafferScene.CustomAttributes()
+		s["planeAttrs"]["in"].setInput( s["plane"]["out"] )
+		s["planeAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "A", Gaffer.StringPlug( "value", defaultValue = 'bar' ) ) )
+		s["planeAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'foo' ) ) )
+
+		s["cube"] = GafferScene.Cube()
+
+		s["cubeAttrs"] = GafferScene.CustomAttributes()
+		s["cubeAttrs"]["in"].setInput( s["cube"]["out"] )
+		s["cubeAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'override' ) ) )
+
+		
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["in"].setInput( s["planeAttrs"]["out"] )
+		s["parent"]["child"].setInput( s["cubeAttrs"]["out"] )
+		s["parent"]["parent"].setValue( "/plane" )
+
+
+		s["shader"] = GafferArnold.ArnoldShader()
+		s["shader"].loadShader( "image" )
+		s["shader"]["parameters"]["filename"].setValue( "<attr:A>/path/<attr:B>.tx" )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["parent"]["out"] )
+		s["shaderAssignment"]["filter"].setInput( s["filter"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["shaderAssignment"]["out"] )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			plane = arnold.AiNodeLookUpByName( "/plane" )
+			shader = arnold.AiNodeGetPtr( plane, "shader" )
+			self.assertEqual( arnold.AiNodeGetStr( shader, "filename" ), "bar/path/foo.tx" )
+
+			cube = arnold.AiNodeLookUpByName( "/plane/cube" )
+			shader2 = arnold.AiNodeGetPtr( cube, "shader" )
+			self.assertEqual( arnold.AiNodeGetStr( shader2, "filename" ), "bar/path/override.tx" )
+
+
 if __name__ == "__main__":
 	unittest.main()
