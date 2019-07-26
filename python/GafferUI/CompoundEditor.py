@@ -941,6 +941,10 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		if event.button() != QtCore.Qt.LeftButton :
 			return False
 
+		if not self.__qTabBar :
+			# We can end up here from drag interactions with the close button
+			return False
+
 		try :
 
 			# We only consume this event if we've been messing with events and
@@ -1004,6 +1008,10 @@ class _TabDragBehaviour( QtCore.QObject ) :
 	def __mouseMove( self, _, event ):
 
 		if not event.buttons() & QtCore.Qt.LeftButton :
+			return False
+
+		if not self.__qTabBar :
+			# We can end up here from drag interactions with the close button
 			return False
 
 		# If the user moves the mouse out of the tab bar, we need to make the
