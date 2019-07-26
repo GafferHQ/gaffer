@@ -386,6 +386,13 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ) ) )
 			layoutButton.setToolTip( "Click to modify the layout" )
 			layoutButton._qtWidget().setFixedHeight( 15 )
+			layoutButton.getMenu().visibilityChangedSignal().connect(
+				functools.partial(
+					Gaffer.WeakMethod( self.__buttonContextMenuVisibilityChanged ),
+					weakref.ref( layoutButton )
+				),
+				scoped = False
+			)
 
 		cornerWidget._qtWidget().setObjectName( "gafferCompoundEditorTools" )
 		self.setCornerWidget( cornerWidget )
@@ -590,6 +597,13 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			return False
 
 		self.__pinningMenu = GafferUI.Menu( m )
+		self.__pinningMenu.visibilityChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__buttonContextMenuVisibilityChanged ),
+				weakref.ref( self.__pinningButton )
+			),
+			scoped = False
+		)
 
 		buttonBound = button.bound()
 		self.__pinningMenu.popup(
@@ -598,6 +612,14 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		)
 
 		return True
+
+	# The button never receives the leave event, so the highlight
+	# state sticks with us indefinitely. TODO: Is there a way to
+	# deal with this in the button itself?
+	def __buttonContextMenuVisibilityChanged( self, weakButton, menu ) :
+		# For some reason menu.getVisible() always returns True
+		if weakButton() is not None and menu._qtWidget().isHidden() :
+			weakButton().setHighlighted( False )
 
 	def __tabContextMenu( self, pos ) :
 
