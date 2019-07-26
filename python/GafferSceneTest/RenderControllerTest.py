@@ -372,5 +372,34 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( renderer.capturedObject( "/group/defaultLight" ) )
 		self.assertEqual( capturedPlane.capturedLinks( "lights" ), set() )
 
+	def testShaderSubstitutions( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "aaa", Gaffer.StringPlug( "value", defaultValue = 'blah' ) ) )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "bbb", Gaffer.StringPlug( "value", defaultValue = 'foo' ) ) )
+
+		assign = GafferScene.ShaderAssignment()
+		assign["in"].setInput( attributes["out"] )
+
+		s = GafferSceneTest.TestShader()
+		s["type"].setValue( "test:surface" )
+		s["parameters"].addChild( Gaffer.StringPlug( "testString", defaultValue = "<attr:aaa>_<attr:bbb>" ) )
+		assign["shader"].setInput( s["out"] )
+
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( assign["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
+		capturedSphere = renderer.capturedObject( "/sphere" )
+
+		self.assertEqual( capturedSphere.capturedAttributes().attributes()["test:surface"].outputShader().parameters["testString"], "blah_foo" )
+
+		del capturedSphere
+
 if __name__ == "__main__":
 	unittest.main()

@@ -37,6 +37,8 @@
 #include "GafferScene/RendererAlgo.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
+
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/SetAlgo.h"
@@ -51,6 +53,7 @@
 #include "IECoreScene/PreWorldRenderable.h"
 #include "IECoreScene/Primitive.h"
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -86,6 +89,36 @@ void motionTimes( size_t segments, const V2f &shutter, std::set<float> &times )
 		times.insert( lerp( shutter[0], shutter[1], (float)i / (float)segments ) );
 	}
 }
+
+struct SubstitutionKey
+{
+	SubstitutionKey( const IECore::MurmurHash &precomputedHash, const ShaderNetwork *network, const CompoundObject *attributes )
+		:   precomputedHash( precomputedHash ),
+			network( network ),
+			attributes( attributes )
+	{
+	}
+
+	const IECore::MurmurHash precomputedHash;
+	const ShaderNetwork *network;
+	const CompoundObject *attributes;
+
+	operator const IECore::MurmurHash &() const
+	{
+		return precomputedHash;
+	}
+
+};
+
+static IECoreScene::ShaderNetworkPtr substitutionCacheGetter( const SubstitutionKey &key, size_t &cost )
+{
+	ShaderNetworkPtr substituted = key.network->copy();
+	substituted->applySubstitutions( key.attributes );
+	cost = 1;
+	return substituted;
+}
+
+typedef IECorePreview::LRUCache<IECore::MurmurHash, IECoreScene::ShaderNetworkPtr, IECorePreview::LRUCachePolicy::Parallel, SubstitutionKey> SubstitutionCache;
 
 } // namespace
 
@@ -980,6 +1013,20 @@ struct LocationOutput
 				updatedAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
 			}
 
+			for( auto &i : updatedAttributes->members() )
+			{
+				const ShaderNetwork *shaderAttribute = IECore::runTimeCast<ShaderNetwork>( i.second.get() );
+				if( shaderAttribute )
+				{
+					ConstShaderNetworkPtr substituted = RendererAlgo::substitutedShader(
+						shaderAttribute, updatedAttributes.get()
+					);
+
+					// const_cast is safe because we're about to assign to m_attributes which is const
+					i.second = const_cast<ShaderNetwork*>( substituted.get() );
+				}
+			}
+
 			m_attributes = updatedAttributes;
 		}
 
@@ -1540,6 +1587,27 @@ void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObje
 	// always storing a relative shutter in camera->setShutter()
 	camera->setShutter( SceneAlgo::shutter( globals, scene ) );
 
+}
+
+ConstShaderNetworkPtr substitutedShader( IECoreScene::ConstShaderNetworkPtr shaderNetwork, const IECore::CompoundObject *attributes )
+{
+	// Fixed size cache that will hold 10000 shaders
+	static SubstitutionCache substitutionCache( substitutionCacheGetter, 10000 );
+
+	IECore::MurmurHash substitutionsHash;
+	shaderNetwork->hashSubstitutions( attributes, substitutionsHash );
+
+	if( substitutionsHash == IECore::MurmurHash() )
+	{
+		// No substitutions, so just return the input without touching the cache
+		return shaderNetwork;
+	}
+
+	// Make a hash that includes the shader network, and the substitutions
+	shaderNetwork->hash( substitutionsHash );
+
+	const SubstitutionKey substitutionKey( substitutionsHash, shaderNetwork.get(), attributes );
+	return substitutionCache.get( substitutionKey );
 }
 
 } // namespace RendererAlgo

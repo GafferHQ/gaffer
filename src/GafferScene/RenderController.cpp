@@ -203,7 +203,7 @@ class RenderController::SceneGraph
 		// Constructs the root of the scene graph.
 		// Children are constructed using updateChildren().
 		SceneGraph()
-			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject ), m_dirtyComponents( AllComponents ), m_changedComponents( NoComponent )
+			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject ), m_fullAttributesSubstituted( false ), m_dirtyComponents( AllComponents ), m_changedComponents( NoComponent )
 		{
 			clear();
 		}
@@ -459,7 +459,7 @@ class RenderController::SceneGraph
 	private :
 
 		SceneGraph( const InternedString &name, const SceneGraph *parent )
-			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject )
+			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject ), m_fullAttributesSubstituted( false )
 		{
 			clear();
 		}
@@ -478,6 +478,7 @@ class RenderController::SceneGraph
 			ConstCompoundObjectPtr attributes = attributesPlug->getValue( &attributesHash );
 			CompoundObject::ObjectMap &fullAttributes = m_fullAttributes->members();
 			fullAttributes = m_parent->m_fullAttributes->members();
+			m_fullAttributesSubstituted = false;
 			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
 				fullAttributes[it->first] = it->second;
@@ -501,6 +502,8 @@ class RenderController::SceneGraph
 			}
 
 			m_fullAttributes->members() = globalAttributes->members();
+			m_fullAttributesSubstituted = false;
+			
 			m_attributesInterface = nullptr;
 
 			return true;
@@ -519,6 +522,25 @@ class RenderController::SceneGraph
 		{
 			if( !m_attributesInterface )
 			{
+				if( !m_fullAttributesSubstituted )
+				{
+					for( auto &i : m_fullAttributes->members() )
+					{
+						const ShaderNetwork *shaderAttribute = IECore::runTimeCast<ShaderNetwork>( i.second.get() );
+						if( shaderAttribute )
+						{
+							ConstShaderNetworkPtr substituted = RendererAlgo::substitutedShader(
+								shaderAttribute, m_fullAttributes.get()
+							);
+
+							// const_cast is safe because we control m_fullAttributes, and we don't
+							// modify the children
+							i.second = const_cast<ShaderNetwork*>( substituted.get() );
+						}
+					}
+					m_fullAttributesSubstituted = true;
+				}
+				
 				m_attributesInterface = renderer->attributes( m_fullAttributes.get() );
 			}
 			return m_attributesInterface.get();
@@ -761,6 +783,7 @@ class RenderController::SceneGraph
 
 		IECore::MurmurHash m_attributesHash;
 		IECore::CompoundObjectPtr m_fullAttributes;
+		bool m_fullAttributesSubstituted;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_attributesInterface;
 		IECore::MurmurHash m_lightLinksHash;
 

@@ -42,6 +42,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "IECoreScene/Camera.h"
+#include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/CompoundObject.h"
@@ -265,6 +266,8 @@ GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::Compou
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
 GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene );
+
+GAFFERSCENE_API IECoreScene::ConstShaderNetworkPtr substitutedShader( IECoreScene::ConstShaderNetworkPtr shaderNetwork, const IECore::CompoundObject *attributes );
 
 } // namespace RendererAlgo
 
