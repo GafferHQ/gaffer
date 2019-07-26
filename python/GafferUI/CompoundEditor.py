@@ -91,9 +91,22 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.__splitContainer.addEditor( editor )
 
 	__nodeSetMenuSignal = Gaffer.Signal2()
-	## A signal emitted to populate a menu for manipulating
-	# the node set of a NodeSetEditor - the signature is
-	# `slot( nodeSetEditor, menuDefinition )`.
+	## A signal emitted to populate a menu for manipulating the node set of a
+	# NodeSetEditor - the signature is `slot( nodeSetEditor, menuDefinition )`.
+	#
+	# The menu is logically broken into two sections:
+	#
+	#  - The top section is the current 'state' of the editor.
+	#    It should only contain mutually exclusive items with
+	#    associated checkBoxes to indicate to the user which
+	#    state is current ( ie: its really a radio option group ).
+	#
+	#  - The lower section contains action items that can affect the
+	#    current editor's state.
+	#
+	# The divider between the two sections has the path '/ActionsDivider' which
+	# can be used with `menuDefnition.insertBefore` to place new items in the
+	# correct section.
 	@classmethod
 	def nodeSetMenuSignal( cls ) :
 
@@ -379,7 +392,9 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth=2 ) as cornerWidget :
 
-			self.__pinningButton = GafferUI.Button( image="targetNodesUnlocked.png", hasFrame=False )
+			self.__drivenEditorSwatch = _DrivenEditorSwatch()
+
+			self.__pinningButton = GafferUI.Button( image="nodeSetDriverNodeSelection.png", hasFrame=False )
 			self.__pinningButton._qtWidget().setFixedHeight( 15 )
 
 			layoutButton = GafferUI.MenuButton( image="layoutButton.png", hasFrame=False )
@@ -545,8 +560,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		if isinstance( currentEditor, GafferUI.NodeSetEditor ) :
 			self.__nodeSetChangedConnection = currentEditor.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updatePinningButton ) )
+			self.__nodeSetDriverChangedConnection = currentEditor.nodeSetDriverChangedSignal().connect( Gaffer.WeakMethod( self.__updatePinningButton ) )
+			self.__drivenNodeSetsChangedConnection = currentEditor.drivenNodeSetsChangedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__updateDrivenEditorSwatch ), True ) )
 		else :
 			self.__nodeSetChangedConnection = None
+			self.__nodeSetDriverChangedConnection = None
+			self.__drivenNodeSetsChangedConnection = None
 
 		self.__updatePinningButton()
 
@@ -557,37 +576,89 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 			self.__pinningButton.setVisible( True )
 
-			if editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
-				self.__pinningButton.setToolTip( "Click to lock view to current selection" )
-				self.__pinningButton.setImage( "targetNodesUnlocked.png" )
+			drivingEditor, mode = editor.getNodeSetDriver()
+
+			if drivingEditor is not None :
+				icon = "nodeSetDriver%s.png" % mode
+				tip = "Click to un-link and follow the current node selection"
+			elif self.__editorIsPinned( editor ):
+				nodeSet = editor.getNodeSet()
+				icon = "nodeSet%s.png"  % nodeSet.__class__.__name__
+				tip = "Click to un-pin and follow the current node selection"
 			else :
-				self.__pinningButton.setToolTip( "Click to unlock view and follow selection" )
-				self.__pinningButton.setImage( "targetNodesLocked.png" )
+				icon = "nodeSetDriverNodeSelection.png"
+				tip = "Click to pin the current node selection"
+
+			self.__pinningButton.setToolTip( tip )
+			self.__pinningButton.setImage( icon )
 
 		else :
 
 			self.__pinningButton.setVisible( False )
+
+		self.__updateDrivenEditorSwatch( True )
+
+	def __updateDrivenEditorSwatch( self, updateAssociated, *args ) :
+
+		self.__drivenEditorSwatch.update()
+
+		if updateAssociated :
+
+			editor = self.getCurrent()
+			if editor and isinstance( editor, GafferUI.NodeSetEditor ) :
+				# Technically, their driven status hasn't changed, but the color for them
+				# may have, eg: A -> B -> C and we just unlinked B from C. A should now show
+				# B's color not C's. We can't rely on nodeSetChangedSignal as the actual
+				# node set may not have changed....
+				for drivenEditor in editor.drivenNodeSets( recurse = True ) :
+					parentTabbedContainer = drivenEditor.ancestor( _TabbedContainer )
+					if parentTabbedContainer is not None :
+						parentTabbedContainer.__updateDrivenEditorSwatch( False )
 
 	def __pinningButtonClicked( self, button ) :
 
 		editor = self.getCurrent()
 		assert( isinstance( editor, GafferUI.NodeSetEditor ) )
 
-		nodeSet = editor.getNodeSet()
-		selectionSet = editor.scriptNode().selection()
-		if nodeSet.isSame( selectionSet ) :
-			nodeSet = Gaffer.StandardSet( list( nodeSet ) )
+		drivingEditor, _ = editor.getNodeSetDriver()
+		if drivingEditor :
+			self.__followScriptSelection()
+		elif self.__editorIsPinned( editor ) :
+			self.__followScriptSelection()
 		else :
-			nodeSet = selectionSet
-		editor.setNodeSet( nodeSet )
+			self.__pinToScriptSelection()
+
+	def __editorIsPinned( self, editor ) :
+
+		# Linking trumps pinning determination
+		drivingEditor, _ = editor.getNodeSetDriver()
+		if drivingEditor is not None :
+			return False
+
+		if editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
+			return False
+
+		# All states other than having a driving editor, or literally the
+		# ScriptNode selection are considered 'pinned'
+		return True
+
+	def __pinToScriptSelection( self, *args ) :
+
+		editor = self.getCurrent()
+		editor.setNodeSet( Gaffer.StandardSet( list( editor.scriptNode().selection() ) ) )
+
+	def __followScriptSelection( self, *args ) :
+
+		editor = self.getCurrent()
+		editor.setNodeSet( editor.scriptNode().selection() )
 
 	def __pinningButtonContextMenu( self, button ) :
 
 		m = IECore.MenuDefinition()
-		CompoundEditor.nodeSetMenuSignal()( self.getCurrent(), m )
 
-		if not len( m.items() ) :
-			return False
+		self.__addStandardItems( self.getCurrent(), m )
+
+		CompoundEditor.nodeSetMenuSignal()( self.getCurrent(), m )
 
 		self.__pinningMenu = GafferUI.Menu( m )
 
@@ -598,6 +669,33 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		)
 
 		return True
+
+	def __addStandardItems( self, editor, m ) :
+
+		# @see CompoundEditor.nodeSetMenuSignal for details on the structure
+		# of this menu.
+
+		drivingEditor, _ = editor.getNodeSetDriver()
+		isPinned  = self.__editorIsPinned( editor )
+
+		isFollowingNodeSelection = drivingEditor is None and not isPinned
+		m.append( "/Following Selected Nodes", {
+			"checkBox" : isFollowingNodeSelection,
+			"command" : None if isFollowingNodeSelection else Gaffer.WeakMethod( self.__followScriptSelection )
+		} )
+
+		m.append( "/Pinned", {
+			"checkBox" : isPinned,
+			"command" : None if isPinned else Gaffer.WeakMethod( self.__pinToScriptSelection )
+		} )
+
+		# Do not change this!
+		# Signals use this to anchor insertions of actions or state items appropriately.
+		m.append( "/ActionsDivider", { "divider" : True } )
+
+		m.append( "Pin Current Node Selection", {
+			"command" : Gaffer.WeakMethod( self.__pinToScriptSelection ),
+		} )
 
 	def __tabContextMenu( self, pos ) :
 
@@ -1308,4 +1406,98 @@ def _reprDict( d ) :
 	return "{ %s }" % ", ".join( [
 		"'%s' : %s" % ( k, IECore.repr(v) ) for k,v in d.items()
 	] )
+
+
+# A little color swatch that can be inserted into a _TabbedContainer to
+# represent the driven/driving state of the current editor
+from GafferUI.Frame import Frame as _Frame
+class _DrivenEditorSwatch( _Frame ) :
+
+	__drivenEditorColors = [
+		imath.Color3f( 0.71, 0.43, 0.47 ),
+		imath.Color3f( 0.85, 0.80, 0.48 ),
+		imath.Color3f( 0.62, 0.79, 0.93 ),
+		imath.Color3f( 0.27, 0.45, 0.21 ),
+		imath.Color3f( 0.57, 0.43, 0.71 )
+	]
+	__drivenEditorColorsLastUsed = 0
+	__drivenEditorColorMapping = {}
+
+	def __init__( self ) :
+
+		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
+		self._qtWidget().setFixedSize( 6, 6 )
+
+	def getToolTip( self ) :
+
+		editor = self.__getNodeSetEditor()
+		if editor is None :
+			return ""
+
+		masterEditor = editor.drivingEditor()
+		drivenEditors = editor.drivenNodeSets( recurse = True ).keys()
+
+		toolTipElements = []
+
+		if masterEditor is not None :
+			toolTipElements.append( "Following _%s_" % masterEditor.getTitle() )
+
+		if drivenEditors :
+			toolTipElements.append( "Followed by:")
+			for d in drivenEditors :
+				toolTipElements.append( " - _%s_" % d.getTitle() )
+
+		return "\n".join( toolTipElements )
+
+	def update( self ) :
+
+		color = None
+
+		editor = self.__getNodeSetEditor()
+		if editor is None :
+			self.setVisible( False )
+			return
+
+		masterEditor = editor.drivingEditor()
+		drivenEditors = editor.drivenNodeSets( recurse = True ).keys()
+
+		if masterEditor :
+			color = self.__drivenEditorColor( masterEditor )
+		elif drivenEditors :
+			color = self.__drivenEditorColor( editor )
+
+		if color is not None :
+			self.setVisible( True )
+			self._qtWidget().setStyleSheet(
+				# The odd padding seems to be required to see the border radius
+				"padding: 3px; margin-right: 2px; border-radius: 3px; background: rgb( {r}, {g}, {b} );".format(
+					r = color[0] * 255,
+					g = color[1] * 255,
+					b = color[2] * 255
+				)
+			)
+		else :
+			self.setVisible( False )
+
+	def __getNodeSetEditor( self ) :
+
+		tabbedContainer = self.ancestor( _TabbedContainer )
+		editor = tabbedContainer.getCurrent()
+		if editor and isinstance( editor, GafferUI.NodeSetEditor ) :
+			return editor
+
+		return None
+
+	@classmethod
+	def __drivenEditorColor( cls, editor ) :
+
+		for weakEditor, color in cls.__drivenEditorColorMapping.items() :
+			if weakEditor() is editor :
+				return color
+
+		colorIndex = ( cls.__drivenEditorColorsLastUsed + 1 ) % len( cls.__drivenEditorColors )
+		editorColor = cls.__drivenEditorColors[ colorIndex ]
+		cls.__drivenEditorColorMapping[ weakref.ref( editor ) ] =  editorColor
+		cls.__drivenEditorColorsLastUsed = colorIndex
+		return editorColor
 
