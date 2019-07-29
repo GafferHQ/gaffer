@@ -26,7 +26,7 @@ if platform in ( "cent7.x86_64" ) :
 
 	# find a specific appleseed version per compiler
 	compilerVersions = IEEnv.activeVersions( IEEnv.registry["compilers"]["gcc"] )
-	appleseedVersions = IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] )
+	appleseedVersions = [ x for x in IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] ) if x.startswith( "1.9" ) ]
 	appleseedCompilerMap = { x : [] for x in compilerVersions }
 	for appleseedVersion in appleseedVersions :
 		compilerVersion = IEEnv.registry["apps"]["appleseed"][appleseedVersion][platform]["compilerVersion"]
