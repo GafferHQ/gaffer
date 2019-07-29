@@ -69,7 +69,7 @@ before_cache:
     # This is run just before uploading the cache for next time.
     # SCons caches grow without bound so we want to remove old
     # files to prevent our caches becoming too big.
-    - python ./config/travis/limitCacheSize.py
+    - python ./config/limitCacheSize.py
     - du -sh sconsCache
 
 matrix:
