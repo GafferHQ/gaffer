@@ -36,6 +36,7 @@
 ##########################################################################
 
 import datetime
+import github
 import os
 import sys
 
@@ -52,27 +53,65 @@ import sys
 # trigger. These variables can be referenced in a pipeline yaml file downstream
 # of the step that runs this script.
 
+## Source Commit Hash
+
 commit = os.environ.get( 'BUILD_SOURCEVERSION' )
 # Azure merges the branch into its target in PR build, so
 # BUILD_SOURCEVERSION isn't correct as it references the ephemeral merge.
 if os.environ.get( 'BUILD_REASON', '' ) == 'PullRequest' :
 	commit = os.environ.get( 'SYSTEM_PULLREQUEST_SOURCECOMMITID' )
 
+## Source Branch
+
+sourceBranch = os.environ.get( "BUILD_SOURCEBRANCH", "" )
+
+## Source Tag
+
+tag = sourceBranch.replace( "refs/tags/", "" ) if "/tags/" in sourceBranch else ""
+
+## Release ID
+
+releaseId = ""
+
+if tag :
+
+	# We attempt to find the release ID so that we only publish a tag build
+	# if its for a release, not all tags will have one
+	githubClient = github.Github( os.environ.get( 'GITHUB_ACCESS_TOKEN' ) )
+	repo = githubClient.get_repo( os.environ.get( 'BUILD_REPOSITORY_NAME' ) )
+
+	for r in repo.get_releases() :
+		if r.tag_name == tag :
+			releaseId = r.id
+			break
+
+## Build Name
+
 formatVars = {
 	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
 	"platform" : "macos" if sys.platform == "darwin" else "linux",
 	"timestamp" : datetime.datetime.now().strftime( "%Y%m%d%H%M" ),
 	"pullRequest" : os.environ.get( "SYSTEM_PULLREQUEST_PULLREQUESTNUMBER", "UNKNOWN" ),
-	"shortCommit" : commit[:8]
+	"shortCommit" : commit[:8],
+	"tag" : tag
 }
 
 nameFormats = {
 	"default" : "gaffer-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
-	"PullRequest" : "gaffer-pr{pullRequest}-{shortCommit}-{platform}{buildTypeSuffix}"
+	"PullRequest" : "gaffer-pr{pullRequest}-{shortCommit}-{platform}{buildTypeSuffix}",
+	"IndividualCI-tag" : "gaffer-{tag}-{platform}{buildTypeSuffix}"
 }
 
 trigger = os.environ.get( 'BUILD_REASON', 'Manual' )
+
+# Tag triggers run as InidividualCI, with the appropriate source branch.
+# We wan't to special case this to form our release build name.
+if trigger == 'IndividualCI' and tag :
+	trigger += "-tag"
+
 buildName = nameFormats.get( trigger, nameFormats['default'] ).format( **formatVars )
+
+## Azure Pipeline Vars
 
 print( "Setting $(buildName) to %s" % buildName )
 print( "##vso[task.setvariable variable=buildName;]%s" % buildName )
@@ -80,4 +119,10 @@ print( "##vso[task.setvariable variable=buildName;]%s" % buildName )
 # To make sure our publish always matches the one we use in the build name
 print( "Setting $(buildSourceCommit) to %s" % commit )
 print( "##vso[task.setvariable variable=buildSourceCommit;]%s" % commit )
+
+print( "Setting $(buildTag) to %s" % tag )
+print( "##vso[task.setvariable variable=buildTag;]%s" % tag )
+
+print( "Setting $(releaseId) to %s" % releaseId )
+print( "##vso[task.setvariable variable=releaseId;]%s" % releaseId )
 
