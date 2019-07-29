@@ -1,5 +1,11 @@
 trigger:
-- master
+  branches:
+    include:
+    - master
+  tags:
+    include:
+    # * on its own seems to precipitate a syntax error...
+    - 0.*
 
 schedules:
 - cron: "0 23 * * *"
