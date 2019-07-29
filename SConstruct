@@ -1324,8 +1324,8 @@ if conf.checkSphinx() :
 		docEnv["ENV"]["PATH"] += ":" + docEnv.subst( "$APPLESEED_ROOT/bin" )
 		docEnv["ENV"][libraryPathEnvVar] += ":" + docEnv.subst( "$APPLESEED_ROOT/lib" )
 		docEnv["ENV"]["OSLHOME"] = docEnv.subst( "$OSLHOME" )
-		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/gaffer" )
-		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/gaffer:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
+		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed" )
+		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
 	docSource, docGenerationCommands = locateDocs( "doc/source", docEnv )
 	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
