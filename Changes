@@ -1,6 +1,12 @@
 0.54.0.0 (relative to 0.53.x)
 ========
 
+This major release brings support for Arnold's light blockers and adds a new UVInspector
+panel for viewing UVs and textures. It also brings a host of core UI changes, including a
+new look and improvements to layout management and node pinning. Additionally we've made
+advances under the hood, resulting in improved performance and lower memory usage in many
+cases. Read on for further details of these and numerous other enhancements and fixes...
+
 > Caution :
 >
 > This release brings substantial performance improvements in the generation
@@ -19,19 +25,24 @@
 Features
 --------
 
-- Extended support for Arnold's light filters by adding blockers (#3020) :
-  - Added new node representing Arnold's blockers.
-  - Added attribute for specifying filtered lights to StandardAttributes node.
-  - Added special visualisation for blockers.
-- SetVisualiser node : Added node to allow visualisation of set membership in the Viewer (#3117).
+- Light filters : Extended support for Arnold's light filters by adding blockers (#3020) :
+  - Added new ArnoldLightFilter node for creating blockers.
+  - Added attribute for linking blockers to lights to StandardAttributes node.
+- UVInspector : Added new editor for viewing UVs and associated textures (#3273).
+- SetVisualiser : Added node to allow visualisation of set membership in the Viewer (#3117).
 
 Improvements
 ------------
 
-- Layouts : Improved tab management
-  - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu (#3179).
-  - Layouts will now store and recall detached panels, and all positions, sizes and maximised/full screen state (#3179).
-  - Added tab close buttons (#3211).
+- Layouts :
+  - Improved tab management
+    - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu (#3179).
+    - Layouts will now store and recall detached panels, and all positions, sizes and maximised/full screen state (#3179).
+    - Added tab close buttons (#3211).
+  - Added advanced pinning options, available from the context menu for the pinning icon (#3270)
+    - Editors can now follow the source node for the current scene selection.
+    - Editors can be linked so that an editor follows all pinning changes applied
+      to another editor.
 - OSLImage :
     - Added improved interface which provides image channel management directly on
       the OSLImage node (#3218).
@@ -44,10 +55,13 @@ Improvements
     - Improved performance of shader input evaluation (#3074).
     - Added `useAttributes` plug, which allows OSL shaders to query attributes from the
       scene (#3226).
+- Appleseed : Updated to Appleseed 2.0.5 (#3288).
 - FilterResults : Improved performance. For certain FilterResults-heavy production
   graphs, we have seen 4-5x speedups in total scene generation time (#3174).
 - Instancer/Parent/Seeds : Added a filter input to allow operation on multiple locations
   at once (#2917, #3176).
+- TransformTools : Added precision mode enabled by holding `Shift`. Added basic snapping to increments
+  by holding `Control` (#3277).
 - Viewer : Prioritised update of objects being manipulated, resulting in much more fluid update (#3144).
 - Node Menu :
   - Added an improved "fuzzy matching" search algorithm (#2986).
@@ -99,6 +113,7 @@ Improvements
 - UI : Improved stylesheet (#3193, #3229, #3246, #3249).
 - SystemCommand : Added `shell` plug, to determine whether or not the supplied
   command is interpreted as a shell command or executed directly (#3230).
+- ArnoldShader : Added metadata for new shader parameters introduced in Arnold 5.3 (#3243).
 
 Fixes
 -----
@@ -122,10 +137,12 @@ Fixes
   - Connected external dispatcher settings to internal render task.
   - Connected preTasks plug to internal tasks.
   - Fixed leakage of internal context variables.
-- Viewer : Fixed keyboard modifier handling for object selection. Previously, holding
-  down any modifier key whilst drag selecting or clicking an object in the Viewer would
-  modify the current selection. This behaviour was only intended to be triggered by the
-  Shift key (#3095).
+- Viewer :
+  - Fixed keyboard modifier handling for object selection. Previously, holding
+    down any modifier key whilst drag selecting or clicking an object in the Viewer would
+    modify the current selection. This behaviour was only intended to be triggered by the
+    Shift key (#3095).
+  - Fixed bug that prevented image updates after a computation error had occurred (#3273).
 - Scene : Fixed context handling bugs in Transform, SceneWriter, SceneAlgo, Set,
   Isolate and Prune. This improves performance on some complex scenes (#3060).
 - Offset : Fixed context handling bug (#3073).
@@ -141,9 +158,10 @@ Fixes
     - Using ScopedConnections is no longer needed as `Widget` now derives from `Trackable`.
     - ScopedConnections can still be used when wanting to replace connections on the fly.
 - NodeMenu : Fixed Delight/Light/DistantLight menu item (#3216).
-- CropWindowTool (#3207) :
-  - Fixed incorrect results caused by a Switch node between viewed node and target.
-  - Fixed hangs caused by active CropWindowTool when viewing empty scene.
+- CropWindowTool :
+  - Fixed incorrect results caused by a Switch node between viewed node and target (#3207).
+  - Fixed hangs caused by active CropWindowTool when viewing empty scene (#3207).
+  - Fixed bug that could allow a read-only plug to be edited (#3239).
 - Dispatch app : Fixed configuration bug which caused GafferUI to be loaded unnecessarily.
   This could cause a `QXcbConnection Could not connect to display` when run on a machine
   without an X server (#3237).
@@ -153,6 +171,16 @@ Fixes
 - Monitor : Fixed thread safety and scoping of monitors. Monitors now only see processes
   launched on the thread they were scoped on, and parallel tasks that are spawned by those
   processes (#3196).
+- Reference : Fixed problems that meant that metadata was lost when promoting a plug from
+  a reference (#3258).
+- GraphComponent : Fixed crashes caused by passing `None` as a child argument from Python
+  (#3276, #3279).
+- Expression : Fixed bug whereby expressions could break if nodes were renamed during copy/paste
+  (#3283).
+- CustomAttributes : Fixed performance regression caused by addition of the `extraAttributes`
+  plug (#3280).
+- Warp : Fixed bug which prevented a derived class from using a single Engine for the whole
+  image. It is no longer necessary to append `tileOrigin` in `engineHash()` (#3299).
 
 Documentation
 -------------
@@ -205,8 +233,10 @@ API
 - AnnotationsGadget (#3028) : Added new gadget for rendering annotations for GraphGadgets.
 - MonitorAlgo (#3028) : Added `annotate()` methods for turning Monitor statistics into
   GraphEditor annotations.
-- ValuePlug : Added `set/getHashCacheSizeLimit()` methods for controlling hash cache
-  memory usage (#3033).
+- ValuePlug :
+	- Added `set/getHashCacheSizeLimit()` methods for controlling hash cache memory usage (#3033).
+	- `isSetToDefault()` now returns false uncoditionally if a plug's value is being driven
+	  by a ComputeNode. Calling `isSetToDefault()` will never trigger a compute (#3280).
 - Context (#3060) : Added `EditableScope::context()` method.
 - SceneTestCase (#3060) :
   - Added a ContextSanitiser that is active for the duration of the tests.
@@ -229,15 +259,29 @@ API
   `PerformanceTestMethod` and `PerformanceScope` nested classes to annotate unit tests which test
   performance (#3127, (#3265).
 - Plug : Deprecated `Cacheable` flag. Override `computeCachePolicy()` instead (#3174).
+- Reference : Added `hasMetadataEdit()` method (#3258).
+- ImageGadget : Added `set/getLabelsVisible()` accessors (#3273).
+- ImageView : Added `createDisplayTransform()` static method (#3273).
+- UVView : Added new View subclass for viewing UVs and textures (#3273).
+- SourceSet : Added new Set subclass whose contents automatically track the source node for the
+  current scene selection (#3270).
+- NodeSetEditor (#3270) :
+  - Added `setNodeSetDriver()`/`getNodeSetDriver()` methods to link editors.
+  - Added `drivenNodeSets()` method to query linked editors.
+  - Added `nodeSetDriverChangedSignal()` and `drivenNodeSetsChangedSignal()` signals
+    to allow editor links to be observed.
+  - Added `registerNodeSetDriverMode()` to allow custom link modes to be added.
 
 Build
 -----
 
+- Arnold : Updated to version 5.3.1.0.
+- Appleseed : Updated to version 2.0.5-beta.
 - OpenEXR : Updated to version 2.3.0.
 - OpenVDB : Updated to version 6.0.0.
 - Blosc : Updated to version 1.15.1.
 - PySide : Updated to version corresponding with Maya 2018 Update 6.
-- Cortex : Updated to version 10.0.0-a58.
+- Cortex : Updated to version 10.0.0-a59.
 - TBB : Updated to version 2018 Update 5.
 - Alembic : Added python bindings.
 - Improved debugging support (#3070) :
@@ -307,6 +351,8 @@ Breaking Changes
 - ComputeNode : Added virtual methods (#3174).
 - ValuePlug : Removed `getObjectValueIfCached()` method (#3174).
 - TypedObjectPlug : Removed `getValueIfCached()` method (#3174).
+- GafferCortex : Removed GafferCortex module from standard builds (#3253).
+- Style : Changed colour arguments to `renderLine()` and `renderText()` from Color3f to Color4f (#3273).
 
 0.53.6.3 (relative to 0.53.6.2)
 ========
