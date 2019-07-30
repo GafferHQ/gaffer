@@ -36,7 +36,6 @@
 ##########################################################################
 
 import github
-from azure.storage.blob import BlockBlobService
 
 import argparse
 import datetime
@@ -44,8 +43,7 @@ import os
 import subprocess
 import sys
 
-# A script to publish an archive to an Azure blob store and create a commit
-# status linking to the download on the source commit.
+# A script to publish a build to a GitHub Release
 
 parser = argparse.ArgumentParser()
 
@@ -56,21 +54,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--commit",
+	"--releaseId",
+	type = int,
 	required = True,
-	help = "The hash for the commit to publish the build link to."
-)
-
-parser.add_argument(
-	"--context",
-	help = "The context to associate the build link to. There can only be "
-	       "one status for each context on a commit. eg: 'CI Linux Release'"
-)
-
-parser.add_argument(
-	"--description",
-	default = "Download available",
-	help = "The description to appear in the commit status message."
+	help = "The release ID to publish the asset to."
 )
 
 parser.add_argument(
@@ -81,93 +68,29 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--azure-account",
-	dest = "azureAccount",
-	default = "gafferhq",
-	help = "The Storage Account name to upload the archive to."
-)
-
-parser.add_argument(
-	"--azure-container",
-	dest = "azureContainer",
-	default = "builds",
-	help = "The storage container to upload the archive to."
-)
-
-parser.add_argument(
 	"--github-access-token",
 	dest = "githubAccessToken",
 	default = os.environ.get( 'GITHUB_ACCESS_TOKEN', None ),
 	help = "A suitable access token to authenticate the GitHub API."
 )
 
-parser.add_argument(
-	"--azure-access-token",
-	dest = "azureAccessToken",
-	default = os.environ.get( 'AZURE_ACCESS_TOKEN', None ),
-	help = "A suitable access token to authenticate the Azure Blob Store API."
-)
-
 args = parser.parse_args()
-
-if not args.azureAccessToken :
-	parser.exit( 1, "No --azure-access-token/AZURE_ACCESS_TOKEN set")
 
 if not args.githubAccessToken :
 	parser.exit( 1, "No --github-access-token/GITHUB_ACCESS_TOKEN set")
 
-
-formatVars = {
-	"buildTypeSuffix" : " Debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
-	"platform" : "MacOS" if sys.platform == "darwin" else "Linux",
-}
-
-if not args.context :
-	args.context = "CI Build ({platform}{buildTypeSuffix})".format( **formatVars )
-
 if not os.path.exists( args.archive ) :
 	parser.exit( 1, "The specified archive '%s' does not exist." % args.archive )
 
-# Post our archive to blob storage
-
-blobStore = BlockBlobService(
-	account_name=args.azureAccount,
-	account_key=args.azureAccessToken
-)
-
-print( "Uploading {archive} to {account}/{container}".format(
-	archive = args.archive,
-	account = args.azureAccount,
-	container = args.azureContainer
-) )
-
-def uploadProcess( current, total ) :
-	print( "Upload process: %s of %s bytes" % ( current, total ) )
-
-archiveFilename = os.path.basename( args.archive )
-
-blobStore.create_blob_from_path(
-	args.azureContainer,
-	archiveFilename,
-	args.archive,
-	progress_callback=uploadProcess
-)
-downloadURL = blobStore.make_blob_url( args.azureContainer, archiveFilename )
-
-print( "Available at %s" % downloadURL )
-
-# Publish a commit status to our source commit
-
-print( "Publishing build link to status on {commit} in {repo}: {context} {description}".format(
-	commit = args.commit,
-	repo = args.repo,
-	context = args.context,
-	description = args.description
-) )
-
 githubClient = github.Github( args.githubAccessToken )
 repo = githubClient.get_repo( args.repo )
-commit = repo.get_commit( args.commit )
 
-commit.create_status( "success", downloadURL, args.description, args.context )
+release = repo.get_release( args.releaseId )
+if not release :
+	parser.exit( "Unable to find GitHub Release %s" % args.releaseId )
+
+print( "Uploading '%s' to release %s" % ( args.archive, args.releaseId ) )
+asset = release.upload_asset( args.archive, content_type="application/gzip" )
+
+print( "Success, %s available at %s" % ( args.archive, asset.browser_download_url ) )
 

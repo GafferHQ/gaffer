@@ -1,13 +1,11 @@
 trigger:
-- master
-
-schedules:
-- cron: "0 23 * * *"
-  displayName: Nightly
-  always: false
   branches:
     include:
     - master
+  tags:
+    include:
+    # * on its own seems to precipitate a syntax error...
+    - 0.*
 
 jobs :
 
