@@ -170,7 +170,7 @@ Assign numeric bookmark               :kbd:`Ctrl` + :kbd:`1` … :kbd:`9`
 Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ===================================== =============================================
 
-.. |pin| image:: images/targetNodesLocked.png
+.. |pin| image:: images/nodeSetStandardSet.png
     :alt: Pin
 ```
 

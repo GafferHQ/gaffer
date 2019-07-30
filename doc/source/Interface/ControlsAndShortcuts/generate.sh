@@ -1,6 +1,6 @@
 #! /bin/bash
-# BuildTarget: images/targetNodesLocked.png
+# BuildTarget: images/nodeSetStandardSet.png
 
 set -e
 
-cp $GAFFER_ROOT/graphics/targetNodesLocked.png images
+cp $GAFFER_ROOT/graphics/nodeSetStandardSet.png images

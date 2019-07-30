@@ -118,36 +118,42 @@ def appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition ) :
 
 def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
-	if len( editor.getNodeSet() ) :
-		primaryNode = editor.getNodeSet()[-1]
-	else :
-		primaryNode = None
-
-	menuDefinition.append(
-		"/Bookmarked",
-		{
-			"checkBox" : primaryNode is not None and Gaffer.MetadataAlgo.getBookmarked( primaryNode ),
-			"command" : functools.partial( __setBookmarked, primaryNode ),
-			"active" : primaryNode is not None and not Gaffer.MetadataAlgo.readOnly( primaryNode ),
-		}
-	)
-
 	for i in range( 1, 10 ) :
 	  menuDefinition.append(
-		  "/Numeric Bookmark/%s" % i,
+		  "/Pin Bookmark/%s" % i,
 		  {
 			  "command" : functools.partial( __findNumericBookmark, editor, i ),
 			  "active" : Gaffer.MetadataAlgo.getNumericBookmark( editor.scriptNode(), i ) is not None,
 		  }
 	  )
 
+	menuDefinition.append( "/Pin Bookmark/Divider", { "divider" : True } )
+
 	bookmarks = __findableBookmarks( editor )
 	menuDefinition.append(
-		"/Find Bookmark...",
+		"/Pin Bookmark/Other...",
 		{
 			"command" : functools.partial( __findBookmark, editor, bookmarks ),
 			"active" : len( bookmarks ),
 			"shortCut" : "B",
+		}
+	)
+
+	menuDefinition.append( "/BookmarkNodeDivider", { "divider" : True } )
+
+	if len( editor.getNodeSet() ) :
+		primaryNode = editor.getNodeSet()[-1]
+		title = "Bookmark %s" % primaryNode.getName()
+		canBookmark = not Gaffer.MetadataAlgo.getBookmarked( primaryNode ) and not Gaffer.MetadataAlgo.readOnly( primaryNode )
+	else :
+		primaryNode = None
+		title = "Bookmark Current Node"
+		canBookmark = False
+
+	menuDefinition.append( title,
+		{
+			"command" : functools.partial( __setBookmarked, primaryNode, True ),
+			"active" : canBookmark
 		}
 	)
 

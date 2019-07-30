@@ -33,6 +33,7 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+import weakref
 
 import GafferUI
 import GafferSceneUI
@@ -44,8 +45,106 @@ def __editorCreated( editor ) :
 
 GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
 
-def __nodeSetMenu( editor, menuDefinition ) :
+
+#### Editor follows Scene Selection
+
+# This makes the supplied editor follow the source node of the scene selection of another editor.
+# When followSelectionSource is True, the editor will follow the source node for the scene
+# selection (as observed by the targetEditor's nodeSet), instead of the targets nodeSet itself.
+# For example, a NodeEditor linked to a Viewer with followSelectionSource would show the source
+# node for any selected lights/objects.
+
+def __driveFromSceneSelectionSourceChangeCallback( editor, targetEditor ) :
+
+	sourceSet = targetEditor.getNodeSet()
+	context = targetEditor.getContext()
+	return GafferSceneUI.SourceSet( context, sourceSet )
+
+DriverModeSceneSelectionSource = "SceneSelectionSource"
+GafferUI.NodeSetEditor.registerNodeSetDriverMode( DriverModeSceneSelectionSource, __driveFromSceneSelectionSourceChangeCallback  )
+
+
+### Pinning Menu Items
+
+# Helper for registering unique menu items considering current state
+def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mode, dedupe ) :
+
+		title = targetEditor.getTitle()
+
+		# We could easily have collisions
+		dedupe[ title ] = dedupe.setdefault( title, 0 ) + 1
+		if dedupe[ title ] > 1 :
+			title += " (%d)" % dedupe[ title ]
+
+		existingDriver, existingMode = editor.getNodeSetDriver()
+		weakEditor = weakref.ref( editor )
+		weakTarget = weakref.ref( targetEditor )
+
+		isCurrent = existingMode == mode if existingDriver is targetEditor else False
+		menuDefinition.insertBefore( "/%s/%s" % ( subMenuTitle, title ), {
+			"checkBox" : isCurrent,
+			"command" : None if isCurrent else lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
+			"active" : not editor.drivesNodeSet( targetEditor )
+		}, "/ActionsDivider" )
+
+# Simple follows, eg: Hierarchy -> Viewer
+def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
+
+	if not isinstance( editor, (
+		GafferUI.NodeEditor,
+		GafferUI.AnimationEditor,
+		GafferSceneUI.HierarchyView,
+		GafferSceneUI.SceneInspector,
+		GafferSceneUI.PrimitiveInspector
+	) ) :
+		return
+
+	# Generally, we consider the Viewer/Hierarchy views 'focal' editors as
+	# they can affect the context selection/expansion state, etc...
+	parentCompoundEditor = editor.ancestor( GafferUI.CompoundEditor )
+	targets = parentCompoundEditor.editors( GafferUI.Viewer )
+	targets.extend( parentCompoundEditor.editors( GafferSceneUI.HierarchyView ) )
+
+	itemNameCounts = {}
+	for target in targets :
+		if target is not editor :
+			__addFollowMenuItem( menuDefinition,
+				editor, target,
+				"Linked to Editor",
+				GafferUI.NodeSetEditor.DriverModeNodeSet ,
+				itemNameCounts
+			)
+
+# Selection follows, ie: NodeEditor -> Viewer
+def __registerNodeSetFollowsSceneSelectionItems( editor, menuDefinition ) :
+
+	if not isinstance( editor, GafferUI.NodeEditor ) :
+		return
+
+	# We support Viewers and Hierarchy Views as they are the only
+	# standard editors that manipulate the selection in the context.
+	parentCompoundEditor = editor.ancestor( GafferUI.CompoundEditor )
+	targets = parentCompoundEditor.editors( GafferUI.Viewer )
+	targets.extend( parentCompoundEditor.editors( GafferSceneUI.HierarchyView ) )
+
+	itemNameCounts = {}
+	for target in targets :
+		if target is not editor :
+			__addFollowMenuItem( menuDefinition,
+				editor, target,
+				"Following Scene Selection",
+				DriverModeSceneSelectionSource,
+				itemNameCounts
+			)
+
+
+## Registration
+
+def __registerNodeSetMenuItems( editor, menuDefinition ) :
+
+	__registerEditorNodeSetDriverItems( editor, menuDefinition )
+	__registerNodeSetFollowsSceneSelectionItems( editor, menuDefinition )
 
 	GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions( editor, menuDefinition )
 
-GafferUI.CompoundEditor.nodeSetMenuSignal().connect( __nodeSetMenu, scoped = False )
+GafferUI.CompoundEditor.nodeSetMenuSignal().connect( __registerNodeSetMenuItems, scoped = False )

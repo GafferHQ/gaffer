@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,25 +36,42 @@
 
 #include "boost/python.hpp"
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "SceneGadgetBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "SourceSetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
 
-using namespace GafferSceneUIModule;
+#include "GafferSceneUI/SourceSet.h"
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+using namespace Gaffer;
+using namespace GafferSceneUI;
+
+using namespace IECorePython;
+using namespace boost::python;
+
+namespace {
+
+void setContext( SourceSet &s, Context &c )
 {
+	IECorePython::ScopedGILRelease gilRelease;
+	s.setContext( &c );
+}
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
-	bindSourceSet();
+void setNodeSet( SourceSet &s, Set &t )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.setNodeSet( &t );
+}
 
 }
+
+void GafferSceneUIModule::bindSourceSet()
+{
+	RunTimeTypedClass<SourceSet>()
+		.def( init<ContextPtr, SetPtr>() )
+		.def( "setContext", &setContext )
+		.def( "getContext", &SourceSet::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setNodeSet", &setNodeSet )
+		.def( "getNodeSet", &SourceSet::getNodeSet, return_value_policy<CastToIntrusivePtr>() )
+	;
+}
+

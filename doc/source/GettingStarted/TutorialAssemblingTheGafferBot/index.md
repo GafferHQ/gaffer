@@ -310,7 +310,7 @@ To make switching between viewing Gaffy's geometry and the render easier, you ca
 1. Select the InteractiveAppleseedRender node.
 
 2. Click ![](images/targetNodesUnlocked.png "the pin button") at the top-right
-  of the top panel. The pin button will highlight: ![](images/targetNodesLocked.png "highlighted pin").
+  of the top panel. The pin button will highlight: ![](images/nodeSetStandardSet.png "highlighted pin").
 
 <!-- TODO: Screenshot of pinned Viewer -->
 
