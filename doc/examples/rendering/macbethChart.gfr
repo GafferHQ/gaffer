@@ -6,6 +6,7 @@ import GafferOSL
 import GafferScene
 import IECore
 import imath
+import os
 
 Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
 Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 54, persistent=False )
@@ -77,7 +78,7 @@ parent.addChild( __children["Camera"] )
 __children["Camera"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["MacbethTexture"] = Gaffer.Reference( "MacbethTexture" )
 parent.addChild( __children["MacbethTexture"] )
-__children["MacbethTexture"].load( "/disk1/john/dev/build/gaffer/resources/examples/references/macbethTexture.grf" )
+__children["MacbethTexture"].load( os.path.expandvars("${GAFFER_ROOT}/resources/examples/references/macbethTexture.grf") )
 __children["MacbethTexture"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["AppleseedRender"] = GafferAppleseed.AppleseedRender( "AppleseedRender" )
 parent.addChild( __children["AppleseedRender"] )
@@ -146,7 +147,7 @@ __children["Group"]["in"]["in2"].setInput( __children["latlong_map_environment_e
 __children["Group"]["__uiPosition"].setValue( imath.V2f( -11.2808237, 14.4019547 ) )
 __children["Camera"]["transform"]["translate"].setValue( imath.V3f( 0, 0, 5 ) )
 __children["Camera"]["__uiPosition"].setValue( imath.V2f( -12.7808228, 22.5660172 ) )
-Gaffer.Metadata.registerValue( __children["MacbethTexture"], 'icon', '/disk1/john/dev/build/gaffer/resources/examples/references/macbethTexture.png' )
+Gaffer.Metadata.registerValue( __children["MacbethTexture"], 'icon', os.path.expandvars('${GAFFER_ROOT}/resources/examples/references/macbethTexture.png') )
 Gaffer.Metadata.registerValue( __children["MacbethTexture"], 'nodeGadget:color', imath.Color3f( 0.5, 0.25, 0.25 ) )
 __children["MacbethTexture"]["color"].setInput( __children["MacbethTexture"]["BoxOut"]["__out"] )
 __children["MacbethTexture"]["color"]["r"].setInput( __children["MacbethTexture"]["BoxOut"]["__out"]["r"] )
