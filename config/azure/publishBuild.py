@@ -52,7 +52,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
 	"--repo",
 	required = True,
-	help = "The GitHub organistaion/repo to post the build link to."
+	help = "The GitHub organisation/repo to post the build link to."
 )
 
 parser.add_argument(
