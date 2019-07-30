@@ -25,8 +25,16 @@ jobs:
      ARNOLD_ROOT: $(System.DefaultWorkingDirectory)/arnoldRoot
      DELIGHT: $(System.DefaultWorkingDirectory)/3delight
      BUILD_TYPE: ${{ parameters.buildType }}
+     SCONS_BUILD_CACHEDIR: $(Pipeline.Workspace)/sconsCache
+
 
    steps:
+
+   - task: CacheBeta@0
+     inputs:
+       key: $(Build.SourcesDirectory)/config/installDependencies.sh $(Build.SourcesDirectory)/config/installArnold.sh $(Build.SourcesDirectory)/config/installDelight.sh
+       path: $(SCONS_BUILD_CACHEDIR)
+     displayName: 'Configure Scons Build Cache'
 
    # Provides $(Gaffer.*) variables
    - script: |
@@ -64,7 +72,7 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=$(SCONS_BUILD_CACHEDIR)
      displayName: 'Build'
      env:
        DISPLAY: :99.0
