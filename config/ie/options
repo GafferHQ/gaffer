@@ -225,8 +225,6 @@ vdbVersion = targetAppReg.get( "vdbVersion", cortexReg["vdbVersion"] )
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
 
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "include", "python{0}".format( pythonVersion ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenImageIO", oiioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( OSLHOME, "include" ),
@@ -239,6 +237,12 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion ),
 	"/usr/include/freetype2",
 ]
+
+# append openVDB header when we are not building for Houdini.
+# In Houdini, we are using Sidefx's openVDB header.
+if not targetApp or targetApp != "houdini":
+		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "include" ) ]
+		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "include", "python{0}".format( pythonVersion ) ) ]
 
 if targetAppVersion :
 	# for Houdini, we are favouring our dependency rather than sideFx's
