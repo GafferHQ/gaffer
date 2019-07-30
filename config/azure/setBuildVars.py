@@ -113,16 +113,13 @@ buildName = nameFormats.get( trigger, nameFormats['default'] ).format( **formatV
 
 ## Azure Pipeline Vars
 
-print( "Setting $(buildName) to %s" % buildName )
-print( "##vso[task.setvariable variable=buildName;]%s" % buildName )
+print( "Setting $(Gaffer.Build.Name) to %s" % buildName )
+print( "##vso[task.setvariable variable=Gaffer.Build.Name;]%s" % buildName )
 
 # To make sure our publish always matches the one we use in the build name
-print( "Setting $(buildSourceCommit) to %s" % commit )
-print( "##vso[task.setvariable variable=buildSourceCommit;]%s" % commit )
+print( "Setting $(Gaffer.Source.Commit) to %s" % commit )
+print( "##vso[task.setvariable variable=Gaffer.Source.Commit;]%s" % commit )
 
-print( "Setting $(buildTag) to %s" % tag )
-print( "##vso[task.setvariable variable=buildTag;]%s" % tag )
-
-print( "Setting $(releaseId) to %s" % releaseId )
-print( "##vso[task.setvariable variable=releaseId;]%s" % releaseId )
+print( "Setting $(Gaffer.GitHub.ReleaseID) to %s" % releaseId )
+print( "##vso[task.setvariable variable=Gaffer.GitHub.ReleaseID;]%s" % releaseId )
 

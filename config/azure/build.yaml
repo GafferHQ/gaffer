@@ -28,7 +28,7 @@ jobs:
 
    steps:
 
-   # Provides $(buildName) and $(buildSourceCommit)
+   # Provides $(Gaffer.*) variables
    - script: |
        pip install --user PyGithub &&
        ./config/azure/setBuildVars.py
@@ -64,14 +64,14 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(buildName) BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
      displayName: 'Build'
      env:
        DISPLAY: :99.0
        AZURE: 1
 
    - script: |
-       ./install/$(buildName)/bin/gaffer test
+       ./install/$(Gaffer.Build.Name)/bin/gaffer test
      displayName: 'Test'
      env:
        DISPLAY: :99.0
@@ -82,7 +82,7 @@ jobs:
 
      - script: |
          pip install --user azure-storage-blob PyGithub &&
-         ./config/azure/publishBuild.py --archive ./install/$(buildName).tar.gz --repo $(Build.Repository.Name) --commit $(buildSourceCommit)
+         ./config/azure/publishBuild.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --commit $(Gaffer.Source.Commit)
        displayName: "Publish Build"
        condition: and( succeeded(), or( eq( variables['Build.Reason'], 'PullRequest' ), eq( variables['Build.Reason'], 'Schedule' ) ) )
        env:
@@ -91,9 +91,9 @@ jobs:
 
      - script: |
          pip install --user PyGithub &&
-         ./config/azure/publishRelease.py --archive ./install/$(buildName).tar.gz --repo $(Build.Repository.Name) --releaseId $(releaseId)
+         ./config/azure/publishRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --releaseId $(Gaffer.GitHub.ReleaseID)
        displayName: "Publish Release"
-       condition: and( succeeded(), ne( variables['releaseId'], '' ) )
+       condition: and( succeeded(), ne( variables['Gaffer.GitHub.ReleaseID'], '' ) )
        env:
          GITHUB_ACCESS_TOKEN: $(githubAccessToken)
 
