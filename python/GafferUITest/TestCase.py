@@ -83,6 +83,29 @@ class TestCase( GafferTest.TestCase ) :
 			expanded = os.path.expandvars( e['filePath'] )
 			self.assertTrue( os.path.exists( expanded ), "%s does not exist" % expanded )
 
+	def assertExampleFilesDontReferenceUnstablePaths( self ) :
+
+		forbidden = (
+			"${script:name}",
+			"/home/"
+		)
+
+		safePlugNames = (
+			"title",
+			"description"
+		)
+
+		examples = GafferUI.Examples.registeredExamples()
+		for e in examples.values():
+			path = os.path.expandvars( e['filePath'] )
+			with open( path, 'r' ) as example :
+				for line in example :
+					# If the line contains a set for one of our safe plugs, don't check
+					if any( '["%s"].setValue(' % plug in line for plug in safePlugNames ) :
+						continue
+					for phrase in forbidden :
+						self.assertFalse( phrase in line, "Example %s references unstable '%s':\n%s" % ( e['filePath'], phrase, line ) )
+
 	@staticmethod
 	def __widgetInstances() :
 
