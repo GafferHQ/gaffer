@@ -120,7 +120,7 @@ enum TypeId
 	ExternalProceduralTypeId = 110575,
 	ScenePathTypeId = 110576,
 	MeshToPointsTypeId = 110577,
-	FilterSwitchTypeId = 110578, // Obsolete, available for reuse
+	OrientationTypeId = 110578,
 	DeleteSetsTypeId = 110579,
 	ParametersTypeId = 110580,
 	SceneFilterPathFilterTypeId = 110581,
