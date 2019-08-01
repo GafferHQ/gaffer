@@ -351,7 +351,7 @@ __children["Camera"]["orthographicAperture"]["y"].setInput( __children["Camera"]
 __children["Camera"]["__uiPosition"].setValue( imath.V2f( 109.176865, 17.1217937 ) )
 __children["InteractiveArnoldRender"]["in"].setInput( __children["ArnoldOptions"]["out"] )
 __children["InteractiveArnoldRender"]["__uiPosition"].setValue( imath.V2f( 20.6618805, -28.6581573 ) )
-__children["Catalogue"]["directory"].setValue( '${project:rootDirectory}/catalogues/${script:name}' )
+__children["Catalogue"]["directory"].setValue( '${project:rootDirectory}/catalogues/examples/lightingBasicsArnold' )
 __children["Catalogue"]["__uiPosition"].setValue( imath.V2f( 35.7331619, -28.5916443 ) )
 __children["No_Link"]["in"]["in0"].setInput( __children["Dot"]["out"] )
 __children["No_Link"]["in"]["in1"].setInput( __children["Text1"]["out"] )
