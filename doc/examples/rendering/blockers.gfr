@@ -272,7 +272,7 @@ __children["Outputs"]["outputs"]["output5"]["data"].setValue( 'color diffuse_dir
 __children["Outputs"]["__uiPosition"].setValue( imath.V2f( 54.3000107, -35.4529724 ) )
 __children["InteractiveArnoldRender"]["in"].setInput( __children["Outputs"]["out"] )
 __children["InteractiveArnoldRender"]["__uiPosition"].setValue( imath.V2f( 54.3019981, -43.6171494 ) )
-__children["Catalogue"]["directory"].setValue( '${project:rootDirectory}/catalogues/${script:name}' )
+__children["Catalogue"]["directory"].setValue( '${project:rootDirectory}/catalogues/examples/blockers' )
 __children["Catalogue"]["__uiPosition"].setValue( imath.V2f( 38.1320343, -43.5129089 ) )
 __children["Blockers"]["in"]["in0"].setInput( __children["light_blocker1"]["out"] )
 __children["Blockers"]["in"]["in1"].setInput( __children["Dot"]["out"] )

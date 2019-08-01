@@ -407,7 +407,7 @@ __children["Wedge_Scene_and_Shaders"]["ShaderAssignment_sphere"]["__uiPosition"]
 __children["Wedge_Scene_and_Shaders"]["PathFilter1"]["paths"].setValue( IECore.StringVectorData( [ '/group/sphere' ] ) )
 __children["Wedge_Scene_and_Shaders"]["PathFilter1"]["__uiPosition"].setValue( imath.V2f( 50.4027977, 13.6347942 ) )
 __children["Wedge_Scene_and_Shaders"]["AppleseedRender"]["in"].setInput( __children["Wedge_Scene_and_Shaders"]["AppleseedOptions"]["out"] )
-__children["Wedge_Scene_and_Shaders"]["AppleseedRender"]["fileName"].setValue( '${project:rootDirectory}/appleseeds/${script:name}/${script:name}.####.appleseed' )
+__children["Wedge_Scene_and_Shaders"]["AppleseedRender"]["fileName"].setValue( '${project:rootDirectory}/appleseeds/examples/contactSheet/contactSheet.####.appleseed' )
 __children["Wedge_Scene_and_Shaders"]["AppleseedRender"]["__uiPosition"].setValue( imath.V2f( 34.7674637, -32.9140053 ) )
 __children["Wedge_Scene_and_Shaders"]["Expression"]["__uiPosition"].setValue( imath.V2f( -6.93983889, 10.5330076 ) )
 __children["Wedge_Scene_and_Shaders"]["ImageWriter"]["preTasks"]["preTask0"].setInput( __children["Wedge_Scene_and_Shaders"]["AppleseedRender"]["task"] )
