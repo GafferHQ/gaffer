@@ -39,6 +39,7 @@ from MeshToLevelSetTest import MeshToLevelSetTest
 from LevelSetToMeshTest import LevelSetToMeshTest
 from LevelSetOffsetTest import LevelSetOffsetTest
 from PointsGridToPointsTest import PointsGridToPointsTest
+from ModuleTest import ModuleTest
 
 if __name__ == "__main__":
 	import unittest

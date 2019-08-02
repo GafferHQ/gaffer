@@ -47,5 +47,10 @@ class ModuleTest( GafferTest.TestCase ) :
 		self.assertRaises( AttributeError, getattr, GafferOSL, "GafferScene" )
 		self.assertRaises( AttributeError, getattr, GafferOSL, "GafferImage" )
 
+	def testDoesNotImportUI( self ) :
+
+		self.assertModuleDoesNotImportUI( "GafferOSL" )
+		self.assertModuleDoesNotImportUI( "GafferOSLTest" )
+
 if __name__ == "__main__":
 	unittest.main()

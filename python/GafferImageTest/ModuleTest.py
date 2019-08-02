@@ -34,10 +34,14 @@
 #
 ##########################################################################
 
-import GafferSceneUI
-import IECore
+import GafferTest
 
-toHide = IECore.PathMatcher()
-toHide.addPath( "ObjectProcessing/Out*.oso" )
-toHide.addPath( "ImageProcessing/Out*.oso" )
-GafferSceneUI.ShaderUI.hideShaders( toHide )
+class ModuleTest( GafferTest.TestCase ) :
+
+	def testDoesNotImportUI( self ) :
+
+		self.assertModuleDoesNotImportUI( "GafferImage" )
+		self.assertModuleDoesNotImportUI( "GafferImageTest" )
+
+if __name__ == "__main__":
+	unittest.main()

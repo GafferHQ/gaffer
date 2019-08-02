@@ -160,6 +160,7 @@ from ProcessMessageHandlerTest import ProcessMessageHandlerTest
 from MonitorAlgoTest import MonitorAlgoTest
 from NameValuePlugTest import NameValuePlugTest
 from ExtensionAlgoTest import ExtensionAlgoTest
+from ModuleTest import ModuleTest
 
 from IECorePreviewTest import *
 
