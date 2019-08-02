@@ -64,6 +64,9 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 			unsigned flags=Default
 		);
 
+		/// \deprecated Use the version below.
+		/// \todo Remove, and add default arguments for `name` and `flags`
+		/// in the version below.
 		NameValuePlug(
 			const std::string &nameDefault,
 			Gaffer::PlugPtr valuePlug,
@@ -88,6 +91,9 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 			unsigned flags=Default
 		);
 
+		/// \deprecated Use the version below.
+		/// \todo Remove, and add default arguments for `name` and `flags`
+		/// in the version below.
 		NameValuePlug(
 			const std::string &nameDefault,
 			Gaffer::PlugPtr valuePlug,

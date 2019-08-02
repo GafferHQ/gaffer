@@ -224,7 +224,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["o"] = GafferOSL.OSLObject()
-		s["b"]["o"]["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ), "testClosure" ) )
+		s["b"]["o"]["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug(), "testClosure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		p = Gaffer.PlugAlgo.promote( s["b"]["o"]["primitiveVariables"]["testClosure"]["value"] )
 		p.setName( "p" )
 
@@ -1043,7 +1043,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		o["in"].setInput( a["out"] )
 
 		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
-		
+
 		s["transform"]["translate"]["x"].setValue( 1 )
 		def checkAffected( expected ):
 			self.assertEqual( [ i[0].getName() for i in cs if i[0].parent() == o["out"] ], expected )

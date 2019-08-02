@@ -251,8 +251,8 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.CompoundDataPlug()
 
-		v = Gaffer.IntPlug( minValue = -10, maxValue = 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		m1 = Gaffer.NameValuePlug( "a", v )
+		v = Gaffer.IntPlug( minValue = -10, maxValue = 10 )
+		m1 = Gaffer.NameValuePlug( "a", v, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		p.addChild( m1 )
 		self.assertTrue( v.parent().isSame( m1 ) )
 		self.assertEqual( m1["value"].getName(), "value" )
