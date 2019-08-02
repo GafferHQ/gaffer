@@ -32,8 +32,10 @@ __dispatchScript(
 		"-StandardOptions.options.renderResolution.enabled True",
 		"-StandardOptions.options.renderResolution.value.x '270'",
 		"-StandardOptions.options.renderResolution.value.y '240'",
-		"-AppleseedOptions.options.aaSamples.enabled True",
-		"-AppleseedOptions.options.aaSamples.value '128'",
+		"-AppleseedOptions.options.maxAASamples.enabled True",
+		"-AppleseedOptions.options.maxAASamples.value '0'",
+		"-AppleseedOptions.options.aaBatchSampleSize.enabled True",
+		"-AppleseedOptions.options.aaBatchSampleSize.value '64'",
 		"-Outputs.outputs.output2.fileName '\"{}\"'".format( os.path.abspath( "images/exampleMacbethChart.png" ) ),
 		"-Outputs.outputs.output2.type '\"png\"'",
 		"-Outputs.outputs.output1.active False"
