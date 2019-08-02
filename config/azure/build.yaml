@@ -37,6 +37,7 @@ jobs:
        GITHUB_ACCESS_TOKEN: $(githubAccessToken)
 
    - script: |
+       pip install sphinx sphinx_rtd_theme recommonmark &&
        brew update &&
        brew install scons doxygen &&
        brew cask install xquartz inkscape
