@@ -56,10 +56,14 @@ NameValuePlug::NameValuePlug( const std::string &nameDefault, const IECore::Data
 }
 
 NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::PlugPtr valuePlug, const std::string &name )
-	:	NameValuePlug( name, valuePlug->direction(), valuePlug->getFlags() )
+	:	NameValuePlug( nameDefault, valuePlug, name, valuePlug->getFlags() )
 {
-	addChild( new StringPlug( "name", valuePlug->direction(), nameDefault, valuePlug->getFlags() ) );
+}
 
+NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::PlugPtr valuePlug, const std::string &name, unsigned flags )
+	:	NameValuePlug( name, valuePlug->direction(), flags )
+{
+	addChild( new StringPlug( "name", valuePlug->direction(), nameDefault ) );
 	valuePlug->setName( "value" );
 	addChild( valuePlug );
 }
@@ -71,9 +75,14 @@ NameValuePlug::NameValuePlug( const std::string &nameDefault, const IECore::Data
 }
 
 NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::PlugPtr valuePlug, bool enabled, const std::string &name )
-	:	NameValuePlug( nameDefault, valuePlug, name )
+	:	NameValuePlug( nameDefault, valuePlug, enabled, name, valuePlug->getFlags() )
 {
-	addChild( new BoolPlug( "enabled", valuePlug->direction(), enabled, valuePlug->getFlags() ) );
+}
+
+NameValuePlug::NameValuePlug( const std::string &nameDefault, Gaffer::PlugPtr valuePlug, bool defaultEnabled, const std::string &name, unsigned flags )
+	:	NameValuePlug( nameDefault, valuePlug, name, flags )
+{
+	addChild( new BoolPlug( "enabled", direction(), defaultEnabled ) );
 }
 
 // We need to check if the namePlug exists because we offer a bare constructor that leaves the child plugs
@@ -164,13 +173,13 @@ PlugPtr NameValuePlug::createCounterpart( const std::string &name, Direction dir
 	if( enabledPlug() )
 	{
 		return new NameValuePlug(
-			namePlug()->defaultValue(), valueCounterpart, enabledPlug()->defaultValue(), name
+			namePlug()->defaultValue(), valueCounterpart, enabledPlug()->defaultValue(), name, getFlags()
 		);
 	}
 	else
 	{
 		return new NameValuePlug(
-			namePlug()->defaultValue(), valueCounterpart, name
+			namePlug()->defaultValue(), valueCounterpart, name, getFlags()
 		);
 	}
 }

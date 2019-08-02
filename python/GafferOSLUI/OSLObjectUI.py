@@ -146,12 +146,12 @@ class _PrimitiveVariablesFooter( GafferUI.PlugValueWidget ) :
 		if defaultData == None:
 			plugName = "closure"
 			name = ""
-			valuePlug = GafferOSL.ClosurePlug( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			valuePlug = GafferOSL.ClosurePlug( "value" )
 		else:
 			plugName = "primitiveVariable"
-			valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultData )
+			valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, defaultData )
 
-		plug = Gaffer.NameValuePlug( name, valuePlug, True, plugName )
+		plug = Gaffer.NameValuePlug( name, valuePlug, True, plugName, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
@@ -237,7 +237,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The interpolation type of the primitive variables created by this node.
-			For instance, Uniform interpolation means that the shader is run once per face on a mesh, allowing it to output primitive variables with a value per face. 
+			For instance, Uniform interpolation means that the shader is run once per face on a mesh, allowing it to output primitive variables with a value per face.
 			All non-constant input primitive variables are resampled to match the selected interpolation so that they can be accessed from the shader.
 			""",
 

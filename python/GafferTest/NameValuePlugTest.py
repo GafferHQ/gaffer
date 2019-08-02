@@ -184,9 +184,11 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 				self.assertCounterpart( spec )
 
 	def testBasicRepr( self ) :
+
 		p = Gaffer.NameValuePlug( "key", IECore.StringData( "value" ) )
-		self.assertEqual( repr( p ),
-			'Gaffer.NameValuePlug( "key", Gaffer.StringPlug( "value", defaultValue = \'value\', ), "NameValuePlug" )'
+		self.assertEqual(
+			repr( p ),
+			'Gaffer.NameValuePlug( "key", Gaffer.StringPlug( "value", defaultValue = \'value\', ), "NameValuePlug", Gaffer.Plug.Flags.Default )'
 		)
 
 	def testEmptyPlugRepr( self ) :
@@ -284,6 +286,39 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p1.hash(), p2.hash() )
 		p2["enabled"].setValue( False )
 		self.assertNotEqual( p1.hash(), p2.hash() )
+
+	def testDynamicFlags( self ) :
+
+		def assertFlags( script ) :
+
+			self.assertEqual( script["n"]["user"]["p1"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			self.assertEqual( script["n"]["user"]["p1"]["name"].getFlags(), Gaffer.Plug.Flags.Default )
+			self.assertEqual( script["n"]["user"]["p1"]["value"].getFlags(), Gaffer.Plug.Flags.Default )
+
+			c = script["n"]["user"]["p1"].createCounterpart( "c", Gaffer.Plug.Direction.In )
+			self.assertEqual( c.getFlags(), script["n"]["user"]["p1"].getFlags() )
+
+			self.assertEqual( script["n"]["user"]["p2"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			self.assertEqual( script["n"]["user"]["p2"]["name"].getFlags(), Gaffer.Plug.Flags.Default )
+			self.assertEqual( script["n"]["user"]["p2"]["value"].getFlags(), Gaffer.Plug.Flags.Default )
+			self.assertEqual( script["n"]["user"]["p2"]["enabled"].getFlags(), Gaffer.Plug.Flags.Default )
+
+			c = script["n"]["user"]["p2"].createCounterpart( "c", Gaffer.Plug.Direction.In )
+			self.assertEqual( c.getFlags(), script["n"]["user"]["p2"].getFlags() )
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p1"] = Gaffer.NameValuePlug( "name1", Gaffer.IntPlug( defaultValue = 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p2"] = Gaffer.NameValuePlug( "name2", Gaffer.IntPlug( defaultValue = 1 ), defaultEnabled = False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		assertFlags( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		assertFlags( s2 )
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		assertFlags( s3 )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -119,5 +119,58 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].setHash( "flatThings" ), p["out"].setHash( "flatThings" ) )
 		self.assertTrue( a["out"].set( "flatThings", _copy=False ).isSame( p["out"].set( "flatThings", _copy=False ) ) )
 
+	def assertPromotedAttribute( self, script ) :
+
+		self.assertIn( "attributes_visibility", script["Box"] )
+		self.assertIsInstance( script["Box"]["attributes_visibility"], Gaffer.NameValuePlug )
+
+		self.assertIn( "name", script["Box"]["attributes_visibility"] )
+		self.assertIsInstance( script["Box"]["attributes_visibility"]["name"], Gaffer.StringPlug )
+
+		self.assertIn( "value", script["Box"]["attributes_visibility"] )
+		self.assertIsInstance( script["Box"]["attributes_visibility"]["value"], Gaffer.BoolPlug )
+
+		self.assertIn( "enabled", script["Box"]["attributes_visibility"] )
+		self.assertIsInstance( script["Box"]["attributes_visibility"]["enabled"], Gaffer.BoolPlug )
+
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( script["Box"]["StandardAttributes"]["attributes"]["visibility"] ) )
+		self.assertEqual(
+			script["Box"]["StandardAttributes"]["attributes"]["visibility"].getInput(),
+			script["Box"]["attributes_visibility"]
+		)
+
+		self.assertTrue( script["Box"]["attributes_visibility"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
+
+	def testLoadPromotedAttributeFrom0_53( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedCompoundDataMemberPlug-0.53.4.0.gfr" )
+		s.load()
+		self.assertPromotedAttribute( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertPromotedAttribute( s2 )
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		self.assertPromotedAttribute( s3 )
+
+	def testPromoteAndSerialiseAttribute( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["Box"] = Gaffer.Box()
+		s["Box"]["StandardAttributes"] = GafferScene.StandardAttributes()
+		Gaffer.PlugAlgo.promote( s["Box"]["StandardAttributes"]["attributes"]["visibility"] )
+		self.assertPromotedAttribute( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertPromotedAttribute( s2 )
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		self.assertPromotedAttribute( s3 )
+
 if __name__ == "__main__":
 	unittest.main()

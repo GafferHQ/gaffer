@@ -144,26 +144,26 @@ class _ChannelsFooter( GafferUI.PlugValueWidget ) :
 		return result
 
 	def __addPlug( self, name, defaultData ) :
+
 		alphaValue = None
 
 		if isinstance( defaultData, IECore.Color4fData ):
-			alphaValue = Gaffer.FloatPlug( "value", Gaffer.Plug.Direction.In, defaultData.value.a, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			alphaValue = Gaffer.FloatPlug( "value", Gaffer.Plug.Direction.In, defaultData.value.a )
 			defaultData = IECore.Color3fData( imath.Color3f( defaultData.value.r, defaultData.value.g, defaultData.value.b ) )
 
 		if defaultData == None:
 			plugName = "closure"
 			name = ""
-			valuePlug = GafferOSL.ClosurePlug( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			valuePlug = GafferOSL.ClosurePlug( "value" )
 		else:
 			plugName = "channel"
-			valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultData )
-
+			valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, defaultData )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addChild( Gaffer.NameValuePlug( name, valuePlug, True, plugName ) )
+			self.getPlug().addChild( Gaffer.NameValuePlug( name, valuePlug, True, plugName, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 			if alphaValue:
 				self.getPlug().addChild(
-					Gaffer.NameValuePlug( name + ".A" if name else "A", alphaValue, True, plugName )
+					Gaffer.NameValuePlug( name + ".A" if name else "A", alphaValue, True, plugName, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 				)
 
 def __channelLabelFromPlug( plug ):
@@ -207,7 +207,7 @@ Gaffer.Metadata.registerNode(
 			Define image channels to output by adding child plugs and connecting
 			corresponding OSL shaders.  You can drive RGB layers with a color,
 			or connect individual channels to a float.
- 
+
 			If you want to add multiple channels at once, you can also add a closure plug,
 			which can accept a connection from an OSLCode with a combined output closure.
  			""",
@@ -217,7 +217,7 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:section", "left",
 			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
- 
+
 			# Add + button for showing and hiding parameters in the GraphEditor
 			"noduleLayout:customGadget:addButton:gadgetType", "GafferOSLUI.OSLImageUI.PlugAdder",
 		],
@@ -240,7 +240,7 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "",
 		],
 		"channels.*.value" : [
- 
+
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,

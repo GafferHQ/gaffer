@@ -64,10 +64,20 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 			unsigned flags=Default
 		);
 
+		/// \deprecated Use the version below.
+		/// \todo Remove, and add default arguments for `name` and `flags`
+		/// in the version below.
 		NameValuePlug(
 			const std::string &nameDefault,
 			Gaffer::PlugPtr valuePlug,
 			const std::string &name=defaultName<NameValuePlug>()
+		);
+
+		NameValuePlug(
+			const std::string &nameDefault,
+			Gaffer::PlugPtr valuePlug,
+			const std::string &name,
+			unsigned flags
 		);
 
 		// Similar to above, construct a NameValuePlug with the "name" and "value" children,
@@ -81,11 +91,22 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 			unsigned flags=Default
 		);
 
+		/// \deprecated Use the version below.
+		/// \todo Remove, and add default arguments for `name` and `flags`
+		/// in the version below.
 		NameValuePlug(
 			const std::string &nameDefault,
 			Gaffer::PlugPtr valuePlug,
 			bool defaultEnabled,
 			const std::string &name=defaultName<NameValuePlug>()
+		);
+
+		NameValuePlug(
+			const std::string &nameDefault,
+			Gaffer::PlugPtr valuePlug,
+			bool defaultEnabled,
+			const std::string &name,
+			unsigned flags
 		);
 
 		// Bare constructor required for compatibility with old CompoundDataPlug::MemberPlug constructor.

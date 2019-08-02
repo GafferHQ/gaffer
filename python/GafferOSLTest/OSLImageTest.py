@@ -94,7 +94,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		def checkDirtiness( expected):
 			self.assertEqual( [ i[0].fullName() for i in cs ], [ "OSLImage." + i for i in expected ] )
 			del cs[:]
-			
+
 		image["channels"]["testClosure"]["value"].setInput( imageShader["out"]["out"] )
 
 		checkDirtiness( [
@@ -153,7 +153,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 				'__shading',
 				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out'
 		] )
-		
+
 
 	def testAcceptsShaderSwitch( self ) :
 
@@ -238,7 +238,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["i"] = GafferOSL.OSLImage()
-		s["b"]["i"]["channels"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ), "testClosure" ) )
+		s["b"]["i"]["channels"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug(), "testClosure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		p = Gaffer.PlugAlgo.promote( s["b"]["i"]["channels"]["testClosure"]["value"] )
 		p.setName( "p" )
 
