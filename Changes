@@ -1,3 +1,20 @@
+0.54.0.1 (relative to 0.54.0.0)
+========
+
+Fixes
+-----
+
+- NameValuePlug : Fixed serialisation bug which could prevent promoted NameValuePlugs
+  from being saved correctly (#3318).
+- OSL : Fixed bug which prevented the GafferOSL module from loading on headless
+  renderfarm machines (#3316).
+
+Documentation
+-------------
+
+- Fixed missing documentation on MacOS builds (#3315).
+- Made miscellaneous fixes to examples (#3309, #3313).
+
 0.54.0.0 (relative to 0.53.x)
 ========
 
