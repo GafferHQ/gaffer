@@ -48,5 +48,10 @@ class ModuleTest( GafferTest.TestCase ) :
 		self.assertRaises( AttributeError, getattr, GafferArnold, "sys" )
 		self.assertRaises( AttributeError, getattr, GafferArnold, "ctypes" )
 
+	def testDoesNotImportUI( self ) :
+
+		self.assertModuleDoesNotImportUI( "GafferArnold" )
+		self.assertModuleDoesNotImportUI( "GafferArnoldTest" )
+
 if __name__ == "__main__":
 	unittest.main()

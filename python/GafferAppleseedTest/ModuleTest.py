@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,30 +34,14 @@
 #
 ##########################################################################
 
-# Utility classes
+import GafferTest
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
-from ErroringTaskNode import ErroringTaskNode
+class ModuleTest( GafferTest.TestCase ) :
 
-# Test cases
+	def testDoesNotImportUI( self ) :
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
-from FrameMaskTest import FrameMaskTest
-from DispatchApplicationTest import DispatchApplicationTest
-from ModuleTest import ModuleTest
+		self.assertModuleDoesNotImportUI( "GafferAppleseed" )
+		self.assertModuleDoesNotImportUI( "GafferAppleseedTest" )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,30 +34,20 @@
 #
 ##########################################################################
 
-# Utility classes
+import unittest
+import sys
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
-from ErroringTaskNode import ErroringTaskNode
+import IECore
 
-# Test cases
+import GafferTest
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
-from FrameMaskTest import FrameMaskTest
-from DispatchApplicationTest import DispatchApplicationTest
-from ModuleTest import ModuleTest
+@unittest.skipIf( not IECore.SearchPath( sys.path ).find( "tractor" ), "Tractor not available" )
+class ModuleTest( GafferTest.TestCase ) :
+
+	def testDoesNotImportUI( self ) :
+
+		self.assertModuleDoesNotImportUI( "GafferTractor" )
+		self.assertModuleDoesNotImportUI( "GafferTractorTest" )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

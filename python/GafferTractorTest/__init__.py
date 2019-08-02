@@ -35,6 +35,7 @@
 ##########################################################################
 
 from TractorDispatcherTest import TractorDispatcherTest
+from ModuleTest import ModuleTest
 
 if __name__ == "__main__":
 	import unittest
