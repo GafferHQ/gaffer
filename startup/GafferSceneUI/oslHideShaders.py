@@ -37,7 +37,9 @@
 import GafferSceneUI
 import IECore
 
-toHide = IECore.PathMatcher()
-toHide.addPath( "ObjectProcessing/Out*.oso" )
-toHide.addPath( "ImageProcessing/Out*.oso" )
-GafferSceneUI.ShaderUI.hideShaders( toHide )
+GafferSceneUI.ShaderUI.hideShaders(
+	IECore.PathMatcher( [
+		"ObjectProcessing/Out*.oso",
+		"ImageProcessing/Out*.oso",
+	] )
+)
