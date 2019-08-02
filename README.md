@@ -22,7 +22,9 @@ Compiled binary releases are available for download from the [releases page](htt
 
 ## Building ##
 
-[![Build Status](https://travis-ci.org/GafferHQ/gaffer.svg?branch=master)](https://travis-ci.org/GafferHQ/gaffer)
+[![Build Status](https://travis-ci.com/GafferHQ/gaffer.svg?branch=master)](https://travis-ci.com/GafferHQ/gaffer)
+
+[![Build Status](https://dev.azure.com/GafferHQ/Gaffer/_apis/build/status/GafferHQ.gaffer?branchName=master)](https://dev.azure.com/GafferHQ/Gaffer/_build/latest?definitionId=1&branchName=master)
 
 Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, make sure you have the following prerequisites installed on your system, which will be used to perform the build itself.
 
