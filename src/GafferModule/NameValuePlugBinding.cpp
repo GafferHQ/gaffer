@@ -86,7 +86,9 @@ class NameValuePlugSerialiser : public ValuePlugSerialiser
 				result += std::string( plug->enabledPlug()->defaultValue() ? "True" : "False" ) + ", ";
 			}
 
-			result += "\"" + plug->getName().string() + "\" )";
+			result += "\"" + plug->getName().string() + "\", ";
+
+			result += flagsRepr( plug->getFlags() ) + " )";
 
 			return result;
 		}
@@ -99,15 +101,21 @@ std::string repr( const NameValuePlug *plug )
 	return NameValuePlugSerialiser::repr( plug, &tempSerialisation );
 }
 
-
 NameValuePlugPtr nameValuePlugConstructor1( const std::string &nameDefault, const IECore::DataPtr valueDefault, const std::string &name, Plug::Direction direction, unsigned flags )
 {
 	return new NameValuePlug( nameDefault, valueDefault.get(), name, direction, flags );
 }
 
-NameValuePlugPtr nameValuePlugConstructor2( const std::string &nameDefault, const Gaffer::PlugPtr valuePlug, const std::string &name )
+NameValuePlugPtr nameValuePlugConstructor2( const std::string &nameDefault, const Gaffer::PlugPtr valuePlug, const std::string &name, object flags )
 {
-	return new NameValuePlug( nameDefault, valuePlug, name );
+	if( flags == object() )
+	{
+		return new NameValuePlug( nameDefault, valuePlug, name );
+	}
+	else
+	{
+		return new NameValuePlug( nameDefault, valuePlug, name, extract<unsigned>( flags ) );
+	}
 }
 
 NameValuePlugPtr nameValuePlugConstructor3( const std::string &nameDefault, const IECore::DataPtr valueDefault, bool defaultEnabled, const std::string &name, Plug::Direction direction, unsigned flags )
@@ -115,12 +123,17 @@ NameValuePlugPtr nameValuePlugConstructor3( const std::string &nameDefault, cons
 	return new NameValuePlug( nameDefault, valueDefault.get(), defaultEnabled, name, direction, flags );
 }
 
-NameValuePlugPtr nameValuePlugConstructor4( const std::string &nameDefault, const Gaffer::PlugPtr valuePlug, bool defaultEnabled, const std::string &name )
+NameValuePlugPtr nameValuePlugConstructor4( const std::string &nameDefault, const Gaffer::PlugPtr valuePlug, bool defaultEnabled, const std::string &name, object flags )
 {
-	return new NameValuePlug( nameDefault, valuePlug, defaultEnabled, name );
+	if( flags == object() )
+	{
+		return new NameValuePlug( nameDefault, valuePlug, defaultEnabled, name );
+	}
+	else
+	{
+		return new NameValuePlug( nameDefault, valuePlug, defaultEnabled, name, extract<unsigned>( flags ) );
+	}
 }
-
-
 
 } // namespace
 
@@ -150,7 +163,8 @@ void GafferModule::bindNameValuePlug()
 				(
 					arg( "nameDefault" ),
 					arg( "valuePlug" ),
-					arg( "name" ) = GraphComponent::defaultName<NameValuePlug>()
+					arg( "name" ) = GraphComponent::defaultName<NameValuePlug>(),
+					arg( "flags" ) = object()
 				)
 			)
 		)
@@ -170,7 +184,8 @@ void GafferModule::bindNameValuePlug()
 					arg( "nameDefault" ),
 					arg( "valuePlug" ),
 					arg( "defaultEnabled" ),
-					arg( "name" ) = GraphComponent::defaultName<NameValuePlug>()
+					arg( "name" ) = GraphComponent::defaultName<NameValuePlug>(),
+					arg( "flags" ) = object()
 				)
 			)
 		)
