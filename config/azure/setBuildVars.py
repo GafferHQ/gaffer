@@ -99,15 +99,16 @@ formatVars = {
 nameFormats = {
 	"default" : "gaffer-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
 	"PullRequest" : "gaffer-pr{pullRequest}-{shortCommit}-{platform}{buildTypeSuffix}",
-	"IndividualCI-tag" : "gaffer-{tag}-{platform}{buildTypeSuffix}"
+	"Release" : "gaffer-{tag}-{platform}{buildTypeSuffix}"
 }
 
 trigger = os.environ.get( 'BUILD_REASON', 'Manual' )
 
-# Tag triggers run as InidividualCI, with the appropriate source branch.
-# We wan't to special case this to form our release build name.
-if trigger == 'IndividualCI' and tag :
-	trigger += "-tag"
+# If we have a releaseID (and tag) then we always use release naming conventions
+# to allow manual re-runs of release builds that fail for <reasons>.
+if tag and releaseId :
+	print( "Have Release ID %s for tag %s, using release naming." % ( releaseId, tag ) )
+	trigger = "Release"
 
 buildName = nameFormats.get( trigger, nameFormats['default'] ).format( **formatVars )
 
