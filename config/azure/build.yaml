@@ -28,6 +28,14 @@ jobs:
 
    steps:
 
+   - script: |
+       sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off &&
+       defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true &&
+       sudo killall NotificationCenter &&
+       defaults write com.apple.Dock autohide -bool true && sleep 1 && killall Dock
+     displayName: 'Configure Environment (Darwin)'
+     condition: eq( variables['Agent.OS'], 'Darwin' )
+
    # Provides $(Gaffer.*) variables
    - script: |
        pip install --user PyGithub &&
