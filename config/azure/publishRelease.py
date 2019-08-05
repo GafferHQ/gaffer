@@ -77,7 +77,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 if not args.githubAccessToken :
-	parser.exit( 1, "No --github-access-token/GITHUB_ACCESS_TOKEN set")
+	parser.exit( 1, "No --github-access-token/GITHUB_ACCESS_TOKEN set" )
 
 if not os.path.exists( args.archive ) :
 	parser.exit( 1, "The specified archive '%s' does not exist." % args.archive )
@@ -87,7 +87,7 @@ repo = githubClient.get_repo( args.repo )
 
 release = repo.get_release( args.releaseId )
 if not release :
-	parser.exit( "Unable to find GitHub Release %s" % args.releaseId )
+	parser.exit( 1, "Unable to find GitHub Release %s" % args.releaseId )
 
 print( "Uploading '%s' to release %s" % ( args.archive, args.releaseId ) )
 asset = release.upload_asset( args.archive, content_type="application/gzip" )
