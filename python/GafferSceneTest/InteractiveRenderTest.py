@@ -1022,19 +1022,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["catalogue"] = GafferImage.Catalogue()
 
-		s["l"], colorPlug = self._createPointLight()
-		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
-		s["l"]["transform"]["translate"]["z"].setValue( 1 )
-
 		s["p"] = GafferScene.Plane()
 
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"][0].setInput( s["l"]["out"] )
-		s["g"]["in"][1].setInput( s["p"]["out"] )
-		s["g"]["in"][2].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
@@ -1077,24 +1072,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 0, 0 ) )
+		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
 
 		# Add a light
 
-		s["l2"], colorPlug = self._createPointLight()
-		colorPlug.setValue( imath.Color3f( 0, 1, 0 ) )
-		s["l2"]["transform"]["translate"]["z"].setValue( 1 )
+		s["l"], colorPlug = self._createPointLight()
+		s["l"]["transform"]["translate"]["z"].setValue( 1 )
 
-		s["g"]["in"][3].setInput( s["l2"]["out"] )
+		s["g"]["in"][2].setInput( s["l"]["out"] )
 
 		# Give it time to update, and check the output.
 
 		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		# Tolerance is high due to sampling noise in Cycles, but is more than sufficient to
-		# be sure that the new light has been added (otherwise there would be no green at all).
-		self.assertTrue( ( c / c[0] ).equalWithAbsError( imath.Color3f( 1, 1, 0 ), 0.25 ) )
+		self.assertGreater( c[1], 0.05 )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
