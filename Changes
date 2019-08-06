@@ -18,15 +18,13 @@ Documentation
 0.54.0.0 (relative to 0.53.x)
 ========
 
-This major release brings support for Arnold's light blockers and adds a new UVInspector
-panel for viewing UVs and textures. It also brings a host of core UI changes, including a
+This major release brings support for Arnold's light blockers and adds a new _UV Inspector_
+editor for viewing UVs and textures. It also brings a host of core UI changes, including a
 new look and improvements to layout management and node pinning. Additionally we've made
 advances under the hood, resulting in improved performance and lower memory usage in many
 cases. Read on for further details of these and numerous other enhancements and fixes...
 
-> Caution :
->
-> This release brings substantial performance improvements in the generation
+> **Caution** : This release brings substantial performance improvements in the generation
 > of ShaderAssignments, but at the expense of removing support for using the `scene:path`
 > context variable in shader networks. We recommend migrating such setups to use a
 > CustomAttributes node to generate a context-varying attribute which is then referenced
@@ -35,7 +33,7 @@ cases. Read on for further details of these and numerous other enhancements and 
 > Temporary backwards compatibility for old networks can be enabled by setting the
 > `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable to `1`.
 >
-> The same optimisation applies to the OSLObject node, with temporary backwards compatibility
+> The same optimization applies to the OSLObject node, with temporary backwards compatibility
 > being available separately by setting the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment
 > variable to `1`.
 
@@ -52,11 +50,11 @@ Improvements
 ------------
 
 - Layouts :
-  - Improved tab management
-    - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu (#3179).
-    - Layouts will now store and recall detached panels, and all positions, sizes and maximised/full screen state (#3179).
+  - Improved tab management :
+    - Tabs can now be drag re-arranged, detached into new windows and closed/detached using a context menu (#3197).
+    - Layouts will now store and recall detached panels, and all positions, sizes and maximized/full screen state (#3197).
     - Added tab close buttons (#3211).
-  - Added advanced pinning options, available from the context menu for the pinning icon (#3270)
+  - Added advanced pinning options, available from the context menu for the pinning icon (#3270) :
     - Editors can now follow the source node for the current scene selection.
     - Editors can be linked so that an editor follows all pinning changes applied
       to another editor.
@@ -77,22 +75,22 @@ Improvements
   graphs, we have seen 4-5x speedups in total scene generation time (#3174).
 - Instancer/Parent/Seeds : Added a filter input to allow operation on multiple locations
   at once (#2917, #3176).
-- TransformTools : Added precision mode enabled by holding `Shift`. Added basic snapping to increments
-  by holding `Control` (#3277).
-- Viewer : Prioritised update of objects being manipulated, resulting in much more fluid update (#3144).
+- TransformTools : Added precision mode enabled by holding <kbd>Shift</kbd>. Added basic
+  snapping to increments by holding <kbd>Ctrl</kbd> (#3277).
+- Viewer : Prioritized update of objects being manipulated, resulting in much more fluid update (#3144).
 - Node Menu :
   - Added an improved "fuzzy matching" search algorithm (#2986).
   - Added an error indicator when a search matches nothing (#2986).
   - Improved naming of nodes and scene locations for newly created
     Arnold shaders and lights (#3261).
 - SceneReader : Added support for USD files that reference Alembic archives.
-- Text : Added support for unicode characters (#2999).
+- Text : Added support for Unicode characters (#2999).
 - PythonCommand : Improved performance (#3029).
 - GraphEditor :
   - Added support for arbitrary node annotations specified by metadata.
-    Use "annotation:<name>:text" to specify the text to render, and "annotation:<name>:color"
-    to specify an associated colour (#3028).
-  - Added Ctrl-Drag functionality to deselect nodes (#3090).
+    Use `annotation:<name>:text` to specify the text to render, and `annotation:<name>:color`
+    to specify an associated color (#3028).
+  - Added <kbd>Ctrl</kbd> + click-drag marquee action to deselect nodes (#3090).
   - Made it show the root instead of removing the GraphEditor when the viewed Box is deleted (#3163).
 - UIEditor : Added support for setting the icon for a node (#3204).
 - Stats app :
@@ -104,12 +102,12 @@ Improvements
   - Added a `-contextSanitiser` argument, used to check for common context handling
     errors (#3060).
   - Added entries for SharedSceneInterface limits and usage (#3126).
-- ArnoldTextureBake (#3026) : Added optional median filter.
-- Hash cache (#3033) : Reduced memory usage and improved performance.
+- ArnoldTextureBake : Added optional median filter (#3026).
+- Hash cache : Reduced memory usage and improved performance (#3033).
 - GraphComponent : Reduced memory usage and improved script loading times (#3080).
 - Shader : Improved performance of network generation (#3074).
 - ShaderAssignment : Improved performance by removing support for varying shader networks
-  by scene location (via the "scene:path" context variable) (#3074).
+  by scene location (via the `scene:path` context variable) (#3074).
 - AnimationEditor : Improved behaviour of the plug listing (#3106).
   - Only selected nodes are shown, not their descendants.
   - The ancestor node hierarchy is not shown redundantly.
@@ -119,14 +117,14 @@ Improvements
   - Added support for detecting performance regression/improvement (#3127).
 - MeshTangents : Added support for additional computation modes (#3030).
 - ImageWriter : Added DWA compression presets (#3153).
-- Numeric Bookmarks : Added serialisation to preserve numeric bookmarks across sessions (#3157).
+- Numeric Bookmarks : Added serialization to preserve numeric bookmarks across sessions (#3157).
 - SetExpressions : Added support for wildcard characters in set names (#3172).
 - Lights :
-  - Added "visualiserScale" setting in new "Visualisation" tab (#3180).
-  - By setting "visualiserScale" to 0 all visualisation computations can now be avoided (#3178).
-  - Added visualisation for pointlight radius (#3199).
-- OpenGLAttributes : Added new "Light Visualiser" section, with control over
-  visualisation scale and maximum texture resolution (#3219).
+  - Added `visualiserScale` setting in new _Visualisation_ tab (#3180).
+  - By setting `visualiserScale` to 0, all visualisation computations can now be avoided (#3178).
+  - Added visualization for point light radius (#3199).
+- OpenGLAttributes : Added new _Light Visualiser_ section, with control over
+  visualization scale and maximum texture resolution (#3219).
 - UI : Improved stylesheet (#3193, #3229, #3246, #3249).
 - SystemCommand : Added `shell` plug, to determine whether or not the supplied
   command is interpreted as a shell command or executed directly (#3230).
@@ -149,14 +147,14 @@ Fixes
     where inadvertently added to the `defaultLights` set.
 - TransformTool : Fixed crash when using the tool while a Catalogue node saves an
   image in the background (#3196).
-- GraphEditor (#3028) : Added bookmark annotations for Dots and other auxiliary nodes.
+- GraphEditor : Added bookmark annotations for Dots and other auxiliary nodes (#3028).
 - ArnoldTextureBake (#3026) :
   - Connected external dispatcher settings to internal render task.
   - Connected preTasks plug to internal tasks.
   - Fixed leakage of internal context variables.
 - Viewer :
   - Fixed keyboard modifier handling for object selection. Previously, holding
-    down any modifier key whilst drag selecting or clicking an object in the Viewer would
+    down any modifier key whilst drag-selecting or clicking an object in the Viewer would
     modify the current selection. This behaviour was only intended to be triggered by the
     Shift key (#3095).
   - Fixed bug that prevented image updates after a computation error had occurred (#3273).
@@ -180,7 +178,7 @@ Fixes
   - Fixed hangs caused by active CropWindowTool when viewing empty scene (#3207).
   - Fixed bug that could allow a read-only plug to be edited (#3239).
 - Dispatch app : Fixed configuration bug which caused GafferUI to be loaded unnecessarily.
-  This could cause a `QXcbConnection Could not connect to display` when run on a machine
+  This could cause a `QXcbConnection Could not connect to display` error when run on a machine
   without an X server (#3237).
 - Execute app : Stopped current frame of saved script leaking into the context for
   `TaskNode::executeSequence()` (#3262).
@@ -234,8 +232,8 @@ API
   `Context::EditableScope` classes make this relatively painless (#3196).
 - ProcessException : Added new class used to wrap exceptions thrown during computation.
   This provides information about the plug and context where the exception was thrown (#3223).
-- TextWidget/MultiLineTextWidget : Added support for unicode characters. In this
-  case the `getText()` method will return a UTF8 encoded string (#2999).
+- TextWidget/MultiLineTextWidget : Added support for Unicode characters. In this
+  case the `getText()` method will return a UTF-8 encoded string (#2999).
 - ContextSanitisers : Added new ContextSanitiser classes to GafferSceneTest and
   GafferImageTest. These are Monitors which warn about common context handling mistakes
   (#3060, #3073).
@@ -247,14 +245,14 @@ API
 - ContextProcessor (#3024) :
   - Added `inPlugContext()` method.
   - Added support for working with `Plugs` rather than only `ValuePlugs`.
-- AnnotationsGadget (#3028) : Added new gadget for rendering annotations for GraphGadgets.
-- MonitorAlgo (#3028) : Added `annotate()` methods for turning Monitor statistics into
-  GraphEditor annotations.
+- AnnotationsGadget : Added new gadget for rendering annotations for GraphGadgets (#3028).
+- MonitorAlgo : Added `annotate()` methods for turning Monitor statistics into
+  GraphEditor annotations (#3028).
 - ValuePlug :
 	- Added `set/getHashCacheSizeLimit()` methods for controlling hash cache memory usage (#3033).
 	- `isSetToDefault()` now returns false uncoditionally if a plug's value is being driven
 	  by a ComputeNode. Calling `isSetToDefault()` will never trigger a compute (#3280).
-- Context (#3060) : Added `EditableScope::context()` method.
+- Context : Added `EditableScope::context()` method (#3060).
 - SceneTestCase (#3060) :
   - Added a ContextSanitiser that is active for the duration of the tests.
   - Improved assert methods.
@@ -266,8 +264,8 @@ API
 - SceneAlgo : `history()` now returns a nullptr when called for empty scenes instead of precipitating a segfault (#3207).
 - ExtensionAlgo : Added mechanism to export Boxes as Gaffer extensions via `exportExtension()` (#3158).
   Gaffer extensions each define a new node type and are automatically integrated into the node menu.
-- StringPlugValueWidget : Added support for "stringPlugValueWidget:placeholderText" metadata (#3218).
-- Widget : Improved interaction with stylesheet. Widgets now provide "gafferClass" and "gafferClasses"
+- StringPlugValueWidget : Added support for `stringPlugValueWidget:placeholderText` metadata (#3218).
+- Widget : Improved interaction with stylesheet. Widgets now provide `gafferClass` and `gafferClasses`.
   Qt properties which allows stylesheets more precise control (#3229).
 - MetadataWidget : Added new class and derived classes to allow editing of metadata values via
   the UI (#3143).
@@ -306,7 +304,7 @@ Build
   - Enabled TBB debugging features in DEBUG builds.
   - Added `-fno-omit-frame-pointer` compiler flag for RELWITHDEBINFO builds.
 - Fixed warnings when building with XCode 10.2 (#3094).
-- Fixed problem where some Arnold modules were installed when ARNOLD_ROOT was
+- Fixed problem where some Arnold modules were installed when `ARNOLD_ROOT` was
   not specified (#3101).
 - Made GafferCortex an optional component at build time (#3168).
 - Reduced the number of errors thrown during documentation build (#3212).
@@ -318,13 +316,13 @@ Breaking Changes
   - The loading of networks from versions prior to Gaffer 0.45 is no longer supported (#3192, #3218).
   - Added a `useTransform` plug to OSLObject. This must now be turned on before a shader can query
     transforms (#3226).
-- ShaderAssignment : Removed support for using the "scene:path" context variable in shader
+- ShaderAssignment : Removed support for using the `scene:path` context variable in shader
   networks. Temporary backwards compatibility can be enabled by setting the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable to `1` (#3074).
-- OSLObject : Removed support for using the "scene:path" context variable in shader
+- OSLObject : Removed support for using the `scene:path` context variable in shader
   networks. Temporary backwards compatibility can be enabled by setting the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable to `1` (#3074).
 - GraphComponent :
   - Added `parentChanged()` virtual method (#3080).
-    > Caution : Experience in the Gaffer codebase suggests that `parentChanged()` was a
+    > **Caution** : Experience in the Gaffer codebase suggests that `parentChanged()` was a
     > relatively common method name, which may now be inadvertently overriding the new
     > virtual method. Clang will warn for these cases if `-Wall` is used, but GCC requires
     > `-Woverloaded-virtual` to be used.
@@ -335,8 +333,8 @@ Breaking Changes
   - The equality operator now compares plug and context instead of
     hash.
 - ArrayPlug : Inputs are now required to be ArrayPlugs too (#3116).
-- BackdropNodeGadget/StandardNodeGadget (#3028) : Removed private member variables.
-- SceneTestCase (#3060) : Changed signatures for the following functions :
+- BackdropNodeGadget/StandardNodeGadget : Removed private member variables (#3028).
+- SceneTestCase : Changed signatures for the following functions (#3060) :
   - `assertPathsEqual()`
   - `assertScenesEqual()`
   - `assertPathHashesEqual()`
@@ -360,7 +358,7 @@ Breaking Changes
 - BranchCreator : Added `affectsBranch*()` and `constantBranchSetNames()` virtual methods (#3176).
 - EvaluateLightLinks : Removed. This was a node used internally to translate light links to renderers,
   work that is now done in RendererAlgo (#3265).
-- Context : Changed base class for Scope/EditableScope, and removed private member from Scope. Source compatibility is preserved (#3196).
+- Context : Changed base class for `Scope`/`EditableScope`, and removed private member from `Scope`. Source compatibility is preserved (#3196).
 - Process : Changed base class, and removed optional `currentContext` argument from protected constructor (#3196).
 - Monitor (#3196) :
   - Changed base class to `IECore::RefCounted`.
@@ -369,7 +367,7 @@ Breaking Changes
 - ValuePlug : Removed `getObjectValueIfCached()` method (#3174).
 - TypedObjectPlug : Removed `getValueIfCached()` method (#3174).
 - GafferCortex : Removed GafferCortex module from standard builds (#3253).
-- Style : Changed colour arguments to `renderLine()` and `renderText()` from Color3f to Color4f (#3273).
+- Style : Changed color arguments to `renderLine()` and `renderText()` from `Color3f` to `Color4f` (#3273).
 
 0.53.6.3 (relative to 0.53.6.2)
 ========
