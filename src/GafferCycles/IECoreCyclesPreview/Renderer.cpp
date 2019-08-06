@@ -1647,6 +1647,14 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		~CyclesObject() override
+		{
+		}
+
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
+		{
+		}
+
 		void transform( const Imath::M44f &transform ) override
 		{
 			ccl::Object *object = m_instance.object();
@@ -1715,6 +1723,14 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 		CyclesLight( SharedCLightPtr &light )
 			: m_light( light ), m_attributes( nullptr )
+		{
+		}
+
+		~CyclesLight() override
+		{
+		}
+
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
 		{
 		}
 
@@ -1795,6 +1811,14 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		CyclesCamera( SharedCCameraPtr camera )
 			: m_camera( camera )//, m_attributes( nullptr )
+		{
+		}
+
+		~CyclesCamera() override
+		{
+		}
+
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
 		{
 		}
 
@@ -1887,14 +1911,16 @@ IECore::InternedString g_denoiseRelativePcaOptionName( "ccl:denoise:relative_pca
 IECore::InternedString g_denoiseNeighborFramesOptionName( "ccl:denoise:neighbor_frames" );
 IECore::InternedString g_denoiseClampInputOptionName( "ccl:denoise:clampInput" );
 // Curves
-IECore::InternedString g_useCurvesOptionType( "ccl:curve:use_curves" );
-IECore::InternedString g_curveMinimumWidthOptionType( "ccl:curve:minimum_width" );
-IECore::InternedString g_curveMaximumWidthOptionType( "ccl:curve:maximum_width" );
 IECore::InternedString g_curvePrimitiveOptionType( "ccl:curve:primitive" );
 IECore::InternedString g_curveShapeOptionType( "ccl:curve:shape" );
+IECore::InternedString g_curveLineMethod( "ccl:curve:line_method" );
+IECore::InternedString g_curveTriangleMethod( "ccl:curve:triangle_method" );
 IECore::InternedString g_curveResolutionOptionType( "ccl:curve:resolution" );
 IECore::InternedString g_curveSubdivisionsOptionType( "ccl:curve:subdivisions" );
-IECore::InternedString g_curveCullBackfacing( "ccl:curve:cull_backfacing" );
+IECore::InternedString g_useCurvesOptionType( "ccl:curve:use_curves" );
+IECore::InternedString g_useEncasingOptionType( "ccl:curve:use_encasing" );
+IECore::InternedString g_curveUseBackfacing( "ccl:curve:use_backfacing" );
+IECore::InternedString g_useTangentNormalGeoOptionType( "ccl:curve:use_tangent_normal_geometry" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "ccl:background:shader" );
 // Square samples
@@ -1934,12 +1960,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Set path to find shaders
 			#ifdef _WIN32
-			string paths = boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+			string paths = boost::str( boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
 			#else
-			string paths = boost::format( "%s:%s/cycles:%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+			string paths = boost::str( boost::format( "%s:%s/cycles:%s" ) % getenv( "GAFFERCYCLES" ) % getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
 			#endif
 			const char *kernelFile = "source/kernel/kernel_globals.h";
-			SearchPath searchPath( paths ? paths : "" );
+			SearchPath searchPath( paths );
 			boost::filesystem::path path = searchPath.find( kernelFile );
 			if( path.empty() )
 			{
@@ -1947,7 +1973,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				ccl::path_init( path.string() );
+				string cclPath = path.string();
+				cclPath.erase( cclPath.end() - strlen( kernelFile ), cclPath.end() );
+				ccl::path_init( cclPath );
 			}
 			// Define internal device names
 			getCyclesDevices();
@@ -2235,14 +2263,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
 			{
-				OPTION_BOOL (m_curveSystemManager, g_useCurvesOptionType,         use_curves);
-				OPTION_FLOAT(m_curveSystemManager, g_curveMinimumWidthOptionType, minimum_width);
-				OPTION_FLOAT(m_curveSystemManager, g_curveMaximumWidthOptionType, maximum_width);
 				OPTION_INT_C(m_curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
 				OPTION_INT_C(m_curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
+				OPTION_INT_C(m_curveSystemManager, g_curveLineMethod,             line_method, ccl::CurveLineMethod);
+				OPTION_INT_C(m_curveSystemManager, g_curveTriangleMethod,         triangle_method, ccl::CurveTriangleMethod);
 				OPTION_INT  (m_curveSystemManager, g_curveResolutionOptionType,   resolution);
 				OPTION_INT  (m_curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
-				OPTION_BOOL (m_curveSystemManager, g_curveCullBackfacing,         use_backfacing);
+
+				OPTION_BOOL (m_curveSystemManager, g_useCurvesOptionType,           use_curves);
+				OPTION_BOOL (m_curveSystemManager, g_useEncasingOptionType,         use_encasing);
+				OPTION_BOOL (m_curveSystemManager, g_curveUseBackfacing,            use_backfacing);
+				OPTION_BOOL (m_curveSystemManager, g_useTangentNormalGeoOptionType, use_tangent_normal_geometry);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -2557,6 +2588,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ObjectInterfacePtr result = new CyclesLight( clight );
 			result->attributes( attributes );
 			return result;
+		}
+
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "lightFilter() unimplemented" );
+			return nullptr;
 		}
 
 		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override

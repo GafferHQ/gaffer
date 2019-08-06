@@ -52,135 +52,136 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Device
 
-	options->addOptionalMember( "ccl:device", new IECore::StringData( "CPU" ), "device", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:device", new IECore::StringData( "CPU" ), false, "device" ) );
 
 	// Session and scene
-	options->addOptionalMember( "ccl:shadingsystem", new IECore::StringData( "SVM" ), "shadingSystem", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:shadingsystem", new IECore::StringData( "SVM" ), false, "shadingSystem" ) );
 
 	// Session/Render
 
-	options->addOptionalMember( "ccl:session:experimental", new IECore::BoolData( false ), "featureSet", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:experimental", new IECore::BoolData( false ), false, "featureSet" ) );
 
-	options->addOptionalMember( "ccl:session:progressive_refine", new IECore::BoolData( false ), "progressiveRefine", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:progressive", new IECore::BoolData( false ), "method", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:samples", new IECore::IntData( 8 ), "samples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), "tileSize", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:tile_order", new IECore::IntData( 0 ), "tileOrder", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:start_resolution", new IECore::IntData( 64 ), "startResolution", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:pixel_size", new IECore::IntData( 64 ), "pixelSize", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:threads", new IECore::IntData( 0 ), "numThreads", Gaffer::Plug::Default, false );
-	//options->addOptionalMember( "ccl:session:display_buffer_linear", new IECore::BoolData( true ), "displayBufferLinear", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:run_denoising", new IECore::BoolData( false ), "runDenoising", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:write_denoising_passes", new IECore::BoolData( false ), "writeDenoisingPasses", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:full_denoising", new IECore::BoolData( false ), "fullDenoising", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:cancel_timeout", new IECore::FloatData( 0.1f ), "cancelTimeout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), "resetTimeout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), "textTimeout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:session:progressive_update_timeout", new IECore::FloatData( 1.0f ), "progressiveUpdateTimeout", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:progressive_refine", new IECore::BoolData( false ), false, "progressiveRefine" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:progressive", new IECore::BoolData( false ), false, "method" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:samples", new IECore::IntData( 8 ), false, "samples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), false, "tileSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:tile_order", new IECore::IntData( 0 ), false, "tileOrder" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:start_resolution", new IECore::IntData( 64 ), false, "startResolution" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:pixel_size", new IECore::IntData( 64 ), false, "pixelSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:threads", new IECore::IntData( 0 ), false, "numThreads" ) );
+	//options->addChild( new Gaffer::NameValuePlug( "ccl:session:display_buffer_linear", new IECore::BoolData( true ), false, "displayBufferLinear" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:run_denoising", new IECore::BoolData( false ), false, "runDenoising" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:write_denoising_passes", new IECore::BoolData( false ), false, "writeDenoisingPasses" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:full_denoising", new IECore::BoolData( false ), false, "fullDenoising" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:cancel_timeout", new IECore::FloatData( 0.1f ), false, "cancelTimeout" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), false, "resetTimeout" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), false, "textTimeout" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:progressive_update_timeout", new IECore::FloatData( 1.0f ), false, "progressiveUpdateTimeout" ) );
 
 	// Denoising
-	options->addOptionalMember( "ccl:denoise:radius", new IECore::IntData( 8 ), "denoiseRadius", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoise:strength", new IECore::FloatData( 0.5f ), "denoiseStrength", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoise:feature_strength", new IECore::FloatData( 0.5f ), "denoiseFeatureStrength", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoise:relative_pca", new IECore::BoolData( false ), "denoiseRelativePca", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoise:neighbor_frames", new IECore::IntData( 2 ), "denoiseNeighborFrames", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoise:clamp_input", new IECore::BoolData( true ), "denoiseClampInput", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:radius", new IECore::IntData( 8 ), false, "denoiseRadius" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:strength", new IECore::FloatData( 0.5f ), false, "denoiseStrength" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:feature_strength", new IECore::FloatData( 0.5f ), false, "denoiseFeatureStrength" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:relative_pca", new IECore::BoolData( false ), false, "denoiseRelativePca" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:neighbor_frames", new IECore::IntData( 2 ), false, "denoiseNeighborFrames" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:clamp_input", new IECore::BoolData( true ), false, "denoiseClampInput" ) );
 
-	options->addOptionalMember( "ccl:denoising_diffuse_direct",        new IECore::BoolData( true ), "denoisingDiffuseDirect",       Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_diffuse_indirect",      new IECore::BoolData( true ), "denoisingDiffuseIndirect",      Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_glossy_direct",         new IECore::BoolData( true ), "denoisingGlossyDirect",        Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_glossy_indirect",       new IECore::BoolData( true ), "denoisingGlossyIndirect",      Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_transmission_direct",   new IECore::BoolData( true ), "denoisingTransmissionDirect",  Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_transmission_indirect", new IECore::BoolData( true ), "denoisingTransmissionIndirect", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_subsurface_direct",     new IECore::BoolData( true ), "denoisingSubsurfaceDirect",    Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:denoising_subsurface_indirect",   new IECore::BoolData( true ), "denoisingSubsurfaceIndirect",  Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_diffuse_direct",        new IECore::BoolData( true ), false, "denoisingDiffuseDirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_diffuse_indirect",      new IECore::BoolData( true ), false, "denoisingDiffuseIndirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_glossy_direct",         new IECore::BoolData( true ), false, "denoisingGlossyDirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_glossy_indirect",       new IECore::BoolData( true ), false, "denoisingGlossyIndirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_transmission_direct",   new IECore::BoolData( true ), false, "denoisingTransmissionDirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_transmission_indirect", new IECore::BoolData( true ), false, "denoisingTransmissionIndirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_subsurface_direct",     new IECore::BoolData( true ), false, "denoisingSubsurfaceDirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoising_subsurface_indirect",   new IECore::BoolData( true ), false, "denoisingSubsurfaceIndirect" ) );
 
 	// Scene/BVH
 
-	//options->addOptionalMember( "ccl:scene:bvh_type", new IECore::IntData( 0 ), "bvhType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), "bvhLayout", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), "useBvhSpatialSplit", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), "useBvhUnalignedNodes", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), "numBvhTimeSteps", Gaffer::Plug::Default, false );
+	//options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_type", new IECore::IntData( 0 ), false, "bvhType" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), false, "bvhLayout" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), false, "useBvhSpatialSplit" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), false, "useBvhUnalignedNodes" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), false, "numBvhTimeSteps" ) );
 
-	//options->addOptionalMember( "ccl:scene:persistent_data", new IECore::BoolData( true ), "persistentData", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:scene:texture_limit", new IECore::IntData( 0 ), "textureLimit", Gaffer::Plug::Default, false );
+	//options->addChild( new Gaffer::NameValuePlug( "ccl:scene:persistent_data", new IECore::BoolData( true ), false, "persistentData" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:texture_limit", new IECore::IntData( 0 ), false, "textureLimit" ) );
 
 	// Integrator
 
-	options->addOptionalMember( "ccl:integrator:max_bounce", new IECore::IntData( 7 ), "maxBounce", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:max_bounce", new IECore::IntData( 7 ), false, "maxBounce" ) );
 
-	options->addOptionalMember( "ccl:integrator:max_diffuse_bounce", new IECore::IntData( 7 ), "maxDiffuseBounce", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:max_glossy_bounce", new IECore::IntData( 7 ), "maxGlossyBounce", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:max_transmission_bounce", new IECore::IntData( 7 ), "maxTransmissionBounce", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:max_volume_bounce", new IECore::IntData( 7 ), "maxVolumeBounce", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:max_diffuse_bounce", new IECore::IntData( 7 ), false, "maxDiffuseBounce" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:max_glossy_bounce", new IECore::IntData( 7 ), false, "maxGlossyBounce" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:max_transmission_bounce", new IECore::IntData( 7 ), false, "maxTransmissionBounce" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:max_volume_bounce", new IECore::IntData( 7 ), false, "maxVolumeBounce" ) );
 
-	options->addOptionalMember( "ccl:integrator:transparent_max_bounce", new IECore::IntData( 7 ), "transparentMaxBounce", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:transparent_max_bounce", new IECore::IntData( 7 ), false, "transparentMaxBounce" ) );
 
-	options->addOptionalMember( "ccl:integrator:ao_bounces", new IECore::IntData( 0 ), "aoBounces", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:ao_bounces", new IECore::IntData( 0 ), false, "aoBounces" ) );
 
-	options->addOptionalMember( "ccl:integrator:volume_max_steps", new IECore::IntData( 1024 ), "volumeMaxSteps", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:volume_step_size", new IECore::FloatData( 0.1f ), "volumeStepSize", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:volume_max_steps", new IECore::IntData( 1024 ), false, "volumeMaxSteps" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:volume_step_size", new IECore::FloatData( 0.1f ), false, "volumeStepSize" ) );
 
-	options->addOptionalMember( "ccl:integrator:caustics_reflective", new IECore::BoolData( true ), "causticsReflective", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:caustics_refractive", new IECore::BoolData( true ), "causticsRefractive", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:filter_glossy", new IECore::FloatData( 0.0f ), "filterGlossy", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:seed", new IECore::IntData( 0 ), "seed", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), "sampleClampDirect", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), "sampleClampIndirect", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:caustics_reflective", new IECore::BoolData( true ), false, "causticsReflective" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:caustics_refractive", new IECore::BoolData( true ), false, "causticsRefractive" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:filter_glossy", new IECore::FloatData( 0.0f ), false, "filterGlossy" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:seed", new IECore::IntData( 0 ), false, "seed" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), false, "sampleClampDirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), false, "sampleClampIndirect" ) );
 
-	options->addOptionalMember( "ccl:integrator:aa_samples", new IECore::IntData( 0 ), "aaSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:diffuse_samples", new IECore::IntData( 1 ), "diffuseSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:glossy_samples", new IECore::IntData( 1 ), "glossySamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:transmission_samples", new IECore::IntData( 1 ), "transmissionSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:ao_samples", new IECore::IntData( 1 ), "aoSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:mesh_light_samples", new IECore::IntData( 1 ), "meshlightSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:subsurface_samples", new IECore::IntData( 1 ), "subsurfaceSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:volume_samples", new IECore::IntData( 1 ), "volumeSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:start_sample", new IECore::IntData( 0 ), "startSample", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:aa_samples", new IECore::IntData( 0 ), false, "aaSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:diffuse_samples", new IECore::IntData( 1 ), false, "diffuseSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:glossy_samples", new IECore::IntData( 1 ), false, "glossySamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:transmission_samples", new IECore::IntData( 1 ), false, "transmissionSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:ao_samples", new IECore::IntData( 1 ), false, "aoSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:mesh_light_samples", new IECore::IntData( 1 ), false, "meshlightSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:subsurface_samples", new IECore::IntData( 1 ), false, "subsurfaceSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:volume_samples", new IECore::IntData( 1 ), false, "volumeSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:start_sample", new IECore::IntData( 0 ), false, "startSample" ) );
 
-	options->addOptionalMember( "ccl:integrator:sample_all_lights_direct", new IECore::BoolData( true ), "sampleAllLightsDirect", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:sample_all_lights_indirect", new IECore::BoolData( true ), "sampleAllLightsIndirect", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:integrator:light_sampling_threshold", new IECore::FloatData( 0.05f ), "lightSamplingThreshold", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_all_lights_direct", new IECore::BoolData( true ), false, "sampleAllLightsDirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_all_lights_indirect", new IECore::BoolData( true ), false, "sampleAllLightsIndirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:light_sampling_threshold", new IECore::FloatData( 0.05f ), false, "lightSamplingThreshold" ) );
 
-	options->addOptionalMember( "ccl:integrator:sampling_pattern", new IECore::IntData( 0 ), "samplingPattern", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sampling_pattern", new IECore::IntData( 0 ), false, "samplingPattern" ) );
 
 	// Curves
-	options->addOptionalMember( "ccl:curve:use_curves", new IECore::BoolData( false ), "useCurves", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:minimum_width", new IECore::FloatData( 0.0f ), "curveMinimumWidth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:maximum_width", new IECore::FloatData( 0.10f ), "curveMaximumWidth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:primitive", new IECore::IntData( 0 ), "curvePrimitive", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:shape", new IECore::IntData( 0 ), "curveShape", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:resolution", new IECore::IntData( 0 ), "curveResolution", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:subdivisions", new IECore::IntData( 0 ), "curveSubdivisions", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:curve:cull_backfacing", new IECore::BoolData( false ), "curveCullBackfacing", Gaffer::Plug::Default, false );
-
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:primitive", new IECore::IntData( 0 ), false, "curvePrimitive" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:shape", new IECore::IntData( 0 ), false, "curveShape" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:line_method", new IECore::IntData( 0 ), false, "curveLineMethod" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:triangle_method", new IECore::IntData( 0 ), false, "curveTriangleMethod" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:resolution", new IECore::IntData( 0 ), false, "curveResolution" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:subdivisions", new IECore::IntData( 0 ), false, "curveSubdivisions" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:use_curves", new IECore::BoolData( false ), false, "useCurves" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:use_encasing", new IECore::BoolData( false ), false, "curveUseEncasing" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:use_backfacing", new IECore::BoolData( false ), false, "curveUseBackfacing" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:curve:use_tangent_normal_geometry", new IECore::BoolData( false ), false, "curveUseTangentNormalGeo" ) );
 	// Background
-	options->addOptionalMember( "ccl:background:ao_factor", new IECore::FloatData( 0.0f ), "aoFactor", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:ao_distance", new IECore::FloatData( FLT_MAX ), "aoDistance", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:use_shader", new IECore::BoolData( true ), "bgUseShader", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:use_ao", new IECore::BoolData( false ), "useAO", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:transparent", new IECore::BoolData( true ), "bgTransparent", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:transparent_glass", new IECore::BoolData( false ), "bgTransparentGlass", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:transparent_roughness_threshold", new IECore::FloatData( 0.0f ), "bgTransparentRoughnessThreshold", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:visibility:camera", new IECore::BoolData( true ), "bgCameraVisibility", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:visibility:diffuse", new IECore::BoolData( true ), "bgDiffuseVisibility", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:visibility:glossy", new IECore::BoolData( true ), "bgGlossyVisibility", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:visibility:transmission", new IECore::BoolData( true ), "bgTransmissionVisibility", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:visibility:shadow", new IECore::BoolData( true ), "bgShadowVisibility", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:background:visibility:scatter", new IECore::BoolData( true ), "bgScatterVisibility", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:ao_factor", new IECore::FloatData( 0.0f ), false, "aoFactor" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:ao_distance", new IECore::FloatData( FLT_MAX ), false, "aoDistance" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:use_shader", new IECore::BoolData( true ), false, "bgUseShader" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:use_ao", new IECore::BoolData( false ), false, "useAO" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:transparent", new IECore::BoolData( true ), false, "bgTransparent" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:transparent_glass", new IECore::BoolData( false ), false, "bgTransparentGlass" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:transparent_roughness_threshold", new IECore::FloatData( 0.0f ), false, "bgTransparentRoughnessThreshold" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:camera", new IECore::BoolData( true ), false, "bgCameraVisibility" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:diffuse", new IECore::BoolData( true ), false, "bgDiffuseVisibility" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:glossy", new IECore::BoolData( true ), false, "bgGlossyVisibility" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:transmission", new IECore::BoolData( true ), false, "bgTransmissionVisibility" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:shadow", new IECore::BoolData( true ), false, "bgShadowVisibility" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:scatter", new IECore::BoolData( true ), false, "bgScatterVisibility" ) );
 
 	// Film
-	options->addOptionalMember( "ccl:film:exposure", new IECore::FloatData( 0.5f ), "exposure", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:pass_alpha_threshold", new IECore::FloatData( 0.5f ), "passAlphaThreshold", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:filter_type", new IECore::IntData( 0 ), "filterType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:filter_width", new IECore::FloatData( 1.0f ), "filterWidth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:mist_start", new IECore::FloatData( 0.0f ), "mistStart", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:mist_depth", new IECore::FloatData( 100.0f ), "mistDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:mist_falloff", new IECore::FloatData( 1.0f ), "mistFalloff", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:use_sample_clamp", new IECore::BoolData( false ), "useSampleClamp", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:denoising_data_pass", new IECore::BoolData( false ), "denoisingDataPass", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ccl:film:denoising_clean_pass", new IECore::BoolData( false ), "denoisingCleanPass", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:exposure", new IECore::FloatData( 0.5f ), false, "exposure" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:pass_alpha_threshold", new IECore::FloatData( 0.5f ), false, "passAlphaThreshold" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_type", new IECore::IntData( 0 ), false, "filterType" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_width", new IECore::FloatData( 1.0f ), false, "filterWidth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_start", new IECore::FloatData( 0.0f ), false, "mistStart" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_depth", new IECore::FloatData( 100.0f ), false, "mistDepth" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_falloff", new IECore::FloatData( 1.0f ), false, "mistFalloff" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:use_sample_clamp", new IECore::BoolData( false ), false, "useSampleClamp" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_data_pass", new IECore::BoolData( false ), false, "denoisingDataPass" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_clean_pass", new IECore::BoolData( false ), false, "denoisingCleanPass" ) );
 
 	// Multi-Device
 	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
@@ -190,14 +191,14 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	{
 		if( device.type == ccl::DEVICE_CPU )
 		{
-			options->addOptionalMember( "ccl:multidevice:CPU", new IECore::BoolData( true ), "multideviceCPU", Gaffer::Plug::Default, false );
+			options->addChild( new Gaffer::NameValuePlug( "ccl:multidevice:CPU", new IECore::BoolData( true ), false, "multideviceCPU" ) );
 			continue;
 		}
 		if( device.type == ccl::DEVICE_CUDA )
 		{
 			auto internalName = boost::format( "ccl:multidevice:CUDA%02i" ) % indexCuda;
 			auto optionName = boost::format( "multideviceCUDA%02i" ) % indexCuda;
-			options->addOptionalMember( internalName.str(), new IECore::BoolData( false ), optionName.str(), Gaffer::Plug::Default, false );
+			options->addChild( new Gaffer::NameValuePlug( internalName.str(), new IECore::BoolData( false ), false, optionName.str() ) );
 			++indexCuda;
 			continue;
 		}
@@ -205,14 +206,14 @@ CyclesOptions::CyclesOptions( const std::string &name )
 		{
 			auto internalName = boost::format( "ccl:multidevice:OPENCL%02i" ) % indexOpenCL;
 			auto optionName = boost::format( "multideviceOPENCL%02i" ) % indexOpenCL;
-			options->addOptionalMember( internalName.str(), new IECore::BoolData( false ), optionName.str(), Gaffer::Plug::Default, false );
+			options->addChild( new Gaffer::NameValuePlug( internalName.str(), new IECore::BoolData( false ), false, optionName.str() ) );
 			++indexOpenCL;
 			continue;
 		}
 	}
 
 	// Dicing camera
-	options->addOptionalMember( "ccl:dicing_camera", new IECore::StringData(), "dicingCamera", Gaffer::Plug::Default, false );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:dicing_camera", new IECore::StringData(), false, "dicingCamera" ) );
 }
 
 CyclesOptions::~CyclesOptions()

@@ -50,21 +50,21 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 
 	// Visibility parameters
 
-	attributes->addOptionalMember( "ccl:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:visibility:transmission", new IECore::BoolData( true ), "transmissionVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:visibility:scatter", new IECore::BoolData( true ), "scatterVisibility", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:glossy", new IECore::BoolData( true ), false, "glossyVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:transmission", new IECore::BoolData( true ), false, "transmissionVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:shadow", new IECore::BoolData( true ), false, "shadowVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:scatter", new IECore::BoolData( true ), false, "scatterVisibility" ) );
 
 	// Shading parameters
 
-	attributes->addOptionalMember( "ccl:use_holdout", new IECore::BoolData( false ), "useHoldout", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:is_shadow_catcher", new IECore::BoolData( false ), "isShadowCatcher", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:use_holdout", new IECore::BoolData( false ), false, "useHoldout" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:is_shadow_catcher", new IECore::BoolData( false ), false, "isShadowCatcher" ) );
 
 	// Subdivision parameters
-	attributes->addOptionalMember( "ccl:max_level", new IECore::IntData( 12 ), "maxLevel", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ccl:dicing_rate", new IECore::FloatData( 1.0f ), "dicingScale", Gaffer::Plug::Default, false );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:max_level", new IECore::IntData( 12 ), false, "maxLevel" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dicing_rate", new IECore::FloatData( 1.0f ), false, "dicingScale" ) );
 
 }
 

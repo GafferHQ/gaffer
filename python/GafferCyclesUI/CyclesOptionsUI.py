@@ -313,17 +313,17 @@ def __curvesSummary( plug ) :
 	if plug["useCurves"]["enabled"].getValue() :
 		info.append( "Use Curves {}".format( plug["useCurves"]["value"].getValue() ) )
 
-	if plug["curveMinimumWidth"]["enabled"].getValue() :
-		info.append( "Minimum Width {}".format( plug["curveMinimumWidth"]["value"].getValue() ) )
-
-	if plug["curveMaximumWidth"]["enabled"].getValue() :
-		info.append( "Maximum Width {}".format( plug["curveMaximumWidth"]["value"].getValue() ) )
-
 	if plug["curvePrimitive"]["enabled"].getValue() :
 		info.append( "Primitive {}".format( plug["curvePrimitive"]["value"].getValue() ) )
 
 	if plug["curveShape"]["enabled"].getValue() :
 		info.append( "Shape {}".format( plug["curveShape"]["value"].getValue() ) )
+
+	if plug["curveLineMethod"]["enabled"].getValue() :
+		info.append( "Line method {}".format( plug["curveLineMethod"]["value"].getValue() ) )
+
+	if plug["curveTriangleMethod"]["enabled"].getValue() :
+		info.append( "Triangle method {}".format( plug["curveTriangleMethod"]["value"].getValue() ) )
 
 	if plug["curveResolution"]["enabled"].getValue() :
 		info.append( "Resolution {}".format( plug["curveResolution"]["value"].getValue() ) )
@@ -331,8 +331,14 @@ def __curvesSummary( plug ) :
 	if plug["curveSubdivisions"]["enabled"].getValue() :
 		info.append( "Subdivisions {}".format( plug["curveSubdivisions"]["value"].getValue() ) )
 
-	if plug["curveCullBackfacing"]["enabled"].getValue() :
-		info.append( "Cull Backfacing {}".format( plug["curveCullBackfacing"]["value"].getValue() ) )
+	if plug["curveUseEncasing"]["enabled"].getValue() :
+		info.append( "Encasing {}".format( plug["curveUseEncasing"]["value"].getValue() ) )
+
+	if plug["curveUseBackfacing"]["enabled"].getValue() :
+		info.append( "Use Backfacing {}".format( plug["curveUseBackfacing"]["value"].getValue() ) )
+
+	if plug["curveUseTangentNormalGeo"]["enabled"].getValue() :
+		info.append( "Tangent Normal Geo {}".format( plug["curveUseTangentNormalGeo"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -1734,30 +1740,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.curveMinimumWidth" : [
-
-			"description",
-			"""
-			Minimal pixel width for strand (0 - deactivated).
-			""",
-
-			"layout:section", "Curves",
-			"label", "Minimum Width",
-
-		],
-
-		"options.curveMaximumWidth" : [
-
-			"description",
-			"""
-			Maximum extension that strand radius can be increased by.
-			""",
-
-			"layout:section", "Curves",
-			"label", "Minimum Width",
-
-		],
-
 		"options.curvePrimitive" : [
 
 			"description",
@@ -1802,6 +1784,49 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.curveLineMethod" : [
+
+			"description",
+			"""
+			Curve line method.
+			""",
+
+			"layout:section", "Curves",
+			"label", "LineMethod",
+
+		],
+
+		"options.curveLineMethod.value" : [
+
+			"preset:Accurate", 0,
+			"preset:Corrected", 1,
+			"preset:Uncorrected", 2,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.curveTriangleMethod" : [
+
+			"description",
+			"""
+			Curve triangle method.
+			""",
+
+			"layout:section", "Curves",
+			"label", "TriangleMethod",
+
+		],
+
+		"options.curveTriangleMethod.value" : [
+
+			"preset:CameraTriangles", 0,
+			"preset:TessellatedTriangles", 1,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 		"options.curveResolution" : [
 
 			"description",
@@ -1826,15 +1851,39 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.curveCullBackfacing" : [
+		"options.curveUseEncasing" : [
 
 			"description",
 			"""
-			Curve cull back-faces.
+			Curve use encasing.
 			""",
 
 			"layout:section", "Curves",
-			"label", "CullBackfacing",
+			"label", "UseEncasing",
+
+		],
+
+		"options.curveUseBackfacing" : [
+
+			"description",
+			"""
+			Curve use back-faces.
+			""",
+
+			"layout:section", "Curves",
+			"label", "UseBackfacing",
+
+		],
+
+		"options.curveUseTangentNormalGeo" : [
+
+			"description",
+			"""
+			Curve use tangent normal geometry.
+			""",
+
+			"layout:section", "Curves",
+			"label", "UseTangentNormalGeometry",
 
 		],
 	}
