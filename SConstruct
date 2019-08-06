@@ -2,6 +2,7 @@
 #
 #  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright 2019, Hypothetical Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -77,13 +78,13 @@ options = Variables( optionsFile, ARGUMENTS )
 options.Add(
 	"CXX",
 	"The C++ compiler.",
-	"clang++" if sys.platform == "darwin" else "g++",
+	{"darwin" : "clang++", "win32" : "cl"}.get(sys.platform, "g++")
 )
 
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall" ]
+	[ "-pipe", "-Wall" ] if Environment()["PLATFORM"] != "win32" else [],
 )
 
 options.Add(
@@ -118,7 +119,7 @@ options.Add(
 options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
-	"./build/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
+	os.path.join( ".", "build", "gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}" ),
 )
 
 options.Add(
@@ -132,13 +133,13 @@ options.Add(
 options.Add(
 	"INSTALL_DIR",
 	"The destination directory for the installation.",
-	"./install/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
+	os.path.join( ".", "install", "gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}" ),
 )
 
 options.Add(
 	"PACKAGE_FILE",
 	"The file in which the final gaffer file will be created by the package target.",
-	"${INSTALL_DIR}.tar.gz",
+	"${INSTALL_DIR}.tar.gz" if sys.platform != "win32" else "${INSTALL_DIR}.zip",
 )
 
 options.Add(
@@ -167,7 +168,7 @@ options.Add(
 options.Add(
 	"APPLESEED_ROOT",
 	"The directory in which Appleseed is installed. Used to build Gafferseed",
-	"$BUILD_DIR/appleseed",
+	os.path.join( "$BUILD_DIR", "appleseed" ),
 )
 
 options.Add(
