@@ -307,7 +307,16 @@ size_t Switch::inputIndex( const Context *context ) const
 		{
 			index = indexPlug->getValue();
 		}
-		return index % (inPlugs->children().size() - 1);
+
+		if( inPlugs->resizeWhenInputsChange() )
+		{
+			// Last input is always unconnected, so should be ignored.
+			return index % (inPlugs->children().size() - 1);
+		}
+		else
+		{
+			return index % inPlugs->children().size();
+		}
 	}
 	else
 	{

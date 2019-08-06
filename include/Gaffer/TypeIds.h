@@ -101,7 +101,7 @@ enum TypeId
 	InternedStringVectorDataPlugTypeId = 110054,
 	SplinefColor4fPlugTypeId = 110055,
 	NumericBookmarkSetTypeId = 110056,
-	DispatcherTypeId = 110057, // obsolete - available for reuse
+	NameSwitchTypeId = 110057,
 	Transform2DPlugTypeId = 110058,
 	ReferenceTypeId = 110059,
 	ComputeNodeTypeId = 110060,
