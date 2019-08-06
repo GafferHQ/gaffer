@@ -329,6 +329,10 @@ options.Add( "GAFFER_PATCH_VERSION", "Patch version", str( gafferPatchVersion ) 
 # Basic environment object. All the other environments will be based on this.
 ###############################################################################################
 
+###########################################################################################
+# All platforms
+###########################################################################################
+
 env = Environment(
 
 	options = options,
@@ -365,6 +369,9 @@ env = Environment(
 # this should turn off warnings from those headers, allowing us to
 # build with -Werror. there are so many warnings from boost
 # in particular that this would be otherwise impossible.
+
+systemIncludeArgument = "/external:I" if env[ "PLATFORM" ] == "win32" else "-isystem"
+
 for path in [
 		"$BUILD_DIR/include",
 		"$BUILD_DIR/include/OpenEXR",
@@ -372,7 +379,7 @@ for path in [
 	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
 
 	env.Append(
-		CXXFLAGS = [ "-isystem", path ]
+		CXXFLAGS = [ systemIncludeArgument, path ]
 	)
 
 if "clang++" in os.path.basename( env["CXX"] ):
@@ -813,7 +820,7 @@ gafferLib = {}
 if os.path.exists( vTuneRoot ):
 	gafferLib = {
 		"envAppends" : {
-			"CXXFLAGS" : [ "-isystem", "$VTUNE_ROOT/include", "-DGAFFER_VTUNE"],
+			"CXXFLAGS" : [ systemIncludeArgument, "$VTUNE_ROOT/include", "-DGAFFER_VTUNE"],
 			"LIBPATH" : [ "$VTUNE_ROOT/lib64" ],
 			"LIBS" : [ "ittnotify" ]
 		},
@@ -1097,12 +1104,12 @@ libraries = {
 
 	"GafferAppleseed" : {
 		"envAppends" : {
-			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_USE_SSE" ],
+			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_USE_SSE" ],
+			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferBindings", "GafferAppleseed" ],
 		},
