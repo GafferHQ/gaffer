@@ -37,7 +37,9 @@
 #ifndef GAFFER_PROCESS_H
 #define GAFFER_PROCESS_H
 
+#include "Gaffer/Context.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/Plug.h"
 #include "Gaffer/ThreadState.h"
 
 #include "IECore/InternedString.h"
