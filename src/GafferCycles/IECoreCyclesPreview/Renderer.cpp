@@ -1933,7 +1933,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_deviceDirty( false )
 		{
 			// Set path to find shaders
-			ccl::path_init( getenv("GAFFERCYCLES") );
+			#ifdef _WIN32
+			string paths = boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+			#else
+			string paths = boost::format( "%s:%s/cycles:%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+			#endif
+			const char *kernelFile = "source/kernel/kernel_globals.h";
+			SearchPath searchPath( paths ? paths : "" );
+			boost::filesystem::path path = searchPath.find( kernelFile );
+			if( path.empty() )
+			{
+				IECore::msg( IECore::Msg::Error, "CyclesRenderer", "Cannot find GafferCycles location. Have you set the GAFFERCYCLES environment variable?" );
+			}
+			else
+			{
+				ccl::path_init( path.string() );
+			}
 			// Define internal device names
 			getCyclesDevices();
 			// Session Defaults
