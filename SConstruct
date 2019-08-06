@@ -382,74 +382,174 @@ if "clang++" in os.path.basename( env["CXX"] ):
 
 env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
 
-# DISPLAY and HOME are essential for running gaffer when generating
-# the documentation. TERM is needed to get coloured output from the
-# compiler.
-for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME", "TERM" ] :
-	if e in os.environ :
-		env["ENV"][e] = os.environ[e]
+###########################################################################################
+# POSIX configuration
+###########################################################################################
 
-if env["PLATFORM"] == "darwin" :
+if env["PLATFORM"] != "win32" :
 
-	env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
-	env["GAFFER_PLATFORM"] = "osx"
+	# DISPLAY and HOME are essential for running gaffer when generating
+	# the documentation. TERM is needed to get coloured output from the
+	# compiler.
+	for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME", "TERM" ] :
+		if e in os.environ :
+			env["ENV"][e] = os.environ[e]
 
-	osxVersion = [ int( v ) for v in platform.mac_ver()[0].split( "." ) ]
-	if osxVersion[0] == 10 and osxVersion[1] > 7 :
-		# Fix problems with Boost 1.55 and recent versions of Clang.
-		env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128", "-Wno-unused-local-typedef" ] )
+	if env["PLATFORM"] == "darwin" :
 
-elif env["PLATFORM"] == "posix" :
+		env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
+		env["GAFFER_PLATFORM"] = "osx"
 
-	if "g++" in os.path.basename( env["CXX"] ) :
+		osxVersion = [ int( v ) for v in platform.mac_ver()[0].split( "." ) ]
+		if osxVersion[0] == 10 and osxVersion[1] > 7 :
+			# Fix problems with Boost 1.55 and recent versions of Clang.
+			env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128", "-Wno-unused-local-typedef" ] )
 
-		# Get GCC version.
-		gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"] ).decode().strip()
-		if "." not in gccVersion :
-			# GCC 7 onwards requires `-dumpfullversion` to get minor/patch, but this
-			# flag does not exist on earlier GCCs, where minor/patch was provided by `-dumpversion`.
-			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"] ).decode().strip()
-		gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
+	else :
 
-		# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
-		# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
-		# so we turn the optimisation off here, only for that specific GCC version.
-		if gccVersion == [ 4, 1, 2 ] :
-			env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
+		if "g++" in os.path.basename( env["CXX"] ) :
 
-		# GCC emits spurious "assuming signed overflow does not occur"
-		# warnings, typically triggered by the comparisons in Box3f::isEmpty().
-		# Downgrade these back to warning status.
-		if gccVersion >= [ 4, 2 ] :
-			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
+			# Get GCC version.
+			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"] ).decode().strip()
+			if "." not in gccVersion :
+				# GCC 7 onwards requires `-dumpfullversion` to get minor/patch, but this
+				# flag does not exist on earlier GCCs, where minor/patch was provided by `-dumpversion`.
+				gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"] ).decode().strip()
+			gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
 
-		# Old GCC emits spurious "maybe uninitialized" warnings when using
-		# boost::optional
-		if gccVersion < [ 5, 1 ] :
-			env.Append( CXXFLAGS = [ "-Wno-error=maybe-uninitialized" ] )
+			# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
+			# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
+			# so we turn the optimisation off here, only for that specific GCC version.
+			if gccVersion == [ 4, 1, 2 ] :
+				env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
 
-		if gccVersion >= [ 5, 1 ] :
-			env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
+			# GCC emits spurious "assuming signed overflow does not occur"
+			# warnings, typically triggered by the comparisons in Box3f::isEmpty().
+			# Downgrade these back to warning status.
+			if gccVersion >= [ 4, 2 ] :
+				env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
 
-		if gccVersion >= [ 9, 2 ] :
-			env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
+			# Old GCC emits spurious "maybe uninitialized" warnings when using
+			# boost::optional
+			if gccVersion < [ 5, 1 ] :
+				env.Append( CXXFLAGS = [ "-Wno-error=maybe-uninitialized" ] )
 
-	env["GAFFER_PLATFORM"] = "linux"
+			if gccVersion >= [ 5, 1 ] :
+				env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
 
-env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
+			if gccVersion >= [ 9, 2 ] :
+				env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
 
-if env["BUILD_TYPE"] == "DEBUG" :
-	env.Append( CXXFLAGS = ["-g", "-O0", "-DTBB_USE_DEBUG=1"] )
-elif env["BUILD_TYPE"] == "RELEASE" :
-	env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3"] )
-elif env["BUILD_TYPE"] == "RELWITHDEBINFO" :
-	env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3", "-g", "-fno-omit-frame-pointer"] )
+		env["GAFFER_PLATFORM"] = "linux"
 
-if env["WARNINGS_AS_ERRORS"] :
+	env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
+
+	if env["BUILD_TYPE"] == "DEBUG" :
+		env.Append( CXXFLAGS = ["-g", "-O0", "-DTBB_USE_DEBUG=1"] )
+	elif env["BUILD_TYPE"] == "RELEASE" :
+		env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3"] )
+	elif env["BUILD_TYPE"] == "RELWITHDEBINFO" :
+		env.Append( CXXFLAGS = ["-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-O3", "-g", "-fno-omit-frame-pointer"] )
+
+	if env["WARNINGS_AS_ERRORS"] :
+		env.Append(
+			CXXFLAGS = [ "-Werror" ],
+			SHLINKFLAGS = [ "-Wl,-fatal_warnings" ],
+		)
+
+###########################################################################################
+# Windows configuration
+###########################################################################################
+
+else:
 	env.Append(
-		CXXFLAGS = [ "-Werror" ],
-		SHLINKFLAGS = [ "-Wl,-fatal_warnings" ],
+		CXXFLAGS = [
+			"/nologo",  # Suppress startup banner
+			"/DOPENEXR_DLL",  # Link to dynamic OpenEXR library
+			"/DNOMINMAX",  # Suppress compiler definition of `min` and `max`
+			"/D__PRETTY_FUNCTION__=__FUNCSIG__",
+			"/DBOOST_ALL_DYN_LINK",
+			"/DBOOST_FILESYSTEM_NO_DEPRECATED",
+			"/DBOOST_SIGNALS_NO_DEPRECATION_WARNING",
+			"/DBOOST_PYTHON_MAX_ARITY=20",
+			"/W4",  # Warning level 4, one level less than all warnings
+			"/experimental:external",  # Allow use of /external:I
+			"/external:W0",  # Suppress warnings for headers included with /external:I
+			"/Zc:inline", # Remove unreferenced function or data if it is COMDAT or has internal linkage only
+			"/GR", # Enable RTTI
+			"/TP", # Treat all files as c++ (vs C)
+			"/FC", # Display full paths in diagnostics
+			"/EHsc", # Catch c++ exceptions only
+			"/MP",  # Enable multiprocessing of builds
+			"/permissive-", # Disable permissive mode, which also enables standard compliant two phase name lookup
+			"/D_USE_MATH_DEFINES",  # Required when permissive mode is off, for defining constants like M_PI used by OpenVDB
+			"/std:$CXXSTD",
+		]
 	)
+
+	if env["WARNINGS_AS_ERRORS"] :
+		env.Append(
+			CXXFLAGS = [ 
+				"/WX",  # Treat warnings as errors
+				"/wd4100",  # Suppress warning about unused parameters
+				"/wd4706",	# Suppress warning about using assignment in conditionals
+				"/wd4267",  # Suppress warning about conversion from int to size_t
+				"/wd4244",  # Suppress warning about possible loss of data in type conversion
+				"/wd4305",  # Suppress warning about conversion from double to float
+				"/D_CRT_SECURE_NO_WARNINGS",  # Suppress warnings about getenv and similar
+			],
+		)
+
+	if env["BUILD_TYPE"] == "DEBUG" :
+		env.Append(
+			CXXFLAGS = 
+			[
+				"/O0",
+				"/Zi",
+				"/MDd",
+				"/DBOOST_DISABLE_ASSERTS",
+				"/bigobj",
+			],
+			CCPDBFLAGS= 
+			[
+				"/Zi",
+				"/Fd${TARGET}.pdb",
+			],
+		)
+	elif env["BUILD_TYPE"] == "RELEASE" :
+		env.Append(
+			CXXFLAGS = 
+			[
+				"/DNDEBUG",  
+				"/MD",	# create multithreaded DLL
+				"/DBOOST_DISABLE_ASSERTS", 
+				"/O2",
+				# /Og optimization (included via /O2) generates lots of unreachable 
+				# code warnings from boost::intrusive_ptr. Disabled in release build only.
+				"/wd4702"
+			] 
+		)
+	elif env["BUILD_TYPE"] == "RELWITHDEBINFO" :
+		env.Append( 
+			CXXFLAGS = 
+			[
+				"/DNDEBUG",
+				"/MD",
+				"/bigobj",
+				"/DBOOST_DISABLE_ASSERTS", 
+				"/Zi",
+			],
+			LINKFLAGS =
+			[
+				"/DEBUG",
+			],
+			CCPDBFLAGS= 
+			[
+				"/Zi",
+				"/Fd${TARGET}.pdb",
+			],
+		)
+
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
