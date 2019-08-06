@@ -100,8 +100,6 @@ class IECORE_EXPORT Switch : public ComputeNode
 
 	private :
 
-		void init( bool expectBaseClassPlugs );
-
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
 		void plugInputChanged( Plug *plug );
