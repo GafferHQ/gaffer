@@ -93,20 +93,6 @@ class CompoundEditor( GafferUI.Editor ) :
 	__nodeSetMenuSignal = Gaffer.Signal2()
 	## A signal emitted to populate a menu for manipulating the node set of a
 	# NodeSetEditor - the signature is `slot( nodeSetEditor, menuDefinition )`.
-	#
-	# The menu is logically broken into two sections:
-	#
-	#  - The top section is the current 'state' of the editor.
-	#    It should only contain mutually exclusive items with
-	#    associated checkBoxes to indicate to the user which
-	#    state is current ( ie: its really a radio option group ).
-	#
-	#  - The lower section contains action items that can affect the
-	#    current editor's state.
-	#
-	# The divider between the two sections has the path '/ActionsDivider' which
-	# can be used with `menuDefnition.insertBefore` to place new items in the
-	# correct section.
 	@classmethod
 	def nodeSetMenuSignal( cls ) :
 
@@ -393,6 +379,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth=2 ) as cornerWidget :
 
 			self.__drivenEditorSwatch = _DrivenEditorSwatch()
+			self.__bookmarkNumberIndicator = _BookmarkNumberIndicator()
 
 			self.__pinningButton = GafferUI.Button( image="nodeSetDriverNodeSelection.png", hasFrame=False )
 			self.__pinningButton._qtWidget().setFixedHeight( 15 )
@@ -597,6 +584,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			self.__pinningButton.setVisible( False )
 
 		self.__updateDrivenEditorSwatch( True )
+		self.__bookmarkNumberIndicator.update()
 
 	def __updateDrivenEditorSwatch( self, updateAssociated, *args ) :
 
@@ -679,21 +667,13 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		isPinned  = self.__editorIsPinned( editor )
 
 		isFollowingNodeSelection = drivingEditor is None and not isPinned
-		m.append( "/Following Selected Nodes", {
-			"checkBox" : isFollowingNodeSelection,
-			"command" : None if isFollowingNodeSelection else Gaffer.WeakMethod( self.__followScriptSelection )
+		m.append( "/Follow/Node Selection", {
+			"command" : None if isFollowingNodeSelection else Gaffer.WeakMethod( self.__followScriptSelection ),
+			"active" : not isFollowingNodeSelection,
+			"checkBox" : isFollowingNodeSelection
 		} )
 
-		m.append( "/Pinned", {
-			"checkBox" : isPinned,
-			"command" : None if isPinned else Gaffer.WeakMethod( self.__pinToScriptSelection )
-		} )
-
-		# Do not change this!
-		# Signals use this to anchor insertions of actions or state items appropriately.
-		m.append( "/ActionsDivider", { "divider" : True } )
-
-		m.append( "Pin Current Node Selection", {
+		m.append( "/Pin/Node Selection", {
 			"command" : Gaffer.WeakMethod( self.__pinToScriptSelection ),
 		} )
 
@@ -1408,6 +1388,55 @@ def _reprDict( d ) :
 	] )
 
 
+
+# A numeric indicator for the current bookmark set number
+from GafferUI.Label import Label as _Label
+class _BookmarkNumberIndicator( _Label ) :
+
+	def __init__( self ) :
+
+		_Label.__init__( self, horizontalAlignment=_Label.HorizontalAlignment.Right )
+
+	def getToolTip( self ) :
+
+		tip = ""
+
+		bookmarkSet = self.__getBookmarkSet()
+		if bookmarkSet is not None :
+			tip = "Following Bookmark %d" % bookmarkSet.getBookmark()
+
+		return tip
+
+
+	def update( self ) :
+
+		bookmarkSet = self.__getBookmarkSet()
+		if bookmarkSet is not None :
+			self.setText( "%d" % bookmarkSet.getBookmark() )
+			self.setVisible( True )
+		else :
+			self.setVisible( False )
+			self.setText( "" )
+
+	def __getBookmarkSet( self ) :
+
+		tabbedContainer = self.ancestor( _TabbedContainer )
+		editor = tabbedContainer.getCurrent()
+		if editor is None or not isinstance( editor, GafferUI.NodeSetEditor ) :
+			return None
+
+		# We don't display for driven editors as they will have
+		# a different appearance, so only return if we're a master
+		driver, _ = editor.getNodeSetDriver()
+		if driver is not None :
+			return None
+
+		nodeSet = editor.getNodeSet()
+		if isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
+			return nodeSet
+
+		return None
+
 # A little color swatch that can be inserted into a _TabbedContainer to
 # represent the driven/driving state of the current editor
 from GafferUI.Frame import Frame as _Frame
@@ -1483,7 +1512,7 @@ class _DrivenEditorSwatch( _Frame ) :
 
 		tabbedContainer = self.ancestor( _TabbedContainer )
 		editor = tabbedContainer.getCurrent()
-		if editor and isinstance( editor, GafferUI.NodeSetEditor ) :
+		if editor is not None and isinstance( editor, GafferUI.NodeSetEditor ) :
 			return editor
 
 		return None
