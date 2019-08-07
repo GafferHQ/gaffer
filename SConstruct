@@ -653,7 +653,7 @@ if env["ASAN"] :
 # An environment for running commands with access to the applications we've built
 ###############################################################################################
 
-def split( stringOrList, separator = ":" ) :
+def split( stringOrList, separator = os.path.pathsep ) :
 
 	if isinstance( stringOrList, list ) :
 		return stringOrList
@@ -661,14 +661,18 @@ def split( stringOrList, separator = ":" ) :
 		return stringOrList.split( separator )
 
 commandEnv = env.Clone()
-commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/bin:" ) + commandEnv["ENV"]["PATH"]
+commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/bin" + os.path.pathsep ) + commandEnv["ENV"]["PATH"]
+if env["PLATFORM"] == "win32" :
+	commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/lib" + os.path.pathsep ) + commandEnv["ENV"]["PATH"]
 
 if commandEnv["PLATFORM"]=="darwin" :
 	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
-else :
+elif commandEnv["PLATFORM"] == "win32" :
+	commandEnv["ENV"]["PATH"] = commandEnv.subst( ";".join( [ "$BUILD_DIR/lib" ] + split( commandEnv[ "LOCATE_DEPENDENCY_LIBPATH" ] ) + [ commandEnv["ENV"]["PATH"] ] ) )
+else:
 	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
 
-commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( ":".join( split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
+commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
 
 # SIP on MacOS prevents DYLD_LIBRARY_PATH being passed down so we make sure
 # we also pass through to gaffer the other base vars it uses to populate paths
