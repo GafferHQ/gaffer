@@ -392,6 +392,10 @@ if "clang++" in os.path.basename( env["CXX"] ):
 
 env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
 
+for e in env["ENV_VARS_TO_IMPORT"].split() :
+	if e in os.environ :
+		env["ENV"][e] = os.environ[e]
+
 ###########################################################################################
 # POSIX configuration
 ###########################################################################################
@@ -401,7 +405,7 @@ if env["PLATFORM"] != "win32" :
 	# DISPLAY and HOME are essential for running gaffer when generating
 	# the documentation. TERM is needed to get coloured output from the
 	# compiler.
-	for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME", "TERM" ] :
+	for e in [ "DISPLAY", "HOME", "TERM" ] :
 		if e in os.environ :
 			env["ENV"][e] = os.environ[e]
 
