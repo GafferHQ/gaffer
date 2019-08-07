@@ -100,7 +100,7 @@ enum TypeId
 	BoxTypeId = 110053,
 	InternedStringVectorDataPlugTypeId = 110054,
 	SplinefColor4fPlugTypeId = 110055,
-	ExecutableOpHolderTypeId = 110056, // obsolete - available for reuse
+	NumericBookmarkSetTypeId = 110056,
 	DispatcherTypeId = 110057, // obsolete - available for reuse
 	Transform2DPlugTypeId = 110058,
 	ReferenceTypeId = 110059,
