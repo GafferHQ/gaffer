@@ -826,7 +826,14 @@ if env["ARNOLD_ROOT"] :
 
 vTuneRoot = env.subst("$VTUNE_ROOT")
 
-gafferLib = {}
+if env["PLATFORM"] == "win32" : 
+	gafferLib = {
+		"envAppends" : {
+			"LIBS" : [ "Advapi32" ]
+		}
+	}
+else:
+	gafferLib = {}
 
 if os.path.exists( vTuneRoot ):
 	gafferLib = {
