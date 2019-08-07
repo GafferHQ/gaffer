@@ -44,6 +44,8 @@ import platform
 import subprocess
 import distutils.dir_util
 
+EnsureSConsVersion( 3, 0, 2 )  # Substfile is a default builder as of 3.0.2
+
 ###############################################################################################
 # Version
 ###############################################################################################
@@ -364,6 +366,7 @@ env = Environment(
 	FRAMEWORKPATH = "$BUILD_DIR/lib",
 
 )
+
 
 # include 3rd party headers with -isystem rather than -I.
 # this should turn off warnings from those headers, allowing us to
@@ -1270,10 +1273,12 @@ for libraryName, libraryDef in libraries.items() :
 
 	# header install
 
-	sedSubstitutions = "s/!GAFFER_MILESTONE_VERSION!/$GAFFER_MILESTONE_VERSION/g"
-	sedSubstitutions += "; s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
-	sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
-	sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
+	fileSubstitutions = {
+		"!GAFFER_MILESTONE_VERSION!" : "$GAFFER_MILESTONE_VERSION",
+		"!GAFFER_MAJOR_VERSION!" : "$GAFFER_MAJOR_VERSION",
+		"!GAFFER_MINOR_VERSION!" : "$GAFFER_MINOR_VERSION",
+		"!GAFFER_PATCH_VERSION!" : "$GAFFER_PATCH_VERSION",
+	}
 
 	headers = (
 		glob.glob( "include/" + libraryName + "/*.h" ) +
@@ -1283,7 +1288,12 @@ for libraryName, libraryDef in libraries.items() :
 	)
 
 	for header in headers :
-		headerInstall = env.Command( os.path.join( installRoot, header ), header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		headerInstall = env.Substfile(
+			os.path.join( installRoot, header ),
+			header,
+			SUBST_DICT = fileSubstitutions
+		)
+		
 		libEnv.Alias( "build", headerInstall )
 
 	# bindings library
@@ -1311,7 +1321,11 @@ for libraryName, libraryDef in libraries.items() :
 	)
 
 	for header in bindingsHeaders :
-		headerInstall = env.Command( os.path.join( installRoot, header ), header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		headerInstall = env.Substfile(
+			os.path.join( installRoot, header ),
+			header,
+			SUBST_DICT = fileSubstitutions
+		)
 		bindingsEnv.Alias( "build", headerInstall )
 
 	# python module binary component
@@ -1358,7 +1372,11 @@ for libraryName, libraryDef in libraries.items() :
 
 	pythonFiles = glob.glob( "python/" + libraryName + "/*.py" ) + glob.glob( "python/" + libraryName + "/*/*.py" ) + glob.glob( "python/" + libraryName + "/*/*/*.py" )
 	for pythonFile in pythonFiles :
-		pythonFileInstall = env.Command( os.path.join( installRoot, pythonFile ), pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		pythonFileInstall = env.Substfile(
+			os.path.join( installRoot, pythonFile ),
+			pythonFile,
+			SUBST_DICT = fileSubstitutions
+		)
 		env.Alias( "build", pythonFileInstall )
 
 	# apps
