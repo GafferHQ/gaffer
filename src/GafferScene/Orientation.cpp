@@ -160,7 +160,7 @@ PrimitiveVariable inEuler( const Primitive *inputPrimitive, Primitive *outputPri
 	return PrimitiveVariable( spec.interpolation, quaternionData );
 }
 
-PrimitiveVariable inQuaternion( const Primitive *inputPrimitive, Primitive *outputPrimitive, const std::string &quaternionName, bool deleteInputs )
+PrimitiveVariable inQuaternion( const Primitive *inputPrimitive, Primitive *outputPrimitive, const std::string &quaternionName, bool deleteInputs, bool xyzw )
 {
 	if( quaternionName == "" )
 	{
@@ -176,7 +176,14 @@ PrimitiveVariable inQuaternion( const Primitive *inputPrimitive, Primitive *outp
 
 	for( auto &q : view )
 	{
-		quaternions.push_back( q );
+		if( xyzw )
+		{
+			quaternions.push_back( Quatf( q.v.z, V3f( q.r, q.v.x, q.v.y ) ) );
+		}
+		else
+		{
+			quaternions.push_back( q );
+		}
 	}
 
 	return PrimitiveVariable( spec.interpolation, quaternionData );
@@ -506,7 +513,7 @@ Orientation::Orientation( const std::string &name )
 
 	// Input
 
-	addChild( new IntPlug( "inMode", Plug::In, (int)Mode::Euler, (int)Mode::Euler, (int)Mode::Matrix ) );
+	addChild( new IntPlug( "inMode", Plug::In, (int)Mode::Euler, (int)Mode::Euler, (int)Mode::QuaternionXYZW ) );
 	addChild( new BoolPlug( "deleteInputs", Plug::In, true ) );
 
 	addChild( new StringPlug( "inEuler", Plug::In, "" ) );
@@ -864,6 +871,7 @@ void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Cont
 			inOrderPlug()->hash( h );
 			break;
 		case Mode::Quaternion :
+		case Mode::QuaternionXYZW :
 			inQuaternionPlug()->hash( h );
 			break;
 		case Mode::AxisAngle :
@@ -909,6 +917,10 @@ void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Cont
 		case Mode::Matrix :
 			outMatrixPlug()->hash( h );
 			break;
+		case Mode::QuaternionXYZW :
+			// Plug max value should prevent us getting here
+			assert( 0 );
+			break;
 	}
 }
 
@@ -926,7 +938,8 @@ IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &pat
 	// Convert from input format into intermediate (quaternion) format.
 
 	PrimitiveVariable inOrientation;
-	switch( (Mode)inModePlug()->getValue() )
+	const Mode inMode = (Mode)inModePlug()->getValue();
+	switch( inMode )
 	{
 		case Mode::Euler :
 			inOrientation = inEuler(
@@ -938,11 +951,13 @@ IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &pat
 			);
 			break;
 		case Mode::Quaternion :
+		case Mode::QuaternionXYZW :
 			inOrientation = inQuaternion(
 				inputPrimitive,
 				result.get(),
 				inQuaternionPlug()->getValue(),
-				deleteInputs
+				deleteInputs,
+				inMode == Mode::QuaternionXYZW
 			);
 			break;
 		case Mode::AxisAngle :
@@ -1043,6 +1058,9 @@ IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &pat
 				outMatrixPlug()->getValue()
 			);
 			break;
+		case Mode::QuaternionXYZW :
+			// Plug max value should prevent us getting here
+			assert( 0 );
 	}
 
 	return result;

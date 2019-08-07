@@ -65,7 +65,10 @@ class GAFFERSCENE_API Orientation : public SceneElementProcessor
 			Quaternion,
 			AxisAngle,
 			BasisVectors,
-			Matrix
+			Matrix,
+			// Used to fix incorrect Alembic export from Houdini
+			// (SideFX bug #92479).
+			QuaternionXYZW,
 		};
 
 		/// Input

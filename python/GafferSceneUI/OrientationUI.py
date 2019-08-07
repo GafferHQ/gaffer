@@ -106,7 +106,11 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Settings.Input",
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-		] + __modePresets,
+		] + __modePresets + [
+
+			"preset:Quaternion XYZW (Houdini)", GafferScene.Orientation.Mode.QuaternionXYZW,
+
+		],
 
 		"deleteInputs" : [
 

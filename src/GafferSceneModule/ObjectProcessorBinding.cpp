@@ -98,8 +98,8 @@ void GafferSceneModule::bindObjectProcessor()
 			.value( "AxisAngle", GafferScene::Orientation::Mode::AxisAngle )
 			.value( "BasisVectors", GafferScene::Orientation::Mode::BasisVectors )
 			.value( "Matrix", GafferScene::Orientation::Mode::Matrix )
+			.value( "QuaternionXYZW", GafferScene::Orientation::Mode::QuaternionXYZW )
 		;
 	}
-
 
 }
