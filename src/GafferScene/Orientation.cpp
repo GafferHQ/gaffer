@@ -219,7 +219,7 @@ PrimitiveVariable inAxisAngle( const Primitive *inputPrimitive, Primitive *outpu
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
-PrimitiveVariable inBasisVectors( const Primitive *inputPrimitive, Primitive *outputPrimitive, const std::string &xAxisName, const std::string &yAxisName, const std::string &zAxisName, bool deleteInputs )
+PrimitiveVariable inAim( const Primitive *inputPrimitive, Primitive *outputPrimitive, const std::string &xAxisName, const std::string &yAxisName, const std::string &zAxisName, bool deleteInputs )
 {
 	ViewSpec spec;
 
@@ -387,7 +387,7 @@ void outAxisAngle( const PrimitiveVariable &orientations, Primitive *outputPrimi
 	}
 }
 
-void outBasisVectors( const PrimitiveVariable &orientations, Primitive *outputPrimitive, const std::string &xAxisName, const std::string &yAxisName, const std::string &zAxisName )
+void outAim( const PrimitiveVariable &orientations, Primitive *outputPrimitive, const std::string &xAxisName, const std::string &yAxisName, const std::string &zAxisName )
 {
 	const auto &quaternions = static_cast<const QuatfVectorData *>( orientations.data.get() )->readable();
 
@@ -878,7 +878,7 @@ void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Cont
 			inAxisPlug()->hash( h );
 			inAnglePlug()->hash( h );
 			break;
-		case Mode::BasisVectors :
+		case Mode::Aim :
 			inXAxisPlug()->hash( h );
 			inYAxisPlug()->hash( h );
 			inZAxisPlug()->hash( h );
@@ -909,7 +909,7 @@ void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Cont
 			outAxisPlug()->hash( h );
 			outAnglePlug()->hash( h );
 			break;
-		case Mode::BasisVectors :
+		case Mode::Aim :
 			outXAxisPlug()->hash( h );
 			outYAxisPlug()->hash( h );
 			outZAxisPlug()->hash( h );
@@ -969,8 +969,8 @@ IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &pat
 				deleteInputs
 			);
 			break;
-		case Mode::BasisVectors :
-			inOrientation = inBasisVectors(
+		case Mode::Aim :
+			inOrientation = inAim(
 				inputPrimitive,
 				result.get(),
 				inXAxisPlug()->getValue(),
@@ -1042,8 +1042,8 @@ IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &pat
 				outAnglePlug()->getValue()
 			);
 			break;
-		case Mode::BasisVectors :
-			outBasisVectors(
+		case Mode::Aim :
+			outAim(
 				inOrientation,
 				result.get(),
 				outXAxisPlug()->getValue(),

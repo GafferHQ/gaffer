@@ -43,7 +43,7 @@ __modePresets = [
 	"preset:Euler", GafferScene.Orientation.Mode.Euler,
 	"preset:Quaternion", GafferScene.Orientation.Mode.Quaternion,
 	"preset:Axis-Angle", GafferScene.Orientation.Mode.AxisAngle,
-	"preset:BasisVectors", GafferScene.Orientation.Mode.BasisVectors,
+	"preset:Aim", GafferScene.Orientation.Mode.Aim,
 	"preset:Matrix", GafferScene.Orientation.Mode.Matrix,
 ]
 
@@ -64,7 +64,7 @@ Gaffer.Metadata.registerNode(
 	"""
 	Converts between different representations of orientation, stored as
 	primitive variables on an object. Supported representations include
-	euler angles, quaternions, axis-angle form, basis vectors and matrices.
+	euler angles, quaternions, axis-angle form, aim vectors and matrices.
 
 	Typically used to prepare points for instancing, as the Instancer node
 	requires orientation to be provided as a quaternion, but it is often
@@ -74,13 +74,13 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:inModeIsEuler", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Euler,
 	"layout:activator:inModeIsQuaternion", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Quaternion,
 	"layout:activator:inModeIsAxisAngle", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.AxisAngle,
-	"layout:activator:inModeIsBasisVectors", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.BasisVectors,
+	"layout:activator:inModeIsAim", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Aim,
 	"layout:activator:inModeIsMatrix", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Matrix,
 
 	"layout:activator:outModeIsEuler", lambda node : node["outMode"].getValue() == GafferScene.Orientation.Mode.Euler,
 	"layout:activator:outModeIsQuaternion", lambda node : node["outMode"].getValue() == GafferScene.Orientation.Mode.Quaternion,
 	"layout:activator:outModeIsAxisAngle", lambda node : node["outMode"].getValue() == GafferScene.Orientation.Mode.AxisAngle,
-	"layout:activator:outModeIsBasisVectors", lambda node : node["outMode"].getValue() == GafferScene.Orientation.Mode.BasisVectors,
+	"layout:activator:outModeIsAim", lambda node : node["outMode"].getValue() == GafferScene.Orientation.Mode.Aim,
 	"layout:activator:outModeIsMatrix", lambda node : node["outMode"].getValue() == GafferScene.Orientation.Mode.Matrix,
 
 	"layout:activator:randomEnabled", lambda node : node["randomEnabled"].getValue(),
@@ -209,21 +209,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Basic Vectors
-		# -------------
+		# Aim
+		# ---
 
 		"inXAxis" : [
 
 			"description",
 			"""
 			Name of the primitive variable that defines the direction in which the
-			X axis will be oriented. This variable should contain V3fVectorData.
+			X axis will be aimed. This variable should contain V3fVectorData.
 			""",
 
 			"label", "X Axis",
 
 			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsBasisVectors",
+			"layout:visibilityActivator", "inModeIsAim",
 
 		],
 
@@ -232,13 +232,13 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Name of the primitive variable that defines the direction in which the
-			Y axis will be oriented. This variable should contain V3fVectorData.
+			Y axis will be aimed. This variable should contain V3fVectorData.
 			""",
 
 			"label", "Y Axis",
 
 			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsBasisVectors",
+			"layout:visibilityActivator", "inModeIsAim",
 
 		],
 
@@ -247,13 +247,13 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Name of the primitive variable that defines the direction in which the
-			Z axis will be oriented. This variable should contain V3fVectorData.
+			Z axis will be aimed. This variable should contain V3fVectorData.
 			""",
 
 			"label", "Z Axis",
 
 			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsBasisVectors",
+			"layout:visibilityActivator", "inModeIsAim",
 
 		],
 
@@ -439,8 +439,8 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Basic Vectors
-		# -------------
+		# Aim
+		# ---
 
 		"outXAxis" : [
 
@@ -452,7 +452,7 @@ Gaffer.Metadata.registerNode(
 
 			"label", "X Axis",
 			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsBasisVectors",
+			"layout:visibilityActivator", "outModeIsAim",
 
 		],
 
@@ -466,7 +466,7 @@ Gaffer.Metadata.registerNode(
 
 			"label", "Y Axis",
 			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsBasisVectors",
+			"layout:visibilityActivator", "outModeIsAim",
 
 		],
 
@@ -480,7 +480,7 @@ Gaffer.Metadata.registerNode(
 
 			"label", "Z Axis",
 			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsBasisVectors",
+			"layout:visibilityActivator", "outModeIsAim",
 
 		],
 

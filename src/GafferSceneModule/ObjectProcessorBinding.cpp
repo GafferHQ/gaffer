@@ -96,7 +96,7 @@ void GafferSceneModule::bindObjectProcessor()
 			.value( "Euler", GafferScene::Orientation::Mode::Euler )
 			.value( "Quaternion", GafferScene::Orientation::Mode::Quaternion )
 			.value( "AxisAngle", GafferScene::Orientation::Mode::AxisAngle )
-			.value( "BasisVectors", GafferScene::Orientation::Mode::BasisVectors )
+			.value( "Aim", GafferScene::Orientation::Mode::Aim )
 			.value( "Matrix", GafferScene::Orientation::Mode::Matrix )
 			.value( "QuaternionXYZW", GafferScene::Orientation::Mode::QuaternionXYZW )
 		;
