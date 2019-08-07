@@ -1,3 +1,15 @@
+0.53.6.5 (relative to 0.53.6.4)
+========
+
+Fixes
+-----
+
+- PythonCommand : Sequence mode now allows access to static variables without specifying the frame (#3262).
+- Execute app : Stopped current frame of saved script leaking into the context for TaskNode::executeSequence() (#3262).
+- GraphComponent : Fixed crashes caused by passing None as a child argument from Python (#3276, #3279).
+- Expression : Fixed bug whereby expressions could break if nodes were renamed during copy/paste (#3283).
+- CustomAttributes : Fixed performance regression caused by addition of the extraAttributes plug (#3280).
+
 0.53.6.4 (relative to 0.53.6.3)
 ========
 
