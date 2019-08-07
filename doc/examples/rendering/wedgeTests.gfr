@@ -466,11 +466,9 @@ __children["Backdrop14"].addChild( Gaffer.Box2fPlug( "__uiBound", defaultValue =
 __children["Backdrop14"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 Gaffer.Metadata.registerValue( __children["Backdrop14"], 'nodeGadget:color', imath.Color3f( 0.36, 0.5041, 0.6 ) )
 __children["Backdrop14"]["title"].setValue( 'Important: Context flow' )
-__children["Backdrop14"]["description"].setValue( 'You may find it somewhat inintuitive, but contexts and their variables actually flow up the graph, passing up from node to node, child to parent.\n\nWhen this graph is dispatched, the Wedge node will be executed. When that happens, it will in fact dictate the primary context (including its `wedge:metallic` and `wedge:metallicIndex` context variables), because for each wedge its context will propagate up through the graph, and each node will use that context.' )
-__children["Backdrop14"]["__uiBound"].setValue( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 40, 25 ) ) )
-__children["Backdrop14"]["__uiPosition"].setValue( imath.V2f( 56, -115 ) )
-
-
+__children["Backdrop14"]["description"].setValue( "You may find it somewhat counter-intuitive, but contexts and their variables actually flow up the graph, passing up from node to node, child to parent.\n\nWhen this graph is dispatched, the Wedge node will be executed. When that happens, it will in fact dictate the primary context - including its `wedge:metallic` and `wedge:metallicIndex` context variables - because for each wedge its context will propagate up through the graph, and each node will access that context.\n\nContexts always pass between connected nodes, regardless of whether they process different data. For example, when joined by an intermediary task node, a 3D node will receive the same contexts as a prior 2D node. This is the case in this graph, where we have 2D task nodes at the bottom of the graph that pass along contexts to upstream 3D task nodes." )
+__children["Backdrop14"]["__uiBound"].setValue( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 40, 33.5 ) ) )
+__children["Backdrop14"]["__uiPosition"].setValue( imath.V2f( 56, -124 ) )
 
 
 del __children
