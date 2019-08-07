@@ -1367,6 +1367,8 @@ for libraryName, libraryDef in libraries.items() :
 			# LIBSUFFIXES variable used by the library scanner.
 			pythonModuleEnv["LIBSUFFIXES"].append( pythonModuleEnv.subst( "$SHLIBSUFFIX" ) )
 			pythonModuleEnv["SHLIBSUFFIX"] = ".so"
+		elif pythonModuleEnv["PLATFORM"] == "win32" :
+			pythonModuleEnv["SHLIBSUFFIX"] = ".pyd"
 
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
 		pythonModuleEnv.Default( pythonModule )
