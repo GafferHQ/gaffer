@@ -214,7 +214,7 @@ PrimitiveVariable inAxisAngle( const Primitive *inputPrimitive, Primitive *outpu
 
 /// Disable over-zealous GCC warning.
 /// See https://stackoverflow.com/questions/21755206/how-to-get-around-gcc-void-b-4-may-be-used-uninitialized-in-this-funct
-#ifdef BOOST_COMP_GNUC
+#if defined( __GNUC__ ) && !defined( __clang__ )
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -293,7 +293,7 @@ PrimitiveVariable inAim( const Primitive *inputPrimitive, Primitive *outputPrimi
 	return PrimitiveVariable( spec.interpolation, quaternionData );
 }
 
-#ifdef BOOST_COMP_GNUC
+#if defined( __GNUC__ ) && !defined( __clang__ )
 #pragma GCC diagnostic pop
 #endif
 
