@@ -219,12 +219,12 @@ void Switch::childAdded( GraphComponent *child )
 
 Plug *Switch::correspondingInput( const Plug *output )
 {
-	return const_cast<Plug *>( oppositePlug( output, 0 ) );
+	return const_cast<Plug *>( oppositePlug( output ) );
 }
 
 const Plug *Switch::correspondingInput( const Plug *output ) const
 {
-	return oppositePlug( output, 0 );
+	return oppositePlug( output );
 }
 
 bool Switch::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
@@ -255,7 +255,7 @@ bool Switch::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 
 void Switch::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
+	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
 		h = input->hash();
 		return;
@@ -266,7 +266,7 @@ void Switch::hash( const ValuePlug *output, const Context *context, IECore::Murm
 
 void Switch::compute( ValuePlug *output, const Context *context ) const
 {
-	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
+	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
 		output->setFrom( input );
 		return;
@@ -315,7 +315,7 @@ size_t Switch::inputIndex( const Context *context ) const
 	}
 }
 
-const Plug *Switch::oppositePlug( const Plug *plug, size_t inputIndex ) const
+const Plug *Switch::oppositePlug( const Plug *plug, const Context *context ) const
 {
 	const ArrayPlug *inPlugs = this->inPlugs();
 	const Plug *outPlug = this->outPlug();
@@ -353,7 +353,8 @@ const Plug *Switch::oppositePlug( const Plug *plug, size_t inputIndex ) const
 	const Plug *oppositeAncestorPlug = nullptr;
 	if( plug->direction() == Plug::Out )
 	{
-		oppositeAncestorPlug = inPlugs->getChild<Plug>( inputIndex );
+		const size_t i = context ? inputIndex( context ) : 0;
+		oppositeAncestorPlug = inPlugs->getChild<Plug>( i );
 	}
 	else
 	{
@@ -393,6 +394,6 @@ void Switch::updateInternalConnection()
 		return;
 	}
 
-	Plug *in = const_cast<Plug *>( oppositePlug( out, inputIndex() ) );
+	Plug *in = const_cast<Plug *>( oppositePlug( out, Context::current() ) );
 	out->setInput( in );
 }
