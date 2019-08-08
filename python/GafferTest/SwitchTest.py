@@ -521,6 +521,12 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s2["switch"]["in"], "test" ), 1 )
 		self.assertEqual( Gaffer.Metadata.value( s2["switch"]["out"], "test" ), 2 )
 
+	def testNestedPlugs( self ) :
+
+		s = Gaffer.Switch()
+		s.setup( Gaffer.NameValuePlug( "name", Gaffer.V3fPlug() ) )
+		self.assertEqual( s.correspondingInput( s["out"]["value"]["x"] ), s["in"][0]["value"]["x"] )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

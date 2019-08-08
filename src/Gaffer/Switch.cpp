@@ -363,7 +363,7 @@ const Plug *Switch::oppositePlug( const Plug *plug, const Context *context ) con
 
 	// And then find the opposite of plug by traversing down from the ancestor plug.
 	const Plug *result = oppositeAncestorPlug;
-	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
+	for( auto it = names.rbegin(), eIt = names.rend(); it != eIt; ++it )
 	{
 		result = result->getChild<Plug>( *it );
 	}
