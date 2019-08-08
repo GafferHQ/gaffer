@@ -46,6 +46,27 @@
 using namespace boost;
 using namespace Gaffer;
 
+namespace
+{
+
+bool hasInput( const Plug *p )
+{
+	if( p->getInput() )
+	{
+		return true;
+	}
+	for( PlugIterator it( p ); !it.done(); ++it )
+	{
+		if( hasInput( it->get() ) )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+} // namespace
+
 GAFFER_PLUG_DEFINE_TYPE( ArrayPlug )
 
 ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr element, size_t minSize, size_t maxSize, unsigned flags )
@@ -137,7 +158,7 @@ void ArrayPlug::parentChanged( GraphComponent *oldParent )
 
 void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 {
-	if( plug->parent<ArrayPlug>() != this )
+	if( !this->isAncestorOf( plug ) )
 	{
 		return;
 	}
@@ -168,7 +189,9 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 	{
 		// Connection made. If it's the last plug
 		// then we need to add one more.
-		if( plug == children().back() && children().size() < m_maxSize )
+		if(
+			( plug == children().back() || children().back()->isAncestorOf( plug ) )
+			&& children().size() < m_maxSize )
 		{
 			PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), Plug::In );
 			p->setFlags( Gaffer::Plug::Dynamic, true );
@@ -183,7 +206,7 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 		// only one unconnected plug at the end.
 		for( size_t i = children().size() - 1; i > m_minSize - 1; --i )
 		{
-			if( !getChild<Plug>( i )->getInput() && !getChild<Plug>( i - 1 )->getInput() )
+			if( !hasInput( getChild<Plug>( i ) ) && !hasInput( getChild<Plug>( i - 1 ) ) )
 			{
 				removeChild( getChild<Plug>( i ) );
 			}

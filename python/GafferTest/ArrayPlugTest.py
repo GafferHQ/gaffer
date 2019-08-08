@@ -401,6 +401,31 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.V2iPlug()
 		self.assertFalse( a.acceptsInput( p ) )
 
+	def testPartialConnections( self ) :
+
+		n = Gaffer.Node()
+		n["p"] = Gaffer.ArrayPlug( element = Gaffer.V3fPlug( "e" ) )
+		self.assertEqual( len( n["p"] ), 1 )
+
+		p = Gaffer.FloatPlug()
+		n["p"][0]["x"].setInput( p )
+		self.assertEqual( len( n["p"] ), 2 )
+
+		n["p"][0]["y"].setInput( p )
+		self.assertEqual( len( n["p"] ), 2 )
+
+		n["p"][1]["y"].setInput( p )
+		self.assertEqual( len( n["p"] ), 3 )
+
+		n["p"][2]["z"].setInput( p )
+		self.assertEqual( len( n["p"] ), 4 )
+
+		n["p"][1]["y"].setInput( None )
+		self.assertEqual( len( n["p"] ), 4 )
+
+		n["p"][2]["z"].setInput( None )
+		self.assertEqual( len( n["p"] ), 2 )
+
 	def tearDown( self ) :
 
 		# some bugs in the InputGenerator only showed themselves when
