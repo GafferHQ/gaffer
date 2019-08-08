@@ -4806,5 +4806,12 @@
        id="forExport:nodeSetNumericBookmarkSet"
        style="fill:#e0e0e0;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:0.49690738;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        sodipodi:type="star" />
+    <path
+       inkscape:connector-curvature="0"
+       inkscape:label="#path3093"
+       style="fill:#9e9e9e;fill-opacity:0.99215686;fill-rule:nonzero;stroke:#3b3b3b;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
+       d="m 494,150.86218 h -3.5 l 5,5.5 5,-5.5 H 497 v -7 h 3.5 l -5,-5.5 -5,5.5 h 3.5 z"
+       id="forExport:reorderVertically"
+       sodipodi:nodetypes="ccccccccccc" />
   </g>
 </svg>

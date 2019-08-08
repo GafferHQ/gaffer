@@ -312,6 +312,7 @@ import AnimationUI
 import BoxIOUI
 import BoxInUI
 import BoxOutUI
+import NameSwitchUI
 
 # backwards compatibility
 ## \todo Remove me

@@ -979,6 +979,10 @@ _styleSheet = string.Template(
 		margin-right: 10px;
 	}
 
+	QFrame[gafferClass="GafferUI.Divider"][gafferHighlighted="true"] {
+		color: $brightColor;
+	}
+
 	QToolTip {
 		background-clip: border;
 		color: $backgroundDarkest;
