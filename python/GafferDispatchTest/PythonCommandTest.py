@@ -259,10 +259,10 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		s["n"] = GafferDispatch.PythonCommand()
 		s["n"]["sequence"].setValue( True )
-		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+		s["n"]["variables"].addMember( "testInt", 42, "testInt" )
 
 		s["e"] = Gaffer.Expression()
-		s["e"].setExpression( "parent['n']['variables']['NameValuePlug']['value'] = context.getFrame() ** 2;", "python" )
+		s["e"].setExpression( "parent['n']['variables']['testInt']['value'] = context.getFrame() ** 2;", "python" )
 
 		commandLines = inspect.cleandoc(
 			"""
@@ -302,7 +302,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		s["n"] = GafferDispatch.PythonCommand()
 		s["n"]["sequence"].setValue( True )
-		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+		s["n"]["variables"].addMember( "testInt", 42, "testInt" )
 
 		commandLines = inspect.cleandoc(
 			"""
