@@ -189,7 +189,16 @@ root["SceneWriter"].execute()
 		self.assertEqual( parms["uvcoords"].value, imath.V2f( 12, 13 ) )
 		self.assertEqual( parms["filename"].value, "overrideUserDefault" )
 		self.assertEqual( parms["filter"].value, "bilinear" )
-		
+
+	def testBaseClassMetadataLookup( self ) :
+
+		surface = GafferArnold.ArnoldShader()
+		surface.loadShader( "standard_surface" )
+
+		# Make sure that metadata registration based on mechanism in GafferScene.ShaderUI works
+		Gaffer.Metadata.registerValue( "ai:surface:standard_surface:aov_id1", "userDefault", "id_1" )
+
+		self.assertEqual( Gaffer.Metadata.value( surface["parameters"]["aov_id1"], "userDefault" ), "id_1" )
 
 if __name__ == "__main__":
 	unittest.main()
