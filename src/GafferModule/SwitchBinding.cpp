@@ -59,6 +59,12 @@ void setup( T &s, const Plug &plug )
 	s.setup( &plug );
 }
 
+PlugPtr activeInPlug( Switch &s, const Plug *plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return s.activeInPlug( plug );
+}
+
 /// \todo This is almost identical to the serialisers for Dot, ContextProcessor and Loop.
 /// Can we somehow consolidate them all into one? Or should `setup()` calls be supported by
 /// the standard serialiser, driven by some metadata?
@@ -115,7 +121,7 @@ void GafferModule::bindSwitch()
 {
 	DependencyNodeClass<Switch>()
 		.def( "setup", &setup<Switch> )
-		.def( "activeInPlug", (Plug *(Switch::*)())&Switch::activeInPlug, return_value_policy<CastToIntrusivePtr>() )
+		.def( "activeInPlug", &activeInPlug, ( arg( "plug") = object() ) )
 	;
 
 	DependencyNodeClass<NameSwitch>()

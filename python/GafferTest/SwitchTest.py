@@ -526,6 +526,7 @@ class SwitchTest( GafferTest.TestCase ) :
 		s = Gaffer.Switch()
 		s.setup( Gaffer.NameValuePlug( "name", Gaffer.V3fPlug() ) )
 		self.assertEqual( s.correspondingInput( s["out"]["value"]["x"] ), s["in"][0]["value"]["x"] )
+		self.assertEqual( s.activeInPlug( s["out"]["value"]["y"] ), s["in"][0]["value"]["y"] )
 
 	def setUp( self ) :
 

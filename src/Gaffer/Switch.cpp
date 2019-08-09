@@ -121,17 +121,22 @@ const Plug *Switch::outPlug() const
 
 Plug *Switch::activeInPlug()
 {
-	ArrayPlug *inputs = inPlugs();
-	if( !inputs )
-	{
-		return nullptr;
-	}
-	return inputs->getChild<Plug>( inputIndex( Context::current() ) );
+	return activeInPlug( outPlug() );
 }
 
 const Plug *Switch::activeInPlug() const
 {
-	return const_cast<Switch *>( this )->activeInPlug();
+	return activeInPlug( outPlug() );
+}
+
+Plug *Switch::activeInPlug( const Plug *outPlug )
+{
+	return const_cast<Plug *>( oppositePlug( outPlug ? outPlug : this->outPlug(), Context::current() ) );
+}
+
+const Plug *Switch::activeInPlug( const Plug *outPlug ) const
+{
+	return oppositePlug( outPlug ? outPlug : this->outPlug(), Context::current() );
 }
 
 IntPlug *Switch::indexPlug()

@@ -72,8 +72,15 @@ class IECORE_EXPORT Switch : public ComputeNode
 
 		/// Returns the input plug which will be passed through
 		/// by the switch in the current context.
+		/// \todo Remove, and add `nullptr` default to the version
+		/// below.
 		Plug *activeInPlug();
 		const Plug *activeInPlug() const;
+		/// Returns the input plug which will be passed through
+		/// by the switch when evaluating `outPlug` in the
+		/// current context.
+		Plug *activeInPlug( const Plug *outPlug );
+		const Plug *activeInPlug( const Plug *outPlug ) const;
 
 		IntPlug *indexPlug();
 		const IntPlug *indexPlug() const;
