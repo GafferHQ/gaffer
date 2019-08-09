@@ -404,10 +404,10 @@ class Dispatcher::Batcher
 			// because they only know how to deal with ValuePlugs, and we use TaskPlugs.
 			if( auto sw = runTimeCast<const Switch>( task.plug()->node() ) )
 			{
-				if( task.plug() == sw->outPlug() )
+				Context::Scope scopedTaskContext( task.context() );
+				if( auto activeInPlug = sw->activeInPlug( task.plug() ) )
 				{
-					Context::Scope scopedTaskContext( task.context() );
-					task = TaskNode::Task( sw->activeInPlug()->source<TaskNode::TaskPlug>(), task.context() );
+					task = TaskNode::Task( activeInPlug->source<TaskNode::TaskPlug>(), task.context() );
 				}
 			}
 			else if( auto contextProcessor = runTimeCast<const ContextProcessor>( task.plug()->node() ) )
