@@ -225,6 +225,24 @@ bool aiVersionLessThan( int arch, int major, int minor, int patch )
 	);
 }
 
+void substituteShaderIfNecessary( IECoreScene::ConstShaderNetworkPtr &shaderNetwork, const IECore::CompoundObject *attributes )
+{
+	if( !shaderNetwork )
+	{
+		return;
+	}
+
+	IECore::MurmurHash h;
+	shaderNetwork->hashSubstitutions( attributes, h );
+	if( h != IECore::MurmurHash() )
+	{
+		IECoreScene::ShaderNetworkPtr substituted = shaderNetwork->copy();
+		substituted->applySubstitutions( attributes );
+		shaderNetwork = substituted;
+	}
+}
+
+
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
 const AtString g_aovShadersArnoldString( "aov_shaders" );
@@ -812,8 +830,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECoreScene::ShaderNetwork>( g_lightShaderAttributeName, attributes );
+			substituteShaderIfNecessary( m_lightShader, attributes );
 
 			m_lightFilterShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightFilterShaderAttributeName, attributes );
+			substituteShaderIfNecessary( m_lightFilterShader, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
