@@ -47,6 +47,7 @@
 #include "GafferScene/MeshTangents.h"
 #include "GafferScene/MeshToPoints.h"
 #include "GafferScene/MeshType.h"
+#include "GafferScene/Orientation.h"
 #include "GafferScene/Parameters.h"
 #include "GafferScene/PointsType.h"
 #include "GafferScene/ReverseWinding.h"
@@ -77,13 +78,33 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<UDIMQuery>();
 	GafferBindings::DependencyNodeClass<Wireframe>();
 
-	scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
+	{
+		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
 
-	enum_<GafferScene::MeshTangents::Mode>( "Mode" )
-		.value( "UV", GafferScene::MeshTangents::Mode::UV )
-		.value( "FirstEdge", GafferScene::MeshTangents::Mode::FirstEdge )
-		.value( "TwoEdges", GafferScene::MeshTangents::Mode::TwoEdges )
-		.value( "PrimitiveCentroid", GafferScene::MeshTangents::Mode::PrimitiveCentroid )
+		enum_<GafferScene::MeshTangents::Mode>( "Mode" )
+			.value( "UV", GafferScene::MeshTangents::Mode::UV )
+			.value( "FirstEdge", GafferScene::MeshTangents::Mode::FirstEdge )
+			.value( "TwoEdges", GafferScene::MeshTangents::Mode::TwoEdges )
+			.value( "PrimitiveCentroid", GafferScene::MeshTangents::Mode::PrimitiveCentroid )
 		;
+	}
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<Orientation>();
+
+		enum_<GafferScene::Orientation::Mode>( "Mode" )
+			.value( "Euler", GafferScene::Orientation::Mode::Euler )
+			.value( "Quaternion", GafferScene::Orientation::Mode::Quaternion )
+			.value( "AxisAngle", GafferScene::Orientation::Mode::AxisAngle )
+			.value( "Aim", GafferScene::Orientation::Mode::Aim )
+			.value( "Matrix", GafferScene::Orientation::Mode::Matrix )
+			.value( "QuaternionXYZW", GafferScene::Orientation::Mode::QuaternionXYZW )
+		;
+
+		enum_<GafferScene::Orientation::Space>( "Space" )
+			.value( "Local", GafferScene::Orientation::Space::Local )
+			.value( "Parent", GafferScene::Orientation::Space::Parent )
+		;
+	}
 
 }

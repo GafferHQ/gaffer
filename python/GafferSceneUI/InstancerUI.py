@@ -144,8 +144,10 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the per-vertex primitive variable used
-			to specify the orientation of each instance. The
-			orientation must be provided as a quaternion.
+			to specify the orientation of each instance. This
+			must be provided as a quaternion : use an upstream
+			Orientation node to convert from other representations
+			before instancing.
 			""",
 
 		],

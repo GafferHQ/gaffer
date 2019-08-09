@@ -138,6 +138,7 @@ from WireframeTest import WireframeTest
 from TweakPlugTest import TweakPlugTest
 from ContextSanitiserTest import ContextSanitiserTest
 from SetVisualiserTest import SetVisualiserTest
+from OrientationTest import OrientationTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *
