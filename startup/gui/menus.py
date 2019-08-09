@@ -478,6 +478,7 @@ nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateComman
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
 nodeMenu.append( "/Utility/Switch", Gaffer.Switch )
+nodeMenu.append( "/Utility/Name Switch", Gaffer.NameSwitch, searchText = "NameSwitch" )
 nodeMenu.append( "/Utility/Context Variables", Gaffer.ContextVariables, searchText = "ContextVariables" )
 nodeMenu.append( "/Utility/Delete Context Variables", Gaffer.DeleteContextVariables, searchText = "DeleteContextVariables" )
 nodeMenu.append( "/Utility/Time Warp", Gaffer.TimeWarp, searchText = "TimeWarp" )
