@@ -137,6 +137,15 @@ class GAFFERSCENE_API Orientation : public SceneElementProcessor
 		Gaffer::FloatPlug *randomTwistPlug();
 		const Gaffer::FloatPlug *randomTwistPlug() const;
 
+		enum class Space
+		{
+			Local,
+			Parent
+		};
+
+		Gaffer::IntPlug *randomSpacePlug();
+		const Gaffer::IntPlug *randomSpacePlug() const;
+
 		/// Output
 		/// ======
 

@@ -342,6 +342,35 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"randomSpace" : [
+
+			"description",
+			"""
+			The space in which the randomisation is specified. This defines
+			how it is combined with the input orientations.
+
+			Local
+			:	The randomisation is specified in local space and
+				is therefore post-multiplied onto the input orientations.
+				When using the Instancer, this is equivalent to randomising
+				the prototypes before they are instanced.
+
+			Parent
+			:	The transformation is specified in parent space and
+				is therefore pre-multiplied onto the input orientations.
+				When using the Instancer, this is equivalent to randomising
+				the instances after they are positioned.
+
+			""",
+
+			"layout:section", "Settings.Random",
+			"label", "Space",
+			"preset:Local", GafferScene.Orientation.Space.Local,
+			"preset:Parent", GafferScene.Orientation.Space.Parent,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 		# Output
 		# ======
 

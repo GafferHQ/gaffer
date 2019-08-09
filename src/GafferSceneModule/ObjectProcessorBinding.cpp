@@ -100,6 +100,11 @@ void GafferSceneModule::bindObjectProcessor()
 			.value( "Matrix", GafferScene::Orientation::Mode::Matrix )
 			.value( "QuaternionXYZW", GafferScene::Orientation::Mode::QuaternionXYZW )
 		;
+
+		enum_<GafferScene::Orientation::Space>( "Space" )
+			.value( "Local", GafferScene::Orientation::Space::Local )
+			.value( "Parent", GafferScene::Orientation::Space::Parent )
+		;
 	}
 
 }

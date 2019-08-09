@@ -460,7 +460,7 @@ void outMatrix( const PrimitiveVariable &orientations, Primitive *outputPrimitiv
 	outputPrimitive->variables[matrixName] = PrimitiveVariable( orientations.interpolation, matricesData );
 }
 
-void randomise( vector<Quatf> &orientations, const V3f &axis, float spreadMax, float twistMax )
+void randomise( vector<Quatf> &orientations, const V3f &axis, float spreadMax, float twistMax, Orientation::Space space )
 {
 	spreadMax = degreesToRadians( spreadMax );
 	twistMax = degreesToRadians( twistMax );
@@ -487,7 +487,14 @@ void randomise( vector<Quatf> &orientations, const V3f &axis, float spreadMax, f
 		// Generate twist.
 		Quatf twist; twist.setAxisAngle( V3f( 0, 1, 0 ), random.nextf( -twistMax, twistMax ) );
 		// Compose with original orientation.
-		q = q * yToAxis * spread * twist * axisToY;
+		if( space == Orientation::Space::Local )
+		{
+			q = q * yToAxis * spread * twist * axisToY;
+		}
+		else
+		{
+			q = yToAxis * spread * twist * axisToY * q;
+		}
 	}
 }
 
@@ -531,6 +538,7 @@ Orientation::Orientation( const std::string &name )
 	addChild( new V3fPlug( "randomAxis", Plug::In, V3f( 0, 1, 0 ) ) );
 	addChild( new FloatPlug( "randomSpread", Plug::In, 0, 0, 180 ) );
 	addChild( new FloatPlug( "randomTwist", Plug::In, 0, 0, 180 ) );
+	addChild( new IntPlug( "randomSpace", Plug::In, (int)Space::Local, (int)Space::Local, (int)Space::Parent ) );
 
 	// Output
 
@@ -711,104 +719,114 @@ const Gaffer::FloatPlug *Orientation::randomTwistPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 14 );
 }
 
+Gaffer::IntPlug *Orientation::randomSpacePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 15 );
+}
+
+const Gaffer::IntPlug *Orientation::randomSpacePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 15 );
+}
+
 Gaffer::IntPlug *Orientation::outModePlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 15 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 16 );
 }
 
 const Gaffer::IntPlug *Orientation::outModePlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 15 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 16 );
 }
 
 Gaffer::StringPlug *Orientation::outEulerPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 16 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 17 );
 }
 
 const Gaffer::StringPlug *Orientation::outEulerPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 16 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 17 );
 }
 
 Gaffer::IntPlug *Orientation::outOrderPlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 17 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 18 );
 }
 
 const Gaffer::IntPlug *Orientation::outOrderPlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 17 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 18 );
 }
 
 Gaffer::StringPlug *Orientation::outQuaternionPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 18 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 19 );
 }
 
 const Gaffer::StringPlug *Orientation::outQuaternionPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 18 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 19 );
 }
 
 Gaffer::StringPlug *Orientation::outAxisPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 19 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 20 );
 }
 
 const Gaffer::StringPlug *Orientation::outAxisPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 19 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 20 );
 }
 
 Gaffer::StringPlug *Orientation::outAnglePlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 20 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 21 );
 }
 
 const Gaffer::StringPlug *Orientation::outAnglePlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 20 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 21 );
 }
 
 Gaffer::StringPlug *Orientation::outXAxisPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 21 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 22 );
 }
 
 const Gaffer::StringPlug *Orientation::outXAxisPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 21 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 22 );
 }
 
 Gaffer::StringPlug *Orientation::outYAxisPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 22 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 23 );
 }
 
 const Gaffer::StringPlug *Orientation::outYAxisPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 22 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 23 );
 }
 
 Gaffer::StringPlug *Orientation::outZAxisPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 23 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 24 );
 }
 
 const Gaffer::StringPlug *Orientation::outZAxisPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 23 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 24 );
 }
 
 Gaffer::StringPlug *Orientation::outMatrixPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 24 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 25 );
 }
 
 const Gaffer::StringPlug *Orientation::outMatrixPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 24 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 25 );
 }
 
 void Orientation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -831,6 +849,7 @@ void Orientation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		input->parent() == randomAxisPlug() ||
 		input == randomSpreadPlug() ||
 		input == randomTwistPlug() ||
+		input == randomSpacePlug() ||
 		input == outModePlug() ||
 		input == outEulerPlug() ||
 		input == outOrderPlug() ||
@@ -887,6 +906,7 @@ void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Cont
 	randomAxisPlug()->hash( h );
 	randomSpreadPlug()->hash( h );
 	randomTwistPlug()->hash( h );
+	randomSpacePlug()->hash( h );
 
 	const int outMode = outModePlug()->getValue();
 	h.append( outMode );
@@ -999,7 +1019,8 @@ IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &pat
 			static_cast<QuatfVectorData *>( inOrientation.data.get() )->writable(),
 			randomAxisPlug()->getValue(),
 			randomSpreadPlug()->getValue(),
-			randomTwistPlug()->getValue()
+			randomTwistPlug()->getValue(),
+			(Space)randomSpacePlug()->getValue()
 		);
 	}
 
