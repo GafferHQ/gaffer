@@ -678,13 +678,31 @@ class ShaderCache : public RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		AppleseedShaderPtr get( const ShaderNetwork *shader )
+		AppleseedShaderPtr get( const ShaderNetwork *shader, const IECore::CompoundObject *attributes )
 		{
+			IECore::MurmurHash h = shader->Object::hash();
+			IECore::MurmurHash hSubst;
+			if( attributes )
+			{
+				shader->hashSubstitutions( attributes, hSubst );
+				h.append( hSubst );
+			}
+
 			Cache::accessor a;
-			m_cache.insert( a, shader->Object::hash() );
+			m_cache.insert( a, h );
 			if( !a->second )
 			{
-				a->second = new AppleseedShader( m_project, shader->Object::hash().toString() + "_shadergroup", shader, m_isInteractive );
+				std::string name = h.toString() + "_shadergroup";
+				if( hSubst != IECore::MurmurHash() )
+				{
+					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
+					substitutedShader->applySubstitutions( attributes );
+					a->second = new AppleseedShader( m_project, name, substitutedShader.get(), m_isInteractive );
+				}
+				else
+				{
+					a->second = new AppleseedShader( m_project, name, shader, m_isInteractive );
+				}
 			}
 			return a->second;
 		}
@@ -804,7 +822,7 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 
 			if( surfaceShaderAttribute )
 			{
-				m_shaderGroup = shaderCache->get( surfaceShaderAttribute );
+				m_shaderGroup = shaderCache->get( surfaceShaderAttribute, attributes );
 			}
 		}
 
