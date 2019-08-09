@@ -37,6 +37,7 @@
 
 #include "GafferUI/StandardGraphLayout.h"
 
+#include "GafferUI/CompoundNodule.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -50,6 +51,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/Loop.h"
+#include "Gaffer/NameSwitch.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Switch.h"
@@ -1289,7 +1291,16 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	/// doing the work ourselves. In fact, because PlugAdders and Nodules are
 	/// both derived from ConnectionCreator, we should only need to consider
 	/// ConnectionCreators, and shouldn't need to know anything about what's
-	/// happening behind the scenes.
+	/// happening behind the scenes. To make this work, I think we probably
+	/// need to make a few tweaks, some of which would require a major version
+	/// change :
+	///
+	/// - Add a `virtual bool ConnectionCreator::hasConnection()` method so
+	///   that we can avoid modifying existing connections.
+	/// - Have `ConnectionCreator::createConnection()` return the other endpoint
+	///   of the connection.
+	/// - Make the Dot node to use PlugAdders rather than its own mechanism
+	///   (see PR #3059).
 	if( Dot *dot = runTimeCast<Dot>( node ) )
 	{
 		if( !dot->inPlug() )
@@ -1297,9 +1308,16 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			dot->setup( outputPlugs.front() );
 		}
 	}
+	else if( NameSwitch *switchNode = runTimeCast<NameSwitch>( node ) )
+	{
+		if( !switchNode->inPlugs() )
+		{
+			switchNode->setup( outputPlugs.front() );
+		}
+	}
 	else if( Switch *switchNode = runTimeCast<Switch>( node ) )
 	{
-		if( !switchNode->getChild<Plug>( "in" ) )
+		if( !switchNode->inPlugs() )
 		{
 			switchNode->setup( outputPlugs.front() );
 		}
@@ -1413,9 +1431,12 @@ size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaf
 {
 	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
-		if( nodeGadget->nodule( it->get() ) )
+		if( auto nodule = nodeGadget->nodule( it->get() ) )
 		{
-			plugs.push_back( it->get() );
+			if( !runTimeCast<CompoundNodule>( nodule ) )
+			{
+				plugs.push_back( it->get() );
+			}
 		}
 	}
 

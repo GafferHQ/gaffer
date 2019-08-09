@@ -899,5 +899,24 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( expressionPosition.y < i1Bounds.min().y )
 		self.assertTrue( expressionPosition.y > i2Bounds.max().y )
 
+	def testConnectNameSwitch( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		s["s"] = Gaffer.NameSwitch()
+
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["s"], Gaffer.StandardSet( [ s["n"] ] ) )
+
+		self.assertIsInstance( s["s"]["in"][0], Gaffer.NameValuePlug )
+		self.assertTrue( isinstance( s["s"]["in"][0]["value"], Gaffer.IntPlug ) )
+		self.assertEqual( s["s"]["in"][0]["value"].getInput(), s["n"]["sum"] )
+
+		s["c"] = Gaffer.ContextVariables()
+		g.getLayout().connectNode( g, s["c"], Gaffer.StandardSet( [ s["s"] ] ) )
+
+		self.assertIsInstance( s["c"]["in"], Gaffer.IntPlug )
+		self.assertEqual( s["c"]["in"].getInput(), s["s"]["out"]["value"] )
+
 if __name__ == "__main__":
 	unittest.main()
