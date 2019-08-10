@@ -37,6 +37,7 @@
 import os
 import unittest
 import imath
+import re
 
 import IECore
 import IECoreScene
@@ -485,6 +486,34 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( 'SetAttribute "transformed" "transformationmatrix" "doublematrix" 1 [ 1 0 0 0 0 1 0 0 0 0 1 0 1 0 0 1 ]', nsi )
 		self.__assertInNSI( 'SetAttributeAtTime "animated" 0 "transformationmatrix" "doublematrix" 1 [ 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ]', nsi )
 		self.__assertInNSI( 'SetAttributeAtTime "animated" 1 "transformationmatrix" "doublematrix" 1 [ 1 0 0 0 0 1 0 0 0 0 1 0 1 0 0 1 ]', nsi )
+
+	def testShaderSubstitutions( self ) :
+
+		def runSubstitutions( text, attributes ):
+			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"3Delight",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+				self.temporaryDirectory() + "/test.nsi",
+			)
+
+			s = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "testShader", "surface", { "testStringSubstituted" : text } ) }, output = "output" )
+
+			m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+			attrs = attributes.copy()
+			attrs["osl:surface"] = s
+			a = r.attributes( IECore.CompoundObject( attrs ) )
+
+			r.object( "object", m, a )
+
+			r.render()
+			del r
+
+			nsi = open( self.temporaryDirectory() + "/test.nsi" ).read()
+			return re.findall( '\n *"testStringSubstituted" "string" 1 "(.*)" \n', nsi )[0]
+
+		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", {} ), " TEST " )
+		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", { "test:bar" : IECore.StringData( "AAA" ) } ), " TEST AAA" )
+		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", { "test:foo" : IECore.StringData( "AAA" ), "test:bar" : IECore.StringData( "BBB" ) } ), "AAA TEST BBB" )
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. This is a very poor substitute to being able to directly query
