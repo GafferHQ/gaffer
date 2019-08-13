@@ -54,3 +54,13 @@ GafferUI.Examples.registerExample(
 		GafferArnold.ArnoldLightFilter,
 	]
 )
+
+GafferUI.Examples.registerExample(
+	"Rendering/Trace Sets (Arnold)",
+	"$GAFFER_ROOT/resources/examples/rendering/traceSetsArnold.gfr",
+	description = "Demonstrates how to set up trace sets in Arnold",
+	notableNodes = [
+		GafferScene.Set,
+		GafferArnold.ArnoldShader
+	]
+)
