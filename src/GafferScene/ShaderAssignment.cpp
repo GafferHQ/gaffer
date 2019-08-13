@@ -51,6 +51,9 @@ namespace
 const InternedString g_oslShader( "osl:shader" );
 const InternedString g_oslSurface( "osl:surface" );
 
+const char *g_oslPrefix( getenv( "GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX" ) );
+const InternedString g_oslTarget( g_oslPrefix ? std::string( g_oslPrefix ) + ":surface" : "osl:surface" );
+
 /// Historically, we evaluated `ShaderAssignment::shaderPlug()` in a context
 /// containing "scene:path". This was undesirable for a couple of reasons :
 ///
@@ -203,6 +206,20 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 			/// - https://groups.google.com/d/msg/osl-dev/bVBZda-UsbI/EvByoI6sBQAJ
 			/// - https://github.com/imageworks/OpenShadingLanguage/pull/899
 			name = g_oslSurface;
+		}
+
+		// Another, bigger kludge for OSL surfaces.
+		// It can be unintuitive that OSL shaders are unable to override renderer
+		// specific shaders.  OSL shaders are always considered less specific,
+		// even when declared further down the hierarchy.  Artists using one only
+		// renderer are likely to ignore the distinction between renderer
+		// specific and OSL shaders.  To address this, the env var
+		// GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX allows forcing all OSL shaders to be
+		// treated as if they are specific to your chosen renderer, so that they
+		// override other shaders for that renderer as expected.
+		if( name == g_oslSurface )
+		{
+			name = g_oslTarget;
 		}
 		result->members()[name] = attribute.second;
 	}
