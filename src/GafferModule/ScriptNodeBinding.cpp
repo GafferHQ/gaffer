@@ -199,6 +199,7 @@ boost::python::object executionDict( ScriptNodePtr script, NodePtr parent )
 
 std::string serialise( const Node *parent, const Set *filter )
 {
+	IECorePython::ScopedGILLock gilLock;
 	if( !Py_IsInitialized() )
 	{
 		Py_Initialize();
