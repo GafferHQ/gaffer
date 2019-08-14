@@ -47,6 +47,7 @@ import Gaffer
 import GafferTest
 import GafferScene
 import GafferSceneTest
+import GafferDispatch
 
 class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
@@ -549,6 +550,48 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		shader = GafferSceneTest.TestShader()
 		self.assertFalse( switch["in"].acceptsInput( shader["out"] ) )
+
+	def testOSLAssignmentPrefix( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "osl:shader" )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["sphere"]["out"] )
+		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+
+		script["writer"] = GafferScene.SceneWriter()
+		script["writer"]["in"].setInput( script["assignment"]["out"] )
+		script["writer"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.scc" ) )
+
+		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script.save()
+
+
+		def assertAssignment( expected, envVar ) :
+
+			env = os.environ.copy()
+			if envVar is not None :
+				env["GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX"] = envVar
+
+			o = subprocess.check_output(
+				[ "gaffer", "execute", script["fileName"].getValue(), "-nodes", "writer" ],
+				env = env
+			)
+
+			scene = IECoreScene.SceneCache( script["writer"]["fileName"].getValue(), IECore.IndexedIO.OpenMode.Read )
+			sphere = scene.child( "sphere" )
+
+			self.assertEqual( [ i for i in sphere.attributeNames() if ":surface" in i ], [ expected ] )
+
+		assertAssignment( "osl:surface", envVar = None )
+		assertAssignment( "foo:surface", envVar = "foo" )
+
+		
 
 if __name__ == "__main__":
 	unittest.main()
