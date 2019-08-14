@@ -204,6 +204,8 @@ std::string serialise( const Node *parent, const Set *filter )
 		Py_Initialize();
 	}
 
+	IECorePython::ScopedGILLock gilLock;
+
 	std::string result;
 	try
 	{
