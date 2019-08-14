@@ -47,8 +47,8 @@ GafferUI.Examples.registerExample(
 )
 
 GafferUI.Examples.registerExample(
-	"Rendering/Blockers (Arnold)",
-	"$GAFFER_ROOT/resources/examples/rendering/blockers.gfr",
+	"Lighting/Blockers (Arnold)",
+	"$GAFFER_ROOT/resources/examples/lighting/blockers.gfr",
 	description = "Demonstrates how to set up blockers in Arnold",
 	notableNodes = [
 		GafferArnold.ArnoldLightFilter,
