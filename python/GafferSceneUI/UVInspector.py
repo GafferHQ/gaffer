@@ -87,10 +87,7 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 
 		scene = None
 		if len( self.getNodeSet() ) :
-			for p in self.getNodeSet()[-1].children( GafferScene.ScenePlug ) :
-				if p.direction() == Gaffer.Plug.Direction.Out :
-					scene = p
-					break
+			scene = next( GafferScene.ScenePlug.RecursiveOutputRange( self.getNodeSet()[-1] ), None )
 
 		self.__uvView["in"].setInput( scene )
 
