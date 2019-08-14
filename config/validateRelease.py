@@ -35,30 +35,13 @@
 #
 ##########################################################################
 
-import github
-
 import argparse
-import datetime
 import os
-import subprocess
-import sys
+import tarfile
 
-# A script to publish a build to a GitHub Release
+# A script to validate a Gaffer release archive
 
 parser = argparse.ArgumentParser()
-
-parser.add_argument(
-	"--repo",
-	required = True,
-	help = "The GitHub organisation/repo to post the build link to."
-)
-
-parser.add_argument(
-	"--releaseId",
-	type = int,
-	required = True,
-	help = "The release ID to publish the asset to."
-)
 
 parser.add_argument(
 	"--archive",
@@ -67,30 +50,41 @@ parser.add_argument(
 	help = "The path to the build archive to publish."
 )
 
-parser.add_argument(
-	"--github-access-token",
-	dest = "githubAccessToken",
-	default = os.environ.get( 'GITHUB_ACCESS_TOKEN', None ),
-	help = "A suitable access token to authenticate the GitHub API."
-)
-
 args = parser.parse_args()
-
-if not args.githubAccessToken :
-	parser.exit( 1, "No --github-access-token/GITHUB_ACCESS_TOKEN set" )
 
 if not os.path.exists( args.archive ) :
 	parser.exit( 1, "The specified archive '%s' does not exist." % args.archive )
 
-githubClient = github.Github( args.githubAccessToken )
-repo = githubClient.get_repo( args.repo )
 
-release = repo.get_release( args.releaseId )
-if not release :
-	parser.exit( 1, "Unable to find GitHub Release %s" % args.releaseId )
+print( "Validating %s" % args.archive )
 
-print( "Uploading '%s' to release %s" % ( args.archive, args.releaseId ) )
-asset = release.upload_asset( args.archive, content_type="application/gzip" )
+# Validate the release contains our mandatory components
 
-print( "Success, %s available at %s" % ( args.archive, asset.browser_download_url ) )
+requiredPaths = [
+	os.path.join( "doc", "gaffer", "html", "index.html" ),
+	os.path.join( "resources", "examples" )
+]
 
+for module in (
+	"Gaffer", "GafferAppleseed", "GafferArnold", "GafferDelight",
+	"GafferDispatch", "GafferImage", "GafferOSL", "GafferScene",
+	"GafferTractor", "GafferVDB"
+) :
+	requiredPaths.append( os.path.join( "python", module ) )
+	requiredPaths.append( os.path.join( "python", "%sUI" % module ) )
+
+with tarfile.open( args.archive, "r:gz" ) as a:
+
+	# getmember still reads the whole archive, so might as well grab them all
+	# as we go. We need to strip the first directory from all paths too as that
+	# contains the release name
+	archivePaths = { os.path.join( *m.name.split( os.sep )[1:] ) for m in a.getmembers() if os.sep in m.name }
+
+	missing = [ p for p in requiredPaths if p not in archivePaths ]
+	if missing :
+		parser.exit( 1,
+			"ERROR: The following are missing from the archive:\n%s"
+				% "\n".join( missing )
+		)
+
+print( "Archive appears OK" )

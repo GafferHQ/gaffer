@@ -87,6 +87,10 @@ jobs:
        AZURE: 1
        USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
 
+   - script: |
+       ./config/validateRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz
+     displayName: 'Validate'
+
    - ${{ if eq(parameters.publish, true) }}:
 
      - script: |
