@@ -497,5 +497,35 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		ss = Gaffer.Serialisation( Gaffer.Node() )
 		self.assertIn( "setValue", s.postHierarchy( p, "x", ss ) )
 
+	def testRanges( self ) :
+
+		n = Gaffer.Node()
+		n["c1"] = Gaffer.Plug()
+		n["c2"] = Gaffer.Node()
+		n["c3"] = Gaffer.IntPlug()
+		n["c4"] = Gaffer.Plug()
+		n["c4"]["gc1"] = Gaffer.Plug()
+		n["c4"]["gc2"] = Gaffer.FloatPlug()
+
+		self.assertEqual(
+			list( Gaffer.IntPlug.Range( n ) ),
+			[ n["c3"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.FloatPlug.Range( n ) ),
+			[]
+		)
+
+		self.assertEqual(
+			list( Gaffer.IntPlug.RecursiveRange( n ) ),
+			[ n["c3"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.FloatPlug.RecursiveRange( n ) ),
+			[ n["c4"]["gc2"] ]
+		)
+
 if __name__ == "__main__":
 	unittest.main()
