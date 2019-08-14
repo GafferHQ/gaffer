@@ -39,6 +39,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Process.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -102,12 +103,20 @@ std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) co
 		throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
 	}
 
-	const bool performSubstitutions =
-		m_substitutions &&
-		direction() == In &&
-		Process::current() &&
-		Context::hasSubstitutions( s->readable() )
-	;
+	bool performSubstitutions = false;
+	if( m_substitutions && direction() == In )
+	{
+		if( const auto *process = Process::current() )
+		{
+			performSubstitutions =
+				Context::hasSubstitutions( s->readable() ) &&
+				// This is a metric for "is this process relevant". Perhaps in the future
+				// we can test the `Process::type()` and opt out of substitutions for
+				// certain types of processes (eg. a serialisation process).
+				process->plug()->ancestor<ScriptNode>()->isAncestorOf( this )
+			;
+		}
+	}
 
 	return performSubstitutions ? Context::current()->substitute( s->readable(), m_substitutions ) : s->readable();
 }
