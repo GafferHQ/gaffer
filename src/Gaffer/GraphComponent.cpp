@@ -89,7 +89,7 @@ struct GraphComponent::Signals : boost::noncopyable
 // GraphComponent
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( GraphComponent );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GraphComponent );
 
 GraphComponent::GraphComponent( const std::string &name )
 	: m_name( name ), m_parent( nullptr )
