@@ -46,7 +46,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( CopyImageMetadata );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyImageMetadata );
 
 size_t CopyImageMetadata::g_firstPlugIndex = 0;
 

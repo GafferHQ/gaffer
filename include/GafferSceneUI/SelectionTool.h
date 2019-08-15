@@ -58,7 +58,7 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		~SelectionTool() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
 
 	private :
 

@@ -65,7 +65,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		ViewportGadget( GadgetPtr primaryChild = nullptr );
 		~ViewportGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );
 
 		/// Accepts no parents - the ViewportGadget must always be the topmost Gadget.
 		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;

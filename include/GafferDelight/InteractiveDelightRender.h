@@ -52,7 +52,7 @@ class GAFFERDELIGHT_API InteractiveDelightRender : public GafferScene::Interacti
 
 		InteractiveDelightRender( const std::string &name=defaultName<InteractiveDelightRender>() );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDelight::InteractiveDelightRender, InteractiveDelightRenderTypeId, GafferScene::InteractiveRender );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferDelight::InteractiveDelightRender, InteractiveDelightRenderTypeId, GafferScene::InteractiveRender );
 
 };
 

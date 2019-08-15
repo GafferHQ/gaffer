@@ -53,7 +53,7 @@ class GAFFERDELIGHT_API DelightOptions : public GafferScene::Options
 		DelightOptions( const std::string &name=defaultName<DelightOptions>() );
 		~DelightOptions() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDelight::DelightOptions, DelightOptionsTypeId, GafferScene::Options );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferDelight::DelightOptions, DelightOptionsTypeId, GafferScene::Options );
 
 };
 

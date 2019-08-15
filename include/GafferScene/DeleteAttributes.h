@@ -50,7 +50,7 @@ class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 		DeleteAttributes( const std::string &name=defaultName<DeleteAttributes>() );
 		~DeleteAttributes() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteAttributes, DeleteAttributesTypeId, AttributeProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeleteAttributes, DeleteAttributesTypeId, AttributeProcessor );
 
 	protected :
 

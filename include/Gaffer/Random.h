@@ -55,7 +55,7 @@ class GAFFER_API Random : public ComputeNode
 		Random( const std::string &name=defaultName<Random>() );
 		~Random() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Random, RandomTypeId, ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Random, RandomTypeId, ComputeNode );
 
 		IntPlug *seedPlug();
 		const IntPlug *seedPlug() const;

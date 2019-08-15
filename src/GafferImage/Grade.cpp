@@ -57,7 +57,7 @@ namespace
 
 }
 
-IE_CORE_DEFINERUNTIMETYPED( Grade );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Grade );
 
 size_t Grade::g_firstPlugIndex = 0;
 

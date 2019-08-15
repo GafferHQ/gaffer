@@ -46,7 +46,7 @@
 using namespace Gaffer;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( View );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( View );
 
 size_t View::g_firstPlugIndex = 0;
 

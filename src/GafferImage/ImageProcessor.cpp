@@ -43,7 +43,7 @@
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( ImageProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageProcessor );
 
 size_t ImageProcessor::g_firstPlugIndex = 0;
 

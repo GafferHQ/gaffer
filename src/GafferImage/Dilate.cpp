@@ -37,7 +37,7 @@
 
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( Dilate );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Dilate );
 
 Dilate::Dilate( const std::string &name )
 	:   RankFilter( name, DilateRank )

@@ -86,7 +86,7 @@ class GAFFER_API StringPlug : public ValuePlug
 
 		typedef std::string ValueType;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StringPlug, StringPlugTypeId, ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::StringPlug, StringPlugTypeId, ValuePlug );
 
 		StringPlug(
 			const std::string &name = defaultName<StringPlug>(),

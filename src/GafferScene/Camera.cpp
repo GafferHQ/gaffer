@@ -52,7 +52,7 @@ using namespace IECore;
 
 static IECore::InternedString g_camerasSetName( "__cameras" );
 
-IE_CORE_DEFINERUNTIMETYPED( Camera );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Camera );
 
 size_t Camera::g_firstPlugIndex = 0;
 

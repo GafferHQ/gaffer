@@ -49,7 +49,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( AttributeVisualiser );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AttributeVisualiser );
 
 size_t AttributeVisualiser::g_firstPlugIndex = 0;
 

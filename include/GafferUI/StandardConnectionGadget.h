@@ -59,7 +59,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		StandardConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 		~StandardConnectionGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardConnectionGadget, StandardConnectionGadgetTypeId, ConnectionGadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::StandardConnectionGadget, StandardConnectionGadgetTypeId, ConnectionGadget );
 
 		Imath::Box3f bound() const override;
 

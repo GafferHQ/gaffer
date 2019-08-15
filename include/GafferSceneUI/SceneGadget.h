@@ -63,7 +63,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		SceneGadget();
 		~SceneGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneGadget, SceneGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::SceneGadget, SceneGadgetTypeId, Gadget );
 
 		/// Scene
 		/// =====

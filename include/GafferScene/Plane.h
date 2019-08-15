@@ -50,7 +50,7 @@ class GAFFERSCENE_API Plane : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Plane, PlaneTypeId, ObjectSource );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Plane, PlaneTypeId, ObjectSource );
 
 		Plane( const std::string &name=defaultName<Plane>() );
 		~Plane() override;

@@ -41,7 +41,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( OpenGLAttributes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenGLAttributes );
 
 OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	:	Attributes( name )

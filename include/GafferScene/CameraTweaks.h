@@ -53,7 +53,7 @@ class GAFFERSCENE_API CameraTweaks : public SceneElementProcessor
 		CameraTweaks( const std::string &name=defaultName<CameraTweaks>() );
 		~CameraTweaks() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CameraTweaks, CameraTweaksTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CameraTweaks, CameraTweaksTypeId, SceneElementProcessor );
 
 		GafferScene::TweaksPlug *tweaksPlug();
 		const GafferScene::TweaksPlug *tweaksPlug() const;

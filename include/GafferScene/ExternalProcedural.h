@@ -49,7 +49,7 @@ class GAFFERSCENE_API ExternalProcedural : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExternalProcedural, ExternalProceduralTypeId, ObjectSource );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ExternalProcedural, ExternalProceduralTypeId, ObjectSource );
 
 		ExternalProcedural( const std::string &name=defaultName<ExternalProcedural>() );
 		~ExternalProcedural() override;

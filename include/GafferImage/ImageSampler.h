@@ -58,7 +58,7 @@ class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 		ImageSampler( const std::string &name=defaultName<ImageSampler>() );
 		~ImageSampler() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageSampler, ImageSamplerTypeId, ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageSampler, ImageSamplerTypeId, ComputeNode );
 
 		ImagePlug *imagePlug();
 		const ImagePlug *imagePlug() const;

@@ -48,7 +48,7 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugAdder, PlugAdderTypeId, ConnectionCreator );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::PlugAdder, PlugAdderTypeId, ConnectionCreator );
 
 		PlugAdder();
 		~PlugAdder() override;

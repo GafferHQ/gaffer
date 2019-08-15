@@ -46,7 +46,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( AuxiliaryNodeGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AuxiliaryNodeGadget );
 
 AuxiliaryNodeGadget::NodeGadgetTypeDescription<AuxiliaryNodeGadget> AuxiliaryNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 

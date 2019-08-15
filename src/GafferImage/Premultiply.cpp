@@ -45,7 +45,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( Premultiply );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Premultiply );
 
 size_t Premultiply::g_firstPlugIndex = 0;
 

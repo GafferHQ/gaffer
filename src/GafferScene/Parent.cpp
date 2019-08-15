@@ -38,7 +38,7 @@
 
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Parent );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Parent );
 
 size_t Parent::g_firstPlugIndex = 0;
 

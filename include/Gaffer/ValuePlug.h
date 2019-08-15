@@ -61,7 +61,7 @@ class GAFFER_API ValuePlug : public Plug
 		ValuePlug( const std::string &name=defaultName<ValuePlug>(), Direction direction=In, unsigned flags=Default );
 		~ValuePlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
 
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		/// Accepts the input only if it is derived from ValuePlug.

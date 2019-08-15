@@ -107,7 +107,7 @@ OSLQuery::Parameter *firstOutputParameter( const std::string &shaderName )
 // AppleseedShaderAdaptor
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( AppleseedShaderAdaptor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AppleseedShaderAdaptor );
 
 AppleseedShaderAdaptor::AppleseedShaderAdaptor( const std::string &name )
 	:	SceneProcessor( name )

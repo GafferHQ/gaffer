@@ -58,7 +58,7 @@ class GAFFER_API DependencyNode : public Node
 		DependencyNode( const std::string &name=defaultName<DependencyNode>() );
 		~DependencyNode() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::DependencyNode, DependencyNodeTypeId, Node );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::DependencyNode, DependencyNodeTypeId, Node );
 
 		typedef std::vector<const Plug *> AffectedPlugsContainer;
 

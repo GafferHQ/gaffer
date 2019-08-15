@@ -49,7 +49,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( Mix );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Mix );
 
 size_t Mix::g_firstPlugIndex = 0;
 

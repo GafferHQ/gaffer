@@ -56,7 +56,7 @@ class GAFFERUI_API CompoundNodule : public Nodule
 		CompoundNodule( Gaffer::PlugPtr plug );
 		~CompoundNodule() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 

@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( CDL );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CDL );
 
 size_t CDL::g_firstPlugIndex = 0;
 

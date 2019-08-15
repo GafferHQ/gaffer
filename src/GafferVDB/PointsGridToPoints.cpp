@@ -447,7 +447,7 @@ IECoreScene::PointsPrimitivePtr createPointsPrimitive( openvdb::GridBase::ConstP
 
 } //namespace
 
-IE_CORE_DEFINERUNTIMETYPED( PointsGridToPoints );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PointsGridToPoints );
 
 size_t PointsGridToPoints::g_firstPlugIndex = 0;
 

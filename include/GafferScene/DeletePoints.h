@@ -64,7 +64,7 @@ class GAFFERSCENE_API DeletePoints : public SceneElementProcessor
 		Gaffer::BoolPlug *invertPlug();
 		const Gaffer::BoolPlug *invertPlug() const;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeletePoints, DeletePointsTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeletePoints, DeletePointsTypeId, SceneElementProcessor );
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

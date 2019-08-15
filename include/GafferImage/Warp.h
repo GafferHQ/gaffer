@@ -64,7 +64,7 @@ class GAFFERIMAGE_API Warp : public ImageProcessor
 		Warp( const std::string &name=defaultName<Warp>() );
 		~Warp() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Warp, WarpTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Warp, WarpTypeId, ImageProcessor );
 
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;

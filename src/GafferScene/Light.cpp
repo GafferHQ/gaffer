@@ -53,7 +53,7 @@ static IECore::InternedString g_lightsSetName( "__lights" );
 static IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 static IECore::InternedString g_visualiserScaleAttribute( "visualiser:scale" );
 
-IE_CORE_DEFINERUNTIMETYPED( Light );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Light );
 
 size_t Light::g_firstPlugIndex = 0;
 

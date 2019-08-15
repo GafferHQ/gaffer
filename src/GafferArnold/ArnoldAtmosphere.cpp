@@ -38,7 +38,7 @@
 
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldAtmosphere );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldAtmosphere );
 
 ArnoldAtmosphere::ArnoldAtmosphere( const std::string &name )
 	:	GlobalShader( name )

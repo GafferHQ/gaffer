@@ -43,7 +43,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( TranslateHandle );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TranslateHandle );
 
 TranslateHandle::TranslateHandle( Style::Axes axes )
 	:	Handle( defaultName<TranslateHandle>() ), m_axes( Style::X )

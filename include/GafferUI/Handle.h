@@ -51,7 +51,7 @@ class GAFFERUI_API Handle : public Gadget
 
 		~Handle() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Handle, HandleTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::Handle, HandleTypeId, Gadget );
 
 		// A non-zero raster scale causes the handles to be
 		// drawn at a constant size in raster space.

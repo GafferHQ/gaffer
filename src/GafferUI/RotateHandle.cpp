@@ -73,7 +73,7 @@ float closestRotation( const V2f &p, float targetRotation )
 // RotateHandle
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( RotateHandle );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( RotateHandle );
 
 RotateHandle::RotateHandle( Style::Axes axes )
 	:	Handle( defaultName<RotateHandle>() ), m_axes( Style::X )

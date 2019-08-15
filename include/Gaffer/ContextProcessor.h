@@ -51,7 +51,7 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ContextProcessor, ContextProcessorTypeId, ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::ContextProcessor, ContextProcessorTypeId, ComputeNode );
 
 		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
 		~ContextProcessor() override;

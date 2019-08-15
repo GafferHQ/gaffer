@@ -53,7 +53,7 @@ class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
 		ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
 		~ShaderTweaks() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderTweaks, ShaderTweaksTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, SceneElementProcessor );
 
 		Gaffer::StringPlug *shaderPlug();
 		const Gaffer::StringPlug *shaderPlug() const;

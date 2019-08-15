@@ -50,7 +50,7 @@ class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
 
 		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
 		~ArnoldLight() override;

@@ -48,7 +48,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ScenePlug );
+GAFFER_PLUG_DEFINE_TYPE( ScenePlug );
 
 const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
 const IECore::InternedString ScenePlug::setNameContextName( "scene:setName" );

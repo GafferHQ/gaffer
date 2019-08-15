@@ -62,7 +62,7 @@ class GAFFERIMAGE_API Checkerboard : public ImageNode
 		Checkerboard( const std::string &name=defaultName<Checkerboard>() );
 		~Checkerboard() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Checkerboard, CheckerboardTypeId, ImageNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Checkerboard, CheckerboardTypeId, ImageNode );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

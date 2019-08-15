@@ -83,7 +83,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		Gadget( const std::string &name=defaultName<Gadget>() );
 		~Gadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );
 
 		enum class Layer
 		{

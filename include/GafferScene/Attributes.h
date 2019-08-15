@@ -54,7 +54,7 @@ class GAFFERSCENE_API Attributes : public SceneElementProcessor
 		Attributes( const std::string &name=defaultName<Attributes>() );
 		~Attributes() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Attributes, AttributesTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Attributes, AttributesTypeId, SceneElementProcessor );
 
 		Gaffer::CompoundDataPlug *attributesPlug();
 		const Gaffer::CompoundDataPlug *attributesPlug() const;

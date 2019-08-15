@@ -81,7 +81,7 @@ void titleAndDescriptionFromPlugs( const StringPlug *titlePlug, const StringPlug
 
 } // namespace
 
-IE_CORE_DEFINERUNTIMETYPED( BackdropNodeGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BackdropNodeGadget );
 
 static const float g_margin = 3.0f;
 static IECore::InternedString g_boundPlugName( "__uiBound" );

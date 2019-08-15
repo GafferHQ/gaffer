@@ -42,7 +42,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( SceneProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneProcessor );
 
 size_t SceneProcessor::g_firstPlugIndex = 0;
 

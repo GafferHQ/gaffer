@@ -46,7 +46,7 @@ using namespace GafferScene;
 
 size_t MeshDistortion::g_firstPlugIndex = 0;
 
-IE_CORE_DEFINERUNTIMETYPED( MeshDistortion );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshDistortion );
 
 MeshDistortion::MeshDistortion( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )

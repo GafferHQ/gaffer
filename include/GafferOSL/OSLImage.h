@@ -58,7 +58,7 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 		OSLImage( const std::string &name=defaultName<OSLImage>() );
 		~OSLImage() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::ImageProcessor );
 
 		GafferImage::FormatPlug *defaultFormatPlug();
 		const GafferImage::FormatPlug *defaultFormatPlug() const;

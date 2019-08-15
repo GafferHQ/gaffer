@@ -57,7 +57,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldLight );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldLight );
 
 size_t ArnoldLight::g_firstPlugIndex = 0;
 

@@ -61,7 +61,7 @@ using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
-IE_CORE_DEFINERUNTIMETYPED( RotateTool );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( RotateTool );
 
 RotateTool::ToolDescription<RotateTool, SceneView> RotateTool::g_toolDescription;
 

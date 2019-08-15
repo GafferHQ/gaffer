@@ -53,7 +53,7 @@ class GAFFERSCENETEST_API TestShader : public GafferScene::Shader
 		TestShader( const std::string &name=defaultName<TestShader>() );
 		~TestShader() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestShader, TestShaderTypeId, GafferScene::Shader );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneTest::TestShader, TestShaderTypeId, GafferScene::Shader );
 
 };
 

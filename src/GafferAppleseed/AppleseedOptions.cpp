@@ -39,7 +39,7 @@
 using namespace Imath;
 using namespace GafferAppleseed;
 
-IE_CORE_DEFINERUNTIMETYPED( AppleseedOptions );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AppleseedOptions );
 
 AppleseedOptions::AppleseedOptions( const std::string &name )
 	:	GafferScene::Options( name )

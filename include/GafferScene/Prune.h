@@ -50,7 +50,7 @@ class GAFFERSCENE_API Prune : public FilteredSceneProcessor
 		Prune( const std::string &name=defaultName<Prune>() );
 		~Prune() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Prune, PruneTypeId, FilteredSceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Prune, PruneTypeId, FilteredSceneProcessor );
 
 		Gaffer::BoolPlug *adjustBoundsPlug();
 		const Gaffer::BoolPlug *adjustBoundsPlug() const;

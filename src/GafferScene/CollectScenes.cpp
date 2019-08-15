@@ -99,7 +99,7 @@ class SceneScope : public Context::EditableScope
 // CollectScenes
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( CollectScenes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CollectScenes );
 
 size_t CollectScenes::g_firstPlugIndex = 0;
 

@@ -57,7 +57,7 @@ const ScenePlug::ScenePath g_emptyScenePath;
 
 }
 
-IE_CORE_DEFINERUNTIMETYPED( CollectTransforms );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CollectTransforms );
 
 size_t CollectTransforms::g_firstPlugIndex = 0;
 

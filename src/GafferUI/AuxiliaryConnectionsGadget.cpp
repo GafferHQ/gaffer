@@ -152,7 +152,7 @@ string gadgetName( const Gadget *gadget )
 // AuxiliaryConnectionsGadget
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( AuxiliaryConnectionsGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AuxiliaryConnectionsGadget );
 
 AuxiliaryConnectionsGadget::AuxiliaryConnectionsGadget()
 	:	Gadget( "AuxiliaryConnections" ), m_dirty( false )

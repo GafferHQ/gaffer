@@ -59,7 +59,7 @@ class GAFFEROSL_API ClosurePlug : public Gaffer::Plug
 		ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
 		~ClosurePlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::ClosurePlug, ClosurePlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferOSL::ClosurePlug, ClosurePlugTypeId, Plug );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;

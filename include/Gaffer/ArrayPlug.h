@@ -70,7 +70,7 @@ class GAFFER_API ArrayPlug : public Plug
 
 		~ArrayPlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ArrayPlug, ArrayPlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::ArrayPlug, ArrayPlugTypeId, Plug );
 
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		bool acceptsInput( const Plug *input ) const override;

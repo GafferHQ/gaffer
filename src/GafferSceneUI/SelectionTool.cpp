@@ -138,7 +138,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 // SelectionTool implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( SelectionTool );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SelectionTool );
 
 SelectionTool::ToolDescription<SelectionTool, SceneView> SelectionTool::g_toolDescription;
 static IECore::InternedString g_dragOverlayName( "__selectionToolDragOverlay" );

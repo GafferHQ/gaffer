@@ -50,7 +50,7 @@ class GAFFERSCENE_API OpenGLRender : public Render
 		OpenGLRender( const std::string &name=defaultName<OpenGLRender>() );
 		~OpenGLRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLRender, OpenGLRenderTypeId, Render );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::OpenGLRender, OpenGLRenderTypeId, Render );
 
 };
 

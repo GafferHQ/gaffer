@@ -242,7 +242,7 @@ IECoreScene::CameraPtr lightToCamera( const IECore::CompoundData *shaderParamete
 
 } // namespace
 
-IE_CORE_DEFINERUNTIMETYPED( LightToCamera );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LightToCamera );
 
 size_t LightToCamera::g_firstPlugIndex = 0;
 

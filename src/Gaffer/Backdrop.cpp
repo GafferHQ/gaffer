@@ -40,7 +40,7 @@
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( Backdrop );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Backdrop );
 
 size_t Backdrop::g_firstPlugIndex = 0;
 

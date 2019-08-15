@@ -58,7 +58,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( DotNodeGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DotNodeGadget );
 
 DotNodeGadget::NodeGadgetTypeDescription<DotNodeGadget> DotNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Dot::staticTypeId() );
 

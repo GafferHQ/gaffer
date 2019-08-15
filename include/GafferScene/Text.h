@@ -47,7 +47,7 @@ class GAFFERSCENE_API Text : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Text, TextTypeId, ObjectSource );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Text, TextTypeId, ObjectSource );
 
 		Text( const std::string &name=defaultName<Text>() );
 		~Text() override;

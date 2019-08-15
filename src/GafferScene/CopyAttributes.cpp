@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( CopyAttributes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyAttributes );
 
 size_t CopyAttributes::g_firstPlugIndex = 0;
 

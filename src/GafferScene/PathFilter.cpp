@@ -48,7 +48,7 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( PathFilter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PathFilter );
 
 size_t PathFilter::g_firstPlugIndex = 0;
 

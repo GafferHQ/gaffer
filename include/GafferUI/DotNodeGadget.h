@@ -56,7 +56,7 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::DotNodeGadget, DotNodeGadgetTypeId, StandardNodeGadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::DotNodeGadget, DotNodeGadgetTypeId, StandardNodeGadget );
 
 		DotNodeGadget( Gaffer::NodePtr node );
 		~DotNodeGadget() override;

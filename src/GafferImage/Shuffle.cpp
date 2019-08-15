@@ -47,7 +47,7 @@ using namespace GafferImage;
 // Shuffle::ChannelPlug
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Shuffle::ChannelPlug );
+GAFFER_PLUG_DEFINE_TYPE( Shuffle::ChannelPlug );
 
 Shuffle::ChannelPlug::ChannelPlug( const std::string &name, Direction direction, unsigned flags)
 	:	ValuePlug( name, direction, flags )
@@ -102,7 +102,7 @@ PlugPtr Shuffle::ChannelPlug::createCounterpart( const std::string &name, Direct
 
 size_t Shuffle::g_firstPlugIndex = 0;
 
-IE_CORE_DEFINERUNTIMETYPED( Shuffle );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Shuffle );
 
 Shuffle::Shuffle( const std::string &name )
 	:	ImageProcessor( name )

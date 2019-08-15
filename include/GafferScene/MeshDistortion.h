@@ -53,7 +53,7 @@ class GAFFERSCENE_API MeshDistortion : public SceneElementProcessor
 		MeshDistortion( const std::string &name=defaultName<MeshDistortion>() );
 		~MeshDistortion() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::MeshDistortion, MeshDistortionTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshDistortion, MeshDistortionTypeId, SceneElementProcessor );
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;

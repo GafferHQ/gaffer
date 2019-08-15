@@ -319,7 +319,7 @@ Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation
 // TransformTool
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( TransformTool );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TransformTool );
 
 size_t TransformTool::g_firstPlugIndex = 0;
 

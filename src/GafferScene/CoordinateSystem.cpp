@@ -46,7 +46,7 @@ using namespace Imath;
 
 static IECore::InternedString g_coordinateSystemsSetName( "__coordinateSystems" );
 
-IE_CORE_DEFINERUNTIMETYPED( CoordinateSystem );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CoordinateSystem );
 
 CoordinateSystem::CoordinateSystem( const std::string &name )
 	:	ObjectSource( name, "coordinateSystem" )

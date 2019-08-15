@@ -237,7 +237,7 @@ Box2f transform( const Box2f &b, const M33f &m )
 // Resample
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Resample );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Resample );
 
 size_t Resample::g_firstPlugIndex = 0;
 

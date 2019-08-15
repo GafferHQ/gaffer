@@ -126,7 +126,7 @@ struct VectorWarp::Engine : public Warp::Engine
 // VectorWarp implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( VectorWarp );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( VectorWarp );
 
 size_t VectorWarp::g_firstPlugIndex = 0;
 

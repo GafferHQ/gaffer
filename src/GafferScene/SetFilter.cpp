@@ -47,7 +47,7 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( SetFilter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SetFilter );
 
 size_t SetFilter::g_firstPlugIndex = 0;
 

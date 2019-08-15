@@ -68,7 +68,7 @@ static OCIOMutex g_ocioMutex;
 
 } // namespace
 
-IE_CORE_DEFINERUNTIMETYPED( OpenColorIOTransform );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenColorIOTransform );
 
 size_t OpenColorIOTransform::g_firstPlugIndex = 0;
 

@@ -53,7 +53,7 @@ class GAFFERSCENE_API Outputs : public GlobalsProcessor
 		Outputs( const std::string &name=defaultName<Outputs>() );
 		~Outputs() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
 
 		Gaffer::ValuePlug *outputsPlug();
 		const Gaffer::ValuePlug *outputsPlug() const;

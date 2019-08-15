@@ -62,7 +62,7 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::Node
 		InteractiveRender( const std::string &name=defaultName<InteractiveRender>() );
 		~InteractiveRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::InteractiveRender, GafferScene::InteractiveRenderTypeId, Gaffer::Node );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::InteractiveRender, GafferScene::InteractiveRenderTypeId, Gaffer::Node );
 
 		enum State
 		{

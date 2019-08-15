@@ -66,7 +66,7 @@ class GAFFERSCENE_API FilterProcessor : public Filter
 
 		~FilterProcessor() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterProcessor, FilterProcessorTypeId, Filter );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::FilterProcessor, FilterProcessorTypeId, Filter );
 
 		/// Returns the primary filter input. For nodes with multiple inputs
 		/// this will be the first child of the inPlugs() array. For nodes

@@ -56,7 +56,7 @@ class GAFFER_API Animation : public ComputeNode
 		Animation( const std::string &name=defaultName<Animation>() );
 		~Animation() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation, AnimationTypeId, ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
 
 		/// Defines the method used to interpolate
 		/// between a key and the previous one.
@@ -126,7 +126,7 @@ class GAFFER_API Animation : public ComputeNode
 
 			public :
 
-				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::CurvePlug, AnimationCurvePlugTypeId, Gaffer::ValuePlug );
+				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Animation::CurvePlug, AnimationCurvePlugTypeId, Gaffer::ValuePlug );
 
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
 

@@ -57,7 +57,7 @@ class GAFFERSCENE_API SubTree : public SceneProcessor
 		SubTree( const std::string &name=defaultName<SubTree>() );
 		~SubTree() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SubTree, SubTreeTypeId, SceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SubTree, SubTreeTypeId, SceneProcessor );
 
 		Gaffer::StringPlug *rootPlug();
 		const Gaffer::StringPlug *rootPlug() const;

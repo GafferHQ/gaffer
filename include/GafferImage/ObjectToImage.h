@@ -47,7 +47,7 @@ class GAFFERIMAGE_API ObjectToImage : public ImagePrimitiveNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
 
 		ObjectToImage( const std::string &name = defaultName<ObjectToImage>() );
 		~ObjectToImage() override;

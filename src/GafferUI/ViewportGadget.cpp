@@ -613,7 +613,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 // ViewportGadget
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ViewportGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ViewportGadget );
 
 ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	: Gadget(),

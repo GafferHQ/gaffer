@@ -54,7 +54,7 @@ class GAFFERUI_API ConnectionCreator : public Gadget
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionCreator, ConnectionCreatorTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ConnectionCreator, ConnectionCreatorTypeId, Gadget );
 
 		ConnectionCreator( const std::string &name=defaultName<ConnectionCreator>() );
 		~ConnectionCreator() override;

@@ -53,7 +53,7 @@ class GAFFERSCENETEST_API TestLight : public GafferScene::Light
 		TestLight( const std::string &name=defaultName<TestLight>() );
 		~TestLight() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
 
 	protected :
 

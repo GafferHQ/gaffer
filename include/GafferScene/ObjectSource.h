@@ -58,7 +58,7 @@ class GAFFERSCENE_API ObjectSource : public SceneNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ObjectSource, ObjectSourceTypeId, SceneNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ObjectSource, ObjectSourceTypeId, SceneNode );
 
 		~ObjectSource() override;
 

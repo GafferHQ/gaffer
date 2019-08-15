@@ -347,7 +347,7 @@ InternedString CompileProcess::g_type( "oslCode:compile" );
 // OSLCode
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( OSLCode );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLCode );
 
 size_t OSLCode::g_firstPlugIndex;
 

@@ -45,7 +45,7 @@ using namespace Gaffer;
 
 size_t Node::g_firstPlugIndex;
 
-IE_CORE_DEFINERUNTIMETYPED( Node );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Node );
 
 Node::Node( const std::string &name )
 	:	GraphComponent( name )

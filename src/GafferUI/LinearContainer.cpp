@@ -47,7 +47,7 @@ using namespace std;
 using namespace Imath;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( LinearContainer );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LinearContainer );
 
 LinearContainer::LinearContainer( const std::string &name, Orientation orientation,
 	Alignment alignment, float spacing, Direction direction )

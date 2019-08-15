@@ -50,7 +50,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( DeletePoints );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeletePoints );
 
 size_t DeletePoints::g_firstPlugIndex = 0;
 

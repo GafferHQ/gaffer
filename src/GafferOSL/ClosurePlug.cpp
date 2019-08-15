@@ -51,7 +51,7 @@ using namespace GafferOSL;
 // ClosurePlug
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ClosurePlug );
+GAFFER_PLUG_DEFINE_TYPE( ClosurePlug );
 
 ClosurePlug::ClosurePlug( const std::string &name, Direction direction, unsigned flags )
 	:	Plug( name, direction, flags )

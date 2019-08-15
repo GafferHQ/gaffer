@@ -63,7 +63,7 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 
 		typedef Format ValueType;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::FormatPlug, FormatPlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferImage::FormatPlug, FormatPlugTypeId, Gaffer::ValuePlug );
 
 		FormatPlug(
 			const std::string &name = defaultName<FormatPlug>(),

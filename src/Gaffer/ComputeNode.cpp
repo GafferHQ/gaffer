@@ -41,7 +41,7 @@
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( ComputeNode );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ComputeNode );
 
 ComputeNode::ComputeNode( const std::string &name )
 	:	DependencyNode( name )

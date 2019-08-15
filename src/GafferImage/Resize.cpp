@@ -45,7 +45,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( Resize );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Resize );
 
 size_t Resize::g_firstPlugIndex = 0;
 

@@ -48,7 +48,7 @@ using namespace IECore;
 using namespace Imath;
 using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( Nodule );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Nodule );
 
 Nodule::Nodule( Gaffer::PlugPtr plug )
 	:	ConnectionCreator( defaultName<Nodule>() ), m_plug( plug )

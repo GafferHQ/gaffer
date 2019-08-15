@@ -44,7 +44,7 @@
 namespace Gaffer
 {
 
-IE_CORE_DEFINERUNTIMETYPED( Loop );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Loop );
 
 Loop::Loop( const std::string &name )
 	:	ComputeNode( name ), m_inPlugIndex( 0 ), m_outPlugIndex( 0 ), m_firstPlugIndex( 0 )

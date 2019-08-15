@@ -136,7 +136,7 @@ const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextu
 // ImageGadget
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ImageGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageGadget );
 
 ImageGadget::ImageGadget( const std::string &fileName )
 	:	Gadget( defaultName<ImageGadget>() )

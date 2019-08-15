@@ -82,7 +82,7 @@ OutputMap &outputMap()
 // Outputs implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Outputs );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Outputs );
 
 size_t Outputs::g_firstPlugIndex = 0;
 

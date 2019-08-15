@@ -50,7 +50,7 @@ class GAFFER_API BoxIn : public BoxIO
 		BoxIn( const std::string &name=defaultName<BoxIn>() );
 		~BoxIn() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::BoxIn, BoxInTypeId, BoxIO );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::BoxIn, BoxInTypeId, BoxIO );
 
 };
 

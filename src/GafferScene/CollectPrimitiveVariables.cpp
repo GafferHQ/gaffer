@@ -56,7 +56,7 @@ using namespace GafferScene;
 // CollectPrimitiveVariables
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( CollectPrimitiveVariables );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CollectPrimitiveVariables );
 
 size_t CollectPrimitiveVariables::g_firstPlugIndex = 0;
 

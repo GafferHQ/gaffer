@@ -83,7 +83,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 
 		~GraphGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::GraphGadget, GraphGadgetTypeId, ContainerGadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::GraphGadget, GraphGadgetTypeId, ContainerGadget );
 
 		Gaffer::Node *getRoot();
 		const Gaffer::Node *getRoot() const;

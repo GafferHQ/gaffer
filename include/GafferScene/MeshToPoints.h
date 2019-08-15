@@ -57,7 +57,7 @@ class GAFFERSCENE_API MeshToPoints : public SceneElementProcessor
 		MeshToPoints( const std::string &name=defaultName<MeshToPoints>() );
 		~MeshToPoints() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::MeshToPoints, MeshToPointsTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshToPoints, MeshToPointsTypeId, SceneElementProcessor );
 
 		Gaffer::StringPlug *typePlug();
 		const Gaffer::StringPlug *typePlug() const;

@@ -39,7 +39,7 @@
 using namespace GafferScene;
 using namespace GafferAppleseed;
 
-IE_CORE_DEFINERUNTIMETYPED( InteractiveAppleseedRender );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( InteractiveAppleseedRender );
 
 InteractiveAppleseedRender::InteractiveAppleseedRender( const std::string &name )
 	:	InteractiveRender( "Appleseed", name )

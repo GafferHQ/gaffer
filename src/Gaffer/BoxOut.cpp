@@ -72,7 +72,7 @@ const Dot *dotChainSource( const Plug *plug )
 // BoxOut
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( BoxOut )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BoxOut )
 
 BoxOut::BoxOut( const std::string &name )
 	:	BoxIO( Plug::Out, name )

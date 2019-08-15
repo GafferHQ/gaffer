@@ -61,7 +61,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferOSL;
 
-IE_CORE_DEFINERUNTIMETYPED( OSLObject );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLObject );
 
 size_t OSLObject::g_firstPlugIndex;
 

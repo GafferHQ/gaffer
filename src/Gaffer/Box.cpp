@@ -89,7 +89,7 @@ std::unordered_set<const Node *> boxOutPassThroughSources( const Node *parent )
 // Box
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Box );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Box );
 
 Box::Box( const std::string &name )
 	:	SubGraph( name )

@@ -55,7 +55,7 @@ class GAFFER_API NumericPlug : public ValuePlug
 
 		typedef T ValueType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( NumericPlug<T>, ValuePlug );
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( NumericPlug<T>, ValuePlug );
 
 		NumericPlug(
 			const std::string &name = defaultName<NumericPlug>(),
@@ -90,8 +90,6 @@ class GAFFER_API NumericPlug : public ValuePlug
 		void setFrom( const ValuePlug *other ) override;
 
 	private :
-
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( NumericPlug<T> );
 
 		typedef IECore::TypedData<T> DataType;
 		typedef typename DataType::Ptr DataTypePtr;

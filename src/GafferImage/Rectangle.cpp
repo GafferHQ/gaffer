@@ -88,7 +88,7 @@ float filteredPulse( float edge0, float edge1, float x, float w )
 // Rectangle
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Rectangle );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Rectangle );
 
 size_t Rectangle::g_firstPlugIndex = 0;
 

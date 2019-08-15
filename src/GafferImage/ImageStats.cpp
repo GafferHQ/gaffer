@@ -78,7 +78,7 @@ int colorIndex( const ValuePlug *plug )
 // ImageStats
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ImageStats );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageStats );
 
 size_t ImageStats::g_firstPlugIndex = 0;
 

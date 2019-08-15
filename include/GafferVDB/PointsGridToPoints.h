@@ -60,7 +60,7 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcess
 		PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
 		~PointsGridToPoints() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::PointsGridToPoints, PointsGridToPointsId, GafferScene::SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferVDB::PointsGridToPoints, PointsGridToPointsId, GafferScene::SceneElementProcessor );
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;

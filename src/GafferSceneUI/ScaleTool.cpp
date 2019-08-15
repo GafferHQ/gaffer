@@ -88,7 +88,7 @@ M44f signOnlyScaling( const M44f &m )
 // ScaleTool
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ScaleTool );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ScaleTool );
 
 ScaleTool::ToolDescription<ScaleTool, SceneView> ScaleTool::g_toolDescription;
 

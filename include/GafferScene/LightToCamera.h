@@ -50,7 +50,7 @@ class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
 		LightToCamera( const std::string &name=defaultName<LightToCamera>() );
 		~LightToCamera() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::LightToCamera, LightToCameraTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::LightToCamera, LightToCameraTypeId, SceneElementProcessor );
 
 		Gaffer::IntPlug *filmFitPlug();
 		const Gaffer::IntPlug *filmFitPlug() const;

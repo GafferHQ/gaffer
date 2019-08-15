@@ -56,7 +56,7 @@ class GAFFERSCENE_API Grid : public SceneNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Grid, GridTypeId, SceneNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Grid, GridTypeId, SceneNode );
 
 		Grid( const std::string &name=defaultName<Grid>() );
 		~Grid() override;

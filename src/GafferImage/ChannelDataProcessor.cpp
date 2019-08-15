@@ -42,7 +42,7 @@
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( ChannelDataProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ChannelDataProcessor );
 
 size_t ChannelDataProcessor::g_firstPlugIndex = 0;
 

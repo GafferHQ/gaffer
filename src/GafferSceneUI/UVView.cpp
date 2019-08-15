@@ -92,7 +92,7 @@ class UVView::UVScene : public SceneProcessor
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::UVView::UVScene, UVSceneTypeId, SceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::UVView::UVScene, UVSceneTypeId, SceneProcessor );
 
 		UVScene( const std::string &name = defaultName<UVScene>() )
 			:	SceneProcessor( name )
@@ -375,7 +375,7 @@ class UVView::UVScene : public SceneProcessor
 
 };
 
-IE_CORE_DEFINERUNTIMETYPED( UVView::UVScene );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( UVView::UVScene );
 size_t UVView::UVScene::g_firstPlugIndex;
 
 //////////////////////////////////////////////////////////////////////////
@@ -595,7 +595,7 @@ size_t UVView::g_firstPlugIndex = 0;
 static InternedString g_textureGadgetsName( "textureGadgets" );
 static InternedString g_gridGadgetName( "gridGadget" );
 
-IE_CORE_DEFINERUNTIMETYPED( UVView )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( UVView )
 
 UVView::UVView( const std::string &name )
 	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )

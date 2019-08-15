@@ -57,7 +57,7 @@ class GAFFERSCENE_API PointsType : public SceneElementProcessor
 		PointsType( const std::string &name=defaultName<PointsType>() );
 		~PointsType() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PointsType, PointsTypeTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PointsType, PointsTypeTypeId, SceneElementProcessor );
 
 		Gaffer::StringPlug *typePlug();
 		const Gaffer::StringPlug *typePlug() const;

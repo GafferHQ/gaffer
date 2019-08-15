@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Prune );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Prune );
 
 size_t Prune::g_firstPlugIndex = 0;
 

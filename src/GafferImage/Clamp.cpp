@@ -44,7 +44,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( Clamp );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Clamp );
 
 size_t Clamp::g_firstPlugIndex = 0;
 

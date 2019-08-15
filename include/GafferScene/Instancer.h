@@ -51,7 +51,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Instancer( const std::string &name=defaultName<Instancer>() );
 		~Instancer() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Instancer, InstancerTypeId, BranchCreator );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Instancer, InstancerTypeId, BranchCreator );
 
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;

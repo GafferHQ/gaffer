@@ -47,7 +47,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( MapOffset );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MapOffset );
 
 size_t MapOffset::g_firstPlugIndex = 0;
 

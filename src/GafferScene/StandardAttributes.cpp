@@ -42,7 +42,7 @@
 
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( StandardAttributes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardAttributes );
 
 StandardAttributes::StandardAttributes( const std::string &name )
 	:	Attributes( name )

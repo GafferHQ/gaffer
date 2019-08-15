@@ -54,7 +54,7 @@ using namespace GafferUI;
 using namespace Imath;
 using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( Gadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Gadget );
 
 Gadget::Gadget( const std::string &name )
 	:	GraphComponent( name ), m_style( nullptr ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_toolTip( "" )

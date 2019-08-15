@@ -41,7 +41,7 @@
 using namespace GafferTest;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( MultiplyNode )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MultiplyNode )
 
 size_t MultiplyNode::g_firstPlugIndex = 0;
 

@@ -61,7 +61,7 @@ class GAFFER_API ComputeNode : public DependencyNode
 		ComputeNode( const std::string &name=defaultName<ComputeNode>() );
 		~ComputeNode() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ComputeNode, ComputeNodeTypeId, DependencyNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::ComputeNode, ComputeNodeTypeId, DependencyNode );
 
 	protected :
 

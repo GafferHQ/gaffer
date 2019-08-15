@@ -710,7 +710,7 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 // ImageWriter implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ImageWriter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageWriter );
 
 size_t ImageWriter::g_firstPlugIndex = 0;
 

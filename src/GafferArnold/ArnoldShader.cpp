@@ -60,7 +60,7 @@ using namespace GafferScene;
 using namespace GafferArnold;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldShader );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldShader );
 
 ArnoldShader::ArnoldShader( const std::string &name )
 	:	GafferScene::Shader( name )

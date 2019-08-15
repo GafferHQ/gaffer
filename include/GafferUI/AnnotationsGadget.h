@@ -64,7 +64,7 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 
 		~AnnotationsGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AnnotationsGadget, AnnotationsGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AnnotationsGadget, AnnotationsGadgetTypeId, Gadget );
 
 		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 

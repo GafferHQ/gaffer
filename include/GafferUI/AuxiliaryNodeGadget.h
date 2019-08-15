@@ -47,7 +47,7 @@ class GAFFERUI_API AuxiliaryNodeGadget : public NodeGadget
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AuxiliaryNodeGadget, AuxiliaryNodeGadgetTypeId, NodeGadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AuxiliaryNodeGadget, AuxiliaryNodeGadgetTypeId, NodeGadget );
 
 		AuxiliaryNodeGadget( Gaffer::NodePtr node );
 		~AuxiliaryNodeGadget() override;

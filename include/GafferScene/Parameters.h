@@ -52,7 +52,7 @@ class GAFFERSCENE_API Parameters : public SceneElementProcessor
 		Parameters( const std::string &name=defaultName<Parameters>() );
 		~Parameters() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Parameters, ParametersTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Parameters, ParametersTypeId, SceneElementProcessor );
 
 		Gaffer::CompoundDataPlug *parametersPlug();
 		const Gaffer::CompoundDataPlug *parametersPlug() const;

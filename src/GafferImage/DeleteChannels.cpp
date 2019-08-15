@@ -45,7 +45,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( DeleteChannels );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteChannels );
 
 size_t DeleteChannels::g_firstPlugIndex = 0;
 

@@ -82,7 +82,7 @@ NodeCreatorMap &nodeCreators()
 // NodeGadget
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( NodeGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NodeGadget );
 
 NodeGadget::NodeGadget( Gaffer::NodePtr node )
 	:	m_node( node.get() )

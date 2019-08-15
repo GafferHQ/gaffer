@@ -51,7 +51,7 @@ using namespace IECoreScene;
 using namespace Imath;
 using namespace boost;
 
-IE_CORE_DEFINERUNTIMETYPED( Frame );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Frame );
 
 Frame::Frame( GadgetPtr child )
 	:	IndividualContainer( child ), m_border( 1 )

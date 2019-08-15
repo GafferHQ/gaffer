@@ -63,7 +63,7 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 
 		~BranchCreator() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::BranchCreator, BranchCreatorTypeId, FilteredSceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::BranchCreator, BranchCreatorTypeId, FilteredSceneProcessor );
 
 		Gaffer::StringPlug *parentPlug();
 		const Gaffer::StringPlug *parentPlug() const;

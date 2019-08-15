@@ -50,7 +50,7 @@ class GAFFERSCENE_API DeleteOptions : public DeleteGlobals
 		DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
 		~DeleteOptions() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteOptions, DeleteOptionsTypeId, DeleteGlobals );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeleteOptions, DeleteOptionsTypeId, DeleteGlobals );
 
 	protected :
 

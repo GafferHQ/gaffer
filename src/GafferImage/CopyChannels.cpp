@@ -80,7 +80,7 @@ void copyRegion( const float *fromBuffer, const Box2i &fromWindow, const Box2i &
 // CopyChannels
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( CopyChannels );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyChannels );
 
 size_t CopyChannels::g_firstPlugIndex = 0;
 

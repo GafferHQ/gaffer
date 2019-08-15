@@ -50,7 +50,7 @@ class GAFFERSCENE_API AimConstraint : public Constraint
 		AimConstraint( const std::string &name=defaultName<AimConstraint>() );
 		~AimConstraint() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::AimConstraint, AimConstraintTypeId, Constraint );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::AimConstraint, AimConstraintTypeId, Constraint );
 
 		Gaffer::V3fPlug *aimPlug();
 		const Gaffer::V3fPlug *aimPlug() const;

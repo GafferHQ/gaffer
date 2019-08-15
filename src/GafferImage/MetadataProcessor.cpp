@@ -42,7 +42,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( MetadataProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MetadataProcessor );
 
 MetadataProcessor::MetadataProcessor( const std::string &name )
 	:	ImageProcessor( name )

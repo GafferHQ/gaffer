@@ -43,7 +43,7 @@
 using namespace GafferScene;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( Filter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Filter );
 
 const IECore::InternedString Filter::inputSceneContextName( "scene:filter:inputScene" );
 size_t Filter::g_firstPlugIndex = 0;

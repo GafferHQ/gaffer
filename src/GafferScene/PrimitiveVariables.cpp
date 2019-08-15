@@ -43,7 +43,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( PrimitiveVariables );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PrimitiveVariables );
 
 size_t PrimitiveVariables::g_firstPlugIndex = 0;
 

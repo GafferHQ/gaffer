@@ -45,7 +45,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Sphere );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Sphere );
 
 size_t Sphere::g_firstPlugIndex = 0;
 

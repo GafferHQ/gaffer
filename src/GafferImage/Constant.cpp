@@ -51,7 +51,7 @@ using namespace Gaffer;
 // Constant implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Constant );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Constant );
 
 size_t Constant::g_firstPlugIndex = 0;
 

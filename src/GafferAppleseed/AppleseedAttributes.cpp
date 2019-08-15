@@ -40,7 +40,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferAppleseed;
 
-IE_CORE_DEFINERUNTIMETYPED( AppleseedAttributes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AppleseedAttributes );
 
 AppleseedAttributes::AppleseedAttributes( const std::string &name )
 	:	GafferScene::Attributes( name )

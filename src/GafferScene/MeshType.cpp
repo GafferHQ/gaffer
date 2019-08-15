@@ -46,7 +46,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( MeshType );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshType );
 
 size_t MeshType::g_firstPlugIndex = 0;
 

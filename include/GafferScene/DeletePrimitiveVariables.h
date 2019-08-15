@@ -50,7 +50,7 @@ class GAFFERSCENE_API DeletePrimitiveVariables : public PrimitiveVariableProcess
 		DeletePrimitiveVariables( const std::string &name=defaultName<DeletePrimitiveVariables>() );
 		~DeletePrimitiveVariables() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
 
 	protected :
 

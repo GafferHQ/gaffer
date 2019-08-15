@@ -52,7 +52,7 @@ class GAFFERSCENE_API Duplicate : public BranchCreator
 		Duplicate( const std::string &name=defaultName<Duplicate>() );
 		~Duplicate() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Duplicate, DuplicateTypeId, BranchCreator );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Duplicate, DuplicateTypeId, BranchCreator );
 
 		Gaffer::StringPlug *targetPlug();
 		const Gaffer::StringPlug *targetPlug() const;

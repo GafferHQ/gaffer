@@ -54,7 +54,7 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 		Crop( const std::string &name=defaultName<Crop>() );
 		~Crop() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Crop, CropTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Crop, CropTypeId, ImageProcessor );
 
 		enum AreaSource
 		{

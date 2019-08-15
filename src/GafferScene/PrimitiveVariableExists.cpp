@@ -46,7 +46,7 @@ using namespace IECore;
 using namespace GafferScene;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( PrimitiveVariableExists );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PrimitiveVariableExists );
 
 size_t PrimitiveVariableExists::g_firstPlugIndex = 0;
 

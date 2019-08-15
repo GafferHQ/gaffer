@@ -47,7 +47,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Duplicate );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Duplicate );
 
 size_t Duplicate::g_firstPlugIndex = 0;
 

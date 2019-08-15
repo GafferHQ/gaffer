@@ -50,7 +50,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( FilterPlug );
+GAFFER_PLUG_DEFINE_TYPE( FilterPlug );
 
 const IECore::InternedString FilterPlug::inputSceneContextName( "scene:filter:inputScene" );
 

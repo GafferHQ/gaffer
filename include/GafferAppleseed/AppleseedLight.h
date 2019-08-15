@@ -52,7 +52,7 @@ class GAFFERAPPLESEED_API AppleseedLight : public GafferScene::Light
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedLight, AppleseedLightTypeId, GafferScene::Light );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferAppleseed::AppleseedLight, AppleseedLightTypeId, GafferScene::Light );
 
 		AppleseedLight( const std::string &name=defaultName<AppleseedLight>() );
 		~AppleseedLight() override;

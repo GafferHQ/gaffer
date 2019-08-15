@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( DeleteOutputs );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteOutputs );
 
 DeleteOutputs::DeleteOutputs( const std::string &name )
 	:	DeleteGlobals( name )

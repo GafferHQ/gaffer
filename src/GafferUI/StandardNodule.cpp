@@ -62,7 +62,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardNodule );
 
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 

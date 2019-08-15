@@ -55,7 +55,7 @@ class GAFFERSCENE_API PrimitiveVariableExists : public Gaffer::ComputeNode
 		PrimitiveVariableExists( const std::string &name=defaultName<PrimitiveVariableExists>() );
 		~PrimitiveVariableExists() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariableExists, PrimitiveVariableExistsTypeId, Gaffer::ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PrimitiveVariableExists, PrimitiveVariableExistsTypeId, Gaffer::ComputeNode );
 
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;

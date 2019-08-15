@@ -206,7 +206,7 @@ void connect( const DragDropEvent &event, ConnectionCreator *destination )
 // StandardNodeGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardNodeGadget );
 
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 

@@ -73,7 +73,7 @@ Dispatcher::DispatchSignal Dispatcher::g_dispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 std::string Dispatcher::g_defaultDispatcherType = "";
 
-IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Dispatcher )
 
 Dispatcher::Dispatcher( const std::string &name )
 	: Node( name )

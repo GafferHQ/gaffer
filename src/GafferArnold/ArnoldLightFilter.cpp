@@ -42,7 +42,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldLightFilter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldLightFilter );
 
 ArnoldLightFilter::ArnoldLightFilter( const std::string &name )
 	:	GafferScene::LightFilter( new ArnoldShader(), name )

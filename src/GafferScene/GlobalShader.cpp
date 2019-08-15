@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( GlobalShader );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GlobalShader );
 
 size_t GlobalShader::g_firstPlugIndex = 0;
 

@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( FilteredSceneProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FilteredSceneProcessor );
 
 size_t FilteredSceneProcessor::g_firstPlugIndex = 0;
 

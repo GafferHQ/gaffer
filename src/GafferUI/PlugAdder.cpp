@@ -159,7 +159,7 @@ void updateMetadata( Plug *plug, InternedString key, const char *value )
 // PlugAdder
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( PlugAdder );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PlugAdder );
 
 PlugAdder::PlugAdder()
 	:	m_dragging( false )

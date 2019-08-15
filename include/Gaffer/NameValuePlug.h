@@ -50,7 +50,7 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::NameValuePlug, NameValuePlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::NameValuePlug, NameValuePlugTypeId, Gaffer::ValuePlug );
 
 		// Construct a NameValuePlug with the "name" and "value" children.  The value plug
 		// can be constructed either based on a IECore::Data default value, or by supplying

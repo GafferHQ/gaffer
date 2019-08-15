@@ -39,7 +39,7 @@
 using namespace Imath;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( ConnectionCreator );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ConnectionCreator );
 
 ConnectionCreator::ConnectionCreator( const std::string &name )
 	: Gadget( name )

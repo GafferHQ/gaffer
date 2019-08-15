@@ -53,7 +53,7 @@ class GAFFERUI_API TextGadget : public Gadget
 		TextGadget( const std::string &text );
 		~TextGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::TextGadget, TextGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::TextGadget, TextGadgetTypeId, Gadget );
 
 		const std::string &getText() const;
 		void setText( const std::string &text );

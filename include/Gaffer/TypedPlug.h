@@ -53,7 +53,7 @@ class IECORE_EXPORT TypedPlug : public ValuePlug
 
 		typedef T ValueType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TypedPlug<T>, ValuePlug );
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TypedPlug<T>, ValuePlug );
 
 		TypedPlug(
 			const std::string &name = defaultName<TypedPlug>(),
@@ -87,8 +87,6 @@ class IECORE_EXPORT TypedPlug : public ValuePlug
 		using ValuePlug::hash;
 
 	private :
-
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedPlug<T> );
 
 		typedef IECore::TypedData<T> DataType;
 		typedef typename DataType::Ptr DataTypePtr;

@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( DeleteAttributes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteAttributes );
 
 DeleteAttributes::DeleteAttributes( const std::string &name )
 	:	AttributeProcessor( name )

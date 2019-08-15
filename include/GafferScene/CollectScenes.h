@@ -57,7 +57,7 @@ class GAFFERSCENE_API CollectScenes : public SceneProcessor
 		CollectScenes( const std::string &name=defaultName<CollectScenes>() );
 		~CollectScenes() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CollectScenes, CollectScenesTypeId, SceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CollectScenes, CollectScenesTypeId, SceneProcessor );
 
 		Gaffer::StringVectorDataPlug *rootNamesPlug();
 		const Gaffer::StringVectorDataPlug *rootNamesPlug() const;

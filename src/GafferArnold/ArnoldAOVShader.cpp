@@ -41,7 +41,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldAOVShader );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldAOVShader );
 
 size_t ArnoldAOVShader::g_firstPlugIndex = 0;
 

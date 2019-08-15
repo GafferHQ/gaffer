@@ -51,7 +51,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( ImagePlug );
+GAFFER_PLUG_DEFINE_TYPE( ImagePlug );
 
 //////////////////////////////////////////////////////////////////////////
 // Utilities

@@ -51,7 +51,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( FreezeTransform );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FreezeTransform );
 
 size_t FreezeTransform::g_firstPlugIndex = 0;
 
