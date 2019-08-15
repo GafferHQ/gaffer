@@ -387,9 +387,10 @@ def selectedNodes( script ) :
 		if isinstance( n, GafferDispatch.TaskNode ) :
 			result.append( n )
 		elif isinstance( n, Gaffer.SubGraph ) :
-			for p in n.children( GafferDispatch.TaskNode.TaskPlug ) :
-				if p.direction() == Gaffer.Plug.Direction.Out and p.source() :
+			for p in GafferDispatch.TaskNode.TaskPlug.RecursiveOutputRange( n ) :
+				if isinstance( p.source().node(), GafferDispatch.TaskNode ) :
 					result.append( n )
+					break
 
 	return result
 
