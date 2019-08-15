@@ -354,6 +354,11 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 			continue;
 		}
 
+		if( !tweakPlug->enabledPlug()->getValue() )
+		{
+			continue;
+		}
+
 		ShaderNetwork::Parameter parameter;
 		size_t dotPos = name.find_last_of( '.' );
 		if( dotPos == string::npos )
@@ -365,11 +370,6 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 		{
 			parameter.shader = InternedString( name.c_str(), dotPos );
 			parameter.name = InternedString( name.c_str() + dotPos + 1 );
-		}
-
-		if( !tweakPlug->enabledPlug()->getValue() )
-		{
-			continue;
 		}
 
 		const Mode mode = static_cast<Mode>( tweakPlug->modePlug()->getValue() );
