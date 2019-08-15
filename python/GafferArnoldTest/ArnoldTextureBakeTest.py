@@ -460,7 +460,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		outImage["parameters"]["in0"].setInput( outLayer["out"]["layer"] )
 		oSLImage = GafferOSL.OSLImage()
 		oSLImage["in"].setInput( imageReader["out"] )
-		oSLImage["shader"].setInput( outImage["out"] )
+		oSLImage["shader"].setInput( outImage["out"]["out"] )
 
 		merge3 = GafferImage.Merge()
 		merge3["in"]["in0"].setInput( oSLImage["out"] )
