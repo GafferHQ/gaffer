@@ -45,6 +45,8 @@ import imath
 import IECore
 
 import Gaffer
+import GafferDispatch
+
 import GafferTest
 import GafferDispatchTest
 
@@ -329,6 +331,47 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			open( s["t"]["fileName"].getValue() ).read(),
 			"0.0 1.0 2.0"
 		)
+
+	def testCanSerialiseFrameDependentPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["PythonCommand"] = GafferDispatch.PythonCommand()
+		s["PythonCommand"]["command"].setValue(
+			inspect.cleandoc( """
+				import os
+				import GafferDispatchTest
+
+				tmpDir = os.path.dirname( self.scriptNode()["fileName"].getValue() )
+				s = Gaffer.ScriptNode()
+				s["t"] = GafferDispatchTest.TextWriter()
+				s["t"]["fileName"].setValue( tmpDir + "/test.####.txt" )
+				s["t"]["text"].setValue( "test" )
+				s["fileName"].setValue( tmpDir + "/canSerialiseFrameDependentPlug.gfr" )
+				s.save()
+			""" )
+		)
+
+		def validate( sequence ) :
+
+			s["PythonCommand"]["sequence"].setValue( sequence )
+
+			s["fileName"].setValue( self.__scriptFileName )
+			s.context().setFrame( 10 )
+			s.save()
+
+			subprocess.check_call( [ "gaffer", "execute", self.__scriptFileName, "-frames", "5", "-nodes", "PythonCommand" ] )
+
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/canSerialiseFrameDependentPlug.gfr" ) )
+
+			ss = Gaffer.ScriptNode()
+			ss["fileName"].setValue( self.temporaryDirectory() + "/canSerialiseFrameDependentPlug.gfr" )
+			ss.load()
+
+			# we must retain the non-substituted value
+			self.assertEqual( ss["t"]["fileName"].getValue(), "{}/test.####.txt".format( self.temporaryDirectory() ) )
+
+		validate( sequence = True )
+		validate( sequence = False )
 
 if __name__ == "__main__":
 	unittest.main()

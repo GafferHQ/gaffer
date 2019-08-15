@@ -45,6 +45,7 @@
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Monitor.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
@@ -203,6 +204,21 @@ std::string serialise( const Node *parent, const Set *filter )
 	{
 		Py_Initialize();
 	}
+
+	IECorePython::ScopedGILLock gilLock;
+
+	// Remove current Process from ThreadState, because it would
+	// cause `StringPlug::getValue()` to perform unwanted substitutions
+	// that would accidentally be baked into the serialisation.
+	/// \todo Consider having a serialisation process instead (and
+	/// perhaps a more general concept of a non-computing process)
+	/// and making StringPlug skip substitutions when it sees one.
+	const Context *context = Context::current();
+	const Monitor::MonitorSet &monitors = Monitor::current();
+	const ThreadState defaultThreadState;
+	ThreadState::Scope defaultThreadStateScope( defaultThreadState );
+	Context::Scope contextScope( context );
+	Monitor::Scope monitorScope( monitors );
 
 	std::string result;
 	try
