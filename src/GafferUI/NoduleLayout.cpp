@@ -376,7 +376,7 @@ bool affectsDirection( IECore::InternedString key, IECore::InternedString sectio
 // NoduleLayout implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( NoduleLayout );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NoduleLayout );
 
 NoduleLayout::NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedString section )
 	:	Gadget(), m_parent( parent ), m_section( section )

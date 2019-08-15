@@ -52,7 +52,7 @@ class GAFFERSCENE_API ShaderAssignment : public SceneElementProcessor
 		ShaderAssignment( const std::string &name=defaultName<ShaderAssignment>() );
 		~ShaderAssignment() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
 
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;

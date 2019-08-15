@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ShaderAssignment );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ShaderAssignment );
 
 namespace
 {

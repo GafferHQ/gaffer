@@ -53,7 +53,7 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 		BackdropNodeGadget( Gaffer::NodePtr node );
 		~BackdropNodeGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::BackdropNodeGadget, BackdropNodeGadgetTypeId, NodeGadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::BackdropNodeGadget, BackdropNodeGadgetTypeId, NodeGadget );
 
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 

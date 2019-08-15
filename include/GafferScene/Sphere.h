@@ -49,7 +49,7 @@ class GAFFERSCENE_API Sphere : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Sphere, SphereTypeId, ObjectSource );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Sphere, SphereTypeId, ObjectSource );
 
 		Sphere( const std::string &name=defaultName<Sphere>() );
 		~Sphere() override;

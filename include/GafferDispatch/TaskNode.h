@@ -113,7 +113,7 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 		typedef std::vector<Task> Tasks;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
 
 		TaskNode( const std::string &name=defaultName<TaskNode>() );
 		~TaskNode() override;
@@ -126,7 +126,7 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 			public :
 
-				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode::TaskPlug, TaskNodeTaskPlugTypeId, Gaffer::Plug );
+				GAFFER_PLUG_DECLARE_TYPE( GafferDispatch::TaskNode::TaskPlug, TaskNodeTaskPlugTypeId, Gaffer::Plug );
 
 				TaskPlug( const std::string &name=defaultName<TaskPlug>(), Direction direction=In, unsigned flags=Default );
 

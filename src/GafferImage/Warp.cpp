@@ -179,7 +179,7 @@ class Warp::EngineData : public Data
 // Warp
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Warp );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Warp );
 
 size_t Warp::g_firstPlugIndex = 0;
 

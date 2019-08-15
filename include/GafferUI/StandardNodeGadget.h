@@ -63,7 +63,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodeGadget, StandardNodeGadgetTypeId, NodeGadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::StandardNodeGadget, StandardNodeGadgetTypeId, NodeGadget );
 
 		enum Edge
 		{

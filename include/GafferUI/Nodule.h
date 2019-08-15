@@ -59,7 +59,7 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Nodule, NoduleTypeId, ConnectionCreator );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::Nodule, NoduleTypeId, ConnectionCreator );
 		~Nodule() override;
 
 		Gaffer::Plug *plug();

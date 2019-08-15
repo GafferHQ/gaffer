@@ -57,7 +57,7 @@ using namespace GafferScene;
 
 typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 
-IE_CORE_DEFINERUNTIMETYPED( SceneReader );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneReader );
 
 //////////////////////////////////////////////////////////////////////////
 // SceneReader implementation

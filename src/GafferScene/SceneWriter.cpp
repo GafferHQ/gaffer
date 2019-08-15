@@ -151,7 +151,7 @@ struct LocationWriter
 
 }
 
-IE_CORE_DEFINERUNTIMETYPED( SceneWriter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneWriter );
 
 size_t SceneWriter::g_firstPlugIndex = 0;
 

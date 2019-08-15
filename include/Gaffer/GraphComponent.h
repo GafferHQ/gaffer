@@ -59,8 +59,24 @@ struct TypePredicate;
 template<typename Predicate>
 class FilteredChildIterator;
 
+template<typename Predicate>
+class FilteredChildRange;
+
 template<typename Predicate, typename RecursionPredicate>
 class FilteredRecursiveChildIterator;
+
+template<typename Predicate, typename RecursionPredicate>
+class FilteredRecursiveChildRange;
+
+#define GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( TYPE, TYPEID, BASETYPE ) \
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TYPE, TYPEID, BASETYPE ) \
+	using Iterator = Gaffer::FilteredChildIterator<Gaffer::TypePredicate<TYPE>>; \
+	using RecursiveIterator = Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<TYPE>, Gaffer::TypePredicate<GraphComponent>>; \
+	using Range = Gaffer::FilteredChildRange<Gaffer::TypePredicate<TYPE>>; \
+	using RecursiveRange = Gaffer::FilteredRecursiveChildRange<Gaffer::TypePredicate<TYPE>, Gaffer::TypePredicate<GraphComponent>>;
+
+#define GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TYPE ) \
+	IE_CORE_DEFINERUNTIMETYPED( TYPE )
 
 class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::signals::trackable
 {
@@ -70,7 +86,7 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		GraphComponent( const std::string &name=GraphComponent::defaultName<GraphComponent>() );
 		~GraphComponent() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
 		typedef boost::signal<void (GraphComponent *)> UnarySignal;
 		typedef boost::signal<void (GraphComponent *, GraphComponent *)> BinarySignal;

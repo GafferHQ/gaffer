@@ -61,7 +61,7 @@ class GAFFERIMAGE_API Resize : public ImageProcessor
 		Resize( const std::string &name=defaultName<Resize>() );
 		~Resize() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Resize, ResizeTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resize, ResizeTypeId, ImageProcessor );
 
 		enum FitMode
 		{

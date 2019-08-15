@@ -53,7 +53,7 @@ class GAFFERIMAGE_API Blur : public ImageProcessor
 		Blur( const std::string &name=defaultName<Blur>() );
 		~Blur() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Blur, BlurTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Blur, BlurTypeId, ImageProcessor );
 
 		Gaffer::V2fPlug *radiusPlug();
 		const Gaffer::V2fPlug *radiusPlug() const;

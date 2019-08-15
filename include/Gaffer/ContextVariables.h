@@ -49,7 +49,7 @@ class IECORE_EXPORT ContextVariables : public ContextProcessor
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ContextVariables, ContextVariablesTypeId, ContextProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::ContextVariables, ContextVariablesTypeId, ContextProcessor );
 
 		ContextVariables( const std::string &name=GraphComponent::defaultName<ContextVariables>() );
 		~ContextVariables() override;

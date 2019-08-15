@@ -64,7 +64,7 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		UVView( const std::string &name = defaultName<UVView>() );
 		~UVView() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::UVView, UVViewTypeId, View );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::UVView, UVViewTypeId, View );
 
 		void setContext( Gaffer::ContextPtr context ) override;
 

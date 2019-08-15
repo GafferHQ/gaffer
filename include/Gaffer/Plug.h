@@ -50,6 +50,35 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( Node )
 
+#define GAFFER_PLUG_DECLARE_TYPE_ALIASES( TYPE ) \
+	using Iterator = Gaffer::FilteredChildIterator<Gaffer::Plug::TypePredicate<TYPE>>; \
+	using InputIterator = Gaffer::FilteredChildIterator<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::In>>; \
+	using OutputIterator = Gaffer::FilteredChildIterator<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::Out>>; \
+	using RecursiveIterator = Gaffer::FilteredRecursiveChildIterator<Gaffer::Plug::TypePredicate<TYPE>, Gaffer::Plug::TypePredicate<>>; \
+	using RecursiveInputIterator = Gaffer::FilteredRecursiveChildIterator<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::In>, Gaffer::Plug::TypePredicate<>>; \
+	using RecursiveOutputIterator = Gaffer::FilteredRecursiveChildIterator<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::Out>, Gaffer::Plug::TypePredicate<>>; \
+	using Range = Gaffer::FilteredChildRange<Gaffer::Plug::TypePredicate<TYPE>>; \
+	using InputRange = Gaffer::FilteredChildRange<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::In>>; \
+	using OutputRange = Gaffer::FilteredChildRange<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::Out>>; \
+	using RecursiveRange = Gaffer::FilteredRecursiveChildRange<Gaffer::Plug::TypePredicate<TYPE>, Gaffer::Plug::TypePredicate<>>;\
+	using RecursiveInputRange = Gaffer::FilteredRecursiveChildRange<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::In>, Gaffer::Plug::TypePredicate<>>; \
+	using RecursiveOutputRange = Gaffer::FilteredRecursiveChildRange<Gaffer::Plug::TypePredicate<TYPE, Gaffer::Plug::Out>, Gaffer::Plug::TypePredicate<>>;
+
+#define GAFFER_PLUG_DECLARE_TYPE( TYPE, TYPEID, BASETYPE ) \
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TYPE, TYPEID, BASETYPE ) \
+	GAFFER_PLUG_DECLARE_TYPE_ALIASES( TYPE )
+
+#define GAFFER_PLUG_DEFINE_TYPE( TYPE ) \
+	IE_CORE_DEFINERUNTIMETYPED( TYPE )
+
+#define GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TYPE, BASETYPE ) \
+	IECORE_RUNTIMETYPED_DECLARETEMPLATE( TYPE, BASETYPE ) \
+	IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TYPE ) \
+	GAFFER_PLUG_DECLARE_TYPE_ALIASES( TYPE )
+
+#define GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( TYPE, TYPEID ) \
+	IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( TYPE, TYPEID )
+
 /// The Plug class defines a means of making point to point connections
 /// between Nodes. A plug may receive a single input connection from
 /// another plug, and may have an arbitrary number of output connections
@@ -114,7 +143,10 @@ class GAFFER_API Plug : public GraphComponent
 		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
 		~Plug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Plug, PlugTypeId, GraphComponent );
+		template<typename T=Plug, Plug::Direction D=Plug::Invalid>
+		struct TypePredicate;
+
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::Plug, PlugTypeId, GraphComponent );
 
 		/// @name Parent-child relationships
 		//////////////////////////////////////////////////////////////////////
@@ -244,6 +276,27 @@ class GAFFER_API Plug : public GraphComponent
 
 IE_CORE_DECLAREPTR( Plug );
 
+template<typename T, Plug::Direction D>
+struct Plug::TypePredicate
+{
+	typedef T ChildType;
+
+	bool operator()( const GraphComponentPtr &g ) const
+	{
+		const T *p = IECore::runTimeCast<T>( g.get() );
+		if( !p )
+		{
+			return false;
+		}
+		if( D==Plug::Invalid )
+		{
+			return true;
+		}
+		return D==p->direction();
+	}
+};
+
+/// \deprecated Use Plug::TypePredicate instead
 template<Plug::Direction D=Plug::Invalid, typename T=Plug>
 struct PlugPredicate
 {
@@ -264,6 +317,7 @@ struct PlugPredicate
 	}
 };
 
+/// \deprecated Use Plug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<> > PlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Plug> > InputPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Plug> > OutputPlugIterator;

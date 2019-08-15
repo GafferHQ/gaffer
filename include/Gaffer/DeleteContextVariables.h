@@ -49,7 +49,7 @@ class IECORE_EXPORT DeleteContextVariables : public ContextProcessor
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::DeleteContextVariables, DeleteContextVariablesTypeId, ContextProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::DeleteContextVariables, DeleteContextVariablesTypeId, ContextProcessor );
 
 		DeleteContextVariables( const std::string &name=GraphComponent::defaultName<DeleteContextVariables>() );
 		~DeleteContextVariables() override;

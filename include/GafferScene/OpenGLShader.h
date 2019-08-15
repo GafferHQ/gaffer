@@ -50,7 +50,7 @@ class GAFFERSCENE_API OpenGLShader : public GafferScene::Shader
 		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
 		~OpenGLShader() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
 
 		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 

@@ -349,6 +349,35 @@ class NodeTest( GafferTest.TestCase ) :
 		s.addChild( n )
 		assertConnections()
 
+	def testRanges( self ) :
+
+		n = Gaffer.Node()
+		n["c1"] = Gaffer.Node()
+		n["c2"] = GafferTest.AddNode()
+		n["c2"]["gc1"] = Gaffer.Node()
+		n["c3"] = Gaffer.Node()
+		n["c3"]["gc2"] = GafferTest.AddNode()
+		n["c3"]["gc3"] = GafferTest.AddNode()
+
+		self.assertEqual(
+			list( Gaffer.Node.Range( n ) ),
+			[ n["c1"], n["c2"], n["c3"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Node.RecursiveRange( n ) ),
+			[ n["c1"], n["c2"], n["c2"]["gc1"], n["c3"], n["c3"]["gc2"], n["c3"]["gc3"] ],
+		)
+
+		self.assertEqual(
+			list( GafferTest.AddNode.Range( n ) ),
+			[ n["c2"] ],
+		)
+
+		self.assertEqual(
+			list( GafferTest.AddNode.RecursiveRange( n ) ),
+			[ n["c2"], n["c3"]["gc2"], n["c3"]["gc3"] ],
+		)
 
 if __name__ == "__main__" :
 	unittest.main()

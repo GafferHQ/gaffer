@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Transform );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Transform );
 
 size_t Transform::g_firstPlugIndex = 0;
 

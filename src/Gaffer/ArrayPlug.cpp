@@ -46,7 +46,7 @@
 using namespace boost;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( ArrayPlug )
+GAFFER_PLUG_DEFINE_TYPE( ArrayPlug )
 
 ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr element, size_t minSize, size_t maxSize, unsigned flags )
 	:	Plug( name, direction, flags ), m_minSize( std::max( minSize, size_t( 1 ) ) ), m_maxSize( std::max( maxSize, m_minSize ) )

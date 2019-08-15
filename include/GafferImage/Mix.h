@@ -57,7 +57,7 @@ class GAFFERIMAGE_API Mix : public ImageProcessor
 		Mix( const std::string &name=defaultName<Mix>() );
 		~Mix() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Mix, MixTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Mix, MixTypeId, ImageProcessor );
 
 		GafferImage::ImagePlug *maskPlug();
 		const GafferImage::ImagePlug *maskPlug() const;

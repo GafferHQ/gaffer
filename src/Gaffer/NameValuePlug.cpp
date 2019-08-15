@@ -43,7 +43,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( NameValuePlug );
+GAFFER_PLUG_DEFINE_TYPE( NameValuePlug );
 
 NameValuePlug::NameValuePlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
@@ -157,7 +157,7 @@ PlugPtr NameValuePlug::createCounterpart( const std::string &name, Direction dir
 	{
 		// We'd like this to be an error, but when deserializing files, we might call
 		// createCounterpart on half-loaded NameValuePlugs, which don't have any plugs yet.
-		// To allow this to load, we have allow the counterpart to also be an invalid 
+		// To allow this to load, we have allow the counterpart to also be an invalid
 		// NameValuePlug.  We are depending on subsequent serialization code to actually
 		// add the required children, or else we will be left with an invalid plug
 		return new NameValuePlug( name, direction, getFlags() );

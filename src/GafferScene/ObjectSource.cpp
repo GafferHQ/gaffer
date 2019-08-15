@@ -50,7 +50,7 @@ using namespace GafferScene;
 
 static IECore::InternedString g_emptyString( "" );
 
-IE_CORE_DEFINERUNTIMETYPED( ObjectSource );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ObjectSource );
 
 size_t ObjectSource::g_firstPlugIndex = 0;
 

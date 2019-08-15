@@ -49,7 +49,7 @@ class GAFFERSCENE_API Light : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Light, LightTypeId, ObjectSource );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Light, LightTypeId, ObjectSource );
 
 		Light( const std::string &name=defaultName<Light>() );
 		~Light() override;

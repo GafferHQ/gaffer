@@ -58,7 +58,7 @@ using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
-IE_CORE_DEFINERUNTIMETYPED( TranslateTool );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TranslateTool );
 
 TranslateTool::ToolDescription<TranslateTool, SceneView> TranslateTool::g_toolDescription;
 

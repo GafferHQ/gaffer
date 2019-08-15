@@ -167,7 +167,7 @@ void setFrom( Plug *dst, const Plug *src )
 // BoxIO
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( BoxIO );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BoxIO );
 
 size_t BoxIO::g_firstPlugIndex = 0;
 

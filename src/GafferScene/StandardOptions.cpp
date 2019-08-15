@@ -42,7 +42,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( StandardOptions );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardOptions );
 
 StandardOptions::StandardOptions( const std::string &name )
 	:	Options( name )

@@ -44,7 +44,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ExternalProcedural );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ExternalProcedural );
 
 size_t ExternalProcedural::g_firstPlugIndex = 0;
 

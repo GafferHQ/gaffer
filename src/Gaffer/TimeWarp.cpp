@@ -41,7 +41,7 @@
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( TimeWarp );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TimeWarp );
 
 size_t TimeWarp::g_firstPlugIndex;
 

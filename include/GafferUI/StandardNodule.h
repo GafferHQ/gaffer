@@ -60,7 +60,7 @@ class GAFFERUI_API StandardNodule : public Nodule
 		StandardNodule( Gaffer::PlugPtr plug );
 		~StandardNodule() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodule, StandardNoduleTypeId, Nodule );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::StandardNodule, StandardNoduleTypeId, Nodule );
 
 		void setLabelVisible( bool labelVisible );
 		bool getLabelVisible() const;

@@ -53,7 +53,7 @@ class GAFFERSCENE_API Options : public GlobalsProcessor
 		Options( const std::string &name=defaultName<Options>() );
 		~Options() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Options, OptionsTypeId, GlobalsProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Options, OptionsTypeId, GlobalsProcessor );
 
 		Gaffer::CompoundDataPlug *optionsPlug();
 		const Gaffer::CompoundDataPlug *optionsPlug() const;

@@ -43,7 +43,7 @@
 using namespace IECore;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( StringPlug );
+GAFFER_PLUG_DEFINE_TYPE( StringPlug );
 
 StringPlug::StringPlug(
 	const std::string &name,

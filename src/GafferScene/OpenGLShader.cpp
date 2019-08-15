@@ -58,7 +58,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( OpenGLShader );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenGLShader );
 
 OpenGLShader::OpenGLShader( const std::string &name )
 	:	GafferScene::Shader( name )

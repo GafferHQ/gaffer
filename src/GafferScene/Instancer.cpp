@@ -340,7 +340,7 @@ class Instancer::EngineData : public Data
 // Instancer
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Instancer );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Instancer );
 
 size_t Instancer::g_firstPlugIndex = 0;
 

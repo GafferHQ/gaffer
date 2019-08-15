@@ -60,7 +60,7 @@ class GAFFER_API CompoundNumericPlug : public ValuePlug
 		typedef T ValueType;
 		typedef NumericPlug<typename T::BaseType> ChildType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( CompoundNumericPlug<T>, ValuePlug );
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( CompoundNumericPlug<T>, ValuePlug );
 
 		CompoundNumericPlug(
 			const std::string &name = defaultName<CompoundNumericPlug>(),
@@ -121,8 +121,6 @@ class GAFFER_API CompoundNumericPlug : public ValuePlug
 		//@}
 
 	private :
-
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( CompoundNumericPlug<T> );
 
 		static const char **childNames();
 		const IECore::GeometricData::Interpretation m_interpretation;

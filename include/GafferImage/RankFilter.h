@@ -53,7 +53,7 @@ class GAFFERIMAGE_API RankFilter : public ImageProcessor
 
 		~RankFilter() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::RankFilter, RankFilterTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::RankFilter, RankFilterTypeId, ImageProcessor );
 
 		Gaffer::V2iPlug *radiusPlug();
 		const Gaffer::V2iPlug *radiusPlug() const;

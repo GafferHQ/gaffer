@@ -46,7 +46,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( DeleteImageMetadata );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteImageMetadata );
 
 size_t DeleteImageMetadata::g_firstPlugIndex = 0;
 

@@ -59,7 +59,7 @@ class GAFFERUI_API NodeGadget : public Gadget
 
 		~NodeGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NodeGadget, NodeGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::NodeGadget, NodeGadgetTypeId, Gadget );
 
 		Gaffer::Node *node();
 		const Gaffer::Node *node() const;

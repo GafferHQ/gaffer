@@ -63,7 +63,7 @@ class ContextProcessor::ProcessedScope : public Context::EditableScope
 
 };
 
-IE_CORE_DEFINERUNTIMETYPED( ContextProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ContextProcessor );
 
 size_t ContextProcessor::g_firstPlugIndex = 0;
 

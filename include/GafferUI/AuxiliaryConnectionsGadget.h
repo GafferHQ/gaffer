@@ -70,7 +70,7 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 
 		~AuxiliaryConnectionsGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AuxiliaryConnectionsGadget, AuxiliaryConnectionsGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AuxiliaryConnectionsGadget, AuxiliaryConnectionsGadgetTypeId, Gadget );
 
 		/// Gadgets may either be NodeGadgets or Nodules.
 		bool hasConnection( const Gadget *srcGadget, const Gadget *dstGadget ) const;

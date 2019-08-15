@@ -90,7 +90,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		ImageGadget();
 		~ImageGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageGadget, ImageGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImageUI::ImageGadget, ImageGadgetTypeId, Gadget );
 
 		Imath::Box3f bound() const override;
 

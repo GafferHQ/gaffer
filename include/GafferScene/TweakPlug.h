@@ -54,7 +54,7 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::ValuePlug );
 
 		enum Mode
 		{
@@ -117,7 +117,7 @@ class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::TweaksPlug, TweaksPlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferScene::TweaksPlug, TweaksPlugTypeId, Gaffer::ValuePlug );
 
 		TweaksPlug( const std::string &name=defaultName<TweaksPlug>(), Direction direction=In, unsigned flags=Default );
 

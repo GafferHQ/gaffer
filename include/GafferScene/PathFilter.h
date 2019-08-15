@@ -50,7 +50,7 @@ class GAFFERSCENE_API PathFilter : public Filter
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PathFilter, PathFilterTypeId, Filter );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PathFilter, PathFilterTypeId, Filter );
 
 		PathFilter( const std::string &name=defaultName<PathFilter>() );
 		~PathFilter() override;

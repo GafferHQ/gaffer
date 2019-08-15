@@ -66,7 +66,7 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		Gaffer::CompoundDataPlug *contextPlug();
 		const Gaffer::CompoundDataPlug *contextPlug() const;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
 
 	protected :
 

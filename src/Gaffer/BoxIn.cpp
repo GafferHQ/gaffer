@@ -38,7 +38,7 @@
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( BoxIn )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BoxIn )
 
 BoxIn::BoxIn( const std::string &name )
 	:	BoxIO( Plug::In, name )

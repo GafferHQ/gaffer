@@ -46,7 +46,7 @@ using namespace Imath;
 
 static IECore::InternedString g_clippingPlanesSetName( "__clippingPlanes" );
 
-IE_CORE_DEFINERUNTIMETYPED( ClippingPlane );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ClippingPlane );
 
 ClippingPlane::ClippingPlane( const std::string &name )
 	:	ObjectSource( name, "clippingPlane" )

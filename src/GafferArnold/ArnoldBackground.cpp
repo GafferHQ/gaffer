@@ -38,7 +38,7 @@
 
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldBackground );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldBackground );
 
 ArnoldBackground::ArnoldBackground( const std::string &name )
 	:	GlobalShader( name )

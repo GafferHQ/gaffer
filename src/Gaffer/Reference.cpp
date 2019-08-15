@@ -290,7 +290,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 // Reference
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Reference );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Reference );
 
 Reference::Reference( const std::string &name )
 	:	SubGraph( name ), m_plugEdits( new PlugEdits( this ) )

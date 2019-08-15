@@ -39,7 +39,7 @@
 using namespace GafferScene;
 using namespace GafferDelight;
 
-IE_CORE_DEFINERUNTIMETYPED( DelightRender );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DelightRender );
 
 DelightRender::DelightRender( const std::string &name )
 	:	Render( "3Delight", name )

@@ -47,7 +47,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CompoundNodule );
 
 Nodule::NoduleTypeDescription<CompoundNodule> CompoundNodule::g_noduleTypeDescription;
 

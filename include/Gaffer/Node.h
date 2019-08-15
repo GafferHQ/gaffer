@@ -62,7 +62,7 @@ class GAFFER_API Node : public GraphComponent
 		Node( const std::string &name=defaultName<Node>() );
 		~Node() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Node, NodeTypeId, GraphComponent );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Node, NodeTypeId, GraphComponent );
 
 		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
 		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;

@@ -41,7 +41,7 @@
 
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( NameGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NameGadget );
 
 NameGadget::NameGadget( Gaffer::GraphComponentPtr object )
 	:	TextGadget( object->getName() )

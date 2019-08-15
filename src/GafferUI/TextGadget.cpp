@@ -45,7 +45,7 @@ using namespace GafferUI;
 using namespace IECore;
 using namespace boost;
 
-IE_CORE_DEFINERUNTIMETYPED( TextGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TextGadget );
 
 TextGadget::TextGadget( const std::string &text )
 	:	Gadget( defaultName<TextGadget>() )

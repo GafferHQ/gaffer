@@ -88,7 +88,7 @@ Box2f transform( const Box2f &b, const M33f &m )
 // ImageTransform
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ImageTransform );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageTransform );
 
 size_t ImageTransform::g_firstPlugIndex = 0;
 

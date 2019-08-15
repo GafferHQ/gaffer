@@ -49,7 +49,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( RankFilter );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( RankFilter );
 
 size_t RankFilter::g_firstPlugIndex = 0;
 

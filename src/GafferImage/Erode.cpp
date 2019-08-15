@@ -37,7 +37,7 @@
 
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( Erode );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Erode );
 
 Erode::Erode( const std::string &name )
 	:   RankFilter( name, ErodeRank )

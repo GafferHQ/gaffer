@@ -48,7 +48,7 @@ using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( ImageNode );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageNode );
 
 size_t ImageNode::g_firstPlugIndex = 0;
 

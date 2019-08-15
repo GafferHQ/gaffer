@@ -64,7 +64,7 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 		);
 		~CompoundDataPlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::ValuePlug );
 
 		/// Accepts only children that can generate values for the CompoundData.
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;

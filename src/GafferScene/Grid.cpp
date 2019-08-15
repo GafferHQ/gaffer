@@ -48,7 +48,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Grid );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Grid );
 
 size_t Grid::g_firstPlugIndex = 0;
 static InternedString g_gridLinesName( "gridLines" );

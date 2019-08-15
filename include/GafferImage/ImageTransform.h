@@ -59,7 +59,7 @@ class GAFFERIMAGE_API ImageTransform : public ImageProcessor
 		ImageTransform( const std::string &name=defaultName<ImageTransform>() );
 		~ImageTransform() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageTransform, ImageTransformTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageTransform, ImageTransformTypeId, ImageProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

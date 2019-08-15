@@ -52,7 +52,7 @@ class GAFFERSCENE_API CopyAttributes : public FilteredSceneProcessor
 		CopyAttributes( const std::string &name=defaultName<CopyAttributes>() );
 		~CopyAttributes() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CopyAttributes, CopyAttributesTypeId, FilteredSceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CopyAttributes, CopyAttributesTypeId, FilteredSceneProcessor );
 
 		Gaffer::StringPlug *attributesPlug();
 		const Gaffer::StringPlug *attributesPlug() const;

@@ -64,7 +64,7 @@ class GAFFERIMAGE_API Resample : public ImageProcessor
 		Resample( const std::string &name=defaultName<Resample>() );
 		~Resample() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Resample, ResampleTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resample, ResampleTypeId, ImageProcessor );
 
 		enum Debug
 		{

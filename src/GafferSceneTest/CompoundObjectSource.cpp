@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferSceneTest;
 
-IE_CORE_DEFINERUNTIMETYPED( CompoundObjectSource )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CompoundObjectSource )
 
 CompoundObjectSource::CompoundObjectSource( const std::string &name )
 	:	SceneNode( name )

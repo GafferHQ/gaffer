@@ -54,7 +54,7 @@ class GAFFERIMAGE_API Constant : public ImageNode
 		Constant( const std::string &name=defaultName<Constant>() );
 		~Constant() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Constant, ConstantTypeId, ImageNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Constant, ConstantTypeId, ImageNode );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

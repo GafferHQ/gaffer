@@ -48,7 +48,7 @@
 using namespace Gaffer;
 using namespace Imath;
 
-IE_CORE_DEFINERUNTIMETYPED( Random );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Random );
 
 size_t Random::g_firstPlugIndex = 0;
 

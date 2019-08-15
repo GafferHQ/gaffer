@@ -105,7 +105,7 @@ IECoreImage::DisplayDriverServer *displayDriverServer()
 //////////////////////////////////////////////////////////////////////////
 
 
-IE_CORE_DEFINERUNTIMETYPED( ShaderView );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ShaderView );
 
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 

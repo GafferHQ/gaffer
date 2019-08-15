@@ -851,5 +851,65 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( scope["parent"]["p"], "test" ), None )
 		self.assertEqual( Gaffer.Metadata.value( scope["parent"]["a"]["op1"], "test" ), 10 )
 
+	def testRanges( self ) :
+
+		n = Gaffer.Node()
+		n["c1"] = Gaffer.Plug()
+		n["c2"] = Gaffer.Node()
+		n["c3"] = Gaffer.StringPlug()
+		n["c4"] = Gaffer.Plug()
+		n["c4"]["gc1"] = Gaffer.Plug()
+		n["c4"]["gc2"] = Gaffer.StringPlug()
+
+		self.assertEqual(
+			list( Gaffer.Plug.Range( n ) ),
+			[ n["user"], n["c1"], n["c3"], n["c4"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.StringPlug.Range( n ) ),
+			[ n["c3"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.RecursiveRange( n ) ),
+			[ n["user"], n["c1"], n["c3"], n["c4"], n["c4"]["gc1"], n["c4"]["gc2"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.StringPlug.RecursiveRange( n ) ),
+			[ n["c3"], n["c4"]["gc2"] ]
+		)
+
+	def testInputAndOutputRanges( self ) :
+
+		n = Gaffer.Node()
+
+		n["c1"] = Gaffer.Plug()
+		n["c2"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		n["c3"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs )
+		n["c3"]["gc1"] = Gaffer.StringPlug()
+		n["c3"]["gc2"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+
+		self.assertEqual(
+			list( Gaffer.Plug.InputRange( n ) ),
+			[ n["user"], n["c1"], n["c3" ] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.OutputRange( n ) ),
+			[ n["c2"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.RecursiveInputRange( n ) ),
+			[ n["user"], n["c1"], n["c3" ], n["c3"]["gc1"] ]
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.RecursiveOutputRange( n ) ),
+			[ n["c2"], n["c3"]["gc2"] ]
+		)
+
 if __name__ == "__main__":
 	unittest.main()

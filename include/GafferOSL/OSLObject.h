@@ -61,7 +61,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 		OSLObject( const std::string &name=defaultName<SceneElementProcessor>() );
 		~OSLObject() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
 
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;

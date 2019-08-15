@@ -66,7 +66,7 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 		typedef typename ValueType::Ptr ValuePtr;
 		typedef typename ValueType::ConstPtr ConstValuePtr;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TypedObjectPlug<T>, ValuePlug );
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TypedObjectPlug<T>, ValuePlug );
 
 		/// A copy of defaultValue is taken - it must not be null.
 		TypedObjectPlug(
@@ -117,10 +117,6 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
 		void setFrom( const ValuePlug *other ) override;
-
-	private :
-
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedObjectPlug<T> );
 
 };
 

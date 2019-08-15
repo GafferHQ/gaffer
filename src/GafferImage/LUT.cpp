@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( LUT );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LUT );
 
 size_t LUT::g_firstPlugIndex = 0;
 

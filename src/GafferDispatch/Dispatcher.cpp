@@ -73,7 +73,7 @@ Dispatcher::DispatchSignal Dispatcher::g_dispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 std::string Dispatcher::g_defaultDispatcherType = "";
 
-IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Dispatcher )
 
 Dispatcher::Dispatcher( const std::string &name )
 	: Node( name )
@@ -737,9 +737,9 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
 		{
-			for ( RecursiveOutputPlugIterator plugIt( subGraph ); !plugIt.done(); ++plugIt )
+			for( auto &plug : TaskNode::TaskPlug::RecursiveOutputRange( *subGraph ) )
 			{
-				Node *sourceNode = plugIt->get()->source()->node();
+				Node *sourceNode = plug->source()->node();
 				if ( TaskNode *taskNode = runTimeCast<TaskNode>( sourceNode ) )
 				{
 					taskNodes.push_back( taskNode );

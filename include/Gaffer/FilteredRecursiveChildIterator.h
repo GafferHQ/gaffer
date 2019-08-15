@@ -135,6 +135,35 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 
 };
 
+template<typename Predicate, typename RecursionPredicate=TypePredicate<GraphComponent>>
+class FilteredRecursiveChildRange
+{
+
+	public :
+
+		FilteredRecursiveChildRange( const GraphComponent &parent )
+			:	m_parent( parent )
+		{
+		}
+
+		using Iterator = FilteredRecursiveChildIterator<Predicate, RecursionPredicate>;
+
+		Iterator begin() const
+		{
+			return Iterator( &m_parent, m_parent.children().begin() );
+		}
+
+		Iterator end() const
+		{
+			return Iterator( &m_parent, m_parent.children().end() );
+		}
+
+	private :
+
+		const GraphComponent &m_parent;
+
+};
+
 } // namespace Gaffer
 
 #endif // GAFFER_FILTEREDRECURSIVECHILDITERATOR_H

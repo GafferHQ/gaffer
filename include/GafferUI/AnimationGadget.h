@@ -63,7 +63,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		~AnimationGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AnimationGadget, AnimationGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AnimationGadget, AnimationGadgetTypeId, Gadget );
 
 		Gaffer::StandardSet *visiblePlugs();
 		const Gaffer::StandardSet *visiblePlugs() const;

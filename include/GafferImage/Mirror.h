@@ -52,7 +52,7 @@ class GAFFERIMAGE_API Mirror : public ImageProcessor
 		Mirror( const std::string &name=defaultName<Mirror>() );
 		~Mirror() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Mirror, MirrorTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Mirror, MirrorTypeId, ImageProcessor );
 
 		Gaffer::BoolPlug *horizontalPlug();
 		const Gaffer::BoolPlug *horizontalPlug() const;

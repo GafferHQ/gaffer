@@ -52,7 +52,7 @@ class GAFFERIMAGE_API ImageMetadata : public MetadataProcessor
 		ImageMetadata( const std::string &name=defaultName<ImageMetadata>() );
 		~ImageMetadata() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageMetadata, ImageMetadataTypeId, MetadataProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageMetadata, ImageMetadataTypeId, MetadataProcessor );
 
 		Gaffer::CompoundDataPlug *metadataPlug();
 		const Gaffer::CompoundDataPlug *metadataPlug() const;

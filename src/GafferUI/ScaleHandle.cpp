@@ -45,7 +45,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( ScaleHandle );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ScaleHandle );
 
 ScaleHandle::ScaleHandle( Style::Axes axes )
 	:	Handle( defaultName<ScaleHandle>() ), m_axes( Style::X )

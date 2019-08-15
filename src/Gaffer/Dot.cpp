@@ -43,7 +43,7 @@
 using namespace IECore;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( Dot );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Dot );
 
 static InternedString g_inPlugName( "in" );
 static InternedString g_outPlugName( "out" );

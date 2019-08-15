@@ -46,7 +46,7 @@
 
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( ConnectionGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ConnectionGadget );
 
 ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
 	:	ConnectionCreator( defaultName<ConnectionGadget>() ), m_minimised( false )

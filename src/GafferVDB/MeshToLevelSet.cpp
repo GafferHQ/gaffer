@@ -123,7 +123,7 @@ struct CortexMeshAdapter
 // MeshToLevelSet implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( MeshToLevelSet );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshToLevelSet );
 
 size_t MeshToLevelSet::g_firstPlugIndex = 0;
 

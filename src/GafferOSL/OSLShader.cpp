@@ -137,7 +137,7 @@ ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 // OSLShader
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( OSLShader );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLShader );
 
 OSLShader::OSLShader( const std::string &name )
 	:	GafferScene::Shader( name )

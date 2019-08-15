@@ -60,7 +60,7 @@ class GAFFER_API BoxPlug : public ValuePlug
 		typedef typename IECore::BoxTraits<T>::BaseType PointType;
 		typedef CompoundNumericPlug<PointType> ChildType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( BoxPlug<T>, ValuePlug );
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( BoxPlug<T>, ValuePlug );
 
 		BoxPlug(
 			const std::string &name = defaultName<BoxPlug>(),
@@ -105,10 +105,6 @@ class GAFFER_API BoxPlug : public ValuePlug
 		/// Returns the value, calling getValue() on the min and max child plugs to compute a component
 		/// of the result.
 		T getValue() const;
-
-	private :
-
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( BoxPlug<T> );
 
 };
 

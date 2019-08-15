@@ -55,7 +55,7 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLLight, OSLLightTypeId, GafferScene::Light );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLLight, OSLLightTypeId, GafferScene::Light );
 
 		OSLLight( const std::string &name=defaultName<OSLLight>() );
 		~OSLLight() override;

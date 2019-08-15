@@ -64,7 +64,7 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 		ImageReader( const std::string &name=defaultName<ImageReader>() );
 		~ImageReader() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageReader, ImageReaderTypeId, ImageNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageReader, ImageReaderTypeId, ImageNode );
 
 		/// The MissingFrameMode controls how to handle missing images.
 		/// It is distinct from OpenImageIOReader::MissingFrameMode so

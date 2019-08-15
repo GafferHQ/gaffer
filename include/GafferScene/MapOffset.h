@@ -58,7 +58,7 @@ class GAFFERSCENE_API MapOffset : public SceneElementProcessor
 		MapOffset( const std::string &name=defaultName<MapOffset>() );
 		~MapOffset() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::MapOffset, MapOffsetTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MapOffset, MapOffsetTypeId, SceneElementProcessor );
 
 		Gaffer::V2fPlug *offsetPlug();
 		const Gaffer::V2fPlug *offsetPlug() const;

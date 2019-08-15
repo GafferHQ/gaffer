@@ -51,7 +51,7 @@ class GAFFER_API TransformPlug : public ValuePlug
 		TransformPlug( const std::string &name = defaultName<TransformPlug>(), Direction direction=In, unsigned flags = Default );
 		~TransformPlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::TransformPlug, TransformPlugTypeId, ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::TransformPlug, TransformPlugTypeId, ValuePlug );
 
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;

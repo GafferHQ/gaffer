@@ -62,7 +62,7 @@ class GAFFERIMAGE_API Ramp : public ImageNode
 		Ramp( const std::string &name=defaultName<Ramp>() );
 		~Ramp() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Ramp, RampTypeId, ImageNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Ramp, RampTypeId, ImageNode );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

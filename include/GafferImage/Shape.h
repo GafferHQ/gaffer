@@ -59,7 +59,7 @@ class GAFFERIMAGE_API Shape : public ImageProcessor
 		Shape( const std::string &name=defaultName<Shape>() );
 		~Shape() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Shape, ShapeTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Shape, ShapeTypeId, ImageProcessor );
 
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;

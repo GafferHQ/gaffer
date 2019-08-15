@@ -57,7 +57,7 @@ class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 		FilterResults( const std::string &name=defaultName<FilterResults>() );
 		~FilterResults() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterResults, FilterResultsTypeId, ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::FilterResults, FilterResultsTypeId, ComputeNode );
 
 		ScenePlug *scenePlug();
 		const ScenePlug *scenePlug() const;

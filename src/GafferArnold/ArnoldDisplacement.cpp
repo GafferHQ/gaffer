@@ -43,7 +43,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( ArnoldDisplacement );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldDisplacement );
 
 size_t ArnoldDisplacement::g_firstPlugIndex = 0;
 static IECore::InternedString g_mapAttributeName = "ai:disp_map";

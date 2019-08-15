@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ReverseWinding );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ReverseWinding );
 
 ReverseWinding::ReverseWinding( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )

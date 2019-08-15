@@ -107,7 +107,7 @@ bool isParameterType( const Plug *plug )
 // ShaderPlug
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ShaderPlug );
+GAFFER_PLUG_DEFINE_TYPE( ShaderPlug );
 
 ShaderPlug::ShaderPlug( const std::string &name, Direction direction, unsigned flags )
 	:	Plug( name, direction, flags )

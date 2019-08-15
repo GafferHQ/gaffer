@@ -50,7 +50,7 @@ using namespace GafferImage;
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
 
 template<>
 Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const

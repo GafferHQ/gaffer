@@ -58,7 +58,7 @@ class GAFFERUI_API ContainerGadget : public Gadget
 		ContainerGadget( const std::string &name=defaultName<ContainerGadget>() );
 		~ContainerGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ContainerGadget, ContainerGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ContainerGadget, ContainerGadgetTypeId, Gadget );
 
 		/// The padding is a region added around the contents of the children.
 		/// It is specified as the final bounding box when the child bounding

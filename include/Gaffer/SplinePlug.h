@@ -124,9 +124,7 @@ class GAFFER_API SplinePlug : public ValuePlug
 		typedef typename PlugType<typename T::XType>::Type XPlugType;
 		typedef typename PlugType<typename T::YType>::Type YPlugType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( SplinePlug<T>, ValuePlug );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( SplinePlug<T> );
-
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( SplinePlug<T>, ValuePlug );
 
 		SplinePlug(
 			const std::string &name = defaultName<SplinePlug>(),

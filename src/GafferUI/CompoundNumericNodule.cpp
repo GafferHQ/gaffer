@@ -149,7 +149,7 @@ static TypeDescription g_typeDescription;
 // CompoundNumericNodule
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( CompoundNumericNodule );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CompoundNumericNodule );
 
 CompoundNumericNodule::CompoundNumericNodule( Gaffer::PlugPtr plug )
 	:	StandardNodule( plug )

@@ -81,7 +81,7 @@ class GAFFER_API BoxIO : public Node
 
 		~BoxIO() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::BoxIO, BoxIOTypeId, Node );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::BoxIO, BoxIOTypeId, Node );
 
 		StringPlug *namePlug();
 		const StringPlug *namePlug() const;

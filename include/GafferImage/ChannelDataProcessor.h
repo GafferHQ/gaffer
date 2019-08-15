@@ -55,7 +55,7 @@ class GAFFERIMAGE_API ChannelDataProcessor : public ImageProcessor
 		ChannelDataProcessor( const std::string &name=defaultName<ChannelDataProcessor>() );
 		~ChannelDataProcessor() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

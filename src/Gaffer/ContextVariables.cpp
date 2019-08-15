@@ -42,7 +42,7 @@
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( ContextVariables );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ContextVariables );
 
 size_t ContextVariables::g_firstPlugIndex;
 

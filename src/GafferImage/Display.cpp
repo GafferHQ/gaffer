@@ -305,7 +305,7 @@ const IECoreImage::DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> 
 // Implementation of the Display class itself
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Display );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Display );
 
 size_t Display::g_firstPlugIndex = 0;
 

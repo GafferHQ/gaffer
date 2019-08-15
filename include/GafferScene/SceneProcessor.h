@@ -67,7 +67,7 @@ class GAFFERSCENE_API SceneProcessor : public SceneNode
 
 		~SceneProcessor() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneProcessor, SceneProcessorTypeId, SceneNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SceneProcessor, SceneProcessorTypeId, SceneNode );
 
 		/// Returns the primary scene input. For nodes with multiple inputs
 		/// this will be the first child of the inPlugs() array. For nodes

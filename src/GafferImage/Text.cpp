@@ -205,7 +205,7 @@ struct Line
 // Text node
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Text );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Text );
 
 size_t Text::g_firstPlugIndex = 0;
 

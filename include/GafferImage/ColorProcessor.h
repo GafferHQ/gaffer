@@ -54,7 +54,7 @@ class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 		ColorProcessor( const std::string &name=defaultName<ColorProcessor>() );
 		~ColorProcessor() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );
 
 		Gaffer::StringPlug *channelsPlug();
 		const Gaffer::StringPlug *channelsPlug() const;

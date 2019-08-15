@@ -51,8 +51,8 @@ namespace Gaffer
 {
 
 // RunTimeTyped specialisation
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::IntPlug, IntPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::FloatPlug, FloatPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::IntPlug, IntPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::FloatPlug, FloatPlugTypeId )
 
 }
 

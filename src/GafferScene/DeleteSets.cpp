@@ -44,7 +44,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( DeleteSets );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteSets );
 
 size_t DeleteSets::g_firstPlugIndex(0);
 

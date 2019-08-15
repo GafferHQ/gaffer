@@ -63,7 +63,7 @@ using namespace GafferScene;
 // TweakPlug
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( TweakPlug );
+GAFFER_PLUG_DEFINE_TYPE( TweakPlug );
 
 TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode, bool enabled )
 	:	TweakPlug( valuePlug, "tweak", In, Default | Dynamic )
@@ -461,7 +461,7 @@ std::pair<const GafferScene::Shader *, const Gaffer::Plug *> TweakPlug::shaderOu
 // TweaksPlug
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( TweaksPlug );
+GAFFER_PLUG_DEFINE_TYPE( TweaksPlug );
 
 TweaksPlug::TweaksPlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )

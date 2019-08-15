@@ -50,7 +50,7 @@ using namespace Gaffer;
 // Ramp implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Ramp );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Ramp );
 
 size_t Ramp::g_firstPlugIndex = 0;
 

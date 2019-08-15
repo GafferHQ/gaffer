@@ -38,7 +38,7 @@
 
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( IndividualContainer );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( IndividualContainer );
 
 IndividualContainer::IndividualContainer( GadgetPtr child )
 	:	ContainerGadget( defaultName<IndividualContainer>() )

@@ -59,7 +59,7 @@ class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 		LUT( const std::string &name=defaultName<LUT>() );
 		~LUT() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LUT, LUTTypeId, OpenColorIOTransform );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::LUT, LUTTypeId, OpenColorIOTransform );
 
 		enum Interpolation
 		{

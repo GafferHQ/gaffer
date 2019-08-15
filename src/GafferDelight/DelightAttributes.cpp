@@ -41,7 +41,7 @@
 using namespace Gaffer;
 using namespace GafferDelight;
 
-IE_CORE_DEFINERUNTIMETYPED( DelightAttributes );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DelightAttributes );
 
 DelightAttributes::DelightAttributes( const std::string &name )
 	:	GafferScene::Attributes( name )

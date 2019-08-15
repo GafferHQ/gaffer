@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ParentConstraint );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ParentConstraint );
 
 size_t ParentConstraint::g_firstPlugIndex = 0;
 

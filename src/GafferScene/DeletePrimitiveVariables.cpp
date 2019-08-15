@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( DeletePrimitiveVariables );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeletePrimitiveVariables );
 
 DeletePrimitiveVariables::DeletePrimitiveVariables( const std::string &name )
 	:	PrimitiveVariableProcessor( name )

@@ -45,7 +45,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Plane );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Plane );
 
 size_t Plane::g_firstPlugIndex = 0;
 

@@ -37,7 +37,7 @@
 
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( Median );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Median );
 
 Median::Median( const std::string &name )
 	:   RankFilter( name, MedianRank )

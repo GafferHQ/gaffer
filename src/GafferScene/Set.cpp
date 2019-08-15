@@ -49,7 +49,7 @@ using namespace GafferScene;
 
 static InternedString g_ellipsis( "..." );
 
-IE_CORE_DEFINERUNTIMETYPED( Set );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Set );
 
 size_t Set::g_firstPlugIndex = 0;
 

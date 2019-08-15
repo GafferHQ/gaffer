@@ -53,7 +53,7 @@ class GAFFERARNOLD_API ArnoldRender : public GafferScene::Render
 		ArnoldRender( const std::string &name=defaultName<ArnoldRender>() );
 		~ArnoldRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Render );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Render );
 
 };
 

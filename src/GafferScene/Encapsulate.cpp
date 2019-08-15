@@ -44,7 +44,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Encapsulate );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Encapsulate );
 
 size_t Encapsulate::g_firstPlugIndex = 0;
 

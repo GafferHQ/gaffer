@@ -57,7 +57,7 @@ class GAFFERSCENE_API ShaderPlug : public Gaffer::Plug
 		ShaderPlug( const std::string &name=defaultName<ShaderPlug>(), Direction direction=In, unsigned flags=Default );
 		~ShaderPlug() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderPlug, ShaderPlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferScene::ShaderPlug, ShaderPlugTypeId, Plug );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;

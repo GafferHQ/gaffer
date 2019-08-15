@@ -53,7 +53,7 @@ class GAFFERSCENE_API ArnoldAtmosphere : public GafferScene::GlobalShader
 		ArnoldAtmosphere( const std::string &name=defaultName<ArnoldAtmosphere>() );
 		~ArnoldAtmosphere() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAtmosphere, ArnoldAtmosphereTypeId, GafferScene::GlobalShader );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldAtmosphere, ArnoldAtmosphereTypeId, GafferScene::GlobalShader );
 
 	protected :
 

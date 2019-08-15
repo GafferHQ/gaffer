@@ -52,7 +52,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ShaderTweaks );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ShaderTweaks );
 
 size_t ShaderTweaks::g_firstPlugIndex = 0;
 

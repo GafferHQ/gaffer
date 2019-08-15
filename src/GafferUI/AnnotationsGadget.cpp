@@ -115,7 +115,7 @@ float g_spacing = 0.25;
 // AnnotationsGadget
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( AnnotationsGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AnnotationsGadget );
 
 AnnotationsGadget::AnnotationsGadget()
 	:	Gadget( "AnnotationsGadget" )

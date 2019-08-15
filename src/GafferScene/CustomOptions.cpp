@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( CustomOptions );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CustomOptions );
 
 size_t CustomOptions::g_firstPlugIndex = 0;
 

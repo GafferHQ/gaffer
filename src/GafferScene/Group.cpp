@@ -56,7 +56,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Group );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Group );
 
 size_t Group::g_firstPlugIndex = 0;
 

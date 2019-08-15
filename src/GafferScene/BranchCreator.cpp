@@ -86,7 +86,7 @@ void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString
 //////////////////////////////////////////////////////////////////////////
 
 
-IE_CORE_DEFINERUNTIMETYPED( BranchCreator );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BranchCreator );
 
 size_t BranchCreator::g_firstPlugIndex = 0;
 

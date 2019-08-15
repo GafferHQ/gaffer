@@ -60,7 +60,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( StandardConnectionGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardConnectionGadget );
 
 ConnectionGadget::ConnectionGadgetTypeDescription<StandardConnectionGadget> StandardConnectionGadget::g_connectionGadgetTypeDescription( Gaffer::Plug::staticTypeId() );
 

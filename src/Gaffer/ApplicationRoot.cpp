@@ -43,7 +43,7 @@
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( ApplicationRoot );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ApplicationRoot );
 
 ApplicationRoot::ApplicationRoot( const std::string &name )
 	:	GraphComponent( name )

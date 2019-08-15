@@ -203,7 +203,7 @@ class V2fContextVariable : public Gaffer::ComputeNode
 			addChild( new V2fPlug( "out", Plug::Out ) );
 		}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( V2fContextVariable, V2fContextVariableTypeId, ComputeNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( V2fContextVariable, V2fContextVariableTypeId, ComputeNode );
 
 		StringPlug *namePlug()
 		{
@@ -270,7 +270,7 @@ class V2fContextVariable : public Gaffer::ComputeNode
 };
 
 size_t V2fContextVariable::g_firstPlugIndex = 0;
-IE_CORE_DEFINERUNTIMETYPED( V2fContextVariable )
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( V2fContextVariable )
 
 IE_CORE_DECLAREPTR( V2fContextVariable )
 
@@ -350,7 +350,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 /// Implementation of ImageView
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ImageView );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageView );
 
 ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 

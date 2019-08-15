@@ -52,7 +52,7 @@ class GAFFERIMAGE_API CopyChannels : public ImageProcessor
 		CopyChannels( const std::string &name=defaultName<CopyChannels>() );
 		~CopyChannels() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CopyChannels, CopyChannelsTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::CopyChannels, CopyChannelsTypeId, ImageProcessor );
 
 		Gaffer::StringPlug *channelsPlug();
 		const Gaffer::StringPlug *channelsPlug() const;

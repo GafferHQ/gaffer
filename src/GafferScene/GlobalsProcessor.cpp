@@ -40,7 +40,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( GlobalsProcessor );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GlobalsProcessor );
 
 GlobalsProcessor::GlobalsProcessor( const std::string &name )
 	:	SceneProcessor( name )

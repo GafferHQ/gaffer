@@ -68,7 +68,7 @@ class GAFFERSCENE_API SetVisualiser : public SceneElementProcessor
 		SetVisualiser( const std::string &name=defaultName<SetVisualiser>() );
 		~SetVisualiser() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SetVisualiser, SetVisualiserTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SetVisualiser, SetVisualiserTypeId, SceneElementProcessor );
 
 		Gaffer::StringPlug *setsPlug();
 		const Gaffer::StringPlug *setsPlug() const;

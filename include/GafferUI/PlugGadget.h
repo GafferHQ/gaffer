@@ -62,7 +62,7 @@ class GAFFERUI_API PlugGadget : public ContainerGadget
 		PlugGadget( Gaffer::PlugPtr plug );
 		~PlugGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugGadget, PlugGadgetTypeId, Gadget );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::PlugGadget, PlugGadgetTypeId, Gadget );
 
 		void setPlug( Gaffer::PlugPtr plug );
 		template<typename T=Gaffer::Plug>

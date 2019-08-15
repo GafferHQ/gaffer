@@ -52,7 +52,7 @@ class GAFFERSCENE_API PrimitiveVariables : public SceneElementProcessor
 		PrimitiveVariables( const std::string &name=defaultName<PrimitiveVariables>() );
 		~PrimitiveVariables() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, SceneElementProcessor );
 
 		Gaffer::CompoundDataPlug *primitiveVariablesPlug();
 		const Gaffer::CompoundDataPlug *primitiveVariablesPlug() const;

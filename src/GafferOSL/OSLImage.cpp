@@ -59,7 +59,7 @@ using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferOSL;
 
-IE_CORE_DEFINERUNTIMETYPED( OSLImage );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLImage );
 
 size_t OSLImage::g_firstPlugIndex = 0;
 

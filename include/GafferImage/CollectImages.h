@@ -52,7 +52,7 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 		CollectImages( const std::string &name=defaultName<CollectImages>() );
 		~CollectImages() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CollectImages, CollectImagesTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::CollectImages, CollectImagesTypeId, ImageProcessor );
 
 		Gaffer::StringVectorDataPlug *rootLayersPlug();
 		const Gaffer::StringVectorDataPlug *rootLayersPlug() const;

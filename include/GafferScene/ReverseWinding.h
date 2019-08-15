@@ -50,7 +50,7 @@ class GAFFERSCENE_API ReverseWinding : public SceneElementProcessor
 		ReverseWinding( const std::string &name=defaultName<ReverseWinding>() );
 		~ReverseWinding() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ReverseWinding, ReverseWindingTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ReverseWinding, ReverseWindingTypeId, SceneElementProcessor );
 
 	protected :
 

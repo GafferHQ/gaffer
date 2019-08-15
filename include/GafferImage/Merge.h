@@ -64,7 +64,7 @@ class GAFFERIMAGE_API Merge : public ImageProcessor
 		Merge( const std::string &name=defaultName<Merge>() );
 		~Merge() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Merge, MergeTypeId, ImageProcessor );
 
 		enum Operation
 		{

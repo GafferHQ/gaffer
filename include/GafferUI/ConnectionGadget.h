@@ -68,7 +68,7 @@ class GAFFERUI_API ConnectionGadget : public ConnectionCreator
 
 		~ConnectionGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, ConnectionCreator );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, ConnectionCreator );
 
 		/// Accepts only GraphGadgets as parent.
 		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;

@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( ObjectToImage );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ObjectToImage );
 
 size_t ObjectToImage::g_firstPlugIndex = 0;
 

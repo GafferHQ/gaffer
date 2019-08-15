@@ -55,7 +55,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 		TranslateTool( SceneView *view, const std::string &name = defaultName<TranslateTool>() );
 		~TranslateTool() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::TranslateTool, TranslateToolTypeId, TransformTool );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::TranslateTool, TranslateToolTypeId, TransformTool );
 
 		Gaffer::IntPlug *orientationPlug();
 		const Gaffer::IntPlug *orientationPlug() const;

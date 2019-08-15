@@ -42,7 +42,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( PointConstraint );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PointConstraint );
 
 size_t PointConstraint::g_firstPlugIndex = 0;
 

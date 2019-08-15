@@ -93,7 +93,7 @@ inline Imath::Color4f monotoneSlopeCompute<>(
 }
 
 // This function translates a set of control points for a MonotoneCubic curve into a set of
-// bezier control points.  The X values are set up to make each segment linear in X, which 
+// bezier control points.  The X values are set up to make each segment linear in X, which
 // makes the control point behaviour a bit more predictable when used as a color ramp.
 // The Y tangents are adjusted to compensate for the discontinuity in the slope of the
 // parameterization across control points, which mean that the X/Y tangent is continuous across
@@ -123,7 +123,7 @@ void monotoneCubicCVsToBezierCurve( const typename T::PointContainer &cvs, typen
 	{
 		typename T::YType nextSlope;
 
-		
+
 		const typename T::Point *pNext;
 		if( i == cvs.end() )
 		{
@@ -137,7 +137,7 @@ void monotoneCubicCVsToBezierCurve( const typename T::PointContainer &cvs, typen
 			typename T::XType xDelta2 = pNext->first - p2->first;
 			typename T::YType yDelta1 = p2->second - p1->second;
 			typename T::YType yDelta2 = pNext->second - p2->second;
-			
+
 			nextSlope = monotoneSlopeCompute( yDelta1 / xDelta1, yDelta2 / xDelta2, xDelta1, xDelta2);
 
 			// NOTE : If we copied everything else about this function, but instead just used:
@@ -184,7 +184,7 @@ T SplineDefinition<T>::spline() const
 {
 	T result;
 
-	result.points = points;	
+	result.points = points;
 
 	if( interpolation == SplineDefinitionInterpolationLinear )
 	{
@@ -219,7 +219,7 @@ T SplineDefinition<T>::spline() const
 		}
 	}
 
-	return result;	
+	return result;
 }
 
 template<typename T>
@@ -537,9 +537,9 @@ namespace Gaffer
 {
 
 // RunTimeTyped specialisation
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplineffPlug, SplineffPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor3fPlug, SplinefColor3fPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor4fPlug, SplinefColor4fPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::SplineffPlug, SplineffPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::SplinefColor3fPlug, SplinefColor3fPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::SplinefColor4fPlug, SplinefColor4fPlugTypeId )
 
 // explicit instantiation
 template struct SplineDefinition< IECore::Splineff >;

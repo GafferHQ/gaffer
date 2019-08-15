@@ -67,7 +67,7 @@ const ValuePlug *valuePlug( const NameValuePlug *p )
 // CompoundDataPlug implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( CompoundDataPlug )
+GAFFER_PLUG_DEFINE_TYPE( CompoundDataPlug )
 
 CompoundDataPlug::CompoundDataPlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )

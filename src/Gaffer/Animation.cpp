@@ -192,7 +192,7 @@ const Animation::CurvePlug *Animation::Key::parent() const
 // CurvePlug implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Animation::CurvePlug );
+GAFFER_PLUG_DEFINE_TYPE( Animation::CurvePlug );
 
 Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
@@ -427,7 +427,7 @@ const FloatPlug *Animation::CurvePlug::outPlug() const
 // Animation implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Animation );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Animation );
 
 size_t Animation::g_firstPlugIndex = 0;
 

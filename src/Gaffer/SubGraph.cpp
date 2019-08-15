@@ -41,7 +41,7 @@
 using namespace IECore;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( SubGraph );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SubGraph );
 
 static IECore::InternedString g_enabledName( "enabled" );
 

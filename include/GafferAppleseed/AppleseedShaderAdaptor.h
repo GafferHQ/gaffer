@@ -52,7 +52,7 @@ class GAFFERAPPLESEED_API AppleseedShaderAdaptor : public GafferScene::SceneProc
 
 		AppleseedShaderAdaptor( const std::string &name=defaultName<AppleseedShaderAdaptor>() );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedShaderAdaptor, AppleseedShaderAdaptorTypeId, GafferScene::SceneProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferAppleseed::AppleseedShaderAdaptor, AppleseedShaderAdaptorTypeId, GafferScene::SceneProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

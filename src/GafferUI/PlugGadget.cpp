@@ -45,7 +45,7 @@
 using namespace GafferUI;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( PlugGadget );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PlugGadget );
 
 PlugGadget::PlugGadget( Gaffer::PlugPtr plug )
 	:	ContainerGadget( defaultName<PlugGadget>() ), m_plug( nullptr )

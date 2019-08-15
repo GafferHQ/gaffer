@@ -65,7 +65,7 @@ using namespace GafferUI;
 // Handle
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Handle );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Handle );
 
 Handle::Handle( const std::string &name )
 	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f ), m_visibleOnHover( false )

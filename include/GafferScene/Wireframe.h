@@ -57,7 +57,7 @@ class GAFFERSCENE_API Wireframe : public SceneElementProcessor
 		Wireframe( const std::string &name=defaultName<Wireframe>() );
 		~Wireframe() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Wireframe, WireframeTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Wireframe, WireframeTypeId, SceneElementProcessor );
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;

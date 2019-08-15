@@ -106,7 +106,7 @@ bool allDescendantInputsAreNull( const Plug *plug )
 // Plug implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Plug );
+GAFFER_PLUG_DEFINE_TYPE( Plug );
 
 Plug::Plug( const std::string &name, Direction direction, unsigned flags )
 	:	GraphComponent( name ), m_direction( direction ), m_input( nullptr ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )

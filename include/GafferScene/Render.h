@@ -58,7 +58,7 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		Render( const std::string &name=defaultName<Render>() );
 		~Render() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
 
 		enum Mode
 		{

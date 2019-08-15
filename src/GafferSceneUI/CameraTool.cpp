@@ -101,7 +101,7 @@ void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
 // CameraTool
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( CameraTool );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CameraTool );
 
 CameraTool::ToolDescription<CameraTool, SceneView> CameraTool::g_toolDescription;
 

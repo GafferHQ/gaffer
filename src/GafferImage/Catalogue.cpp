@@ -578,7 +578,7 @@ size_t Catalogue::InternalImage::g_firstChildIndex = 0;
 // Image
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Catalogue::Image );
+GAFFER_PLUG_DEFINE_TYPE( Catalogue::Image );
 
 Catalogue::Image::Image( const std::string &name, Direction direction, unsigned flags )
 	:	Plug( name, direction, flags )
@@ -665,7 +665,7 @@ bool undoingOrRedoing( const Node *node )
 
 } // namespace
 
-IE_CORE_DEFINERUNTIMETYPED( Catalogue );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Catalogue );
 
 size_t Catalogue::g_firstPlugIndex = 0;
 

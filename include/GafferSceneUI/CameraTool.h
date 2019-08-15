@@ -59,7 +59,7 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 		CameraTool( SceneView *view, const std::string &name = defaultName<CameraTool>() );
 		~CameraTool() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::CameraTool, CameraToolTypeId, GafferSceneUI::SelectionTool );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::CameraTool, CameraToolTypeId, GafferSceneUI::SelectionTool );
 
 	private :
 
