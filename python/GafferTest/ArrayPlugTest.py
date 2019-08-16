@@ -494,6 +494,27 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		with self.assertRaises( RuntimeError ) :
 			p.resize( p.maxSize() + 1 )
 
+	def testSerialisationUsesIndices( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = GafferTest.AddNode()
+		s["n"] = GafferTest.ArrayPlugNode()
+		s["n"]["in"][0].setInput( s["a"]["sum"] )
+		s["n"]["in"][1].setInput( s["a"]["sum"] )
+
+		ss = s.serialise()
+		self.assertNotIn( "[\"" + s["n"]["in"][0].getName() + "\"]", ss )
+		self.assertNotIn( "[\"" + s["n"]["in"][1].getName() + "\"]", ss )
+		self.assertIn( "[0].setInput", ss )
+		self.assertIn( "[1].setInput", ss )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+
+		self.assertEqual( s2["n"]["in"][0].getInput(), s2["a"]["sum"] )
+		self.assertEqual( s2["n"]["in"][1].getInput(), s2["a"]["sum"] )
+
 	def tearDown( self ) :
 
 		# some bugs in the InputGenerator only showed themselves when

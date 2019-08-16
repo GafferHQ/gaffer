@@ -543,5 +543,27 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( len( values ), 6 )
 		self.assertEqual( len( exceptions ), 0 )
 
+	def testDeleteRowsAndSerialise( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addRows( 3 )
+		s["s"]["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+
+		for i in range( 0, 4 ) :
+			s["s"]["rows"][i]["cells"]["v"]["value"].setValue( i )
+
+		s["s"]["rows"].removeRow( s["s"]["rows"][1] )
+
+		ss = Gaffer.ScriptNode()
+		ss.execute( s.serialise() )
+
+		for i, v in [
+			( 0, 0 ),
+			( 1, 2 ),
+			( 2, 3 ),
+		] :
+			self.assertEqual( ss["s"]["rows"][i]["cells"]["v"]["value"].getValue(), v )
+
 if __name__ == "__main__":
 	unittest.main()

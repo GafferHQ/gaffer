@@ -42,8 +42,10 @@
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/MetadataBinding.h"
 
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECorePython/ScopedGILLock.h"
 
@@ -57,6 +59,58 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace boost::python;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// Where a parent has dynamically changing numbers of children,
+// and no meaning is attached to their names, we want to
+// access the children by index rather than name. This is faster
+// and more readable, and opens the possibility of omitting the
+// overhead of the names entirely one day.
+/// \todo Consider an official way for GraphComponents to opt in
+/// to this behaviour.
+bool keyedByIndex( const GraphComponent *parent )
+{
+	return
+		runTimeCast<const Spreadsheet::RowsPlug>( parent ) ||
+		runTimeCast<const ArrayPlug>( parent )
+	;
+}
+
+std::string childKey( const GraphComponent *g )
+{
+	const GraphComponent *parent = g->parent();
+	if( keyedByIndex( parent ) )
+	{
+		return boost::lexical_cast<std::string>(
+			std::find( parent->children().begin(), parent->children().end(), g ) - parent->children().begin()
+		);
+	}
+	else
+	{
+		return "\"" + g->getName().string() + "\"";
+	}
+}
+
+// Overload for when an iterator is available. This gives constant-time index computation.
+std::string childKey( const GraphComponent *parent, GraphComponent::ChildIterator childIt )
+{
+	if( keyedByIndex( parent ) )
+	{
+		return boost::lexical_cast<std::string>( childIt - parent->children().begin() );
+	}
+	else
+	{
+		return "\"" + (*childIt)->getName().string() + "\"";
+	}
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Serialisation
@@ -251,11 +305,11 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		std::string childIdentifier;
 		if( parent == m_parent && childConstructor.size() && m_protectParentNamespace )
 		{
-			childIdentifier = "__children[\"" + child->getName().string() + "\"]";
+			childIdentifier = "__children[" + childKey( parent, it ) + "]";
 		}
 		else
 		{
-			childIdentifier = parentIdentifier + "[\"" + child->getName().string() + "\"]";
+			childIdentifier = parentIdentifier + "[" + childKey( parent, it ) + "]";
 		}
 
 		if( childConstructor.size() )
@@ -301,14 +355,14 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 			const Serialiser *parentSerialiser = acquireSerialiser( parent );
 			if( m_protectParentNamespace && parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
 			{
-				return "__children[\"" + graphComponent->getName().string() + "\"]" + result;
+				return "__children[" + childKey( graphComponent ) + "]" + result;
 			}
 			else
 			{
-				return m_parentName + "[\"" + graphComponent->getName().string() + "\"]" + result;
+				return m_parentName + "[" + childKey( graphComponent ) + "]" + result;
 			}
 		}
-		result = "[\"" + graphComponent->getName().string() + "\"]" + result;
+		result = "[" + childKey( graphComponent ) + "]" + result;
 		graphComponent = parent;
 	}
 
