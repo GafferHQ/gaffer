@@ -927,6 +927,8 @@ void propagateExpandedWalk( QTreeView *treeView, PathModel *model, QModelIndex i
 
 void propagateExpanded( uint64_t treeViewAddress, uint64_t modelIndexAddress, bool expanded, int numLevels )
 {
+	IECorePython::ScopedGILRelease gilRelease;
+
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 	if( !model )
