@@ -65,7 +65,8 @@ class GAFFER_API ArrayPlug : public Plug
 			PlugPtr element = nullptr,
 			size_t minSize = 1,
 			size_t maxSize = Imath::limits<size_t>::max(),
-			unsigned flags = Default
+			unsigned flags = Default,
+			bool resizeWhenInputsChange = true
 		);
 
 		~ArrayPlug() override;
@@ -79,6 +80,12 @@ class GAFFER_API ArrayPlug : public Plug
 
 		size_t minSize() const;
 		size_t maxSize() const;
+		void resize( size_t size );
+		bool resizeWhenInputsChange() const;
+		/// Returns an unconnected element at the end of the array, adding one
+		/// if necessary. Returns null if `maxSize()` prevents the creation of
+		/// a new element.
+		Gaffer::Plug *next();
 
 	protected :
 
@@ -90,6 +97,7 @@ class GAFFER_API ArrayPlug : public Plug
 
 		size_t m_minSize;
 		size_t m_maxSize;
+		bool m_resizeWhenInputsChange;
 
 		boost::signals::scoped_connection m_inputChangedConnection;
 
