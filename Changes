@@ -1,3 +1,47 @@
+0.54.1.0 (relative to 0.54.0.1)
+========
+
+Features
+--------
+
+- Orientation : Added new node for converting between different orientation representations
+  (eulers, quaternions, matrices etc). This is particularly useful when preparing points for
+  instancing (#3328).
+
+Improvements
+------------
+
+- ShaderAssignment : Added support for assigning OSL shaders with an alternative prefix. This
+  can be useful when mixing OSL shader assignments with renderer-specific shader assignments
+  (#3334).
+
+Fixes
+-----
+
+- HierarchyView : Fixed bug which could cause a hang when Shift+clicking to expand (#3335).
+- ScriptNode (#3340) :
+  - Fixed GIL management bug which could cause crashes when serialising a script.
+  - Fixed bug that could cause string substitutions to be baked into serialisations.
+
+API
+---
+
+- Improved support for iterating over nodes and plugs (#3341) :
+  - Added FilteredChildRange and FilteredRecursiveChildRange classes. These can be used with
+    C++11's range-for.
+  - Added Iterator, RecursiveIterator, Range and RecursiveRange type aliases to all nodes and
+    plugs.
+  - Added InputIterator, OutputIterator, RecursiveInputIterator, RecursiveOutputIterator,
+    InputRange, OutputRange, RecursiveInputRange and RecursiveOutputRange type aliases to all
+    plugs.
+  - Exposed Range classes to Python.
+
+Documentation
+-------------
+
+- Fixed problems with screenshots for MacOS builds (#3321).
+- Made miscellaneous improvements to the examples available from the Help menu (#3314).
+
 0.54.0.1 (relative to 0.54.0.0)
 ========
 
