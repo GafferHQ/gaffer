@@ -38,6 +38,7 @@
 
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/Camera.h"
@@ -155,10 +156,24 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			IECoreGL::ConstStatePtr visualisationState;
 			m_visualisation = AttributeVisualiser::allVisualisations( attributes, visualisationState );
-			if( visualisationState )
+
+			IECoreGL::ConstStatePtr lightVisualisationState;
+			m_lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
+
+			if( visualisationState || lightVisualisationState )
 			{
 				StatePtr combinedState = new State( *m_state );
-				combinedState->add( const_cast<State *>( visualisationState.get() ) );
+
+				if( visualisationState )
+				{
+					combinedState->add( const_cast<State *>( visualisationState.get() ) );
+				}
+
+				if( lightVisualisationState )
+				{
+					combinedState->add( const_cast<State *>( lightVisualisationState.get() ) );
+				}
+
 				m_state = combinedState;
 			}
 		}
@@ -177,6 +192,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		ConstStatePtr m_state;
 		IECoreGL::ConstRenderablePtr m_visualisation;
+		IECoreGL::ConstRenderablePtr m_lightVisualisation;
 
 };
 
