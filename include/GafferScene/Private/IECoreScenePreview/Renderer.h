@@ -136,8 +136,8 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// -------------------
 		///
 		/// "doubleSided", BoolData, true
-		/// "surface", ObjectVector of IECore::Shaders
-		/// "light", ObjectVector of IECore::Shaders
+		/// "surface", IECoreScene::ShaderNetwork
+		/// "light", IECoreScene::ShaderNetwork
 		/// "sets", InternedStringVectorData of set names
 		/// "linkedLights", StringVectorData of light names
 		///
