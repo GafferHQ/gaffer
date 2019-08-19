@@ -103,9 +103,10 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
 GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu, scoped = False )
 
-def __plugContextMenu( graphEditor, node, menuDefinition ) :
+def __plugContextMenu( graphEditor, plug, menuDefinition ) :
 
-	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition )
+	GafferUI.NodeUI.appendPlugDeletionMenuDefinitions( plug, menuDefinition )
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
 

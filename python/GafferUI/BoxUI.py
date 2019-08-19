@@ -81,6 +81,7 @@ Gaffer.Metadata.registerNode(
 
 		"*" : [
 
+			"deletable", True,
 			"labelPlugValueWidget:renameable", True,
 
 		],
@@ -198,22 +199,6 @@ def __upgradeToUseBoxIO( node ) :
 # Shared menu code
 ##########################################################################
 
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
-def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
-
-	if not isinstance( plug.parent(), Gaffer.Box ) :
-		return
-
-	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append( "/Delete", {
-		"command" : functools.partial( __deletePlug, plug ),
-		"active" : not readOnly,
-	} )
-
 def __promote( plug ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
@@ -282,7 +267,6 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	__appendPlugDeletionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
 	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
@@ -375,7 +359,6 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 			}
 		)
 
-	__appendPlugDeletionMenuItems( menuDefinition, parentPlug, readOnly )
 	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
