@@ -283,8 +283,9 @@ def __translateNodeMetadata( nodeEntry ) :
 			userDefault = __aiMetadataGetStr( nodeEntry, paramName, "gaffer.userDefault" )
 
 		if userDefault:
-			__metadata[paramPath]["userDefault"] = userDefault
-			
+			nodeName, _, plugName = paramPath.split( "." )
+			Gaffer.Metadata.registerValue( "ai:surface:%s:%s" % ( nodeName, plugName ), "userDefault", userDefault )
+
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 
