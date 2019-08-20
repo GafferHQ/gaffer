@@ -1214,7 +1214,14 @@ else :
 
 resources = None
 if commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" ) :
-	resources = commandEnv.Install( "$BUILD_DIR", "$LOCATE_DEPENDENCY_RESOURCESPATH" )
+
+	resources = []
+	resourceRoot = commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" )
+	for root, dirs, files in os.walk( resourceRoot ) :
+		for f in files :
+			fullPath = os.path.join( root, f )
+			resources.append( commandEnv.Command( fullPath.replace( resourceRoot, "$BUILD_DIR/resources/", 1 ), fullPath, Copy( "$TARGET", "$SOURCE" ) ) )
+
 	commandEnv.NoCache( resources )
 	commandEnv.Alias( "build", resources )
 
