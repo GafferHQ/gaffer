@@ -160,7 +160,11 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 	// ourselves when necessary, in `shaderOutPlug()`.
 	if( auto switchNode = runTimeCast<const Switch>( sourcePlug->node() ) )
 	{
-		if( sourcePlug == switchNode->outPlug() || sourcePlug->parent() == switchNode->inPlugs() )
+		if(
+			sourcePlug == switchNode->outPlug() ||
+			( switchNode->outPlug() && switchNode->outPlug()->isAncestorOf( sourcePlug ) ) ||
+			sourcePlug->parent() == switchNode->inPlugs()
+		)
 		{
 			// Reject switches which have inputs from non-shader nodes.
 			for( PlugIterator it( switchNode->inPlugs() ); !it.done(); ++it )
@@ -249,21 +253,18 @@ const Gaffer::Plug *ShaderPlug::shaderOutPlug() const
 		return nullptr;
 	}
 
-	if( auto switchNode = source->parent<Switch>() )
+	if( auto switchNode = runTimeCast<const Switch>( source->node() ) )
 	{
-		if( source == switchNode->outPlug() )
+		// Special case for switches with context-varying index values.
+		// Query the active input for this context, and manually traverse
+		// out the other side.
+		/// \todo Perhaps we should support ContextProcessors in the same way?
+		/// We have a similar pattern now in ShaderPlug, Shader::NetworkBuilder
+		/// and Dispatcher. Perhaps the logic should be consolidated into a
+		/// `PlugAlgo::computedSource()` utility of some sort?
+		if( const Plug *activeInPlug = switchNode->activeInPlug( source ) )
 		{
-			// Special case for switches with context-varying index values.
-			// Query the active input for this context, and manually traverse
-			// out the other side.
-			/// \todo Perhaps we should support ContextProcessors in the same way?
-			/// We have a similar pattern now in ShaderPlug, Shader::NetworkBuilder
-			/// and Dispatcher. Perhaps the logic should be consolidated into a
-			/// `PlugAlgo::computedSource()` utility of some sort?
-			if( const Plug *activeInPlug = switchNode->activeInPlug() )
-			{
-				source = activeInPlug->source();
-			}
+			source = activeInPlug->source();
 		}
 	}
 
