@@ -51,6 +51,8 @@ import GafferImage
 
 class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
+	__shaderPrefix = os.environ.get( "GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX", "osl" )
+
 	def test( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
@@ -945,7 +947,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		shaderAssignment["filter"].setInput(pathFilter["out"])
 		shaderAssignment["shader"].setInput(n1["out"]["out"])
 
-		network = shaderAssignment["out"].attributes( "/sphere" )["osl:surface"]
+		network = shaderAssignment["out"].attributes( "/sphere" )[self.__shaderPrefix + ":surface"]
 		self.assertEqual( len( network ), 3 )
 
 		self.assertEqual( network.getShader( "red1" ).name.split( "/" )[-1], "red" )
@@ -955,7 +957,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# when we disable the add shader we should get the pass through parameter's ("a") shader (n2)
 		n1["enabled"].setValue( False )
 
-		network = shaderAssignment["out"].attributes( "/sphere" )["osl:surface"]
+		network = shaderAssignment["out"].attributes( "/sphere" )[self.__shaderPrefix + ":surface"]
 		self.assertEqual( len ( network ), 1 )
 		self.assertEqual( network.getShader( "red1" ).name.split( "/" )[-1], "red" )
 
@@ -1078,7 +1080,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		shaderAssignment["shader"].setInput( shader["out"]["out"] )
 		shaderAssignment["filter"].setInput( planeFilter["out"] )
 
-		self.assertEqual( shaderAssignment["out"].attributes( "/plane" ).keys(), [ "osl:surface" ] )
+		self.assertEqual( shaderAssignment["out"].attributes( "/plane" ).keys(), [ self.__shaderPrefix + ":surface" ] )
 
 if __name__ == "__main__":
 	unittest.main()

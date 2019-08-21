@@ -577,6 +577,8 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 			env = os.environ.copy()
 			if envVar is not None :
 				env["GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX"] = envVar
+			elif env.get( "GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX" ) :
+				del env["GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX"]
 
 			o = subprocess.check_output(
 				[ "gaffer", "execute", script["fileName"].getValue(), "-nodes", "writer" ],
