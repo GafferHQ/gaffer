@@ -38,6 +38,7 @@ import os
 import sys
 import unittest
 import imath
+import inspect
 
 import IECore
 import IECoreScene
@@ -148,6 +149,55 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertEqual( s2["shader"].attributes(), s["shader"].attributes() )
+
+	def testGLSLSourceParameters( self ) :
+
+		vertSource = inspect.cleandoc(
+			'''
+			void main()
+			{
+				gl_Position = vec4( 1 );
+			}
+			'''
+		)
+
+		geomSource = inspect.cleandoc(
+			'''
+			layout(points) in;
+			layout(points, max_vertices = 1) out;
+
+			void main()
+			{
+				gl_Position = gl_in[0].gl_Position;
+				EmitVertex();
+				EndPrimitive();
+			}
+			'''
+		)
+
+		fragSource = inspect.cleandoc(
+			'''
+			void main()
+			{
+				gl_FragColor = vec4( 1 );
+			}
+			'''
+		)
+
+		s = GafferScene.OpenGLShader()
+		s["name"].setValue( "testSource" )
+		s["type"].setValue( "gl:surface" )
+		s["parameters"].addChild( Gaffer.StringPlug( "glVertexSource", defaultValue = vertSource ) )
+		s["parameters"].addChild( Gaffer.StringPlug( "glGeometrySource", defaultValue = geomSource ) )
+		s["parameters"].addChild( Gaffer.StringPlug( "glFragmentSource", defaultValue = fragSource ) )
+		s["parameters"].addChild( Gaffer.StringPlug( "glNotAThing", defaultValue = "this isnt glsl" ) )
+
+		ss = s.attributes()["gl:surface"].outputShader()
+		self.assertEqual( set(ss.parameters.keys()), set(['gl:vertexSource', 'gl:geometrySource', 'gl:fragmentSource', 'glNotAThing']) )
+		self.assertEqual( ss.parameters["gl:vertexSource"].value, vertSource )
+		self.assertEqual( ss.parameters["gl:geometrySource"].value, geomSource )
+		self.assertEqual( ss.parameters["gl:fragmentSource"].value, fragSource )
+		self.assertEqual( ss.parameters["glNotAThing"].value, "this isnt glsl" )
 
 if sys.platform == "darwin" :
 	# The Texture shader used in the test provides only a .frag file, which
