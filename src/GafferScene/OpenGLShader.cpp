@@ -49,6 +49,8 @@
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/ShaderLoader.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -59,6 +61,18 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenGLShader );
+
+namespace
+{
+
+IECore::InternedString g_glVertexSource( "glVertexSource" );
+IECore::InternedString g_glNamespacedVertexSource( "gl:vertexSource" );
+IECore::InternedString g_glGeometrySource( "glGeometrySource" );
+IECore::InternedString g_glNamespacedGeometrySource( "gl:geometrySource" );
+IECore::InternedString g_glFragmentSource( "glFragmentSource" );
+IECore::InternedString g_glNamespacedFragmentSource( "gl:fragmentSource" );
+
+} // namespace
 
 OpenGLShader::OpenGLShader( const std::string &name )
 	:	GafferScene::Shader( name )
@@ -209,5 +223,80 @@ IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug 
 	else
 	{
 		return Shader::parameterValue( parameterPlug );
+	}
+}
+
+IECore::ConstCompoundObjectPtr OpenGLShader::attributes( const Gaffer::Plug *output ) const
+{
+	ConstCompoundObjectPtr original = Shader::attributes( output );
+	const IECoreScene::ShaderNetwork *network = original->member<const IECoreScene::ShaderNetwork>( "gl:surface" );
+	if( !network || !network->size() )
+	{
+		return original;
+	}
+
+	IECoreScene::ShaderNetworkPtr updatedNetwork = nullptr;
+
+	auto swapParameter = [network, &updatedNetwork]
+	(
+		const IECoreScene::Shader *oldShader,
+		IECoreScene::ShaderPtr &newShader,
+		const InternedString &oldParameterName,
+		const DataPtr oldParameterValue,
+		const InternedString &newParameterName
+	)
+	{
+		if( !updatedNetwork )
+		{
+			updatedNetwork = network->copy();
+		}
+
+		if( !newShader )
+		{
+			newShader = oldShader->copy();
+		}
+
+		newShader->parameters()[newParameterName] = oldParameterValue;
+		newShader->parameters().erase( oldParameterName );
+	};
+
+	for( const auto &s : network->shaders() )
+	{
+		InternedString handle = s.first;
+		const IECoreScene::Shader *shader = s.second.get();
+
+		IECoreScene::ShaderPtr updatedShader = nullptr;
+
+		for( auto &kv : shader->parameters() )
+		{
+			if( kv.first == g_glVertexSource )
+			{
+				swapParameter( shader, updatedShader, kv.first, kv.second, g_glNamespacedVertexSource );
+			}
+			else if( kv.first == g_glGeometrySource )
+			{
+				swapParameter( shader, updatedShader, kv.first, kv.second, g_glNamespacedGeometrySource );
+			}
+			else if( kv.first == g_glFragmentSource )
+			{
+				swapParameter( shader, updatedShader, kv.first, kv.second, g_glNamespacedFragmentSource );
+			}
+		}
+
+		if( updatedShader )
+		{
+			updatedNetwork->setShader( handle, std::move( updatedShader ) );
+		}
+	}
+
+	if( updatedNetwork )
+	{
+		CompoundObjectPtr result = original->copy();
+		result->members()["gl:surface"] = updatedNetwork;
+		return result;
+	}
+	else
+	{
+		return original;
 	}
 }
