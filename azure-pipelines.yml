@@ -32,7 +32,7 @@ jobs :
 
   - template: config/azure/build.yaml
     parameters:
-      name: OSX
+      name: MacOS
       vmImage: 'macOS-10.14'
       publish: true
 
