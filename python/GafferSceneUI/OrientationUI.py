@@ -72,7 +72,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"layout:activator:inModeIsEuler", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Euler,
-	"layout:activator:inModeIsQuaternion", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Quaternion,
+	"layout:activator:inModeIsQuaternion", lambda node : node["inMode"].getValue() in ( GafferScene.Orientation.Mode.Quaternion, GafferScene.Orientation.Mode.QuaternionXYZW ),
 	"layout:activator:inModeIsAxisAngle", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.AxisAngle,
 	"layout:activator:inModeIsAim", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Aim,
 	"layout:activator:inModeIsMatrix", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Matrix,
