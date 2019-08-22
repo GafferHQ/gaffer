@@ -250,7 +250,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 			def __slot( self, *args ) :
 
 				self.append( args )
-				raise RuntimeError, "bad slot!"
+				raise RuntimeError( "bad slot!" )
 
 		badConnection = BadSlot( GafferDispatch.Dispatcher.dispatchSignal() )
 		cs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
@@ -457,7 +457,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
 
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		self.assertEqual( text, "a1;b1;c1;" )
@@ -569,7 +569,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( os.path.isfile( fileName ), True )
 
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all nodes on frame 1, followed by all nodes on frame 2, followed by all nodes on frame 3
@@ -602,7 +602,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# n1 on all frames, followed by the n2 sequence, followed by n3 on all frames
@@ -615,7 +615,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# n1 in requested order, followed by the n2 sequence in sorted order, followed by n3 in the requested order
@@ -653,7 +653,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1 and n2 interleaved, followed by the n3 sequence, followed by n4 on all frames
@@ -667,7 +667,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# first 2 frames of n1, followed by all frames of n2, followed by last frame of n1, followed by the n3 sequence, followed by n4 on all frames
@@ -715,7 +715,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1 and n2 interleaved, followed by the n3 sequence, followed by n4 on all frames
@@ -728,7 +728,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1 and n2 interleaved, followed by the n3 sequence
@@ -743,7 +743,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1, followed by the n3 sequence
@@ -758,7 +758,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1, followed by the n3 sequence
@@ -774,7 +774,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1, followed by the n3 sequence, followed by all frames of n2
@@ -788,7 +788,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1, n2, n3, and n4 interleaved
@@ -803,7 +803,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["r"] ] )
 		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
+		with open( fileName, "r" ) as f :
 			text = f.read()
 
 		# all frames of n1, n2, and n3 interleaved

@@ -67,14 +67,14 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 
 			try :
 				images.append( g["out"].image() )
-			except Exception, e :
+			except Exception as e :
 				exceptions.append( e )
 
 		def processer() :
 
 			try :
 				GafferImageTest.processTiles( g["out"] )
-			except Exception, e :
+			except Exception as e :
 				exceptions.append( e )
 
 		graderThreads = []

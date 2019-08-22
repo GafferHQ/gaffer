@@ -187,7 +187,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 			try :
 				GafferSceneTest.traverseScene( g["out"] )
-			except Exception, e :
+			except Exception as e :
 				exceptions.append( e )
 
 		threads = []

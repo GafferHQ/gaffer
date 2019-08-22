@@ -44,8 +44,8 @@ class WeakMethod( object ) :
 
 	def __init__( self, boundMethod, **kw ) :
 
-		self.__method = boundMethod.im_func
-		self.__self = weakref.ref( boundMethod.im_self )
+		self.__method = boundMethod.__func__
+		self.__self = weakref.ref( boundMethod.__self__ )
 		self.__kw = kw
 
 	## Calls the method if the instance it refers to is still alive,

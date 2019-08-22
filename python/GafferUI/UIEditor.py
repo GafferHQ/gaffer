@@ -579,7 +579,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 	def setPlugParent( self, parent ) :
 
-		assert( isinstance( parent, ( Gaffer.Plug, Gaffer.Node, types.NoneType ) ) )
+		assert( isinstance( parent, ( Gaffer.Plug, Gaffer.Node, type( None ) ) ) )
 
 		self.__parent = parent
 

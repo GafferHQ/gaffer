@@ -274,7 +274,7 @@ class EventLoop( object ) :
 			try :
 				if not c() :
 					EventLoop.__idleCallbacks.remove( c )
-			except Exception, e :
+			except Exception as e :
 				# if the callback throws then we remove it anyway, because
 				# we don't want to keep invoking the same error over and over.
 				EventLoop.__idleCallbacks.remove( c )

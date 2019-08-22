@@ -66,7 +66,7 @@ class OpMatcher( object ) :
 			try :
 				opClass = classLoader.load( className )
 				opInstance = opClass()
-			except Exception, m :
+			except Exception as m :
 				if reportErrors :
 					IECore.msg( IECore.Msg.Level.Error, "GafferCortex.OpMatcher", "Error loading op \"%s\" : %s" % ( className, traceback.format_exc() ) )
 				continue

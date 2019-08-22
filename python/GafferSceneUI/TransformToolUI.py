@@ -116,7 +116,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 					GafferUI.Image( "infoSmall.png" )
 					GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 					self.__infoLabel = GafferUI.Label( "" )
-					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = sys.maxint )
+					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = sys.maxsize )
 					self.__nameLabel.setFormatter( _boldFormatter )
 					self.__nameLabel.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 

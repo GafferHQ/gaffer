@@ -134,7 +134,7 @@ class Editor( GafferUI.Widget ) :
 
 	def __setContextInternal( self, context, callUpdate ) :
 
-		assert( isinstance( context, ( Gaffer.Context, types.NoneType ) ) )
+		assert( isinstance( context, ( Gaffer.Context, type( None ) ) ) )
 
 		previousContext = self.__context
 		self.__context = context

@@ -229,7 +229,7 @@ class PlugLayout( GafferUI.Widget ) :
 		for itemAndIndex in itemsAndIndices :
 			index = cls.__staticItemMetadataValue( itemAndIndex[1], "index", parent, layoutName )
 			if index is not None :
-				index = index if index >= 0 else sys.maxint + index
+				index = index if index >= 0 else sys.maxsize + index
 				itemAndIndex[0] = index
 
 		itemsAndIndices.sort( key = lambda x : x[0] )
