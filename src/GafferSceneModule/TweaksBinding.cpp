@@ -67,16 +67,22 @@ void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, bool r
 	plug.applyTweak( &parameters, requireExists );
 }
 
-void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork )
+void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork, TweakPlug::MissingMode missingMode )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork );
+	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork, missingMode );
 }
 
 void applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, bool requireExists )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	tweaksPlug.applyTweaks( &parameters, requireExists );
+}
+
+void applyTweaksToParameters2( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	tweaksPlug.applyTweaks( &parameters, missingMode );
 }
 
 class TweakPlugSerialiser : public ValuePlugSerialiser
@@ -116,12 +122,19 @@ void GafferSceneModule::bindTweaks()
 
 	{
 		scope tweakPlugScope = tweakPlugClass;
+
 		enum_<TweakPlug::Mode>( "Mode" )
 			.value( "Replace", TweakPlug::Replace )
 			.value( "Add", TweakPlug::Add )
 			.value( "Subtract", TweakPlug::Subtract )
 			.value( "Multiply", TweakPlug::Multiply )
 			.value( "Remove", TweakPlug::Remove )
+		;
+
+		enum_<TweakPlug::MissingMode>( "MissingMode" )
+			.value( "Ignore", TweakPlug::MissingMode::Ignore )
+			.value( "Error", TweakPlug::MissingMode::Error )
+			.value( "IgnoreOrReplace", TweakPlug::MissingMode::IgnoreOrReplace )
 		;
 	}
 
@@ -160,7 +173,7 @@ void GafferSceneModule::bindTweaks()
 			)
 		)
 		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
-		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
+		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ), arg( "missingMode" ) = TweakPlug::MissingMode::Error ) )
 		.staticmethod( "applyTweaks" )
 	;
 
@@ -176,8 +189,9 @@ void GafferSceneModule::bindTweaks()
 				)
 			)
 		)
-		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ) ) )
+		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ), arg( "missingMode" ) = TweakPlug::MissingMode::Error ) )
 		.def( "applyTweaks", &applyTweaksToParameters, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
+		.def( "applyTweaks", &applyTweaksToParameters2, ( arg( "parameters" ), arg( "missingMode" ) ) )
 	;
 
 }
