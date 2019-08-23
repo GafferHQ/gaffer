@@ -36,8 +36,10 @@
 
 import functools
 import imath
+import inspect
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -94,6 +96,39 @@ def __registerShadingModes( modes ) :
 				plugValues,
 			)
 		)
+
+def __createXRayShader() :
+
+	# ideally this could be any type of node (eg Box), but
+	# SceneView seems to require a SceneProcessor.
+	xray = GafferScene.SceneProcessor( "XRay" )
+	xray["attributes"] = GafferScene.CustomAttributes()
+	xray["attributes"]["attributes"].addChild( Gaffer.NameValuePlug( "gl:depthTest", Gaffer.BoolPlug( "value", defaultValue = False ), True, "depthTest" ) )
+	xray["attributes"]["in"].setInput( xray["in"] )
+	xray["assignment"] = GafferScene.ShaderAssignment()
+	xray["assignment"]["in"].setInput( xray["attributes"]["out"] )
+	xray["shader"] = GafferScene.OpenGLShader( "XRay" )
+	xray["shader"]["name"].setValue( "xray" )
+	xray["shader"]["type"].setValue( "gl:surface" )
+	xray["shader"]["parameters"].addChild( Gaffer.StringPlug( "glFragmentSource", defaultValue = inspect.cleandoc(
+		'''
+		in vec3 fragmentN;
+		in vec3 fragmentI;
+
+		void main()
+		{
+			float f = abs( dot( normalize( fragmentI ), normalize( fragmentN ) ) );
+			gl_FragColor = vec4( mix( vec3( 0.7 ), vec3( 0.5 ), f ), 0.5 );
+		}
+		'''
+	) ) )
+	xray["shader"]["out"] = Gaffer.Plug()
+	xray["assignment"]["shader"].setInput( xray["shader"]["out"] )
+	xray["out"].setInput( xray["assignment"]["out"] )
+
+	return xray
+
+GafferSceneUI.SceneView.registerShadingMode( "X-Ray", functools.partial( __createXRayShader ) )
 
 with IECore.IgnoredExceptions( ImportError ) :
 
