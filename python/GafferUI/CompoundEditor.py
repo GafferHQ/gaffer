@@ -53,7 +53,9 @@ from Qt import QtWidgets
 
 class CompoundEditor( GafferUI.Editor ) :
 
-	def __init__( self, scriptNode, children=None, detachedPanels=None, windowState=None, **kw ) :
+	# The CompoundEditor constructor args are considered 'private', used only
+	# by the persistent layout system.
+	def __init__( self, scriptNode, _state={}, **kw ) :
 
 		# We have 1px extra padding within the splits themselves to accommodate highlighting
 		self.__splitContainer = _SplitContainer( borderWidth = 5 )
@@ -65,15 +67,14 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.__splitContainer.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
-		self.__windowState = windowState or {}
+		self.__windowState = _state.get( "windowState", {} )
 
-		if children :
-			self.__splitContainer.restoreChildren( children )
+		self.__splitContainer.restoreChildren( _state.get( "children", () ) )
 
 		self.__detachedPanels = []
-		if detachedPanels :
-			for panelArgs in detachedPanels  :
-				self._createDetachedPanel( **panelArgs )
+		detachedPanels = _state.get( "detachedPanels", () )
+		for panelArgs in detachedPanels  :
+			self._createDetachedPanel( **panelArgs )
 
 	# Returns the editor of the specified type that the user is currently
 	# interested in. This takes into account detached panels and window
@@ -200,7 +201,7 @@ class CompoundEditor( GafferUI.Editor ) :
 		# Editors are public classes and so they are stored by repr.
 		# We don't want to expose the implementation of detached panels
 		# (considered private) so instead we save their construction args.
-		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, windowState = %s )" \
+		return "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : %s, 'detachedPanels' : %s, 'windowState' : %s } )" \
 				% (
 					self.__splitContainer.serialiseChildren(),
 					self.__serialiseDetachedPanels(),
@@ -395,6 +396,9 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 			return repr( tabDict )
 
 	def restoreChildren( self, children ) :
+
+		if not children :
+			return
 
 		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
 
@@ -865,8 +869,7 @@ class _DetachedPanel( GafferUI.Window ) :
 		# accessors for this.
 		self.__parentEditor = weakref.ref( parentEditor )
 
-		if children :
-			self.__splitContainer.restoreChildren( children )
+		self.__splitContainer.restoreChildren( children )
 
 		self.__windowState = windowState or {}
 

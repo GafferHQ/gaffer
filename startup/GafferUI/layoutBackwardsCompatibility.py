@@ -34,44 +34,33 @@
 #
 ##########################################################################
 
-import re
-
 import Gaffer
 import GafferUI
 
-import imath
 
-if Gaffer.About.compatibilityVersion() < 54 :
+# CompoundEditor has changed its constructor, this shim allows old invocations
+#to work. This is required as serialised layouts from older versions will
+#contain the old format.
 
-	# Remove new kwargs introduced to store positions/detached panels
-	def __initWrapper( originalInit ) :
+def __initWrapper( originalInit ) :
 
-		def init( self, *args, **kwargs ) :
-			for kw in ( "windowState", "detachedPanels" ) :
-				if kw in kwargs :
-					del kwargs[kw]
-			originalInit( self, *args, **kwargs )
+	def init( self, *args, **kwargs ) :
 
-		return init
+		if "_state" not in kwargs :
 
-	GafferUI.CompoundEditor.__init__ = __initWrapper( GafferUI.CompoundEditor.__init__ )
+			state = {}
 
-	# windowState requires imath, so we need to modify the eval environment
-	def __create( self, name, scriptNode ) :
+			# Older versions have the _state entries as individual kwargs
+			for arg in ( "children", "windowState", "detachedPanels" ) :
+				if arg in kwargs :
+					state[ arg ] = kwargs[ arg ]
+					del kwargs[ arg ]
 
-		layout = self._Layouts__namedLayouts[name]
+			if state :
+				kwargs[ "_state" ] = state
 
-		# first try to import the modules the layout needs
-		contextDict = { "scriptNode" : scriptNode, "imath" : imath }
-		imported = set()
-		classNameRegex = re.compile( "[a-zA-Z]*Gaffer[^(,]*\(" )
-		for className in classNameRegex.findall( layout.repr ) :
-			moduleName = className.partition( "." )[0]
-			if moduleName not in imported :
-				exec( "import %s" % moduleName, contextDict, contextDict )
-				imported.add( moduleName )
+		originalInit( self, *args, **kwargs )
 
-		return eval( layout.repr, contextDict, contextDict )
+	return init
 
-	GafferUI.Layouts.create = __create
-
+GafferUI.CompoundEditor.__init__ = __initWrapper( GafferUI.CompoundEditor.__init__ )
