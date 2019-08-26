@@ -187,6 +187,11 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Light Linking",
 			"label", "Linked Lights",
+
+		],
+
+		"attributes.linkedLights.value" : [
+
 			"ui:scene:acceptsSetExpression", True,
 
 		],
@@ -203,6 +208,11 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Light Linking",
 			"label", "Filtered Lights",
+
+		],
+
+		"attributes.filteredLights.value" : [
+
 			"ui:scene:acceptsSetExpression", True,
 
 		],
