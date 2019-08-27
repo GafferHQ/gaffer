@@ -539,6 +539,7 @@
 	[attr geometry_matrix]
 
 		widget STRING "null"
+		gaffer.plugType STRING ""
 
 	[attr shader]
 
