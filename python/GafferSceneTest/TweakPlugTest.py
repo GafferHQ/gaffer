@@ -83,7 +83,7 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		tweaks.addChild( GafferScene.TweakPlug( "a", 1.0, GafferScene.TweakPlug.Mode.Replace ) )
 		tweaks.addChild( GafferScene.TweakPlug( "b", 10.0, GafferScene.TweakPlug.Mode.Multiply ) )
 
-		parameters = IECore.CompoundData( { "b" : 2.0 } )
+		parameters = IECore.CompoundData( { "a" : 0.0, "b" : 2.0 } )
 		tweaks.applyTweaks( parameters )
 		self.assertEqual( parameters, IECore.CompoundData( { "a" : 1.0, "b" : 20.0 } ) )
 

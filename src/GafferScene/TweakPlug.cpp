@@ -325,11 +325,6 @@ void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const
 
 } // namespace
 
-void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists ) const
-{
-	applyTweak( parameters, requireExists ? MissingMode::Error : MissingMode::IgnoreOrReplace );
-}
-
 void TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
 {
 	if( !enabledPlug()->getValue() )
@@ -345,11 +340,6 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missin
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	applyTweakInternal( mode, this->valuePlug(), name, name, parameters, missingMode );
-}
-
-void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork )
-{
-	applyTweaks( tweaksPlug, shaderNetwork, TweakPlug::MissingMode::Error );
 }
 
 void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode )
@@ -535,25 +525,12 @@ Gaffer::PlugPtr TweaksPlug::createCounterpart( const std::string &name, Directio
 	return result;
 }
 
-void TweaksPlug::applyTweaks( IECore::CompoundData *parameters, bool requireExists ) const
-{
-	for( TweakPlugIterator it( this ); !it.done(); ++it )
-	{
-		(*it)->applyTweak( parameters, requireExists );
-	}
-}
-
 void TweaksPlug::applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode ) const
 {
 	for( TweakPlugIterator it( this ); !it.done(); ++it )
 	{
 		(*it)->applyTweak( parameters, missingMode );
 	}
-}
-
-void TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork ) const
-{
-	TweakPlug::applyTweaks( this, shaderNetwork );
 }
 
 void TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode ) const

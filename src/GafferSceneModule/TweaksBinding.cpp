@@ -61,10 +61,10 @@ TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstData
 	return new TweakPlug( tweakName, tweakValue.get(), mode, enabled );
 }
 
-void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, bool requireExists )
+void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	plug.applyTweak( &parameters, requireExists );
+	plug.applyTweak( &parameters, missingMode );
 }
 
 void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork, TweakPlug::MissingMode missingMode )
@@ -73,13 +73,7 @@ void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetw
 	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork, missingMode );
 }
 
-void applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, bool requireExists )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	tweaksPlug.applyTweaks( &parameters, requireExists );
-}
-
-void applyTweaksToParameters2( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
+void applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	tweaksPlug.applyTweaks( &parameters, missingMode );
@@ -172,7 +166,7 @@ void GafferSceneModule::bindTweaks()
 				)
 			)
 		)
-		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
+		.def( "applyTweak", &applyTweak, ( arg( "parameters" ), arg( "missingMode" ) = TweakPlug::MissingMode::Error ) )
 		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ), arg( "missingMode" ) = TweakPlug::MissingMode::Error ) )
 		.staticmethod( "applyTweaks" )
 	;
@@ -190,8 +184,7 @@ void GafferSceneModule::bindTweaks()
 			)
 		)
 		.def( "applyTweaks", &applyTweaks, ( arg( "shaderNetwork" ), arg( "missingMode" ) = TweakPlug::MissingMode::Error ) )
-		.def( "applyTweaks", &applyTweaksToParameters, ( arg( "parameters" ), arg( "requireExists" ) = false ) )
-		.def( "applyTweaks", &applyTweaksToParameters2, ( arg( "parameters" ), arg( "missingMode" ) ) )
+		.def( "applyTweaks", &applyTweaksToParameters, ( arg( "parameters" ), arg( "missingMode" ) = TweakPlug::MissingMode::Error ) )
 	;
 
 }
