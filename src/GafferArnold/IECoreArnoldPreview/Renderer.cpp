@@ -225,6 +225,24 @@ bool aiVersionLessThan( int arch, int major, int minor, int patch )
 	);
 }
 
+void substituteShaderIfNecessary( IECoreScene::ConstShaderNetworkPtr &shaderNetwork, const IECore::CompoundObject *attributes )
+{
+	if( !shaderNetwork )
+	{
+		return;
+	}
+
+	IECore::MurmurHash h;
+	shaderNetwork->hashSubstitutions( attributes, h );
+	if( h != IECore::MurmurHash() )
+	{
+		IECoreScene::ShaderNetworkPtr substituted = shaderNetwork->copy();
+		substituted->applySubstitutions( attributes );
+		shaderNetwork = substituted;
+	}
+}
+
+
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
 const AtString g_aovShadersArnoldString( "aov_shaders" );
@@ -624,14 +642,30 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		ArnoldShaderPtr get( const IECoreScene::ShaderNetwork *shader )
+		ArnoldShaderPtr get( const IECoreScene::ShaderNetwork *shader, const IECore::CompoundObject *attributes )
 		{
+			IECore::MurmurHash h = shader->Object::hash();
+			IECore::MurmurHash hSubst;
+			if( attributes )
+			{
+				shader->hashSubstitutions( attributes, hSubst );
+				h.append( hSubst );
+			}
 			Cache::accessor a;
-			m_cache.insert( a, shader->Object::hash() );
+			m_cache.insert( a, h );
 			if( !a->second )
 			{
 				const std::string namePrefix = "shader:" + a->first.toString();
-				a->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
+				if( hSubst != IECore::MurmurHash() )
+				{
+					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
+					substitutedShader->applySubstitutions( attributes );
+					a->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, namePrefix, m_parentNode );
+				}
+				else
+				{
+					a->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
+				}
 			}
 			return a->second;
 		}
@@ -782,22 +816,24 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_surfaceShaderAttributeName, attributes );
 			if( surfaceShaderAttribute )
 			{
-				m_surfaceShader = shaderCache->get( surfaceShaderAttribute );
+				m_surfaceShader = shaderCache->get( surfaceShaderAttribute, attributes );
 			}
 
 			if( auto filterMapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldFilterMapAttributeName, attributes ) )
 			{
-				m_filterMap = shaderCache->get( filterMapAttribute );
+				m_filterMap = shaderCache->get( filterMapAttribute, attributes );
 			}
 			if( auto uvRemapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldUVRemapAttributeName, attributes ) )
 			{
-				m_uvRemap = shaderCache->get( uvRemapAttribute );
+				m_uvRemap = shaderCache->get( uvRemapAttribute, attributes );
 			}
 
 			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECoreScene::ShaderNetwork>( g_lightShaderAttributeName, attributes );
+			substituteShaderIfNecessary( m_lightShader, attributes );
 
 			m_lightFilterShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightFilterShaderAttributeName, attributes );
+			substituteShaderIfNecessary( m_lightFilterShader, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
@@ -823,7 +859,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 				else if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
 				{
-					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it->second.get() ) );
+					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECoreScene::ShaderNetwork>( it->second.get() ), attributes );
 					m_lightFilterShaders.push_back( filter );
 				}
 			}
@@ -1222,7 +1258,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				if( const IECoreScene::ShaderNetwork *mapAttribute = attribute<IECoreScene::ShaderNetwork>( g_dispMapAttributeName, attributes ) )
 				{
-					map = shaderCache->get( mapAttribute );
+					map = shaderCache->get( mapAttribute, attributes );
 				}
 				height = attributeValue<float>( g_dispHeightAttributeName, attributes, 1.0f );
 				padding = attributeValue<float>( g_dispPaddingAttributeName, attributes, 0.0f );
@@ -2749,7 +2785,7 @@ class ArnoldGlobals
 				{
 					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 					{
-						m_atmosphere = m_shaderCache->get( d );
+						m_atmosphere = m_shaderCache->get( d, nullptr );
 					}
 				}
 				AiNodeSetPtr( options, g_atmosphereArnoldString, m_atmosphere ? m_atmosphere->root() : nullptr );
@@ -2762,7 +2798,7 @@ class ArnoldGlobals
 				{
 					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 					{
-						m_background = m_shaderCache->get( d );
+						m_background = m_shaderCache->get( d, nullptr );
 					}
 				}
 				AiNodeSetPtr( options, g_backgroundArnoldString, m_background ? m_background->root() : nullptr );
@@ -2775,7 +2811,7 @@ class ArnoldGlobals
 				{
 					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 					{
-						m_aovShaders[name] = m_shaderCache->get( d );
+						m_aovShaders[name] = m_shaderCache->get( d, nullptr );
 					}
 				}
 

@@ -37,6 +37,7 @@
 import os
 import unittest
 import subprocess32 as subprocess
+import re
 
 import IECore
 import IECoreScene
@@ -46,6 +47,7 @@ import GafferTest
 import GafferScene
 import GafferAppleseed
 import GafferAppleseedTest
+import GafferOSL
 
 class AppleseedRenderTest( GafferTest.TestCase ) :
 
@@ -269,6 +271,51 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		self.assertNotEqual( render["task"].hash(), IECore.MurmurHash() )
 		render["task"].execute()
 		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+
+	def testShaderSubstitutions( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeAttrs = GafferScene.CustomAttributes()
+		planeAttrs["in"].setInput( plane["out"] )
+		planeAttrs["attributes"].addChild( Gaffer.NameValuePlug( "A", Gaffer.StringPlug( "value", defaultValue = 'bar' ) ) )
+		planeAttrs["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'foo' ) ) )
+
+		cube = GafferScene.Cube()
+
+		cubeAttrs = GafferScene.CustomAttributes()
+		cubeAttrs["in"].setInput( cube["out"] )
+		cubeAttrs["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'override' ) ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( planeAttrs["out"] )
+		parent["child"].setInput( cubeAttrs["out"] )
+		parent["parent"].setValue( "/plane" )
+
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "as_texture" )
+		shader["parameters"]["in_filename"].setValue( "<attr:A>/path/<attr:B>.tx" )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( parent["out"] )
+		shaderAssignment["filter"].setInput( f["out"] )
+		shaderAssignment["shader"].setInput( shader["out"] )
+
+		render = GafferAppleseed.AppleseedRender()
+		render["in"].setInput( shaderAssignment["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.appleseed" ) )
+
+		self.assertNotEqual( render["task"].hash(), IECore.MurmurHash() )
+		render["task"].execute()
+		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+		f = open( render["fileName"].getValue(), "r" )
+		texturePaths = set( re.findall( '<parameter name="in_filename" value="string (.*)"', f.read()) )
+		self.assertEqual( texturePaths, set( ['bar/path/foo.tx', 'bar/path/override.tx' ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

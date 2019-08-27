@@ -1202,5 +1202,108 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render["task"].execute()
 
+	def testShaderSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+
+		s["planeAttrs"] = GafferScene.CustomAttributes()
+		s["planeAttrs"]["in"].setInput( s["plane"]["out"] )
+		s["planeAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "A", Gaffer.StringPlug( "value", defaultValue = 'bar' ) ) )
+		s["planeAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'foo' ) ) )
+
+		s["cube"] = GafferScene.Cube()
+
+		s["cubeAttrs"] = GafferScene.CustomAttributes()
+		s["cubeAttrs"]["in"].setInput( s["cube"]["out"] )
+		s["cubeAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'override' ) ) )
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["in"].setInput( s["planeAttrs"]["out"] )
+		s["parent"]["child"].setInput( s["cubeAttrs"]["out"] )
+		s["parent"]["parent"].setValue( "/plane" )
+
+		s["shader"] = GafferArnold.ArnoldShader()
+		s["shader"].loadShader( "image" )
+		s["shader"]["parameters"]["filename"].setValue( "<attr:A>/path/<attr:B>.tx" )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["parent"]["out"] )
+		s["shaderAssignment"]["filter"].setInput( s["filter"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+
+		s["light"] = GafferArnold.ArnoldLight()
+		s["light"].loadShader( "photometric_light" )
+		s["light"]["parameters"]["filename"].setValue( "/path/<attr:A>.ies" )
+
+		s["goboTexture"] = GafferArnold.ArnoldShader()
+		s["goboTexture"].loadShader( "image" )
+		s["goboTexture"]["parameters"]["filename"].setValue( "<attr:B>/gobo.tx" )
+
+		s["gobo"] = GafferArnold.ArnoldShader()
+		s["gobo"].loadShader( "gobo" )
+		s["gobo"]["parameters"]["slidemap"].setInput( s["goboTexture"]["out"] )
+
+		s["goboAssign"] = GafferScene.ShaderAssignment()
+		s["goboAssign"]["in"].setInput( s["light"]["out"] )
+		s["goboAssign"]["shader"].setInput( s["gobo"]["out"] )
+
+		
+		s["lightBlocker"] = GafferArnold.ArnoldLightFilter()
+		s["lightBlocker"].loadShader( "light_blocker" )
+		s["lightBlocker"]["parameters"]["geometry_type"].setValue( "<attr:geometryType>" )
+		#s["lightBlocker"]["parameters"]["geometry_type"].setValue( "plane" )
+
+
+		s["lightGroup"] = GafferScene.Group()
+		s["lightGroup"]["name"].setValue( "lightGroup" )
+		s["lightGroup"]["in"][0].setInput( s["goboAssign"]["out"] )
+		s["lightGroup"]["in"][1].setInput( s["lightBlocker"]["out"] )
+
+		s["parent2"] = GafferScene.Parent()
+		s["parent2"]["in"].setInput( s["shaderAssignment"]["out"] )
+		s["parent2"]["child"].setInput( s["lightGroup"]["out"] )
+		s["parent2"]["parent"].setValue( "/" )
+
+		s["globalAttrs"] = GafferScene.CustomAttributes()
+		s["globalAttrs"]["in"].setInput( s["parent2"]["out"] )
+		s["globalAttrs"]["global"].setValue( True )
+		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "A", Gaffer.StringPlug( "value", defaultValue = 'default1' ) ) )
+		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'default2' ) ) )
+		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "geometryType", Gaffer.StringPlug( "value", defaultValue = 'cylinder' ) ) )
+
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["globalAttrs"]["out"] )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			plane = arnold.AiNodeLookUpByName( "/plane" )
+			shader = arnold.AiNodeGetPtr( plane, "shader" )
+			self.assertEqual( arnold.AiNodeGetStr( shader, "filename" ), "bar/path/foo.tx" )
+
+			cube = arnold.AiNodeLookUpByName( "/plane/cube" )
+			shader2 = arnold.AiNodeGetPtr( cube, "shader" )
+			self.assertEqual( arnold.AiNodeGetStr( shader2, "filename" ), "bar/path/override.tx" )
+
+			light = arnold.AiNodeLookUpByName( "light:/lightGroup/light" )
+			self.assertEqual( arnold.AiNodeGetStr( light, "filename" ), "/path/default1.ies" )
+
+			gobo = arnold.AiNodeGetPtr( light, "filters" )
+			goboTex = arnold.AiNodeGetLink( gobo, "slidemap" )
+			self.assertEqual( arnold.AiNodeGetStr( goboTex, "filename" ), "default2/gobo.tx" )
+
+			lightFilter = arnold.AiNodeLookUpByName( "lightFilter:/lightGroup/lightFilter" )
+			self.assertEqual( arnold.AiNodeGetStr( lightFilter, "geometry_type" ), "cylinder" )
+
 if __name__ == "__main__":
 	unittest.main()
