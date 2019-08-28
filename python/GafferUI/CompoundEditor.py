@@ -76,6 +76,9 @@ class CompoundEditor( GafferUI.Editor ) :
 		for panelArgs in detachedPanels  :
 			self._createDetachedPanel( **panelArgs )
 
+		# By Now, all Editors will have been created, so we can restore any state
+		self.__restoreEditorState( _state.get( "editorState", {} ) )
+
 	# Returns the editor of the specified type that the user is currently
 	# interested in. This takes into account detached panels and window
 	# ordering such that when the keyboard focus is with an editor of the
@@ -121,8 +124,6 @@ class CompoundEditor( GafferUI.Editor ) :
 				editor = editors[0]
 
 		return editor
-
-
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
@@ -201,12 +202,118 @@ class CompoundEditor( GafferUI.Editor ) :
 		# Editors are public classes and so they are stored by repr.
 		# We don't want to expose the implementation of detached panels
 		# (considered private) so instead we save their construction args.
-		return "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : %s, 'detachedPanels' : %s, 'windowState' : %s } )" \
+		return "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : %s, 'detachedPanels' : %s, 'windowState' : %s, 'editorState' : %s } )" \
 				% (
 					self.__splitContainer.serialiseChildren(),
 					self.__serialiseDetachedPanels(),
-					self._serializeWindowState()
+					self._serializeWindowState(),
+					self.__captureEditorState()
 				)
+
+	# We use the path to the editor in the UI to allow us to find
+	# the same editor again after restoring from a layout.
+	# NOTE: This is only stable as long as the layout hasn't been
+	# altered since the path was generated
+	def __pathToEditor( self, editor ) :
+
+		path = []
+
+		child = editor
+		parent = child.parent()
+
+		while parent is not None :
+
+			# The last (will be first) part of the path indicates where
+			# the target lives, 'c' for child, 'p' for panel
+			if isinstance( parent, GafferUI.CompoundEditor ) :
+				path.append( "c" )
+				break
+			elif isinstance( parent, _DetachedPanel ) :
+				path.append( str(self.__detachedPanels.index( parent )) )
+				path.append( "p" )
+				# We don't append the index of the split container
+				# as we'll skip it later
+				break
+
+			# The rest of the path in then simply the index of the child under
+			# its parent.
+
+			path.append( str(parent.index( child )) )
+
+			child = parent
+			parent = child.parent()
+
+		# Store in load order
+		path.reverse()
+
+		# By now we have something like "c-0-1-1-0"
+		return "-".join( path )
+
+	# Finds the editor given the string from __pathToEditor
+	def __editorAtPath( self, path ) :
+
+		path = path.split( "-" )
+
+		# The first element indicates where the path is rooted, the second
+		# element is the corresponding index. We have to manually unpack the
+		# initial Widget from the appropriate place, the rest we can recursively
+		# unpack using the subscript method of indexed child retrieval from
+		# gaffer layout widgets.
+
+		if path[0] == "p" :
+			obj = self.__detachedPanels[ int(path[1]) ]._splitContainer()
+		elif path[0] == "c" :
+			obj = self.__splitContainer[ int(path[1]) ]
+		else :
+			return None
+
+		# We consumed the first two elements getting to the root of the
+		# hierarchy we need to search below.
+		for i in path[2:] :
+			obj = obj[ int(i) ]
+
+		if not isinstance( obj, GafferUI.Editor ) :
+			raise RuntimeError( "Unable to find an editor at path %s" % path )
+
+		return obj
+
+	def __captureEditorState( self ) :
+
+		state = {}
+
+		# Store the driver (if set) for any NodeSetEditors
+		nodeSetEditors = [ e for e in self.editors() if isinstance( e, GafferUI.NodeSetEditor ) ]
+		for n in nodeSetEditors :
+			driver, mode = n.getNodeSetDriver()
+			if driver is not None :
+				state[ self.__pathToEditor(n) ] = {
+					"driver" : self.__pathToEditor(driver),
+					"driverMode" : mode
+				}
+
+		return state
+
+	def __restoreEditorState( self, editorState ) :
+
+		if not editorState :
+			return
+
+		for path, state in editorState.items() :
+
+			if "driver" in state :
+				editor = self.__editorAtPath( path )
+				driver = self.__editorAtPath( state["driver"] )
+				# The mode may not be registered any more, so make sure
+				# we fail gracefully here
+				try :
+					editor.setNodeSetDriver( driver, state["driverMode"] )
+				except Exception as e :
+					sys.stderr.write(
+						"Unable to restore node set driver for {editor}: {error}\n".format(
+							editor = path,
+							error = "%s: %s" % ( type(e), e )
+						)
+					)
 
 	# visibility for Test Harness
 	def _serializeWindowState( self ) :
@@ -917,6 +1024,10 @@ class _DetachedPanel( GafferUI.Window ) :
 			self.__splitContainer.serialiseChildren(),
 			_reprDict( _getWindowState( self ) )
 		)
+
+	# Required for editor path introspection
+	def _splitContainer( self ) :
+		return self.__splitContainer
 
 ## An internal eventFilter class managing all tab drag-drop events and logic.
 # Tab dragging is an exception and is implemented entirely using mouse-move
