@@ -38,6 +38,7 @@
 
 #include "GafferUI/NoduleLayout.h"
 
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/NameValuePlug.h"
 
@@ -98,6 +99,24 @@ class NameSwitchPlugAdder : public PlugAdder
 			{
 				p->valuePlug()->setInput( endpoint );
 			}
+
+			auto nameSwitch = m_plug->parent<NameSwitch>();
+			if( !nameSwitch || m_plug != nameSwitch->inPlugs() )
+			{
+				// Not `NameSwitch.in` - most likely a promoted copy.
+				// We won't be inheriting the metadata registered for
+				// NameSwitch nodes, so must explicitly copy the
+				// right metadata onto the new plug.
+				//
+				// > Todo : Consider improvements to the Medatata registration
+				// > mechanism so that "ancestor relative" metadata can be
+				// > registered against specific GraphComponent _instances_ rather
+				// > than only against GraphComponent _types_. Also introduce
+				// > the ability to register dynamic (Metadata::PlugValueFunction)
+				// > metadata against instances, so we can properly support the
+				// > "noduleLayout:label" metadata.
+				MetadataAlgo::copy( m_plug->getChild<Plug>( s - 1 ), p );
+			}
 		}
 
 	private :
@@ -118,11 +137,11 @@ struct Registration
 
 		static GadgetPtr create( GraphComponentPtr parent )
 		{
-			if( auto s = parent->parent<NameSwitch>() )
+			if( auto a = runTimeCast<ArrayPlug>( parent ) )
 			{
-				return new NameSwitchPlugAdder( s->inPlugs() );
+				return new NameSwitchPlugAdder( a );
 			}
-			throw IECore::Exception( "Expected an ArrayPlug belonging to a NameSwitch" );
+			throw IECore::Exception( "Expected an ArrayPlug" );
 		}
 
 };

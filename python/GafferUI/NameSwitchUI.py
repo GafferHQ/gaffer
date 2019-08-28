@@ -114,7 +114,6 @@ Gaffer.Metadata.registerNode(
 		"in.*.enabled" : [
 
 			"nodule:type", "",
-			"boolPlugValueWidget:displayMode", "switch",
 
 		],
 
@@ -196,6 +195,10 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().resize( len( self.getPlug() ) + 1 )
+			parent = self.getPlug().parent()
+			if not isinstance( parent, Gaffer.NameSwitch ) or self.getPlug() != parent["in"] :
+				## See comments in `NameSwitchPlugAdder::createConnection()`
+				Gaffer.MetadataAlgo.copy( self.getPlug()[-2], self.getPlug()[-1] )
 
 	def __dragEnter( self, widget, event ) :
 
@@ -357,7 +360,7 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__plugValueWidgets = []
 				self.__plugValueWidgets.append( GafferUI.StringPlugValueWidget( plug["name"] ) )
-				self.__plugValueWidgets.append( GafferUI.BoolPlugValueWidget( plug["enabled"] ) )
+				self.__plugValueWidgets.append( GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode = GafferUI.BoolWidget.DisplayMode.Switch ) )
 				self.__plugValueWidgets.append( GafferUI.PlugValueWidget.create( plug["value"] ) )
 
 				self.__plugValueWidgets[0].textWidget()._qtWidget().setFixedWidth( self.__labelWidth )
