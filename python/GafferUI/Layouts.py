@@ -38,9 +38,12 @@
 import collections
 import os
 import re
+import traceback
 import weakref
 
 import imath
+
+import IECore
 
 import Gaffer
 import GafferUI
@@ -130,10 +133,19 @@ class Layouts( object ) :
 		for className in classNameRegex.findall( layout.repr ) :
 			moduleName = className.partition( "." )[0]
 			if moduleName not in imported :
-				exec( "import %s" % moduleName, contextDict, contextDict )
+				try :
+					exec( "import %s" % moduleName, contextDict, contextDict )
+				except( ImportError ) :
+					IECore.msg( IECore.MessageHandler.Level.Error, "GafferUI.Layouts", "Failed to load \"{layout}\" layout. {module} is not available.".format( layout=name, module=moduleName ) )
+					return GafferUI.CompoundEditor( scriptNode )
 				imported.add( moduleName )
 
-		return eval( layout.repr, contextDict, contextDict )
+		try :
+			return eval( layout.repr, contextDict, contextDict )
+		except Exception as e :
+			traceback.print_exc()
+			IECore.msg( IECore.MessageHandler.Level.Error, "GafferUI.Layouts", "Failed to load \"{layout}\" layout. {message}.".format( layout=name, message=e ) )
+			return GafferUI.CompoundEditor( scriptNode )
 
 	def setDefault( self, name, persistent = False ) :
 
