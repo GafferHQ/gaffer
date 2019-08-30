@@ -82,6 +82,26 @@ class GAFFERSCENE_API LightVisualiser : public IECore::RefCounted
 			const IECore::InternedString &shaderName,
 			ConstLightVisualiserPtr visualiser
 		);
+
+		/// Get all registered visualisations for the given attributes, by returning a renderable
+		/// group and some extra state. The return value and/or the state may be left null if
+		/// no registered visualisers do anything with these attributes.
+		static IECoreGL::ConstRenderablePtr allVisualisations(
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		);
+
+	protected :
+
+		template<typename VisualiserType>
+		struct LightVisualiserDescription
+		{
+			LightVisualiserDescription( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName )
+			{
+				registerLightVisualiser( attributeName, shaderName, new VisualiserType() );
+			};
+		};
+
 };
 
 } // namespace IECoreGLPreview

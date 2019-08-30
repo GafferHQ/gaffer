@@ -34,24 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-
-#include "GafferSceneUI/StandardLightVisualiser.h"
-
-#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
-#include "IECoreScene/Shader.h"
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
 
 using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace IECoreGLPreview;
-using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
 // Internal implementation details
@@ -69,39 +65,27 @@ LightVisualisers &lightVisualisers()
 	return l;
 }
 
-const LightVisualiser *standardLightVisualiser()
-{
-	static ConstLightVisualiserPtr l = new StandardLightVisualiser;
-	return l.get();
-}
-
-/// Class for visualisation of lights. All lights in Gaffer are represented
-/// as IECore::Shader objects, but we need to visualise them differently
-/// depending on their shader name (accessed using `IECore::Shader::getName()`). A
-/// factory mechanism is provided to map from this type to a specialised
-/// LightVisualiser.
-class AttributeVisualiserForLights : public AttributeVisualiser
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiserForLights )
-
-		/// Uses a custom visualisation registered via `registerLightVisualiser()` if one
-		/// is available, if not falls back to a basic point light visualisation.
-		IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes,
-			IECoreGL::ConstStatePtr &state ) const override;
-
-	protected :
-
-		static AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> g_visualiserDescription;
-
-};
-
 } // namespace
 
-IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECore::CompoundObject *attributes,
-	IECoreGL::ConstStatePtr &state ) const
+//////////////////////////////////////////////////////////////////////////
+// LightVisualiser class
+//////////////////////////////////////////////////////////////////////////
+
+
+LightVisualiser::LightVisualiser()
+{
+}
+
+LightVisualiser::~LightVisualiser()
+{
+}
+
+void LightVisualiser::registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser )
+{
+	lightVisualisers()[AttributeAndShaderNames( attributeName, shaderName )] = visualiser;
+}
+
+IECoreGL::ConstRenderablePtr LightVisualiser::allVisualisations( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state )
 {
 	if( !attributes )
 	{
@@ -139,13 +123,32 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 			continue;
 		}
 
-		const LightVisualiser *visualiser = standardLightVisualiser();
+		const LightVisualiser *visualiser = nullptr;
 
 		const LightVisualisers &l = lightVisualisers();
 		LightVisualisers::const_iterator visIt = l.find( AttributeAndShaderNames( it->first, shaderName ) );
 		if( visIt != l.end() )
 		{
 			visualiser = visIt->second.get();
+		}
+		else
+		{
+			// Direct lookup failed. See if we have any wildcard matches.
+			// We assume that the number of registered visualisers is small
+			// enough that linear search is OK here.
+			for( auto &r : l )
+			{
+				if( StringAlgo::matchMultiple( it->first, r.first.first ) && StringAlgo::matchMultiple( shaderName, r.first.second ) )
+				{
+					visualiser = r.second.get();
+					break;
+				}
+			}
+		}
+
+		if( !visualiser )
+		{
+			continue;
 		}
 
 		IECoreGL::ConstStatePtr curState = nullptr;
@@ -174,24 +177,4 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 
 	state = resultState;
 	return resultGroup;
-}
-
-AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> AttributeVisualiserForLights::g_visualiserDescription;
-
-//////////////////////////////////////////////////////////////////////////
-// LightVisualiser class
-//////////////////////////////////////////////////////////////////////////
-
-
-LightVisualiser::LightVisualiser()
-{
-}
-
-LightVisualiser::~LightVisualiser()
-{
-}
-
-void LightVisualiser::registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser )
-{
-	lightVisualisers()[AttributeAndShaderNames( attributeName, shaderName )] = visualiser;
 }
