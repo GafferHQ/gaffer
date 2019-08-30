@@ -67,12 +67,21 @@ class GAFFERSCENE_API LightVisualiser : public IECore::RefCounted
 
 		/// Must be implemented by derived classes to visualise
 		/// the light contained within `shaderNetwork`.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const = 0;
+		virtual IECoreGL::ConstRenderablePtr visualise(
+			const IECore::InternedString &attributeName,
+			const IECoreScene::ShaderNetwork *shaderNetwork,
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		) const = 0;
 
 		/// Registers a visualiser to visualise a particular type of light.
 		/// For instance, `registerLightVisualiser( "ai:light", "point_light", visualiser )`
 		/// would register a visualiser for an Arnold point light.
-		static void registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser );
+		static void registerLightVisualiser(
+			const IECore::InternedString &attributeName,
+			const IECore::InternedString &shaderName,
+			ConstLightVisualiserPtr visualiser
+		);
 };
 
 } // namespace IECoreGLPreview
