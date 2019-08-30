@@ -78,6 +78,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName, int maxTextureResolution );
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
 
+		static LightVisualiser::StandardLightVisualiserDescription<StandardLightVisualiser> g_standardLightVisualiserDescription;
+
 	private :
 
 		/// \todo Expose publicly once we have enough uses to dictate
