@@ -188,6 +188,11 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_visualisation.get();
 		}
 
+		const IECoreGL::Renderable *lightVisualisation() const
+		{
+			return m_lightVisualisation.get();
+		}
+
 	private :
 
 		ConstStatePtr m_state;
@@ -275,9 +280,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				b.extendBy( m_renderable->bound() );
 			}
-			if( m_attributes->visualisation() )
+			if( visualisation( m_attributes ) )
 			{
-				b.extendBy( m_attributes->visualisation()->bound() );
+				b.extendBy( visualisation( m_attributes )->bound() );
 			}
 
 			if( b.isEmpty() )
@@ -315,9 +320,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				m_renderable->render( currentState );
 			}
 
-			if( m_attributes->visualisation() )
+			if( visualisation( m_attributes ) )
 			{
-				m_attributes->visualisation()->render( currentState );
+				visualisation( m_attributes )->render( currentState );
 			}
 
 			if( haveTransform )
@@ -329,6 +334,11 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		IECore::TypeId objectType() const
 		{
 			return m_objectType;
+		}
+
+		virtual const IECoreGL::Renderable *visualisation( ConstOpenGLAttributesPtr attributes ) const
+		{
+			return attributes->visualisation();
 		}
 
 	protected :
@@ -411,6 +421,32 @@ IE_CORE_FORWARDDECLARE( OpenGLCamera )
 
 } // namespace
 
+//////////////////////////////////////////////////////////////////////////
+// OpenGLLight
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class OpenGLLight : public OpenGLObject
+{
+
+	public :
+
+		OpenGLLight( const std::string &name, const IECore::Object *light, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
+			:	OpenGLObject( name, light, attributes, editQueue )
+		{
+		}
+
+		const IECoreGL::Renderable *visualisation( ConstOpenGLAttributesPtr attributes ) const override
+		{
+			return attributes->lightVisualisation();
+		}
+};
+
+IE_CORE_FORWARDDECLARE( OpenGLLight )
+
+} // namespace
 //////////////////////////////////////////////////////////////////////////
 // OpenGLRenderer
 //////////////////////////////////////////////////////////////////////////
@@ -531,7 +567,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			return this->object( name, object, attributes );
+			OpenGLLightPtr result = new OpenGLLight( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
+			return result;
 		}
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
