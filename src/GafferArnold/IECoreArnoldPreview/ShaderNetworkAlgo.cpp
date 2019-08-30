@@ -262,11 +262,16 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 }
 
 AtString g_name( "name" );
+AtString g_lightBlockerNodeEntryName( "light_blocker" );
 
 const std::vector<AtString> g_protectedLightParameters = {
 	AtString( "matrix" ),
 	AtString( "filters" ),
 	AtString( "mesh" )
+};
+
+const std::vector<AtString> g_protectedLightFilterParameters = {
+	AtString( "geometry_matrix" ),
 };
 
 // Similar to `AiNodeReset()`, but avoids resetting light parameters
@@ -275,6 +280,8 @@ void resetNode( AtNode *node )
 {
 	const AtNodeEntry *nodeEntry = AiNodeGetNodeEntry( node );
 	const bool isLight = AiNodeEntryGetType( nodeEntry ) == AI_NODE_LIGHT;
+	const bool isShader = AiNodeEntryGetType( nodeEntry ) == AI_NODE_SHADER;
+	const bool isLightFilter = isShader && AtString( AiNodeEntryGetName( nodeEntry ) ) == g_lightBlockerNodeEntryName;
 
 	AtParamIterator *it = AiNodeEntryGetParamIterator( nodeEntry );
 	while( !AiParamIteratorFinished( it ) )
@@ -294,6 +301,18 @@ void resetNode( AtNode *node )
 				g_protectedLightParameters.end(),
 				name
 			) != g_protectedLightParameters.end()
+		)
+		{
+			continue;
+		}
+
+		if(
+			isLightFilter &&
+			std::find(
+				g_protectedLightFilterParameters.begin(),
+				g_protectedLightFilterParameters.end(),
+				name
+			) != g_protectedLightFilterParameters.end()
 		)
 		{
 			continue;
