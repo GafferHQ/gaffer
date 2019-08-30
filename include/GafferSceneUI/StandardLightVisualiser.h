@@ -88,6 +88,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr pointShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
 
+		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
+
 };
 
 IE_CORE_DECLAREPTR( StandardLightVisualiser )
