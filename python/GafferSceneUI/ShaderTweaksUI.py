@@ -71,6 +71,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"ignoreMissing" : [
+
+			"description",
+			"""
+			Ignores tweaks targeting missing parameters. When off, missing parameters
+			cause the node to error.
+			"""
+
+		],
+
+
 		"tweaks" : [
 
 			"description",

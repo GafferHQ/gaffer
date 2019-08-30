@@ -131,7 +131,7 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 			InternedString internedName(name);
 			CompoundDataPtr dummyParameters = new CompoundData();
 			dummyParameters->writable()[internedName] = new FloatData( result->calculateFieldOfView()[0] );
-			(*tIt)->applyTweak( dummyParameters.get() );
+			(*tIt)->applyTweak( dummyParameters.get(), TweakPlug::MissingMode::IgnoreOrReplace );
 			FloatData *tweakedData = dummyParameters->member<FloatData>( internedName );
 			if( tweakedData )
 			{
@@ -145,7 +145,7 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 			Imath::V2f aperture = result->getAperture();
 			CompoundDataPtr dummyParameters = new CompoundData();
 			dummyParameters->writable()[internedName] = new FloatData( aperture[0] / aperture[1] );
-			(*tIt)->applyTweak( dummyParameters.get() );
+			(*tIt)->applyTweak( dummyParameters.get(), TweakPlug::MissingMode::IgnoreOrReplace );
 			FloatData *tweakedData = dummyParameters->member<FloatData>( internedName );
 			if( tweakedData )
 			{
@@ -155,7 +155,7 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 		}
 		else
 		{
-			(*tIt)->applyTweak( result->parametersData() );
+			(*tIt)->applyTweak( result->parametersData(), TweakPlug::MissingMode::IgnoreOrReplace );
 		}
 	}
 

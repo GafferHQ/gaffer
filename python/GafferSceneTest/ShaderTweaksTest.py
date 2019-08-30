@@ -341,5 +341,34 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		network = box["tweaks"]["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( network.getShader( "shader" ).parameters["c"].value, imath.Color3f( 0.1, 5, 9 ) )
 
+	def testIgnoreMissing( self ) :
+
+		l = GafferSceneTest.TestLight()
+		l["parameters"]["intensity"].setValue( imath.Color3f( 1 ) )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		t = GafferScene.ShaderTweaks()
+		t["in"].setInput( l["out"] )
+		t["shader"].setValue( "light" )
+		t["filter"].setInput( f["out"] )
+
+		badTweak = GafferScene.TweakPlug( "badParameter", 1.0 )
+		t["tweaks"].addChild( badTweak )
+
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"badParameter\" : This parameter does not exist" ) :
+			t["out"].attributes( "/light" )
+
+		t["ignoreMissing"].setValue( True )
+		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
+
+		badTweak["name"].setValue( "badShader.p" )
+		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
+
+		t["ignoreMissing"].setValue( False )
+		with self.assertRaisesRegexp( Gaffer.ProcessException, "Cannot apply tweak \"badShader.p\" because shader \"badShader\" does not exist" ) :
+			t["out"].attributes( "/light" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -91,9 +91,23 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 		/// ValuePlug::hash( h )
 		using ValuePlug::hash;
 
+		/// Controls behaviour when the parameter to be
+		/// tweaked cannot be found.
+		enum class MissingMode
+		{
+			Ignore,
+			Error,
+			/// Legacy mode used by CameraTweaks. Same as
+			/// Ignore mode except when `Mode == Replace`, in
+			/// which case a new parameter is created.
+			/// \deprecated Do not use in new code. If you find
+			/// yourself wanting to, add Mode::Create instead.
+			IgnoreOrReplace,
+		};
+
 		/// \deprecated. Use `TweaksPlug::applyTweaks()` instead.
-		void applyTweak( IECore::CompoundData *parameters, bool requireExists = false ) const;
-		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork );
+		void applyTweak( IECore::CompoundData *parameters, MissingMode missingMode = MissingMode::Error ) const;
+		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, MissingMode missingMode = MissingMode::Error );
 
 	private :
 
@@ -128,8 +142,8 @@ class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
 		/// Tweak application
 		/// =================
 
-		void applyTweaks( IECore::CompoundData *parameters, bool requireExists = false ) const;
-		void applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork ) const;
+		void applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
+		void applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
 
 };
 

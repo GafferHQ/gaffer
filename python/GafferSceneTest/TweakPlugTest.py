@@ -83,7 +83,7 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		tweaks.addChild( GafferScene.TweakPlug( "a", 1.0, GafferScene.TweakPlug.Mode.Replace ) )
 		tweaks.addChild( GafferScene.TweakPlug( "b", 10.0, GafferScene.TweakPlug.Mode.Multiply ) )
 
-		parameters = IECore.CompoundData( { "b" : 2.0 } )
+		parameters = IECore.CompoundData( { "a" : 0.0, "b" : 2.0 } )
 		tweaks.applyTweaks( parameters )
 		self.assertEqual( parameters, IECore.CompoundData( { "a" : 1.0, "b" : 20.0 } ) )
 
@@ -131,6 +131,37 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak to \"test\" : Value of type \"IntData\" does not match parameter of type \"Color3fData\"" ) :
 			p.applyTweak( d )
 
+	def testMissingMode( self ) :
+
+		p = GafferScene.TweaksPlug()
+		p["t"] = GafferScene.TweakPlug( "test", 0.5, GafferScene.TweakPlug.Mode.Replace )
+
+		d = IECore.CompoundData()
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"test\" : This parameter does not exist" ) :
+			p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.Error )
+		self.assertEqual( d, IECore.CompoundData() )
+
+		d = IECore.CompoundData()
+		p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.Ignore )
+		self.assertEqual( d, IECore.CompoundData() )
+
+		d = IECore.CompoundData()
+		p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.IgnoreOrReplace )
+		self.assertEqual( d, IECore.CompoundData( { "test" : 0.5 } ) )
+
+		d = IECore.CompoundData()
+		p["t"]["mode"].setValue( GafferScene.TweakPlug.Mode.Add )
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
+			p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.Error )
+		self.assertEqual( d, IECore.CompoundData() )
+
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
+			p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.IgnoreOrReplace )
+		self.assertEqual( d, IECore.CompoundData() )
+
+		p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.Ignore )
+		self.assertEqual( d, IECore.CompoundData() )
+
 	def testTweaksPlug( self ) :
 
 		p = GafferScene.TweaksPlug()
@@ -149,6 +180,39 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		# Old scripts call a constructor with an outdated signature as below.
 		plug = GafferScene.TweakPlug( "exposure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+	def testMissingModeForShaderNetwork( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = { "surface" : IECoreScene.Shader( "lambert", "ai:surface", { "Kd" : 0.25 } ) },
+			output = "surface"
+		)
+
+		p = GafferScene.TweaksPlug()
+		p["t"] = GafferScene.TweakPlug( "Ks", 0.5, GafferScene.TweakPlug.Mode.Replace )
+
+		networkCopy = network.copy()
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"Ks\" : This parameter does not exist" ) :
+			p.applyTweaks( networkCopy )
+
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"Ks\" : This parameter does not exist" ) :
+			p.applyTweaks( networkCopy, missingMode = GafferScene.TweakPlug.MissingMode.Error )
+
+		self.assertEqual( networkCopy, network )
+		p.applyTweaks( networkCopy, missingMode = GafferScene.TweakPlug.MissingMode.Ignore )
+		self.assertEqual( networkCopy, network )
+
+		p["t"]["name"].setValue( "missingShader.parameterName" )
+
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak \"missingShader.parameterName\" because shader \"missingShader\" does not exist" ) :
+			p.applyTweaks( networkCopy )
+
+		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak \"missingShader.parameterName\" because shader \"missingShader\" does not exist" ) :
+			p.applyTweaks( networkCopy, missingMode = GafferScene.TweakPlug.MissingMode.Error )
+
+		self.assertEqual( networkCopy, network )
+		p.applyTweaks( networkCopy, missingMode = GafferScene.TweakPlug.MissingMode.Ignore )
+		self.assertEqual( networkCopy, network )
 
 if __name__ == "__main__":
 	unittest.main()
