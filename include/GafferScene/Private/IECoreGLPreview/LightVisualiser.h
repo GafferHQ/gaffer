@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_LIGHTVISUALISER_H
-#define GAFFERSCENEUI_LIGHTVISUALISER_H
+#ifndef IECOREGLPREVIEW_LIGHTVISUALISER_H
+#define IECOREGLPREVIEW_LIGHTVISUALISER_H
 
-#include "GafferSceneUI/Export.h"
+#include "GafferScene/Export.h"
 
 #include "IECoreGL/Renderable.h"
 
@@ -45,7 +45,7 @@
 
 #include "IECore/CompoundObject.h"
 
-namespace GafferSceneUI
+namespace IECoreGLPreview
 {
 
 IE_CORE_FORWARDDECLARE( LightVisualiser )
@@ -55,7 +55,7 @@ IE_CORE_FORWARDDECLARE( LightVisualiser )
 /// depending on their shader name (accessed using `IECore::Shader::getName()`). A
 /// factory mechanism is provided to map from this name to a specialised
 /// LightVisualiser.
-class GAFFERSCENEUI_API LightVisualiser : public IECore::RefCounted
+class GAFFERSCENE_API LightVisualiser : public IECore::RefCounted
 {
 
 	public :
@@ -75,6 +75,6 @@ class GAFFERSCENEUI_API LightVisualiser : public IECore::RefCounted
 		static void registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser );
 };
 
-} // namespace GafferSceneUI
+} // namespace IECoreGLPreview
 
-#endif // GAFFERSCENEUI_LIGHTVISUALISER_H
+#endif // IECOREGLPREVIEW_LIGHTVISUALISER_H

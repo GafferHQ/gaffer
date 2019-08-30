@@ -34,11 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/LightVisualiser.h"
 
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
