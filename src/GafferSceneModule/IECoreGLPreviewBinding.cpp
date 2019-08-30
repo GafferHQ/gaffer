@@ -38,6 +38,7 @@
 
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 
 #include "IECorePython/RefCountedBinding.h"
 
@@ -60,5 +61,10 @@ void GafferSceneModule::bindIECoreGLPreview()
 		.staticmethod( "registerVisualiser" )
 		.def( "allVisualisations", &AttributeVisualiser::allVisualisations )
 		.staticmethod( "allVisualisations" )
+	;
+
+	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
+		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )
+		.staticmethod( "registerLightVisualiser" )
 	;
 }
