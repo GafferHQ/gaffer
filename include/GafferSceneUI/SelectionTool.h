@@ -70,11 +70,14 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 		DragOverlay *dragOverlay();
 
 		bool buttonPress( const GafferUI::ButtonEvent &event );
+		bool buttonRelease( const GafferUI::ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragMove( const GafferUI::DragDropEvent &event );
 		bool dragEnd( const GafferUI::DragDropEvent &event );
 
+		bool m_acceptedButtonPress = false;
+		bool m_initiatedDrag = false;
 };
 
 } // namespace GafferSceneUI
