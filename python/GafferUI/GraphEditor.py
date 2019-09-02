@@ -37,6 +37,7 @@
 
 import functools
 import imath
+import weakref
 
 import IECore
 
@@ -230,6 +231,28 @@ class GraphEditor( GafferUI.Editor ) :
 					"active" : enabledPlug.settable() and not Gaffer.MetadataAlgo.readOnly( enabledPlug )
 				}
 			)
+
+			# The plug is hidden as it has no nodule type, rather than via visibility
+			plugExposed = bool( Gaffer.Metadata.value( enabledPlug, "nodule:type" ) )
+			menuDefinition.append(
+				"/Show Enabled Plug",
+				{
+					# If we weakref enabledPlug, it is dead by the time we come to use it (?)
+					"command" : functools.partial( GafferUI.GraphEditor.__exposeEnabledPlug, enabledPlug, not plugExposed ),
+					"checkBox" : plugExposed,
+					"active" : not Gaffer.MetadataAlgo.readOnly( enabledPlug )
+				}
+			)
+
+	@staticmethod
+	def __exposeEnabledPlug( plug, exposed, _ ) :
+
+		if exposed :
+			Gaffer.Metadata.registerValue( plug, "nodule:type", "GafferUI::StandardNodule" )
+			Gaffer.Metadata.registerValue( plug, "noduleLayout:section", "right" )
+		else :
+			Gaffer.Metadata.deregisterValue( plug, "nodule:type" )
+			Gaffer.Metadata.deregisterValue( plug, "noduleLayout:section" )
 
 	@classmethod
 	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
