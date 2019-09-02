@@ -892,7 +892,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			self.insert( 0, newEditor )
 			self.setCurrent( newEditor )
 		else :
-			self.getCurrent().setNodeSet( nodeSet )
+			target = self.getCurrent().drivingEditor() or self.getCurrent()
+			target.setNodeSet( nodeSet )
 
 		self.setHighlighted( False )
 		self.__pinningButton.setHighlighted( False )
