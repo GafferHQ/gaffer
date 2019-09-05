@@ -54,15 +54,13 @@ except AttributeError :
 		return wrapper
 
 ## Determines if the tests are running in a Continuous Integration
-# environment. Valid platforms are 'azure' and 'travis'.
-#
-# There isn't a specific 'We're on Azure' var (other than some azure specific
-# vars that are set that would be 'magic words'), so we set our own in our
-# azure-pipelines.yaml
+# environment.
 def inCI( platforms = set() ) :
 
 	platformVars = {
-		'travis' : 'TRAVIS',
+		# There isn't a specific 'We're on Azure' var (other than some azure specific
+		# vars that are set that would be 'magic words'), so we set our own in our
+		# azure-pipelines.yaml
 		'azure' : 'AZURE'
 	}
 
