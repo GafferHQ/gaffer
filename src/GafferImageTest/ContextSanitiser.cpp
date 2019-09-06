@@ -67,7 +67,14 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 {
 	if( const ImagePlug *image = process->plug()->parent<ImagePlug>() )
 	{
-		if( process->plug() != image->channelDataPlug() )
+		if( process->plug() == image->sampleOffsetsPlug() )
+		{
+			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
+			{
+				warn( *process, ImagePlug::channelNameContextName );
+			}
+		}
+		else if( process->plug() != image->channelDataPlug() )
 		{
 			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
 			{
