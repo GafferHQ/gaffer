@@ -96,7 +96,7 @@ Gaffer::Plug *TypedParameterHandler<T>::setupPlug( Gaffer::GraphComponent *plugP
 	if( !m_plug || m_plug->direction()!=direction )
 	{
 		m_plug = createPlug( direction );
-		plugParent->setChild( m_parameter->name(), m_plug );
+		Gaffer::PlugAlgo::replacePlug( plugParent, m_plug );
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
@@ -124,7 +124,7 @@ Gaffer::Plug *TypedParameterHandler<std::string>::setupPlug( Gaffer::GraphCompon
 	if( !m_plug || m_plug->direction()!=direction || m_plug->substitutions()!=substitutions )
 	{
 		m_plug = createPlug( direction, substitutions );
-		plugParent->setChild( m_parameter->name(), m_plug );
+		Gaffer::PlugAlgo::replacePlug( plugParent, m_plug );
 	}
 
 	setupPlugFlags( m_plug.get(), flags );

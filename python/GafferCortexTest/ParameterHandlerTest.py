@@ -254,5 +254,17 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		h.setupPlug( n )
 		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
 
+		# make sure connections are maintained as well
+		nn = Gaffer.Node()
+		nn["driver"] = Gaffer.StringPlug()
+		n["s"].setInput( nn["driver"] )
+		# we're forcing a re-creation of the plug because substitutions have changed
+		p.userData()["gaffer"] = IECore.CompoundObject( {
+			"substitutions" : IECore.IntData( Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.VariableSubstitutions ),
+		} )
+		h.setupPlug( n )
+		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.VariableSubstitutions )
+		self.assertEqual( n["s"].getInput(), nn["driver"] )
+
 if __name__ == "__main__":
 	unittest.main()
