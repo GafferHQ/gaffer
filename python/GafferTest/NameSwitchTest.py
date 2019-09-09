@@ -118,5 +118,23 @@ class NameSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["s"]["in"][0]["value"].getInput(), s2["n"]["sum"] )
 		self.assertEqual( s2["s"]["in"][0]["enabled"].getValue(), s["s"]["in"][0]["enabled"].getValue() )
 
+	def testDirtyPropagation( self ) :
+
+		s = Gaffer.NameSwitch()
+		s.setup( Gaffer.IntPlug() )
+		s["in"].resize( 2 )
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		s["in"][1]["name"].setValue( "x" )
+		self.assertIn( s["out"], { x[0] for x in cs } )
+
+		del cs[:]
+		s["in"][1]["enabled"].setValue( False )
+		self.assertIn( s["out"], { x[0] for x in cs } )
+
+		del cs[:]
+		s["in"][1]["value"].setValue( 10 )
+		self.assertIn( s["out"], { x[0] for x in cs } )
+
 if __name__ == "__main__":
 	unittest.main()

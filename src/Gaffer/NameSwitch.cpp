@@ -118,7 +118,10 @@ void NameSwitch::affects( const Plug *input, DependencyNode::AffectedPlugsContai
 	auto nameValuePlug = input->parent<NameValuePlug>();
 	if(
 		input == selectorPlug() ||
-		( nameValuePlug && input == nameValuePlug->namePlug() && nameValuePlug->parent() == inPlugs() )
+		(
+			nameValuePlug && nameValuePlug->parent() == inPlugs() &&
+			( input == nameValuePlug->namePlug() || input == nameValuePlug->enabledPlug() )
+		)
 	)
 	{
 		outputs.push_back( outIndexPlug() );
