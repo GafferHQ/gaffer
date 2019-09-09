@@ -759,8 +759,11 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 				icon = "nodeSetDriverNodeSelection.png"
 				tip = "Click to pin the current node selection"
 
-			self.__pinningButton.setToolTip( tip )
-			self.__pinningButton.setImage( icon )
+			try :
+				self.__pinningButton.setToolTip( tip )
+				self.__pinningButton.setImage( icon )
+			except Exception as e :
+				sys.stderr.write( str(e) )
 
 		else :
 
@@ -1748,8 +1751,11 @@ class _DrivenEditorSwatch( _Frame ) :
 				return color
 
 		# We want the color index to be kept per-script, not per gaffer process
+		# so the CompoundEditor is a good place. Fall-back on the scriptNode
 
 		e = editor.ancestor( GafferUI.CompoundEditor )
+		if e is None :
+			e = editor.scriptNode()
 		if not hasattr( e, '_DrivenEditorSwatch__lastColorUsed' ) :
 			e.__lastColorUsed = 0
 
