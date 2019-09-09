@@ -238,5 +238,21 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		self.assertNotEqual( hash1, hash3 )
 		self.assertNotEqual( hash2, hash3 )
 
+	def testSubstitutions( self ) :
+
+		p = IECore.StringParameter( "s", "d", "" )
+
+		n = Gaffer.Node()
+		h = GafferCortex.ParameterHandler.create( p )
+		h.setupPlug( n )
+		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions )
+
+		# adding substitutions should affect the plug
+		p.userData()["gaffer"] = IECore.CompoundObject( {
+			"substitutions" : IECore.IntData( Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions ),
+		} )
+		h.setupPlug( n )
+		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+
 if __name__ == "__main__":
 	unittest.main()
