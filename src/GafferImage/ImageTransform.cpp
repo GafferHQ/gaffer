@@ -99,6 +99,7 @@ ImageTransform::ImageTransform( const std::string &name )
 
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 	addChild( new StringPlug( "filter", Plug::In, "cubic" ) );
+	addChild( new BoolPlug( "invert", Plug::In ) );
 
 	// We use an internal Resample node to do filtered
 	// sampling of the translate and scale in one. Then,
@@ -146,34 +147,44 @@ const Gaffer::StringPlug *ImageTransform::filterPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::BoolPlug *ImageTransform::invertPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *ImageTransform::invertPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::M33fPlug *ImageTransform::resampleMatrixPlug()
 {
-	return getChild<M33fPlug>( g_firstPlugIndex + 2 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::M33fPlug *ImageTransform::resampleMatrixPlug() const
 {
-	return getChild<M33fPlug>( g_firstPlugIndex + 2 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 3 );
 }
 
 ImagePlug *ImageTransform::resampledInPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
 }
 
 const ImagePlug *ImageTransform::resampledInPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
 }
 
 Resample *ImageTransform::resample()
 {
-	return getChild<Resample>( g_firstPlugIndex + 4 );
+	return getChild<Resample>( g_firstPlugIndex + 5 );
 }
 
 const Resample *ImageTransform::resample() const
 {
-	return getChild<Resample>( g_firstPlugIndex + 4 );
+	return getChild<Resample>( g_firstPlugIndex + 5 );
 }
 
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -183,7 +194,8 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	if(
 		input->parent<Plug>() == transformPlug()->translatePlug() ||
 		input->parent<Plug>() == transformPlug()->scalePlug() ||
-		input->parent<Plug>() == transformPlug()->pivotPlug()
+		input->parent<Plug>() == transformPlug()->pivotPlug() ||
+		input == invertPlug()
 	)
 	{
 		outputs.push_back( resampleMatrixPlug() );
@@ -192,7 +204,8 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	if(
 		input == inPlug()->dataWindowPlug() ||
 		input == resampledInPlug()->dataWindowPlug() ||
-		transformPlug()->isAncestorOf( input )
+		transformPlug()->isAncestorOf( input ) ||
+		input == invertPlug()
 	)
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
@@ -202,7 +215,8 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 		input == inPlug()->channelDataPlug() ||
 		input == inPlug()->dataWindowPlug() ||
 		input == resampledInPlug()->channelDataPlug() ||
-		transformPlug()->isAncestorOf( input )
+		transformPlug()->isAncestorOf( input ) ||
+		input == invertPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -219,6 +233,7 @@ void ImageTransform::hash( const ValuePlug *output, const Context *context, IECo
 		transformPlug()->translatePlug()->hash( h );
 		transformPlug()->scalePlug()->hash( h );
 		transformPlug()->pivotPlug()->hash( h );
+		invertPlug()->hash( h );
 	}
 }
 
@@ -348,6 +363,7 @@ unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMa
 	const V2f translate = plug->translatePlug()->getValue();
 	const V2f scale = plug->scalePlug()->getValue();
 	const float rotate = plug->rotatePlug()->getValue();
+	const bool invert = invertPlug()->getValue();
 
 	M33f pivotMatrix; pivotMatrix.setTranslation( pivot );
 	M33f pivotInverseMatrix; pivotInverseMatrix.setTranslation( -pivot );
@@ -357,6 +373,12 @@ unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMa
 
 	matrix = pivotInverseMatrix * scaleMatrix * rotateMatrix * pivotMatrix * translateMatrix;
 	resampleMatrix = pivotInverseMatrix * scaleMatrix * pivotMatrix * translateMatrix;
+
+	if( invert )
+	{
+		matrix = matrix.inverse();
+		resampleMatrix = resampleMatrix.inverse();
+	}
 
 	unsigned op = 0;
 	if( translate != V2f( 0 ) )

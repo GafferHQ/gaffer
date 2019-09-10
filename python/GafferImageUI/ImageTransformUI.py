@@ -87,6 +87,13 @@ Gaffer.Metadata.registerNode(
 
 		) ),
 
+		"invert" : [
+			"description",
+			"""
+			Apply the inverse transformation to the image.
+			"""
+		]
+
 	}
 
 )
