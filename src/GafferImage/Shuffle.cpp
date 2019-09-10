@@ -114,7 +114,7 @@ Shuffle::Shuffle( const std::string &name )
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
-	outPlug()->deepStatePlug()->setInput( inPlug()->deepStatePlug() );
+	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
 	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 }
 
@@ -182,13 +182,25 @@ void Shuffle::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffe
 {
 	std::string c = inChannelName( context->get<string>( ImagePlug::channelNameContextName ) );
 
-	if( c == "__black" || c == "" )
+	if( c == "__black" || c == "" || c == "__white")
 	{
-		h = ImagePlug::blackTile()->Object::hash();
-	}
-	else if( c == "__white" )
-	{
-		h = ImagePlug::whiteTile()->Object::hash();
+		const Imath::V2i tileOrigin = context->get<Imath::V2i>( ImagePlug::tileOriginContextName );
+
+		ImagePlug::ChannelDataScope channelDataScope( context );
+		channelDataScope.remove( ImagePlug::channelNameContextName );
+		channelDataScope.remove( ImagePlug::tileOriginContextName );
+		bool deep = inPlug()->deepPlug()->getValue();
+
+		if( !deep )
+		{
+			h = ( c == "__white" ) ? ImagePlug::whiteTile()->Object::hash() : ImagePlug::blackTile()->Object::hash();
+		}
+		else
+		{
+			channelDataScope.setTileOrigin( tileOrigin );
+			inPlug()->sampleOffsetsPlug()->hash( h );
+			h.append( c == "__white" );
+		}
 	}
 	else
 	{
@@ -202,13 +214,30 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 {
 	std::string c = inChannelName( context->get<string>( ImagePlug::channelNameContextName ) );
 
-	if( c == "__black" || c == "" )
+	if( c == "__black" || c == "" || c == "__white")
 	{
-		return ImagePlug::blackTile();
-	}
-	else if( c == "__white" )
-	{
-		return ImagePlug::whiteTile();
+		ImagePlug::ChannelDataScope channelDataScope( context );
+		channelDataScope.remove( ImagePlug::channelNameContextName );
+		channelDataScope.remove( ImagePlug::tileOriginContextName );
+		bool deep = inPlug()->deepPlug()->getValue();
+
+		if( !deep )
+		{
+			return ( c == "__white" ) ? ImagePlug::whiteTile() : ImagePlug::blackTile();
+		}
+		else
+		{
+			channelDataScope.setTileOrigin( tileOrigin );
+			ConstIntVectorDataPtr sampleOffsets = inPlug()->sampleOffsetsPlug()->getValue();
+
+			FloatVectorDataPtr result = new FloatVectorData();
+			result->writable().resize(
+				sampleOffsets->readable()[ ImagePlug::tileSize() * ImagePlug::tileSize() - 1 ],
+				( c == "__white" ) ? 1.0f : 0.0f
+			);
+
+			return result;
+		}
 	}
 	else
 	{
