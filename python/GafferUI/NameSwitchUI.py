@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -232,8 +234,13 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 				self.__dragHandle = _DragHandle()
-				self.__defaultLabel = GafferUI.Label( "Default", horizontalAlignment = GafferUI.HorizontalAlignment.Right )
-				self.__defaultLabel._qtWidget().setFixedWidth( self.__labelWidth + 44 )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__defaultLabel :
+					# Spacers on default row occupy the space taken by PlugValueWidgets on
+					# non-default rows. This keeps the ConnectionPlugValueWidgets in alignment.
+					GafferUI.Spacer( imath.V2i( 11, 1 ) )
+					label = GafferUI.Label( "Default", horizontalAlignment = GafferUI.HorizontalAlignment.Left )
+					label._qtWidget().setFixedWidth( self.__labelWidth )
+					GafferUI.Spacer( imath.V2i( 25, 1 ) )
 
 				self.__plugValueWidgets = []
 				self.__plugValueWidgets.append( GafferUI.StringPlugValueWidget( plug["name"] ) )
