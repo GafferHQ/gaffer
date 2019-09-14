@@ -75,6 +75,54 @@ class CompoundEditor( GafferUI.Editor ) :
 			for panelArgs in detachedPanels  :
 				self._createDetachedPanel( **panelArgs )
 
+	# Returns the editor of the specified type that the user is currently
+	# interested in. This takes into account detached panels and window
+	# ordering such that when the keyboard focus is with an editor of the
+	# requested type, in the active window, that editor will be returned.
+	# Otherwise the first editor in the active window belonging to the
+	# CompoundEditor will be returned. If none can be found, then the first
+	# matching editor from any of the CompoundEditor's windows will be returned.
+	# If focussedOnly is true, None will be returned in cases where the
+	# keyboard focus is not with a matching editor in the active window.
+	def editor( self, type = GafferUI.Editor, focussedOnly = False ) :
+
+		candidates = [ self ]
+		candidates.extend( self._detachedPanels() )
+
+		editor = None
+
+		for candidate in candidates :
+
+			# Skip a window if its inactive
+			if not candidate._qtWidget().windowHandle().isActive() :
+				continue
+
+			# We the focus widget is (or is a child of) an editor of the right
+			# type, use that
+			focusWidget = GafferUI.Widget._owner( candidate._qtWidget().focusWidget() )
+			if focusWidget is not None :
+				editor = focusWidget.ancestor( type )
+				if editor :
+					break
+
+			# If the window was active, but the focussed editor was something
+			# else, if requested, pick the first matching editor in this window.
+			if editor is None and not focussedOnly :
+				editors = candidate.editors( type )
+				if editors :
+					editor = editors[0]
+					break
+
+		# Worst case, go find the first editor of the right type anywhere
+		if editor is None and not focussedOnly :
+			editors = self.editors( type )
+			if editors :
+				editor = editors[0]
+
+		return editor
+
+
+
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
 	def editors( self, type = GafferUI.Editor ) :
