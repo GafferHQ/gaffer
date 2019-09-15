@@ -73,6 +73,8 @@ class GAFFERCORTEX_API TypedParameterHandler : public ParameterHandler
 	private :
 
 		typename PlugType::Ptr createPlug( Gaffer::Plug::Direction direction ) const;
+		// variant for StringPlugs
+		typename PlugType::Ptr createPlug( Gaffer::Plug::Direction direction, Gaffer::Context::Substitutions substitutions ) const;
 
 		typename ParameterType::Ptr m_parameter;
 		typename PlugType::Ptr m_plug;

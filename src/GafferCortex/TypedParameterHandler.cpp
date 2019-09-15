@@ -37,8 +37,10 @@
 
 #include "GafferCortex/TypedParameterHandler.h"
 
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/TypedPlug.h"
 
+#include "IECore/CompoundObject.h"
 #include "IECore/TypedParameter.h"
 
 namespace GafferCortex
@@ -82,14 +84,9 @@ typename TypedParameterHandler<T>::PlugType::Ptr TypedParameterHandler<T>::creat
 }
 
 template<>
-TypedParameterHandler<std::string>::PlugType::Ptr TypedParameterHandler<std::string>::createPlug( Gaffer::Plug::Direction direction ) const
+TypedParameterHandler<std::string>::PlugType::Ptr TypedParameterHandler<std::string>::createPlug( Gaffer::Plug::Direction direction, Gaffer::Context::Substitutions substitutions ) const
 {
-	return new Gaffer::StringPlug(
-		m_parameter->name(), direction, m_parameter->typedDefaultValue(), Gaffer::Plug::Default,
-		// We have to turn off substitutions for FileSequenceParameters because they'd remove the
-		// #### destined for the parameter.
-		m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) ? Gaffer::Context::NoSubstitutions : Gaffer::Context::AllSubstitutions
-	);
+	return new Gaffer::StringPlug( m_parameter->name(), direction, m_parameter->typedDefaultValue(), Gaffer::Plug::Default, substitutions );
 }
 
 template<typename T>
@@ -99,7 +96,35 @@ Gaffer::Plug *TypedParameterHandler<T>::setupPlug( Gaffer::GraphComponent *plugP
 	if( !m_plug || m_plug->direction()!=direction )
 	{
 		m_plug = createPlug( direction );
-		plugParent->setChild( m_parameter->name(), m_plug );
+		Gaffer::PlugAlgo::replacePlug( plugParent, m_plug );
+	}
+
+	setupPlugFlags( m_plug.get(), flags );
+
+	return m_plug.get();
+}
+
+template<>
+Gaffer::Plug *TypedParameterHandler<std::string>::setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
+{
+	// We have to turn off substitutions for FileSequenceParameters because they'd remove the
+	// #### destined for the parameter.
+	Gaffer::Context::Substitutions substitutions = m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) ? Gaffer::Context::NoSubstitutions : Gaffer::Context::AllSubstitutions;
+
+	// We also allow individual parameters to override the substitutions via userData
+	if( const auto *gafferUserData = m_parameter->userData()->member<IECore::CompoundObject>( "gaffer" ) )
+	{
+		if( const auto *substitutionsUserData = gafferUserData->member<IECore::IntData>( "substitutions" ) )
+		{
+			substitutions = (Gaffer::Context::Substitutions)substitutionsUserData->readable();
+		}
+	}
+
+	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
+	if( !m_plug || m_plug->direction()!=direction || m_plug->substitutions()!=substitutions )
+	{
+		m_plug = createPlug( direction, substitutions );
+		Gaffer::PlugAlgo::replacePlug( plugParent, m_plug );
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
