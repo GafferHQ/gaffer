@@ -65,7 +65,11 @@ static py::list getDevices()
 {
 	py::list result;
 
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
+#ifdef WITH_OPTIX
+	| ccl::DEVICE_MASK_OPTIX
+#endif
+	);
 	devices.push_back( ccl::Device::get_multi_device( devices, 0, true ) );
 	for( const ccl::DeviceInfo &device : devices ) 
 	{

@@ -395,6 +395,7 @@ def __multideviceNames() :
 
 	indexCuda = 0
 	indexOpenCL = 0
+	indexOptiX = 0
 	for device in GafferCycles.devices :
 		if device["type"] == "MULTI" :
 			continue
@@ -407,6 +408,9 @@ def __multideviceNames() :
 		elif device["type"] == "OPENCL" :
 			optionName = "options.multidevice%s%02i" % ( device["type"], indexOpenCL )
 			indexOpenCL += 1
+		elif device["type"] == "OPTIX" :
+			optionName = "options.multidevice%s%02i" % ( device["type"], indexOptiX )
+			indexOptiX += 1
 		else :
 			continue
 

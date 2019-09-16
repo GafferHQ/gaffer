@@ -184,9 +184,14 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_clean_pass", new IECore::BoolData( false ), false, "denoisingCleanPass" ) );
 
 	// Multi-Device
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
+#ifdef WITH_OPTIX
+		| ccl::DEVICE_MASK_OPTIX
+#endif
+	 );
 	int indexCuda = 0;
 	int indexOpenCL = 0;
+	int indexOptiX = 0;
 	for( const ccl::DeviceInfo &device : devices ) 
 	{
 		if( device.type == ccl::DEVICE_CPU )
@@ -210,6 +215,16 @@ CyclesOptions::CyclesOptions( const std::string &name )
 			++indexOpenCL;
 			continue;
 		}
+#ifdef WITH_OPTIX
+		if( device.type == ccl::DEVICE_OPTIX )
+		{
+			auto internalName = boost::format( "ccl:multidevice:OPTIX%02i" ) % indexOptiX;
+			auto optionName = boost::format( "multideviceOPTIX%02i" ) % indexOptiX;
+			options->addChild( new Gaffer::NameValuePlug( internalName.str(), new IECore::BoolData( false ), false, optionName.str() ) );
+			++indexOptiX;
+			continue;
+		}
+#endif
 	}
 
 	// Dicing camera
