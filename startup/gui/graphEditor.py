@@ -64,6 +64,7 @@ Gaffer.Metadata.registerValue( Gaffer.Expression, "nodeGadget:color", imath.Colo
 Gaffer.Metadata.registerValue( Gaffer.Animation, "nodeGadget:color", imath.Color3f( 0.3, 0.3, 0.45 ) )
 
 Gaffer.Metadata.registerValue( GafferScene.ScenePlug, "nodule:color", imath.Color3f( 0.2401, 0.3394, 0.485 ) )
+Gaffer.Metadata.registerValue( GafferScene.ScenePlug, "connectionGadget:color", imath.Color3f( 0.11, 0.14, 0.265 ) )
 
 Gaffer.Metadata.registerValue( GafferScene.SceneProcessor, "nodeGadget:color", imath.Color3f( 0.495, 0.2376, 0.4229 ) )
 Gaffer.Metadata.registerValue( GafferScene.SceneElementProcessor, "nodeGadget:color", imath.Color3f( 0.1886, 0.2772, 0.41 ) )
