@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferScene
 import GafferSceneUI
 import GafferDispatch
@@ -73,6 +74,9 @@ Gaffer.Metadata.registerValue( GafferScene.Transform, "nodeGadget:color", imath.
 Gaffer.Metadata.registerValue( GafferScene.Constraint, "nodeGadget:color", imath.Color3f( 0.485, 0.3112, 0.2255 ) )
 
 Gaffer.Metadata.registerValue( GafferScene.GlobalsProcessor, "nodeGadget:color", imath.Color3f( 0.255, 0.505, 0.28 ) )
+
+Gaffer.Metadata.registerValue( GafferImage.ImagePlug, "nodule:color", imath.Color3f( 0.458, 0.29, 0.482 ) )
+Gaffer.Metadata.registerValue( GafferImage.ImagePlug, "connectionGadget:color", imath.Color3f( 0.22, 0.035, 0.31 ) )
 
 Gaffer.Metadata.registerValue( Gaffer.FloatPlug, "nodule:color", imath.Color3f( 0.2467, 0.3762, 0.47 ) )
 Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "nodule:color", imath.Color3f( 0.69, 0.5378, 0.2283 ) )
