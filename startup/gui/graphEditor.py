@@ -52,6 +52,8 @@ import GafferDispatchUI
 # Colour
 ##########################################################################
 
+Gaffer.Metadata.registerValue( Gaffer.Plug, "connectionGadget:color", imath.Color3f( 0.17 ) )
+
 Gaffer.Metadata.registerValue( GafferDispatch.TaskNode, "nodeGadget:color", imath.Color3f( 0.61, 0.1525, 0.1525 ) )
 Gaffer.Metadata.registerValue( GafferDispatch.TaskNode.TaskPlug, "nodule:color", imath.Color3f( 0.645, 0.2483, 0.2483 ) )
 Gaffer.Metadata.registerValue( GafferDispatch.TaskNode.TaskPlug, "connectionGadget:color", imath.Color3f( 0.315, 0.0787, 0.0787 ) )
