@@ -114,6 +114,7 @@ Gaffer.Metadata.registerNode(
 		"in.*.enabled" : [
 
 			"nodule:type", "",
+			"boolPlugValueWidget:displayMode", "switch",
 
 		],
 
