@@ -168,6 +168,13 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ), scoped = False )
 
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ), scoped = False )
+
+		self.__currentDragTarget = None
+
 	def hasLabel( self ) :
 
 		return True
@@ -189,6 +196,111 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().resize( len( self.getPlug() ) + 1 )
+
+	def __dragEnter( self, widget, event ) :
+
+		return self.__sourcePlug( event ) is not None
+
+	def __dragMove( self, widget, event ) :
+
+		dragTarget = self.__destinationDivider( event )
+		if dragTarget is self.__currentDragTarget :
+			return True
+
+		if self.__currentDragTarget is not None :
+			self.__currentDragTarget.setHighlighted( False )
+
+		self.__currentDragTarget = dragTarget
+		self.__currentDragTarget.setHighlighted( True )
+
+		return True
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__currentDragTarget.setHighlighted( False )
+		self.__currentDragTarget = None
+
+	def __drop( self, widget, event ) :
+
+		srcPlug = self.__sourcePlug( event )
+		dstPlug = self.__currentDragTarget.ancestor( _RowPlugValueWidget ).getPlug()
+		parent = dstPlug.parent()
+		assert( srcPlug.parent() == parent )
+
+		srcIndex = parent.children().index( srcPlug )
+		dstIndex = parent.children().index( dstPlug )
+
+		# Reordering the plugs themselves is problematic, so
+		# we reorder their values and connections instead.
+
+		assert( srcIndex != 0 )
+
+		if dstIndex > srcIndex :
+			with Gaffer.UndoScope( srcPlug.ancestor( Gaffer.ScriptNode ) ) :
+				srcState = self.__getValuesAndInputs( srcPlug )
+				for i in range( srcIndex, dstIndex ) :
+					self.__setValuesAndInputs( parent[i], self.__getValuesAndInputs( parent[i+1] ) )
+				self.__setValuesAndInputs( parent[dstIndex], srcState )
+		elif dstIndex < srcIndex - 1 :
+			with Gaffer.UndoScope( srcPlug.ancestor( Gaffer.ScriptNode ) ) :
+				srcState = self.__getValuesAndInputs( srcPlug )
+				for i in range( srcIndex, dstIndex + 1, -1 ) :
+					self.__setValuesAndInputs( parent[i], self.__getValuesAndInputs( parent[i-1] ) )
+				self.__setValuesAndInputs( parent[dstIndex + 1], srcState )
+
+		self.__currentDragTarget.setHighlighted( False )
+		self.__currentDragTarget = None
+
+		return True
+
+	def __sourcePlug( self, dragEvent ) :
+
+		if not isinstance( dragEvent.sourceWidget, _DragHandle ) :
+			return None
+
+		if dragEvent.data != IECore.NullObject.defaultNullObject() :
+			return None
+
+		sourcePlug = dragEvent.sourceWidget.ancestor( _RowPlugValueWidget ).getPlug()
+		if sourcePlug.parent() == self.getPlug() :
+			return sourcePlug
+
+		return None
+
+	def __destinationDivider( self, dragEvent ) :
+
+		for plug in reversed( self.getPlug().children() ) :
+			row = self.childPlugValueWidget( plug )
+			yMin = row.bound( relativeTo = self ).min().y
+			yMax = row._dragDivider().bound( relativeTo = self ).min().y - 4
+			yCenter = (yMin + yMax) / 2.0
+			if dragEvent.line.p0.y > yCenter or plug == self.getPlug()[0] :
+				return row._dragDivider()
+
+	@staticmethod
+	def __getValuesAndInputs( plug ) :
+
+		result = []
+		for child in Gaffer.Plug.Range( plug ) :
+			if child.getInput() is not None :
+				result.append( child.getInput() )
+			elif hasattr( child, "getValue" ) :
+				result.append( child.getValue() )
+			else :
+				result.append( None )
+
+		return result
+
+	@staticmethod
+	def __setValuesAndInputs( plug, valuesAndInputs ) :
+
+		for i, valueOrInput in enumerate( valuesAndInputs ) :
+			if isinstance( valueOrInput, Gaffer.Plug ) :
+				plug[i].setInput( valueOrInput )
+			else :
+				plug[i].setInput( None )
+				if valueOrInput is not None :
+					plug[i].setValue( valueOrInput )
 
 class _DragHandle( GafferUI.Image ) :
 
@@ -252,10 +364,6 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__dragDivider = GafferUI.Divider()
 
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ), scoped = False )
-
 		self.__updateWidgetVisibility()
 		self._updateFromPlug()
 
@@ -316,85 +424,11 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__plugValueWidgets[0].setVisible( not default )
 		self.__plugValueWidgets[1].setVisible( not default )
 
-	def __dragEnter( self, widget, event ) :
+	# Exposed only for use by _InPlugValueWidget. Really, it would be better if we could
+	# move all the drag handling to _InPlugValueWidget, including the creation
+	# of the drag handles and dividers. Currently this doesn't seem possible without duplicating
+	# much of the code from _PlugLayout, so for now we use a compromise where _RowPlugValueWidget
+	# manages the widgets and _InPlugValueWidget implements the behaviour.
+	def _dragDivider( self ) :
 
-		if self.__sourcePlug( event ) is not None :
-			self.__dragDivider.setHighlighted( True )
-			return True
-
-		return False
-
-	def __dragLeave( self, widget, event ) :
-
-		self.__dragDivider.setHighlighted( False )
-
-	def __drop( self, widget, event ) :
-
-		self.__dragDivider.setHighlighted( False )
-
-		srcPlug = self.__sourcePlug( event )
-		dstPlug = self.getPlug()
-		parent = dstPlug.parent()
-		assert( srcPlug.parent() == parent )
-
-		srcIndex = parent.children().index( srcPlug )
-		dstIndex = parent.children().index( dstPlug )
-
-		# Reordering the plugs themselves is problematic, so
-		# we reorder their values and connections instead.
-
-		assert( srcIndex != 0 )
-
-		if dstIndex > srcIndex :
-			with Gaffer.UndoScope( srcPlug.ancestor( Gaffer.ScriptNode ) ) :
-				srcState = self.__getValuesAndInputs( srcPlug )
-				for i in range( srcIndex, dstIndex ) :
-					self.__setValuesAndInputs( parent[i], self.__getValuesAndInputs( parent[i+1] ) )
-				self.__setValuesAndInputs( parent[dstIndex], srcState )
-		elif dstIndex < srcIndex - 1 :
-			with Gaffer.UndoScope( srcPlug.ancestor( Gaffer.ScriptNode ) ) :
-				srcState = self.__getValuesAndInputs( srcPlug )
-				for i in range( srcIndex, dstIndex + 1, -1 ) :
-					self.__setValuesAndInputs( parent[i], self.__getValuesAndInputs( parent[i-1] ) )
-				self.__setValuesAndInputs( parent[dstIndex + 1], srcState )
-
-		return True
-
-	def __sourcePlug( self, dragEvent ) :
-
-		if not isinstance( dragEvent.sourceWidget, _DragHandle ) :
-			return None
-
-		if dragEvent.data != IECore.NullObject.defaultNullObject() :
-			return None
-
-		sourcePlug = dragEvent.sourceWidget.ancestor( _RowPlugValueWidget ).getPlug()
-		if sourcePlug.parent() == self.getPlug().parent() :
-			return sourcePlug
-
-		return None
-
-	@staticmethod
-	def __getValuesAndInputs( plug ) :
-
-		result = []
-		for child in Gaffer.Plug.Range( plug ) :
-			if child.getInput() is not None :
-				result.append( child.getInput() )
-			elif hasattr( child, "getValue" ) :
-				result.append( child.getValue() )
-			else :
-				result.append( None )
-
-		return result
-
-	@staticmethod
-	def __setValuesAndInputs( plug, valuesAndInputs ) :
-
-		for i, valueOrInput in enumerate( valuesAndInputs ) :
-			if isinstance( valueOrInput, Gaffer.Plug ) :
-				plug[i].setInput( valueOrInput )
-			else :
-				plug[i].setInput( None )
-				if valueOrInput is not None :
-					plug[i].setValue( valueOrInput )
+		return self.__dragDivider
