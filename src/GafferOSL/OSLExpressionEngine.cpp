@@ -230,6 +230,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			m_inParameters.clear();
 			m_outSymbols.clear();
 			m_shaderGroup.reset();
+			m_needsTime = false;
 
 			// Find all references to plugs within the expression.
 			vector<string> inPlugPaths;
@@ -301,6 +302,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					{
 						contextVariables.push_back( "frame" );
 						contextVariables.push_back( "framesPerSecond" );
+						m_needsTime = true;
 						break;
 					}
 				}
@@ -323,7 +325,10 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		    OSL::ShaderGlobals shaderGlobals;
 			memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
-			shaderGlobals.time = context->getTime();
+			if( m_needsTime )
+			{
+				shaderGlobals.time = context->getTime();
+			}
 
 			RenderState renderState;
 			renderState.inParameters = &m_inParameters;
@@ -811,6 +816,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		}
 
 		// Initialised by parse().
+		bool m_needsTime;
 		vector<ustring> m_inParameters;
 		vector<const OSL::ShaderSymbol *> m_outSymbols;
 		OSL::ShaderGroupRef m_shaderGroup;

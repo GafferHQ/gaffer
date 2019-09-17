@@ -393,7 +393,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 			c.setTime( 2 )
 			self.assertEqual( s["n"]["user"]["f"].getValue(), 2 )
 
-	def testHashIgnoresTimeWhenTimeNotReferenced( self ) :
+	def testIgnoresTimeWhenTimeNotReferenced( self ) :
 
 		s = Gaffer.ScriptNode()
 
@@ -410,6 +410,10 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 			h2 = s["n"]["user"]["f"].hash()
 
 		self.assertEqual( h1, h2 )
+
+		with Gaffer.Context() as c :
+			del c["frame"]
+			self.assertEqual( s["n"]["user"]["f"].getValue(), 1 )
 
 	def testDeleteOutputPlug( self ) :
 
