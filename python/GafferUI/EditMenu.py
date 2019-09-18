@@ -97,15 +97,9 @@ def scope( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 
 	graphEditor = None
-	## \todo Add public methods for querying focus.
-	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
-	if focusWidget is not None :
-		graphEditor = focusWidget.ancestor( GafferUI.GraphEditor )
 
-	if graphEditor is None :
-		graphEditors = scriptWindow.getLayout().editors( GafferUI.GraphEditor )
-		if graphEditors :
-			graphEditor = graphEditors[0]
+	if isinstance( scriptWindow.getLayout(), GafferUI.CompoundEditor ) :
+		graphEditor = scriptWindow.getLayout().editor( GafferUI.GraphEditor, focussedOnly = False )
 
 	if graphEditor is not None :
 		parent = graphEditor.graphGadget().getRoot()
