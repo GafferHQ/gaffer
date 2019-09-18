@@ -159,6 +159,7 @@ from MonitorAlgoTest import MonitorAlgoTest
 from NameValuePlugTest import NameValuePlugTest
 from ExtensionAlgoTest import ExtensionAlgoTest
 from ModuleTest import ModuleTest
+from NumericBookmarkSetTest import NumericBookmarkSetTest
 
 from IECorePreviewTest import *
 

@@ -118,20 +118,38 @@ def appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition ) :
 
 def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
+	weakEditor = weakref.ref( editor )
+
+	def followBookmark( number, weakEditor, _ ) :
+		editor = weakEditor()
+		if editor is not None :
+			b = Gaffer.NumericBookmarkSet( editor.scriptNode(), number )
+			editor.setNodeSet( b )
+
+	n = editor.getNodeSet()
+
+	for i in range( 1, 10 ) :
+		isCurrent = isinstance( n, Gaffer.NumericBookmarkSet ) and n.getBookmark() == i
+		menuDefinition.append( "/Follow/Bookmark/%d" % i, {
+			"command" : functools.partial( followBookmark, i, weakEditor ),
+			"active" : not isCurrent,
+			"checkBox" : isCurrent
+		} )
+
 	for i in range( 1, 10 ) :
 	  menuDefinition.append(
-		  "/Pin Bookmark/%s" % i,
+		  "/Pin/Bookmark/%s" % i,
 		  {
 			  "command" : functools.partial( __findNumericBookmark, editor, i ),
 			  "active" : Gaffer.MetadataAlgo.getNumericBookmark( editor.scriptNode(), i ) is not None,
 		  }
 	  )
 
-	menuDefinition.append( "/Pin Bookmark/Divider", { "divider" : True } )
+	menuDefinition.append( "/Pin/Bookmark/Divider", { "divider" : True } )
 
 	bookmarks = __findableBookmarks( editor )
 	menuDefinition.append(
-		"/Pin Bookmark/Other...",
+		"/Pin/Bookmark/Other...",
 		{
 			"command" : functools.partial( __findBookmark, editor, bookmarks ),
 			"active" : len( bookmarks ),
