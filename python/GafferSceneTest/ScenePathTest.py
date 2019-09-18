@@ -209,5 +209,15 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		path.setFilter( GafferScene.ScenePath.createStandardFilter( [ "__cameras" ] ) )
 		self.assertEqual( { str( c ) for c in path.children() }, { "/camera" } )
 
+	def testNone( self ) :
+
+		plane = GafferScene.Plane()
+
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			GafferScene.ScenePath( None, Gaffer.Context() )
+
+		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+			GafferScene.ScenePath( plane["out"], None )
+
 if __name__ == "__main__":
 	unittest.main()

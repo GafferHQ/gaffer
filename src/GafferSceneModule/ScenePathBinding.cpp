@@ -59,6 +59,16 @@ using namespace GafferScene;
 namespace
 {
 
+ScenePathPtr constructor1( ScenePlug &scene, Context &context, PathFilterPtr filter )
+{
+	return new ScenePath( &scene, &context, filter );
+}
+
+ScenePathPtr constructor2( ScenePlug &scene, Context &context, const std::string &path, PathFilterPtr filter )
+{
+	return new ScenePath( &scene, &context, path, filter );
+}
+
 PathFilterPtr createStandardFilter( object pythonSetNames, const std::string &setsLabel )
 {
 	std::vector<std::string> setNames;
@@ -73,19 +83,29 @@ void GafferSceneModule::bindScenePath()
 
 	PathClass<ScenePath>()
 		.def(
-			init<ScenePlugPtr, ContextPtr, PathFilterPtr>( (
-				arg( "scene" ),
-				arg( "context" ),
-				arg( "filter" ) = object()
-			) )
+			"__init__",
+			make_constructor(
+				constructor1,
+				default_call_policies(),
+				(
+					arg( "scene" ),
+					arg( "context" ),
+					arg( "filter" ) = object()
+				)
+			)
 		)
 		.def(
-			init<ScenePlugPtr, ContextPtr, const std::string &, PathFilterPtr>( (
-				arg( "scene" ),
-				arg( "context" ),
-				arg( "path" ),
-				arg( "filter" ) = object()
-			) )
+			"__init__",
+			make_constructor(
+				constructor2,
+				default_call_policies(),
+				(
+					arg( "scene" ),
+					arg( "context" ),
+					arg( "path" ),
+					arg( "filter" ) = object()
+				)
+			)
 		)
 		.def( "setScene", &ScenePath::setScene )
 		.def( "getScene", (ScenePlug *(ScenePath::*)())&ScenePath::getScene, return_value_policy<CastToIntrusivePtr>() )

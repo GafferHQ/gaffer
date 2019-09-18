@@ -52,10 +52,8 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 					Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:setsLabel" )
 				)
 
-			scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
-
 			path = GafferScene.ScenePath(
-				plug.node().descendant( scenePlugName ),
+				self.__scenePlug( plug ),
 				plug.node().scriptNode().context(),
 				"/",
 				filter = filter
@@ -84,3 +82,19 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 			path[:] = pathNames
 
 		return dialogue
+
+	def __scenePlug( self, plug ) :
+
+		scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
+		scenePlug = plug.node().descendant( scenePlugName )
+		if scenePlug and isinstance( scenePlug, GafferScene.ScenePlug ) :
+			return scenePlug
+
+		# Couldn't find scene plug. Perhaps `plug` has been promoted but the
+		# corresponding scene hasn't been yet. Check outputs to see if that
+		# is the case.
+
+		for output in plug.outputs() :
+			p = self.__scenePlug( output )
+			if p is not None :
+				return p
