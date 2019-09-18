@@ -62,7 +62,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__splitContainer.append( _TabbedContainer() )
 
-		self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.__splitContainer.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
 		self.__windowState = windowState or {}
@@ -121,12 +121,15 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		panel = _DetachedPanel( self,  *args, **kwargs )
 		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ) )
+		panel.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow :
 			panel.setTitle( scriptWindow.getTitle() )
 			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
 			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ) )
+			# It's not directly in the qt hierarchy so shortcut events don't make it to the MenuBar
+			scriptWindow.menuBar().addShortcutTarget( panel )
 
 		self.__detachedPanels.append( panel )
 		return panel
@@ -173,7 +176,8 @@ class CompoundEditor( GafferUI.Editor ) :
 			[ p.reprArgs() for p in self.__detachedPanels ]
 		)
 
-	def __keyPress( self, unused, event ) :
+	@staticmethod
+	def __keyPress( unused, event ) :
 
 		if event.key == "Space" :
 
@@ -191,7 +195,7 @@ class CompoundEditor( GafferUI.Editor ) :
 					childIndex = parent.index( widget )
 					ancestors.append(
 						Ancestor(
-							parent, childIndex, self.__handlePosition( parent )
+							parent, childIndex, CompoundEditor.__handlePosition( parent )
 						)
 					)
 				widget = parent

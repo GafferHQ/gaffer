@@ -72,6 +72,10 @@ class ScriptWindow( GafferUI.Window ) :
 
 		ScriptWindow.__instances.append( weakref.ref( self ) )
 
+	def menuBar( self ) :
+
+		return self.__listContainer[0]
+
 	def scriptNode( self ) :
 
 		return self.__script
