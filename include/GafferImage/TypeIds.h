@@ -123,6 +123,7 @@ enum TypeId
 	DeepStateTypeId = 110827,
 	EmptyTypeId = 110828,
 	FlatImageProcessorTypeId = 110829,
+	DeepSampleCountsTypeId = 110830,
 
 	LastTypeId = 110849
 };

@@ -40,6 +40,7 @@
 #include "GafferImage/DeepMerge.h"
 #include "GafferImage/DeepState.h"
 #include "GafferImage/Empty.h"
+#include "GafferImage/DeepSampleCounts.h"
 
 #include "DeepNodeBinding.h"
 
@@ -72,4 +73,5 @@ void GafferImageModule::bindDeepNodes()
 		;
 	}
 	DependencyNodeClass<Empty>();
+	DependencyNodeClass<DeepSampleCounts>();
 }
