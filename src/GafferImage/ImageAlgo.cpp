@@ -97,6 +97,11 @@ class CopyTile
 
 };
 
+std::string tileOriginToString( const Imath::V2i &tileOrigin )
+{
+	return std::to_string( tileOrigin.x ) + ", " + std::to_string( tileOrigin.y );
+}
+
 } // namespace
 
 
@@ -118,6 +123,11 @@ std::vector<std::string> GafferImage::ImageAlgo::layerNames( const std::vector<s
 
 IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug )
 {
+	if( imagePlug->deepPlug()->getValue() )
+	{
+		throw( IECore::Exception( "ImageAlgo::image() only works on flat image data ") );
+	}
+
 	Format format = imagePlug->formatPlug()->getValue();
 	Imath::Box2i dataWindow = imagePlug->dataWindowPlug()->getValue();
 	Imath::Box2i newDataWindow( Imath::V2i( 0 ) );
@@ -169,6 +179,27 @@ IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug
 	result.append( imagePlug->metadataPlug()->hash() );
 	result.append( imagePlug->channelNamesPlug()->hash() );
 
+	bool deep = imagePlug->deepPlug()->getValue();
+	result.append( deep );
+	if( deep )
+	{
+		ImageAlgo::parallelGatherTiles(
+			imagePlug,
+			// Tile
+			[] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin )
+			{
+				return imageP->sampleOffsetsPlug()->hash();
+			},
+			// Gather
+			[ &result ] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+			{
+				result.append( tileHash );
+			},
+			dataWindow,
+			ImageAlgo::BottomToTop
+		);
+	}
+
 	ImageAlgo::parallelGatherTiles(
 		imagePlug, channelNames,
 		// Tile
@@ -187,3 +218,69 @@ IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug
 
 	return result;
 }
+
+IECore::ConstCompoundDataPtr GafferImage::ImageAlgo::tiles( const ImagePlug *imagePlug )
+{
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
+	const Imath::Box2i dataWindow = imagePlug->dataWindowPlug()->getValue();
+	IECore::ConstStringVectorDataPtr channelNamesData = imagePlug->channelNamesPlug()->getValue();
+	const vector<string> &channelNames = channelNamesData->readable();
+
+	bool deep = imagePlug->deepPlug()->getValue();
+
+	IECore::CompoundDataPtr sampleOffsets = new IECore::CompoundData();
+
+	ImageAlgo::parallelGatherTiles(
+		imagePlug,
+		// Tile
+		[] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin )
+		{
+			return imageP->sampleOffsetsPlug()->getValue();
+		},
+		// Gather
+		[ &sampleOffsets, deep ] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin, IECore::ConstIntVectorDataPtr data )
+		{
+			if( deep )
+			{
+				sampleOffsets->writable()[ tileOriginToString( tileOrigin ) ] = const_cast<IECore::IntVectorData*>(data.get() );
+			}
+			else
+			{
+				// For flat images, we don't actually need to access the sampleOffsets, since they must always be
+				// flat.  But it's a good check to make sure that the sample offsets are actually correct.
+				// Currently, tiles() is used mostly in tests, so it seem good to verify this.
+				// If tiles() gets used in somewhere performance critical, it would be good to make this check
+				// optional.
+				if( data != ImagePlug::flatTileSampleOffsets() )
+				{
+					throw IECore::Exception( "Accessing tiles on flat image with invalid sample offsets" );
+				}
+			}
+		},
+		dataWindow
+	);
+
+	if( deep )
+	{
+		result->writable()["sampleOffsets"] = sampleOffsets;
+	}
+
+	ImageAlgo::parallelGatherTiles(
+		imagePlug, channelNames,
+		// Tile
+		[] ( const ImagePlug *imageP, const string &channelName, const Imath::V2i &tileOrigin )
+		{
+			return imageP->channelDataPlug()->getValue();
+		},
+		// Gather
+		[ &result ] ( const ImagePlug *imageP, const string &channelName, const Imath::V2i &tileOrigin, IECore::ConstFloatVectorDataPtr data )
+		{
+			IECore::CompoundDataPtr channel = result->member<IECore::CompoundData>( channelName, false, true );
+			channel->writable()[ tileOriginToString( tileOrigin ) ] = const_cast<IECore::FloatVectorData*>( data.get() );
+		},
+		dataWindow
+	);
+
+	return result;
+}
+

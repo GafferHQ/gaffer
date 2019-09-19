@@ -171,6 +171,12 @@ GAFFERIMAGE_API IECoreImage::ImagePrimitivePtr image( const ImagePlug *imagePlug
 /// Return a hash that will vary if any aspect of the return from image( ... ) varies
 GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug );
 
+/// Return all pixel data as a big CompoundData with entries for each channel
+/// and tile.  Among other things, this makes it possible to efficiently test
+/// from Python whether two ImagePlugs have identical pixel data.  Unlike the
+/// image() method above, it works on deep images.
+GAFFERIMAGE_API IECore::ConstCompoundDataPtr tiles( const ImagePlug *imagePlug );
+
 } // namespace ImageAlgo
 
 } // namespace GafferImage
