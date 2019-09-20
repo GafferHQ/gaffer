@@ -135,6 +135,9 @@ def __samplingSummary( plug ) :
 		elif plug["method"]["value"].getValue() == 1 :
 			info.append( "Path Integrator" )
 
+	if plug["useAdaptiveSampling"]["enabled"].getValue() :
+		info.append( "Use Adaptive Sampling {}".format( plug["useAdaptiveSampling"]["value"].getValue() ) )
+
 	if plug["samples"]["enabled"].getValue() :
 		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
 
@@ -156,6 +159,12 @@ def __samplingSummary( plug ) :
 
 	if plug["lightSamplingThreshold"]["enabled"].getValue() :
 		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
+
+	if plug["adaptiveSamplingThreshold"]["enabled"].getValue() :
+		info.append( "Adaptive Sampling Threshold {}".format( plug["adaptiveSamplingThreshold"]["value"].getValue() ) )
+
+	if plug["adaptiveMinSamples"]["enabled"].getValue() :
+		info.append( "Adaptive Min Samples {}".format( plug["adaptiveMinSamples"]["value"].getValue() ) )
 
 	if plug["filterGlossy"]["enabled"].getValue() :
 		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
@@ -665,6 +674,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.adaptiveSampling" : [
+
+			"description",
+			"""
+			Adaptive sampling.
+			""",
+
+			"layout:section", "Session",
+
+		],
+
 		# Scene
 
 		"options.bvhLayout" : [
@@ -779,6 +799,17 @@ Gaffer.Metadata.registerNode(
 			"preset:Path", True,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.useAdaptiveSampling" : [
+
+			"description",
+			"""
+			Automatically determine the number of samples per pixel based on a variance estimation.
+			""",
+
+			"layout:section", "Sampling",
 
 		],
 
@@ -913,6 +944,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Sobol", 0,
 			"preset:Correlated Multi-Jitter", 1,
+			"preset:Progressive Multi-Jitter", 2,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -948,6 +980,28 @@ Gaffer.Metadata.registerNode(
 			contribution is below this threshold (more noise but faster
 			rendering). "
             "Zero disables the test and never ignores lights.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
+		"options.adaptiveSamplingThreshold" : [
+
+			"description",
+			"""
+			Zero for automatic setting based on AA samples.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
+		"options.adaptiveMinSamples" : [
+
+			"description",
+			"""
+			Minimum AA samples for adaptive sampling. Zero for automatic setting based on AA samples.
 			""",
 
 			"layout:section", "Sampling",

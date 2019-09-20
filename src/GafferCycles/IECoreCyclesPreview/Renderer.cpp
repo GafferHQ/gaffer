@@ -206,6 +206,10 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS( "bvh_intersections", ccl::PASS_BVH_INTERSECTIONS );
 	MAP_PASS( "ray_bounces", ccl::PASS_RAY_BOUNCES );
 #endif
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+	MAP_PASS( "debug_sample_count", ccl::PASS_SAMPLE_COUNT );
+	MAP_PASS( "adaptive_aux_buffer", ccl::PASS_ADAPTIVE_AUX_BUFFER );
+#endif
 	MAP_PASS( "diffuse_direct", ccl::PASS_DIFFUSE_DIRECT );
 	MAP_PASS( "diffuse_indirect", ccl::PASS_DIFFUSE_INDIRECT );
 	MAP_PASS( "diffuse_color", ccl::PASS_DIFFUSE_COLOR );
@@ -283,6 +287,12 @@ int passComponents( ccl::PassType type )
 #endif
 		case ccl::PASS_RENDER_TIME:
 			return 0;
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+		case ccl::PASS_SAMPLE_COUNT:
+			return 1;
+		case ccl::PASS_ADAPTIVE_AUX_BUFFER:
+			return 4;
+#endif
 		case ccl::PASS_DIFFUSE_COLOR:
 		case ccl::PASS_GLOSSY_COLOR:
 		case ccl::PASS_TRANSMISSION_COLOR:
@@ -1895,6 +1905,9 @@ IECore::InternedString g_cancelTimeoutOptionName( "ccl:session:cancel_timeout" )
 IECore::InternedString g_resetTimeoutOptionName( "ccl:session:reset_timeout" );
 IECore::InternedString g_textTimeoutOptionName( "ccl:session:text_timeout" );
 IECore::InternedString g_progressiveUpdateTimeoutOptionName( "ccl:session:progressive_update_timeout" );
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+IECore::InternedString g_adaptiveSamplingOptionName( "ccl:session:adaptive_sampling" );
+#endif
 // Scene
 IECore::InternedString g_bvhTypeOptionName( "ccl:scene:bvh_type" );
 IECore::InternedString g_bvhLayoutOptionName( "ccl:scene:bvh_layout" );
@@ -2232,6 +2245,23 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_FLOAT(m_sessionParams, g_resetTimeoutOptionName,             reset_timeout);
 				OPTION_FLOAT(m_sessionParams, g_textTimeoutOptionName,              text_timeout);
 				OPTION_FLOAT(m_sessionParams, g_progressiveUpdateTimeoutOptionName, progressive_update_timeout);
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+				if( name == g_adaptiveSamplingOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.adaptive_sampling = false;
+						m_film.use_adaptive_sampling = false;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+					{
+						m_sessionParams.adaptive_sampling = data->readable();
+						m_film.use_adaptive_sampling = data->readable();
+						return;
+					}
+				}
+#endif
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -2500,6 +2530,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::vector<ccl::Pass> passes;
 			// Beauty
 			ccl::Pass::add( ccl::PASS_COMBINED, passes );
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+			// Adaptive
+			if( m_sessionParams.adaptive_sampling )
+			{
+				ccl::Pass::add( ccl::PASS_ADAPTIVE_AUX_BUFFER, passes );
+				ccl::Pass::add( ccl::PASS_SAMPLE_COUNT, passes );
+			}
+#endif
 
 			if( !ccl::Pass::contains( film->passes, passType ) )
 			{
