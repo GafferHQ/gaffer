@@ -346,6 +346,10 @@
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	[attr camera]
+
+		gaffer.plugType STRING ""
+
 
 [node checkerboard]
 
