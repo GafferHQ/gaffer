@@ -304,7 +304,7 @@ def __assignNumericBookmark( node, numericBookmark ) :
 		else :
 			Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), numericBookmark, node )
 
-def __findNumericBookmark( editor, numericBookmark ) :
+def __findNumericBookmark( editor, numericBookmark, removeDriver = True ) :
 
 	if not isinstance( editor, ( GafferUI.NodeSetEditor, GafferUI.GraphEditor ) ) :
 		return False
@@ -322,7 +322,12 @@ def __findNumericBookmark( editor, numericBookmark ) :
 		editor.graphGadget().setRoot( node.parent() )
 		editor.frame( [ node ] )
 	else :
-		editor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
+		s = Gaffer.StandardSet( [ node ] )
+		if removeDriver :
+			editor.setNodeSet( s )
+		else :
+			target = editor.drivingEditor() or editor
+			target.setNodeSet( s )
 
 	return True
 
@@ -360,10 +365,14 @@ def __editorKeyPress( editor, event ) :
 
 			# Find
 
+			# For linked editors, its more intuitive for the user if we update
+			# the driving editor, rather than breaking the link.
+
 			if numericBookmark != 0 :
-				__findNumericBookmark( editor, numericBookmark )
+				__findNumericBookmark( editor, numericBookmark, False )
 			elif isinstance( editor, GafferUI.NodeSetEditor ) :
-				editor.setNodeSet( editor.scriptNode().selection() )
+				target = editor.drivingEditor() or editor
+				target.setNodeSet( editor.scriptNode().selection() )
 
 		return True
 
