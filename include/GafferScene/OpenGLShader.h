@@ -60,6 +60,11 @@ class GAFFERSCENE_API OpenGLShader : public GafferScene::Shader
 		void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const override;
 		IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const override;
 
+		/// Reimplemented to allow glsl source specified by specifically named parameters.
+		/// Use a StringPlug named "glVertexSource", "glGeometrySource", or "glFragmentSource"
+		/// to specify the various types of glsl source code.
+		IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const override;
+
 };
 
 IE_CORE_DECLAREPTR( OpenGLShader )
