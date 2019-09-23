@@ -280,7 +280,7 @@ private:
 	const std::string &m_tweakName;
 };
 
-void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, bool requireExists )
+void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode )
 {
 	if( mode == TweakPlug::Remove )
 	{
@@ -301,20 +301,22 @@ void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const
 		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % tweakName % parameterValue->typeName() % newData->typeName() ) );
 	}
 
-	if( mode == TweakPlug::Replace )
-	{
-		if( !parameterValue && requireExists )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot replace parameter \"%s\" which does not exist" ) % tweakName ) );
-		}
-
-		parameters->writable()[parameterName] = newData;
-		return;
-	}
-
 	if( !parameterValue )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % tweakName ) );
+		if( missingMode == TweakPlug::MissingMode::Ignore )
+		{
+			return;
+		}
+		else if( !( mode == TweakPlug::Replace && missingMode == TweakPlug::MissingMode::IgnoreOrReplace ) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % tweakName ) );
+		}
+	}
+
+	if( mode == TweakPlug::Replace )
+	{
+		parameters->writable()[parameterName] = newData;
+		return;
 	}
 
 	NumericTweak t( newData.get(), mode, tweakName );
@@ -324,6 +326,11 @@ void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const
 } // namespace
 
 void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists ) const
+{
+	applyTweak( parameters, requireExists ? MissingMode::Error : MissingMode::IgnoreOrReplace );
+}
+
+void TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
 {
 	if( !enabledPlug()->getValue() )
 	{
@@ -337,10 +344,15 @@ void TweakPlug::applyTweak( IECore::CompoundData *parameters, bool requireExists
 	}
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
-	applyTweakInternal( mode, this->valuePlug(), name, name, parameters, requireExists );
+	applyTweakInternal( mode, this->valuePlug(), name, name, parameters, missingMode );
 }
 
 void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	applyTweaks( tweaksPlug, shaderNetwork, TweakPlug::MissingMode::Error );
+}
+
+void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode )
 {
 	unordered_map<InternedString, IECoreScene::ShaderPtr> modifiedShaders;
 
@@ -350,6 +362,11 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 		const TweakPlug *tweakPlug = tIt->get();
 		const std::string name = tweakPlug->namePlug()->getValue();
 		if( name.empty() )
+		{
+			continue;
+		}
+
+		if( !tweakPlug->enabledPlug()->getValue() )
 		{
 			continue;
 		}
@@ -367,9 +384,19 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 			parameter.name = InternedString( name.c_str() + dotPos + 1 );
 		}
 
-		if( !tweakPlug->enabledPlug()->getValue() )
+		const IECoreScene::Shader *shader = shaderNetwork->getShader( parameter.shader );
+		if( !shader )
 		{
-			continue;
+			if( missingMode != TweakPlug::MissingMode::Ignore )
+			{
+				throw IECore::Exception( boost::str(
+					boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
+				) );
+			}
+			else
+			{
+				continue;
+			}
 		}
 
 		const Mode mode = static_cast<Mode>( tweakPlug->modePlug()->getValue() );
@@ -414,19 +441,10 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 			auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
 			if( modifiedShader.second )
 			{
-				if( const IECoreScene::Shader *shader = shaderNetwork->getShader( parameter.shader ) )
-				{
-					modifiedShader.first->second = shader->copy();
-				}
-				else
-				{
-					throw IECore::Exception( boost::str(
-						boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
-					) );
-				}
+				modifiedShader.first->second = shader->copy();
 			}
 
-			applyTweakInternal( mode, tweakPlug->valuePlug(), name, parameter.name, modifiedShader.first->second->parametersData(), /* requireExists = */ true );
+			applyTweakInternal( mode, tweakPlug->valuePlug(), name, parameter.name, modifiedShader.first->second->parametersData(), missingMode );
 		}
 	}
 
@@ -525,7 +543,20 @@ void TweaksPlug::applyTweaks( IECore::CompoundData *parameters, bool requireExis
 	}
 }
 
+void TweaksPlug::applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode ) const
+{
+	for( TweakPlugIterator it( this ); !it.done(); ++it )
+	{
+		(*it)->applyTweak( parameters, missingMode );
+	}
+}
+
 void TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork ) const
 {
 	TweakPlug::applyTweaks( this, shaderNetwork );
+}
+
+void TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode ) const
+{
+	TweakPlug::applyTweaks( this, shaderNetwork, missingMode );
 }

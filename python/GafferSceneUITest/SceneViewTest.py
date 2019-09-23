@@ -211,7 +211,6 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
 		self.assertEqual( getSelection(), set( [ "/A", "/A/C" ] ) )
 
-	@unittest.skipIf( GafferTest.inCI( { 'travis' } ), "Unknown problem on Travis" )
 	def testLookThrough( self ) :
 
 		script = Gaffer.ScriptNode()

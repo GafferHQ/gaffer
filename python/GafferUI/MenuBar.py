@@ -44,6 +44,8 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
+import weakref
+
 class MenuBar( GafferUI.Widget ) :
 
 	def __init__( self, definition, **kw ) :
@@ -60,6 +62,15 @@ class MenuBar( GafferUI.Widget ) :
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ), scoped = False )
 		self.__setupShortcutEventFilter()
+
+	## Adds a listener to the supplied gaffer widget to action any menu items
+	# in response to keyboard shortcut events received by that widget.
+	# This can be useful to ensure secondary windows not in the hierarchy of
+	# the MenuBar's parent still cause associated actions to fire.
+	def addShortcutTarget( self, widget ) :
+
+		widget.__shortcutEventFilter = _ShortcutEventFilter( widget._qtWidget(), self )
+		widget._qtWidget().installEventFilter( widget.__shortcutEventFilter )
 
 	def __setattr__( self, key, value ) :
 
@@ -100,7 +111,7 @@ class MenuBar( GafferUI.Widget ) :
 		if isinstance( shortcutTarget.parent(), GafferUI.Window ) :
 			shortcutTarget = shortcutTarget.parent()
 
-		self.__shortcutEventFilter = _ShortcutEventFilter( self._qtWidget() )
+		self.__shortcutEventFilter = _ShortcutEventFilter( self._qtWidget(), self )
 		shortcutTarget._qtWidget().installEventFilter( self.__shortcutEventFilter )
 
 	def __visibilityChanged( self, widget ) :
@@ -125,10 +136,11 @@ class MenuBar( GafferUI.Widget ) :
 # shortcuts in order to defer to our own code here.
 class _ShortcutEventFilter( QtCore.QObject ) :
 
-	def __init__( self, parent ) :
+	def __init__( self, parent, menuBar ) :
 
 		QtCore.QObject.__init__( self, parent )
 
+		self.__menuBar = weakref.ref( menuBar )
 		self.__shortcutAction = None
 
 	def eventFilter( self, qObject, qEvent ) :
@@ -148,7 +160,7 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 
 			self.__shortcutAction = None
 			keySequence = self.__keySequence( qEvent )
-			menuBar = GafferUI.Widget._owner( self.parent() )
+			menuBar = self.__menuBar()
 			for menu in menuBar._MenuBar__subMenus :
 				if menu._qtWidget().isEmpty() :
 					menu._buildFully()

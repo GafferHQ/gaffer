@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,41 +34,53 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPENGLSHADER_H
-#define GAFFERSCENE_OPENGLSHADER_H
+#ifndef GAFFER_NUMERICBOOKMARKSET_H
+#define GAFFER_NUMERICBOOKMARKSET_H
 
-#include "GafferScene/Shader.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/Set.h"
+#include "Gaffer/TypeIds.h"
 
-namespace GafferScene
+namespace Gaffer
 {
 
-class GAFFERSCENE_API OpenGLShader : public GafferScene::Shader
+/// The NumericBookmarkSet provides a Set implementation that adjusts its membership such that
+/// it always contains the node associated with a specified numeric bookmark (@see MetadataAlgo.h).
+class GAFFER_API NumericBookmarkSet : public Gaffer::Set
 {
 
 	public :
 
-		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
-		~OpenGLShader() override;
+		NumericBookmarkSet( Gaffer::ScriptNodePtr script, int bookmark );
+		~NumericBookmarkSet() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::NumericBookmarkSet, NumericBookmarkSetTypeId, Gaffer::Set );
 
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
+		void setBookmark( int bookmark );
+		int getBookmark() const;
 
-	protected :
+		/// @name Set interface
+		////////////////////////////////////////////////////////////////////
+		//@{
+		bool contains( const Member *object ) const override;
+		Member *member( size_t index ) override;
+		const Member *member( size_t index ) const override;
+		size_t size() const override;
+		//@}
 
-		/// Reimplemented to allow ImageNodes to be plugged in to texture parameters.
-		void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const override;
-		IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const override;
+	private :
 
-		/// Reimplemented to allow glsl source specified by specifically named parameters.
-		/// Use a StringPlug named "glVertexSource", "glGeometrySource", or "glFragmentSource"
-		/// to specify the various types of glsl source code.
-		IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const override;
+		Gaffer::ScriptNodePtr m_script;
+		int m_bookmark;
 
+		Gaffer::NodePtr m_node;
+		void updateNode();
+
+		void metadataChanged( IECore::InternedString key, Gaffer::Node *node );
 };
 
-IE_CORE_DECLAREPTR( OpenGLShader )
+IE_CORE_DECLAREPTR( NumericBookmarkSet );
 
-} // namespace GafferScene
+} // namespace Gaffer
 
-#endif // GAFFERSCENE_OPENGLSHADER_H
+#endif // GAFFER_NUMERICBOOKMARKSET_H

@@ -481,15 +481,36 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		DelightShaderPtr get( const IECoreScene::ShaderNetwork *shader )
+		DelightShaderPtr get( const IECoreScene::ShaderNetwork *shader, const IECore::CompoundObject *attributes )
 		{
+			IECore::MurmurHash h;
+			IECore::MurmurHash hSubst;
+			if( shader )
+			{
+				h = shader->Object::hash();
+				if( attributes )
+				{
+					shader->hashSubstitutions( attributes, hSubst );
+					h.append( hSubst );
+				}
+			}
+
 			Cache::accessor a;
-			m_cache.insert( a, shader ? shader->Object::hash() : MurmurHash() );
+			m_cache.insert( a, h );
 			if( !a->second )
 			{
 				if( shader )
 				{
-					a->second = new DelightShader( m_context, shader, m_ownership );
+					if( hSubst != IECore::MurmurHash() )
+					{
+						IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
+						substitutedShader->applySubstitutions( attributes );
+						a->second = new DelightShader( m_context, substitutedShader.get(), m_ownership );
+					}
+					else
+					{
+						a->second = new DelightShader( m_context, shader, m_ownership );
+					}
 				}
 				else
 				{
@@ -510,7 +531,7 @@ class ShaderCache : public IECore::RefCounted
 
 		DelightShaderPtr defaultSurface()
 		{
-			return get( nullptr );
+			return get( nullptr, nullptr );
 		}
 
 		// Must not be called concurrently with anything.
@@ -581,7 +602,7 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				{
 					if( const ShaderNetwork *shader = reportedCast<const ShaderNetwork>( o, "attribute", name ) )
 					{
-						m_shader = shaderCache->get( shader );
+						m_shader = shaderCache->get( shader, attributes );
 					}
 					break;
 				}

@@ -107,6 +107,12 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			hash = t["out"].imageHash()
 			self.assertNotEqual( hash, previousHash )
 
+			t["invert"].setValue( True )
+			invertHash = t["out"].imageHash()
+			t["invert"].setValue( False )
+
+			self.assertNotEqual( invertHash, hash )
+
 			previousHash = hash
 
 	def testDirtyPropagation( self ) :
@@ -308,6 +314,27 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["transform"]["rotate"].setValue( 1 )
 
 		self.assertEqual( t["out"]["dataWindow"].getValue(), imath.Box2i() )
+
+	def testInvertTransform( self ):
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )
+
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( r["out"] )
+		t["transform"]["rotate"].setValue( 45 )
+
+		tInv = GafferImage.ImageTransform()
+		tInv["in"].setInput( t["out"] )
+		tInv["transform"]["rotate"].setValue( 45 )
+		tInv["invert"].setValue( True )
+
+		self.assertNotEqual(
+			r["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			t["out"].channelDataHash( "R", imath.V2i( 0 ) )
+		)
+
+		self.assertImagesEqual( r["out"], tInv["out"], maxDifference = 0.5, ignoreDataWindow=True )
 
 if __name__ == "__main__":
 	unittest.main()

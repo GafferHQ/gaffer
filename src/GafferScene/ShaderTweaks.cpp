@@ -61,6 +61,7 @@ ShaderTweaks::ShaderTweaks( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "shader" ) );
+	addChild( new BoolPlug( "ignoreMissing", Plug::In, false ) );
 	addChild( new TweaksPlug( "tweaks" ) );
 
 	// Fast pass-throughs for the things we don't alter.
@@ -83,21 +84,35 @@ const Gaffer::StringPlug *ShaderTweaks::shaderPlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *ShaderTweaks::ignoreMissingPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *ShaderTweaks::ignoreMissingPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug()
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 1 );
+	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
 const GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug() const
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 1 );
+	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
 void ShaderTweaks::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( tweaksPlug()->isAncestorOf( input ) || input == shaderPlug() )
+	if(
+		tweaksPlug()->isAncestorOf( input ) ||
+		input == shaderPlug() ||
+		input == ignoreMissingPlug()
+	)
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -114,6 +129,7 @@ void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer:
 {
 	shaderPlug()->hash( h );
 	tweaksPlug()->hash( h );
+	ignoreMissingPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
@@ -129,6 +145,8 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	{
 		return inputAttributes;
 	}
+
+	const bool ignoreMissing = ignoreMissingPlug()->getValue();
 
 	CompoundObjectPtr result = new CompoundObject;
 	const CompoundObject::ObjectMap &in = inputAttributes->members();
@@ -148,7 +166,7 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
-		tweaksPlug->applyTweaks( tweakedNetwork.get() );
+		tweaksPlug->applyTweaks( tweakedNetwork.get(), ignoreMissing ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error );
 		out[it->first] = tweakedNetwork;
 	}
 

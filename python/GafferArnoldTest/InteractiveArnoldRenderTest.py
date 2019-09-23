@@ -51,7 +51,6 @@ import GafferSceneTest
 import GafferImage
 import GafferArnold
 
-@unittest.skipIf( GafferTest.inCI( { 'travis' } ), "No license available on Travis" )
 class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	def testTwoRenders( self ) :

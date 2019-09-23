@@ -81,11 +81,11 @@ def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mod
 		weakTarget = weakref.ref( targetEditor )
 
 		isCurrent = existingMode == mode if existingDriver is targetEditor else False
-		menuDefinition.insertBefore( "/%s/%s" % ( subMenuTitle, title ), {
-			"checkBox" : isCurrent,
-			"command" : None if isCurrent else lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
-			"active" : not editor.drivesNodeSet( targetEditor )
-		}, "/ActionsDivider" )
+		menuDefinition.append( "/%s/%s" % ( subMenuTitle, title ), {
+			"command" : lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
+			"active" : not editor.drivesNodeSet( targetEditor ) and not isCurrent,
+			"checkBox" : isCurrent
+		} )
 
 # Simple follows, eg: Hierarchy -> Viewer
 def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
@@ -110,7 +110,7 @@ def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
 		if target is not editor :
 			__addFollowMenuItem( menuDefinition,
 				editor, target,
-				"Linked to Editor",
+				"Follow/Editor",
 				GafferUI.NodeSetEditor.DriverModeNodeSet ,
 				itemNameCounts
 			)
@@ -132,18 +132,17 @@ def __registerNodeSetFollowsSceneSelectionItems( editor, menuDefinition ) :
 		if target is not editor :
 			__addFollowMenuItem( menuDefinition,
 				editor, target,
-				"Following Scene Selection",
+				"Follow/Scene Selection",
 				DriverModeSceneSelectionSource,
 				itemNameCounts
 			)
-
 
 ## Registration
 
 def __registerNodeSetMenuItems( editor, menuDefinition ) :
 
-	__registerEditorNodeSetDriverItems( editor, menuDefinition )
 	__registerNodeSetFollowsSceneSelectionItems( editor, menuDefinition )
+	__registerEditorNodeSetDriverItems( editor, menuDefinition )
 
 	GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions( editor, menuDefinition )
 

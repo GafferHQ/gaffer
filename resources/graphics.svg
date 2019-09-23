@@ -21,6 +21,14 @@
   <defs
      id="defs4">
     <linearGradient
+       id="linearGradient2267"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#787878;stop-opacity:1;"
+         offset="0"
+         id="stop2265" />
+    </linearGradient>
+    <linearGradient
        id="compoundEditorButtonDisabled">
       <stop
          style="stop-color:#696969;stop-opacity:1;"
@@ -4781,5 +4789,22 @@
          y="220.61823"
          inkscape:label="export" />
     </g>
+    <path
+       inkscape:label="#forExport:nodeSetNumericBookmarkSet"
+       transform="matrix(1.2161846,0,0,1.2434878,-17.319593,317.77547)"
+       d="m 302.30138,18.423424 -3.43097,-2.443491 -3.44073,2.429728 1.26367,-4.018128 -3.37406,-2.521504 4.21197,-0.03985 1.35545,-3.9881025 1.33946,3.9935005 4.21177,0.05672 -3.38412,2.507967 z"
+       inkscape:randomized="0"
+       inkscape:rounded="0"
+       inkscape:flatsided="false"
+       sodipodi:arg2="1.5727992"
+       sodipodi:arg1="0.94448073"
+       sodipodi:r2="2.2924397"
+       sodipodi:r1="5.8454323"
+       sodipodi:cy="13.687498"
+       sodipodi:cx="298.875"
+       sodipodi:sides="5"
+       id="forExport:nodeSetNumericBookmarkSet"
+       style="fill:#e0e0e0;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:0.49690738;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:type="star" />
   </g>
 </svg>

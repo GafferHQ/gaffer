@@ -100,6 +100,8 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 
 };
 
+IE_CORE_DECLAREPTR( ScenePath )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SCENEPATH_H

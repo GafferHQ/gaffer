@@ -58,6 +58,9 @@ class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
 		Gaffer::StringPlug *shaderPlug();
 		const Gaffer::StringPlug *shaderPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingPlug();
+		const Gaffer::BoolPlug *ignoreMissingPlug() const;
+
 		GafferScene::TweaksPlug *tweaksPlug();
 		const GafferScene::TweaksPlug *tweaksPlug() const;
 

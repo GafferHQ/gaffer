@@ -69,6 +69,9 @@ class GAFFERIMAGE_API ImageTransform : public ImageProcessor
 		Gaffer::StringPlug *filterPlug();
 		const Gaffer::StringPlug *filterPlug() const;
 
+		Gaffer::BoolPlug *invertPlug();
+		const Gaffer::BoolPlug *invertPlug() const;
+
 	protected :
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
