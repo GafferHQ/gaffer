@@ -1,3 +1,68 @@
+0.54.2.0 (relative to 0.54.1.0)
+========
+
+Features
+--------
+
+- Shaders : Added support for attribute substitutions in all string shader parameters.
+  Tokens of the form `<attr:attributeName>` will be automatically substituted with the
+  value of `attributeName` at render time. We recommend using this mechanism for passing
+  texture paths to shaders, while allowing the paths to be modified independently of the
+  shaders themselves (via a CustomAttribute node) (#3331).
+
+  > Note : This mechanism uses the same syntax as Arnold's native attribute substitutions,
+  > meaning that substitutions now occur in Gaffer before reaching Arnold.
+
+Improvements
+------------
+
+- ShaderTweaks : Added `ignoreMissing` plug that suppresses the error that would normally
+  occur for an attempt to tweak a parameter that doesn't exist (#3353).
+- ImageTransform : Added `invert` plug (#3371).
+- Layouts (#3323) :
+  - Added pinning menu option for following numeric bookmarks.
+  - Improved legibility of pinning menu.
+- Viewer : Added X-Ray shading mode to the scene Viewer (#3344).
+
+Fixes
+-----
+
+- ArnoldLightFilter : Fixed bug whereby changing a `light_blocker` parameter during an interactive
+  render caused the transform for the blocker to be reset (#3358).
+- ArnoldShader : Fixed bug which could cause user defaults for shader parameters to be ignored (#3333).
+- Orientation : Fixed UI for "Quaternion XYZW (Houdini)" mode. Previously the `quaternion` plug was
+  disabled in this mode (#3352).
+- StandardAttributes : Fixed popup menu for the `linkedLights` and `filteredLights` plugs (#3346).
+- Layouts : Improved handling of errors when loading a layout which contains a missing editor (#3355).
+- ScriptWindow : Fixed automatic creation of ScriptWindows so that it interacts correctly with custom
+  code that calls `ScriptWindow.acquire()` on script creation (#3362).
+- GafferCortex : Fixed bug which caused plug connections and values to be lost when reloading a Parameter.
+  Also added support for StringParameter userData that specifies StringPlug substitutions (#3370).
+- OSLExpression : Fixed bug that caused execution to request `context.getTime()` even if the expression
+  didn't need it. This could cause errors when dispatching tasks (#3373).
+- Layouts : Fixed menu bar shortcuts in detached panels (#3357, #3359, #3372).
+- Arnold metadata : Disabled `camera_projection.camera` parameter (#3363).
+- Scene Path Browser : Fixed a bug when browsing a scene for a promoted plug (#3377).
+
+API
+---
+
+- NumericBookmarkSet : Added new set subclass that mirrors numeric bookmarks (#3323).
+- TweakPlug : Added `MissingMode` enum arguments to `applyTweaks()` methods (#3353).
+- ScriptWindow : Added `menuBar()` accessor (#3359).
+- MenuBar : Added `addShortcutTarget()` method to allow keyboard shortcuts to be associated
+  with windows other than the parent window of the menu bar (#3359).
+- CompoundEditor : Added `editor()` method that can be used to find an editor that the
+  user is currently interacting with (#3372).
+- OpenGLShader : Added support for glsl source code parameters (#3344).
+- ScenePath Binding : Prevent crashes caused by passing None to constructor (#3377).
+
+Build
+-----
+
+- Fixed bug with builds using LOCATE_DEPENDENCY_RESOURCESPATH (#3347).
+- Fixed failure to load GafferArnold during documentation builds on MacOS with SIP enabled (#3348).
+
 0.54.1.0 (relative to 0.54.0.1)
 ========
 
