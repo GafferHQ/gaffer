@@ -1635,7 +1635,6 @@ class _DrivenEditorSwatch( _Frame ) :
 		imath.Color3f( 0.35, 0.55, 0.28 ),
 		imath.Color3f( 0.57, 0.43, 0.71 )
 	]
-	__drivenEditorColorsLastUsed = 0
 	__drivenEditorColorMapping = {}
 
 	def __init__( self ) :
@@ -1748,9 +1747,15 @@ class _DrivenEditorSwatch( _Frame ) :
 			if weakEditor() is editor :
 				return color
 
-		colorIndex = ( cls.__drivenEditorColorsLastUsed + 1 ) % len( cls.__drivenEditorColors )
+		# We want the color index to be kept per-script, not per gaffer process
+
+		e = editor.ancestor( GafferUI.CompoundEditor )
+		if not hasattr( e, '_DrivenEditorSwatch__lastColorUsed' ) :
+			e.__lastColorUsed = 0
+
+		colorIndex = ( e.__lastColorUsed + 1 ) % len( cls.__drivenEditorColors )
 		editorColor = cls.__drivenEditorColors[ colorIndex ]
 		cls.__drivenEditorColorMapping[ weakref.ref( editor ) ] =  editorColor
-		cls.__drivenEditorColorsLastUsed = colorIndex
+		e.__lastColorUsed = colorIndex
 		return editorColor
 
