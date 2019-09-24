@@ -441,6 +441,9 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		s["n"]["user"]["p"][0].setInput( None )
 		self.assertEqual( len( s["n"]["user"]["p"] ), 1 )
 
+		p = s["n"]["user"]["p"].createCounterpart( "p", Gaffer.Plug.Direction.In )
+		self.assertEqual( p.resizeWhenInputsChange(), False )
+
 	def testNext( self ) :
 
 		a = GafferTest.AddNode()
