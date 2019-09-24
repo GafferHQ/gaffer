@@ -1644,6 +1644,17 @@ class _DrivenEditorSwatch( _Frame ) :
 		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
 		self._qtWidget().setFixedSize( 6, 6 )
 
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
+
+	# Disclaimer:
+	# In order to defer the highlighting of related editors, avoiding brief
+	# flashes whilst general mousing around, we abuse the tooltip mechanism.
+	# Otherwise, we'd have to reimplement the entire set-timeout/cancel/etc...
+	# behaviour or figure some way to hook up to Qt's tooltip event directly.
+	# As this is technically a private implementation class, no one should be
+	# calling getToolTip themselves anyway so were going to try and get away
+	# with it.  We'll have to fix this up should we need to call this in other
+	# presentation scenarios.
 	def getToolTip( self ) :
 
 		editor = self.__getNodeSetEditor()
@@ -1663,7 +1674,34 @@ class _DrivenEditorSwatch( _Frame ) :
 			for d in drivenEditors :
 				toolTipElements.append( " - _%s_" % d.getTitle() )
 
+		self.__highlightRelatedEditors( editor, True )
+
 		return "\n".join( toolTipElements )
+
+	@staticmethod
+	def __highlightRelatedEditors( editor, highlighted ) :
+
+		toHighlight = []
+
+		masterEditor = editor.drivingEditor()
+		if masterEditor is not None :
+			toHighlight.append( masterEditor )
+		else :
+			toHighlight.extend( editor.drivenNodeSets( recurse = True ).keys() )
+
+		for e in toHighlight :
+			if e._qtWidget().isHidden() :
+				e.parent().parent().setHighlighted( highlighted )
+			else :
+				e.parent().setHighlighted( highlighted )
+
+	def __leave( self, widget ) :
+
+		editor = self.__getNodeSetEditor()
+		if editor is None :
+			return
+
+		self.__highlightRelatedEditors( editor, False )
 
 	def update( self ) :
 
