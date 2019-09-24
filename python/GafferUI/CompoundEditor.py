@@ -1632,8 +1632,7 @@ class _DrivenEditorSwatch( _Frame ) :
 	__drivenEditorColors = [
 		imath.Color3f( 0.71, 0.43, 0.47 ),
 		imath.Color3f( 0.85, 0.80, 0.48 ),
-		imath.Color3f( 0.62, 0.79, 0.93 ),
-		imath.Color3f( 0.27, 0.45, 0.21 ),
+		imath.Color3f( 0.35, 0.55, 0.28 ),
 		imath.Color3f( 0.57, 0.43, 0.71 )
 	]
 	__drivenEditorColorsLastUsed = 0
