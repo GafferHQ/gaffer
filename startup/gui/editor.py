@@ -91,6 +91,7 @@ def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mod
 def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
 
 	if not isinstance( editor, (
+		GafferUI.Viewer,
 		GafferUI.NodeEditor,
 		GafferUI.AnimationEditor,
 		GafferSceneUI.HierarchyView,
