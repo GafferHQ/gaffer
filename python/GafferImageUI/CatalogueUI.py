@@ -154,7 +154,16 @@ class _ImagesPath( Gaffer.Path ) :
 		return len( self ) > 0
 
 	def _orderedImages( self ) :
-		return sorted( self.__images.children(), key=lambda x : Gaffer.Metadata.value( x, _ImagesPath.indexMetadataName ) or 0 )
+
+		# Avoid repeat lookups for plugs with no logical index by first getting all
+		# images with their plug indices, then updating those with any metadata
+		imageAndIndices = [ [ image, plugIndex ] for plugIndex, image in enumerate( self.__images.children() ) ]
+		for imageAndIndex in imageAndIndices :
+			logicalIndex = Gaffer.Metadata.value( imageAndIndex[0], _ImagesPath.indexMetadataName )
+			if logicalIndex is not None :
+				imageAndIndex[1] = logicalIndex
+
+		return [ i[0] for i in sorted( imageAndIndices, key = lambda i : i[1] ) ]
 
 	def _children( self ) :
 
@@ -184,8 +193,6 @@ class _ImagesPath( Gaffer.Path ) :
 
 		assert( parent.isSame( self.__images ) )
 		self.__nameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
-		if not Gaffer.Metadata.value( child, _ImagesPath.indexMetadataName ) :
-			Gaffer.Metadata.registerValue( child, _ImagesPath.indexMetadataName, len( parent.children() ) -1 )
 		self._emitPathChanged()
 
 	def __childRemoved( self, parent, child ) :
