@@ -290,6 +290,15 @@ class CompoundEditor( GafferUI.Editor ) :
 					"driver" : self.__pathToEditor(driver),
 					"driverMode" : mode
 				}
+			else :
+				nodeSet = n.getNodeSet()
+				# NumericBookmarkSet doesn't support repr as we don't want to
+				# couple the layout-centric serialisation that assumes 'scriptNode'
+				# is a global into Sets, so we keep it all contained here.
+				if isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
+					state[ self.__pathToEditor(n) ] = {
+						"nodeSet" : "Gaffer.NumericBookmarkSet( scriptNode, %d )" % nodeSet.getBookmark()
+					}
 
 		return state
 
@@ -300,20 +309,31 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		for path, state in editorState.items() :
 
-			if "driver" in state :
-				editor = self.__editorAtPath( path )
-				driver = self.__editorAtPath( state["driver"] )
-				# The mode may not be registered any more, so make sure
-				# we fail gracefully here
-				try :
+			editor = self.__editorAtPath( path )
+
+			try :
+
+				if "driver" in state :
+
+					driver = self.__editorAtPath( state["driver"] )
 					editor.setNodeSetDriver( driver, state["driverMode"] )
-				except Exception as e :
-					sys.stderr.write(
-						"Unable to restore node set driver for {editor}: {error}\n".format(
-							editor = path,
-							error = "%s: %s" % ( type(e), e )
-						)
+
+				elif "nodeSet" in state :
+
+					g = {
+						"scriptNode" : self.scriptNode(),
+						"Gaffer" : Gaffer
+					}
+					nodeSet = eval( state["nodeSet"], g )
+					editor.setNodeSet( nodeSet )
+
+			except Exception as e :
+				sys.stderr.write(
+					"Unable to restore editor state for {editor}: {error}\n".format(
+						editor = "%s (%s)" % ( path, type(editor).__name__ ),
+						error = "%s: %s" % ( type(e).__name__, e )
 					)
+				)
 
 	# visibility for Test Harness
 	def _serializeWindowState( self ) :
