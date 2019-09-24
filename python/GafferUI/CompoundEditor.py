@@ -1666,7 +1666,7 @@ class _DrivenEditorSwatch( _Frame ) :
 		toolTipElements = []
 
 		if masterEditor is not None :
-			toolTipElements.append( "Following _%s_" % masterEditor.getTitle() )
+			toolTipElements.append( "Following _%s_\n" % masterEditor.getTitle() )
 
 		if drivenEditors :
 			toolTipElements.append( "Followed by:")
