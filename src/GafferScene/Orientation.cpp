@@ -504,7 +504,7 @@ void randomise( vector<Quatf> &orientations, const V3f &axis, float spreadMax, f
 // Orientation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Orientation );
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Orientation );
 
 size_t Orientation::g_firstPlugIndex = 0;
 
