@@ -79,6 +79,29 @@ void Capsule::setScene( const ScenePlug *scene )
 {
 	assert( !scene || scene->parent() );
 
+	// Connecting to and disconnecting from signals is not threadsafe,
+	// and neither is calling `GraphComponent::parentChangedSignal()`
+	// (because it constructs signals lazily on demand). Most (all?)
+	// other signal access occurs on the UI thread, but capsules are
+	// constructed concurrently on background threads when generating
+	// scenes. We use a mutex to serialise all signal access performed
+	// by capsules, but this is still not safe with respect to signal
+	// access that may be performed by UI components on the main thread.
+	//
+	// Todo : Make this watertight. Possibilities include :
+	//
+	// - Switching to boost::signals2, which is threadsafe by default,
+	//   and making the GraphComponent signal accessors threadsafe.
+	// - Writing our own threadsafe signals classes which do exactly what
+	//   we need, without the bloat of the boost versions. And making the
+	//   GraphComponent signal accessors threadsafe.
+	// - Ditching all the signal handling in capsules. It is only used
+	//   to track the erroneous usage of "expired" capsules, which can
+	//   only arise from bugs elsewhere. I can't recall seeing an expired
+	//   capsule yet.
+	static tbb::spin_mutex g_signalMutex;
+	tbb::spin_mutex::scoped_lock signalLock( g_signalMutex );
+
 	if( const Node *node = m_scene ? m_scene->node() : nullptr )
 	{
 		const_cast<Node *>( node )->plugDirtiedSignal().disconnect(
