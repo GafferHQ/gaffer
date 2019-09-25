@@ -47,6 +47,7 @@
 #include "GafferScene/MeshTangents.h"
 #include "GafferScene/MeshToPoints.h"
 #include "GafferScene/MeshType.h"
+#include "GafferScene/ObjectProcessor.h"
 #include "GafferScene/Orientation.h"
 #include "GafferScene/Parameters.h"
 #include "GafferScene/PointsType.h"
@@ -64,6 +65,7 @@ using namespace GafferScene;
 void GafferSceneModule::bindObjectProcessor()
 {
 
+	GafferBindings::DependencyNodeClass<GafferScene::ObjectProcessor>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
