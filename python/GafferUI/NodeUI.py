@@ -83,6 +83,7 @@ Gaffer.Metadata.registerNode(
 
 		"user.*" : (
 
+			"deletable", True,
 			"labelPlugValueWidget:renameable", True,
 
 		),
@@ -165,21 +166,31 @@ class NodeUI( GafferUI.Widget ) :
 
 		cls.__nodeUIs[nodeTypeId] = nodeUICreator
 
-##########################################################################
-# Plug menu
-##########################################################################
+	@staticmethod
+	def appendPlugDeletionMenuDefinitions( plugOrPlugValueWidget, menuDefinition ) :
 
-def __deletePlug( plug ) :
+		readOnlyUI = False
+		if isinstance( plugOrPlugValueWidget, GafferUI.PlugValueWidget ) :
+			readOnlyUI = plugOrPlugValueWidget.getReadOnly()
+			plug = plugOrPlugValueWidget.getPlug()
+		else :
+			plug = plugOrPlugValueWidget
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
+		while plug is not None :
+			if Gaffer.Metadata.value( plug, "deletable" ) :
+				break
+			plug = plug.parent() if isinstance( plug.parent(), Gaffer.Plug ) else None
 
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+		if plug is None :
+			return
 
-	plug = plugValueWidget.getPlug()
-	node = plug.node()
-	if plug.parent().isSame( node["user"] ) :
-		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		if len( menuDefinition.items() ) :
+			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+		menuDefinition.append( "/Delete", { "command" : functools.partial( NodeUI.__deletePlug, plug ), "active" : not readOnlyUI and not Gaffer.MetadataAlgo.readOnly( plug ) } )
+
+	@staticmethod
+	def __deletePlug( plug ) :
+
+		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+			plug.parent().removeChild( plug )

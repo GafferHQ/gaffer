@@ -121,17 +121,22 @@ const Plug *Switch::outPlug() const
 
 Plug *Switch::activeInPlug()
 {
-	ArrayPlug *inputs = inPlugs();
-	if( !inputs )
-	{
-		return nullptr;
-	}
-	return inputs->getChild<Plug>( inputIndex( Context::current() ) );
+	return activeInPlug( outPlug() );
 }
 
 const Plug *Switch::activeInPlug() const
 {
-	return const_cast<Switch *>( this )->activeInPlug();
+	return activeInPlug( outPlug() );
+}
+
+Plug *Switch::activeInPlug( const Plug *outPlug )
+{
+	return const_cast<Plug *>( oppositePlug( outPlug ? outPlug : this->outPlug(), Context::current() ) );
+}
+
+const Plug *Switch::activeInPlug( const Plug *outPlug ) const
+{
+	return oppositePlug( outPlug ? outPlug : this->outPlug(), Context::current() );
 }
 
 IntPlug *Switch::indexPlug()
@@ -219,12 +224,12 @@ void Switch::childAdded( GraphComponent *child )
 
 Plug *Switch::correspondingInput( const Plug *output )
 {
-	return const_cast<Plug *>( oppositePlug( output, 0 ) );
+	return const_cast<Plug *>( oppositePlug( output ) );
 }
 
 const Plug *Switch::correspondingInput( const Plug *output ) const
 {
-	return oppositePlug( output, 0 );
+	return oppositePlug( output );
 }
 
 bool Switch::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
@@ -255,7 +260,7 @@ bool Switch::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 
 void Switch::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
+	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
 		h = input->hash();
 		return;
@@ -266,7 +271,7 @@ void Switch::hash( const ValuePlug *output, const Context *context, IECore::Murm
 
 void Switch::compute( ValuePlug *output, const Context *context ) const
 {
-	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
+	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
 		output->setFrom( input );
 		return;
@@ -307,7 +312,16 @@ size_t Switch::inputIndex( const Context *context ) const
 		{
 			index = indexPlug->getValue();
 		}
-		return index % (inPlugs->children().size() - 1);
+
+		if( inPlugs->resizeWhenInputsChange() )
+		{
+			// Last input is always unconnected, so should be ignored.
+			return index % (inPlugs->children().size() - 1);
+		}
+		else
+		{
+			return index % inPlugs->children().size();
+		}
 	}
 	else
 	{
@@ -315,7 +329,7 @@ size_t Switch::inputIndex( const Context *context ) const
 	}
 }
 
-const Plug *Switch::oppositePlug( const Plug *plug, size_t inputIndex ) const
+const Plug *Switch::oppositePlug( const Plug *plug, const Context *context ) const
 {
 	const ArrayPlug *inPlugs = this->inPlugs();
 	const Plug *outPlug = this->outPlug();
@@ -353,7 +367,8 @@ const Plug *Switch::oppositePlug( const Plug *plug, size_t inputIndex ) const
 	const Plug *oppositeAncestorPlug = nullptr;
 	if( plug->direction() == Plug::Out )
 	{
-		oppositeAncestorPlug = inPlugs->getChild<Plug>( inputIndex );
+		const size_t i = context ? inputIndex( context ) : 0;
+		oppositeAncestorPlug = inPlugs->getChild<Plug>( i );
 	}
 	else
 	{
@@ -362,7 +377,7 @@ const Plug *Switch::oppositePlug( const Plug *plug, size_t inputIndex ) const
 
 	// And then find the opposite of plug by traversing down from the ancestor plug.
 	const Plug *result = oppositeAncestorPlug;
-	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
+	for( auto it = names.rbegin(), eIt = names.rend(); it != eIt; ++it )
 	{
 		result = result->getChild<Plug>( *it );
 	}
@@ -393,6 +408,6 @@ void Switch::updateInternalConnection()
 		return;
 	}
 
-	Plug *in = const_cast<Plug *>( oppositePlug( out, inputIndex() ) );
+	Plug *in = const_cast<Plug *>( oppositePlug( out, Context::current() ) );
 	out->setInput( in );
 }

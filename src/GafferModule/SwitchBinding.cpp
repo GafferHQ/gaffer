@@ -40,6 +40,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
+#include "Gaffer/NameSwitch.h"
+#include "Gaffer/NameValuePlug.h"
 #include "Gaffer/Switch.h"
 
 using namespace boost::python;
@@ -50,10 +52,17 @@ using namespace GafferBindings;
 namespace
 {
 
-void setup( Switch &s, const Plug &plug )
+template<typename T>
+void setup( T &s, const Plug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	s.setup( &plug );
+}
+
+PlugPtr activeInPlug( Switch &s, const Plug *plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return s.activeInPlug( plug );
 }
 
 /// \todo This is almost identical to the serialisers for Dot, ContextProcessor and Loop.
@@ -92,6 +101,10 @@ class SwitchSerialiser : public NodeSerialiser
 		// Add a call to `setup()` to recreate the plugs.
 
 		PlugPtr plug = sw->inPlugs()->getChild<Plug>( 0 )->createCounterpart( "in", Plug::In );
+		if( IECore::runTimeCast<const NameSwitch>( sw ) )
+		{
+			plug = static_cast<NameValuePlug *>( plug.get() )->valuePlug();
+		}
 		plug->setFlags( Plug::Dynamic, false );
 
 		const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( plug.get() );
@@ -107,8 +120,12 @@ class SwitchSerialiser : public NodeSerialiser
 void GafferModule::bindSwitch()
 {
 	DependencyNodeClass<Switch>()
-		.def( "setup", &setup )
-		.def( "activeInPlug", (Plug *(Switch::*)())&Switch::activeInPlug, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setup", &setup<Switch> )
+		.def( "activeInPlug", &activeInPlug, ( arg( "plug") = object() ) )
+	;
+
+	DependencyNodeClass<NameSwitch>()
+		.def( "setup", &setup<NameSwitch> )
 	;
 
 	Serialisation::registerSerialiser( Switch::staticTypeId(), new SwitchSerialiser );

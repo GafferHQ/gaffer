@@ -83,7 +83,7 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "GafferUI::CompoundNodule",
 			"plugValueWidget:type", "",
 
-			"noduleLayout:spacing", lambda plug : 2.0 if Gaffer.Metadata.value( plug, "noduleLayout:section" ) in ( "Top", "Bottom", None ) else 0.25,
+			"noduleLayout:spacing", lambda plug : 2.0 if Gaffer.Metadata.value( plug, "noduleLayout:section" ) in ( "top", "bottom", None ) else 0.25,
 
 		],
 

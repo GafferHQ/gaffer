@@ -1688,6 +1688,38 @@ class DispatcherTest( GafferTest.TestCase ) :
 			self.assertEqual( len( s["n2"].log ), 2 )
 			self.assertEqual( len( s["n3"].log ), 5 )
 
+	def testNameSwitch( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
+
+		s["switch"] = Gaffer.NameSwitch()
+		s["switch"].setup( s["n1"]["task"] )
+		s["switch"]["in"][0]["value"].setInput( s["n1"]["task"] )
+		s["switch"]["in"][1]["value"].setInput( s["n2"]["task"] )
+		s["switch"]["in"][1]["name"].setValue( "n2" )
+
+		s["n3"] = GafferDispatchTest.LoggingTaskNode()
+		s["n3"]["preTasks"][0].setInput( s["switch"]["out"]["value"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		s["switch"]["selector"].setValue( "n2" )
+		dispatcher.dispatch( [ s["n3"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+		self.assertEqual( len( s["n3"].log ), 1 )
+
+		s["switch"]["selector"].setValue( "n1" )
+		dispatcher.dispatch( [ s["n3"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+		self.assertEqual( len( s["n3"].log ), 2 )
+
 	def testContextProcessor( self ) :
 
 		s = Gaffer.ScriptNode()

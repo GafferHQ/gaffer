@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/Nodule.h"
-#include "GafferUI/NoduleLayout.h"
 #include "GafferUI/PlugAdder.h"
 
+#include "GafferUI/NoduleLayout.h"
+
 #include "Gaffer/ArrayPlug.h"
-#include "Gaffer/NameSwitch.h"
-#include "Gaffer/NameValuePlug.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Switch.h"
-#include "Gaffer/UndoScope.h"
+#include "Gaffer/Metadata.h"
 
 #include "boost/bind.hpp"
 
@@ -54,92 +50,59 @@ using namespace GafferUI;
 namespace
 {
 
-class SwitchPlugAdder : public PlugAdder
+class ArrayPlugAdder : public PlugAdder
 {
 
 	public :
 
-		SwitchPlugAdder( SwitchPtr node )
-			:	m_switch( node )
+		ArrayPlugAdder( ArrayPlugPtr plug )
+			:	m_plug( plug )
 		{
-			node->childAddedSignal().connect( boost::bind( &SwitchPlugAdder::childAdded, this ) );
-			node->childRemovedSignal().connect( boost::bind( &SwitchPlugAdder::childRemoved, this ) );
-
-			updateVisibility();
 		}
 
 	protected :
 
 		bool canCreateConnection( const Plug *endpoint ) const override
 		{
-			return PlugAdder::canCreateConnection( endpoint );
+			if( !PlugAdder::canCreateConnection( endpoint ) )
+			{
+				return false;
+			}
+
+			// Assume that if the first plug wouldn't accept the input,
+			// then neither would the new one that we add.
+
+			if( !m_plug->children().size() )
+			{
+				return false;
+			}
+			else if( !m_plug->getChild<Plug>( 0 )->acceptsInput( endpoint ) )
+			{
+				return false;
+			}
+
+			return m_plug->children().size() < m_plug->maxSize();
 		}
 
 		void createConnection( Plug *endpoint ) override
 		{
-			auto nameSwitch = runTimeCast<NameSwitch>( m_switch.get() );
-			if( nameSwitch  )
+			const size_t s = m_plug->children().size();
+			m_plug->resize( s + 1 );
+			auto p = m_plug->getChild<Plug>( s );
+
+			if( endpoint->direction() == Plug::In )
 			{
-				/// \todo Should `Switch::setup()` be virtual so that we don't
-				/// need to downcast?
-				nameSwitch->setup( endpoint );
+				endpoint->setInput( p );
 			}
 			else
 			{
-				m_switch->setup( endpoint );
+				p->setInput( endpoint );
 			}
-
-			ArrayPlug *inPlug = m_switch->getChild<ArrayPlug>( "in" );
-			Plug *outPlug = m_switch->getChild<Plug>( "out" );
-
-			bool inOpposite = false;
-			if( endpoint->direction() == Plug::Out )
-			{
-				if( nameSwitch )
-				{
-					inPlug->getChild<NameValuePlug>( 0 )->valuePlug()->setInput( endpoint );
-				}
-				else
-				{
-					inPlug->getChild<Plug>( 0 )->setInput( endpoint );
-				}
-				inOpposite = false;
-			}
-			else
-			{
-				if( nameSwitch )
-				{
-					endpoint->setInput( static_cast<NameValuePlug *>( outPlug )->valuePlug() );
-				}
-				else
-				{
-					endpoint->setInput( outPlug );
-				}
-				inOpposite = true;
-			}
-
-			applyEdgeMetadata( inPlug, inOpposite );
-			applyEdgeMetadata( outPlug, !inOpposite );
 		}
 
 	private :
 
-		void childAdded()
-		{
-			updateVisibility();
-		}
-
-		void childRemoved()
-		{
-			updateVisibility();
-		}
-
-		void updateVisibility()
-		{
-			setVisible( m_switch->getChild<ArrayPlug>( "in" ) == nullptr );
-		}
-
-		SwitchPtr m_switch;
+		ArrayPlugPtr m_plug;
 
 };
 
@@ -148,20 +111,32 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.ArrayPlugUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		Gaffer::Metadata::registerValue(
+			ArrayPlug::staticTypeId(), "noduleLayout:customGadget:addButton:gadgetType",
+			[]( const GraphComponent *plug ) -> ConstDataPtr {
+				auto arrayPlug = static_cast<const ArrayPlug *>( plug );
+				if( !arrayPlug->resizeWhenInputsChange() )
+				{
+					return new StringData( "GafferUI.ArrayPlugUI.PlugAdder" );
+				}
+				else
+				{
+					return nullptr;
+				}
+			}
+		);
 	}
 
 	private :
 
 		static GadgetPtr create( GraphComponentPtr parent )
 		{
-			SwitchPtr switchNode = runTimeCast<Switch>( parent );
-			if( !switchNode )
+			if( ArrayPlugPtr plug = runTimeCast<ArrayPlug>( parent ) )
 			{
-				throw Exception( "SwitchPlugAdder requires a Switch" );
+				return new ArrayPlugAdder( plug );
 			}
-
-			return new SwitchPlugAdder( switchNode );
+			throw IECore::Exception( "Expected an ArrayPlug" );
 		}
 
 };
@@ -169,3 +144,4 @@ struct Registration
 Registration g_registration;
 
 } // namespace
+

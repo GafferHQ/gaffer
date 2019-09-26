@@ -250,12 +250,12 @@ class Shader::NetworkBuilder
 					assert( isInputParameter( parameterPlug ) );
 					const Gaffer::Plug *source = parameterPlug->source<Gaffer::Plug>();
 
-					if( const Switch *switchNode = source->parent<Switch>() )
+					if( auto switchNode = IECore::runTimeCast<const Switch>( source->node() ) )
 					{
 						// Special case for switches with context-varying index values.
 						// Query the active input for this context, and manually traverse
 						// out the other side.
-						if( const Plug *activeInPlug = switchNode->activeInPlug() )
+						if( const Plug *activeInPlug = switchNode->activeInPlug( source ) )
 						{
 							source = activeInPlug->source();
 						}

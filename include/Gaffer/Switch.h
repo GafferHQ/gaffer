@@ -72,8 +72,15 @@ class IECORE_EXPORT Switch : public ComputeNode
 
 		/// Returns the input plug which will be passed through
 		/// by the switch in the current context.
+		/// \todo Remove, and add `nullptr` default to the version
+		/// below.
 		Plug *activeInPlug();
 		const Plug *activeInPlug() const;
+		/// Returns the input plug which will be passed through
+		/// by the switch when evaluating `outPlug` in the
+		/// current context.
+		Plug *activeInPlug( const Plug *outPlug );
+		const Plug *activeInPlug( const Plug *outPlug ) const;
 
 		IntPlug *indexPlug();
 		const IntPlug *indexPlug() const;
@@ -100,8 +107,6 @@ class IECORE_EXPORT Switch : public ComputeNode
 
 	private :
 
-		void init( bool expectBaseClassPlugs );
-
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
 		void plugInputChanged( Plug *plug );
@@ -109,7 +114,7 @@ class IECORE_EXPORT Switch : public ComputeNode
 
 		// Returns the input corresponding to the output and vice versa. Returns null
 		// if plug is not meaningful to the switching process.
-		const Plug *oppositePlug( const Plug *plug, size_t inputIndex = 0 ) const;
+		const Plug *oppositePlug( const Plug *plug, const Context *context = nullptr ) const;
 
 		bool variesWithContext( const Plug *plug ) const;
 

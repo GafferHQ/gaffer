@@ -252,6 +252,40 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "", ), network.Parameter( "n3", "c" ) ) ]
 				)
 
+	def testSwitchWithComponentConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferSceneTest.TestShader( "n1" )
+		s["n2"] = GafferSceneTest.TestShader( "n2" )
+		s["n3"] = GafferSceneTest.TestShader( "n3" )
+		s["n3"]["type"].setValue( "test:surface" )
+
+		s["switch"] = Gaffer.Switch()
+		s["switch"].setup( s["n3"]["parameters"]["c"] )
+
+		s["switch"]["in"][0].setInput( s["n1"]["out"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+
+		s["n3"]["parameters"]["c"]["r"].setInput( s["switch"]["out"]["r"] )
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["switch"]["index"] = context["index"]' )
+
+		with Gaffer.Context() as context :
+
+			for i in range( 0, 3 ) :
+
+				context["index"] = i
+				effectiveIndex = i % 2
+
+				network = s["n3"].attributes()["test:surface"]
+				self.assertEqual( len( network ), 2 )
+				self.assertEqual(
+					network.inputConnections( "n3" ),
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "r", ), network.Parameter( "n3", "c.r" ) ) ]
+				)
+
 	def testComponentToComponentConnections( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
@@ -271,6 +305,34 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 				( ( "n1", "g" ), ( "n2", "c.r" ) ),
 			]
 		)
+
+	def testNameSwitch( self ) :
+
+		n1 = GafferSceneTest.TestShader( "n1" )
+		n2 = GafferSceneTest.TestShader( "n2" )
+		n3 = GafferSceneTest.TestShader( "n3" )
+		n3["type"].setValue( "test:surface" )
+
+		switch = Gaffer.NameSwitch()
+		switch.setup( n3["parameters"]["c"] )
+
+		switch["in"].resize( 2 )
+		switch["in"][0]["value"].setInput( n1["out"] )
+		switch["in"][1]["value"].setInput( n2["out"] )
+		switch["in"][1]["name"].setValue( "n2" )
+
+		n3["parameters"]["c"].setInput( switch["out"]["value"] )
+
+		for n in ( "n1", "n2" ) :
+
+			switch["selector"].setValue( n )
+
+			network = n3.attributes()["test:surface"]
+			self.assertEqual( len( network ), 2 )
+			self.assertEqual(
+				network.inputConnections( "n3" ),
+				[ network.Connection( network.Parameter( n, "", ), network.Parameter( "n3", "c" ) ) ]
+			)
 
 if __name__ == "__main__":
 	unittest.main()

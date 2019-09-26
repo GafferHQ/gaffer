@@ -170,32 +170,7 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug, CompoundDataPlugValueWidget )
 
 ##########################################################################
-# Plug menu
+# Plug metadata
 ##########################################################################
 
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
-
-	plug = plugValueWidget.getPlug()
-	memberPlug = plug if isinstance( plug, Gaffer.CompoundDataPlug.MemberPlug ) else None
-	memberPlug = memberPlug if memberPlug is not None else plug.ancestor( Gaffer.CompoundDataPlug.MemberPlug )
-	if memberPlug is None :
-		return
-
-	if not memberPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
-		return
-
-	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append(
-		"/Delete",
-		{
-			"command" : functools.partial( __deletePlug, memberPlug ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( memberPlug ),
-		}
-	)
-
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+Gaffer.Metadata.registerValue( Gaffer.CompoundDataPlug, "*", "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
