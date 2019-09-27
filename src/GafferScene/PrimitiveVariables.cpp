@@ -48,15 +48,10 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PrimitiveVariables );
 size_t PrimitiveVariables::g_firstPlugIndex = 0;
 
 PrimitiveVariables::PrimitiveVariables( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	ObjectProcessor( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "primitiveVariables" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 PrimitiveVariables::~PrimitiveVariables()
@@ -73,29 +68,30 @@ const Gaffer::CompoundDataPlug *PrimitiveVariables::primitiveVariablesPlug() con
 	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
 }
 
-void PrimitiveVariables::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool PrimitiveVariables::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( primitiveVariablesPlug()->isAncestorOf( input ) )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool PrimitiveVariables::processesObject() const
-{
-	return primitiveVariablesPlug()->children().size();
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
+		primitiveVariablesPlug()->isAncestorOf( input )
+	;
 }
 
 void PrimitiveVariables::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	primitiveVariablesPlug()->hash( h );
+	if( !primitiveVariablesPlug()->children().size() )
+	{
+		h = inPlug()->objectPlug()->hash();
+	}
+	else
+	{
+		ObjectProcessor::hashProcessedObject( path, context, h );
+		primitiveVariablesPlug()->hash( h );
+	}
 }
 
-IECore::ConstObjectPtr PrimitiveVariables::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr PrimitiveVariables::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
+	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject );
 	if( !inputPrimitive )
 	{
 		return inputObject;

@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLES_H
 #define GAFFERSCENE_PRIMITIVEVARIABLES_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API PrimitiveVariables : public SceneElementProcessor
+class GAFFERSCENE_API PrimitiveVariables : public ObjectProcessor
 {
 
 	public :
@@ -52,18 +52,16 @@ class GAFFERSCENE_API PrimitiveVariables : public SceneElementProcessor
 		PrimitiveVariables( const std::string &name=defaultName<PrimitiveVariables>() );
 		~PrimitiveVariables() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, ObjectProcessor );
 
 		Gaffer::CompoundDataPlug *primitiveVariablesPlug();
 		const Gaffer::CompoundDataPlug *primitiveVariablesPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

@@ -85,6 +85,16 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 		void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
 		IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const final;
 
+		/// Private constructor and friendship for old nodes which are filtered to everything
+		/// by default. This was a mistake, and we want to ensure that we don't repeat the mistake
+		/// for new nodes.
+		ObjectProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault );
+		friend class MeshType;
+		friend class MapOffset;
+		friend class MapProjection;
+		friend class MeshTangents;
+		friend class PrimitiveVariables;
+
 };
 
 IE_CORE_DECLAREPTR( ObjectProcessor )

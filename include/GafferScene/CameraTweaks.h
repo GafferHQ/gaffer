@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_CAMERATWEAKS_H
 #define GAFFERSCENE_CAMERATWEAKS_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 #include "GafferScene/TweakPlug.h"
 
 #include "Gaffer/StringPlug.h"
@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API CameraTweaks : public SceneElementProcessor
+class GAFFERSCENE_API CameraTweaks : public ObjectProcessor
 {
 
 	public :
@@ -53,18 +53,16 @@ class GAFFERSCENE_API CameraTweaks : public SceneElementProcessor
 		CameraTweaks( const std::string &name=defaultName<CameraTweaks>() );
 		~CameraTweaks() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CameraTweaks, CameraTweaksTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CameraTweaks, CameraTweaksTypeId, ObjectProcessor );
 
 		GafferScene::TweaksPlug *tweaksPlug();
 		const GafferScene::TweaksPlug *tweaksPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputAttributes ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 		static size_t g_firstPlugIndex;
 

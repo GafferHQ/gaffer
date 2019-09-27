@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_PARAMETERS_H
 #define GAFFERSCENE_PARAMETERS_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API Parameters : public SceneElementProcessor
+class GAFFERSCENE_API Parameters : public ObjectProcessor
 {
 
 	public :
@@ -52,18 +52,16 @@ class GAFFERSCENE_API Parameters : public SceneElementProcessor
 		Parameters( const std::string &name=defaultName<Parameters>() );
 		~Parameters() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Parameters, ParametersTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Parameters, ParametersTypeId, ObjectProcessor );
 
 		Gaffer::CompoundDataPlug *parametersPlug();
 		const Gaffer::CompoundDataPlug *parametersPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_MESHTANGENTS_H
 #define GAFFERSCENE_MESHTANGENTS_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API MeshTangents : public SceneElementProcessor
+class GAFFERSCENE_API MeshTangents : public ObjectProcessor
 {
 
 	public :
@@ -92,15 +92,13 @@ class GAFFERSCENE_API MeshTangents : public SceneElementProcessor
 		Gaffer::StringPlug *biTangentPlug();
 		const Gaffer::StringPlug *biTangentPlug() const;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshTangents, MeshTangentsTypeId, SceneElementProcessor );
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshTangents, MeshTangentsTypeId, ObjectProcessor );
 
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

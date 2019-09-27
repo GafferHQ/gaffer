@@ -509,7 +509,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Orientation );
 size_t Orientation::g_firstPlugIndex = 0;
 
 Orientation::Orientation( const std::string &name )
-	:	SceneElementProcessor( name, PathMatcher::NoMatch )
+	:	ObjectProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -557,12 +557,6 @@ Orientation::Orientation( const std::string &name )
 	addChild( new StringPlug( "outZAxis" ) );
 
 	addChild( new StringPlug( "outMatrix" ) );
-
-	// Fast pass-throughs for things we don't modify
-
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 Orientation::~Orientation()
@@ -829,11 +823,10 @@ const Gaffer::StringPlug *Orientation::outMatrixPlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 25 );
 }
 
-void Orientation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool Orientation::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if(
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
 		input == inModePlug() ||
 		input == deleteInputsPlug() ||
 		input == inEulerPlug() ||
@@ -860,19 +853,13 @@ void Orientation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		input == outYAxisPlug() ||
 		input == outZAxisPlug() ||
 		input == outMatrixPlug()
-	)
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool Orientation::processesObject() const
-{
-	return true;
+	;
 }
 
 void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ObjectProcessor::hashProcessedObject( path, context, h );
+
 	deleteInputsPlug()->hash( h );
 
 	const int inMode = inModePlug()->getValue();
@@ -939,9 +926,9 @@ void Orientation::hashProcessedObject( const ScenePath &path, const Gaffer::Cont
 	}
 }
 
-IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr Orientation::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
+	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject );
 	if( !inputPrimitive )
 	{
 		return inputObject;

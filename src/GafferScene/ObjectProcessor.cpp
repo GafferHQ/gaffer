@@ -42,10 +42,15 @@ using namespace GafferScene;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ObjectProcessor );
 
-ObjectProcessor::ObjectProcessor( const std::string &name )
-	:	FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
+ObjectProcessor::ObjectProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault )
+	:	FilteredSceneProcessor( name, filterDefault )
 {
 	init();
+}
+
+ObjectProcessor::ObjectProcessor( const std::string &name )
+	:	ObjectProcessor( name, IECore::PathMatcher::NoMatch )
+{
 }
 
 ObjectProcessor::ObjectProcessor( const std::string &name, size_t minInputs, size_t maxInputs )

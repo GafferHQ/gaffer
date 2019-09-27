@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_ORIENTATION_H
 #define GAFFERSCENE_ORIENTATION_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 namespace Gaffer
 {
@@ -49,7 +49,7 @@ class StringPlug;
 namespace GafferScene
 {
 
-class GAFFERSCENE_API Orientation : public SceneElementProcessor
+class GAFFERSCENE_API Orientation : public ObjectProcessor
 {
 
 	public :
@@ -57,7 +57,7 @@ class GAFFERSCENE_API Orientation : public SceneElementProcessor
 		Orientation( const std::string &name=defaultName<Orientation>() );
 		~Orientation() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Orientation, OrientationTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Orientation, OrientationTypeId, ObjectProcessor );
 
 		enum class Mode
 		{
@@ -194,13 +194,11 @@ class GAFFERSCENE_API Orientation : public SceneElementProcessor
 		Gaffer::StringPlug *outMatrixPlug();
 		const Gaffer::StringPlug *outMatrixPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

@@ -49,15 +49,10 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Parameters );
 size_t Parameters::g_firstPlugIndex = 0;
 
 Parameters::Parameters( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+	:	ObjectProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "parameters" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 Parameters::~Parameters()
@@ -74,27 +69,28 @@ const Gaffer::CompoundDataPlug *Parameters::parametersPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
-void Parameters::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool Parameters::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( parametersPlug()->isAncestorOf( input ) )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool Parameters::processesObject() const
-{
-	return true;
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
+		parametersPlug()->isAncestorOf( input )
+	;
 }
 
 void Parameters::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	parametersPlug()->hash( h );
+	if( !parametersPlug()->children().size() )
+	{
+		h = inPlug()->objectPlug()->hash();
+	}
+	else
+	{
+		ObjectProcessor::hashProcessedObject( path, context, h );
+		parametersPlug()->hash( h );
+	}
 }
 
-IECore::ConstObjectPtr Parameters::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr Parameters::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
 	if( !parametersPlug()->children().size() )
 	{
@@ -104,13 +100,13 @@ IECore::ConstObjectPtr Parameters::computeProcessedObject( const ScenePath &path
 	ConstObjectPtr outputObject = inputObject;
 	CompoundData *outputParameters = nullptr;
 
-	if( const Camera *camera = runTimeCast<const Camera>( inputObject.get() ) )
+	if( const Camera *camera = runTimeCast<const Camera>( inputObject ) )
 	{
 		CameraPtr cameraCopy = camera->copy();
 		outputParameters = cameraCopy->parametersData();
 		outputObject = cameraCopy;
 	}
-	else if( const ExternalProcedural *procedural = runTimeCast<const ExternalProcedural>( inputObject.get() ) )
+	else if( const ExternalProcedural *procedural = runTimeCast<const ExternalProcedural>( inputObject ) )
 	{
 		ExternalProceduralPtr proceduralCopy = procedural->copy();
 		outputParameters = proceduralCopy->parameters();

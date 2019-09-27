@@ -37,12 +37,12 @@
 #ifndef GAFFERSCENE_REVERSEWINDING_H
 #define GAFFERSCENE_REVERSEWINDING_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API ReverseWinding : public SceneElementProcessor
+class GAFFERSCENE_API ReverseWinding : public ObjectProcessor
 {
 
 	public :
@@ -50,13 +50,13 @@ class GAFFERSCENE_API ReverseWinding : public SceneElementProcessor
 		ReverseWinding( const std::string &name=defaultName<ReverseWinding>() );
 		~ReverseWinding() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ReverseWinding, ReverseWindingTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ReverseWinding, ReverseWindingTypeId, ObjectProcessor );
 
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 };
 

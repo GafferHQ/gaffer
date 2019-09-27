@@ -57,16 +57,11 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MapProjection );
 size_t MapProjection::g_firstPlugIndex = 0;
 
 MapProjection::MapProjection( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	ObjectProcessor( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "camera" ) );
 	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 MapProjection::~MapProjection()
@@ -93,27 +88,20 @@ const Gaffer::StringPlug *MapProjection::uvSetPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-void MapProjection::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool MapProjection::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if(
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
 		input == cameraPlug() ||
 		input == uvSetPlug() ||
 		input == inPlug()->transformPlug()
-	)
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool MapProjection::processesObject() const
-{
-	return true;
+	;
 }
 
 void MapProjection::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ObjectProcessor::hashProcessedObject( path, context, h );
+
 	ScenePath cameraPath;
 	ScenePlug::stringToPath( cameraPlug()->getValue(), cameraPath );
 
@@ -124,10 +112,10 @@ void MapProjection::hashProcessedObject( const ScenePath &path, const Gaffer::Co
 	uvSetPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
 	// early out if it's not a primitive with a "P" variable
-	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
+	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject );
 	if( !inputPrimitive )
 	{
 		return inputObject;
