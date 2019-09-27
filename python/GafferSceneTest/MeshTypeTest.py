@@ -50,47 +50,39 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		## \todo - this test just needs an arbitrary mesh with normals.
-		# We should maybe have a more concise way of achieving this.  How about a cow primitive?
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
-
-		read = Gaffer.ObjectReader()
-		read["fileName"].setValue( fileName )
-		object = IECore.Reader.create( fileName ).read()
-
-		p = GafferScene.ObjectToScene()
-		p["object"].setInput( read["out"] )
+		r = GafferScene.SceneReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
 
 		m = GafferScene.MeshType()
-		m["in"].setInput( p["out"] )
+		m["in"].setInput( r["out"] )
 
 		# Test unchanged settings.
 
 		self.assertEqual( m["meshType"].getValue(), "" ) # do nothing
-		self.assertEqual( p["out"].object( "/object" ), m["out"].object( "/object" ) )
-		self.assertScenesEqual( p["out"], m["out"] )
+		self.assertEqual( r["out"].object( "/cow" ), m["out"].object( "/cow" ) )
+		self.assertScenesEqual( r["out"], m["out"] )
 
 		# Test converting poly to poly ( shouldn't do anything )
 
 		m["meshType"].setValue( "linear" )
 
-		self.assertEqual( p["out"].object( "/object" ), m["out"].object( "/object" ) )
-		self.assertScenesEqual( p["out"], m["out"] )
+		self.assertEqual( r["out"].object( "/cow" ), m["out"].object( "/cow" ) )
+		self.assertScenesEqual( r["out"], m["out"] )
 
-		self.failUnless( "P" in m["out"].object( "/object" ) )
-		self.failUnless( "N" in m["out"].object( "/object" ) )
+		self.failUnless( "P" in m["out"].object( "/cow" ) )
+		self.failUnless( "N" in m["out"].object( "/cow" ) )
 
 		# Test converting poly to subdiv
 
 		m["meshType"].setValue( "catmullClark" )
 
-		self.assertNotEqual( p["out"].object( "/object" ), m["out"].object( "/object" ) )
-		self.assertSceneHashesEqual( p["out"], m["out"], childPlugNames = ( "attributes", "bound", "transform", "globals", "childNames" ) )
+		self.assertNotEqual( r["out"].object( "/cow" ), m["out"].object( "/cow" ) )
+		self.assertSceneHashesEqual( r["out"], m["out"], checks = self.allPathChecks - { "object" } )
 
-		self.assertScenesEqual( p["out"], m["out"], pathsToIgnore = ( "/object", ) )
+		self.assertScenesEqual( r["out"], m["out"], pathsToIgnore = ( "/cow", ) )
 
-		self.assertEqual( m["out"].object( "/object" ).interpolation, "catmullClark" )
-		self.failUnless( "N" not in m["out"].object( "/object" ) )
+		self.assertEqual( m["out"].object( "/cow" ).interpolation, "catmullClark" )
+		self.failUnless( "N" not in m["out"].object( "/cow" ) )
 
 		# Test converting back to poly
 
@@ -98,11 +90,11 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		m2["in"].setInput( m["out"] )
 
 		m2["meshType"].setValue( "linear" )
-		self.assertEqual( m2["out"].object( "/object" ).interpolation, "linear" )
-		self.assertTrue( "N" not in m2["out"].object( "/object" ) )
+		self.assertEqual( m2["out"].object( "/cow" ).interpolation, "linear" )
+		self.assertTrue( "N" not in m2["out"].object( "/cow" ) )
 
 		m2["calculatePolygonNormals"].setValue( True )
-		self.failUnless( "N" in m2["out"].object( "/object" ) )
+		self.failUnless( "N" in m2["out"].object( "/cow" ) )
 
 	def testNonPrimitiveObject( self ) :
 
@@ -121,8 +113,7 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 
 		n["enabled"].setValue( False )
-		self.assertTrue( len( cs ) )
-		self.assertTrue( cs[1][0].isSame( n["out"] ) )
+		self.assertIn( n["out"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()
