@@ -140,7 +140,7 @@ enum TypeId
 	DeleteFacesTypeId = 110595,
 	DeleteCurvesTypeId = 110596,
 	DeletePointsTypeId = 110597,
-	DeleteSceneContextVariablesTypeId = 110598, // Obsolete, available for reuse
+	DeformerTypeId = 110598,
 	CollectScenesTypeId = 110599,
 	CapsuleTypeId = 110600,
 	EncapsulateTypeId = 110601,

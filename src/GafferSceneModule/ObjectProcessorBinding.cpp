@@ -38,6 +38,7 @@
 
 #include "ObjectProcessorBinding.h"
 
+#include "GafferScene/Deformer.h"
 #include "GafferScene/DeleteCurves.h"
 #include "GafferScene/DeleteFaces.h"
 #include "GafferScene/DeleteObject.h"
@@ -66,6 +67,7 @@ void GafferSceneModule::bindObjectProcessor()
 {
 
 	GafferBindings::DependencyNodeClass<GafferScene::ObjectProcessor>();
+	GafferBindings::DependencyNodeClass<GafferScene::Deformer>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
