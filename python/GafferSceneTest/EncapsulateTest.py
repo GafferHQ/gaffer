@@ -36,6 +36,8 @@
 
 import inspect
 import unittest
+import os
+import subprocess
 
 import IECore
 
@@ -195,6 +197,34 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		encapsulate["filter"].setInput( pathFilter["out"] )
 
 		self.assertEqual( encapsulate["out"].set( "A" ).value.paths(), [ "/group/sphere" ] )
+
+	def testSignalThreadSafety( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["random"] = Gaffer.Random()
+		script["random"]["contextEntry"].setValue( "collect:rootName" )
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setInput( script["random"]["outFloat"] )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["encapsulate"] = GafferScene.Encapsulate()
+		script["encapsulate"]["in"].setInput( script["sphere"]["out"] )
+		script["encapsulate"]["filter"].setInput( script["filter"]["out"] )
+
+		script["collect"] = GafferScene.CollectScenes()
+		script["collect"]["in"].setInput( script["encapsulate"]["out"] )
+		script["collect"]["rootNames"].setValue( IECore.StringVectorData( [ str( x ) for x in range( 0, 100 ) ] ) )
+
+		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script.save()
+
+		# This exposed a crash caused by non-threadsafe access to signals from Capsules. It
+		# will throw if the subprocess crashes.
+		subprocess.check_output( [ "gaffer", "stats", script["fileName"].getValue(), "-scene", "collect" ] )
 
 if __name__ == "__main__":
 	unittest.main()
