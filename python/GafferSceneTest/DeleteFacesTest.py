@@ -41,7 +41,6 @@ import IECoreScene
 import GafferScene
 import GafferSceneTest
 
-
 class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 
 	def makeRectangleFromTwoSquaresScene( self ) :
@@ -124,3 +123,32 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		expectedBoundingBox = imath.Box3f( imath.V3f( 0, 0, 0 ), imath.V3f( 1, 1, 0 ) )
 
 		self.assertEqual( actualFaceDeletedBounds, expectedBoundingBox )
+
+	def testBoundsOfChildObjects( self ) :
+
+		rectangle = self.makeRectangleFromTwoSquaresScene()
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setValue( 10 ) # Totally encloses the rectangle
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( rectangle["out"] )
+		parent["parent"].setValue( "/object" )
+		parent["child"].setInput( sphere["out"] )
+
+		self.assertSceneValid( parent["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		deleteFaces = GafferScene.DeleteFaces()
+		deleteFaces["in"].setInput( parent["out"] )
+		deleteFaces["filter"].setInput( pathFilter["out"] )
+
+		# The sphere should not have been modified
+		self.assertEqual( deleteFaces["out"].object( "/object/sphere" ), parent["out"].object( "/object/sphere" ) )
+		# And the bounding boxes should still enclose all the objects,
+		# including the sphere.
+		self.assertSceneValid( deleteFaces["out"] )
+
+if __name__ == "__main__":
+	unittest.main()

@@ -54,16 +54,13 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeletePoints );
 
 size_t DeletePoints::g_firstPlugIndex = 0;
 
-DeletePoints::DeletePoints( const std::string &name ) : SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+DeletePoints::DeletePoints( const std::string &name )
+	:	Deformer( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "points", Plug::In, "deletePoints" ) );
 	addChild( new BoolPlug( "invert", Plug::In, false ) );
-
-	// Fast pass-through for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
 
 DeletePoints::~DeletePoints()
@@ -80,7 +77,6 @@ const Gaffer::StringPlug *DeletePoints::pointsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-
 Gaffer::BoolPlug *DeletePoints::invertPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1);
@@ -91,55 +87,25 @@ const Gaffer::BoolPlug *DeletePoints::invertPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1);
 }
 
-void DeletePoints::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool DeletePoints::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == pointsPlug() || input == invertPlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-	else if( input == outPlug()->objectPlug() )
-	{
-		outputs.push_back( outPlug()->boundPlug() );
-	}
-}
-
-bool DeletePoints::processesBound() const
-{
-	return true;
-}
-
-void DeletePoints::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-
-	hashProcessedObject( path, context, h );
-}
-
-Imath::Box3f DeletePoints::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
-	if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
-	{
-		return primitive->bound();
-	}
-	return inputBound;
-}
-
-bool DeletePoints::processesObject() const
-{
-	return true;
+	return
+		Deformer::affectsProcessedObject( input ) ||
+		input == pointsPlug() ||
+		input == invertPlug()
+	;
 }
 
 void DeletePoints::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Deformer::hashProcessedObject( path, context, h );
 	pointsPlug()->hash( h );
 	invertPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const PointsPrimitive *points = runTimeCast<const PointsPrimitive>( inputObject.get() );
+	const PointsPrimitive *points = runTimeCast<const PointsPrimitive>( inputObject );
 	if( !points )
 	{
 		return inputObject;
@@ -147,6 +113,8 @@ IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &pa
 
 	std::string deletePrimVarName = pointsPlug()->getValue();
 
+	/// \todo Remove. We take values verbatim everywhere else in Gaffer, and I don't
+	/// see any good reason to differ here.
 	if( boost::trim_copy( deletePrimVarName ).empty() )
 	{
 		return inputObject;
