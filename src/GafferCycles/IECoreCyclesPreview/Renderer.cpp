@@ -2022,6 +2022,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			init();
 
+			// CyclesOptions will set some values to these.
+			m_integrator = *(m_scene->integrator);
+			m_background = *(m_scene->background);
+			m_scene->background->transparent = true;
+			m_film = *(m_scene->film);
+			m_curveSystemManager = *(m_scene->curve_system_manager);
+
 			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
 			m_shaderCache = new ShaderCache( m_scene );
@@ -2756,12 +2763,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Grab the default camera from cycles.
 			m_defaultCamera = m_scene->camera;
-			// CyclesOptions will set some values to these.
-			m_integrator = *(m_scene->integrator);
-			m_background = *(m_scene->background);
-			m_scene->background->transparent = true;
-			m_film = *(m_scene->film);
-			m_curveSystemManager = *(m_scene->curve_system_manager);
 
 			m_scene->camera->need_update = true;
 			m_scene->camera->update( m_scene );
@@ -2784,14 +2785,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// No checking on denoise settings either
 			m_session->params.denoising = m_denoiseParams;
 			m_sessionParams.denoising = m_denoiseParams;
-			// If anything changes in scene or session, we reset.
-			if( m_scene->params.modified( m_sceneParams ) ||
-			    m_session->params.modified( m_sessionParams ) ||
-				m_deviceDirty )
-			{
-				m_deviceDirty = false;
-				reset();
-			}
 
 			ccl::Integrator *integrator = m_scene->integrator;
 			if( integrator->modified( m_integrator ) )
@@ -2820,6 +2813,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				curveSystemManager->tag_update( m_scene );
 				m_curveSystemManager = *curveSystemManager;
+			}
+
+			// If anything changes in scene or session, we reset.
+			if( m_scene->params.modified( m_sceneParams ) ||
+			    m_session->params.modified( m_sessionParams ) ||
+				m_deviceDirty )
+			{
+				m_deviceDirty = false;
+				reset();
 			}
 		}
 
@@ -2871,7 +2873,44 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
+			
 			init();
+
+			// Re-apply the settings for these.
+			for( const ccl::SocketType socketType : m_scene->integrator->type->inputs )
+			{
+				m_scene->integrator->copy_value(socketType, m_integrator, *m_integrator.type->find_input( socketType.name ) );
+			}
+			for( const ccl::SocketType socketType : m_scene->background->type->inputs )
+			{
+				m_scene->background->copy_value(socketType, m_background, *m_background.type->find_input( socketType.name ) );
+			}
+			for( const ccl::SocketType socketType : m_scene->film->type->inputs )
+			{
+				m_scene->film->copy_value(socketType, m_film, *m_film.type->find_input( socketType.name ) );
+			}
+			for( ccl::vector<ccl::Pass>::const_iterator it = m_film.passes.begin(), eIt = m_film.passes.end(); it != eIt; ++it )
+			{
+				m_scene->film->passes.push_back( *it );
+			}
+			#define CURVES_SET(OPTION) m_scene->curve_system_manager->OPTION = m_curveSystemManager.OPTION;
+			CURVES_SET(primitive);
+			CURVES_SET(curve_shape);
+			CURVES_SET(line_method);
+			CURVES_SET(triangle_method);
+			CURVES_SET(resolution);
+			CURVES_SET(subdivisions);
+			CURVES_SET(use_curves);
+			CURVES_SET(use_encasing);
+			CURVES_SET(use_backfacing);
+			CURVES_SET(use_tangent_normal_geometry);
+			#undef CURVES_SET
+			m_scene->integrator->tag_update( m_scene );
+			m_scene->background->tag_update( m_scene );
+			m_scene->film->tag_update( m_scene );
+			m_scene->curve_system_manager->tag_update( m_scene );
+			m_session->reset( m_bufferParams, m_sessionParams.samples );
+			
 			//m_session->progress.reset();
 			//m_scene->reset();
 			//m_session->tile_manager.set_tile_order( m_sessionParams.tile_order );
