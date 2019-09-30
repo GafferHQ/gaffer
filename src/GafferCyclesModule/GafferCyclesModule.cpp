@@ -52,6 +52,7 @@
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
+#include "util/util_logging.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -449,5 +450,11 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	DependencyNodeClass<CyclesShader>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
+
+	// This is a global thing for logging
+	const char* argv[] = { "-", "v", "1" };
+	ccl::util_logging_init( argv[0] );
+	ccl::util_logging_start();
+	ccl::util_logging_verbosity_set( 0 );
 
 }

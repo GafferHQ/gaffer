@@ -50,6 +50,9 @@ CyclesOptions::CyclesOptions( const std::string &name )
 {
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 
+	// Log
+	options->addChild( new Gaffer::NameValuePlug( "ccl:log_level", new IECore::IntData( 0 ), false, "logLevel" ) );
+
 	// Device
 
 	options->addChild( new Gaffer::NameValuePlug( "ccl:device", new IECore::StringData( "CPU" ), false, "device" ) );

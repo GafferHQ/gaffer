@@ -99,6 +99,7 @@
 #include "subd/subd_dice.h"
 #include "util/util_array.h"
 #include "util/util_function.h"
+#include "util/util_logging.h"
 #include "util/util_path.h"
 #include "util/util_vector.h"
 
@@ -1878,6 +1879,8 @@ IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
+// Logging
+IECore::InternedString g_logLevelOptionName( "ccl:log_level" );
 // Session
 IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
 IECore::InternedString g_progressiveRefineOptionName( "ccl:session:progressive_refine" );
@@ -2220,6 +2223,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
 				}
 				return;
+			}
+			else if( name == g_logLevelOptionName )
+			{
+				if( value == nullptr )
+				{
+					ccl::util_logging_verbosity_set( 0 );
+					return;
+				}
+				else
+				{
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						ccl::util_logging_verbosity_set( data->readable() );
+					}
+					return;
+				}
 			}
 			else if( boost::starts_with( name.string(), "ccl:session:" ) )
 			{
