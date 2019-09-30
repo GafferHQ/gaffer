@@ -40,13 +40,12 @@ import imath
 import Gaffer
 
 Gaffer.Metadata.registerValue( "ccl:light:spot_light", "type", "spot" )
-Gaffer.Metadata.registerValue( "ccl:light:spot_light", "coneAngleParameter", "spot_angle" )
-Gaffer.Metadata.registerValue( "ccl:light:spot_light", "penumbraAngleParameter", "spot_smooth" )
-Gaffer.Metadata.registerValue( "ccl:light:spot_light", "penumbraType", "weight" )
+Gaffer.Metadata.registerValue( "ccl:light:spot_light", "coneAngleParameter", "coneAngle" )
+Gaffer.Metadata.registerValue( "ccl:light:spot_light", "penumbraAngleParameter", "penumbraAngle" )
+Gaffer.Metadata.registerValue( "ccl:light:spot_light", "penumbraType", "inset" )
 Gaffer.Metadata.registerValue( "ccl:light:spot_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ccl:light:spot_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ccl:light:spot_light", "colorParameter", "color" )
-Gaffer.Metadata.registerValue( "ccl:light:spot_light", "angleUnit", "radians" )
 Gaffer.Metadata.registerValue( "ccl:light:spot_light", "lensRadiusParameter", "size" )
 
 Gaffer.Metadata.registerValue( "ccl:light:point_light", "type", "point" )
@@ -63,13 +62,20 @@ Gaffer.Metadata.registerValue( "ccl:light:quad_light", "type", "quad" )
 Gaffer.Metadata.registerValue( "ccl:light:quad_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ccl:light:quad_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ccl:light:quad_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ccl:light:quad_light", "textureNameParameter", "image" )
+
+Gaffer.Metadata.registerValue( "ccl:light:portal", "type", "quad" )
 
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "type", "disk" )
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "ccl:light:disk_light", "radiusParameter", "size" )
+Gaffer.Metadata.registerValue( "ccl:light:disk_light", "textureNameParameter", "image" )
 
+Gaffer.Metadata.registerValue( "ccl:light:background_light", "type", "environment" )
+Gaffer.Metadata.registerValue( "ccl:light:background_light", "textureNameParameter", "image" )
 Gaffer.Metadata.registerValue( "ccl:light:background_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ccl:light:background_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ccl:light:background_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ccl:light:background_light", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0, -0.5 * math.pi, 0 ) ) )

@@ -52,38 +52,6 @@ def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
 
-def __getSocketToWidget( socketType ) :
-	if( socketType == "boolean" ) :
-		return "GafferUI.BoolPlugValueWidget"
-	elif( socketType == "float" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "int" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "uint" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "color" ) :
-		return "GafferUI.ColorPlugValueWidget"
-	#elif( socketType == "vector" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "point" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "normal" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "point2" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "closure" ) :
-	#	return "GafferUI.StringPlugValueWidget"
-	elif( socketType == "string" ) :
-		return "GafferUI.StringPlugValueWidget"
-	elif( socketType == "enum" ) :
-		return "GafferUI.PresetsPlugValueWidget"
-	#elif( socketType == "transform" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "node" ) :
-	#	return "GafferUI.StringPlugValueWidget"
-	else :
-		return ""
-
 def __getSocketToComponents( socketType ) :
 	if( socketType == "point2" ) :
 		return "xy"
@@ -113,8 +81,7 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 			presetValues.append(enumValues)
 		__metadata[paramPath]["presetNames"] = presetNames
 		__metadata[paramPath]["presetValues"] = presetValues
-
-	__metadata[paramPath]["plugValueWidget:type"] = __getSocketToWidget( socketType )
+		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
 
 	if( socketName == "filename" ) :
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PathPlugValueWidget"

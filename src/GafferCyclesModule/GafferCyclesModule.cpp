@@ -126,7 +126,7 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 			d["is_array"] = socketType.is_array();
 			d["flags"] = socketType.flags;
 
-			// Some of the texture mapping nodes have a dot in them, replace here with a colon
+			// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
 			std::string actualName = boost::replace_first_copy( name, ".", "__" );
 			result[actualName] = d;
 		}
@@ -383,6 +383,7 @@ static py::dict getLights()
 			in["use_scatter"] = _in["use_scatter"];
 			in["max_bounces"] = _in["max_bounces"];
 			in["samples"] = _in["samples"];
+			in["strength"] = _in["strength"];
 
 			if( type == "background_light" )
 			{

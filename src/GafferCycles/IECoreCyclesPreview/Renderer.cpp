@@ -1068,6 +1068,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->max_bounces = clight->max_bounces;
 				light->is_portal = clight->is_portal;
 				light->is_enabled = clight->is_enabled;
+				light->strength = clight->strength;
 			}
 			if( m_shader.get() )
 			{
@@ -2306,7 +2307,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						}
 						else
 						{
-							background->shader = m_scene->default_background;
+							background->shader = nullptr;
 						}
 					}
 					else if( const Data *data = reportedCast<const Data>( value, "option", name ) )
@@ -2966,9 +2967,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void getCyclesDevices()
 		{
 			DeviceMap retvar;
-			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
+			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
+#ifdef WITH_OPTIX
+				| ccl::DEVICE_MASK_OPTIX
+#endif
+			);
 			int indexCuda = 0;
 			int indexOpenCL = 0;
+			int indexOptiX = 0;
 			for( const ccl::DeviceInfo &device : devices ) 
 			{
 				if( device.type == ccl::DEVICE_CPU )
@@ -2991,6 +2997,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					++indexOpenCL;
 					continue;
 				}
+#ifdef WITH_OPTIX
+				if( device.type == ccl::DEVICE_OPTIX )
+				{
+					auto optionName = boost::format( "%s%02i" ) % deviceName % indexOptiX;
+					m_deviceMap[optionName.str()] = device;
+					++indexOptiX;
+					continue;
+				}
+#endif
 			}
 		}
 

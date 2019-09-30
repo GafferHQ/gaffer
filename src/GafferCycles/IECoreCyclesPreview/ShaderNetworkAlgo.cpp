@@ -476,6 +476,16 @@ ccl::Light *convertLight( const IECoreScene::ShaderNetwork *shaderNetwork )
 		const IECoreScene::Shader *lightShader = shaderNetwork->getShader( output );
 		for( const auto &namedParameter : lightShader->parameters() )
 		{
+			// Skip the ones which don't exist but we need for the Gaffer UI widget updates
+			if( namedParameter.first == "exposure" ||
+				namedParameter.first == "intensity" ||
+				namedParameter.first == "color" ||
+				namedParameter.first == "image" ||
+				namedParameter.first == "coneAngle" ||
+				namedParameter.first == "penumbraAngle" )
+				{
+					continue;
+				}
 			SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
 		}
 	}

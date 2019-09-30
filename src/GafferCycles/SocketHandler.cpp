@@ -495,12 +495,13 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 
 	if( shaderName == "portal" )
 	{
-		validPlugs.insert( setupTypedPlug<BoolPlug>( "is_portal", plugsParent, Gaffer::Plug::In, true ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
 	}
 	else
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
+		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupTypedPlug<BoolPlug>( "use_mis", plugsParent, Gaffer::Plug::In, true ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_diffuse" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_glossy" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_transmission" ) )), plugsParent, Gaffer::Plug::In ) );
@@ -509,40 +510,37 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "samples" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "intensity", plugsParent, Gaffer::Plug::In, 1.0f ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "exposure", plugsParent, Gaffer::Plug::In, 0.0f ) );
-		validPlugs.insert( setupTypedPlug<V3fPlug>( "color", plugsParent, Gaffer::Plug::In, V3f( 1.0f ) ) );
+		validPlugs.insert( setupTypedPlug<Color3fPlug>( "color", plugsParent, Gaffer::Plug::In, Color3f( 1.0f ) ) );
 		validPlugs.insert( setupTypedPlug<BoolPlug>( "squareSamples", plugsParent, Gaffer::Plug::In, true ) );
 	}
 
 	if( shaderName == "spot_light" )
 	{
-		validPlugs.insert( setupTypedPlug<IntPlug>( "type", plugsParent, Gaffer::Plug::In, (int)ccl::LIGHT_SPOT ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_angle" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
+		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_angle" ) )), plugsParent, Gaffer::Plug::In ) );
+		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
+		// We make the light cone act more like Arnold
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "coneAngle", plugsParent, Gaffer::Plug::In, 30.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "penumbraAngle", plugsParent, Gaffer::Plug::In, 0.0f ) );
 	}
-	else if( ( shaderName == "quad_light" )
-	      || ( shaderName == "disk_light" )
-	      || ( shaderName == "portal" ) )	
+	else if( shaderName == "quad_light" )
 	{
-		validPlugs.insert( setupTypedPlug<IntPlug>( "type", plugsParent, Gaffer::Plug::In, (int)ccl::LIGHT_AREA ) );
+		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
+	}
+	else if( shaderName == "disk_light" )
+	{
+		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
 	}
 	else if( shaderName == "background_light" )
 	{
-		validPlugs.insert( setupTypedPlug<IntPlug>( "type", plugsParent, Gaffer::Plug::In, (int)ccl::LIGHT_BACKGROUND ) );
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "map_resolution", plugsParent, Gaffer::Plug::In, 1024 ) );
+		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
+		validPlugs.insert( setupTypedPlug<IntPlug>( "map_resolution", plugsParent, Gaffer::Plug::In, 1024 ) );
 	}
 	else if( shaderName == "distant_light" )
 	{
-		validPlugs.insert( setupTypedPlug<IntPlug>( "type", plugsParent, Gaffer::Plug::In, (int)ccl::LIGHT_DISTANT ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
 	}
-	else
-	{
-		validPlugs.insert( setupTypedPlug<IntPlug>( "type", plugsParent, Gaffer::Plug::In, (int)ccl::LIGHT_POINT ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
-	}
-	
 
 	// Remove any old plugs which it turned out we didn't need.
 
