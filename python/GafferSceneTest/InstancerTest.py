@@ -897,6 +897,58 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+		instancer["attributePrefix"].setValue( "user:" )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject( {
+				"user:testFloat" : IECore.FloatData( 0.0 ),
+				"user:testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
+				"user:testPoint" : IECore.V3fData(
+					imath.V3f( 0 ),
+					IECore.GeometricData.Interpretation.Point
+				)
+			} )
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/1" ),
+			IECore.CompoundObject( {
+				"user:testFloat" : IECore.FloatData( 1.0 ),
+				"user:testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
+				"user:testPoint" : IECore.V3fData(
+					imath.V3f( 1 ),
+					IECore.GeometricData.Interpretation.Point
+				)
+			} )
+		)
+
+		instancer["attributePrefix"].setValue( "foo:" )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject( {
+				"foo:testFloat" : IECore.FloatData( 0.0 ),
+				"foo:testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
+				"foo:testPoint" : IECore.V3fData(
+					imath.V3f( 0 ),
+					IECore.GeometricData.Interpretation.Point
+				)
+			} )
+		)
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/1" ),
+			IECore.CompoundObject( {
+				"foo:testFloat" : IECore.FloatData( 1.0 ),
+				"foo:testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
+				"foo:testPoint" : IECore.V3fData(
+					imath.V3f( 1 ),
+					IECore.GeometricData.Interpretation.Point
+				)
+			} )
+		)
+
 	def testEmptyAttributesHaveConstantHash( self ) :
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
