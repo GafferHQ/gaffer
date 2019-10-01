@@ -48,7 +48,8 @@ enum TypeId
 	InteractiveCyclesRenderTypeId = 400003,
 	CyclesShaderTypeId = 400004,
 	CyclesLightTypeId = 400005,
-	CyclesBackgroundTypeId =  400006,
+	CyclesBackgroundTypeId = 400006,
+	CyclesMeshLightTypeId = 400007,
 
 	LastTypeId = 400049
 };

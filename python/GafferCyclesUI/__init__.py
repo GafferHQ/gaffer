@@ -38,6 +38,7 @@ __import__( "GafferSceneUI" )
 
 import CyclesAttributesUI
 import CyclesLightUI
+import CyclesMeshLightUI
 import CyclesOptionsUI
 import CyclesRenderUI
 import CyclesShaderUI
