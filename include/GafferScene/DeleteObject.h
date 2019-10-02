@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_DELETEOBJECT_H
 #define GAFFERSCENE_DELETEOBJECT_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
 namespace GafferScene
 {
