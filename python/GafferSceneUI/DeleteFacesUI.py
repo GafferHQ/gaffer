@@ -43,21 +43,28 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Deletes faces from a mesh using a primitive variable to choose the faces.  
+	Deletes faces from a mesh using a primitive variable to choose the faces.
 	""",
 
 	plugs = {
 
+		"adjustBounds" : [
+
+			"userDefault", False,
+
+		],
+
 		"faces" : [
 			"description",
 			"""
-			Uniformly interpolated int, float or bool primitive variable to choose which faces to delete. Note a non-zero value indicates the face will be deleted.  
+			Uniformly interpolated int, float or bool primitive variable to choose which faces to delete. Note a non-zero value indicates the face will be deleted.
 			"""
 		],
+
 		"invert" : [
 			"description",
 			"""
-			Invert the condition used to delete faces. If the primvar is zero then the face will be deleted. 
+			Invert the condition used to delete faces. If the primvar is zero then the face will be deleted.
 			"""
 		]
 	}
