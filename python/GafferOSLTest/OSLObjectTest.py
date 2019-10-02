@@ -1069,6 +1069,67 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		checkAffected( ["attributes", "object", "bound" ] )
 
+	def testBoundsUpdate( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		inPoint = GafferOSL.OSLShader()
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
+
+		multiplyVector = GafferOSL.OSLShader()
+		multiplyVector.loadShader( "Maths/MultiplyVector" )
+		multiplyVector["parameters"]["a"].setInput( inPoint["out"]["value"] )
+		multiplyVector["parameters"]["b"].setValue( imath.V3f( 2 ) )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["filter"].setInput( planeFilter["out"] )
+
+		oslObject["primitiveVariables"].addChild(
+			Gaffer.NameValuePlug(
+				"aPoint", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point )
+			)
+		)
+		oslObject["primitiveVariables"][0]["value"].setInput( multiplyVector["out"]["out"] )
+
+		# Because we're not manipulating "P", the bounding boxes should remain unchanged.
+
+		self.assertEqual(
+			oslObject["out"].object( "/plane" )["aPoint"].data,
+			oslObject["in"].object( "/plane" )["P"].data * imath.V3f( 2 )
+		)
+
+		self.assertScenesEqual( oslObject["out"], oslObject["in"], checks = { "bound" } )
+		self.assertSceneHashesEqual( oslObject["out"], oslObject["in"], checks = { "bound" } )
+
+		# But as soon as we manipulate "P", bounds updates should be triggered.
+
+		oslObject["primitiveVariables"][0]["name"].setValue( "P" )
+
+		self.assertEqual(
+			oslObject["out"].object( "/plane" )["P"].data,
+			oslObject["in"].object( "/plane" )["P"].data * imath.V3f( 2 )
+		)
+
+		self.assertEqual( oslObject["out"].bound( "/plane" ), oslObject["out"].object( "/plane" ).bound() )
+		self.assertSceneValid( oslObject["out"] )
+
+		# And we should be able to turn the bounds updates off if we don't want to
+		# pay for them.
+
+		oslObject["adjustBounds"].setValue( False )
+
+		self.assertEqual(
+			oslObject["out"].object( "/plane" )["P"].data,
+			oslObject["in"].object( "/plane" )["P"].data * imath.V3f( 2 )
+		)
+
+		self.assertScenesEqual( oslObject["out"], oslObject["in"], checks = { "bound" } )
+		self.assertSceneHashesEqual( oslObject["out"], oslObject["in"], checks = { "bound" } )
+
 if __name__ == "__main__":
 	unittest.main()
 
