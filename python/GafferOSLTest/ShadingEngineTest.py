@@ -866,5 +866,45 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for c in s["Ci"] :
 			self.assertEqual( c, imath.Color3f( 0, 1, 0 ) )
 
+	def testHasDeformation( self ) :
+
+		inputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
+
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"outPoint" : IECoreScene.Shader(
+					"ObjectProcessing/OutPoint", "osl:shader",
+					{
+						"name" : "P"
+					}
+				),
+				"output" : IECoreScene.Shader( inputClosureShader, "osl:surface" ),
+			},
+			connections = [
+				( ( "outPoint", "primitiveVariable" ), ( "output", "i" ) ),
+			],
+			output = "output"
+		) )
+
+		self.assertTrue( e.hasDeformation() )
+
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"outPoint" : IECoreScene.Shader(
+					"ObjectProcessing/OutPoint", "osl:shader",
+					{
+						"name" : "notP"
+					}
+				),
+				"output" : IECoreScene.Shader( inputClosureShader, "osl:surface" ),
+			},
+			connections = [
+				( ( "outPoint", "primitiveVariable" ), ( "output", "i" ) ),
+			],
+			output = "output"
+		) )
+
+		self.assertFalse( e.hasDeformation() )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -108,9 +108,21 @@ closure color outColor( string name, color value )
 	return debug( name, "type", "color", "value", color( value ) );
 }
 
+// Custom closure used by ShadingEngine to detect shaders that will
+// deform an object.
+closure color deformation( string name ) [[ int builtin = 1 ]];
+
 closure color outPoint( string name, point value )
 {
-	return debug( name, "type", "point", "value", color( value ) );
+	if( name == "P" )
+	{
+		// Tag with a different closure so that ShadingEngine can detect deformation.
+		return deformation( name, "type", "point", "value", color( value ) );
+	}
+	else
+	{
+		return debug( name, "type", "point", "value", color( value ) );
+	}
 }
 
 closure color outVector( string name, vector value )

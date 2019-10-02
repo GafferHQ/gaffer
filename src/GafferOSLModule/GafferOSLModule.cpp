@@ -188,6 +188,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 				)
 			)
 			.def( "needsAttribute", &ShadingEngine::needsAttribute )
+			.def( "hasDeformation", &ShadingEngine::hasDeformation )
 		;
 
 		class_<ShadingEngine::Transform>( "Transform" )

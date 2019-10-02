@@ -86,10 +86,11 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
 
 		bool needsAttribute( const std::string &name ) const;
+		bool hasDeformation() const;
 
 	private :
 
-		void queryContextVariablesAndAttributesNeeded();
+		void queryShaderGroup();
 
 		const IECore::MurmurHash m_hash;
 
@@ -101,6 +102,8 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		// Set to true if the shader reads attributes who's name is not know at compile time
 		bool m_unknownAttributesNeeded;
+
+		bool m_hasDeformation;
 
 		void *m_shaderGroupRef;
 
