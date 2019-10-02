@@ -184,6 +184,8 @@ Gaffer.Metadata.registerNode(
 			via the \"attributes\" plug. 
 			""",
 
+			"userDefault", "user:",
+
 		],
 
 	}
