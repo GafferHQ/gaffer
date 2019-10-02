@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Cinesite VFX Limited. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,7 +46,10 @@ import GafferImage
 import GafferImageUI
 
 ## \todo
-## - Could up/down in the Viewer cycle through the image list?
+## Ideally Catalogue reordering wouldn't just be managed the UI layer, but
+## the scope of changing this is somewhat large. When we need to do folders,
+## then this will probably force us to sort this out. For now, is at least
+## contained within just this file...
 
 Gaffer.Metadata.registerNode(
 
@@ -131,6 +135,86 @@ Gaffer.Metadata.registerNode(
 
 )
 
+
+##########################################################################
+# Viewer hot-keys
+##########################################################################
+
+def addCatalogueHotkeys( editor ) :
+
+	if not isinstance( editor, GafferUI.Viewer ) :
+		return
+
+	editor.keyPressSignal().connect( __viewerKeyPress, scoped = False )
+
+def __viewerKeyPress( viewer, event ) :
+
+	# Up/Down arrows need to walk upstream of the viewer input and look for
+	# a Catalogue node and increment/decrement its active index
+
+	if event.key not in ( "Down", "Up" ) :
+		return False
+
+	if not isinstance( viewer.view(), GafferImageUI.ImageView ) :
+		return False
+
+	catalogue = __findCatalogue( viewer.view() )
+	if catalogue is None :
+		return False
+
+	__incrementImageIndex( catalogue, event.key )
+
+	return True
+
+def __findCatalogue( node ) :
+
+	catalogue = node.ancestor( GafferImage.Catalogue )
+	if catalogue is not None :
+		return catalogue
+	else :
+		for inPlug in GafferImage.ImagePlug.RecursiveInputRange( node ) :
+			upstreamPlug = inPlug.source()
+			if upstreamPlug == inPlug or upstreamPlug.node() == node :
+				continue
+			catalogue = __findCatalogue( upstreamPlug.node() )
+			if catalogue is not None :
+				return catalogue
+
+	return None
+
+def __incrementImageIndex( catalogue, direction ) :
+
+	indexPlug = catalogue["imageIndex"].source()
+
+	if Gaffer.MetadataAlgo.readOnly( indexPlug ) or not indexPlug.settable() :
+		return
+
+	# Match the UI's top-to-bottom order instead of 'up is a larger number'
+	increment = -1 if direction == "Up" else 1
+
+	# The Catalog UI re-orders images internally using metadata, rather than by
+	# shuffling plugs. As such, we can't just set imageIndex. We don't want to
+	# be poking into the specifics of how this works, so for now we re-use
+	# _ImagesPath as it knows all that logic.
+
+	images = catalogue["images"].source().children()
+	if len( images ) == 0 :
+		return
+
+	maxIndex = len( images ) - 1
+	orderedImages = _ImagesPath( catalogue["images"].source(), [] )._orderedImages()
+
+	# There are times when this can be out of sync with the number of images.
+	# Generally when the UI hasn't been opened.
+	currentPlugIndex = min( indexPlug.getValue(), maxIndex )
+
+	catalogueIndex = orderedImages.index( images[currentPlugIndex] )
+	nextIndex = max( min( catalogueIndex + increment, maxIndex ), 0 )
+	nextPlugIndex = images.index( orderedImages[nextIndex] )
+
+	if nextPlugIndex != currentPlugIndex :
+		indexPlug.setValue( nextPlugIndex )
+
 ##########################################################################
 # _CataloguePath
 ##########################################################################
@@ -154,7 +238,16 @@ class _ImagesPath( Gaffer.Path ) :
 		return len( self ) > 0
 
 	def _orderedImages( self ) :
-		return sorted( self.__images.children(), key=lambda x : Gaffer.Metadata.value( x, _ImagesPath.indexMetadataName ) or 0 )
+
+		# Avoid repeat lookups for plugs with no logical index by first getting all
+		# images with their plug indices, then updating those with any metadata
+		imageAndIndices = [ [ image, plugIndex ] for plugIndex, image in enumerate( self.__images.children() ) ]
+		for imageAndIndex in imageAndIndices :
+			logicalIndex = Gaffer.Metadata.value( imageAndIndex[0], _ImagesPath.indexMetadataName )
+			if logicalIndex is not None :
+				imageAndIndex[1] = logicalIndex
+
+		return [ i[0] for i in sorted( imageAndIndices, key = lambda i : i[1] ) ]
 
 	def _children( self ) :
 
@@ -184,8 +277,6 @@ class _ImagesPath( Gaffer.Path ) :
 
 		assert( parent.isSame( self.__images ) )
 		self.__nameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
-		if not Gaffer.Metadata.value( child, _ImagesPath.indexMetadataName ) :
-			Gaffer.Metadata.registerValue( child, _ImagesPath.indexMetadataName, len( parent.children() ) -1 )
 		self._emitPathChanged()
 
 	def __childRemoved( self, parent, child ) :

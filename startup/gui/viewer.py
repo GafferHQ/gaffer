@@ -45,6 +45,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+import GafferImageUI
 
 # add plugs to the preferences node
 
@@ -182,3 +183,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Diagnostic/Appleseed/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:light" } ),
 
 	] )
+
+
+# Add catalogue hotkeys to viewers, eg: up/down navigation
+GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys, scoped = False )
