@@ -263,3 +263,13 @@ IECore::ConstObjectPtr Wireframe::computeProcessedObject( const ScenePath &path,
 
 	return result;
 }
+
+bool Wireframe::adjustBounds() const
+{
+	if( !Deformer::adjustBounds() )
+	{
+		return false;
+	}
+
+	return positionPlug()->getValue() != "P";
+}
