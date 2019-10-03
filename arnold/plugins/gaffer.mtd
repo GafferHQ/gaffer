@@ -1119,6 +1119,143 @@
 	gaffer.nodeMenu.category STRING "Surface"
 
 
+[node toon]
+
+	gaffer.nodeMenu.category STRING "Surface"
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+		[attr edge_color]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Edge"
+		[attr edge_tonemap]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Edge"
+		[attr edge_opacity]
+			page STRING "Edge"
+		[attr edge_width_scale]
+			page STRING "Edge"
+
+		[attr id_difference]
+			page STRING "Edge.Edge Detection"
+		[attr shader_difference]
+			page STRING "Edge.Edge Detection"
+		[attr mask_color]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Edge.Edge Detection"
+		[attr uv_threshold]
+			page STRING "Edge.Edge Detection"
+		[attr angle_threshold]
+			page STRING "Edge.Edge Detection"
+		[attr normal_type]
+			page STRING "Edge.Edge Detection"
+
+		[attr priority]
+			page STRING "Edge.Advanced Edge Control"
+		[attr ignore_throughput]
+			page STRING "Edge.Advanced Edge Control"
+		[attr enable]
+			page STRING "Edge.Advanced Edge Control"
+
+		[attr enable_silhouette]
+			page STRING "Silhouette"
+			desc STRING "Requires \"contour_filter\" on all Outputs"
+		[attr silhouette_color]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Silhouette"
+		[attr silhouette_tonemap]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Silhouette"
+		[attr silhouette_opacity]
+			page STRING "Silhouette"
+		[attr silhouette_width_scale]
+			page STRING "Silhouette"
+
+		[attr base]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Base"
+		[attr base_color]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Base"
+		[attr base_tonemap]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Base"
+
+		[attr specular]
+			page STRING "Specular"
+		[attr specular_color]
+			page STRING "Specular"
+		[attr specular_roughness]
+			page STRING "Specular"
+		[attr specular_anisotropy]
+			page STRING "Specular"
+		[attr specular_rotation]
+			page STRING "Specular"
+		[attr specular_tonemap]
+			page STRING "Specular"
+
+		[attr lights]
+			page STRING "Stylized Highlight"
+		[attr highlight_color]
+			page STRING "Stylized Highlight"
+		[attr highlight_size]
+			page STRING "Stylized Highlight"
+
+		[attr rim_light]
+			page STRING "Rim Lighting"
+		[attr rim_light_color]
+			page STRING "Rim Lighting"
+		[attr rim_light_width]
+			page STRING "Rim Lighting"
+
+		[attr transmission]
+			page STRING "Transmission"
+		[attr transmission_color]
+			page STRING "Transmission"
+		[attr transmission_roughness]
+			page STRING "Transmission"
+		[attr transmission_anisotropy]
+			page STRING "Transmission"
+		[attr transmission_rotation]
+			page STRING "Transmission"
+
+		[attr sheen]
+			page STRING "Sheen"
+		[attr sheen_color]
+			page STRING "Sheen"
+		[attr sheen_roughness]
+			page STRING "Sheen"
+
+		[attr emission]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Emission"
+		[attr emission_color]
+			gaffer.graphEditorLayout.visible BOOL true
+			page STRING "Emission"
+
+		[attr normal]
+			page STRING "Geometry"
+		[attr tangent]
+			page STRING "Geometry"
+		[attr bump_mode]
+			page STRING "Geometry"
+
+		[attr aov_highlight]
+			page STRING "AOV"
+		[attr aov_rim_light]
+			page STRING "AOV"
+
+		[attr IOR]
+			page STRING "Advanced"
+		[attr indirect_diffuse]
+			page STRING "Advanced"
+		[attr indirect_specular]
+			page STRING "Advanced"
+		[attr energy_conserving]
+			page STRING "Advanced"
+		[attr user_id]
+			page STRING "Advanced"
+
+
 [node thin_film]
 
 	# DEPRECATED
