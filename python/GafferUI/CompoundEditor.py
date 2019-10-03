@@ -590,7 +590,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__tabDragBehaviour = _TabDragBehaviour( self )
 
 		self.__updateStyles()
-
+		self.__updatePinningButton()
 
 	# This method MUST be used (along with removeEditor) whenever the children
 	# of a _TabbedContainer are being changed. Do not use TabbedContainer methods
@@ -742,7 +742,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def __updatePinningButton( self, *unused ) :
 
 		editor = self.getCurrent()
-		if isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
+		if editor is not None and isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
 
 			self.__pinningButton.setVisible( True )
 
