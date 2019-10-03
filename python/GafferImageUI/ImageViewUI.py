@@ -464,6 +464,9 @@ class _Spacer( GafferUI.Spacer ) :
 
 		GafferUI.Spacer.__init__( self, size = imath.V2i( 0 ) )
 
+## \todo This widget is basically the same as the SceneView and UVView ones. Perhaps the
+# View base class should provide standard functionality for pausing and state, and we could
+# use one standard widget for everything.
 class _StateWidget( GafferUI.Widget ) :
 
 	def __init__( self, imageView, **kw ) :
@@ -496,5 +499,5 @@ class _StateWidget( GafferUI.Widget ) :
 	def __update( self ) :
 
 		paused = self.__imageGadget.getPaused()
-		self.__button.setImage( "timelinePause.png" if not paused else "timelinePlay.png" )
+		self.__button.setImage( "viewPause.png" if not paused else "viewPaused.png" )
 		self.__busyWidget.setBusy( self.__imageGadget.state() == self.__imageGadget.State.Running )
