@@ -741,6 +741,16 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 	def __updatePinningButton( self, *unused ) :
 
+		# This method will get called during the deletion of a layout
+		# containing linked editor chains if the current editor's driver gets
+		# deleted before it does.
+		# Due to https://github.com/GafferHQ/gaffer/pull/3179, the c++ widget
+		# hierarchy will have been deleted before we are deleted, so we end up
+		# with 'Underlying C++ object has been deleted' errors. Sanity check
+		# that we're not just further down the deletion list...
+		if not GafferUI._qtObjectIsValid( self._qtWidget() ) :
+			return
+
 		editor = self.getCurrent()
 		if editor is not None and isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
 
