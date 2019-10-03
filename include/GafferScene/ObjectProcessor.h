@@ -44,6 +44,9 @@ namespace GafferScene
 
 /// Base class for nodes which manipulate objects (geometry, cameras etc)
 /// in some way.
+///
+/// > Note : If the processing modifies the bounding box of the object,
+/// > the Deformer base class should be used instead.
 class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 {
 
