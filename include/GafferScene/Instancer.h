@@ -77,6 +77,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::StringPlug *attributesPlug();
 		const Gaffer::StringPlug *attributesPlug() const;
 
+		Gaffer::StringPlug *attributePrefixPlug();
+		const Gaffer::StringPlug *attributePrefixPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

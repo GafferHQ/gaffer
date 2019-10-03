@@ -83,7 +83,8 @@ class Instancer::EngineData : public Data
 			const std::string &position,
 			const std::string &orientation,
 			const std::string &scale,
-			const std::string &attributes
+			const std::string &attributes,
+			const std::string &attributePrefix
 		)
 			:	m_indices( nullptr ),
 				m_ids( nullptr ),
@@ -161,7 +162,7 @@ class Instancer::EngineData : public Data
 				}
 			}
 
-			initAttributes( attributes );
+			initAttributes( attributes, attributePrefix );
 		}
 
 		size_t numPoints() const
@@ -300,8 +301,10 @@ class Instancer::EngineData : public Data
 
 		};
 
-		void initAttributes( const std::string &attributes )
+		void initAttributes( const std::string &attributes, const std::string &attributePrefix )
 		{
+			m_attributesHash.append( attributePrefix );
+
 			for( auto &primVar : m_primitive->variables )
 			{
 				if( primVar.second.interpolation != PrimitiveVariable::Vertex )
@@ -314,7 +317,7 @@ class Instancer::EngineData : public Data
 				}
 				DataPtr d = primVar.second.expandedData();
 				AttributeCreator attributeCreator = dispatch( d.get(), MakeAttributeCreator() );
-				m_attributeCreators[primVar.first] = attributeCreator;
+				m_attributeCreators[attributePrefix + primVar.first] = attributeCreator;
 				m_attributesHash.append( primVar.first );
 				d->hash( m_attributesHash );
 			}
@@ -358,6 +361,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "orientation", Plug::In ) );
 	addChild( new StringPlug( "scale", Plug::In ) );
 	addChild( new StringPlug( "attributes", Plug::In ) );
+	addChild( new StringPlug( "attributePrefix", Plug::In ) );
 	addChild( new ObjectPlug( "__engine", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new AtomicCompoundDataPlug( "__instanceChildNames", Plug::Out, new CompoundData ) );
 }
@@ -446,24 +450,34 @@ const Gaffer::StringPlug *Instancer::attributesPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
+Gaffer::StringPlug *Instancer::attributePrefixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+}
+
+const Gaffer::StringPlug *Instancer::attributePrefixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+}
+
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::instanceChildNamesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 9 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 10 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::instanceChildNamesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 9 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 10 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -477,7 +491,8 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == positionPlug() ||
 		input == orientationPlug() ||
 		input == scalePlug() ||
-		input == attributesPlug()
+		input == attributesPlug() ||
+		input == attributePrefixPlug()
 	)
 	{
 		outputs.push_back( enginePlug() );
@@ -506,6 +521,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		orientationPlug()->hash( h );
 		scalePlug()->hash( h );
 		attributesPlug()->hash( h );
+		attributePrefixPlug()->hash( h );
 	}
 	else if( output == instanceChildNamesPlug() )
 	{
@@ -529,7 +545,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				positionPlug()->getValue(),
 				orientationPlug()->getValue(),
 				scalePlug()->getValue(),
-				attributesPlug()->getValue()
+				attributesPlug()->getValue(),
+				attributePrefixPlug()->getValue()
 			)
 		);
 		return;

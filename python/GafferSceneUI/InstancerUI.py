@@ -176,6 +176,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributePrefix" : [
+
+			"description",
+			"""
+			A prefix added to all per-instance attributes specified
+			via the \"attributes\" plug. 
+			""",
+
+			"userDefault", "user:",
+
+		],
+
 	}
 
 )
