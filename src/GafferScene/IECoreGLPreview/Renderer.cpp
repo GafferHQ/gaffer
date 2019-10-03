@@ -38,6 +38,7 @@
 
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/Camera.h"
@@ -155,10 +156,24 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			IECoreGL::ConstStatePtr visualisationState;
 			m_visualisation = AttributeVisualiser::allVisualisations( attributes, visualisationState );
-			if( visualisationState )
+
+			IECoreGL::ConstStatePtr lightVisualisationState;
+			m_lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
+
+			if( visualisationState || lightVisualisationState )
 			{
 				StatePtr combinedState = new State( *m_state );
-				combinedState->add( const_cast<State *>( visualisationState.get() ) );
+
+				if( visualisationState )
+				{
+					combinedState->add( const_cast<State *>( visualisationState.get() ) );
+				}
+
+				if( lightVisualisationState )
+				{
+					combinedState->add( const_cast<State *>( lightVisualisationState.get() ) );
+				}
+
 				m_state = combinedState;
 			}
 		}
@@ -173,10 +188,16 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_visualisation.get();
 		}
 
+		const IECoreGL::Renderable *lightVisualisation() const
+		{
+			return m_lightVisualisation.get();
+		}
+
 	private :
 
 		ConstStatePtr m_state;
 		IECoreGL::ConstRenderablePtr m_visualisation;
+		IECoreGL::ConstRenderablePtr m_lightVisualisation;
 
 };
 
@@ -259,9 +280,10 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				b.extendBy( m_renderable->bound() );
 			}
-			if( m_attributes->visualisation() )
+
+			if( auto v = visualisation( *m_attributes ) )
 			{
-				b.extendBy( m_attributes->visualisation()->bound() );
+				b.extendBy( v->bound() );
 			}
 
 			if( b.isEmpty() )
@@ -299,9 +321,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				m_renderable->render( currentState );
 			}
 
-			if( m_attributes->visualisation() )
+			if( auto v = visualisation( *m_attributes ) )
 			{
-				m_attributes->visualisation()->render( currentState );
+				v->render( currentState );
 			}
 
 			if( haveTransform )
@@ -320,6 +342,11 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		EditQueue &editQueue()
 		{
 			return m_editQueue;
+		}
+
+		virtual const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const
+		{
+			return attributes.visualisation();
 		}
 
 	private :
@@ -395,6 +422,35 @@ IE_CORE_FORWARDDECLARE( OpenGLCamera )
 
 } // namespace
 
+//////////////////////////////////////////////////////////////////////////
+// OpenGLLight
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class OpenGLLight : public OpenGLObject
+{
+
+	public :
+
+		OpenGLLight( const std::string &name, const IECore::Object *light, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
+			:	OpenGLObject( name, light, attributes, editQueue )
+		{
+		}
+
+	protected :
+
+		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const override
+		{
+			return attributes.lightVisualisation();
+		}
+
+};
+
+IE_CORE_FORWARDDECLARE( OpenGLLight )
+
+} // namespace
 //////////////////////////////////////////////////////////////////////////
 // OpenGLRenderer
 //////////////////////////////////////////////////////////////////////////
@@ -515,7 +571,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			return this->object( name, object, attributes );
+			OpenGLLightPtr result = new OpenGLLight( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
+			return result;
 		}
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override

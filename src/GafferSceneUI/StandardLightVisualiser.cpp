@@ -58,6 +58,7 @@ using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace Gaffer;
 using namespace GafferSceneUI;
+using namespace IECoreGLPreview;
 
 //////////////////////////////////////////////////////////////////////////
 // Utility methods. We define these in an anonymouse namespace rather
@@ -213,6 +214,9 @@ const char *environmentSphereFragSource()
 //////////////////////////////////////////////////////////////////////////
 // StandardLightVisualiser implementation.
 //////////////////////////////////////////////////////////////////////////
+
+// Register as the standard fallback visualiser.
+LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> StandardLightVisualiser::g_description( "light *:light", "*" );
 
 StandardLightVisualiser::StandardLightVisualiser()
 {

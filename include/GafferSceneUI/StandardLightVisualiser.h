@@ -37,7 +37,8 @@
 #ifndef GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 #define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 
-#include "GafferSceneUI/LightVisualiser.h"
+#include "GafferSceneUI/Export.h"
+#include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 
 #include "IECoreGL/Group.h"
 
@@ -52,7 +53,7 @@ namespace GafferSceneUI
 /// This also provides several protected utility methods for
 /// making standard visualisations, so is suitable for use as
 /// a base class for custom light visualisers.
-class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
+class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightVisualiser
 {
 
 	public :
@@ -86,6 +87,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
 		static IECoreGL::ConstRenderablePtr cylinderShape( float radius );
 		static IECoreGL::ConstRenderablePtr pointShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
+
+		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
 
 };
 
