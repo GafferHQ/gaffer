@@ -184,7 +184,7 @@ class _StateWidget( GafferUI.Widget ) :
 	def __update( self ) :
 
 		paused = self.__uvView.getPaused()
-		self.__button.setImage( "timelinePause.png" if not paused else "timelinePlay.png" )
+		self.__button.setImage( "viewPause.png" if not paused else "viewPaused.png" )
 		self.__busyWidget.setBusy( self.__uvView.state() == self.__uvView.State.Running )
 
 UVInspector._StateWidget = _StateWidget

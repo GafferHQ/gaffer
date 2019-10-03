@@ -15,7 +15,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="graphics.svg"
    enable-background="new">
   <defs
@@ -734,17 +734,17 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="8.0000004"
-     inkscape:cx="312.09716"
-     inkscape:cy="673.18996"
+     inkscape:cx="245.37812"
+     inkscape:cy="881.53436"
      inkscape:document-units="px"
-     inkscape:current-layer="forExport:nodeSetDriverSceneSelectionSource"
+     inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1231"
-     inkscape:window-height="1006"
+     inkscape:window-height="981"
      inkscape:window-x="427"
-     inkscape:window-y="0"
+     inkscape:window-y="28"
      inkscape:window-maximized="0"
-     inkscape:snap-global="false"
+     inkscape:snap-global="true"
      inkscape:snap-nodes="true"
      inkscape:snap-bbox="true"
      inkscape:object-nodes="true"
@@ -753,7 +753,7 @@
      inkscape:snap-smooth-nodes="true"
      showguides="true"
      inkscape:guide-bbox="true"
-     inkscape:snap-grids="false"
+     inkscape:snap-grids="true"
      inkscape:object-paths="false"
      inkscape:bbox-paths="false"
      inkscape:bbox-nodes="true"
@@ -4813,5 +4813,80 @@
        d="m 494,150.86218 h -3.5 l 5,5.5 5,-5.5 H 497 v -7 h 3.5 l -5,-5.5 -5,5.5 h 3.5 z"
        id="forExport:reorderVertically"
        sodipodi:nodetypes="ccccccccccc" />
+    <g
+       id="forExport:viewPause"
+       inkscape:label="#g1592">
+      <g
+         id="g1573"
+         transform="translate(-104,104)">
+        <rect
+           y="62.862183"
+           x="330.5"
+           height="14"
+           width="4"
+           id="rect1567"
+           style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1" />
+        <rect
+           style="fill:url(#backgroundLighter);fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1"
+           id="rect1569"
+           width="4"
+           height="14"
+           x="336.5"
+           y="62.862183" />
+        <rect
+           style="fill:url(#backgroundLighter);fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1"
+           id="rect1571"
+           width="4"
+           height="14"
+           x="330.5"
+           y="62.862183" />
+      </g>
+      <rect
+         inkscape:label="#rect3932"
+         y="165.36217"
+         x="225"
+         height="17"
+         width="13"
+         id="forExport:viewerPause"
+         style="fill:none;fill-opacity:1;stroke:none;stroke-opacity:1" />
+    </g>
+    <g
+       inkscape:label="#g1592"
+       id="forExport:viewPaused"
+       transform="translate(15)">
+      <g
+         transform="translate(-104,104)"
+         id="g1600">
+        <rect
+           style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1"
+           id="rect1594"
+           width="4"
+           height="14"
+           x="330.5"
+           y="62.862183" />
+        <rect
+           y="62.862183"
+           x="336.5"
+           height="14"
+           width="4"
+           id="rect1596"
+           style="fill:#bb2b2b;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1" />
+        <rect
+           y="62.862183"
+           x="330.5"
+           height="14"
+           width="4"
+           id="rect1598"
+           style="fill:#bb2b2b;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1" />
+      </g>
+      <rect
+         style="fill:none;fill-opacity:1;stroke:none;stroke-opacity:1"
+         id="rect1602"
+         width="13"
+         height="17"
+         x="225"
+         y="165.36217"
+         inkscape:label="#rect3932" />
+    </g>
   </g>
 </svg>
