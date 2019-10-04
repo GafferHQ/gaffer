@@ -34,10 +34,13 @@
 #
 ##########################################################################
 
+import os.path
+
 import imath
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferScene
 import GafferSceneTest
@@ -420,6 +423,42 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		cs = GafferTest.CapturingSlot( parent.plugDirtiedSignal() )
 		sphere["name"].setValue( "ball" )
 		self.assertIn( parent["__mapping"], { x[0] for x in cs } )
+
+	def testChildArray( self ) :
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "A B" )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "B C" )
+
+		parent = GafferScene.Parent()
+		parent["children"][0].setInput( cube["out"] )
+		parent["children"][1].setInput( sphere["out"] )
+		parent["children"][2].setInput( sphere["out"] )
+		parent["parent"].setValue( "/" )
+
+		self.assertSceneValid( parent["out"] )
+
+		self.assertEqual( parent["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube", "sphere", "sphere1" ] ) )
+		self.assertEqual( parent["out"].setNames(), IECore.InternedStringVectorData( [ "A", "B", "C" ] ) )
+		self.assertEqual( parent["out"].set( "A" ).value, IECore.PathMatcher( [ "/cube" ] ) )
+		self.assertEqual( parent["out"].set( "B" ).value, IECore.PathMatcher( [ "/cube", "/sphere", "/sphere1" ] ) )
+		self.assertEqual( parent["out"].set( "C" ).value, IECore.PathMatcher( [ "/sphere", "/sphere1" ] ) )
+
+	def testLoadFrom0_54( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "parent-0.54.1.0.gfr" ) )
+		script.load()
+
+		self.assertEqual( script["Parent"]["in"].getInput(), script["Plane"]["out"] )
+		self.assertEqual( script["Parent"]["children"][0].getInput(), script["Cube"]["out"] )
+
+		self.assertEqual( script["Box"]["Parent"]["in"].source(), script["Plane"]["out"] )
+		self.assertEqual( script["Box"]["Parent"]["children"][0].source(), script["Cube"]["out"] )
+
+		self.assertScenesEqual( script["Parent"]["out"], script["Box"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

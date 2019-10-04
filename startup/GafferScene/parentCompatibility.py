@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019 Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,56 +34,35 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
+import types
 
+import Gaffer
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
+def __parentChildrenSetInput( self, input ) :
 
-Gaffer.Metadata.registerNode(
+	if isinstance( input, GafferScene.ScenePlug ) :
+		# Old connection into "child" plug. Reroute
+		# it into "children[0]".
+		self[0].setInput( input )
+	else :
+		Gaffer.ArrayPlug.setInput( input )
 
-	GafferScene.Parent,
+def __parentGetItem( originalGetItem ) :
 
-	"description",
-	"""
-	Parents additional child hierarchies into the main scene hierarchy.
-	""",
+	def getItem( self, key ) :
 
-	plugs = {
+		# Redirect old "child" ScenePlug plug to new
+		# "children" ArrayPlug.
 
-		"parent" : [
+		key = "children" if key == "child" else key
+		result = originalGetItem( self, key )
 
-			"description",
-			"""
-			The location which the children are parented under. This is
-			ignored when a filter is connected, in which case the children
-			are parented under all the locations matched by the filter.
-			""",
+		if key == "children" :
+			result.setInput = types.MethodType( __parentChildrenSetInput, result )
 
-			"userDefault", "/",
-			# Base class hides this if its not in use, but it's still
-			# pretty useful for the Parent node, so we make it visible
-			# unconditionally again.
-			"layout:visibilityActivator", "",
+		return result
 
-		],
+	return getItem
 
-		"children" : [
-
-			"description",
-			"""
-			The child hierarchies to be parented.
-			""",
-
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.5,
-
-		],
-
-	}
-
-)
+GafferScene.Parent.__getitem__ = __parentGetItem( GafferScene.Parent.__getitem__ )
