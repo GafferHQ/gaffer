@@ -855,6 +855,11 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	}
 }
 
+bool Instancer::processesRootObject() const
+{
+	return true;
+}
+
 bool Instancer::affectsBranchObject( const Gaffer::Plug *input ) const
 {
 	return input == instancesPlug()->objectPlug();

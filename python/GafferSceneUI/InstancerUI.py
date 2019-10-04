@@ -52,7 +52,7 @@ Gaffer.Metadata.registerNode(
 	object, making one copy per vertex. Additional primitive
 	variables on the target object can be used to choose between
 	multiple instances, and to specify their orientation and
-	scale.
+	scale. Note the target object will be removed from the scene.
 	""",
 
 	plugs = {
