@@ -155,6 +155,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 			updateFromDriver( drivingEditor )
 
 		self.__nodeSetDriverChangedSignal( self )
+		self.__dirtyTitle()
 
 	## Returns a tuple of the drivingEditor and the drive mode.
 	# When there is no driver ( None, "" ) will be returned.
@@ -334,12 +335,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 	# All implementations must first call the base class implementation.
 	def _updateFromSet( self ) :
 
-		# flush information needed for making the title -
-		# we'll update it lazily in getTitle().
-		self.__nameChangedConnections = []
-		self.__titleFormat = None
-
-		self.titleChangedSignal()( self )
+		self.__dirtyTitle()
 
 	# May be called to ensure that _updateFromSet() is called
 	# immediately if a lazy update has been scheduled but not
@@ -358,26 +354,45 @@ class NodeSetEditor( GafferUI.Editor ) :
 		else :
 			result = [ _prefix ]
 
-		numNames = min( _maxNodes, len( self.__nodeSet ) )
-		if numNames :
+		# Only add node names if we're pinned in some way shape or form
+		if not self.__nodeSetIsScriptSelection() :
 
-			result.append( " : " )
+			numNames = min( _maxNodes, len( self.__nodeSet ) )
+			if numNames :
 
-			if _reverseNodes :
-				nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
-				nodes.reverse()
-			else :
-				nodes = self.__nodeSet[:numNames]
+				result.append( " [" )
 
-			for i, node in enumerate( nodes ) :
-				result.append( node )
-				if i < numNames - 1 :
-					result.append( ", " )
+				if _reverseNodes :
+					nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
+					nodes.reverse()
+				else :
+					nodes = self.__nodeSet[:numNames]
 
-			if _ellipsis and len( self.__nodeSet ) > _maxNodes :
-				result.append( "..." )
+				for i, node in enumerate( nodes ) :
+					result.append( node )
+					if i < numNames - 1 :
+						result.append( ", " )
+
+				if _ellipsis and len( self.__nodeSet ) > _maxNodes :
+					result.append( "..." )
+
+				result.append( "]" )
 
 		return result
+
+	def __dirtyTitle( self ) :
+
+		# flush information needed for making the title -
+		# we'll update it lazily in getTitle().
+		self.__nameChangedConnections = []
+		self.__titleFormat = None
+
+		self.titleChangedSignal()( self )
+
+	def __nodeSetIsScriptSelection( self ) :
+
+		driver = self.drivingEditor() or self
+		return driver.getNodeSet() == self.scriptNode().selection()
 
 	def __setNodeSetInternal( self, nodeSet, callUpdateFromSet ) :
 
@@ -388,6 +403,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 		self.__nodeSet = nodeSet
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		self.__dirtyTitle()
 
 		if isinstance( nodeSet, Gaffer.StandardSet ) :
 			nodeSet.setRemoveOrphans( True )

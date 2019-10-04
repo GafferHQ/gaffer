@@ -724,6 +724,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 	def __titleChanged( self, editor ) :
 
+		# see __updatePinningButton
+		if not GafferUI._qtObjectIsValid( self._qtWidget() ) :
+			return
+
 		self.setLabel( editor, editor.getTitle() )
 
 	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
