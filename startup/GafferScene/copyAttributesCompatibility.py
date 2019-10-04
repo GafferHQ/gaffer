@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,65 +34,40 @@
 #
 ##########################################################################
 
-import Gaffer
+import types
+
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+# The CopyAttributes node used to have a fixed length ArrayPlug as its "in" plug,
+# but now has separate "in" and "source" plugs. Here we monkey patch the API so
+# we can silently load scripts which were serialised in the old version.
 
-	GafferScene.CopyAttributes,
+def __copyAttributesGetItem( originalGetItem ) :
 
-	"description",
-	"""
-	Copies attributes from a source scene, adding them to the attributes
-	of the main input scene.
-	""",
+	def getItem( self, key ) :
 
-	plugs = {
+		key = "sourceLocation" if key == "copyFrom" else key
+		return originalGetItem( self, key )
 
-		"source" : [
+	return getItem
 
-			"description",
-			"""
-			The scene from which the attributes are copied.
-			""",
+def __copyAttributesInGetItem( originalGetItem ) :
 
-		],
+	def getItem( self, key ) :
 
-		"attributes" : [
+		if not isinstance( self.parent(), GafferScene.CopyAttributes ) or self.getName() != "in" :
+			return originalGetItem( self, key )
 
-			"description",
-			"""
-			The names of the attributes to be copied. These should be
-			separated by spaces and can use Gaffer's standard wildcards
-			to match multiple attributes.
-			""",
+		# We're getting a child of CopyAttributes.in.
 
-		],
+		if key in ( "in0", 0 ) :
+			# First element of old ArrayPlug - redirect to self.
+			return self
+		else :
+			# Second element of old ArrayPlug - redirect to source.
+			return self.parent()["source"]
 
-		"sourceLocation" : [
+	return getItem
 
-			"description",
-			"""
-			The location in the source scene that attributes are copied from.
-			By default, attributes are copied from the location equivalent to the one
-			they are being copied to.
-			""",
-
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "source",
-
-		],
-
-		"deleteExisting" : [
-
-			"description",
-			"""
-			Deletes all attributes from the input scene before adding the copied
-			attributes.
-			""",
-
-		],
-
-	}
-
-)
+GafferScene.CopyAttributes.__getitem__ = __copyAttributesGetItem( GafferScene.CopyAttributes.__getitem__ )
+GafferScene.ScenePlug.__getitem__ = __copyAttributesInGetItem( GafferScene.ScenePlug.__getitem__ )

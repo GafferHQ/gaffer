@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,65 +34,15 @@
 #
 ##########################################################################
 
-import Gaffer
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+def __copyOptionsGetItem( originalGetItem ) :
 
-	GafferScene.CopyAttributes,
+	def getItem( self, key ) :
 
-	"description",
-	"""
-	Copies attributes from a source scene, adding them to the attributes
-	of the main input scene.
-	""",
+		key = "options" if key == "names" else key
+		return originalGetItem( self, key )
 
-	plugs = {
+	return getItem
 
-		"source" : [
-
-			"description",
-			"""
-			The scene from which the attributes are copied.
-			""",
-
-		],
-
-		"attributes" : [
-
-			"description",
-			"""
-			The names of the attributes to be copied. These should be
-			separated by spaces and can use Gaffer's standard wildcards
-			to match multiple attributes.
-			""",
-
-		],
-
-		"sourceLocation" : [
-
-			"description",
-			"""
-			The location in the source scene that attributes are copied from.
-			By default, attributes are copied from the location equivalent to the one
-			they are being copied to.
-			""",
-
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "source",
-
-		],
-
-		"deleteExisting" : [
-
-			"description",
-			"""
-			Deletes all attributes from the input scene before adding the copied
-			attributes.
-			""",
-
-		],
-
-	}
-
-)
+GafferScene.CopyOptions.__getitem__ = __copyOptionsGetItem( GafferScene.CopyOptions.__getitem__ )

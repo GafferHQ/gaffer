@@ -40,7 +40,6 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
-// using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -53,7 +52,7 @@ CopyOptions::CopyOptions( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "source", Plug::In ) );
-	addChild( new StringPlug( "names" , Plug::In, "" ) );
+	addChild( new StringPlug( "options" , Plug::In, "" ) );
 
 	// Fast pass-throughs for things we don't modify
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
@@ -79,12 +78,12 @@ const GafferScene::ScenePlug *CopyOptions::sourcePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *CopyOptions::namesPlug()
+Gaffer::StringPlug *CopyOptions::optionsPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *CopyOptions::namesPlug() const
+const Gaffer::StringPlug *CopyOptions::optionsPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
@@ -93,7 +92,7 @@ void CopyOptions::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 {
 	GlobalsProcessor::affects( input, outputs );
 
-	if( input == sourcePlug()->globalsPlug() || input == namesPlug() )
+	if( input == sourcePlug()->globalsPlug() || input == optionsPlug() )
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
@@ -102,7 +101,7 @@ void CopyOptions::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 void CopyOptions::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	sourcePlug()->globalsPlug()->hash( h );
-	namesPlug()->hash( h );
+	optionsPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr CopyOptions::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
@@ -117,7 +116,7 @@ IECore::ConstCompoundObjectPtr CopyOptions::computeProcessedGlobals( const Gaffe
 
 	// copy matching options
 	const std::string prefix = "option:";
-	const std::string names = namesPlug()->getValue();
+	const std::string names = optionsPlug()->getValue();
 
 	IECore::ConstCompoundObjectPtr sourceGlobals = sourcePlug()->globalsPlug()->getValue();
 	for( IECore::CompoundObject::ObjectMap::const_iterator it = sourceGlobals->members().begin(), eIt = sourceGlobals->members().end(); it != eIt; ++it )

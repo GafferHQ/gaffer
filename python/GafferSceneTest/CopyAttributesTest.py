@@ -56,8 +56,8 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# Node should do nothing without a filter applied.
 
 		copyAttributes = GafferScene.CopyAttributes()
-		copyAttributes["in"][0].setInput( plane["out"] )
-		copyAttributes["in"][1].setInput( customAttributes["out"] )
+		copyAttributes["in"].setInput( plane["out"] )
+		copyAttributes["source"].setInput( customAttributes["out"] )
 
 		self.assertScenesEqual( plane["out"], copyAttributes["out"] )
 		self.assertSceneHashesEqual( plane["out"], copyAttributes["out"] )
@@ -91,8 +91,8 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		bAttributes["attributes"].addChild( b )
 
 		copyAttributes = GafferScene.CopyAttributes()
-		copyAttributes["in"][0].setInput( aAttributes["out"] )
-		copyAttributes["in"][1].setInput( bAttributes["out"] )
+		copyAttributes["in"].setInput( aAttributes["out"] )
+		copyAttributes["source"].setInput( bAttributes["out"] )
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
@@ -129,7 +129,7 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( bAttributes["out"]["attributes"], pm.allStatistics() )
 		self.assertNotIn( aAttributes["out"]["attributes"], pm.allStatistics() )
 
-	def testCopyFrom( self ) :
+	def testSourceLocation( self ) :
 
 		plane = GafferScene.Plane()
 		sphere = GafferScene.Sphere()
@@ -144,8 +144,8 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		parent["child"].setInput( sphereAttributes["out"] )
 
 		copyAttributes = GafferScene.CopyAttributes()
-		copyAttributes["in"][0].setInput( parent["out"] )
-		copyAttributes["in"][1].setInput( parent["out"] )
+		copyAttributes["in"].setInput( parent["out"] )
+		copyAttributes["source"].setInput( parent["out"] )
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
@@ -156,7 +156,7 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 			parent["out"].attributes( "/plane" )
 		)
 
-		copyAttributes["copyFrom"].setValue( "/sphere" )
+		copyAttributes["sourceLocation"].setValue( "/sphere" )
 		self.assertEqual(
 			copyAttributes["out"].attributes( "/plane" ),
 			parent["out"].attributes( "/sphere" )
