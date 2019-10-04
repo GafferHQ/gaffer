@@ -232,7 +232,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		s["p"] = GafferScene.Parent()
 		s["p"]["in"].setInput( s["s1"]["out"] )
-		s["p"]["child"].setInput( s["s2"]["out"] )
+		s["p"]["children"][0].setInput( s["s2"]["out"] )
 		s["p"]["parent"].setValue( "/bigSphere" )
 
 		s["a"] = GafferScene.StandardAttributes()

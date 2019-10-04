@@ -91,7 +91,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 							l[i - 1].get("fileName") == l[i].get("fileName") ):
 						i += 1
 					return i
-					
+
 				rawInfo = parent["__udimQuery"]["out"]
 
 				defaultFileName = parent["defaultFileName"]
@@ -107,7 +107,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 						fileName = defaultFileName
 						if "bake:fileName" in extraAttributes:
 							fileName = extraAttributes["bake:fileName"].value
-						
+
 						listInfo.append( { "udim" : int( udim ), "mesh" : mesh, "resolution" : resolution, "fileName" : fileName } )
 
 				listInfo.sort( key = lambda i: (i["fileName"], i["udim"] ) )
@@ -171,8 +171,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 				for key, value in inGlobals.items():
 					if not key.startswith( "output:" ):
 						outGlobals[key] = value
-			
-				# Make our own outputs	
+
+				# Make our own outputs
 				info = parent["__chunkedBakeInfo"]
 				for cameraName, i in info.items():
 					params = IECore.CompoundData()
@@ -219,7 +219,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			self["__group"]["in"][0].setInput( self["__collectScenes"]["out"] )
 			self["__group"]["name"].setInput( self["cameraGroup"] )
 
-			self["__parent"]["child"].setInput( self["__group"]["out"] )
+			self["__parent"]["children"][0].setInput( self["__group"]["out"] )
 
 			self["__collectSceneRootsExpression"] = Gaffer.Expression()
 			self["__collectSceneRootsExpression"].setExpression( inspect.cleandoc(
@@ -310,12 +310,12 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		for redispatch in [ self["__RenderDispatcher"], self["__ImageDispatcher"] ]:
 			redispatch["variables"].addChild( Gaffer.NameValuePlug( "bakeDirectory", "", "bakeDirectoryVar" ) )
 			redispatch["variables"].addChild( Gaffer.NameValuePlug( "defaultFileName", "", "defaultFileNameVar" ) )
-	
+
 		# Connect the variables via an expression so that get expanded ( this also means that
-		# if you put #### in a filename you will get per frame tasks, because the hash will depend	
+		# if you put #### in a filename you will get per frame tasks, because the hash will depend
 		# on frame number )
 		self["__DispatchVariableExpression"] = Gaffer.Expression()
-		self["__DispatchVariableExpression"].setExpression( inspect.cleandoc( 
+		self["__DispatchVariableExpression"].setExpression( inspect.cleandoc(
 			"""
 			parent["__RenderDispatcher"]["variables"]["bakeDirectoryVar"]["value"] = parent["bakeDirectory"]
 			parent["__RenderDispatcher"]["variables"]["defaultFileNameVar"]["value"] = parent["defaultFileName"]
@@ -326,7 +326,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 		# Wedge based on tasks into the overall number of tasks to run.  Note that we don't know how
 		# much work each task will do until we actually run the render tasks ( this is when scene
-		# expansion happens ).  Because we must group all tasks that write to the same file into the 
+		# expansion happens ).  Because we must group all tasks that write to the same file into the
 		# same task batch, if tasks is a large number, some tasks batches could end up empty
 		self["__MainWedge"] = GafferDispatch.Wedge()
 		self["__MainWedge"]["preTasks"][0].setInput( self["__ImageDispatcher"]["task"] )
@@ -442,7 +442,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# Loop over all input files for this output file, and merge them all together
 		self["__ImageLoop"] = Gaffer.LoopComputeNode()
 		self["__ImageLoop"].setup( GafferImage.ImagePlug() )
-		
+
 		self["__NumInputsForCurOutputExpression"] = Gaffer.Expression()
 		self["__NumInputsForCurOutputExpression"].setExpression( inspect.cleandoc(
 			"""
@@ -477,7 +477,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__ImageIntermediateReader"] = GafferImage.ImageReader()
 
 		# Now that we've merged everything together, we can use a BleedFill to fill in the background,
-		# so that texture filtering across the edges will pull in colors that are at least reasonable.	
+		# so that texture filtering across the edges will pull in colors that are at least reasonable.
 		self["__BleedFill"] = GafferImage.BleedFill()
 		self["__BleedFill"]["in"].setInput( self["__ImageIntermediateReader"]["out"] )
 
@@ -487,7 +487,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__Median"]["radius"]["x"].setInput( self["medianRadius"] )
 		self["__Median"]["radius"]["y"].setInput( self["medianRadius"] )
 
-		# Write out the result	
+		# Write out the result
 		self["__ImageWriter"] = GafferImage.ImageWriter()
 		self["__ImageWriter"]["in"].setInput( self["__Median"]["out"] )
 		self["__ImageWriter"]["preTasks"][0].setInput( self["__ImageIntermediateWriter"]["task"] )

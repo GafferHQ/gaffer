@@ -59,7 +59,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "/group" )
-		p["child"].setInput( c["out"] )
+		p["children"][0].setInput( c["out"] )
 
 		self.assertEqual( p["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "sphere", "cube", "cube1" ] ) )
 		self.assertPathsEqual( p["out"], "/group/cube", p["out"], "/group/cube1" )
@@ -78,7 +78,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "/" )
-		p["child"].setInput( c["out"] )
+		p["children"][0].setInput( c["out"] )
 
 		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group", "cube" ] ) )
 		self.assertPathsEqual( p["out"], "/group/cube", p["out"], "/cube" )
@@ -113,7 +113,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "/group" )
-		p["child"].setInput( c["out"] )
+		p["children"][0].setInput( c["out"] )
 
 		self.assertEqual( p["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "cube", "cube1", "cube2" ] ) )
 		self.assertSceneValid( p["out"] )
@@ -131,7 +131,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "/group" )
-		p["child"].setInput( cSmall["out"] )
+		p["children"][0].setInput( cSmall["out"] )
 
 		self.assertSceneValid( p["out"] )
 
@@ -148,7 +148,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "/group" )
-		p["child"].setInput( cLarge["out"] )
+		p["children"][0].setInput( cLarge["out"] )
 
 		self.assertSceneValid( p["out"] )
 
@@ -162,7 +162,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "" )
-		p["child"].setInput( c["out"] )
+		p["children"][0].setInput( c["out"] )
 
 		self.assertScenesEqual( p["out"], g["out"] )
 		self.assertSceneHashesEqual( p["out"], g["out"] )
@@ -174,14 +174,14 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p1 = GafferScene.Parent()
 		p1["in"].setInput( c["out"] )
 		p1["parent"].setValue( "/cube" )
-		p1["child"].setInput( c["out"] )
+		p1["children"][0].setInput( c["out"] )
 
 		self.assertEqual( p1["out"].childNames( "/cube" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 
 		p2 = GafferScene.Parent()
 		p2["in"].setInput( p1["out"] )
 		p2["parent"].setValue( "/cube/cube" )
-		p2["child"].setInput( c["out"] )
+		p2["children"][0].setInput( c["out"] )
 
 		self.assertEqual( p2["out"].childNames( "/cube" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 		self.assertEqual( p2["out"].childNames( "/cube/cube" ), IECore.InternedStringVectorData( [ "cube" ] ) )
@@ -195,7 +195,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Parent()
 		p["in"].setInput( l1["out"] )
-		p["child"].setInput( l2["out"] )
+		p["children"][0].setInput( l2["out"] )
 		p["parent"].setValue( "/" )
 
 		self.assertSceneValid( p["out"] )
@@ -211,7 +211,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Parent()
 		p["in"].setInput( c["out"] )
-		p["child"].setInput( l["out"] )
+		p["children"][0].setInput( l["out"] )
 		p["parent"].setValue( "/" )
 
 		self.assertSceneValid( p["out"] )
@@ -227,7 +227,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Parent()
 		p["in"].setInput( l["out"] )
-		p["child"].setInput( c["out"] )
+		p["children"][0].setInput( c["out"] )
 		p["parent"].setValue( "/" )
 
 		self.assertSceneValid( p["out"] )
@@ -243,7 +243,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Parent()
 		p["in"].setInput( c["out"] )
-		p["child"].setInput( l["out"] )
+		p["children"][0].setInput( l["out"] )
 		p["parent"].setValue( "/cube" )
 
 		self.assertSceneValid( p["out"] )
@@ -264,7 +264,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Parent()
 		p["in"].setInput( c["out"] )
-		p["child"].setInput( g2["out"] )
+		p["children"][0].setInput( g2["out"] )
 		p["parent"].setValue( "/cube" )
 
 		self.assertSceneValid( p["out"] )
@@ -279,7 +279,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Parent()
 		p["in"].setInput( l1["out"] )
-		p["child"].setInput( l2["out"] )
+		p["children"][0].setInput( l2["out"] )
 		p["parent"].setValue( "/" )
 
 		self.assertSceneValid( p["out"] )
@@ -296,7 +296,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
 		p["parent"].setValue( "/group" )
-		p["child"].setInput( s["out"] )
+		p["children"][0].setInput( s["out"] )
 
 		self.assertSceneValid( p["out"] )
 
@@ -311,7 +311,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Parent()
 		p["in"].setInput( c1["out"] )
 		p["parent"].setValue( "/" )
-		p["child"].setInput( c2["out"] )
+		p["children"][0].setInput( c2["out"] )
 
 		h = p["out"].setHash( "test" )
 		self.assertEqual( p["out"].set( "test" ).value, IECore.PathMatcher() )
@@ -337,7 +337,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		parent = GafferScene.Parent()
 		parent["in"].setInput( group["out"] )
-		parent["child"].setInput( cube["out"] )
+		parent["children"][0].setInput( cube["out"] )
 		parent["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( parent["out"] )
@@ -374,7 +374,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		parent = GafferScene.Parent()
 		parent["in"].setInput( outerGroup["out"] )
-		parent["child"].setInput( cube["out"] )
+		parent["children"][0].setInput( cube["out"] )
 		parent["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( parent["out"] )
@@ -388,7 +388,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		parent = GafferScene.Parent()
 		parent["in"].setInput( cube["out"] )
-		parent["child"].setInput( cube["out"] )
+		parent["children"][0].setInput( cube["out"] )
 		parent["parent"].setValue( "/" )
 
 		self.assertEqual( parent["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube", "cube1" ] ) )
@@ -405,7 +405,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		parent = GafferScene.Parent()
 		parent["in"].setInput( cube["out"] )
-		parent["child"].setInput( cube["out"] )
+		parent["children"][0].setInput( cube["out"] )
 		parent["parent"].setValue( "/invalidLocation" )
 
 		self.assertSceneValid( parent["out"] )
@@ -418,7 +418,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		parent = GafferScene.Parent()
 		parent["in"].setInput( cube["out"] )
-		parent["child"].setInput( sphere["out"] )
+		parent["children"][0].setInput( sphere["out"] )
 
 		cs = GafferTest.CapturingSlot( parent.plugDirtiedSignal() )
 		sphere["name"].setValue( "ball" )

@@ -60,7 +60,7 @@ class ArnoldShaderBall( GafferScene.ShaderBall ) :
 
 		self["__parentLights"] = GafferScene.Parent()
 		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
-		self["__parentLights"]["child"].setInput( self["__skyDome"]["out"] )
+		self["__parentLights"]["children"][0].setInput( self["__skyDome"]["out"] )
 		self["__parentLights"]["parent"].setValue( "/" )
 
 		self["__arnoldOptions"] = GafferArnold.ArnoldOptions()

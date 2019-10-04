@@ -267,7 +267,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		parent = GafferScene.Parent()
 		parent["parent"].setValue( "/" )
 		parent["in"].setInput( group1["out"] )
-		parent["child"].setInput( plane["out"] )
+		parent["children"][0].setInput( plane["out"] )
 
 		isolate = GafferScene.Isolate()
 		isolate["in"].setInput( parent["out"] )

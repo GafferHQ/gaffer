@@ -193,7 +193,7 @@ class _Camera( Gaffer.Node ) :
 		self["parent"] = GafferScene.Parent()
 		self["parent"]["in"].setInput( self["in"] )
 		self["parent"]["parent"].setValue( "/" )
-		self["parent"]["child"].setInput( self["camera"]["out"] )
+		self["parent"]["children"][0].setInput( self["camera"]["out"] )
 
 		self["cameraFilter"] = GafferScene.PathFilter()
 		self["cameraFilter"]["paths"].setValue( IECore.StringVectorData( [ "/previewCamera" ] ) )
