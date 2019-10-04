@@ -74,6 +74,12 @@ using namespace GafferSceneUI;
 namespace
 {
 
+int filterResult( const FilterPlug *filter, const ScenePlug *scene )
+{
+	FilterPlug::SceneScope scope( Context::current(), scene );
+	return filter->getValue();
+}
+
 bool ancestorMakesChildNodesReadOnly( const Node *node )
 {
 	node = node->parent<Node>();
@@ -118,7 +124,7 @@ bool updateSelection( const SceneAlgo::History *history, TransformTool::Selectio
 	}
 	else if( const GafferScene::Transform *transform = runTimeCast<const GafferScene::Transform>( node ) )
 	{
-		if( transform->filterPlug()->getValue() & PathMatcher::ExactMatch )
+		if( filterResult( transform->filterPlug(), transform->inPlug() ) & PathMatcher::ExactMatch )
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
 			ScenePlug::ScenePath spacePath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );

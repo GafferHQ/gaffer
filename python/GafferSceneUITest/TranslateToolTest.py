@@ -726,5 +726,28 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( tool.selection() ), 1 )
 		self.assertEqual( tool.selection()[0].transformPlug, script["reader"]["transform"] )
 
+	def testSetFilter( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["sets"].setValue( "A" )
+
+		script["setFilter"] = GafferScene.SetFilter()
+		script["setFilter"]["set"].setValue( "A" )
+
+		script["transform"] = GafferScene.Transform()
+		script["transform"]["in"].setInput( script["sphere"]["out"] )
+		script["transform"]["filter"].setInput( script["setFilter"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["transform"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+		self.assertEqual( tool.selection()[0].transformPlug, script["transform"]["transform"] )
+
 if __name__ == "__main__":
 	unittest.main()
