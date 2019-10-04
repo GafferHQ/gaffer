@@ -104,7 +104,13 @@ bool Deformer::adjustBounds() const
 
 void Deformer::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( adjustBounds() )
+	bool adjustBounds;
+	{
+		ScenePlug::GlobalScope globalScope( context );
+		adjustBounds = this->adjustBounds();
+	}
+
+	if( adjustBounds )
 	{
 		const PathMatcher::Result m = filterValue( context );
 		if( m & ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch ) )
@@ -137,7 +143,17 @@ void Deformer::hashBound( const ScenePath &path, const Gaffer::Context *context,
 
 Imath::Box3f Deformer::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( adjustBounds() )
+	bool adjustBounds;
+	{
+		// We can't allow the result of `adjustBounds()` to vary per location,
+		// because that would prevent us from successfully propagating bounds
+		// changes up to ancestor locations. To enforce this, we evaluate
+		// `adjustBounds()` in a global scope.
+		ScenePlug::GlobalScope globalScope( context );
+		adjustBounds = this->adjustBounds();
+	}
+
+	if( adjustBounds )
 	{
 		const PathMatcher::Result m = filterValue( context );
 		if( m & ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch ) )
