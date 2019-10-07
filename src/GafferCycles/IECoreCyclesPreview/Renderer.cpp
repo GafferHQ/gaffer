@@ -975,8 +975,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						{
 							const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderNetwork->getOutput().shader );
 							// This is just to store data that is attached to the lights.
-							m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convertLight( shaderNetwork ) );
-							//m_shader = shaderCache->getEmission( shader, color, strength );
+							m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convert( shaderNetwork ) );
 						}
 						m_shader = shaderCache->get( shaderNetwork );
 					}

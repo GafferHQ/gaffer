@@ -453,7 +453,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 	return result;
 }
 
-ccl::Light *convertLight( const IECoreScene::ShaderNetwork *shaderNetwork )
+ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) // todo : make conditional on OSL < 1.10
