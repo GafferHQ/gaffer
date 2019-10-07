@@ -52,6 +52,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Log
 	options->addChild( new Gaffer::NameValuePlug( "ccl:log_level", new IECore::IntData( 0 ), false, "logLevel" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:progress_level", new IECore::IntData( 2 ), false, "progressLevel" ) );
 
 	// Device
 

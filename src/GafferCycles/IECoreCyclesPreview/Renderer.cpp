@@ -1880,6 +1880,7 @@ IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
 // Logging
 IECore::InternedString g_logLevelOptionName( "ccl:log_level" );
+IECore::InternedString g_progressLevelOptionName( "ccl:progress_level" );
 // Session
 IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
 IECore::InternedString g_progressiveRefineOptionName( "ccl:session:progressive_refine" );
@@ -1959,7 +1960,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
 				m_rendering( false ),
-				m_deviceDirty( false )
+				m_deviceDirty( false ),
+				m_pause( false ),
+				m_progressLevel( IECore::Msg::Info )
 		{
 			// Set path to find shaders
 			#ifdef _WIN32
@@ -2235,6 +2238,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
 					{
 						ccl::util_logging_verbosity_set( data->readable() );
+					}
+					return;
+				}
+			}
+			else if( name == g_progressLevelOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_progressLevel = IECore::Msg::Info;
+					return;
+				}
+				else
+				{
+					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_progressLevel = (IECore::Msg::Level)data->readable();
 					}
 					return;
 				}
@@ -3012,13 +3031,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			/* get status */
 			float progress = m_session->progress.get_progress();
-			m_session->progress.get_status(status, substatus);
+			m_session->progress.get_status( status, substatus );
 
-			if(substatus != "")
+			if( substatus != "" )
 				status += ": " + substatus;
 
 			/* print status */
-			IECore::msg( IECore::Msg::Info, "CyclesRenderer", boost::format( "Progress %05.2f   %s" ) % (double)(progress * 100.0f ) % status );
+			IECore::msg( m_progressLevel, "CyclesRenderer", boost::format( "Progress %05.2f   %s" ) % (double)(progress * 100.0f ) % status );
 		}
 
 		void getCyclesDevices()
@@ -3097,6 +3116,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		string m_camera;
 		bool m_rendering;
 		bool m_deviceDirty;
+		IECore::Msg::Level m_progressLevel;
 
 		// Caches.
 		CameraCachePtr m_cameraCache;
