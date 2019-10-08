@@ -248,7 +248,7 @@ class DispatcherWindow( GafferUI.Window ) :
 			toRemove = self.__dispatchers.get( label, None )
 			if toRemove and self.__currentDispatcher.isSame( toRemove ) :
 				if len(self.__dispatchers.items()) < 2 :
-					raise RuntimeError, "DispatcherWindow: " + label + " is the only dispatcher, so it cannot be removed."
+					raise RuntimeError( "DispatcherWindow: " + label + " is the only dispatcher, so it cannot be removed." )
 				self.setCurrentDispatcher( self.__dispatchers.values()[0] )
 
 			del self.__dispatchers[label]
@@ -271,7 +271,7 @@ class DispatcherWindow( GafferUI.Window ) :
 				break
 
 		if not dispatcherLabel :
-			raise RuntimeError, "DispatcherWindow: The current dispatcher must be added first. Use DispatcherWindow.addDispatcher( label, dispatcher )"
+			raise RuntimeError( "DispatcherWindow: The current dispatcher must be added first. Use DispatcherWindow.addDispatcher( label, dispatcher )" )
 
 		self.__currentDispatcher = dispatcher
 		self.__dispatchersMenu.setSelection( [ dispatcherLabel ] )

@@ -74,7 +74,7 @@ class BoolWidget( GafferUI.Widget ) :
 		if isinstance( image, basestring ) :
 			self.__image = GafferUI.Image( image )
 		else :
-			assert( isinstance( image, ( GafferUI.Image, types.NoneType ) ) )
+			assert( isinstance( image, ( GafferUI.Image, type( None ) ) ) )
 			self.__image = image
 
 		if self.__image is None :

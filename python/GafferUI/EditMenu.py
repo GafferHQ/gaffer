@@ -267,13 +267,13 @@ def selectAddInputs( menu ) :
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectUpstream( menu ) :
 
-	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = False )
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxsize, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Upstream" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAddUpstream( menu ) :
 
-	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = True )
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxsize, add = True )
 
 ## The command function for the default "Edit/Select Connected/Outputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -291,19 +291,19 @@ def selectAddOutputs( menu ) :
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectDownstream( menu ) :
 
-	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = False )
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxsize, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Downstream" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAddDownstream( menu ) :
 
-	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = True )
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxsize, add = True )
 
 ## The command function for the default "Edit/Select Connected/Add All" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectConnected( menu ) :
 
-	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxint, add = True )
+	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxsize, add = True )
 
 def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 

@@ -304,7 +304,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 					g.addChild( Gaffer.GraphComponent( "a" ) )
 
 				self.assertEqual( set(g.keys()), set( [ "a" ] + [ "a%i" % i for i in range( 1, 500 ) ] ) )
-			except Exception, e:
+			except Exception as e:
 				q.put( e )
 
 		threads = []

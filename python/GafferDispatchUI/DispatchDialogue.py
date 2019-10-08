@@ -232,7 +232,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 					self.__currentDispatcher.dispatch( self.__tasks )
 					result = 0
 
-		except Exception, e :
+		except Exception as e :
 
 			result = sys.exc_info()
 

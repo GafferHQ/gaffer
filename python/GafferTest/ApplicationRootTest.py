@@ -85,7 +85,10 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		p["category2"]["v"].setValue( imath.V3f( -10 ) )
 
 		executionContext = { "application" : application }
-		execfile( self.__preferencesFile, executionContext, executionContext )
+		exec(
+			compile( open( self.__preferencesFile ).read(), self.__preferencesFile, "exec" ),
+			executionContext, executionContext
+		)
 
 		self.assertEqual( p["category1"]["i"].getValue(), 10 )
 		self.assertEqual( p["category2"]["s"].getValue(), "oranges" )

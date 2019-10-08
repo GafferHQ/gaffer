@@ -58,7 +58,7 @@ class WeakMethodTest( GafferTest.TestCase ) :
 		self.assertEqual( wm(), 10 )
 
 		self.failUnless( wm.instance() is a )
-		self.failUnless( wm.method() is A.f.im_func )
+		self.failUnless( wm.method() is A.f.__func__ )
 
 		del a
 
@@ -68,7 +68,7 @@ class WeakMethodTest( GafferTest.TestCase ) :
 
 		try :
 			wm()
-		except ReferenceError, e :
+		except ReferenceError as e :
 			self.failUnless( "f()" in str( e ) )
 
 	def testFallbackResult( self ) :

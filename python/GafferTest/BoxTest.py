@@ -1048,7 +1048,7 @@ class BoxTest( GafferTest.TestCase ) :
 
 		try :
 			box = Gaffer.Box.create( scriptNode, setOfNodesToBox )
-		except RuntimeError, e :
+		except RuntimeError as e :
 			self.assertTrue( False, msg = "boxing should not raise an exception here" )
 
 	def testPassThroughCreatedInVersion0_52( self ) :

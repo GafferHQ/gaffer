@@ -108,7 +108,7 @@ class PythonEditor( GafferUI.Editor ) :
 		# and display the result or must exec() only.
 		try :
 			parsed = ast.parse( toExecute )
-		except SyntaxError, e :
+		except SyntaxError as e :
 			self.__outputWidget.appendHTML( self.__syntaxErrorToHTML( e ) )
 			return
 
@@ -129,7 +129,7 @@ class PythonEditor( GafferUI.Editor ) :
 								exec( toExecute, self.__executionDict, self.__executionDict )
 							if not haveSelection :
 								self.__inputWidget.setText( "" )
-						except Exception, e :
+						except Exception as e :
 							self.__outputWidget.appendHTML( self.__exceptionToHTML() )
 
 	def __repr__( self ) :
