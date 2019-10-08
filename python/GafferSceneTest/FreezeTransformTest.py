@@ -107,5 +107,21 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 		t = GafferScene.FreezeTransform()
 		self.assertEqual( set( t.affects( t["in"]["object"] ) ), set( [ t["out"]["object"] ] ) )
 
+	def testSetFilter( self ) :
+
+		plane = GafferScene.Plane()
+		plane["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		plane["sets"].setValue( "A" )
+
+		planeFilter = GafferScene.SetFilter()
+		planeFilter["setExpression"].setValue( "A" )
+
+		freezeTransform = GafferScene.FreezeTransform()
+		freezeTransform["in"].setInput( plane["out"] )
+		freezeTransform["filter"].setInput( planeFilter["out"] )
+
+		self.assertSceneValid( freezeTransform["out"] )
+		self.assertEqual( freezeTransform["out"].transform( "/plane" ), imath.M44f() )
+
 if __name__ == "__main__":
 	unittest.main()

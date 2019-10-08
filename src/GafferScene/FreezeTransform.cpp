@@ -137,7 +137,7 @@ void FreezeTransform::compute( Gaffer::ValuePlug *output, const Gaffer::Context 
 
 void FreezeTransform::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const unsigned m = filterPlug()->getValue();
+	const unsigned m = filterValue( context );
 	if( m & ( IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::ExactMatch ) )
 	{
 		// if there's an ancestor match or an exact match here then we know
@@ -163,7 +163,7 @@ void FreezeTransform::hashBound( const ScenePath &path, const Gaffer::Context *c
 
 Imath::Box3f FreezeTransform::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const unsigned m = filterPlug()->getValue();
+	const unsigned m = filterValue( context );
 	if( m & ( IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::ExactMatch ) )
 	{
 		Box3f result = unionOfTransformedChildBounds( path, outPlug() );
@@ -180,7 +180,7 @@ Imath::Box3f FreezeTransform::computeBound( const ScenePath &path, const Gaffer:
 
 void FreezeTransform::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const unsigned m = filterPlug()->getValue();
+	const unsigned m = filterValue( context );
 	if( m & IECore::PathMatcher::ExactMatch )
 	{
 		SceneProcessor::hashTransform( path, context, parent, h );
@@ -193,7 +193,7 @@ void FreezeTransform::hashTransform( const ScenePath &path, const Gaffer::Contex
 
 Imath::M44f FreezeTransform::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const unsigned m = filterPlug()->getValue();
+	const unsigned m = filterValue( context );
 	if( m & IECore::PathMatcher::ExactMatch )
 	{
 		return M44f();
@@ -206,7 +206,7 @@ Imath::M44f FreezeTransform::computeTransform( const ScenePath &path, const Gaff
 
 void FreezeTransform::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const unsigned m = filterPlug()->getValue();
+	const unsigned m = filterValue( context );
 	if( m & ( IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::ExactMatch ) )
 	{
 		FilteredSceneProcessor::hashObject( path, context, parent, h );
@@ -221,7 +221,7 @@ void FreezeTransform::hashObject( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const unsigned m = filterPlug()->getValue();
+	const unsigned m = filterValue( context );
 	if( m & ( IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::ExactMatch ) )
 	{
 		ConstObjectPtr inputObject = inPlug()->objectPlug()->getValue();
