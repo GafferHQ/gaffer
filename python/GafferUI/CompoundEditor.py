@@ -53,7 +53,9 @@ from Qt import QtWidgets
 
 class CompoundEditor( GafferUI.Editor ) :
 
-	def __init__( self, scriptNode, children=None, detachedPanels=None, windowState=None, **kw ) :
+	# The CompoundEditor constructor args are considered 'private', used only
+	# by the persistent layout system.
+	def __init__( self, scriptNode, _state={}, **kw ) :
 
 		# We have 1px extra padding within the splits themselves to accommodate highlighting
 		self.__splitContainer = _SplitContainer( borderWidth = 5 )
@@ -65,15 +67,17 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.__splitContainer.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
-		self.__windowState = windowState or {}
+		self.__windowState = _state.get( "windowState", {} )
 
-		if children :
-			self.__splitContainer.restoreChildren( children )
+		self.__splitContainer.restoreChildren( _state.get( "children", () ) )
 
 		self.__detachedPanels = []
-		if detachedPanels :
-			for panelArgs in detachedPanels  :
-				self._createDetachedPanel( **panelArgs )
+		detachedPanels = _state.get( "detachedPanels", () )
+		for panelArgs in detachedPanels  :
+			self._createDetachedPanel( **panelArgs )
+
+		# By Now, all Editors will have been created, so we can restore any state
+		self.__restoreEditorState( _state.get( "editorState", {} ) )
 
 	# Returns the editor of the specified type that the user is currently
 	# interested in. This takes into account detached panels and window
@@ -120,8 +124,6 @@ class CompoundEditor( GafferUI.Editor ) :
 				editor = editors[0]
 
 		return editor
-
-
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
@@ -200,11 +202,137 @@ class CompoundEditor( GafferUI.Editor ) :
 		# Editors are public classes and so they are stored by repr.
 		# We don't want to expose the implementation of detached panels
 		# (considered private) so instead we save their construction args.
-		return "GafferUI.CompoundEditor( scriptNode, children = %s, detachedPanels = %s, windowState = %s )" \
+		return "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : %s, 'detachedPanels' : %s, 'windowState' : %s, 'editorState' : %s } )" \
 				% (
 					self.__splitContainer.serialiseChildren(),
 					self.__serialiseDetachedPanels(),
-					self._serializeWindowState()
+					self._serializeWindowState(),
+					self.__captureEditorState()
+				)
+
+	# We use the path to the editor in the UI to allow us to find
+	# the same editor again after restoring from a layout.
+	# NOTE: This is only stable as long as the layout hasn't been
+	# altered since the path was generated
+	def __pathToEditor( self, editor ) :
+
+		path = []
+
+		child = editor
+		parent = child.parent()
+
+		while parent is not None :
+
+			# The last (will be first) part of the path indicates where
+			# the target lives, 'c' for child, 'p' for panel
+			if isinstance( parent, GafferUI.CompoundEditor ) :
+				path.append( "c" )
+				break
+			elif isinstance( parent, _DetachedPanel ) :
+				path.append( str(self.__detachedPanels.index( parent )) )
+				path.append( "p" )
+				# We don't append the index of the split container
+				# as we'll skip it later
+				break
+
+			# The rest of the path in then simply the index of the child under
+			# its parent.
+
+			path.append( str(parent.index( child )) )
+
+			child = parent
+			parent = child.parent()
+
+		# Store in load order
+		path.reverse()
+
+		# By now we have something like "c-0-1-1-0"
+		return "-".join( path )
+
+	# Finds the editor given the string from __pathToEditor
+	def __editorAtPath( self, path ) :
+
+		path = path.split( "-" )
+
+		# The first element indicates where the path is rooted, the second
+		# element is the corresponding index. We have to manually unpack the
+		# initial Widget from the appropriate place, the rest we can recursively
+		# unpack using the subscript method of indexed child retrieval from
+		# gaffer layout widgets.
+
+		if path[0] == "p" :
+			obj = self.__detachedPanels[ int(path[1]) ]._splitContainer()
+		elif path[0] == "c" :
+			obj = self.__splitContainer[ int(path[1]) ]
+		else :
+			return None
+
+		# We consumed the first two elements getting to the root of the
+		# hierarchy we need to search below.
+		for i in path[2:] :
+			obj = obj[ int(i) ]
+
+		if not isinstance( obj, GafferUI.Editor ) :
+			raise RuntimeError( "Unable to find an editor at path %s" % path )
+
+		return obj
+
+	def __captureEditorState( self ) :
+
+		state = {}
+
+		# Store the driver (if set) for any NodeSetEditors
+		nodeSetEditors = [ e for e in self.editors() if isinstance( e, GafferUI.NodeSetEditor ) ]
+		for n in nodeSetEditors :
+			driver, mode = n.getNodeSetDriver()
+			if driver is not None :
+				state[ self.__pathToEditor(n) ] = {
+					"driver" : self.__pathToEditor(driver),
+					"driverMode" : mode
+				}
+			else :
+				nodeSet = n.getNodeSet()
+				# NumericBookmarkSet doesn't support repr as we don't want to
+				# couple the layout-centric serialisation that assumes 'scriptNode'
+				# is a global into Sets, so we keep it all contained here.
+				if isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
+					state[ self.__pathToEditor(n) ] = {
+						"nodeSet" : "Gaffer.NumericBookmarkSet( scriptNode, %d )" % nodeSet.getBookmark()
+					}
+
+		return state
+
+	def __restoreEditorState( self, editorState ) :
+
+		if not editorState :
+			return
+
+		for path, state in editorState.items() :
+
+			editor = self.__editorAtPath( path )
+
+			try :
+
+				if "driver" in state :
+
+					driver = self.__editorAtPath( state["driver"] )
+					editor.setNodeSetDriver( driver, state["driverMode"] )
+
+				elif "nodeSet" in state :
+
+					g = {
+						"scriptNode" : self.scriptNode(),
+						"Gaffer" : Gaffer
+					}
+					nodeSet = eval( state["nodeSet"], g )
+					editor.setNodeSet( nodeSet )
+
+			except Exception as e :
+				sys.stderr.write(
+					"Unable to restore editor state for {editor}: {error}\n".format(
+						editor = "%s (%s)" % ( path, type(editor).__name__ ),
+						error = "%s: %s" % ( type(e).__name__, e )
+					)
 				)
 
 	# visibility for Test Harness
@@ -396,6 +524,9 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 	def restoreChildren( self, children ) :
 
+		if not children :
+			return
+
 		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
 
 			self.split( children[0], 0 )
@@ -459,7 +590,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__tabDragBehaviour = _TabDragBehaviour( self )
 
 		self.__updateStyles()
-
+		self.__updatePinningButton()
 
 	# This method MUST be used (along with removeEditor) whenever the children
 	# of a _TabbedContainer are being changed. Do not use TabbedContainer methods
@@ -610,8 +741,18 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 	def __updatePinningButton( self, *unused ) :
 
+		# This method will get called during the deletion of a layout
+		# containing linked editor chains if the current editor's driver gets
+		# deleted before it does.
+		# Due to https://github.com/GafferHQ/gaffer/pull/3179, the c++ widget
+		# hierarchy will have been deleted before we are deleted, so we end up
+		# with 'Underlying C++ object has been deleted' errors. Sanity check
+		# that we're not just further down the deletion list...
+		if not GafferUI._qtObjectIsValid( self._qtWidget() ) :
+			return
+
 		editor = self.getCurrent()
-		if isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
+		if editor is not None and isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
 
 			self.__pinningButton.setVisible( True )
 
@@ -628,8 +769,11 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 				icon = "nodeSetDriverNodeSelection.png"
 				tip = "Click to pin the current node selection"
 
-			self.__pinningButton.setToolTip( tip )
-			self.__pinningButton.setImage( icon )
+			try :
+				self.__pinningButton.setToolTip( tip )
+				self.__pinningButton.setImage( icon )
+			except Exception as e :
+				sys.stderr.write( str(e) )
 
 		else :
 
@@ -781,7 +925,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			self.insert( 0, newEditor )
 			self.setCurrent( newEditor )
 		else :
-			self.getCurrent().setNodeSet( nodeSet )
+			target = self.getCurrent().drivingEditor() or self.getCurrent()
+			target.setNodeSet( nodeSet )
 
 		self.setHighlighted( False )
 		self.__pinningButton.setHighlighted( False )
@@ -865,8 +1010,7 @@ class _DetachedPanel( GafferUI.Window ) :
 		# accessors for this.
 		self.__parentEditor = weakref.ref( parentEditor )
 
-		if children :
-			self.__splitContainer.restoreChildren( children )
+		self.__splitContainer.restoreChildren( children )
 
 		self.__windowState = windowState or {}
 
@@ -914,6 +1058,10 @@ class _DetachedPanel( GafferUI.Window ) :
 			self.__splitContainer.serialiseChildren(),
 			_reprDict( _getWindowState( self ) )
 		)
+
+	# Required for editor path introspection
+	def _splitContainer( self ) :
+		return self.__splitContainer
 
 ## An internal eventFilter class managing all tab drag-drop events and logic.
 # Tab dragging is an exception and is implemented entirely using mouse-move
@@ -1497,11 +1645,9 @@ class _DrivenEditorSwatch( _Frame ) :
 	__drivenEditorColors = [
 		imath.Color3f( 0.71, 0.43, 0.47 ),
 		imath.Color3f( 0.85, 0.80, 0.48 ),
-		imath.Color3f( 0.62, 0.79, 0.93 ),
-		imath.Color3f( 0.27, 0.45, 0.21 ),
+		imath.Color3f( 0.35, 0.55, 0.28 ),
 		imath.Color3f( 0.57, 0.43, 0.71 )
 	]
-	__drivenEditorColorsLastUsed = 0
 	__drivenEditorColorMapping = {}
 
 	def __init__( self ) :
@@ -1509,6 +1655,17 @@ class _DrivenEditorSwatch( _Frame ) :
 		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
 		self._qtWidget().setFixedSize( 6, 6 )
 
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
+
+	# Disclaimer:
+	# In order to defer the highlighting of related editors, avoiding brief
+	# flashes whilst general mousing around, we abuse the tooltip mechanism.
+	# Otherwise, we'd have to reimplement the entire set-timeout/cancel/etc...
+	# behaviour or figure some way to hook up to Qt's tooltip event directly.
+	# As this is technically a private implementation class, no one should be
+	# calling getToolTip themselves anyway so were going to try and get away
+	# with it.  We'll have to fix this up should we need to call this in other
+	# presentation scenarios.
 	def getToolTip( self ) :
 
 		editor = self.__getNodeSetEditor()
@@ -1521,14 +1678,41 @@ class _DrivenEditorSwatch( _Frame ) :
 		toolTipElements = []
 
 		if masterEditor is not None :
-			toolTipElements.append( "Following _%s_" % masterEditor.getTitle() )
+			toolTipElements.append( "Following _%s_\n" % masterEditor.getTitle() )
 
 		if drivenEditors :
 			toolTipElements.append( "Followed by:")
 			for d in drivenEditors :
 				toolTipElements.append( " - _%s_" % d.getTitle() )
 
+		self.__highlightRelatedEditors( editor, True )
+
 		return "\n".join( toolTipElements )
+
+	@staticmethod
+	def __highlightRelatedEditors( editor, highlighted ) :
+
+		toHighlight = []
+
+		masterEditor = editor.drivingEditor()
+		if masterEditor is not None :
+			toHighlight.append( masterEditor )
+		else :
+			toHighlight.extend( editor.drivenNodeSets( recurse = True ).keys() )
+
+		for e in toHighlight :
+			if e._qtWidget().isHidden() :
+				e.parent().parent().setHighlighted( highlighted )
+			else :
+				e.parent().setHighlighted( highlighted )
+
+	def __leave( self, widget ) :
+
+		editor = self.__getNodeSetEditor()
+		if editor is None :
+			return
+
+		self.__highlightRelatedEditors( editor, False )
 
 	def update( self ) :
 
@@ -1576,9 +1760,18 @@ class _DrivenEditorSwatch( _Frame ) :
 			if weakEditor() is editor :
 				return color
 
-		colorIndex = ( cls.__drivenEditorColorsLastUsed + 1 ) % len( cls.__drivenEditorColors )
+		# We want the color index to be kept per-script, not per gaffer process
+		# so the CompoundEditor is a good place. Fall-back on the scriptNode
+
+		e = editor.ancestor( GafferUI.CompoundEditor )
+		if e is None :
+			e = editor.scriptNode()
+		if not hasattr( e, '_DrivenEditorSwatch__lastColorUsed' ) :
+			e.__lastColorUsed = 0
+
+		colorIndex = ( e.__lastColorUsed + 1 ) % len( cls.__drivenEditorColors )
 		editorColor = cls.__drivenEditorColors[ colorIndex ]
 		cls.__drivenEditorColorMapping[ weakref.ref( editor ) ] =  editorColor
-		cls.__drivenEditorColorsLastUsed = colorIndex
+		e.__lastColorUsed = colorIndex
 		return editorColor
 

@@ -84,13 +84,16 @@ def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mod
 		menuDefinition.append( "/%s/%s" % ( subMenuTitle, title ), {
 			"command" : lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
 			"active" : not editor.drivesNodeSet( targetEditor ) and not isCurrent,
-			"checkBox" : isCurrent
+			"checkBox" : isCurrent,
+			"enter" : lambda : weakTarget().parent().setHighlighted( True ),
+			"leave" : lambda : weakTarget().parent().setHighlighted( False )
 		} )
 
 # Simple follows, eg: Hierarchy -> Viewer
 def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
 
 	if not isinstance( editor, (
+		GafferUI.Viewer,
 		GafferUI.NodeEditor,
 		GafferUI.AnimationEditor,
 		GafferSceneUI.HierarchyView,

@@ -139,5 +139,86 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		self.assertEqual( ct, editorTypes )
 		self.assertEqual( repr(cc.editors()), repr(editors) )
 
+	def testNodeSetRestore( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		editors = list((
+			GafferUI.NodeEditor( s ),
+			GafferUI.NodeEditor( s ),
+			GafferUI.AnimationEditor( s ),
+			GafferUI.NodeEditor( s )
+		))
+
+		editors[0].setNodeSet( Gaffer.NumericBookmarkSet( s, 1 ) )
+		editors[1].setNodeSet( Gaffer.NumericBookmarkSet( s, 2 ) )
+		editors[2].setNodeSet( Gaffer.NumericBookmarkSet( s, 3 ) )
+
+		for e in editors :
+			c.addEditor( e )
+
+		a = Gaffer.ApplicationRoot( "testApp" )
+		l = GafferUI.Layouts.acquire( a )
+		l.add( "ReprNodeSetTest", repr(c), persistent = False )
+
+		cc = l.create( "ReprNodeSetTest", s )
+
+		editors = cc.editors()
+
+		ns = editors[0].getNodeSet()
+		self.assertTrue( isinstance( ns, Gaffer.NumericBookmarkSet ) )
+		self.assertTrue( ns.getBookmark(), 1 )
+
+		ns = editors[1].getNodeSet()
+		self.assertTrue( isinstance( ns, Gaffer.NumericBookmarkSet ) )
+		self.assertTrue( ns.getBookmark(), 2 )
+
+		ns = editors[2].getNodeSet()
+		self.assertTrue( isinstance( ns, Gaffer.NumericBookmarkSet ) )
+		self.assertTrue( ns.getBookmark(), 3 )
+
+		ns = editors[3].getNodeSet()
+		self.assertTrue( isinstance( ns, Gaffer.StandardSet ) )
+
+	def testSetNodeSetDriverRestore( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		GafferUI.NodeSetEditor.registerNodeSetDriverMode( "testMode", lambda e, t : t.getNodeSet() )
+
+		editors = list((
+			GafferUI.NodeEditor( s ),
+			GafferUI.NodeEditor( s ),
+			GafferUI.AnimationEditor( s ),
+			GafferUI.NodeEditor( s )
+		))
+
+		editors[0].setNodeSetDriver( editors[1] )
+		editors[2].setNodeSetDriver( editors[3], "testMode" )
+
+		for e in editors :
+			c.addEditor( e )
+
+		a = Gaffer.ApplicationRoot( "testApp" )
+		l = GafferUI.Layouts.acquire( a )
+		l.add( "ReprDriverTest", repr(c), persistent = False )
+
+		cc = l.create( "ReprDriverTest", s )
+
+		editors = cc.editors()
+
+		driver, mode = editors[0].getNodeSetDriver()
+		self.assertTrue( driver is editors[1] )
+		self.assertTrue( mode is GafferUI.NodeSetEditor.DriverModeNodeSet )
+
+		driver, mode = editors[2].getNodeSetDriver()
+		self.assertTrue( driver is editors[3] )
+		self.assertTrue( mode is "testMode" )
+
+		driver, mode = editors[3].getNodeSetDriver()
+		self.assertIsNone( driver )
+
 if __name__ == "__main__":
 	unittest.main()

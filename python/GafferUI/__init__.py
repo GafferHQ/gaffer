@@ -96,18 +96,7 @@ def _qtAddress( o ) :
 		import sip
 		return sip.unwrapinstance( o )
 	else :
-		if Qt.__binding__ == "PySide2" :
-			try :
-				import PySide2.shiboken2 as shiboken
-			except ImportError :
-				import shiboken2 as shiboken
-		else :
-			try :
-				import PySide.shiboken
-			except ImportError :
-				import shiboken
-
-		return shiboken.getCppPointer( o )[0]
+		return __shiboken().getCppPointer( o )[0]
 
 ##########################################################################
 # Function to return a wrapped Qt object from the given C++ address.
@@ -122,18 +111,45 @@ def _qtObject( address, type ) :
 		import sip
 		return sip.wrapinstance( address, type )
 	else :
-		if Qt.__binding__ == "PySide2" :
-			try :
-				import PySide2.shiboken2 as shiboken
-			except ImportError :
-				import shiboken2 as shiboken
-		else :
-			try :
-				import PySide.shiboken
-			except ImportError :
-				import shiboken
+		return __shiboken().wrapInstance( address, type )
 
-		return shiboken.wrapInstance( address, type )
+##########################################################################
+# Determines if the wrapped Qt object is still valid
+# Useful when having to deal with the consequences of C++/Python deletion
+# order challeneges, see:
+#    https://github.com/GafferHQ/gaffer/pull/3179
+##########################################################################
+
+def _qtObjectIsValid( o ) :
+
+	import Qt
+	if "PyQt" in Qt.__binding__ :
+		import sip
+		return not sip.isdeleted( o )
+	else :
+		return __shiboken().isValid( o )
+
+##########################################################################
+# Shiboken lives in a variety of places depending on which PySide it is.
+##########################################################################
+
+def __shiboken() :
+
+	import Qt
+	assert( "PyQt" not in Qt.__binding__ )
+
+	if Qt.__binding__ == "PySide2" :
+		try :
+			import PySide2.shiboken2 as shiboken
+		except ImportError :
+			import shiboken2 as shiboken
+	else :
+		try :
+			import PySide.shiboken
+		except ImportError :
+			import shiboken
+
+	return shiboken
 
 ##########################################################################
 # now import our actual functionality
