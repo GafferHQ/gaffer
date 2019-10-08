@@ -808,28 +808,6 @@ class ShaderCache : public IECore::RefCounted
 			return m_defaultSurface;
 		}
 
-		// To apply a default color+strength to the lights without shaders assigned.
-		SharedCShaderPtr getEmission( const IECoreScene::Shader *shader, const V3f &color, const float strength )
-		{
-			Cache::accessor a;
-			m_cache.insert( a, shader->Object::hash() );
-			if( !a->second )
-			{
-				const std::string name = "shader:" + a->first.toString() + ":emission";
-				ccl::Shader *cshader = new ccl::Shader();
-				cshader->name = name.c_str();
-				cshader->graph = new ccl::ShaderGraph();
-				ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
-				ccl::EmissionNode *emission = new ccl::EmissionNode();
-				emission->color = SocketAlgo::setColor( color );
-				emission->strength = strength;
-				ccl::ShaderNode *shaderNode = cshader->graph->add( (ccl::ShaderNode*)emission );
-				cshader->graph->connect( shaderNode->output( "Emission" ), outputNode->input( "Surface" ) );
-				a->second = SharedCShaderPtr( cshader );
-			}
-			return a->second;
-		}
-
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
@@ -902,10 +880,8 @@ IECore::InternedString g_useHoldoutAttributeName( "ccl:use_holdout" );
 IECore::InternedString g_isShadowCatcherAttributeName( "ccl:is_shadow_catcher" );
 IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
-std::array<IECore::InternedString, 2> g_colorAttributeNames = { {
-	"Cs",
-	"ccl:color",
-} };
+// Per-object color
+IECore::InternedString g_colorAttributeName( "Cs" );
 // Cycles Light
 IECore::InternedString g_lightAttributeName( "ccl:light" );
 // Particle
@@ -932,24 +908,18 @@ IECore::InternedString g_particleVelocityAttributeName( "velocity" );
 IECore::InternedString g_particleAngularVelocityAttributeName( "angular_velocity" );
 
 // Shader Assignment
-std::array<IECore::InternedString, 2> g_shaderAttributeNames = { {
-	"surface",
-	"osl:surface",
-} };
-
-ccl::PathRayFlag nameToRayType( const std::string &name )
-{
-#define MAP_RAY(rayname, raytype) if(name == rayname) return raytype;
-	MAP_RAY( "camera", ccl::PATH_RAY_CAMERA );
-	MAP_RAY( "diffuse", ccl::PATH_RAY_DIFFUSE );
-	MAP_RAY( "glossy", ccl::PATH_RAY_GLOSSY );
-	MAP_RAY( "transmission", ccl::PATH_RAY_TRANSMIT );
-	MAP_RAY( "shadow", ccl::PATH_RAY_SHADOW );
-	MAP_RAY( "scatter", ccl::PATH_RAY_VOLUME_SCATTER );
-#undef MAP_RAY
-
-	return (ccl::PathRayFlag)0;
-}
+IECore::InternedString g_cyclesSurfaceShaderAttributeName( "ccl:surface" );
+IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
+IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
+IECore::InternedString g_cyclesDisplacementShaderAttributeName( "ccl:displacement" );
+IECore::InternedString g_cyclesVolumeShaderAttributeName( "ccl:volume" );
+// Ray visibility
+IECore::InternedString g_cameraVisibilityAttributeName( "ccl:visibility:camera" );
+IECore::InternedString g_diffuseVisibilityAttributeName( "ccl:visibility:diffuse" );
+IECore::InternedString g_glossyVisibilityAttributeName( "ccl:visibility:glossy" );
+IECore::InternedString g_transmissionVisibilityAttributeName( "ccl:visibility:transmission" );
+IECore::InternedString g_shadowVisibilityAttributeName( "ccl:visibility:shadow" );
+IECore::InternedString g_scatterVisibilityAttributeName( "ccl:visibility:scatter" );
 
 IECore::InternedString g_setsAttributeName( "sets" );
 
@@ -959,110 +929,56 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes )
+			:	m_shaderHash( 0 ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes )
 		{
-			for( const auto &name : g_shaderAttributeNames )
-			{
-				if( const Object *o = attributes->member<const Object>( name ) )
-				{
-					if( const ShaderNetwork *shader = reportedCast<const ShaderNetwork>( o, "attribute", name ) )
-					{
-						m_shaderHash = hash_value( shader->getOutput() );
-						m_shader = shaderCache->get( shader );
-					}
+			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
+			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
+			updateVisibility( g_glossyVisibilityAttributeName,       (int)ccl::PATH_RAY_GLOSSY,         attributes );
+			updateVisibility( g_transmissionVisibilityAttributeName, (int)ccl::PATH_RAY_TRANSMIT,       attributes );
+			updateVisibility( g_shadowVisibilityAttributeName,       (int)ccl::PATH_RAY_SHADOW,         attributes );
+			updateVisibility( g_scatterVisibilityAttributeName,      (int)ccl::PATH_RAY_VOLUME_SCATTER, attributes );
 
-					break;
-				}
+			m_useHoldout = attributeValue<bool>( g_useHoldoutAttributeName, attributes, m_useHoldout );
+			m_isShadowCatcher = attributeValue<bool>( g_isShadowCatcherAttributeName, attributes, m_isShadowCatcher );
+			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
+			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
+			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
+
+			// Surface shader
+			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
+			if( surfaceShaderAttribute )
+			{
+				m_shaderHash = hash_value( surfaceShaderAttribute->getOutput() );
+
+				//const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
+				//const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
+
+				m_shader = shaderCache->get( surfaceShaderAttribute );
 			}
-
-			for( const auto &m : attributes->members() )
+			else
 			{
-				for( const auto &name : g_colorAttributeNames )
+				// Volume shader
+				const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
+				if( volumeShaderAttribute )
 				{
-					if( m.first == name )
-					{
-						if( const Color3fData *data = reportedCast<const Color3fData>( m.second.get(), "attribute", m.first ) )
-						{
-							m_color = data->readable();
-							break;
-						}
-					}
-				}
-				if( m.first == g_setsAttributeName )
-				{
-					if( const InternedStringVectorData *d = reportedCast<const InternedStringVectorData>( m.second.get(), "attribute", m.first ) )
-					{
-						if( d->readable().size() )
-						{
-							msg( Msg::Warning, "CyclesRenderer", "Attribute \"sets\" not supported" );
-						}
-					}
-				}
-				else if( boost::starts_with( m.first.string(), "ccl:visibility:" ) )
-				{
-					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
-					{
-						if( const BoolData *data = static_cast<const BoolData *>( d ) )
-						{
-							auto &vis = data->readable();
-							auto rayType = nameToRayType( m.first.string().c_str() + 15 );
-							m_visibility = vis ? m_visibility |= rayType : m_visibility & ~rayType;
-						}
-					}
-				}
-				else if( boost::starts_with( m.first.string(), "ccl:" ) )
-				{
-					if( const ShaderNetwork *shaderNetwork = reportedCast<const ShaderNetwork>( m.second.get(), "attribute", m.first ) )
-					{
-						if( m.first == g_lightAttributeName )
-						{
-							const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderNetwork->getOutput().shader );
-							// This is just to store data that is attached to the lights.
-							m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convert( shaderNetwork ) );
-						}
-						m_shader = shaderCache->get( shaderNetwork );
-					}
-					else if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
-					{
-						if( m.first == g_useHoldoutAttributeName )
-						{
-							if ( const BoolData *data = static_cast<const BoolData *>( d ) )
-								m_useHoldout = data->readable();
-						}
-						else if( m.first == g_isShadowCatcherAttributeName )
-						{
-							if ( const BoolData *data = static_cast<const BoolData *>( d ) )
-								m_isShadowCatcher = data->readable();
-						}
-						else if( m.first == g_maxLevelAttributeName )
-						{
-							if ( const IntData *data = static_cast<const IntData *>( d ) )
-								m_maxLevel = data->readable();
-						}
-						else if( m.first == g_dicingRateAttributeName )
-						{
-							if ( const FloatData *data = static_cast<const FloatData *>( d ) )
-								m_dicingRate = data->readable();
-						}
-					}
-				}
-				else if( boost::starts_with( m.first.string(), "user:" ) )
-				{
-					msg( Msg::Warning, "CyclesRenderer", boost::format( "User attribute \"%s\" not supported" ) % m.first.string() );
-				}
-				else if( boost::contains( m.first.string(), ":" ) )
-				{
-					// Attribute for another renderer - ignore
+					m_shaderHash = hash_value( volumeShaderAttribute->getOutput() );
+					m_shader = shaderCache->get( volumeShaderAttribute );
 				}
 				else
 				{
-					msg( Msg::Warning, "CyclesRenderer", boost::format( "Attribute \"%s\" not supported" ) % m.first.string() );
+					// Revert back to the default surface
+					m_shader = shaderCache->defaultSurface();
 				}
 			}
 
-			if( !m_shader )
+			// Light attributes
+			const IECoreScene::ShaderNetwork *lightShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
+			if( lightShaderAttribute )
 			{
-				m_shader = shaderCache->defaultSurface();
+				// This is just to store data that is attached to the lights.
+				m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convert( lightShaderAttribute ) );
 			}
 		}
 
@@ -1194,11 +1110,34 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		}
 
 		template<typename T>
+		static T attributeValue( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T &defaultValue )
+		{
+			typedef IECore::TypedData<T> DataType;
+			const DataType *data = attribute<DataType>( name, attributes );
+			return data ? data->readable() : defaultValue;
+		}
+
+		template<typename T>
 		static boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 		{
 			typedef IECore::TypedData<T> DataType;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : boost::optional<T>();
+		}
+
+		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes )
+		{
+			if( const IECore::BoolData *d = attribute<IECore::BoolData>( name, attributes ) )
+			{
+				if( d->readable() )
+				{
+					m_visibility |= rayType;
+				}
+				else
+				{
+					m_visibility = m_visibility & ~rayType;
+				}
+			}
 		}
 
 		struct Particle
@@ -1275,7 +1214,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		CLightPtr m_light;
 		SharedCShaderPtr m_shader;
 		size_t m_shaderHash;
-		unsigned m_visibility;
+		int m_visibility;
 		bool m_useHoldout;
 		bool m_isShadowCatcher;
 		int m_maxLevel;
@@ -2260,6 +2199,20 @@ IECore::InternedString g_curveUseBackfacing( "ccl:curve:use_backfacing" );
 IECore::InternedString g_useTangentNormalGeoOptionType( "ccl:curve:use_tangent_normal_geometry" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "ccl:background:shader" );
+
+ccl::PathRayFlag nameToRayType( const std::string &name )
+{
+#define MAP_RAY(rayname, raytype) if(name == rayname) return raytype;
+	MAP_RAY( "camera", ccl::PATH_RAY_CAMERA );
+	MAP_RAY( "diffuse", ccl::PATH_RAY_DIFFUSE );
+	MAP_RAY( "glossy", ccl::PATH_RAY_GLOSSY );
+	MAP_RAY( "transmission", ccl::PATH_RAY_TRANSMIT );
+	MAP_RAY( "shadow", ccl::PATH_RAY_SHADOW );
+	MAP_RAY( "scatter", ccl::PATH_RAY_VOLUME_SCATTER );
+#undef MAP_RAY
+
+	return (ccl::PathRayFlag)0;
+}
 // Square samples
 std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
 	"ccl:integrator:aa_samples",
