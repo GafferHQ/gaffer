@@ -98,7 +98,8 @@ def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
 		GafferUI.AnimationEditor,
 		GafferSceneUI.HierarchyView,
 		GafferSceneUI.SceneInspector,
-		GafferSceneUI.PrimitiveInspector
+		GafferSceneUI.PrimitiveInspector,
+		GafferSceneUI.UVInspector
 	) ) :
 		return
 
