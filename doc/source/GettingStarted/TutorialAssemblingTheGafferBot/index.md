@@ -309,25 +309,20 @@ To make switching between viewing Gaffy's geometry and the render easier, you ca
 
 1. Select the InteractiveAppleseedRender node.
 
-2. Click ![](images/targetNodesUnlocked.png "the pin button") at the top-right
-  of the top panel. The pin button will highlight: ![](images/nodeSetStandardSet.png "highlighted pin").
+2. From the editor focus menu ![](images/editorFocusMenuNodeSelectionLinked.png "the editor focus menu") at the top-right of the top panel, choose _Node Selection_ in the _Pin_ group. The menu's icon will change to the pinned icon (![](images/nodeSetStandardSet.png "highlighted pin")) to show it is now locked to a specific node, and the Viewer's title in the tab bar will now include "[InteractiveAppleseedRender]" to help you keep track of which node(s) are pinned in which editors.
 
-<!-- TODO: Screenshot of pinned Viewer -->
+![](images/viewerPinnedMaster.png "The viewer's tab bar and editor focus menu when pinned to a specific node")
+
+> Tip :
+> You can also pin an editor to the current node selection by pressing <kbd>P</kbd> whilst the cursor is over the editor.
 
 The _Viewer_ is now locked to the InteractiveAppleseedRender node's scene (which contains all of the parts from its upstream scenes), and will only show that scene, even if you deselect it or select a different node.
 
-Next, pin the same node to the _Hierarchy View_. This time, use a shortcut:
+In the default layout, the _Hierarchy View_ and other editors are set to follow the _Viewer_. You can tell which editors are linked in this way by the color of their editor focus mode menu. Slave editors will also show the slave icon (![](images/nodeSetDriverNodeSet.png "the slave editor focus mode icon")) in their editor focus menu.
 
-1. Select the InteractiveAppleseedRender node.
+![](images/hierarchyViewSlave.png "The hierarchy view's tab bar and editor focus menu when following another editor")
 
-2. Middle-click and drag the InteractiveAppleseedRender node from the _Graph Editor_ into the
-  _Hierarchy View_.
-
-<!-- TODO: Screenshot of the pinned Hierarchy View -->
-
-As with the _Viewer_, the _Hierarchy View_ will now remain locked to the output of InteractiveAppleseedRender, regardless of your selection. Now you are free to select any node for editing in the _Node Editor_, but you will always be viewing the final results of the last node in the graph.
-
-For the final adjustment to the UI, create another _Viewer_ in the top-left panel, and pin the Catalogue node to it:
+For the final adjustment to the UI, create another _Viewer_ in the top-left panel, and pin the Catalogue node to it. This time we'll use another pinning shortcut:
 
 1. At the top-right of the top panel, click ![](images/layoutButton.png "the layout menu button") to open the layout menu.
 

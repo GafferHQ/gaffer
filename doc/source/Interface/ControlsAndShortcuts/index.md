@@ -30,6 +30,21 @@ Hide tabs of current panel            :kbd:`Ctrl` + :kbd:`T`
 ===================================== =============================================
 ```
 
+### Pinnable Editors and Inspectors ###
+
+When editors are following another editor (linked), keybaord shortcuts will
+affect the master editor.
+
+```eval_rst
+===================================== =============================================
+Action                                Control or shortcut
+===================================== =============================================
+Pin the node selection                Hover cursor over editor, :kbd:`p`
+Pin numeric bookmark 1-9              Hover cursor over editor, :kbd:`1` - :kbd:`9`
+Follow to the node selection          Hover cursor over editor, :kbd:`u`
+===================================== =============================================
+```
+
 ## _Graph Editor_ ##
 
 > Note :
@@ -165,13 +180,13 @@ Jump to bookmarked node               Hover cursor over editor, :kbd:`Ctrl` +
                                       
                                       or
                                       
-                                      Right-click |pin|, select bookmarked node
+                                      Click |focusMenu|, select *Bookmark* > ...
 Assign numeric bookmark               :kbd:`Ctrl` + :kbd:`1` … :kbd:`9`
 Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ===================================== =============================================
 
-.. |pin| image:: images/nodeSetStandardSet.png
-    :alt: Pin
+.. |focusMenu| image:: images/editorFocusMenuNodeSelection.png
+    :alt: Editor focus menu
 ```
 
 
