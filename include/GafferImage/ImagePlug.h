@@ -177,9 +177,11 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		/// @name Tile utilities
 		////////////////////////////////////////////////////////////////////
 		//@{
-		static int tileSize() { return 1 << tileSizeLog2(); };
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
+
+		inline static int tileSize() { return 1 << tileSizeLog2(); };
+		inline static int tilePixels() { return tileSize() * tileSize(); };
 
 		/// Returns the index of the tile containing a point
 		/// This just means dividing by tile size ( always rounding down )
@@ -193,6 +195,12 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		{
 			return tileIndex( point ) * tileSize();
 		}
+
+		/// Returns the unwrapped index of a point within a tile
+		inline static int pixelIndex( const Imath::V2i &point, const Imath::V2i &tileOrigin )
+		{
+			return ( ( point.y - tileOrigin.y ) << tileSizeLog2() ) + point.x - tileOrigin.x;
+		};
 		//@}
 
 	private :

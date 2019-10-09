@@ -236,8 +236,10 @@ void GafferImageModule::bindCore()
 		.def( "metadata", &metadata, ( arg( "_copy" ) = true ) )
 		.def( "metadataHash", &metadataHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
+		.def( "tilePixels", &ImagePlug::tilePixels ).staticmethod( "tilePixels" )
 		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
+		.def( "pixelIndex", &ImagePlug::pixelIndex ).staticmethod( "pixelIndex" )
 	;
 
 	typedef ComputeNodeWrapper<ImageNode> ImageNodeWrapper;
