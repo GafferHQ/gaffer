@@ -80,13 +80,15 @@ def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mod
 		weakEditor = weakref.ref( editor )
 		weakTarget = weakref.ref( targetEditor )
 
+		highlightTarget = weakref.ref( targetEditor.parent().parent() if targetEditor._qtWidget().isHidden() else targetEditor.parent() )
+
 		isCurrent = existingMode == mode if existingDriver is targetEditor else False
 		menuDefinition.append( "/%s/%s" % ( subMenuTitle, title ), {
 			"command" : lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
 			"active" : not editor.drivesNodeSet( targetEditor ) and not isCurrent,
 			"checkBox" : isCurrent,
-			"enter" : lambda : weakTarget().parent().setHighlighted( True ),
-			"leave" : lambda : weakTarget().parent().setHighlighted( False )
+			"enter" : lambda : highlightTarget().setHighlighted( True ),
+			"leave" : lambda : highlightTarget().setHighlighted( False )
 		} )
 
 # Simple follows, eg: Hierarchy -> Viewer
@@ -98,7 +100,8 @@ def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
 		GafferUI.AnimationEditor,
 		GafferSceneUI.HierarchyView,
 		GafferSceneUI.SceneInspector,
-		GafferSceneUI.PrimitiveInspector
+		GafferSceneUI.PrimitiveInspector,
+		GafferSceneUI.UVInspector
 	) ) :
 		return
 
