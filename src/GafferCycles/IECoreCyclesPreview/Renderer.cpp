@@ -922,6 +922,7 @@ IECore::InternedString g_shadowVisibilityAttributeName( "ccl:visibility:shadow" 
 IECore::InternedString g_scatterVisibilityAttributeName( "ccl:visibility:scatter" );
 
 IECore::InternedString g_setsAttributeName( "sets" );
+IECore::InternedString g_cryptomatteAssetAttributeName( "asset:" );
 
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -943,6 +944,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
 			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
+
+			m_sets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 
 			// Surface shader
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
@@ -1006,6 +1009,20 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			m_particle.apply( object );
+
+			// Cryptomatte asset name
+			if( m_sets && m_sets->readable().size() )
+			{
+				const vector<IECore::InternedString> &v = m_sets->readable();
+				for( auto const& name : v )
+				{
+					if( boost::starts_with( name.string(), g_cryptomatteAssetAttributeName.string() ) )
+					{
+						object->asset_name = ccl::ustring( name.c_str() + 6 );
+						break;
+					}
+				}
+			}
 
 			return true;
 		}
@@ -1219,6 +1236,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		bool m_isShadowCatcher;
 		int m_maxLevel;
 		float m_dicingRate;
+		IECore::ConstInternedStringVectorDataPtr m_sets;
 		Color3f m_color;
 		Particle m_particle;
 
