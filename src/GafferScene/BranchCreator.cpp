@@ -99,7 +99,7 @@ BranchCreator::BranchCreator( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "parent" ) );
 
-	addChild( new PathMatcherDataPlug( "__filteredPaths", Gaffer::Plug::In, new IECore::PathMatcherData() ) );
+	addChild( new PathMatcherDataPlug( "__filteredPaths", Gaffer::Plug::In, new IECore::PathMatcherData(), Plug::Default & ~Plug::Serialisable ) );
 	addChild( new PathMatcherDataPlug( "__parentPaths", Gaffer::Plug::Out, new IECore::PathMatcherData() ) );
 
 	addChild( new AtomicCompoundDataPlug( "__mapping", Gaffer::Plug::Out, new CompoundData() ) );
