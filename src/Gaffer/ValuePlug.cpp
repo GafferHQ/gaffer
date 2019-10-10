@@ -79,6 +79,61 @@ inline const ValuePlug *sourcePlug( const ValuePlug *p )
 
 const IECore::MurmurHash g_nullHash;
 
+#if TBB_INTERFACE_VERSION < 10003
+
+// A bug in TBB means that `TaskMutex::execute( f )` cannot guarantee that `f` is
+// called on the current thread (see TaskMutex for details). This means that
+// `LRUCache::get()` may end up invoking the cache getter on a different thread,
+// but only when `CachePolicy==TaskCollaboration`. We use this horrible little
+// workaround to ensure that we transfer over the correct ThreadState into the
+// getter.
+class ThreadStateFixer
+{
+
+	public :
+
+		ThreadStateFixer( ValuePlug::CachePolicy cachePolicy )
+			:	m_threadState( cachePolicy == ValuePlug::CachePolicy::TaskCollaboration ? &ThreadState::current() : nullptr )
+		{
+		}
+
+		struct Scope : public ThreadState::Scope
+		{
+			Scope( const ThreadStateFixer &f )
+				:	ThreadState::Scope( *f.m_threadState )
+			{
+			}
+		};
+
+	private :
+
+		const ThreadState *m_threadState;
+
+};
+
+#else
+
+// No-op version of ThreadStateFixer for use with modern TBB. All official
+// Gaffer builds use this code path because GafferHQ/dependencies is following
+// VFXPlatform reasonably closely.
+struct ThreadStateFixer
+{
+
+	ThreadStateFixer( ValuePlug::CachePolicy cachePolicy )
+	{
+	}
+
+	struct Scope
+	{
+		Scope( const ThreadStateFixer &f )
+		{
+		}
+	};
+
+};
+
+#endif
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -144,13 +199,15 @@ struct HashProcessKey : public HashCacheKey
 		:	HashCacheKey( plug, context ),
 			downstreamPlug( downstreamPlug ),
 			computeNode( computeNode ),
-			cachePolicy( cachePolicy )
+			cachePolicy( cachePolicy ),
+			threadStateFixer( cachePolicy )
 	{
 	}
 
 	const ValuePlug *downstreamPlug;
 	const ComputeNode *computeNode;
 	const ValuePlug::CachePolicy cachePolicy;
+	const ThreadStateFixer threadStateFixer;
 };
 
 // Avoids LRUCache overhead for non-collaborative policies.
@@ -302,6 +359,7 @@ class ValuePlug::HashProcess : public Process
 				{
 					case CachePolicy::TaskCollaboration :
 					{
+						ThreadStateFixer::Scope scope( key.threadStateFixer );
 						HashProcess process( key );
 						result = process.m_result;
 						break;
@@ -405,6 +463,7 @@ struct ComputeProcessKey
 			downstreamPlug( downstreamPlug ),
 			computeNode( computeNode ),
 			cachePolicy( cachePolicy ),
+			threadStateFixer( cachePolicy ),
 			m_hash( precomputedHash ? *precomputedHash : IECore::MurmurHash() )
 	{
 	}
@@ -413,6 +472,7 @@ struct ComputeProcessKey
 	const ValuePlug *downstreamPlug;
 	const ComputeNode *computeNode;
 	const ValuePlug::CachePolicy cachePolicy;
+	const ThreadStateFixer threadStateFixer;
 
 	operator const IECore::MurmurHash &() const
 	{
@@ -598,8 +658,14 @@ class ValuePlug::ComputeProcess : public Process
 				switch( key.cachePolicy )
 				{
 					case CachePolicy::Standard :
+					{
+						ComputeProcess process( key );
+						result = process.m_result;
+						break;
+					}
 					case CachePolicy::TaskCollaboration :
 					{
+						ThreadStateFixer::Scope scope( key.threadStateFixer );
 						ComputeProcess process( key );
 						result = process.m_result;
 						break;
