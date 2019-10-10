@@ -59,6 +59,7 @@ namespace ascii = boost::spirit::ascii;
 
 namespace
 {
+
 struct BinaryOp;
 struct Nil {};
 
@@ -67,7 +68,6 @@ struct SetName
 {
 	std::string name;
 };
-
 
 // Wrap a string into an ObjectName struct that gives it semantic meaning
 struct ObjectName
@@ -83,12 +83,12 @@ std::ostream & operator<<( std::ostream &out, const Op &op )
 {
 	switch( op )
 	{
-	case Or :
-		out << "|"; break;
-	case And :
-		out << "&"; break;
-	case AndNot :
-		out << "-"; break;
+		case Or :
+			out << "|"; break;
+		case And :
+			out << "&"; break;
+		case AndNot :
+			out << "-"; break;
 	}
 	return out;
 }
@@ -124,8 +124,9 @@ struct BinaryOp
 	BinaryOp(
 		const ExpressionAst &left,
 		Op op,
-		const ExpressionAst &right )
-		: left( left ), op(op), right( right ) {}
+		const ExpressionAst &right
+	)
+		: left( left ), op( op ), right( right ) {}
 
 	ExpressionAst left;
 	Op op;
