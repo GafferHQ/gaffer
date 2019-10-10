@@ -223,5 +223,11 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ) ) )
 		self.assertLessEqual( seeds["out"].object( "/plane/seeds" ).numPoints, p.numPoints )
 
+	def testInternalConnectionsNotSerialised( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["seeds"] = GafferScene.Seeds()
+		self.assertNotIn( "setInput", s.serialise() )
+
 if __name__ == "__main__":
 	unittest.main()
