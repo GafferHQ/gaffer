@@ -43,21 +43,27 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Delete curves from a curves primitive using a primitive variable to choose the curves.  
+	Delete curves from a curves primitive using a primitive variable to choose the curves.
 	""",
 
 	plugs = {
 
+		"adjustBounds" : [
+
+			"userDefault", False,
+
+		],
+
 		"curves" : [
 			"description",
 			"""
-			Uniformly interpolated int, float or bool primitive variable to choose which curves to delete. Note a non-zero value indicates the curve will be deleted. 
+			Uniformly interpolated int, float or bool primitive variable to choose which curves to delete. Note a non-zero value indicates the curve will be deleted.
 			"""
 		],
 		"invert" : [
 			"description",
 			"""
-			Invert the condition used to delete curves. If the primvar is zero then the curve will be deleted. 
+			Invert the condition used to delete curves. If the primvar is zero then the curve will be deleted.
 			"""
 		]
 

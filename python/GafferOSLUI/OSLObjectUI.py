@@ -175,6 +175,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"adjustBounds" : [
+
+			"layout:index", -2,
+
+		],
+
 		"primitiveVariables" : [
 
 			"description",
@@ -201,6 +207,9 @@ Gaffer.Metadata.registerNode(
 
 			# Add + button for showing and hiding parameters in the GraphEditor
 			"noduleLayout:customGadget:addButton:gadgetType", "GafferOSLUI.OSLObjectUI.PlugAdder",
+
+			"layout:index", -1,
+
 		],
 		"primitiveVariables.*" : [
 
@@ -270,6 +279,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
+
 	}
 
 )

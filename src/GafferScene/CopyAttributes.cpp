@@ -47,11 +47,12 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyAttributes );
 size_t CopyAttributes::g_firstPlugIndex = 0;
 
 CopyAttributes::CopyAttributes( const std::string &name )
-	:	FilteredSceneProcessor( name, 2, 2 )
+	:	FilteredSceneProcessor( name, PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ScenePlug( "source" ) );
 	addChild( new StringPlug( "attributes", Plug::In, "*" ) );
-	addChild( new StringPlug( "copyFrom" ) );
+	addChild( new StringPlug( "sourceLocation" ) );
 	addChild( new BoolPlug( "deleteExisting" ) );
 
 	// Pass through everything except attributes.
@@ -68,46 +69,56 @@ CopyAttributes::~CopyAttributes()
 {
 }
 
+GafferScene::ScenePlug *CopyAttributes::sourcePlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
+const GafferScene::ScenePlug *CopyAttributes::sourcePlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
 Gaffer::StringPlug *CopyAttributes::attributesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringPlug *CopyAttributes::attributesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-Gaffer::StringPlug *CopyAttributes::copyFromPlug()
-{
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *CopyAttributes::copyFromPlug() const
+Gaffer::StringPlug *CopyAttributes::sourceLocationPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *CopyAttributes::sourceLocationPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::BoolPlug *CopyAttributes::deleteExistingPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::BoolPlug *CopyAttributes::deleteExistingPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 void CopyAttributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	const ScenePlug *scenePlug = input->parent<ScenePlug>();
 	if(
-		( scenePlug && scenePlug->parent() == inPlugs() && input == scenePlug->attributesPlug() ) ||
+		input == inPlug()->attributesPlug() ||
+		input == sourcePlug()->attributesPlug() ||
 		input == filterPlug() ||
 		input == attributesPlug() ||
-		input == copyFromPlug() ||
+		input == sourceLocationPlug() ||
 		input == deleteExistingPlug()
 	)
 	{
@@ -129,17 +140,17 @@ void CopyAttributes::hashAttributes( const ScenePath &path, const Gaffer::Contex
 	{
 		inPlug()->attributesPlug()->hash( h );
 	}
-	const std::string copyFrom = copyFromPlug()->getValue();
-	if( copyFrom.empty() )
+	const std::string sourceLocation = sourceLocationPlug()->getValue();
+	if( sourceLocation.empty() )
 	{
-		inPlugs()->getChild<ScenePlug>( 1 )->attributesPlug()->hash( h );
+		sourcePlug()->attributesPlug()->hash( h );
 	}
 	else
 	{
-		ScenePlug::ScenePath copyFromPath;
-		ScenePlug::stringToPath( copyFrom, copyFromPath );
-		ScenePlug::PathScope pathScope( context, copyFromPath );
-		inPlugs()->getChild<ScenePlug>( 1 )->attributesPlug()->hash( h );
+		ScenePlug::ScenePath sourceLocationPath;
+		ScenePlug::stringToPath( sourceLocation, sourceLocationPath );
+		ScenePlug::PathScope pathScope( context, sourceLocationPath );
+		sourcePlug()->attributesPlug()->hash( h );
 	}
 
 	attributesPlug()->hash( h );
@@ -160,17 +171,17 @@ IECore::ConstCompoundObjectPtr CopyAttributes::computeAttributes( const ScenePat
 	}
 
 	ConstCompoundObjectPtr sourceAttributes;
-	const std::string copyFrom = copyFromPlug()->getValue();
-	if( copyFrom.empty() )
+	const std::string sourceLocation = sourceLocationPlug()->getValue();
+	if( sourceLocation.empty() )
 	{
-		sourceAttributes = inPlugs()->getChild<ScenePlug>( 1 )->attributesPlug()->getValue();
+		sourceAttributes = sourcePlug()->attributesPlug()->getValue();
 	}
 	else
 	{
-		ScenePlug::ScenePath copyFromPath;
-		ScenePlug::stringToPath( copyFrom, copyFromPath );
-		ScenePlug::PathScope pathScope( context, copyFromPath );
-		sourceAttributes = inPlugs()->getChild<ScenePlug>( 1 )->attributesPlug()->getValue();
+		ScenePlug::ScenePath sourceLocationPath;
+		ScenePlug::stringToPath( sourceLocation, sourceLocationPath );
+		ScenePlug::PathScope pathScope( context, sourceLocationPath );
+		sourceAttributes = sourcePlug()->attributesPlug()->getValue();
 	}
 
 	const std::string matchPattern = attributesPlug()->getValue();

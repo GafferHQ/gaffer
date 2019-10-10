@@ -54,6 +54,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"adjustBounds" : [
+
+			"userDefault", False,
+
+		],
+
 		"type" : [
 
 			"description",

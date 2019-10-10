@@ -43,11 +43,20 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Copies attributes from a second scene, adding them to the attributes
+	Copies attributes from a source scene, adding them to the attributes
 	of the main input scene.
 	""",
 
 	plugs = {
+
+		"source" : [
+
+			"description",
+			"""
+			The scene from which the attributes are copied.
+			""",
+
+		],
 
 		"attributes" : [
 
@@ -60,16 +69,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"copyFrom" : [
+		"sourceLocation" : [
 
 			"description",
 			"""
-			The location that attributes are copied from. By default, attributes
-			are copied from the location equivalent to the one they are being copied to.
+			The location in the source scene that attributes are copied from.
+			By default, attributes are copied from the location equivalent to the one
+			they are being copied to.
 			""",
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "in.in1",
+			"scenePathPlugValueWidget:scene", "source",
 
 		],
 

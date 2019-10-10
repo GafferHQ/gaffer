@@ -149,7 +149,7 @@ const bool g_contextCompatibilityEnabled = initContextCompatibility();
 } // namespace
 
 OSLObject::OSLObject( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+	:	Deformer( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new GafferScene::ShaderPlug( "__shader", Plug::In, Plug::Default & ~Plug::Serialisable ) );
@@ -175,10 +175,6 @@ OSLObject::OSLObject( const std::string &name )
 	resample->filterPlug()->setInput( filterPlug() );
 
 	resampledInPlug()->setInput( resample->outPlug() );
-
-	// Pass-throughs for things we don't want to modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
 
 OSLObject::~OSLObject()
@@ -287,29 +283,7 @@ namespace
 
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	bool transformTrigger = input == inPlug()->transformPlug() && (
-		requiresCompute( useTransformPlug() ) || useTransformPlug()->getValue()
-	);
-
-	bool attributeTrigger = input == inPlug()->attributesPlug() && (
-		requiresCompute( useAttributesPlug() ) || useAttributesPlug()->getValue()
-	);
-
-	if(
-		input == shaderPlug() ||
-		input == interpolationPlug() ||
-		input == useTransformPlug() ||
-		input == useAttributesPlug() ||
-		input == resampledInPlug()->objectPlug() ||
-		input == contextCompatibilityPlug() ||
-		transformTrigger ||
-		attributeTrigger
-	)
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
+	Deformer::affects( input, outputs );
 
 	if(
 		input == shaderPlug() ||
@@ -319,36 +293,29 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	{
 		outputs.push_back( resampledNamesPlug() );
 	}
-
-	if( input == outPlug()->objectPlug() )
-	{
-		outputs.push_back( outPlug()->boundPlug() );
-	}
 }
 
-bool OSLObject::processesBound() const
+bool OSLObject::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	return runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
-}
+	const bool transformTrigger = input == inPlug()->transformPlug() && (
+		requiresCompute( useTransformPlug() ) || useTransformPlug()->getValue()
+	);
 
-void OSLObject::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	hashProcessedObject( path, context, h );
-}
+	const bool attributeTrigger = input == inPlug()->attributesPlug() && (
+		requiresCompute( useAttributesPlug() ) || useAttributesPlug()->getValue()
+	);
 
-Imath::Box3f OSLObject::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
-	if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
-	{
-		return primitive->bound();
-	}
-	return inputBound;
-}
-
-bool OSLObject::processesObject() const
-{
-	return runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
+	return
+		Deformer::affectsProcessedObject( input ) ||
+		input == shaderPlug() ||
+		input == interpolationPlug() ||
+		input == useTransformPlug() ||
+		input == useAttributesPlug() ||
+		input == resampledInPlug()->objectPlug() ||
+		input == contextCompatibilityPlug() ||
+		transformTrigger ||
+		attributeTrigger
+	;
 }
 
 void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -356,8 +323,11 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
 	if( !shadingEngine )
 	{
+		h = inPlug()->objectPlug()->hash();
 		return;
 	}
+
+	Deformer::hashProcessedObject( path, context, h );
 
 	shadingEngine->hash( h );
 	interpolationPlug()->hash( h );
@@ -375,9 +345,9 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 
 static const IECore::InternedString g_world("world");
 
-IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
+	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject );
 	if( !inputPrimitive )
 	{
 		return inputObject;
@@ -427,9 +397,20 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	return outputPrimitive;
 }
 
+bool OSLObject::adjustBounds() const
+{
+	if( !Deformer::adjustBounds() )
+	{
+		return false;
+	}
+
+	ConstShadingEnginePtr s = shadingEngine( Context::current() );
+	return s && s->hasDeformation();
+}
+
 void OSLObject::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	SceneElementProcessor::hash( output, context, h );
+	Deformer::hash( output, context, h );
 
 	if( output == resampledNamesPlug() )
 	{
@@ -480,7 +461,7 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		return;
 	}
 
-	SceneElementProcessor::compute( output, context );
+	Deformer::compute( output, context );
 }
 
 ConstShadingEnginePtr OSLObject::shadingEngine( const Gaffer::Context *context ) const
@@ -540,7 +521,7 @@ void OSLObject::updatePrimitiveVariables()
 			oslCode()->parametersPlug()->addChild( codeClosurePlug );
 			codeClosurePlug->setInput( valuePlug );
 
-			code += prefix + "out += " + codeClosurePlug->getName().string() + ";\n";
+			code += prefix + "out = out + " + codeClosurePlug->getName().string() + ";\n";
 			continue;
 		}
 
@@ -603,7 +584,7 @@ void OSLObject::updatePrimitiveVariables()
 			oslCode()->parametersPlug()->addChild( codeValuePlug );
 			codeValuePlug->setInput( valuePlug );
 
-			code += prefix + "out += " + outFunction + "( " + codeNamePlug->getName().string() + ", "
+			code += prefix + "out = out + " + outFunction + "( " + codeNamePlug->getName().string() + ", "
 				+ codeValuePlug->getName().string() + ");\n";
 			continue;
 		}

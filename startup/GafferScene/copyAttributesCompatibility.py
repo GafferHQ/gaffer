@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,39 +34,40 @@
 #
 ##########################################################################
 
-import Gaffer
+import types
+
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+# The CopyAttributes node used to have a fixed length ArrayPlug as its "in" plug,
+# but now has separate "in" and "source" plugs. Here we monkey patch the API so
+# we can silently load scripts which were serialised in the old version.
 
-	GafferScene.DeletePoints,
+def __copyAttributesGetItem( originalGetItem ) :
 
-	"description",
-	"""
-	Deletes points from a points primitive using a primitive variable to choose the points.
-	""",
+	def getItem( self, key ) :
 
-	plugs = {
+		key = "sourceLocation" if key == "copyFrom" else key
+		return originalGetItem( self, key )
 
-		"adjustBounds" : [
+	return getItem
 
-			"userDefault", False,
+def __copyAttributesInGetItem( originalGetItem ) :
 
-		],
+	def getItem( self, key ) :
 
-		"points" : [
-			"description",
-			"""
-			Vertex interpolated int, float or bool primitive variable to choose which points to delete. Note a non-zero value indicates the point will be deleted.
-			"""
-		],
+		if not isinstance( self.parent(), GafferScene.CopyAttributes ) or self.getName() != "in" :
+			return originalGetItem( self, key )
 
-		"invert" : [
-			"description",
-			"""
-			Invert the condition used to delete points. If the primvar is zero then the point will be deleted.
-			"""
-		]
-	}
+		# We're getting a child of CopyAttributes.in.
 
-)
+		if key in ( "in0", 0 ) :
+			# First element of old ArrayPlug - redirect to self.
+			return self
+		else :
+			# Second element of old ArrayPlug - redirect to source.
+			return self.parent()["source"]
+
+	return getItem
+
+GafferScene.CopyAttributes.__getitem__ = __copyAttributesGetItem( GafferScene.CopyAttributes.__getitem__ )
+GafferScene.ScenePlug.__getitem__ = __copyAttributesInGetItem( GafferScene.ScenePlug.__getitem__ )

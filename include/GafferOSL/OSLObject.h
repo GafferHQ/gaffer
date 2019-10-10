@@ -42,7 +42,7 @@
 #include "GafferOSL/TypeIds.h"
 
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/Deformer.h"
 #include "GafferScene/ShaderPlug.h"
 
 #include "Gaffer/NumericPlug.h"
@@ -53,15 +53,15 @@ namespace GafferOSL
 
 IE_CORE_FORWARDDECLARE( ShadingEngine )
 
-class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
+class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 {
 
 	public :
 
-		OSLObject( const std::string &name=defaultName<SceneElementProcessor>() );
+		OSLObject( const std::string &name=defaultName<OSLObject>() );
 		~OSLObject() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::Deformer );
 
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;
@@ -79,13 +79,10 @@ class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 
 	protected :
 
-		bool processesBound() const override;
-		void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		Imath::Box3f computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const override;
-
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+		bool adjustBounds() const override;
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -39,34 +39,25 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeletePoints,
-
-	"description",
-	"""
-	Deletes points from a points primitive using a primitive variable to choose the points.
-	""",
+	GafferScene.Deformer,
 
 	plugs = {
 
 		"adjustBounds" : [
 
-			"userDefault", False,
+			"description",
+			"""
+			Adjusts bounding boxes to account for the changes made to the object.
+
+			> Caution : Adjusting boundings boxes has a performance penalty.
+			> If you do not need accurate bounds or you know that the bounds
+			> will only change slightly, you may prefer to turn this off.
+			""",
+
+			"layout:index", -1,
 
 		],
 
-		"points" : [
-			"description",
-			"""
-			Vertex interpolated int, float or bool primitive variable to choose which points to delete. Note a non-zero value indicates the point will be deleted.
-			"""
-		],
-
-		"invert" : [
-			"description",
-			"""
-			Invert the condition used to delete points. If the primvar is zero then the point will be deleted.
-			"""
-		]
 	}
 
 )

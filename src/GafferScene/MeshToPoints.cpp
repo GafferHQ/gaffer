@@ -51,14 +51,10 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshToPoints );
 size_t MeshToPoints::g_firstPlugIndex = 0;
 
 MeshToPoints::MeshToPoints( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	Deformer( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "type", Plug::In, "particle" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
 
 MeshToPoints::~MeshToPoints()
@@ -75,53 +71,23 @@ const Gaffer::StringPlug *MeshToPoints::typePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-void MeshToPoints::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool MeshToPoints::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == typePlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-	else if( input == outPlug()->objectPlug() )
-	{
-		outputs.push_back( outPlug()->boundPlug() );
-	}
-}
-
-bool MeshToPoints::processesBound() const
-{
-	return true;
-}
-
-void MeshToPoints::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	hashProcessedObject( path, context, h );
-}
-
-Imath::Box3f MeshToPoints::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
-	if( const PointsPrimitive *points = runTimeCast<const PointsPrimitive>( object.get() ) )
-	{
-		return points->bound();
-	}
-	return inputBound;
-}
-
-bool MeshToPoints::processesObject() const
-{
-	return true;
+	return
+		Deformer::affectsProcessedObject( input ) ||
+		input == typePlug()
+	;
 }
 
 void MeshToPoints::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Deformer::hashProcessedObject( path, context, h );
 	typePlug()->hash( h );
 }
 
-IECore::ConstObjectPtr MeshToPoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MeshToPoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh )
 	{
 		return inputObject;

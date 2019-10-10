@@ -141,5 +141,35 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegexp( RuntimeError, ".* \"constantV3f\" must have Vertex, Varying or FaceVarying interpolation" ) :
 			wireframe["out"].object( "/plane" )
 
+	def testAdjustBounds( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		wireframe = GafferScene.Wireframe()
+		wireframe["in"].setInput( sphere["out"] )
+		wireframe["filter"].setInput( sphereFilter["out"] )
+
+		# We don't want to pay for bounds propagation when we're using "P" for the
+		# wireframe position. Hash equality indicates a pass-through.
+
+		self.assertScenesEqual( wireframe["in"], wireframe["out"], checks = { "bound" } )
+		self.assertSceneHashesEqual( wireframe["in"], wireframe["out"], checks = { "bound" } )
+
+		# But when we use something other than "P", we need the bounds to be updated
+		# so as to be valid.
+
+		wireframe["position"].setValue( "uv" )
+		self.assertSceneValid( wireframe["out"] )
+
+		# And if we don't want to pay for bounds propagation, we can turn it off,
+		# and get back to having a pass-through.
+
+		wireframe["adjustBounds"].setValue( False )
+		self.assertScenesEqual( wireframe["in"], wireframe["out"], checks = { "bound" } )
+		self.assertSceneHashesEqual( wireframe["in"], wireframe["out"], checks = { "bound" } )
+
 if __name__ == "__main__":
 	unittest.main()

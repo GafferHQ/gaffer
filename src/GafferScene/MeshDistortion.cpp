@@ -49,7 +49,7 @@ size_t MeshDistortion::g_firstPlugIndex = 0;
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshDistortion );
 
 MeshDistortion::MeshDistortion( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+	:	ObjectProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -58,11 +58,6 @@ MeshDistortion::MeshDistortion( const std::string &name )
 	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
 	addChild( new StringPlug( "distortion", Plug::In, "distortion" ) );
 	addChild( new StringPlug( "uvDistortion", Plug::In, "uvDistortion" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 MeshDistortion::~MeshDistortion()
@@ -119,13 +114,22 @@ const Gaffer::StringPlug *MeshDistortion::uvDistortionPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
-bool MeshDistortion::processesObject() const
+bool MeshDistortion::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	return true;
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
+		input == positionPlug() ||
+		input == referencePositionPlug() ||
+		input == uvSetPlug() ||
+		input == distortionPlug() ||
+		input == uvDistortionPlug()
+	;
 }
 
 void MeshDistortion::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ObjectProcessor::hashProcessedObject( path, context, h );
+
 	positionPlug()->hash( h );
 	referencePositionPlug()->hash( h );
 	uvSetPlug()->hash( h );
@@ -133,9 +137,9 @@ void MeshDistortion::hashProcessedObject( const ScenePath &path, const Gaffer::C
 	uvDistortionPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr MeshDistortion::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MeshDistortion::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh )
 	{
 		return inputObject;

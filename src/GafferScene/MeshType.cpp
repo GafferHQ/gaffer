@@ -51,17 +51,12 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshType );
 size_t MeshType::g_firstPlugIndex = 0;
 
 MeshType::MeshType( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	ObjectProcessor( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "meshType", Plug::In, "" ) );
 	addChild( new BoolPlug( "calculatePolygonNormals" ) );
 	addChild( new BoolPlug( "overwriteExistingNormals" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 MeshType::~MeshType()
@@ -98,31 +93,27 @@ const Gaffer::BoolPlug *MeshType::overwriteExistingNormalsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
-void MeshType::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool MeshType::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == meshTypePlug() || input == calculatePolygonNormalsPlug() || input == overwriteExistingNormalsPlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool MeshType::processesObject() const
-{
-	return true;
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
+		input == meshTypePlug() ||
+		input == calculatePolygonNormalsPlug() ||
+		input == overwriteExistingNormalsPlug()
+	;
 }
 
 void MeshType::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ObjectProcessor::hashProcessedObject( path, context, h );
 	meshTypePlug()->hash( h );
 	calculatePolygonNormalsPlug()->hash( h );
 	overwriteExistingNormalsPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *inputGeometry = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *inputGeometry = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !inputGeometry )
 	{
 		return inputObject;

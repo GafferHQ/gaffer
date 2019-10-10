@@ -38,6 +38,8 @@
 
 #include "ObjectProcessorBinding.h"
 
+#include "GafferScene/CopyPrimitiveVariables.h"
+#include "GafferScene/Deformer.h"
 #include "GafferScene/DeleteCurves.h"
 #include "GafferScene/DeleteFaces.h"
 #include "GafferScene/DeleteObject.h"
@@ -47,6 +49,7 @@
 #include "GafferScene/MeshTangents.h"
 #include "GafferScene/MeshToPoints.h"
 #include "GafferScene/MeshType.h"
+#include "GafferScene/ObjectProcessor.h"
 #include "GafferScene/Orientation.h"
 #include "GafferScene/Parameters.h"
 #include "GafferScene/PointsType.h"
@@ -64,6 +67,8 @@ using namespace GafferScene;
 void GafferSceneModule::bindObjectProcessor()
 {
 
+	GafferBindings::DependencyNodeClass<GafferScene::ObjectProcessor>();
+	GafferBindings::DependencyNodeClass<GafferScene::Deformer>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
@@ -77,6 +82,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<DeleteObject>();
 	GafferBindings::DependencyNodeClass<UDIMQuery>();
 	GafferBindings::DependencyNodeClass<Wireframe>();
+	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();

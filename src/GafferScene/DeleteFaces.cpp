@@ -53,16 +53,13 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteFaces );
 
 size_t DeleteFaces::g_firstPlugIndex = 0;
 
-DeleteFaces::DeleteFaces( const std::string &name ) : SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+DeleteFaces::DeleteFaces( const std::string &name )
+	:	Deformer( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "faces", Plug::In, "deleteFaces" ) );
 	addChild( new BoolPlug( "invert", Plug::In, false ) );
-
-	// Fast pass-through for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
 
 DeleteFaces::~DeleteFaces()
@@ -89,63 +86,34 @@ const Gaffer::BoolPlug *DeleteFaces::invertPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1);
 }
 
-void DeleteFaces::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool DeleteFaces::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == facesPlug() || input == invertPlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-	else if( input == outPlug()->objectPlug() )
-	{
-		outputs.push_back( outPlug()->boundPlug() );
-	}
-}
-
-bool DeleteFaces::processesBound() const
-{
-	return true;
-}
-
-void DeleteFaces::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-
-	hashProcessedObject( path, context, h );
-}
-
-Imath::Box3f DeleteFaces::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
-	if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
-	{
-		return primitive->bound();
-	}
-	return inputBound;
-}
-
-bool DeleteFaces::processesObject() const
-{
-	return true;
+	return
+		Deformer::affectsProcessedObject( input ) ||
+		input == facesPlug() ||
+		input == invertPlug()
+	;
 }
 
 void DeleteFaces::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Deformer::hashProcessedObject( path, context, h );
 	facesPlug()->hash( h );
 	invertPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr DeleteFaces::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr DeleteFaces::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh )
 	{
 		return inputObject;
 	}
 
-
 	std::string deletePrimVarName = facesPlug()->getValue();
 
+	/// \todo Remove. We take values verbatim everywhere else in Gaffer, and I don't
+	/// see any good reason to differ here.
 	if( boost::trim_copy( deletePrimVarName ).empty() )
 	{
 		return inputObject;

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design Inc nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -32,45 +32,43 @@
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-/////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
-
-#ifndef GAFFERSCENE_DELETEPOINTS_H
-#define GAFFERSCENE_DELETEPOINTS_H
+#ifndef GAFFERSCENE_COPYPRIMITIVEVARIABLES_H
+#define GAFFERSCENE_COPYPRIMITIVEVARIABLES_H
 
 #include "GafferScene/Deformer.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-} // namespace Gaffer
+#include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API DeletePoints : public Deformer
+class GAFFERSCENE_API CopyPrimitiveVariables : public Deformer
 {
 
 	public :
 
-		DeletePoints( const std::string &name = defaultName<DeletePoints>() );
-		~DeletePoints() override;
+		CopyPrimitiveVariables( const std::string &name=defaultName<CopyPrimitiveVariables>() );
+		~CopyPrimitiveVariables() override;
 
-		Gaffer::StringPlug *pointsPlug();
-		const Gaffer::StringPlug *pointsPlug() const;
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CopyPrimitiveVariables, CopyPrimitiveVariablesTypeId, Deformer );
 
-		Gaffer::BoolPlug *invertPlug();
-		const Gaffer::BoolPlug *invertPlug() const;
+		GafferScene::ScenePlug *sourcePlug();
+		const GafferScene::ScenePlug *sourcePlug() const;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeletePoints, DeletePointsTypeId, Deformer );
+		Gaffer::StringPlug *primitiveVariablesPlug();
+		const Gaffer::StringPlug *primitiveVariablesPlug() const;
+
+		Gaffer::StringPlug *sourceLocationPlug();
+		const Gaffer::StringPlug *sourceLocationPlug() const;
 
 	protected :
 
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+		bool adjustBounds() const override;
 
 	private :
 
@@ -78,9 +76,8 @@ class GAFFERSCENE_API DeletePoints : public Deformer
 
 };
 
-IE_CORE_DECLAREPTR( DeletePoints )
+IE_CORE_DECLAREPTR( CopyPrimitiveVariables )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_DELETEPOINTS_H
-
+#endif // GAFFERSCENE_COPYPRIMITIVEVARIABLES_H

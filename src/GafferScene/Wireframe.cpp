@@ -196,15 +196,11 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Wireframe );
 size_t Wireframe::g_firstPlugIndex = 0;
 
 Wireframe::Wireframe( const std::string &name )
-	:	SceneElementProcessor( name, PathMatcher::NoMatch )
+	:	Deformer( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new FloatPlug( "width", Plug::In, 1.0f, 0.0f ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
 
 Wireframe::~Wireframe()
@@ -231,53 +227,24 @@ const Gaffer::FloatPlug *Wireframe::widthPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-void Wireframe::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool Wireframe::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if(
+	return Deformer::affectsProcessedObject( input ) ||
 		input == positionPlug() ||
 		input == widthPlug()
-	)
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool Wireframe::processesBound() const
-{
-	return true;
-}
-
-void Wireframe::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	outPlug()->objectPlug()->hash( h );
-}
-
-Imath::Box3f Wireframe::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
-	if( const CurvesPrimitive *wireframe = runTimeCast<const CurvesPrimitive>( object.get() ) )
-	{
-		return wireframe->bound();
-	}
-	return inputBound;
-}
-
-bool Wireframe::processesObject() const
-{
-	return true;
+	;
 }
 
 void Wireframe::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Deformer::hashProcessedObject( path, context, h );
 	positionPlug()->hash( h );
 	widthPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr Wireframe::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr Wireframe::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh )
 	{
 		return inputObject;
@@ -295,4 +262,14 @@ IECore::ConstObjectPtr Wireframe::computeProcessedObject( const ScenePath &path,
 	result->variables["width"] = PrimitiveVariable( PrimitiveVariable::Constant, new FloatData( widthPlug()->getValue() ) );
 
 	return result;
+}
+
+bool Wireframe::adjustBounds() const
+{
+	if( !Deformer::adjustBounds() )
+	{
+		return false;
+	}
+
+	return positionPlug()->getValue() != "P";
 }

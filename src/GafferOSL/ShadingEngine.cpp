@@ -526,7 +526,8 @@ namespace
 enum ClosureId
 {
 	EmissionClosureId,
-	DebugClosureId
+	DebugClosureId,
+	DeformationClosureId
 };
 
 struct EmissionParameters
@@ -606,6 +607,14 @@ OSL::ShadingSystem *shadingSystem()
 	g_shadingSystem->register_closure(
 		/* name */ "debug",
 		/* id */ DebugClosureId,
+		/* params */ debugParams,
+		/* prepare */ DebugParameters::prepare,
+		/* setup */ nullptr
+	);
+
+	g_shadingSystem->register_closure(
+		/* name */ "deformation",
+		/* id */ DeformationClosureId,
 		/* params */ debugParams,
 		/* prepare */ DebugParameters::prepare,
 		/* setup */ nullptr
@@ -720,6 +729,7 @@ class ShadingResults
 					case EmissionClosureId :
 						addEmission( pointIndex, closure->as_comp()->as<EmissionParameters>(), weight * closure->as_comp()->w );
 						break;
+					case DeformationClosureId :
 					case DebugClosureId :
 						addDebug( pointIndex, closure->as_comp()->as<DebugParameters>(), weight * closure->as_comp()->w, threadCache );
 						break;
@@ -958,7 +968,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 } // namespace
 
 ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
-	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false )
+	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) /// \todo Make conditional on OSL < 1.10
@@ -1018,10 +1028,10 @@ ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 		}
 	}
 
-	queryContextVariablesAndAttributesNeeded();
+	queryShaderGroup();
 }
 
-void ShadingEngine::queryContextVariablesAndAttributesNeeded()
+void ShadingEngine::queryShaderGroup()
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
@@ -1072,6 +1082,33 @@ void ShadingEngine::queryContextVariablesAndAttributesNeeded()
 			}
 		}
 	}
+
+	// Closures
+
+	int unknownClosuresNeeded = 0;
+	shadingSystem->getattribute(  &shaderGroup, "unknown_closures_needed", unknownClosuresNeeded );
+	if( unknownClosuresNeeded )
+	{
+		m_hasDeformation = true;
+	}
+
+	int numClosures = 0;
+	shadingSystem->getattribute( &shaderGroup, "num_closures_needed", numClosures );
+	if( numClosures )
+	{
+		ustring *closureNames = nullptr;
+		shadingSystem->getattribute(  &shaderGroup, "closures_needed", TypeDesc::PTR, &closureNames );
+		for( int i = 0; i < numClosures; ++i )
+		{
+			if( closureNames[i] == "deformation" )
+			{
+				m_hasDeformation = true;
+				break;
+			}
+		}
+	}
+
+
 }
 
 ShadingEngine::~ShadingEngine()
@@ -1260,4 +1297,9 @@ bool ShadingEngine::needsAttribute( const std::string &name ) const
 
 
 	return m_attributesNeeded.find(  name  ) != m_attributesNeeded.end();
+}
+
+bool ShadingEngine::hasDeformation() const
+{
+	return m_hasDeformation;
 }

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -39,34 +39,51 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeletePoints,
+	GafferScene.CopyPrimitiveVariables,
 
 	"description",
 	"""
-	Deletes points from a points primitive using a primitive variable to choose the points.
+	Copies primitive variables from a source scene, adding them to the objects
+	of the main input scene.
 	""",
 
 	plugs = {
 
-		"adjustBounds" : [
+		"source" : [
 
-			"userDefault", False,
+			"description",
+			"""
+			The scene from which the primitive variables are copied.
+			""",
 
 		],
 
-		"points" : [
+		"primitiveVariables" : [
+
 			"description",
 			"""
-			Vertex interpolated int, float or bool primitive variable to choose which points to delete. Note a non-zero value indicates the point will be deleted.
-			"""
+			The names of the primitive variables to be copied. These should be
+			separated by spaces and can use Gaffer's standard wildcards
+			to match multiple variables.
+			""",
+
 		],
 
-		"invert" : [
+		"sourceLocation" : [
+
 			"description",
 			"""
-			Invert the condition used to delete points. If the primvar is zero then the point will be deleted.
-			"""
-		]
+			The location in the source scene that primitive variables are copied from.
+			By default, variables are copied from the location equivalent to the one
+			they are being copied to. It is not an error if the location to be copied from
+			does not exist; instead, no variables are copied.
+			""",
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene", "source",
+
+		],
+
 	}
 
 )

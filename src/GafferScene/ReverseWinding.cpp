@@ -46,30 +46,27 @@ using namespace GafferScene;
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ReverseWinding );
 
 ReverseWinding::ReverseWinding( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+	:	ObjectProcessor( name )
 {
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 ReverseWinding::~ReverseWinding()
 {
 }
 
-bool ReverseWinding::processesObject() const
+bool ReverseWinding::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	return true;
+	return ObjectProcessor::affectsProcessedObject( input );
 }
 
 void ReverseWinding::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ObjectProcessor::hashProcessedObject( path, context, h );
 }
 
-IECore::ConstObjectPtr ReverseWinding::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr ReverseWinding::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh )
 	{
 		return inputObject;

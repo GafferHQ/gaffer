@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_MESHDISTORTION_H
 #define GAFFERSCENE_MESHDISTORTION_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API MeshDistortion : public SceneElementProcessor
+class GAFFERSCENE_API MeshDistortion : public ObjectProcessor
 {
 
 	public :
@@ -53,7 +53,7 @@ class GAFFERSCENE_API MeshDistortion : public SceneElementProcessor
 		MeshDistortion( const std::string &name=defaultName<MeshDistortion>() );
 		~MeshDistortion() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshDistortion, MeshDistortionTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshDistortion, MeshDistortionTypeId, ObjectProcessor );
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;
@@ -72,9 +72,9 @@ class GAFFERSCENE_API MeshDistortion : public SceneElementProcessor
 
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

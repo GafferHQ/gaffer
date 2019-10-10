@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_MAPOFFSET_H
 #define GAFFERSCENE_MAPOFFSET_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 namespace Gaffer
 {
@@ -50,7 +50,7 @@ namespace GafferScene
 {
 
 /// Applies offsets to texture coordinates.
-class GAFFERSCENE_API MapOffset : public SceneElementProcessor
+class GAFFERSCENE_API MapOffset : public ObjectProcessor
 {
 
 	public :
@@ -58,7 +58,7 @@ class GAFFERSCENE_API MapOffset : public SceneElementProcessor
 		MapOffset( const std::string &name=defaultName<MapOffset>() );
 		~MapOffset() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MapOffset, MapOffsetTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MapOffset, MapOffsetTypeId, ObjectProcessor );
 
 		Gaffer::V2fPlug *offsetPlug();
 		const Gaffer::V2fPlug *offsetPlug() const;
@@ -69,13 +69,11 @@ class GAFFERSCENE_API MapOffset : public SceneElementProcessor
 		Gaffer::StringPlug *uvSetPlug();
 		const Gaffer::StringPlug *uvSetPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

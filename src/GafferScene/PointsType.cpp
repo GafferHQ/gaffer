@@ -50,7 +50,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PointsType );
 size_t PointsType::g_firstPlugIndex = 0;
 
 PointsType::PointsType( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	Deformer( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "type", Plug::In, "" ) );
@@ -70,53 +70,23 @@ const Gaffer::StringPlug *PointsType::typePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-void PointsType::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool PointsType::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == typePlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-	else if( input == outPlug()->objectPlug() )
-	{
-		outputs.push_back( outPlug()->boundPlug() );
-	}
-}
-
-bool PointsType::processesBound() const
-{
-	return true;
-}
-
-void PointsType::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	hashProcessedObject( path, context, h );
-}
-
-Imath::Box3f PointsType::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	ConstObjectPtr object = outPlug()->objectPlug()->getValue();
-	if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
-	{
-		return primitive->bound();
-	}
-	return inputBound;
-}
-
-bool PointsType::processesObject() const
-{
-	return true;
+	return
+		Deformer::affectsProcessedObject( input ) ||
+		input == typePlug()
+	;
 }
 
 void PointsType::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Deformer::hashProcessedObject( path, context, h );
 	typePlug()->hash( h );
 }
 
-IECore::ConstObjectPtr PointsType::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr PointsType::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const PointsPrimitive *inputPoints = runTimeCast<const PointsPrimitive>( inputObject.get() );
+	const PointsPrimitive *inputPoints = runTimeCast<const PointsPrimitive>( inputObject );
 	if( !inputPoints )
 	{
 		return inputObject;

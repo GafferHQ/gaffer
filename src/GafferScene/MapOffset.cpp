@@ -52,17 +52,12 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MapOffset );
 size_t MapOffset::g_firstPlugIndex = 0;
 
 MapOffset::MapOffset( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	ObjectProcessor( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new V2fPlug( "offset" ) );
 	addChild( new IntPlug( "udim", Plug::In, 1001, 1001 ) );
 	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
-
-	// Fast pass-throughs for things we don't modify
-	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 MapOffset::~MapOffset()
@@ -99,36 +94,28 @@ const Gaffer::StringPlug *MapOffset::uvSetPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-void MapOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool MapOffset::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if(
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
 		input->parent<Plug>() == offsetPlug() ||
 		input == udimPlug() ||
 		input == uvSetPlug()
-	)
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool MapOffset::processesObject() const
-{
-	return true;
+	;
 }
 
 void MapOffset::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ObjectProcessor::hashProcessedObject( path, context, h );
 	offsetPlug()->hash( h );
 	udimPlug()->hash( h );
 	uvSetPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
 	// early out if it's not a primitive
-	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
+	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject );
 	if( !inputPrimitive )
 	{
 		return inputObject;
