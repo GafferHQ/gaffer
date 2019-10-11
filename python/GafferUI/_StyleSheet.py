@@ -254,6 +254,15 @@ _styleSheet = string.Template(
 		margin-bottom: 6px;
 	}
 
+	QLabel#gafferMenuLabeledDivider {
+		background-color: $backgroundLightLowlight;
+		font-weight: bold;
+		padding: 3px 25px 3px 20px;
+		margin-bottom: 4px;
+		margin-top: 0;
+		color: $foreground;
+	}
+
 	QLabel#gafferMenuTitle:disabled {
 		color: $foreground;
 	}
