@@ -921,7 +921,7 @@ class SceneView::Camera : public boost::signals::trackable
 			plug->addChild(
 				new Gaffer::V2fPlug(
 					"clippingPlanes", Plug::In,
-					V2f( 0.01, 100000 ),
+					V2f( 0.1, 100000 ),
 					V2f( 0.0001 ),
 					V2f( Imath::limits<float>::max() ),
 					Plug::Default & ~Plug::AcceptsInputs
