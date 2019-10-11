@@ -38,6 +38,7 @@
 
 #include "GafferSceneUI/SceneView.h"
 
+#include "GafferUI/Pointer.h"
 #include "GafferUI/RotateHandle.h"
 
 #include "Gaffer/MetadataAlgo.h"
@@ -49,6 +50,7 @@
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathEuler.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind.hpp"
@@ -79,10 +81,23 @@ RotateTool::RotateTool( SceneView *view, const std::string &name )
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &RotateTool::dragBegin, this ) );
-		handle->dragMoveSignal().connect( boost::bind( &RotateTool::dragMove, this, ::_1, ::_2 ) );
-		handle->dragEndSignal().connect( boost::bind( &RotateTool::dragEnd, this ) );
+		handle->dragBeginSignal().connect( 0, boost::bind( &RotateTool::handleDragBegin, this ) );
+		handle->dragMoveSignal().connect( boost::bind( &RotateTool::handleDragMove, this, ::_1, ::_2 ) );
+		handle->dragEndSignal().connect( boost::bind( &RotateTool::handleDragEnd, this ) );
 	}
+
+	SceneGadget *sg = runTimeCast<SceneGadget>( this->view()->viewportGadget()->getPrimaryChild() );
+	sg->keyPressSignal().connect( boost::bind( &RotateTool::keyPress, this, ::_2 ) );
+	sg->keyReleaseSignal().connect( boost::bind( &RotateTool::keyRelease, this, ::_2 ) );
+	sg->leaveSignal().connect( boost::bind( &RotateTool::sceneGadgetLeave, this, ::_2 ) );
+	// We have to insert this before the underlying SelectionTool connections or it starts an object drag.
+	sg->buttonPressSignal().connect( 0, boost::bind( &RotateTool::buttonPress, this, ::_2 ) );
+
+	// We need to track the tool state/view visibility so we don't leave a lingering target cursor
+	sg->visibilityChangedSignal().connect( boost::bind( &RotateTool::visibilityChanged, this, ::_1 ) );
+	// We use set not dirtied to make sure we're called synchronously. We're
+	// happy to assume that this plug won't ever be connected to anything.
+	plugSetSignal().connect( boost::bind( &RotateTool::plugSet, this, ::_1 ) );
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -148,7 +163,75 @@ void RotateTool::updateHandles( float rasterScale )
 	}
 }
 
-IECore::RunTimeTypedPtr RotateTool::dragBegin()
+bool RotateTool::keyPress( const GafferUI::KeyEvent &event )
+{
+	// We track this regardless of whether we're active or not in case the tool
+	// is changed whilst the key is held down.
+	if( activePlug()->getValue() && event.key == "V" )
+	{
+		setTargetedMode( true );
+		return true;
+	}
+
+	return false;
+}
+
+bool RotateTool::keyRelease( const GafferUI::KeyEvent &event )
+{
+	if( activePlug()->getValue() && event.key == "V" )
+	{
+		setTargetedMode( false );
+		return true;
+	}
+
+	return false;
+}
+
+void RotateTool::sceneGadgetLeave( const GafferUI::ButtonEvent & event )
+{
+	if( getTargetedMode() )
+	{
+		// We loose keyRelease events in a variety of scenarios so turn targeted
+		// off whenever the mouse leaves the scene view. Key-repeat events will
+		// cause it to be re-enabled when the mouse re-enters if the key is still
+		// held down at that time.
+		setTargetedMode( false );
+	}
+}
+
+void RotateTool::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == activePlug() )
+	{
+		if( !activePlug()->getValue() && getTargetedMode() )
+		{
+			setTargetedMode( false );
+		}
+	}
+}
+
+void RotateTool::visibilityChanged( GafferUI::Gadget *gadget )
+{
+	if( !gadget->visible() && getTargetedMode() )
+	{
+		setTargetedMode( false );
+	}
+}
+
+void RotateTool::setTargetedMode( bool targeted )
+{
+	if( targeted == m_targetedMode )
+	{
+		return;
+	}
+
+	m_targetedMode = targeted;
+
+	GafferUI::Pointer::setCurrent( targeted ? "target" : "" );
+}
+
+
+IECore::RunTimeTypedPtr RotateTool::handleDragBegin()
 {
 	m_drag.clear();
 	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
@@ -161,7 +244,7 @@ IECore::RunTimeTypedPtr RotateTool::dragBegin()
 	return nullptr; // Let the handle start the drag.
 }
 
-bool RotateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+bool RotateTool::handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f rotation = static_cast<const RotateHandle *>( gadget )->rotation( event );
@@ -172,10 +255,60 @@ bool RotateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragD
 	return true;
 }
 
-bool RotateTool::dragEnd()
+bool RotateTool::handleDragEnd()
 {
 	TransformTool::dragEnd();
 	return false;
+}
+
+bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
+{
+	if( event.buttons != ButtonEvent::Left
+		|| !activePlug()->getValue()
+		|| !getTargetedMode()
+	) {
+		return false;
+	}
+
+	// In targeted mode, we orient the selection so -z aims towards the clicked point.
+	//
+	// We always return true to prevent the SelectTool defaults.
+
+	GafferScene::ScenePlug::ScenePath _;
+	Imath::V3f targetPos;
+
+	const SceneView *sv = static_cast<const SceneView *>( view() );
+	const Gadget *g = sv->viewportGadget()->getPrimaryChild();
+	const SceneGadget* sg = static_cast<const SceneGadget *>( g );
+	if( !sg->objectAt( event.line, _, targetPos ) )
+	{
+		return true;
+	}
+
+	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled );
+
+	for( const auto &s : selection() )
+	{
+		Context::Scope scopedContext( s.context.get() );
+
+		V3f currentYAxis, currentZAxis;
+		const M44f worldTransform = s.scene->fullTransform( s.path );
+		worldTransform.multDirMatrix( V3f( 0.0f, 1.0f, 0.0f ), currentYAxis );
+		worldTransform.multDirMatrix( V3f( 0.0f, 0.0f, -1.0f ), currentZAxis );
+
+		const V3f targetZAzis = targetPos - ( V3f( 0.0f ) * worldTransform );
+
+		M44f reorientationMatrix = rotationMatrixWithUpDir(
+			currentZAxis, targetZAzis, currentYAxis
+		);
+
+		V3f offset;
+		extractEulerXYZ( reorientationMatrix, offset );
+
+		Rotation( s, World ).apply( offset );
+	}
+
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
