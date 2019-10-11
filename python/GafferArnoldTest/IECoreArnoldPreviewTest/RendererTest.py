@@ -1834,8 +1834,8 @@ class RendererTest( GafferTest.TestCase ) :
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
 
-			self.assertEqual( numInstances, 7 )
-			self.assertEqual( numCurves, 4 )
+			self.assertEqual( numInstances, 4 ) # Can't instance when min_pixel_width != 0
+			self.assertEqual( numCurves, 5 )
 
 			self.__assertInstanced(
 				"default",
@@ -1843,12 +1843,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"pixelWidth0ModeRibbon",
 			)
 
-			self.__assertInstanced(
+			self.__assertNotInstanced(
 				"pixelWidth1",
 				"pixelWidth1Duplicate",
+				"pixelWidth2",
 			)
 
-			for name in ( "pixelWidth2", "modeRibbon", "modeThick" ) :
+			for name in ( "modeRibbon", "modeThick" ) :
 				self.__assertInstanced( name )
 
 			for name, minPixelWidth, mode in (
@@ -1861,10 +1862,12 @@ class RendererTest( GafferTest.TestCase ) :
 				( "pixelWidth0ModeRibbon", 0, "ribbon" ),
 			) :
 
-				instance = arnold.AiNodeLookUpByName( name )
-				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance ) ), "ginstance" )
+				node = arnold.AiNodeLookUpByName( name )
+				if arnold.AiNodeIs( node, "ginstance" ) :
+					shape = self.arnoldCompat( arnold.AiNodeGetPtr( node, "node" ) )
+				else :
+					shape = node
 
-				shape = self.arnoldCompat( arnold.AiNodeGetPtr( instance, "node" ) )
 				self.assertEqual( arnold.AiNodeGetFlt( shape, "min_pixel_width" ), minPixelWidth )
 				self.assertEqual( arnold.AiNodeGetStr( shape, "mode" ), mode )
 

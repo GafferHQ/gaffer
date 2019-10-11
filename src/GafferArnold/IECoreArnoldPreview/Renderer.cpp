@@ -958,6 +958,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectArnoldString;
 				}
 			}
+			else if( IECore::runTimeCast<const IECoreScene::CurvesPrimitive>( object ) )
+			{
+				// Min pixel width is a screen-space metric, and hence not compatible with instancing.
+				return m_curves.minPixelWidth == 0.0f;
+			}
 			else if( const IECoreScene::ExternalProcedural *procedural = IECore::runTimeCast<const IECoreScene::ExternalProcedural>( object ) )
 			{
 				// We don't instance "ass archive" procedurals, because Arnold
