@@ -414,6 +414,11 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 	}
 }
 
+bool BranchCreator::processesRootObject() const
+{
+	return false;
+}
+
 void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ScenePath parentPath, branchPath;
@@ -421,6 +426,11 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 
 	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
+		hashBranchObject( parentPath, branchPath, context, h );
+	}
+	else if( parentMatch == IECore::PathMatcher::ExactMatch && processesRootObject() )
+	{
+		// note branchPath is empty here
 		hashBranchObject( parentPath, branchPath, context, h );
 	}
 	else
@@ -436,6 +446,11 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 
 	if( parentMatch == IECore::PathMatcher::AncestorMatch )
 	{
+		return computeBranchObject( parentPath, branchPath, context );
+	}
+	else if( parentMatch == IECore::PathMatcher::ExactMatch && processesRootObject() )
+	{
+		// note branchPath is empty here
 		return computeBranchObject( parentPath, branchPath, context );
 	}
 	else
