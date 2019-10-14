@@ -61,7 +61,10 @@ def __driveFromSceneSelectionSourceChangeCallback( editor, targetEditor ) :
 	return GafferSceneUI.SourceSet( context, sourceSet )
 
 DriverModeSceneSelectionSource = "SceneSelectionSource"
-GafferUI.NodeSetEditor.registerNodeSetDriverMode( DriverModeSceneSelectionSource, __driveFromSceneSelectionSourceChangeCallback  )
+GafferUI.NodeSetEditor.registerNodeSetDriverMode(
+	DriverModeSceneSelectionSource, __driveFromSceneSelectionSourceChangeCallback,
+	"Following the scene selection's source node from {editor}."
+)
 
 
 ### Pinning Menu Items
