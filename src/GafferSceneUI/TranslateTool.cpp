@@ -40,6 +40,7 @@
 
 #include "GafferScene/SceneAlgo.h"
 
+#include "GafferUI/Pointer.h"
 #include "GafferUI/TranslateHandle.h"
 
 #include "Gaffer/MetadataAlgo.h"
@@ -77,10 +78,23 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &TranslateTool::dragBegin, this ) );
-		handle->dragMoveSignal().connect( boost::bind( &TranslateTool::dragMove, this, ::_1, ::_2 ) );
-		handle->dragEndSignal().connect( boost::bind( &TranslateTool::dragEnd, this ) );
+		handle->dragBeginSignal().connect( 0, boost::bind( &TranslateTool::handleDragBegin, this ) );
+		handle->dragMoveSignal().connect( boost::bind( &TranslateTool::handleDragMove, this, ::_1, ::_2 ) );
+		handle->dragEndSignal().connect( boost::bind( &TranslateTool::handleDragEnd, this ) );
 	}
+
+	SceneGadget *sg = runTimeCast<SceneGadget>( this->view()->viewportGadget()->getPrimaryChild() );
+	sg->keyPressSignal().connect( boost::bind( &TranslateTool::keyPress, this, ::_2 ) );
+	sg->keyReleaseSignal().connect( boost::bind( &TranslateTool::keyRelease, this, ::_2 ) );
+	sg->leaveSignal().connect( boost::bind( &TranslateTool::sceneGadgetLeave, this, ::_2 ) );
+	// We have to insert this before the underlying SelectionTool connections or it starts an object drag.
+	sg->buttonPressSignal().connect( 0, boost::bind( &TranslateTool::buttonPress, this, ::_2 ) );
+
+	// We need to track the tool state/view visibility so we don't leave a lingering target cursor
+	sg->visibilityChangedSignal().connect( boost::bind( &TranslateTool::visibilityChanged, this, ::_1 ) );
+	// We use set not dirtied to make sure we're called synchronously. We're
+	// happy to assume that this plug won't ever be connected to anything.
+	plugSetSignal().connect( boost::bind( &TranslateTool::plugSet, this, ::_1 ) );
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -151,7 +165,73 @@ void TranslateTool::translate( const Imath::V3f &offset )
 	}
 }
 
-IECore::RunTimeTypedPtr TranslateTool::dragBegin()
+bool TranslateTool::keyPress( const GafferUI::KeyEvent &event )
+{
+	if( activePlug()->getValue() && event.key == "V" )
+	{
+		setTargetedMode( true );
+		return true;
+	}
+
+	return false;
+}
+
+bool TranslateTool::keyRelease( const GafferUI::KeyEvent &event )
+{
+	if( activePlug()->getValue() && event.key == "V" )
+	{
+		setTargetedMode( false );
+		return true;
+	}
+
+	return false;
+}
+
+void TranslateTool::sceneGadgetLeave( const GafferUI::ButtonEvent & event )
+{
+	if( getTargetedMode() )
+	{
+		// We loose keyRelease events in a variety of scenarios so turn targeted
+		// off whenever the mouse leaves the scene view. Key-repeat events will
+		// cause it to be re-enabled when the mouse re-enters if the key is still
+		// held down at that time.
+		setTargetedMode( false );
+	}
+}
+
+void TranslateTool::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == activePlug() )
+	{
+		if( !activePlug()->getValue() && getTargetedMode() )
+		{
+			setTargetedMode( false );
+		}
+	}
+}
+
+void TranslateTool::visibilityChanged( GafferUI::Gadget *gadget )
+{
+	if( !gadget->visible() && getTargetedMode() )
+	{
+		setTargetedMode( false );
+	}
+}
+
+void TranslateTool::setTargetedMode( bool targeted )
+{
+	if( targeted == m_targetedMode )
+	{
+		return;
+	}
+
+	m_targetedMode = targeted;
+
+	GafferUI::Pointer::setCurrent( targeted ? "target" : "" );
+}
+
+
+IECore::RunTimeTypedPtr TranslateTool::handleDragBegin()
 {
 	m_drag.clear();
 	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
@@ -163,7 +243,7 @@ IECore::RunTimeTypedPtr TranslateTool::dragBegin()
 	return nullptr; // let the handle start the drag with the event system
 }
 
-bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+bool TranslateTool::handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f translation = static_cast<const TranslateHandle *>( gadget )->translation( event );
@@ -174,10 +254,58 @@ bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::Dr
 	return true;
 }
 
-bool TranslateTool::dragEnd()
+bool TranslateTool::handleDragEnd()
 {
 	TransformTool::dragEnd();
 	return false;
+}
+
+bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
+{
+	if( event.buttons != ButtonEvent::Left
+		|| !activePlug()->getValue()
+		|| !getTargetedMode()
+	) {
+		return false;
+	}
+
+	// In targeted mode, we teleport the selection to the clicked point.
+	//
+	// Our prescribed behaviour is to move the bbox center of the selection
+	// to the clicked point. If multiple locations are selected, their combined
+	// bounds should be used, so they retain their existing relative spacing.
+	//
+	// We always return true to prevent the SelectTool defaults.
+
+	GafferScene::ScenePlug::ScenePath _;
+	Imath::V3f targetPos;
+
+	const SceneView *sv = static_cast<const SceneView *>( view() );
+	const Gadget *g = sv->viewportGadget()->getPrimaryChild();
+	const SceneGadget* sg = static_cast<const SceneGadget *>( g );
+	if( !sg->objectAt( event.line, _, targetPos ) )
+	{
+		return true;
+	}
+
+	Box3f selectionCentroids;
+	for( const auto &s : selection() )
+	{
+		Context::Scope scopedContext( s.context.get() );
+
+		const M44f worldTransform = s.scene->fullTransform( s.path );
+		selectionCentroids.extendBy( s.scene->bound( s.path ).center() * worldTransform );
+	}
+
+	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled );
+
+	const V3f offset = targetPos - selectionCentroids.center();
+	for( const auto &s : selection() )
+	{
+		Translation( s, World ).apply( offset );
+	}
+
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////

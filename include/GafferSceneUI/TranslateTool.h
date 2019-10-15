@@ -95,11 +95,25 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 
 		};
 
-		// Drag handling.
+		// Handle drag handling.
 
-		IECore::RunTimeTypedPtr dragBegin();
-		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragEnd();
+		IECore::RunTimeTypedPtr handleDragBegin();
+		bool handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool handleDragEnd();
+
+		// Targeted mode handling
+
+		bool keyPress( const GafferUI::KeyEvent &event );
+		bool keyRelease( const GafferUI::KeyEvent &event );
+		void sceneGadgetLeave( const GafferUI::ButtonEvent &event );
+		void visibilityChanged( GafferUI::Gadget *gadget );
+		void plugSet( Gaffer::Plug *plug );
+
+		bool buttonPress( const GafferUI::ButtonEvent &event );
+
+		void setTargetedMode( bool targeted );
+		inline bool getTargetedMode() const { return m_targetedMode; }
+		bool m_targetedMode;
 
 		std::vector<Translation> m_drag;
 

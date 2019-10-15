@@ -62,6 +62,7 @@ static Registry &registry()
 		r["contextMenu"] = new Pointer( "pointerContextMenu.png", Imath::V2i( 1 ) );
 		r["tab"] = new Pointer( "pointerTab.png", Imath::V2i( 12, 15 ) );
 		r["detachedPanel"] = new Pointer( "pointerDetachedPanel.png", Imath::V2i( 12, 15 ) );
+		r["target"] = new Pointer( "pointerTarget.png", Imath::V2i( 12, 12 ) );
 	}
 	return r;
 }
