@@ -289,6 +289,7 @@ Decrease manipulator size                            :kbd:`-`
 Add animation key to transform of selected object(s) :kbd:`S`
 Adjust, high precision                               :kbd:`Shift` + click and drag
 Adjust, snapping to rounded increments               :kbd:`Ctrl` + click and drag
+Target mode (Translate and Rotate only)              Hold :kbd:`v`
 ==================================================== =============================================
 ```
 
