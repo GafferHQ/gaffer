@@ -35,6 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/tuple.hpp"
+
 
 #include "SceneGadgetBinding.h"
 
@@ -132,6 +134,17 @@ IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegmen
 	return nullptr;
 }
 
+tuple objectAndIntersectionAt( SceneGadget &g, IECore::LineSegment3f &l )
+{
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
+	Imath::V3f hitPos( 0.0f );
+	if( g.objectAt( l, result->writable(), hitPos ) )
+	{
+		return boost::python::make_tuple( result, hitPos );
+	}
+	return boost::python::make_tuple( object(), hitPos );
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindSceneGadget()
@@ -157,6 +170,7 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "setSelectionMask", &SceneGadget::setSelectionMask )
 		.def( "getSelectionMask", &getSelectionMask )
 		.def( "objectAt", &objectAt )
+		.def( "objectAndIntersectionAt", &objectAndIntersectionAt )
 		.def( "objectsAt", &SceneGadget::objectsAt )
 		.def( "setSelection", &SceneGadget::setSelection )
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )

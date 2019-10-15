@@ -50,6 +50,19 @@ using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
+namespace
+{
+	float lineariseDepthBufferSample( float bufferDepth, float *m )
+	{
+		// Heavily optimised extraction that works with our orthogonal clipping planes
+		//   Fast Extraction of Viewing Frustum Planes from the WorldView-Projection Matrix
+		//   http://www.cs.otago.ac.nz/postgrads/alexis/planeExtraction.pdf
+		const float n = - ( m[15] + m[14] ) / ( m[11] + m[10] );
+		const float f = - ( m[15] - m[14] ) / ( m[11] - m[10] );
+		return ( 2.0f * n * f ) / ( f + n - ( bufferDepth * 2.0f - 1.0f ) * ( f - n ) );
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // SceneGadget implementation
 //////////////////////////////////////////////////////////////////////////
@@ -270,9 +283,21 @@ const IECore::StringVectorData *SceneGadget::getSelectionMask() const
 
 bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path ) const
 {
+	V3f unused;
+	return objectAt( lineInGadgetSpace, path, unused );
+}
+
+bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path, V3f &hitPoint ) const
+{
+	float projectionMatrix[16];
+
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
+		//  Fetch the matrix so we can work out our clipping planes to extract
+		//  a real-world depth from the buffer. We do this here in case
+		//  SelectionScope ever affects the matrix/planes.
+		glGetFloatv( GL_PROJECTION_MATRIX, projectionMatrix );
 		renderScene();
 	}
 
@@ -299,6 +324,25 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	}
 
 	path = *PathMatcher::Iterator( paths.begin() );
+
+	// Notes:
+	//  - depthMin is in respect to +ve z, we're looking down -z, so we need to invert it.
+	//  - depthMin is orthogonal to the camera's xy plane not from its origin.
+	//  - There may be intermediate transforms between us and the ViewportGadget.
+
+	V3f viewDir;
+	const M44f cameraWorldTransform = ancestor<ViewportGadget>()->getCameraTransform();
+	const M44f cameraTransform = cameraWorldTransform * fullTransform().inverse();
+	cameraTransform.multDirMatrix( V3f( 0.0f, 0.0f, -1.0f ), viewDir );
+
+	const V3f traceDir = lineInGadgetSpace.normalizedDirection();
+
+	float hitDepth = - lineariseDepthBufferSample( depthMin, projectionMatrix );
+	hitDepth /= max( 0.00001f, viewDir.dot( traceDir ) );
+
+	const V3f origin = V3f( 0.0f ) * cameraTransform;
+	hitPoint = origin + ( traceDir * hitDepth );
+
 	return true;
 }
 
