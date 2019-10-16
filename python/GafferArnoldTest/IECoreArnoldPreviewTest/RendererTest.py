@@ -2281,6 +2281,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/test/test_log.txt" ) )
 		r.option( "ai:statisticsFileName", IECore.StringData( self.temporaryDirectory() + "/test/test_stats.json" ) )
+		r.option( "ai:profileFileName", IECore.StringData( self.temporaryDirectory() + "/test/test_profile.json" ) )
+
 		c = r.camera(
 			"testCamera",
 			IECoreScene.Camera(
@@ -2304,6 +2306,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.render()
 
+		# required to flush the profile json
+		del r
+
 		with open( self.temporaryDirectory() + "/test/test_log.txt", "r" ) as logHandle:
 			self.assertNotEqual( logHandle.read().find( "rendering image at 640 x 480" ), -1 )
 
@@ -2319,6 +2324,11 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertTrue( "memory consumed MB" in stats )
 
 			self.assertTrue( "ray counts" in stats )
+
+		with open( self.temporaryDirectory() + "/test/test_profile.json", "r" ) as profileHandle :
+			stats = json.load( profileHandle )["traceEvents"]
+			driverEvents = [ x for x in stats if x["name"] == "ieCoreArnold:display:testBeauty" ]
+			self.assertEqual( driverEvents[0]["cat"], "driver_exr" )
 
 	def testProcedural( self ) :
 
