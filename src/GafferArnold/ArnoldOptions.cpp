@@ -153,6 +153,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	// Statistics
 	options->addChild( new Gaffer::NameValuePlug( "ai:statisticsFileName", new IECore::StringData( "" ), false, "statisticsFileName" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:profileFileName", new IECore::StringData( "" ), false, "profileFileName" ) );
 
 	// Licensing
 
