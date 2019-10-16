@@ -176,7 +176,9 @@ def __statisticsSummary( plug ) :
 
 	info = []
 	if plug["statisticsFileName"]["enabled"].getValue() :
-		info.append( "File name: " + plug["statisticsFileName"]["value"].getValue() )
+		info.append( "Stats File: " + plug["statisticsFileName"]["value"].getValue() )
+	if plug["profileFileName"]["enabled"].getValue() :
+		info.append( "Profile File: " + plug["profileFileName"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -915,7 +917,21 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Statistics",
-			"label", "File Name",
+			"label", "Statistics File",
+
+		],
+
+		"options.profileFileName" : [
+
+			"description",
+			"""
+			The name of a profile json file where Arnold will store a
+			detailed node performance graph. Use chrome://tracing to
+			view the profile.
+			""",
+
+			"layout:section", "Statistics",
+			"label", "Profile File",
 
 		],
 
