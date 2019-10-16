@@ -166,11 +166,11 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		/// Used to calculate the name remapping needed to prevent name clashes with
 		/// the existing scene. Must be evaluated in a context where "scene:path" is
 		/// one of the parent paths.
-		Gaffer::AtomicCompoundDataPlug *mappingPlug();
-		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
+		Gaffer::ObjectPlug *mappingPlug();
+		const Gaffer::ObjectPlug *mappingPlug() const;
 
 		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		IECore::ConstCompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
+		IECore::ConstDataPtr computeMapping( const Gaffer::Context *context ) const;
 
 		// Computes the relevant parent and branch paths for computing the result
 		// at the specified path. Returns a PathMatcher::Result to describe where path is

@@ -37,18 +37,16 @@
 
 #include "GafferScene/Group.h"
 
+#include "GafferScene/Private/ChildNamesMap.h"
+
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
 
-#include "IECore/CompoundData.h"
-#include "IECore/CompoundObject.h"
+#include "IECore/NullObject.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
-
-#include "boost/lexical_cast.hpp"
-#include "boost/regex.hpp"
 
 using namespace std;
 using namespace Imath;
@@ -68,7 +66,7 @@ Group::Group( const std::string &name )
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
 	addChild( new TransformPlug( "transform" ) );
 
-	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundObject() ) );
+	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, NullObject::defaultNullObject() ) );
 
 	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
 }
@@ -164,9 +162,9 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	if( output == mappingPlug() )
 	{
 		ScenePlug::PathScope scope( context, ScenePath() );
-		for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
+		for( const auto &p : ScenePlug::Range( *inPlugs() ) )
 		{
-			(*it)->childNamesPlug()->hash( h );
+			p->childNamesPlug()->hash( h );
 		}
 	}
 }
@@ -175,7 +173,13 @@ void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context )
 {
 	if( output == mappingPlug() )
 	{
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMapping( context ) );
+		vector<ConstInternedStringVectorDataPtr> inputChildNames; inputChildNames.reserve( inPlugs()->children().size() );
+		ScenePlug::PathScope scope( context, ScenePath() );
+		for( const auto &p : ScenePlug::Range( *inPlugs() ) )
+		{
+			inputChildNames.push_back( p->childNamesPlug()->getValue() );
+		}
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( new Private::ChildNamesMap( inputChildNames ) );
 		return;
 	}
 
@@ -366,8 +370,8 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	else if( path.size() == 1 )
 	{
 		ScenePlug::GlobalScope s( context );
-		ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
-		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
+		Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+		return mapping->outputChildNames();
 	}
 	else
 	{
@@ -412,9 +416,9 @@ IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::C
 void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneProcessor::hashSet( setName, context, parent, h );
-	for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( const auto &p : ScenePlug::Range( *inPlugs() ) )
 	{
-		(*it)->setPlug()->hash( h );
+		p->setPlug()->hash( h );
 	}
 
 	ScenePlug::GlobalScope s( context );
@@ -424,139 +428,33 @@ void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 
 IECore::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	InternedString groupName;
-	ConstCompoundObjectPtr mapping;
+	vector<ConstPathMatcherDataPtr> inputSets; inputSets.reserve( inPlugs()->children().size() );
+	for( const auto &p : ScenePlug::Range( *inPlugs() ) )
 	{
-		ScenePlug::GlobalScope s( context );
-		groupName = namePlug()->getValue();
-		mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+		inputSets.push_back( p->setPlug()->getValue() );
 	}
-	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
+
+	ScenePlug::GlobalScope s( context );
+	Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+	const InternedString name = namePlug()->getValue();
 
 	PathMatcherDataPtr resultData = new PathMatcherData;
-	PathMatcher &result = resultData->writable();
-	for( size_t i = 0, e = inPlugs()->children().size(); i < e; i++ )
-	{
-		ConstPathMatcherDataPtr inputSetData = inPlugs()->getChild<ScenePlug>( i )->setPlug()->getValue();
-		const PathMatcher &inputSet = inputSetData->readable();
-
-		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
-
-		// We want our outputSet to reference the data within inputSet rather
-		// than do an expensive copy. This is complicated slightly by the fact
-		// that we may need to rename the children of the root according to the
-		// forwardMapping object. Here we do that by taking subtrees of the input
-		// and adding them to our output under a renamed prefix.
-		for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
-		{
-			const vector<InternedString> &inputPath = *pIt;
-			if( !inputPath.size() )
-			{
-				// Skip root.
-				continue;
-			}
-			assert( inputPath.size() == 1 );
-
-			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0], /* throwExceptions = */ true );
-
-			vector<InternedString> prefix;
-			prefix.push_back( groupName );
-			prefix.push_back( outputName->readable() );
-			result.addPaths( inputSet.subTree( inputPath ), prefix );
-
-			pIt.prune(); // We only want to visit the first level
-		}
-	}
+	resultData->writable().addPaths( mapping->set( inputSets ), { name } );
 
 	return resultData;
 }
 
-IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
-{
-	/// \todo It might be more optimal to make our own Object subclass better tailored
-	/// for passing the information we want.
-	CompoundObjectPtr result = new CompoundObject();
-
-	InternedStringVectorDataPtr childNamesData = new InternedStringVectorData();
-	vector<InternedString> &childNames = childNamesData->writable();
-	result->members()["__GroupChildNames"] = childNamesData;
-
-	ObjectVectorPtr forwardMappings = new ObjectVector;
-	result->members()["__GroupForwardMappings"] = forwardMappings;
-
-	boost::regex namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
-	boost::format namePrefixSuffixFormatter( "%s%d" );
-
-	set<InternedString> allNames;
-	for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
-	{
-		ConstInternedStringVectorDataPtr inChildNamesData = (*it)->childNames( ScenePath() );
-		CompoundDataPtr forwardMapping = new CompoundData;
-		forwardMappings->members().push_back( forwardMapping );
-
-		const vector<InternedString> &inChildNames = inChildNamesData->readable();
-		for( vector<InternedString>::const_iterator cIt = inChildNames.begin(), ceIt = inChildNames.end(); cIt!=ceIt; cIt++ )
-		{
-			InternedString name = *cIt;
-			if( allNames.find( name ) != allNames.end() )
-			{
-				// uniqueify the name
-				/// \todo This code is almost identical to code in GraphComponent::setName(),
-				/// is there a sensible place it can be shared? The primary obstacle is that
-				/// each use has a different method of storing the existing names.
-				string prefix = name;
-				int suffix = 1;
-
-				boost::cmatch match;
-				if( regex_match( name.value().c_str(), match, namePrefixSuffixRegex ) )
-				{
-					prefix = match[1];
-					suffix = boost::lexical_cast<int>( match[2] );
-				}
-
-				do
-				{
-					name = boost::str( namePrefixSuffixFormatter % prefix % suffix );
-					suffix++;
-				} while( allNames.find( name ) != allNames.end() );
-			}
-
-			allNames.insert( name );
-			childNames.push_back( name );
-			forwardMapping->writable()[*cIt] = new InternedStringData( name );
-
-			CompoundObjectPtr entry = new CompoundObject;
-			entry->members()["n"] = new InternedStringData( *cIt );
-			entry->members()["i"] = new IntData( it.base() - inPlugs()->children().begin() );
-			result->members()[name] = entry;
-		}
-	}
-
-	return result;
-}
-
 SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const ScenePlug **source ) const
 {
-	const InternedString mappedChildName = outputPath[1];
+	ScenePlug::GlobalScope s( Context::current() );
+	Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 
-	ConstCompoundObjectPtr mapping;
-	{
-		ScenePlug::GlobalScope s( Context::current() );
-		mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
-	}
-	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
-	if( !entry )
-	{
-		string outputPathString;
-		ScenePlug::pathToString( outputPath, outputPathString );
-		throw Exception( boost::str( boost::format( "Unable to find mapping for output path \"%s\"" ) % outputPathString ) );
-	}
-
-	*source = inPlugs()->getChild<ScenePlug>( entry->member<IntData>( "i" )->readable() );
+	const Private::ChildNamesMap::Input &input = mapping->input( outputPath[1] );
+	*source = inPlugs()->getChild<ScenePlug>( input.index );
 
 	ScenePath result;
 	result.reserve( outputPath.size() - 1 );
-	result.push_back( entry->member<InternedStringData>( "n" )->readable() );
+	result.push_back( input.name );
 	result.insert( result.end(), outputPath.begin() + 2, outputPath.end() );
 	return result;
 }
