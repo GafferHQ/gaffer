@@ -407,5 +407,30 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( pm.plugStatistics( setB["__FilterResults"]["__internalOut"] ).hashCount, 1 )
 		self.assertEqual( pm.plugStatistics( setB["__FilterResults"]["__internalOut"] ).computeCount, 1 )
 
+	def testFilterAndContextVariables( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "${name}" )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		sphereSet = GafferScene.Set()
+		sphereSet["in"].setInput( sphere["out"] )
+		sphereSet["filter"].setInput( sphereFilter["out"] )
+
+		expectedSet = IECore.PathMatcher( [ "/sphere" ] )
+
+		# This exposed a ThreadState management problem triggered
+		# by older versions of TBB.
+
+		with Gaffer.Context() as c :
+
+			c["name"] = "sphere"
+			for i in range( 0, 10000 ) :
+
+				Gaffer.ValuePlug.clearCache()
+				self.assertEqual( sphereSet["out"].set( "set" ).value, expectedSet )
+
 if __name__ == "__main__":
 	unittest.main()
