@@ -98,7 +98,8 @@ class CompoundEditor( GafferUI.Editor ) :
 		for candidate in candidates :
 
 			# Skip a window if its inactive
-			if not candidate._qtWidget().windowHandle().isActive() :
+			window = candidate._qtWidget().windowHandle()
+			if not window or not window.isActive() :
 				continue
 
 			# We the focus widget is (or is a child of) an editor of the right
