@@ -47,15 +47,15 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
 	__preferencesFile = "/tmp/testPreferences.py"
 
+	class testApp( Gaffer.Application ) :
+
+		def __init__( self ) :
+
+			Gaffer.Application.__init__( self )
+
 	def testPreferences( self ) :
 
-		class testApp( Gaffer.Application ) :
-
-			def __init__( self ) :
-
-				Gaffer.Application.__init__( self )
-
-		application = testApp()
+		application = ApplicationRootTest.testApp()
 		applicationRoot = application.root()
 
 		p = applicationRoot["preferences"]
