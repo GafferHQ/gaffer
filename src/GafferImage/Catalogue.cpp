@@ -136,9 +136,10 @@ class Catalogue::InternalImage : public ImageNode
 			// Adds on a description to the output
 			addChild( new ImageMetadata() );
 			imageMetadata()->inPlug()->setInput( imageSwitch()->outPlug() );
-			NameValuePlugPtr meta = new NameValuePlug( "ImageDescription", new StringData(), "member1" );
+			NameValuePlugPtr meta = new NameValuePlug( "ImageDescription", new StringData(), true, "member1" );
 			imageMetadata()->metadataPlug()->addChild( meta );
-			meta->valuePlug<StringPlug>()->setInput( descriptionPlug() );
+			meta->valuePlug()->setInput( descriptionPlug() );
+			meta->enabledPlug()->setInput( descriptionPlug() ); // Enable only for non-empty strings
 
 			outPlug()->setInput( imageMetadata()->outPlug() );
 		}
@@ -620,14 +621,6 @@ Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 
 	Ptr image = new Image( name, Plug::In, Plug::Default | Plug::Dynamic );
 	image->fileNamePlug()->setValue( fileName );
-
-	ImageReaderPtr reader = new ImageReader;
-	reader->fileNamePlug()->setValue( fileName );
-	ConstCompoundDataPtr meta = reader->outPlug()->metadataPlug()->getValue();
-	if( const StringData *description = meta->member<const StringData>( "ImageDescription" ) )
-	{
-		image->descriptionPlug()->setValue( description->readable() );
-	}
 
 	return image;
 }
