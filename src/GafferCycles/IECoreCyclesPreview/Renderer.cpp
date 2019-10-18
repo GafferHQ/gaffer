@@ -743,7 +743,7 @@ class ShaderCache : public IECore::RefCounted
 			#ifdef WITH_OSL
 			m_shaderManager = new ccl::OSLShaderManager();
 			#endif
-			m_defaultSurface = get( nullptr );
+			m_defaultSurface = get( nullptr, nullptr );
 		}
 
 		~ShaderCache()
@@ -760,16 +760,32 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		SharedCShaderPtr get( const IECoreScene::ShaderNetwork *shader )
+		SharedCShaderPtr get( const IECoreScene::ShaderNetwork *shader, const IECore::CompoundObject *attributes )
 		{
+			IECore::MurmurHash h = shader ? shader->Object::hash() : MurmurHash();
+			IECore::MurmurHash hSubst;
+			if( attributes && shader )
+			{
+				shader->hashSubstitutions( attributes, hSubst );
+				h.append( hSubst );
+			}
 			Cache::accessor a;
-			m_cache.insert( a, shader ? shader->Object::hash() : MurmurHash() );
+			m_cache.insert( a, h );
 			if( !a->second )
 			{
 				if( shader )
 				{
 					const std::string namePrefix = "shader:" + a->first.toString() + ":";
-					a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_shaderManager, namePrefix ) );
+					if( hSubst != IECore::MurmurHash() )
+					{
+						IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
+						substitutedShader->applySubstitutions( attributes );
+						a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( substitutedShader.get(), m_shaderManager, namePrefix ) );
+					}
+					else
+					{
+						a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_shaderManager, namePrefix ) );
+					}
 				}
 				else
 				{
@@ -959,7 +975,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				//const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
 				//const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
 
-				m_shader = shaderCache->get( surfaceShaderAttribute );
+				m_shader = shaderCache->get( surfaceShaderAttribute, attributes );
 			}
 			else
 			{
@@ -968,7 +984,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				if( volumeShaderAttribute )
 				{
 					m_shaderHash = hash_value( volumeShaderAttribute->getOutput() );
-					m_shader = shaderCache->get( volumeShaderAttribute );
+					m_shader = shaderCache->get( volumeShaderAttribute, attributes );
 				}
 				else
 				{
@@ -2653,7 +2669,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_backgroundShader = nullptr;
 						if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 						{
-							m_backgroundShader = m_shaderCache->get( d );
+							m_backgroundShader = m_shaderCache->get( d, nullptr );
 							background->shader = m_backgroundShader.get();
 						}
 						else
