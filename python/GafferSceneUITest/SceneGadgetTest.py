@@ -308,7 +308,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 			IECore.MessageHandler.setDefaultHandler( originalMessageHandler )
 
-	def testObjectsAt( self ) :
+	def testObjectsAtBox( self ) :
 
 		plane = GafferScene.Plane()
 
@@ -365,6 +365,86 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			imath.Box2f( imath.V2f( 0.5 ), imath.V2f( 1 ) ),
 			[ "/instances/sphere/1" ]
 		)
+
+	def testObjectAtLine( self ) :
+
+		cubes = []
+		names = ( "left", "center", "right" )
+		for i in range( 3 ) :
+			cube = GafferScene.Cube()
+			cube["transform"]["translate"].setValue( imath.V3f( ( i - 1 ) * 2.0, 0.0, -2.5 ) )
+			cube["name"].setValue( names[i] )
+			cubes.append( cube )
+
+		group = GafferScene.Group()
+		for i, cube in enumerate( cubes ) :
+			group["in"][i].setInput( cube["out"] )
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setScene( group["out"] )
+		sg.setMinimumExpansionDepth( 100 )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+		w.setVisible( True )
+		self.waitForIdle( 10000 )
+
+		vp = gw.getViewportGadget()
+
+		# This is the single most important line in this test. If you don't set
+		# this to false, you get an orthographic camera, even if you set a
+		# perspective projection.
+		vp.setPlanarMovement( False )
+
+		c = IECoreScene.Camera()
+		c.setProjection( "perspective" )
+		c.setFocalLength( 35 )
+		c.setAperture( imath.V2f( 36, 24 ) )
+		vp.setCamera( c )
+
+		cameraTransform = imath.M44f()
+		cameraTransform.translate( imath.V3f( 0, 0, 2 ) )
+		vp.setCameraTransform( cameraTransform )
+
+		self.waitForIdle( 10000 )
+
+		# We assume in this case, that gadget space is world space
+
+		leftCubeDir = IECore.LineSegment3f( imath.V3f( 0, 0, 2 ), imath.V3f( -2, 0, -2 ) )
+		pathA = sg.objectAt( leftCubeDir )
+		pathB, hitPoint = sg.objectAndIntersectionAt( leftCubeDir )
+		self.assertIsNotNone( pathA )
+		self.assertEqual( pathA, IECore.InternedStringVectorData( [ "group", "left" ] ) )
+		self.assertEqual( pathA,  pathB )
+		self.assertAlmostEqual( hitPoint.x, -2, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.y, 0, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.z, -2, delta = 0.01 )
+
+		centerCubeDir = IECore.LineSegment3f( imath.V3f( 0, 0, 1 ), imath.V3f( 0, 0, -1 ) )
+		pathA = sg.objectAt( centerCubeDir )
+		pathB, hitPoint = sg.objectAndIntersectionAt( centerCubeDir )
+		self.assertIsNotNone( pathA )
+		self.assertEqual( pathA, IECore.InternedStringVectorData( [ "group", "center" ] ) )
+		self.assertEqual( pathA,  pathB )
+		self.assertAlmostEqual( hitPoint.x, 0, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.y, 0, delta = 0.01  )
+		self.assertAlmostEqual( hitPoint.z, -2, delta = 0.01 )
+
+		rightCubeDir = IECore.LineSegment3f( imath.V3f( 0, 0, 2 ), imath.V3f( 2, 0, -2 ) )
+		pathA = sg.objectAt( rightCubeDir )
+		pathB, hitPoint = sg.objectAndIntersectionAt( rightCubeDir )
+		self.assertIsNotNone( pathA )
+		self.assertEqual( pathA, IECore.InternedStringVectorData( [ "group", "right" ] ) )
+		self.assertEqual( pathA,  pathB )
+		self.assertAlmostEqual( hitPoint.x, 2, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.y, 0, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.z, -2, delta = 0.01 )
+
+		missDir = IECore.LineSegment3f( imath.V3f( 0, 0, 2 ), imath.V3f( 0, 10, -2 ) )
+		pathA = sg.objectAt( missDir )
+		pathB, hitPoint = sg.objectAndIntersectionAt( missDir )
+		self.assertIsNone( pathA )
+		self.assertIsNone( pathB )
 
 	def testSetAndGetScene( self ) :
 

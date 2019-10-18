@@ -97,11 +97,25 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 
 		};
 
-		// Drag handling.
+		// Handle Drag handling.
 
-		IECore::RunTimeTypedPtr dragBegin();
-		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragEnd();
+		IECore::RunTimeTypedPtr handleDragBegin();
+		bool handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool handleDragEnd();
+
+		// Target mode handling
+
+		bool keyPress( const GafferUI::KeyEvent &event );
+		bool keyRelease( const GafferUI::KeyEvent &event );
+		void sceneGadgetLeave( const GafferUI::ButtonEvent &event );
+		void visibilityChanged( GafferUI::Gadget *gadget );
+		void plugSet( Gaffer::Plug *plug );
+
+		bool buttonPress( const GafferUI::ButtonEvent &event );
+
+		void setTargetedMode( bool targeted );
+		inline bool getTargetedMode() const { return m_targetedMode; }
+		bool m_targetedMode;
 
 		std::vector<Rotation> m_drag;
 

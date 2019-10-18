@@ -53,6 +53,8 @@ class BoolWidget( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, _CheckBox( text ), **kw )
 
+		self.__defaultFocusPolicy = self._qtWidget().focusPolicy()
+
 		self.setState( checked )
 		self.setDisplayMode( displayMode )
 		self.setImage( image )
@@ -101,6 +103,11 @@ class BoolWidget( GafferUI.Widget ) :
 		self._qtWidget().setHitMode(
 			_CheckBox.HitMode.Button if displayMode == self.DisplayMode.Tool else _CheckBox.HitMode.CheckBox
 		)
+
+		if displayMode == self.DisplayMode.Tool :
+			self._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+		else :
+			self._qtWidget().setFocusPolicy( self.__defaultFocusPolicy )
 
 	def getDisplayMode( self ) :
 

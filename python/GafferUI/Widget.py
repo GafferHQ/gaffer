@@ -1023,6 +1023,13 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __keyRelease( self, qObject, qEvent ) :
 
+		# When a key is held, the following events are observed:
+		#   MacOS: p p p p r
+		#   Linux: p r p r p r p r
+		# We conform linux to match Mac as it feels more intuitive.
+		if qEvent.isAutoRepeat() :
+			return True
+
 		if self.__updateDragModifiers( qObject, qEvent ) :
 			return True
 
