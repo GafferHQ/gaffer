@@ -781,7 +781,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 			n["parameters"]["colorSpline"].setValue( Gaffer.SplineDefinitionfColor3f( points, interpolation ) )
 
-			oslSamples = list( reversed( image['out'].image()["R"] ) )
+			oslSamples = list( reversed( GafferImage.ImageAlgo.image( image['out'] )["R"] ) )
 
 			s = n['parameters']['colorSpline'].getValue().spline()
 			cortexSamples = [ s( ( i + 0.5 ) / numSamples )[0] for i in range( numSamples ) ]

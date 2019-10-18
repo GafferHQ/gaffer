@@ -163,7 +163,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["filter"].setValue( "sinc" )
 		r["in"].setInput( c["out"] )
 
-		i = r["out"].image()
+		i = GafferImage.ImageAlgo.image( r["out"] )
 		self.assertEqual( i["R"], IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
 
 	def testExpandDataWindow( self ) :

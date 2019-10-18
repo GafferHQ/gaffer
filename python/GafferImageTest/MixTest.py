@@ -69,12 +69,12 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		mix["in"][0].setInput( r1["out"] )
 		mix["in"][1].setInput( r2["out"] )
-		h1 = mix["out"].imageHash()
+		h1 = GafferImage.ImageAlgo.imageHash( mix["out"] )
 
 		# Switch the inputs.
 		mix["in"][1].setInput( r1["out"] )
 		mix["in"][0].setInput( r2["out"] )
-		h2 = mix["out"].imageHash()
+		h2 = GafferImage.ImageAlgo.imageHash( mix["out"] )
 
 		self.assertNotEqual( h1, h2 )
 
@@ -88,7 +88,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		mix = GafferImage.Mix()
 
-		input1Hash = r["out"].imageHash()
+		input1Hash = GafferImage.ImageAlgo.imageHash( r["out"] )
 		mix["in"][0].setInput( r["out"] )
 		mix["in"][1].setInput( g["out"] )
 		mix["mix"].setValue( 0.5 )
@@ -98,7 +98,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		# and the data window is merged
 		##########################################
 
-		self.assertNotEqual( mix["out"].imageHash(), input1Hash )
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( mix["out"] ), input1Hash )
 		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 20 ), imath.V2i( 75 ) ) )
 
 		##########################################
@@ -106,7 +106,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		##########################################
 
 		mix["enabled"].setValue(False)
-		self.assertEqual( mix["out"].imageHash(), input1Hash )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( mix["out"] ), input1Hash )
 		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 20 ), imath.V2i( 70 ) ) )
 		self.assertImagesEqual( mix["out"], r["out"] )
 
@@ -117,7 +117,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		mix["enabled"].setValue( True )
 		mix["mix"].setValue( 0 )
-		self.assertEqual( mix["out"].imageHash(), input1Hash )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( mix["out"] ), input1Hash )
 		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 20 ), imath.V2i( 70 ) ) )
 		self.assertImagesEqual( mix["out"], r["out"] )
 

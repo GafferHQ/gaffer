@@ -580,8 +580,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"]["in"].setInput( s["c"]["out"] )
 
 		with s.context() :
-			ci = s["c"]["out"].image()
-			wi = s["w"]["out"].image()
+			ci = GafferImage.ImageAlgo.image( s["c"]["out"] )
+			wi = GafferImage.ImageAlgo.image( s["w"]["out"] )
 
 		self.assertEqual( ci, wi )
 

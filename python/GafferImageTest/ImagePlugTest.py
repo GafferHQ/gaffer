@@ -158,14 +158,14 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r['fileName'].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
 
-		h = r['out'].imageHash()
+		h = GafferImage.ImageAlgo.imageHash( r['out'] )
 
 		for i in range( 20 ) :
-			self.assertEqual( h, r['out'].imageHash() )
+			self.assertEqual( h, GafferImage.ImageAlgo.imageHash( r['out'] ) )
 
 		r['refreshCount'].setValue( 2 )
 
-		self.assertNotEqual( h, r['out'].imageHash() )
+		self.assertNotEqual( h, GafferImage.ImageAlgo.imageHash( r['out'] ) )
 
 	def testDefaultFormatForImage( self ) :
 
@@ -174,10 +174,10 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.Context() as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
-			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )
+			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
-			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
+			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
 
 	def testGlobalConvenienceMethods( self ) :
 

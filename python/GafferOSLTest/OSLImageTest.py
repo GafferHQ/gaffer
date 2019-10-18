@@ -84,7 +84,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		# we haven't connected the shader yet, so the node should act as a pass through
 
-		self.assertEqual( image["out"].image(), reader["out"].image() )
+		self.assertEqual( GafferImage.ImageAlgo.image( image["out"] ), GafferImage.ImageAlgo.image( reader["out"] ) )
 
 		# that should all change when we hook up a shader
 
@@ -102,8 +102,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 				"out.channelNames", "out.channelData", "out"
 		] )
 
-		inputImage = reader["out"].image()
-		outputImage = image["out"].image()
+		inputImage = GafferImage.ImageAlgo.image( reader["out"] )
+		outputImage = GafferImage.ImageAlgo.image( image["out"] )
 
 		self.assertNotEqual( inputImage, outputImage )
 		self.assertEqual( outputImage["R"], inputImage["B"] )
@@ -124,8 +124,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 				"out.channelNames", "out.channelData", "out"
 		] )
 
-		inputImage = reader["out"].image()
-		outputImage = image["out"].image()
+		inputImage = GafferImage.ImageAlgo.image( reader["out"] )
+		outputImage = GafferImage.ImageAlgo.image( image["out"] )
 
 		self.assertEqual( outputImage["R"], inputImage["R"] )
 		self.assertEqual( outputImage["G"], inputImage["R"] )
@@ -199,8 +199,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		image["in"].setInput( reader["out"] )
 		image["shader"].setInput( imageShader["out"]["out"] )
 
-		inputImage = reader["out"].image()
-		outputImage = image["out"].image()
+		inputImage = GafferImage.ImageAlgo.image( reader["out"] )
+		outputImage = GafferImage.ImageAlgo.image( image["out"] )
 
 		self.assertEqual( outputImage["R"], IECore.FloatVectorData( [ 0 ] * inputImage["R"].size() ) )
 		self.assertEqual( outputImage["G"], inputImage["G"] )
@@ -384,7 +384,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		oslImage["shader"].setInput( outImage["out"]["out"] )
 
 		with Gaffer.PerformanceMonitor() as pm :
-			oslImage["out"].image()
+			GafferImage.ImageAlgo.image( oslImage["out"] )
 
 		# Because the shader doesn't use any input channels,
 		# the OSLImage node shouldn't have needed to pull on
@@ -432,7 +432,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		i["channels"].addChild( Gaffer.NameValuePlug( "testFloat", 42.42 ) )
 		i["channels"].addChild( Gaffer.NameValuePlug( "testColor", imath.Color3f(12,13,14) ) )
 
-		image = i['out'].image()
+		image = GafferImage.ImageAlgo.image( i['out'] )
 
 		self.assertEqual( image["R"], IECore.FloatVectorData( [1]*25 ) )
 		self.assertEqual( image["G"], IECore.FloatVectorData( [3]*25 ) )
@@ -454,7 +454,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		i["channels"][0]["value"].setInput( code["out"]["output1"] )
 
-		image = i['out'].image()
+		image = GafferImage.ImageAlgo.image( i['out'] )
 		self.assertEqual( image["blah.R"], IECore.FloatVectorData( [0.1]*25 ) )
 		self.assertEqual( image["blah.G"], IECore.FloatVectorData( [0.2]*25 ) )
 		self.assertEqual( image["blah.B"], IECore.FloatVectorData( [0.3]*25 ) )
@@ -506,7 +506,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( oslImage["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 5, 5 ) ) )
 		self.assertEqual( oslImage["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 5, 5 ) ) )
-		self.assertEqual( oslImage["out"].image()["G"], IECore.FloatVectorData( [0.6] * 25 ) )
+		self.assertEqual( GafferImage.ImageAlgo.image( oslImage["out"] )["G"], IECore.FloatVectorData( [0.6] * 25 ) )
 
 		oslImage["in"].setInput( constant["out"] )
 
@@ -516,7 +516,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 4 ) ) ) )
 		self.assertEqual( oslImage["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 4, 4 ) ) )
 		self.assertEqual( oslImage["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 4, 4 ) ) )
-		self.assertEqual( oslImage["out"].image()["G"], IECore.FloatVectorData( [0.6] * 16 ) )
+		self.assertEqual( GafferImage.ImageAlgo.image( oslImage["out"] )["G"], IECore.FloatVectorData( [0.6] * 16 ) )
 
 if __name__ == "__main__":
 	unittest.main()

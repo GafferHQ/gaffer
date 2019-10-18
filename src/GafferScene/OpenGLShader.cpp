@@ -37,6 +37,7 @@
 #include "GafferScene/OpenGLShader.h"
 
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageAlgo.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
@@ -196,7 +197,7 @@ void OpenGLShader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::Mur
 {
 	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
-		h.append( imagePlug->imageHash() );
+		h.append( GafferImage::ImageAlgo::imageHash( imagePlug ) );
 	}
 	else
 	{
@@ -208,7 +209,7 @@ IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug 
 {
 	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
-		IECoreImage::ImagePrimitivePtr image = imagePlug->image();
+		IECoreImage::ImagePrimitivePtr image = GafferImage::ImageAlgo::image( imagePlug );
 		if( image )
 		{
 			CompoundDataPtr value = new CompoundData;

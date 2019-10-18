@@ -125,18 +125,6 @@ IECore::MurmurHash metadataHash( const ImagePlug &plug )
 	return plug.metadataHash();
 }
 
-IECoreImage::ImagePrimitivePtr image( const ImagePlug &plug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return plug.image();
-}
-
-IECore::MurmurHash imageHash( const ImagePlug &plug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return plug.imageHash();
-}
-
 boost::python::list registeredFormats()
 {
 	std::vector<std::string> names;
@@ -247,8 +235,6 @@ void GafferImageModule::bindCore()
 		.def( "channelNamesHash", &channelNamesHash )
 		.def( "metadata", &metadata, ( arg( "_copy" ) = true ) )
 		.def( "metadataHash", &metadataHash )
-		.def( "image", &image )
-		.def( "imageHash", &imageHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
 		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )

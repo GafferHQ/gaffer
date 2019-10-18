@@ -172,14 +172,6 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		IECore::ConstCompoundDataPtr metadata() const;
 		/// Calls `metadataPlug()->hash()` using a GlobalScope.
 		IECore::MurmurHash metadataHash() const;
-		/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
-		/// coordinate system will be converted to the OpenEXR and Cortex specification
-		/// and have it's origin in the top left of it's display window with the positive
-		/// Y axis pointing downwards rather than Gaffer's internal representation where
-		/// the origin is in the bottom left of the display window with the Y axis
-		/// ascending towards the top of the display window.
-		IECoreImage::ImagePrimitivePtr image() const;
-		IECore::MurmurHash imageHash() const;
 		//@}
 
 		/// @name Tile utilities

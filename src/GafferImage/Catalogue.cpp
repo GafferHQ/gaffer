@@ -851,7 +851,7 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 	}
 
 	boost::filesystem::path result( directory );
-	result /= image->imageHash().toString();
+	result /= ImageAlgo::imageHash( image ).toString();
 	result.replace_extension( "exr" );
 
 	return result.string();

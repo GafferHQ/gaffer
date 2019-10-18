@@ -79,6 +79,6 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 
 		catalogueSelect["imageName"].setValue("nope")
 		with self.assertRaises( Exception ) as cm:
-			catalogueSelect["out"].image()
+			GafferImage.ImageAlgo.image( catalogueSelect["out"] )
 
 		self.assertEqual( str( cm.exception ), "CatalogueSelect.__context.out.format : Unknown image name." )

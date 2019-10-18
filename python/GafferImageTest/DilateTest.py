@@ -55,7 +55,7 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 		m["in"].setInput( c["out"] )
 		m["radius"].setValue( imath.V2i( 0 ) )
 
-		self.assertEqual( c["out"].imageHash(), m["out"].imageHash() )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( c["out"] ), GafferImage.ImageAlgo.imageHash( m["out"] ) )
 		self.assertImagesEqual( c["out"], m["out"] )
 
 	def testExpandDataWindow( self ) :

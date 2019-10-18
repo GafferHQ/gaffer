@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_IMAGEALGO_H
 #define GAFFERIMAGE_IMAGEALGO_H
 
+#include "IECoreImage/ImagePrimitive.h"
+
 #include "GafferImage/Export.h"
 
 #include "IECore/Export.h"
@@ -99,6 +101,10 @@ inline bool channelExists( const ImagePlug *image, const std::string &channelNam
 /// Returns true if the specified channel exists in channelNames
 inline bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
 
+/// Parallel processing functions
+/// ==============================
+///
+
 enum TileOrder
 {
 	Unordered,
@@ -147,6 +153,23 @@ void parallelGatherTiles(
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
+
+/// Whole image operations
+/// ==============================
+///
+/// The functions process the whole image at once.  Not generally used in core Gaffer processing, since we
+/// prefer to process just one tile at a time, but useful for testing and interoperability
+
+/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
+/// coordinate system will be converted to the OpenEXR and Cortex specification
+/// and have it's origin in the top left of it's display window with the positive
+/// Y axis pointing downwards rather than Gaffer's internal representation where
+/// the origin is in the bottom left of the display window with the Y axis
+/// ascending towards the top of the display window.
+GAFFERIMAGE_API IECoreImage::ImagePrimitivePtr image( const ImagePlug *imagePlug );
+
+/// Return a hash that will vary if any aspect of the return from image( ... ) varies
+GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug );
 
 } // namespace ImageAlgo
 

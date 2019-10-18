@@ -156,8 +156,8 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		d["mode"].setValue( d.Mode.Keep )
 		d["channels"].setValue( "R" )
 
-		ri = r["out"].image()
-		di = d["out"].image()
+		ri = GafferImage.ImageAlgo.image( r["out"] )
+		di = GafferImage.ImageAlgo.image( d["out"] )
 
 		self.assertEqual( set( ri.keys() ), set( [ "R", "G", "B", "A" ] ) )
 		self.assertEqual( di.keys(), [ "R" ] )

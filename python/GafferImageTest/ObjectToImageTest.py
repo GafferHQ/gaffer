@@ -56,7 +56,7 @@ class ObjectToImageTest( GafferImageTest.ImageTestCase ) :
 		n = GafferImage.ObjectToImage()
 		n["object"].setValue( i )
 
-		self.assertEqual( n["out"].image(), i )
+		self.assertEqual( GafferImage.ImageAlgo.image( n["out"] ), i )
 
 	def testImageWithANegativeDataWindow( self ) :
 
@@ -65,7 +65,7 @@ class ObjectToImageTest( GafferImageTest.ImageTestCase ) :
 		n = GafferImage.ObjectToImage()
 		n["object"].setValue( i )
 
-		self.assertEqual( n["out"].image(), i )
+		self.assertEqual( GafferImage.ImageAlgo.image( n["out"] ), i )
 
 	def testHashVariesPerTileAndChannel( self ) :
 
