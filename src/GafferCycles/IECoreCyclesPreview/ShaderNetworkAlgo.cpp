@@ -284,9 +284,9 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 #endif
 		{
 #ifdef WITH_OSL
-			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
-#else
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
+#else
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
 #endif
 			return node;
 		}

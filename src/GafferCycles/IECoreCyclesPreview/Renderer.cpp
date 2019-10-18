@@ -836,7 +836,8 @@ class ShaderCache : public IECore::RefCounted
 		void updateShaders()
 		{
 			auto &shaders = m_scene->shaders;
-			shaders.clear();
+			//shaders.clear();
+			shaders.resize(4); // 4 built-in shaders, wipe the rest as we manage those
 			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
 				if( it->second )
