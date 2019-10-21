@@ -141,7 +141,7 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		parent = GafferScene.Parent()
 		parent["parent"].setValue( "/" )
 		parent["in"].setInput( plane["out"] )
-		parent["child"].setInput( sphereAttributes["out"] )
+		parent["children"][0].setInput( sphereAttributes["out"] )
 
 		copyAttributes = GafferScene.CopyAttributes()
 		copyAttributes["in"].setInput( parent["out"] )

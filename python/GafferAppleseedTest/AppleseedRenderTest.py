@@ -289,9 +289,8 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		parent = GafferScene.Parent()
 		parent["in"].setInput( planeAttrs["out"] )
-		parent["child"].setInput( cubeAttrs["out"] )
+		parent["children"][0].setInput( cubeAttrs["out"] )
 		parent["parent"].setValue( "/plane" )
-
 
 		shader = GafferOSL.OSLShader()
 		shader.loadShader( "as_texture" )

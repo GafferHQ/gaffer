@@ -1221,7 +1221,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["parent"] = GafferScene.Parent()
 		s["parent"]["in"].setInput( s["planeAttrs"]["out"] )
-		s["parent"]["child"].setInput( s["cubeAttrs"]["out"] )
+		s["parent"]["children"][0].setInput( s["cubeAttrs"]["out"] )
 		s["parent"]["parent"].setValue( "/plane" )
 
 		s["shader"] = GafferArnold.ArnoldShader()
@@ -1252,12 +1252,9 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["goboAssign"]["in"].setInput( s["light"]["out"] )
 		s["goboAssign"]["shader"].setInput( s["gobo"]["out"] )
 
-		
 		s["lightBlocker"] = GafferArnold.ArnoldLightFilter()
 		s["lightBlocker"].loadShader( "light_blocker" )
 		s["lightBlocker"]["parameters"]["geometry_type"].setValue( "<attr:geometryType>" )
-		#s["lightBlocker"]["parameters"]["geometry_type"].setValue( "plane" )
-
 
 		s["lightGroup"] = GafferScene.Group()
 		s["lightGroup"]["name"].setValue( "lightGroup" )
@@ -1266,7 +1263,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["parent2"] = GafferScene.Parent()
 		s["parent2"]["in"].setInput( s["shaderAssignment"]["out"] )
-		s["parent2"]["child"].setInput( s["lightGroup"]["out"] )
+		s["parent2"]["children"][0].setInput( s["lightGroup"]["out"] )
 		s["parent2"]["parent"].setValue( "/" )
 
 		s["globalAttrs"] = GafferScene.CustomAttributes()
@@ -1275,7 +1272,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "A", Gaffer.StringPlug( "value", defaultValue = 'default1' ) ) )
 		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'default2' ) ) )
 		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "geometryType", Gaffer.StringPlug( "value", defaultValue = 'cylinder' ) ) )
-
 
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["globalAttrs"]["out"] )

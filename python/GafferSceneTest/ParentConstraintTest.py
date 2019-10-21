@@ -146,7 +146,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		parent = GafferScene.Parent()
 		parent["in"].setInput( plane1["out"] )
 		parent["parent"].setValue( "/target" )
-		parent["child"].setInput( plane2["out"] )
+		parent["children"][0].setInput( plane2["out"] )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( plane1["out"] )

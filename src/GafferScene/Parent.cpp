@@ -36,6 +36,14 @@
 
 #include "GafferScene/Parent.h"
 
+#include "GafferScene/Private/ChildNamesMap.h"
+
+#include "IECore/NullObject.h"
+
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace Gaffer;
 using namespace GafferScene;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Parent );
@@ -46,126 +54,316 @@ Parent::Parent( const std::string &name )
 	:	BranchCreator( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ScenePlug( "child" ) );
+	addChild( new ArrayPlug( "children", Plug::In, new ScenePlug( "child0" ) ) );
+	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 }
 
 Parent::~Parent()
 {
 }
 
-ScenePlug *Parent::childPlug()
+Gaffer::ArrayPlug *Parent::childrenPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex );
+	return getChild<ArrayPlug>( g_firstPlugIndex );
 }
 
-const ScenePlug *Parent::childPlug() const
+const Gaffer::ArrayPlug *Parent::childrenPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex );
+	return getChild<ArrayPlug>( g_firstPlugIndex );
+}
+
+Gaffer::ObjectPlug *Parent::mappingPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::ObjectPlug *Parent::mappingPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+void Parent::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	BranchCreator::affects( input, outputs );
+
+	if( const ScenePlug *s = input->parent<ScenePlug>() )
+	{
+		if( s->parent<ArrayPlug>() == childrenPlug() )
+		{
+			if( input == s->childNamesPlug() )
+			{
+				outputs.push_back( mappingPlug() );
+			}
+		}
+	}
+}
+
+void Parent::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	BranchCreator::hash( output, context, h );
+
+	if( output == mappingPlug() )
+	{
+		ScenePlug::PathScope scope( context, ScenePath() );
+		for( const auto &child : ScenePlug::Range( *childrenPlug() ) )
+		{
+			child->childNamesPlug()->hash( h );
+		}
+	}
+}
+
+void Parent::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == mappingPlug() )
+	{
+		ScenePlug::PathScope scope( context, ScenePath() );
+		vector<ConstInternedStringVectorDataPtr> childNames;
+		for( const auto &child : ScenePlug::Range( *childrenPlug() ) )
+		{
+			childNames.push_back( child->childNamesPlug()->getValue() );
+		}
+
+		static_cast<ObjectPlug *>( output )->setValue( new Private::ChildNamesMap( childNames ) );
+	}
+
+	return BranchCreator::compute( output, context );
 }
 
 bool Parent::affectsBranchBound( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->boundPlug();
+	return input == mappingPlug() || isChildrenPlug( input, inPlug()->boundPlug()->getName() );
 }
 
 void Parent::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = childPlug()->boundHash( branchPath );
+	if( branchPath.size() == 0 )
+	{
+		BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
+		ScenePlug::PathScope scope( context, ScenePath() );
+		for( auto &p : ScenePlug::Range( *childrenPlug() ) )
+		{
+			p->boundPlug()->hash( h );
+		}
+	}
+	else
+	{
+		// pass through
+		const ScenePlug *sourcePlug = nullptr;
+		ScenePath source = sourcePath( branchPath, &sourcePlug );
+		h = sourcePlug->boundHash( source );
+	}
 }
 
 Imath::Box3f Parent::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return childPlug()->bound( branchPath );
+	if( branchPath.size() == 0 )
+	{
+		Box3f combinedBound;
+		for( auto &p : ScenePlug::Range( *childrenPlug() ) )
+		{
+			// we don't need to transform these bounds, because the SceneNode
+			// guarantees that the transform for root nodes is always identity.
+			Box3f bound = p->bound( ScenePath() );
+			combinedBound.extendBy( bound );
+		}
+		return combinedBound;
+	}
+	else
+	{
+		// pass through
+		const ScenePlug *sourcePlug = nullptr;
+		ScenePath source = sourcePath( branchPath, &sourcePlug );
+		return sourcePlug->bound( source );
+	}
 }
 
 bool Parent::affectsBranchTransform( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->transformPlug();
+	return input == mappingPlug() || isChildrenPlug( input, inPlug()->transformPlug()->getName() );
 }
 
 void Parent::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = childPlug()->transformHash( branchPath );
+	const ScenePlug *sourcePlug = nullptr;
+	ScenePath source = sourcePath( branchPath, &sourcePlug );
+	h = sourcePlug->transformHash( source );
 }
 
 Imath::M44f Parent::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return childPlug()->transform( branchPath );
+	const ScenePlug *sourcePlug = nullptr;
+	ScenePath source = sourcePath( branchPath, &sourcePlug );
+	return sourcePlug->transform( source );
 }
 
 bool Parent::affectsBranchAttributes( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->attributesPlug();
+	return input == mappingPlug() || isChildrenPlug( input, inPlug()->attributesPlug()->getName() );
 }
 
 void Parent::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = childPlug()->attributesHash( branchPath );
+	const ScenePlug *sourcePlug = nullptr;
+	ScenePath source = sourcePath( branchPath, &sourcePlug );
+	h = sourcePlug->attributesHash( source );
 }
 
 IECore::ConstCompoundObjectPtr Parent::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return childPlug()->attributes( branchPath );
+	const ScenePlug *sourcePlug = nullptr;
+	ScenePath source = sourcePath( branchPath, &sourcePlug );
+	return sourcePlug->attributes( source );
 }
 
 bool Parent::affectsBranchObject( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->objectPlug();
+	return input == mappingPlug() || isChildrenPlug( input, inPlug()->objectPlug()->getName() );
 }
 
 void Parent::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = childPlug()->objectHash( branchPath );
+	const ScenePlug *sourcePlug = nullptr;
+	ScenePath source = sourcePath( branchPath, &sourcePlug );
+	h = sourcePlug->objectHash( source );
 }
 
 IECore::ConstObjectPtr Parent::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return childPlug()->object( branchPath );
+	const ScenePlug *sourcePlug = nullptr;
+	ScenePath source = sourcePath( branchPath, &sourcePlug );
+	return sourcePlug->object( source );
 }
 
 bool Parent::affectsBranchChildNames( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->childNamesPlug();
+	return input == mappingPlug() || isChildrenPlug( input, inPlug()->childNamesPlug()->getName() );
 }
 
 void Parent::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = childPlug()->childNamesHash( branchPath );
+	if( branchPath.size() == 0 )
+	{
+		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
+		ScenePlug::GlobalScope s( context );
+		mappingPlug()->hash( h );
+	}
+	else
+	{
+		const ScenePlug *sourcePlug = nullptr;
+		ScenePath source = sourcePath( branchPath, &sourcePlug );
+		h = sourcePlug->childNamesHash( source );
+	}
 }
 
 IECore::ConstInternedStringVectorDataPtr Parent::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return childPlug()->childNames( branchPath );
+	if( branchPath.size() == 0 )
+	{
+		ScenePlug::GlobalScope s( context );
+		Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+		return mapping->outputChildNames();
+	}
+	else
+	{
+		const ScenePlug *sourcePlug = nullptr;
+		ScenePath source = sourcePath( branchPath, &sourcePlug );
+		return sourcePlug->childNames( source );
+	}
 }
 
 bool Parent::affectsBranchSetNames( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->setNamesPlug();
+	return isChildrenPlug( input, inPlug()->setNamesPlug()->getName() );
 }
 
 void Parent::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
-	h = childPlug()->setNamesPlug()->hash();
+	BranchCreator::hashBranchSetNames( parentPath, context, h );
+	for( auto &p : ScenePlug::Range( *childrenPlug() ) )
+	{
+		p->setNamesPlug()->hash( h );
+	}
 }
 
 IECore::ConstInternedStringVectorDataPtr Parent::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
-	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
-	return childPlug()->setNamesPlug()->getValue();
+	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
+	vector<InternedString> &result = resultData->writable();
+	for( auto &p : ScenePlug::Range( *childrenPlug() ) )
+	{
+		// This naive approach to merging set names preserves the order of the incoming names,
+		// but at the expense of using linear search. We assume that the number of sets is small
+		// enough and the InternedString comparison fast enough that this is OK.
+		ConstInternedStringVectorDataPtr inputSetNamesData = p->setNamesPlug()->getValue();
+		for( const auto &setName : inputSetNamesData->readable() )
+		{
+			if( std::find( result.begin(), result.end(), setName ) == result.end() )
+			{
+				result.push_back( setName );
+			}
+		}
+	}
+
+	return resultData;
 }
 
 bool Parent::affectsBranchSet( const Gaffer::Plug *input ) const
 {
-	return input == childPlug()->setPlug();
+	return input == mappingPlug() || isChildrenPlug( input, inPlug()->setPlug()->getName() );
 }
 
 void Parent::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = childPlug()->setHash( setName );
+	BranchCreator::hashBranchSet( parentPath, setName, context, h );
+
+	for( auto &p : ScenePlug::Range( *childrenPlug() ) )
+	{
+		p->setPlug()->hash( h );
+	}
+
+	ScenePlug::GlobalScope s( context );
+	mappingPlug()->hash( h );
 }
 
 IECore::ConstPathMatcherDataPtr Parent::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
-	return childPlug()->set( setName );
+	vector<ConstPathMatcherDataPtr> inputSets; inputSets.reserve( childrenPlug()->children().size() );
+	for( auto &p : ScenePlug::Range( *childrenPlug() ) )
+	{
+		inputSets.push_back( p->setPlug()->getValue() );
+	}
+
+	ScenePlug::GlobalScope s( context );
+	Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+
+	PathMatcherDataPtr resultData = new PathMatcherData;
+	resultData->writable().addPaths( mapping->set( inputSets ) );
+
+	return resultData;
+}
+
+bool Parent::isChildrenPlug( const Gaffer::Plug *input, const IECore::InternedString &scenePlugChildName ) const
+{
+	const auto scene = input->parent<ScenePlug>();
+	if( !scene || scene->parent() != childrenPlug() )
+	{
+		return false;
+	}
+
+	return input->getName() == scenePlugChildName;
+}
+
+SceneNode::ScenePath Parent::sourcePath( const ScenePath &branchPath, const ScenePlug **source ) const
+{
+	ScenePlug::GlobalScope s( Context::current() );
+	Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+
+	const Private::ChildNamesMap::Input &input = mapping->input( branchPath[0] );
+	*source = childrenPlug()->getChild<ScenePlug>( input.index );
+
+	ScenePath result;
+	result.reserve( branchPath.size() );
+	result.push_back( input.name );
+	result.insert( result.end(), branchPath.begin() + 1, branchPath.end() );
+	return result;
 }

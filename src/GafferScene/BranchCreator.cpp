@@ -38,14 +38,13 @@
 #include "GafferScene/BranchCreator.h"
 
 #include "GafferScene/FilterResults.h"
+#include "GafferScene/Private/ChildNamesMap.h"
 #include "GafferScene/SceneAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
-#include "IECore/StringAlgo.h"
-
-#include "boost/algorithm/string/predicate.hpp"
+#include "IECore/NullObject.h"
 
 using namespace std;
 using namespace Imath;
@@ -102,7 +101,7 @@ BranchCreator::BranchCreator( const std::string &name )
 	addChild( new PathMatcherDataPlug( "__filteredPaths", Gaffer::Plug::In, new IECore::PathMatcherData(), Plug::Default & ~Plug::Serialisable ) );
 	addChild( new PathMatcherDataPlug( "__parentPaths", Gaffer::Plug::Out, new IECore::PathMatcherData() ) );
 
-	addChild( new AtomicCompoundDataPlug( "__mapping", Gaffer::Plug::Out, new CompoundData() ) );
+	addChild( new ObjectPlug( "__mapping", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 
 	FilterResultsPtr filterResults = new FilterResults( "__filterResults" );
 	addChild( filterResults );
@@ -147,14 +146,14 @@ const Gaffer::PathMatcherDataPlug *BranchCreator::parentPathsPlug() const
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::AtomicCompoundDataPlug *BranchCreator::mappingPlug()
+Gaffer::ObjectPlug *BranchCreator::mappingPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
-const Gaffer::AtomicCompoundDataPlug *BranchCreator::mappingPlug() const
+const Gaffer::ObjectPlug *BranchCreator::mappingPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -470,8 +469,8 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 	}
 	else if( parentMatch == IECore::PathMatcher::ExactMatch )
 	{
-		ConstCompoundDataPtr mapping = mappingPlug()->getValue();
-		h = mapping->member<InternedStringVectorData>( g_childNamesKey )->Object::hash();
+		Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+		h = mapping->outputChildNames()->Object::hash();
 	}
 	else
 	{
@@ -490,8 +489,8 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 	}
 	else if( parentMatch == IECore::PathMatcher::ExactMatch )
 	{
-		ConstCompoundDataPtr mapping = mappingPlug()->getValue();
-		return mapping->member<InternedStringVectorData>( g_childNamesKey );
+		Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
+		return mapping->outputChildNames();
 	}
 	else
 	{
@@ -613,34 +612,16 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 			continue;
 		}
 
-		const PathMatcher &branchSet = branchSetData->readable();
-
-		ConstCompoundDataPtr mapping;
+		Private::ConstChildNamesMapPtr mapping;
 		{
 			ScenePlug::PathScope pathScope( context, parentPath );
-			mapping = mappingPlug()->getValue();
+			mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 		}
-		const CompoundData *forwardMapping = mapping->member<CompoundData>( g_forwardMappingKey );
 
-		outputPrefix = parentPath;
-		outputPrefix.push_back( InternedString() ); // Room for base of branch path
-
-		for( PathMatcher::RawIterator pIt = branchSet.begin(), peIt = branchSet.end(); pIt != peIt; ++pIt )
-		{
-			const ScenePlug::ScenePath &branchPath = *pIt;
-			if( !branchPath.size() )
-			{
-				continue; // Skip root
-			}
-			assert( branchPath.size() == 1 );
-
-			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0], /* throwExceptions = */ true );
-
-			outputPrefix.back() = outputName->readable();
-			outputSet.addPaths( branchSet.subTree( *pIt ), outputPrefix );
-
-			pIt.prune(); // We only want to visit the first level
-		}
+		outputSet.addPaths(
+			mapping->set( { nullptr, branchSetData } ),
+			parentPath
+		);
 	}
 
 	return outputSetData;
@@ -742,65 +723,13 @@ void BranchCreator::hashMapping( const Gaffer::Context *context, IECore::MurmurH
 	inPlug()->childNamesPlug()->hash( h );
 }
 
-IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Context *context ) const
+IECore::ConstDataPtr BranchCreator::computeMapping( const Gaffer::Context *context ) const
 {
 	const ScenePlug::ScenePath parent = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-
-	// Create our result. In future it might be useful to create our datatype for this,
-	// but for now we're just packing everything into a CompoundData.
-
-	CompoundDataPtr result = new CompoundData;
-
-	InternedStringVectorDataPtr childNamesData = new InternedStringVectorData();
-	vector<InternedString> &childNames = childNamesData->writable();
-	result->writable()[g_childNamesKey] = childNamesData;
-
-	CompoundDataPtr forwardMapping = new CompoundData;
-	result->writable()[g_forwardMappingKey] = forwardMapping;
-
-	// Calculate the child names for the result. This is the full list of child names
-	// immediately below the parent. We need to be careful to ensure that we rename any
-	// branch names which conflict with existing children of the parent.
-
-	ConstInternedStringVectorDataPtr branchChildNamesData = computeBranchChildNames( parent, ScenePath(), context );
-	const vector<InternedString> &branchChildNames = branchChildNamesData->readable();
-
-	ConstInternedStringVectorDataPtr inChildNamesData = inPlug()->childNamesPlug()->getValue();
-	const vector<InternedString> &inChildNames = inChildNamesData->readable();
-
-	set<InternedString> allNames;
-	for( vector<InternedString>::const_iterator it = inChildNames.begin(); it != inChildNames.end(); ++it )
-	{
-		allNames.insert( *it );
-		childNames.push_back( *it );
-	}
-
-	boost::format namePrefixSuffixFormatter( "%s%d" );
-
-	for( vector<InternedString>::const_iterator it = branchChildNames.begin(); it != branchChildNames.end(); ++it )
-	{
-		InternedString name = *it;
-		if( allNames.find( name ) != allNames.end() )
-		{
-			// uniqueify the name
-			string prefix;
-			int suffix = StringAlgo::numericSuffix( name, 1, &prefix );
-
-			do
-			{
-				name = boost::str( namePrefixSuffixFormatter % prefix % suffix );
-				suffix++;
-			} while( allNames.find( name ) != allNames.end() );
-		}
-
-		allNames.insert( name );
-		childNames.push_back( name );
-
-		result->writable()[name] = new InternedStringData( *it );
-		forwardMapping->writable()[*it] = new InternedStringData( name );
-	}
-
-	return result;
+	return new Private::ChildNamesMap( {
+		inPlug()->childNamesPlug()->getValue(),
+		computeBranchChildNames( parent, ScenePath(), context )
+	} );
 }
 
 IECore::PathMatcher::Result BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
@@ -821,22 +750,22 @@ IECore::PathMatcher::Result BranchCreator::parentAndBranchPaths( const ScenePath
 			parentPath.pop_back();
 		} while( !(parentPaths.match( parentPath ) & PathMatcher::ExactMatch) );
 
-		ConstCompoundDataPtr mapping;
+		Private::ConstChildNamesMapPtr mapping;
 		{
-			ScenePlug::PathScope pathScope( Context::current(), parentPath ); // PASS CONTEXT IN TO THIS METHOD???!!
-			mapping = mappingPlug()->getValue();
+			ScenePlug::PathScope pathScope( Context::current(), parentPath );
+			mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 		}
 
-		const InternedStringData *branchName = mapping->member<InternedStringData>( path[parentPath.size()] );
-		if( branchName )
+		const Private::ChildNamesMap::Input input = mapping->input( path[parentPath.size()] );
+		if( input.index == 1 )
 		{
-			branchPath.push_back( branchName->readable() );
+			branchPath.push_back( input.name );
 			branchPath.insert( branchPath.end(), path.begin() + parentPath.size() + 1, path.end() );
 			return PathMatcher::AncestorMatch;
 		}
 		else
 		{
-			// Descendant comes from the input, rather than being part of the generated branch.
+			// Descendant comes from the primary input, rather than being part of the generated branch.
 			return PathMatcher::NoMatch;
 		}
 	}

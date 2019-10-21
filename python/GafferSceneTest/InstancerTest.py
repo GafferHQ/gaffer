@@ -622,7 +622,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		cube = GafferScene.Cube()
 		instances = GafferScene.Parent()
 		instances["in"].setInput( sphere["out"] )
-		instances["child"].setInput( cube["out"] )
+		instances["children"][0].setInput( cube["out"] )
 		instances["parent"].setValue( "/" )
 
 		instancer = GafferScene.Instancer()
@@ -671,7 +671,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instances = GafferScene.Parent()
 		instances["in"].setInput( sphere["out"] )
-		instances["child"].setInput( cubeGroup["out"] )
+		instances["children"][0].setInput( cubeGroup["out"] )
 		instances["parent"].setValue( "/" )
 
 		instancer = GafferScene.Instancer()
@@ -720,7 +720,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		cube = GafferScene.Cube()
 		instances = GafferScene.Parent()
 		instances["in"].setInput( sphere["out"] )
-		instances["child"].setInput( cube["out"] )
+		instances["children"][0].setInput( cube["out"] )
 		instances["parent"].setValue( "/" )
 
 		instancer = GafferScene.Instancer()
@@ -775,7 +775,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		cube = GafferScene.Cube()
 		instances = GafferScene.Parent()
 		instances["in"].setInput( sphere["out"] )
-		instances["child"].setInput( cube["out"] )
+		instances["children"][0].setInput( cube["out"] )
 		instances["parent"].setValue( "/" )
 
 		instancer = GafferScene.Instancer()

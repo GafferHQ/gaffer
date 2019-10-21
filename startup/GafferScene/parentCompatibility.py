@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019 Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,45 +34,35 @@
 #
 ##########################################################################
 
-import IECore
+import types
 
 import Gaffer
 import GafferScene
-import GafferArnold
 
-class ArnoldShaderBall( GafferScene.ShaderBall ) :
+def __parentChildrenSetInput( self, input ) :
 
-	def __init__( self, name = "ArnoldShaderBall" ) :
+	if isinstance( input, GafferScene.ScenePlug ) :
+		# Old connection into "child" plug. Reroute
+		# it into "children[0]".
+		self[0].setInput( input )
+	else :
+		Gaffer.ArrayPlug.setInput( input )
 
-		GafferScene.ShaderBall.__init__( self, name )
+def __parentGetItem( originalGetItem ) :
 
-		self["environment"] = Gaffer.StringPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
+	def getItem( self, key ) :
 
-		self["__envMap"] = GafferArnold.ArnoldShader()
-		self["__envMap"].loadShader( "image" )
-		self["__envMap"]["parameters"]["filename"].setInput( self["environment"] )
+		# Redirect old "child" ScenePlug plug to new
+		# "children" ArrayPlug.
 
-		self["__skyDome"] = GafferArnold.ArnoldLight()
-		self["__skyDome"].loadShader( "skydome_light" )
-		self["__skyDome"]["parameters"]["color"].setInput( self["__envMap"]["out"] )
-		self["__skyDome"]["parameters"]["format"].setValue( "latlong" )
-		self["__skyDome"]["parameters"]["camera"].setValue( 0 )
+		key = "children" if key == "child" else key
+		result = originalGetItem( self, key )
 
-		self["__parentLights"] = GafferScene.Parent()
-		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
-		self["__parentLights"]["children"][0].setInput( self["__skyDome"]["out"] )
-		self["__parentLights"]["parent"].setValue( "/" )
+		if key == "children" :
+			result.setInput = types.MethodType( __parentChildrenSetInput, result )
 
-		self["__arnoldOptions"] = GafferArnold.ArnoldOptions()
-		self["__arnoldOptions"]["in"].setInput( self["__parentLights"]["out"] )
-		self["__arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		self["__arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 3 )
+		return result
 
-		self.addChild(
-			self["__arnoldOptions"]["options"]["threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
-		)
-		self["__arnoldOptions"]["options"]["threads"].setInput( self["threads"] )
+	return getItem
 
-		self._outPlug().setInput( self["__arnoldOptions"]["out"] )
-
-IECore.registerRunTimeTyped( ArnoldShaderBall, typeName = "GafferArnold::ArnoldShaderBall" )
+GafferScene.Parent.__getitem__ = __parentGetItem( GafferScene.Parent.__getitem__ )

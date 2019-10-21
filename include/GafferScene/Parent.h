@@ -39,6 +39,8 @@
 
 #include "GafferScene/BranchCreator.h"
 
+#include "Gaffer/ArrayPlug.h"
+
 namespace GafferScene
 {
 
@@ -52,10 +54,15 @@ class GAFFERSCENE_API Parent : public BranchCreator
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Parent, ParentTypeId, BranchCreator );
 
-		ScenePlug *childPlug();
-		const ScenePlug *childPlug() const;
+		Gaffer::ArrayPlug *childrenPlug();
+		const Gaffer::ArrayPlug *childrenPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchBound( const Gaffer::Plug *input ) const override;
 		void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -86,6 +93,12 @@ class GAFFERSCENE_API Parent : public BranchCreator
 		IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const override;
 
 	private :
+
+		Gaffer::ObjectPlug *mappingPlug();
+		const Gaffer::ObjectPlug *mappingPlug() const;
+
+		bool isChildrenPlug( const Gaffer::Plug *input, const IECore::InternedString &scenePlugChildName ) const;
+		ScenePath sourcePath( const ScenePath &branchPath, const ScenePlug **source ) const;
 
 		static size_t g_firstPlugIndex;
 

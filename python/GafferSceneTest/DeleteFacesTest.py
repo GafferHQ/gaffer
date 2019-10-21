@@ -133,7 +133,7 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		parent = GafferScene.Parent()
 		parent["in"].setInput( rectangle["out"] )
 		parent["parent"].setValue( "/object" )
-		parent["child"].setInput( sphere["out"] )
+		parent["children"][0].setInput( sphere["out"] )
 
 		self.assertSceneValid( parent["out"] )
 
