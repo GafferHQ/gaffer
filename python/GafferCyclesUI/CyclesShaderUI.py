@@ -96,10 +96,10 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	if "category" in value :
 		__metadata[paramPath]["layout:section"] = value["category"]
 
-	#childComponents = __getSocketToComponents( socketType )
-	#if childComponents is not None :
-	#	for c in childComponents :
-	#		__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
+	childComponents = __getSocketToComponents( socketType )
+	if childComponents is not None :
+		for c in childComponents :
+			__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
 def __translateShaderMetadata() :
 
@@ -175,10 +175,10 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 	nodeKeys = set()
 	parametersPlugKeys = set()
 	parameterPlugKeys = set()
-	#parameterPlugComponentKeys = set()
+	parameterPlugComponentKeys = set()
 
 	for name, metadata in __metadata.items() :
-		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys )[name.count( ".")]
+		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys, parameterPlugComponentKeys )[name.count( ".")]
 		keys.update( metadata.keys() )
 
 	for key in nodeKeys :
@@ -190,8 +190,8 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 	for key in parameterPlugKeys :
 		Gaffer.Metadata.registerValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
 
-	#for key in parameterPlugComponentKeys :
-	#	Gaffer.Metadata.registerValue( nodeType, "parameters.*.[xyzrgb]", key, functools.partial( __plugMetadata, name = key ) )
+	for key in parameterPlugComponentKeys :
+		Gaffer.Metadata.registerValue( nodeType, "parameters.*.[xyzrgb]", key, functools.partial( __plugMetadata, name = key ) )
 
 	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
 

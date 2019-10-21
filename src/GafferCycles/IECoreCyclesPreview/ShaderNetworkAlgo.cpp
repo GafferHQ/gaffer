@@ -109,6 +109,8 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "combine_xyz", ccl::CombineXYZNode() );
 	MAP_NODE( "hsv", ccl::HSVNode() );
 	MAP_NODE( "rgb_to_bw", ccl::RGBToBWNode() );
+	MAP_NODE( "map_range", ccl::MapRangeNode() );
+	MAP_NODE( "clamp", ccl::ClampNode() );
 	MAP_NODE( "math", ccl::MathNode() );
 	MAP_NODE( "vector_math", ccl::VectorMathNode() );
 	MAP_NODE( "vector_transform", ccl::VectorTransformNode() );
@@ -148,6 +150,8 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "object_info", ccl::ObjectInfoNode() );
 	MAP_NODE( "particle_info", ccl::ParticleInfoNode() );
 	MAP_NODE( "hair_info", ccl::HairInfoNode() );
+	MAP_NODE( "volume_info", ccl::VolumeInfoNode() );
+	MAP_NODE( "vertex_color", ccl::VertexColorNode() );
 	MAP_NODE( "bump", ccl::BumpNode() );
 	MAP_NODE( "image_texture", ccl::ImageTextureNode() );
 	MAP_NODE( "environment_texture", ccl::EnvironmentTextureNode() );
@@ -162,6 +166,7 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "texture_coordinate", ccl::TextureCoordinateNode() );
 	MAP_NODE( "sky_texture", ccl::SkyTextureNode() );
 	MAP_NODE( "ies_light", ccl::IESLightNode() );
+	MAP_NODE( "white_noise_texture", ccl::WhiteNoiseTextureNode() );
 	MAP_NODE( "normal_map", ccl::NormalMapNode() );
 	MAP_NODE( "tangent", ccl::TangentNode() );
 	MAP_NODE( "uvmap", ccl::UVMapNode() );
@@ -169,9 +174,21 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "bevel", ccl::BevelNode() );
 	MAP_NODE( "displacement", ccl::DisplacementNode() );
 	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode() );
-	MAP_NODE( "add_closure", ccl::AddClosureNode() );
 #undef MAP_NODE
 	return nullptr;
+}
+
+ccl::SocketType::Type getSocketType( const std::string &name )
+{
+    if( name == "float" ) return ccl::SocketType::Type::FLOAT;
+    if( name == "int" ) return ccl::SocketType::Type::INT;
+    if( name == "color" ) return ccl::SocketType::Type::COLOR;
+    if( name == "vector" ) return ccl::SocketType::Type::VECTOR;
+    if( name == "point" ) return ccl::SocketType::Type::POINT;
+    if( name == "normal" ) return ccl::SocketType::Type::NORMAL;
+    if( name == "closure" ) return ccl::SocketType::Type::CLOSURE;
+    if( name == "string" ) return ccl::SocketType::Type::STRING;
+	return ccl::SocketType::Type::UNDEFINED;
 }
 
 template<typename Spline>
@@ -258,6 +275,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
 	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "output" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
 
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
@@ -289,6 +307,18 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
 #endif
 			return node;
+		}
+	}
+	else if( isConverter )
+	{
+		vector<string> split;
+		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
+		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
+		{
+			ccl::ConvertNode *convertNode = new ccl::ConvertNode( getSocketType( split[1] ), getSocketType( split[3] ), true );
+			node = (ccl::ShaderNode*)convertNode;
+			if( node )
+				node = cshader->graph->add( node );
 		}
 	}
 	else
