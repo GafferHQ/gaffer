@@ -242,10 +242,21 @@ class NodeSetEditor( GafferUI.Editor ) :
 	# The supplied callback will be called with ( thisEditor, drivingEditor ) and
 	# must return a derivative of Gaffer.Set that represents the nodesSet to be
 	# set in the driven editor.
+	# If provided, 'description' should be a sensible message to describe the
+	# nature of the user-observed behaviour, '{editor}' will be replaced with
+	# the name of the driving editor. eg:
+	#   "Following the source node for the scene selection of {editor}"
 	@classmethod
-	def registerNodeSetDriverMode( cls, mode, changeCallback ) :
+	def registerNodeSetDriverMode( cls, mode, changeCallback, description = "Following {editor}." ) :
 
 		cls.__nodeSetDriverModes[ mode ] = changeCallback
+		# TODO: Move to the NodeSetEditor class once they are GraphComponents
+		Gaffer.Metadata.registerValue( "NodeSetEditor", "nodeSetDriverMode:%s:description" % mode, description )
+
+	@staticmethod
+	def nodeSetDriverModeDescription( mode ) :
+
+		return Gaffer.Metadata.value( "NodeSetEditor", "nodeSetDriverMode:%s:description" % mode )
 
 	## Overridden to display the names of the nodes being edited.
 	# Derived classes should override _titleFormat() rather than
@@ -465,4 +476,7 @@ class _EditorWindow( GafferUI.Window ) :
 			self.parent().removeChild( self )
 
 
-NodeSetEditor.registerNodeSetDriverMode( NodeSetEditor.DriverModeNodeSet, None )
+NodeSetEditor.registerNodeSetDriverMode(
+	NodeSetEditor.DriverModeNodeSet, None,
+	"Following {editor}."
+)

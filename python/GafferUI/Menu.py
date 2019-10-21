@@ -53,10 +53,15 @@ from Qt import QtWidgets
 class Menu( GafferUI.Widget ) :
 
 	## A dynamic menu constructed from the supplied IECore.MenuDefinition.
+	#
 	# Along with the standard IECore.MenuItemDefinition fields, the Gaffer Menu
-	# implementation also supports 'enter' and 'leave', to optionally provide
-	# callables to be invoked when the mouse enters and leaves an item's
-	# on-screen representation.
+	# implementation also supports:
+	#
+	#  - 'enter' and 'leave', to optionally provide callables to be invoked
+	#    when the mouse enters and leaves an item's on-screen representation.
+	#
+	# - 'label' in conjunction with 'divider' = True, displays a textual
+	#   divider as opposed to a simple line.
 	def __init__( self, definition, _qtParent=None, searchable=False, title=None, **kw ) :
 
 		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
@@ -64,7 +69,7 @@ class Menu( GafferUI.Widget ) :
 		self.__searchable = searchable
 
 		self.__title = title
-		# this property is used by the stylesheet
+		# this property is used by the stylesheet to fix up menu padding bugs
 		self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( title is not None ) )
 
 		self._qtWidget().__definition = definition
@@ -263,6 +268,8 @@ class Menu( GafferUI.Widget ) :
 
 		qtMenu.clear()
 
+		needsBottomSpacer = False
+
 		done = set()
 		for path, item in definition.items() :
 
@@ -299,7 +306,18 @@ class Menu( GafferUI.Widget ) :
 					else :
 
 						# it's not a submenu
-						qtMenu.addAction( self.__buildAction( item, name, qtMenu ) )
+						action = self.__buildAction( item, name, qtMenu )
+
+						# Wrangle some divider spacing issues
+						if isinstance( action, _DividerAction ) :
+							if len( qtMenu.actions() ) :
+								qtMenu.addAction( _SpacerAction( qtMenu ) )
+							elif not self.__title and action.hasText :
+								# If a divider is the first item, we want the menu padding as per a title
+								self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( True ) )
+								needsBottomSpacer = True
+
+						qtMenu.addAction( action )
 
 				done.add( name )
 
@@ -313,16 +331,12 @@ class Menu( GafferUI.Widget ) :
 			titleWidgetAction.setDefaultWidget( titleWidget )
 			titleWidgetAction.setEnabled( False )
 			qtMenu.insertAction( qtMenu.actions()[0], titleWidgetAction )
+			needsBottomSpacer = True
 
-			# qt stylesheets ignore the padding-bottom for menus and
-			# use padding-top instead. we need padding-top to be 0 when
-			# we have a title, so we have to fake the bottom padding like so.
-			spacerWidget = QtWidgets.QWidget()
-			spacerWidget.setFixedSize( 5, 5 )
-			spacerWidgetAction = QtWidgets.QWidgetAction( qtMenu )
-			spacerWidgetAction.setDefaultWidget( spacerWidget )
-			spacerWidgetAction.setEnabled( False )
-			qtMenu.addAction( spacerWidgetAction )
+		if needsBottomSpacer :
+			qtMenu.addAction( _SpacerAction( qtMenu ) )
+
+		self._repolish()
 
 	def __buildAction( self, item, name, parent ) :
 
@@ -330,15 +344,15 @@ class Menu( GafferUI.Widget ) :
 		with IECore.IgnoredExceptions( AttributeError ) :
 			label = item.label
 
-		qtAction = _Action( item, label, parent )
+		if item.divider :
+			qtAction = _DividerAction( item, parent )
+		else :
+			qtAction = _Action( item, label, parent )
 
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
 			checked = self.__evaluateItemValue( item.checkBox )
 			qtAction.setChecked( checked )
-
-		if item.divider :
-			qtAction.setSeparator( True )
 
 		if item.command :
 
@@ -632,6 +646,38 @@ class _Action( QtWidgets.QAction ) :
 	def __init__( self, item, *args, **kwarg ) :
 		self.item = item
 		QtWidgets.QAction.__init__( self, *args, **kwarg )
+
+class _DividerAction( QtWidgets.QWidgetAction ) :
+
+	def __init__( self, item, *args, **kwarg ) :
+
+		self.item = item
+
+		QtWidgets.QWidgetAction.__init__( self, *args, **kwarg )
+
+		if hasattr( item, 'label' ) and item.label :
+			titleWidget = QtWidgets.QLabel( item.label )
+			titleWidget.setIndent( 0 )
+			titleWidget.setObjectName( "gafferMenuLabeledDivider" )
+			titleWidget.setEnabled( False )
+			self.setDefaultWidget( titleWidget )
+			self.hasText = True
+		else :
+			self.setSeparator( True )
+			self.hasText = False
+
+class _SpacerAction( QtWidgets.QWidgetAction ) :
+
+	def __init__( self, *args, **kwarg ) :
+
+		QtWidgets.QWidgetAction.__init__( self, *args, **kwarg )
+		# qt stylesheets ignore the padding-bottom for menus and
+		# use padding-top instead. we need padding-top to be 0 when
+		# we have a title, so we have to fake the bottom padding like so.
+		spacerWidget = QtWidgets.QWidget()
+		spacerWidget.setFixedSize( 5, 5 )
+		self.setDefaultWidget( spacerWidget )
+		self.setEnabled( False )
 
 class _Menu( QtWidgets.QMenu ) :
 
