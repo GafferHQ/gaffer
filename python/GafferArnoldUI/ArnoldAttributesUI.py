@@ -149,6 +149,14 @@ def __volumeSummary( plug ) :
 
 	return ", ".join( info )
 
+def __toonSummary( plug ) :
+
+	info = []
+	if plug["toonId"]["enabled"].getValue() :
+		info.append( "Toon Id " + plug["toonId"]["value"].getValue() )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldAttributes,
@@ -170,6 +178,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Curves:summary", __curvesSummary,
 			"layout:section:Volume:summary", __volumeSummary,
+			"layout:section:Toon:summary", __toonSummary,
 
 		],
 
@@ -705,6 +714,18 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Volume",
 			"label", "Velocity Outlier Threshold",
+
+		],
+
+		"attributes.toonId" : [
+
+			"description",
+			"""
+			You can select in the toon shader to skip outlines between objects with the same toon id set.
+			""",
+
+			"layout:section", "Toon",
+			"label", "Toon Id",
 
 		],
 
