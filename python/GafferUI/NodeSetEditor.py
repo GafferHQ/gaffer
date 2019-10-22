@@ -368,10 +368,10 @@ class NodeSetEditor( GafferUI.Editor ) :
 		# Only add node names if we're pinned in some way shape or form
 		if not self.__nodeSetIsScriptSelection() :
 
+			result.append( " [" )
+
 			numNames = min( _maxNodes, len( self.__nodeSet ) )
 			if numNames :
-
-				result.append( " [" )
 
 				if _reverseNodes :
 					nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
@@ -387,7 +387,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 				if _ellipsis and len( self.__nodeSet ) > _maxNodes :
 					result.append( "..." )
 
-				result.append( "]" )
+			result.append( "]" )
 
 		return result
 
