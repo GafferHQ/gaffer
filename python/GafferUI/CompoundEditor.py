@@ -565,7 +565,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			self.__pinningWidget = _PinningWidget()
 
 			layoutButton = GafferUI.MenuButton( image="layoutButton.png", hasFrame=False )
-			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ) ) )
+			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ), title = "Layout" ) )
 			layoutButton.setToolTip( "Click to modify the layout" )
 			layoutButton._qtWidget().setFixedHeight( 15 )
 
@@ -1662,7 +1662,7 @@ class _PinningWidget( _Frame ) :
 		self.__addStandardItems( e, m )
 		CompoundEditor.nodeSetMenuSignal()( e, m )
 
-		self.__pinningMenu = GafferUI.Menu( m )
+		self.__pinningMenu = GafferUI.Menu( m, title = "Editor Focus" )
 
 		buttonBound = self.__icon.bound()
 		self.__pinningMenu.popup(
