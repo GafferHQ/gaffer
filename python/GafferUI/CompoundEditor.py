@@ -818,8 +818,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			self.insert( 0, newEditor )
 			self.setCurrent( newEditor )
 		else :
-			target = self.getCurrent().drivingEditor() or self.getCurrent()
-			target.setNodeSet( nodeSet )
+			self.getCurrent().setNodeSet( nodeSet )
 
 		self.setHighlighted( False )
 
@@ -1519,13 +1518,11 @@ class _PinningWidget( _Frame ) :
 		if not isinstance( editor, GafferUI.NodeSetEditor ) :
 			return False
 
-		targetEditor = editor.drivingEditor() or editor
-
 		if event.key == "N" :
-			_PinningWidget.__followNodeSelection( targetEditor )
+			_PinningWidget.__followNodeSelection( editor )
 			return True
 		elif event.key == "P" :
-			_PinningWidget.__pinToNodeSelection( targetEditor )
+			_PinningWidget.__pinToNodeSelection( editor )
 			return True
 
 		return False
@@ -1683,14 +1680,16 @@ class _PinningWidget( _Frame ) :
 
 		m.append( "/Node Selection", {
 			"command" : functools.partial( self.__followNodeSelection, weakref.ref( editor ) ),
-			"checkBox" : drivingEditor is None and editor.getNodeSet().isSame( editor.scriptNode().selection() )
+			"checkBox" : drivingEditor is None and editor.getNodeSet().isSame( editor.scriptNode().selection() ),
+			"shortCut" : "n"
 		} )
 
 		m.append( "/Pin Divider", { "divider" : True, "label" : "Pin" } )
 
 		m.append( "/Pin Node Selection", {
 			"command" : functools.partial( self.__pinToNodeSelection, weakref.ref( editor ) ),
-			"label" : "Node Selection"
+			"label" : "Node Selection",
+			"shortCut" : "p"
 		} )
 
 	def __getNodeSetEditor( self ) :
