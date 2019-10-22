@@ -76,7 +76,7 @@ OSLImage::OSLImage( const std::string &name )
 	addChild( new Plug( "channels", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new OSLCode( "__oslCode" ) );
 	addChild( new GafferImage::Constant( "__defaultConstant" ) );
-	addChild( new GafferImage::ImagePlug( "__defaultIn" ) );
+	addChild( new GafferImage::ImagePlug( "__defaultIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 	shaderPlug()->setInput( oslCode()->outPlug() );
 	defaultConstant()->formatPlug()->setInput( defaultFormatPlug() );
 	defaultInPlug()->setInput( defaultConstant()->outPlug() );
