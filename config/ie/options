@@ -147,8 +147,8 @@ if targetApp :
 else :
 
 	targetApp = "gaffer"
-	targetAppReg = cortexReg
-	pythonVersion = targetAppReg["preferredPythonVersion"]
+	targetAppReg = gafferReg
+	pythonVersion = cortexReg["preferredPythonVersion"]
 	platformReg = IEEnv.registry["platformDefaults"][IEEnv.platform()]
 	if not compiler :
 		compiler = platformReg.get( "toolsCompiler", platformReg["compiler"] )

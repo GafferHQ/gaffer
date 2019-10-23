@@ -251,21 +251,19 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 
 		self.__swatch._qtWidget().setFixedHeight( 18 )
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
-		self.__value = None
 
 		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
 	def _updateFromValue( self, value ) :
 
-		self.__value = value
+		self.__swatch.setColor( value )
 
 	def __buttonRelease( self, swatch, event ) :
 
 		if event.button != event.Buttons.Left :
 			return False
 
-		color = self.__value if self.__value is not None else imath.Color3f( 1 )
-		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
+		dialogue = GafferUI.ColorChooserDialogue( color = self.__swatch.getColor(), useDisplayTransform = False )
 		color = dialogue.waitForColor( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if color is not None :

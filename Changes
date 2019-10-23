@@ -1,3 +1,15 @@
+0.54.2.1 (relative to 0.54.2.0)
+========
+
+Fixes
+-----
+
+- UIEditor : Fixed bugs which prevented node colour from being edited (#3383, #3384, #3385).
+- Encapsulate : Fixed concurrent access to signals that could cause crashes at render time
+  (#3381).
+- Layouts : Fixed bug in `editor()` method (#3395).
+- TBB : Fixed an obscure context management bug involving older TBB versions in custom Gaffer builds (#3409).
+
 0.54.2.0 (relative to 0.54.1.0)
 ========
 
