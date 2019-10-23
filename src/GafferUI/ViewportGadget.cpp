@@ -1492,7 +1492,8 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	V2f position( event.line.p0.x, event.line.p0.y );
 
 	m_cameraController->motionStart( CameraController::Dolly, position );
-	position.x += event.wheelRotation * getViewport().x / 140.0f;
+	const float scaleFactor = event.modifiers & ModifiableEvent::Modifiers::Shift ? 1400.0f : 140.0f;
+	position.x += event.wheelRotation * getViewport().x / scaleFactor ;
 	m_cameraController->motionUpdate( position );
 	m_cameraController->motionEnd( position );
 
