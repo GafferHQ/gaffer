@@ -9,6 +9,7 @@ Fixes
   (#3381).
 - Layouts : Fixed bug in `editor()` method (#3395).
 - TBB : Fixed an obscure context management bug involving older TBB versions in custom Gaffer builds (#3409).
+- NodeSetEditor : Fixed circular references for linked editors (#3421).
 
 0.54.2.0 (relative to 0.54.1.0)
 ========
