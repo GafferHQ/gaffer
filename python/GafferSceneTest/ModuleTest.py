@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os.path
+
+import Gaffer
 import GafferTest
 
 class ModuleTest( GafferTest.TestCase ) :
@@ -51,6 +54,23 @@ class ModuleTest( GafferTest.TestCase ) :
 
 		self.assertModuleDoesNotImportUI( "GafferScene" )
 		self.assertModuleDoesNotImportUI( "GafferSceneTest" )
+
+	def testLoadScriptsFrom0_55( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "parentAndCopy-0.55.0.0.gfr" ) )
+		s.load()
+
+		self.assertEqual( s["Parent"]["in"].getInput(), s["Plane"]["out"] )
+		self.assertEqual( s["Parent"]["child"].getInput(), s["Sphere"]["out"] )
+
+		self.assertEqual( s["CopyAttributes"]["in"][0].getInput(), s["Parent"]["out"] )
+		self.assertEqual( s["CopyAttributes"]["in"][1].getInput(), s["Sphere"]["out"] )
+		self.assertEqual( s["CopyAttributes"]["copyFrom"].getValue(), "/sphere" )
+
+		self.assertEqual( s["CopyOptions"]["in"].getInput(), s["CopyAttributes"]["out"] )
+		self.assertEqual( s["CopyOptions"]["source"].getInput(), s["StandardOptions"]["out"] )
+		self.assertEqual( s["CopyOptions"]["options"].getValue(), "a b c" )
 
 if __name__ == "__main__":
 	unittest.main()

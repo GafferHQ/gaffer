@@ -1,0 +1,60 @@
+import Gaffer
+import GafferImage
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 55, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+parent["variables"].addChild( Gaffer.NameValuePlug( "image:catalogue:port", Gaffer.IntPlug( "value", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "imageCataloguePort", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:name", Gaffer.StringPlug( "value", defaultValue = 'default', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectName", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:rootDirectory", Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectRootDirectory", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["Parent"] = GafferScene.Parent( "Parent" )
+parent.addChild( __children["Parent"] )
+__children["Parent"]["children"].addChild( GafferScene.ScenePlug( "child1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Parent"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Plane"] = GafferScene.Plane( "Plane" )
+parent.addChild( __children["Plane"] )
+__children["Plane"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Sphere"] = GafferScene.Sphere( "Sphere" )
+parent.addChild( __children["Sphere"] )
+__children["Sphere"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["CopyAttributes"] = GafferScene.CopyAttributes( "CopyAttributes" )
+parent.addChild( __children["CopyAttributes"] )
+__children["CopyAttributes"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["CopyOptions"] = GafferScene.CopyOptions( "CopyOptions" )
+parent.addChild( __children["CopyOptions"] )
+__children["CopyOptions"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["StandardOptions"] = GafferScene.StandardOptions( "StandardOptions" )
+parent.addChild( __children["StandardOptions"] )
+__children["StandardOptions"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 36680 )
+Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
+__children["Parent"]["in"].setInput( __children["Plane"]["out"] )
+__children["Parent"]["parent"].setValue( '/' )
+__children["Parent"]["children"]["child0"].setInput( __children["Sphere"]["out"] )
+__children["Parent"]["__uiPosition"].setValue( imath.V2f( -10.7146645, -5.55191278 ) )
+__children["Plane"]["__uiPosition"].setValue( imath.V2f( -18.5143375, 2.71051121 ) )
+__children["Sphere"]["__uiPosition"].setValue( imath.V2f( -5.51433706, 2.61214948 ) )
+__children["CopyAttributes"]["in"].setInput( __children["Parent"]["out"] )
+__children["CopyAttributes"]["source"].setInput( __children["Sphere"]["out"] )
+__children["CopyAttributes"]["sourceLocation"].setValue( '/sphere' )
+__children["CopyAttributes"]["__uiPosition"].setValue( imath.V2f( -8.11623287, -13.7159748 ) )
+__children["CopyOptions"]["in"].setInput( __children["CopyAttributes"]["out"] )
+__children["CopyOptions"]["source"].setInput( __children["StandardOptions"]["out"] )
+__children["CopyOptions"]["options"].setValue( 'a b c' )
+__children["CopyOptions"]["__uiPosition"].setValue( imath.V2f( -1.14644361, -21.8800983 ) )
+__children["StandardOptions"]["__uiPosition"].setValue( imath.V2f( 5.82517385, -13.7160358 ) )
+
+
+del __children
+
