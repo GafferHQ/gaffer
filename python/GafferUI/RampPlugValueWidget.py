@@ -146,6 +146,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__positionsMergeGroupId += 1
 		self.__lastPositionChangedReason = reason
 
+		rejected = False
 		plug = self.getPlug()
 		with Gaffer.UndoScope(
 			plug.ancestor( Gaffer.ScriptNode ),
@@ -155,7 +156,12 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if len( slider.getPositions() ) == plug.numPoints() :
 				# the user has moved an existing point on the slider
 				for index, position in enumerate( slider.getPositions() ) :
-					plug.pointXPlug( index ).setValue( position )
+					if plug.pointXPlug( index ).getValue() != position :
+						curPlug = plug.pointXPlug( index )
+						if curPlug.settable() and not Gaffer.MetadataAlgo.readOnly( curPlug ):
+							curPlug.setValue( position )
+						else:
+							rejected = True
 			else :
 				# a new position was added on the end by the user clicking
 				# on an empty area of the slider.
@@ -163,14 +169,33 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				assert( len( slider.getPositions() ) == numPoints + 1 )
 				spline = plug.getValue().spline()
 				position = slider.getPositions()[numPoints]
-				plug.addPoint()
-				plug.pointXPlug( numPoints ).setValue( position )
-				plug.pointYPlug( numPoints ).setValue( spline( position ) )
+				if not ( plug.getInput() or plug.direction() == Gaffer.Plug.Direction.Out
+						or Gaffer.MetadataAlgo.readOnly( plug )
+				):
+					plug.addPoint()
+					plug.pointXPlug( numPoints ).setValue( position )
+					plug.pointYPlug( numPoints ).setValue( spline( position ) )
+				else:
+					rejected = True
+
+		if rejected:
+			self._updateFromPlug()
 
 	def __indexRemoved( self, slider, index ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().removePoint( index )
+		plug = self.getPlug()
+		rejected = False
+		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+			if not ( plug.getInput() or plug.direction() == Gaffer.Plug.Direction.Out
+					or Gaffer.MetadataAlgo.readOnly( plug )
+			):
+				self.getPlug().removePoint( index )
+			else:
+				rejected = True
+	
+		if rejected:
+			self._updateFromPlug()
+		
 
 	def __selectedIndexChanged( self, slider ) :
 
