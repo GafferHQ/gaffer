@@ -102,6 +102,8 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:volume:velocity_fps", new FloatPlug( "value", Plug::In, 24.0f, 0.0f ), false, "velocityFPS" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:volume:velocity_outlier_threshold", new FloatPlug( "value", Plug::In, 0.001f, 0.0f ), false, "velocityOutlierThreshold" ) );
 
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:toon_id", new StringPlug( "value", Plug::In ), false, "toonId" ) );
+
 }
 
 ArnoldAttributes::~ArnoldAttributes()

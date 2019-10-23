@@ -306,6 +306,7 @@ const AtString g_subdivAdaptiveSpaceArnoldString( "subdiv_adaptive_space" );
 const AtString g_subdivSmoothDerivsArnoldString( "subdiv_smooth_derivs" );
 const AtString g_subdivTypeArnoldString( "subdiv_type" );
 const AtString g_subdivUVSmoothingArnoldString( "subdiv_uv_smoothing" );
+const AtString g_toonIdArnoldString( "toon_id" );
 const AtString g_traceSetsArnoldString( "trace_sets" );
 const AtString g_transformTypeArnoldString( "transform_type" );
 const AtString g_thickArnoldString( "thick" );
@@ -777,6 +778,7 @@ IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
 IECore::InternedString g_sssSetNameName( "ai:sss_setname" );
+IECore::InternedString g_toonIdName( "ai:toon_id" );
 
 IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
@@ -842,6 +844,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_volumePadding = attributeValue<float>( g_shapeVolumePaddingAttributeName, attributes, 0.0f );
 
 			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
+			m_toonId = attribute<IECore::StringData>( g_toonIdName, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
@@ -1120,6 +1123,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				else
 				{
 					AiNodeResetParameter( node, g_sssSetNameArnoldString );
+				}
+
+				if( m_toonId )
+				{
+					ParameterAlgo::setParameter( node, g_toonIdArnoldString, m_toonId.get() );
+				}
+				else
+				{
+					AiNodeResetParameter( node, g_toonIdArnoldString );
 				}
 			}
 
@@ -1574,6 +1586,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Displacement m_displacement;
 		Curves m_curves;
 		Volume m_volume;
+		IECore::ConstStringDataPtr m_toonId;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;
