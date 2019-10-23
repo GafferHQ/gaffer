@@ -48,6 +48,7 @@
 #include "IECore/BoxOps.h"
 #include "IECore/MessageHandler.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
@@ -69,6 +70,8 @@ using namespace GafferImage;
 
 namespace GafferImage
 {
+
+static const std::string g_headerPrefix = "header:";
 
 class GafferDisplayDriver : public IECoreImage::DisplayDriver
 {
@@ -94,6 +97,15 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 			);
 
 			m_parameters = parameters ? parameters->copy() : CompoundDataPtr( new CompoundData );
+			CompoundDataPtr metadata = new CompoundData;
+			for( const auto &p : m_parameters->readable() )
+			{
+				if( boost::starts_with( p.first.string(), g_headerPrefix ) )
+				{
+					metadata->writable()[p.first.string().substr( g_headerPrefix.size() )] = p.second;
+				}
+			}
+			m_metadata = metadata;
 
 			if( const FloatData *pixelAspect = m_parameters->member<FloatData>( "pixelAspect" ) )
 			{
@@ -111,7 +123,7 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 		GafferDisplayDriver( GafferDisplayDriver &other )
 			:	DisplayDriver( other.displayWindow(), other.dataWindow(), other.channelNames(), other.parameters() ),
 				m_gafferFormat( other.m_gafferFormat ), m_gafferDataWindow( other.m_gafferDataWindow ),
-				m_parameters( other.m_parameters )
+				m_parameters( other.m_parameters ), m_metadata( other.m_metadata )
 		{
 			// boost::multi_array has a joke assignment operator that only works
 			// if you first resize the target of the assignment to match the
@@ -143,6 +155,11 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 		const CompoundData *parameters() const
 		{
 			return m_parameters.get();
+		}
+
+		const CompoundData *metadata() const
+		{
+			return m_metadata.get();
 		}
 
 		void imageData( const Imath::Box2i &box, const float *data, size_t dataSize ) override
@@ -292,6 +309,7 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 		Format m_gafferFormat;
 		Imath::Box2i m_gafferDataWindow;
 		IECore::ConstCompoundDataPtr m_parameters;
+		IECore::ConstCompoundDataPtr m_metadata;
 		DataReceivedSignal m_dataReceivedSignal;
 		ImageReceivedSignal m_imageReceivedSignal;
 
@@ -463,9 +481,15 @@ Imath::Box2i Display::computeDataWindow( const Gaffer::Context *context, const I
 	return Box2i();
 }
 
+void Display::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	const CompoundData *d = m_driver ? m_driver->metadata() : outPlug()->metadataPlug()->defaultValue();
+	h = d->Object::hash();
+}
+
 IECore::ConstCompoundDataPtr Display::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return outPlug()->metadataPlug()->defaultValue();
+	return m_driver ? m_driver->metadata() : outPlug()->metadataPlug()->defaultValue();
 }
 
 void Display::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

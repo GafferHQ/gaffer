@@ -219,5 +219,30 @@ class TypedPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n.numHashCalls, numHashCalls )
 		self.assertEqual( n.numComputeCalls, 1 )
 
+	def testBoolPlugStringConnections( self ) :
+
+		n = GafferTest.AddNode()
+		n["op1"].setValue( 0 )
+		n["op2"].setValue( 2 )
+		self.assertEqual( n["sum"].getValue(), 2 )
+
+		s = Gaffer.StringPlug()
+		n["enabled"].setInput( s )
+		self.assertEqual( n["sum"].getValue(), 0 )
+
+		s.setValue( "notEmpty" )
+		self.assertEqual( n["sum"].getValue(), 2 )
+
+		s.setValue( "${test}" )
+		self.assertEqual( n["sum"].getValue(), 0 )
+
+		with Gaffer.Context() as c :
+
+			c["test"] = "notEmpty"
+			self.assertEqual( n["sum"].getValue(), 2 )
+
+			c["test"] = ""
+			self.assertEqual( n["sum"].getValue(), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

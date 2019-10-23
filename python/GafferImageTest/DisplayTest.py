@@ -110,11 +110,15 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			dataWindow = image["dataWindow"].getValue()
 			channelNames = image["channelNames"].getValue()
 
+			parameters = IECore.CompoundData()
+			parameters.update( { "header:" + k : v for k, v in image["metadata"].getValue().items() } )
+			parameters.update( extraParameters )
+
 			driver = DisplayTest.Driver(
 				image["format"].getValue(),
 				dataWindow,
 				channelNames,
-				port, extraParameters
+				port, parameters
 			)
 
 			tileSize = GafferImage.ImagePlug.tileSize()
@@ -289,7 +293,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		self.Driver.sendImage( imageReader["out"], port = server.portNumber() )
 
-		self.assertImagesEqual( imageReader["out"], node["out"], ignoreMetadata = True )
+		self.assertImagesEqual( imageReader["out"], node["out"] )
 
 		self.assertEqual( len( imagesReceived ), 1 )
 		self.assertEqual( imagesReceived[0][0], node["out"] )
