@@ -1,3 +1,17 @@
+0.56.0.0
+========
+
+Fixes
+-----
+
+- Resize : Fixed bug which caused unwanted image distortion when changing pixel aspect ratio.
+
+Breaking Changes
+----------------
+
+- Resize : A bug fix means that results are changed significantly when changing pixel aspect
+  ratios.
+
 0.55.0.0
 ========
 

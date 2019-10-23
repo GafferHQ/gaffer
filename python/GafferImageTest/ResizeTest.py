@@ -77,17 +77,20 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		r["in"].setInput( c["out"] )
 		r["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ), 1 ) )
 
-		# Assert that the pixel data is passed clean through.
-		for channel in [ "R", "G", "B", "A" ] :
-			self.assertEqual(
-				c["out"].channelDataHash( channel, imath.V2i( 0 ) ),
-				r["out"].channelDataHash( channel, imath.V2i( 0 ) ),
-			)
-			self.assertTrue(
-				c["out"].channelData( channel, imath.V2i( 0 ), _copy = False ).isSame(
-					r["out"].channelData( channel, imath.V2i( 0 ), _copy = False )
+		# Assert that the pixel data is passed clean through, even
+		# if we request a new pixel aspect ratio.
+		for pixelAspect in ( 0.5, 1, 2 ) :
+			r["format"]["pixelAspect"].setValue( pixelAspect )
+			for channel in [ "R", "G", "B", "A" ] :
+				self.assertEqual(
+					c["out"].channelDataHash( channel, imath.V2i( 0 ) ),
+					r["out"].channelDataHash( channel, imath.V2i( 0 ) ),
 				)
-			)
+				self.assertTrue(
+					c["out"].channelData( channel, imath.V2i( 0 ), _copy = False ).isSame(
+						r["out"].channelData( channel, imath.V2i( 0 ), _copy = False )
+					)
+				)
 
 	def testFit( self ) :
 
@@ -241,6 +244,58 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		r["format"].setValue( GafferImage.Format( 2121, 1012 ) )
 
 		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i() )
+
+	def testPixelAspectRatio( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+
+		r = GafferImage.Resize()
+		r["in"].setInput( c["out"] )
+		r["format"].setValue( GafferImage.Format( 1500, 1000 ) )
+
+		for fitMode in r.FitMode.values :
+
+			r["fitMode"].setValue( fitMode )
+
+			for inputPixelAspect in ( 0.5, 1, 2 ) :
+
+				c["format"]["pixelAspect"].setValue( inputPixelAspect )
+
+				for outputPixelAspect in ( 0.5, 1, 2 ) :
+
+					r["format"]["pixelAspect"].setValue( outputPixelAspect )
+
+					if fitMode == r.FitMode.Horizontal :
+						self.assertEqual( r["out"]["dataWindow"].getValue().min().x, r["out"]["format"].getValue().getDisplayWindow().min().x )
+						self.assertEqual( r["out"]["dataWindow"].getValue().max().x, r["out"]["format"].getValue().getDisplayWindow().max().x )
+					elif fitMode == r.FitMode.Vertical :
+						self.assertEqual( r["out"]["dataWindow"].getValue().min().y, r["out"]["format"].getValue().getDisplayWindow().min().y )
+						self.assertEqual( r["out"]["dataWindow"].getValue().max().y, r["out"]["format"].getValue().getDisplayWindow().max().y )
+
+					if fitMode != r.FitMode.Distort :
+
+						# All fit modes other than Distort should ensure that the aspect
+						# ratio of the output data window is the same as the aspect ratio
+						# of the input data window.
+
+						inputDataWindow = r["in"]["dataWindow"].getValue()
+						inputFormat = r["in"]["format"].getValue()
+						inputAspect = (inputDataWindow.size().x) * inputFormat.getPixelAspect() / (inputDataWindow.size().y)
+
+						outputDataWindow = r["out"]["dataWindow"].getValue()
+						outputFormat = r["out"]["format"].getValue()
+						outputAspect = (outputDataWindow.size().x) * outputFormat.getPixelAspect() / (outputDataWindow.size().y)
+
+						# `delta` accounts for the fact that we're comparing integer data windows
+						# which have been expanded to enclose "fractional" pixels.
+						self.assertAlmostEqual( outputAspect, inputAspect, delta = 0.01 )
+
+					else :
+
+						# Distort mode - data window fills output format.
+
+						self.assertEqual( r["out"]["dataWindow"].getValue(), r["out"]["format"].getValue().getDisplayWindow() )
 
 if __name__ == "__main__":
 	unittest.main()
