@@ -1,10 +1,142 @@
 0.55.0.0
 ========
 
+This release brings numerous enhancements to the Layout system, new and improved 3D nodes, performance tweaks and new tools.
+
+> Caution : The Instancer now deletes the target point cloud from the scene (#3394). This will
+> result in a behaviour change in existing scenes that rely on the target point cloud
+> existing downstream of the Instancer node.
+
+> Info : The companion patch release `0.54.2.1` includes support to allow scripts saved from
+> `0.55.0.0` to be opened in environments locked to the `0.54.x.x` series. However, scripts
+> saved in `0.55.0.0` that make use of multiple input connections to the Parent node are not
+> compatible with any previous versions.
+
+Features
+--------
+
+- NameSwitch : Added new node to switch between named input connections using string matching (#3349).
+- CopyPrimitiveVariables : Added new node to copy primitive variables from one object to another (#3361, #3389).
+- Viewer : Transform tools now feature a ‘targeted’ mode (#3403).
+   - Holding <kbd>V</kbd> and clicking in the Viewer with the Translate tool active teleports the selected objects to the clicked point.
+   - Holding <kbd>V</kbd> and clicking in the Viewer with the Rotate tool active aims the selection’s -z axis at the clicked point.
+
+Improvements
+------------
+
+- Layouts (#3360, #3392, #3398, #3399) :
+  - The focus state and linking of each editor is now saved with the layout.
+  - All default layouts now include linked editors as standard, with all inspectors following the Viewer, and all other editors following the Graph Editor selection.
+  - Viewers can now be linked to other Viewers.
+  - The Pinning button has been re-designed as the Editor Focus menu, moving all interactions to a left-click menu.
+  - Editor-centric keyboard shortcuts have been added and other shortcuts improved :
+    - Hitting <kbd>P</kbd> will pin the editor to the current node selection
+    - Hitting <kbd>N</kbd> will make the editor follow the current node selection (a.k.a ‘un-pin’).
+    - All keyboard shortcuts that change an editor’s focus, when used with a slave editor will now break any links to it’s master.
+  - When hovering over an entry in the Follow section of the Editor Focus menu, the target editor will be highlighted.
+  - When hovering over the editor focus menu button for a master editor, all of the following (slave) editors will be highlighted when its tooltip is presented.
+  - When hovering over the editor focus menu button for a slave editor, its master editor will be highlighted when its tooltip is presented.
+  - Improved editor link colors.
+  - Editor/Inspector tab titles now only include node names when the editor is pinned.
+  - The UVInspector can now be linked to other editors.
+- Parent : The Parent node now accepts multiple inputs (#1202).
+- Viewer :
+  - Added up/down hotkeys to navigate through Catalogue node images (#3387).
+  - Fixed light visualisation bug which would draw an extra copy of a light when an object was parented under it (#3380).
+  - Made paused status more obvious (#3390).
+  - Changed the default near clipping plane to 0.1 to increase depth buffer precision.
+- OSLObject (#3389) :
+  - Optimized bounds computations for cases where "P" is not modified.
+  - Added Adjust Bounds plug to optionally disable bounds computations.
+- Wireframe : Optimized bounds computations (#3389).
+- Instancer :
+  - Added Attribute Prefix plug (#3388).
+  - The target point cloud is now deleted from the scene (#3394).
+- ArnoldShader : Added metadata to improve UI layout of the `toon` shader (#3391).
+- ArnoldAttributes : Added `toonId` attribute to use in conjunction with Arnold's `toon`
+  shader (#3416).
+- ArnoldOptions : Added `profileFileName` option (#3404).
+- Docs (#3337) :
+   - Added an example of configuring Arnold trace sets.
+   - Moved the blockers example to the Lighting section.
+- Catalogue : `header:` prefixed display parameters are now available in Catalogue image metadata for IPR renders (#3410).
+
+Fixes
+-----
+
+- TransformTool : Fixed bug which caused nodes using set filters to be ignored (#3393).
+- SceneAlgo : Fixed `objectTweaks()` and `shaderTweaks()` to respect nodes using set filters (#3393).
+- Switch (#3349) :
+  - Fixed bug which prevented derived classes from adding their own plugs.
+  - Fixed bug with deeply nested plugs.
+- ArrayPlug (#3349) :
+  - Added support for child-level inputs to compound plugs.
+- Shader : Fixed bug affecting component-level connections through a Switch node (#3349).
+- Editors : Added support for nested output plugs (#3349).
+- Catalogue : Fixed image ordering bug (#3387).
+- FreezeTransform : Fixed filter evaluation bug (#3397).
+- BranchCreator : Fixed serialization to omit internal connections (#3401).
+- Arnold : Fixed attempts to instance curves with `min_pixel_width != 0` (#3402).
+- EditMenu : Fixed bug in `editor()` method that caused errors using keyboard shortcuts with custom UIs (#3395).
+- Test : Fixed a test case issue when using older python versions in custom Gaffer builds (#3408).
+- Viewer : Fixed an issue that required a second click in the viewer to return focus to it after selecting a tool using the mouse (#3403).
+- ShaderView : Fixed a crash that could occur on shutdown (#3413).
+- Ramp editor : Fixed bug that prevented editing of ramps where a subset of plugs were not editable (#3417).
+- TabbedContainer : Fixed bug whereby `currentChanged()` was called with the wrong widget when a tab was removed (#3424).
+- Layouts : Fixed bug triggered when removing a tab with linked editors (#3421).
+
+API
+---
+
+- ObjectProcessor : Added new base class to simplify the creation of nodes that modify objects.
+- Deformer : Added new base class to simplify the creation of nodes that modify objects such that their bounding box changes.
+- ArrayPlug (#3349) :
+  - Added `resizeWhenInputsChange` constructor argument.
+  - Added `next()` method.
+- Switch : Added `outPlug` argument to `activeInPlug()` method (#3349).
+- CompoundEditor : Made constructor arguments private.
+- Menu : Added support for `enter` and `leave` fields (supplied through an `IECore.MenuItemDefinition`) to provide callback functionality as the user hovers over menu items presented on screen (#3360).
+- Menu : Added support for combining `label` and `divider` to create labeled sections within a menu (#3399).
+- GafferUI : Added `_qtObjectIsValid()` method (#3360).
+- ShadingEngine : Added `hasDeformation()` method (#3389).
+- BranchCreator : Added `processesRootObject()` virtual method to enable parent object Modifications (#3406).
+- Widget : Conform linux/MacOS keyRelease events such that repeated release events are no longer emit on linux (#3403).
+- SelectionTool : Don't initiate drags for derived class button presses (#3403).
+- SceneGadget : Added `objectAt( line, &path, &hitPoint )` method that also populates hitPoint with the (approximate) gadget-space intersection point of line and the hit object (#3403).
+- Group/BranchCreator : Factored out name mapping into ChildNameMap class to facilitate reuse (#3406).
+- NodeSetEditor :
+  - `registerNodeSetDriverMode` gained an optional `description` kwarg to supply a custom UI description for the mode (#3399).
+  - Added `nodeSetDriverModeDescription` to retrieve the UI description for a specific driver mode (#3399).
+- BoolPlug : StringPlugs are now accepted as inputs, converting empty strings to `false` and all other strings to `true` (#3410).
+
 Breaking Changes
 ----------------
 
-- TweaksPlug : Changed function signature and default behaviour of `applyTweaks()` methods (#3353).
+- TweaksPlug : Changed function signature and default behaviour of `applyTweaks()` method (#3353).
+- Instancer : The target point cloud is now deleted from the scene (#3394) .
+- ArrayPlug : Added argument to constructor and additional private member data. ABI change only - source compatibility is maintained (#3349).
+- LightVisualiser : Moved from GafferSceneUI to IECoreGLPreview (#3380).
+- Changed the base class of the following nodes : MeshType, CameraTweaks, CollectPrimitiveVariables, MapOffset, MapProjection, MeshDistortion, MeshTangents, PrimitiveVariables, Orientation, Parameters, ReverseWinding, DeleteFaces, DeleteCurves, DeletePoints, MeshToPoints, PointsType, Wireframe, OSLObject (#3389).
+- ShadingEngine : Added private member (ABI change only) (#3389).
+- CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
+- CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
+- BranchCreator : Added virtual method (#3406).
+
+0.54.2.1 (relative to 0.54.2.0)
+========
+
+Fixes
+-----
+
+- UIEditor : Fixed bugs which prevented node colour from being edited (#3383, #3384, #3385).
+- Encapsulate : Fixed concurrent access to signals that could cause crashes at render time
+  (#3381).
+- Layouts : Fixed bug in `editor()` method (#3395).
+- TBB : Fixed an obscure context management bug involving older TBB versions in custom Gaffer builds (#3409).
+- NodeSetEditor : Fixed circular references for linked editors (#3421).
+- Added support for loading files saved in Gaffer 0.55 (#3415). Note that because version 0.54
+  does not support multiple child inputs on the Parent node, only the first child input will
+  be loaded.
 
 0.54.2.0 (relative to 0.54.1.0)
 ========
