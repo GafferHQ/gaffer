@@ -133,19 +133,23 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 			drivingEditor.__registerDrivenEditor( self, mode )
 
-			weakDriver = weakref.ref(
-				drivingEditor,
-				# We need to unlink ourselves if the driver goes away
-				lambda _ : self.setNodeSetDriver( None )
-			)
+			weakSelf = weakref.ref( self )
+
+			# We need to unlink ourselves if the driver goes away
+			def disconnect( _ ) :
+				if weakSelf() is not None:
+					weakSelf().setNodeSetDriver( None )
+
+			weakDriver = weakref.ref( drivingEditor, disconnect )
+
 			changeCallback = self.__nodeSetDriverModes[ mode ]
 
 			def updateFromDriver( _ ) :
-				if weakDriver() is not None :
+				if weakDriver() is not None and weakSelf() is not None :
 					nodeSet = weakDriver().getNodeSet()
 					if changeCallback :
-						nodeSet = changeCallback( self, weakDriver() )
-					self.__setNodeSetInternal( nodeSet, callUpdateFromSet=True )
+						nodeSet = changeCallback( weakSelf(), weakDriver() )
+					weakSelf().__setNodeSetInternal( nodeSet, callUpdateFromSet=True )
 
 			self.__nodeSetDriver = {
 				"mode" : mode,

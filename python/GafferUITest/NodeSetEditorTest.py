@@ -148,6 +148,21 @@ class NodeSetEditorTest( GafferUITest.TestCase ) :
 		del ne1
 		self.assertEqual( ne2.getNodeSetDriver(), ( None, "" ) )
 
+	def testEditorLifetime( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		ne1 = GafferUI.NodeEditor( s )
+		ne2 = GafferUI.NodeEditor( s )
+
+		ne2.setNodeSetDriver( ne1 )
+
+		weak2 = weakref.ref( ne2 )
+
+		del ne2
+
+		self.assertIsNone( weak2() )
+
 	def testLoop( self ) :
 
 		s = Gaffer.ScriptNode()
