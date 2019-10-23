@@ -86,9 +86,6 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if event.buttons & event.Buttons.Left :
 
-			if not self._editable() :
-				return False
-
 			_SplinePlugValueDialogue.acquire( self.getPlug() )
 			return True
 
