@@ -333,7 +333,7 @@ class Slider( GafferUI.Widget ) :
 			positions = self.getPositions()[:]
 			positions.append( float( event.line.p0.x ) / self.size().x )
 			self._setPositionsInternal( positions, self.PositionChangedReason.IndexAdded )
-			self.setSelectedIndex( len( positions ) - 1 )
+			self.setSelectedIndex( len( self.getPositions() ) - 1 )
 
 		return True
 
