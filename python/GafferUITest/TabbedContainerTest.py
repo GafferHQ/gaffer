@@ -149,6 +149,10 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		self.failUnless( self.__current is b2 )
 		self.failUnless( tc.getCurrent() is b2 )
 
+		tc.remove( b1 )
+		self.failUnless( self.__current is b2 )
+		self.failUnless( tc.getCurrent() is b2 )
+
 	def testDel( self ) :
 
 		with GafferUI.TabbedContainer() as t :

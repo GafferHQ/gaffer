@@ -173,8 +173,11 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			self._qtWidget().setCornerWidget( None )
 			self.__cornerWidget = None
 		else :
-			self._qtWidget().removeTab( self.__widgets.index( child ) )
+			# We must remove the child from __widgets before the tab, otherwise
+			# currentChangedSignal will be emit with the old widget.
+			removalIndex = self.__widgets.index( child )
 			self.__widgets.remove( child )
+			self._qtWidget().removeTab( removalIndex )
 
 		child._qtWidget().setParent( None )
 		child._applyVisibility()
