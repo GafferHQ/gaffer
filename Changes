@@ -10,6 +10,9 @@ Fixes
 - Layouts : Fixed bug in `editor()` method (#3395).
 - TBB : Fixed an obscure context management bug involving older TBB versions in custom Gaffer builds (#3409).
 - NodeSetEditor : Fixed circular references for linked editors (#3421).
+- Added support for loading files saved in Gaffer 0.55 (#3415). Note that because version 0.54
+  does not support multiple child inputs on the Parent node, only the first child input will
+  be loaded.
 
 0.54.2.0 (relative to 0.54.1.0)
 ========
