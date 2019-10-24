@@ -177,6 +177,12 @@ GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug );
 /// image() method above, it works on deep images.
 GAFFERIMAGE_API IECore::ConstCompoundDataPtr tiles( const ImagePlug *imagePlug );
 
+/// Deep Utils
+/// ==============================
+
+/// If the provided sample offsets do not match, raise an exception that indicates where the mismatch occured.
+GAFFERIMAGE_API void throwIfSampleOffsetsMismatch( const IECore::IntVectorData* sampleOffsetsA, const IECore::IntVectorData* sampleOffsetsB, const Imath::V2i &tileOrigin, const std::string &message );
+
 } // namespace ImageAlgo
 
 } // namespace GafferImage

@@ -284,3 +284,30 @@ IECore::ConstCompoundDataPtr GafferImage::ImageAlgo::tiles( const ImagePlug *ima
 	return result;
 }
 
+void GafferImage::ImageAlgo::throwIfSampleOffsetsMismatch( const IECore::IntVectorData* sampleOffsetsDataA, const IECore::IntVectorData* sampleOffsetsDataB, const Imath::V2i &tileOrigin, const std::string &message )
+{
+	if( sampleOffsetsDataA != sampleOffsetsDataB )
+	{
+		const std::vector<int> &sampleOffsetsA = sampleOffsetsDataA->readable();
+		const std::vector<int> &sampleOffsetsB = sampleOffsetsDataB->readable();
+		for( int i = 0; i < ImagePlug::tilePixels(); i++ )
+		{
+			if( sampleOffsetsA[i] != sampleOffsetsB[i] )
+			{
+				int prevOffset = i > 0 ? sampleOffsetsA[i - 1] : 0;
+
+				int y = i / ImagePlug::tileSize();
+				int x = i - y * ImagePlug::tileSize();
+
+				throw IECore::Exception( message + boost::str( boost::format(
+					" Pixel %i,%i received both %i and %i samples"
+					) % ( x + tileOrigin.x )  % ( y + tileOrigin.y ) %
+					( sampleOffsetsA[i] - prevOffset ) % ( sampleOffsetsB[i] - prevOffset )
+				) );
+			}
+		}
+	}
+}
+
+
+
