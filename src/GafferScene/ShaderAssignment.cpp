@@ -54,40 +54,6 @@ const InternedString g_oslSurface( "osl:surface" );
 const char *g_oslPrefix( getenv( "GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX" ) );
 const InternedString g_oslTarget( g_oslPrefix ? std::string( g_oslPrefix ) + ":surface" : "osl:surface" );
 
-/// Historically, we evaluated `ShaderAssignment::shaderPlug()` in a context
-/// containing "scene:path". This was undesirable for a couple of reasons :
-///
-/// - If the user used "scene:path" to vary the shader in some way, it
-///   could result in a unique ShaderNetwork for every location assigned, which
-///   could translate into huge numbers of unique networks in the renderer.
-///   This is a very inefficient way of generating shader variation. A better
-///   approach is to use a CustomAttributes node to assign random user attributes
-///   and to read from those in a single static shader network.
-/// - Even if the user didn't use "scene:path", we still needed to compute the
-///   hash for the input network in a potentially huge number of contexts. Since
-///   shader networks are often large, this could have significant overhead, particularly
-///   during interactive render updates. If we can remove "scene:path" from
-///   the context before hashing the shader, we make much more efficient use of the
-///   hash cache and get better performance.
-///
-/// Because of this, we want to evaluate the input shader in a GlobalScope.
-/// Unfortunately, we have no way of knowing if a shader network is relying on
-/// "scene:path", so we must provide some backwards compatibility while folks migrate
-/// to the preferred way of working. Setting the GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY
-/// environment variable to "1" provides that compatibility, allowing old ShaderAssignments
-/// to operate as they did before. To hasten migration, we don't want the environment variable
-/// to allow _new_ ShaderAssignments to operate in the old way, so we use the "__contextCompatibility"
-/// plug to provide additional control per node. It defaults to on, but we use a userDefault
-/// to turn it off for all newly created nodes.
-bool initContextCompatibility()
-{
-	Gaffer::Metadata::registerValue( ShaderAssignment::staticTypeId(), "__contextCompatibility", "userDefault", new BoolData( false ) );
-	const char *e = getenv( "GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY" );
-	return e && !strcmp( e, "1" );
-}
-
-const bool g_contextCompatibilityEnabled = initContextCompatibility();
-
 } // namespace
 
 size_t ShaderAssignment::g_firstPlugIndex = 0;
@@ -97,7 +63,6 @@ ShaderAssignment::ShaderAssignment( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShaderPlug( "shader" ) );
-	addChild( new BoolPlug( "__contextCompatibility", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
 
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
@@ -119,21 +84,11 @@ const GafferScene::ShaderPlug *ShaderAssignment::shaderPlug() const
 	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-Gaffer::BoolPlug *ShaderAssignment::contextCompatibilityPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::BoolPlug *ShaderAssignment::contextCompatibilityPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
 void ShaderAssignment::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == shaderPlug() || input == contextCompatibilityPlug() )
+	if( input == shaderPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -146,29 +101,14 @@ bool ShaderAssignment::processesAttributes() const
 
 void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( g_contextCompatibilityEnabled && contextCompatibilityPlug()->getValue() )
-	{
-		h.append( shaderPlug()->attributesHash() );
-	}
-	else
-	{
-		ScenePlug::GlobalScope globalScope( context );
-		h.append( shaderPlug()->attributesHash() );
-	}
+	ScenePlug::GlobalScope globalScope( context );
+	h.append( shaderPlug()->attributesHash() );
 }
 
 IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	ConstCompoundObjectPtr attributes;
-	if( g_contextCompatibilityEnabled && contextCompatibilityPlug()->getValue() )
-	{
-		attributes = shaderPlug()->attributes();
-	}
-	else
-	{
-		ScenePlug::GlobalScope globalScope( context );
-		attributes = shaderPlug()->attributes();
-	}
+	ScenePlug::GlobalScope globalScope( context );
+	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();
 
 	if( attributes->members().empty() )
 	{
