@@ -402,14 +402,22 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 			}
 
 			float m = mix;
-			if( yValidMask && x >= maskValidBound.min.x && x < maskValidBound.max.x )
+			if( M )
 			{
-				m *= std::max( 0.0f, std::min( 1.0f, *M ) );
+				if( yValidMask && x >= maskValidBound.min.x && x < maskValidBound.max.x )
+				{
+					m *= std::max( 0.0f, std::min( 1.0f, *M ) );
+				}
+				else
+				{
+					m = 0;
+				}
+				++M;
 			}
 
 			*R = a * ( 1 - m ) + b * m;
 
-			++R; ++A; ++B; ++M;
+			++R; ++A; ++B;
 		}
 	}
 
