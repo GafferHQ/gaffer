@@ -99,7 +99,7 @@ namespace IECoreCycles
 namespace ObjectAlgo
 {
 
-ccl::Object *convert( const IECore::Object *object, const std::string &nodeName )
+ccl::Object *convert( const IECore::Object *object, const std::string &nodeName, const ccl::Scene *scene )
 {
 	const Registry &r = registry();
 	Registry::const_iterator it = r.find( object->typeId() );
@@ -107,10 +107,10 @@ ccl::Object *convert( const IECore::Object *object, const std::string &nodeName 
 	{
 		return nullptr;
 	}
-	return it->second.converter( object, nodeName );
+	return it->second.converter( object, nodeName, scene );
 }
 
-ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName )
+ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName, const ccl::Scene *scene )
 {
 	if( samples.empty() )
 	{
@@ -135,11 +135,11 @@ ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const 
 	}
 	if( it->second.motionConverter )
 	{
-		return it->second.motionConverter( samples, nodeName );
+		return it->second.motionConverter( samples, nodeName, scene );
 	}
 	else
 	{
-		return it->second.converter( samples.front(), nodeName );
+		return it->second.converter( samples.front(), nodeName, scene );
 	}
 }
 

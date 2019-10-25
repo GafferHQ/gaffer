@@ -342,7 +342,7 @@ namespace MeshAlgo
 
 {
 
-ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
+ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, const ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
 	cobject->mesh = convertCommon(mesh);
@@ -350,7 +350,7 @@ ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string 
 	return cobject;
 }
 
-ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::string &nodeName )
+ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::string &nodeName, const ccl::Scene *scene )
 {
 	ccl::Mesh *cmesh = convertCommon(meshes[0]);
 
