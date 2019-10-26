@@ -103,7 +103,18 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	const Imath::V2f &clippingPlanes = camera->getClippingPlanes();
 	ccam->nearclip = clippingPlanes.x;
 	ccam->farclip = clippingPlanes.y;
-
+	
+	// Crop window
+	if ( camera->hasCropWindow() )
+	{
+		const Imath::Box2f &cropWindow = camera->getCropWindow();
+		ccam->border.left = cropWindow.min.x;
+		ccam->border.right = cropWindow.max.x;
+		ccam->border.top = cropWindow.max.y;
+		ccam->border.bottom = cropWindow.min.y;
+		ccam->border.clamp();
+	}
+	
 	// Shutter TODO: Need to see if this is correct or not, cycles also has a shutter curve...
 	const Imath::V2f &shutter = camera->getShutter();
 	if ((shutter.x > 0.0) && (shutter.y > 0.0))
