@@ -389,8 +389,8 @@ class CyclesOutput : public IECore::RefCounted
 				V2i( camera->width - 1, camera->height - 1 )
 				);
 			Box2i dataWindow(
-				V2i( 0, 0 ),
-				V2i( camera->width - 1, camera->height - 1 )
+				V2i( (int)(camera->border.left * (float)camera->width), (int)(camera->border.bottom * (float)camera->height) ),
+				V2i( (int)(camera->border.right * (float)camera->width) - 1, (int)(camera->border.top * (float)camera->height - 1 ) )
 				);
 
 			vector<string> channelNames;
@@ -514,8 +514,8 @@ class RenderCallback : public IECore::RefCounted
 				V2i( camera->width - 1, camera->height - 1 )
 				);
 			Box2i dataWindow(
-				V2i( 0, 0 ),
-				V2i( camera->width - 1, camera->height - 1 )
+				V2i( (int)(camera->border.left * (float)camera->width), (int)(camera->border.bottom * (float)camera->height) ),
+				V2i( (int)(camera->border.right * (float)camera->width) - 1, (int)(camera->border.top * (float)camera->height - 1 ) )
 				);
 
 			//CompoundDataPtr parameters = new CompoundData();
@@ -633,8 +633,8 @@ class RenderCallback : public IECore::RefCounted
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", "No interactive outputs to render to." );
 				return;
 			}
-			const int x = rtile.x - m_session->tile_manager.params.full_x;
-			const int y = rtile.y - m_session->tile_manager.params.full_y;
+			const int x = rtile.x;
+			const int y = rtile.y;
 			const int w = rtile.w;
 			const int h = rtile.h;
 
