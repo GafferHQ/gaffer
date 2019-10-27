@@ -481,6 +481,21 @@ class RenderCallback : public IECore::RefCounted
 			: m_session( nullptr ), m_interactive( interactive ), m_displayDriver( nullptr )
 		{
 		}
+		
+		~RenderCallback()
+		{
+			if( m_displayDriver )
+			{
+				try
+				{
+					m_displayDriver->imageClose();
+				}
+				catch( const std::exception &e )
+				{
+					IECore::msg( IECore::Msg::Error, "DisplayDriver::imageClose", e.what() );
+				}
+			}
+		}
 
 		void updateSession( ccl::Session *session )
 		{
