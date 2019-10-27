@@ -35,6 +35,7 @@
 #include "GafferCycles/IECoreCyclesPreview/VDBAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "openvdb/openvdb.h"
 
@@ -81,7 +82,24 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 	cobject->mesh = new ccl::Mesh();
 
 	cobject->mesh->volume_isovalue = 0.0f;
+	cobject->mesh->has_volume = true;
 	ccl::AttributeSet& attributes = cobject->mesh->attributes;
+
+	ccl::Attribute *attrTfm = attributes.add( ccl::ATTR_STD_GENERATED_TRANSFORM );
+	ccl::Transform *tfm = attrTfm->data_transform();
+	Imath::Box3f bound = vdbObject->bound();
+	ccl::float3 loc = SocketAlgo::setVector( bound.center() );
+	ccl::float3 size = SocketAlgo::setVector( bound.size() );
+
+	if ( size.x != 0.0f )
+		size.x = 0.5f / size.x;
+	if ( size.y != 0.0f )
+		size.y = 0.5f / size.y;
+	if ( size.z != 0.0f )
+		size.z = 0.5f / size.z;
+
+	loc = loc * size - ccl::make_float3( 0.5f, 0.5f, 0.5f );
+	*tfm = ccl::transform_translate( -loc ) * ccl::transform_scale( size * 2.0f );
 
 	ccl::Attribute *attr = nullptr;
 	std::vector<std::string> gridNames = vdbObject->gridNames();
