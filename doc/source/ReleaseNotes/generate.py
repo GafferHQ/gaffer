@@ -3,7 +3,7 @@
 import re
 import inspect
 
-changes = open( "../../../Changes" )
+changes = open( "../../../Changes.md" )
 # remove me
 
 versionFile = None
