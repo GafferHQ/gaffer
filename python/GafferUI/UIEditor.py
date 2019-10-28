@@ -538,6 +538,10 @@ class _PlugListing( GafferUI.Widget ) :
 		column = GafferUI.ListContainer( spacing = 4 )
 		GafferUI.Widget.__init__( self, column, **kw )
 
+		# We don't have a way to do this with Widget directly at present, this
+		# stops the preset name/value fields being off-screen.
+		column._qtWidget().setMinimumWidth( 650 )
+
 		with column :
 
 			self.__pathListing = GafferUI.PathListingWidget(
