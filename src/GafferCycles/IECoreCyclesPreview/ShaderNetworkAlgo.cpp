@@ -265,7 +265,7 @@ InternedString partitionEnd( const InternedString &s, char c )
 	}
 }
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::ShaderManager *shaderManager, ccl::Shader *cshader, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. It is ideal for all assigned
 	// shaders in the graph to funnel through the default "output" so
@@ -286,7 +286,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( isOutput )
 	{
-		node = (ccl::ShaderNode*)cshader->graph->output();
+		node = (ccl::ShaderNode*)shaderGraph->output();
 	}
 	else if( isOSLShader )
 	{
@@ -296,7 +296,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
 			node = manager->osl_node( shaderFileName.c_str() );
-			node = cshader->graph->add( node );
+			node = shaderGraph->add( node );
 		}
 		else
 #endif
@@ -318,14 +318,14 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			ccl::ConvertNode *convertNode = new ccl::ConvertNode( getSocketType( split[1] ), getSocketType( split[3] ), true );
 			node = (ccl::ShaderNode*)convertNode;
 			if( node )
-				node = cshader->graph->add( node );
+				node = shaderGraph->add( node );
 		}
 	}
 	else
 	{
 		node = getShaderNode( shader->getName() );
 		if( node )
-			node = cshader->graph->add( node );
+			node = shaderGraph->add( node );
 	}
 
 	if( !node )
@@ -369,7 +369,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, cshader, converted );
+		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, shaderGraph, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -388,7 +388,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( sourceNode, sourceName ) )
 			if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) )
-				cshader->graph->connect( shaderOutput, shaderInput );
+				shaderGraph->connect( shaderOutput, shaderInput );
 	}
 
 	if( !isOutput && ( shaderNetwork->outputShader() == shader ) )
@@ -396,11 +396,11 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// In the cases where there is no cycles output attached in the network
 		// we just connect to the main output node of the cycles shader graph.
 		// Either ccl:surface, ccl:volume or ccl:displacement.
-		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
+		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)shaderGraph->output();
 		string input = string( shader->getType().c_str() + 4 );
 		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ) )
 		    if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) )
-				cshader->graph->connect( shaderOutput, shaderInput );
+				shaderGraph->connect( shaderOutput, shaderInput );
 	}
 
 	return node;
@@ -456,7 +456,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 
 	ShaderMap converted;
 	ccl::Shader *result = new ccl::Shader();
-	result->graph = new ccl::ShaderGraph();
+	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
 	const InternedString output = shaderNetwork->getOutput().shader;
 	if( output.string().empty() )
 	{
@@ -469,17 +469,20 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 			// The first shader is an emission node
 			for( const auto &connection : shaderNetwork->inputConnections( output ) )
 			{
-				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, result, converted );
-				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)result->graph->output();
+				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, graph, converted );
+				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)graph->output();
 				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "emission" ) )
 					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
-						result->graph->connect( shaderOutput, shaderInput );
+						graph->connect( shaderOutput, shaderInput );
 				break; // Only one connection
 			}
 		}
 		else
-			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, result, converted );
+			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
 	}
+
+	result->set_graph( graph );
+
 	return result;
 }
 
