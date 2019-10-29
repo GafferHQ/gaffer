@@ -62,6 +62,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"processUnpremultiplied" : [
+
+			"description",
+			"""
+			Unpremultiplies data before processing, and premultiply again after processing.  This allows
+			accurate processing of nodes that deal with color, when running on partially transparent or
+			deep images.
+			""",
+
+		],
+
 	}
 
 )

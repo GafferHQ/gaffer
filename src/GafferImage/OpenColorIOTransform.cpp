@@ -220,8 +220,8 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 		g->baseWritable(),
 		b->baseWritable(),
 		nullptr, // alpha
-		ImagePlug::tileSize(), // width
-		ImagePlug::tileSize() // height
+		r->readable().size(), // Treat all pixels as a single line, since geometry doesn't affect OCIO
+		1 // height
 	);
 
 	processor->apply( image );
