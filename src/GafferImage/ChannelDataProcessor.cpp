@@ -37,6 +37,8 @@
 
 #include "GafferImage/ChannelDataProcessor.h"
 
+#include "GafferImage/ImageAlgo.h"
+
 #include "IECore/StringAlgo.h"
 
 using namespace Gaffer;
@@ -46,18 +48,23 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ChannelDataProcessor );
 
 size_t ChannelDataProcessor::g_firstPlugIndex = 0;
 
-ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
+ChannelDataProcessor::ChannelDataProcessor( const std::string &name, bool hasUnpremultPlug )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "channels", Gaffer::Plug::In, "[RGB]" ) );
+	m_hasUnpremultPlug = hasUnpremultPlug;
+	if( m_hasUnpremultPlug )
+	{
+		addChild( new BoolPlug( "processUnpremultiplied", Gaffer::Plug::In, false ) );
+	}
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
-	outPlug()->deepStatePlug()->setInput( inPlug()->deepStatePlug() );
+	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
 	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
@@ -76,6 +83,24 @@ const Gaffer::StringPlug *ChannelDataProcessor::channelsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *ChannelDataProcessor::processUnpremultipliedPlug()
+{
+	if( !m_hasUnpremultPlug )
+	{
+		throw IECore::Exception( "No processUnpremultiplied plug" );
+	}
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *ChannelDataProcessor::processUnpremultipliedPlug() const
+{
+	if( !m_hasUnpremultPlug )
+	{
+		throw IECore::Exception( "No processUnpremultiplied plug" );
+	}
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
@@ -84,6 +109,11 @@ void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCont
 		input == inPlug()->channelDataPlug() ||
 		input == channelsPlug()
 	)
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+
+	if( m_hasUnpremultPlug && input == processUnpremultipliedPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -99,9 +129,104 @@ bool ChannelDataProcessor::channelEnabled( const std::string &channel ) const
 	return IECore::StringAlgo::matchMultiple( channel, channelsPlug()->getValue() );
 }
 
+void ChannelDataProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashChannelData( output, context, h );
+
+	inPlug()->channelDataPlug()->hash( h );
+
+	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+
+
+	IECore::ConstStringVectorDataPtr channelNamesData;
+	bool unpremult = false;
+	bool repremultByProcessedAlpha = false;
+	if( m_hasUnpremultPlug && channelName != "A" )
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		unpremult = processUnpremultipliedPlug()->getValue();
+		if( unpremult )
+		{
+			channelNamesData = inPlug()->channelNamesPlug()->getValue();
+			repremultByProcessedAlpha = channelEnabled( "A" );
+		}
+	}
+
+	h.append( unpremult );
+	if( unpremult && ImageAlgo::channelExists( channelNamesData->readable(), "A" ) )
+	{
+		ImagePlug::ChannelDataScope s( context );
+		s.setChannelName( "A" );
+		inPlug()->channelDataPlug()->hash( h );
+		if( repremultByProcessedAlpha )
+		{
+			outPlug()->channelDataPlug()->hash( h );
+		}
+	}
+}
+
+
 IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
+
+	IECore::ConstStringVectorDataPtr channelNamesData;
+	bool unpremult = false;
+	bool repremultByProcessedAlpha = false;
+	if( m_hasUnpremultPlug && channelName != "A" )
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		unpremult = processUnpremultipliedPlug()->getValue();
+		if( unpremult )
+		{
+			channelNamesData = inPlug()->channelNamesPlug()->getValue();
+			repremultByProcessedAlpha = channelEnabled( "A" );
+		}
+	}
+
+	IECore::ConstFloatVectorDataPtr alphaData;
+	IECore::ConstFloatVectorDataPtr postAlphaData;
+	if( unpremult && ImageAlgo::channelExists( channelNamesData->readable(), "A" ) )
+	{
+		ImagePlug::ChannelDataScope s( context );
+		s.setChannelName( "A" );
+		alphaData = inPlug()->channelDataPlug()->getValue();
+		if( repremultByProcessedAlpha )
+		{
+			postAlphaData = outPlug()->channelDataPlug()->getValue();
+		}
+		else
+		{
+			postAlphaData = alphaData;
+		}
+
+		int size = alphaData->readable().size();
+		const float *A = &alphaData->readable().front();
+		float *O = &outData->writable().front();
+		for( int j = 0; j < size; j++ )
+		{
+			if( *A != 0 )
+			{
+				*O /= *A;
+			}
+			A++;
+			O++;
+		}
+
+	}
 	processChannelData( context, parent, channelName, outData );
+	if( unpremult && postAlphaData )
+	{
+		int size = postAlphaData->readable().size();
+		const float *A = &postAlphaData->readable().front();
+		float *O = &outData->writable().front();
+		for( int j = 0; j < size; j++ )
+		{
+			*O *= *A;
+			A++;
+			O++;
+		}
+
+	}
 	return outData;
 }

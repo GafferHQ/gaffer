@@ -62,7 +62,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Grade );
 size_t Grade::g_firstPlugIndex = 0;
 
 Grade::Grade( const std::string &name )
-	:	ChannelDataProcessor( name )
+	:	ChannelDataProcessor( name, true /* hasUnpremultPlug */ )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Color4fPlug( "blackPoint" ) );

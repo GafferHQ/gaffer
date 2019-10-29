@@ -49,7 +49,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Clamp );
 size_t Clamp::g_firstPlugIndex = 0;
 
 Clamp::Clamp( const std::string &name )
-	:	ChannelDataProcessor( name )
+	:	ChannelDataProcessor( name, true /* hasUnpremultPlug */ )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
