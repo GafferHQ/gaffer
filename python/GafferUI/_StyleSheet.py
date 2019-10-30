@@ -1090,6 +1090,22 @@ _styleSheet = string.Template(
 		background-color: $brightColor;
 	}
 
+	QTableView[gafferToggleIndicator="true"]::indicator:unchecked {
+		image: url($GAFFER_ROOT/graphics/toggleOff.png);
+	}
+
+	QTableView[gafferToggleIndicator="true"]::indicator:unchecked:hover {
+		image: url($GAFFER_ROOT/graphics/toggleOffHover.png);
+	}
+
+	QTableView[gafferToggleIndicator="true"]::indicator:checked {
+		image: url($GAFFER_ROOT/graphics/toggleOn.png);
+	}
+
+	QTableView[gafferToggleIndicator="true"]::indicator:checked:hover {
+		image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
+	}
+
 	/* highlighted state for VectorDataWidget and tree views */
 
 	_TableView[gafferHighlighted="true"] {
