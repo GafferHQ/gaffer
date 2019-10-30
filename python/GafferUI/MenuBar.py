@@ -67,10 +67,16 @@ class MenuBar( GafferUI.Widget ) :
 	# in response to keyboard shortcut events received by that widget.
 	# This can be useful to ensure secondary windows not in the hierarchy of
 	# the MenuBar's parent still cause associated actions to fire.
+	# If the widget already has a shortcut target for another MenuBar, this
+	# will be removed.
 	def addShortcutTarget( self, widget ) :
 
-		widget.__shortcutEventFilter = _ShortcutEventFilter( widget._qtWidget(), self )
-		widget._qtWidget().installEventFilter( widget.__shortcutEventFilter )
+		if not hasattr( widget, '_MenuBar__shortcutEventFilter' ) :
+			widget.__shortcutEventFilter = _ShortcutEventFilter( widget._qtWidget(), self )
+			widget._qtWidget().installEventFilter( widget.__shortcutEventFilter )
+
+		if widget.__shortcutEventFilter.getMenuBar() != self :
+			widget.__shortcutEventFilter.setMenuBar( self )
 
 	def __setattr__( self, key, value ) :
 
@@ -183,6 +189,14 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 				return True
 
 		return QtCore.QObject.eventFilter( self, qObject, qEvent )
+
+	def setMenuBar( self, menuBar ) :
+
+		self.__menuBar = weakref.ref( menuBar )
+
+	def getMenuBar( self ) :
+
+		return self.__menuBar()
 
 	def __keySequence( self, keyEvent ) :
 
