@@ -312,6 +312,7 @@ from NameValuePlugValueWidget import NameValuePlugValueWidget
 import DependencyNodeUI
 import ComputeNodeUI
 import RandomUI
+import SpreadsheetUI
 import ExpressionUI
 import BoxUI
 import ReferenceUI
