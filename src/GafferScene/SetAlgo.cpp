@@ -112,10 +112,6 @@ struct ExpressionAst
 	ExpressionAst( const Expr &expr )
 		: expr( expr ) {}
 
-	ExpressionAst& operator&=( const ExpressionAst &rhs );
-	ExpressionAst& operator-=( const ExpressionAst &rhs );
-	ExpressionAst& operator|=( const ExpressionAst &rhs );
-
 	type expr;
 };
 
@@ -133,23 +129,22 @@ struct BinaryOp
 	ExpressionAst right;
 };
 
-ExpressionAst& ExpressionAst::operator&=( const ExpressionAst &rhs )
+struct CreateBinaryOpImplementation
 {
-	expr = BinaryOp( expr, And, rhs );
-	return *this;
-}
 
-ExpressionAst& ExpressionAst::operator-=( const ExpressionAst &rhs )
-{
-	expr = BinaryOp( expr, AndNot , rhs );
-	return *this;
-}
+	typedef ExpressionAst & result_type;
 
-ExpressionAst& ExpressionAst::operator|=( const ExpressionAst &rhs )
-{
-	expr = BinaryOp( expr, Or , rhs );
-	return *this;
-}
+	ExpressionAst & operator()( ExpressionAst &lhs, Op op, ExpressionAst &rhs ) const
+	{
+		lhs.expr = BinaryOp( lhs.expr, op, rhs );
+		return lhs;
+	}
+
+};
+
+// Function that we can use as a semantic action in the parser, inserting
+// a BinaryOp into the current ExpressionAst.
+boost::phoenix::function<CreateBinaryOpImplementation> createBinaryOp;
 
 // Visiting the AST
 // ----------------
@@ -403,18 +398,18 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 
 		orExpression =
 			andExpression                                              [_val  = _1]
-			>> *(     ( '|' >> andExpression                           [_val |= _1] )
-			    |     ( andExpression                                  [_val |= _1] )
+			>> *(     ( '|' >> andExpression                           [createBinaryOp( _val, Or, _1 )] )
+			    |     ( andExpression                                  [createBinaryOp( _val, Or, _1 )] )
 			    );
 
 		andExpression =
 			andNotExpression                                           [_val  = _1]
-			>> *(     ( '&' >> andNotExpression                        [_val &= _1] )
+			>> *(     ( '&' >> andNotExpression                        [createBinaryOp( _val, And, _1 )] )
 			    );
 
 		andNotExpression =
 			element                                                    [_val  = _1]
-			>> *(     ( '-' >> element                                 [_val -= _1] )
+			>> *(     ( '-' >> element                                 [createBinaryOp( _val, AndNot, _1 )] )
 			    );
 
 		element =
