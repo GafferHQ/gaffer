@@ -1,9 +1,10 @@
-0.54.x.x (relative to 0.54.2.1)
+0.54.2.2 (relative to 0.54.2.1)
 ========
 
 Fixes
 -----
 
+- ArnoldLightFilter : Fixed bug which caused animated light blockers to lose their transform.
 - NodeEditor : Fixed bug that allowed drag and drop to create unwanted input connections to output plugs.
 
 0.54.2.1 (relative to 0.54.2.0)
