@@ -101,6 +101,8 @@ from FlatToDeepTest import FlatToDeepTest
 from DeepMergeTest import DeepMergeTest
 from DeepStateTest import DeepStateTest
 from EmptyTest import EmptyTest
+from DeepHoldoutTest import DeepHoldoutTest
+from DeepRecolorTest import DeepRecolorTest
 
 if __name__ == "__main__":
 	import unittest

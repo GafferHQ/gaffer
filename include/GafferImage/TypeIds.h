@@ -126,6 +126,8 @@ enum TypeId
 	DeepSampleCountsTypeId = 110830,
 	DeepSamplerTypeId = 110831,
 	DeepToFlatTypeId = 110832,
+	DeepHoldoutTypeId = 110833,
+	DeepRecolorTypeId = 110834,
 
 	LastTypeId = 110849
 };
