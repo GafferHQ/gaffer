@@ -603,7 +603,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return False
 
 		if isinstance( event.data, Gaffer.Plug ) :
-			if self.getPlug().acceptsInput( event.data ) :
+			if self.getPlug().direction() == Gaffer.Plug.Direction.In and self.getPlug().acceptsInput( event.data ) :
 				self.setHighlighted( True )
 				return True
 		elif hasattr( self.getPlug(), "setValue" ) and self._convertValue( event.data ) is not None :
