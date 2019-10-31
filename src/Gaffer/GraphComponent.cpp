@@ -55,6 +55,25 @@ using namespace IECore;
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void validateName( const InternedString &name )
+{
+	static boost::regex g_validator( "^[A-Za-z_]+[A-Za-z_0-9]*" );
+	if( !regex_match( name.c_str(), g_validator ) )
+	{
+		std::string what = boost::str( boost::format( "Invalid name \"%s\"" ) % name.string() );
+		throw IECore::Exception( what );
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // GraphComponent::Signals
 //
 // We allocate these separately because they have a significant overhead
@@ -94,6 +113,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GraphComponent );
 GraphComponent::GraphComponent( const std::string &name )
 	: m_name( name ), m_parent( nullptr )
 {
+	validateName( m_name );
 }
 
 GraphComponent::~GraphComponent()
@@ -115,12 +135,7 @@ GraphComponent::~GraphComponent()
 const IECore::InternedString &GraphComponent::setName( const IECore::InternedString &name )
 {
 	// make sure the name is valid
-	static boost::regex validator( "^[A-Za-z_]+[A-Za-z_0-9]*" );
-	if( !regex_match( name.c_str(), validator ) )
-	{
-		std::string what = boost::str( boost::format( "Invalid name \"%s\"" ) % name.string() );
-		throw IECore::Exception( what );
-	}
+	validateName( name );
 
 	// make sure the name is unique
 	IECore::InternedString newName = name;
