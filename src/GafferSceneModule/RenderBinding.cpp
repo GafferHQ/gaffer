@@ -340,6 +340,7 @@ void GafferSceneModule::bindRender()
 
 			.def( "camera", &Renderer::camera )
 			.def( "light", &Renderer::light )
+			.def( "lightFilter", &Renderer::lightFilter )
 
 			.def( "object", &rendererObject1 )
 			.def( "object", &rendererObject2 )

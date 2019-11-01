@@ -2489,6 +2489,51 @@ class RendererTest( GafferTest.TestCase ) :
 		r.option( "ai:background", None )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
 
+	def testBlockerMotionBlur( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		o = r.lightFilter(
+			"/lightFilter", IECore.NullObject(),
+			r.attributes( IECore.CompoundObject( {
+				"ai:lightFilter:filter" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"filter" : IECoreScene.Shader( "light_blocker", "ai:lightFilter" ),
+					},
+					output = "filter"
+				)
+			} ) )
+		)
+
+		# Ask for transform motion blur
+
+		o.transform(
+			[ imath.M44f().translate( imath.V3f( 1, 0, 0 ) ), imath.M44f().translate( imath.V3f( 2, 0, 0 ) ) ],
+			[ 0, 1 ]
+		)
+
+		r.render()
+
+		del o
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			# Since Arnold's `light_blocker` node doesn't support transform blur,
+			# we just expect a single matrix with the first transform sample.
+
+			node = arnold.AiNodeLookUpByName( "lightFilter:/lightFilter" )
+			self.assertEqual(
+				self.__m44f( arnold.AiNodeGetMatrix( node, "geometry_matrix" ) ),
+				imath.M44f().translate( imath.V3f( 1, 0, 0 ) )
+			)
+
 	def __testVDB( self, stepSize = None, stepScale = 1.0, expectedSize = 0.0, expectedScale = 1.0 ) :
 
 		import IECoreVDB
