@@ -47,6 +47,7 @@
 #include "boost/spirit/include/classic_core.hpp"
 #include "boost/spirit/include/phoenix_operator.hpp"
 #include "boost/spirit/include/qi.hpp"
+#include "boost/spirit/repository/include/qi_distinct.hpp"
 #include "boost/variant/apply_visitor.hpp"
 #include "boost/variant/recursive_variant.hpp"
 
@@ -77,7 +78,7 @@ struct ObjectName
 
 // Determine which Ops are supported in SetExpressions
 // and provide a way to print them for debugging.
-enum Op { And, Or, AndNot };
+enum Op { And, Or, AndNot, In, Containing };
 
 std::ostream & operator<<( std::ostream &out, const Op &op )
 {
@@ -89,6 +90,10 @@ std::ostream & operator<<( std::ostream &out, const Op &op )
 			out << "&"; break;
 		case AndNot :
 			out << "-"; break;
+		case In :
+			out << "in"; break;
+		case Containing :
+			out << "containing"; break;
 	}
 	return out;
 }
@@ -291,7 +296,29 @@ struct AstEvaluator
 				result.removePaths( right );
 				return result;
 			}
-			default:
+			case In :
+			{
+				PathMatcher result;
+				for( PathMatcher::Iterator it = right.begin(), eIt = right.end(); it != eIt; ++it )
+				{
+					result.addPaths( left.subTree( *it ), *it );
+					it.prune();
+				}
+				return result;
+			}
+			case Containing :
+			{
+				PathMatcher result;
+				for( PathMatcher::Iterator it = left.begin(), eIt = left.end(); it != eIt; ++it )
+				{
+					if( right.match( *it ) & ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch ) )
+					{
+						result.addPath( *it );
+					}
+				}
+				return result;
+			}
+			default :
 				return PathMatcher();
 		}
 	}
@@ -378,6 +405,7 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 		using qi::_1;
 		using qi::char_;
 		using qi::lit;
+		using boost::spirit::repository::distinct;
 
 		/* Grammar Specification
 
@@ -394,7 +422,17 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 		// grammar                                                     bindings
 		// -----------------------------------------------------------------------
 		expression =
-			orExpression                                               [_val  = _1];
+			inExpression                                               [_val  = _1];
+
+		inExpression =
+			containingExpression                                       [_val  = _1]
+			>> *(     ( inKeyword >> containingExpression              [createBinaryOp( _val, In, _1 )] )
+			    );
+
+		containingExpression =
+			orExpression                                               [_val  = _1]
+			>> *(     ( containingKeyword >> orExpression              [createBinaryOp( _val, Containing, _1 )] )
+			    );
 
 		orExpression =
 			andExpression                                              [_val  = _1]
@@ -417,16 +455,22 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 			| setName                                                  [_val  = _1]
 			| lit('(') >> expression                                   [_val  = _1] >> lit(')');
 
+		const char *setNameCharacters = "a-zA-Z_0-9:.*?[]!\\";
 
 		setName %= setNameToken;
-		setNameToken %= char_( "a-zA-Z_*?[\\" ) >> *char_( "a-zA-Z_0-9:.*?[]!\\" );
+		setNameToken %= !reservedWords >> +char_( setNameCharacters );
 
 		objectName %= objectNameToken;
 		objectNameToken %= char_( "/" ) >> *char_( "a-zA-Z_0-9/:." );
 
+		inKeyword = distinct( char_( setNameCharacters ) )["in"];
+		containingKeyword = distinct( char_( setNameCharacters ) )["containing"];
+		reservedWords = inKeyword | containingKeyword;
 
 		// these have no effect unless BOOST_SPIRIT_DEBUG is defined
 		BOOST_SPIRIT_DEBUG_NODE(expression);
+		BOOST_SPIRIT_DEBUG_NODE(inExpression);
+		BOOST_SPIRIT_DEBUG_NODE(containingExpression);
 		BOOST_SPIRIT_DEBUG_NODE(andNotExpression);
 		BOOST_SPIRIT_DEBUG_NODE(andExpression);
 		BOOST_SPIRIT_DEBUG_NODE(orExpression);
@@ -434,10 +478,11 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 		BOOST_SPIRIT_DEBUG_NODE(objectName);
 	}
 
+	qi::rule<Iterator> inKeyword, containingKeyword, reservedWords;
 	qi::rule<Iterator, SetName()> setName;
 	qi::rule<Iterator, ObjectName()> objectName;
 	qi::rule<Iterator, std::string()> setNameToken, objectNameToken;
-	qi::rule<Iterator, ExpressionAst(), ascii::space_type> expression, andNotExpression, andExpression, orExpression, element;
+	qi::rule<Iterator, ExpressionAst(), ascii::space_type> expression, inExpression, containingExpression, andNotExpression, andExpression, orExpression, element;
 };
 
 void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
