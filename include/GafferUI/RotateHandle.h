@@ -78,6 +78,9 @@ class GAFFERUI_API RotateHandle : public Handle
 		bool mouseMove( const ButtonEvent &event );
 		Imath::V3f pointOnSphere( const IECore::LineSegment3f &line ) const;
 
+		void updatePreciseMotionState( const DragDropEvent &event );
+		IECore::LineSegment3f updatedLineFromEvent( const DragDropEvent &event ) const;
+
 		Style::Axes m_axes;
 		// For X, Y and Z handles.
 		PlanarDrag m_drag;
@@ -86,6 +89,9 @@ class GAFFERUI_API RotateHandle : public Handle
 		Imath::M44f m_dragBeginWorldTransform;
 		Imath::V3f m_dragBeginPointOnSphere;
 		Imath::V3f m_highlightVector;
+
+		bool m_preciseMotionEnabled;
+		IECore::LineSegment3f m_preciseMotionOriginLine;
 
 };
 
