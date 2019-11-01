@@ -94,22 +94,20 @@ Imath::V3i TranslateHandle::axisMask() const
 	}
 }
 
-Imath::V3f TranslateHandle::translation( const DragDropEvent &event ) const
+Imath::V3f TranslateHandle::translation( const DragDropEvent &event )
 {
+	const float snapIncrement = event.modifiers & ButtonEvent::Shift ? 0.1f : 1.0f;
+	const float snapOffset = snapIncrement * 0.5f;
+
 	if( m_axes == Style::X || m_axes == Style::Y || m_axes == Style::Z )
 	{
-		float offset = m_linearDrag.position( event ) - m_linearDrag.startPosition();
+		float offset = m_linearDrag.updatedPosition( event ) - m_linearDrag.startPosition();
 
-		// snap to integers
+		// snap
 		if( event.modifiers & ButtonEvent::Control )
 		{
-			offset = std::round( offset );
-		}
-
-		// precision mode
-		if( event.modifiers & ButtonEvent::Shift )
-		{
-			offset *= 0.1;
+			// Offset such that it behaves like round not floor.
+			offset = offset - fmodf( offset - snapOffset, snapIncrement ) + snapOffset;
 		}
 
 		switch( m_axes )
@@ -126,19 +124,13 @@ Imath::V3f TranslateHandle::translation( const DragDropEvent &event ) const
 	}
 	else
 	{
-		V2f offset = m_planarDrag.position( event ) - m_planarDrag.startPosition();
+		V2f offset = m_planarDrag.updatedPosition( event ) - m_planarDrag.startPosition();
 
-		// snap to integers
+		// snap
 		if( event.modifiers & ButtonEvent::Control )
 		{
-			offset[0] = std::round( offset[0] );
-			offset[1] = std::round( offset[1] );
-		}
-
-		// precision mode
-		if( event.modifiers & ButtonEvent::Shift )
-		{
-			offset *= 0.1;
+			offset[0] = offset[0] - fmodf( offset[0] - snapOffset, snapIncrement ) + snapOffset;
+			offset[1] = offset[1] - fmodf( offset[1] - snapOffset, snapIncrement ) + snapOffset;
 		}
 
 		return m_planarDrag.axis0() * offset[0] + m_planarDrag.axis1() * offset[1];

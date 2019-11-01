@@ -217,21 +217,29 @@ bool Handle::dragEnter( const DragDropEvent &event )
 // LinearDrag
 //////////////////////////////////////////////////////////////////////////
 
-Handle::LinearDrag::LinearDrag()
+Handle::LinearDrag::LinearDrag( bool processModifiers )
 	:	m_gadget( nullptr ),
 		m_worldLine( V3f( 0 ), V3f( 1, 0, 0 ) ),
-		m_dragBeginPosition( 0 )
+		m_dragBeginPosition( 0 ),
+		m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false ),
+		m_preciseMotionOrigin( 0 )
 {
 }
 
-Handle::LinearDrag::LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent )
+Handle::LinearDrag::LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent, bool processModifiers )
 	:	m_gadget( gadget ),
 		m_worldLine(
 			line.p0 * m_gadget->fullTransform(),
 			line.p1 * m_gadget->fullTransform()
 		),
-		m_dragBeginPosition( position( dragBeginEvent ) )
+		m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false )
 {
+	m_dragBeginPosition = updatedPosition( dragBeginEvent );
+
+	m_preciseMotionEnabled = dragBeginEvent.modifiers & ModifiableEvent::Shift;
+	m_preciseMotionOrigin = m_dragBeginPosition;
 }
 
 float Handle::LinearDrag::startPosition() const
@@ -239,7 +247,7 @@ float Handle::LinearDrag::startPosition() const
 	return m_dragBeginPosition;
 }
 
-float Handle::LinearDrag::position( const DragDropEvent &event ) const
+float Handle::LinearDrag::updatedPosition( const DragDropEvent &event )
 {
 	const ViewportGadget *viewport = m_gadget->ancestor<ViewportGadget>();
 
@@ -275,19 +283,48 @@ float Handle::LinearDrag::position( const DragDropEvent &event ) const
 			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
 		);
 
-	return m_worldLine.direction().dot( worldClosestPoint - m_worldLine.p0 ) / m_worldLine.length2();
+	float position = m_worldLine.direction().dot( worldClosestPoint - m_worldLine.p0 ) / m_worldLine.length2();
+
+	if( m_processModifiers )
+	{
+		// Factor in precision motion, in which we scale down motion after the
+		// key was held by a factor of 10, which means relative to the position
+		// at that time.
+		//
+		const bool shiftHeld = event.modifiers & ModifiableEvent::Shift;
+
+		// If this is the first time we've seen an event where precise motion is
+		// enabled, then we need to store the position at this time.
+		if( !m_preciseMotionEnabled && shiftHeld )
+		{
+			m_preciseMotionOrigin = position;
+		}
+		m_preciseMotionEnabled = shiftHeld;
+
+		if( m_preciseMotionEnabled )
+		{
+			position = m_preciseMotionOrigin + ( ( position - m_preciseMotionOrigin ) * 0.1f );
+		}
+	}
+
+	return position;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // PlanarDrag
 //////////////////////////////////////////////////////////////////////////
 
-Handle::PlanarDrag::PlanarDrag()
-	:	m_gadget( nullptr )
+Handle::PlanarDrag::PlanarDrag( bool processModifiers )
+	:	m_gadget( nullptr ),
+		m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false ),
+		m_preciseMotionOrigin( 0 )
 {
 }
 
-Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent )
+Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent, bool processModifiers )
+	:	m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false )
 {
 	const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
 	const M44f cameraTransform = viewport->getCameraTransform();
@@ -310,7 +347,9 @@ Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragB
 	);
 }
 
-Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
+Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent, bool processModifiers )
+	:	m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false )
 {
 	init( gadget, origin, axis0, axis1, dragBeginEvent );
 }
@@ -330,7 +369,7 @@ Imath::V2f Handle::PlanarDrag::startPosition() const
 	return m_dragBeginPosition;
 }
 
-Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
+Imath::V2f Handle::PlanarDrag::updatedPosition( const DragDropEvent &event )
 {
 	Line3f worldLine(
 		event.line.p0 * m_gadget->fullTransform(),
@@ -348,10 +387,29 @@ Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
 	// and returning the length of the projection as a proportion
 	// of the axis length.
 
-	return V2f(
+	V2f position = V2f(
 		m_worldAxis0.dot( worldIntersection - m_worldOrigin ) / m_worldAxis0.length2(),
 		m_worldAxis1.dot( worldIntersection - m_worldOrigin ) / m_worldAxis1.length2()
 	);
+
+	if( m_processModifiers )
+	{
+		const bool shiftHeld = event.modifiers & ModifiableEvent::Shift;
+		// If this is the first time we've seen an event where precise motion is
+		// enabled, then we need to store the position at this time.
+		if( !m_preciseMotionEnabled && shiftHeld )
+		{
+			m_preciseMotionOrigin = position;
+		}
+		m_preciseMotionEnabled = shiftHeld;
+
+		if( m_preciseMotionEnabled )
+		{
+			position = m_preciseMotionOrigin + ( ( position - m_preciseMotionOrigin ) * 0.1f );
+		}
+	}
+
+	return position;
 }
 
 void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
@@ -363,6 +421,10 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 	m_worldOrigin = origin * transform;
 	transform.multDirMatrix( axis0, m_worldAxis0 );
 	transform.multDirMatrix( axis1, m_worldAxis1 );
-	m_dragBeginPosition = position( dragBeginEvent );
+
+	m_dragBeginPosition = updatedPosition( dragBeginEvent );
+
+	m_preciseMotionEnabled = dragBeginEvent.modifiers & ModifiableEvent::Shift;
+	m_preciseMotionOrigin = m_dragBeginPosition;
 }
 

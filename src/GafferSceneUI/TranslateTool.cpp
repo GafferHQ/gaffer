@@ -243,10 +243,10 @@ IECore::RunTimeTypedPtr TranslateTool::handleDragBegin()
 	return nullptr; // let the handle start the drag with the event system
 }
 
-bool TranslateTool::handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+bool TranslateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const V3f translation = static_cast<const TranslateHandle *>( gadget )->translation( event );
+	const V3f translation = static_cast<TranslateHandle *>( gadget )->translation( event );
 	for( const auto &t : m_drag )
 	{
 		t.apply( translation );

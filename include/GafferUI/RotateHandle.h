@@ -65,7 +65,7 @@ class GAFFERUI_API RotateHandle : public Handle
 		Imath::V3i axisMask() const;
 
 		// Measured in radians
-		Imath::Eulerf rotation( const DragDropEvent &event ) const;
+		Imath::Eulerf rotation( const DragDropEvent &event );
 
 	protected :
 

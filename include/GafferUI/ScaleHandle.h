@@ -61,7 +61,7 @@ class GAFFERUI_API ScaleHandle : public Handle
 		// scaling in that axis.
 		Imath::V3i axisMask() const;
 
-		Imath::V3f scaling( const DragDropEvent &event ) const;
+		Imath::V3f scaling( const DragDropEvent &event );
 
 	protected :
 

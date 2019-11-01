@@ -12,12 +12,21 @@ Improvements
 - View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
 - AnimationEditor : Changed the modifier key used to enable single-axis zoom has changed to <kbd>Ctrl</kbd> to allow use in conjunction with precise movement mode (<kbd>Shift</kbd>) (#3324).
 - Error handling : The Cortex exception type is now included in error messages where relevant.
+- Tools :
+  - Added generic support for precise tool adjustments by holding down <kbd>Shift</kbd> whilst adjusting tool handles (#3324).
+  - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
 
 Fixes
 -----
 
 - Resize : Fixed bug which caused unwanted image distortion when changing pixel aspect ratio.
 - Launch : Fixed bug which prevented gaffer launching when stored on case destroying file systems (#3477).
+
+API
+---
+
+- Handle :
+  - Added an optional `processModifiers` argument to drag constructors that allows the built-in precision mode handling to be disabled (#3324).
 
 Breaking Changes
 ----------------
@@ -30,6 +39,7 @@ Breaking Changes
 - ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
 - ViewportGadget : Added private members, ABI break only - source compatibility is maintained (#3324).
+- Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods loose `const`-ness accordingly.
 
 0.55.2.0 (relative to 0.55.1.0)
 ========

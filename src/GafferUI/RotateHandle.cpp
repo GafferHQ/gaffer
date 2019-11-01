@@ -132,7 +132,7 @@ Imath::V3i RotateHandle::axisMask() const
 	}
 }
 
-Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event ) const
+Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event )
 {
 	if( m_axes == Style::XYZ )
 	{
@@ -147,24 +147,18 @@ Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event ) const
 			Quatf interpolated = slerpShortestArc( Quatf(), q, 0.1f );
 			e.extract( interpolated );
 		}
-
 		return e;
 	}
 
-	float rotate = ( closestRotation( m_drag.position( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f ) );
+	float rotate = ( closestRotation( m_drag.updatedPosition( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f ) );
 
-	// snap to 30 degree increments
+	// snap
 	if( event.modifiers & ButtonEvent::Control )
 	{
-		float piOverSix = M_PI / 6.0;
-		rotate /= piOverSix;
-		rotate = std::round( rotate ) * piOverSix;
-	}
-
-	// precision mode
-	if( event.modifiers & ButtonEvent::Shift )
-	{
-		rotate *= 0.1;
+		// Offset such that it behaves like round not floor.
+		const float snapIncrement = event.modifiers & ButtonEvent::Shift ? ( M_PI / 60.0f ) : ( M_PI / 6.0f );
+		const float snapOffset = snapIncrement * 0.5f;
+		rotate = rotate - fmodf( rotate - snapOffset, snapIncrement ) + snapOffset;
 	}
 
 	switch( m_axes )
@@ -225,7 +219,7 @@ bool RotateHandle::dragMove( const DragDropEvent &event )
 		// that our drag gives us, but we want to be able to support continuous
 		// values and multiple revolutions. Here we keep track of the current rotation
 		// position so that we can adjust correctly in `RotateHandle::rotation()`.
-		m_rotation = closestRotation( m_drag.position( event ), m_rotation );
+		m_rotation = closestRotation( m_drag.updatedPosition( event ), m_rotation );
 	}
 	return false;
 }

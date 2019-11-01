@@ -96,13 +96,13 @@ Imath::V3i ScaleHandle::axisMask() const
 	}
 }
 
-Imath::V3f ScaleHandle::scaling( const DragDropEvent &event ) const
+Imath::V3f ScaleHandle::scaling( const DragDropEvent &event )
 {
 	float scale = 1;
 
 	if( m_axes != Style::XYZ )
 	{
-		scale = ( m_drag.position( event ) / m_drag.startPosition() - 1 );
+		scale = ( m_drag.updatedPosition( event ) / m_drag.startPosition() - 1 );
 	}
 	else
 	{
@@ -112,16 +112,13 @@ Imath::V3f ScaleHandle::scaling( const DragDropEvent &event ) const
 		scale *= 3;
 	}
 
-	// snap to integers
+	// snap
 	if( event.modifiers & ButtonEvent::Control )
 	{
-		scale = std::round( scale );
-	}
-
-	// precision mode
-	if( event.modifiers & ButtonEvent::Shift )
-	{
-		scale *= 0.1;
+		// Offset such that it behaves like round not floor.
+		const float snapIncrement = event.modifiers & ButtonEvent::Shift ? 0.1f : 1.0f;
+		const float snapOffset = snapIncrement * 0.5f;
+		scale = scale - fmodf( scale - snapOffset, snapIncrement ) + snapOffset;
 	}
 
 	scale = 1 + scale;
