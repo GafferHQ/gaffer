@@ -88,6 +88,9 @@ class GAFFERUI_API Handle : public Gadget
 		{
 
 			LinearDrag( bool processModifiers = true );
+			// Line is parallel to the camera plane, centered on gadget, and
+			// with unit length axes in gadget space.
+			LinearDrag( const Gadget *gadget, const Imath::V2f &line, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 			// Line is specified in Gadget space.
 			LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 

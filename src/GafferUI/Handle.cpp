@@ -227,6 +227,34 @@ Handle::LinearDrag::LinearDrag( bool processModifiers )
 {
 }
 
+Handle::LinearDrag::LinearDrag( const Gadget *gadget, const Imath::V2f &line, const DragDropEvent &dragBeginEvent, bool processModifiers )
+	:   m_gadget( gadget ),
+		m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false )
+{
+	// We need an axis in world space, derived from the supplied camera space
+	// line, normalized in gadget space...(!)
+	const M44f gadgetTransform = gadget->fullTransform();
+
+	const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
+	const M44f cameraToGadget = viewport->getCameraTransform() * gadgetTransform.inverse();
+
+	V3f gadgetAxis;
+	cameraToGadget.multDirMatrix( V3f( line.x, line.y, 0 ), gadgetAxis );
+	gadgetAxis.normalize();
+
+	V3f worldAxis;
+	gadgetTransform.multDirMatrix( gadgetAxis, worldAxis );
+
+	const V3f worldOrigin =  V3f( 0 ) * gadgetTransform;
+	m_worldLine = LineSegment3f( worldOrigin, worldOrigin + worldAxis );
+
+	m_dragBeginPosition = updatedPosition( dragBeginEvent );
+
+	m_preciseMotionEnabled = dragBeginEvent.modifiers & ModifiableEvent::Shift;
+	m_preciseMotionOrigin = m_dragBeginPosition;
+}
+
 Handle::LinearDrag::LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent, bool processModifiers )
 	:	m_gadget( gadget ),
 		m_worldLine(

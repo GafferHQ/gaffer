@@ -27,6 +27,7 @@ API
 
 - Handle :
   - Added an optional `processModifiers` argument to drag constructors that allows the built-in precision mode handling to be disabled (#3324).
+  - Added a convenience constructor for `LinearDrag` that creates a drag in an arbitrary direction on the camera plane (#3324).
 
 Breaking Changes
 ----------------
