@@ -1904,6 +1904,14 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times, const AtString matrixParameterName = g_matrixArnoldString )
 		{
+			const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), matrixParameterName );
+			if( AiParamGetType( parameter ) != AI_TYPE_ARRAY )
+			{
+				// Parameter doesn't support motion blur
+				applyTransform( node, samples[0], matrixParameterName );
+				return;
+			}
+
 			const size_t numSamples = samples.size();
 			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
 			for( size_t i = 0; i < numSamples; ++i )
