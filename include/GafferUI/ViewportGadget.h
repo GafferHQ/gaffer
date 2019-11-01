@@ -244,6 +244,9 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void updateGadgetUnderMouse( const ButtonEvent &event );
 		void emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event );
 
+		void updateMotionState( const DragDropEvent &event, bool initialEvent = false );
+		Imath::V2f motionPositionFromEvent( const DragDropEvent &event ) const;
+
 		GadgetPtr updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event );
 
 		void trackDrag( const DragDropEvent &event );
@@ -259,6 +262,10 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		std::unique_ptr<CameraController> m_cameraController;
 		bool m_cameraInMotion;
 		bool m_cameraEditable;
+
+		bool m_preciseMotionEnabled;
+		Imath::V2f m_motionSegmentOrigin;
+		Imath::V2f m_motionSegmentEventOrigin;
 
 		GadgetPtr m_lastButtonPressGadget;
 		GadgetPtr m_gadgetUnderMouse;

@@ -9,7 +9,8 @@ Improvements
   - Organised UI into sections.
   - Added better defaults for the `orientation` and `scale` plugs.
 - OSLObject : Added non-uniform scale to standard primitive variable menu.
- - View navigation : Holding down <kbd>Shift</kbd> whilst using the scroll wheel in the Viewer and other Editors to adjust the camera or view magnification results in more precise adjustments (#3324).
+- View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
+- AnimationEditor : Changed the modifier key used to enable single-axis zoom has changed to <kbd>Ctrl</kbd> to allow use in conjunction with precise movement mode (<kbd>Shift</kbd>) (#3324).
 - Error handling : The Cortex exception type is now included in error messages where relevant.
 
 Fixes
@@ -28,6 +29,7 @@ Breaking Changes
 - OSLObject : Removed support for the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable.
 - ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
+- ViewportGadget : Added private members, ABI break only - source compatibility is maintained (#3324).
 
 0.55.2.0 (relative to 0.55.1.0)
 ========
