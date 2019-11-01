@@ -102,14 +102,19 @@ Imath::V3f ScaleHandle::scaling( const DragDropEvent &event )
 
 	if( m_axes != Style::XYZ )
 	{
-		scale = ( m_drag.updatedPosition( event ) / m_drag.startPosition() - 1 );
+		// When performing per-axis scale, the user has clicked and dragged a
+		// handle. This means the start position is far enough away from the
+		// origin that we can treat the click point as scale=1 and the gadget's
+		// origin as scale=0.
+		scale = m_drag.updatedPosition( event ) / m_drag.startPosition() - 1;
 	}
 	else
 	{
-		const ViewportGadget *viewport = ancestor<ViewportGadget>();
-		const V2f p = viewport->gadgetToRasterSpace( event.line.p1, this );
-		scale = ( p.x - m_uniformDragStartPosition.x ) / (float)viewport->getViewport().x;
-		scale *= 3;
+		// When performing uniform scales, the handle is at the origin, so the
+		// pattern we use above gets very twitchy. We instead need to treat the
+		// click point as scale=1 and relative movement in +ve x as a scale
+		// increase and anything in -ve x as a scale decrease.
+		scale = m_drag.updatedPosition( event ) - m_drag.startPosition();
 	}
 
 	// snap
@@ -174,9 +179,7 @@ void ScaleHandle::dragBegin( const DragDropEvent &event )
 		case Style::YZ :
 			m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( 0, 1, 1 ) ), event );
 			break;
-		case Style::XYZ : {
-			const ViewportGadget *viewport = ancestor<ViewportGadget>();
-			m_uniformDragStartPosition = viewport->gadgetToRasterSpace( event.line.p1, this );
-		}
+		case Style::XYZ :
+			m_drag = LinearDrag( this, V2f( 1, 0 ), event );
 	}
 }
