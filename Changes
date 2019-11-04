@@ -1,3 +1,11 @@
+0.55.0.1 (relative to 0.55.0.0)
+========
+
+Fixes
+-----
+
+- RotateTool : When using targeted mode, the tool no longer introduces arbitrary rotation around the z-axis.
+
 0.55.0.0
 ========
 

@@ -291,16 +291,17 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 	{
 		Context::Scope scopedContext( s.context.get() );
 
-		V3f currentYAxis, currentZAxis;
+		V3f currentZAxis;
 		const M44f worldTransform = s.scene->fullTransform( s.path );
-		worldTransform.multDirMatrix( V3f( 0.0f, 1.0f, 0.0f ), currentYAxis );
 		worldTransform.multDirMatrix( V3f( 0.0f, 0.0f, -1.0f ), currentZAxis );
+		currentZAxis.normalize();
 
-		const V3f targetZAzis = targetPos - ( V3f( 0.0f ) * worldTransform );
+		const V3f targetZAxis = ( targetPos - ( V3f( 0.0f ) * worldTransform ) ).normalized();
 
-		M44f reorientationMatrix = rotationMatrixWithUpDir(
-			currentZAxis, targetZAzis, currentYAxis
-		);
+		// Note: despite rotationMatrixWithUpDir using the current Y axis
+		// sounding like a better option, it actually introduces arbitrary
+		// rotations in z, which we never got to the bottom of.
+		M44f reorientationMatrix = rotationMatrix( currentZAxis, targetZAxis );
 
 		V3f offset;
 		extractEulerXYZ( reorientationMatrix, offset );
