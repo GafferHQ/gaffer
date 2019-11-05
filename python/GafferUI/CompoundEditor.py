@@ -75,6 +75,8 @@ class CompoundEditor( GafferUI.Editor ) :
 			for panelArgs in detachedPanels  :
 				self._createDetachedPanel( **panelArgs )
 
+		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ), scoped=False )
+
 	# Returns the editor of the specified type that the user is currently
 	# interested in. This takes into account detached panels and window
 	# ordering such that when the keyboard focus is with an editor of the
@@ -195,6 +197,14 @@ class CompoundEditor( GafferUI.Editor ) :
 		v = self.visible()
 		for p in self.__detachedPanels :
 			p.setVisible( v )
+
+	def __parentChanged( self, widget ) :
+
+		# Make sure we have the correct keyboard shortcut listeners
+		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
+		if scriptWindow is not None :
+			for panel in self._detachedPanels() :
+				scriptWindow.menuBar().addShortcutTarget( panel )
 
 	def __repr__( self ) :
 
