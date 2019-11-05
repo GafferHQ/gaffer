@@ -15,6 +15,7 @@ Fixes
 - GraphComponent : Fixed bug that allowed construction with an invalid name (#3436).
 - Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
 - Rotate/TranslateTool : Fixed a potential crash if targeted mode was used with an empty selection.
+- RotateTool : Fixed a bug when applying targeted mode rotations that introduced arbitrary roll around the z-axis (#3439).
 - TabbedContainer : Fixed a bug that caused an exception when the last tab in a container was closed.
 - ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
 - GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
