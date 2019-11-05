@@ -150,6 +150,8 @@ Gaffer.Metadata.registerNode(
 			before instancing.
 			""",
 
+			"userDefault", "orientation",
+
 		],
 
 		"scale" : [
@@ -161,6 +163,8 @@ Gaffer.Metadata.registerNode(
 			provided as a float for uniform scaling, or as a vector
 			to define different scaling in each axis.
 			""",
+
+			"userDefault", "scale",
 
 		],
 
