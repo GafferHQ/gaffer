@@ -84,11 +84,11 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 			Rotation( const Selection &selection, Orientation orientation );
 
 			bool canApply( const Imath::V3i &axisMask ) const;
-			void apply( const Imath::Eulerf &rotation ) const;
+			void apply( const Imath::Eulerf &rotation, bool relative = true ) const;
 
 			private :
 
-				Imath::V3f updatedRotateValue( const Imath::Eulerf &rotation, Imath::V3f *currentValue = nullptr ) const;
+				Imath::V3f updatedRotateValue( const Imath::Eulerf &rotation, bool relative = true, Imath::V3f *currentValue = nullptr ) const;
 
 				Gaffer::V3fPlugPtr m_plug;
 				Imath::Eulerf m_originalRotation; // Radians
