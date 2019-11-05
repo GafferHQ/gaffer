@@ -297,7 +297,6 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 		const M44f worldParentTransform = s.scene->fullTransform( parentPath );
 		const M44f worldParentTransformInverse = worldParentTransform.inverse();
-
 		const M44f localTransform = s.scene->transform( s.path );
 
 		V3f currentYAxis;
@@ -310,9 +309,20 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 			V3f( 0.0f, 0.0f, -1.0f ), targetZAxis, currentYAxis
 		);
 
+		// We now have the desired local space orientation matrix, and we want to set the rotation to match this.
+		// This means we want the value of "m" computed in apply() to be equal to orientationMatrix.
+		// Because there is no way to call apply without it composing with the existing rotation, we now
+		// need to pre-invert the existing rotation.
+
+		V3f originalRotation = degreesToRadians( s.transformPlug->rotatePlug()->getValue() );
+		M44f m;
+		m.rotate( originalRotation );
+
+		M44f relativeMatrix = m.inverse() * orientationMatrix;
+
 		V3f e;
-		extractEulerXYZ( orientationMatrix, e );
-		Rotation( s, World ).apply( e, false );
+		extractEulerXYZ( relativeMatrix, e );
+		Rotation( s, Parent ).apply( e );
 	}
 
 	return true;
@@ -338,7 +348,7 @@ RotateTool::Rotation::Rotation( const Selection &selection, Orientation orientat
 bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 {
 	Imath::V3f current;
-	const Imath::V3f updated = updatedRotateValue( V3f( axisMask ), true, &current );
+	const Imath::V3f updated = updatedRotateValue( V3f( axisMask ), &current );
 	for( int i = 0; i < 3; ++i )
 	{
 		if( updated[i] == current[i] )
@@ -354,9 +364,9 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 	return true;
 }
 
-void RotateTool::Rotation::apply( const Imath::Eulerf &rotation, bool relative ) const
+void RotateTool::Rotation::apply( const Imath::Eulerf &rotation ) const
 {
-	const Imath::V3f e = updatedRotateValue( rotation, relative );
+	const Imath::V3f e = updatedRotateValue( rotation );
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *p = m_plug->getChild( i );
@@ -367,28 +377,19 @@ void RotateTool::Rotation::apply( const Imath::Eulerf &rotation, bool relative )
 	}
 }
 
-Imath::V3f RotateTool::Rotation::updatedRotateValue( const Imath::Eulerf &rotation, bool relative, Imath::V3f *currentValue ) const
+Imath::V3f RotateTool::Rotation::updatedRotateValue( const Imath::Eulerf &rotation, Imath::V3f *currentValue ) const
 {
-	Eulerf e;
-	if( relative )
-	{
-		// Convert the rotation into the space of the
-		// upstream transform.
-		Quatf q = rotation.toQuat();
-		V3f transformSpaceAxis;
-		m_gadgetToTransform.multDirMatrix( q.axis(), transformSpaceAxis );
-		q.setAxisAngle( transformSpaceAxis, q.angle() );
+	// Convert the rotation into the space of the
+	// upstream transform.
+	Quatf q = rotation.toQuat();
+	V3f transformSpaceAxis;
+	m_gadgetToTransform.multDirMatrix( q.axis(), transformSpaceAxis );
+	q.setAxisAngle( transformSpaceAxis, q.angle() );
 
-		// Compose it with the original.
+	// Compose it with the original.
 
-		M44f m = q.toMatrix44();
-		m.rotate( m_originalRotation );
-		e.extract( m );
-	}
-	else
-	{
-		e = rotation;
-	}
+	M44f m = q.toMatrix44();
+	m.rotate( m_originalRotation );
 
 	// Convert to the euler angles closest to
 	// those we currently have.
@@ -399,6 +400,7 @@ Imath::V3f RotateTool::Rotation::updatedRotateValue( const Imath::Eulerf &rotati
 		*currentValue = current;
 	}
 
+	Eulerf e; e.extract( m );
 	e.makeNear( degreesToRadians( current ) );
 
 	return radiansToDegrees( V3f( e ) );
