@@ -265,6 +265,7 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 	if( event.buttons != ButtonEvent::Left
 		|| !activePlug()->getValue()
 		|| !getTargetedMode()
+		|| selection().size() == 0
 	) {
 		return false;
 	}
