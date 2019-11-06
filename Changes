@@ -4,6 +4,10 @@
 Fixes
 -----
 
+- ArnoldLightFilter : Fixed bug which caused animated light blockers to lose their transform.
+- NodeEditor : Fixed bug that allowed drag and drop to create unwanted input connections to output plugs.
+- GraphComponent : Fixed bug that allowed construction with an invalid name (#3436).
+- Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
 - Rotate/TranslateTool : Fixed a potential crash if targeted mode was used with an empty selection.
 
 0.55.0.0
