@@ -90,19 +90,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"instances" : [
+		"prototypes" : [
 
 			"description",
 			"""
-			The scene containing the instances to be applied to
-			each vertex. Specify multiple instances by parenting
+			The scene containing the prototypes to be applied to
+			each vertex. Specify multiple prototypes by parenting
 			them at the root of the scene :
 
-			- /instance0
-			- /instance1
-			- /instance2
+			- /prototype0
+			- /prototype1
+			- /prototype2
 
-			Note that the instances are not limited to being a
+			Note that the prototypes are not limited to being a
 			single object : they can each have arbitrary child
 			hierarchies.
 			""",
@@ -111,17 +111,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"index" : [
+		"prototypeIndex" : [
 
 			"description",
 			"""
 			The name of a per-vertex integer primitive variable
-			used to determine which instance is applied to the
+			used to determine which prototype is applied to the
 			vertex. An index of 0 applies the first location from
-			the instances scene, an index of 1 applies the second
+			the prototypes scene, an index of 1 applies the second
 			and so on.
 			""",
 
+			"userDefault", "prototypeIndex",
 			"layout:section", "Settings.General",
 
 		],
