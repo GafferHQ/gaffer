@@ -287,7 +287,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		sphereInstancer = GafferScene.Instancer()
 		sphereInstancer["in"].setInput( spherePlane["out"] )
-		sphereInstancer["instances"].setInput( sphere["out"] )
+		sphereInstancer["prototypes"].setInput( sphere["out"] )
 		sphereInstancer["parent"].setValue( "/spheres" )
 
 		# Make a bunch of lights
@@ -300,7 +300,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		lightInstancer = GafferScene.Instancer()
 		lightInstancer["in"].setInput( lightPlane["out"] )
-		lightInstancer["instances"].setInput( light["out"] )
+		lightInstancer["prototypes"].setInput( light["out"] )
 		lightInstancer["parent"].setValue( "/lights" )
 
 		# Make a single non-default light. This
