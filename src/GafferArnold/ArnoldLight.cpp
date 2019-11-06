@@ -116,7 +116,10 @@ IECoreScene::ShaderNetworkPtr ArnoldLight::computeLight( const Gaffer::Context *
 			/// This would avoid manually splicing in networks here, and would
 			/// generalise nicely to the other Light subclasses too.
 			IECore::ConstCompoundObjectPtr inputAttributes = shader->attributes();
-			const IECoreScene::ShaderNetwork *inputNetwork = inputAttributes->member<const IECoreScene::ShaderNetwork>( "ai:surface" );
+			IECoreScene::ShaderNetwork const *inputNetwork = inputAttributes->member<const IECoreScene::ShaderNetwork>( "ai:surface" );
+			if( !inputNetwork ) {
+				inputNetwork = inputAttributes->member<const IECoreScene::ShaderNetwork>( "osl:shader" );
+			}
 			if( !inputNetwork || !inputNetwork->size() )
 			{
 				continue;
