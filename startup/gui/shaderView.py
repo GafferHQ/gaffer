@@ -47,8 +47,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		result = GafferCycles.CyclesShaderBall()
 
+		# Reserve some cores for the rest of the UI
 		result["threads"]["enabled"].setValue( True )
-		result["threads"]["value"].setValue( 0 )
+		result["threads"]["value"].setValue( -3 )
 
 		return result
 

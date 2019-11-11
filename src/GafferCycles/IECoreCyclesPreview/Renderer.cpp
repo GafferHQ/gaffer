@@ -2535,6 +2535,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_deviceDirty = true;
 				return;
 			}
+			else if( name == g_threadsOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_sessionParams.threads = 0;
+				}
+				else if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+				{
+					auto threads = data->readable();
+					if( threads < 0 )
+						threads = max( ccl::system_cpu_thread_count() + threads, 1);
+					
+					m_sessionParams.threads = threads;
+				}
+				return;
+			}
 			else if( name == g_shadingsystemOptionName )
 			{
 				if( value == nullptr )
@@ -2614,7 +2630,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
 				OPTION_INT  (m_sessionParams, g_pixelSizeOptionName,                pixel_size);
-				OPTION_INT  (m_sessionParams, g_threadsOptionName,                  threads);
 				OPTION_BOOL (m_sessionParams, g_displayBufferLinearOptionName,      display_buffer_linear);
 				OPTION_BOOL (m_sessionParams, g_runDenoisingOptionName,             run_denoising);
 				OPTION_BOOL (m_sessionParams, g_writeDenoisingPassesOptionName,     write_denoising_passes);
