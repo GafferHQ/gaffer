@@ -425,6 +425,11 @@ class CyclesOutput : public IECore::RefCounted
 
 		void writeImage()
 		{
+			if( m_interactive )
+			{
+				IECore::msg( IECore::Msg::Debug, "CyclesRenderer::CyclesOutput", boost::format( "Skipping interactive output: \"%s\"." ) % m_name );
+				return;
+			}
 			if( !m_image )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Cannot write output: \"%s\"." ) % m_name );
@@ -570,18 +575,21 @@ class RenderCallback : public IECore::RefCounted
 
 			if( m_interactive )
 			{
-				const auto bIt = m_outputs.find( "Interactive/Beauty" );
-				if( bIt != m_outputs.end() )
+				for( auto &output : m_outputs )
 				{
-					const auto parameters = bIt->second->m_parameters;
-					const StringData *driverType = parameters->member<StringData>( "driverType", true );
-					m_displayDriver = DisplayDriver::create(
-						driverType->readable(),
-						displayWindow, 
-						dataWindow, 
-						channelNames,
-						parameters
-						);
+					if( output.second->m_type == "ieDisplay" && output.second->m_data == "rgba")
+					{
+						const auto parameters = output.second->m_parameters;
+						const StringData *driverType = parameters->member<StringData>( "driverType", true );
+						m_displayDriver = DisplayDriver::create(
+							driverType->readable(),
+							displayWindow,
+							dataWindow,
+							channelNames,
+							parameters
+							);
+						break;
+					}
 				}
 			}
 		}
@@ -2528,6 +2536,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_deviceDirty = true;
 				return;
 			}
+			else if( name == g_threadsOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_sessionParams.threads = 0;
+				}
+				else if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+				{
+					auto threads = data->readable();
+					if( threads < 0 )
+						threads = max( ccl::system_cpu_thread_count() + threads, 1);
+					
+					m_sessionParams.threads = threads;
+				}
+				return;
+			}
 			else if( name == g_shadingsystemOptionName )
 			{
 				if( value == nullptr )
@@ -2607,7 +2631,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
 				OPTION_INT  (m_sessionParams, g_pixelSizeOptionName,                pixel_size);
-				OPTION_INT  (m_sessionParams, g_threadsOptionName,                  threads);
 				OPTION_BOOL (m_sessionParams, g_displayBufferLinearOptionName,      display_buffer_linear);
 				OPTION_BOOL (m_sessionParams, g_runDenoisingOptionName,             run_denoising);
 				OPTION_BOOL (m_sessionParams, g_writeDenoisingPassesOptionName,     write_denoising_passes);

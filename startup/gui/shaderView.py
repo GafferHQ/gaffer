@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Alex Fuller. All rights reserved.
+#  Copyright (c) 2019, Murray Stevenson. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,23 @@
 #
 ##########################################################################
 
-__import__( "GafferScene" )
+import IECore
 
-from _GafferCycles import *
-from CyclesShaderBall import CyclesShaderBall
+import GafferSceneUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCycles" )
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferCycles
+	GafferSceneUI.ShaderView.registerRenderer( "ccl", GafferCycles.InteractiveCyclesRender )
+
+	def __cyclesShaderBall() :
+
+		result = GafferCycles.CyclesShaderBall()
+
+		# Reserve some cores for the rest of the UI
+		result["threads"]["enabled"].setValue( True )
+		result["threads"]["value"].setValue( -3 )
+
+		return result
+
+	GafferSceneUI.ShaderView.registerScene( "ccl", "Default", __cyclesShaderBall )
