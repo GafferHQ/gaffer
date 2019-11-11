@@ -48,6 +48,7 @@
 #include "IECoreGL/Exception.h"
 #include "IECoreGL/FrameBuffer.h"
 #include "IECoreGL/GL.h"
+#include "IECoreGL/Group.h"
 #include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
@@ -154,11 +155,13 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				CachedConverter::defaultCachedConverter()->convert( attributes )
 			);
 
+			IECoreGL::GroupPtr visGroup = nullptr;
+
 			IECoreGL::ConstStatePtr visualisationState;
-			m_visualisation = AttributeVisualiser::allVisualisations( attributes, visualisationState );
+			IECoreGL::ConstRenderablePtr attrVisualisation = AttributeVisualiser::allVisualisations( attributes, visualisationState );
 
 			IECoreGL::ConstStatePtr lightVisualisationState;
-			m_lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
+			IECoreGL::ConstRenderablePtr lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
 
 			if( visualisationState || lightVisualisationState )
 			{
@@ -176,6 +179,21 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				m_state = combinedState;
 			}
+
+			if( attrVisualisation || lightVisualisation )
+			{
+				visGroup = new IECoreGL::Group();
+				if( attrVisualisation )
+				{
+					visGroup->addChild( const_cast<IECoreGL::Renderable*>( attrVisualisation.get() ) );
+				}
+				if( lightVisualisation )
+				{
+					visGroup->addChild( const_cast<IECoreGL::Renderable*>( lightVisualisation.get() ) );
+				}
+			}
+
+			m_visualisation = visGroup;
 		}
 
 		const State *state() const
@@ -188,16 +206,10 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_visualisation.get();
 		}
 
-		const IECoreGL::Renderable *lightVisualisation() const
-		{
-			return m_lightVisualisation.get();
-		}
-
 	private :
 
 		ConstStatePtr m_state;
 		IECoreGL::ConstRenderablePtr m_visualisation;
-		IECoreGL::ConstRenderablePtr m_lightVisualisation;
 
 };
 
@@ -443,7 +455,7 @@ class OpenGLLight : public OpenGLObject
 
 		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const override
 		{
-			return attributes.lightVisualisation();
+			return attributes.visualisation();
 		}
 
 };
