@@ -425,6 +425,11 @@ class CyclesOutput : public IECore::RefCounted
 
 		void writeImage()
 		{
+			if( m_interactive )
+			{
+				IECore::msg( IECore::Msg::Debug, "CyclesRenderer::CyclesOutput", boost::format( "Skipping interactive output: \"%s\"." ) % m_name );
+				return;
+			}
 			if( !m_image )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Cannot write output: \"%s\"." ) % m_name );
@@ -570,18 +575,21 @@ class RenderCallback : public IECore::RefCounted
 
 			if( m_interactive )
 			{
-				const auto bIt = m_outputs.find( "Interactive/Beauty" );
-				if( bIt != m_outputs.end() )
+				for( auto &output : m_outputs )
 				{
-					const auto parameters = bIt->second->m_parameters;
-					const StringData *driverType = parameters->member<StringData>( "driverType", true );
-					m_displayDriver = DisplayDriver::create(
-						driverType->readable(),
-						displayWindow, 
-						dataWindow, 
-						channelNames,
-						parameters
-						);
+					if( output.second->m_type == "ieDisplay" && output.second->m_data == "rgba")
+					{
+						const auto parameters = output.second->m_parameters;
+						const StringData *driverType = parameters->member<StringData>( "driverType", true );
+						m_displayDriver = DisplayDriver::create(
+							driverType->readable(),
+							displayWindow,
+							dataWindow,
+							channelNames,
+							parameters
+							);
+						break;
+					}
 				}
 			}
 		}
