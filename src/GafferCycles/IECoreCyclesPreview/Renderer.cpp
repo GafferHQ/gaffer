@@ -2449,7 +2449,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
 			auto *film = m_scene->film;
-			auto *curveSystemManager = m_scene->curve_system_manager;
+			auto &curveSystemManager = *(m_scene->curve_system_manager);
+			auto &curveSystemManagerDefault = m_curveSystemManagerDefault;
 
 			if( name == g_frameOptionName )
 			{
@@ -2644,19 +2645,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
+			else if( boost::starts_with( name.string(), "ccl:curve:" ) )
 			{
-				OPTION_INT_C(m_curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
-				OPTION_INT_C(m_curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
-				OPTION_INT_C(m_curveSystemManager, g_curveLineMethod,             line_method, ccl::CurveLineMethod);
-				OPTION_INT_C(m_curveSystemManager, g_curveTriangleMethod,         triangle_method, ccl::CurveTriangleMethod);
-				OPTION_INT  (m_curveSystemManager, g_curveResolutionOptionType,   resolution);
-				OPTION_INT  (m_curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
+				OPTION_INT_C(curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
+				OPTION_INT_C(curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
+				OPTION_INT_C(curveSystemManager, g_curveLineMethod,             line_method, ccl::CurveLineMethod);
+				OPTION_INT_C(curveSystemManager, g_curveTriangleMethod,         triangle_method, ccl::CurveTriangleMethod);
+				OPTION_INT  (curveSystemManager, g_curveResolutionOptionType,   resolution);
+				OPTION_INT  (curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
 
-				OPTION_BOOL (m_curveSystemManager, g_useCurvesOptionType,           use_curves);
-				OPTION_BOOL (m_curveSystemManager, g_useEncasingOptionType,         use_encasing);
-				OPTION_BOOL (m_curveSystemManager, g_curveUseBackfacing,            use_backfacing);
-				OPTION_BOOL (m_curveSystemManager, g_useTangentNormalGeoOptionType, use_tangent_normal_geometry);
+				OPTION_BOOL (curveSystemManager, g_useCurvesOptionType,           use_curves);
+				OPTION_BOOL (curveSystemManager, g_useEncasingOptionType,         use_encasing);
+				OPTION_BOOL (curveSystemManager, g_curveUseBackfacing,            use_backfacing);
+				OPTION_BOOL (curveSystemManager, g_useTangentNormalGeoOptionType, use_tangent_normal_geometry);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
