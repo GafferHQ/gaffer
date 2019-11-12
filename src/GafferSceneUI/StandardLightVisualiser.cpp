@@ -69,7 +69,8 @@ using namespace IECoreGLPreview;
 namespace
 {
 
-Color3f g_lightWireframeColor = Color3f( 1.0f, 0.835f, 0.07f );
+const Color3f g_lightWireframeColor = Color3f( 1.0f, 0.835f, 0.07f );
+const Color4f g_lightWireframeColor4 = Color4f( g_lightWireframeColor.x, g_lightWireframeColor.y, g_lightWireframeColor.z, 1.0f );
 
 enum Axis { X, Y, Z };
 
@@ -491,6 +492,16 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 		}
+	}
+	else if( type && type->readable() == "mesh" )
+	{
+		// There isn't any meaningful place to draw anything for the mesh
+		// light, so instead we make the mesh outline visible and light coloured.
+		IECoreGL::StatePtr meshState = new IECoreGL::State( false );
+		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
+		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
+		meshState->add( new IECoreGL::OutlineColorStateComponent( g_lightWireframeColor4 ) );
+		state = meshState;
 	}
 	else
 	{
