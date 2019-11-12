@@ -135,6 +135,8 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		c = tc.currentChangedSignal().connect( s )
 		self.__current = None
 
+		self.failUnless( tc.getCurrent() is None )
+
 		b1 = GafferUI.Button()
 		tc.append( b1 )
 		self.failUnless( self.__current is b1 )
@@ -152,6 +154,10 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		tc.remove( b1 )
 		self.failUnless( self.__current is b2 )
 		self.failUnless( tc.getCurrent() is b2 )
+
+		tc.remove( b2 )
+		self.failUnless( self.__current is None )
+		self.failUnless( tc.getCurrent() is None )
 
 	def testDel( self ) :
 

@@ -24,6 +24,26 @@ Breaking Changes
 - Instancer : Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a
   config file.
 
+0.55.0.1 (relative to 0.55.0.0)
+========
+
+Improvements
+------------
+
+- Stats app : Added node compute counts to performanceMonitor script annotations.
+
+Fixes
+-----
+
+- ArnoldLightFilter : Fixed bug which caused animated light blockers to lose their transform.
+- NodeEditor : Fixed bug that allowed drag and drop to create unwanted input connections to output plugs.
+- GraphComponent : Fixed bug that allowed construction with an invalid name (#3436).
+- Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
+- Rotate/TranslateTool : Fixed a potential crash if targeted mode was used with an empty selection.
+- TabbedContainer : Fixed a bug that caused an exception when the last tab in a container was closed.
+- ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
+- GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
+
 0.55.0.0
 ========
 
@@ -157,6 +177,9 @@ Fixes
 - ArnoldLightFilter : Fixed bug which caused animated light blockers to lose their transform.
 - NodeEditor : Fixed bug that allowed drag and drop to create unwanted input connections to output plugs.
 - GraphComponent : Fixed bug that allowed construction with an invalid name (#3436).
+- Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
+- ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
+- GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
 
 0.54.2.1 (relative to 0.54.2.0)
 ========

@@ -337,6 +337,7 @@ class stats( Gaffer.Application ) :
 			if self.__performanceMonitor is not None :
 				Gaffer.MonitorAlgo.annotate( script, self.__performanceMonitor, Gaffer.MonitorAlgo.PerformanceMetric.TotalDuration )
 				Gaffer.MonitorAlgo.annotate( script, self.__performanceMonitor, Gaffer.MonitorAlgo.PerformanceMetric.HashCount )
+				Gaffer.MonitorAlgo.annotate( script, self.__performanceMonitor, Gaffer.MonitorAlgo.PerformanceMetric.ComputeCount )
 			if self.__contextMonitor is not None :
 				Gaffer.MonitorAlgo.annotate( script, self.__contextMonitor )
 

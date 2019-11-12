@@ -234,7 +234,8 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 	def __currentChanged( self, index ) :
 
-		self.__currentChangedSignal( self, self[index] )
+		current = self[index] if len(self) else None
+		self.__currentChangedSignal( self, current )
 
 	def __tabBarDragEnter( self, widget, event ) :
 
