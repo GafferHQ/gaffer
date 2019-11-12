@@ -317,7 +317,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instances"].setInput( sphere["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
 		instancer["parent"].setValue( "/plane" )
 
 		subTree = GafferScene.SubTree()

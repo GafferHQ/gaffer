@@ -51,6 +51,7 @@ _primitiveVariableNamesOptions = {
 	"N" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Normal ),
 	"velocity" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.Vector ),
 	"uv" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.UV ),
+	"scale" : IECore.V3fData( imath.V3f(1) ),
 	"width" : IECore.FloatData(),
 	"Cs" : IECore.Color3fData(),
 	"customInt" : IECore.IntData(),

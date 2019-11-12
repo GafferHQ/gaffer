@@ -59,7 +59,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane2["out"] )
 		instancer["parent"].setValue( "/plane" )
-		instancer["instances"].setInput( group["out"] )
+		instancer["prototypes"].setInput( group["out"] )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/group/*1/plane" ] ) )
@@ -478,7 +478,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instances"].setInput( sphere["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
 		instancer["parent"].setValue( "/plane" )
 
 		filter = GafferScene.PathFilter()

@@ -56,11 +56,11 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
-		ScenePlug *instancesPlug();
-		const ScenePlug *instancesPlug() const;
+		ScenePlug *prototypesPlug();
+		const ScenePlug *prototypesPlug() const;
 
-		Gaffer::StringPlug *indexPlug();
-		const Gaffer::StringPlug *indexPlug() const;
+		Gaffer::StringPlug *prototypeIndexPlug();
+		const Gaffer::StringPlug *prototypeIndexPlug() const;
 
 		Gaffer::StringPlug *idPlug();
 		const Gaffer::StringPlug *idPlug() const;
@@ -133,9 +133,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		IECore::ConstCompoundDataPtr instanceChildNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 		void instanceChildNamesHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
-		struct InstanceScope : public Gaffer::Context::EditableScope
+		struct PrototypeScope : public Gaffer::Context::EditableScope
 		{
-			InstanceScope( const Gaffer::Context *context, const ScenePath &branchPath );
+			PrototypeScope( const Gaffer::Context *context, const ScenePath &branchPath );
 		};
 
 		static size_t g_firstPlugIndex;

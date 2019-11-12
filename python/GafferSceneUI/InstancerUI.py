@@ -55,6 +55,10 @@ Gaffer.Metadata.registerNode(
 	scale. Note the target object will be removed from the scene.
 	""",
 
+	"layout:section:Settings.General:collapsed", False,
+	"layout:section:Settings.Transforms:collapsed", False,
+	"layout:section:Settings.Attributes:collapsed", False,
+
 	plugs = {
 
 		"parent" : [
@@ -67,7 +71,9 @@ Gaffer.Metadata.registerNode(
 			this object. This is ignored when a filter is
 			connected, in which case the filter specifies
 			multiple objects to make the instances from.
-			"""
+			""",
+
+			"layout:section", "Settings.General",
 
 		],
 
@@ -78,23 +84,25 @@ Gaffer.Metadata.registerNode(
 			The name of the location the instances will be
 			generated below. This will be parented directly
 			under the parent location.
-			"""
+			""",
+
+			"layout:section", "Settings.General",
 
 		],
 
-		"instances" : [
+		"prototypes" : [
 
 			"description",
 			"""
-			The scene containing the instances to be applied to
-			each vertex. Specify multiple instances by parenting
+			The scene containing the prototypes to be applied to
+			each vertex. Specify multiple prototypes by parenting
 			them at the root of the scene :
 
-			- /instance0
-			- /instance1
-			- /instance2
+			- /prototype0
+			- /prototype1
+			- /prototype2
 
-			Note that the instances are not limited to being a
+			Note that the prototypes are not limited to being a
 			single object : they can each have arbitrary child
 			hierarchies.
 			""",
@@ -103,16 +111,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"index" : [
+		"prototypeIndex" : [
 
 			"description",
 			"""
 			The name of a per-vertex integer primitive variable
-			used to determine which instance is applied to the
+			used to determine which prototype is applied to the
 			vertex. An index of 0 applies the first location from
-			the instances scene, an index of 1 applies the second
+			the prototypes scene, an index of 1 applies the second
 			and so on.
-			"""
+			""",
+
+			"userDefault", "prototypeIndex",
+			"layout:section", "Settings.General",
 
 		],
 
@@ -125,7 +136,9 @@ Gaffer.Metadata.registerNode(
 			is useful when points are added and removed over time,
 			as is often the case in a particle simulation. The
 			id is used to name the instance in the output scene.
-			"""
+			""",
+
+			"layout:section", "Settings.General",
 
 		],
 
@@ -136,6 +149,8 @@ Gaffer.Metadata.registerNode(
 			The name of the per-vertex primitive variable used
 			to specify the position of each instance.
 			""",
+
+			"layout:section", "Settings.Transforms",
 
 		],
 
@@ -150,6 +165,9 @@ Gaffer.Metadata.registerNode(
 			before instancing.
 			""",
 
+			"userDefault", "orientation",
+			"layout:section", "Settings.Transforms",
+
 		],
 
 		"scale" : [
@@ -161,6 +179,9 @@ Gaffer.Metadata.registerNode(
 			provided as a float for uniform scaling, or as a vector
 			to define different scaling in each axis.
 			""",
+
+			"userDefault", "scale",
+			"layout:section", "Settings.Transforms",
 
 		],
 
@@ -174,6 +195,8 @@ Gaffer.Metadata.registerNode(
 			standard wildcards.
 			""",
 
+			"layout:section", "Settings.Attributes",
+
 		],
 
 		"attributePrefix" : [
@@ -185,6 +208,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"userDefault", "user:",
+			"layout:section", "Settings.Attributes",
 
 		],
 

@@ -81,7 +81,7 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
 		instancer["parent"].setValue( "/plane" )
-		instancer["instances"].setInput( sphere["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
 
 		scenePathFilter = GafferScene.PathFilter()
 		scenePathFilter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/sphere/*" ] ) )

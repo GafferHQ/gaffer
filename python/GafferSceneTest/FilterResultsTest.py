@@ -133,7 +133,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		script["filter"] = GafferScene.PathFilter()
