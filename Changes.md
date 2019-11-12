@@ -4,6 +4,11 @@
 Improvements
 ------------
 
+- Instancer :
+  - Renamed `instances` plug to `prototypes` and `index` plug to `prototypeIndex`. This clarifies their meaning and matches the terminology used in USD.
+  - Organised UI into sections.
+  - Added better defaults for the `orientation` and `scale` plugs.
+- OSLObject : Added non-uniform scale to standard primitive variable menu.
  - View navigation : Holding down <kbd>Shift</kbd> whilst using the scroll wheel in the Viewer and other Editors to adjust the camera or view magnification results in more precise adjustments (#3324).
 
 Fixes
@@ -16,6 +21,8 @@ Breaking Changes
 
 - Resize : A bug fix means that results are changed significantly when changing pixel aspect
   ratios.
+- Instancer : Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a
+  config file.
 
 0.55.0.0
 ========
