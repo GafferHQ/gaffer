@@ -1,6 +1,11 @@
 0.55.0.1 (relative to 0.55.0.0)
 ========
 
+Improvements
+------------
+
+- Stats app : Added node compute counts to performanceMonitor script annotations.
+
 Fixes
 -----
 
