@@ -491,12 +491,15 @@ class GraphEditor( GafferUI.Editor ) :
 
 		# do what we need to do to keep our title up to date.
 
-		if graphGadget.getRoot().isSame( self.scriptNode() ) :
-			self.__rootNameChangedConnection = None
-			self.__rootParentChangedConnection = None
-		else :
-			self.__rootNameChangedConnection = graphGadget.getRoot().nameChangedSignal().connect( Gaffer.WeakMethod( self.__rootNameChanged ) )
-			self.__rootParentChangedConnection = graphGadget.getRoot().parentChangedSignal().connect( Gaffer.WeakMethod( self.__rootParentChanged ) )
+		self.__changeConnections = []
+
+		if not graphGadget.getRoot().isSame( self.scriptNode() ) :
+			# We have to track the root _and_ its ancestors
+			node = graphGadget.getRoot()
+			while node and not isinstance( node, Gaffer.ScriptNode ) :
+				self.__changeConnections.append( node.nameChangedSignal().connect( Gaffer.WeakMethod( self.__rootNameChanged ) ) )
+				self.__changeConnections.append( node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__rootParentChanged ) ) )
+				node = node.parent()
 
 		self.titleChangedSignal()( self )
 
@@ -504,10 +507,11 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.titleChangedSignal()( self )
 
-	def __rootParentChanged( self, root, oldParent ) :
+	def __rootParentChanged( self, node, oldParent ) :
 
-		# Root has been deleted.
-		self.graphGadget().setRoot( self.scriptNode() )
+		# This may be called for our root, or any of its parents
+		if node.parent() == None :
+			self.graphGadget().setRoot( self.scriptNode() )
 
 	def __preRender( self, viewportGadget ) :
 
