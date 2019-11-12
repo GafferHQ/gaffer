@@ -521,6 +521,16 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		meshState->add( new IECoreGL::OutlineColorStateComponent( g_lightWireframeColor4 ) );
 		state = meshState;
 	}
+	else if( type && type->readable() == "photometric" )
+	{
+		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
+		if( radius > 0 )
+		{
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
+		}
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+	}
 	else
 	{
 		// Treat everything else as a point light.

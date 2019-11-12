@@ -90,3 +90,11 @@ Gaffer.Metadata.registerValue( "ai:light:mesh_light", "intensityParameter", "int
 Gaffer.Metadata.registerValue( "ai:light:mesh_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ai:light:mesh_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "ai:light:mesh_light", "type", "mesh" )
+
+Gaffer.Metadata.registerValue( "ai:light:photometric_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ai:light:photometric_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ai:light:photometric_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ai:light:photometric_light", "radiusParameter", "radius" )
+# Most profiles generally shine down -y
+Gaffer.Metadata.registerValue( "ai:light:photometric_light", "visualiserOrientation", imath.M44f().rotate( imath.V3f( -0.5 * math.pi, 0 , 0 ) ) )
+Gaffer.Metadata.registerValue( "ai:light:photometric_light", "type", "photometric" )
