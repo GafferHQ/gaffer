@@ -92,9 +92,32 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( g.getTitle(), "Graph Editor" )
 
-		g.setTitle( "This is a test!" )
+		b1 = Gaffer.Box()
+		b2 = Gaffer.Box()
 
-		self.assertEqual( g.getTitle(), "This is a test!" )
+		s["a"] = b1
+		s["a"]["b"] = b2
+
+		self.__signalUpdatedTitle = g.getTitle()
+
+		def titleChangedHandler( widget ) :
+			self.__signalUpdatedTitle = widget.getTitle()
+		g.titleChangedSignal().connect( titleChangedHandler, scoped = False )
+
+		g.graphGadget().setRoot( b1 )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : a" )
+
+		g.graphGadget().setRoot( b2 )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : a / b" )
+
+		b1.setName( "c" )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : c / b" )
+
+		b2.setName( "d" )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : c / d" )
+
+		g.setTitle( "This is a test!" )
+		self.assertEqual( self.__signalUpdatedTitle, "This is a test!" )
 
 	def testAutomaticLayout( self ) :
 
@@ -134,6 +157,43 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( graphEditor.graphGadget().unpositionedNodeGadgets(), [] )
 		assertLower( graphEditor.graphGadget(), s["b"]["n3"], s["b"]["n2"] )
+
+	def testRootReparenting( self ) :
+
+		# This test deliberately keeps b alive to mimic
+		# the effects of an UndoScope or similar.
+
+		s = Gaffer.ScriptNode()
+		e = GafferUI.GraphEditor( s )
+
+		b = Gaffer.Box()
+		s["b"] = b
+
+		e.graphGadget().setRoot( b )
+		self.assertEqual( e.graphGadget().getRoot(), b )
+
+		s.removeChild( b )
+		self.assertEqual( e.graphGadget().getRoot(), s )
+
+		s["b"] = b
+		b["bb"] = Gaffer.Box()
+
+		e.graphGadget().setRoot( b["bb"] )
+		self.assertEqual( e.graphGadget().getRoot(), b["bb"] )
+
+		s.removeChild( b )
+		self.assertEqual( e.graphGadget().getRoot(), s )
+
+		# Test with actually deleted nodes too
+
+		s["b"] = b
+		e.graphGadget().setRoot( b["bb"] )
+		self.assertEqual( e.graphGadget().getRoot(), b["bb"] )
+
+		del b
+		del s["b"]
+
+		self.assertEqual( e.graphGadget().getRoot(), s )
 
 if __name__ == "__main__":
 	unittest.main()
