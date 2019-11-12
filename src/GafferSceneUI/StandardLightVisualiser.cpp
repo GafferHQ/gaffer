@@ -499,6 +499,17 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 	}
+	else if( type && type->readable() == "mesh" )
+	{
+		// There isn't any meaningful place to draw anything for the mesh light, so instead we make their wireframe always visible
+		// and change its color to our lovely yellow
+		IECoreGL::StatePtr meshState = new IECoreGL::State( false );
+
+		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
+		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
+
+		state = meshState;
+	}
 	else
 	{
 		// Treat everything else as a point light.
