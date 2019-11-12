@@ -112,5 +112,23 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		network = l["out"].attributes( "/light" )["ai:light"]
 		self.assertEqual( network.getShader( "sky" ).parameters["intensity"].value, 4 )
 
+	def testOSLShaderInputs( self ) :
+
+		l = GafferArnold.ArnoldLight()
+		l.loadShader( "skydome_light" )
+
+		c = GafferSceneTest.TestShader( "mockOSL" )
+		c["type"].setValue( "osl:shader" )
+
+		l["parameters"]["color"].setInput( c["out"] )
+
+		network = l["out"].attributes( "/light" )["ai:light"]
+		self.assertEqual(
+			network.inputConnections( network.getOutput().shader ),
+			[
+				network.Connection( ( "mockOSL", "" ), ( network.getOutput().shader, "color" ) )
+			]
+		)
+
 if __name__ == "__main__":
 	unittest.main()
