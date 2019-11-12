@@ -790,6 +790,9 @@ void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const 
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
+	GafferImage::Format format = FormatPlug::getDefaultFormat( context );
+	h.append( format.getDisplayWindow() );
+	h.append( format.getPixelAspect() );
 }
 
 GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
