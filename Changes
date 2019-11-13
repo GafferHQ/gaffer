@@ -10,6 +10,7 @@ Fixes
 - Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
 - ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
 - GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
+- ImageReader : Fixed bug which meant that changes to the default format were not respected.
 
 0.54.2.1 (relative to 0.54.2.0)
 ========
