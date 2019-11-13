@@ -9,6 +9,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed light filter visualisation.
 - ArnoldLightFilter : Fixed bug which caused animated light blockers to lose their transform.
 - NodeEditor : Fixed bug that allowed drag and drop to create unwanted input connections to output plugs.
 - GraphComponent : Fixed bug that allowed construction with an invalid name (#3436).

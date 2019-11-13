@@ -48,6 +48,7 @@
 #include "IECoreGL/Exception.h"
 #include "IECoreGL/FrameBuffer.h"
 #include "IECoreGL/GL.h"
+#include "IECoreGL/Group.h"
 #include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
@@ -159,6 +160,23 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			IECoreGL::ConstStatePtr lightVisualisationState;
 			m_lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
+
+			if( m_lightVisualisation && m_visualisation )
+			{
+				// Light filter visualisers are in `m_visualisation` and light visualisers are in
+				// `m_lightVisualisation`. Combine them both into `m_lightVisualisation` so that
+				// filters attached to light locations are drawn as expected.
+				/// \todo We don't really want light filters to be in `m_visualisation` because then
+				/// they can get inherited onto locations below the light and drawn in duplicate.
+				/// Move `GafferSceneUI::LightFilterVisualiser` to `IECoreGL::LightFilterVisualiser` so
+				/// we can separate filter visualisations out, and apply them only to lights and
+				/// light filters.
+				IECoreGL::GroupPtr group = new IECoreGL::Group;
+				// `const_pointer_cast` ok because group becomes const on assignment to `m_lightVisualisation`
+				group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_visualisation ) );
+				group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_lightVisualisation ) );
+				m_lightVisualisation = group;
+			}
 
 			if( visualisationState || lightVisualisationState )
 			{
