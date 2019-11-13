@@ -124,14 +124,14 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::ObjectPlug *enginePlug();
 		const Gaffer::ObjectPlug *enginePlug() const;
 
-		Gaffer::AtomicCompoundDataPlug *instanceChildNamesPlug();
-		const Gaffer::AtomicCompoundDataPlug *instanceChildNamesPlug() const;
+		Gaffer::AtomicCompoundDataPlug *prototypeChildNamesPlug();
+		const Gaffer::AtomicCompoundDataPlug *prototypeChildNamesPlug() const;
 
 		ConstEngineDataPtr engine( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 		void engineHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
-		IECore::ConstCompoundDataPtr instanceChildNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
-		void instanceChildNamesHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		IECore::ConstCompoundDataPtr prototypeChildNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
+		void prototypeChildNamesHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		struct PrototypeScope : public Gaffer::Context::EditableScope
 		{
