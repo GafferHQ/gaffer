@@ -38,6 +38,7 @@
 #include "Gaffer/Context.h"
 
 #include "IECore/SimpleTypedData.h"
+#include "IECore/VectorTypedData.h"
 
 #include "boost/lexical_cast.hpp"
 
@@ -480,6 +481,24 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 									static_cast<const IECore::IntData *>( d )->readable()
 								);
 								break;
+							case IECore::InternedStringVectorDataTypeId : {
+								// This is unashamedly tailored to the needs of GafferScene's `${scene:path}`
+								// variable. We could make this cleaner by adding a mechanism for registering custom
+								// formatters, but that would be overkill for this one use case.
+								const auto &v = static_cast<const IECore::InternedStringVectorData *>( d )->readable();
+								if( v.empty() )
+								{
+									result += "/";
+								}
+								else
+								{
+									for( const auto &x : v )
+									{
+										result += "/" + x.string();
+									}
+								}
+								break;
+							}
 							default :
 								break;
 						}
