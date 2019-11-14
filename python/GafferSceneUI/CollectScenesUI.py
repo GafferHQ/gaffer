@@ -56,6 +56,9 @@ Gaffer.Metadata.registerNode(
 	`rootNames[0]`.
 	""",
 
+	"ui:spreadsheet:activeRowNamesConnection", "rootNames",
+	"ui:spreadsheet:selectorContextVariablePlug", "rootNameVariable",
+
 	plugs = {
 
 		"rootNames" : [
