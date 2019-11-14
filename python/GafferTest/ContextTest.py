@@ -337,6 +337,14 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertTrue( c.hasSubstitutions( "${a}" ) )
 		self.assertTrue( c.hasSubstitutions( "###" ) )
 
+	def testInternedStringVectorDataSubstitutions( self ) :
+
+		c = Gaffer.Context()
+		c["test1"] = IECore.InternedStringVectorData( [ "a", "b" ] )
+		c["test2"] = IECore.InternedStringVectorData()
+		self.assertEqual( c.substitute( "${test1}" ), "/a/b" )
+		self.assertEqual( c.substitute( "${test2}" ), "/" )
+
 	def testNames( self ) :
 
 		c = Gaffer.Context()
