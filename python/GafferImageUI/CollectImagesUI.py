@@ -48,6 +48,9 @@ Gaffer.Metadata.registerNode(
 	Useful for networks that need to dynamically build an unknown number of image layers.
 	""",
 
+	"ui:spreadsheet:activeRowNamesConnection", "rootLayers",
+	"ui:spreadsheet:selectorContextVariablePlug", "layerVariable",
+
 	plugs = {
 
 		"in" : [
