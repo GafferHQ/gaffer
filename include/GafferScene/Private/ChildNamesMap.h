@@ -78,8 +78,6 @@ class ChildNamesMap : public IECore::Data
 
 	private :
 
-		IECore::InternedString output( const Input &input ) const;
-
 		const IECore::InternedStringVectorDataPtr m_childNames;
 
 		struct Child
