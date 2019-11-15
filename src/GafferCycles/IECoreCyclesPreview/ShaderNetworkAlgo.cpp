@@ -433,7 +433,14 @@ ccl::ShaderInput *input( ccl::ShaderNode *node, IECore::InternedString name )
 
 ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 {
+	// If the output connector has no explicit name, we pick the first output
+	if( name == "" )
+	{
+		return node->outputs.front();
+	}
+
 	ccl::ustring cname = ccl::ustring( name.c_str() );
+
 	for( ccl::ShaderOutput *socket : node->outputs )
 	{
 		if( socket->socket_type.name == cname )

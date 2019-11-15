@@ -426,6 +426,11 @@ class CyclesOutput : public IECore::RefCounted
 
 		void writeImage()
 		{
+			if( m_interactive )
+			{
+				IECore::msg( IECore::Msg::Debug, "CyclesRenderer::CyclesOutput", boost::format( "Skipping interactive output: \"%s\"." ) % m_name );
+				return;
+			}
 			if( !m_image )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Cannot write output: \"%s\"." ) % m_name );
@@ -571,18 +576,21 @@ class RenderCallback : public IECore::RefCounted
 
 			if( m_interactive )
 			{
-				const auto bIt = m_outputs.find( "Interactive/Beauty" );
-				if( bIt != m_outputs.end() )
+				for( auto &output : m_outputs )
 				{
-					const auto parameters = bIt->second->m_parameters;
-					const StringData *driverType = parameters->member<StringData>( "driverType", true );
-					m_displayDriver = DisplayDriver::create(
-						driverType->readable(),
-						displayWindow, 
-						dataWindow, 
-						channelNames,
-						parameters
-						);
+					if( output.second->m_type == "ieDisplay" && output.second->m_data == "rgba")
+					{
+						const auto parameters = output.second->m_parameters;
+						const StringData *driverType = parameters->member<StringData>( "driverType", true );
+						m_displayDriver = DisplayDriver::create(
+							driverType->readable(),
+							displayWindow,
+							dataWindow,
+							channelNames,
+							parameters
+							);
+						break;
+					}
 				}
 			}
 		}
@@ -648,7 +656,7 @@ class RenderCallback : public IECore::RefCounted
 			if(!buffers->copy_from_device())
 				return;
 
-			//float exposure = m_session->scene->film->exposure;
+			const float exposure = m_session->scene->film->exposure;
 
 			const int numOutputChannels = m_interactive ? m_displayDriver->channelNames().size() : 1;
 
@@ -678,13 +686,13 @@ class RenderCallback : public IECore::RefCounted
 				int numChannels = output.second->m_components;
 				if( output.second->m_passType != ccl::PASS_NONE )
 				{
-					read = buffers->get_pass_rect( output.second->m_passType, 0.5f, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
+					read = buffers->get_pass_rect( output.second->m_passType, exposure, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
 				}
 				else
 				{
 					if( output.second->m_denoisingPassOffsets >= 0 )
 					{
-						read = buffers->get_denoising_pass_rect( output.second->m_denoisingPassOffsets, 0.5f, sample, numChannels, &tileData[0] );
+						read = buffers->get_denoising_pass_rect( output.second->m_denoisingPassOffsets, exposure, sample, numChannels, &tileData[0] );
 					}
 				}
 
@@ -814,19 +822,13 @@ class ShaderCache : public IECore::RefCounted
 					ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
 					vecMath->type = ccl::NODE_VECTOR_MATH_DOT_PRODUCT;
 					ccl::GeometryNode *geo = new ccl::GeometryNode();
-					ccl::MathNode *math = new ccl::MathNode();
-					math->type = ccl::NODE_MATH_MULTIPLY;
-					math->value2 = 2.0f;
 					ccl::ShaderNode *vecMathNode = cshader->graph->add( (ccl::ShaderNode*)vecMath );
 					ccl::ShaderNode *geoNode = cshader->graph->add( (ccl::ShaderNode*)geo );
-					ccl::ShaderNode *mathNode = cshader->graph->add( (ccl::ShaderNode*)math );
 					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "normal" ), 
 											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
 					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "incoming" ), 
 											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
 					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( vecMathNode, "value" ), 
-											 IECoreCycles::ShaderNetworkAlgo::input( mathNode, "value1" ) );
-					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( mathNode, "value" ), 
 											 IECoreCycles::ShaderNetworkAlgo::input( outputNode, "surface" ) );
 					a->second = SharedCShaderPtr( cshader );
 				}
@@ -2460,7 +2462,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
 			auto *film = m_scene->film;
-			auto *curveSystemManager = m_scene->curve_system_manager;
+			auto &curveSystemManager = *(m_scene->curve_system_manager);
+			auto &curveSystemManagerDefault = m_curveSystemManagerDefault;
 
 			if( name == g_frameOptionName )
 			{
@@ -2536,6 +2539,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
 				}
 				m_deviceDirty = true;
+				return;
+			}
+			else if( name == g_threadsOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_sessionParams.threads = 0;
+				}
+				else if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+				{
+					auto threads = data->readable();
+					if( threads < 0 )
+						threads = max( ccl::system_cpu_thread_count() + threads, 1);
+					
+					m_sessionParams.threads = threads;
+				}
 				return;
 			}
 			else if( name == g_shadingsystemOptionName )
@@ -2617,7 +2636,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
 				OPTION_INT  (m_sessionParams, g_pixelSizeOptionName,                pixel_size);
-				OPTION_INT  (m_sessionParams, g_threadsOptionName,                  threads);
 				OPTION_BOOL (m_sessionParams, g_displayBufferLinearOptionName,      display_buffer_linear);
 				OPTION_BOOL (m_sessionParams, g_runDenoisingOptionName,             run_denoising);
 				OPTION_BOOL (m_sessionParams, g_writeDenoisingPassesOptionName,     write_denoising_passes);
@@ -2655,19 +2673,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:curves:" ) )
+			else if( boost::starts_with( name.string(), "ccl:curve:" ) )
 			{
-				OPTION_INT_C(m_curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
-				OPTION_INT_C(m_curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
-				OPTION_INT_C(m_curveSystemManager, g_curveLineMethod,             line_method, ccl::CurveLineMethod);
-				OPTION_INT_C(m_curveSystemManager, g_curveTriangleMethod,         triangle_method, ccl::CurveTriangleMethod);
-				OPTION_INT  (m_curveSystemManager, g_curveResolutionOptionType,   resolution);
-				OPTION_INT  (m_curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
+				OPTION_INT_C(curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
+				OPTION_INT_C(curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
+				OPTION_INT_C(curveSystemManager, g_curveLineMethod,             line_method, ccl::CurveLineMethod);
+				OPTION_INT_C(curveSystemManager, g_curveTriangleMethod,         triangle_method, ccl::CurveTriangleMethod);
+				OPTION_INT  (curveSystemManager, g_curveResolutionOptionType,   resolution);
+				OPTION_INT  (curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
 
-				OPTION_BOOL (m_curveSystemManager, g_useCurvesOptionType,           use_curves);
-				OPTION_BOOL (m_curveSystemManager, g_useEncasingOptionType,         use_encasing);
-				OPTION_BOOL (m_curveSystemManager, g_curveUseBackfacing,            use_backfacing);
-				OPTION_BOOL (m_curveSystemManager, g_useTangentNormalGeoOptionType, use_tangent_normal_geometry);
+				OPTION_BOOL (curveSystemManager, g_useCurvesOptionType,           use_curves);
+				OPTION_BOOL (curveSystemManager, g_useEncasingOptionType,         use_encasing);
+				OPTION_BOOL (curveSystemManager, g_curveUseBackfacing,            use_backfacing);
+				OPTION_BOOL (curveSystemManager, g_useTangentNormalGeoOptionType, use_tangent_normal_geometry);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -3157,6 +3175,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_scene->camera->need_update = true;
 			m_scene->camera->update( m_scene );
+
+			// Set a more sane default than the arbitrary 0.8f
+			m_scene->film->exposure = 1.0f;
+			m_scene->film->tag_update( m_scene );
 
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
 		}
