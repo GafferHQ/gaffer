@@ -95,6 +95,7 @@
 #include "render/mesh.h"
 #include "render/nodes.h"
 #include "render/object.h"
+#include "render/openvdb.h"
 #include "render/osl.h"
 #include "render/scene.h"
 #include "render/session.h"
@@ -1546,7 +1547,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !cyclesAttributes->canInstanceGeometry( object ) )
 			{
-				cobject = ObjectAlgo::convert( object, nodeName );
+				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
 				cobject->random_id = (unsigned)IECore::hash_value( object->hash() );
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
@@ -1567,7 +1568,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-				cobject = ObjectAlgo::convert( object, "instance:" + hash.toString() );
+				cobject = ObjectAlgo::convert( object, "instance:" + hash.toString(), m_scene );
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
@@ -1624,7 +1625,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				cobject = ObjectAlgo::convert( samples, nodeName );
+				cobject = ObjectAlgo::convert( samples, nodeName, m_scene );
 				cobject->random_id = (unsigned)IECore::hash_value( samples.front()->hash() );
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
@@ -1653,7 +1654,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-				cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString() );
+				cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString(), m_scene );
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
@@ -2376,7 +2377,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
+			// OpenVDB
+			ccl::openvdb_initialize();
+			m_sceneParams.intialized_openvdb = true;
+
 			init();
+			// Maintain our own ImageManager
+			m_imageManager = new ccl::ImageManager( m_session->device->info );
+			m_imageManagerOld = m_scene->image_manager;
+			m_scene->image_manager = m_imageManager;
 
 			// CyclesOptions will set some values to these.
 			m_integrator = *(m_scene->integrator);
@@ -2412,9 +2421,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
+			// Hand the old ImanageManager to Cycles to delete.
 			m_scene->mutex.unlock();
 
 			delete m_session;
+			delete m_imageManagerOld;
 		}
 
 		IECore::InternedString name() const override
@@ -3314,8 +3325,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
-			
+			// Give back a dummy ImageManager for Cycles to "delete"
+			m_scene->image_manager = m_imageManagerOld;
+
 			init();
+			// Make sure we are using our ImageManager
+			m_imageManagerOld = m_scene->image_manager;
+			m_scene->image_manager = m_imageManager;
 
 			// Re-apply the settings for these.
 			for( const ccl::SocketType socketType : m_scene->integrator->type->inputs )
@@ -3502,6 +3518,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::Background m_background;
 		ccl::Film m_film;
 		ccl::CurveSystemManager m_curveSystemManager;
+		// Hold onto ImageManager so it doesn't get deleted.
+		ccl::ImageManager *m_imageManager;
+		// Dummy ImageManager for Cycles
+		ccl::ImageManager *m_imageManagerOld;
 
 		// Background shader
 		SharedCShaderPtr m_backgroundShader;

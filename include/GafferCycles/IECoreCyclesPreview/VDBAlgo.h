@@ -32,14 +32,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_MESHALGO_H
-#define IECORECYCLES_MESHALGO_H
+#ifndef IECORECYCLES_VDBALGO_H
+#define IECORECYCLES_VDBALGO_H
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
-#include "IECoreScene/MeshPrimitive.h"
-
-#include <vector>
+#include "IECoreVDB/VDBObject.h"
 
 // Cycles
 #include "render/object.h"
@@ -47,17 +45,14 @@
 namespace IECoreCycles
 {
 
-namespace MeshAlgo
+namespace VDBAlgo
 {
 
-/// Converts the specified IECoreScene::MeshPrimitive into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, const ccl::Scene *scene = nullptr );
-/// As above, but converting a moving object. If no motion converter
-/// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, const std::string &nodeName, const ccl::Scene *scene = nullptr );
+/// Converts the specified IECoreVDB::VDBObject into a ccl::Object.
+IECORECYCLES_API ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, const ccl::Scene *scene );
 
-} // namespace MeshAlgo
+} // namespace VDBAlgo
 
 } // namespace IECoreCycles
 
-#endif // IECORECYCLES_MESHALGO_H
+#endif // IECORECYCLES_VDBALGO_H
