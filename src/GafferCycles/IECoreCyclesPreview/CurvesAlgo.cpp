@@ -72,31 +72,37 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	const V3fVectorData *p = curve->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
 
-	vector<float> width;
-	PrimitiveVariableMap::const_iterator wIt = curve->variables.find( "width" );
-	if( wIt != curve->variables.end() )
+	if( const FloatVectorData *w = curve->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex ) )
 	{
-		const FloatVectorData *w = curve->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex );
 		const vector<float> &width = w->readable();
 
 		size_t key = 0;
 		for( size_t i = 0; i < numCurves; ++i )
 		{
+			size_t firstKey = key;
 			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
-				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] );
+				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] / 2.0f );
 
-			cmesh->add_curve( i, 0 );
+			cmesh->add_curve( firstKey, 0 );
 		}
 	}
 	else
 	{
+		float constantWidth = 1.0f;
+
+		if( const FloatData *cw = curve->variableData<FloatData>( "width", PrimitiveVariable::Constant ) )
+		{	
+			constantWidth = cw->readable();
+		}
+
 		size_t key = 0;
 		for( size_t i = 0; i < numCurves; ++i )
 		{
+			size_t firstKey = key;
 			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
-				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), 1.0f );
+				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), constantWidth / 2.0f );
 
-			cmesh->add_curve( i, 0 );
+			cmesh->add_curve( firstKey, 0 );
 		}
 	}
 

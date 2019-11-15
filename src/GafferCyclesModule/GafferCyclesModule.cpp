@@ -45,6 +45,7 @@
 #include "GafferCycles/CyclesBackground.h"
 #include "GafferCycles/CyclesOptions.h"
 #include "GafferCycles/CyclesLight.h"
+#include "GafferCycles/CyclesMeshLight.h"
 #include "GafferCycles/CyclesShader.h"
 #include "GafferCycles/CyclesRender.h"
 #include "GafferCycles/InteractiveCyclesRender.h"
@@ -52,6 +53,7 @@
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
+#include "util/util_logging.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -126,7 +128,7 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 			d["is_array"] = socketType.is_array();
 			d["flags"] = socketType.flags;
 
-			// Some of the texture mapping nodes have a dot in them, replace here with a colon
+			// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
 			std::string actualName = boost::replace_first_copy( name, ".", "__" );
 			result[actualName] = d;
 		}
@@ -383,6 +385,7 @@ static py::dict getLights()
 			in["use_scatter"] = _in["use_scatter"];
 			in["max_bounces"] = _in["max_bounces"];
 			in["samples"] = _in["samples"];
+			in["strength"] = _in["strength"];
 
 			if( type == "background_light" )
 			{
@@ -445,8 +448,15 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	DependencyNodeClass<CyclesLight>()
 		.def( "loadShader", (void (CyclesLight::*)( const std::string & ) )&CyclesLight::loadShader )
 	;
+	DependencyNodeClass<CyclesMeshLight>();
 	DependencyNodeClass<CyclesShader>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
+
+	// This is a global thing for logging
+	const char* argv[] = { "-", "v", "1" };
+	ccl::util_logging_init( argv[0] );
+	ccl::util_logging_start();
+	ccl::util_logging_verbosity_set( 0 );
 
 }

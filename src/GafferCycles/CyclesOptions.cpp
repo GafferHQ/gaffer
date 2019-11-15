@@ -50,6 +50,10 @@ CyclesOptions::CyclesOptions( const std::string &name )
 {
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 
+	// Log
+	options->addChild( new Gaffer::NameValuePlug( "ccl:log_level", new IECore::IntData( 0 ), false, "logLevel" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:progress_level", new IECore::IntData( 2 ), false, "progressLevel" ) );
+
 	// Device
 
 	options->addChild( new Gaffer::NameValuePlug( "ccl:device", new IECore::StringData( "CPU" ), false, "device" ) );
@@ -177,7 +181,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:background:visibility:scatter", new IECore::BoolData( true ), false, "bgScatterVisibility" ) );
 
 	// Film
-	options->addChild( new Gaffer::NameValuePlug( "ccl:film:exposure", new IECore::FloatData( 0.5f ), false, "exposure" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:exposure", new IECore::FloatData( 1.0f ), false, "exposure" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:pass_alpha_threshold", new IECore::FloatData( 0.5f ), false, "passAlphaThreshold" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_type", new IECore::IntData( 0 ), false, "filterType" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_width", new IECore::FloatData( 1.0f ), false, "filterWidth" ) );

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Alex Fuller. All rights reserved.
+#  Copyright (c) 2019, Murray Stevenson. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,60 @@
 #
 ##########################################################################
 
-__import__( "GafferScene" )
+import Gaffer
+import GafferCycles
 
-from _GafferCycles import *
-from CyclesShaderBall import CyclesShaderBall
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCycles" )
+	GafferCycles.CyclesShaderBall,
+
+	"description",
+	"""
+	Generates scenes suitable for rendering shader balls with Cycles.
+	""",
+
+	"layout:activator:deviceIsCpuOrMulti", lambda node : node["device"]["value"].getValue() in ["CPU", "MULTI"],
+
+	plugs = {
+
+		"environment" : [
+
+			"description",
+			"""
+			An environment map used for lighting. Should be in latlong
+			format.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "texture",
+
+		],
+
+		"device" : [
+
+			"description",
+			"""
+			The device to render the shader ball on.
+			""",
+
+		],
+
+		"threads" : [
+
+			"description",
+			"""
+			The number of threads used by Cycles to render the
+			shader ball. A value of 0 uses all cores, and negative
+			values reserve cores for other uses - to be used by
+			the rest of the UI for instance.
+			""",
+
+			"layout:visibilityActivator", "deviceIsCpuOrMulti",
+
+		],
+
+	}
+
+)

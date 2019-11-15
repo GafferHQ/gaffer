@@ -109,6 +109,8 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "combine_xyz", ccl::CombineXYZNode() );
 	MAP_NODE( "hsv", ccl::HSVNode() );
 	MAP_NODE( "rgb_to_bw", ccl::RGBToBWNode() );
+	MAP_NODE( "map_range", ccl::MapRangeNode() );
+	MAP_NODE( "clamp", ccl::ClampNode() );
 	MAP_NODE( "math", ccl::MathNode() );
 	MAP_NODE( "vector_math", ccl::VectorMathNode() );
 	MAP_NODE( "vector_transform", ccl::VectorTransformNode() );
@@ -148,6 +150,8 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "object_info", ccl::ObjectInfoNode() );
 	MAP_NODE( "particle_info", ccl::ParticleInfoNode() );
 	MAP_NODE( "hair_info", ccl::HairInfoNode() );
+	MAP_NODE( "volume_info", ccl::VolumeInfoNode() );
+	MAP_NODE( "vertex_color", ccl::VertexColorNode() );
 	MAP_NODE( "bump", ccl::BumpNode() );
 	MAP_NODE( "image_texture", ccl::ImageTextureNode() );
 	MAP_NODE( "environment_texture", ccl::EnvironmentTextureNode() );
@@ -162,6 +166,7 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "texture_coordinate", ccl::TextureCoordinateNode() );
 	MAP_NODE( "sky_texture", ccl::SkyTextureNode() );
 	MAP_NODE( "ies_light", ccl::IESLightNode() );
+	MAP_NODE( "white_noise_texture", ccl::WhiteNoiseTextureNode() );
 	MAP_NODE( "normal_map", ccl::NormalMapNode() );
 	MAP_NODE( "tangent", ccl::TangentNode() );
 	MAP_NODE( "uvmap", ccl::UVMapNode() );
@@ -169,9 +174,21 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "bevel", ccl::BevelNode() );
 	MAP_NODE( "displacement", ccl::DisplacementNode() );
 	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode() );
-	MAP_NODE( "add_closure", ccl::AddClosureNode() );
 #undef MAP_NODE
 	return nullptr;
+}
+
+ccl::SocketType::Type getSocketType( const std::string &name )
+{
+    if( name == "float" ) return ccl::SocketType::Type::FLOAT;
+    if( name == "int" ) return ccl::SocketType::Type::INT;
+    if( name == "color" ) return ccl::SocketType::Type::COLOR;
+    if( name == "vector" ) return ccl::SocketType::Type::VECTOR;
+    if( name == "point" ) return ccl::SocketType::Type::POINT;
+    if( name == "normal" ) return ccl::SocketType::Type::NORMAL;
+    if( name == "closure" ) return ccl::SocketType::Type::CLOSURE;
+    if( name == "string" ) return ccl::SocketType::Type::STRING;
+	return ccl::SocketType::Type::UNDEFINED;
 }
 
 template<typename Spline>
@@ -248,7 +265,7 @@ InternedString partitionEnd( const InternedString &s, char c )
 	}
 }
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::ShaderManager *shaderManager, ccl::Shader *cshader, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. It is ideal for all assigned
 	// shaders in the graph to funnel through the default "output" so
@@ -258,6 +275,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
 	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "output" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
 
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
@@ -268,7 +286,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( isOutput )
 	{
-		node = (ccl::ShaderNode*)cshader->graph->output();
+		node = (ccl::ShaderNode*)shaderGraph->output();
 	}
 	else if( isOSLShader )
 	{
@@ -278,24 +296,36 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
 			node = manager->osl_node( shaderFileName.c_str() );
-			node = cshader->graph->add( node );
+			node = shaderGraph->add( node );
 		}
 		else
 #endif
 		{
 #ifdef WITH_OSL
-			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
-#else
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
+#else
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
 #endif
 			return node;
+		}
+	}
+	else if( isConverter )
+	{
+		vector<string> split;
+		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
+		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
+		{
+			ccl::ConvertNode *convertNode = new ccl::ConvertNode( getSocketType( split[1] ), getSocketType( split[3] ), true );
+			node = (ccl::ShaderNode*)convertNode;
+			if( node )
+				node = shaderGraph->add( node );
 		}
 	}
 	else
 	{
 		node = getShaderNode( shader->getName() );
 		if( node )
-			node = cshader->graph->add( node );
+			node = shaderGraph->add( node );
 	}
 
 	if( !node )
@@ -339,7 +369,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, cshader, converted );
+		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, shaderGraph, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -358,7 +388,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( sourceNode, sourceName ) )
 			if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) )
-				cshader->graph->connect( shaderOutput, shaderInput );
+				shaderGraph->connect( shaderOutput, shaderInput );
 	}
 
 	if( !isOutput && ( shaderNetwork->outputShader() == shader ) )
@@ -366,11 +396,11 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// In the cases where there is no cycles output attached in the network
 		// we just connect to the main output node of the cycles shader graph.
 		// Either ccl:surface, ccl:volume or ccl:displacement.
-		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
+		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)shaderGraph->output();
 		string input = string( shader->getType().c_str() + 4 );
 		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ) )
 		    if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) )
-				cshader->graph->connect( shaderOutput, shaderInput );
+				shaderGraph->connect( shaderOutput, shaderInput );
 	}
 
 	return node;
@@ -403,7 +433,14 @@ ccl::ShaderInput *input( ccl::ShaderNode *node, IECore::InternedString name )
 
 ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 {
+	// If the output connector has no explicit name, we pick the first output
+	if( name == "" )
+	{
+		return node->outputs.front();
+	}
+
 	ccl::ustring cname = ccl::ustring( name.c_str() );
+
 	for( ccl::ShaderOutput *socket : node->outputs )
 	{
 		if( socket->socket_type.name == cname )
@@ -426,7 +463,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 
 	ShaderMap converted;
 	ccl::Shader *result = new ccl::Shader();
-	result->graph = new ccl::ShaderGraph();
+	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
 	const InternedString output = shaderNetwork->getOutput().shader;
 	if( output.string().empty() )
 	{
@@ -439,21 +476,24 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 			// The first shader is an emission node
 			for( const auto &connection : shaderNetwork->inputConnections( output ) )
 			{
-				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, result, converted );
-				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)result->graph->output();
+				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, graph, converted );
+				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)graph->output();
 				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "emission" ) )
 					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
-						result->graph->connect( shaderOutput, shaderInput );
+						graph->connect( shaderOutput, shaderInput );
 				break; // Only one connection
 			}
 		}
 		else
-			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, result, converted );
+			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
 	}
+
+	result->set_graph( graph );
+
 	return result;
 }
 
-ccl::Light *convertLight( const IECoreScene::ShaderNetwork *shaderNetwork )
+ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) // todo : make conditional on OSL < 1.10
@@ -476,6 +516,16 @@ ccl::Light *convertLight( const IECoreScene::ShaderNetwork *shaderNetwork )
 		const IECoreScene::Shader *lightShader = shaderNetwork->getShader( output );
 		for( const auto &namedParameter : lightShader->parameters() )
 		{
+			// Skip the ones which don't exist but we need for the Gaffer UI widget updates
+			if( namedParameter.first == "exposure" ||
+				namedParameter.first == "intensity" ||
+				namedParameter.first == "color" ||
+				namedParameter.first == "image" ||
+				namedParameter.first == "coneAngle" ||
+				namedParameter.first == "penumbraAngle" )
+				{
+					continue;
+				}
 			SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
 		}
 	}

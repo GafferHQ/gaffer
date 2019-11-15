@@ -143,6 +143,11 @@ float setAlpha( const Imath::Color4f &color )
 	return color[3];
 }
 
+ccl::float4 setQuaternion( const Imath::Quatf &quat )
+{
+	return ccl::make_float4( quat[0], quat[1], quat[2], quat[3] );
+}
+
 ccl::Transform setTransform( const Imath::M44d &matrix )
 {
 	ccl::Transform t;
@@ -179,6 +184,11 @@ Imath::Color4f getColor( const ccl::float3 color )
 Imath::Color4f getColor( const ccl::float4 color )
 {
 	return Imath::Color4f( color.x, color.y, color.z, color.w );
+}
+
+Imath::Quatf getQuaternion( const ccl::float4 quat )
+{
+	return Imath::Quatf( quat.x, quat.y, quat.z, quat.w );
 }
 
 Imath::M44f getTransform( const ccl::Transform transform )

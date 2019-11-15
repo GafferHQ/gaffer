@@ -58,6 +58,7 @@ IECORECYCLES_API ccl::float3 setVector( const Imath::V3f &vector );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color3f &color );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color4f &color );
 IECORECYCLES_API float setAlpha( const Imath::Color4f &color );
+IECORECYCLES_API ccl::float4 setQuaternion( const Imath::Quatf &quat );
 IECORECYCLES_API ccl::Transform setTransform( const Imath::M44d &matrix );
 IECORECYCLES_API ccl::Transform setTransform( const Imath::M44f &matrix );
 
@@ -65,6 +66,7 @@ IECORECYCLES_API Imath::V2f getVector( const ccl::float2 vector );
 IECORECYCLES_API Imath::V3f getVector( const ccl::float3 vector );
 IECORECYCLES_API Imath::Color4f getColor( const ccl::float3 color );
 IECORECYCLES_API Imath::Color4f getColor( const ccl::float4 color );
+IECORECYCLES_API Imath::Quatf getQuaternion( const ccl::float4 quat );
 IECORECYCLES_API Imath::M44f getTransform( const ccl::Transform transform );
 
 // Setting sockets onto cycles nodes.

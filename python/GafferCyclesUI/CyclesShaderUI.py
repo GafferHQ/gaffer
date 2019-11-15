@@ -52,38 +52,6 @@ def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
 
-def __getSocketToWidget( socketType ) :
-	if( socketType == "boolean" ) :
-		return "GafferUI.BoolPlugValueWidget"
-	elif( socketType == "float" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "int" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "uint" ) :
-		return "GafferUI.NumericPlugValueWidget"
-	elif( socketType == "color" ) :
-		return "GafferUI.ColorPlugValueWidget"
-	#elif( socketType == "vector" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "point" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "normal" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "point2" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "closure" ) :
-	#	return "GafferUI.StringPlugValueWidget"
-	elif( socketType == "string" ) :
-		return "GafferUI.StringPlugValueWidget"
-	elif( socketType == "enum" ) :
-		return "GafferUI.PresetsPlugValueWidget"
-	#elif( socketType == "transform" ) :
-	#	return "GafferUI.NumericPlugValueWidget"
-	#elif( socketType == "node" ) :
-	#	return "GafferUI.StringPlugValueWidget"
-	else :
-		return ""
-
 def __getSocketToComponents( socketType ) :
 	if( socketType == "point2" ) :
 		return "xy"
@@ -113,8 +81,7 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 			presetValues.append(enumValues)
 		__metadata[paramPath]["presetNames"] = presetNames
 		__metadata[paramPath]["presetValues"] = presetValues
-
-	__metadata[paramPath]["plugValueWidget:type"] = __getSocketToWidget( socketType )
+		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
 
 	if( socketName == "filename" ) :
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PathPlugValueWidget"
@@ -129,10 +96,10 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	if "category" in value :
 		__metadata[paramPath]["layout:section"] = value["category"]
 
-	#childComponents = __getSocketToComponents( socketType )
-	#if childComponents is not None :
-	#	for c in childComponents :
-	#		__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
+	childComponents = __getSocketToComponents( socketType )
+	if childComponents is not None :
+		for c in childComponents :
+			__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
 def __translateShaderMetadata() :
 
@@ -208,10 +175,10 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 	nodeKeys = set()
 	parametersPlugKeys = set()
 	parameterPlugKeys = set()
-	#parameterPlugComponentKeys = set()
+	parameterPlugComponentKeys = set()
 
 	for name, metadata in __metadata.items() :
-		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys )[name.count( ".")]
+		keys = ( nodeKeys, parametersPlugKeys, parameterPlugKeys, parameterPlugComponentKeys )[name.count( ".")]
 		keys.update( metadata.keys() )
 
 	for key in nodeKeys :
@@ -223,8 +190,8 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 	for key in parameterPlugKeys :
 		Gaffer.Metadata.registerValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
 
-	#for key in parameterPlugComponentKeys :
-	#	Gaffer.Metadata.registerValue( nodeType, "parameters.*.[xyzrgb]", key, functools.partial( __plugMetadata, name = key ) )
+	for key in parameterPlugComponentKeys :
+		Gaffer.Metadata.registerValue( nodeType, "parameters.*.[xyzrgb]", key, functools.partial( __plugMetadata, name = key ) )
 
 	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
 
