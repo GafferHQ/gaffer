@@ -116,6 +116,7 @@ class UVView::UVScene : public SceneProcessor
 			UDIMQueryPtr udimQuery = new UDIMQuery( "__udimQuery" );
 			udimQuery->inPlug()->setInput( inPlug() );
 			udimQuery->filterPlug()->setInput( udimQueryFilter->outPlug() );
+			udimQuery->uvSetPlug()->setInput( uvSetPlug() );
 			udimQuery->attributesPlug()->setInput( udimQueryAttributesPlug() );
 			udimQueryPlug()->setInput( udimQuery->outPlug() );
 			addChild( udimQuery );
@@ -609,6 +610,7 @@ UVView::UVView( const std::string &name )
 
 	addChild( new UVScene( "__uvScene" ) );
 	uvScene()->inPlug()->setInput( inPlug() );
+	uvScene()->uvSetPlug()->setInput( uvSetPlug() );
 	uvScene()->textureFileNamePlug()->setInput( textureFileNamePlug() );
 	texturesPlug()->setInput( uvScene()->texturesPlug() );
 
