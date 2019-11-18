@@ -83,9 +83,9 @@ class GAFFERUI_API RotateHandle : public Handle
 
 		Style::Axes m_axes;
 		// For X, Y and Z handles.
-		PlanarDrag m_drag;
+		AngularDrag m_drag;
 		float m_rotation;
-		// For XYZ handle.
+		// For free rotation handle.
 		Imath::M44f m_dragBeginWorldTransform;
 		Imath::V3f m_dragBeginPointOnSphere;
 		Imath::V3f m_highlightVector;

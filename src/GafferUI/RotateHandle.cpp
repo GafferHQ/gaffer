@@ -55,21 +55,6 @@ using namespace IECore;
 using namespace GafferUI;
 
 //////////////////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-float closestRotation( const V2f &p, float targetRotation )
-{
-	const float r = atan2( p.y, p.x );
-	return Eulerf::angleMod( r - targetRotation ) + targetRotation;
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // RotateHandle
 //////////////////////////////////////////////////////////////////////////
 
@@ -145,7 +130,7 @@ Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event )
 		return e;
 	}
 
-	float rotate = ( closestRotation( m_drag.updatedPosition( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f ) );
+	float rotate = m_drag.updatedRotation( event ) - m_drag.startRotation();
 
 	// snap
 	if( event.modifiers & ButtonEvent::Control )
@@ -212,16 +197,16 @@ void RotateHandle::dragBegin( const DragDropEvent &event )
 	switch( m_axes )
 	{
 		case Style::X :
-			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 0, 1, 0 ), V3f( 0, 0, 1 ), event );
-			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			m_drag = AngularDrag( this, V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 0, 1 ), event );
+			m_rotation = m_drag.startRotation();
 			break;
 		case Style::Y :
-			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 0, 0, 1 ), V3f( 1, 0, 0 ), event );
-			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			m_drag = AngularDrag( this, V3f( 0 ), V3f( 0, 1, 0 ), V3f( 1, 0, 0 ), event );
+			m_rotation = m_drag.startRotation();
 			break;
 		case Style::Z :
-			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 1, 0 ), event );
-			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			m_drag = AngularDrag( this, V3f( 0 ), V3f( 0, 0, 1 ), V3f( 0, 1, 0 ), event );
+			m_rotation = m_drag.startRotation();
 			break;
 		case Style::XYZ :
 			m_dragBeginWorldTransform = fullTransform();
@@ -246,11 +231,7 @@ bool RotateHandle::dragMove( const DragDropEvent &event )
 	}
 	else
 	{
-		// We can only recover an angle in the range -PI, PI from the 2d position
-		// that our drag gives us, but we want to be able to support continuous
-		// values and multiple revolutions. Here we keep track of the current rotation
-		// position so that we can adjust correctly in `RotateHandle::rotation()`.
-		m_rotation = closestRotation( m_drag.updatedPosition( event ), m_rotation );
+		m_rotation = m_drag.updatedRotation( event );
 	}
 	return false;
 }
