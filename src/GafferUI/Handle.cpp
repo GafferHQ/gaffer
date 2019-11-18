@@ -456,3 +456,85 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 	m_preciseMotionOrigin = m_dragBeginPosition;
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+// AngularDrag
+//////////////////////////////////////////////////////////////////////////
+
+Handle::AngularDrag::AngularDrag( bool processModifiers )
+	:	m_rotation( 0.0f ),
+		m_dragBeginRotation( 0.0f ),
+		m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false )
+{
+	m_drag = PlanarDrag( false );
+}
+
+Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f axis1, const DragDropEvent &dragBeginEvent, bool processModifiers )
+	:	m_rotation( 0.0f ),
+		m_axis0( axis0 ),
+		m_axis1( axis1 ),
+		m_processModifiers( processModifiers ),
+		m_preciseMotionEnabled( false )
+{
+	// We need to negate this, or rotation is opposite to the mouse movement direction
+	V3f planeAxis0 = -axis0.cross( axis1 );
+	// Disable modifier processing as we'll do our own precision mode in angle space
+	m_drag = PlanarDrag( gadget, origin, planeAxis0, axis1, dragBeginEvent, false );
+
+	m_dragBeginRotation = closestRotation( m_drag.startPosition(), m_rotation );
+
+	m_preciseMotionEnabled = dragBeginEvent.modifiers & ModifiableEvent::Shift;
+	m_preciseMotionOrigin = m_dragBeginRotation;
+}
+
+
+const Imath::V3f &Handle::AngularDrag::axis0() const
+{
+	return m_axis0;
+}
+
+const Imath::V3f &Handle::AngularDrag::axis1() const
+{
+	return m_axis1;
+}
+
+float Handle::AngularDrag::startRotation() const
+{
+	return m_dragBeginRotation;
+}
+
+float Handle::AngularDrag::updatedRotation( const DragDropEvent &event )
+{
+	// We can only recover an angle in the range -PI, PI from the 2d position
+	// that our drag gives us, but we want to be able to support continuous
+	// values and multiple revolutions. We need to store the un-modified rotation
+	// such that we pick the closest rotation to the mouse itself.
+	float rotation = closestRotation( m_drag.updatedPosition( event ), m_rotation );
+	m_rotation = rotation;
+
+	if( m_processModifiers )
+	{
+		const bool shiftHeld = event.modifiers & ModifiableEvent::Shift;
+		// If this is the first time we've seen an event where precise motion is
+		// enabled, then we need to store the position at this time.
+		if( !m_preciseMotionEnabled && shiftHeld )
+		{
+			m_preciseMotionOrigin = rotation;
+		}
+		m_preciseMotionEnabled = shiftHeld;
+
+		if( m_preciseMotionEnabled )
+		{
+			rotation = m_preciseMotionOrigin + ( ( rotation - m_preciseMotionOrigin ) * 0.1f );
+		}
+	}
+
+	return rotation;
+}
+
+float Handle::AngularDrag::closestRotation( const V2f &p, float targetRotation )
+{
+	const float r = atan2( p.y, p.x );
+	return Eulerf::angleMod( r - targetRotation ) + targetRotation;
+}
