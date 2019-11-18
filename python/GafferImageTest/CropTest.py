@@ -212,15 +212,15 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			set( c.affects( c["affectDisplayWindow"] ) ),
-			{ c["out"]["format"], c["out"]["dataWindow"], c["__offset"]["x"], c["__offset"]["y"] }
+			{ c["out"]["format"], c["__offset"]["x"], c["__offset"]["y"] }
 		)
 
 		self.assertEqual(
 			set( c.affects( c["affectDataWindow"] ) ),
-			{ c["out"]["dataWindow"] }
+			{ c["__cropDataWindow"] }
 		)
 
-		self.assertTrue( c["out"]["dataWindow"] in set( c.affects( c["in"]["dataWindow"] ) ) )
+		self.assertTrue( c["__cropDataWindow"] in set( c.affects( c["in"]["dataWindow"] ) ) )
 		self.assertTrue( c["out"]["format"] in set( c.affects( c["in"]["format"] ) ) )
 
 	def testResetOrigin( self ) :

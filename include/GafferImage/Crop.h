@@ -90,10 +90,8 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 	protected :
 
 		void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 
 		GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const override;
-		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
@@ -102,6 +100,9 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 
 		Gaffer::AtomicBox2iPlug *cropWindowPlug();
 		const Gaffer::AtomicBox2iPlug *cropWindowPlug() const;
+
+		Gaffer::AtomicBox2iPlug *cropDataWindowPlug();
+		const Gaffer::AtomicBox2iPlug *cropDataWindowPlug() const;
 
 		Gaffer::V2iPlug *offsetPlug();
 		const Gaffer::V2iPlug *offsetPlug() const;
