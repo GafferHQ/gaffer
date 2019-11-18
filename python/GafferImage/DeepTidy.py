@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,26 @@
 #
 ##########################################################################
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+import IECore
 
-def __setupEnvironment() :
+import Gaffer
+import GafferImage
 
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+class DeepTidy( GafferImage.ImageProcessor ) :
 
-__setupEnvironment()
+	def __init__(self, name = 'DeepTidy' ) :
 
-from _GafferImage import *
-from CatalogueSelect import CatalogueSelect
-from BleedFill import BleedFill
-from DeepTidy import DeepTidy
+		GafferImage.ImageProcessor.__init__( self, name )
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImage" )
+		self['__deepState'] = GafferImage.DeepState()
+		self['__deepState']['in'].setInput( self['in'] )
+		self['__deepState']['enabled'].setInput( self['enabled'] )
+		self['out'].setInput( self['__deepState']['out'] )
+		self['out'].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		self['__deepState']['deepState'].setValue( GafferImage.DeepState.TargetState.Tidy )
+		Gaffer.PlugAlgo.promote( self['__deepState']['pruneTransparent'] )
+		Gaffer.PlugAlgo.promote( self['__deepState']['pruneOccluded'] )
+		Gaffer.PlugAlgo.promote( self['__deepState']['occludedThreshold'] )
+
+IECore.registerRunTimeTyped( DeepTidy, typeName = "GafferImage::DeepTidy" )
