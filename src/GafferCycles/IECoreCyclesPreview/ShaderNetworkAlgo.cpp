@@ -463,7 +463,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 
 	ShaderMap converted;
 	ccl::Shader *result = new ccl::Shader();
-	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
+	ccl::ShaderGraph *graph = new ccl::ShaderGraph( result );
 	const InternedString output = shaderNetwork->getOutput().shader;
 	if( output.string().empty() )
 	{

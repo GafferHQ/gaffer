@@ -826,20 +826,21 @@ class ShaderCache : public IECore::RefCounted
 					// This creates a camera dot-product shader/facing ratio.
 					const std::string name = "defaultSurfaceShader";
 					ccl::Shader *cshader = new ccl::Shader();
+					ccl::ShaderGraph *cgraph = new ccl::ShaderGraph( cshader );
 					cshader->name = name.c_str();
-					cshader->graph = new ccl::ShaderGraph();
-					ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cshader->graph->output();
+					ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
 					ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
 					vecMath->type = ccl::NODE_VECTOR_MATH_DOT_PRODUCT;
 					ccl::GeometryNode *geo = new ccl::GeometryNode();
-					ccl::ShaderNode *vecMathNode = cshader->graph->add( (ccl::ShaderNode*)vecMath );
-					ccl::ShaderNode *geoNode = cshader->graph->add( (ccl::ShaderNode*)geo );
-					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "normal" ), 
-											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
-					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "incoming" ), 
-											 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
-					cshader->graph->connect( IECoreCycles::ShaderNetworkAlgo::output( vecMathNode, "value" ), 
-											 IECoreCycles::ShaderNetworkAlgo::input( outputNode, "surface" ) );
+					ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
+					ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
+					cgraph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "normal" ), 
+									 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
+					cgraph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "incoming" ), 
+									 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
+					cgraph->connect( IECoreCycles::ShaderNetworkAlgo::output( vecMathNode, "value" ), 
+									 IECoreCycles::ShaderNetworkAlgo::input( outputNode, "surface" ) );
+					cshader->set_graph( cgraph );
 					a->second = SharedCShaderPtr( cshader );
 				}
 				
