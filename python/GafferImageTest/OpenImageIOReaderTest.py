@@ -595,6 +595,26 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertTrue( mh.messages[0].message.startswith( "Ignoring subimage 1 of " ) )
 
+	def testDefaultFormatHash( self ) :
+
+		r = GafferImage.OpenImageIOReader()
+
+		with Gaffer.Context() as c :
+
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
+			h1 = r["out"].formatHash()
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
+			h2 = r["out"].formatHash()
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 300, 2.0 ) )
+			h3 = r["out"].formatHash()
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
+			h4 = r["out"].formatHash()
+
+		self.assertNotEqual( h1, h2 )
+		self.assertNotEqual( h1, h3 )
+		self.assertNotEqual( h2, h3 )
+		self.assertEqual( h1, h4 )
+
 
 if __name__ == "__main__":
 	unittest.main()

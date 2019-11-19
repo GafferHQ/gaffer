@@ -24,25 +24,35 @@ Breaking Changes
 - Instancer : Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a
   config file.
 
-0.55.0.1 (relative to 0.55.0.0)
+0.55.1.0 (relative to 0.55.0.0)
 ========
 
 Improvements
 ------------
 
 - Stats app : Added node compute counts to performanceMonitor script annotations.
+- UIEditor :
+  - Made the Plugs tab resize the editor window so the Presets section is fully visible when expanded.
+  - Added options to the Node tab to turn on and off Box node plug creator decorations.
 
 Fixes
 -----
 
+- Viewer : Fixed light filter visualisation.
 - ArnoldLightFilter : Fixed bug which caused animated light blockers to lose their transform.
 - NodeEditor : Fixed bug that allowed drag and drop to create unwanted input connections to output plugs.
 - GraphComponent : Fixed bug that allowed construction with an invalid name (#3436).
 - Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
 - Rotate/TranslateTool : Fixed a potential crash if targeted mode was used with an empty selection.
+- RotateTool : Fixed a bug when applying targeted mode rotations that introduced arbitrary roll around the z-axis (#3439).
 - TabbedContainer : Fixed a bug that caused an exception when the last tab in a container was closed.
 - ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
 - GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
+- Parent : Fixed bug which prevented loading of Parent nodes with a promoted `children` plug (#3464).
+- Group/Parent : Fixed processing of invalid input sets. This now omits the invalid set members rather than throwing an error.
+- ImageReader : Fixed bug which meant that changes to the default format were not respected.
+- UVInspector : Fixed bug which prevented alternative UV sets from being viewed.
+- SceneInspector : Fixed bug comparing objects where a particular primitive variable existed on only one of the objects (#3432).
 
 0.55.0.0
 ========
@@ -180,6 +190,9 @@ Fixes
 - Layouts : Keyboard shortcuts will now work in detached panels restored with a layout.
 - ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
 - GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
+- ImageReader : Fixed bug which meant that changes to the default format were not respected.
+- UVInspector : Fixed bug which prevented alternative UV sets from being viewed.
+- SceneInspector : Fixed bug comparing objects where a particular primitive variable existed on only one of the objects (#3432).
 
 0.54.2.1 (relative to 0.54.2.0)
 ========

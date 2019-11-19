@@ -460,5 +460,32 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( script["Parent"]["out"], script["Box"]["out"] )
 
+	def testLoadPromotedChildrenPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b1"] = Gaffer.Box()
+		s["b1"]["p"] = GafferScene.Parent()
+		Gaffer.PlugAlgo.promote( s["b1"]["p"]["children"] )
+
+		s["b2"] = Gaffer.Box()
+		s["b2"]["p"] = GafferScene.Parent()
+		s["b2"]["pi"] = Gaffer.BoxIn()
+		s["b2"]["pi"].setup( s["b2"]["p"]["children"] )
+		s["b2"]["p"]["children"].setInput( s["b2"]["pi"]["out"] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual(
+			s["b1"]["p"]["children"].getInput().fullName(),
+			s2["b1"]["p"]["children"].getInput().fullName()
+		)
+
+		self.assertEqual(
+			s["b2"]["p"]["children"].getInput().fullName(),
+			s2["b2"]["p"]["children"].getInput().fullName()
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -46,7 +46,7 @@ def __parentChildrenSetInput( self, input ) :
 		# it into "children[0]".
 		self[0].setInput( input )
 	else :
-		Gaffer.ArrayPlug.setInput( input )
+		Gaffer.ArrayPlug.setInput( self, input )
 
 def __parentGetItem( originalGetItem ) :
 

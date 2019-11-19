@@ -132,20 +132,6 @@ const ChildNamesMap::Input &ChildNamesMap::input( IECore::InternedString outputN
 	return it->input;
 }
 
-IECore::InternedString ChildNamesMap::output( const Input &input ) const
-{
-	const auto &index = m_map.get<1>();
-	auto it = index.find( input );
-	if( it == index.end() )
-	{
-		throw IECore::Exception(
-			boost::str( boost::format( "Invalid child name \"%1%\"" ) % input.name )
-		);
-	}
-
-	return it->output;
-}
-
 IECore::PathMatcher ChildNamesMap::set( const std::vector<IECore::ConstPathMatcherDataPtr> &inputSets ) const
 {
 	IECore::PathMatcher result;
@@ -169,9 +155,21 @@ IECore::PathMatcher ChildNamesMap::set( const std::vector<IECore::ConstPathMatch
 				}
 				assert( inputPath.size() == 1 );
 
-				vector<InternedString> prefix;
-				prefix.push_back( output( { inputPath[0], inputIndex } ) );
-				result.addPaths( inputSet.subTree( inputPath ), prefix );
+				const auto &inputMap = m_map.get<1>();
+				auto it = inputMap.find( Input{ inputPath[0], inputIndex } );
+				if( it != inputMap.end() )
+				{
+					result.addPaths( inputSet.subTree( inputPath ), { it->output } );
+				}
+				else
+				{
+					// The set contains an invalid path that is not present in
+					// the scene (as defined by the `inputChildNames` passed to our
+					// constructor). We could throw an error, but since it's currently
+					// relatively easy for a user to make an invalid set via
+					// `Set::pathsPlug()`, we do the more helpful thing and just omit
+					// the invalid path from the output set.
+				}
 
 				pIt.prune(); // We only want to visit the first level
 			}
