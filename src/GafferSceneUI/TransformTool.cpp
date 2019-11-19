@@ -49,6 +49,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "OpenEXR/ImathMatrixAlgo.h"
 
@@ -157,6 +158,17 @@ bool updateSelection( const SceneAlgo::History *history, TransformTool::Selectio
 	if( selection.transformPlug )
 	{
 		selection.transformPlug = selection.transformPlug->source<TransformPlug>();
+
+		if( auto *spreadsheet = runTimeCast<Spreadsheet>( selection.transformPlug->node() ) )
+		{
+			if( spreadsheet->outPlug()->isAncestorOf( selection.transformPlug.get() ) )
+			{
+				selection.transformPlug = static_cast<TransformPlug *>(
+					spreadsheet->activeInPlug( selection.transformPlug.get() )
+				);
+			}
+		}
+
 		if( ancestorMakesChildNodesReadOnly( selection.transformPlug->node() ) )
 		{
 			// Inside a Reference node or similar. Unlike a regular read-only
