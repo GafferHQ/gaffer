@@ -290,23 +290,50 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 	for( const auto &s : selection() )
 	{
+		// There are two potential approaches as to the 'correct' space to do
+		// this in.  Production suggested that the guiding principal of
+		// 'minimise additional roll in the object's local z axis' is
+		// preferable. Hence the more elaborate implementation here.
+		//
+		// The alternative (work out the current object's world z and simply
+		// use rotationMatrix()) calculates in world space tends to add more
+		// roll in local Z.
+
 		Context::Scope scopedContext( s.context.get() );
 
-		V3f currentYAxis, currentZAxis;
-		const M44f worldTransform = s.scene->fullTransform( s.path );
-		worldTransform.multDirMatrix( V3f( 0.0f, 1.0f, 0.0f ), currentYAxis );
-		worldTransform.multDirMatrix( V3f( 0.0f, 0.0f, -1.0f ), currentZAxis );
+		ScenePlug::ScenePath parentPath( s.path );
+		parentPath.pop_back();
 
-		const V3f targetZAzis = targetPos - ( V3f( 0.0f ) * worldTransform );
+		const M44f worldParentTransform = s.scene->fullTransform( parentPath );
+		const M44f worldParentTransformInverse = worldParentTransform.inverse();
+		const M44f localTransform = s.scene->transform( s.path );
 
-		M44f reorientationMatrix = rotationMatrixWithUpDir(
-			currentZAxis, targetZAzis, currentYAxis
+		V3f currentYAxis;
+		localTransform.multDirMatrix( V3f( 0.0f, 1.0f, 0.0f ), currentYAxis );
+
+		// The local space position of the target is the direction we want the Z axis to point
+		V3f targetZAxis = targetPos * worldParentTransformInverse - V3f( 0.0f ) * localTransform;
+
+		M44f orientationMatrix = rotationMatrixWithUpDir(
+			V3f( 0.0f, 0.0f, -1.0f ), targetZAxis, currentYAxis
 		);
 
-		V3f offset;
-		extractEulerXYZ( reorientationMatrix, offset );
+		// We now have the desired local space orientation matrix, and we want
+		// to set the rotation to match this.  This means we want the value of
+		// "m" computed in apply() to be equal to orientationMatrix.  Because
+		// there is no way to call apply without it composing with the existing
+		// rotation, we now need to pre-invert the existing rotation.
 
-		Rotation( s, World ).apply( offset );
+		V3f originalRotation;
+		extractEulerXYZ( localTransform, originalRotation );
+		M44f originalRotationMatrix;
+		originalRotationMatrix.rotate( originalRotation );
+
+		M44f relativeMatrix = originalRotationMatrix.inverse() * orientationMatrix;
+
+		V3f relativeRotation;
+		extractEulerXYZ( relativeMatrix, relativeRotation );
+		Rotation( s, Parent ).apply( relativeRotation );
 	}
 
 	return true;
