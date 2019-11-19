@@ -407,10 +407,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
 
 	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
-	const float intensity = parameter<float>( metadataTarget, shaderParameters, "intensityParameter", 1 );
 	const float exposure = parameter<float>( metadataTarget, shaderParameters, "exposureParameter", 0 );
-
-	const Color3f finalColor = color * intensity * pow( 2.0f, exposure );
 
 	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
@@ -455,7 +452,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 		if( visualiseProjection )
 		{
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f, 0.2f ) ) );
@@ -464,7 +461,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	else if( type && type->readable() == "distant" )
 	{
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 	}
 	else if( type && type->readable() == "quad" )
 	{
@@ -475,7 +472,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 		else
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
@@ -491,7 +488,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 		else
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
@@ -503,14 +500,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
 		if( !drawShaded )
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 		}
 	}
 	else if( type && type->readable() == "photometric" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0.5f );
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 	}
 	else if( type && type->readable() == "mesh" )
@@ -534,7 +531,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 
 	}
 
@@ -710,22 +707,11 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imath::Color3f &color, bool faceCamera )
 {
 
-	float maxChannel = std::max( color[0], std::max( color[1], color[2] ) );
-	float exposure = 0;
-	Imath::Color3f indicatorColor = color;
-	if( maxChannel > 1 )
-	{
-		indicatorColor = color / maxChannel;
-		exposure = log( maxChannel ) / log( 2 );
-	}
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	IECoreGL::GroupPtr wirelessGroup = new IECoreGL::Group();
 
 	addConstantShader( group.get(), true, faceCamera ? 1 : -1 );
 
-	wirelessGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
-
-	float indicatorRad = 0.3;
+	const float indicatorRad = 0.05f;
 	Axis indicatorAxis = faceCamera ? Axis::X : Axis::Z;
 
 	{
@@ -733,56 +719,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 		IntVectorDataPtr vertIds = new IntVectorData;
 		V3fVectorDataPtr p = new V3fVectorData;
 
-		addSolidArc( indicatorAxis, V3f( 0 ), indicatorRad, indicatorRad * 0.9, 0, 1, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
+		addSolidArc( indicatorAxis, V3f( 0 ), 0, indicatorRad, 0, 1, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
 
 		IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
 		mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
-		mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( indicatorColor ) );
+		mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( color ) );
 		ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
 		group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
 	}
-	{
-		IntVectorDataPtr vertsPerPoly = new IntVectorData;
-		IntVectorDataPtr vertIds = new IntVectorData;
-		V3fVectorDataPtr p = new V3fVectorData;
-
-		addSolidArc( indicatorAxis, V3f( 0 ), indicatorRad * 0.4, 0.0, 0, 1, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
-
-		for( int i = 0; i < exposure && i < 20; i++ )
-		{
-			float startAngle = 1 - pow( 0.875, i );
-			float endAngle = 1 - pow( 0.875, std::min( i+1.0, (double)exposure ) );
-			float maxEndAngle = 1 - pow( 0.875, i+1.0);
-			float sectorScale = ( maxEndAngle - startAngle - 0.008 ) / ( maxEndAngle - startAngle );
-			addSolidArc( indicatorAxis, V3f( 0 ), indicatorRad * 0.85, indicatorRad * 0.45, startAngle, startAngle + ( endAngle - startAngle ) * sectorScale, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
-		}
-
-		IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
-		mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
-		mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( indicatorColor ) );
-		ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
-		wirelessGroup->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
-	}
-
-	// For exposures greater than 20, draw an additional solid bar of a darker color at the very end, without any segment dividers
-	if( exposure > 20 )
-	{
-		IntVectorDataPtr vertsPerPoly = new IntVectorData;
-		IntVectorDataPtr vertIds = new IntVectorData;
-		V3fVectorDataPtr p = new V3fVectorData;
-
-		float startAngle = 1 - pow( 0.875, 20 );
-		float endAngle = 1 - pow( 0.875, (double)exposure );
-		addSolidArc( indicatorAxis, V3f( 0 ), indicatorRad * 0.85, indicatorRad * 0.45, startAngle, endAngle, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
-
-		IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
-		mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
-		mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( 0.5f * indicatorColor ) );
-		ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
-		wirelessGroup->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
-	}
-
-	group->addChild( wirelessGroup );
 
 	return group;
 }
