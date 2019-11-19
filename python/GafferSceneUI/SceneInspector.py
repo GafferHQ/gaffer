@@ -1871,14 +1871,21 @@ class _PrimitiveVariableTextDiff( TextDiff ) :
 
 		result = []
 		for value in values :
-			s = str( value["interpolation"] )
-			s += " " + value["data"].typeName()
-			if hasattr( value["data"], "getInterpretation" ) :
-				s += " (" + str( value["data"].getInterpretation() ) + ")"
 
-			if value["indices"] :
-				numElements = len( value["data"] )
-				s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
+			if value is not None :
+
+				s = str( value["interpolation"] )
+				s += " " + value["data"].typeName()
+				if hasattr( value["data"], "getInterpretation" ) :
+					s += " (" + str( value["data"].getInterpretation() ) + ")"
+
+				if value["indices"] :
+					numElements = len( value["data"] )
+					s += " ( Indexed : {0} element{1} )".format( numElements, '' if numElements == 1 else 's' )
+
+			else :
+
+				s = ""
 
 			result.append( s )
 
