@@ -156,6 +156,9 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			const FloatData *ornamentScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
 			m_ornamentScale = ornamentScaleData ? ornamentScaleData->readable() : 1.0;
 
+			const BoolData *drawFrustumData = attributes->member<BoolData>( "gl:visualiser:frustum" );
+			m_drawFrustum = drawFrustumData ? drawFrustumData->readable() : true;
+
 			m_state = static_pointer_cast<const State>(
 				CachedConverter::defaultCachedConverter()->convert( attributes )
 			);
@@ -236,6 +239,11 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_ornamentScale;
 		}
 
+		bool drawFrustum() const
+		{
+			return m_drawFrustum;
+		}
+
 	private :
 
 		ConstStatePtr m_state;
@@ -244,6 +252,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Visualisations m_lightFilterVisualisations;
 
 		float m_ornamentScale = 1.0f;
+		bool m_drawFrustum = true;
 };
 
 IE_CORE_DECLAREPTR( OpenGLAttributes )
@@ -345,7 +354,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				// We only consider ornaments if there is no geometric representation.
 				// As we don't use the bounds for culling, we can get away with this,
 				// and it means sizable visualisations don't mess up the framing when there
-				// is a geometric component.
+				// is a geometric component. We also deliberately ignore Frustum visualisations
+				// for the same reason.
 				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
 				{
 					const Box3f ornamentB = v->bound();
@@ -391,6 +401,14 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( auto v = visualisation( *m_attributes, VisualisationType::Geometry ) )
 			{
 				v->render( currentState );
+			}
+
+			if( m_attributes->drawFrustum() )
+			{
+				if( auto v = visualisation( *m_attributes, VisualisationType::Frustum ) )
+				{
+					v->render( currentState );
+				}
 			}
 
 			if( haveTransform )
