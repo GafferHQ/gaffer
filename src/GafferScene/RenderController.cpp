@@ -564,12 +564,12 @@ class RenderController::SceneGraph
 			}
 
 			IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
-			m_objectHash = objectHash;
 
 			const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
 			if( (type != LightType && type != LightFilterType) && nullObject )
 			{
 				m_objectInterface = nullptr;
+				m_objectHash = objectHash;
 				return hadObjectInterface;
 			}
 
@@ -650,6 +650,11 @@ class RenderController::SceneGraph
 			{
 				m_objectInterface = renderer->object( name, object.get(), attributesInterface( renderer ) );
 			}
+
+			// Object computation may take a while so we're sensitive to
+			// cancellation. Only update the hash if we successfully ran to the
+			// end, otherwise we may fail to retry as the hash hasn't changed.
+			m_objectHash = objectHash;
 
 			return true;
 		}
