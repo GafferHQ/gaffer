@@ -76,7 +76,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		static IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &size );
 
-		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
+		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color );
 
 		// This method should be overridden by any sub-classes that wish to
 		// provide an alternate surface texture for area-based lights.
