@@ -11,3 +11,4 @@ config.log
 .idea
 .sconf_temp
 .gafferBackups
+*.pyc
