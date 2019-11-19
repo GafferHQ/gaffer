@@ -1,4 +1,4 @@
-0.55.0.1 (relative to 0.55.0.0)
+0.55.1.0 (relative to 0.55.0.0)
 ========
 
 Improvements
@@ -21,6 +21,9 @@ Fixes
 - GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
 - Parent : Fixed bug which prevented loading of Parent nodes with a promoted `children` plug (#3464).
 - Group/Parent : Fixed processing of invalid input sets. This now omits the invalid set members rather than throwing an error.
+- ImageReader : Fixed bug which meant that changes to the default format were not respected.
+- UVInspector : Fixed bug which prevented alternative UV sets from being viewed.
+- SceneInspector : Fixed bug comparing objects where a particular primitive variable existed on only one of the objects (#3432).
 
 0.55.0.0
 ========
