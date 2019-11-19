@@ -2294,6 +2294,20 @@ std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
 // Dicing camera
 IECore::InternedString g_dicingCameraOptionName( "ccl::dicing_camera" );
 
+// Texture cache
+IECore::InternedString g_useTextureCacheOptionName( "ccl:texture:use_texture_cache" );
+IECore::InternedString g_textureCacheSizeOptionName( "ccl:texture:cache_size" );
+IECore::InternedString g_textureAutoConvertOptionName( "ccl:texture:auto_convert" );
+IECore::InternedString g_textureAcceptUnmippedOptionName( "ccl:texture:accept_unmipped" );
+IECore::InternedString g_textureAcceptUntiledOptionName( "ccl:texture:accept_untiled" );
+IECore::InternedString g_textureAutoTileOptionName( "ccl:texture:auto_tile" );
+IECore::InternedString g_textureAutoMipOptionName( "ccl:texture:auto_mip" );
+IECore::InternedString g_textureTileSizeOptionName( "ccl:texture:tile_size" );
+IECore::InternedString g_textureBlurDiffuseOptionName( "ccl:texture:blur_diffuse" );
+IECore::InternedString g_textureBlurGlossyOptionName( "ccl:texture:blur_glossy" );
+IECore::InternedString g_textureUseCustomCachePathOptionName( "ccl:texture:use_custom_cache_path" );
+IECore::InternedString g_textureCustomCachePathOptionName( "ccl:texture:custom_cache_path" );
+
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
 class CyclesRenderer final : public IECoreScenePreview::Renderer
@@ -2307,6 +2321,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
 				m_denoiseParams( ccl::DenoiseParams() ),
+				m_textureCacheParams( ccl::TextureCacheParams() ),
 				m_deviceName( "CPU" ),
 				m_shadingsystemName( "SVM" ),
 				m_session( nullptr ),
@@ -2375,6 +2390,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
 			m_denoiseParamsDefault = m_denoiseParams;
+			m_textureCacheParamsDefault = m_textureCacheParams;
 
 			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
@@ -2471,6 +2487,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				if ( const V2iData *data = reportedCast<const V2iData>( value, "option", name ) ) { \
 					auto d = data->readable(); \
 					CATEGORY.OPTION = ccl::make_int2( d.x, d.y ); } \
+				return; }
+			#define OPTION_STR(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
+				if( value == nullptr ) { \
+					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+					return; } \
+				if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) ) { \
+					CATEGORY.OPTION = data->readable().c_str(); } \
 				return; }
 
 			auto *integrator = m_scene->integrator;
@@ -2721,6 +2744,24 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
 			}
+			else if( boost::starts_with( name.string(), "ccl:texture:" ) )
+			{
+				OPTION_BOOL (m_textureCacheParams, g_useTextureCacheOptionName,           use_cache );
+				OPTION_INT  (m_textureCacheParams, g_textureCacheSizeOptionName,          cache_size );
+				OPTION_BOOL (m_textureCacheParams, g_textureAutoConvertOptionName,        auto_convert );
+				OPTION_BOOL (m_textureCacheParams, g_textureAcceptUnmippedOptionName,     accept_unmipped );
+				OPTION_BOOL (m_textureCacheParams, g_textureAcceptUntiledOptionName,      accept_untiled );
+				OPTION_BOOL (m_textureCacheParams, g_textureAutoTileOptionName,           auto_tile );
+				OPTION_BOOL (m_textureCacheParams, g_textureAutoMipOptionName,            auto_mip );
+				OPTION_INT  (m_textureCacheParams, g_textureTileSizeOptionName,           tile_size );
+				OPTION_FLOAT(m_textureCacheParams, g_textureBlurDiffuseOptionName,        diffuse_blur );
+				OPTION_FLOAT(m_textureCacheParams, g_textureBlurGlossyOptionName,         glossy_blur );
+				OPTION_BOOL (m_textureCacheParams, g_textureUseCustomCachePathOptionName, use_custom_cache_path );
+				OPTION_STR  (m_textureCacheParams, g_textureCustomCachePathOptionName,    custom_cache_path );
+
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				return;
+			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
 			else if( boost::starts_with( name.string(), "ccl:background:" ) )
 			{
@@ -2896,6 +2937,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			#undef OPTION_INT
 			#undef OPTION_INT_C
 			#undef OPTION_V2I
+			#undef OPTION_STR
 		}
 
 		void output( const IECore::InternedString &name, const Output *output ) override
@@ -3238,6 +3280,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// No checking on denoise settings either
 			m_session->params.denoising = m_denoiseParams;
 			m_sessionParams.denoising = m_denoiseParams;
+			m_sceneParams.texture = m_textureCacheParams;
 
 			ccl::Integrator *integrator = m_scene->integrator;
 			if( integrator->modified( m_integrator ) )
@@ -3514,6 +3557,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::BufferParams m_bufferParams;
 		ccl::BufferParams m_bufferParamsModified;
 		ccl::DenoiseParams m_denoiseParams;
+		ccl::TextureCacheParams m_textureCacheParams;
 		ccl::Camera *m_defaultCamera;
 		ccl::Integrator m_integrator;
 		ccl::Background m_background;
@@ -3532,6 +3576,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SceneParams m_sceneParamsDefault;
 		ccl::DenoiseParams m_denoiseParamsDefault;
 		ccl::CurveSystemManager m_curveSystemManagerDefault;
+		ccl::TextureCacheParams m_textureCacheParamsDefault;
 
 		// IECoreScene::Renderer
 		string m_deviceName;

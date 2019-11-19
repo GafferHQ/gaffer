@@ -238,6 +238,20 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Dicing camera
 	options->addChild( new Gaffer::NameValuePlug( "ccl:dicing_camera", new IECore::StringData(), false, "dicingCamera" ) );
+
+	// Texture cache
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:use_texture_cache", new IECore::BoolData( false ), false, "useTextureCache" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:cache_size", new IECore::IntData( 1024 ), false, "textureCacheSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:auto_convert", new IECore::BoolData( true ), false, "textureAutoConvert" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:accept_unmipped", new IECore::BoolData( true ), false, "textureAcceptUnmipped" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:accept_untiled", new IECore::BoolData( true ), false, "textureAcceptUntiled" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:auto_tile", new IECore::BoolData( true ), false, "textureAutoTile" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:auto_mip", new IECore::BoolData( true ), false, "textureAutoMip" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:tile_size", new IECore::IntData( 64 ), false, "textureTileSize" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:blur_diffuse", new IECore::FloatData( 0.0156f ), false, "textureBlurDiffuse" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:blur_glossy", new IECore::FloatData( 0.0f ), false, "textureBlurGlossy" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:use_custom_cache_path", new IECore::BoolData( false ), false, "useCustomCachePath" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:texture:custom_cache_path", new IECore::StringData(), false, "customCachePath" ) );
 }
 
 CyclesOptions::~CyclesOptions()
