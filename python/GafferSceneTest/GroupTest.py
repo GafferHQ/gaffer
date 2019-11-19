@@ -759,6 +759,24 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( noduleColor, None )
 		self.assertEqual( noduleColor, connectionColor )
 
+	def testProcessInvalidSet( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		bogusSet = GafferScene.Set()
+		bogusSet["in"].setInput( sphere["out"] )
+		bogusSet["paths"].setValue( IECore.StringVectorData( [ "/sphere", "/notASphere" ] ) )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( bogusSet["out"] )
+
+		self.assertEqual(
+			group["out"].set( "set" ).value,
+			IECore.PathMatcher( [ "/group/sphere" ] )
+		)
+
+		self.assertSceneValid( group["out"] )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

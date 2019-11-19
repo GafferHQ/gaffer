@@ -18,6 +18,7 @@ Fixes
 - TabbedContainer : Fixed a bug that caused an exception when the last tab in a container was closed.
 - ArnoldLight : Fixed a bug that prevented OSL shaders being used with Arnold lights.
 - GraphEditor : Fixed several bugs and a crash that could occur when a parent of the editor's root node was changed or deleted.
+- Group/Parent : Fixed processing of invalid input sets. This now omits the invalid set members rather than throwing an error.
 
 0.55.0.0
 ========
