@@ -73,6 +73,8 @@ Light::Light( const std::string &name )
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", maxResValuePlug, false, "maxTextureResolution" ) );
 
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), false, "lightDrawingMode" ) );
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:projection", new IECore::BoolData( true ), false, "lightProjection" ) );
+
 	addChild( visualiserAttr  );
 }
 

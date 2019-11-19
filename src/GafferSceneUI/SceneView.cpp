@@ -163,6 +163,10 @@ class SceneView::DrawingMode : public boost::signals::trackable
 
 			FloatPlugPtr ornamentScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
 			NameValuePlugPtr ornamentScalePlug = new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", ornamentScaleValuePlug, true, "visualiserOrnamentScale" );
+
+			NameValuePlugPtr lightProjectionPlug = new Gaffer::NameValuePlug( "gl:light:projection", new IECore::BoolData( true ), true, "lightProjection" );
+			attr->addChild( lightProjectionPlug );
+
 			attr->addChild( ornamentScalePlug );
 
 			// View plugs
@@ -186,10 +190,12 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			ValuePlugPtr lights = new ValuePlug( "light" );
 			drawingMode->addChild( lights );
 			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
+			lights->addChild( new BoolPlug( "projection", Plug::In, true ) );
 
 			drawingMode->addChild( ornamentScaleValuePlug->createCounterpart( "visualiserOrnamentScale", Plug::Direction::In ) );
 
 			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
+			lightProjectionPlug->getChild<BoolPlug>( "value" )->setInput( lights->getChild<BoolPlug>( "projection" ) );
 			ornamentScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserOrnamentScale" ) );
 
 			updateOpenGLOptions();

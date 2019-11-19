@@ -410,7 +410,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.lightProjection" : [
 
+			"description",
+			"""
+			Controls whether applicable lights draw a representation of the
+			projection of their light.
+			""",
+
+			"layout:section", "Visualisers",
+
+		]
 
 	}
 

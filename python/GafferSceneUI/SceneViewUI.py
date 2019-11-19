@@ -225,6 +225,17 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+		m.append( "/Lights/__optionsDivider__", { "divider" : True } )
+
+		lightProjectionPlug = self.getPlug()["light"]["projection"]
+		m.append(
+			"/Lights/Show Projection",
+			{
+				"command" : lightProjectionPlug.setValue,
+				"checkBox" : lightProjectionPlug.getValue()
+			}
+		)
+
 		for n in ( "useGLLines", "interpolate" ) :
 			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(

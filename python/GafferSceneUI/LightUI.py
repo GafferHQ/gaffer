@@ -140,6 +140,16 @@ Gaffer.Metadata.registerNode(
 			"preset:Texture", "texture",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
+		],
+
+		"visualiserAttributes.lightProjection" : [
+
+			"description",
+			"""
+			Controls whether applicable lights draw a representation of the
+			projection of their light.
+			"""
+
 		]
 
 	}
