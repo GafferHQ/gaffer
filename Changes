@@ -5,6 +5,8 @@ Improvements
 ------------
 
 - Stats app : Added node compute counts to performanceMonitor script annotations.
+- UIEditor : Made the Plugs tab resize the editor window so the Presets section is fully visible when expanded.
+- UIEditor : Added options to the Node tab to turn on and off Box node plug creator decorations.
 
 Fixes
 -----

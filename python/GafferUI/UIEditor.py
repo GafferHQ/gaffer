@@ -110,6 +110,17 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 						MetadataWidget.FileSystemPathMetadataWidget( key = "icon" )
 					)
 
+				with _Row() as self.__plugAddButtons :
+
+					_Label( "Plug Creators" )
+
+					for side in ( "Top", "Bottom", "Left", "Right" ) :
+						_Label( side )._qtWidget().setFixedWidth( 40 )
+						self.__nodeMetadataWidgets.append( MetadataWidget.BoolMetadataWidget(
+							key = "noduleLayout:customGadget:addButton%s:visible" % side,
+							defaultValue = True
+						) )
+
 			# Plugs tab
 			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as self.__plugTab :
 
@@ -251,6 +262,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		self.__node = node
 		self.__nodeNameWidget.setGraphComponent( self.__node )
 		self.__nodeTab.setEnabled( self.__node is not None )
+		self.__plugAddButtons.setVisible( False )
 
 		if self.__node is None :
 			self.__plugListing.setPlugParent( None )
@@ -264,6 +276,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 				# is available for use by the user on Reference nodes once a Box has
 				# been exported and referenced.
 				plugParent = self.__node
+				self.__plugAddButtons.setVisible( True )
 			self.__plugListing.setPlugParent( plugParent )
 			self.__sectionEditor.setPlugParent( plugParent )
 
@@ -537,6 +550,10 @@ class _PlugListing( GafferUI.Widget ) :
 
 		column = GafferUI.ListContainer( spacing = 4 )
 		GafferUI.Widget.__init__( self, column, **kw )
+
+		# We don't have a way to do this with Widget directly at present, this
+		# stops the preset name/value fields being off-screen.
+		column._qtWidget().setMinimumWidth( 650 )
 
 		with column :
 
