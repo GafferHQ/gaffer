@@ -36,6 +36,7 @@
 ##########################################################################
 
 import gc
+import inspect
 
 import IECore
 
@@ -658,6 +659,31 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		# to be equal in this context.
 		self.assertFalse( n2["op2"].isSetToDefault() )
 		self.assertEqual( n2["op2"].getValue(), n2["op2"].defaultValue() )
+
+	def testCancellationDuringCompute( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			IECore.Canceller.check( context.canceller() )
+			parent['n']['op1'] = 40
+			"""
+		) )
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		with Gaffer.Context( s.context(), canceller ) :
+			with self.assertRaises( IECore.Cancelled ) :
+				s["n"]["sum"].getValue()
+
+		canceller = IECore.Canceller()
+
+		with Gaffer.Context( s.context(), canceller ) :
+			self.assertEqual( s["n"]["sum"].getValue(), 40 )
 
 	def setUp( self ) :
 
