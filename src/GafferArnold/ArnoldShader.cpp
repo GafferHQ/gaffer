@@ -42,10 +42,10 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreArnold/UniverseBlock.h"
 
-#include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 
 #include "boost/format.hpp"
@@ -211,7 +211,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	return metadata;
 }
 
-typedef LRUCache<std::string, IECore::ConstCompoundDataPtr> MetadataCache;
+typedef IECorePreview::LRUCache<std::string, IECore::ConstCompoundDataPtr> MetadataCache;
 MetadataCache g_arnoldMetadataCache( metadataGetter, 10000 );
 
 const IECore::CompoundData *ArnoldShader::metadata() const

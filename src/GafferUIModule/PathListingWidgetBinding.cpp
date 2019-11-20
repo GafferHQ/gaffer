@@ -40,13 +40,13 @@
 
 #include "Gaffer/FileSystemPath.h"
 #include "Gaffer/Path.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "IECore/DateTimeData.h"
-#include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
@@ -270,7 +270,7 @@ class IconColumn : public Column
 			return QPixmap( QString( path.string().c_str() ) );
 		}
 
-		typedef IECore::LRUCache<std::string, QVariant> IconCache;
+		typedef IECorePreview::LRUCache<std::string, QVariant> IconCache;
 		static IconCache g_iconCache;
 
 };

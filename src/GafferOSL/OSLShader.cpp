@@ -47,12 +47,12 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
-#include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 
 #include "OSL/oslquery.h"
@@ -128,7 +128,7 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &co
 	return new ShadingEngine( network );
 }
 
-typedef LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey> ShadingEngineCache;
+typedef IECorePreview::LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, IECorePreview::LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey> ShadingEngineCache;
 ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
 } // namespace
@@ -1213,7 +1213,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	return metadata;
 }
 
-typedef LRUCache<std::string, IECore::ConstCompoundDataPtr> MetadataCache;
+typedef IECorePreview::LRUCache<std::string, IECore::ConstCompoundDataPtr> MetadataCache;
 MetadataCache g_metadataCache( metadataGetter, 10000 );
 
 const IECore::CompoundData *OSLShader::metadata() const
