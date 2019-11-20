@@ -67,9 +67,6 @@ class GAFFERSCENE_API ShaderAssignment : public SceneElementProcessor
 
 	private :
 
-		Gaffer::BoolPlug *contextCompatibilityPlug();
-		const Gaffer::BoolPlug *contextCompatibilityPlug() const;
-
 		static size_t g_firstPlugIndex;
 
 };

@@ -41,7 +41,6 @@
 #include "GafferOSL/OSLCode.h"
 #include "GafferOSL/TypeIds.h"
 
-
 #include "GafferScene/Deformer.h"
 #include "GafferScene/ShaderPlug.h"
 
@@ -97,9 +96,6 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 
 		Gaffer::StringPlug *resampledNamesPlug();
 		const Gaffer::StringPlug *resampledNamesPlug() const;
-
-		Gaffer::BoolPlug *contextCompatibilityPlug();
-		const Gaffer::BoolPlug *contextCompatibilityPlug() const;
 
 		ConstShadingEnginePtr shadingEngine( const Gaffer::Context *context ) const;
 
