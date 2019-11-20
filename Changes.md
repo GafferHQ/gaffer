@@ -23,6 +23,8 @@ Breaking Changes
   ratios.
 - Instancer : Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a
   config file.
+- OSLObject : Removed support for the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable.
+- ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
 
 0.55.1.0 (relative to 0.55.0.0)
 ========
