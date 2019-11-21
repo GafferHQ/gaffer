@@ -40,6 +40,7 @@
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "Gaffer/Metadata.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
@@ -51,7 +52,6 @@
 
 #include "IECoreScene/Shader.h"
 
-#include "IECore/LRUCache.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/format.hpp"
@@ -116,7 +116,7 @@ CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 	return evalOSLTexture( key.shaderNetwork, key.resolution );
 }
 
-typedef LRUCache<IECore::MurmurHash, CompoundDataPtr, LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
+typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
 OSLTextureCache g_oslTextureCache( getter, 100 );
 
 const char *goboFragSource()
