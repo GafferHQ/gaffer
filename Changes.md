@@ -15,6 +15,7 @@ Fixes
 -----
 
 - Resize : Fixed bug which caused unwanted image distortion when changing pixel aspect ratio.
+- Launch : Fixed bug which prevented gaffer launching when stored on case destroying file systems (#3477).
 
 Breaking Changes
 ----------------
@@ -25,6 +26,7 @@ Breaking Changes
   config file.
 - OSLObject : Removed support for the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable.
 - ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
+- bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
 
 0.55.1.0 (relative to 0.55.0.0)
 ========

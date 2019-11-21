@@ -927,7 +927,7 @@ libraries = {
 	},
 
 	"scripts" : {
-		"additionalFiles" : [ "bin/gaffer", "bin/gaffer.py" ],
+		"additionalFiles" : [ "bin/gaffer", "bin/__gaffer.py" ],
 	},
 
 	"misc" : {
