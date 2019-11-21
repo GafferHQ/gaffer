@@ -1,3 +1,11 @@
+0.54.2.x (relative to 0.54.2.2)
+========
+
+Fixes
+-----
+
+Viewer : Fixed X-Ray shading mode on MacOS (#3473).
+
 0.54.2.2 (relative to 0.54.2.1)
 ========
 
