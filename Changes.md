@@ -10,6 +10,7 @@ Improvements
   - Added better defaults for the `orientation` and `scale` plugs.
 - OSLObject : Added non-uniform scale to standard primitive variable menu.
  - View navigation : Holding down <kbd>Shift</kbd> whilst using the scroll wheel in the Viewer and other Editors to adjust the camera or view magnification results in more precise adjustments (#3324).
+- Error handling : The Cortex exception type is now included in error messages where relevant.
 
 Fixes
 -----
