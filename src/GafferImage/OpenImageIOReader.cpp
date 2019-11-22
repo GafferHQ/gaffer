@@ -37,6 +37,9 @@
 
 #include "GafferImage/OpenImageIOReader.h"
 
+// The nested TaskMutex needs to be the first to include tbb
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
+
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
 
@@ -48,7 +51,6 @@
 #include "IECore/Export.h"
 #include "IECore/FileSequence.h"
 #include "IECore/FileSequenceFunctions.h"
-#include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 
 #include "OpenImageIO/imagecache.h"
@@ -499,7 +501,7 @@ CacheEntry fileCacheGetter( const std::string &fileName, size_t &cost )
 	return result;
 }
 
-typedef LRUCache<std::string, CacheEntry> FileHandleCache;
+typedef IECorePreview::LRUCache<std::string, CacheEntry> FileHandleCache;
 
 FileHandleCache *fileCache()
 {

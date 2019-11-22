@@ -113,6 +113,10 @@ def __createXRayShader() :
 	xray["shader"]["type"].setValue( "gl:surface" )
 	xray["shader"]["parameters"].addChild( Gaffer.StringPlug( "glFragmentSource", defaultValue = inspect.cleandoc(
 		'''
+		\\#if __VERSION__ <= 120
+		\\#define in varying
+		\\#endif
+
 		in vec3 fragmentN;
 		in vec3 fragmentI;
 

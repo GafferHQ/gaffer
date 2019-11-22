@@ -37,11 +37,11 @@
 #include "GafferScene/Text.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreScene/Font.h"
 #include "IECoreScene/MeshPrimitive.h"
 
-#include "IECore/LRUCache.h"
 #include "IECore/SearchPath.h"
 
 using namespace Gaffer;
@@ -75,7 +75,7 @@ FontPtr fontGetter( const std::string &fileName, size_t &cost )
 	return new Font( resolvedFileName );
 }
 
-typedef LRUCache<std::string, FontPtr> FontCache;
+typedef IECorePreview::LRUCache<std::string, FontPtr> FontCache;
 
 FontCache *fontCache()
 {
