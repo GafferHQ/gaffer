@@ -38,6 +38,7 @@
 
 #include "Gaffer/Private/IECorePreview/TaskMutex.h"
 
+#include "IECore/Canceller.h"
 #include "IECore/Exception.h"
 
 #include "boost/multi_index/hashed_index.hpp"
@@ -1091,6 +1092,10 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 		try
 		{
 			handle.execute( [this, &value, &key, &cost] { value = m_getter( key, cost ); } );
+		}
+		catch( IECore::Cancelled const &c )
+		{
+			throw;
 		}
 		catch( ... )
 		{
