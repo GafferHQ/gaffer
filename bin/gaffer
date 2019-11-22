@@ -304,7 +304,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 		fi
 	fi
 	# Using `which` because lldb doesn't seem to respect $PATH
-	exec $GAFFER_DEBUGGER `which python` "$GAFFER_ROOT/bin/gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER `which python` "$GAFFER_ROOT/bin/__gaffer.py" "$@"
 else
-	exec python "$GAFFER_ROOT/bin/gaffer.py" "$@"
+	exec python "$GAFFER_ROOT/bin/__gaffer.py" "$@"
 fi
