@@ -37,6 +37,7 @@
 #include "GafferUI/ImageGadget.h"
 
 #include "GafferUI/Style.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreGL/Texture.h"
 #include "IECoreGL/TextureLoader.h"
@@ -45,7 +46,6 @@
 #include "IECoreImage/ImageReader.h"
 
 #include "IECore/Exception.h"
-#include "IECore/LRUCache.h"
 #include "IECore/SearchPath.h"
 
 using namespace Imath;
@@ -145,7 +145,7 @@ ImageGadget::ImageGadget( const std::string &fileName )
 	// we'll load the actual texture later when we're sure a GL context exists,
 	// but we need to find the bounding box now so that bound() will always be correct.
 
-	typedef LRUCache<std::string, Box3f> ImageBoundCache;
+	typedef IECorePreview::LRUCache<std::string, Box3f> ImageBoundCache;
 	static ImageBoundCache g_imageBoundCache( boundGetter, 10000 );
 	m_bound = g_imageBoundCache.get( fileName );
 

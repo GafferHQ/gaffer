@@ -40,8 +40,8 @@
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Transform2DPlug.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
-#include "IECore/LRUCache.h"
 #include "IECore/SearchPath.h"
 
 #include "tbb/enumerable_thread_specific.h"
@@ -116,7 +116,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost )
 	return result;
 }
 
-typedef LRUCache<string, FacePtr> FaceCache;
+typedef IECorePreview::LRUCache<string, FacePtr> FaceCache;
 typedef std::unique_ptr<FaceCache> FaceCachePtr;
 FaceCachePtr createFaceCache()
 {

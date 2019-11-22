@@ -1,10 +1,17 @@
-0.55.2.0 (relative to 0.55.1.0)
+0.55.2.x (relative to 0.55.1.0)
 ========
 
 Improvements
 ------------
 
 - Stats app : Added `-postLoadScript` command line argument. This can be used to perform post-processing of the loaded script before stats are gathered.
+
+Fixes
+-----
+
+- Viewer : Fixed X-Ray shading mode on MacOS (#3473).
+- Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
+- LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
 
 0.55.1.0 (relative to 0.55.0.0)
 ========
@@ -160,7 +167,7 @@ Breaking Changes
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
 
-0.54.2.2 (relative to 0.54.2.1)
+0.54.2.x (relative to 0.54.2.2)
 ========
 
 Fixes
@@ -175,6 +182,9 @@ Fixes
 - ImageReader : Fixed bug which meant that changes to the default format were not respected.
 - UVInspector : Fixed bug which prevented alternative UV sets from being viewed.
 - SceneInspector : Fixed bug comparing objects where a particular primitive variable existed on only one of the objects (#3432).
+- Viewer : Fixed X-Ray shading mode on MacOS (#3473).
+- Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
+- LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
 
 0.54.2.1 (relative to 0.54.2.0)
 ========

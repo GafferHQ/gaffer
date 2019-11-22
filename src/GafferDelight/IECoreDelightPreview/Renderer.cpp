@@ -36,6 +36,8 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
+
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
@@ -43,7 +45,6 @@
 #include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
-#include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
@@ -120,7 +121,7 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 	}
 }
 
-typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
+typedef IECorePreview::LRUCache<std::string, std::string> ShaderSearchPathCache;
 ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 } // namespace
