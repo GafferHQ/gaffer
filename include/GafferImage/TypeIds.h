@@ -118,6 +118,7 @@ enum TypeId
 	DilateTypeId = 110822,
 	RampTypeId = 110823,
 	RectangleTypeId = 110824,
+	FlatToDeepTypeId = 110825,
 
 	LastTypeId = 110849
 };

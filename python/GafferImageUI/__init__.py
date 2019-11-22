@@ -98,5 +98,6 @@ import CollectImagesUI
 import CatalogueSelectUI
 import BleedFillUI
 import RectangleUI
+import FlatToDeepUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

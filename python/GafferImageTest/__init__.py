@@ -97,6 +97,7 @@ from CatalogueSelectTest import CatalogueSelectTest
 from BleedFillTest import BleedFillTest
 from RectangleTest import RectangleTest
 from ModuleTest import ModuleTest
+from FlatToDeepTest import FlatToDeepTest
 
 if __name__ == "__main__":
 	import unittest
