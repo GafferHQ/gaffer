@@ -106,5 +106,6 @@ import DeepStateUI
 import EmptyUI
 import DeepSampleCountsUI
 import DeepSamplerUI
+import DeepToFlatUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

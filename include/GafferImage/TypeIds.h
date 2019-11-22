@@ -125,6 +125,7 @@ enum TypeId
 	FlatImageProcessorTypeId = 110829,
 	DeepSampleCountsTypeId = 110830,
 	DeepSamplerTypeId = 110831,
+	DeepToFlatTypeId = 110832,
 
 	LastTypeId = 110849
 };

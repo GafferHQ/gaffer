@@ -39,6 +39,7 @@
 #include "GafferImage/FlatToDeep.h"
 #include "GafferImage/DeepMerge.h"
 #include "GafferImage/DeepState.h"
+#include "GafferImage/DeepToFlat.h"
 #include "GafferImage/Empty.h"
 #include "GafferImage/DeepSampleCounts.h"
 #include "GafferImage/DeepSampler.h"
@@ -71,6 +72,15 @@ void GafferImageModule::bindDeepNodes()
 			.value( "Sorted", DeepState::TargetState::Sorted )
 			.value( "Tidy", DeepState::TargetState::Tidy )
 			.value( "Flat", DeepState::TargetState::Flat )
+		;
+	}
+	{
+		scope s = DependencyNodeClass<DeepToFlat>();
+
+		enum_<DeepToFlat::DepthMode>( "DepthMode" )
+			.value( "Range", DeepToFlat::DepthMode::Range )
+			.value( "Filtered", DeepToFlat::DepthMode::Filtered )
+			.value( "None", DeepToFlat::DepthMode::None )
 		;
 	}
 	DependencyNodeClass<Empty>();
