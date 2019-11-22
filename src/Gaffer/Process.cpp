@@ -49,6 +49,27 @@
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+std::string prefixedWhat( const IECore::Exception &e )
+{
+	std::string s = std::string( e.type() );
+	if( s == "Exception" )
+	{
+		// Prefixing with type wouldn't add any useful information.
+		return e.what();
+	}
+	s += " : "; s += e.what();
+	return s;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // Process
 //////////////////////////////////////////////////////////////////////////
 
@@ -96,6 +117,15 @@ void Process::handleException()
 	{
 		emitError( e.what(), e.plug() );
 		throw;
+	}
+	catch( const IECore::Exception &e )
+	{
+		emitError( prefixedWhat( e ) );
+		// Wrap in a ProcessException. This allows us to correctly
+		// transport the source plug up the call chain, and also
+		// provides a more useful error message to the unlucky
+		// recipient.
+		ProcessException::wrapCurrentException( *this );
 	}
 	catch( const std::exception &e )
 	{
@@ -177,6 +207,11 @@ void ProcessException::wrapCurrentException( const ConstPlugPtr &plug, const Con
 	catch( const ProcessException &e )
 	{
 		throw;
+	}
+	catch( const IECore::Exception &e )
+	{
+		const std::string w = prefixedWhat( e );
+		throw ProcessException( plug, context, processType, std::current_exception(), w.c_str() );
 	}
 	catch( const std::exception &e )
 	{
