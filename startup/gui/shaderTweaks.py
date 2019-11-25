@@ -55,6 +55,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Arnold Gobo", "ai:lightFilter:gobo" ),
 		( "Arnold Decay", "ai:lightFilter:light_decay" ),
 		( "Arnold Barndoor", "ai:lightFilter:barndoor" ),
+		( "Arnold Blocker", "ai:lightFilter:filter" )
 
 	] )
 
