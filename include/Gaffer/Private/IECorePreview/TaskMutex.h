@@ -35,6 +35,8 @@
 #ifndef IECOREPREVIEW_TASKMUTEX_H
 #define IECOREPREVIEW_TASKMUTEX_H
 
+#include "IECore/RefCounted.h"
+
 #include "boost/container/flat_set.hpp"
 #include "boost/noncopyable.hpp"
 

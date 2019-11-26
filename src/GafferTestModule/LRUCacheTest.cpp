@@ -42,6 +42,8 @@
 
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
+#include "IECore/Canceller.h"
+
 #include "tbb/parallel_for.h"
 
 using namespace IECorePreview;
@@ -485,6 +487,79 @@ void testLRUCacheExceptions( const std::string &policy )
 	DispatchTest<TestLRUCacheExceptions>()( policy );
 }
 
+template<template<typename> class Policy>
+struct TestLRUCacheCancellation
+{
+
+	void operator()()
+	{
+		std::vector<int> calls;
+
+		typedef std::unique_ptr<IECore::Canceller> CancellerPtr;
+		CancellerPtr canceller;
+		canceller.reset( new IECore::Canceller() );
+
+		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
+		Cache cache(
+			[&calls, &canceller]( int key, size_t &cost ) {
+				calls.push_back( key );
+				IECore::Canceller::check( canceller.get() );
+				return key;
+			},
+			1000
+		);
+
+		// Check normal operation
+
+		GAFFERTEST_ASSERTEQUAL( cache.get( 1 ), 1 );
+		GAFFERTEST_ASSERTEQUAL( cache.get( 2 ), 2 );
+
+		GAFFERTEST_ASSERTEQUAL( calls.size(), 2 );
+		GAFFERTEST_ASSERTEQUAL( calls[0], 1 );
+		GAFFERTEST_ASSERTEQUAL( calls[1], 2 );
+
+		// Check cancellation is not handled in the same way as a normal
+		// exception, and will simply get the value again for subsequent
+		// lookups.
+
+		canceller->cancel();
+
+		bool caughtCancel = false;
+		int val = -1;
+		try
+		{
+			val = cache.get( 3 );
+		}
+		catch( IECore::Cancelled const &c )
+		{
+			caughtCancel = true;
+		}
+
+		GAFFERTEST_ASSERT( caughtCancel );
+		GAFFERTEST_ASSERTEQUAL( val, -1 );
+
+		GAFFERTEST_ASSERTEQUAL( calls.size(), 3 );
+		GAFFERTEST_ASSERTEQUAL( calls.back(), 3 );
+
+		// reset and check that we get called again
+
+		canceller.reset( new IECore::Canceller() );
+
+		val = cache.get( 3 );
+
+		GAFFERTEST_ASSERTEQUAL( val, 3 );
+		GAFFERTEST_ASSERTEQUAL( calls.size(), 4 );
+		GAFFERTEST_ASSERTEQUAL( calls.back(), 3 );
+
+	}
+
+};
+
+void testLRUCacheCancellation( const std::string &policy )
+{
+	DispatchTest<TestLRUCacheCancellation>()( policy );
+}
+
 } // namespace
 
 void GafferTestModule::bindLRUCacheTest()
@@ -496,4 +571,5 @@ void GafferTestModule::bindLRUCacheTest()
 	def( "testLRUCacheRecursionOnOneItem", &testLRUCacheRecursionOnOneItem );
 	def( "testLRUCacheClearFromGet", &testLRUCacheClearFromGet );
 	def( "testLRUCacheExceptions", &testLRUCacheExceptions );
+	def( "testLRUCacheCancellation", &testLRUCacheCancellation );
 }

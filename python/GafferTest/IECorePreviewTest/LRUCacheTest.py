@@ -171,5 +171,17 @@ class LRUCacheTest( GafferTest.TestCase ) :
 
 		GafferTest.testLRUCacheExceptions( "taskParallel" )
 
+	def testCancellationSerial( self ) :
+
+		GafferTest.testLRUCacheCancellation( "serial" )
+
+	def testCancellationParallel( self ) :
+
+		GafferTest.testLRUCacheCancellation( "parallel" )
+
+	def testCancellationTaskParallel( self ) :
+
+		GafferTest.testLRUCacheCancellation( "taskParallel" )
+
 if __name__ == "__main__":
 	unittest.main()

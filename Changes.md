@@ -1,4 +1,4 @@
-0.56.0.0
+0.56.x.x
 ========
 
 Improvements
@@ -28,6 +28,21 @@ Breaking Changes
 - OSLObject : Removed support for the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable.
 - ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
+
+0.55.2.0 (relative to 0.55.1.0)
+========
+
+Improvements
+------------
+
+- Stats app : Added `-postLoadScript` command line argument. This can be used to perform post-processing of the loaded script before stats are gathered.
+
+Fixes
+-----
+
+- Viewer : Fixed X-Ray shading mode on MacOS (#3473).
+- Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
+- LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
 
 0.55.1.0 (relative to 0.55.0.0)
 ========
@@ -182,6 +197,16 @@ Breaking Changes
 - CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
+
+0.54.2.3 (relative to 0.54.2.2)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed X-Ray shading mode on MacOS (#3473).
+- Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
+- LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
 
 0.54.2.2 (relative to 0.54.2.1)
 ========
