@@ -123,6 +123,14 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		for w in self.__row :
 			w.setReadOnly( readOnly )
 
+	def setNameVisible( self, visible ) :
+
+		self.__row[0].setVisible( visible )
+
+	def getNameVisible( self ) :
+
+		return self.__row[0].getVisible()
+
 	def _updateFromPlug( self ) :
 
 		if "enabled" in self.getPlug() :
