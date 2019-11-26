@@ -318,6 +318,9 @@ void resetNode( AtNode *node )
 			continue;
 		}
 
+		// We've seen cases where AiNodeResetParameter doesn't unlink
+		// connections hence the call directly to AiNodeUnlink.
+		AiNodeUnlink( node, name );
 		AiNodeResetParameter( node, name );
 	}
 	AiParamIteratorDestroy( it );
