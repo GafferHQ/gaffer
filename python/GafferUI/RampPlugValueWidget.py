@@ -79,7 +79,6 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__splineWidget._qtWidget().setMinimumHeight( 50 )
 
 			self.__slider = GafferUI.Slider()
-			self.__slider.setSizeEditable( True )
 			self.__slider.setMinimumSize( 2 )
 			self.__positionsChangedConnection = self.__slider.positionChangedSignal().connect( Gaffer.WeakMethod( self.__positionsChanged ), scoped = False )
 			self.__slider.indexRemovedSignal().connect( Gaffer.WeakMethod( self.__indexRemoved ), scoped = False )
@@ -129,6 +128,9 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlug( self ) :
 
 		plug = self.getPlug()
+		self.__slider.setSizeEditable( not ( plug.getInput() or
+			plug.direction() == Gaffer.Plug.Direction.Out or Gaffer.MetadataAlgo.readOnly( plug )
+		) )
 		with self.getContext() :
 
 			self.__splineWidget.setSpline( plug.getValue().spline() )
@@ -146,7 +148,6 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__positionsMergeGroupId += 1
 		self.__lastPositionChangedReason = reason
 
-		rejected = False
 		plug = self.getPlug()
 		with Gaffer.UndoScope(
 			plug.ancestor( Gaffer.ScriptNode ),
@@ -154,6 +155,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		) :
 
 			if len( slider.getPositions() ) == plug.numPoints() :
+				rejected = False
 				# the user has moved an existing point on the slider
 				for index, position in enumerate( slider.getPositions() ) :
 					if plug.pointXPlug( index ).getValue() != position :
@@ -162,6 +164,9 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 							curPlug.setValue( position )
 						else:
 							rejected = True
+
+				if rejected:
+					self._updateFromPlug()
 			else :
 				# a new position was added on the end by the user clicking
 				# on an empty area of the slider.
@@ -169,33 +174,14 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				assert( len( slider.getPositions() ) == numPoints + 1 )
 				spline = plug.getValue().spline()
 				position = slider.getPositions()[numPoints]
-				if not ( plug.getInput() or plug.direction() == Gaffer.Plug.Direction.Out
-						or Gaffer.MetadataAlgo.readOnly( plug )
-				):
-					plug.addPoint()
-					plug.pointXPlug( numPoints ).setValue( position )
-					plug.pointYPlug( numPoints ).setValue( spline( position ) )
-				else:
-					rejected = True
-
-		if rejected:
-			self._updateFromPlug()
+				plug.addPoint()
+				plug.pointXPlug( numPoints ).setValue( position )
+				plug.pointYPlug( numPoints ).setValue( spline( position ) )
 
 	def __indexRemoved( self, slider, index ) :
 
-		plug = self.getPlug()
-		rejected = False
-		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-			if not ( plug.getInput() or plug.direction() == Gaffer.Plug.Direction.Out
-					or Gaffer.MetadataAlgo.readOnly( plug )
-			):
-				self.getPlug().removePoint( index )
-			else:
-				rejected = True
-	
-		if rejected:
-			self._updateFromPlug()
-		
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().removePoint( index )
 
 	def __selectedIndexChanged( self, slider ) :
 
