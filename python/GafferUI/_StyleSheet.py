@@ -237,7 +237,8 @@ _styleSheet = string.Template(
 		background-color: $backgroundLight;
 	}
 
-	QMenu[gafferHasTitle="true"] {
+	QMenu[gafferHasTitle="true"],
+	QMenu[gafferHasLeadingLabelledDivider="true"] {
 		/* make sure the title widget sits at the very top.
 		   infuriatingly, qt uses padding-top for the bottom
 		   as well, and is ignoring padding-bottom. that makes
@@ -253,6 +254,13 @@ _styleSheet = string.Template(
 		padding: 5px 25px 5px 20px;
 		margin-bottom: 6px;
 	}
+
+	QMenu[gafferHasLeadingLabelledDivider="true"] QLabel#gafferMenuTitle {
+		/* If the first item is a labeled section, we don't want any
+		   space under the title. */
+		margin-bottom: 0;
+	}
+
 
 	QLabel#gafferMenuLabeledDivider {
 		background-color: $backgroundLightLowlight;
