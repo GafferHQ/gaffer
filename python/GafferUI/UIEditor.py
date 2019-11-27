@@ -179,6 +179,24 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			}
 		)
 
+		nodeGadgetTypes = Gaffer.Metadata.value( node, "uiEditor:nodeGadgetTypes" )
+		if nodeGadgetTypes :
+			nodeGadgetTypes = set( nodeGadgetTypes )
+			if nodeGadgetTypes == { "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" } :
+				nodeGadgetType = Gaffer.Metadata.value( node, "nodeGadget:type" ) or "GafferUI::StandardNodeGadget"
+				menuDefinition.append(
+					"/Show Name",
+					{
+						"command" : functools.partial( cls.__setNameVisible, node ),
+						"checkBox" : nodeGadgetType == "GafferUI::StandardNodeGadget",
+						"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+					}
+				)
+			else :
+				# We want to present the options above as a simple "Show Name" checkbox, and haven't yet
+				# decided how to present other combinations of allowable gadgets.
+				IECore.msg( IECore.msg.Warning, "UIEditor", 'Unknown combination of "uiEditor:nodeGadgetTypes"' )
+
 	@classmethod
 	def appendNodeEditorToolMenuDefinitions( cls, nodeEditor, node, menuDefinition ) :
 
@@ -316,6 +334,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 				Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
 
+	@staticmethod
+	def __setNameVisible( node, nameVisible ) :
+
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue(
+				node, "nodeGadget:type",
+				"GafferUI::StandardNodeGadget" if nameVisible else "GafferUI::AuxiliaryNodeGadget"
+			)
 
 GafferUI.Editor.registerType( "UIEditor", UIEditor )
 
