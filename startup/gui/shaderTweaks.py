@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 import Gaffer
 import GafferScene
@@ -58,15 +60,17 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	] )
 
-with IECore.IgnoredExceptions( ImportError ) :
+if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
-	import GafferAppleseed
+	with IECore.IgnoredExceptions( ImportError ) :
 
-	__registerShaderPresets( [
+		import GafferAppleseed
 
-		( "Appleseed Light", "as:light" ),
+		__registerShaderPresets( [
 
-	] )
+			( "Appleseed Light", "as:light" ),
+
+		] )
 
 with IECore.IgnoredExceptions( ImportError ) :
 

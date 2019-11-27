@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 import IECoreScene
 
@@ -189,62 +191,64 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 # Add standard appleseed AOVs
 
-with IECore.IgnoredExceptions( ImportError ) :
+if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
-	# If appleseed isn't available for any reason, this will fail
-	# and we won't add any unnecessary output definitions.
-	import GafferAppleseed
+	with IECore.IgnoredExceptions( ImportError ) :
 
-	for aov in [
-		"diffuse",
-		"glossy",
-		"emission",
-		"direct_diffuse",
-		"indirect_diffuse",
-		"direct_glossy",
-		"indirect_glossy",
-		"albedo",
+		# If appleseed isn't available for any reason, this will fail
+		# and we won't add any unnecessary output definitions.
+		import GafferAppleseed
 
-		"npr_contour",
-		"npr_shading",
+		for aov in [
+			"diffuse",
+			"glossy",
+			"emission",
+			"direct_diffuse",
+			"indirect_diffuse",
+			"direct_glossy",
+			"indirect_glossy",
+			"albedo",
 
-		"depth",
-		"normal",
-		"position",
-		"uv",
+			"npr_contour",
+			"npr_shading",
 
-		"pixel_variation",
-		"pixel_sample_count",
-		"pixel_time",
-		"invalid_samples"
-	] :
+			"depth",
+			"normal",
+			"position",
+			"uv",
 
-		label = aov.replace( "_", " " ).title().replace( " ", "_" )
-		aovModel = aov + "_aov"
+			"pixel_variation",
+			"pixel_sample_count",
+			"pixel_time",
+			"invalid_samples"
+		] :
 
-		GafferScene.Outputs.registerOutput(
-			"Interactive/Appleseed/" + label,
-			IECoreScene.Output(
-				aov,
-				"ieDisplay",
-				aovModel,
-				{
-					"driverType" : "ClientDisplayDriver",
-					"displayHost" : "localhost",
-					"displayPort" : "${image:catalogue:port}",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-				}
+			label = aov.replace( "_", " " ).title().replace( " ", "_" )
+			aovModel = aov + "_aov"
+
+			GafferScene.Outputs.registerOutput(
+				"Interactive/Appleseed/" + label,
+				IECoreScene.Output(
+					aov,
+					"ieDisplay",
+					aovModel,
+					{
+						"driverType" : "ClientDisplayDriver",
+						"displayHost" : "localhost",
+						"displayPort" : "${image:catalogue:port}",
+						"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					}
+				)
 			)
-		)
 
-		GafferScene.Outputs.registerOutput(
-			"Batch/Appleseed/" + label,
-			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
-				"exr",
-				aovModel
+			GafferScene.Outputs.registerOutput(
+				"Batch/Appleseed/" + label,
+				IECoreScene.Output(
+					"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+					"exr",
+					aovModel
+				)
 			)
-		)
 
 # Publish the Catalogue port number as a context variable, so we can refer
 # to it easily in output definitions.

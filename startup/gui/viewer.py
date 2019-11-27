@@ -37,6 +37,7 @@
 import functools
 import imath
 import inspect
+import os
 
 import IECore
 import IECoreScene
@@ -172,21 +173,23 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	] )
 
-with IECore.IgnoredExceptions( ImportError ) :
+if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
-	import GafferAppleseed
+	with IECore.IgnoredExceptions( ImportError ) :
 
-	__registerShadingModes( [
+		import GafferAppleseed
 
-		( "Diagnostic/Appleseed/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "osl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
-		( "Diagnostic/Appleseed/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:camera" } ),
-		( "Diagnostic/Appleseed/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:shadow" } ),
-		( "Diagnostic/Appleseed/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:diffuse" } ),
-		( "Diagnostic/Appleseed/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:specular" } ),
-		( "Diagnostic/Appleseed/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:glossy" } ),
-		( "Diagnostic/Appleseed/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:light" } ),
+		__registerShadingModes( [
 
-	] )
+			( "Diagnostic/Appleseed/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "osl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
+			( "Diagnostic/Appleseed/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:camera" } ),
+			( "Diagnostic/Appleseed/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:shadow" } ),
+			( "Diagnostic/Appleseed/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:diffuse" } ),
+			( "Diagnostic/Appleseed/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:specular" } ),
+			( "Diagnostic/Appleseed/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:glossy" } ),
+			( "Diagnostic/Appleseed/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:light" } ),
+
+		] )
 
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
