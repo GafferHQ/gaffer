@@ -293,6 +293,11 @@ def _cellWidthAndProxy( cellPlug ) :
 		"GafferUI.PresetsPlugValueWidget" : 100,
 		"GafferUI.StringPlugValueWidget" : 120,
 		"GafferUI.FileSystemPathPlugValueWidget" : 120,
+		# It's a bit naughty to refer to GafferSceneUI here.
+		# If we have other use cases, perhaps we should have
+		# a public method to allow the registration of supported
+		# widgets and their default widths.
+		"GafferSceneUI.ScenePathPlugValueWidget" : 120,
 		Gaffer.StringPlug : 120,
 
 		Gaffer.V2iPlug : 120,

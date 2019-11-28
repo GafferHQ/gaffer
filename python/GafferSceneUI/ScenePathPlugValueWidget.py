@@ -98,3 +98,15 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 			p = self.__scenePlug( output )
 			if p is not None :
 				return p
+
+		# Or perhaps `plug` is in a cell in a spreadsheet, in which case
+		# we may be able to get somewhere by looking where the corresponding
+		# output is connected.
+		## \todo Can this sort of traversal be wrapped up in PlugAlgo somehow?
+
+		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+		if cellPlug is not None :
+			spreadsheet = cellPlug.ancestor( Gaffer.Spreadsheet )
+			if spreadsheet is not None :
+				return self.__scenePlug( spreadsheet["out"][cellPlug.getName()] )
+
