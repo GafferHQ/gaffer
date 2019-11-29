@@ -135,6 +135,7 @@ enum TypeId
 	DeleteContextVariablesTypeId = 110088,
 	SpreadsheetRowsPlugTypeId = 110089,
 	SpreadsheetRowPlugTypeId = 110090,
+	EditScopeTypeId = 110091,
 
 	LastTypeId = 110159,
 
