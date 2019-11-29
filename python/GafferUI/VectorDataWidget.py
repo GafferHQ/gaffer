@@ -275,15 +275,20 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 	def setEditable( self, editable ) :
 
-		# set object name so stylesheet can differentiate editable from
-		# non editable in terms of the style. hide the add/remove buttons
-		# if not editable.
+		if editable == self.getEditable() :
+			return
+
+		# Set property for stylesheet and update visibility
+		# of buttons.
+
 		if editable :
 			self.__tableView.setProperty( "gafferEditable", True )
 			self.__buttonRow.setVisible( self.__sizeEditable )
 		else :
 			self.__tableView.setProperty( "gafferEditable", False )
 			self.__buttonRow.setVisible( False )
+
+		self._repolish()
 
 		# update the model
 		if self.__model is not None :
