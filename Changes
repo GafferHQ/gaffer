@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Stats app : Added `-postLoadScript` command line argument. This can be used to perform post-processing of the loaded script before stats are gathered.
+- Appleseed : Added the ability to hide Appleseed nodes and other presets from the UI by setting the `GAFFERAPPLESEED_HIDE_UI` environment variable to `1`. Appleseed will still be available for OSL shader previews and example scenes.
 
 Fixes
 -----

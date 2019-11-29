@@ -235,22 +235,24 @@ if "APPLESEED" in os.environ :
 		import GafferOSL
 		import GafferOSLUI
 
-		GafferAppleseedUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+		if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
-		GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )
+			GafferAppleseedUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
-		nodeMenu.append( "/Appleseed/Attributes", GafferAppleseed.AppleseedAttributes, searchText = "AppleseedAttributes" )
-		nodeMenu.append( "/Appleseed/Options", GafferAppleseed.AppleseedOptions, searchText = "AppleseedOptions" )
-		nodeMenu.append( "/Appleseed/Render", GafferAppleseed.AppleseedRender, searchText = "AppleseedRender" )
-		nodeMenu.append( "/Appleseed/Interactive Render", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveAppleseedRender" )
-		nodeMenu.append( "/Appleseed/Shader Ball", GafferAppleseed.AppleseedShaderBall, searchText = "AppleseedShaderBall" )
+			GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )
 
-		scriptWindowMenu.append(
-			"/Help/Appleseed/User Docs",
-			{
-				"command" : functools.partial( GafferUI.showURL, "https://github.com/appleseedhq/appleseed/wiki" ),
-			}
-		)
+			nodeMenu.append( "/Appleseed/Attributes", GafferAppleseed.AppleseedAttributes, searchText = "AppleseedAttributes" )
+			nodeMenu.append( "/Appleseed/Options", GafferAppleseed.AppleseedOptions, searchText = "AppleseedOptions" )
+			nodeMenu.append( "/Appleseed/Render", GafferAppleseed.AppleseedRender, searchText = "AppleseedRender" )
+			nodeMenu.append( "/Appleseed/Interactive Render", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveAppleseedRender" )
+			nodeMenu.append( "/Appleseed/Shader Ball", GafferAppleseed.AppleseedShaderBall, searchText = "AppleseedShaderBall" )
+
+			scriptWindowMenu.append(
+				"/Help/Appleseed/User Docs",
+				{
+					"command" : functools.partial( GafferUI.showURL, "https://github.com/appleseedhq/appleseed/wiki" ),
+				}
+			)
 
 	except Exception, m :
 
