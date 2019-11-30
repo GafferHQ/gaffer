@@ -232,7 +232,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 
 	if( channelName.empty() || BufferAlgo::empty( area ) )
 	{
-		h.append( static_cast<const FloatPlug *>( output )->defaultValue() );
+		h.append( 0.0f );
 		return;
 	}
 
@@ -255,7 +255,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 
 	if( channelName.empty() || BufferAlgo::empty( area ) )
 	{
-		output->setToDefault();
+		static_cast<FloatPlug *>( output )->setValue( 0.0f );
 		return;
 	}
 

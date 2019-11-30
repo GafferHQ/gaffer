@@ -90,7 +90,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( m["out"] )
 		s["area"].setValue( dataWindow )
 
-		self.assertEqual( s["max"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEqual( s["max"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
 
 	def testDriverChannel( self ) :
 
