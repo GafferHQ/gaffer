@@ -68,7 +68,7 @@ enum TypeId
 	CatalogueTypeId = 110772,
 	CatalogueImageTypeId = 110773,
 	CheckerboardTypeId = 110774,
-	SplineFilterTypeId = 110775, // Obsolete - available for reuse
+	FlatImageSourceTypeId = 110775,
 	BSplineFilterTypeId = 110776, // Obsolete - available for reuse
 	HermiteFilterTypeId = 110777, // Obsolete - available for reuse
 	CubicFilterTypeId = 110778, // Obsolete - available for reuse

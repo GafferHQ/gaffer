@@ -44,6 +44,7 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/Sampler.h"
+#include "GafferImage/FlatImageSource.h"
 
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/Serialisation.h"
@@ -308,6 +309,9 @@ void GafferImageModule::bindCore()
 
 	typedef ComputeNodeWrapper<ImageNode> ImageNodeWrapper;
 	GafferBindings::DependencyNodeClass<ImageNode, ImageNodeWrapper>();
+
+	typedef ComputeNodeWrapper<FlatImageSource> FlatImageSourceWrapper;
+	GafferBindings::DependencyNodeClass<FlatImageSource, FlatImageSourceWrapper>();
 
 	class_<Format>( "Format" )
 
