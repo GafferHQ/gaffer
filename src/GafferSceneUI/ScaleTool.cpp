@@ -181,10 +181,10 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 	return nullptr; // Let the handle start the drag.
 }
 
-bool ScaleTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+bool ScaleTool::dragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const V3f &scaling = static_cast<const ScaleHandle *>( gadget )->scaling( event );
+	const V3f &scaling = static_cast<ScaleHandle *>( gadget )->scaling( event );
 	for( const auto &s : m_drag )
 	{
 		s.apply( scaling );

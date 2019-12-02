@@ -87,13 +87,16 @@ class GAFFERUI_API Handle : public Gadget
 		struct LinearDrag
 		{
 
-			LinearDrag();
+			LinearDrag( bool processModifiers = true );
+			// Line is parallel to the camera plane, centered on gadget, and
+			// with unit length axes in gadget space.
+			LinearDrag( const Gadget *gadget, const Imath::V2f &line, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 			// Line is specified in Gadget space.
-			LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent );
+			LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 
 			// Positions are measured from 0 at line.p0 to 1 at line.p1.
 			float startPosition() const;
-			float position( const DragDropEvent &event ) const;
+			float updatedPosition( const DragDropEvent &event );
 
 			private :
 
@@ -104,19 +107,25 @@ class GAFFERUI_API Handle : public Gadget
 				IECore::LineSegment3f m_worldLine;
 				float m_dragBeginPosition;
 
+				bool m_processModifiers;
+
+				// We track the point where precision mode is enabled (hold shift)
+				// and scale movement after that point accordingly (x0.1)
+				bool m_preciseMotionEnabled;
+				float m_preciseMotionOrigin;
 		};
 
 		// Helper for performing drags in a plane.
 		struct PlanarDrag
 		{
 
-			PlanarDrag();
+			PlanarDrag( bool processModifiers = true );
 			// Plane is parallel to the camera plane, centered on gadget, and with unit
 			// length axes in gadget space.
-			PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent );
+			PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 			// Origin and axes are in gadget space. Axes are assumed to be orthogonal
 			// but may have any length.
-			PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
+			PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 
 			// The axes of the plane in Gadget space.
 			const Imath::V3f &axis0() const;
@@ -125,7 +134,7 @@ class GAFFERUI_API Handle : public Gadget
 			// X coordinate are measured from 0 at origin to 1 at `origin + axis0`
 			// Y coordinates are measured from 0 at origin to 1 at `origin + axis1`
 			Imath::V2f startPosition() const;
-			Imath::V2f position( const DragDropEvent &event ) const;
+			Imath::V2f updatedPosition( const DragDropEvent &event );
 
 			private :
 
@@ -141,11 +150,56 @@ class GAFFERUI_API Handle : public Gadget
 				Imath::V3f m_worldAxis1;
 				Imath::V2f m_dragBeginPosition;
 
+				bool m_processModifiers;
+
+				// We track the point where precision mode is enabled (hold shift)
+				// and scale movement after that point accordingly (x0.1)
+				bool m_preciseMotionEnabled;
+				Imath::V2f m_preciseMotionOrigin;
+
 		};
 
 		// Returns the current scale factor needed to keep the handles
 		// at the requested size in raster space.
 		Imath::V3f rasterScaleFactor() const;
+
+		// Helper for performing drags around a rotation axis.
+		struct AngularDrag
+		{
+
+			AngularDrag( bool processModifiers = true );
+			// Origin and axes are in gadget space. Rotations will be around
+			// axis0, with 0 rotation along axis1. Axes are assumed to be
+			// orthogonal, but may have any length.
+			AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f axis1, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
+
+			// The axis of rotation in Gadget space.
+			const Imath::V3f &axis0() const;
+			// The direction on which zero rotation lies.
+			const Imath::V3f &axis1() const;
+
+			// Rotation is in radians
+			float startRotation() const;
+			float updatedRotation( const DragDropEvent &event );
+
+			private :
+
+				float closestRotation( const Imath::V2f &p, float targetRotation );
+
+				PlanarDrag m_drag;
+				float m_rotation;
+
+				Imath::V3f m_axis0;
+				Imath::V3f m_axis1;
+				float m_dragBeginRotation;
+
+				bool m_processModifiers;
+
+				// AngularDrag re-implements precision so that it can be applied in
+				// angle space, to allow continuous 'winding'.
+				bool m_preciseMotionEnabled;
+				float m_preciseMotionOrigin;
+		};
 
 	private :
 

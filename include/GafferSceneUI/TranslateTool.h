@@ -98,7 +98,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 		// Handle drag handling.
 
 		IECore::RunTimeTypedPtr handleDragBegin();
-		bool handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool handleDragEnd();
 
 		// Targeted mode handling

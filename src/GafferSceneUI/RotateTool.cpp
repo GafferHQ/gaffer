@@ -244,10 +244,10 @@ IECore::RunTimeTypedPtr RotateTool::handleDragBegin()
 	return nullptr; // Let the handle start the drag.
 }
 
-bool RotateTool::handleDragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+bool RotateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const V3f rotation = static_cast<const RotateHandle *>( gadget )->rotation( event );
+	const V3f rotation = static_cast<RotateHandle *>( gadget )->rotation( event );
 	for( const auto &r : m_drag )
 	{
 		r.apply( rotation );

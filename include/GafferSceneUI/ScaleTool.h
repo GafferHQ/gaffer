@@ -90,7 +90,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 		// Drag handling.
 
 		IECore::RunTimeTypedPtr dragBegin( GafferUI::Style::Axes axes );
-		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 
 		std::vector<Scale> m_drag;

@@ -63,6 +63,7 @@ Zoom                                  :kbd:`Alt` + right-click and drag
                                       or
                                       
                                       Mouse wheel up/down
+Pan/Zoom, fine precision              Hold :kbd:`Shift` during action
 Frame selected nodes                  :kbd:`F`
 Enter `Box` node (subgraph)           :kbd:`↓`
 Leave `Box` node (subgraph)           :kbd:`↑`
@@ -246,6 +247,7 @@ Zoom/dolly                            :kbd:`Alt` + right-click and drag
                                       or
                                       
                                       Mouse wheel up/down
+Pan/Zoom, fine precision              Hold :kbd:`Shift` during action
 Frame view to contents                :kbd:`F`
 Pause processing                      :kbd:`Escape`
 Selection Tool                        :kbd:`Q`
@@ -265,6 +267,7 @@ Pin to numeric bookmark               :kbd:`1` … :kbd:`9`
 Action                                                 Control or shortcut
 ====================================================== =====================================
 Tumble                                                 :kbd:`Alt` + click and drag
+Tumble, fine precision                                 Hold :kbd:`Shift` during action
 Select objects                                         Click and drag marquee, then release
 Add/remove object from selection                       :kbd:`Ctrl` + click
 Add objects to selection                               :kbd:`Shift` + click and drag marquee, then
@@ -302,8 +305,8 @@ Action                                               Control or shortcut
 Increase manipulator size                            :kbd:`+`
 Decrease manipulator size                            :kbd:`-`
 Add animation key to transform of selected object(s) :kbd:`S`
-Adjust, high precision                               :kbd:`Shift` + click and drag
-Adjust, snapping to rounded increments               :kbd:`Ctrl` + click and drag
+Adjust, fine precision                               Hold :kbd:`Shift` during action
+Adjust, snapping to rounded increments               Hold :kbd:`Ctrl` + during action
 Target mode (Translate and Rotate only)              Hold :kbd:`v`
 ==================================================== =============================================
 ```
@@ -383,6 +386,8 @@ Zoom                                            :kbd:`Alt` + right-click and dra
                                                 or
                                                 
                                                 Mouse wheel up/down
+Zoom x/y axes independently                     Hold :kbd:`Ctrl` during action
+Pan/Zoom, fine precision                        Hold :kbd:`Shift` during action
 Adjust frame range                              :kbd:`Alt` + :kbd:`Shift` + right-click and
                                                 drag left/right
 Adjust key value range                          :kbd:`Alt` + :kbd:`Shift` + right-click and

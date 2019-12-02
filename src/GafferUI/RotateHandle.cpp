@@ -55,28 +55,15 @@ using namespace IECore;
 using namespace GafferUI;
 
 //////////////////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-float closestRotation( const V2f &p, float targetRotation )
-{
-	const float r = atan2( p.y, p.x );
-	return Eulerf::angleMod( r - targetRotation ) + targetRotation;
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // RotateHandle
 //////////////////////////////////////////////////////////////////////////
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( RotateHandle );
 
 RotateHandle::RotateHandle( Style::Axes axes )
-	:	Handle( defaultName<RotateHandle>() ), m_axes( Style::X )
+	:	Handle( defaultName<RotateHandle>() ),
+		m_axes( Style::X ),
+		m_preciseMotionEnabled( false )
 {
 	setAxes( axes );
 	dragMoveSignal().connect( boost::bind( &RotateHandle::dragMove, this, ::_2 ) );
@@ -132,39 +119,26 @@ Imath::V3i RotateHandle::axisMask() const
 	}
 }
 
-Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event ) const
+Imath::Eulerf RotateHandle::rotation( const DragDropEvent &event )
 {
 	if( m_axes == Style::XYZ )
 	{
-		const LineSegment3f line = event.line * fullTransform() * m_dragBeginWorldTransform.inverse();
+		const LineSegment3f line = updatedLineFromEvent( event ) * fullTransform() * m_dragBeginWorldTransform.inverse();
 		const M44f m = rotationMatrix( m_dragBeginPointOnSphere, pointOnSphere( line ) );
 		Eulerf e; e.extract( m );
-
-		// precision mode
-		if( event.modifiers & ButtonEvent::Shift )
-		{
-			Quatf q = e.toQuat();
-			Quatf interpolated = slerpShortestArc( Quatf(), q, 0.1f );
-			e.extract( interpolated );
-		}
 
 		return e;
 	}
 
-	float rotate = ( closestRotation( m_drag.position( event ), m_rotation ) - closestRotation( m_drag.startPosition(), 0.0f ) );
+	float rotate = m_drag.updatedRotation( event ) - m_drag.startRotation();
 
-	// snap to 30 degree increments
+	// snap
 	if( event.modifiers & ButtonEvent::Control )
 	{
-		float piOverSix = M_PI / 6.0;
-		rotate /= piOverSix;
-		rotate = std::round( rotate ) * piOverSix;
-	}
-
-	// precision mode
-	if( event.modifiers & ButtonEvent::Shift )
-	{
-		rotate *= 0.1;
+		// Offset such that it behaves like round not floor.
+		const float snapIncrement = event.modifiers & ButtonEvent::Shift ? ( M_PI / 60.0f ) : ( M_PI / 6.0f );
+		const float snapOffset = snapIncrement * 0.5f;
+		rotate = rotate - fmodf( rotate - snapOffset, snapIncrement ) + snapOffset;
 	}
 
 	switch( m_axes )
@@ -186,25 +160,60 @@ void RotateHandle::renderHandle( const Style *style, Style::State state ) const
 	style->renderRotateHandle( m_axes, state, m_highlightVector );
 }
 
+void RotateHandle::updatePreciseMotionState( const DragDropEvent &event )
+{
+	const bool shiftHeld = event.modifiers & ModifiableEvent::Shift;
+	if( !m_preciseMotionEnabled && shiftHeld )
+	{
+		m_preciseMotionOriginLine = event.line;
+	}
+	m_preciseMotionEnabled = shiftHeld;
+}
+
+IECore::LineSegment3f RotateHandle::updatedLineFromEvent( const DragDropEvent &event ) const
+{
+	LineSegment3f line = event.line;
+
+	if( m_preciseMotionEnabled )
+	{
+		// We interpolate the mouse position, not the resulting rotation to
+		// ensure we don't get clamped by pointOnSphere once the actual mouse
+		// has moved way away from the handle. The compromise is a non-linear
+		// rotation response, but we have that anyway as the mouse is on a
+		// plane to start with.
+		const V3f dP0 = ( event.line.p0 - m_preciseMotionOriginLine.p0 ) * 0.1f;
+		const V3f dP1 = ( event.line.p1 - m_preciseMotionOriginLine.p1 ) * 0.1f;
+		line = LineSegment3f(
+			V3f( m_preciseMotionOriginLine.p0 + dP0 ),
+			V3f( m_preciseMotionOriginLine.p1 + dP1 )
+		);
+	}
+
+	return line;
+}
+
 void RotateHandle::dragBegin( const DragDropEvent &event )
 {
 	switch( m_axes )
 	{
 		case Style::X :
-			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 0, 1, 0 ), V3f( 0, 0, 1 ), event );
-			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			m_drag = AngularDrag( this, V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 0, 1 ), event );
+			m_rotation = m_drag.startRotation();
 			break;
 		case Style::Y :
-			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 0, 0, 1 ), V3f( 1, 0, 0 ), event );
-			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			m_drag = AngularDrag( this, V3f( 0 ), V3f( 0, 1, 0 ), V3f( 1, 0, 0 ), event );
+			m_rotation = m_drag.startRotation();
 			break;
 		case Style::Z :
-			m_drag = PlanarDrag( this, V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 1, 0 ), event );
-			m_rotation = closestRotation( m_drag.startPosition(), 0.0f );
+			m_drag = AngularDrag( this, V3f( 0 ), V3f( 0, 0, 1 ), V3f( 0, 1, 0 ), event );
+			m_rotation = m_drag.startRotation();
 			break;
 		case Style::XYZ :
 			m_dragBeginWorldTransform = fullTransform();
 			m_dragBeginPointOnSphere = pointOnSphere( event.line );
+			m_preciseMotionEnabled = false;
+			m_preciseMotionOriginLine = event.line;
+			updatePreciseMotionState( event );
 			break;
 		default :
 			// Checks in `setAxes()` prevent us getting here
@@ -216,16 +225,13 @@ bool RotateHandle::dragMove( const DragDropEvent &event )
 {
 	if( m_axes == Style::XYZ )
 	{
-		m_highlightVector = pointOnSphere( event.line );
+		updatePreciseMotionState( event );
+		m_highlightVector = pointOnSphere( updatedLineFromEvent( event ) );
 		requestRender();
 	}
 	else
 	{
-		// We can only recover an angle in the range -PI, PI from the 2d position
-		// that our drag gives us, but we want to be able to support continuous
-		// values and multiple revolutions. Here we keep track of the current rotation
-		// position so that we can adjust correctly in `RotateHandle::rotation()`.
-		m_rotation = closestRotation( m_drag.position( event ), m_rotation );
+		m_rotation = m_drag.updatedRotation( event );
 	}
 	return false;
 }
