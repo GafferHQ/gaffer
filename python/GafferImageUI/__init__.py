@@ -57,7 +57,6 @@ import RampUI
 import ColorSpaceUI
 import ImageStatsUI
 import DeleteChannelsUI
-import ObjectToImageUI
 import ClampUI
 import ImageWriterUI
 import GradeUI
