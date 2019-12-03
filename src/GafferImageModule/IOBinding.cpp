@@ -41,7 +41,6 @@
 #include "GafferImage/Checkerboard.h"
 #include "GafferImage/ImageReader.h"
 #include "GafferImage/ImageWriter.h"
-#include "GafferImage/ObjectToImage.h"
 #include "GafferImage/OpenImageIOReader.h"
 #include "GafferImage/Ramp.h"
 
@@ -116,9 +115,6 @@ boost::python::list supportedExtensions()
 void GafferImageModule::bindIO()
 {
 
-	DependencyNodeClass<ImagePrimitiveNode>();
-	DependencyNodeClass<ImagePrimitiveProcessor>();
-	DependencyNodeClass<ObjectToImage>();
 	DependencyNodeClass<Constant>();
 	DependencyNodeClass<Checkerboard>();
 	DependencyNodeClass<Ramp>();
