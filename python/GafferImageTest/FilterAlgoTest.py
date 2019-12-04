@@ -112,18 +112,12 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			IECore.Writer.create( parallelogramImage, "/tmp/filterDerivativesTestResult.parallelogram.exr" ).write()
 			IECore.Writer.create( boxImage, "/tmp/filterDerivativesTestResult.box.exr" ).write()
 
-		imageNode = GafferImage.ObjectToImage()
-		imageNode["object"].setValue( parallelogramImage )
+		parallelogramReference = IECore.Reader.create( self.derivativesReferenceParallelFileName ).read()
+		boxReference = IECore.Reader.create( self.derivativesReferenceBoxFileName ).read()
 
-		expectedImage = GafferImage.ImageReader()
-		expectedImage["fileName"].setValue( self.derivativesReferenceParallelFileName )
-
-		self.assertImagesEqual( imageNode["out"], expectedImage["out"], ignoreMetadata = True, maxDifference = 0.000005 )
-
-		imageNode["object"].setValue( boxImage )
-		expectedImage["fileName"].setValue( self.derivativesReferenceBoxFileName )
-
-		self.assertImagesEqual( imageNode["out"], expectedImage["out"], ignoreMetadata = True, maxDifference = 0.000005 )
+		for i in range( len( parallelogramImage["R"] ) ):
+			self.assertAlmostEqual( parallelogramReference["R"][i], parallelogramImage["R"][i], places = 5 )
+			self.assertAlmostEqual( boxReference["R"][i], boxImage["R"][i], places = 5 )
 
 	def testMatchesResample( self ):
 		def __test( fileName, size, filter ) :
@@ -162,52 +156,25 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			sampleRegion.setMax( sampleRegion.max() + imath.V2i( borderForFilterWidth ) )
 
 			s = GafferImage.Sampler( reader["out"], "R", sampleRegion, GafferImage.Sampler.BoundingMode.Clamp )
-
-			w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
-			boxImage = IECoreImage.ImagePrimitive( w, w )
-			parallelImage = IECoreImage.ImagePrimitive( w, w )
-
-			boxR = IECore.FloatVectorData( size.x * size.y )
-			parallelR = IECore.FloatVectorData( size.x * size.y )
+			resampledS = GafferImage.Sampler( resample["out"], "R", resample["out"]["dataWindow"].getValue() )
 
 			for y in range( size.y ):
 				for x in range( size.x ):
-						boxR[ ( size.y - 1 - y ) * size.x + x ] = GafferImage.FilterAlgo.sampleBox(
-							s,
-							imath.V2f( x + 0.5, y + 0.5 ) / scale,
-							max( 1.0 / scale[0], 1.0 ),
-							max( 1.0 / scale[1], 1.0 ),
-							filter )
-						parallelR[ ( size.y - 1 - y ) * size.x + x ] = GafferImage.FilterAlgo.sampleParallelogram(
-							s,
-							imath.V2f( x + 0.5, y + 0.5 ) / scale,
-							imath.V2f( 1.0 / scale[0], 0),
-							imath.V2f( 0, 1.0 / scale[1]),
-							filter )
-
-			boxImage["R"] = boxR
-			parallelImage["R"] = parallelR
-
-			# Enable to write out images for visual comparison
-			if False:
-				tempDirectory = "/tmp"
-				expectedFileName = tempDirectory + "/%s_%dx%d_%s_expected.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
-				expectedWriter = GafferImage.ImageWriter()
-				expectedWriter["in"].setInput( crop["out"] )
-				expectedWriter["fileName"].setValue( expectedFileName )
-				expectedWriter["task"].execute()
-
-				outputFileName = tempDirectory + "/%s_%dx%d_%s.box.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
-				IECore.Writer.create( boxImage, outputFileName ).write()
-				outputFileName = tempDirectory + "/%s_%dx%d_%s.parallel.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
-				IECore.Writer.create( parallelImage, outputFileName ).write()
-
-			imageNode = GafferImage.ObjectToImage()
-			imageNode["object"].setValue( boxImage )
-			self.assertImagesEqual( crop["out"], imageNode["out"], maxDifference = 0.000011, ignoreMetadata = True )
-
-			imageNode["object"].setValue( parallelImage )
-			self.assertImagesEqual( crop["out"], imageNode["out"], maxDifference = 0.000011, ignoreMetadata = True )
+					resampled = resampledS.sample( x, y )
+					self.assertAlmostEqual( resampled, GafferImage.FilterAlgo.sampleBox(
+						s,
+						imath.V2f( x + 0.5, y + 0.5 ) / scale,
+						max( 1.0 / scale[0], 1.0 ),
+						max( 1.0 / scale[1], 1.0 ),
+						filter
+					), places = 5 )
+					self.assertAlmostEqual( resampled, GafferImage.FilterAlgo.sampleParallelogram(
+						s,
+						imath.V2f( x + 0.5, y + 0.5 ) / scale,
+						imath.V2f( 1.0 / scale[0], 0),
+						imath.V2f( 0, 1.0 / scale[1]),
+						filter
+					), places = 5 )
 
 		tests = [
 			( "resamplePatterns.exr", imath.V2i( 4 ), "lanczos3" ),
