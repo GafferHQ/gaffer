@@ -118,96 +118,60 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		GafferImageTest.processTiles( vectorWarp["out"] )
 
 	def testWarpImage( self ):
-		def __warpImage( size, distortion, idistortStyle ):
-			w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
-			image = IECoreImage.ImagePrimitive( w, w )
-
-			R = IECore.FloatVectorData( size.x * size.y )
-			G = IECore.FloatVectorData( size.x * size.y )
-
-			for iy in range( size.y ):
-				for ix in range( size.x ):
-					x = (ix + 0.5) / size.x
-					y = 1 - (iy + 0.5) / size.y
-					if idistortStyle:
-						R[ iy * size.x + ix ] = distortion * math.sin( y * 8 ) * size.x
-						G[ iy * size.x + ix ] = distortion * math.sin( x * 8 ) * size.y
-					else:
-						R[ iy * size.x + ix ] = x + distortion * math.sin( y * 8 )
-						G[ iy * size.x + ix ] = y + distortion * math.sin( x * 8 )
-
-
-			image["R"] = R
-			image["G"] = G
-
-			return image
-
-		def __dotGrid( size ):
-			w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
-			image = IECoreImage.ImagePrimitive( w, w )
-
-			R = IECore.FloatVectorData( size.x * size.y )
-			G = IECore.FloatVectorData( size.x * size.y )
-			B = IECore.FloatVectorData( size.x * size.y )
-
-			for iy in range( 0, size.y ):
-				for ix in range( 0, size.x ):
-					q = max( ix % 16, iy % 16 )
-
-					R[ iy * size.x + ix ] = q < 1
-					G[ iy * size.x + ix ] = q < 4
-					B[ iy * size.x + ix ] = q < 8
-
-			image["R"] = R
-			image["G"] = G
-			image["B"] = B
-
-			return image
-
-
-		objectToImageSource = GafferImage.ObjectToImage()
-		objectToImageSource["object"].setValue( __dotGrid( imath.V2i( 300 ) ) )
-
-		# TODO - reorder channels of our source image because ObjectToImage outputs in opposite order to
-		# the rest of Gaffer.  This probably should be fixed in ObjectToImage,
-		# or we shouldn't depend on channel order to check if images are equal?
-		sourceReorderConstant = GafferImage.Constant()
-		sourceReorderConstant["format"].setValue( GafferImage.Format( 300, 300, 1.000 ) )
-		sourceReorderDelete = GafferImage.DeleteChannels()
-		sourceReorderDelete["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
-		sourceReorderDelete["in"].setInput( sourceReorderConstant["out"] )
-		sourceReorder = GafferImage.CopyChannels()
-		sourceReorder["channels"].setValue( "R G B" )
-		sourceReorder["in"]["in0"].setInput( sourceReorderDelete["out"] )
-		sourceReorder["in"]["in1"].setInput( objectToImageSource["out"] )
-
-		objectToImageVector = GafferImage.ObjectToImage()
+		dotGridReader = GafferImage.ImageReader()
+		dotGridReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.300.exr" )
 
 		vectorWarp = GafferImage.VectorWarp()
-		vectorWarp["in"].setInput( sourceReorder["out"] )
-		vectorWarp["vector"].setInput( objectToImageVector["out"] )
+		vectorWarp["in"].setInput( dotGridReader["out"] )
 
 		# Test that a warp with no distortion and a box filter reproduces the input
-		objectToImageVector["object"].setValue( __warpImage( imath.V2i( 300 ), 0, False ) )
+
+		xRamp = GafferImage.Ramp()
+		xRamp["format"].setValue( GafferImage.Format( 300, 300 ) )
+		xRamp["endPosition"].setValue( imath.V2f( 300, 0 ) )
+		xRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
+		yRamp = GafferImage.Ramp()
+		yRamp["format"].setValue( GafferImage.Format( 300, 300 ) )
+		yRamp["endPosition"].setValue( imath.V2f( 0, 300 ) )
+		yRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
+
+		toAbsoluteMerge = GafferImage.Merge()
+		toAbsoluteMerge["operation"].setValue( GafferImage.Merge.Operation.Add )
+		toAbsoluteMerge["in"]["in0"].setInput( xRamp["out"] )
+		toAbsoluteMerge["in"]["in1"].setInput( yRamp["out"] )
+		vectorWarp["vector"].setInput( toAbsoluteMerge["out"] )
+
 		vectorWarp["filter"].setValue( "box" )
-		self.assertImagesEqual( vectorWarp["out"], sourceReorder["out"], maxDifference = 0.00001 )
+
+		testWriter = GafferImage.ImageWriter()
+		testWriter["in"].setInput( vectorWarp["out"] )
+		testWriter["fileName"].setValue( "/tmp/TODO.exr" )
+		testWriter["task"].execute()
+
+		self.assertImagesEqual( vectorWarp["out"], dotGridReader["out"], maxDifference = 0.00001 )
+
 
 		# Test that a warp with distortion produces an expected output
-		objectToImageVector["object"].setValue( __warpImage( imath.V2i( 300 ), 0.2, False ) )
-		vectorWarp["filter"].setValue( "blackman-harris" )
+		warpPatternReader = GafferImage.ImageReader()
+		warpPatternReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/warpPattern.exr" )
 
-		# Enable to write out images for visual comparison
-		if False:
-			testWriter = GafferImage.ImageWriter()
-			testWriter["in"].setInput( vectorWarp["out"] )
-			testWriter["fileName"].setValue( "/tmp/dotGrid.warped.exr" )
-			testWriter["task"].execute()
+		toAbsoluteMerge["in"]["in2"].setInput( warpPatternReader["out"] )
+
+		vectorWarp["filter"].setValue( "blackman-harris" )
+		vectorWarp["vector"].setInput( toAbsoluteMerge["out"] )
 
 		expectedReader = GafferImage.ImageReader()
 		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.warped.exr" )
+		self.assertImagesEqual( vectorWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
 
 		# Test that we can get the same result using pixel offsets instead of normalized coordinates
-		objectToImageVector["object"].setValue( __warpImage( imath.V2i( 300 ), 0.2, True ) )
+
+		toPixelsGrade = GafferImage.Grade()
+		toPixelsGrade["in"].setInput( warpPatternReader["out"] )
+		toPixelsGrade["blackClamp"].setValue( False )
+		toPixelsGrade["multiply"].setValue( imath.Color4f( 300 ) )
+
+		vectorWarp["vector"].setInput( toPixelsGrade["out"] )
 		vectorWarp["vectorMode"].setValue( GafferImage.VectorWarp.VectorMode.Relative )
 		vectorWarp["vectorUnits"].setValue( GafferImage.VectorWarp.VectorUnits.Pixels )
 
