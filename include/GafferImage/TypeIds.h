@@ -68,7 +68,7 @@ enum TypeId
 	CatalogueTypeId = 110772,
 	CatalogueImageTypeId = 110773,
 	CheckerboardTypeId = 110774,
-	SplineFilterTypeId = 110775, // Obsolete - available for reuse
+	FlatImageSourceTypeId = 110775,
 	BSplineFilterTypeId = 110776, // Obsolete - available for reuse
 	HermiteFilterTypeId = 110777, // Obsolete - available for reuse
 	CubicFilterTypeId = 110778, // Obsolete - available for reuse
@@ -118,6 +118,16 @@ enum TypeId
 	DilateTypeId = 110822,
 	RampTypeId = 110823,
 	RectangleTypeId = 110824,
+	FlatToDeepTypeId = 110825,
+	DeepMergeTypeId = 110826,
+	DeepStateTypeId = 110827,
+	EmptyTypeId = 110828,
+	FlatImageProcessorTypeId = 110829,
+	DeepSampleCountsTypeId = 110830,
+	DeepSamplerTypeId = 110831,
+	DeepToFlatTypeId = 110832,
+	DeepHoldoutTypeId = 110833,
+	DeepRecolorTypeId = 110834,
 
 	LastTypeId = 110849
 };

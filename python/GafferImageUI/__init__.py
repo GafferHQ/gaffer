@@ -64,8 +64,10 @@ import GradeUI
 import ImageSamplerUI
 import MergeUI
 import ImageNodeUI
+import FlatImageSourceUI
 import ChannelDataProcessorUI
 import ImageProcessorUI
+import FlatImageProcessorUI
 import ImageMetadataUI
 import DeleteImageMetadataUI
 import CopyImageMetadataUI
@@ -98,5 +100,15 @@ import CollectImagesUI
 import CatalogueSelectUI
 import BleedFillUI
 import RectangleUI
+import FlatToDeepUI
+import DeepMergeUI
+import DeepStateUI
+import EmptyUI
+import DeepSampleCountsUI
+import DeepSamplerUI
+import DeepToFlatUI
+import DeepTidyUI
+import DeepHoldoutUI
+import DeepRecolorUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

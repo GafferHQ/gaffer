@@ -38,7 +38,7 @@
 #define GAFFERIMAGE_CHECKERBOARD_H
 
 #include "GafferImage/FormatPlug.h"
-#include "GafferImage/ImageNode.h"
+#include "GafferImage/FlatImageSource.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
@@ -54,7 +54,7 @@ IE_CORE_FORWARDDECLARE( Transform2DPlug )
 namespace GafferImage
 {
 
-class GAFFERIMAGE_API Checkerboard : public ImageNode
+class GAFFERIMAGE_API Checkerboard : public FlatImageSource
 {
 
 	public :
@@ -62,7 +62,7 @@ class GAFFERIMAGE_API Checkerboard : public ImageNode
 		Checkerboard( const std::string &name=defaultName<Checkerboard>() );
 		~Checkerboard() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Checkerboard, CheckerboardTypeId, ImageNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Checkerboard, CheckerboardTypeId, FlatImageSource );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

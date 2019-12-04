@@ -72,12 +72,12 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		merge["in"][0].setInput( r1["out"] )
 		merge["in"][1].setInput( r2["out"] )
-		h1 = merge["out"].imageHash()
+		h1 = GafferImage.ImageAlgo.imageHash( merge["out"] )
 
 		# Switch the inputs.
 		merge["in"][1].setInput( r1["out"] )
 		merge["in"][0].setInput( r2["out"] )
-		h2 = merge["out"].imageHash()
+		h2 = GafferImage.ImageAlgo.imageHash( merge["out"] )
 
 		self.assertNotEqual( h1, h2 )
 
@@ -101,7 +101,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		# but then disconnect two so that the result should still be the same...
 		merge["in"][1].setInput( None )
 		merge["in"][2].setInput( None )
-		h1 = merge["out"].imageHash()
+		h1 = GafferImage.ImageAlgo.imageHash( merge["out"] )
 
 		self.assertEqual( h1, expectedHash )
 
@@ -121,9 +121,9 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
-		expectedHash = r1["out"].imageHash()
+		expectedHash = GafferImage.ImageAlgo.imageHash( r1["out"] )
 		merge["in"][0].setInput( r1["out"] )
-		h1 = merge["out"].imageHash()
+		h1 = GafferImage.ImageAlgo.imageHash( merge["out"] )
 
 		self.assertEqual( h1, expectedHash )
 
@@ -132,7 +132,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		##########################################
 
 		merge["enabled"].setValue(False)
-		h1 = merge["out"].imageHash()
+		h1 = GafferImage.ImageAlgo.imageHash( merge["out"] )
 
 		self.assertEqual( h1, expectedHash )
 
@@ -428,6 +428,23 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.3 + 0.1 )
 		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.4 + 0.2 )
 
+	def testNonFlatThrows( self ) :
+
+		deep = GafferImage.Empty()
+		flat = GafferImage.Constant()
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( flat["out"] )
+		merge["in"][1].setInput( flat["out"] )
+
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( merge["out"] ), GafferImage.ImageAlgo.imageHash( flat["out"] ) )
+
+		merge["in"][0].setInput( deep["out"] )
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, merge["out"] )
+		merge["in"][0].setInput( flat["out"] )
+		merge["in"][1].setInput( deep["out"] )
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, merge["out"] )
+
 	def testDefaultFormat( self ) :
 
 		a = GafferImage.Constant()
@@ -465,7 +482,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		merge["in"][0].setInput( r["out"] )
 		merge["in"][1].setInput( o["out"] )
-		merge["out"].image()
+		GafferImage.ImageAlgo.image( merge["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

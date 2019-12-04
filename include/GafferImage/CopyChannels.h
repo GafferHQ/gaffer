@@ -37,14 +37,14 @@
 #ifndef GAFFERIMAGE_COPYCHANNELS_H
 #define GAFFERIMAGE_COPYCHANNELS_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {
 
-class GAFFERIMAGE_API CopyChannels : public ImageProcessor
+class GAFFERIMAGE_API CopyChannels : public FlatImageProcessor
 {
 
 	public :
@@ -52,7 +52,7 @@ class GAFFERIMAGE_API CopyChannels : public ImageProcessor
 		CopyChannels( const std::string &name=defaultName<CopyChannels>() );
 		~CopyChannels() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::CopyChannels, CopyChannelsTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::CopyChannels, CopyChannelsTypeId, FlatImageProcessor );
 
 		Gaffer::StringPlug *channelsPlug();
 		const Gaffer::StringPlug *channelsPlug() const;

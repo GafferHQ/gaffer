@@ -78,7 +78,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Checkerboard );
 size_t Checkerboard::g_firstPlugIndex = 0;
 
 Checkerboard::Checkerboard( const std::string &name )
-	:	ImageNode( name )
+	:	FlatImageSource( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
@@ -155,7 +155,7 @@ const Gaffer::Transform2DPlug *Checkerboard::transformPlug() const
 
 void Checkerboard::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageNode::affects( input, outputs );
+	FlatImageSource::affects( input, outputs );
 
 	if(
 		input->parent<Plug>() == colorAPlug() ||
@@ -186,7 +186,7 @@ void Checkerboard::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 
 void Checkerboard::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashFormat( output, context, h );
+	FlatImageSource::hashFormat( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
@@ -197,7 +197,7 @@ GafferImage::Format Checkerboard::computeFormat( const Gaffer::Context *context,
 
 void Checkerboard::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashDataWindow( output, context, h );
+	FlatImageSource::hashDataWindow( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
@@ -213,7 +213,7 @@ IECore::ConstCompoundDataPtr Checkerboard::computeMetadata( const Gaffer::Contex
 
 void Checkerboard::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashChannelNames( output, context, h );
+	FlatImageSource::hashChannelNames( output, context, h );
 	layerPlug()->hash( h );
 }
 
@@ -238,7 +238,7 @@ IECore::ConstStringVectorDataPtr Checkerboard::computeChannelNames( const Gaffer
 
 void Checkerboard::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashChannelData( output, context, h );
+	FlatImageSource::hashChannelData( output, context, h );
 
 	V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	h.append( tileOrigin );

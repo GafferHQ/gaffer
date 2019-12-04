@@ -65,7 +65,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
-		self.assertNotEqual( n["out"].image(), o["out"].image() )
+		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
 
 	def testHashPassThrough( self ) :
 
@@ -81,7 +81,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
-		self.assertNotEqual( n["out"].image(), o["out"].image() )
+		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
 
 		o["enabled"].setValue( False )
 
@@ -111,12 +111,12 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
 
-		self.assertEqual( i["out"].imageHash(), o["out"].imageHash() )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
-		self.assertNotEqual( i["out"].imageHash(), o["out"].imageHash() )
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
 	def testChannelsAreSeparate( self ) :
 

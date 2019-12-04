@@ -38,7 +38,7 @@
 #define GAFFERIMAGE_RESIZE_H
 
 #include "GafferImage/FormatPlug.h"
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "Gaffer/NumericPlug.h"
 
@@ -54,14 +54,14 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class GAFFERIMAGE_API Resize : public ImageProcessor
+class GAFFERIMAGE_API Resize : public FlatImageProcessor
 {
 	public :
 
 		Resize( const std::string &name=defaultName<Resize>() );
 		~Resize() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resize, ResizeTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resize, ResizeTypeId, FlatImageProcessor );
 
 		enum FitMode
 		{

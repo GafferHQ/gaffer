@@ -97,6 +97,12 @@ from CatalogueSelectTest import CatalogueSelectTest
 from BleedFillTest import BleedFillTest
 from RectangleTest import RectangleTest
 from ModuleTest import ModuleTest
+from FlatToDeepTest import FlatToDeepTest
+from DeepMergeTest import DeepMergeTest
+from DeepStateTest import DeepStateTest
+from EmptyTest import EmptyTest
+from DeepHoldoutTest import DeepHoldoutTest
+from DeepRecolorTest import DeepRecolorTest
 
 if __name__ == "__main__":
 	import unittest

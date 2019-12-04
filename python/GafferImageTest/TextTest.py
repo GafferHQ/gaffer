@@ -155,6 +155,36 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		self.assertAlmostEqual( bottomDW.size().y, centerDW.size().y, delta = 1 )
 		self.assertAlmostEqual( centerDW.size().y, topDW.size().y, delta = 1 )
 
+	def testNonFlatThrows( self ) :
+
+		text = GafferImage.Text()
+		text["size"].setValue( imath.V2i( 20 ) )
+		text["area"].setValue( imath.Box2i( imath.V2i( 5 ), imath.V2i( 95 ) ) )
+
+		self.assertRaisesDeepNotSupported( text )
+
+	def testImagePlugs( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ), 1 ) )
+		constant["color"].setValue( imath.Color4f( 0 ) )
+
+		text = GafferImage.Text()
+		text["in"].setInput( constant["out"] )
+
+		text["out"]["format"].getValue()
+		text["out"]["dataWindow"].getValue()
+		text["out"]["metadata"].getValue()
+		text["out"]["channelNames"].getValue()
+		self.assertFalse( text["out"]["deep"].getValue() )
+
+		c = Gaffer.Context()
+		c["image:channelName"] = "R"
+		c["image:tileOrigin"] = imath.V2i( 0 )
+
+		with c :
+			text["out"]["channelData"].getValue()
+
 	def testUnparenting( self ) :
 
 		t1 = GafferImage.Text()

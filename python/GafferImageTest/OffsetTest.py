@@ -105,6 +105,36 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 								sample( c["out"], channelName, imath.V2i( x, y ) ),
 						)
 
+	def testDeepOffset( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/representativeDeepImage.exr" )
+
+		od = GafferImage.Offset()
+		od["in"].setInput( r["out"] )
+		od["offset"].setValue( imath.V2i( 1 ) )
+
+		preFlat = GafferImage.DeepState()
+		preFlat["in"].setInput( r["out"] )
+		preFlat["deepState"].setValue( GafferImage.DeepState.TargetState.Flat )
+
+		of = GafferImage.Offset()
+		of["in"].setInput( preFlat["out"] )
+		of["offset"].setInput( od["offset"] )
+
+		s = GafferImage.DeepState()
+		s["in"].setInput( od["out"] )
+		s["deepState"].setValue( GafferImage.DeepState.TargetState.Flat )
+
+		tileSize = GafferImage.ImagePlug.tileSize()
+		for yOffset in [ -tileSize, -200, -107, -31, -1, 0, 1, 31, 107, 200, tileSize ] :
+			for xOffset in [ -tileSize, -200, -107, -31, -1, 0, 1, 31, 107, 200, tileSize ] :
+
+				od["offset"].setValue( imath.V2i( xOffset, yOffset ) )
+
+				self.assertImagesEqual( s["out"], of["out"] )
+
+
 	def testMultipleOfTileSize( self ) :
 
 		c = GafferImage.ImageReader()

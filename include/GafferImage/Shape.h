@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_SHAPE_H
 #define GAFFERIMAGE_SHAPE_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 
@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( ImageTransform )
 /// Derived classes are responsible only for generating a mask for the
 /// shape, and the base class takes care of colouring it and compositing
 /// it over the input.
-class GAFFERIMAGE_API Shape : public ImageProcessor
+class GAFFERIMAGE_API Shape : public FlatImageProcessor
 {
 
 	public :
@@ -59,7 +59,7 @@ class GAFFERIMAGE_API Shape : public ImageProcessor
 		Shape( const std::string &name=defaultName<Shape>() );
 		~Shape() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Shape, ShapeTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Shape, ShapeTypeId, FlatImageProcessor );
 
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;

@@ -63,8 +63,9 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
-
 }
 
 DeleteChannels::~DeleteChannels()

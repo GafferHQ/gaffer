@@ -93,7 +93,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageTransform );
 size_t ImageTransform::g_firstPlugIndex = 0;
 
 ImageTransform::ImageTransform( const std::string &name )
-	:	ImageProcessor( name )
+	:	FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -189,7 +189,7 @@ const Resample *ImageTransform::resample() const
 
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if(
 		input->parent<Plug>() == transformPlug()->translatePlug() ||
@@ -226,7 +226,7 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 
 void ImageTransform::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( output, context, h );
+	FlatImageProcessor::hash( output, context, h );
 
 	if( output == resampleMatrixPlug() )
 	{
@@ -247,7 +247,7 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
-	ImageProcessor::compute( output, context );
+	FlatImageProcessor::compute( output, context );
 }
 
 void ImageTransform::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -260,7 +260,7 @@ void ImageTransform::hashDataWindow( const GafferImage::ImagePlug *parent, const
 	}
 	else
 	{
-		ImageProcessor::hashDataWindow( parent, context, h );
+		FlatImageProcessor::hashDataWindow( parent, context, h );
 		inPlug()->dataWindowPlug()->hash( h );
 		h.append( matrix );
 	}

@@ -139,7 +139,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 		clamp["minEnabled"].setValue( False )
 		clamp["maxEnabled"].setValue( False )
 
-		self.assertEqual( i["out"].imageHash(), clamp["out"].imageHash() )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( clamp["out"] ) )
 		self.assertEqual( i["out"]["format"].hash(), clamp["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), clamp["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), clamp["out"]["channelNames"].hash() )

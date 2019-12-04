@@ -44,6 +44,7 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/Sampler.h"
+#include "GafferImage/FlatImageSource.h"
 
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/Serialisation.h"
@@ -125,16 +126,59 @@ IECore::MurmurHash metadataHash( const ImagePlug &plug )
 	return plug.metadataHash();
 }
 
-IECoreImage::ImagePrimitivePtr image( const ImagePlug &plug )
+bool deep( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return plug.image();
+	return plug.deep();
 }
 
-IECore::MurmurHash imageHash( const ImagePlug &plug )
+IECore::MurmurHash deepHash( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return plug.imageHash();
+	return plug.deepHash();
+}
+
+IECore::IntVectorDataPtr sampleOffsets( const ImagePlug &plug, const Imath::V2i &tile, bool copy  )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstIntVectorDataPtr d = plug.sampleOffsets( tile );
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::IntVectorData>( d );
+}
+
+IECore::MurmurHash sampleOffsetsHash( const ImagePlug &plug, const Imath::V2i &tile )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.sampleOffsetsHash( tile );
+}
+
+IECore::IntVectorDataPtr emptyTileSampleOffsets( bool copy )
+{
+	IECore::ConstIntVectorDataPtr d = ImagePlug::emptyTileSampleOffsets();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::IntVectorData>( d );
+}
+
+IECore::IntVectorDataPtr flatTileSampleOffsets( bool copy )
+{
+	IECore::ConstIntVectorDataPtr d = ImagePlug::flatTileSampleOffsets();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::IntVectorData>( d );
+}
+
+IECore::FloatVectorDataPtr emptyTile( bool copy )
+{
+	IECore::ConstFloatVectorDataPtr d = ImagePlug::emptyTile();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
+}
+
+IECore::FloatVectorDataPtr blackTile( bool copy )
+{
+	IECore::ConstFloatVectorDataPtr d = ImagePlug::blackTile();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
+}
+
+IECore::FloatVectorDataPtr whiteTile( bool copy )
+{
+	IECore::ConstFloatVectorDataPtr d = ImagePlug::whiteTile();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
 }
 
 boost::python::list registeredFormats()
@@ -247,15 +291,27 @@ void GafferImageModule::bindCore()
 		.def( "channelNamesHash", &channelNamesHash )
 		.def( "metadata", &metadata, ( arg( "_copy" ) = true ) )
 		.def( "metadataHash", &metadataHash )
-		.def( "image", &image )
-		.def( "imageHash", &imageHash )
+		.def( "deep", &deep )
+		.def( "deepHash", &deepHash )
+		.def( "sampleOffsets", &sampleOffsets, ( arg( "_copy" ) = true ) )
+		.def( "sampleOffsetsHash", &sampleOffsetsHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
+		.def( "tilePixels", &ImagePlug::tilePixels ).staticmethod( "tilePixels" )
 		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
+		.def( "pixelIndex", &ImagePlug::pixelIndex ).staticmethod( "pixelIndex" )
+		.def( "emptyTileSampleOffsets", &emptyTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTileSampleOffsets" )
+		.def( "flatTileSampleOffsets", &flatTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "flatTileSampleOffsets" )
+		.def( "emptyTile", &emptyTile, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTile" )
+		.def( "blackTile", &blackTile, ( arg( "_copy" ) = true ) ).staticmethod( "blackTile" )
+		.def( "whiteTile", &whiteTile, ( arg( "_copy" ) = true ) ).staticmethod( "whiteTile" )
 	;
 
 	typedef ComputeNodeWrapper<ImageNode> ImageNodeWrapper;
 	GafferBindings::DependencyNodeClass<ImageNode, ImageNodeWrapper>();
+
+	typedef ComputeNodeWrapper<FlatImageSource> FlatImageSourceWrapper;
+	GafferBindings::DependencyNodeClass<FlatImageSource, FlatImageSourceWrapper>();
 
 	class_<Format>( "Format" )
 

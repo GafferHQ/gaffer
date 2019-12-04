@@ -38,7 +38,7 @@
 #define GAFFERIMAGE_CONSTANT_H
 
 #include "GafferImage/FormatPlug.h"
-#include "GafferImage/ImageNode.h"
+#include "GafferImage/FlatImageSource.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -46,7 +46,7 @@
 namespace GafferImage
 {
 
-class GAFFERIMAGE_API Constant : public ImageNode
+class GAFFERIMAGE_API Constant : public FlatImageSource
 {
 
 	public :
@@ -54,7 +54,7 @@ class GAFFERIMAGE_API Constant : public ImageNode
 		Constant( const std::string &name=defaultName<Constant>() );
 		~Constant() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Constant, ConstantTypeId, ImageNode );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Constant, ConstantTypeId, FlatImageSource );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

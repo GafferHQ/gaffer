@@ -158,14 +158,14 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r['fileName'].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
 
-		h = r['out'].imageHash()
+		h = GafferImage.ImageAlgo.imageHash( r['out'] )
 
 		for i in range( 20 ) :
-			self.assertEqual( h, r['out'].imageHash() )
+			self.assertEqual( h, GafferImage.ImageAlgo.imageHash( r['out'] ) )
 
 		r['refreshCount'].setValue( 2 )
 
-		self.assertNotEqual( h, r['out'].imageHash() )
+		self.assertNotEqual( h, GafferImage.ImageAlgo.imageHash( r['out'] ) )
 
 	def testDefaultFormatForImage( self ) :
 
@@ -174,10 +174,10 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.Context() as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
-			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )
+			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
-			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
+			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
 
 	def testGlobalConvenienceMethods( self ) :
 
@@ -202,6 +202,109 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertFalse( metadata["out"].metadata().isSame( metadata["out"]["metadata"].getValue( _copy = False ) ) )
 		self.assertTrue( metadata["out"].metadata( _copy = False ).isSame( metadata["out"]["metadata"].getValue( _copy = False ) ) )
 		self.assertEqual( metadata["out"].metadataHash(), metadata["out"]["metadata"].hash() )
+
+	def testImageDeepException( self ) :
+
+		constant1 = GafferImage.Constant()
+		constant1["color"].setValue( imath.Color4f( 1 ) )
+
+		constant2 = GafferImage.Constant()
+		constant2["color"].setValue( imath.Color4f( 1 ) )
+
+		merge = GafferImage.DeepMerge()
+		merge["in"][0].setInput( constant1["out"] )
+		merge["in"][1].setInput( constant2["out"] )
+
+		with self.assertRaises( RuntimeError ) :
+			GafferImage.ImageAlgo.image( merge["out"] )
+
+	def testBlackTile( self ) :
+
+		ts = GafferImage.ImagePlug.tileSize()
+		tileDataCopiedA = GafferImage.ImagePlug.blackTile()
+		tileDataCopiedB = GafferImage.ImagePlug.blackTile()
+		self.__testTileData( tileDataCopiedA, ts*ts, value = 0.0 )
+
+		self.assertFalse( tileDataCopiedA.isSame( tileDataCopiedB ) )
+
+		tileDataNoCopyA = GafferImage.ImagePlug.blackTile( _copy = False )
+		tileDataNoCopyB = GafferImage.ImagePlug.blackTile( _copy = False )
+		self.__testTileData( tileDataNoCopyA, ts*ts, value = 0.0 )
+
+		self.assertTrue( tileDataNoCopyA.isSame( tileDataNoCopyB ) )
+
+	def testWhiteTile( self ) :
+
+		ts = GafferImage.ImagePlug.tileSize()
+		tileDataCopiedA = GafferImage.ImagePlug.whiteTile()
+		tileDataCopiedB = GafferImage.ImagePlug.whiteTile()
+		self.__testTileData( tileDataCopiedA, ts*ts, value = 1.0 )
+
+		self.assertFalse( tileDataCopiedA.isSame( tileDataCopiedB ) )
+
+		tileDataNoCopyA = GafferImage.ImagePlug.whiteTile( _copy = False )
+		tileDataNoCopyB = GafferImage.ImagePlug.whiteTile( _copy = False )
+		self.__testTileData( tileDataNoCopyA, ts*ts, value = 1.0 )
+
+		self.assertTrue( tileDataNoCopyA.isSame( tileDataNoCopyB ) )
+
+	def testEmptyTile( self ) :
+
+		tileDataCopiedA = GafferImage.ImagePlug.emptyTile()
+		tileDataCopiedB = GafferImage.ImagePlug.emptyTile()
+		self.__testTileData( tileDataCopiedA, 0, value = 0.0 )
+
+		self.assertFalse( tileDataCopiedA.isSame( tileDataCopiedB ) )
+
+		tileDataNoCopyA = GafferImage.ImagePlug.emptyTile( _copy = False )
+		tileDataNoCopyB = GafferImage.ImagePlug.emptyTile( _copy = False )
+		self.__testTileData( tileDataNoCopyA, 0, value = 0.0 )
+
+		self.assertTrue( tileDataNoCopyA.isSame( tileDataNoCopyB ) )
+
+	def testEmptyTileSampleOffsets( self ) :
+
+		ts = GafferImage.ImagePlug.tileSize()
+		tileDataCopiedA = GafferImage.ImagePlug.emptyTileSampleOffsets()
+		tileDataCopiedB = GafferImage.ImagePlug.emptyTileSampleOffsets()
+
+		self.__testTileData( tileDataCopiedA, (ts*ts), value = 0 )
+
+		self.assertFalse( tileDataCopiedA.isSame( tileDataCopiedB ) )
+
+		tileDataNoCopyA = GafferImage.ImagePlug.emptyTileSampleOffsets( _copy = False )
+		tileDataNoCopyB = GafferImage.ImagePlug.emptyTileSampleOffsets( _copy = False )
+		self.__testTileData( tileDataNoCopyA, (ts*ts), value = 0 )
+
+		self.assertTrue( tileDataNoCopyA.isSame( tileDataNoCopyB ) )
+
+	def testFlatTileSampleOffsets( self ) :
+
+		def valueFunc( i ) :
+			return i+1
+
+		ts = GafferImage.ImagePlug.tileSize()
+		tileDataCopiedA = GafferImage.ImagePlug.flatTileSampleOffsets()
+		tileDataCopiedB = GafferImage.ImagePlug.flatTileSampleOffsets()
+
+		self.__testTileData( tileDataCopiedA, (ts*ts), valueFunc = valueFunc )
+
+		self.assertFalse( tileDataCopiedA.isSame( tileDataCopiedB ) )
+
+		tileDataNoCopyA = GafferImage.ImagePlug.flatTileSampleOffsets( _copy = False )
+		tileDataNoCopyB = GafferImage.ImagePlug.flatTileSampleOffsets( _copy = False )
+		self.__testTileData( tileDataNoCopyA, (ts*ts), valueFunc = valueFunc )
+
+		self.assertTrue( tileDataNoCopyA.isSame( tileDataNoCopyB ) )
+
+	def __testTileData( self, tileData, numSamples, value = None, valueFunc = None ) :
+
+		self.assertEqual( len(tileData), numSamples )
+		for i in range( numSamples ) :
+			if valueFunc is not None:
+				self.assertEqual( tileData[i], valueFunc( i ) )
+			else:
+				self.assertEqual( tileData[i], value )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -163,7 +163,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["filter"].setValue( "sinc" )
 		r["in"].setInput( c["out"] )
 
-		i = r["out"].image()
+		i = GafferImage.ImageAlgo.image( r["out"] )
 		self.assertEqual( i["R"], IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
 
 	def testExpandDataWindow( self ) :
@@ -210,6 +210,13 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		t = time.time()
 		bt.cancelAndWait()
 		self.assertLess( time.time() - t, acceptableCancellationDelay )
+
+	def testNonFlatThrows( self ) :
+
+		resample = GafferImage.Resample()
+		resample["matrix"].setValue( imath.M33f().scale( imath.V2f( 0.5 ) ) )
+
+		self.assertRaisesDeepNotSupported( resample )
 
 if __name__ == "__main__":
 	unittest.main()

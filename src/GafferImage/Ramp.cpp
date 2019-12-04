@@ -55,7 +55,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Ramp );
 size_t Ramp::g_firstPlugIndex = 0;
 
 Ramp::Ramp( const std::string &name )
-	:	ImageNode( name )
+	:	FlatImageSource( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
@@ -135,7 +135,7 @@ const Gaffer::Transform2DPlug *Ramp::transformPlug() const
 
 void Ramp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageNode::affects( input, outputs );
+	FlatImageSource::affects( input, outputs );
 
 	if(
 		rampPlug()->isAncestorOf( input ) ||
@@ -166,7 +166,7 @@ void Ramp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 
 void Ramp::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashFormat( output, context, h );
+	FlatImageSource::hashFormat( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
@@ -177,7 +177,7 @@ GafferImage::Format Ramp::computeFormat( const Gaffer::Context *context, const I
 
 void Ramp::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashDataWindow( output, context, h );
+	FlatImageSource::hashDataWindow( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
@@ -193,7 +193,7 @@ IECore::ConstCompoundDataPtr Ramp::computeMetadata( const Gaffer::Context *conte
 
 void Ramp::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashChannelNames( output, context, h );
+	FlatImageSource::hashChannelNames( output, context, h );
 	layerPlug()->hash( h );
 }
 
@@ -218,7 +218,7 @@ IECore::ConstStringVectorDataPtr Ramp::computeChannelNames( const Gaffer::Contex
 
 void Ramp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashChannelData( output, context, h );
+	FlatImageSource::hashChannelData( output, context, h );
 
 	V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	h.append( tileOrigin );

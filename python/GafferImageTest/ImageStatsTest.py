@@ -59,14 +59,14 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "", "G", "B" ] ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0., 0.0744, 0.1250, 1. ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 1. ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0.5, 0.5, 1. ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0., 0.0744, 0.1250, 0. ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0. ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0.5, 0.5, 0. ) )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "", "B" ] ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0, 0.1250, 1. ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 1. ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0.5, 1. ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0, 0.1250, 0. ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0. ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0.5, 0. ) )
 
 	def testDisconnectedDirty( self ) :
 

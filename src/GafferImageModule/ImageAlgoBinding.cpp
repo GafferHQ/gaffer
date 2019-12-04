@@ -161,6 +161,26 @@ void parallelGatherTiles2( const GafferImage::ImagePlug &image, object pythonCha
 	);
 }
 
+IECoreImage::ImagePrimitivePtr imageWrapper( const ImagePlug *plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return ImageAlgo::image( plug );
+}
+
+IECore::MurmurHash imageHashWrapper( const ImagePlug *plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return ImageAlgo::imageHash( plug );
+}
+
+IECore::CompoundDataPtr tilesWrapper( const ImagePlug *plug, bool copy )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstCompoundDataPtr d = ImageAlgo::tiles( plug );
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::CompoundData>( d );
+}
+
+
 } // namespace
 
 void GafferImageModule::bindImageAlgo()
@@ -205,6 +225,10 @@ void GafferImageModule::bindImageAlgo()
 			boost::python::arg( "tileOrder" ) = ImageAlgo::Unordered
 		)
 	);
+
+	def( "image", &imageWrapper );
+	def( "imageHash", &imageHashWrapper );
+	def( "tiles", &tilesWrapper, ( boost::python::arg( "_copy" ) = true ) );
 
 	StringVectorFromStringVectorData();
 

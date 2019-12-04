@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_RANKFILTER_H
 #define GAFFERIMAGE_RANKFILTER_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -46,14 +46,14 @@
 namespace GafferImage
 {
 
-class GAFFERIMAGE_API RankFilter : public ImageProcessor
+class GAFFERIMAGE_API RankFilter : public FlatImageProcessor
 {
 
 	public :
 
 		~RankFilter() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::RankFilter, RankFilterTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::RankFilter, RankFilterTypeId, FlatImageProcessor );
 
 		Gaffer::V2iPlug *radiusPlug();
 		const Gaffer::V2iPlug *radiusPlug() const;
@@ -88,7 +88,6 @@ class GAFFERIMAGE_API RankFilter : public ImageProcessor
 
 		void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
-
 
 	private:
 

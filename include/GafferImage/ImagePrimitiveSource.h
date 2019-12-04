@@ -67,6 +67,7 @@ class GAFFERIMAGE_API ImagePrimitiveSource : public BaseType
 		const Gaffer::ObjectPlug *imagePrimitivePlug() const;
 
 		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+
 		/// It is ok to return nullptr if no ImagePrimitive is available.
 		virtual IECoreImage::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const = 0;
 
@@ -74,6 +75,7 @@ class GAFFERIMAGE_API ImagePrimitiveSource : public BaseType
 		void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 
@@ -81,6 +83,8 @@ class GAFFERIMAGE_API ImagePrimitiveSource : public BaseType
 		GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 		IECore::ConstCompoundDataPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		bool computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		IECore::ConstIntVectorDataPtr computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 		IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 

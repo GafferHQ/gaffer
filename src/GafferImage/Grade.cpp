@@ -62,7 +62,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Grade );
 size_t Grade::g_firstPlugIndex = 0;
 
 Grade::Grade( const std::string &name )
-	:	ChannelDataProcessor( name )
+	:	ChannelDataProcessor( name, true /* hasUnpremultPlug */ )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Color4fPlug( "blackPoint" ) );
@@ -249,9 +249,6 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	// Calculate the valid data window that we are to merge.
-	const int dataWidth = ImagePlug::tileSize()*ImagePlug::tileSize();
-
 	// Do some pre-processing.
 	float A, B, gamma;
 	bool whiteClamp, blackClamp;
@@ -265,7 +262,7 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 
 	// Get some useful pointers.
 	float *outPtr = &(outData->writable()[0]);
-	const float *END = outPtr + dataWidth;
+	const float *END = outPtr + outData->writable().size();
 
 	while (outPtr != END)
 	{

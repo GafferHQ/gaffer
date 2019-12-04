@@ -65,8 +65,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["in"].setInput( r["out"] )
 		t["filter"].setValue( "blackman-harris" )
 
-		self.assertNotEqual( t["out"].imageHash(), t["in"].imageHash() )
-		self.assertNotEqual( t["out"].image(), t["in"].image() )
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( t["out"] ), GafferImage.ImageAlgo.imageHash( t["in"] ) )
+		self.assertNotEqual( GafferImage.ImageAlgo.image( t["out"] ), GafferImage.ImageAlgo.image( t["in"] ) )
 
 	def testTilesWithSameInputTiles( self ) :
 
@@ -96,7 +96,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		t = GafferImage.ImageTransform()
 
-		previousHash = t["out"].imageHash()
+		previousHash = GafferImage.ImageAlgo.imageHash( t["out"] )
 		for plug in t["transform"].children() :
 
 			if isinstance( plug, Gaffer.FloatPlug ) :
@@ -104,11 +104,11 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			else :
 				plug.setValue( imath.V2f( 2 ) )
 
-			hash = t["out"].imageHash()
+			hash = GafferImage.ImageAlgo.imageHash( t["out"] )
 			self.assertNotEqual( hash, previousHash )
 
 			t["invert"].setValue( True )
-			invertHash = t["out"].imageHash()
+			invertHash = GafferImage.ImageAlgo.imageHash( t["out"] )
 			t["invert"].setValue( False )
 
 			self.assertNotEqual( invertHash, hash )
@@ -152,6 +152,15 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( t["out"]["format"].hash(), r["out"]["format"].hash() )
 
+
+	def testNonFlatThrows( self ) :
+
+		transform = GafferImage.ImageTransform()
+		transform["transform"]["translate"].setValue( imath.V2f( 20., 20.5 ) )
+
+		self.assertRaisesDeepNotSupported( transform )
+
+
 	def testDisabled( self ) :
 
 		r = GafferImage.ImageReader()
@@ -163,10 +172,10 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["transform"]["translate"].setValue( imath.V2f( 2., 2. ) )
 		t["transform"]["rotate"].setValue( 90 )
 		t["enabled"].setValue( True )
-		self.assertNotEqual( r["out"].imageHash(), t["out"].imageHash() )
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( r["out"] ), GafferImage.ImageAlgo.imageHash( t["out"] ) )
 
 		t["enabled"].setValue( False )
-		self.assertEqual( r["out"].imageHash(), t["out"].imageHash() )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( r["out"] ), GafferImage.ImageAlgo.imageHash( t["out"] ) )
 
 	def testPassThrough( self ) :
 

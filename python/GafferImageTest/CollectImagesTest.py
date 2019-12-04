@@ -174,7 +174,70 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.2, 0.4, 0.6, 0.8 ) )
 
+	def testDeep( self ) :
 
+		constantA = GafferImage.Constant()
+		constantA["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		constantB = GafferImage.Constant()
+		constantB["color"].setValue( imath.Color4f( 0.01, 0.02, 0.03, 0.04 ) )
+		constantC = GafferImage.Constant()
+		constantC["color"].setValue( imath.Color4f( 0.001, 0.002, 0.003, 0.004 ) )
+		constantD = GafferImage.Constant()
+		constantD["color"].setValue( imath.Color4f( 0.0001, 0.0002, 0.0003, 0.0004 ) )
+
+		deepMergeAB = GafferImage.DeepMerge()
+		deepMergeAB["in"][0].setInput( constantA["out"] )
+		deepMergeAB["in"][1].setInput( constantB["out"] )
+
+		deepMergeCD = GafferImage.DeepMerge()
+		deepMergeCD["in"][0].setInput( constantC["out"] )
+		deepMergeCD["in"][1].setInput( constantD["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( GafferImage.ImagePlug( "in", ) )
+		switch["in"][0].setInput( deepMergeAB["out"] )
+		switch["in"][1].setInput( deepMergeCD["out"] )
+
+		switchExpr = Gaffer.Expression()
+		switch.addChild( switchExpr )
+		switchExpr.setExpression( 'parent["index"] = context["collect:layerName"] == "CD"' )
+
+		collect = GafferImage.CollectImages()
+		collect["in"].setInput( switch["out"] )
+		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'AB', 'CD' ] ) )
+
+		o = imath.V2i( 0 )
+		self.assertEqual( collect["out"].channelData( "AB.R", o ), deepMergeAB["out"].channelData( "R", o ) )
+		self.assertEqual( collect["out"].channelData( "AB.G", o ), deepMergeAB["out"].channelData( "G", o ) )
+		self.assertEqual( collect["out"].channelData( "AB.B", o ), deepMergeAB["out"].channelData( "B", o ) )
+		self.assertEqual( collect["out"].channelData( "AB.A", o ), deepMergeAB["out"].channelData( "A", o ) )
+		self.assertEqual( collect["out"].channelData( "CD.R", o ), deepMergeCD["out"].channelData( "R", o ) )
+		self.assertEqual( collect["out"].channelData( "CD.G", o ), deepMergeCD["out"].channelData( "G", o ) )
+		self.assertEqual( collect["out"].channelData( "CD.B", o ), deepMergeCD["out"].channelData( "B", o ) )
+		self.assertEqual( collect["out"].channelData( "CD.A", o ), deepMergeCD["out"].channelData( "A", o ) )
+		self.assertEqual( collect["out"].sampleOffsets( o ), deepMergeAB["out"].sampleOffsets( o ) )
+		self.assertEqual( collect["out"].dataWindow(), deepMergeAB["out"].dataWindow() )
+		self.assertEqual( collect["out"].deep(), True )
+		self.assertEqual( collect["out"].channelNames(), IECore.StringVectorData( [ 'AB.R', 'AB.G', 'AB.B', 'AB.A', 'CD.R', 'CD.G', 'CD.B', 'CD.A' ] ) )
+
+		deepMergeAB["enabled"].setValue( False )
+		with self.assertRaisesRegexp( Gaffer.ProcessException, r'Input to CollectImages must be consistent, but it is sometimes deep.*' ) as raised:
+			collect["out"].deep()
+
+		deepMergeAB["enabled"].setValue( True )
+
+		deepMergeAB["in"][2].setInput( constantB["out"] )
+
+		with self.assertRaisesRegexp( Gaffer.ProcessException, r'SampleOffsets on input to CollectImages must match. Pixel 0,0 received both 3 and 2 samples' ) as raised:
+			collect["out"].sampleOffsets( o )
+
+		offset = GafferImage.Offset()
+		offset["in"].setInput( constantB["out"] )
+		offset["offset"].setValue( imath.V2i( -5, -13 ) )
+
+		deepMergeAB["in"][2].setInput( offset["out"] )
+		with self.assertRaisesRegexp( Gaffer.ProcessException, r'DataWindows on deep input to CollectImages must match. Received both -5,-13 -> 1920,1080 and 0,0 -> 1920,1080' ) as raised:
+			collect["out"].dataWindow()
 
 if __name__ == "__main__":
 	unittest.main()

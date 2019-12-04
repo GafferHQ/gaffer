@@ -55,7 +55,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		m["in"].setInput( c["out"] )
 		m["radius"].setValue( imath.V2i( 0 ) )
 
-		self.assertEqual( c["out"].imageHash(), m["out"].imageHash() )
+		self.assertEqual( GafferImage.ImageAlgo.imageHash( c["out"] ), GafferImage.ImageAlgo.imageHash( m["out"] ) )
 		self.assertImagesEqual( c["out"], m["out"] )
 
 	def testExpandDataWindow( self ) :
@@ -90,7 +90,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( m["out"] )
 		s["area"].setValue( dataWindow )
 
-		self.assertEqual( s["max"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEqual( s["max"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
 
 	def testDriverChannel( self ) :
 

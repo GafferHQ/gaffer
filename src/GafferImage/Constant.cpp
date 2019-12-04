@@ -56,7 +56,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Constant );
 size_t Constant::g_firstPlugIndex = 0;
 
 Constant::Constant( const std::string &name )
-	:	ImageNode( name )
+	:	FlatImageSource( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
@@ -100,7 +100,7 @@ const Gaffer::StringPlug *Constant::layerPlug() const
 
 void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageNode::affects( input, outputs );
+	FlatImageSource::affects( input, outputs );
 
 	if( input->parent<Plug>() == colorPlug() )
 	{
@@ -126,7 +126,7 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 
 void Constant::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashFormat( output, context, h );
+	FlatImageSource::hashFormat( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
@@ -137,7 +137,7 @@ GafferImage::Format Constant::computeFormat( const Gaffer::Context *context, con
 
 void Constant::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashDataWindow( output, context, h );
+	FlatImageSource::hashDataWindow( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
@@ -153,7 +153,7 @@ IECore::ConstCompoundDataPtr Constant::computeMetadata( const Gaffer::Context *c
 
 void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashChannelNames( output, context, h );
+	FlatImageSource::hashChannelNames( output, context, h );
 	layerPlug()->hash( h );
 }
 
@@ -178,16 +178,24 @@ IECore::ConstStringVectorDataPtr Constant::computeChannelNames( const Gaffer::Co
 
 void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashChannelData( output, context, h );
+	FlatImageSource::hashChannelData( output, context, h );
 	// Don't bother hashing the format or tile origin here as we couldn't care less about the
 	// position on the canvas, only the colour!
 	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	if( channelIndex == -1 )
+	{
+		throw IECore::Exception( "Constant : Invalid channel: " + context->get<std::string>( ImagePlug::channelNameContextName ) );
+	}
 	colorPlug()->getChild( channelIndex )->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr Constant::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	if( channelIndex == -1 )
+	{
+		throw IECore::Exception( "Constant : Invalid channel: " + context->get<std::string>( ImagePlug::channelNameContextName ) );
+	}
 	const float value = colorPlug()->getChild( channelIndex )->getValue();
 
 	FloatVectorDataPtr result = new FloatVectorData;

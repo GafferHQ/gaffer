@@ -122,5 +122,12 @@ class MirrorTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( m["out"], t["out"] )
 
+	def testNonFlatThrows( self ) :
+
+		mirror = GafferImage.Mirror()
+		mirror["vertical"].setValue( True )
+
+		self.assertRaisesDeepNotSupported( mirror )
+
 if __name__ == "__main__":
 	unittest.main()

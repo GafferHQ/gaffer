@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/iterator/counting_iterator.hpp"
+
 #include "GafferImage/ImagePlug.h"
 
 #include "GafferImage/BufferAlgo.h"
@@ -52,60 +54,6 @@ using namespace Gaffer;
 using namespace GafferImage;
 
 GAFFER_PLUG_DEFINE_TYPE( ImagePlug );
-
-//////////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class CopyTile
-{
-
-	public :
-
-		CopyTile(
-				const vector<float *> &imageChannelData,
-				const vector<string> &channelNames,
-				const Box2i &dataWindow
-			) :
-				m_imageChannelData( imageChannelData ),
-				m_channelNames( channelNames ),
-				m_dataWindow( dataWindow )
-		{}
-
-		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-		{
-			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-			const Box2i b = BufferAlgo::intersection( tileBound, m_dataWindow );
-
-			const size_t imageStride = m_dataWindow.size().x;
-			const size_t tileStrideSize = sizeof(float) * b.size().x;
-
-			const int channelIndex = std::find( m_channelNames.begin(), m_channelNames.end(), channelName ) - m_channelNames.begin();
-			float *channelBegin = m_imageChannelData[channelIndex];
-
-			ConstFloatVectorDataPtr tileData = imagePlug->channelDataPlug()->getValue();
-			const float *tileDataBegin = &(tileData->readable()[0]);
-
-			for( int y = b.min.y; y < b.max.y; y++ )
-			{
-				const float *tilePtr = tileDataBegin + ( y - tileOrigin.y ) * ImagePlug::tileSize() + ( b.min.x - tileOrigin.x );
-				float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( 1 + y - m_dataWindow.min.y ) ) * imageStride + ( b.min.x - m_dataWindow.min.x );
-				std::memcpy( channelPtr, tilePtr, tileStrideSize );
-			}
-		}
-
-	private :
-
-		const vector<float *> &m_imageChannelData;
-		const vector<string> &m_channelNames;
-		const Box2i &m_dataWindow;
-
-};
-
-} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Implementation of ImagePlug
@@ -159,6 +107,24 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
+	addChild(
+		new BoolPlug(
+			"deep",
+			direction,
+			false,
+			childFlags
+		)
+	);
+
+	addChild(
+		new IntVectorDataPlug(
+			"sampleOffsets",
+			direction,
+			flatTileSampleOffsets(),
+			childFlags
+		)
+	);
+
 	/// \todo Default value should be empty.
 	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
@@ -183,22 +149,47 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-
 }
 
 ImagePlug::~ImagePlug()
 {
 }
 
+const IECore::IntVectorData *ImagePlug::flatTileSampleOffsets()
+{
+	static boost::counting_iterator<int> begin( 1 ), end( ImagePlug::tilePixels() + 1 );
+	// counting_iterator syntax is a tad funny looking, but this does create N samples
+	// from 1, ... , N, where N = tilePixels
+	static IECore::ConstIntVectorDataPtr g_flatTileSampleOffsets(
+		new IECore::IntVectorData( std::vector<int>( begin, end ) )
+	);
+
+	return g_flatTileSampleOffsets.get();
+};
+
+const IECore::IntVectorData *ImagePlug::emptyTileSampleOffsets()
+{
+	static IECore::ConstIntVectorDataPtr g_emptyTileSampleOffsets(
+		new IECore::IntVectorData( std::vector<int>( ImagePlug::tilePixels(), 0 ) )
+	);
+	return g_emptyTileSampleOffsets.get();
+};
+
+const IECore::FloatVectorData *ImagePlug::emptyTile()
+{
+	static IECore::ConstFloatVectorDataPtr g_emptyTile( new IECore::FloatVectorData() );
+	return g_emptyTile.get();
+};
+
 const IECore::FloatVectorData *ImagePlug::whiteTile()
 {
-	static IECore::ConstFloatVectorDataPtr g_whiteTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 1. ) ) );
+	static IECore::ConstFloatVectorDataPtr g_whiteTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tilePixels(), 1. ) ) );
 	return g_whiteTile.get();
 };
 
 const IECore::FloatVectorData *ImagePlug::blackTile()
 {
-	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 0. ) ) );
+	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tilePixels(), 0. ) ) );
 	return g_blackTile.get();
 };
 
@@ -208,7 +199,7 @@ bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return children().size() != 5;
+	return children().size() != 7;
 }
 
 bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
@@ -259,24 +250,44 @@ const Gaffer::AtomicCompoundDataPlug *ImagePlug::metadataPlug() const
 	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+2 );
 }
 
+Gaffer::BoolPlug *ImagePlug::deepPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+}
+
+const Gaffer::BoolPlug *ImagePlug::deepPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+}
+
+Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug()
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+}
+
+const Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug() const
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+}
+
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 const Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 ImagePlug::GlobalScope::GlobalScope( const Gaffer::Context *context )
@@ -315,11 +326,6 @@ void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName
 
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
 {
-	if( direction()==In && !getInput() )
-	{
-		return channelDataPlug()->defaultValue();
-	}
-
 	ChannelDataScope channelDataScope( Context::current() );
 	channelDataScope.setChannelName( channelName );
 	channelDataScope.setTileOrigin( tile );
@@ -383,73 +389,28 @@ IECore::MurmurHash ImagePlug::metadataHash() const
 	return metadataPlug()->hash();
 }
 
-IECoreImage::ImagePrimitivePtr ImagePlug::image() const
+bool ImagePlug::deep() const
 {
-	Format format = formatPlug()->getValue();
-	Box2i dataWindow = dataWindowPlug()->getValue();
-	Box2i newDataWindow( Imath::V2i( 0 ) );
-
-	if( !BufferAlgo::empty( dataWindow ) )
-	{
-		newDataWindow = format.toEXRSpace( dataWindow );
-	}
-	else
-	{
-		dataWindow = newDataWindow;
-	}
-
-	Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );
-
-	IECoreImage::ImagePrimitivePtr result = new IECoreImage::ImagePrimitive( newDataWindow, newDisplayWindow );
-
-	ConstCompoundDataPtr metadata = metadataPlug()->getValue();
-	result->blindData()->Object::copyFrom( metadata.get() );
-
-	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
-	const vector<string> &channelNames = channelNamesData->readable();
-
-	vector<float *> imageChannelData;
-	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
-	{
-		FloatVectorDataPtr cd = new FloatVectorData;
-		vector<float> &c = cd->writable();
-		c.resize( result->channelSize(), 0.0f );
-		result->channels[*it] = cd;
-		imageChannelData.push_back( &(c[0]) );
-	}
-
-	CopyTile copyTile( imageChannelData, channelNames, dataWindow );
-	ImageAlgo::parallelProcessTiles( this, channelNames, copyTile, dataWindow );
-
-	return result;
+	GlobalScope globalScope( Context::current() );
+	return deepPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::imageHash() const
+IECore::MurmurHash ImagePlug::deepHash() const
 {
-	const Box2i dataWindow = dataWindowPlug()->getValue();
-	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
-	const vector<string> &channelNames = channelNamesData->readable();
+	GlobalScope globalScope( Context::current() );
+	return deepPlug()->hash();
+}
 
-	MurmurHash result = formatPlug()->hash();
-	result.append( dataWindowPlug()->hash() );
-	result.append( metadataPlug()->hash() );
-	result.append( channelNamesPlug()->hash() );
+IECore::ConstIntVectorDataPtr ImagePlug::sampleOffsets( const Imath::V2i &tile ) const
+{
+	ChannelDataScope channelDataScope( Context::current() );
+	channelDataScope.setTileOrigin( tile );
+	return sampleOffsetsPlug()->getValue();
+}
 
-	ImageAlgo::parallelGatherTiles(
-		this, channelNames,
-		// Tile
-		[] ( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-		{
-			return imagePlug->channelDataPlug()->hash();
-		},
-		// Gather
-		[ &result ] ( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, const IECore::MurmurHash &tileHash )
-		{
-			result.append( tileHash );
-		},
-		dataWindow,
-		ImageAlgo::BottomToTop
-	);
-
-	return result;
+IECore::MurmurHash ImagePlug::sampleOffsetsHash( const Imath::V2i &tile ) const
+{
+	ChannelDataScope channelDataScope( Context::current() );
+	channelDataScope.setTileOrigin( tile );
+	return sampleOffsetsPlug()->hash();
 }

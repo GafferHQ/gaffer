@@ -63,17 +63,22 @@ Crop::Crop( const std::string &name )
 	addChild( new BoolPlug( "resetOrigin", Gaffer::Plug::In, true ) );
 
 	addChild( new AtomicBox2iPlug( "__cropWindow", Gaffer::Plug::Out ) );
+	addChild( new AtomicBox2iPlug( "__cropDataWindow", Gaffer::Plug::Out ) );
 	addChild( new V2iPlug( "__offset", Gaffer::Plug::Out ) );
 
 	OffsetPtr offset = new Offset( "__offset" );
 	addChild( offset );
 	offset->inPlug()->setInput( inPlug() );
+	offset->inPlug()->dataWindowPlug()->setInput( cropDataWindowPlug() );
 	offset->enabledPlug()->setInput( enabledPlug() );
 	offset->offsetPlug()->setInput( offsetPlug() );
+	outPlug()->dataWindowPlug()->setInput( offset->outPlug()->dataWindowPlug() );
 	outPlug()->channelDataPlug()->setInput( offset->outPlug()->channelDataPlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( offset->outPlug()->sampleOffsetsPlug() );
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
@@ -161,14 +166,24 @@ const Gaffer::AtomicBox2iPlug *Crop::cropWindowPlug() const
 	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 7 );
 }
 
+Gaffer::AtomicBox2iPlug *Crop::cropDataWindowPlug()
+{
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 8 );
+}
+
+const Gaffer::AtomicBox2iPlug *Crop::cropDataWindowPlug() const
+{
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 8 );
+}
+
 Gaffer::V2iPlug *Crop::offsetPlug()
 {
-	return getChild<V2iPlug>( g_firstPlugIndex + 8 );
+	return getChild<V2iPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::V2iPlug *Crop::offsetPlug() const
 {
-	return getChild<V2iPlug>( g_firstPlugIndex + 8 );
+	return getChild<V2iPlug>( g_firstPlugIndex + 9 );
 }
 
 void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -199,13 +214,13 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 
 	if(
 		input == cropWindowPlug() ||
-		input == affectDisplayWindowPlug() ||
 		input == affectDataWindowPlug() ||
 		offsetPlug()->isAncestorOf( input ) ||
-		input == inPlug()->dataWindowPlug()
+		input == inPlug()->dataWindowPlug() ||
+		input == enabledPlug()
 	)
 	{
-		outputs.push_back( outPlug()->dataWindowPlug() );
+		outputs.push_back( cropDataWindowPlug() );
 	}
 
 	if(
@@ -257,37 +272,6 @@ GafferImage::Format Crop::computeFormat( const Gaffer::Context *context, const I
 	return GafferImage::Format( displayWindow, inPlug()->formatPlug()->getValue().getPixelAspect() );
 }
 
-
-void Crop::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageProcessor::hashDataWindow( parent, context, h );
-
-	inPlug()->dataWindowPlug()->hash( h );
-	cropWindowPlug()->hash( h );
-	affectDataWindowPlug()->hash( h );
-	affectDisplayWindowPlug()->hash( h );
-	offsetPlug()->hash( h );
-}
-
-Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	Box2i result = inPlug()->dataWindowPlug()->getValue();
-	const Box2i cropWindow = cropWindowPlug()->getValue();
-	const V2i offset = offsetPlug()->getValue();
-	if( affectDataWindowPlug()->getValue() )
-	{
-		result = BufferAlgo::intersection( result, cropWindow );
-	}
-
-	if( !BufferAlgo::empty( result ) )
-	{
-		result.min += offset;
-		result.max += offset;
-	}
-
-	return result;
-}
-
 void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( output, context, h );
@@ -323,6 +307,17 @@ void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 				break;
 			}
 		}
+	}
+	else if ( output == cropDataWindowPlug() )
+	{
+		if( !enabledPlug()->getValue() )
+		{
+			h = inPlug()->dataWindowPlug()->hash();
+			return;
+		}
+		inPlug()->dataWindowPlug()->hash( h );
+		cropWindowPlug()->hash( h );
+		affectDataWindowPlug()->hash( h );
 	}
 	else if( output->parent<Plug>() == offsetPlug() )
 	{
@@ -377,6 +372,21 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		}
 
 		static_cast<Gaffer::AtomicBox2iPlug *>( output )->setValue( cropWindow );
+	}
+	else if ( output == cropDataWindowPlug() )
+	{
+		Box2i result = inPlug()->dataWindowPlug()->getValue();
+
+		if( enabledPlug()->getValue() )
+		{
+			const Box2i cropWindow = cropWindowPlug()->getValue();
+			if( affectDataWindowPlug()->getValue() )
+			{
+				result = BufferAlgo::intersection( result, cropWindow );
+			}
+		}
+
+		static_cast<Gaffer::AtomicBox2iPlug *>( output )->setValue( result );
 	}
 	else if( output->parent<Plug>() == offsetPlug() )
 	{

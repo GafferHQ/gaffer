@@ -377,6 +377,14 @@ nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "I
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
 nodeMenu.append( "/Image/Utility/Catalogue", GafferImage.Catalogue )
 nodeMenu.append( "/Image/Utility/Catalogue Select", GafferImage.CatalogueSelect )
+nodeMenu.append( "/Image/Deep/FlatToDeep", GafferImage.FlatToDeep, searchText = "FlatToDeep" )
+nodeMenu.append( "/Image/Deep/Merge", GafferImage.DeepMerge, searchText = "DeepMerge" )
+nodeMenu.append( "/Image/Deep/Tidy", GafferImage.DeepTidy, searchText = "DeepTidy" )
+nodeMenu.append( "/Image/Deep/DeepToFlat", GafferImage.DeepToFlat )
+nodeMenu.append( "/Image/Deep/Sample Counts", GafferImage.DeepSampleCounts, searchText = "DeepSampleCounts" )
+nodeMenu.append( "/Image/Deep/Deep Sampler", GafferImage.DeepSampler, searchText = "DeepSampler" )
+nodeMenu.append( "/Image/Deep/Deep Holdout", GafferImage.DeepHoldout, searchText = "DeepHoldout" )
+nodeMenu.append( "/Image/Deep/Deep Recolor", GafferImage.DeepRecolor, searchText = "DeepRecolor" )
 
 # OSL nodes
 

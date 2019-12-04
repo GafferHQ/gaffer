@@ -56,6 +56,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
 	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150" )
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/defaultNegativeDisplayWindow.exr" )
+	__representativeDeepPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
 
 	longMessage = True
 
@@ -363,6 +364,82 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( w["webp"]["compressionQuality"].getValue(), 100 )
 
+	def testDeepWrite( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__representativeDeepPath )
+
+		c = GafferImage.Crop()
+		c["in"].setInput( r["out"] )
+		c["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ) )
+
+		o = GafferImage.Offset()
+		o["in"].setInput( c["out"] )
+
+		testFile = self.__testFile( "deep", "RGBA", "exr" )
+
+		w = GafferImage.ImageWriter()
+		w['fileName'].setValue( testFile )
+		w['in'].setInput( o['out'] )
+
+		reRead = GafferImage.ImageReader()
+		reRead["fileName"].setValue( testFile )
+
+		# We don't currently have an explicit way of trimming to the dataWindow - any nodes that process the
+		# data should do it, but crop may be passing through.  In order to be able to do an exact compare with
+		# the round tripped data, we can do a little hack by offsetting back and forth by a pixel, to force
+		# processing, which will trim to the dataWindow
+		trimToDataWindowStage1 = GafferImage.Offset()
+		trimToDataWindowStage1["in"].setInput( o["out"] )
+		trimToDataWindowStage1["offset"].setValue( imath.V2i( 1, 0 ) )
+
+		trimToDataWindowStage2 = GafferImage.Offset()
+		trimToDataWindowStage2["in"].setInput( trimToDataWindowStage1["out"] )
+		trimToDataWindowStage2["offset"].setValue( imath.V2i( -1, 0 ) )
+
+		for mode in [ GafferImage.ImageWriter.Mode.Scanline, GafferImage.ImageWriter.Mode.Tile]:
+
+			w["openexr"]["mode"].setValue( mode )
+
+			for area, affectDisplayWindow in [
+					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ), True ),
+					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 63 ) ), True ),
+					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 65 ) ), True ),
+					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 150, 100 ) ), True ),
+					( imath.Box2i( imath.V2i( 37, 21 ), imath.V2i( 96, 43 ) ), False ),
+					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ), False )
+				]:
+				c["area"].setValue( area )
+				c["affectDisplayWindow"].setValue( affectDisplayWindow )
+
+				for offset in [
+						imath.V2i( 0, 0 ),
+						imath.V2i( 13, 17 ),
+						imath.V2i( -13, -17 ),
+						imath.V2i( -233, 431 ),
+						imath.V2i( -GafferImage.ImagePlug.tileSize(), 2 * GafferImage.ImagePlug.tileSize() ),
+						imath.V2i( 106, 28 )
+					]:
+
+					with Gaffer.Context() :
+						w["task"].execute()
+
+					reRead["refreshCount"].setValue( reRead["refreshCount"].getValue() + 1 )
+					if area.size() != imath.V2i( 0 ):
+						self.assertImagesEqual( reRead["out"], trimToDataWindowStage2["out"], ignoreMetadata = True )
+					else:
+						# We have to write one pixel to file, since OpenEXR doesn't permit empty dataWindow
+						onePixelDataWindow = imath.Box2i( imath.V2i( 0, 99 ), imath.V2i( 1, 100 ) )
+						self.assertEqual( reRead["out"].dataWindow(), onePixelDataWindow )
+
+						emptyPixelData = IECore.CompoundData( dict( [
+							( key,  IECore.CompoundData( {
+								"0, 64" : IECore.FloatVectorData() if key != "sampleOffsets"
+									else GafferImage.ImagePlug.emptyTileSampleOffsets()
+							} ) ) for key in [ "sampleOffsets", "R", "G","B", "A", "Z", "ZBack" ]
+						] ) )
+						self.assertEqual( GafferImage.ImageAlgo.tiles( reRead["out"] ), emptyPixelData )
+
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
 	def __testExtension( self, ext, formatName, options = {}, metadataToIgnore = [] ) :
 
@@ -580,8 +657,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"]["in"].setInput( s["c"]["out"] )
 
 		with s.context() :
-			ci = s["c"]["out"].image()
-			wi = s["w"]["out"].image()
+			ci = GafferImage.ImageAlgo.image( s["c"]["out"] )
+			wi = GafferImage.ImageAlgo.image( s["w"]["out"] )
 
 		self.assertEqual( ci, wi )
 

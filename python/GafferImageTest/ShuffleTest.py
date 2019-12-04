@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import os
 import imath
 
 import IECore
@@ -45,6 +46,8 @@ import GafferImage
 import GafferImageTest
 
 class ShuffleTest( GafferImageTest.ImageTestCase ) :
+
+	representativeDeepImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
 
 	def test( self ) :
 
@@ -166,6 +169,77 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( s["out"].channelData( "G", imath.V2i( 0 ) ), black )
 		self.assertEqual( s["out"].channelData( "B", imath.V2i( 0 ) ), black )
 		self.assertEqual( s["out"].channelData( "A", imath.V2i( 0 ) ), r["out"].channelData( "R", imath.V2i( 0 ) ) )
+
+	def testDeep( self ) :
+		representativeDeep = GafferImage.ImageReader()
+		representativeDeep["fileName"].setValue( self.representativeDeepImagePath )
+
+		deepShuffle = GafferImage.Shuffle()
+		deepShuffle["in"].setInput( representativeDeep["out"] )
+
+		postFlatten = GafferImage.DeepToFlat()
+		postFlatten["in"].setInput( deepShuffle["out"] )
+
+		preFlatten = GafferImage.DeepToFlat()
+		preFlatten["in"].setInput( representativeDeep["out"] )
+
+		flatShuffle = GafferImage.Shuffle()
+		flatShuffle["in"].setInput( preFlatten["out"] )
+		flatShuffle["channels"].setInput( deepShuffle["channels"] )
+
+		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "R", "B" ) )
+		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "G", "R" ) )
+		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "B", "G" ) )
+
+		deepOrig = GafferImage.ImageAlgo.tiles( representativeDeep["out"] )
+		flatOrig = GafferImage.ImageAlgo.tiles( preFlatten["out"] )
+
+
+		flatShuffled = GafferImage.ImageAlgo.tiles( flatShuffle["out"] )
+		deepShuffled = GafferImage.ImageAlgo.tiles( deepShuffle["out"] )
+
+		self.assertEqual( flatShuffled["R"], flatOrig["B"] )
+		self.assertEqual( flatShuffled["G"], flatOrig["R"] )
+		self.assertEqual( flatShuffled["B"], flatOrig["G"] )
+		self.assertEqual( flatShuffled["A"], flatOrig["A"] )
+
+		self.assertEqual( deepShuffled["R"], deepOrig["B"] )
+		self.assertEqual( deepShuffled["G"], deepOrig["R"] )
+		self.assertEqual( deepShuffled["B"], deepOrig["G"] )
+		self.assertEqual( deepShuffled["A"], deepOrig["A"] )
+
+		self.assertImagesEqual( postFlatten["out"], flatShuffle["out"] )
+
+		deepShuffle["channels"].clearChildren()
+		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "R", "__black" ) )
+		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "G", "__white" ) )
+		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "B", "__black" ) )
+
+		flatGreen = GafferImage.ImageAlgo.tiles( flatShuffle["out"] )
+		deepGreen = GafferImage.ImageAlgo.tiles( deepShuffle["out"] )
+
+		for k in flatGreen["R"].keys():
+			self.assertEqual( flatGreen["R"][k], GafferImage.ImagePlug.blackTile() )
+			self.assertEqual( flatGreen["G"][k], GafferImage.ImagePlug.whiteTile() )
+			self.assertEqual( flatGreen["B"][k], GafferImage.ImagePlug.blackTile() )
+
+			numSamples = deepGreen["sampleOffsets"][k][-1]
+
+			self.assertEqual( deepGreen["R"][k], IECore.FloatVectorData( [ 0.0 ] * numSamples ) )
+			self.assertEqual( deepGreen["G"][k], IECore.FloatVectorData( [ 1.0 ] * numSamples ) )
+			self.assertEqual( deepGreen["B"][k], IECore.FloatVectorData( [ 0.0 ] * numSamples ) )
+
+		deepPremult = GafferImage.Premultiply()
+		deepPremult["in"].setInput( deepShuffle["out"] )
+		postFlatten["in"].setInput( deepPremult["out"] )
+
+		flatPremult = GafferImage.Premultiply()
+		flatPremult["in"].setInput( flatShuffle["out"] )
+
+		self.assertImagesEqual( postFlatten["out"], flatPremult["out"], maxDifference = 0.000001 )
+
+
+
 
 if __name__ == "__main__":
 	unittest.main()

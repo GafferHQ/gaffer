@@ -146,6 +146,11 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 150, 1. ) )
 			self.assertEqual( d["out"]["format"].getValue(), GafferImage.FormatPlug.getDefaultFormat( c ) )
 
+	def testDeep( self ) :
+
+		d = GafferImage.Display()
+		self.assertEqual( d["out"]["deep"].getValue(), False )
+
 	def testTileHashes( self ) :
 
 		node = GafferImage.Display()

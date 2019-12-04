@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_RESAMPLE_H
 #define GAFFERIMAGE_RESAMPLE_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
@@ -57,14 +57,14 @@ namespace GafferImage
 /// data window in the output image, using a chosen filter. Uses OIIO::Filter2D
 /// to provide the filter implementation, and is based heavily on OIIO's
 /// ImageBufAlgo resize() function.
-class GAFFERIMAGE_API Resample : public ImageProcessor
+class GAFFERIMAGE_API Resample : public FlatImageProcessor
 {
 	public :
 
 		Resample( const std::string &name=defaultName<Resample>() );
 		~Resample() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resample, ResampleTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resample, ResampleTypeId, FlatImageProcessor );
 
 		enum Debug
 		{

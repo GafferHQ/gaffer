@@ -76,7 +76,7 @@ OSLImage::OSLImage( const std::string &name )
 	addChild( new Plug( "channels", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new OSLCode( "__oslCode" ) );
 	addChild( new GafferImage::Constant( "__defaultConstant" ) );
-	addChild( new GafferImage::ImagePlug( "__defaultIn" ) );
+	addChild( new GafferImage::ImagePlug( "__defaultIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 	shaderPlug()->setInput( oslCode()->outPlug() );
 	defaultConstant()->formatPlug()->setInput( defaultFormatPlug() );
 	defaultInPlug()->setInput( defaultConstant()->outPlug() );
@@ -86,6 +86,8 @@ OSLImage::OSLImage( const std::string &name )
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 }
 
 OSLImage::~OSLImage()
@@ -184,7 +186,9 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		input == inPlug()->formatPlug() ||
 		input == defaultInPlug()->formatPlug() ||
 		input == inPlug()->channelNamesPlug() ||
-		input == inPlug()->channelDataPlug()
+		input == inPlug()->channelDataPlug() ||
+		input == inPlug()->deepPlug() ||
+		input == inPlug()->sampleOffsetsPlug()
 	)
 	{
 		outputs.push_back( shadingPlug() );
@@ -367,14 +371,22 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 
 	ConstStringVectorDataPtr channelNamesData;
+	bool deep;
 	{
 		ImagePlug::GlobalScope c( context );
 		defaultedInPlug()->formatPlug()->hash( h );
 		channelNamesData = defaultedInPlug()->channelNamesPlug()->getValue();
+		deep = defaultedInPlug()->deepPlug()->getValue();
 	}
 
 	{
 		ImagePlug::ChannelDataScope c( context );
+		if( deep )
+		{
+			c.remove( ImagePlug::channelNameContextName );
+			defaultedInPlug()->sampleOffsetsPlug()->hash( h );
+		}
+
 		for( const auto &channelName : channelNamesData->readable() )
 		{
 			if( shadingEngine->needsAttribute( channelName ) )
@@ -405,50 +417,26 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	Format format;
 	ConstStringVectorDataPtr channelNamesData;
+	bool deep;
 	{
 		ImagePlug::GlobalScope c( context );
 		format = defaultedInPlug()->formatPlug()->getValue();
 		channelNamesData = defaultedInPlug()->channelNamesPlug()->getValue();
+		deep = defaultedInPlug()->deepPlug()->getValue();
 	}
 
 	CompoundDataPtr shadingPoints = new CompoundData();
+	ConstIntVectorDataPtr sampleOffsetsData;
 
-	V3fVectorDataPtr pData = new V3fVectorData;
-	FloatVectorDataPtr uData = new FloatVectorData;
-	FloatVectorDataPtr vData = new FloatVectorData;
-
-	vector<V3f> &pWritable = pData->writable();
-	vector<float> &uWritable = uData->writable();
-	vector<float> &vWritable = vData->writable();
-
-	const size_t tileSize = ImagePlug::tileSize();
-	pWritable.reserve( tileSize * tileSize );
-	uWritable.reserve( tileSize * tileSize );
-	vWritable.reserve( tileSize * tileSize );
-
-	const V2f uvStep = V2f( 1.0f ) / format.getDisplayWindow().size();
-	// UV value for the pixel at 0,0
-	const V2f uvOrigin = (V2f(0.5) - format.getDisplayWindow().min) * uvStep;
-
-	const V2i pMax = tileOrigin + V2i( tileSize );
-	V2i p;
-	for( p.y = tileOrigin.y; p.y < pMax.y; ++p.y )
-	{
-		const float v = uvOrigin.y + p.y * uvStep.y;
-		for( p.x = tileOrigin.x; p.x < pMax.x; ++p.x )
-		{
-			uWritable.push_back( uvOrigin.x + p.x * uvStep.x );
-			vWritable.push_back( v );
-			pWritable.push_back( V3f( p.x + 0.5f, p.y + 0.5f, 0.0f ) );
-		}
-	}
-
-	shadingPoints->writable()["P"] = pData;
-	shadingPoints->writable()["u"] = uData;
-	shadingPoints->writable()["v"] = vData;
 
 	{
 		ImagePlug::ChannelDataScope c( context );
+		if( deep )
+		{
+			c.remove( ImagePlug::channelNameContextName );
+			sampleOffsetsData = defaultedInPlug()->sampleOffsetsPlug()->getValue();
+		}
+
 		for( const auto &channelName : channelNamesData->readable() )
 		{
 			if( shadingEngine->needsAttribute( channelName ) )
@@ -460,6 +448,68 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 			}
 		}
 	}
+
+	int numSamples = sampleOffsetsData ? sampleOffsetsData->readable().back() : ImagePlug::tilePixels();
+
+	V3fVectorDataPtr pData = new V3fVectorData;
+	FloatVectorDataPtr uData = new FloatVectorData;
+	FloatVectorDataPtr vData = new FloatVectorData;
+
+	vector<V3f> &pWritable = pData->writable();
+	vector<float> &uWritable = uData->writable();
+	vector<float> &vWritable = vData->writable();
+
+	pWritable.reserve( numSamples );
+	uWritable.reserve( numSamples );
+	vWritable.reserve( numSamples );
+
+	const V2f uvStep = V2f( 1.0f ) / format.getDisplayWindow().size();
+	// UV value for the pixel at 0,0
+	const V2f uvOrigin = (V2f(0.5) - format.getDisplayWindow().min) * uvStep;
+	const V2i pMax = tileOrigin + V2i( ImagePlug::tileSize() );
+
+	if( !deep )
+	{
+		V2i p;
+		for( p.y = tileOrigin.y; p.y < pMax.y; ++p.y )
+		{
+			const float v = uvOrigin.y + p.y * uvStep.y;
+			for( p.x = tileOrigin.x; p.x < pMax.x; ++p.x )
+			{
+				uWritable.push_back( uvOrigin.x + p.x * uvStep.x );
+				vWritable.push_back( v );
+				pWritable.push_back( V3f( p.x + 0.5f, p.y + 0.5f, 0.0f ) );
+			}
+		}
+	}
+	else
+	{
+		const std::vector< int > &sampleOffsets = sampleOffsetsData->readable();
+		int prevOffset = 0;
+		int index = 0;
+		V2i p;
+		for( p.y = tileOrigin.y; p.y < pMax.y; ++p.y )
+		{
+			const float v = uvOrigin.y + p.y * uvStep.y;
+			for( p.x = tileOrigin.x; p.x < pMax.x; ++p.x )
+			{
+				int offset = sampleOffsets[index];
+				for( int j = 0; j < offset - prevOffset; j++ )
+				{
+					uWritable.push_back( uvOrigin.x + p.x * uvStep.x );
+					vWritable.push_back( v );
+					pWritable.push_back( V3f( p.x + 0.5f, p.y + 0.5f, j ) );
+				}
+				prevOffset = offset;
+				index++;
+			}
+		}
+	}
+
+	shadingPoints->writable()["P"] = pData;
+	shadingPoints->writable()["u"] = uData;
+	shadingPoints->writable()["v"] = vData;
+
 
 	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
 

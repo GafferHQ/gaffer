@@ -146,8 +146,8 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( d["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 		GafferImageTest.processTiles( d["out"] )
-		d["out"].image()
-		d["out"].imageHash()
+		GafferImage.ImageAlgo.image( d["out"] )
+		GafferImage.ImageAlgo.imageHash( d["out"] )
 
 	def testLayerNames( self ) :
 
