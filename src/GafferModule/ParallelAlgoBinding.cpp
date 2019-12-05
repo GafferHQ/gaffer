@@ -178,7 +178,14 @@ void pushUIThreadCallHandler( boost::python::object handler )
 				boost::python::default_call_policies(),
 				boost::mpl::vector<void>()
 			);
-			(*handlerPtr)( pythonFunction );
+			try
+			{
+				(*handlerPtr)( pythonFunction );
+			}
+			catch( boost::python::error_already_set &e )
+			{
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
 		}
 	);
 }
