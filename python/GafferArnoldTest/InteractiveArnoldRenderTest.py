@@ -111,6 +111,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["attributes"]["in"].setInput( script["meshType"]["out"] )
 		script["attributes"]["attributes"]["subdivIterations"]["enabled"].setValue( True )
 
+		script["catalogue"] = GafferImage.Catalogue()
+
 		script["outputs"] = GafferScene.Outputs()
 		script["outputs"].addOutput(
 			"beauty",
@@ -119,17 +121,17 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"driverType" : "ImageDisplayDriver",
-					"handle" : "subdivisionTest",
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 				}
 			)
 		)
 		script["outputs"]["in"].setInput( script["attributes"]["out"] )
 
-		script["objectToImage"] = GafferImage.ObjectToImage()
-
 		script["imageStats"] = GafferImage.ImageStats()
-		script["imageStats"]["in"].setInput( script["objectToImage"]["out"] )
+		script["imageStats"]["in"].setInput( script["catalogue"]["out"] )
 		script["imageStats"]["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		script["imageStats"]["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 640, 480 ) ) )
 
@@ -144,24 +146,29 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Render the cube with one level of subdivision. Check we get roughly the
 		# alpha coverage we expect.
 
-		script["render"]["state"].setValue( script["render"].State.Running )
-		time.sleep( 1 )
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
 
-		script["objectToImage"]["object"].setValue( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ) )
-		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
+			script["render"]["state"].setValue( script["render"].State.Running )
 
-		# Now up the number of subdivision levels. The alpha coverage should
-		# increase as the shape tends towards the limit surface.
+			handler.waitFor( 1 )
 
-		script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
-		time.sleep( 1 )
+			self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
 
-		script["objectToImage"]["object"].setValue( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ) )
-		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
+			# Now up the number of subdivision levels. The alpha coverage should
+			# increase as the shape tends towards the limit surface.
+
+			script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
+			handler.waitFor( 1 )
+
+			self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
+
+			script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testLightLinkingAfterParameterUpdates( self ) :
 
 		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferImage.Catalogue()
+
 
 		s["s"] = GafferScene.Sphere()
 
@@ -208,8 +215,10 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"driverType" : "ImageDisplayDriver",
-					"handle" : "litByEnvironment",
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 				}
 			)
 		)
@@ -225,29 +234,27 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start rendering and make sure the light is linked to the sphere
 
-		s["r"]["state"].setValue( s["r"].State.Running )
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
 
-		time.sleep( 0.5 )
+			s["r"]["state"].setValue( s["r"].State.Running )
 
-		c = self._color3fAtUV(
-			IECoreImage.ImageDisplayDriver.storedImage( "litByEnvironment" ),
-			imath.V2f( 0.5 )
-		)
+			handler.waitFor( 0.5 )
 
-		self.assertEqual( c, imath.Color3f( 1.0 ) )
+			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 
-		# Change a value on the light. The light should still be linked to the sphere
-		# and we should get the same result as before.
-		s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
+			self.assertEqual( c, imath.Color3f( 1.0 ) )
 
-		time.sleep( 0.5 )
+			# Change a value on the light. The light should still be linked to the sphere
+			# and we should get the same result as before.
+			s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
 
-		c = self._color3fAtUV(
-			IECoreImage.ImageDisplayDriver.storedImage( "litByEnvironment" ),
-			imath.V2f( 0.5 )
-		)
+			handler.waitFor( 0.5 )
 
-		self.assertEqual( c, imath.Color3f( 1.0 ) )
+			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+
+			self.assertEqual( c, imath.Color3f( 1.0 ) )
+
+			s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def _createInteractiveRender( self ) :
 
