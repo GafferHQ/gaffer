@@ -37,6 +37,8 @@
 import thread
 import threading
 import unittest
+import timeit
+import Queue
 
 import IECore
 
@@ -93,6 +95,44 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 				assert( condition.toCall is None )
 				condition.toCall = f
 				condition.notify()
+
+	# Context manager used to test code which needs to run various things on
+	# a "UI thread". By calling waitFor, the main Python thread can act as the
+	# UI thread, ensuring that events are processed
+	class UIThreadCallHandler( object ) :
+
+		def __enter__( self ) :
+			self.__queue = Queue.Queue()
+			Gaffer.ParallelAlgo.pushUIThreadCallHandler( self.__callOnUIThread )
+			return self
+
+		def __exit__( self, type, value, traceBack ) :
+			Gaffer.ParallelAlgo.popUIThreadCallHandler()
+			try:
+				while True:
+					f = self.__queue.get( False)
+					f()
+			except Queue.Empty:
+				pass
+
+		def __callOnUIThread( self, f ) :
+			self.__queue.put( f )
+
+		# Wait for "time" seconds, and process any "UI Thread Calls" that occur during
+		# this time
+		def waitFor( self, time ) :
+			startTime = timeit.default_timer()
+
+			elapsed = 0.0
+			
+			while elapsed < time:
+				try:
+					f = self.__queue.get( True, time - elapsed )
+					f()
+				except Queue.Empty:
+					return
+
+				elapsed = timeit.default_timer() - startTime
 
 	def testCallOnUIThread( self ) :
 
