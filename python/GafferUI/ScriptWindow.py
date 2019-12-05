@@ -222,7 +222,7 @@ class _WindowTitleBehaviour :
 		u = " *" if self.__script()["unsavedChanges"].getValue() else ""
 		ro = " (read only) " if Gaffer.MetadataAlgo.readOnly( self.__script() ) else ""
 
-		w._setTitle( "Gaffer : %s%s%s%s" % ( f, ro, u, d ) )
+		w._setTitle( "Gaffer %s : %s%s%s%s" % ( Gaffer.About.versionString(), f, ro, u, d ) )
 
 	def __scriptPlugChanged( self, plug ) :
 
