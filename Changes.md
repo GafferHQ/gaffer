@@ -15,6 +15,7 @@ Improvements
 - Tools :
   - Added generic support for precise tool adjustments by holding down <kbd>Shift</kbd> whilst adjusting tool handles (#3324).
   - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
+- UI : Added the Gaffer version to the window title.
 
 Fixes
 -----
