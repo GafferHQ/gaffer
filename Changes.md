@@ -1,6 +1,14 @@
 0.56.x.x
 ========
 
+Features
+--------
+
+- Deep image support (#2668, #3405) :
+  - Updated ImageReader and ImageWriter to support deep images.
+  - Added new nodes for processing deep images : DeepToFlat, FlatToDeep, DeepMerge, DeepRecolor, DeepHoldout, DeepState, DeepTidy, Empty, DeepSampleCounts and DeepSampler.
+  - Updated existing nodes to support deep images where relevant.
+
 Improvements
 ------------
 
@@ -22,6 +30,9 @@ Fixes
 
 - Resize : Fixed bug which caused unwanted image distortion when changing pixel aspect ratio.
 - Launch : Fixed bug which prevented gaffer launching when stored on case destroying file systems (#3477).
+- CopyAttributes : Fixed bug loading scripts saved prior to version 0.55.0.0.
+- Mix : Fix wrong behaviour outside of mask data window.
+- ImageStats : Fixed bug that would return 1.0 if the 4th channel was missing. Missing channels now always return 0.0.
 
 API
 ---
@@ -30,6 +41,14 @@ API
   - Added an optional `processModifiers` argument to drag constructors that allows the built-in precision mode handling to be disabled (#3324).
   - Added a convenience constructor for `LinearDrag` that creates a drag in an arbitrary direction on the camera plane (#3324).
   - Added `AngularDrag` helper to manage drags that represent rotations around a single axis (#3324).
+- ImagePlug :
+  - Added plugs and methods to support deep data.
+  - Added `tilePixels()` and `pixelIndex()` convenience functions.
+- ImageAlgo :
+  - Added `tiles()` method, returning all the tiles for an image.
+  - Added `throwIfSampleOffsetsMismatch()` method.
+- FlatImageSource : Added a new base class to help in implementing image sources which generate flat data.
+- FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
 
 Breaking Changes
 ----------------
@@ -43,6 +62,8 @@ Breaking Changes
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
 - ViewportGadget : Added private members, ABI break only - source compatibility is maintained (#3324).
 - Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods loose `const`-ness accordingly.
+- ImagePlug : Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
+- ImageNode : Added virtual methods.
 
 0.55.2.0 (relative to 0.55.1.0)
 ========
