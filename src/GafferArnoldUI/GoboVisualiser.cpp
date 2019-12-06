@@ -36,8 +36,9 @@
 
 #include "GafferOSL/ShadingEngine.h"
 
-#include "GafferSceneUI/LightFilterVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
+
+#include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
@@ -61,6 +62,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreGL;
+using namespace IECoreGLPreview;
 using namespace GafferSceneUI;
 
 namespace

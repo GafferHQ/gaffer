@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/LightFilterVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
 #include "Gaffer/Metadata.h"
 
@@ -52,8 +52,8 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreGL;
+using namespace IECoreGLPreview;
 using namespace Gaffer;
-using namespace GafferSceneUI;
 
 namespace
 {
@@ -173,7 +173,7 @@ void setFalloffGroupSettings( IECoreGL::Group *group, const IECore::CompoundData
 // LightBlockerVisualiser implementation.
 //////////////////////////////////////////////////////////////////////////
 
-class GAFFERSCENEUI_API LightBlockerVisualiser : public LightFilterVisualiser
+class LightBlockerVisualiser : public LightFilterVisualiser
 {
 
 	public :

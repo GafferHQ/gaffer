@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/LightFilterVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
@@ -52,7 +52,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreGL;
-using namespace GafferSceneUI;
+using namespace IECoreGLPreview;
 
 namespace
 {
