@@ -281,6 +281,27 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		return self.__dropTextSignal
 
+	## A signal emitted when the standard context menu is being built. This
+	# allows extra items to be inserted after the standard items, without
+	# having to re-implement them yourself. If a custom menu has been generated
+	# via contextMenuSignal, then this will not be called.
+	# Signature is ( widget, menuDefinition ).
+	def appendStandardContextMenuSignal( self ) :
+
+		try :
+			return self.__appendStandardContextMenuSignal
+		except :
+			self.__appendStandardContextMenuSignal = Gaffer.Signal2()
+			self._qtWidget().appendStandardContextMenuSignal.connect( Gaffer.WeakMethod( self.__appendStandardContextMenu ), scoped = False )
+
+		return self.__appendStandardContextMenuSignal
+
+	def __appendStandardContextMenu( self, qtWidget, menuDefinition ) :
+
+		# We need to wrap this one so we can add ourselves to the arguments.
+		# We can't sub-class the event filter methods as they're private to Widget.
+		self.__appendStandardContextMenuSignal( self, menuDefinition )
+
 	def __textChanged( self ) :
 
 		self.__textChangedSignal( self )
@@ -361,6 +382,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 		QtWidgets.QPlainTextEdit.__init__( self, parent )
 		self.__fixedLineHeight = None
 		self.__widgetFullyBuilt = False
+		self.appendStandardContextMenuSignal = Gaffer.Signal2()
 
 	def setFixedLineHeight( self, fixedLineHeight ) :
 
@@ -376,6 +398,24 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 	def getFixedLineHeight( self ) :
 
 		return self.__fixedLineHeight
+
+	def contextMenuEvent( self, event ) :
+
+		menu = self.createStandardContextMenu( event.pos() )
+
+		menuDefinition = IECore.MenuDefinition()
+		self.appendStandardContextMenuSignal( self, menuDefinition )
+
+		if len( menuDefinition.items() ) :
+
+			menu.addSeparator()
+
+			m = GafferUI.Menu( menuDefinition )
+			m._buildFully()
+			for a in m._qtWidget().actions() :
+				menu.addAction( a )
+
+		menu.exec_( event.globalPos() )
 
 	def __computeHeight( self, size ) :
 

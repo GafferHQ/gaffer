@@ -38,6 +38,8 @@
 import ast
 import sys
 import traceback
+import weakref
+
 import imath
 
 import IECore
@@ -71,6 +73,7 @@ class PythonEditor( GafferUI.Editor ) :
 		)
 
 		self.__outputWidget._qtWidget().setProperty( "gafferTextRole", "output" )
+		self.__outputWidget.appendStandardContextMenuSignal().connect( Gaffer.WeakMethod( self.__outputContextMenu ), scoped = False )
 		self.__inputWidget._qtWidget().setProperty( "gafferTextRole", "input" )
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
@@ -193,6 +196,11 @@ class PythonEditor( GafferUI.Editor ) :
 			# update the gui so messages are output as they occur, rather than all getting queued
 			# up till the end.
 			QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+
+	def __outputContextMenu( self, widget, menuDefinition ) :
+
+		weakWidget = weakref.ref( widget )
+		menuDefinition.append( "/Clear", { "command" : lambda : weakWidget().setText( "" ) } )
 
 GafferUI.Editor.registerType( "PythonEditor", PythonEditor )
 
