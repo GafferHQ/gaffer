@@ -9,8 +9,11 @@ Gaffer is compatible with the following commercial and open-source third-party t
 
 Gaffer comes with Appleseed, so it will require no additional configuration. For the rest of the tools in this list, you will need to set some additional environment variables.
 
+> Tip :
+> If you do not use Appleseed in production, you can hide its nodes and presets from the UI by setting the `GAFFERAPPLESEED_HIDE_UI` environment variable to `1`. Even when set, Appleseed will still be available for OSL shader previews and example scenes.
+
 > Note :
-> For the the following Linux instructions, we will assume you are using the _bash_ shell and are familiar with terminal commands. Other shells will have comparable methods for setting environment variables.
+> For the following Linux instructions, we will assume you are using the _bash_ shell and are familiar with terminal commands. Other shells will have comparable methods for setting environment variables.
 
 
 ## Configuring Gaffer for Arnold ##

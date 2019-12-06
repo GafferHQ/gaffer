@@ -65,20 +65,26 @@ Breaking Changes
 - ImagePlug : Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
 - ImageNode : Added virtual methods.
 
-0.55.2.0 (relative to 0.55.1.0)
+0.55.x.x (relative to 0.55.1.0)
 ========
 
 Improvements
 ------------
 
 - Stats app : Added `-postLoadScript` command line argument. This can be used to perform post-processing of the loaded script before stats are gathered.
+- Appleseed : Added the ability to hide Appleseed nodes and other presets from the UI by setting the `GAFFERAPPLESEED_HIDE_UI` environment variable to `1`. Appleseed will still be available for OSL shader previews and example scenes.
 
 Fixes
 -----
 
+- CollectScenes : Fixed bug in set computations. This first appeared as a failure to display lights in the viewer in certain circumstances (#3497).
 - Viewer : Fixed X-Ray shading mode on MacOS (#3473).
 - Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
 - LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
+- Menu : Fixed spacing issue in menus when the first item was a labelled divider.
+- ShaderTweaks : Fixed missing preset for Arnold Blockers.
+- Arnold : Fixed crash when disconnecting shader networks from lights (#3484).
+- VectorDataWidget : Fixed styling update bug for non-editable widgets.
 
 0.55.1.0 (relative to 0.55.0.0)
 ========
@@ -234,15 +240,19 @@ Breaking Changes
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
 
-0.54.2.3 (relative to 0.54.2.2)
+0.54.2.x (relative to 0.54.2.2)
 ========
 
 Fixes
 -----
 
+- CollectScenes : Fixed bug in set computations. This first appeared as a failure to display lights in the viewer in certain circumstances (#3497).
 - Viewer : Fixed X-Ray shading mode on MacOS (#3473).
 - Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
 - LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
+- ShaderTweaks : Fixed missing preset for Arnold Blockers.
+- Arnold : Fixed crash when disconnecting shader networks from lights (#3484).
+- VectorDataWidget : Fixed styling update bug for non-editable widgets.
 
 0.54.2.2 (relative to 0.54.2.1)
 ========

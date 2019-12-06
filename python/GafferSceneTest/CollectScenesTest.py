@@ -296,5 +296,19 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( collect["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "A" ] ) )
 		self.assertEqual( collect["out"].childNames( "/A" ), IECore.InternedStringVectorData() )
 
+	def testSetRespectsRootName( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		collect1 = GafferScene.CollectScenes()
+		collect1["in"].setInput( light["out"] )
+		collect1["rootNames"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+		self.assertEqual( collect1["out"].set( "__lights" ).value, IECore.PathMatcher( [ "/a/light", "/b/light" ] ) )
+
+		collect2 = GafferScene.CollectScenes()
+		collect2["in"].setInput( light["out"] )
+		collect2["rootNames"].setValue( IECore.StringVectorData( [ "c", "d" ] ) )
+		self.assertEqual( collect2["out"].set( "__lights" ).value, IECore.PathMatcher( [ "/c/light", "/d/light" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

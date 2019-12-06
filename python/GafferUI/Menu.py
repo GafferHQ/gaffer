@@ -308,13 +308,12 @@ class Menu( GafferUI.Widget ) :
 						# it's not a submenu
 						action = self.__buildAction( item, name, qtMenu )
 
-						# Wrangle some divider spacing issues
+						# Wrangle some divider/menu spacing issues
 						if isinstance( action, _DividerAction ) :
 							if len( qtMenu.actions() ) :
 								qtMenu.addAction( _SpacerAction( qtMenu ) )
-							elif not self.__title and action.hasText :
-								# If a divider is the first item, we want the menu padding as per a title
-								self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( True ) )
+							elif action.hasText :
+								self._qtWidget().setProperty( "gafferHasLeadingLabelledDivider", GafferUI._Variant.toVariant( True ) )
 								needsBottomSpacer = True
 
 						qtMenu.addAction( action )
