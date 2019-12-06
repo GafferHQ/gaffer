@@ -437,6 +437,7 @@ void CollectScenes::hashSet( const IECore::InternedString &setName, const Gaffer
 		sceneScope.setRootName( *it );
 		inSetPlug->hash( h );
 		sourceRootPlug->hash( h );
+		h.append( *it );
 	}
 }
 
