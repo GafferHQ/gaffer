@@ -4,11 +4,13 @@
 Fixes
 -----
 
+- CollectScenes : Fixed bug in set computations. This first appeared as a failure to display lights in the viewer in certain circumstances (#3497).
 - Viewer : Fixed X-Ray shading mode on MacOS (#3473).
 - Caching : Changed the cache used in various sub-systems to avoid potential compute failures (#3476).
 - LRUCache : Fixed handling of cases where value computation for a cache-miss was cancelled in-flight, which then prevented the value ever being successfully retrieved (#3469).
 - ShaderTweaks : Fixed missing preset for Arnold Blockers.
 - Arnold : Fixed crash when disconnecting shader networks from lights (#3484).
+- VectorDataWidget : Fixed styling update bug for non-editable widgets.
 
 0.54.2.2 (relative to 0.54.2.1)
 ========
