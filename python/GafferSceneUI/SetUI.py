@@ -54,6 +54,8 @@ Gaffer.Metadata.registerNode(
 	a particular set.
 	""",
 
+	"layout:activator:pathsInUse", lambda node : node["paths"].getInput() is not None or len( node["paths"].getValue() ),
+
 	plugs = {
 
 		"mode" : [
@@ -98,10 +100,15 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The paths to be added to or removed from the set.
+
+			> Caution : This plug is deprecated and will be removed
+			in a future release. No validity checks are performed on
+			these paths, so it is possible to accidentally generate
+			invalid sets.
 			""",
 
-			"ui:scene:acceptsPaths", True,
 			"vectorDataPlugValueWidget:dragPointer", "objects",
+			"layout:visibilityActivator", "pathsInUse",
 
 		],
 
@@ -109,15 +116,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			A filter to define additional paths to be added to
-			or removed from the set.
-
-			> Caution : Using a filter can be very expensive.
-			It is advisable to limit use to filters with a
-			limited number of matches and/or sets which are
-			not used heavily downstream. Wherever possible,
-			prefer to use the `paths` plug directly instead
-			of using a filter.
+			Defines the locations to be added to or removed from the set.
 			""",
 
 		],
