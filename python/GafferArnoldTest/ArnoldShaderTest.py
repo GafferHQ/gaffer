@@ -196,16 +196,13 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		r.render()
 
-		image = GafferImage.ObjectToImage()
-		image["object"].setValue( IECoreImage.ImageDisplayDriver.removeStoredImage( "test" ) )
+		imagePrimitive = IECoreImage.ImageDisplayDriver.removeStoredImage( "test" )
 
-		sampler = GafferImage.ImageSampler()
-		sampler["image"].setInput( image["out"] )
-		sampler["pixel"].setValue( imath.V2f( 320, 240 ) )
+		pixelPos = 320 + 240 * 640
 
-		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 1, 5 )
-		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 1, 5 )
-		self.assertEqual( sampler["color"]["b"].getValue(), 0 )
+		self.assertAlmostEqual( imagePrimitive["R"][pixelPos], 1, 5 )
+		self.assertAlmostEqual( imagePrimitive["G"][pixelPos], 1, 5 )
+		self.assertEqual( imagePrimitive["B"][pixelPos], 0 )
 
 	def testShaderNetworkHash( self ) :
 

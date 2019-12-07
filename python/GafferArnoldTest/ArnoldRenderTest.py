@@ -1101,6 +1101,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		ball = GafferArnold.ArnoldShaderBall()
 		ball["shader"].setInput( pack["out"] )
 
+		catalogue = GafferImage.Catalogue()
+
 		outputs = GafferScene.Outputs()
 		outputs.addOutput(
 			"beauty",
@@ -1109,8 +1111,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"driverType" : "ImageDisplayDriver",
-					"handle" : "myLovelySphere",
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( catalogue.displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 				}
 			)
 		)
@@ -1118,11 +1122,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( outputs["out"] )
-		render["task"].execute()
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
-		self.assertEqual( self.__color4fAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+			render["task"].execute()
+
+			handler.waitFor( 0.1 ) #Just need to let the catalogue update
+
+			self.assertEqual( self.__color4fAtUV( catalogue, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
 
 	def testDefaultLightsMistakesDontForceLinking( self ) :
 
@@ -1163,18 +1169,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	def __color4fAtUV( self, image, uv ) :
 
-		objectToImage = GafferImage.ObjectToImage()
-		objectToImage["object"].setValue( image )
-
 		sampler = GafferImage.ImageSampler()
-		sampler["image"].setInput( objectToImage["out"] )
-		sampler["pixel"].setValue(
-			uv * imath.V2f(
-				image.displayWindow.size().x,
-				image.displayWindow.size().y
-			)
-		)
-
+		sampler["image"].setInput( image["out"] )
+		dw = image['out']["format"].getValue().getDisplayWindow().size()
+		sampler["pixel"].setValue( uv * imath.V2f( dw.x, dw.y ) )
 		return sampler["color"].getValue()
 
 	def __arrayToSet( self, a ) :
