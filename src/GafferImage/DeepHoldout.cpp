@@ -146,12 +146,16 @@ void DeepHoldout::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
+
+	if( input == inPlug()->channelNamesPlug() )
+	{
+		outputs.push_back( outPlug()->channelNamesPlug() );
+	}
 }
 
 void DeepHoldout::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelNames( output, context, h );
-	h.append( output == intermediateInPlug() );
 	inPlug()->channelNamesPlug()->hash( h );
 }
 
@@ -210,6 +214,12 @@ void DeepHoldout::hashChannelData( const GafferImage::ImagePlug *output, const G
 				channelScope.setChannelName( "A" );
 				inPlug()->channelDataPlug()->hash( h );
 			}
+		}
+		else if( channelName == "__holdoutAlpha" )
+		{
+			ImagePlug::ChannelDataScope channelScope( context );
+			channelScope.setChannelName( "A" );
+			return inPlug()->channelDataPlug()->hash( h );
 		}
 		else
 		{

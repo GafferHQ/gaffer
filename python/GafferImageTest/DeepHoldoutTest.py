@@ -143,5 +143,48 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 		offset["offset"].setValue( imath.V2i( 103, -27 ) )
 		self.assertImagesEqual( holdoutNoZ["out"], cropCleanup["out"], maxDifference = 1e-5 )
 
+	def testDirtyPropagation( self ):
+		a = GafferImage.Constant()
+		b = GafferImage.Constant()
+		aShuffle = GafferImage.Shuffle()
+		aShuffle["in"].setInput( a["out"] )
+		bShuffle = GafferImage.Shuffle()
+		bShuffle["in"].setInput( b["out"] )
+		holdout = GafferImage.DeepHoldout()
+		holdout["in"].setInput( aShuffle["out"] )
+		holdout["holdout"].setInput( bShuffle["out"] )
+
+		cs = GafferTest.CapturingSlot( holdout.plugDirtiedSignal() )
+
+		a["color"]["r"].setValue( 0.5 )
+		dirtiedPlugs = { x[0].relativeName( holdout ) for x in cs }
+		self.assertIn( "__intermediateIn.channelData", dirtiedPlugs )
+		self.assertIn( "__flattened.channelData", dirtiedPlugs )
+		self.assertIn( "out.channelData", dirtiedPlugs )
+		del cs[:]
+
+		b["color"]["a"].setValue( 0.5 )
+		dirtiedPlugs = { x[0].relativeName( holdout ) for x in cs }
+		self.assertIn( "__flattened.channelData", dirtiedPlugs )
+		self.assertIn( "out.channelData", dirtiedPlugs )
+		del cs[:]
+
+		aShuffle["channels"].addChild( bShuffle.ChannelPlug( "Z", "__white" ) )
+		dirtiedPlugs = { x[0].relativeName( holdout ) for x in cs }
+		self.assertIn( "__intermediateIn.channelData", dirtiedPlugs )
+		self.assertIn( "__flattened.channelData", dirtiedPlugs )
+		self.assertIn( "out.channelData", dirtiedPlugs )
+		self.assertIn( "__intermediateIn.channelNames", dirtiedPlugs )
+		self.assertIn( "__flattened.channelNames", dirtiedPlugs )
+		self.assertIn( "out.channelNames", dirtiedPlugs )
+		del cs[:]
+
+		bShuffle["channels"].addChild( bShuffle.ChannelPlug( "Z", "__white" ) )
+		dirtiedPlugs = { x[0].relativeName( holdout ) for x in cs }
+		self.assertIn( "__flattened.channelData", dirtiedPlugs )
+		self.assertIn( "out.channelData", dirtiedPlugs )
+		self.assertIn( "__flattened.channelNames", dirtiedPlugs )
+		del cs[:]
+
 if __name__ == "__main__":
 	unittest.main()
