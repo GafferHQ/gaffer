@@ -162,13 +162,14 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 
 	std::string lightAttribute = "light";
 
-	IECoreScene::ShaderNetworkPtr lightShaders = computeLight( context );
+	IECoreScene::ConstShaderNetworkPtr lightShaders = computeLight( context );
 	if( const IECoreScene::Shader *shader = lightShaders->outputShader() )
 	{
 		lightAttribute = shader->getType();
 	}
 
-	result->members()[lightAttribute] = lightShaders;
+	// As we output as const, then this just lets us get through the next few lines...
+	result->members()[lightAttribute] = const_cast<IECoreScene::ShaderNetwork*>( lightShaders.get() );
 	result->members()[g_visualiserScaleAttribute] = new IECore::FloatData( visualiserScalePlug()->getValue() );
 	result->members()[g_visualiserShadedAttribute] = new IECore::BoolData( visualiserShadedPlug()->getValue() );
 
