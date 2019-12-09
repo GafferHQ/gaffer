@@ -313,7 +313,7 @@ class Menu( GafferUI.Widget ) :
 							if len( qtMenu.actions() ) :
 								qtMenu.addAction( _SpacerAction( qtMenu ) )
 							elif action.hasText :
-								self._qtWidget().setProperty( "gafferHasLeadingLabelledDivider", GafferUI._Variant.toVariant( True ) )
+								qtMenu.setProperty( "gafferHasLeadingLabelledDivider", GafferUI._Variant.toVariant( True ) )
 								needsBottomSpacer = True
 
 						qtMenu.addAction( action )
