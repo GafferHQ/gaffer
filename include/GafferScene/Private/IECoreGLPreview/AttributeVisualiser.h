@@ -39,6 +39,8 @@
 
 #include "GafferScene/Export.h"
 
+#include "GafferScene/Private/IECoreGLPreview/Private/Visualiser.h"
+
 #include "IECoreGL/Renderable.h"
 
 #include "IECore/CompoundObject.h"
@@ -56,7 +58,7 @@ class GAFFERSCENE_API AttributeVisualiser : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiser )
 		~AttributeVisualiser() override;
 
-		virtual IECoreGL::ConstRenderablePtr visualise(
+		virtual Visualisations visualise(
 			const IECore::CompoundObject *attributes,
 			IECoreGL::ConstStatePtr &state
 		) const = 0;
@@ -64,10 +66,11 @@ class GAFFERSCENE_API AttributeVisualiser : public IECore::RefCounted
 		/// Registers an attribute visualiser
 		static void registerVisualiser( ConstAttributeVisualiserPtr visualiser );
 
-		/// Get all registered visualisations for the given attributes, by returning a renderable
-		/// group and some extra state. The return value value and/or the state may left null if
-		/// no registered visualisers do anything with these attributes
-		static IECoreGL::ConstRenderablePtr allVisualisations(
+		/// Get all registered visualisations for the given attributes, by
+		/// returning a map of renderable groups and some extra state. The
+		/// return value may be left empty and/or the state may left null if no
+		/// registered visualisers do anything with these attributes.
+		static Visualisations allVisualisations(
 			const IECore::CompoundObject *attributes,
 			IECoreGL::ConstStatePtr &state
 		);

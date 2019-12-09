@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine. All rights reserved.
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Cinesite VFX Ltd. nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,65 +34,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+#ifndef IECOREGLPREVIEW_VISUALISER_H
+#define IECOREGLPREVIEW_VISUALISER_H
 
-#include "IECoreGL/Group.h"
-#include "IECoreGL/State.h"
+#include "IECoreGL/Renderable.h"
 
-using namespace IECoreGLPreview;
+#include <array>
 
-namespace
+namespace IECoreGLPreview
 {
 
-typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
-
-AttributeVisualisers &visualisers()
+enum VisualisationType
 {
-	static AttributeVisualisers v;
-	return v;
-}
+	Geometry, // Visualisations that inherit a location's transform.
+	Ornament  // Visualisations that don't inherit a location's scale and aren't
+	          // considered for bounds computation if geometry or a Geometric
+	          // visualisation is present.
+};
 
-} // namespace
+// A container for renderables grouped by VisualisationType
+using Visualisations = std::array<IECoreGL::ConstRenderablePtr, 2>;
 
-AttributeVisualiser::AttributeVisualiser()
+namespace Private
 {
-}
 
-AttributeVisualiser::~AttributeVisualiser()
-{
-}
+// Appends any visualisations in source to target. In order to avoid
+// over-nesting creating redundant GL state push/pops, it is assumed that target
+// is a 'collector' map. And as such, it is safe to append any outer groups in
+// source as direct children of the root group of each visualisation type.
+void collectVisualisations( const Visualisations &source, Visualisations &target );
 
-Visualisations AttributeVisualiser::allVisualisations( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) {
-	const AttributeVisualisers &v = visualisers();
+} // namespace Private
 
-	Visualisations resultVis;
-	IECoreGL::StatePtr resultState = nullptr;
+} // namespace IECoreGLPreview
 
-	for( unsigned int i = 0; i < v.size(); i++ )
-	{
-		IECoreGL::ConstStatePtr curState = nullptr;
-		const Visualisations curVis = v[i]->visualise( attributes, curState );
-
-		if( !curVis.empty() )
-		{
-			Private::collectVisualisations( curVis, resultVis );
-		}
-
-		if( curState )
-		{
-			if( !resultState )
-			{
-				resultState = new IECoreGL::State( false );
-			}
-			resultState->add( const_cast<IECoreGL::State*>( curState.get() ) );
-		}
-	}
-
-	state = resultState;
-	return resultVis;
-}
-
-void AttributeVisualiser::registerVisualiser( ConstAttributeVisualiserPtr visualiser )
-{
-	visualisers().push_back( visualiser );
-}
+#endif // IECOREGLPREVIEW_VISUALISER_H

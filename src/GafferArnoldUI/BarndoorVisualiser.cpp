@@ -157,7 +157,7 @@ class BarndoorVisualiser final : public LightFilterVisualiser
 		BarndoorVisualiser();
 		~BarndoorVisualiser() override;
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
+		Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -178,7 +178,7 @@ BarndoorVisualiser::~BarndoorVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr BarndoorVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+Visualisations BarndoorVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
@@ -232,7 +232,10 @@ IECoreGL::ConstRenderablePtr BarndoorVisualiser::visualise( const IECore::Intern
 		result->setTransform( barndoorTrans );
 	}
 
-	return result;
+	Visualisations v;
+	v[ VisualisationType::Ornament ] = result;
+	return v;
+
 }
 
 } // namespace
