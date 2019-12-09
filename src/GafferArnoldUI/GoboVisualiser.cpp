@@ -115,12 +115,13 @@ struct OSLTextureCacheGetterKey
 
 CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 {
-	cost = 1;
+	// make the cost be image data in bytes
+	cost = key.resolution * key.resolution * 3 * 4;
 	return GafferOSL::ShadingEngineAlgo::shadeUVTexture( key.shaderNetwork, V2i( key.resolution ), key.output );
 }
 
 typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
-OSLTextureCache g_oslTextureCache( getter, 100 );
+OSLTextureCache g_oslTextureCache( getter, 1024 * 1024 * 64 );
 
 const char *goboFragSource()
 {
