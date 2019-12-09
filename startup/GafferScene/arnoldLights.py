@@ -63,6 +63,7 @@ Gaffer.Metadata.registerValue( "ai:light:quad_light", "type", "quad" )
 Gaffer.Metadata.registerValue( "ai:light:quad_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ai:light:quad_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ai:light:quad_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ai:light:quad_light", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0, 0, 0.5 * math.pi ) ) )
 
 Gaffer.Metadata.registerValue( "ai:light:disk_light", "type", "disk" )
 Gaffer.Metadata.registerValue( "ai:light:disk_light", "intensityParameter", "intensity" )
@@ -80,3 +81,4 @@ Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "visualiserOrientation
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ai:light:skydome_light", "type", "environment" )

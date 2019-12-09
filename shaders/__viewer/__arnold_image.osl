@@ -1,0 +1,94 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
+//
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of Cinesite VFX Ltd nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "color4.h"
+
+shader __arnold_image
+(
+	string filename = "",
+	int single_channel = 0,
+	int start_channel = 0,
+
+	float sscale = 1.0,
+	float tscale = 1.0,
+	int sflip = 0,
+	int tflip = 0,
+	float soffset = 0,
+	float toffset = 0,
+	int swapst = 0,
+
+	color multiply = 1,
+	color add = 0,
+
+	string swrap = "default",
+	string twrap = "default",
+
+	color4 missing_texture_color = {color(0), 1},
+
+	output color out = 0
+)
+{
+	float uu = u * sscale;
+	float vv = v * tscale;
+
+	if( sflip > 0 )
+		uu = 1.0 - uu;
+	// Arnold / OSL have inverted v
+	if( tflip == 0 )
+		vv = 1.0 - vv;
+
+	uu += soffset;
+	vv += toffset;
+
+	if( swapst > 0 )
+	{
+		float tmp = uu;
+		uu == vv;
+		vv = tmp;
+	}
+
+	color t = texture(
+		filename, uu, vv,
+		"missingcolor", missing_texture_color.rgb, "missingalpha", missing_texture_color.a,
+		"swrap", swrap, "twrap", twrap
+	);
+
+	if( single_channel > 0 )
+		t = color( t[ start_channel ] );
+
+	out = ( t * multiply ) + add;
+}
