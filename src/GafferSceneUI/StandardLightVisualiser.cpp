@@ -41,6 +41,7 @@
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/DiskPrimitive.h"
 #include "IECoreGL/Group.h"
+#include "IECoreGL/QuadPrimitive.h"
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/SpherePrimitive.h"
@@ -68,11 +69,14 @@ using namespace IECoreGLPreview;
 namespace
 {
 
-const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, InternedString &metadataTarget )
+Color3f g_lightWireframeColor = Color3f( 1.0f, 0.835f, 0.07f );
+
+enum Axis { X, Y, Z };
+
+IECore::InternedString metadataTargetForNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	const IECoreScene::Shader *shader = shaderNetwork->outputShader();
-	metadataTarget = attributeName.string() + ":" + shader->getName();
-	return shader->parametersData();
+	return shader->getType() + ":" + shader->getName();
 }
 
 template<typename T>
@@ -93,14 +97,6 @@ T parameter( InternedString metadataTarget, const IECore::CompoundData *paramete
 	return defaultValue;
 }
 
-void addWireframeCurveState( IECoreGL::Group *group )
-{
-	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
-	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
-	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
-}
 
 V3f lightPlane( const V2f &p )
 {
@@ -125,18 +121,29 @@ void addRay( const V2f &start, const V2f &end, vector<int> &vertsPerCurve, vecto
 	vertsPerCurve.push_back( 3 );
 }
 
-void addCircle( const V3f &center, float radius, vector<int> &vertsPerCurve, vector<V3f> &p )
+void addCircle( Axis axis, const V3f &center, float radius, vector<int> &vertsPerCurve, vector<V3f> &p )
 {
 	const int numDivisions = 100;
 	for( int i = 0; i < numDivisions; ++i )
 	{
 		const float angle = 2 * M_PI * (float)i/(float)(numDivisions-1);
-		p.push_back( center + radius * V3f( cos( angle ), sin( angle ), 0 ) );
+		if( axis == Axis::Z )
+		{
+			p.push_back( center + radius * V3f( cos( angle ), sin( angle ), 0 ) );
+		}
+		else if( axis == Axis::X )
+		{
+			p.push_back( center + radius * V3f( 0, cos( angle ), sin( angle ) ) );
+		}
+		else
+		{
+			p.push_back( center + radius * V3f( cos( angle ), 0, sin( angle ) ) );
+		}
 	}
 	vertsPerCurve.push_back( numDivisions );
 }
 
-void addSolidArc( int axis, const V3f &center, float majorRadius, float minorRadius, float startFraction, float stopFraction, vector<int> &vertsPerPoly, vector<int> &vertIds, vector<V3f> &p )
+void addSolidArc( Axis axis, const V3f &center, float majorRadius, float minorRadius, float startFraction, float stopFraction, vector<int> &vertsPerPoly, vector<int> &vertIds, vector<V3f> &p )
 {
 	const int numSegmentsForCircle = 100;
 	int numSegments = max( 1, (int)ceil( (stopFraction - startFraction) * numSegmentsForCircle ) );
@@ -146,8 +153,8 @@ void addSolidArc( int axis, const V3f &center, float majorRadius, float minorRad
 	{
 		const float angle = 2 * M_PI * ( startFraction + (stopFraction - startFraction) * (float)i/(float)(numSegments) );
 		V3f dir( -sin( angle ), cos( angle ), 0 );
-		if( axis == 0 ) dir = V3f( 0, dir[1], -dir[0] );
-		else if( axis == 1 ) dir = V3f( dir[1], 0, dir[0] );
+		if( axis == Axis::X ) dir = V3f( 0, dir[1], -dir[0] );
+		else if( axis == Axis::Y ) dir = V3f( dir[1], 0, dir[0] );
 		p.push_back( center + majorRadius * dir );
 		p.push_back( center + minorRadius * dir );
 	}
@@ -169,9 +176,9 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 
 	if( startRadius > 0 )
 	{
-		addCircle( V3f( 0 ), startRadius, vertsPerCurve, p );
+		addCircle( Axis::Z, V3f( 0 ), startRadius, vertsPerCurve, p );
 	}
-	addCircle( V3f( 0, 0, -baseDistance ), baseRadius + startRadius, vertsPerCurve, p );
+	addCircle( Axis::Z, V3f( 0, 0, -baseDistance ), baseRadius + startRadius, vertsPerCurve, p );
 
 	p.push_back( V3f( 0, startRadius, 0 ) );
 	p.push_back( V3f( 0, baseRadius + startRadius, -baseDistance ) );
@@ -182,7 +189,35 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 	vertsPerCurve.push_back( 2 );
 }
 
-const char *environmentSphereFragSource()
+// Shaders
+
+const char *constantFragSource()
+{
+	return
+		"#version 120\n"
+		""
+		"#if __VERSION__ <= 120\n"
+		"#define in varying\n"
+		"#endif\n"
+		""
+		"#include \"IECoreGL/ColorAlgo.h\"\n"
+		""
+		"in vec3 fragmentCs;"
+		""
+		"uniform int linearColor;"
+		""
+		"void main()"
+		"{"
+			"if( linearColor == 1 ) {"
+				"gl_FragColor = vec4( ieLinToSRGB( fragmentCs ), 1 );"
+			"} else {"
+				"gl_FragColor = vec4( fragmentCs, 1 );"
+			"}"
+		"}"
+	;
+}
+
+const char *texturedConstantFragSource()
 {
 	return
 		"#version 120\n"
@@ -194,183 +229,17 @@ const char *environmentSphereFragSource()
 		"#include \"IECoreGL/ColorAlgo.h\"\n"
 		""
 		"in vec2 fragmentuv;"
-		""
-		"uniform vec3 lightMultiplier;"
-		"uniform vec3 defaultColor;"
-		"uniform float previewOpacity;"
-		""
-		"uniform sampler2D mapSampler;"
+		"uniform sampler2D texture;"
 		""
 		"void main()"
 		"{"
-			"vec3 c = defaultColor + texture2D( mapSampler, fragmentuv ).xyz;"
-			"gl_FragColor = vec4( ieLinToSRGB( c * lightMultiplier ), previewOpacity );"
+			"vec3 c = texture2D( texture, fragmentuv ).xyz;"
+			"gl_FragColor = vec4( ieLinToSRGB( c ), 1.0 );"
 		"}"
 	;
 }
 
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// StandardLightVisualiser implementation.
-//////////////////////////////////////////////////////////////////////////
-
-// Register as the standard fallback visualiser.
-LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> StandardLightVisualiser::g_description( "light *:light", "*" );
-
-StandardLightVisualiser::StandardLightVisualiser()
-{
-}
-
-StandardLightVisualiser::~StandardLightVisualiser()
-{
-}
-
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
-{
-	InternedString metadataTarget;
-	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderNetwork, metadataTarget );
-
-	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
-	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
-
-	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
-	const float intensity = parameter<float>( metadataTarget, shaderParameters, "intensityParameter", 1 );
-	const float exposure = parameter<float>( metadataTarget, shaderParameters, "exposureParameter", 0 );
-
-	const Color3f finalColor = color * intensity * pow( 2.0f, exposure );
-
-	GroupPtr result = new Group;
-	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
-	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
-	result->addChild( geometry );
-	result->addChild( ornaments );
-
-	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
-	float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
-
-	/// \todo: We should find a better way to opt out of expensive visualisations
-	///        (in particular for large environment light textures)
-	if( visualiserScale == 0 )
-	{
-		return result;
-	}
-
-	Imath::M44f topTransform;
-	if( orientation )
-	{
-		topTransform = orientation->readable();
-	}
-	result->setTransform( topTransform );
-
-	Imath::M44f ornamentsTransform;
-	ornamentsTransform.scale( V3f( visualiserScale ) );
-	ornaments->setTransform( ornamentsTransform );
-
-	if( type && type->readable() == "environment" )
-	{
-		const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
-		const IntData *textureMaxResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
-		const int textureMaxResolution = textureMaxResolutionData ? textureMaxResolutionData->readable() : std::numeric_limits<int>::max();
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphere( finalColor, textureName, textureMaxResolution ) ) );
-	}
-	else if( type && type->readable() == "spot" )
-	{
-		float innerAngle, outerAngle, lensRadius;
-		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
-	}
-	else if( type && type->readable() == "distant" )
-	{
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
-	}
-	else if( type && type->readable() == "quad" )
-	{
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadShape() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
-	}
-	else if( type && type->readable() == "disk" )
-	{
-		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskShape( radius ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
-	}
-	else if( type && type->readable() == "cylinder" )
-	{
-		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
-	}
-	else
-	{
-		// Treat everything else as a point light.
-		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
-		if( radius > 0 )
-		{
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
-		}
-
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
-
-	}
-
-	return result;
-}
-
-void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius )
-{
-
-	InternedString metadataTarget;
-	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderNetwork, metadataTarget );
-
-	float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
-	float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );
-	if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
-	{
-		if( angleUnit->readable() == "radians" )
-		{
-			coneAngle *= 180.0 / M_PI;
-			penumbraAngle *= 180 / M_PI;
-		}
-	}
-
-	innerAngle = 0;
-	outerAngle = 0;
-
-	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
-	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : NULL;
-
-	if( !penumbraType || *penumbraType == "inset" )
-	{
-		outerAngle = coneAngle;
-		innerAngle = coneAngle - 2.0f * penumbraAngle;
-	}
-	else if( *penumbraType == "outset" )
-	{
-		outerAngle = coneAngle + 2.0f * penumbraAngle;
-		innerAngle = coneAngle ;
-	}
-	else if( *penumbraType == "absolute" )
-	{
-		outerAngle = coneAngle;
-		innerAngle = penumbraAngle;
-	}
-
-	lensRadius = 0.0f;
-	if( parameter<bool>( metadataTarget, shaderParameters, "lensRadiusEnableParameter", true ) )
-	{
-		lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
-	}
-}
-
-const char *StandardLightVisualiser::faceCameraVertexSource()
+const char *faceCameraVertexSource()
 {
 	return
 
@@ -451,16 +320,266 @@ const char *StandardLightVisualiser::faceCameraVertexSource()
 	;
 }
 
+// Shader state helpers
+
+void addWireframeCurveState( IECoreGL::Group *group )
+{
+	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
+	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
+	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
+}
+
+void addConstantShader( IECoreGL::Group *group, bool linearColor = false, int aimType = -1 )
+{
+	IECore::CompoundObjectPtr parameters = new CompoundObject;
+
+	if( aimType > -1 )
+	{
+		parameters->members()["aimType"] = new IntData( aimType );
+	}
+
+	parameters->members()["linearColor"] = new IntData( linearColor ? 1 : 0 );
+
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent(
+			ShaderLoader::defaultShaderLoader(),
+			TextureLoader::defaultTextureLoader(),
+			aimType > -1 ? faceCameraVertexSource() : "",
+			"",
+			constantFragSource(),
+			parameters
+		)
+	);
+}
+
+void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr textureData, int textureMaxResolution )
+{
+	IECore::CompoundObjectPtr shaderParameters = new CompoundObject;
+
+	shaderParameters->members()["texture"] = const_cast<Data *>( textureData.get() );
+	shaderParameters->members()["texture:maxResolution"] = new IntData( textureMaxResolution );
+
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent(
+			ShaderLoader::defaultShaderLoader(),
+			TextureLoader::defaultTextureLoader(),
+			"",
+			"",
+			texturedConstantFragSource(),
+			shaderParameters
+		)
+	);
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// StandardLightVisualiser implementation.
+//////////////////////////////////////////////////////////////////////////
+
+// Register as the standard fallback visualiser.
+LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> StandardLightVisualiser::g_description( "light *:light", "*" );
+
+StandardLightVisualiser::StandardLightVisualiser()
+{
+}
+
+StandardLightVisualiser::~StandardLightVisualiser()
+{
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+{
+	const InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
+	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
+
+	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
+	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
+
+	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
+	const float intensity = parameter<float>( metadataTarget, shaderParameters, "intensityParameter", 1 );
+	const float exposure = parameter<float>( metadataTarget, shaderParameters, "exposureParameter", 0 );
+
+	const Color3f finalColor = color * intensity * pow( 2.0f, exposure );
+
+	GroupPtr result = new Group;
+	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
+	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
+	result->addChild( geometry );
+	result->addChild( ornaments );
+
+	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
+	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
+	const BoolData *visualiserShadedData = attributes->member<BoolData>( "visualiser:shaded" );
+	const bool visualiserShaded = visualiserShadedData ? visualiserShadedData->readable() : true;
+
+	const IntData *textureMaxResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
+	const int textureMaxResolution = textureMaxResolutionData ? textureMaxResolutionData->readable() : std::numeric_limits<int>::max();
+
+	/// \todo: We should find a better way to opt out of expensive visualisations
+	///        (in particular for large environment light textures)
+	if( visualiserScale == 0 )
+	{
+		return result;
+	}
+
+	Imath::M44f topTransform;
+	if( orientation )
+	{
+		topTransform = orientation->readable();
+	}
+	result->setTransform( topTransform );
+
+	Imath::M44f ornamentsTransform;
+	ornamentsTransform.scale( V3f( visualiserScale ) );
+	ornaments->setTransform( ornamentsTransform );
+
+	if( type && type->readable() == "environment" )
+	{
+		if( visualiserShaded )
+		{
+			DataPtr textureData = surfaceTexture( shaderNetwork, attributes, textureMaxResolution );
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, textureMaxResolution, color ) ) );
+		}
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
+	}
+	else if( type && type->readable() == "spot" )
+	{
+		float innerAngle, outerAngle, lensRadius;
+		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+	}
+	else if( type && type->readable() == "distant" )
+	{
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+	}
+	else if( type && type->readable() == "quad" )
+	{
+		if( visualiserShaded )
+		{
+			ConstDataPtr textureData = surfaceTexture( shaderNetwork, attributes, textureMaxResolution );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( textureData, textureMaxResolution, color ) ) );
+		}
+		else
+		{
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		}
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe() ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+	}
+	else if( type && type->readable() == "disk" )
+	{
+		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
+
+		if( visualiserShaded )
+		{
+			ConstDataPtr textureData = surfaceTexture( shaderNetwork, attributes, textureMaxResolution );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskSurface( radius, textureData, textureMaxResolution, color ) ) );
+		}
+		else
+		{
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		}
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+	}
+	else if( type && type->readable() == "cylinder" )
+	{
+		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, visualiserShaded, color ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
+		if( !visualiserShaded )
+		{
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+		}
+	}
+	else
+	{
+		// Treat everything else as a point light.
+		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
+		if( radius > 0 )
+		{
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
+		}
+
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
+
+	}
+
+	return result;
+}
+
+IECore::DataPtr StandardLightVisualiser::surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
+{
+	const IECore::InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
+	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
+	const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
+	if( !textureName.empty() )
+	{
+		return new IECore::StringData( textureName );
+	}
+
+	return nullptr;
+}
+
+void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius )
+{
+
+	InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
+	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
+
+	float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
+	float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );
+	if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
+	{
+		if( angleUnit->readable() == "radians" )
+		{
+			coneAngle *= 180.0 / M_PI;
+			penumbraAngle *= 180 / M_PI;
+		}
+	}
+
+	innerAngle = 0;
+	outerAngle = 0;
+
+	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
+	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : NULL;
+
+	if( !penumbraType || *penumbraType == "inset" )
+	{
+		outerAngle = coneAngle;
+		innerAngle = coneAngle - 2.0f * penumbraAngle;
+	}
+	else if( *penumbraType == "outset" )
+	{
+		outerAngle = coneAngle + 2.0f * penumbraAngle;
+		innerAngle = coneAngle ;
+	}
+	else if( *penumbraType == "absolute" )
+	{
+		outerAngle = coneAngle;
+		innerAngle = penumbraAngle;
+	}
+
+	lensRadius = 0.0f;
+	if( parameter<bool>( metadataTarget, shaderParameters, "lensRadiusEnableParameter", true ) )
+	{
+		lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
+	}
+}
+
+
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 0 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+	addConstantShader( group.get(), false, 0 );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -468,7 +587,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -479,12 +598,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 1 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+	addConstantShader( group.get(), false, 1 );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -499,7 +613,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -529,14 +643,9 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
+	addConstantShader( group.get(), false, 0 );
 
 	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 0 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -544,7 +653,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -559,42 +668,12 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
 		outerGroup->addChild( curves );
 
 		group->addChild( outerGroup );
 	}
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphere( const Imath::Color3f &color, const std::string &textureFileName, int textureMaxResolution )
-{
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-
-	Imath::M44f trans;
-	trans.scale( V3f( 1, 1, -1 ) );
-	trans.rotate( V3f( -0.5 * M_PI, -0.5 * M_PI, 0 ) );
-	group->setTransform( trans );
-
-	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
-	group->addChild( sphere );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["lightMultiplier"] = new Color3fData( color );
-	parameters->members()["previewOpacity"] = new FloatData( 1 );
-	parameters->members()["defaultColor"] = new Color3fData( Color3f( textureFileName == "" ? 1.0f : 0.0f ) );
-	parameters->members()["mapSampler"] = new StringData( textureFileName );
-
-	parameters->members()["mapSampler:maxResolution"] = new IntData( textureMaxResolution );
-
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), IECoreGL::Shader::defaultVertexSource(), "", environmentSphereFragSource(), parameters )
-	);
-	group->getState()->add(
-		new IECoreGL::DoubleSidedStateComponent( false )
-	);
 
 	return group;
 }
@@ -613,16 +692,12 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	IECoreGL::GroupPtr wirelessGroup = new IECoreGL::Group();
 
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 1 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), faceCamera ? faceCameraVertexSource() : "", "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+	addConstantShader( group.get(), true, faceCamera ? 1 : -1 );
 
 	wirelessGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
 
 	float indicatorRad = 0.3;
-	int indicatorAxis = faceCamera ? 0 : 2;
+	Axis indicatorAxis = faceCamera ? Axis::X : Axis::Z;
 
 	{
 		IntVectorDataPtr vertsPerPoly = new IntVectorData;
@@ -683,79 +758,49 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadShape()
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radius, bool filled, const Color3f &color )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
+	addConstantShader( group.get(), false, 0 );
 
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+	if( filled )
+	{
+		IntVectorDataPtr vertsPerPolyData = new IntVectorData;
+		IntVectorDataPtr vertIdsData = new IntVectorData;
+		V3fVectorDataPtr pData = new V3fVectorData;
 
-	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
-	V3fVectorDataPtr pData = new V3fVectorData;
+		vector<int> &vertIds = vertIdsData->writable();
+		vector<V3f> &p = pData->writable();
 
-	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-	vector<V3f> &p = pData->writable();
+		addSolidArc( Axis::Z, V3f( 0, 0, -1 ), radius, 0, 0, 1, vertsPerPolyData->writable(), vertIds, p );
+		addSolidArc( Axis::Z, V3f( 0, 0, 1 ), radius, 0, 0, 1, vertsPerPolyData->writable(), vertIds, p );
 
-	vertsPerCurve.push_back( 4 );
-	p.push_back( V3f( -1, -1, 0  ) );
-	p.push_back( V3f( 1, -1, 0  ) );
-	p.push_back( V3f( 1, 1, 0  ) );
-	p.push_back( V3f( -1, 1, 0  ) );
+		size_t lastIndex = p.size();
+		p.push_back( V3f( 0, radius, -1 ) );
+		p.push_back( V3f( 0, radius, 1 ) );
+		p.push_back( V3f( 0, -radius, 1 ) );
+		p.push_back( V3f( 0, -radius, -1 ) );
+		vertIds.push_back( lastIndex++ );
+		vertIds.push_back( lastIndex++ );
+		vertIds.push_back( lastIndex++ );
+		vertIds.push_back( lastIndex );
+		vertsPerPolyData->writable().push_back( 4 );
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
-	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
-
-	group->addChild( curves );
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskShape( float radius )
-{
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
-
-	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
-	V3fVectorDataPtr pData = new V3fVectorData;
-
-	addCircle( V3f( 0 ), radius, vertsPerCurveData->writable(), pData->writable() );
-
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
-	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
-
-	group->addChild( curves );
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radius )
-{
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 0 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), StandardLightVisualiser::faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+		IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPolyData, vertIdsData, "linear", pData );
+		mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
+		mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( color ) );
+		ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
+		group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
+	}
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
 	V3fVectorDataPtr pData = new V3fVectorData;
 	vector<V3f> &p = pData->writable();
 
-	addCircle( V3f( 0, 0, -1 ), radius, vertsPerCurve, p );
-	addCircle( V3f( 0, 0, 1 ), radius, vertsPerCurve, p );
+	addCircle( Axis::Z, V3f( 0, 0, -1 ), radius, vertsPerCurve, p );
+	addCircle( Axis::Z, V3f( 0, 0, 1 ), radius, vertsPerCurve, p );
 
 	p.push_back( V3f( 0, radius, -1 ) );
 	p.push_back( V3f( 0, radius, 1 ) );
@@ -767,7 +812,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -778,17 +823,12 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 1 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+	addConstantShader( group.get(), false, 1 );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
 
-	addCircle( V3f( 0 ), radius, vertsPerCurveData->writable(), pData->writable() );
+	addCircle( Axis::Z, V3f( 0 ), radius, vertsPerCurveData->writable(), pData->writable() );
 
 	M44f t = M44f().rotate( V3f( 0, M_PI * 0.5, 0 ) );
 	for( V3f &p : pData->writable() )
@@ -798,7 +838,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -811,12 +851,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["aimType"] = new IntData( 0 );
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), StandardLightVisualiser::faceCameraVertexSource(), "", IECoreGL::Shader::constantFragmentSource(), parameters )
-	);
+	addConstantShader( group.get(), false, 0 );
 
 	const int numRays = 8;
 	for( int i = 0; i < numRays; ++i )
@@ -837,3 +872,165 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 
 	return group;
 }
+
+// Quads
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::ConstDataPtr textureData, int textureMaxResolution,  const Color3f &fallbackColor )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	if( textureData )
+	{
+		addTexturedConstantShader( group.get(), textureData, textureMaxResolution );
+	}
+	else
+	{
+		addConstantShader( group.get(), true );
+	}
+
+	IECoreGL::QuadPrimitivePtr textureQuad = new IECoreGL::QuadPrimitive( 2, 2 );
+	textureQuad->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
+	group->addChild( textureQuad );
+
+	M44f m;
+	m.rotate( V3f( M_PI, 0, 0 ) );
+	group->setTransform( m );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe()
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get() );
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	vector<V3f> &p = pData->writable();
+
+	vertsPerCurve.push_back( 4 );
+	p.push_back( V3f( -1, -1, 0  ) );
+	p.push_back( V3f( 1, -1, 0  ) );
+	p.push_back( V3f( 1, 1, 0  ) );
+	p.push_back( V3f( -1, 1, 0  ) );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+
+	group->addChild( curves );
+
+	return group;
+}
+
+// Spheres
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe( float radius, const Vec3<bool> &axisRings )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get() );
+
+	IntVectorDataPtr vertsPerCurve = new IntVectorData;
+	V3fVectorDataPtr p = new V3fVectorData;
+
+	if( axisRings.x )
+	{
+		addCircle( Axis::X,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+	}
+	if( axisRings.y )
+	{
+		addCircle( Axis::Y,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+	}
+	if( axisRings.z )
+	{
+		addCircle( Axis::Z,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+	}
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+
+	group->addChild( curves );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( IECore::ConstDataPtr texture, int textureMaxResolution, const Imath::Color3f &fallbackColor )
+{
+	IECoreGL::GroupPtr sphereGroup = new IECoreGL::Group();
+	sphereGroup->getState()->add( new IECoreGL::DoubleSidedStateComponent( false ) );
+
+	if( texture )
+	{
+		addTexturedConstantShader( sphereGroup.get(), texture, textureMaxResolution );
+	}
+	else
+	{
+		addConstantShader( sphereGroup.get(), true );
+	}
+
+	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
+	sphere->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
+	sphereGroup->addChild( sphere );
+
+	Imath::M44f trans;
+	trans.scale( V3f( 1, 1, -1 ) );
+	trans.rotate( V3f( -0.5 * M_PI, -0.5 * M_PI, 0 ) );
+	sphereGroup->setTransform( trans );
+
+	return sphereGroup;
+}
+
+// Disk
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius, IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	if( textureData )
+	{
+		addTexturedConstantShader( group.get(), textureData, textureMaxResolution );
+	}
+	else
+	{
+		addConstantShader( group.get(), true );
+	}
+
+	IntVectorDataPtr vertsPerPoly = new IntVectorData;
+	IntVectorDataPtr vertIds = new IntVectorData;
+	V3fVectorDataPtr p = new V3fVectorData;
+
+	addSolidArc( Axis::Z, V3f( 0 ), radius, 0, 0, 1, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
+
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
+	mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
+	mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) );
+	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
+	group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radius )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get() );
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	addCircle( Axis::Z, V3f( 0 ), radius, vertsPerCurveData->writable(), pData->writable() );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+
+	group->addChild( curves );
+
+	return group;
+}
+
+

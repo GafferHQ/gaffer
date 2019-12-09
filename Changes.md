@@ -51,6 +51,7 @@ API
 - FlatImageSource : Added a new base class to help in implementing image sources which generate flat data.
 - FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
 - GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
+- StandardLightVisualiser : Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
 
 Breaking Changes
 ----------------
@@ -66,6 +67,8 @@ Breaking Changes
 - Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods loose `const`-ness accordingly.
 - ImagePlug : Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
 - ImageNode : Added virtual methods.
+- StandardLightVisualiser : Removed protected members `faceCameraVertexSource` and `environmentSphere` (#3407).
+- Light : Added plugs and accessors for `visualiserShaded` (#3407).
 
 0.55.x.x (relative to 0.55.1.0)
 ========

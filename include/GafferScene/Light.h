@@ -83,6 +83,8 @@ class GAFFERSCENE_API Light : public ObjectSource
 
 		Gaffer::FloatPlug *visualiserScalePlug();
 		const Gaffer::FloatPlug *visualiserScalePlug() const;
+		Gaffer::BoolPlug *visualiserShadedPlug();
+		const Gaffer::BoolPlug *visualiserShadedPlug() const;
 
 	private :
 

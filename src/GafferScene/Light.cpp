@@ -52,6 +52,7 @@ using namespace GafferScene;
 static IECore::InternedString g_lightsSetName( "__lights" );
 static IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 static IECore::InternedString g_visualiserScaleAttribute( "visualiser:scale" );
+static IECore::InternedString g_visualiserShadedAttribute( "visualiser:shaded" );
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Light );
 
@@ -64,6 +65,7 @@ Light::Light( const std::string &name )
 	addChild( new Plug( "parameters" ) );
 	addChild( new BoolPlug( "defaultLight", Gaffer::Plug::Direction::In, true ) );
 	addChild( new FloatPlug( "visualiserScale", Gaffer::Plug::Direction::In, 1.0 ) );
+	addChild( new BoolPlug( "visualiserShaded", Gaffer::Plug::Direction::In, true ) );
 }
 
 Light::~Light()
@@ -100,12 +102,25 @@ const Gaffer::FloatPlug *Light::visualiserScalePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::BoolPlug *Light::visualiserShadedPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *Light::visualiserShadedPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
 void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 
-	if( parametersPlug()->isAncestorOf( input ) || input == visualiserScalePlug() )
-	{
+	if(
+		parametersPlug()->isAncestorOf( input )
+		|| input == visualiserScalePlug()
+		|| input == visualiserShadedPlug()
+	) {
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
 
@@ -138,6 +153,7 @@ void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Cont
 {
 	hashLight( context, h );
 	visualiserScalePlug()->hash( h );
+	visualiserShadedPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -154,6 +170,7 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 
 	result->members()[lightAttribute] = lightShaders;
 	result->members()[g_visualiserScaleAttribute] = new IECore::FloatData( visualiserScalePlug()->getValue() );
+	result->members()[g_visualiserShadedAttribute] = new IECore::BoolData( visualiserShadedPlug()->getValue() );
 
 	return result;
 }
