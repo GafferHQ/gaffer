@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferOSL/ShadingEngine.h"
+#include "GafferOSL/ShadingEngineAlgo.h"
 
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
@@ -84,8 +84,6 @@ T parameterOrDefault( const IECore::CompoundData *parameters, const IECore::Inte
 	}
 }
 
-CompoundDataPtr evalOSLTexture( const IECoreScene::ShaderNetwork *shaderNetwork, int resolution );
-
 struct OSLTextureCacheGetterKey
 {
 
@@ -94,11 +92,13 @@ struct OSLTextureCacheGetterKey
 	{
 	}
 
-	OSLTextureCacheGetterKey( IECoreScene::ShaderNetwork *shaderNetwork, int resolution )
-		:	shaderNetwork( shaderNetwork ), resolution( resolution )
+	OSLTextureCacheGetterKey( const IECoreScene::ShaderNetwork::Parameter &out, const IECoreScene::ShaderNetwork *shaderNetwork, int resolution )
+		:	output( out ), shaderNetwork( shaderNetwork ), resolution( resolution )
 	{
 		shaderNetwork->hash( hash );
 		hash.append( resolution );
+		hash.append( output.shader );
+		hash.append( output.name );
 	}
 
 	operator const IECore::MurmurHash & () const
@@ -106,7 +106,8 @@ struct OSLTextureCacheGetterKey
 		return hash;
 	}
 
-	IECoreScene::ShaderNetwork *shaderNetwork;
+	IECoreScene::ShaderNetwork::Parameter output;
+	const IECoreScene::ShaderNetwork *shaderNetwork;
 	int resolution;
 	MurmurHash hash;
 
@@ -115,7 +116,7 @@ struct OSLTextureCacheGetterKey
 CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 {
 	cost = 1;
-	return evalOSLTexture( key.shaderNetwork, key.resolution );
+	return GafferOSL::ShadingEngineAlgo::shadeUVTexture( key.shaderNetwork, V2i( key.resolution ), key.output );
 }
 
 typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
@@ -128,98 +129,18 @@ const char *goboFragSource()
 		"#define in varying\n"
 		"#endif\n"
 		""
+		"#include \"IECoreGL/ColorAlgo.h\"\n"
+		""
 		"in vec2 fragmentuv;"
 		""
 		"uniform sampler2D texture;"
 		""
 		"void main()"
 		"{"
-			"gl_FragColor = texture2D( texture, fragmentuv );"
+			"vec4 t = texture2D( texture, fragmentuv );"
+			"gl_FragColor =  vec4( ieLinToSRGB( t.xyz ), t.w );"
 		"}"
 	;
-}
-
-// OSLTextureEvaluation
-
-CompoundDataPtr evalOSLTexture( const IECoreScene::ShaderNetwork *shaderNetwork, int resolution )
-{
-	GafferOSL::ShadingEnginePtr shadingEngine = new GafferOSL::ShadingEngine( shaderNetwork );
-
-	CompoundDataPtr shadingPoints = new CompoundData();
-
-	V3fVectorDataPtr pData = new V3fVectorData;
-	FloatVectorDataPtr uData = new FloatVectorData;
-	FloatVectorDataPtr vData = new FloatVectorData;
-
-	vector<V3f> &pWritable = pData->writable();
-	vector<float> &uWritable = uData->writable();
-	vector<float> &vWritable = vData->writable();
-
-	int numPoints = resolution * resolution;
-
-	pWritable.reserve( numPoints );
-	uWritable.reserve( numPoints );
-	vWritable.reserve( numPoints );
-
-	for( int y = 0; y < resolution; ++y )
-	{
-		for( int x = 0; x < resolution; ++x )
-		{
-			uWritable.push_back( (float)(x + 0.5f) / resolution );
-			// V is flipped because we're generating a Cortex image,
-			// and Cortex has the pixel origin at the top left.
-			vWritable.push_back( 1.0f - ( (y + 0.5f) / resolution ) );
-			pWritable.push_back( V3f( x + 0.5f, y + 0.5f, 0.0f ) );
-		}
-	}
-
-	shadingPoints->writable()["P"] = pData;
-	shadingPoints->writable()["u"] = uData;
-	shadingPoints->writable()["v"] = vData;
-
-	CompoundDataPtr shadingResult = shadingEngine->shade( shadingPoints.get() );
-	ConstColor3fVectorDataPtr colors = shadingResult->member<Color3fVectorData>( "Ci" );
-
-	CompoundDataPtr result = new CompoundData();
-
-	if( colors )
-	{
-		Imath::Box2i dataWindow( Imath::V2i( 0.0f ), Imath::V2i( resolution - 1 ) );
-		Imath::Box2i displayWindow( Imath::V2i( 0.0f ), Imath::V2i( resolution - 1 ) );
-
-		result->writable()["dataWindow"] = new Box2iData( dataWindow );
-		result->writable()["displayWindow"] = new Box2iData( displayWindow );
-
-		FloatVectorDataPtr redChannelData = new FloatVectorData();
-		FloatVectorDataPtr greenChannelData = new FloatVectorData();
-		FloatVectorDataPtr blueChannelData = new FloatVectorData();
-		std::vector<float> &r = redChannelData->writable();
-		std::vector<float> &g = greenChannelData->writable();
-		std::vector<float> &b = blueChannelData->writable();
-
-		vector<Color3f>::size_type numColors = colors->readable().size();
-		r.reserve( numColors );
-		g.reserve( numColors );
-		b.reserve( numColors );
-
-		for( vector<Color3f>::size_type u = 0; u < numColors; ++u )
-		{
-			Color3f c = colors->readable()[u];
-
-			r.push_back( c[0] );
-			g.push_back( c[1] );
-			b.push_back( c[2] );
-		}
-
-		CompoundDataPtr channelData = new CompoundData;
-		channelData->writable()["R"] = redChannelData;
-		channelData->writable()["G"] = greenChannelData;
-		channelData->writable()["B"] = blueChannelData;
-
-		result->writable()["channels"] = channelData;
-	}
-
-	return result;
 }
 
 class GoboVisualiser final : public LightFilterVisualiser
@@ -262,17 +183,12 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 	CompoundDataPtr imageData = new CompoundData;
 	if( slideMapInput )
 	{
-		IECoreScene::ShaderNetworkPtr surfaceNetwork = shaderNetwork->copy();
-		IECore::InternedString surface = surfaceNetwork->addShader( "surface", new IECoreScene::Shader( "Surface/Constant", "osl:shader" ) );
-		surfaceNetwork->addConnection( { slideMapInput, { surface, "Cs" } } );
-		surfaceNetwork->setOutput( { surface, "" } );
-
 		const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
 		const int resolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : 512;
 
 		try
 		{
-			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( surfaceNetwork.get(), resolution ) );
+			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( slideMapInput, shaderNetwork, resolution ) );
 		}
 		catch( const Exception &e )
 		{
