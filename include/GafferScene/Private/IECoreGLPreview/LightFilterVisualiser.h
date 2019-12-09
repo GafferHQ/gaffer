@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_LIGHTFILTERVISUALISER_H
-#define GAFFERSCENEUI_LIGHTFILTERVISUALISER_H
+#ifndef IECOREGLPREVIEW_LIGHTFILTERVISUALISER_H
+#define IECOREGLPREVIEW_LIGHTFILTERVISUALISER_H
 
-#include "GafferSceneUI/Export.h"
+#include "GafferScene/Export.h"
 
 #include "IECoreGL/Renderable.h"
 
@@ -45,7 +45,7 @@
 
 #include "IECore/CompoundObject.h"
 
-namespace GafferSceneUI
+namespace IECoreGLPreview
 {
 
 IE_CORE_FORWARDDECLARE( LightFilterVisualiser )
@@ -55,7 +55,7 @@ IE_CORE_FORWARDDECLARE( LightFilterVisualiser )
 /// depending on their shader name (accessed using `IECore::Shader::getName()`). A
 /// factory mechanism is provided to map from this name to a specialised
 /// LightFilterVisualiser.
-class GAFFERSCENEUI_API LightFilterVisualiser : public IECore::RefCounted
+class GAFFERSCENE_API LightFilterVisualiser : public IECore::RefCounted
 {
 
 	public :
@@ -67,12 +67,30 @@ class GAFFERSCENEUI_API LightFilterVisualiser : public IECore::RefCounted
 
 		/// Must be implemented by derived classes to visualise
 		/// the light filter contained within `filterShaderNetwork`.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const = 0;
+		virtual IECoreGL::ConstRenderablePtr visualise(
+			const IECore::InternedString &attributeName,
+			const IECoreScene::ShaderNetwork *filterShaderNetwork,
+			const IECoreScene::ShaderNetwork *lightShaderNetwork,
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		) const = 0;
 
 		/// Registers a visualiser to visualise a particular type of light filter.
 		/// For instance, `registerLightFilterVisualiser( "ai:lightFilter", "gobo", visualiser )`
 		/// would register a visualiser for an Arnold gobo light filter.
-		static void registerLightFilterVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightFilterVisualiserPtr visualiser );
+		static void registerLightFilterVisualiser(
+			const IECore::InternedString &attributeName,
+			const IECore::InternedString &shaderName,
+			ConstLightFilterVisualiserPtr visualiser
+		);
+
+		/// Get all registered visualisations for the given attributes, by returning a renderable
+		/// group and some extra state. The return value and/or the state may be left null if
+		/// no registered visualisers do anything with these attributes.
+		static IECoreGL::ConstRenderablePtr allVisualisations(
+			const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state
+		);
 
 	protected :
 
@@ -81,11 +99,11 @@ class GAFFERSCENEUI_API LightFilterVisualiser : public IECore::RefCounted
 		{
 			LightFilterVisualiserDescription( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName )
 			{
-				registerLightFilterVisualiser( attributeName, shaderName, new FilterVisualiserType );
+				registerLightFilterVisualiser( attributeName, shaderName, new FilterVisualiserType() );
 			}
 		};
 };
 
-} // namespace GafferSceneUI
+} // namespace IECoreGLPreview
 
-#endif // GAFFERSCENEUI_LIGHTFILTERVISUALISER_H
+#endif // IECOREGLPREVIEW_LIGHTFILTERVISUALISER_H

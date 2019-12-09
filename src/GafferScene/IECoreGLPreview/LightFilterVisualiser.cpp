@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/LightFilterVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 
@@ -50,7 +50,6 @@
 using namespace std;
 using namespace Imath;
 using namespace IECoreGLPreview;
-using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
 // Internal implementation details
@@ -68,31 +67,27 @@ LightFilterVisualisers &lightFilterVisualisers()
 	return l;
 }
 
-/// Class for visualisation of light filters. All light filters in Gaffer are represented
-/// as IECore::Shader objects, but we need to visualise them differently
-/// depending on their shader name (accessed using `IECore::Shader::getName()`). A
-/// factory mechanism is provided to map from this type to a specialised
-/// LightFilterVisualiser.
-class AttributeVisualiserForLightFilters : public AttributeVisualiser
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiserForLightFilters )
-
-		/// Uses a custom visualisation registered via `registerLightFilterVisualiser()` if one
-		/// is available, if not falls back to a basic visualisation.
-		IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
-
-	protected :
-
-		static AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLightFilters> g_visualiserDescription;
-
-};
-
 } // namespace
 
-IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+//////////////////////////////////////////////////////////////////////////
+// LightFilterVisualiser class
+//////////////////////////////////////////////////////////////////////////
+
+
+LightFilterVisualiser::LightFilterVisualiser()
+{
+}
+
+LightFilterVisualiser::~LightFilterVisualiser()
+{
+}
+
+void LightFilterVisualiser::registerLightFilterVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightFilterVisualiserPtr visualiser )
+{
+	lightFilterVisualisers()[AttributeAndShaderNames( attributeName, shaderName )] = visualiser;
+}
+
+IECoreGL::ConstRenderablePtr LightFilterVisualiser::allVisualisations( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state )
 {
 	if( !attributes )
 	{
@@ -188,24 +183,4 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 
 	state = resultState;
 	return resultGroup;
-}
-
-AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLightFilters> AttributeVisualiserForLightFilters::g_visualiserDescription;
-
-//////////////////////////////////////////////////////////////////////////
-// LightVisualiser class
-//////////////////////////////////////////////////////////////////////////
-
-
-LightFilterVisualiser::LightFilterVisualiser()
-{
-}
-
-LightFilterVisualiser::~LightFilterVisualiser()
-{
-}
-
-void LightFilterVisualiser::registerLightFilterVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightFilterVisualiserPtr visualiser )
-{
-	lightFilterVisualisers()[AttributeAndShaderNames( attributeName, shaderName )] = visualiser;
 }

@@ -39,6 +39,7 @@
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/Camera.h"
@@ -161,24 +162,30 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			IECoreGL::ConstStatePtr lightVisualisationState;
 			m_lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
 
-			if( m_lightVisualisation && m_visualisation )
+			IECoreGL::ConstStatePtr lightFilterVisualisationState;
+			m_lightFilterVisualisation = LightFilterVisualiser::allVisualisations( attributes, lightFilterVisualisationState );
+
+			if( m_lightFilterVisualisation )
 			{
-				// Light filter visualisers are in `m_visualisation` and light visualisers are in
-				// `m_lightVisualisation`. Combine them both into `m_lightVisualisation` so that
-				// filters attached to light locations are drawn as expected.
-				/// \todo We don't really want light filters to be in `m_visualisation` because then
-				/// they can get inherited onto locations below the light and drawn in duplicate.
-				/// Move `GafferSceneUI::LightFilterVisualiser` to `IECoreGL::LightFilterVisualiser` so
-				/// we can separate filter visualisations out, and apply them only to lights and
-				/// light filters.
-				IECoreGL::GroupPtr group = new IECoreGL::Group;
-				// `const_pointer_cast` ok because group becomes const on assignment to `m_lightVisualisation`
-				group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_visualisation ) );
-				group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_lightVisualisation ) );
-				m_lightVisualisation = group;
+				if( m_lightVisualisation )
+				{
+					// Light filter visualisers are in `m_lightFilterVisualisation` and light visualisers are in
+					// `m_lightVisualisation`. Combine them both into `m_lightVisualisation` so that
+					// filters attached to light locations are drawn as expected.
+					IECoreGL::GroupPtr group = new IECoreGL::Group;
+					// `const_pointer_cast` ok because group becomes const on assignment to `m_lightVisualisation`
+					group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_lightFilterVisualisation ) );
+					group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_lightVisualisation ) );
+					m_lightVisualisation = group;
+				}
+				else
+				{
+					// If we don't have a light visualisation, but do have filters, make sure they're drawn.
+					m_lightVisualisation = m_lightFilterVisualisation;
+				}
 			}
 
-			if( visualisationState || lightVisualisationState )
+			if( visualisationState || lightVisualisationState || lightFilterVisualisationState )
 			{
 				StatePtr combinedState = new State( *m_state );
 
@@ -190,6 +197,11 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				if( lightVisualisationState )
 				{
 					combinedState->add( const_cast<State *>( lightVisualisationState.get() ) );
+				}
+
+				if( lightFilterVisualisationState )
+				{
+					combinedState->add( const_cast<State *>( lightFilterVisualisationState.get() ) );
 				}
 
 				m_state = combinedState;
@@ -211,11 +223,17 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_lightVisualisation.get();
 		}
 
+		const IECoreGL::Renderable *lightFilterVisualisation() const
+		{
+			return m_lightFilterVisualisation.get();
+		}
+
 	private :
 
 		ConstStatePtr m_state;
 		IECoreGL::ConstRenderablePtr m_visualisation;
 		IECoreGL::ConstRenderablePtr m_lightVisualisation;
+		IECoreGL::ConstRenderablePtr m_lightFilterVisualisation;
 
 };
 
@@ -468,6 +486,27 @@ class OpenGLLight : public OpenGLObject
 
 IE_CORE_FORWARDDECLARE( OpenGLLight )
 
+class OpenGLLightFilter : public OpenGLObject
+{
+
+	public :
+
+		OpenGLLightFilter( const std::string &name, const IECore::Object *object, const ConstOpenGLAttributesPtr &attributes, EditQueue &editQueue )
+			:	OpenGLObject( name, object, attributes, editQueue )
+		{
+		}
+
+	protected :
+
+		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const override
+		{
+			return attributes.lightFilterVisualisation();
+		}
+
+};
+
+IE_CORE_FORWARDDECLARE( OpenGLLightFilter )
+
 } // namespace
 //////////////////////////////////////////////////////////////////////////
 // OpenGLRenderer
@@ -596,7 +635,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			return this->object( name, object, attributes );
+			OpenGLLightFilterPtr result = new OpenGLLightFilter( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
+			return result;
 		}
 
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
