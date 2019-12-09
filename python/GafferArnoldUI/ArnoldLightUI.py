@@ -34,8 +34,14 @@
 #
 ##########################################################################
 
+import functools
+
 import Gaffer
 import GafferArnold
+
+# Defer parameter metadata lookups to the internal shader node
+# aside from nodule:type, which we handle manually to prevent
+# some connectable plugs appearing.
 
 ## \todo Refactor the GafferScene::Light base class so this can be
 # registered there, and work for all subclasses. The main issue is that
@@ -45,7 +51,7 @@ def __parameterUserDefault( plug ) :
 
 	light = plug.node()
 	return Gaffer.Metadata.value(
-		"ai:light:" + light["__shaderName"].getValue() + ":" + plug.relativeName( light["parameters"] ),
+		"ai:light:" + light["__shader"]["name"].getValue() + ":" + plug.relativeName( light["parameters"] ),
 		"userDefault"
 	)
 
@@ -55,6 +61,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"parameters..." : [
+
+			"userDefault", __parameterUserDefault,
+
+		],
+
 		"parameters.*" : [
 
 			# Most light parameters are not connectable.
@@ -62,16 +74,10 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"parameters..." : [
-
-			"userDefault", __parameterUserDefault,
-
-		],
-
 		"parameters.color" : [
 
 			# The color parameter on quad and skydome lights is connectable.
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "skydome_light" ) else ""
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shader"]["name"].getValue() in ( "quad_light", "skydome_light" ) else ""
 
 		],
 
