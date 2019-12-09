@@ -34,6 +34,7 @@ Fixes
 - CopyAttributes : Fixed bug loading scripts saved prior to version 0.55.0.0.
 - Mix : Fix wrong behaviour outside of mask data window.
 - ImageStats : Fixed bug that would return 1.0 if the 4th channel was missing. Missing channels now always return 0.0.
+- Viewer : Fixed bug that caused the StandardLightVisualiser to be used instead of render-specific ones (#3407).
 
 API
 ---
