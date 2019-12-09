@@ -49,6 +49,7 @@ API
   - Added `throwIfSampleOffsetsMismatch()` method.
 - FlatImageSource : Added a new base class to help in implementing image sources which generate flat data.
 - FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
+- GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
 
 Breaking Changes
 ----------------
