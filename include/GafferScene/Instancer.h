@@ -53,14 +53,30 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Instancer, InstancerTypeId, BranchCreator );
 
+		enum class PrototypeMode
+		{
+			IndexedRootsList = 0,
+			IndexedRootsVariable,
+			RootPerVertex,
+		};
+
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
 		ScenePlug *prototypesPlug();
 		const ScenePlug *prototypesPlug() const;
 
+		Gaffer::IntPlug *prototypeModePlug();
+		const Gaffer::IntPlug *prototypeModePlug() const;
+
 		Gaffer::StringPlug *prototypeIndexPlug();
 		const Gaffer::StringPlug *prototypeIndexPlug() const;
+
+		Gaffer::StringPlug *prototypeRootsPlug();
+		const Gaffer::StringPlug *prototypeRootsPlug() const;
+
+		Gaffer::StringVectorDataPlug *prototypeRootPathsPlug();
+		const Gaffer::StringVectorDataPlug *prototypeRootPathsPlug() const;
 
 		Gaffer::StringPlug *idPlug();
 		const Gaffer::StringPlug *idPlug() const;
@@ -135,7 +151,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		struct PrototypeScope : public Gaffer::Context::EditableScope
 		{
-			PrototypeScope( const Gaffer::Context *context, const ScenePath &branchPath );
+			PrototypeScope( ConstEngineDataPtr engine, const Gaffer::Context *context, const ScenePath &branchPath );
 		};
 
 		static size_t g_firstPlugIndex;

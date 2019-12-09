@@ -110,7 +110,15 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<Isolate>();
 	GafferBindings::DependencyNodeClass<CollectScenes>();
 	GafferBindings::DependencyNodeClass<Seeds>();
-	GafferBindings::DependencyNodeClass<Instancer>();
 	GafferBindings::DependencyNodeClass<Encapsulate>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<Instancer>();
+		enum_<Instancer::PrototypeMode>( "PrototypeMode" )
+			.value( "IndexedRootsList", Instancer::PrototypeMode::IndexedRootsList )
+			.value( "IndexedRootsVariable", Instancer::PrototypeMode::IndexedRootsVariable )
+			.value( "RootPerVertex", Instancer::PrototypeMode::RootPerVertex )
+			;
+	}
 
 }

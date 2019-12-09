@@ -607,7 +607,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-	def testIndices( self ) :
+	def testIndexedRootsListWithEmptyList( self ) :
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 4 ) ] ) )
 		points["index"] = IECoreScene.PrimitiveVariable(
@@ -648,6 +648,374 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].object( "/object/instances/cube/2" ), cube["out"].object( "/cube" ) )
 
 		self.assertSceneValid( instancer["out"] )
+
+	def buildPrototypeRootsScript( self ) :
+
+		# we don't strictly require a script, but its the easiest way to
+		# maintain references to all the nodes for use in client tests.
+		script = Gaffer.ScriptNode()
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 4 ) ] ) )
+		points["index"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 0, 1, 1, 0 ] ),
+		)
+		# for use with RootPerVertex mode
+		points["root"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.StringVectorData( [ "/foo", "/bar" ] ),
+			IECore.IntVectorData( [ 0, 1, 1, 0 ] ),
+		)
+
+		script["objectToScene"] = GafferScene.ObjectToScene()
+		script["objectToScene"]["object"].setValue( points )
+		# for use with IndexedRootsVariable mode
+		script["variables"] = GafferScene.PrimitiveVariables()
+		script["variables"]["primitiveVariables"].addChild(
+			Gaffer.NameValuePlug(
+				"prototypeRoots",
+				Gaffer.StringVectorDataPlug( "value", defaultValue = IECore.StringVectorData( [  ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ),
+				True,
+				"prototypeRoots",
+				Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+			)
+		)
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["name"].setValue( 'prototypeRoots' )
+		script["variables"]["in"].setInput( script["objectToScene"]["out"] )
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+		script["variables"]["filter"].setInput( script["filter"]["out"] )
+
+		# /foo/bar/sphere
+		script["sphere"] = GafferScene.Sphere()
+		script["group"] = GafferScene.Group()
+		script["group"]["name"].setValue( "bar" )
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group2"] = GafferScene.Group()
+		script["group2"]["name"].setValue( "foo" )
+		script["group2"]["in"][0].setInput( script["group"]["out"] )
+
+		# /bar/baz/cube
+		script["cube"] = GafferScene.Cube()
+		script["group3"] = GafferScene.Group()
+		script["group3"]["name"].setValue( "baz" )
+		script["group3"]["in"][0].setInput( script["cube"]["out"] )
+		script["group4"] = GafferScene.Group()
+		script["group4"]["name"].setValue( "bar" )
+		script["group4"]["in"][0].setInput( script["group3"]["out"] )
+
+		script["prototypes"] = GafferScene.Parent()
+		script["prototypes"]["in"].setInput( script["group2"]["out"] )
+		script["prototypes"]["children"][0].setInput( script["group4"]["out"] )
+		script["prototypes"]["parent"].setValue( "/" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["variables"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["prototypes"]["out"] )
+		script["instancer"]["parent"].setValue( "/object" )
+		script["instancer"]["prototypeIndex"].setValue( "index" )
+
+		return script
+
+	def assertRootsMatchPrototypeSceneChildren( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo" ), IECore.InternedStringVectorData( [ "0", "3" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar" ), IECore.InternedStringVectorData( [ "1", "2" ] ) )
+
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar" ), IECore.NullObject.defaultNullObject() )
+
+		for i in [ "0", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}/bar/sphere".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
+
+		for i in [ "1", "2" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/baz/cube".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
+	def assertUnderspecifiedRoots( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "0" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] ) )
+
+		for i in [ "0", "1", "2", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/foo".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/foo/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/bar/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/foo".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/foo/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/foo/bar/sphere".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/bar/baz".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/bar/baz/cube".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
+	def assertSingleRoot( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "foo" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] ) )
+
+		for i in [ "0", "1", "2", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}/bar/sphere".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
+	def assertConflictingRootNames( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "bar", "bar1" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar" ), IECore.InternedStringVectorData( [ "0", "3" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar1" ), IECore.InternedStringVectorData( [ "1", "2" ] ) )
+
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar1" ), IECore.NullObject.defaultNullObject() )
+
+		for i in [ "0", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}/sphere".format( i=i ) ), IECore.InternedStringVectorData( [] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/sphere".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
+
+		for i in [ "1", "2" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar1/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar1/{i}/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar1/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar1/{i}/baz".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar1/{i}/baz/cube".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
+	def assertSwappedRoots( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "bar", "foo" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar" ), IECore.InternedStringVectorData( [ "0", "3" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo" ), IECore.InternedStringVectorData( [ "1", "2" ] ) )
+
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo" ), IECore.NullObject.defaultNullObject() )
+
+		for i in [ "0", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/baz/cube".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
+
+		for i in [ "1", "2" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}/bar/sphere".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
+	def assertRootsToLeaves( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "3" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/cube" ), IECore.InternedStringVectorData( [ "1", "2" ] ) )
+
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/sphere" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/cube" ), IECore.NullObject.defaultNullObject() )
+
+		for i in [ "0", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/sphere/{i}".format( i=i ) ), IECore.InternedStringVectorData( [] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/sphere/{i}".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
+
+		for i in [ "1", "2" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/cube/{i}".format( i=i ) ), IECore.InternedStringVectorData( [] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/cube/{i}".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
+	def testIndexedRootsList( self ) :
+
+		script = self.buildPrototypeRootsScript()
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [] ) )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "", ] ) )
+		self.assertUnderspecifiedRoots( script )
+
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo", ] ) )
+		self.assertSingleRoot( script )
+
+		# roots list matching the prototype root children
+		# we expect the same results as without a roots list
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
+		self.assertConflictingRootNames( script )
+
+		# opposite order to the prototype root children
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
+		self.assertSwappedRoots( script )
+
+		# roots all the way to the leaf level of the prototype scene
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
+		self.assertRootsToLeaves( script )
+		
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+
+	def testIndexedRootsVariable( self ) :
+
+		script = self.buildPrototypeRootsScript()
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsVariable )
+
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [] ) )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, ".*must specify at least one root location.*",
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "", ] ) )
+		self.assertUnderspecifiedRoots( script )
+
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", ] ) )
+		self.assertSingleRoot( script )
+
+		# roots list matching the prototype root children
+		# we expect the same results as without a roots list
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
+		self.assertConflictingRootNames( script )
+
+		# opposite order to the prototype root children
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
+		self.assertSwappedRoots( script )
+
+		# roots all the way to the leaf level of the prototype scene
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
+		self.assertRootsToLeaves( script )
+
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, ".*must be Constant StringVectorData when using IndexedRootsVariable mode.*does not exist.*",
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		# the vertex primvar should fail
+		script["instancer"]["prototypeRoots"].setValue( "root" )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, ".*must be Constant StringVectorData when using IndexedRootsVariable mode.*",
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+	def testRootPerVertex( self ) :
+
+		script = self.buildPrototypeRootsScript()
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.RootPerVertex )
+		script["instancer"]["prototypeRoots"].setValue( "root" )
+
+		def updateRoots( roots, indices ) :
+
+			points = script["objectToScene"]["object"].getValue()
+			points["root"] = IECoreScene.PrimitiveVariable( points["root"].interpolation, roots, indices )
+			script["objectToScene"]["object"].setValue( points )
+
+		updateRoots( IECore.StringVectorData( [] ), IECore.IntVectorData( [] ) )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, ".*must specify at least one root location.*",
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		updateRoots( IECore.StringVectorData( [ "", ] ), IECore.IntVectorData( [ 0, 0, 0, 0 ] ) )
+		self.assertUnderspecifiedRoots( script )
+
+		updateRoots( IECore.StringVectorData( [ "/foo", ] ), IECore.IntVectorData( [ 0, 0, 0, 0 ] ) )
+		self.assertSingleRoot( script )
+
+		# roots list matching the prototype root children
+		# we expect the same results as without a roots list
+		updateRoots( IECore.StringVectorData( [ "/foo", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+
+		updateRoots( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertConflictingRootNames( script )
+
+		# opposite order to the prototype root children
+		updateRoots( IECore.StringVectorData( [ "/bar", "/foo" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertSwappedRoots( script )
+
+		# roots all the way to the leaf level of the prototype scene
+		updateRoots( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertRootsToLeaves( script )
+
+		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*does not exist.*",
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		# the constant primvar should fail
+		script["instancer"]["prototypeRoots"].setValue( "prototypeRoots" )
+		self.assertRaisesRegexp(
+			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*",
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
 
 	def testSets( self ) :
 
@@ -698,6 +1066,56 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			{
 				"/object/instances/cubeGroup/1/cube",
 				"/object/instances/cubeGroup/2/cube",
+			}
+		)
+
+	def testSetsWithDeepPrototypeRoots( self ) :
+
+		script = self.buildPrototypeRootsScript()
+
+		script["sphere"]["sets"].setValue( "sphereSet" )
+		script["cube"]["sets"].setValue( "cubeSet" )
+
+		script["set"] = GafferScene.Set()
+		script["set"]["name"].setValue( "barSet" )
+		script["set"]["in"].setInput( script["prototypes"]["out"] )
+		script["barFilter"] = GafferScene.PathFilter()
+		script["barFilter"]["paths"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
+		script["set"]["filter"].setInput( script["barFilter"]["out"] )
+
+		script["instancer"]["prototypes"].setInput( script["set"]["out"] )
+
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
+
+		self.assertEqual(
+			script["instancer"]["out"]["setNames"].getValue(),
+			IECore.InternedStringVectorData( [ "sphereSet", "cubeSet", "barSet" ] )
+		)
+
+		self.assertEqual(
+			set( script["instancer"]["out"].set( "sphereSet" ).value.paths() ),
+			{
+				"/object/instances/bar/0/sphere",
+				"/object/instances/bar/3/sphere",
+			}
+		)
+
+		self.assertEqual(
+			set( script["instancer"]["out"].set( "cubeSet" ).value.paths() ),
+			{
+				"/object/instances/bar1/1/baz/cube",
+				"/object/instances/bar1/2/baz/cube",
+			}
+		)
+
+		self.assertEqual(
+			set( script["instancer"]["out"].set( "barSet" ).value.paths() ),
+			{
+				"/object/instances/bar/0",
+				"/object/instances/bar/3",
+				"/object/instances/bar1/1",
+				"/object/instances/bar1/2",
 			}
 		)
 
