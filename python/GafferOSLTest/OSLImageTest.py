@@ -443,6 +443,9 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		constant = GafferImage.Constant()
 		constant["color"].setValue( imath.Color4f( 0.1101, 0.1224, 0.1353, 0.135 ) )
+		constant["format"].setValue(
+			GafferImage.Format( GafferImage.ImagePlug.tileSize(), GafferImage.ImagePlug.tileSize() )
+		)
 
 		outLayer = GafferOSL.OSLShader()
 		outLayer.loadShader( "ImageProcessing/OutLayer" )
