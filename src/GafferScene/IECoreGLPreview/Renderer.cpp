@@ -153,6 +153,9 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
 		{
+			const FloatData *ornamentScaleData = attributes->member<FloatData>( "visualiser:scale" );
+			m_ornamentScale = ornamentScaleData ? ornamentScaleData->readable() : 1.0;
+
 			m_state = static_pointer_cast<const State>(
 				CachedConverter::defaultCachedConverter()->convert( attributes )
 			);
@@ -228,6 +231,11 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_lightFilterVisualisations[ type  ].get();
 		}
 
+		float ornamentScale() const
+		{
+			return m_ornamentScale;
+		}
+
 	private :
 
 		ConstStatePtr m_state;
@@ -235,6 +243,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Visualisations m_lightVisualisations;
 		Visualisations m_lightFilterVisualisations;
 
+		float m_ornamentScale = 1.0f;
 };
 
 IE_CORE_DECLAREPTR( OpenGLAttributes )
@@ -288,7 +297,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			m_editQueue.push( [this, transform]() {
 				m_transform = transform;
-				m_translation = sansScalingAndShear( transform );
+				updateOrnamentTransform();
 			} );
 		}
 
@@ -302,6 +311,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ConstOpenGLAttributesPtr openGLAttributes = static_cast<const OpenGLAttributes *>( attributes );
 			m_editQueue.push( [this, openGLAttributes]() {
 				m_attributes = openGLAttributes;
+				updateOrnamentTransform();
 			} );
 			return true;
 		}
@@ -312,6 +322,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		Box3f transformedBound() const
 		{
+			// Note: Imath::transform with a non-identify matrix on an empty
+			// box results in a box that returns false to isEmpty, hence the
+			// checks below.
 			Box3f b;
 			if( m_renderable )
 			{
@@ -323,16 +336,24 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				b.extendBy( v->bound() );
 			}
 
-			if( b.isEmpty() )
+			if( !b.isEmpty() )
 			{
-				return b;
+				b = Imath::transform( b, m_transform );
 			}
-
-			b = Imath::transform( b, m_transform );
-
-			if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+			else
 			{
-				b.extendBy( Imath::transform( v->bound(), m_translation ) );
+				// We only consider ornaments if there is no geometric representation.
+				// As we don't use the bounds for culling, we can get away with this,
+				// and it means sizable visualisations don't mess up the framing when there
+				// is a geometric component.
+				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				{
+					const Box3f ornamentB = v->bound();
+					if( !ornamentB.isEmpty() )
+					{
+						b.extendBy( Imath::transform( ornamentB, m_ornamentTransform ) );
+					}
+				}
 			}
 
 			return b;
@@ -377,21 +398,25 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				glPopMatrix();
 			}
 
-			// Local scale-free visualisations
-
-			if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+			// Local-scale-free visualisations, that use the attribute driven
+			// visualiserScale for size adjustments.
+			if( m_attributes->ornamentScale() > 0 )
 			{
-				if( haveTransform )
+				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
 				{
-					glPushMatrix();
-					glMultMatrixf( m_translation.getValue() );
-				}
+					const bool haveOrnamentTransform = m_ornamentTransform != M44f();
+					if( haveOrnamentTransform )
+					{
+						glPushMatrix();
+						glMultMatrixf( m_ornamentTransform.getValue() );
+					}
 
-				v->render( currentState );
+					v->render( currentState );
 
-				if( haveTransform )
-				{
-					glPopMatrix();
+					if( haveOrnamentTransform )
+					{
+						glPopMatrix();
+					}
 				}
 			}
 		}
@@ -415,9 +440,16 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
+		void updateOrnamentTransform()
+		{
+			M44f ornamentTransform = sansScalingAndShear( m_transform );
+			ornamentTransform.scale( V3f( m_attributes->ornamentScale() ) );
+			m_ornamentTransform = ornamentTransform;
+		}
+
 		IECore::TypeId m_objectType;
 		M44f m_transform;
-		M44f m_translation;
+		M44f m_ornamentTransform;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
 		vector<InternedString> m_name;

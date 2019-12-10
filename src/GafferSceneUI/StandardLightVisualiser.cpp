@@ -419,23 +419,13 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const IntData *textureMaxResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
 	const int textureMaxResolution = textureMaxResolutionData ? textureMaxResolutionData->readable() : std::numeric_limits<int>::max();
 
-	/// \todo: We should find a better way to opt out of expensive visualisations
-	///        (in particular for large environment light textures)
-	if( visualiserScale == 0 )
-	{
-		return {};
-	}
-
 	Imath::M44f topTransform;
 	if( orientation )
 	{
 		topTransform = orientation->readable();
 	}
 	geometry->setTransform( topTransform );
-
-	Imath::M44f ornamentsTransform = topTransform;
-	ornamentsTransform.scale( V3f( visualiserScale ) );
-	ornaments->setTransform( ornamentsTransform );
+	ornaments->setTransform( topTransform );
 
 	if( type && type->readable() == "environment" )
 	{
