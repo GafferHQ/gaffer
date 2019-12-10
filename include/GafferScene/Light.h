@@ -79,10 +79,12 @@ class GAFFERSCENE_API Light : public ObjectSource
 		/// Must be implemented by derived classes to hash and generate the light to be placed
 		/// in the scene graph.
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const = 0;
+		virtual IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const = 0;
 
 		Gaffer::FloatPlug *visualiserScalePlug();
 		const Gaffer::FloatPlug *visualiserScalePlug() const;
+		Gaffer::BoolPlug *visualiserShadedPlug();
+		const Gaffer::BoolPlug *visualiserShadedPlug() const;
 
 	private :
 

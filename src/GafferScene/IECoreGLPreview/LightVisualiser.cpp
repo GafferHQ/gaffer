@@ -136,12 +136,28 @@ IECoreGL::ConstRenderablePtr LightVisualiser::allVisualisations( const IECore::C
 			// Direct lookup failed. See if we have any wildcard matches.
 			// We assume that the number of registered visualisers is small
 			// enough that linear search is OK here.
+
+			// First look for wildcards in shader names only, this ensures
+			// "ai:light *" beats "*:light *" even if iterated after it.
 			for( auto &r : l )
 			{
-				if( StringAlgo::matchMultiple( it->first, r.first.first ) && StringAlgo::matchMultiple( shaderName, r.first.second ) )
+				if( it->first == r.first.first && StringAlgo::matchMultiple( shaderName, r.first.second ) )
 				{
 					visualiser = r.second.get();
 					break;
+				}
+			}
+
+			// Then check look for wildcards in attribute names too if that failed
+			if( !visualiser )
+			{
+				for( auto &r : l )
+				{
+					if( StringAlgo::matchMultiple( it->first, r.first.first ) && StringAlgo::matchMultiple( shaderName, r.first.second ) )
+					{
+						visualiser = r.second.get();
+						break;
+					}
 				}
 			}
 		}

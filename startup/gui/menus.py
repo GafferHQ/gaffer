@@ -426,6 +426,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		# This match expression filters these categories of shader out
 		# as follows :
 		#
+		# - (?!__) asserts that the shader does not begin with double underscore.
 		# - (^|.*/) matches any number (including zero) of directory
 		#   names preceding the shader name.
 		# - (?<!maya/osl/) is a negative lookbehind, asserting that the
@@ -439,7 +440,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		#   shaders.
 		# - [^/]*$ matches the rest of the shader name, ensuring it
 		#   doesn't include any directory separators.
-		matchExpression = re.compile( "(^|.*/)(?<!maya/osl/)(?<!3DelightForKatana/osl/)(?!as_|oslCode)[^/]*$"),
+		matchExpression = re.compile( "(?!__)(^|.*/)(?<!maya/osl/)(?<!3DelightForKatana/osl/)(?!as_|oslCode)[^/]*$"),
 		searchTextPrefix = "osl",
 	)
 

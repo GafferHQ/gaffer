@@ -100,6 +100,18 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visualisation",
 
+		],
+
+		"visualiserShaded" : [
+
+			"description",
+			"""
+			Disable to restrict visualisations of this light to wireframe outlines.
+			""",
+
+			"label", "Shaded",
+			"layout:section", "Visualisation",
+
 		]
 
 	}

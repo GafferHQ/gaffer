@@ -49,6 +49,7 @@
 #include "GafferScene/Light.h"
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Plane.h"
+#include "GafferScene/ShaderPlug.h"
 #include "GafferScene/Sphere.h"
 #include "GafferScene/Text.h"
 #include "GafferScene/LightFilter.h"
@@ -91,6 +92,13 @@ class LightSerialiser : public GafferBindings::NodeSerialiser
 		if( !shaderNamePlug )
 		{
 			shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__model" );
+		}
+		if( !shaderNamePlug )
+		{
+			if( const GafferScene::Shader *shader = light->getChild<GafferScene::Shader>( "__shader" ) )
+			{
+				shaderNamePlug = shader->namePlug();
+			}
 		}
 
 		const std::string shaderName = shaderNamePlug ? shaderNamePlug->getValue() : "";

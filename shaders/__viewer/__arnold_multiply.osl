@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
+//
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +16,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Cinesite VFX Ltd nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,53 +35,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDLIGHT_H
-#define GAFFERARNOLD_ARNOLDLIGHT_H
+shader __arnold_multiply
+(
+	color input1 = 0,
+	color input2 = 0,
 
-#include "GafferArnold/Export.h"
-#include "GafferArnold/TypeIds.h"
-
-#include "GafferScene/Light.h"
-#include "GafferScene/ShaderPlug.h"
-
-namespace GafferArnold
+	output color out = 0
+)
 {
-
-class ArnoldShader;
-
-class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
-{
-
-	public :
-
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
-
-		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
-		~ArnoldLight() override;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		ArnoldShader *shaderNode();
-		const ArnoldShader *shaderNode() const;
-
-		GafferScene::ShaderPlug *shaderInPlug();
-		const GafferScene::ShaderPlug *shaderInPlug() const;
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( ArnoldLight )
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDLIGHT_H
+	out = input1 * input2;
+}

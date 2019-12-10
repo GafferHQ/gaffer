@@ -1,0 +1,7 @@
+shader uv
+(
+output color out = 0
+)
+{
+	out = color( u, v, 0 );
+}

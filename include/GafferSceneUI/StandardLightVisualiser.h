@@ -69,24 +69,45 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 	protected :
 
-		static const char *faceCameraVertexSource();
-
 		static IECoreGL::ConstRenderablePtr ray();
 		static IECoreGL::ConstRenderablePtr pointRays( float radius = 0 );
 		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius );
-		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName, int maxTextureResolution );
+
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
+
+		// This method should be overridden by any sub-classes that wish to
+		// provide an alternate surface texture for area-based lights.
+		//
+		// It should return one of :
+		//  - nullptr : No texture applicable
+		//  - StringData : The file path of a texture.
+		//  - CompoundData : An image representation of the texture data, as
+		//      supported by IECoreGL::ToGLTextureConverter.
+		//
+		// The default implementation looks for a string parameter registered
+		// as the "textureNameParameter" for the supplied shader network's
+		// output shader.
+		virtual IECore::DataPtr surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const;
 
 	private :
 
 		/// \todo Expose publicly once we have enough uses to dictate
 		/// the most general set of parameters.
-		static IECoreGL::ConstRenderablePtr quadShape();
-		static IECoreGL::ConstRenderablePtr diskShape( float radius );
-		static IECoreGL::ConstRenderablePtr cylinderShape( float radius );
+		static IECoreGL::ConstRenderablePtr cylinderShape( float radius, bool filled = false, const Imath::Color3f &color = Imath::Color3f( 1.0f ) );
 		static IECoreGL::ConstRenderablePtr pointShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
+
+		// textureData should be as per return type of surfaceTexture
+
+		static IECoreGL::ConstRenderablePtr environmentSphereWireframe( float radius, const Imath::Vec3<bool> &axisRings );
+		static IECoreGL::ConstRenderablePtr environmentSphereSurface( IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor  );
+
+		static IECoreGL::ConstRenderablePtr quadWireframe();
+		static IECoreGL::ConstRenderablePtr quadSurface( IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );
+
+		static IECoreGL::ConstRenderablePtr diskWireframe( float radius );
+		static IECoreGL::ConstRenderablePtr diskSurface( float radius, IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
 		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
 

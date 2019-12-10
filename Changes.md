@@ -24,6 +24,7 @@ Improvements
   - Added generic support for precise tool adjustments by holding down <kbd>Shift</kbd> whilst adjusting tool handles (#3324).
   - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
 - UI : Added the Gaffer version to the window title.
+- Viewer : Extended viewer color-correction to light textures, such that they now match rendered results (#3407).
 
 Fixes
 -----
@@ -33,6 +34,7 @@ Fixes
 - CopyAttributes : Fixed bug loading scripts saved prior to version 0.55.0.0.
 - Mix : Fix wrong behaviour outside of mask data window.
 - ImageStats : Fixed bug that would return 1.0 if the 4th channel was missing. Missing channels now always return 0.0.
+- Viewer : Fixed bug that caused the StandardLightVisualiser to be used instead of render-specific ones (#3407).
 
 API
 ---
@@ -49,6 +51,8 @@ API
   - Added `throwIfSampleOffsetsMismatch()` method.
 - FlatImageSource : Added a new base class to help in implementing image sources which generate flat data.
 - FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
+- GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
+- StandardLightVisualiser : Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
 
 Breaking Changes
 ----------------
@@ -64,6 +68,10 @@ Breaking Changes
 - Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods loose `const`-ness accordingly.
 - ImagePlug : Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
 - ImageNode : Added virtual methods.
+- Light :
+  - Changed `Light::computeLight` return type to const (#3407).
+  - Added plug and accessors for `visualiserShaded` (#3407).
+- StandardLightVisualiser : Removed protected members `faceCameraVertexSource` and `environmentSphere` (#3407).
 
 0.55.x.x (relative to 0.55.1.0)
 ========

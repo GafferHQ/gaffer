@@ -64,7 +64,7 @@ void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h
 	}
 }
 
-IECoreScene::ShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
+IECoreScene::ConstShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( "testLight", "light" );
 	shader->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
