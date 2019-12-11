@@ -40,9 +40,12 @@ from Qt import QtWidgets
 
 # A QTableView derived class with custom size behaviours we want for
 # GafferUI. This is not part of the public API.
+#
+# - Always requests enough space to show all cells if possible.
+# - Optionally refuses to shrink below a certain number of visible rows.
 class _TableView( QtWidgets.QTableView ) :
 
-	def __init__( self, minimumVisibleRows ) :
+	def __init__( self, minimumVisibleRows = 0 ) :
 
 		QtWidgets.QTableView.__init__( self )
 
@@ -54,14 +57,20 @@ class _TableView( QtWidgets.QTableView ) :
 		if prevModel :
 			prevModel.rowsInserted.disconnect( self.__sizeShouldChange )
 			prevModel.rowsRemoved.disconnect( self.__sizeShouldChange )
-			prevModel.dataChanged.connect( self.__sizeShouldChange )
+			prevModel.columnsInserted.disconnect( self.__sizeShouldChange )
+			prevModel.columnsRemoved.disconnect( self.__sizeShouldChange )
+			prevModel.dataChanged.disconnect( self.__sizeShouldChange )
+			prevModel.modelReset.disconnect( self.__sizeShouldChange )
 
 		QtWidgets.QTableView.setModel( self, model )
 
 		if model :
 			model.rowsInserted.connect( self.__sizeShouldChange )
 			model.rowsRemoved.connect( self.__sizeShouldChange )
+			model.columnsInserted.connect( self.__sizeShouldChange )
+			model.columnsRemoved.connect( self.__sizeShouldChange )
 			model.dataChanged.connect( self.__sizeShouldChange )
+			model.modelReset.connect( self.__sizeShouldChange )
 
 	def minimumSizeHint( self ) :
 
@@ -99,7 +108,8 @@ class _TableView( QtWidgets.QTableView ) :
 		# always allow room for a scrollbar even though we don't always need one. we
 		# make sure the background in the stylesheet is transparent so that when the
 		# scrollbar is hidden we don't draw an empty gap where it otherwise would be.
-		w += self.verticalScrollBar().sizeHint().width()
+		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff :
+			w += self.verticalScrollBar().sizeHint().width()
 
 		h = self.verticalHeader().length() + margins.top() + margins.bottom()
 		if not self.horizontalHeader().isHidden() :
