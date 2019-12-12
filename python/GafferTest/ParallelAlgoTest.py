@@ -75,7 +75,14 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			with self.__condition :
 
 				while self.__condition.toCall is None :
-					self.__condition.wait()
+					self.__condition.wait( timeout = 5.0 )
+					if type is not None and self.__condition.toCall is None :
+						# Exception was thrown, and we've waited 5 seconds without
+						# receiving something to call. Assume that the exception
+						# prevented the call from being scheduled and rethrow.
+						# Otherwise we may wait forever without telling anyone about
+						# the problem.
+						return False
 
 				self.__condition.toCall()
 				self.__condition.toCall = None
