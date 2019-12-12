@@ -1107,17 +1107,7 @@ class _EditWindow( GafferUI.Window ) :
 		# Apply some fixed widths for some widgets, otherwise they're
 		# a bit too eager to grow. \todo Should we change the underlying
 		# behaviour of the widgets themselves?
-
-		fixedWidth = None
-		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-			fixedWidth = self.__numericFieldWidth
-		elif isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
-			fixedWidth = self.__numericFieldWidth * len( plugValueWidget.getPlug() ) + 20
-		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
-			fixedWidth = self.__numericFieldWidth * len( plugValueWidget.getPlug() )
-		elif isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
-			fixedWidth = 250
-
+		fixedWidth = self.__fixedWidth( plugValueWidget )
 		if fixedWidth is not None :
 			plugValueWidget._qtWidget().setFixedWidth( fixedWidth )
 			plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
@@ -1178,6 +1168,24 @@ class _EditWindow( GafferUI.Window ) :
 			return plugValueWidget.pathWidget()
 		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
 			return plugValueWidget.textWidget()
+
+	@classmethod
+	def __fixedWidth( cls, plugValueWidget ) :
+
+		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
+			return cls.__numericFieldWidth
+		elif isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
+			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() ) + 20
+		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
+			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() )
+		elif isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
+			return 250
+		elif isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
+			w = cls.__fixedWidth( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
+			if w is not None :
+				return w + 30
+
+		return None
 
 # ScrolledContainer linking
 # =========================
