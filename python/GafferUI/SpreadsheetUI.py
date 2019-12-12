@@ -1035,7 +1035,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			s = self.__formatValue( value[1], forToolTip )
 			return "{}{}{}".format(
 				"On" if value[0] else "Off",
-				", \n" if forToolTip and "\n" in s else ", ",
+				" : \n" if forToolTip and "\n" in s else " : ",
 				s
 			)
 		elif value is None :
