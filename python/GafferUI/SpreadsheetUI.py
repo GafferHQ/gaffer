@@ -1292,9 +1292,14 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	if rowPlug is None :
 		return
 
+	if rowPlug.getName() == "default" :
+		return
+
+	menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
+
 	# Row menu items
 
-	if plug.parent() == rowPlug and rowPlug.getName() != "default" :
+	if plug.parent() == rowPlug :
 
 		menuDefinition.prepend(
 			"/Delete Row",
@@ -1327,21 +1332,19 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	cellPlug = plug if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug.ancestor( Gaffer.Spreadsheet.CellPlug )
 	if cellPlug is not None :
 
-		if rowPlug.getName() != "default" :
+		enabled = None
+		enabledPlug = cellPlug["enabled"]
+		with plugValueWidget.getContext() :
+			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+				enabled = enabledPlug.getValue()
 
-			enabled = None
-			enabledPlug = cellPlug["enabled"]
-			with plugValueWidget.getContext() :
-				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-					enabled = enabledPlug.getValue()
-
-			menuDefinition.prepend(
-				"/Disable Cell" if enabled else "/Enable Cell",
-				{
-					"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
-					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
-				}
-			)
+		menuDefinition.prepend(
+			"/Disable Cell" if enabled else "/Enable Cell",
+			{
+				"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
+			}
+		)
 
 def __addColumn( spreadsheet, plug ) :
 
@@ -1457,6 +1460,8 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 			else :
 				ancestorPlug = None
 
+	menuDefinition.prepend( "/__SpreadsheetCreationDivider__", { "divider" : True } )
+
 	if ancestorPlug :
 		menuDefinition.prepend(
 			"/Add to Spreadsheet ({})".format( ancestorLabel ),
@@ -1490,8 +1495,6 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 	)
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
-
-	menuDefinition.prepend( "/SpreadsheetDivider", { "divider" : True } )
 
 	## \todo We're prepending rather than appending so that we get the ordering we
 	# want with respect to the Expression menu items. Really we need external control
