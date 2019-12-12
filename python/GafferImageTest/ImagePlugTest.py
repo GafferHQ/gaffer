@@ -84,12 +84,12 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 				tileIndex
 			)
 
-	def testDefaultChannelNamesMethod( self ) :
+	def testDefaultChannelNames( self ) :
 
-		channelNames = GafferImage.ImagePlug()['channelNames'].defaultValue()
-		self.assertTrue( 'R' in channelNames )
-		self.assertTrue( 'G' in channelNames )
-		self.assertTrue( 'B' in channelNames )
+		self.assertEqual(
+			GafferImage.ImagePlug()['channelNames'].defaultValue(),
+			IECore.StringVectorData()
+		)
 
 	def testCreateCounterpart( self ) :
 
