@@ -1309,5 +1309,19 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		cleanOutput["channels"].setValue( "A" )
 		self.assertImagesEqual( reader["out"], cleanOutput["out"], ignoreMetadata=True, ignoreDataWindow=True, maxDifference=0.05 )
 
+	def testThrowsForEmptyChannels( self ) :
+
+		constant = GafferImage.Constant()
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( constant["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["channels"].setValue( "diffuse.[RGB]" )
+
+		with self.assertRaisesRegexp( Gaffer.ProcessException, "No channels to write" ) :
+			writer["task"].execute()
+
+		self.assertFalse( os.path.exists( writer["fileName"].getValue() ) )
+
 if __name__ == "__main__":
 	unittest.main()

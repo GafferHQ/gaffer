@@ -1577,6 +1577,11 @@ void ImageWriter::execute() const
 		channelsToWrite.push_back( *it );
 	}
 
+	if( channelsToWrite.empty() )
+	{
+		throw IECore::Exception( "No channels to write" );
+	}
+
 	spec.nchannels = channelsToWrite.size();
 	spec.channelnames.clear();
 	for( vector<string>::const_iterator it = channelsToWrite.begin(), eIt = channelsToWrite.end(); it != eIt; ++it )
