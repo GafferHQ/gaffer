@@ -1385,6 +1385,9 @@ def __addToSpreadsheetSubMenu( plug ) :
 	other = []
 	for spreadsheet in Gaffer.Spreadsheet.Range( plug.node().parent() ) :
 
+		if spreadsheet == plug.ancestor( Gaffer.Spreadsheet ) :
+			continue
+
 		connected = False
 		for output in spreadsheet["out"] :
 			for destination in output.outputs() :
