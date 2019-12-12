@@ -51,17 +51,16 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	@staticmethod
 	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True, close = True ) :
 
-		if catalogue["directory"].getValue() and waitForSave :
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
+			result = GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
+			if catalogue["directory"].getValue() and waitForSave :
+				# When the image has been received, the Catalogue will
+				# save it to disk on a background thread, and we need
+				# to wait for that to complete.
+				h.assertCalled()
+				h.assertDone()
 
-			# When the image has been received, the Catalogue will
-			# save it to disk on a background thread, and we need
-			# to wait for that to complete.
-			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
-				return GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
-
-		else :
-
-			return GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
+		return result
 
 	def testImages( self ) :
 
@@ -544,7 +543,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
 
-		with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
 			self.sendImage( r["out"], c, waitForSave = False )
 			del c
 

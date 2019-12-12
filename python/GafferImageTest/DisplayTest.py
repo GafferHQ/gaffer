@@ -69,8 +69,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			}
 			parameters.update( extraParameters )
 
-			# Expect UI thread call used to emit Display::driverCreatedSignal()
-			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
 
 				self.__driver = IECoreImage.ClientDisplayDriver(
 					self.__format.toEXRSpace( self.__format.getDisplayWindow() ),
@@ -78,6 +77,10 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 					list( channelNames ),
 					parameters,
 				)
+
+				# Expect UI thread call used to emit Display::driverCreatedSignal()
+				h.assertCalled()
+				h.assertDone()
 
 		# The channelData argument is a list of FloatVectorData
 		# per channel.
@@ -91,18 +94,24 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 					for c in channelData :
 						bucketData.append( c[i] )
 
-			# Expect UI thread call used to increment updateCount plug
-			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
+
 				self.__driver.imageData(
 					self.__format.toEXRSpace( bucketWindow ),
 					bucketData
 				)
 
+				# Expect UI thread call used to increment updateCount plug
+				h.assertCalled()
+				h.assertDone()
+
 		def close( self ) :
 
-			# Expect UI thread call used to emit Display::imageReceivedSignal()
-			with GafferTest.ParallelAlgoTest.ExpectedUIThreadCall() :
+			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
 				self.__driver.imageClose()
+				# Expect UI thread call used to emit Display::imageReceivedSignal()
+				h.assertCalled()
+				h.assertDone()
 
 		@classmethod
 		def sendImage( cls, image, port, extraParameters = {}, close = True ) :
