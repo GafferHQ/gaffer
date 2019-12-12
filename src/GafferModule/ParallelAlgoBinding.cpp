@@ -183,6 +183,12 @@ void pushUIThreadCallHandler( boost::python::object handler )
 	);
 }
 
+void popUIThreadCallHandler()
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	ParallelAlgo::popUIThreadCallHandler();
+}
+
 std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boost::python::object f )
 {
 	// The BackgroundTask we return will own the python function we
@@ -256,7 +262,7 @@ void GafferModule::bindParallelAlgo()
 
 	def( "callOnUIThread", &callOnUIThread );
 	def( "pushUIThreadCallHandler", &pushUIThreadCallHandler );
-	def( "popUIThreadCallHandler", &ParallelAlgo::popUIThreadCallHandler );
+	def( "popUIThreadCallHandler", &popUIThreadCallHandler );
 	def( "callOnBackgroundThread", &callOnBackgroundThread );
 
 }
