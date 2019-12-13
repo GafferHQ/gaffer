@@ -279,13 +279,15 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with self.__grid :
 
-			GafferUI.Label(
-				" Default", # Preceding space to cheat alignment
+			with GafferUI.ListContainer(
 				parenting = {
 					"index" : ( 0, 0 ),
 					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Bottom ),
 				}
-			)
+			) :
+
+				GafferUI.Label( "Default" )._qtWidget().setIndent( 6 )
+				GafferUI.Spacer( imath.V2i( 1, 8 ) )
 
 			defaultTable = _PlugTableView(
 				plug, self.getContext(), _PlugTableView.Mode.Defaults,
