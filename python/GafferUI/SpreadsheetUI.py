@@ -595,7 +595,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		header = self._qtWidget().horizontalHeader()
 		for index, plug in enumerate( rowsPlug["default"]["cells"] ) :
 			visualIndex = Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" )
+			self.__callingMoveSection = True
 			header.moveSection( header.visualIndex( index ), visualIndex if visualIndex is not None else index )
+			self.__callingMoveSection = False
 
 	@GafferUI.LazyMethod()
 	def __applySectionOrderLazily( self ) :
