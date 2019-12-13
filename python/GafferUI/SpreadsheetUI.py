@@ -1046,13 +1046,13 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		elif value is None :
 			return ""
 
-		if not forToolTip :
+		try :
+			# Unknown type. If iteration is supported then use that.
+			separator = "\n" if forToolTip else ", "
+			return separator.join( str( x ) for x in value )
+		except :
+			# Otherwise just cast to string
 			return str( value )
-		else :
-			try :
-				return "\n".join( str( x ) for x in value )
-			except :
-				return str( value )
 
 class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
