@@ -523,6 +523,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		tableView.setHorizontalScrollMode( tableView.ScrollPerPixel )
 
 		tableView.setSizePolicy(
 			QtWidgets.QSizePolicy.Fixed if mode == self.Mode.RowNames else QtWidgets.QSizePolicy.Maximum,
