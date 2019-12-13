@@ -115,6 +115,61 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s["out"] ), 1 )
 		self.assertEqual( s["out"][0].getName(), "myInt" )
 
+	def testRemoveMiddleColumn( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addRow()
+
+		c1 = s["s"]["rows"].addColumn( Gaffer.IntPlug( "c1" ) )
+		c2 = s["s"]["rows"].addColumn( Gaffer.FloatPlug( "c2" ) )
+		c3 = s["s"]["rows"].addColumn( Gaffer.StringPlug( "c3" ) )
+
+		def assertPreconditions() :
+
+			for row in s["s"]["rows"] :
+				self.assertEqual( row["cells"].keys(), [ "c1", "c2", "c3" ] )
+				self.assertIsInstance( row["cells"]["c1"]["value"], Gaffer.IntPlug )
+				self.assertIsInstance( row["cells"]["c2"]["value"], Gaffer.FloatPlug )
+				self.assertIsInstance( row["cells"]["c3"]["value"], Gaffer.StringPlug )
+
+			self.assertEqual( s["s"]["out"].keys(), [ "c1", "c2", "c3" ] )
+			self.assertIsInstance( s["s"]["out"]["c1"], Gaffer.IntPlug )
+			self.assertIsInstance( s["s"]["out"]["c2"], Gaffer.FloatPlug )
+			self.assertIsInstance( s["s"]["out"]["c3"], Gaffer.StringPlug )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+			s["s"]["rows"].removeColumn( c2 )
+
+		def assertPostConditions() :
+
+			for row in s["s"]["rows"] :
+				self.assertEqual( row["cells"].keys(), [ "c1", "c3" ] )
+				self.assertIsInstance( row["cells"]["c1"]["value"], Gaffer.IntPlug )
+				self.assertIsInstance( row["cells"]["c3"]["value"], Gaffer.StringPlug )
+
+			self.assertEqual( s["s"]["out"].keys(), [ "c1", "c3" ] )
+			self.assertIsInstance( s["s"]["out"]["c1"], Gaffer.IntPlug )
+			self.assertIsInstance( s["s"]["out"]["c3"], Gaffer.StringPlug )
+
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostConditions()
+
+
 	def testOutput( self ) :
 
 		s = Gaffer.Spreadsheet()
