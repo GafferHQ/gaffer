@@ -1074,10 +1074,11 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 		painter.save()
 
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		overlayColor = QtGui.QColor( 40, 40, 40, 200 )
 
 		if not cellPlugEnabled :
 
-			painter.fillRect( option.rect, QtGui.QBrush( QtGui.QColor( 40, 40, 40, 200 ) ) )
+			painter.fillRect( option.rect, overlayColor )
 
 			pen = QtGui.QPen( QtGui.QColor( 20, 20, 20, 150 ) )
 			pen.setWidth( 2 )
@@ -1086,9 +1087,7 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
 		if not enabled :
 
-			color = QtGui.QColor( index.data( QtCore.Qt.BackgroundColorRole ) )
-			color.setAlpha( 200 )
-			painter.fillRect( option.rect, QtGui.QBrush( color ) )
+			painter.fillRect( option.rect, overlayColor )
 
 		painter.restore()
 
