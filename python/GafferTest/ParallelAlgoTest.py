@@ -37,6 +37,8 @@
 import thread
 import threading
 import unittest
+import timeit
+import Queue
 
 import IECore
 
@@ -45,54 +47,65 @@ import GafferTest
 
 class ParallelAlgoTest( GafferTest.TestCase ) :
 
-	# Context manager used to run code which is expected to generate a
-	# call to `ParallelAlgo.callOnUIThread()`. This emulates the
-	# UIThreadCallHandler that would otherwise be provided by GafferUI.
-	class ExpectedUIThreadCall( object ) :
-
-		__conditionStack = []
-		__conditionStackMutex = threading.Lock()
-		__callHandlerRegistered = False
+	# Context manager used to test code which uses `ParallelAlgo::callOnUIThread()`.
+	# This emulates the call handler that the UI would usually install.
+	class UIThreadCallHandler( object ) :
 
 		def __enter__( self ) :
 
-			self.__condition = threading.Condition()
-			self.__condition.toCall = None
-
-			with self.__conditionStackMutex :
-				self.__conditionStack.append( self.__condition )
-
-			self.__registeredCallHandler = False
-			if not self.__class__.__callHandlerRegistered :
-				Gaffer.ParallelAlgo.pushUIThreadCallHandler( self.__callOnUIThread )
-				self.__class__.__callHandlerRegistered = True
-				self.__registeredCallHandler = True
+			self.__assertDone = False
+			self.__queue = Queue.Queue()
+			Gaffer.ParallelAlgo.pushUIThreadCallHandler( self.__callOnUIThread )
+			return self
 
 		def __exit__( self, type, value, traceBack ) :
 
-			with self.__condition :
+			Gaffer.ParallelAlgo.popUIThreadCallHandler()
+			while True :
+				try :
+					f = self.__queue.get( block = False )
+				except Queue.Empty:
+					return
+				if self.__assertDone :
+					raise AssertionError( "UIThread call queue not empty" )
+				f()
 
-				while self.__condition.toCall is None :
-					self.__condition.wait()
+		def __callOnUIThread( self, f ) :
 
-				self.__condition.toCall()
-				self.__condition.toCall = None
+			self.__queue.put( f )
 
-			if self.__registeredCallHandler :
-				assert( self.__class__.__callHandlerRegistered == True )
-				Gaffer.ParallelAlgo.popUIThreadCallHandler()
-				self.__class__.__callHandlerRegistered = False
+		# Waits for a single use of `callOnUIThread()`, raising
+		# a test failure if none arises before `timeout` seconds.
+		def assertCalled( self, timeout = 30.0 ) :
 
-		@classmethod
-		def __callOnUIThread( cls, f ) :
+			try :
+				f = self.__queue.get( block = True, timeout = timeout )
+			except Queue.Empty :
+				raise AssertionError( "UIThread call not made within {} seconds".format( timeout ) )
+			
+			f()
 
-			with cls.__conditionStackMutex :
-				condition = cls.__conditionStack.pop()
+		# Asserts that no further uses of `callOnUIThread()` will
+		# be made with this handler. This is checked on context exit.
+		def assertDone( self ) :
 
-			with condition :
-				assert( condition.toCall is None )
-				condition.toCall = f
-				condition.notify()
+			self.__assertDone = True
+
+		# Waits for `time` seconds, processing any calls to
+		# `ParallelAlgo::callOnUIThread()` made during that time.
+		def waitFor( self, time ) :
+
+			startTime = timeit.default_timer()
+			elapsed = 0.0
+
+			while elapsed < time:
+				try:
+					f = self.__queue.get( block = True, timeout = time - elapsed )
+				except Queue.Empty:
+					return
+
+				f()
+				elapsed = timeit.default_timer() - startTime
 
 	def testCallOnUIThread( self ) :
 
@@ -103,21 +116,22 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			s.setName( "test" )
 			s.uiThreadId = thread.get_ident()
 
-		with self.ExpectedUIThreadCall() :
+		with self.UIThreadCallHandler() as h :
 
 			t = threading.Thread(
 				target = lambda : Gaffer.ParallelAlgo.callOnUIThread( uiThreadFunction )
 			)
 			t.start()
+			h.assertCalled()
 			t.join()
+			h.assertDone()
 
 		self.assertEqual( s.getName(), "test" )
 		self.assertEqual( s.uiThreadId, thread.get_ident() )
 
-	@unittest.skipIf( GafferTest.inCI(), "Unknown CI issue. TODO: Investigate why we only see this in the test harness" )
-	def testNestedCallOnUIThread( self ) :
+	def testNestedUIThreadCallHandler( self ) :
 
-		# This is testing our `ExpectedUIThreadCall` utility
+		# This is testing our `UIThreadCallHandler` utility
 		# class more than it's testing `ParallelAlgo`.
 
 		s = Gaffer.ScriptNode()
@@ -132,19 +146,23 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			s["fileName"].setValue( "test" )
 			s.uiThreadId2 = thread.get_ident()
 
-		with self.ExpectedUIThreadCall() :
+		with self.UIThreadCallHandler() as h1 :
 
 			t1 = threading.Thread(
 				target = lambda : Gaffer.ParallelAlgo.callOnUIThread( uiThreadFunction1 )
 			)
 			t1.start()
+			h1.assertCalled()
+			h1.assertDone()
 
-			with self.ExpectedUIThreadCall() :
+			with self.UIThreadCallHandler() as h2 :
 
 				t2 = threading.Thread(
 					target = lambda : Gaffer.ParallelAlgo.callOnUIThread( uiThreadFunction2 )
 				)
 				t2.start()
+				h2.assertCalled()
+				h2.assertDone()
 
 		self.assertEqual( s.getName(), "test" )
 		self.assertEqual( s.uiThreadId1, thread.get_ident() )

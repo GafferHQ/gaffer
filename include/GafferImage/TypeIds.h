@@ -46,13 +46,13 @@ enum TypeId
 	ImagePlugTypeId = 110750,
 	ImageNodeTypeId = 110751,
 	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
+	ImagePrimitiveNodeTypeId = 110753, // Obsolete - available for reuse
 	DisplayTypeId = 110754,
 	GafferDisplayDriverTypeId = 110755,
 	ImageProcessorTypeId = 110756,
 	ChannelDataProcessorTypeId = 110757,
 	ColorSpaceTypeId = 110758,
-	ObjectToImageTypeId = 110759,
+	ObjectToImageTypeId = 110759, // Obsolete - available for reuse
 	FormatDataTypeId = 110760,
 	AtomicFormatPlugTypeId = 110761,
 	MergeTypeId = 110762,
@@ -102,7 +102,7 @@ enum TypeId
 	DisplayTransformTypeId = 110806,
 	FormatPlugTypeId = 110807,
 	OffsetTypeId = 110808,
-	ImagePrimitiveProcessorTypeId = 110809,
+	ImagePrimitiveProcessorTypeId = 110809, // Obsolete - available for reuse
 	BlurTypeId = 110810,
 	ShapeTypeId = 110811,
 	TextTypeId = 110812,

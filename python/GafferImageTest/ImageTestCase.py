@@ -127,18 +127,16 @@ class ImageTestCase( GafferTest.TestCase ) :
 	# verifying that nodes deal correctly with such inputs.
 	def emptyImage( self ) :
 
-		image = IECoreImage.ImagePrimitive( imath.Box2i(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ) )
-		image["R"] = IECore.FloatVectorData()
-		image["G"] = IECore.FloatVectorData()
-		image["B"] = IECore.FloatVectorData()
-		image["A"] = IECore.FloatVectorData()
+		emptyCrop = GafferImage.Crop( "Crop" )
+		emptyCrop["Constant"] = GafferImage.Constant()
+		emptyCrop["Constant"]["format"].setValue( GafferImage.Format( 100, 100, 1.000 ) )
+		emptyCrop["in"].setInput( emptyCrop["Constant"]["out"] )
+		emptyCrop["area"].setValue( imath.Box2i() )
+		emptyCrop["affectDisplayWindow"].setValue( False )
 
-		result = GafferImage.ObjectToImage()
-		result["object"].setValue( image )
+		self.assertEqual( emptyCrop["out"]["dataWindow"].getValue(), imath.Box2i() )
 
-		self.assertEqual( result["out"]["dataWindow"].getValue(), imath.Box2i() )
-
-		return result
+		return emptyCrop
 
 	def deepImage( self ):
 		return self.DeepImage()
