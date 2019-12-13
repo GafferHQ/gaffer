@@ -76,6 +76,9 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Spreadsheet::RowsPlug, Gaffer::SpreadsheetRowsPlugTypeId, Gaffer::ValuePlug );
 
+				RowPlug *defaultRow();
+				const RowPlug *defaultRow() const;
+
 				/// Methods for adjusting spreadsheet size
 				/// ======================================
 				///
@@ -170,8 +173,8 @@ class GAFFER_API Spreadsheet : public ComputeNode
 		StringPlug *selectorPlug();
 		const StringPlug *selectorPlug() const;
 
-		ValuePlug *rowsPlug();
-		const ValuePlug *rowsPlug() const;
+		RowsPlug *rowsPlug();
+		const RowsPlug *rowsPlug() const;
 
 		ValuePlug *outPlug();
 		const ValuePlug *outPlug() const;

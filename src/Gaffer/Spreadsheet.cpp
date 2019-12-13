@@ -81,6 +81,16 @@ Spreadsheet::RowsPlug::RowsPlug( const std::string &name, Direction direction, u
 	addChild( defaultRow );
 }
 
+Spreadsheet::RowPlug *Spreadsheet::RowsPlug::defaultRow()
+{
+	return getChild<RowPlug>( 0 );
+}
+
+const Spreadsheet::RowPlug *Spreadsheet::RowsPlug::defaultRow() const
+{
+	return getChild<RowPlug>( 0 );
+}
+
 size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::InternedString name )
 {
 	if( name.string().empty() )
@@ -100,13 +110,13 @@ size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::Interne
 		outColumn->setFlags( Plug::Dynamic, false );
 		o->addChild( outColumn );
 	}
-	return getChild<RowPlug>( 0 )->cellsPlug()->children().size() - 1;
+	return defaultRow()->cellsPlug()->children().size() - 1;
 
 }
 
 void Spreadsheet::RowsPlug::removeColumn( size_t columnIndex )
 {
-	if( columnIndex >= getChild<RowPlug>( 0 )->cellsPlug()->children().size() )
+	if( columnIndex >= defaultRow()->cellsPlug()->children().size() )
 	{
 		throw IECore::Exception( "Column index out of range" );
 	}
@@ -126,7 +136,7 @@ Spreadsheet::RowPlug *Spreadsheet::RowsPlug::addRow()
 	// We need to use the `Dynamic` flag so that we get dirty propagation via
 	// `Plug::propagateDirtinessForParentChange()`.
 	RowPlugPtr newRow = new RowPlug( "row1", direction(), Default | Dynamic );
-	for( auto &defaultCell : CellPlug::Range( *getChild<RowPlug>( 0 )->cellsPlug() ) )
+	for( auto &defaultCell : CellPlug::Range( *defaultRow()->cellsPlug() ) )
 	{
 		CellPlugPtr newCell = boost::static_pointer_cast<CellPlug>(
 			defaultCell->createCounterpart( defaultCell->getName(), Plug::In )
@@ -324,14 +334,14 @@ const StringPlug *Spreadsheet::selectorPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-ValuePlug *Spreadsheet::rowsPlug()
+Spreadsheet::RowsPlug *Spreadsheet::rowsPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
+	return getChild<RowsPlug>( g_firstPlugIndex + 2 );
 }
 
-const ValuePlug *Spreadsheet::rowsPlug() const
+const Spreadsheet::RowsPlug *Spreadsheet::rowsPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
+	return getChild<RowsPlug>( g_firstPlugIndex + 2 );
 }
 
 ValuePlug *Spreadsheet::outPlug()
@@ -533,7 +543,7 @@ const ValuePlug *Spreadsheet::correspondingInput( const Plug *plug, size_t rowIn
 	const CellPlug *cell = rowsPlug()->getChild<RowPlug>( rowIndex )->cellsPlug()->getChild<CellPlug>( names.back() );
 	if( rowIndex && !cell->enabledPlug()->getValue() )
 	{
-		cell = rowsPlug()->getChild<RowPlug>( 0 )->cellsPlug()->getChild<CellPlug>( names.back() );
+		cell = rowsPlug()->defaultRow()->cellsPlug()->getChild<CellPlug>( names.back() );
 	}
 
 	names.pop_back();
