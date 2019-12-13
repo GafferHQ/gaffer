@@ -50,6 +50,7 @@ class _TableView( QtWidgets.QTableView ) :
 		QtWidgets.QTableView.__init__( self )
 
 		self.__minimumVisibleRows = minimumVisibleRows
+		self.horizontalHeader().sectionResized.connect( self.__sizeShouldChange )
 
 	def setModel( self, model ) :
 
@@ -71,6 +72,15 @@ class _TableView( QtWidgets.QTableView ) :
 			model.columnsRemoved.connect( self.__sizeShouldChange )
 			model.dataChanged.connect( self.__sizeShouldChange )
 			model.modelReset.connect( self.__sizeShouldChange )
+
+	def setHorizontalHeader( self, header ) :
+
+		if header == self.horizontalHeader() :
+			return
+
+		self.horizontalHeader().sectionResized.disconnect( self.__sizeShouldChange )
+		QtWidgets.QTableView.setHorizontalHeader( self, header )
+		self.horizontalHeader().sectionResized.connect( self.__sizeShouldChange )
 
 	def minimumSizeHint( self ) :
 
