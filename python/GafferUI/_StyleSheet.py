@@ -708,28 +708,28 @@ _styleSheet = string.Template(
 		background-color: $tintLighter;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:vertical:first {
+	_TableView QHeaderView::section:vertical:first {
 		border-top-left-radius: $widgetCornerRadius;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:vertical:last {
+	_TableView QHeaderView::section:vertical:last {
 		border-bottom-left-radius: $widgetCornerRadius;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:vertical:only-one {
+	_TableView QHeaderView::section:vertical:only-one {
 		border-top-left-radius: $widgetCornerRadius;
 		border-bottom-left-radius: $widgetCornerRadius;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:horizontal:first {
+	_TableView QHeaderView::section:horizontal:first {
 		border-top-left-radius: $widgetCornerRadius;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:horizontal:last {
+	_TableView QHeaderView::section:horizontal:last {
 		border-top-right-radius: $widgetCornerRadius;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:horizontal:only-one {
+	_TableView QHeaderView::section:horizontal:only-one {
 		border-top-left-radius: $widgetCornerRadius;
 		border-top-right-radius: $widgetCornerRadius;
 	}
@@ -1041,26 +1041,26 @@ _styleSheet = string.Template(
 		border: none;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QTableView {
+	_TableView {
 		gridline-color: $backgroundLowlight;
 		padding: 0px;
 		background-color: $backgroundRaised;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QTableView[gafferEditable="true"] {
+	_TableView[gafferEditable="true"] {
 		padding: 0px;
 		gridline-color: $backgroundLowlight;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QTableView[gafferEditable="true"]::item {
+	_TableView[gafferEditable="true"]::item {
 		background-color: $backgroundLight;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QTableView[gafferEditable="true"]::item:selected {
+	_TableView::item:selected {
 		background-color: $brightColor;
 	}
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QHeaderView::section:vertical {
+	_TableView QHeaderView::section:vertical {
 		padding: 2px;
 	}
 
@@ -1090,14 +1090,30 @@ _styleSheet = string.Template(
 		background-color: $brightColor;
 	}
 
+	QTableView[gafferToggleIndicator="true"]::indicator:unchecked {
+		image: url($GAFFER_ROOT/graphics/toggleOff.png);
+	}
+
+	QTableView[gafferToggleIndicator="true"]::indicator:unchecked:hover {
+		image: url($GAFFER_ROOT/graphics/toggleOffHover.png);
+	}
+
+	QTableView[gafferToggleIndicator="true"]::indicator:checked {
+		image: url($GAFFER_ROOT/graphics/toggleOn.png);
+	}
+
+	QTableView[gafferToggleIndicator="true"]::indicator:checked:hover {
+		image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
+	}
+
 	/* highlighted state for VectorDataWidget and tree views */
 
-	*[gafferClass="GafferUI.VectorDataWidget"] QTableView[gafferHighlighted="true"] {
+	_TableView[gafferHighlighted="true"] {
 		gridline-color: $brightColor;
 	}
 
 	QTreeView[gafferHighlighted="true"],
-	*[gafferClass="GafferUI.VectorDataWidget"] QTableView[gafferHighlighted="true"] QHeaderView::section {
+	_TableView[gafferHighlighted="true"] QHeaderView::section {
 		border-color: $brightColor;
 	}
 

@@ -38,6 +38,7 @@
 import datetime
 import github
 import os
+import re
 import sys
 
 # Azure pipeline variables can be populated at run-time by echoing special
@@ -61,13 +62,14 @@ commit = os.environ.get( 'BUILD_SOURCEVERSION' )
 if os.environ.get( 'BUILD_REASON', '' ) == 'PullRequest' :
 	commit = os.environ.get( 'SYSTEM_PULLREQUEST_SOURCECOMMITID' )
 
-## Source Branch
+## Source Branches
 
-sourceBranch = os.environ.get( "BUILD_SOURCEBRANCH", "" )
+buildBranch = os.environ.get( "BUILD_SOURCEBRANCH", "" )
+sourceBranch = os.environ.get( "SYSTEM_PULLREQUEST_SOURCEBRANCH", buildBranch )
 
 ## Source Tag
 
-tag = sourceBranch.replace( "refs/tags/", "" ) if "/tags/" in sourceBranch else ""
+tag = buildBranch.replace( "refs/tags/", "" ) if "/tags/" in buildBranch else ""
 
 ## Release ID
 
@@ -90,15 +92,16 @@ if tag :
 formatVars = {
 	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
 	"platform" : "macos" if sys.platform == "darwin" else "linux",
-	"timestamp" : datetime.datetime.now().strftime( "%Y%m%d%H%M" ),
+	"timestamp" : datetime.datetime.now().strftime( "%Y_%m_%d_%H%M" ),
 	"pullRequest" : os.environ.get( "SYSTEM_PULLREQUEST_PULLREQUESTNUMBER", "UNKNOWN" ),
 	"shortCommit" : commit[:8],
-	"tag" : tag
+	"tag" : tag,
+	"branch" : re.sub( r"[^a-zA-Z0-9_]", "", sourceBranch.split( "/" )[-1] )
 }
 
 nameFormats = {
 	"default" : "gaffer-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
-	"PullRequest" : "gaffer-pr{pullRequest}-{shortCommit}-{platform}{buildTypeSuffix}",
+	"PullRequest" : "gaffer-pr{pullRequest}-{branch}-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
 	"Release" : "gaffer-{tag}-{platform}{buildTypeSuffix}"
 }
 

@@ -495,6 +495,7 @@ nodeMenu.append( "/Utility/Context Variables", Gaffer.ContextVariables, searchTe
 nodeMenu.append( "/Utility/Delete Context Variables", Gaffer.DeleteContextVariables, searchText = "DeleteContextVariables" )
 nodeMenu.append( "/Utility/Time Warp", Gaffer.TimeWarp, searchText = "TimeWarp" )
 nodeMenu.append( "/Utility/Loop", Gaffer.Loop )
+nodeMenu.append( "/Utility/Spreadsheet", Gaffer.Spreadsheet )
 
 ## Miscellaneous UI
 ###########################################################################

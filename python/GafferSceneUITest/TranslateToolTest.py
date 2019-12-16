@@ -749,5 +749,36 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
 		self.assertEqual( tool.selection()[0].transformPlug, script["transform"]["transform"] )
 
+	def testSpreadsheetAndCollect( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["spreadsheet"] = Gaffer.Spreadsheet()
+		script["spreadsheet"]["rows"].addColumn( script["sphere"]["transform"] )
+		script["sphere"]["transform"].setInput( script["spreadsheet"]["out"]["transform"] )
+		script["spreadsheet"]["rows"].addRow()["name"].setValue( "sphere1" )
+		script["spreadsheet"]["rows"].addRow()["name"].setValue( "sphere2" )
+		script["spreadsheet"]["selector"].setValue( "${collect:rootName}" )
+
+		script["collect"] = GafferScene.CollectScenes()
+		script["collect"]["in"].setInput( script["sphere"]["out"] )
+		script["collect"]["rootNames"].setInput( script["spreadsheet"]["activeRowNames"] )
+
+		self.assertEqual( script["collect"]["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere1", "sphere2" ] ) )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["collect"]["out"] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere1" ] ) )
+		self.assertEqual( tool.selection()[0].transformPlug, script["spreadsheet"]["rows"][1]["cells"]["transform"]["value"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere2" ] ) )
+		self.assertEqual( tool.selection()[0].transformPlug, script["spreadsheet"]["rows"][2]["cells"]["transform"]["value"] )
+
 if __name__ == "__main__":
 	unittest.main()

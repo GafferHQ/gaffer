@@ -67,6 +67,7 @@
 #include "SetBinding.h"
 #include "SignalBinding.h"
 #include "SplinePlugBinding.h"
+#include "SpreadsheetBinding.h"
 #include "StringPlugBinding.h"
 #include "SubGraphBinding.h"
 #include "SwitchBinding.h"
@@ -218,6 +219,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindProcessMessageHandler();
 	bindNameValuePlug();
 	bindProcess();
+	bindSpreadsheet();
 
 	NodeClass<Backdrop>();
 
