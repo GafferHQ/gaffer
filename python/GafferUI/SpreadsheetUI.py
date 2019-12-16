@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import collections
 import functools
 
 import imath
@@ -1020,6 +1021,13 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 					return currentPreset
 				if isinstance( plug, Gaffer.NameValuePlug ) :
 					return plug["enabled"].getValue(), plug["value"].getValue()
+				elif isinstance( plug, Gaffer.TransformPlug ) :
+					return collections.OrderedDict( [
+						( "T", plug["translate"].getValue() ),
+						( "R", plug["rotate"].getValue() ),
+						( "S", plug["scale"].getValue() ),
+						( "P", plug["pivot"].getValue() ),
+					] )
 				else :
 					return plug.getValue()
 		except :
@@ -1042,6 +1050,12 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				"On" if value[0] else "Off",
 				" : \n" if forToolTip and "\n" in s else " : ",
 				s
+			)
+		elif isinstance( value, dict ) :
+			separator = "\n" if forToolTip else "  "
+			return separator.join(
+				"{} : {}".format( item[0], self.__formatValue( item[1] ) )
+				for item in value.items()
 			)
 		elif value is None :
 			return ""
@@ -1172,6 +1186,8 @@ class _EditWindow( GafferUI.Window ) :
 			return plugValueWidget.pathWidget()
 		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
 			return plugValueWidget.textWidget()
+		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
+			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0], lazy = False ) )
 
 	@classmethod
 	def __fixedWidth( cls, plugValueWidget ) :
@@ -1188,6 +1204,11 @@ class _EditWindow( GafferUI.Window ) :
 			w = cls.__fixedWidth( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
 			if w is not None :
 				return w + 30
+		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
+			w = 0
+			for p in plugValueWidget.getPlug() :
+				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p, lazy = False ) ) )
+			return GafferUI.PlugWidget.labelWidth() + w
 
 		return None
 
