@@ -1,11 +1,17 @@
 0.55.x.x (relative to 0.55.1.0)
 ========
 
+Features
+--------
+
+- Spreadsheet (#3222) : Added a new node to simplify workflows where different settings are needed in different contexts. A common expected use is to collapse the "many identical branches per shot" pattern into a single branch and a Spreadsheet. Spreadsheets also integrate well with the PathFilter and CollectScenes nodes to provide values on a per-location basis.
+
 Improvements
 ------------
 
 - Stats app : Added `-postLoadScript` command line argument. This can be used to perform post-processing of the loaded script before stats are gathered.
 - Appleseed : Added the ability to hide Appleseed nodes and other presets from the UI by setting the `GAFFERAPPLESEED_HIDE_UI` environment variable to `1`. Appleseed will still be available for OSL shader previews and example scenes.
+- StringPlug : Added support for the `${scene:path}` variable in string substitutions.
 
 Fixes
 -----
@@ -18,6 +24,12 @@ Fixes
 - ShaderTweaks : Fixed missing preset for Arnold Blockers.
 - Arnold : Fixed crash when disconnecting shader networks from lights (#3484).
 - VectorDataWidget : Fixed styling update bug for non-editable widgets.
+
+API
+---
+
+- NameValuePlugValueWidget : Added `set/getNameVisible()` methods.
+- PresetsPlugValueWidget : Added a `menu()` accessor method.
 
 0.55.1.0 (relative to 0.55.0.0)
 ========
