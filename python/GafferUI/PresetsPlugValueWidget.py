@@ -60,6 +60,10 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()
 
+	def menu( self ) :
+
+		return self.__menuButton.getMenu()
+
 	def _updateFromPlug( self ) :
 
 		self.__menuButton.setEnabled( self._editable() )

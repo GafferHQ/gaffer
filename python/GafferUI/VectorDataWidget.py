@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from _TableView import _TableView
 
 from Qt import QtCore
 from Qt import QtGui
@@ -730,78 +731,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__tableView.mousePressEvent( qEvent )
 		finally :
 			self.__emittingButtonPress = False
-
-# Private implementation - a QTableView with custom size behaviour.
-class _TableView( QtWidgets.QTableView ) :
-
-	def __init__( self, minimumVisibleRows ) :
-
-		QtWidgets.QTableView.__init__( self )
-
-		self.__minimumVisibleRows = minimumVisibleRows
-
-	def setModel( self, model ) :
-
-		prevModel = self.model()
-		if prevModel :
-			prevModel.rowsInserted.disconnect( self.__sizeShouldChange )
-			prevModel.rowsRemoved.disconnect( self.__sizeShouldChange )
-			prevModel.dataChanged.connect( self.__sizeShouldChange )
-
-		QtWidgets.QTableView.setModel( self, model )
-
-		if model :
-			model.rowsInserted.connect( self.__sizeShouldChange )
-			model.rowsRemoved.connect( self.__sizeShouldChange )
-			model.dataChanged.connect( self.__sizeShouldChange )
-
-	def minimumSizeHint( self ) :
-
-		# compute the minimum height to be the size of the header plus
-		# a minimum number of rows specified in self.__minimumVisibleRows
-
-		margins = self.contentsMargins()
-		minimumHeight = margins.top() + margins.bottom()
-
-		if not self.horizontalHeader().isHidden() :
-			minimumHeight += self.horizontalHeader().sizeHint().height()
-
-		numRows = self.verticalHeader().count()
-		if numRows :
-			minimumHeight += self.verticalHeader().sectionSize( 0 ) * min( numRows, self.__minimumVisibleRows )
-
-		# horizontal direction doesn't matter, as we don't allow shrinking
-		# in that direction anyway.
-
-		return QtCore.QSize( 1, minimumHeight )
-
-	def sizeHint( self ) :
-
-		# this seems to be necessary to nudge the header into calculating
-		# the correct size - otherwise the length() below comes out wrong
-		# sometimes. in other words it's a hack.
-		for i in range( 0, self.horizontalHeader().count() ) :
-			self.horizontalHeader().sectionSize( i )
-
-		margins = self.contentsMargins()
-
-		w = self.horizontalHeader().length() + margins.left() + margins.right()
-		if not self.verticalHeader().isHidden() :
-			w += self.verticalHeader().sizeHint().width()
-		# always allow room for a scrollbar even though we don't always need one. we
-		# make sure the background in the stylesheet is transparent so that when the
-		# scrollbar is hidden we don't draw an empty gap where it otherwise would be.
-		w += self.verticalScrollBar().sizeHint().width()
-
-		h = self.verticalHeader().length() + margins.top() + margins.bottom()
-		if not self.horizontalHeader().isHidden() :
-			h += self.horizontalHeader().sizeHint().height()
-
-		return QtCore.QSize( w, h )
-
-	def __sizeShouldChange( self, *unusedArgs ) :
-
-		self.updateGeometry()
 
 # Internal implementation detail - a qt model which wraps
 # around the VectorData.

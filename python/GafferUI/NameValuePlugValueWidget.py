@@ -123,6 +123,14 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		for w in self.__row :
 			w.setReadOnly( readOnly )
 
+	def setNameVisible( self, visible ) :
+
+		self.__row[0].setVisible( visible )
+
+	def getNameVisible( self ) :
+
+		return self.__row[0].getVisible()
+
 	def _updateFromPlug( self ) :
 
 		if "enabled" in self.getPlug() :
@@ -135,3 +143,23 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__row[-1].setEnabled( enabled )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.NameValuePlug, NameValuePlugValueWidget )
+
+def __spreadsheetColumnName( plug ) :
+
+	nameValuePlug = plug.parent()
+	if plug == nameValuePlug["name"] :
+		return plug.getName()
+
+	# Use some heuristics to come up with a more helpful
+	# column name.
+
+	name = nameValuePlug.getName()
+	if name.startswith( "member" ) and nameValuePlug["name"].source().direction() != Gaffer.Plug.Direction.Out :
+		name = nameValuePlug["name"].getValue()
+
+	if name :
+		return name + plug.getName().title()
+	else :
+		return plug.getName()
+
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "*", "spreadsheet:columnName", __spreadsheetColumnName )

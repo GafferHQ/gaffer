@@ -141,6 +141,7 @@ from SetVisualiserTest import SetVisualiserTest
 from OrientationTest import OrientationTest
 from MeshTypeTest import MeshTypeTest
 from CopyPrimitiveVariablesTest import CopyPrimitiveVariablesTest
+from SpreadsheetTest import SpreadsheetTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *

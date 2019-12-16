@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,53 +34,44 @@
 #
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import Gaffer
-import GafferUI
-import GafferImage
+import GafferScene
+import GafferSceneTest
 
-Gaffer.Metadata.registerNode(
+class SpreadsheetTest( GafferSceneTest.SceneTestCase ) :
 
-	GafferImage.CollectImages,
+	def testScenePathAsSelector( self ) :
 
-	"description",
-	"""
-	Forms a series of image layers by repeatedly evaluating the input with different contexts.
-	Useful for networks that need to dynamically build an unknown number of image layers.
-	""",
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
 
-	"ui:spreadsheet:activeRowNamesConnection", "rootLayers",
-	"ui:spreadsheet:selectorContextVariablePlug", "layerVariable",
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
 
-	plugs = {
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere", "/group/cube" ] ) )
 
-		"in" : [
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( group["out"] )
+		attributes["filter"].setInput( pathFilter["out"] )
+		attributes["attributes"]["deformationBlur"]["enabled"].setValue( True )
 
-			"description",
-			"""
-			The image which will be evaluated for each layer.
-			""",
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${scene:path}" )
+		spreadsheet["rows"].addColumn( attributes["attributes"]["deformationBlur"]["value"] )
+		attributes["attributes"]["deformationBlur"]["value"].setInput( spreadsheet["out"][0] )
 
-		],
+		row = spreadsheet["rows"].addRow()
+		row["name"].setValue( "/group/cube" )
+		row["cells"][0]["value"].setValue( False )
 
-		"rootLayers" : [
+		self.assertEqual( attributes["out"].attributes( "/group/sphere" )["gaffer:deformationBlur"].value, True )
+		self.assertEqual( attributes["out"].attributes( "/group/cube" )["gaffer:deformationBlur"].value, False )
 
-			"description",
-			"""
-			A list of the new layers to create.
-			""",
-
-		],
-
-		"layerVariable" : [
-
-			"description",
-			"""
-			This context variable will be set with the current layer name when evaluating the in plug.
-			This allows you to vary the upstream processing for each new layer.
-			""",
-
-		],
-
-	}
-
-)
+if __name__ == "__main__":
+	unittest.main()
