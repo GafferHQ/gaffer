@@ -12,6 +12,11 @@ Features
 Improvements
 ------------
 
+- Viewer :
+  - Improved visualisation of Arnold lights.
+    - Added texture previews for quad and skydome lights. All OSL shaders are supported, along with a small subset of Arnold shaders.
+    - Area lights are now drawn solid by default. This can be controlled via the Visualisation section of the Light node.
+  - Extended color-correction to light textures, such that they now match rendered results (#3407).
 - Instancer :
   - Renamed `instances` plug to `prototypes` and `index` plug to `prototypeIndex`. This clarifies their meaning and matches the terminology used in USD.
   - Organised UI into sections.
@@ -24,7 +29,8 @@ Improvements
   - Added generic support for precise tool adjustments by holding down <kbd>Shift</kbd> whilst adjusting tool handles (#3324).
   - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
 - UI : Added the Gaffer version to the window title.
-- Viewer : Extended viewer color-correction to light textures, such that they now match rendered results (#3407).
+- Set : Hid unused `paths` plugs from the UI, in preparation for eventual removal of the plug itself. The `filter` plug should now always be used in preference to the `paths` plug.
+
 
 Fixes
 -----
@@ -34,7 +40,13 @@ Fixes
 - CopyAttributes : Fixed bug loading scripts saved prior to version 0.55.0.0.
 - Mix : Fix wrong behaviour outside of mask data window.
 - ImageStats : Fixed bug that would return 1.0 if the 4th channel was missing. Missing channels now always return 0.0.
-- Viewer : Fixed bug that caused the StandardLightVisualiser to be used instead of render-specific ones (#3407).
+- Viewer :
+  - Fixed bug that caused the StandardLightVisualiser to be used instead of render-specific ones (#3407).
+  - Fixed bug that caused duplicate drawing of inherited light filter state (#3502).
+- ParallelAlgo :
+  - Fixed handling of Python exceptions thrown from UIThreadCallHandler.
+  - Fixed GIL management for `popUIThreadCallHandler()`.
+- InteractiveRender : Fixed GIL management bug in `setContext()` Python bindings.
 
 API
 ---
@@ -72,6 +84,10 @@ Breaking Changes
   - Changed `Light::computeLight` return type to const (#3407).
   - Added plug and accessors for `visualiserShaded` (#3407).
 - StandardLightVisualiser : Removed protected members `faceCameraVertexSource` and `environmentSphere` (#3407).
+- LightFilterVisualiser : Moved `LightFilterVisualiser` into `IECoreGLPreview`, filter visualiser registrations will need updating (#3502).
+- ObjectToImage/ImagePrimitiveSource : Removed.
+- ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
+
 
 0.55.x.x (relative to 0.55.1.0)
 ========
