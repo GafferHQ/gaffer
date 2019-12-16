@@ -365,6 +365,10 @@ static py::dict getLights()
 	{
 		py::dict _in;
 		_in = getSockets( cNodeType, false );
+		// Change name of lightgroups UI name, Blender has light groups as a bitmask
+		// so that a single light can be in multiple light group outputs hence the plural.
+		// We limit this so a light only participates in one light group.
+		_in["lightgroups"]["ui_name"] = "Light Group";
 
 		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "type" ) );
 		const ccl::NodeEnum *enums = socketType->enum_values;
@@ -386,6 +390,7 @@ static py::dict getLights()
 			in["max_bounces"] = _in["max_bounces"];
 			in["samples"] = _in["samples"];
 			in["strength"] = _in["strength"];
+			in["lightgroups"] = _in["lightgroups"];
 
 			if( type == "background_light" )
 			{

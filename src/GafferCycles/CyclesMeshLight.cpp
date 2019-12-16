@@ -83,6 +83,13 @@ CyclesMeshLight::CyclesMeshLight( const std::string &name )
 	addChild( cameraVisibilityPlug );
 	internalCameraVisibilityPlug->setInput( cameraVisibilityPlug );
 
+	// Light-Group
+
+	Plug *internalLightGroupPlug = attributes->attributesPlug()->getChild<Plug>( "lightGroup" );
+	PlugPtr lightGroupPlug = internalLightGroupPlug->createCounterpart( "lightGroup", Plug::In );
+	addChild( lightGroupPlug );
+	internalLightGroupPlug->setInput( lightGroupPlug );
+
 	// Shader node. This loads the Cycles emission shader.
 
 	CyclesShaderPtr shader = new CyclesShader( "__shader" );

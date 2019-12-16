@@ -69,6 +69,9 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	// Color
 	attributes->addChild( new Gaffer::NameValuePlug( "Cs", new IECore::Color3fData( Imath::Color3f( 0.0f ) ), false, "color" ) );
 
+	// Light-Group
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:light_group", new IECore::IntData( -1 ), false, "lightGroup" ) );
+
 }
 
 CyclesAttributes::~CyclesAttributes()

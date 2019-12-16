@@ -89,17 +89,24 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"denoise_shadowing",
 		"denoise_variance",
 		"denoise_intensity",
-		"denoise_clean"
+		"denoise_clean",
+		"aov_color",
+		"aov_value",
+		"lightgroups",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
+
+		data = aov
+		if data == "lightgroups":
+			data = "lightgroup<8>"
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Cycles/" + label,
 			IECoreScene.Output(
 				aov,
 				"ieDisplay",
-				aov,
+				data,
 				{
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
@@ -112,8 +119,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 		GafferScene.Outputs.registerOutput(
 			"Batch/Cycles/" + label,
 			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, data ),
 				"exr",
-				aov
+				data,
 			)
 		)

@@ -72,6 +72,7 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/lexical_cast.hpp"
 #include "boost/optional.hpp"
 
 #include "tbb/concurrent_hash_map.h"
@@ -191,6 +192,7 @@ namespace
 ccl::PassType nameToPassType( const std::string &name )
 {
 #define MAP_PASS(passname, passtype) if(name == passname) return passtype;
+#define MAP_PASS_STARTSWITH(startswith, passtype) if(boost::starts_with(name,startswith)) return passtype;
 	MAP_PASS( "rgba", ccl::PASS_COMBINED );
 	MAP_PASS( "depth", ccl::PASS_DEPTH );
 	MAP_PASS( "normal", ccl::PASS_NORMAL );
@@ -229,10 +231,12 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS( "subsurface_color", ccl::PASS_SUBSURFACE_COLOR );
 	MAP_PASS( "volume_direct", ccl::PASS_VOLUME_DIRECT );
 	MAP_PASS( "volume_indirect", ccl::PASS_VOLUME_INDIRECT );
-	MAP_PASS( "cryptomatte_asset", ccl::PASS_CRYPTOMATTE );
-	MAP_PASS( "cryptomatte_object", ccl::PASS_CRYPTOMATTE );
-	MAP_PASS( "cryptomatte_material", ccl::PASS_CRYPTOMATTE );
+	MAP_PASS_STARTSWITH( "cryptomatte", ccl::PASS_CRYPTOMATTE );
+	MAP_PASS_STARTSWITH( "AOVC",  ccl::PASS_AOV_COLOR );
+	MAP_PASS_STARTSWITH( "AOVV", ccl::PASS_AOV_VALUE );
+	MAP_PASS_STARTSWITH( "lightgroup", ccl::PASS_LIGHTGROUP );
 #undef MAP_PASS
+#undef MAP_PASS_STARTSWITH
 
 	return ccl::PASS_NONE;
 }
@@ -315,6 +319,12 @@ int passComponents( ccl::PassType type )
 			return 3;
 		case ccl::PASS_CRYPTOMATTE:
 			return 4;
+		case ccl::PASS_AOV_COLOR:
+			return 3;
+		case ccl::PASS_AOV_VALUE:
+			return 1;
+		case ccl::PASS_LIGHTGROUP:
+			return 3;
 		default:
 			return 0;
 	}
@@ -345,18 +355,46 @@ int denoiseComponents( ccl::DenoisingPassOffsets type )
 	}
 }
 
+int getNumMultiPassNames( const std::string &dataName, std::string &baseName )
+{
+	vector<string> split;
+	boost::split( split, dataName, boost::is_any_of( "<" ) );
+	string numStr = boost::erase_all_copy( split.back(), ">" );
+	baseName = split.front();
+	try
+	{
+		int num = boost::lexical_cast<int>( numStr );
+		return num;
+	}
+	catch( const std::exception& e )
+	{
+		IECore::msg( IECore::Msg::Warning, "CyclesRenderer::output", boost::format( "Cannot determine number of passes for \"%s\". Try using <num_passes> on the end of data." ) % dataName );
+		return 0;
+	}
+}
+
 class CyclesOutput : public IECore::RefCounted
 {
 
 	public :
 
 		CyclesOutput( const IECoreScene::Output *output )
-			: m_image( nullptr )
 		{
 			m_name = output->getName();
 			m_type = output->getType();
 			m_data = output->getData();
 			m_passType = nameToPassType( m_data );
+
+			if( m_passType == ccl::PASS_LIGHTGROUP )
+			{
+				int num = getNumMultiPassNames( output->getData(), m_data );
+				m_images.resize( num );
+			}
+			else
+			{
+				m_images.resize( 1 );
+			}
+
 			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
 			if( ( m_passType == ccl::PASS_NONE ) && ( m_denoisingPassOffsets > 0 ) )
 			{
@@ -389,10 +427,14 @@ class CyclesOutput : public IECore::RefCounted
 
 		void createImage( ccl::Camera *camera )
 		{
-			if( m_image.get() )
+			for( auto image : m_images )
 			{
-				m_image.reset();
+				if( image.get() )
+				{
+					image.reset();
+				}
 			}
+
 			//ccl::DisplayBuffer &display = m_session->display;
 			// TODO: Work out if Cycles can do overscan...
 			Box2i displayWindow( 
@@ -431,7 +473,10 @@ class CyclesOutput : public IECore::RefCounted
 
 			m_parameters->writable()["handle"] = new StringData();
 
-			m_image = new ImageDisplayDriver( displayWindow, dataWindow, channelNames, m_parameters );
+			for( auto image : m_images )
+			{
+				image = new ImageDisplayDriver( displayWindow, dataWindow, channelNames, m_parameters );
+			}
 		}
 
 		void writeImage()
@@ -441,25 +486,29 @@ class CyclesOutput : public IECore::RefCounted
 				IECore::msg( IECore::Msg::Debug, "CyclesRenderer::CyclesOutput", boost::format( "Skipping interactive output: \"%s\"." ) % m_name );
 				return;
 			}
-			if( !m_image )
+			for( auto image : m_images )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Cannot write output: \"%s\"." ) % m_name );
-				return;
-			}
-			IECoreImage::ImagePrimitivePtr image = m_image->image()->copy();
-			IECore::WriterPtr writer = IECoreImage::ImageWriter::create( image, "tmp." + m_type );
-			if( !writer )
-			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Unsupported display type \"%s\"." ) % m_type );
-				return;
-			}
+				if( !image )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Cannot write output: \"%s\"." ) % m_name );
+					return;
+				}
 
-			writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
-			//if( m_quantize == ccl::TypeDesc::UINT16 )
-			//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'half' );
-			//else if( m_quantize == ccl::TypeDesc::UINT16 )
-			//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'float' );
-			writer->write();
+				IECoreImage::ImagePrimitivePtr imageCopy = image->image()->copy();
+				IECore::WriterPtr writer = IECoreImage::ImageWriter::create( imageCopy, "tmp." + m_type );
+				if( !writer )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Unsupported display type \"%s\"." ) % m_type );
+					return;
+				}
+
+				writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
+				//if( m_quantize == ccl::TypeDesc::UINT16 )
+				//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'half' );
+				//else if( m_quantize == ccl::TypeDesc::UINT16 )
+				//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'float' );
+				writer->write();
+			}
 		}
 
 		std::string m_name;
@@ -468,7 +517,7 @@ class CyclesOutput : public IECore::RefCounted
 		ccl::PassType m_passType;
 		int m_denoisingPassOffsets;
 		ccl::TypeDesc m_quantize;
-		ImageDisplayDriverPtr m_image;
+		std::vector<ImageDisplayDriverPtr> m_images;
 		CompoundDataPtr m_parameters;
 		int m_components;
 		bool m_interactive;
@@ -545,42 +594,19 @@ class RenderCallback : public IECore::RefCounted
 				auto passType = output.second->m_passType;
 				int components = passComponents( passType );
 
-				if( m_interactive )
+				if( passType == ccl::PASS_LIGHTGROUP )
 				{
-					if( name == "rgba" )
+					for( int i = 1; i <= output.second->m_images.size(); ++i )
 					{
-						channelNames.push_back( "R" );
-						channelNames.push_back( "G" );
-						channelNames.push_back( "B" );
-						channelNames.push_back( "A" );
-						continue;
+						name = ( boost::format( "%s%02i" ) % output.second->m_data % i ).str();
+						if( m_interactive )
+							getChannelNames( name, components, channelNames );
 					}
-					if( components == 1 )
-					{
-						channelNames.push_back( name );
-						continue;
-					}
-					else if( components == 2 )
-					{
-						channelNames.push_back( name + ".R" );
-						channelNames.push_back( name + ".G" );
-						continue;
-					}
-					else if( components == 3 )
-					{
-						channelNames.push_back( name + ".R" );
-						channelNames.push_back( name + ".G" );
-						channelNames.push_back( name + ".B" );
-						continue;
-					}
-					else if( components == 4 )
-					{
-						channelNames.push_back( name + ".R" );
-						channelNames.push_back( name + ".G" );
-						channelNames.push_back( name + ".B" );
-						channelNames.push_back( name + ".A" );
-						continue;
-					}
+				}
+				else
+				{
+					if( m_interactive )
+						getChannelNames( name, components, channelNames );
 				}
 			}
 
@@ -694,45 +720,43 @@ class RenderCallback : public IECore::RefCounted
 				if( !m_interactive && output.second->m_interactive )
 					continue;
 				int numChannels = output.second->m_components;
-				if( output.second->m_passType != ccl::PASS_NONE )
+
+				if( output.second->m_passType == ccl::PASS_LIGHTGROUP )
 				{
-					read = buffers->get_pass_rect( output.second->m_passType, exposure, sample, numChannels, &tileData[0], output.second->m_data.c_str() );
+					int i = 0;
+					for( auto image : output.second->m_images )
+					{
+						i += 1;
+						read = buffers->get_pass_rect( ( boost::format( "%s%02i" ) % output.second->m_data % i ).str().c_str(), exposure, sample, numChannels, &tileData[0] );
+						if( !read )
+							memset( &tileData[0], 0, tileData.size()*sizeof(float) );
+
+						if( m_interactive )
+							outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
+						else
+							image->imageData( tile, &tileData[0], w * h * numChannels );
+					}
+				}
+				else if( output.second->m_passType != ccl::PASS_NONE )
+				{
+					read = buffers->get_pass_rect( output.second->m_data.c_str(), exposure, sample, numChannels, &tileData[0] );
+					if( !read )
+						memset( &tileData[0], 0, tileData.size()*sizeof(float) );
+					
+					if( m_interactive )
+						outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
+					else
+						output.second->m_images[0]->imageData( tile, &tileData[0], w * h * numChannels );
 				}
 				else
 				{
 					if( output.second->m_denoisingPassOffsets >= 0 )
-					{
 						read = buffers->get_denoising_pass_rect( output.second->m_denoisingPassOffsets, exposure, sample, numChannels, &tileData[0] );
-					}
-				}
 
-				if( !read )
-				{
-					memset( &tileData[0], 0, tileData.size()*sizeof(float) );
-				}
-				
-				if( m_interactive )
-				{
-					for( int c = 0; c < numChannels; c++ )
-					{
-						// This is taken out of the Arnold output driver. Interleaving.
-						float *in = &(tileData[0]) + c;
-						float *out = &(interleavedData[0]) + outChannelOffset;
-						for( int j = 0; j < h; j++ )
-						{
-							for( int i = 0; i < w; i++ )
-							{
-								*out = *in;
-								out += numOutputChannels;
-								in += numChannels;
-							}
-						}
-						outChannelOffset += 1;
-					}
-				}
-				else
-				{
-					output.second->m_image->imageData( tile, &tileData[0], w * h * numChannels );
+					if( m_interactive )
+						outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
+					else
+						output.second->m_images[0]->imageData( tile, &tileData[0], w * h * numChannels );
 				}
 			}
 			if( m_interactive )
@@ -747,6 +771,71 @@ class RenderCallback : public IECore::RefCounted
 		}
 
 	private :
+
+		int interleave( float *tileData,
+						const int width, const int height,
+						const int numChannels,
+						const int numOutputChannels,
+						const int outChannelOffset,
+						float *interleavedData )
+		{
+			int offset = outChannelOffset;
+			for( int c = 0; c < numChannels; c++ )
+			{
+				// This is taken out of the Arnold output driver. Interleaving.
+				float *in = &(tileData[0]) + c;
+				float *out = interleavedData + offset;
+				for( int j = 0; j < height; j++ )
+				{
+					for( int i = 0; i < width; i++ )
+					{
+						*out = *in;
+						out += numOutputChannels;
+						in += numChannels;
+					}
+				}
+				offset += 1;
+			}
+			return offset;
+		}
+
+		void getChannelNames( const string name, const int components, vector<string> &channelNames )
+		{
+			if( name == "rgba" )
+			{
+				channelNames.push_back( "R" );
+				channelNames.push_back( "G" );
+				channelNames.push_back( "B" );
+				channelNames.push_back( "A" );
+				return;
+			}
+			if( components == 1 )
+			{
+				channelNames.push_back( name );
+				return;
+			}
+			else if( components == 2 )
+			{
+				channelNames.push_back( name + ".R" );
+				channelNames.push_back( name + ".G" );
+				return;
+			}
+			else if( components == 3 )
+			{
+				channelNames.push_back( name + ".R" );
+				channelNames.push_back( name + ".G" );
+				channelNames.push_back( name + ".B" );
+				return;
+			}
+			else if( components == 4 )
+			{
+				channelNames.push_back( name + ".R" );
+				channelNames.push_back( name + ".G" );
+				channelNames.push_back( name + ".B" );
+				channelNames.push_back( name + ".A" );
+				return;
+			}
+		}
 
 		ccl::Session *m_session;
 		DisplayDriverPtr m_displayDriver;
@@ -826,7 +915,7 @@ class ShaderCache : public IECore::RefCounted
 					// This creates a camera dot-product shader/facing ratio.
 					const std::string name = "defaultSurfaceShader";
 					ccl::Shader *cshader = new ccl::Shader();
-					ccl::ShaderGraph *cgraph = new ccl::ShaderGraph( cshader );
+					ccl::ShaderGraph *cgraph = new ccl::ShaderGraph();
 					cshader->name = name.c_str();
 					ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
 					ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
@@ -970,13 +1059,16 @@ IECore::InternedString g_scatterVisibilityAttributeName( "ccl:visibility:scatter
 IECore::InternedString g_setsAttributeName( "sets" );
 IECore::InternedString g_cryptomatteAssetAttributeName( "asset:" );
 
+// Light-group
+IECore::InternedString g_lightGroupAttributeName( "ccl:light_group" );
+
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shaderHash( 0 ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes )
+			:	m_shaderHash( 0 ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes ), m_lightGroup( -1 )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
@@ -990,6 +1082,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
 			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
+			m_lightGroup = attributeValue<int>( g_lightGroupAttributeName, attributes, m_lightGroup );
 
 			m_sets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 
@@ -1070,6 +1163,15 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
+			if( ( m_lightGroup > 0 ) && ( m_lightGroup <= 32 ) )
+			{
+				object->lightgroups = (1 << ( m_lightGroup - 1 ) );
+			}
+			else
+			{
+				object->lightgroups = 0;
+			}
+
 			return true;
 		}
 
@@ -1093,11 +1195,23 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->is_portal = clight->is_portal;
 				light->is_enabled = clight->is_enabled;
 				light->strength = clight->strength;
+				light->lightgroups = clight->lightgroups;
 			}
 			if( m_shader.get() )
 			{
 				light->shader = m_shader.get();
 			}
+
+			// Override light-group if there is a ccl:lightGroup assigned
+			if( ( m_lightGroup > 0 ) && ( m_lightGroup <= 32 ) )
+			{
+				light->lightgroups = (1 << ( m_lightGroup - 1 ) );
+			}
+			else if( m_lightGroup == 0 )
+			{
+				light->lightgroups = 0;
+			}
+
 			return true;
 		}
 
@@ -1285,6 +1399,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstInternedStringVectorDataPtr m_sets;
 		Color3f m_color;
 		Particle m_particle;
+		int m_lightGroup;
 
 };
 
@@ -2280,6 +2395,7 @@ ccl::PathRayFlag nameToRayType( const std::string &name )
 
 	return (ccl::PathRayFlag)0;
 }
+
 // Square samples
 std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
 	"ccl:integrator:aa_samples",
@@ -2424,6 +2540,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_session->set_pause( true );
 			m_scene->mutex.lock();
+			// Reduce the refcount so that it gets cleared.
+			m_backgroundShader = nullptr;
 			m_cameraCache.reset();
 			m_lightCache.reset();
 			m_shaderCache.reset();
@@ -2438,7 +2556,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
-			// Hand the old ImanageManager to Cycles to delete.
 			m_scene->mutex.unlock();
 
 			delete m_session;
@@ -2946,6 +3063,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( !output )
 			{
+				// Remove output pass
 				const auto coutput = m_outputs.find( name );
 				if( coutput != m_outputs.end() )
 				{
@@ -2955,95 +3073,58 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					{
 						if( o->m_name == "cryptomatte_asset" )
 						{
-							film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes ^ ccl::CRYPT_ASSET );
+							film->cryptomatte_passes = (ccl::CryptomatteType)(film->cryptomatte_passes & ~(ccl::CRYPT_ASSET) );
 						}
 						else if( o->m_name == "cryptomatte_object" )
 						{
-							film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes ^ ccl::CRYPT_OBJECT );
+							film->cryptomatte_passes = (ccl::CryptomatteType)(film->cryptomatte_passes & ~(ccl::CRYPT_OBJECT) );
 						}
 						else if( o->m_name == "cryptomatte_material" )
 						{
-							film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes ^ ccl::CRYPT_MATERIAL );
+							film->cryptomatte_passes =  (ccl::CryptomatteType)(film->cryptomatte_passes & ~(ccl::CRYPT_MATERIAL) );
 						}
 					}
 					m_outputs.erase( name );
 				}
-				return;
+				else
+				{
+					return;
+				}
 			}
-
-			auto passType = nameToPassType( output->getData() );
-			if( passType == ccl::PASS_NONE )
+			else if( nameToPassType( output->getData() ) == ccl::PASS_NONE )
 			{
+				// Add denoise output pass
 				int denoiseOffset = nameToDenoisePassType( output->getData() );
 				if( denoiseOffset > 0 )
 				{
 					m_outputs[name] = new CyclesOutput( output );
 				}
-				return;
-			}
-
-			ccl::vector<ccl::Pass> passes;
-			// Beauty
-			ccl::Pass::add( ccl::PASS_COMBINED, passes );
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
-			// Adaptive
-			if( m_sessionParams.adaptive_sampling )
-			{
-				ccl::Pass::add( ccl::PASS_ADAPTIVE_AUX_BUFFER, passes );
-				ccl::Pass::add( ccl::PASS_SAMPLE_COUNT, passes );
-			}
-#endif
-
-			if( !ccl::Pass::contains( film->passes, passType ) )
-			{
-				m_outputs[name] = new CyclesOutput( output );
-			}
-			else if ( output->getData() == "rgba" )
-			{
-				m_outputs[name] = new CyclesOutput( output );
+				else
+				{
+					return;
+				}
 			}
 			else
-				return;
-
-			for( auto &coutput : m_outputs )
 			{
-				if( coutput.second->m_passType == ccl::PASS_COMBINED )
+				auto passType = nameToPassType( output->getData() );
+				// Add output pass
+				if( passType == ccl::PASS_CRYPTOMATTE )
 				{
-					continue;
+					const auto coutput = m_outputs.find( name );
+					if( coutput == m_outputs.end() )
+					{
+						m_outputs[name] = new CyclesOutput( output );
+					}
 				}
-				else if( coutput.second->m_passType == ccl::PASS_CRYPTOMATTE )
+				else if( !ccl::Pass::contains( film->passes, passType ) )
 				{
-					string cryptoName( "Crypto" );
-					if( output->getName() == "cryptomatte_asset" )
-					{
-						cryptoName += "Asset";
-						film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes | ccl::CRYPT_ASSET );
-					}
-					else if( output->getName() == "cryptomatte_object" )
-					{
-						cryptoName += "Object";
-						film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes | ccl::CRYPT_OBJECT );
-					}
-					else if( output->getName() == "cryptomatte_material" )
-					{
-						cryptoName += "Material";
-						film->cryptomatte_passes = (ccl::CryptomatteType)( film->cryptomatte_passes | ccl::CRYPT_MATERIAL );
-					}
-					else
-					{
-						continue;
-					}
-					for( int i = 0; i < film->cryptomatte_depth; ++i )
-					{
-						string cryptoFullName = ( boost::format( "%s%02i" ) % cryptoName % i ).str();
-						ccl::Pass::add( ccl::PASS_CRYPTOMATTE, passes, cryptoFullName.c_str() );
-					}
+					m_outputs[name] = new CyclesOutput( output );
 				}
 				else
-					ccl::Pass::add( coutput.second->m_passType, passes );
+				{
+					return;
+				}
 			}
-
-			m_bufferParamsModified.passes = passes;
 		}
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
@@ -3259,6 +3340,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Set a more sane default than the arbitrary 0.8f
 			m_scene->film->exposure = 1.0f;
+			m_scene->film->cryptomatte_depth = 2;
 			m_scene->film->tag_update( m_scene );
 
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
@@ -3334,6 +3416,85 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_bufferParamsModified.full_y = (int)(border.bottom * (float)height);
 			m_bufferParamsModified.width =  (int)(border.right * (float)width) - m_bufferParamsModified.full_x;
 			m_bufferParamsModified.height = (int)(border.top * (float)height) - m_bufferParamsModified.full_y;
+
+			// Rebuild passes
+			m_bufferParamsModified.passes.clear();
+			for( auto &coutput : m_outputs )
+			{
+				if( coutput.second->m_passType == ccl::PASS_COMBINED )
+				{
+					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
+					break;
+				}
+			}
+			for( auto &coutput : m_outputs )
+			{
+				if( coutput.second->m_passType == ccl::PASS_COMBINED )
+				{
+					continue;
+				}
+				else if( coutput.second->m_passType == ccl::PASS_CRYPTOMATTE )
+				{
+					string cryptoName( "Crypto" );
+					if( coutput.second->m_data == "cryptomatte_asset" )
+					{
+						cryptoName += "Asset";
+						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_ASSET );
+					}
+					else if( coutput.second->m_data == "cryptomatte_object" )
+					{
+						cryptoName += "Object";
+						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_OBJECT );
+					}
+					else if( coutput.second->m_data == "cryptomatte_material" )
+					{
+						cryptoName += "Material";
+						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_MATERIAL );
+					}
+					else
+					{
+						continue;
+					}
+					for( int i = 0; i < m_scene->film->cryptomatte_depth; ++i )
+					{
+						string cryptoFullName = ( boost::format( "%s%02i" ) % cryptoName % i ).str();
+						ccl::Pass::add( ccl::PASS_CRYPTOMATTE, m_bufferParamsModified.passes, cryptoFullName.c_str() );
+					}
+					continue;
+				}
+				else if(
+					( coutput.second->m_passType == ccl::PASS_AOV_COLOR  ) ||
+					( coutput.second->m_passType == ccl::PASS_AOV_VALUE  )
+				)
+				{
+					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
+					continue;
+				}
+				else if( coutput.second->m_passType == ccl::PASS_LIGHTGROUP )
+				{
+					int num = coutput.second->m_images.size();
+					for( int i = 1; i <= num; ++i )
+					{
+						string fullName = ( boost::format( "%s%02i" ) % coutput.second->m_data % i ).str();
+						ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, fullName.c_str() );
+					}
+					continue;
+				}
+				else
+				{
+					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
+					continue;
+				}
+			}
+
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+			// Adaptive
+			if( m_sessionParams.adaptive_sampling )
+			{
+				ccl::Pass::add( ccl::PASS_ADAPTIVE_AUX_BUFFER, m_bufferParamsModified.passes );
+				ccl::Pass::add( ccl::PASS_SAMPLE_COUNT, m_bufferParamsModified.passes );
+			}
+#endif
 
 			if( !m_bufferParams.modified( m_bufferParamsModified ) )
 			{

@@ -174,6 +174,7 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "bevel", ccl::BevelNode() );
 	MAP_NODE( "displacement", ccl::DisplacementNode() );
 	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode() );
+	MAP_NODE( "aov_output", ccl::OutputAOVNode() );
 #undef MAP_NODE
 	return nullptr;
 }
@@ -436,7 +437,10 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	// If the output connector has no explicit name, we pick the first output
 	if( name == "" )
 	{
-		return node->outputs.front();
+		if ( node->outputs.size() )
+			return node->outputs.front();
+		else
+			return nullptr;
 	}
 
 	ccl::ustring cname = ccl::ustring( name.c_str() );
@@ -463,7 +467,7 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 
 	ShaderMap converted;
 	ccl::Shader *result = new ccl::Shader();
-	ccl::ShaderGraph *graph = new ccl::ShaderGraph( result );
+	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
 	const InternedString output = shaderNetwork->getOutput().shader;
 	if( output.string().empty() )
 	{
