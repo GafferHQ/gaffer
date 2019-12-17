@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import re
 import functools
 
 import IECore
@@ -286,6 +287,18 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertCorrectEvaluation( setB["out"], "containingThings", setB["out"].set( "containingThings" ).value.paths() )
 		self.assertCorrectEvaluation( setB["out"], "B in containing*", setB["paths"].getValue() )
 
+	def testWildcardsInObjectNames( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		for expression in [
+			"/*",
+			"/spher[ef]",
+			"/spher?",
+		] :
+			with self.assertRaisesRegexp( RuntimeError, 'Object name "{0}" contains wildcards'.format( re.escape( expression ) ) ) :
+				GafferScene.SetAlgo.evaluateSetExpression( expression, sphere["out"] )
+
 	def assertCorrectEvaluation( self, scenePlug, expression, expectedContents ) :
 
 		result = set( GafferScene.SetAlgo.evaluateSetExpression( expression, scenePlug ).paths() )
@@ -293,4 +306,3 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-
