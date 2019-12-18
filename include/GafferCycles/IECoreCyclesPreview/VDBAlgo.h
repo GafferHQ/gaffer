@@ -35,6 +35,8 @@
 #ifndef IECORECYCLES_VDBALGO_H
 #define IECORECYCLES_VDBALGO_H
 
+#ifdef WITH_CYCLES_OPENVDB
+
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECoreVDB/VDBObject.h"
@@ -54,5 +56,7 @@ IECORECYCLES_API ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, co
 } // namespace VDBAlgo
 
 } // namespace IECoreCycles
+
+#endif // WITH_CYCLES_OPENVDB
 
 #endif // IECORECYCLES_VDBALGO_H

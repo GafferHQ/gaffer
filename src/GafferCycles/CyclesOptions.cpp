@@ -81,11 +81,10 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), false, "resetTimeout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), false, "textTimeout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:progressive_update_timeout", new IECore::FloatData( 1.0f ), false, "progressiveUpdateTimeout" ) );
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:adaptive_sampling", new IECore::BoolData( false ), false, "useAdaptiveSampling" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:adaptive_threshold", new IECore::FloatData( 0.0f ), false, "adaptiveSamplingThreshold" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:adaptive_min_samples", new IECore::IntData( 0 ), false, "adaptiveMinSamples" ) );
-#endif
 
 	// Denoising
 	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:radius", new IECore::IntData( 8 ), false, "denoiseRadius" ) );

@@ -96,7 +96,11 @@
 #include "render/mesh.h"
 #include "render/nodes.h"
 #include "render/object.h"
+
+#ifdef WITH_CYCLES_OPENVDB
 #include "render/openvdb.h"
+#endif
+
 #include "render/osl.h"
 #include "render/scene.h"
 #include "render/session.h"
@@ -234,7 +238,9 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS_STARTSWITH( "cryptomatte", ccl::PASS_CRYPTOMATTE );
 	MAP_PASS_STARTSWITH( "AOVC",  ccl::PASS_AOV_COLOR );
 	MAP_PASS_STARTSWITH( "AOVV", ccl::PASS_AOV_VALUE );
+#ifdef WITH_CYCLES_LIGHTGROUPS
 	MAP_PASS_STARTSWITH( "lightgroup", ccl::PASS_LIGHTGROUP );
+#endif
 #undef MAP_PASS
 #undef MAP_PASS_STARTSWITH
 
@@ -323,8 +329,10 @@ int passComponents( ccl::PassType type )
 			return 3;
 		case ccl::PASS_AOV_VALUE:
 			return 1;
+#ifdef WITH_CYCLES_LIGHTGROUPS
 		case ccl::PASS_LIGHTGROUP:
 			return 3;
+#endif
 		default:
 			return 0;
 	}
@@ -385,12 +393,14 @@ class CyclesOutput : public IECore::RefCounted
 			m_data = output->getData();
 			m_passType = nameToPassType( m_data );
 
+#ifdef WITH_CYCLES_LIGHTGROUPS
 			if( m_passType == ccl::PASS_LIGHTGROUP )
 			{
 				int num = getNumMultiPassNames( output->getData(), m_data );
 				m_images.resize( num );
 			}
 			else
+#endif
 			{
 				m_images.resize( 1 );
 			}
@@ -594,6 +604,7 @@ class RenderCallback : public IECore::RefCounted
 				auto passType = output.second->m_passType;
 				int components = passComponents( passType );
 
+#ifdef WITH_CYCLES_LIGHTGROUPS
 				if( passType == ccl::PASS_LIGHTGROUP )
 				{
 					for( int i = 1; i <= output.second->m_images.size(); ++i )
@@ -604,6 +615,7 @@ class RenderCallback : public IECore::RefCounted
 					}
 				}
 				else
+#endif
 				{
 					if( m_interactive )
 						getChannelNames( name, components, channelNames );
@@ -721,6 +733,7 @@ class RenderCallback : public IECore::RefCounted
 					continue;
 				int numChannels = output.second->m_components;
 
+#ifdef WITH_CYCLES_LIGHTGROUPS
 				if( output.second->m_passType == ccl::PASS_LIGHTGROUP )
 				{
 					int i = 0;
@@ -737,7 +750,10 @@ class RenderCallback : public IECore::RefCounted
 							image->imageData( tile, &tileData[0], w * h * numChannels );
 					}
 				}
-				else if( output.second->m_passType != ccl::PASS_NONE )
+				else
+#else
+				if( output.second->m_passType != ccl::PASS_NONE )
+#endif
 				{
 					read = buffers->get_pass_rect( output.second->m_data.c_str(), exposure, sample, numChannels, &tileData[0] );
 					if( !read )
@@ -1163,6 +1179,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
+#ifdef WITH_CYCLES_LIGHTGROUPS
 			if( ( m_lightGroup > 0 ) && ( m_lightGroup <= 32 ) )
 			{
 				object->lightgroups = (1 << ( m_lightGroup - 1 ) );
@@ -1171,6 +1188,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				object->lightgroups = 0;
 			}
+#endif
 
 			return true;
 		}
@@ -1195,13 +1213,16 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->is_portal = clight->is_portal;
 				light->is_enabled = clight->is_enabled;
 				light->strength = clight->strength;
+#ifdef WITH_CYCLES_LIGHTGROUPS
 				light->lightgroups = clight->lightgroups;
+#endif
 			}
 			if( m_shader.get() )
 			{
 				light->shader = m_shader.get();
 			}
 
+#ifdef WITH_CYCLES_LIGHTGROUPS
 			// Override light-group if there is a ccl:lightGroup assigned
 			if( ( m_lightGroup > 0 ) && ( m_lightGroup <= 32 ) )
 			{
@@ -1211,6 +1232,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				light->lightgroups = 0;
 			}
+#endif
 
 			return true;
 		}
@@ -2510,9 +2532,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
+#ifdef WITH_CYCLES_OPENVDB
 			// OpenVDB
 			ccl::openvdb_initialize();
 			m_sceneParams.intialized_openvdb = true;
+#endif
 
 			init();
 			// Maintain our own ImageManager
@@ -2863,6 +2887,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:texture:" ) )
 			{
+#ifdef WITH_CYCLES_TEXTURE_CACHE
 				OPTION_BOOL (m_textureCacheParams, g_useTextureCacheOptionName,           use_cache );
 				OPTION_INT  (m_textureCacheParams, g_textureCacheSizeOptionName,          cache_size );
 				OPTION_BOOL (m_textureCacheParams, g_textureAutoConvertOptionName,        auto_convert );
@@ -2875,6 +2900,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_FLOAT(m_textureCacheParams, g_textureBlurGlossyOptionName,         glossy_blur );
 				OPTION_BOOL (m_textureCacheParams, g_textureUseCustomCachePathOptionName, use_custom_cache_path );
 				OPTION_STR  (m_textureCacheParams, g_textureCustomCachePathOptionName,    custom_cache_path );
+#endif
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -3470,6 +3496,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
 					continue;
 				}
+#ifdef WITH_CYCLES_LIGHTGROUPS
 				else if( coutput.second->m_passType == ccl::PASS_LIGHTGROUP )
 				{
 					int num = coutput.second->m_images.size();
@@ -3480,6 +3507,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					continue;
 				}
+#endif
 				else
 				{
 					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );

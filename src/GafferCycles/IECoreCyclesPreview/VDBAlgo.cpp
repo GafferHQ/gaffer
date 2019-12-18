@@ -32,6 +32,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WITH_CYCLES_OPENVDB
+
 #include "GafferCycles/IECoreCyclesPreview/VDBAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
@@ -194,3 +196,5 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 } // namespace VDBAlgo
 
 } // namespace IECoreCycles
+
+#endif // WITH_CYCLES_OPENVDB

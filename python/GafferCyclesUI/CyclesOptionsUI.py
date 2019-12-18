@@ -987,7 +987,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Sobol", 0,
 			"preset:Correlated Multi-Jitter", 1,
-			"preset:Progressive Multi-Jitter", 2,
+			#"preset:Progressive Multi-Jitter", 2,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -2119,3 +2119,30 @@ Gaffer.Metadata.registerNode(
 )
 
 __multideviceNames()
+
+
+
+if not GafferCycles.withTextureCache :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useTextureCache", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureCacheSize", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoConvert", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAcceptUnmipped", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAcceptUntiled", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoTile", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoMip", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureTileSize", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurDiffuse", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurGlossy", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useCustomCachePath", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.customCachePath", "plugValueWidget:type", "" )
+
+if not GafferCycles.withAdaptiveSampling :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useAdaptiveSampling", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.adaptiveSamplingThreshold", "plugValueWidget:type", "" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.adaptiveMinSamples", "plugValueWidget:type", "" )
+
+else :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.samplingPattern.value", "preset:Progressive Multi-Jitter", 2 )

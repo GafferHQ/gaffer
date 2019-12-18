@@ -99,6 +99,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		data = aov
 		if data == "lightgroups":
+			if not GafferCycles.withLightGroups :
+				continue
 			data = "lightgroup<8>"
 
 		GafferScene.Outputs.registerOutput(

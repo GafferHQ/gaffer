@@ -447,6 +447,27 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "shaders" ) = getShaders();
 	py::scope().attr( "lights" ) = getLights();
 
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+	py::scope().attr( "withAdaptiveSampling" ) = true;
+#else
+	py::scope().attr( "withAdaptiveSampling" ) = false;
+#endif
+#ifdef WITH_CYCLES_TEXTURE_CACHE
+	py::scope().attr( "withTextureCache" ) = true;
+#else
+	py::scope().attr( "withTextureCache" ) = false;
+#endif
+#ifdef WITH_CYCLES_OPENVDB
+	py::scope().attr( "withOpenVDB" ) = true;
+#else
+	py::scope().attr( "withOpenVDB" ) = false;
+#endif
+#ifdef WITH_CYCLES_LIGHTGROUPS
+	py::scope().attr( "withLightGroups" ) = true;
+#else
+	py::scope().attr( "withLightGroups" ) = false;
+#endif
+
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesBackground>();
 	DependencyNodeClass<CyclesOptions>();
