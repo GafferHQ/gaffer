@@ -1,4 +1,4 @@
-0.54.2.x (relative to 0.54.2.2)
+0.54.2.3 (relative to 0.54.2.2)
 ========
 
 Fixes
@@ -11,6 +11,7 @@ Fixes
 - ShaderTweaks : Fixed missing preset for Arnold Blockers.
 - Arnold : Fixed crash when disconnecting shader networks from lights (#3484).
 - VectorDataWidget : Fixed styling update bug for non-editable widgets.
+- ParallelAlgo : Fixed potential hang in `popUIThreadCallHandler()` Python bindings.
 
 0.54.2.2 (relative to 0.54.2.1)
 ========
