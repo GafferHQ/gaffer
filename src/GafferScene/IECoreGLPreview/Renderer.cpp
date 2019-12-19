@@ -153,7 +153,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
 		{
-			const FloatData *ornamentScaleData = attributes->member<FloatData>( "visualiser:scale" );
+			const FloatData *ornamentScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
 			m_ornamentScale = ornamentScaleData ? ornamentScaleData->readable() : 1.0;
 
 			m_state = static_pointer_cast<const State>(

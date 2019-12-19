@@ -217,5 +217,32 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 			imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
 		)
 
+	def testVisualisationAttributes( self ) :
+
+		l = GafferSceneTest.TestLight()
+
+		# Test not set by default
+
+		a = l["out"].attributes( "/light" )
+
+		self.assertFalse( "gl:light:drawingMode" in a.keys() )
+		self.assertFalse( "gl:visualiser:ornamentScale" in a.keys() )
+		self.assertFalse( "gl:visualiser:maxTextureResolution" in a.keys() )
+
+		# Test attribute mapping
+
+		l["visualiserAttributes"]["lightDrawingMode"]["enabled"].setValue( True )
+		l["visualiserAttributes"]["lightDrawingMode"]["value"].setValue( "color" )
+		l["visualiserAttributes"]["ornamentScale"]["enabled"].setValue( True )
+		l["visualiserAttributes"]["ornamentScale"]["value"].setValue( 12.3 )
+		l["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
+		l["visualiserAttributes"]["maxTextureResolution"]["value"].setValue( 123 )
+
+		a = l["out"].attributes( "/light" )
+
+		self.assertEqual( a["gl:light:drawingMode"], IECore.StringData( "color" ) )
+		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 12.3 ) )
+		self.assertEqual( a["gl:visualiser:maxTextureResolution"], IECore.IntData( 123 ) )
+
 if __name__ == "__main__":
 	unittest.main()

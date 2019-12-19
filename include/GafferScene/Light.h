@@ -39,6 +39,8 @@
 
 #include "GafferScene/ObjectSource.h"
 
+#include "Gaffer/CompoundDataPlug.h"
+
 #include "IECoreScene/ShaderNetwork.h"
 
 namespace GafferScene
@@ -81,10 +83,8 @@ class GAFFERSCENE_API Light : public ObjectSource
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const = 0;
 
-		Gaffer::FloatPlug *visualiserScalePlug();
-		const Gaffer::FloatPlug *visualiserScalePlug() const;
-		Gaffer::BoolPlug *visualiserShadedPlug();
-		const Gaffer::BoolPlug *visualiserShadedPlug() const;
+		Gaffer::CompoundDataPlug *visualiserAttributesPlug();
+		const Gaffer::CompoundDataPlug *visualiserAttributesPlug() const;
 
 	private :
 

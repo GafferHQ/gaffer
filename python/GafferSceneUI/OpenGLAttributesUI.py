@@ -362,18 +362,55 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.maxTextureResolution" : [
+		"attributes.visualiserOrnamentScale" : [
 
 			"description",
 			"""
-			Light visualisers that load textures will respect this setting to
+			Scales non-geometric visualisations in the viewport to make them
+			easier to work with.
+			""",
+
+			"layout:section", "Visualisers",
+			"label", "Ornament Scale",
+
+		],
+
+		"attributes.visualiserMaxTextureResolution" : [
+
+			"description",
+			"""
+			Visualisers that load textures will respect this setting to
 			limit their resolution.
 			""",
 
-			"layout:section", "Light Visualisers",
+			"layout:section", "Visualisers",
 			"label", "Max Texture Resolution",
 
 		],
+
+		"attributes.lightDrawingMode" : [
+
+			"description",
+			"""
+			Controls how lights are presented in the Viewer.
+			""",
+
+			"layout:section", "Visualisers",
+			"label", "Light Drawing Mode",
+
+		],
+
+		"attributes.lightDrawingMode.value" : [
+
+			"preset:Wireframe", "wireframe",
+			"preset:Color", "color",
+			"preset:Texture", "texture",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
+
+		],
+
+
 
 	}
 

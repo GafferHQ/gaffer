@@ -354,12 +354,12 @@ void addConstantShader( IECoreGL::Group *group, bool linearColor = false, int ai
 	);
 }
 
-void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr textureData, int textureMaxResolution )
+void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr textureData, int maxTextureResolution )
 {
 	IECore::CompoundObjectPtr shaderParameters = new CompoundObject;
 
 	shaderParameters->members()["texture"] = const_cast<Data *>( textureData.get() );
-	shaderParameters->members()["texture:maxResolution"] = new IntData( textureMaxResolution );
+	shaderParameters->members()["texture:maxResolution"] = new IntData( maxTextureResolution );
 
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent(
@@ -411,13 +411,16 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	result[ VisualisationType::Geometry ] = geometry;
 	result[ VisualisationType::Ornament ] = ornaments;
 
-	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
+	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
-	const BoolData *visualiserShadedData = attributes->member<BoolData>( "visualiser:shaded" );
-	const bool visualiserShaded = visualiserShadedData ? visualiserShadedData->readable() : true;
+	const StringData *visualiserDrawingModeData = attributes->member<StringData>( "gl:light:drawingMode" );
+	const std::string visualiserDrawingMode = visualiserDrawingModeData ? visualiserDrawingModeData->readable() : "texture";
 
-	const IntData *textureMaxResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
-	const int textureMaxResolution = textureMaxResolutionData ? textureMaxResolutionData->readable() : std::numeric_limits<int>::max();
+	const bool drawShaded = visualiserDrawingMode != "wireframe";
+	const bool drawTextured = visualiserDrawingMode == "texture";
+
+	const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
+	const int maxTextureResolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : std::numeric_limits<int>::max();
 
 	Imath::M44f topTransform;
 	if( orientation )
@@ -429,10 +432,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	if( type && type->readable() == "environment" )
 	{
-		if( visualiserShaded )
+		if( drawShaded )
 		{
-			DataPtr textureData = surfaceTexture( shaderNetwork, attributes, textureMaxResolution );
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, textureMaxResolution, color ) ) );
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, maxTextureResolution, color ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
 	}
@@ -451,10 +454,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "quad" )
 	{
-		if( visualiserShaded )
+		if( drawShaded )
 		{
-			ConstDataPtr textureData = surfaceTexture( shaderNetwork, attributes, textureMaxResolution );
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( textureData, textureMaxResolution, color ) ) );
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( textureData, maxTextureResolution, color ) ) );
 		}
 		else
 		{
@@ -467,10 +470,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
 
-		if( visualiserShaded )
+		if( drawShaded )
 		{
-			ConstDataPtr textureData = surfaceTexture( shaderNetwork, attributes, textureMaxResolution );
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskSurface( radius, textureData, textureMaxResolution, color ) ) );
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskSurface( radius, textureData, maxTextureResolution, color ) ) );
 		}
 		else
 		{
@@ -482,9 +485,9 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	else if( type && type->readable() == "cylinder" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, visualiserShaded, color ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, drawShaded, color ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
-		if( !visualiserShaded )
+		if( !drawShaded )
 		{
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 		}
@@ -866,12 +869,12 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 
 // Quads
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::ConstDataPtr textureData, int textureMaxResolution,  const Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::ConstDataPtr textureData, int maxTextureResolution,  const Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader( group.get(), textureData, textureMaxResolution );
+		addTexturedConstantShader( group.get(), textureData, maxTextureResolution );
 	}
 	else
 	{
@@ -949,14 +952,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( IECore::ConstDataPtr texture, int textureMaxResolution, const Imath::Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( IECore::ConstDataPtr texture, int maxTextureResolution, const Imath::Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr sphereGroup = new IECoreGL::Group();
 	sphereGroup->getState()->add( new IECoreGL::DoubleSidedStateComponent( false ) );
 
 	if( texture )
 	{
-		addTexturedConstantShader( sphereGroup.get(), texture, textureMaxResolution );
+		addTexturedConstantShader( sphereGroup.get(), texture, maxTextureResolution );
 	}
 	else
 	{
@@ -977,12 +980,12 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( 
 
 // Disk
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius, IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius, IECore::ConstDataPtr textureData, int maxTextureResolution, const Imath::Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader( group.get(), textureData, textureMaxResolution );
+		addTexturedConstantShader( group.get(), textureData, maxTextureResolution );
 	}
 	else
 	{
