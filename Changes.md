@@ -88,8 +88,7 @@ Breaking Changes
 - ObjectToImage/ImagePrimitiveSource : Removed.
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
 
-
-0.55.x.x (relative to 0.55.1.0)
+0.55.2.0 (relative to 0.55.1.0)
 ========
 
 Features
@@ -276,7 +275,7 @@ Breaking Changes
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
 
-0.54.2.x (relative to 0.54.2.2)
+0.54.2.3 (relative to 0.54.2.2)
 ========
 
 Fixes
@@ -289,6 +288,7 @@ Fixes
 - ShaderTweaks : Fixed missing preset for Arnold Blockers.
 - Arnold : Fixed crash when disconnecting shader networks from lights (#3484).
 - VectorDataWidget : Fixed styling update bug for non-editable widgets.
+- ParallelAlgo : Fixed potential hang in `popUIThreadCallHandler()` Python bindings.
 
 0.54.2.2 (relative to 0.54.2.1)
 ========
