@@ -155,7 +155,17 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			// in-scene attribute values rather than any renderer option.
 			m_preprocessor = new CustomAttributes();
 			m_preprocessor->globalPlug()->setValue( true );
-			m_preprocessor->attributesPlug()->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), true, "lightDrawingMode" ) );
+
+			CompoundDataPlug *attr = m_preprocessor->attributesPlug();
+
+			NameValuePlugPtr lightModePlug = new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), true, "lightDrawingMode" );
+			attr->addChild( lightModePlug );
+
+			FloatPlugPtr ornamentScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
+			NameValuePlugPtr ornamentScalePlug = new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", ornamentScaleValuePlug, true, "visualiserOrnamentScale" );
+			attr->addChild( ornamentScalePlug );
+
+			// View plugs
 
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
 			m_view->addChild( drawingMode );
@@ -177,10 +187,10 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			drawingMode->addChild( lights );
 			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
 
-			// Connect our attributes plugs up
-			m_preprocessor->attributesPlug()->getChild<NameValuePlug>( "lightDrawingMode" )->getChild<StringPlug>( "value" )->setInput(
-				lights->getChild<StringPlug>( "drawingMode" )
-			);
+			drawingMode->addChild( ornamentScaleValuePlug->createCounterpart( "visualiserOrnamentScale", Plug::Direction::In ) );
+
+			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
+			ornamentScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserOrnamentScale" ) );
 
 			updateOpenGLOptions();
 
