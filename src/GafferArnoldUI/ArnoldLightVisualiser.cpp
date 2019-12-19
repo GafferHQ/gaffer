@@ -44,16 +44,22 @@
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
+#include "IECoreGL/PointsPrimitive.h"
+
 #include "IECore/MessageHandler.h"
 #include "IECore/Exception.h"
 #include "IECore/TypedData.h"
+#include "IECore/VectorTypedData.h"
 
 #include "OSL/oslquery.h"
+
+#include "ai.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreGLPreview;
 using namespace IECoreScene;
 using namespace OSL;
 
@@ -325,6 +331,65 @@ typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePrevi
 SurfaceTextureCache g_surfaceTextureCache( surfaceTextureGetter, 1024 * 1024 * 64 );
 
 //////////////////////////////////////////////////////////////////////////
+// IESVisualisation helpers
+//////////////////////////////////////////////////////////////////////////
+
+IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
+{
+
+#if AI_VERSION_ARCH_NUM < 6
+	return nullptr;
+#else
+
+	// It's not entirely clear from rendered results exactly how radius
+	// interacts with the profile, so we just draw the normalised distribution
+	// of the profile.
+
+	const AtString f( filename.c_str() );
+
+	const unsigned int w = 64;
+	const unsigned int h = 32;
+
+	float maxIntensity = 0.0f;
+	std::unique_ptr<float[]> iesIntensities( new float[ w * h ] );
+
+	if( !AiLightIESLoad( f, w, h, &maxIntensity, iesIntensities.get() ) )
+	{
+		return nullptr;
+	}
+
+	V3fVectorDataPtr pData = new V3fVectorData;
+	std::vector<V3f> &p = pData->writable();
+
+	for( unsigned int x = 0; x < w; ++x )
+	{
+		for( unsigned int y = 0; y < h; ++y )
+		{
+			const float theta = 2.0f * M_PI * ( float(x) / w );
+			const float phi = M_PI * ( float(y) / h );
+			const unsigned int i = y * w + x;
+
+			if( iesIntensities[i] > 0.0f )
+			{
+				p.push_back(
+					iesIntensities[i] * V3f(
+						sin( phi ) * cos( theta ),
+						sin( phi ) * sin( theta ),
+						cos( phi )
+					)
+				);
+			}
+		}
+	}
+
+	IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
+	points->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Interpolation::Vertex, pData ) );
+	return points;
+
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////////
 // ArnoldLightVisualiser implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -337,6 +402,8 @@ class GAFFERSCENEUI_API ArnoldLightVisualiser : public GafferSceneUI::StandardLi
 
 		ArnoldLightVisualiser();
 		~ArnoldLightVisualiser() override;
+
+		Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -360,6 +427,28 @@ ArnoldLightVisualiser::ArnoldLightVisualiser()
 
 ArnoldLightVisualiser::~ArnoldLightVisualiser()
 {
+}
+
+Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+{
+	Visualisations v = StandardLightVisualiser::visualise( attributeName, shaderNetwork, attributes, state );
+
+	if( shaderNetwork->outputShader()->getName() == "photometric_light" )
+	{
+		const CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
+		if( const StringData *iesFilenameData = shaderParameters->member<StringData>( "filename" ) )
+		{
+			IECoreGL::RenderablePtr iesVis = iesVisualisation( iesFilenameData->readable() );
+			if( iesVis )
+			{
+				IECoreGL::Renderable *ornamentVis = boost::const_pointer_cast<IECoreGL::Renderable>( v[VisualisationType::Ornament] ).get();
+				IECoreGL::Group *g = runTimeCast<IECoreGL::Group>( ornamentVis );
+				g->addChild( iesVis );
+			}
+		}
+	}
+
+	return v;
 }
 
 IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
