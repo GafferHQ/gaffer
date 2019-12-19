@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine. All rights reserved.
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Cinesite VFX Ltd. nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,65 +34,39 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/Private/Visualiser.h"
 
 #include "IECoreGL/Group.h"
 #include "IECoreGL/State.h"
 
-using namespace IECoreGLPreview;
-
-namespace
+void IECoreGLPreview::Private::collectVisualisations( const Visualisations &source, Visualisations &target )
 {
-
-typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
-
-AttributeVisualisers &visualisers()
-{
-	static AttributeVisualisers v;
-	return v;
-}
-
-} // namespace
-
-AttributeVisualiser::AttributeVisualiser()
-{
-}
-
-AttributeVisualiser::~AttributeVisualiser()
-{
-}
-
-Visualisations AttributeVisualiser::allVisualisations( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) {
-	const AttributeVisualisers &v = visualisers();
-
-	Visualisations resultVis;
-	IECoreGL::StatePtr resultState = nullptr;
-
-	for( unsigned int i = 0; i < v.size(); i++ )
+	int t = 0;
+	for( auto &visualisation : source )
 	{
-		IECoreGL::ConstStatePtr curState = nullptr;
-		const Visualisations curVis = v[i]->visualise( attributes, curState );
-
-		if( !curVis.empty() )
+		if( !visualisation )
 		{
-			Private::collectVisualisations( curVis, resultVis );
+			continue;
 		}
 
-		if( curState )
+		IECoreGL::Group *group = nullptr;
+
+		if( target[t] )
 		{
-			if( !resultState )
-			{
-				resultState = new IECoreGL::State( false );
-			}
-			resultState->add( const_cast<IECoreGL::State*>( curState.get() ) );
+			IECoreGL::Renderable *existing = boost::const_pointer_cast<IECoreGL::Renderable>( target[t] ).get();
+			group = dynamic_cast<IECoreGL::Group *>( existing );
 		}
+		else
+		{
+			group = new IECoreGL::Group;
+			target[t] = group;
+		}
+
+		assert( group );
+
+		// `const_pointer_cast` ok because group/renderable becomes const on assignment
+		group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( visualisation ) );
+
+		++t;
 	}
-
-	state = resultState;
-	return resultVis;
-}
-
-void AttributeVisualiser::registerVisualiser( ConstAttributeVisualiserPtr visualiser )
-{
-	visualisers().push_back( visualiser );
 }

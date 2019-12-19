@@ -87,14 +87,15 @@ void LightFilterVisualiser::registerLightFilterVisualiser( const IECore::Interne
 	lightFilterVisualisers()[AttributeAndShaderNames( attributeName, shaderName )] = visualiser;
 }
 
-IECoreGL::ConstRenderablePtr LightFilterVisualiser::allVisualisations( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state )
+Visualisations LightFilterVisualiser::allVisualisations( const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state )
 {
+	Visualisations resultVis;
+
 	if( !attributes )
 	{
-		return nullptr;
+		return resultVis;
 	}
 
-	IECoreGL::GroupPtr resultGroup = nullptr;
 	IECoreGL::StatePtr resultState = nullptr;
 
 	/// This seems pretty expensive to do everywhere.
@@ -159,16 +160,11 @@ IECoreGL::ConstRenderablePtr LightFilterVisualiser::allVisualisations( const IEC
 		}
 
 		IECoreGL::ConstStatePtr curState = nullptr;
-		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( attributeName, filterShaderNetwork, lightShaderNetwork, attributes, curState );
+		const Visualisations curVis = visualiser->visualise( attributeName, filterShaderNetwork, lightShaderNetwork, attributes, curState );
 
-		if( curVis )
+		if( !curVis.empty() )
 		{
-			if( !resultGroup )
-			{
-				resultGroup = new IECoreGL::Group();
-			}
-			// resultGroup will be returned as const, so const-casting the children in order to add them is safe
-			resultGroup->addChild( const_cast<IECoreGL::Renderable*>( curVis.get() ) );
+			Private::collectVisualisations( curVis, resultVis );
 		}
 
 		if( curState )
@@ -182,5 +178,5 @@ IECoreGL::ConstRenderablePtr LightFilterVisualiser::allVisualisations( const IEC
 	}
 
 	state = resultState;
-	return resultGroup;
+	return resultVis;
 }

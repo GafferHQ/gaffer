@@ -39,6 +39,8 @@
 
 #include "GafferScene/Export.h"
 
+#include "GafferScene/Private/IECoreGLPreview/Private/Visualiser.h"
+
 #include "IECoreGL/Renderable.h"
 
 #include "IECoreScene/ShaderNetwork.h"
@@ -67,7 +69,7 @@ class GAFFERSCENE_API LightFilterVisualiser : public IECore::RefCounted
 
 		/// Must be implemented by derived classes to visualise
 		/// the light filter contained within `filterShaderNetwork`.
-		virtual IECoreGL::ConstRenderablePtr visualise(
+		virtual Visualisations visualise(
 			const IECore::InternedString &attributeName,
 			const IECoreScene::ShaderNetwork *filterShaderNetwork,
 			const IECoreScene::ShaderNetwork *lightShaderNetwork,
@@ -84,10 +86,11 @@ class GAFFERSCENE_API LightFilterVisualiser : public IECore::RefCounted
 			ConstLightFilterVisualiserPtr visualiser
 		);
 
-		/// Get all registered visualisations for the given attributes, by returning a renderable
-		/// group and some extra state. The return value and/or the state may be left null if
+		/// Get all registered visualisations for the given attributes, by
+		/// returning a map of renderable groups and some extra state. The
+		/// return value may be left empty and/or the state may be left null if
 		/// no registered visualisers do anything with these attributes.
-		static IECoreGL::ConstRenderablePtr allVisualisations(
+		static Visualisations allVisualisations(
 			const IECore::CompoundObject *attributes,
 			IECoreGL::ConstStatePtr &state
 		);

@@ -183,7 +183,7 @@ class LightBlockerVisualiser : public LightFilterVisualiser
 		LightBlockerVisualiser();
 		~LightBlockerVisualiser() override;
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
+		virtual Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -211,7 +211,7 @@ LightBlockerVisualiser::~LightBlockerVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr LightBlockerVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+Visualisations LightBlockerVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *filterShaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
 	InternedString metadataTarget;
 	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, filterShaderNetwork, metadataTarget );
@@ -252,7 +252,9 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::visualise( const IECore::In
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( planeShape( shaderParameters ) ) );
 	}
 
-	return result;
+	Visualisations v;
+	v[ VisualisationType::Geometry ] = result;
+	return v;
 }
 
 IECoreGL::ConstRenderablePtr LightBlockerVisualiser::boxShape( const IECore::CompoundData *shaderParameters )

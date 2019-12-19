@@ -390,7 +390,7 @@ StandardLightVisualiser::~StandardLightVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+Visualisations StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
 	const InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
 	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
@@ -404,11 +404,12 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 
 	const Color3f finalColor = color * intensity * pow( 2.0f, exposure );
 
-	GroupPtr result = new Group;
 	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
-	result->addChild( geometry );
-	result->addChild( ornaments );
+
+	Visualisations result;
+	result[ VisualisationType::Geometry ] = geometry;
+	result[ VisualisationType::Ornament ] = ornaments;
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "visualiser:scale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
@@ -418,23 +419,13 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	const IntData *textureMaxResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
 	const int textureMaxResolution = textureMaxResolutionData ? textureMaxResolutionData->readable() : std::numeric_limits<int>::max();
 
-	/// \todo: We should find a better way to opt out of expensive visualisations
-	///        (in particular for large environment light textures)
-	if( visualiserScale == 0 )
-	{
-		return result;
-	}
-
 	Imath::M44f topTransform;
 	if( orientation )
 	{
 		topTransform = orientation->readable();
 	}
-	result->setTransform( topTransform );
-
-	Imath::M44f ornamentsTransform;
-	ornamentsTransform.scale( V3f( visualiserScale ) );
-	ornaments->setTransform( ornamentsTransform );
+	geometry->setTransform( topTransform );
+	ornaments->setTransform( topTransform );
 
 	if( type && type->readable() == "environment" )
 	{

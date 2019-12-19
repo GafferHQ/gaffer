@@ -36,10 +36,10 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/Camera.h"
@@ -67,6 +67,7 @@
 #include "IECore/Writer.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/format.hpp"
@@ -152,36 +153,38 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
 		{
+			const FloatData *ornamentScaleData = attributes->member<FloatData>( "visualiser:scale" );
+			m_ornamentScale = ornamentScaleData ? ornamentScaleData->readable() : 1.0;
+
 			m_state = static_pointer_cast<const State>(
 				CachedConverter::defaultCachedConverter()->convert( attributes )
 			);
 
 			IECoreGL::ConstStatePtr visualisationState;
-			m_visualisation = AttributeVisualiser::allVisualisations( attributes, visualisationState );
+			m_visualisations = AttributeVisualiser::allVisualisations( attributes, visualisationState );
 
 			IECoreGL::ConstStatePtr lightVisualisationState;
-			m_lightVisualisation = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
+			m_lightVisualisations = LightVisualiser::allVisualisations( attributes, lightVisualisationState );
 
 			IECoreGL::ConstStatePtr lightFilterVisualisationState;
-			m_lightFilterVisualisation = LightFilterVisualiser::allVisualisations( attributes, lightFilterVisualisationState );
+			m_lightFilterVisualisations = LightFilterVisualiser::allVisualisations( attributes, lightFilterVisualisationState );
 
-			if( m_lightFilterVisualisation )
+			if( !m_lightFilterVisualisations.empty() )
 			{
-				if( m_lightVisualisation )
+				if( !m_lightVisualisations.empty() )
 				{
-					// Light filter visualisers are in `m_lightFilterVisualisation` and light visualisers are in
-					// `m_lightVisualisation`. Combine them both into `m_lightVisualisation` so that
+					// Light filter visualisers are in `m_lightFilterVisualisations` and light visualisers are in
+					// `m_lightVisualisations`. Combine them both into `m_lightVisualisations` so that
 					// filters attached to light locations are drawn as expected.
-					IECoreGL::GroupPtr group = new IECoreGL::Group;
-					// `const_pointer_cast` ok because group becomes const on assignment to `m_lightVisualisation`
-					group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_lightFilterVisualisation ) );
-					group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( m_lightVisualisation ) );
-					m_lightVisualisation = group;
+					Visualisations allVisualisation;
+					Private::collectVisualisations( m_lightVisualisations, allVisualisation );
+					Private::collectVisualisations( m_lightFilterVisualisations, allVisualisation );
+					m_lightVisualisations = allVisualisation;
 				}
 				else
 				{
 					// If we don't have a light visualisation, but do have filters, make sure they're drawn.
-					m_lightVisualisation = m_lightFilterVisualisation;
+					m_lightVisualisations = m_lightFilterVisualisations;
 				}
 			}
 
@@ -213,28 +216,34 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_state.get();
 		}
 
-		const IECoreGL::Renderable *visualisation() const
+		const IECoreGL::Renderable *visualisation( VisualisationType type ) const
 		{
-			return m_visualisation.get();
+			return m_visualisations[ type ].get();
 		}
 
-		const IECoreGL::Renderable *lightVisualisation() const
+		const IECoreGL::Renderable *lightVisualisation( VisualisationType type ) const
 		{
-			return m_lightVisualisation.get();
+			return m_lightVisualisations[ type ].get();
 		}
 
-		const IECoreGL::Renderable *lightFilterVisualisation() const
+		const IECoreGL::Renderable *lightFilterVisualisation( VisualisationType type ) const
 		{
-			return m_lightFilterVisualisation.get();
+			return m_lightFilterVisualisations[ type  ].get();
+		}
+
+		float ornamentScale() const
+		{
+			return m_ornamentScale;
 		}
 
 	private :
 
 		ConstStatePtr m_state;
-		IECoreGL::ConstRenderablePtr m_visualisation;
-		IECoreGL::ConstRenderablePtr m_lightVisualisation;
-		IECoreGL::ConstRenderablePtr m_lightFilterVisualisation;
+		Visualisations m_visualisations;
+		Visualisations m_lightVisualisations;
+		Visualisations m_lightFilterVisualisations;
 
+		float m_ornamentScale = 1.0f;
 };
 
 IE_CORE_DECLAREPTR( OpenGLAttributes )
@@ -288,6 +297,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			m_editQueue.push( [this, transform]() {
 				m_transform = transform;
+				updateOrnamentTransform();
 			} );
 		}
 
@@ -301,6 +311,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ConstOpenGLAttributesPtr openGLAttributes = static_cast<const OpenGLAttributes *>( attributes );
 			m_editQueue.push( [this, openGLAttributes]() {
 				m_attributes = openGLAttributes;
+				updateOrnamentTransform();
 			} );
 			return true;
 		}
@@ -311,23 +322,41 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		Box3f transformedBound() const
 		{
+			// Note: Imath::transform with a non-identify matrix on an empty
+			// box results in a box that returns false to isEmpty, hence the
+			// checks below.
 			Box3f b;
 			if( m_renderable )
 			{
 				b.extendBy( m_renderable->bound() );
 			}
 
-			if( auto v = visualisation( *m_attributes ) )
+			if( auto v = visualisation( *m_attributes, VisualisationType::Geometry ) )
 			{
 				b.extendBy( v->bound() );
 			}
 
-			if( b.isEmpty() )
+			if( !b.isEmpty() )
 			{
-				return b;
+				b = Imath::transform( b, m_transform );
+			}
+			else
+			{
+				// We only consider ornaments if there is no geometric representation.
+				// As we don't use the bounds for culling, we can get away with this,
+				// and it means sizable visualisations don't mess up the framing when there
+				// is a geometric component.
+				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				{
+					const Box3f ornamentB = v->bound();
+					if( !ornamentB.isEmpty() )
+					{
+						b.extendBy( Imath::transform( ornamentB, m_ornamentTransform ) );
+					}
+				}
 			}
 
-			return Imath::transform( b, m_transform );
+			return b;
 		}
 
 		const vector<InternedString> &name() const
@@ -357,7 +386,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				m_renderable->render( currentState );
 			}
 
-			if( auto v = visualisation( *m_attributes ) )
+			// Local space visualisations
+
+			if( auto v = visualisation( *m_attributes, VisualisationType::Geometry ) )
 			{
 				v->render( currentState );
 			}
@@ -365,6 +396,28 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( haveTransform )
 			{
 				glPopMatrix();
+			}
+
+			// Local-scale-free visualisations, that use the attribute driven
+			// visualiserScale for size adjustments.
+			if( m_attributes->ornamentScale() > 0 )
+			{
+				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				{
+					const bool haveOrnamentTransform = m_ornamentTransform != M44f();
+					if( haveOrnamentTransform )
+					{
+						glPushMatrix();
+						glMultMatrixf( m_ornamentTransform.getValue() );
+					}
+
+					v->render( currentState );
+
+					if( haveOrnamentTransform )
+					{
+						glPopMatrix();
+					}
+				}
 			}
 		}
 
@@ -380,15 +433,23 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			return m_editQueue;
 		}
 
-		virtual const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const
+		virtual const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes, VisualisationType type ) const
 		{
-			return attributes.visualisation();
+			return attributes.visualisation( type );
 		}
 
 	private :
 
+		void updateOrnamentTransform()
+		{
+			M44f ornamentTransform = sansScalingAndShear( m_transform );
+			ornamentTransform.scale( V3f( m_attributes->ornamentScale() ) );
+			m_ornamentTransform = ornamentTransform;
+		}
+
 		IECore::TypeId m_objectType;
 		M44f m_transform;
+		M44f m_ornamentTransform;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
 		vector<InternedString> m_name;
@@ -477,9 +538,9 @@ class OpenGLLight : public OpenGLObject
 
 	protected :
 
-		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const override
+		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes, VisualisationType type ) const override
 		{
-			return attributes.lightVisualisation();
+			return attributes.lightVisualisation( type );
 		}
 
 };
@@ -498,9 +559,9 @@ class OpenGLLightFilter : public OpenGLObject
 
 	protected :
 
-		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes ) const override
+		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes, VisualisationType type ) const override
 		{
-			return attributes.lightFilterVisualisation();
+			return attributes.lightFilterVisualisation( type );
 		}
 
 };

@@ -200,7 +200,7 @@ class DecayVisualiser final : public LightFilterVisualiser
 		DecayVisualiser();
 		~DecayVisualiser() override;
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
+		Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -221,25 +221,28 @@ DecayVisualiser::~DecayVisualiser()
 {
 }
 
-IECoreGL::ConstRenderablePtr DecayVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+Visualisations DecayVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
-	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
 	KnotVector knots;
 	getKnotsToVisualize( shaderNetwork, knots );
 
+	Visualisations v;
+
 	if( knots.empty() )
 	{
-		return result;
+		return v;
 	}
 
+	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
 	for( KnotVector::size_type i = 0; i < knots.size(); ++i )
 	{
 		addKnot( result, knots[i] );
 	}
 
-	return result;
+	v[  VisualisationType::Geometry ] = result;
+	return v;
 }
 
 } // namespace
