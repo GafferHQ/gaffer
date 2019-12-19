@@ -41,19 +41,34 @@
 
 #include "GafferOSL/ShadingEngineAlgo.h"
 
+#include "IECoreScene/PointsPrimitive.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/Exception.h"
 #include "IECore/TypedData.h"
+#include "IECore/VectorTypedData.h"
+
+#include "IECoreGL/ToGLPointsConverter.h"
 
 #include "OSL/oslquery.h"
 
+#include "ai.h"
+#include "ai_shader_lights.h"
+#include "ai_version.h"
+
 #include "boost/algorithm/string/predicate.hpp"
+
+// This is missing from Cortex
+namespace IECoreGL {
+IE_CORE_DECLAREPTR( ToGLPointsConverter )
+}
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreGL;
+using namespace IECoreGLPreview;
 using namespace IECoreScene;
 using namespace OSL;
 
@@ -325,6 +340,60 @@ typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePrevi
 SurfaceTextureCache g_surfaceTextureCache( surfaceTextureGetter, 1024 * 1024 * 64 );
 
 //////////////////////////////////////////////////////////////////////////
+// IESVisualisation helpers
+//////////////////////////////////////////////////////////////////////////
+
+IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
+{
+
+#if AI_VERSION_ARCH_NUM < 6
+	return nullptr;
+#else
+
+	const AtString f( filename.c_str() );
+
+	const unsigned int w = 64;
+	const unsigned int h = 32;
+
+	float maxIntensity = 0.0f;
+	std::unique_ptr<float[]> iesIntensities( new float[ w * h ] );
+
+	if( !AiLightIESLoad( f, w, h, &maxIntensity, iesIntensities.get() ) )
+	{
+		return nullptr;
+	}
+
+	V3fVectorDataPtr pData = new V3fVectorData;
+	std::vector<V3f> &p = pData->writable();
+
+	for( unsigned int x = 0; x < w; ++x )
+	{
+		for( unsigned int y = 0; y < h; ++y )
+		{
+			const float theta = 2.0f * M_PI * ( float(x) / w );
+			const float phi = M_PI * ( float(y) / h );
+			const unsigned int i = y * w + x;
+			const float intensity = iesIntensities[ i ];
+
+			if( intensity > 0.0f )
+			{
+				p.push_back( V3f(
+					intensity * sin( phi ) * cos( theta ),
+					intensity * sin( phi ) * sin( theta ),
+					intensity * cos( phi )
+				) );
+			}
+		}
+	}
+
+	IECoreScene::PointsPrimitivePtr points = new IECoreScene::PointsPrimitive( pData );
+	ToGLPointsConverterPtr pointsConverter = new ToGLPointsConverter( points );
+	return runTimeCast<IECoreGL::Renderable>( pointsConverter->convert() );
+
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////////
 // ArnoldLightVisualiser implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -337,6 +406,8 @@ class GAFFERSCENEUI_API ArnoldLightVisualiser : public GafferSceneUI::StandardLi
 
 		ArnoldLightVisualiser();
 		~ArnoldLightVisualiser() override;
+
+		Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -351,7 +422,7 @@ class GAFFERSCENEUI_API ArnoldLightVisualiser : public GafferSceneUI::StandardLi
 IE_CORE_DECLAREPTR( ArnoldLightVisualiser )
 
 
-IECoreGLPreview::LightVisualiser::LightVisualiserDescription<ArnoldLightVisualiser> ArnoldLightVisualiser::g_description( "ai:light", "*" );
+LightVisualiser::LightVisualiserDescription<ArnoldLightVisualiser> ArnoldLightVisualiser::g_description( "ai:light", "*" );
 
 
 ArnoldLightVisualiser::ArnoldLightVisualiser()
@@ -360,6 +431,30 @@ ArnoldLightVisualiser::ArnoldLightVisualiser()
 
 ArnoldLightVisualiser::~ArnoldLightVisualiser()
 {
+}
+
+Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
+{
+	Visualisations v = StandardLightVisualiser::visualise( attributeName, shaderNetwork, attributes, state );
+
+	if( shaderNetwork->outputShader()->getName() == "photometric_light" )
+	{
+		const CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
+		if( const StringData *iesFilenameData = shaderParameters->member<StringData>( "filename" ) )
+		{
+			IECoreGL::RenderablePtr iesVis = iesVisualisation( iesFilenameData->readable() );
+			if( iesVis )
+			{
+				IECoreGL::Renderable *geomVis = boost::const_pointer_cast<IECoreGL::Renderable>( v[ VisualisationType::Geometry ] ).get();
+				if( IECoreGL::Group *g = dynamic_cast<IECoreGL::Group *>( geomVis ) )
+				{
+					g->addChild( iesVis );
+				}
+			}
+		}
+	}
+
+	return v;
 }
 
 IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
