@@ -844,24 +844,11 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 	// bit of padding and a neatish number.
 	far = ceilSignificantDigits( far, 2 );
 
-	// Now choose a near plane. We don't want this to get
-	// too small, to avoid losing precision.
-	const float nearMin = far / 10000.0f;
-	float near = b.center().z + bRadius;
-	if( near >= 0.0f )
-	{
-		// Behind camera.
-		near = nearMin;
-	}
-	else
-	{
-		// Neaten
-		near = floorSignificantDigits( -1 * near, 2 );
-		// Provide room for dollying in.
-		near /= 100.0f;
-		// But don't allow precision to be lost.
-		near = std::max( near, nearMin );
-	}
+	// We try to keep near close to the camera, regardless of what we do for
+	// far as otherwise, if you dolly in, everything disappears.
+	float near = far / 100000.0f;
+	near = floorSignificantDigits( near, 2 );
+	near = std::max( 0.01f, near );
 
 	m_cameraController->setClippingPlanes( V2f( near, far ) );
 	m_cameraChangedSignal( this );
