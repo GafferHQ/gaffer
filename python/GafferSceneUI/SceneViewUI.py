@@ -215,6 +215,16 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
+		lightDrawingModePlug = self.getPlug()["light"]["drawingMode"]
+		for mode in ( "wireframe", "color", "texture" ) :
+			m.append(
+				"/Lights/" + IECore.CamelCase.toSpaced( mode ),
+				{
+					"command" : functools.partial( lambda m, _ : lightDrawingModePlug.setValue( m ), mode ),
+					"checkBox" : lightDrawingModePlug.getValue() == mode
+				}
+			)
+
 		for n in ( "useGLLines", "interpolate" ) :
 			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(

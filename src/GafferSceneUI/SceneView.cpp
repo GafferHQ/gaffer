@@ -39,6 +39,7 @@
 
 #include "GafferSceneUI/ContextAlgo.h"
 
+#include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteObject.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
@@ -147,6 +148,15 @@ class SceneView::DrawingMode : public boost::signals::trackable
 		DrawingMode( SceneView *view )
 			:	m_view( view )
 		{
+			// Attributes drive many of the GL drawing toggles. Some we can set
+			// through renderer options as they simply modify the state used to
+			// render existing renderables. Visualiser however, may generate
+			// different renderables all together and so we need to modify the
+			// in-scene attribute values rather than any renderer option.
+			m_preprocessor = new CustomAttributes();
+			m_preprocessor->globalPlug()->setValue( true );
+			m_preprocessor->attributesPlug()->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), true, "lightDrawingMode" ) );
+
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
 			m_view->addChild( drawingMode );
 
@@ -163,9 +173,24 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			drawingMode->addChild( points );
 			points->addChild( new BoolPlug( "useGLPoints", Plug::In, true ) );
 
+			ValuePlugPtr lights = new ValuePlug( "light" );
+			drawingMode->addChild( lights );
+			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
+
+			// Connect our attributes plugs up
+			m_preprocessor->attributesPlug()->getChild<NameValuePlug>( "lightDrawingMode" )->getChild<StringPlug>( "value" )->setInput(
+				lights->getChild<StringPlug>( "drawingMode" )
+			);
+
 			updateOpenGLOptions();
 
 			view->plugSetSignal().connect( boost::bind( &DrawingMode::plugSet, this, ::_1 ) );
+		}
+
+		/// @see SceneProcessor::preprocessor
+		SceneProcessor *preprocessor()
+		{
+			return m_preprocessor.get();
 		}
 
 	private :
@@ -207,9 +232,9 @@ class SceneView::DrawingMode : public boost::signals::trackable
 				"forAll" :
 				"forGLPoints"
 			);
-
-			sceneGadget()->setOpenGLOptions( options.get() );
 		}
+
+		CustomAttributesPtr m_preprocessor;
 
 		SceneView *m_view;
 
@@ -1483,11 +1508,16 @@ SceneView::SceneView( const std::string &name )
 	preprocessor->addChild( m_shadingMode->preprocessor() );
 	m_shadingMode->preprocessor()->inPlug()->setInput( deleteObject->outPlug() );
 
+	// add in the node from the DrawingMode
+
+	preprocessor->addChild( m_drawingMode->preprocessor() );
+	m_drawingMode->preprocessor()->inPlug()->setInput( m_shadingMode->preprocessor()->outPlug() );
+
 	// make the output for the preprocessor
 
 	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
-	preprocessorOutput->setInput( m_shadingMode->preprocessor()->outPlug() );
+	preprocessorOutput->setInput( m_drawingMode->preprocessor()->outPlug() );
 
 	setPreprocessor( preprocessor );
 
