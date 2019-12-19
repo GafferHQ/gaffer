@@ -38,6 +38,7 @@
 
 #include "GafferScene/SceneNode.h"
 
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
 
@@ -64,8 +65,13 @@ Light::Light( const std::string &name )
 	addChild( new BoolPlug( "defaultLight", Gaffer::Plug::Direction::In, true ) );
 
 	Gaffer::CompoundDataPlug *visualiserAttr = new CompoundDataPlug( "visualiserAttributes" );
-	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", new IECore::FloatData( 1.0f ), false, "ornamentScale" ) );
-	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ), false, "maxTextureResolution" ) );
+
+	FloatPlugPtr ornamentScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", ornamentScaleValuePlug, false, "ornamentScale" ) );
+
+	IntPlugPtr maxResValuePlug = new IntPlug( "value", Gaffer::Plug::Direction::In, 512, 2, 2048 );
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", maxResValuePlug, false, "maxTextureResolution" ) );
+
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), false, "lightDrawingMode" ) );
 	addChild( visualiserAttr  );
 }
