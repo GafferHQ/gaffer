@@ -702,7 +702,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			title = "Set Label",
 			confirmLabel = "Set",
 			initialText = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" ) or cellPlug.getName()
-		).waitForText()
+		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if label is not None :
 			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
