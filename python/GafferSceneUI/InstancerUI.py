@@ -121,7 +121,7 @@ Gaffer.Metadata.registerNode(
 			- In "Indexed (Roots List)" mode, the `prototypeIndex`
 			  primitive variable must be an integer per-vertex.
 			  Optionally, a path in the prototypes scene corresponding
-			  to each index can be specified via the `prototypeRootPaths`
+			  to each index can be specified via the `prototypeRootsList`
 			  plug. If no roots are specified, an index of 0 applies the
 			  first location from the prototypes scene, an index of 1
 			  applies the second, and so on.
@@ -186,7 +186,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"prototypeRootPaths" : [
+		"prototypeRootsList" : [
 
 			"description",
 			"""

@@ -75,8 +75,8 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::StringPlug *prototypeRootsPlug();
 		const Gaffer::StringPlug *prototypeRootsPlug() const;
 
-		Gaffer::StringVectorDataPlug *prototypeRootPathsPlug();
-		const Gaffer::StringVectorDataPlug *prototypeRootPathsPlug() const;
+		Gaffer::StringVectorDataPlug *prototypeRootsListPlug();
+		const Gaffer::StringVectorDataPlug *prototypeRootsListPlug() const;
 
 		Gaffer::StringPlug *idPlug();
 		const Gaffer::StringPlug *idPlug() const;

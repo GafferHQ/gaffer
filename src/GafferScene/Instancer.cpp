@@ -485,7 +485,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new IntPlug( "prototypeMode", Plug::In, (int)PrototypeMode::IndexedRootsList, /* min */ (int)PrototypeMode::IndexedRootsList, /* max */ (int)PrototypeMode::RootPerVertex ) );
 	addChild( new StringPlug( "prototypeIndex", Plug::In, "instanceIndex" ) );
 	addChild( new StringPlug( "prototypeRoots", Plug::In, "prototypeRoots" ) );
-	addChild( new StringVectorDataPlug( "prototypeRootPaths", Plug::In, new StringVectorData ) );
+	addChild( new StringVectorDataPlug( "prototypeRootsList", Plug::In, new StringVectorData ) );
 	addChild( new StringPlug( "id", Plug::In, "instanceId" ) );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "orientation", Plug::In ) );
@@ -550,12 +550,12 @@ const Gaffer::StringPlug *Instancer::prototypeRootsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
-Gaffer::StringVectorDataPlug *Instancer::prototypeRootPathsPlug()
+Gaffer::StringVectorDataPlug *Instancer::prototypeRootsListPlug()
 {
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
-const Gaffer::StringVectorDataPlug *Instancer::prototypeRootPathsPlug() const
+const Gaffer::StringVectorDataPlug *Instancer::prototypeRootsListPlug() const
 {
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
@@ -649,7 +649,7 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == prototypeModePlug() ||
 		input == prototypeIndexPlug() ||
 		input == prototypeRootsPlug() ||
-		input == prototypeRootPathsPlug() ||
+		input == prototypeRootsListPlug() ||
 		input == prototypesPlug()->childNamesPlug() ||
 		input == idPlug() ||
 		input == positionPlug() ||
@@ -679,7 +679,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		prototypeModePlug()->hash( h );
 		prototypeIndexPlug()->hash( h );
 		prototypeRootsPlug()->hash( h );
-		prototypeRootPathsPlug()->hash( h );
+		prototypeRootsListPlug()->hash( h );
 		h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
 
 		idPlug()->hash( h );
@@ -703,11 +703,11 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	if( output == enginePlug() )
 	{
 		PrototypeMode mode = (PrototypeMode)prototypeModePlug()->getValue();
-		ConstStringVectorDataPtr prototypeRootPaths = prototypeRootPathsPlug()->getValue();
-		if( mode == PrototypeMode::IndexedRootsList && prototypeRootPaths->readable().empty() )
+		ConstStringVectorDataPtr prototypeRootsList = prototypeRootsListPlug()->getValue();
+		if( mode == PrototypeMode::IndexedRootsList && prototypeRootsList->readable().empty() )
 		{
 			const auto childNames = prototypesPlug()->childNames( ScenePath() );
-			prototypeRootPaths = new StringVectorData(
+			prototypeRootsList = new StringVectorData(
 				std::vector<string>(
 					childNames->readable().begin(),
 					childNames->readable().end()
@@ -721,7 +721,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				mode,
 				prototypeIndexPlug()->getValue(),
 				prototypeRootsPlug()->getValue(),
-				prototypeRootPaths.get(),
+				prototypeRootsList.get(),
 				prototypesPlug(),
 				idPlug()->getValue(),
 				positionPlug()->getValue(),

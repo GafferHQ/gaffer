@@ -874,32 +874,32 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script = self.buildPrototypeRootsScript()
 		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
 
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [] ) )
 		self.assertRootsMatchPrototypeSceneChildren( script )
 
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "", ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "", ] ) )
 		self.assertUnderspecifiedRoots( script )
 
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo", ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", ] ) )
 		self.assertSingleRoot( script )
 
 		# roots list matching the prototype root children
 		# we expect the same results as without a roots list
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
 		self.assertRootsMatchPrototypeSceneChildren( script )
 
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
 		self.assertConflictingRootNames( script )
 
 		# opposite order to the prototype root children
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
 		self.assertSwappedRoots( script )
 
 		# roots all the way to the leaf level of the prototype scene
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
 		self.assertRootsToLeaves( script )
-		
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
+
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegexp(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
@@ -1086,7 +1086,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["instancer"]["prototypes"].setInput( script["set"]["out"] )
 
 		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
-		script["instancer"]["prototypeRootPaths"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
 
 		self.assertEqual(
 			script["instancer"]["out"]["setNames"].getValue(),
