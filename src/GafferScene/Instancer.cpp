@@ -421,8 +421,6 @@ class Instancer::EngineData : public Data
 
 			size_t i = 0;
 			ScenePlug::ScenePath path;
-			ScenePlug::PathScope pathScope( Context::current() );
-			pathScope.setPath( ScenePath() );
 			for( const auto &root : *rootStrings )
 			{
 				ScenePlug::stringToPath( root, path );
