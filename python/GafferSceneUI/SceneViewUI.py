@@ -215,6 +215,16 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
+		lightDrawingModePlug = self.getPlug()["light"]["drawingMode"]
+		for mode in ( "wireframe", "color", "texture" ) :
+			m.append(
+				"/Lights/" + IECore.CamelCase.toSpaced( mode ),
+				{
+					"command" : functools.partial( lambda m, _ : lightDrawingModePlug.setValue( m ), mode ),
+					"checkBox" : lightDrawingModePlug.getValue() == mode
+				}
+			)
+
 		for n in ( "useGLLines", "interpolate" ) :
 			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(
@@ -234,7 +244,62 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
+		m.append( "/__visualiserDivider__", { "divider" : True } )
+
+		visScaleIsOther = True
+		visScalePlug = self.getPlug()["visualiserOrnamentScale"]
+		for scale in ( 1, 10, 100 ) :
+			isSelected = visScalePlug.getValue() == scale
+			if isSelected :
+				visScaleIsOther = False
+			m.append(
+				"/Visualiser Scale/%d" % scale,
+				{
+					"command" : functools.partial( lambda s, _ : visScalePlug.setValue( s ), scale ),
+					"checkBox" : isSelected
+				}
+			)
+
+		m.append( "/Visualiser Scale/__divider__", { "divider" : True } )
+		m.append(
+			"/Visualiser Scale/Other...",
+			{
+				"command" : functools.partial(  Gaffer.WeakMethod( self.__popupPlugWidget ), visScalePlug, "Other Scale" ),
+				"checkBox" : visScaleIsOther
+			}
+		)
+
 		return m
+
+	def __popupPlugWidget( self, plug, title, *unused ) :
+
+		_PlugWidgetDialog( plug, title ).waitForClose( parentWindow = self.ancestor( GafferUI.Window ) )
+
+class _PlugWidgetDialog( GafferUI.Dialogue ) :
+
+	def __init__( self, plug, title="", **kw ) :
+
+		self.__initialValue = plug.getValue()
+
+		if not title :
+			title = IECore.CamelCase.toSpaced( plug.getName() )
+
+		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
+
+		self.__plugWidget = GafferUI.PlugValueWidget.create( plug )
+		self._setWidget( self.__plugWidget )
+
+		self.__cancelButton = self._addButton( "Cancel" )
+		self.__confirmButton = self._addButton( "OK" )
+
+	def waitForClose( self, **kw ) :
+
+		button = self.waitForButton( **kw )
+		if button is self.__cancelButton :
+			self.__plugWidget.getPlug().setValue( self.__initialValue )
+			return False
+		else :
+			return True
 
 ##########################################################################
 # _ShadingModePlugValueWidget

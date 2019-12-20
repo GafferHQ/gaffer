@@ -50,11 +50,11 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 
 	// drawing parameters
 
-	attributes->addChild( new NameValuePlug( "gl:primitive:solid", new IECore::BoolData( true ), false, "primitiveSolid" ) );
+	attributes->addChild( new NameValuePlug( "gl:primitive:solid", new IECore::BoolData( true ), false, "primitiveSolid" ) ); 
 
-	attributes->addChild( new NameValuePlug( "gl:primitive:wireframe", new IECore::BoolData( true ), false, "primitiveWireframe" ) );
-	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeColor", new IECore::Color4fData( Color4f( 0.25, 0.6, 0.85, 1 ) ), false, "primitiveWireframeColor" ) );
-	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeWidth", new IECore::FloatData( 1.0f ), false, "primitiveWireframeWidth" ) );
+	attributes->addChild( new NameValuePlug( "gl:primitive:wireframe", new IECore::BoolData( true ), false, "primitiveWireframe" ) ); 
+	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeColor", new IECore::Color4fData( Color4f( 0.25, 0.6, 0.85, 1 ) ), false, "primitiveWireframeColor" ) ); 
+	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeWidth", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.1f, 32.0f ), false, "primitiveWireframeWidth" ) );
 
 	attributes->addChild( new NameValuePlug( "gl:primitive:outline", new IECore::BoolData( true ), false, "primitiveOutline" ) );
 	attributes->addChild( new NameValuePlug( "gl:primitive:outlineColor", new IECore::Color4fData( Color4f( 0.85, 0.75, 0.45, 1 ) ), false, "primitiveOutlineColor" ) );
@@ -70,18 +70,19 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	// points primitive parameters
 
 	attributes->addChild( new NameValuePlug( "gl:pointsPrimitive:useGLPoints", new IECore::StringData( "forGLPoints" ), false, "pointsPrimitiveUseGLPoints" ) );
-	attributes->addChild( new NameValuePlug( "gl:pointsPrimitive:glPointWidth", new IECore::FloatData( 1.0 ), false, "pointsPrimitiveGLPointWidth" ) );
+	attributes->addChild( new NameValuePlug( "gl:pointsPrimitive:glPointWidth", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.1f, 128.0f ), false, "pointsPrimitiveGLPointWidth" ) ); 
 
 	// curves primitive parameters
 
 	attributes->addChild( new NameValuePlug( "gl:curvesPrimitive:useGLLines", new IECore::BoolData( false ), false, "curvesPrimitiveUseGLLines" ) );
-	attributes->addChild( new NameValuePlug( "gl:curvesPrimitive:glLineWidth", new IECore::FloatData( 1.0 ), false, "curvesPrimitiveGLLineWidth" ) );
+	attributes->addChild( new NameValuePlug( "gl:curvesPrimitive:glLineWidth", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.1f, 32.0f ), false, "curvesPrimitiveGLLineWidth" ) );
 	attributes->addChild( new NameValuePlug( "gl:curvesPrimitive:ignoreBasis", new IECore::BoolData( false ), false, "curvesPrimitiveIgnoreBasis" ) );
 
-	// light visualisers
+	// visualisers
 
-	attributes->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ), false, "maxTextureResolution" ) );
-
+	attributes->addChild( new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f ), false, "visualiserOrnamentScale" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", new IntPlug( "value", Gaffer::Plug::Direction::In, 512, 2, 2048 ), false, "visualiserMaxTextureResolution" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), false, "lightDrawingMode" ) );
 }
 
 OpenGLAttributes::~OpenGLAttributes()

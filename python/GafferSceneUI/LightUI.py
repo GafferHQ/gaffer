@@ -91,27 +91,55 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"visualiserScale" : [
+		"visualiserAttributes" : [
 
 			"description",
 			"""
-			The scale of the visualisation in the viewport.
+			Attributes that affect the visualisation of this Light in the Viewer.
 			""",
 
 			"layout:section", "Visualisation",
 
 		],
 
-		"visualiserShaded" : [
+		"visualiserAttributes.lightDrawingMode" : [
 
 			"description",
 			"""
-			Disable to restrict visualisations of this light to wireframe outlines.
+			Controls how lights are presented in the Viewer.
 			""",
 
-			"label", "Shaded",
-			"layout:section", "Visualisation",
+			"label", "Light Drawing Mode",
 
+		],
+
+		"visualiserAttributes.maxTextureResolution" : [
+
+			"description",
+			"""
+			Visualisers that load textures will respect this setting to
+			limit their resolution.
+			""",
+
+		],
+
+		"visualiserAttributes.ornamentScale" : [
+
+			"description",
+			"""
+			Scales non-geometric visualisations in the viewport to make them
+			easier to work with.
+			""",
+
+		],
+
+		"visualiserAttributes.lightDrawingMode.value" : [
+
+			"preset:Wireframe", "wireframe",
+			"preset:Color", "color",
+			"preset:Texture", "texture",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
 		]
 
 	}
