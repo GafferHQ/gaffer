@@ -69,6 +69,13 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
+namespace
+{
+
+InternedString g_prototypeRootName( "root" );
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 // EngineData
 //////////////////////////////////////////////////////////////////////////
@@ -432,7 +439,16 @@ class Instancer::EngineData : public Data
 
 				if( path.empty() )
 				{
-					m_prototypeIndexRemap.emplace_back( -1 );
+					if( root == "/" )
+					{
+						inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
+						m_roots.emplace_back( new InternedStringVectorData( path ) );
+						m_prototypeIndexRemap.emplace_back( i++ );
+					}
+					else
+					{
+						m_prototypeIndexRemap.emplace_back( -1 );
+					}
 				}
 				else
 				{
