@@ -136,6 +136,9 @@ class NumericWidget( GafferUI.TextWidget ) :
 	def __incrementIndex( self, index, increment ) :
 
 		text = self.getText()
+		if text == "" :
+			return
+
 		if '.' in text :
 			decimalIndex = text.find( "." )
 			if decimalIndex >= index :
