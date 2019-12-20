@@ -749,26 +749,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 	def assertUnderspecifiedRoots( self, script ) :
 
-		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "0" ] ) )
-		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] ) )
-
-		for i in [ "0", "1", "2", "3" ] :
-
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/foo".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/foo/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/0/{i}/bar/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
-
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/foo".format( i=i ) ), IECore.NullObject.defaultNullObject() )
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/foo/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/foo/bar/sphere".format( i=i ) ), script["sphere"]["out"].object( "/sphere" ) )
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/bar".format( i=i ) ), IECore.NullObject.defaultNullObject() )
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/bar/baz".format( i=i ) ), IECore.NullObject.defaultNullObject() )
-			self.assertEqual( script["instancer"]["out"].object( "/object/instances/0/{i}/bar/baz/cube".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
-
-		self.assertSceneValid( script["instancer"]["out"] )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [] ) )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
 
 	def assertSingleRoot( self, script ) :
 
@@ -845,6 +827,25 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( script["instancer"]["out"] )
 
+	def assertSkippedRoots( self, script ) :
+
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "bar" ] ) )
+		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar" ), IECore.InternedStringVectorData( [ "1", "2" ] ) )
+
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar" ), IECore.NullObject.defaultNullObject() )
+
+		for i in [ "1", "2" ] :
+
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.NullObject.defaultNullObject() )
+			self.assertEqual( script["instancer"]["out"].object( "/object/instances/bar/{i}/baz/cube".format( i=i ) ), script["cube"]["out"].object( "/cube" ) )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
 	def assertRootsToLeaves( self, script ) :
 
 		self.assertEqual( script["instancer"]["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
@@ -895,6 +896,9 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
 		self.assertSwappedRoots( script )
 
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "", "/bar" ] ) )
+		self.assertSkippedRoots( script )
+
 		# roots all the way to the leaf level of the prototype scene
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
 		self.assertRootsToLeaves( script )
@@ -904,7 +908,6 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
-
 
 	def testIndexedRootsVariable( self ) :
 
@@ -934,6 +937,9 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# opposite order to the prototype root children
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
 		self.assertSwappedRoots( script )
+
+		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "", "/bar" ] ) )
+		self.assertSkippedRoots( script )
 
 		# roots all the way to the leaf level of the prototype scene
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
@@ -993,6 +999,9 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# opposite order to the prototype root children
 		updateRoots( IECore.StringVectorData( [ "/bar", "/foo" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertSwappedRoots( script )
+
+		updateRoots( IECore.StringVectorData( [ "", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertSkippedRoots( script )
 
 		# roots all the way to the leaf level of the prototype scene
 		updateRoots( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )

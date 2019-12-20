@@ -194,14 +194,14 @@ class Instancer::EngineData : public Data
 			return it->second;
 		}
 
-		size_t numPrototypes() const
+		size_t numValidPrototypes() const
 		{
-			return m_numPrototypes;
+			return m_numValidPrototypes;
 		}
 
-		size_t prototypeIndex( size_t pointIndex ) const
+		int prototypeIndex( size_t pointIndex ) const
 		{
-			return ( m_indices ? (*m_indices)[pointIndex] : 0 ) % m_numPrototypes;
+			return m_prototypeIndexRemap[ ( m_indices ? (*m_indices)[pointIndex] : 0 ) % m_numPrototypes ];
 		}
 
 		const ScenePlug::ScenePath &prototypeRoot( const InternedString &name ) const
@@ -418,6 +418,7 @@ class Instancer::EngineData : public Data
 			std::vector<ConstInternedStringVectorDataPtr> inputNames;
 			inputNames.reserve( rootStrings->size() );
 			m_roots.reserve( rootStrings->size() );
+			m_prototypeIndexRemap.reserve( rootStrings->size() );
 
 			size_t i = 0;
 			ScenePlug::ScenePath path;
@@ -429,28 +430,29 @@ class Instancer::EngineData : public Data
 					throw IECore::Exception( boost::str( boost::format( "Prototype root \"%1%\" does not exist in the `prototypes` scene" ) % root ) );
 				}
 
-				m_roots.emplace_back( new InternedStringVectorData( path ) );
-
-				InternedStringVectorDataPtr name = new InternedStringVectorData;
 				if( path.empty() )
 				{
-					name->writable().emplace_back( i++ );
+					m_prototypeIndexRemap.emplace_back( -1 );
 				}
 				else
 				{
-					name->writable().emplace_back( path.back() );
+					inputNames.emplace_back( new InternedStringVectorData( { path.back() } ) );
+					m_roots.emplace_back( new InternedStringVectorData( path ) );
+					m_prototypeIndexRemap.emplace_back( i++ );
 				}
-				inputNames.emplace_back( name );
 			}
 
 			m_names = new Private::ChildNamesMap( inputNames );
-			m_numPrototypes = m_names->outputChildNames()->readable().size();
+			m_numPrototypes = m_prototypeIndexRemap.size();
+			m_numValidPrototypes = m_names->outputChildNames()->readable().size();
 		}
 
 		IECoreScene::ConstPrimitivePtr m_primitive;
 		size_t m_numPrototypes;
+		size_t m_numValidPrototypes;
 		Private::ChildNamesMapPtr m_names;
 		std::vector<InternedStringVectorDataPtr> m_roots;
+		std::vector<int> m_prototypeIndexRemap;
 		const std::vector<int> *m_indices;
 		const std::vector<int> *m_ids;
 		const std::vector<Imath::V3f> *m_positions;
@@ -746,13 +748,17 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 		vector<vector<size_t>> indexedPrototypeChildIds;
 
-		size_t numPrototypes = engine->numPrototypes();
+		size_t numPrototypes = engine->numValidPrototypes();
 		if( numPrototypes )
 		{
 			indexedPrototypeChildIds.resize( numPrototypes );
 			for( size_t i = 0, e = engine->numPoints(); i < e; ++i )
 			{
-				indexedPrototypeChildIds[ engine->prototypeIndex( i ) ].push_back( engine->instanceId( i ) );
+				int prototypeIndex = engine->prototypeIndex( i );
+				if( prototypeIndex != -1 )
+				{
+					indexedPrototypeChildIds[prototypeIndex].push_back( engine->instanceId( i ) );
+				}
 			}
 		}
 
