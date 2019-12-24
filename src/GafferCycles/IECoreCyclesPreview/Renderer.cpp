@@ -750,7 +750,7 @@ class RenderCallback : public IECore::RefCounted
 							image->imageData( tile, &tileData[0], w * h * numChannels );
 					}
 				}
-				else
+				else if( output.second->m_passType != ccl::PASS_NONE )
 #else
 				if( output.second->m_passType != ccl::PASS_NONE )
 #endif
