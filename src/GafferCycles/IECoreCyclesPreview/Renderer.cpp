@@ -1295,6 +1295,20 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
+		bool hasParticleInfo() const
+		{
+			if( m_particle.index || m_particle.age || m_particle.lifetime || 
+				m_particle.location || m_particle.rotation || m_particle.size || 
+				m_particle.velocity || m_particle.angular_velocity )
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 	private :
 
 		template<typename T>
@@ -1536,16 +1550,17 @@ class ParticleSystemsCache : public IECore::RefCounted
 		{
 			Cache::accessor a;
 			m_cache.insert( a, hash );
+			ccl::Particle particle = {};
 
 			if( !a->second )
 			{
 				ccl::ParticleSystem *pSys = new ccl::ParticleSystem();
-				pSys->particles.push_back_slow( ccl::Particle() );
+				pSys->particles.push_back_slow( particle );
 				a->second = SharedCParticleSystemPtr( pSys );
 			}
 			else
 			{
-				a->second->particles.push_back_slow( ccl::Particle() );
+				a->second->particles.push_back_slow( particle );
 			}
 
 			a->second->tag_update( m_scene );
@@ -1729,9 +1744,12 @@ class InstanceCache : public IECore::RefCounted
 				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
 
 				// Set particle system to mesh
-				cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
-				cobject->particle_system = cparticleSysPtr.get();
-				cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
+				if( cyclesAttributes->hasParticleInfo() )
+				{
+					cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+					cobject->particle_system = cparticleSysPtr.get();
+					cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
+				}
 
 				m_objects.push_back( cobjectPtr );
 			}
@@ -1817,9 +1835,12 @@ class InstanceCache : public IECore::RefCounted
 				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
 
 				// Set particle system to mesh
-				cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
-				cobject->particle_system = cparticleSysPtr.get();
-				cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
+				if( cyclesAttributes->hasParticleInfo() )
+				{
+					cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+					cobject->particle_system = cparticleSysPtr.get();
+					cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
+				}
 
 				m_objects.push_back( cobjectPtr );
 			}
@@ -1857,11 +1878,8 @@ class InstanceCache : public IECore::RefCounted
 				m_instancedMeshes.erase( *it );
 			}
 
-			if( toErase.size() || meshesKeep.size() )
-			{
-				m_uniqueMeshes = meshesKeep;
-				updateMeshes();
-			}
+			m_uniqueMeshes = meshesKeep;
+			updateMeshes();
 
 			// Objects
 			vector<SharedCObjectPtr> objectsKeep;
@@ -1873,11 +1891,8 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			if( objectsKeep.size() )
-			{
-				m_objects = objectsKeep;
-				updateObjects();
-			}
+			m_objects = objectsKeep;
+			updateObjects();
 		}
 
 		void updateDicingCamera( ccl::Camera *camera )
