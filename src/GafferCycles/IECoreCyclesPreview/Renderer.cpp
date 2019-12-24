@@ -1722,15 +1722,17 @@ class InstanceCache : public IECore::RefCounted
 				cobject->name = ccl::ustring( instanceName.c_str() );
 			}
 
-			// Set particle system to mesh
-			SharedCParticleSystemPtr cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
-			cobject->particle_system = cparticleSysPtr.get();
-			cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
-
 			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
+			SharedCParticleSystemPtr cparticleSysPtr;
 			// Push-back to vector needs thread locking.
 			{
 				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
+
+				// Set particle system to mesh
+				cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+				cobject->particle_system = cparticleSysPtr.get();
+				cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
+
 				m_objects.push_back( cobjectPtr );
 			}
 
@@ -1808,15 +1810,17 @@ class InstanceCache : public IECore::RefCounted
 				cobject->name = ccl::ustring( instanceName.c_str() );
 			}
 
-			// Set particle system to mesh
-			SharedCParticleSystemPtr cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
-			cobject->particle_system = cparticleSysPtr.get();
-			cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
-
 			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
+			SharedCParticleSystemPtr cparticleSysPtr;
 			// Push-back to vector needs thread locking.
 			{
 				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
+
+				// Set particle system to mesh
+				cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+				cobject->particle_system = cparticleSysPtr.get();
+				cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
+
 				m_objects.push_back( cobjectPtr );
 			}
 
@@ -2459,7 +2463,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
 				m_denoiseParams( ccl::DenoiseParams() ),
+#ifdef WITH_CYCLES_TEXTURE_CACHE
 				m_textureCacheParams( ccl::TextureCacheParams() ),
+#endif
 				m_deviceName( "CPU" ),
 				m_shadingsystemName( "SVM" ),
 				m_session( nullptr ),
@@ -2511,6 +2517,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_sessionParams.progressive = true;
 				m_sessionParams.progressive_refine = true;
+				m_sessionParams.progressive_update_timeout = 0.1;
 				m_sceneParams.bvh_type = ccl::SceneParams::BVH_DYNAMIC;
 			}
 
@@ -2528,7 +2535,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
 			m_denoiseParamsDefault = m_denoiseParams;
+#ifdef WITH_CYCLES_TEXTURE_CACHE
 			m_textureCacheParamsDefault = m_textureCacheParams;
+#endif
 
 			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
@@ -3388,7 +3397,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// No checking on denoise settings either
 			m_session->params.denoising = m_denoiseParams;
 			m_sessionParams.denoising = m_denoiseParams;
+#ifdef WITH_CYCLES_TEXTURE_CACHE
 			m_sceneParams.texture = m_textureCacheParams;
+#endif
 
 			ccl::Integrator *integrator = m_scene->integrator;
 			if( integrator->modified( m_integrator ) )
@@ -3746,7 +3757,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::BufferParams m_bufferParams;
 		ccl::BufferParams m_bufferParamsModified;
 		ccl::DenoiseParams m_denoiseParams;
+#ifdef WITH_CYCLES_TEXTURE_CACHE
 		ccl::TextureCacheParams m_textureCacheParams;
+#endif
 		ccl::Camera *m_defaultCamera;
 		ccl::Integrator m_integrator;
 		ccl::Background m_background;
@@ -3765,7 +3778,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SceneParams m_sceneParamsDefault;
 		ccl::DenoiseParams m_denoiseParamsDefault;
 		ccl::CurveSystemManager m_curveSystemManagerDefault;
+#ifdef WITH_CYCLES_TEXTURE_CACHE
 		ccl::TextureCacheParams m_textureCacheParamsDefault;
+#endif
 
 		// IECoreScene::Renderer
 		string m_deviceName;
