@@ -54,12 +54,12 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreCycles;
 
-namespace
-{
-
-ObjectAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( IECoreCycles::VDBAlgo::convert );
-
-} // namespace
+//namespace
+//{
+//
+//ObjectAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( IECoreCycles::VDBAlgo::convert );
+//
+//} // namespace
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ namespace VDBAlgo
 
 {
 
-ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name, const ccl::Scene *scene )
+ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name, const ccl::Scene *scene, const float isovalue )
 {
 	ccl::ImageMetaData metadata;
 	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
@@ -83,7 +83,7 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 	cobject->name = ccl::ustring(name.c_str());
 	cobject->mesh = new ccl::Mesh();
 
-	cobject->mesh->volume_isovalue = 0.0f;
+	cobject->mesh->volume_isovalue = isovalue;
 	cobject->mesh->has_volume = true;
 	ccl::AttributeSet& attributes = cobject->mesh->attributes;
 

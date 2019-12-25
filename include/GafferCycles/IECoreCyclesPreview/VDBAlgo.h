@@ -35,11 +35,11 @@
 #ifndef IECORECYCLES_VDBALGO_H
 #define IECORECYCLES_VDBALGO_H
 
-#ifdef WITH_CYCLES_OPENVDB
-
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECoreVDB/VDBObject.h"
+
+#ifdef WITH_CYCLES_OPENVDB
 
 // Cycles
 #include "render/object.h"
@@ -51,7 +51,7 @@ namespace VDBAlgo
 {
 
 /// Converts the specified IECoreVDB::VDBObject into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, const ccl::Scene *scene );
+IECORECYCLES_API ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, const ccl::Scene *scene, const float isovalue );
 
 } // namespace VDBAlgo
 

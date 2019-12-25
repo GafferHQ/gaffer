@@ -51,9 +51,26 @@ def __visibilitySummary( plug ) :
 def __shadingSummary( plug ) :
 
 	info = []
-	for childName in ( "useHoldout", "isShadowCatcher", "color" ) :
+	for childName in ( "useHoldout", "isShadowCatcher", "color", "lightGroup" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
+def __subdivisionSummary( plug ) :
+
+	info = []
+	for childName in ( "maxLevel", "dicingScale" ) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
+def __volumeSummary( plug ) :
+
+	info = []
+	if plug["volumeIsovalue"]["enabled"].getValue() :
+		info.append( IECore.CamelCase.toSpaced( "volumeIsovalue" ) + ( " On" if plug["volumeIsovalue"]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
@@ -74,6 +91,8 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Visibility:summary", __visibilitySummary,
 			"layout:section:Shading:summary", __shadingSummary,
+			"layout:section:Subdivision:summary", __subdivisionSummary,
+			"layout:section:Volume:summary", __volumeSummary,
 
 		],
 
@@ -196,18 +215,17 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Shading",
 		],
 
-		# Subdivision
-
-		"attributes.use_adaptive_subdivision" : [
+		"attributes.lightGroup" : [
 
 			"description",
 			"""
-			Use adaptive render time subdivision.
+			Set the lightgroup of an object with emission.
 			""",
 
-			"layout:section", "Subdivision",
-
+			"layout:section", "Shading",
 		],
+
+		# Subdivision
 
 		"attributes.maxLevel" : [
 
@@ -232,6 +250,27 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Volume
+
+		"attributes.volumeIsovalue" : [
+
+			"description",
+			"""
+			Set the volume isovalue.
+			""",
+
+			"layout:section", "Volume",
+
+		],
+
 	}
 
 )
+
+if not GafferCycles.withLightGroups :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "attributes.lightGroup", "plugValueWidget:type", "" )
+
+if not GafferCycles.withOpenVDB :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "attributes.volumeIsovalue", "plugValueWidget:type", "" )

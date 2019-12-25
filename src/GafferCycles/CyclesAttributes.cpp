@@ -72,6 +72,9 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	// Light-Group
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:light_group", new IECore::IntData( -1 ), false, "lightGroup" ) );
 
+	// Volume
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_isovalue", new IECore::FloatData( 0.0f ), false, "volumeIsovalue" ) );
+
 }
 
 CyclesAttributes::~CyclesAttributes()

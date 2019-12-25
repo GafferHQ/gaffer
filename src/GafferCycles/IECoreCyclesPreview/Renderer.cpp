@@ -36,6 +36,8 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
+#include "GafferCycles/IECoreCyclesPreview/VDBAlgo.h"
+
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
@@ -1078,13 +1080,16 @@ IECore::InternedString g_cryptomatteAssetAttributeName( "asset:" );
 // Light-group
 IECore::InternedString g_lightGroupAttributeName( "ccl:light_group" );
 
+// Volume isovalue
+IECore::InternedString g_volumeIsovalueAttributeName( "ccl:volume_isovalue" );
+
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shaderHash( 0 ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes ), m_lightGroup( -1 )
+			:	m_shaderHash( 0 ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes ), m_volume( attributes ), m_lightGroup( -1 )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
@@ -1257,8 +1262,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					break;
 				case IECoreScene::ExternalProceduralTypeId :
 					break;
-				//case IECoreVDB::VDBObjectTypeId :
-				//	break;
+				case IECoreVDB::VDBObjectTypeId :
+					if( m_volume.isovalue )
+						h.append( m_volume.isovalue.get() );
+					break;
 				default :
 					// No geometry attributes for this type.
 					break;
@@ -1306,6 +1313,18 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			else
 			{
 				return false;
+			}
+		}
+
+		float getVolumeIsovalue() const
+		{
+			if( m_volume.isovalue )
+			{
+				return m_volume.isovalue.get();
+			}
+			else
+			{
+				return 0.0f;
 			}
 		}
 
@@ -1424,6 +1443,17 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		};
 
+		struct Volume
+		{
+			Volume( const IECore::CompoundObject *attributes )
+			{
+				isovalue = optionalAttribute<float>( g_volumeIsovalueAttributeName, attributes );
+			}
+
+			boost::optional<float> isovalue;
+
+		};
+
 		CLightPtr m_light;
 		SharedCShaderPtr m_shader;
 		size_t m_shaderHash;
@@ -1435,6 +1465,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstInternedStringVectorDataPtr m_sets;
 		Color3f m_color;
 		Particle m_particle;
+		Volume m_volume;
 		int m_lightGroup;
 
 };
@@ -1721,7 +1752,16 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-				cobject = ObjectAlgo::convert( object, "instance:" + hash.toString(), m_scene );
+#ifdef WITH_CYCLES_OPENVDB
+				if( const IECoreVDB::VDBObject *vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
+				{
+					cobject = VDBAlgo::convert( vdbObject, "instance:" + hash.toString(), m_scene, cyclesAttributes->getVolumeIsovalue() );
+				}
+				else
+#endif
+				{
+					cobject = ObjectAlgo::convert( object, "instance:" + hash.toString(), m_scene );
+				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
@@ -1812,7 +1852,16 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-				cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString(), m_scene );
+#ifdef WITH_CYCLES_OPENVDB
+				if( const IECoreVDB::VDBObject *vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
+				{
+					cobject = VDBAlgo::convert( vdbObject, "instance:" + hash.toString(), m_scene, cyclesAttributes->getVolumeIsovalue() );
+				}
+				else
+#endif
+				{
+					cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString(), m_scene );
+				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
