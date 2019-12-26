@@ -47,6 +47,8 @@
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "boost/algorithm/string.hpp"
 #include "boost/format.hpp"
 
@@ -143,6 +145,10 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 	{
 		typePlug()->setValue( "ccl:displacement" );
 	}
+	else if( shaderName == "aov_output" )
+	{
+		typePlug()->setValue( "ccl:aov:" );
+	}
 	else
 	{
 		typePlug()->setValue( "ccl:surface" );
@@ -172,4 +178,33 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
 	}
 
+}
+
+IECore::ConstCompoundObjectPtr CyclesShader::attributes( const Gaffer::Plug *output ) const
+{
+	ConstCompoundObjectPtr original = Shader::attributes( output );
+	const IECoreScene::ShaderNetwork *network = original->member<const IECoreScene::ShaderNetwork>( "ccl:aov:" );
+	if( !network || !network->size() )
+	{
+		return original;
+	}
+
+	std::string aovName;
+	for( const auto &namedParameter : network->outputShader()->parameters() )
+	{
+		if( namedParameter.first.string() == "name" )
+		{
+			const IECore::StringData *stringData = runTimeCast<const IECore::StringData>( namedParameter.second.get() );
+			aovName = stringData->readable();
+			break;
+		}
+	}
+	std::string aovTypeName = ( boost::format( "ccl:aov:%s" ) % aovName ).str();
+	CompoundObjectPtr result = original->copy();
+
+	result->member<IECoreScene::ShaderNetwork>( aovTypeName, false, true );
+	std::swap( result->members()[aovTypeName], result->members()["ccl:aov:"] );
+	result->members().erase( "ccl:aov:" );
+
+	return result;
 }

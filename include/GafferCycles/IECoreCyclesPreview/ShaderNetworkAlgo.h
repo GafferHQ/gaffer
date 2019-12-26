@@ -58,6 +58,7 @@ IECORECYCLES_API ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::Inter
 
 IECORECYCLES_API ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
 IECORECYCLES_API ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork );
+IECORECYCLES_API ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, const ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
 
 } // namespace ShaderNetworkAlgo
 

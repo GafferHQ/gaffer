@@ -277,6 +277,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "output" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
+	const bool isAOV = boost::starts_with( shader->getType(), "ccl:aov:" );
 
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
@@ -392,7 +393,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 				shaderGraph->connect( shaderOutput, shaderInput );
 	}
 
-	if( !isOutput && ( shaderNetwork->outputShader() == shader ) )
+	if( !isOutput && ( shaderNetwork->outputShader() == shader ) && !isAOV )
 	{
 		// In the cases where there is no cycles output attached in the network
 		// we just connect to the main output node of the cycles shader graph.
@@ -534,6 +535,13 @@ ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 		}
 	}
 	return result;
+}
+
+ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, const ccl::ShaderManager *shaderManager, const std::string &namePrefix  )
+{
+	ShaderMap converted;
+	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, cshader->graph, converted );
+	return cshader;
 }
 
 } // namespace ShaderNetworkAlgo

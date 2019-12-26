@@ -65,7 +65,11 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 		menuPath = "Shader"
 
 		nodeCreator = functools.partial( __shaderCreator, shaderName, GafferCycles.CyclesShader )
-		menuItems.append( MenuItem( "%s/%s/%s" % ( menuPath, category, displayName ), nodeCreator ) ) 
+
+		if shaderName == "aov_output" :
+			menuItems.append( MenuItem( "%s/%s" % ( menuPath, displayName ), nodeCreator ) )
+		else :
+			menuItems.append( MenuItem( "%s/%s/%s" % ( menuPath, category, displayName ), nodeCreator ) )
 
 	for light in GafferCycles.lights :
 		lightName = str( light )

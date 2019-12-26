@@ -103,6 +103,12 @@ with IECore.IgnoredExceptions( ImportError ) :
 				continue
 			data = "lightgroup<8>"
 
+		if data == "aov_color" :
+			data = "AOVC aov_color"
+
+		if data == "aov_value" :
+			data = "AOVV aov_value"
+
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Cycles/" + label,
 			IECoreScene.Output(

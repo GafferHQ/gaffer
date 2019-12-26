@@ -407,6 +407,12 @@ class CyclesOutput : public IECore::RefCounted
 				m_images.resize( 1 );
 			}
 
+			if( ( m_passType == ccl::PASS_AOV_COLOR ) || ( m_passType == ccl::PASS_AOV_VALUE ) )
+			{
+				// Remove AOVC/AOVV from name.
+				m_data = output->getData().c_str()+5;
+			}
+
 			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
 			if( ( m_passType == ccl::PASS_NONE ) && ( m_denoisingPassOffsets > 0 ) )
 			{
@@ -909,6 +915,19 @@ class ShaderCache : public IECore::RefCounted
 			{
 				shader->hashSubstitutions( attributes, hSubst );
 				h.append( hSubst );
+
+				// AOV hash
+				for( const auto &member : attributes->members() )
+				{
+					if( boost::starts_with( member.first.string(), "ccl:aov:" ) )
+					{
+						const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
+						if( aovShader )
+						{
+							h.append( member.first.string() );
+						}
+					}
+				}
 			}
 			Cache::accessor a;
 			m_cache.insert( a, h );
@@ -917,16 +936,39 @@ class ShaderCache : public IECore::RefCounted
 				if( shader )
 				{
 					const std::string namePrefix = "shader:" + a->first.toString() + ":";
+					ccl::Shader *cshader;
 					if( hSubst != IECore::MurmurHash() )
 					{
 						IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
 						substitutedShader->applySubstitutions( attributes );
-						a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( substitutedShader.get(), m_shaderManager, namePrefix ) );
+						cshader = ShaderNetworkAlgo::convert( substitutedShader.get(), m_shaderManager, namePrefix );
 					}
 					else
 					{
-						a->second = SharedCShaderPtr( ShaderNetworkAlgo::convert( shader, m_shaderManager, namePrefix ) );
+						cshader = ShaderNetworkAlgo::convert( shader, m_shaderManager, namePrefix );
 					}
+
+					if( attributes )
+					{
+						for( const auto &member : attributes->members() )
+						{
+							if( boost::starts_with( member.first.string(), "ccl:aov:" ) )
+							{
+								const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
+								if( hSubst != IECore::MurmurHash() )
+								{
+									IECoreScene::ShaderNetworkPtr substitutedAOVShader = aovShader->copy();
+									substitutedAOVShader->applySubstitutions( attributes );
+									cshader = ShaderNetworkAlgo::convertAOV( substitutedAOVShader.get(), cshader, m_shaderManager, namePrefix );
+								}
+								else
+								{
+									cshader = ShaderNetworkAlgo::convertAOV( aovShader, cshader, m_shaderManager, namePrefix );
+								}
+							}
+						}
+					}
+					a->second = SharedCShaderPtr( cshader );
 				}
 				else
 				{
