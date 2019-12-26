@@ -143,12 +143,10 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 
 	// Emit shader (color/strength)
 	IECoreScene::ShaderPtr emitShader = new IECoreScene::Shader( "emission", "ccl:surface" );
-	emitShader->parameters()["surface_mix_weight"] = new FloatData( 1.0f );
 	emitShader->parameters()["color"] = new Color3fData( Imath::Color3f( 1.0f ) );
 	emitShader->parameters()["strength"] = new FloatData( 1.0f );
 	// Bg shader
 	IECoreScene::ShaderPtr bgShader = new IECoreScene::Shader( "background_shader", "ccl:surface" );
-	bgShader->parameters()["surface_mix_weight"] = new FloatData( 1.0f );
 	bgShader->parameters()["color"] = new Color3fData( Imath::Color3f( 1.0f ) );
 	bgShader->parameters()["strength"] = new FloatData( 1.0f );
 	// Environment texture
@@ -160,6 +158,10 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	// Image texture
 	IECoreScene::ShaderPtr texShader = new IECoreScene::Shader( "image_texture", "ccl:surface" );
 	IECoreScene::ShaderPtr geoShader = new IECoreScene::Shader( "geometry", "ccl:surface" );
+	// Mult
+	IECoreScene::ShaderPtr tintShader = new IECoreScene::Shader( "vector_math", "ccl:surface" );
+	tintShader->parameters()["type"] = new IntData( 2 ); //Multiply
+	tintShader->parameters()["vector2"] = new V3fData( Imath::V3f( 1.0f, 1.0f, 1.0f ) );
 	// If we want to connect a texture to color
 	IECoreScene::ShaderNetwork::Connection colorEmitConnection;
 	// Parameters we need to modify depending on other parameters found.
@@ -220,9 +222,15 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 				color = static_cast<const Color3fPlug *>( valuePlug )->getValue();
 				// For the UI
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
+				tintShader->parameters()["vector2"] = PlugAlgo::extractDataFromPlug( valuePlug );
 			}
 			else if( parameterName == "image" )
 			{
+				std::string image = static_cast<const StringPlug *>( valuePlug )->getValue();
+				if( image == "" )
+				{
+					continue;
+				}
 				textureInput = true;
 				texShader->parameters()["filename"] = PlugAlgo::extractDataFromPlug( valuePlug );
 				envShader->parameters()["filename"] = PlugAlgo::extractDataFromPlug( valuePlug );
@@ -268,6 +276,7 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 
 	lightShader->parameters()["samples"] = new IntData( squareSamples ? samples * samples : samples );
 	lightShader->parameters()["strength"] = new Color3fData( color * ( intensity * pow( 2.0f, exposure ) ) );
+	tintShader->parameters()["strength"] = new FloatData( intensity * pow( 2.0f, exposure ) );
 	const IECore::InternedString handle = result->addShader( "light", std::move( lightShader ) );
 	const IECore::InternedString emitHandle = result->addShader( "emission", std::move( emitShader ) );
 
@@ -279,10 +288,11 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	{
 		if( shaderNamePlug()->getValue() == "background_light" )
 		{
-			const IECore::InternedString bgHandle = result->addShader( "background_shader", std::move( geoShader ) );
 			const IECore::InternedString envHandle = result->addShader( "environment_texture", std::move( envShader ) );
-			result->addConnection( { { envHandle, "color" }, { bgHandle, "color" } } );
-
+			const IECore::InternedString tintHandle = result->addShader( "vector_math", std::move( tintShader ) );
+			const IECore::InternedString bgHandle = result->addShader( "background_shader", std::move( bgShader ) );
+			result->addConnection( { { envHandle, "color" }, { tintHandle, "vector1" } } );
+			result->addConnection( { { tintHandle, "vector" }, { bgHandle, "color" } } );
 			result->addConnection( { { bgHandle, "background" }, { handle, "shader" } } );
 		}
 		else

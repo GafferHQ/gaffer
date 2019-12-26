@@ -484,9 +484,25 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, graph, converted );
 				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)graph->output();
 				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "emission" ) )
+				{
 					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
+					{
 						graph->connect( shaderOutput, shaderInput );
-				break; // Only one connection
+						break;
+					}
+				}
+				else if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "background" ) )
+				{
+					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
+					{
+						graph->connect( shaderOutput, shaderInput );
+						break;
+					}
+				}
+				else
+				{
+					continue;
+				}
 			}
 		}
 		else

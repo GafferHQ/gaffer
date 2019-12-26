@@ -1153,29 +1153,17 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( surfaceShaderAttribute )
 			{
 				m_shaderHash = hash_value( surfaceShaderAttribute->getOutput() );
-
-				//const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
-				//const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
-
 				m_shader = shaderCache->get( surfaceShaderAttribute, attributes );
 			}
 			else
 			{
-				// Volume shader
-				const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
-				if( volumeShaderAttribute )
-				{
-					m_shaderHash = hash_value( volumeShaderAttribute->getOutput() );
-					m_shader = shaderCache->get( volumeShaderAttribute, attributes );
-				}
-				else
-				{
-					// Revert back to the default surface
-					m_shader = shaderCache->defaultSurface();
-				}
+				// Revert back to the default surface
+				m_shader = shaderCache->defaultSurface();
 			}
 
 			// Light attributes
@@ -2334,6 +2322,10 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			//light->sizev = scale.y;
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
+
+			Imath::V3f rotation = Imath::V3f( 0.0f );
+			Imath::extractEulerXYZ<float>( transform, rotation );
+			rotateEnvironmentTexture( rotation, light );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -2353,6 +2345,10 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			//light->sizev = scale.y;
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
+
+			Imath::V3f rotation = Imath::V3f( 0.0f );
+			Imath::extractEulerXYZ<float>( samples.front(), rotation );
+			rotateEnvironmentTexture( rotation, light );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2371,6 +2367,22 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		}
 
 	private :
+
+		void rotateEnvironmentTexture( const Imath::V3f &rotation, ccl::Light *light )
+		{
+			if( ccl::Shader *shader = light->shader )
+			{
+				for( ccl::ShaderNode *node : shader->graph->nodes )
+				{
+					if ( node->type == ccl::EnvironmentTextureNode::node_type )
+					{
+						ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
+						env->tex_mapping.rotation = ccl::make_float3( rotation.x, rotation.z, rotation.y );
+						return;
+					}
+				}
+			}
+		}
 
 		SharedCLightPtr m_light;
 		ConstCyclesAttributesPtr m_attributes;
@@ -3044,11 +3056,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
 						{
 							m_backgroundShader = m_shaderCache->get( d, nullptr );
-							background->shader = m_backgroundShader.get();
 						}
 						else
 						{
-							background->shader = nullptr;
+							m_backgroundShader = nullptr;
 						}
 					}
 					else if( const Data *data = reportedCast<const Data>( value, "option", name ) )
@@ -3508,13 +3519,29 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #endif
 
 			ccl::Integrator *integrator = m_scene->integrator;
+			ccl::Background *background = m_scene->background;
+
+			for( ccl::Light *light : m_scene->lights )
+			{
+				if( light->type == ccl::LIGHT_BACKGROUND )
+				{
+					background->shader = light->shader;
+#ifdef WITH_CYCLES_LIGHTGROUPS
+					integrator->background_lightgroups = light->lightgroups;
+#endif
+					break;
+				}
+			}
+
+			if( m_backgroundShader )
+				background->shader = m_backgroundShader.get();
+
 			if( integrator->modified( m_integrator ) )
 			{
 				integrator->tag_update( m_scene );
 				m_integrator = *integrator;
 			}
 
-			ccl::Background *background = m_scene->background;
 			if( background->modified( m_background ) )
 			{
 				background->tag_update( m_scene );

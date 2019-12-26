@@ -54,27 +54,13 @@ class CyclesShaderBall( GafferScene.ShaderBall ) :
 		self["__sphere"]["type"].setValue( self["__sphere"].Type.Mesh )
 		self["__sphere"]["divisions"].setValue( imath.V2i( 60, 120 ) )
 
-		self["__environment_texture"] = GafferCycles.CyclesShader()
-		self["__environment_texture"].loadShader( "environment_texture" )
-		self["__environment_texture"]["parameters"]["filename"].setInput( self["environment"] )
-		self["__environment_texture"]["parameters"]["tex_mapping__scale"].setValue( imath.V3f( -1, 1, 1 ) )
-		self["__environment_texture"]["parameters"]["tex_mapping__y_mapping"].setValue( 3 )
-		self["__environment_texture"]["parameters"]["tex_mapping__z_mapping"].setValue( 2 )
-		self["__environment_texture"]['parameters']['tex_mapping__rotation']['z'].setValue( -1.5708 )
-
-		self["__background_shader"] = GafferCycles.CyclesShader()
-		self["__background_shader"].loadShader( "background_shader" )
-		self["__background_shader"]["parameters"]["color"].setInput( self["__environment_texture"]["out"]["color"] )
-
-		self["__background"] = GafferCycles.CyclesBackground()
-		self["__background"]["shader"].setInput( self["__background_shader"]["out"]["background"] )
-		self["__background"]["in"].setInput( self._outPlug().getInput() )
-
 		self["__background_light"] = GafferCycles.CyclesLight()
 		self["__background_light"].loadShader( "background_light" )
+		self["__background_light"]["parameters"]["image"].setInput( self["environment"] )
+		self["__background_light"]["transform"]["rotate"].setValue( imath.V3f( 0, 90, 0 ) )
 
 		self["__parentLights"] = GafferScene.Parent()
-		self["__parentLights"]["in"].setInput( self["__background"]["out"] )
+		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
 		self["__parentLights"]["children"][0].setInput( self["__background_light"]["out"] )
 		self["__parentLights"]["parent"].setValue( "/" )
 
