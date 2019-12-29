@@ -2590,7 +2590,7 @@ ccl::PathRayFlag nameToRayType( const std::string &name )
 }
 
 // Square samples
-std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
+std::array<IECore::InternedString, 9> g_squareSamplesOptionNames = { {
 	"ccl:integrator:aa_samples",
 	"ccl:integrator:diffuse_samples",
 	"ccl:integrator:glossy_samples",
@@ -2599,6 +2599,7 @@ std::array<IECore::InternedString, 8> g_squareSamplesOptionNames = { {
 	"ccl:integrator:mesh_light_samples",
 	"ccl:integrator:subsurface_samples",
 	"ccl:integrator:volume_samples",
+	"ccl:integrator:adaptive_min_samples",
 } };
 // Dicing camera
 IECore::InternedString g_dicingCameraOptionName( "ccl::dicing_camera" );
