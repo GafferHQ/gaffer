@@ -45,6 +45,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -301,6 +302,29 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketTyp
 
 			return setupTypedPlug<BoolPlug>( socketName, plugParent, direction, false );
 
+		case ccl::SocketType::FLOAT_ARRAY :
+
+			{
+				IECore::Splineff::PointContainer points;
+				points.insert( std::pair<float, float>( 0.0f, 0.0f ) );
+				points.insert( std::pair<float, float>( 1.0f, 1.0f ) );
+
+				return setupTypedPlug<SplineffPlug>( socketName, plugParent, direction, SplineDefinitionff( points, SplineDefinitionInterpolationCatmullRom ) );
+			}
+
+		case ccl::SocketType::COLOR_ARRAY :
+		case ccl::SocketType::VECTOR_ARRAY :
+
+			{
+
+				IECore::SplinefColor3f::PointContainer points;
+				points.insert( std::pair<float, Color3f>( 0.0f, Color3f( 0.0f ) ) );
+				points.insert( std::pair<float, Color3f>( 1.0f, Color3f( 1.0f ) ) );
+
+				return setupTypedPlug<SplinefColor3fPlug>( socketName, plugParent, direction, SplineDefinitionfColor3f( points, SplineDefinitionInterpolationCatmullRom ) );
+
+			}
+
 		default :
 
 			msg(
@@ -429,6 +453,39 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 				plugParent,
 				direction
 			);
+			break;
+
+		case ccl::SocketType::FLOAT_ARRAY :
+
+			{
+				IECore::Splineff::PointContainer points;
+				points.insert( std::pair<float, float>( 0.0f, 0.0f ) );
+				points.insert( std::pair<float, float>( 1.0f, 1.0f ) );
+				plug = setupTypedPlug<SplineffPlug>(
+					nodeType,
+					socketType,
+					plugParent,
+					direction,
+					SplineDefinitionff( points, SplineDefinitionInterpolationCatmullRom )
+				);
+			}
+			break;
+
+		case ccl::SocketType::COLOR_ARRAY :
+		case ccl::SocketType::VECTOR_ARRAY :
+
+			{
+				IECore::SplinefColor3f::PointContainer points;
+				points.insert( std::pair<float, Color3f>( 0.0f, Color3f( 0.0f ) ) );
+				points.insert( std::pair<float, Color3f>( 1.0f, Color3f( 1.0f ) ) );
+				plug = setupTypedPlug<SplinefColor3fPlug>(
+					nodeType,
+					socketType,
+					plugParent,
+					direction,
+					SplineDefinitionfColor3f( points, SplineDefinitionInterpolationCatmullRom )
+				);
+			}
 			break;
 	}
 

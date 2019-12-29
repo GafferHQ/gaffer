@@ -38,6 +38,7 @@
 #include "IECore/VectorTypedData.h"
 
 // Cycles
+#include "kernel/kernel_types.h" // for RAMP_TABLE_SIZE
 #include "util/util_transform.h"
 #include "util/util_types.h"
 #include "util/util_vector.h"
@@ -486,6 +487,27 @@ IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket 
 IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name )
 {
 	return getSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ) );
+}
+
+void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline )
+{
+	ccl::array<float> ramp( RAMP_TABLE_SIZE );
+	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
+	{
+		ramp[i] = spline( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
+	}
+	node->set( *socket, ramp );
+}
+
+void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::SplinefColor3f &spline )
+{
+	ccl::array<ccl::float3> ramp( RAMP_TABLE_SIZE );
+	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
+	{
+		Color3f solve = spline( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
+		ramp[i] = ccl::make_float3( solve.x, solve.y, solve.z );
+	}
+	node->set( *socket, ramp );
 }
 
 } // namespace SocketAlgo

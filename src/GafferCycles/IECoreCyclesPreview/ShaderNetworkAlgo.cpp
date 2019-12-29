@@ -354,12 +354,27 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
 		{
-			setSplineParameter( node, parameterName, splineData->readable() );
+			if( !isOSLShader )
+			{
+				if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
+					SocketAlgo::setRampSocket( node, socket, splineData->readable() );
+			}
+			else
+			{
+				setSplineParameter( node, parameterName, splineData->readable() );
+			}
 		}
 		else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( namedParameter.second.get() ) )
 		{
-			setSplineParameter( node, parameterName, splineData->readable() );
-			continue;
+			if( !isOSLShader )
+			{
+				if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
+					SocketAlgo::setRampSocket( node, socket, splineData->readable() );
+			}
+			else
+			{
+				setSplineParameter( node, parameterName, splineData->readable() );
+			}
 		}
 		else
 		{

@@ -40,6 +40,7 @@
 #include "IECore/Export.h"
 
 #include "IECore/CompoundData.h"
+#include "IECore/Spline.h"
 
 // Cycles
 #include "graph/node.h"
@@ -77,6 +78,10 @@ IECORECYCLES_API void setSockets( ccl::Node *node, const IECore::CompoundDataMap
 // Getting data from cycles nodes via sockets.
 IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket );
 IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name );
+
+// Splines
+IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline );
+IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::SplinefColor3f &spline );
 
 } // namespace SocketAlgo
 
