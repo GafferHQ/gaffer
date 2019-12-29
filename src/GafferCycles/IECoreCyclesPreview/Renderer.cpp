@@ -77,6 +77,7 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/optional.hpp"
 
+#include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_hash_map.h"
 
 #include <unordered_map>
@@ -3358,10 +3359,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			// Store the camera for later use in updateCamera().
-			{
-				tbb::spin_mutex::scoped_lock lock( m_camerasMutex );
-				m_cameras[name] = camera;
-			}
+			m_cameras[name] = camera;
 
 			ObjectInterfacePtr result = new CyclesCamera( ccamera );
 			result->attributes( attributes );
@@ -4048,7 +4046,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::vector<ccl::DeviceInfo> m_multiDevices;
 
 		// Cameras (Cycles can only know of one camera at a time)
-		typedef unordered_map<string, ConstCameraPtr> CameraMap;
+		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		tbb::spin_mutex m_camerasMutex;
 		string m_dicingCamera;
