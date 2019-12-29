@@ -272,12 +272,6 @@ def __filmSummary( plug ) :
 	if plug["useSampleClamp"]["enabled"].getValue() :
 		info.append( "Use Sample Clamp {}".format( plug["useSampleClamp"]["value"].getValue() ) )
 
-	if plug["denoisingDataPass"]["enabled"].getValue() :
-		info.append( "Denoising Data Pass {}".format( plug["denoisingDataPass"]["value"].getValue() ) )
-
-	if plug["denoisingCleanPass"]["enabled"].getValue() :
-		info.append( "Denoising Clean Pass {}".format( plug["denoisingCleanPass"]["value"].getValue() ) )
-
 	return ", ".join( info )
 
 def __denoisingSummary( plug ) :
@@ -1576,28 +1570,6 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Use sample clamp.
-			""",
-
-			"layout:section", "Film",
-
-		],
-
-		"options.denoisingDataPass" : [
-
-			"description",
-			"""
-			Denoising data pass.
-			""",
-
-			"layout:section", "Film",
-
-		],
-
-		"options.denoisingCleanPass" : [
-
-			"description",
-			"""
-			Denoising clean pass.
 			""",
 
 			"layout:section", "Film",

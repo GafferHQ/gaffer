@@ -252,7 +252,7 @@ ccl::PassType nameToPassType( const std::string &name )
 int nameToDenoisePassType( const std::string &name )
 {
 #define MAP_PASS(passname, offset) if(name == passname) return offset;
-	MAP_PASS( "denoise_rgba", ccl::DENOISING_PASS_PREFILTERED_COLOR );
+	MAP_PASS( "noisy_rgba", ccl::DENOISING_PASS_PREFILTERED_COLOR );
 	MAP_PASS( "denoise_normal", ccl::DENOISING_PASS_PREFILTERED_NORMAL );
 	MAP_PASS( "denoise_albedo", ccl::DENOISING_PASS_PREFILTERED_ALBEDO );
 	MAP_PASS( "denoise_depth", ccl::DENOISING_PASS_PREFILTERED_DEPTH );
@@ -388,12 +388,13 @@ class CyclesOutput : public IECore::RefCounted
 
 	public :
 
-		CyclesOutput( const IECoreScene::Output *output )
+		CyclesOutput( const IECoreScene::Output *output ) : m_denoisingPassOffsets( -1 )
 		{
 			m_name = output->getName();
 			m_type = output->getType();
 			m_data = output->getData();
 			m_passType = nameToPassType( m_data );
+			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
 
 #ifdef WITH_CYCLES_LIGHTGROUPS
 			if( m_passType == ccl::PASS_LIGHTGROUP )
@@ -413,8 +414,7 @@ class CyclesOutput : public IECore::RefCounted
 				m_data = output->getData().c_str()+5;
 			}
 
-			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
-			if( ( m_passType == ccl::PASS_NONE ) && ( m_denoisingPassOffsets > 0 ) )
+			if( ( m_passType == ccl::PASS_NONE ) && ( m_denoisingPassOffsets >= 0 ) )
 			{
 				m_components = denoiseComponents( (ccl::DenoisingPassOffsets)m_denoisingPassOffsets );
 			}
@@ -610,7 +610,7 @@ class RenderCallback : public IECore::RefCounted
 			{
 				std::string name = output.second->m_data;
 				auto passType = output.second->m_passType;
-				int components = passComponents( passType );
+				int components = output.second->m_components;
 
 #ifdef WITH_CYCLES_LIGHTGROUPS
 				if( passType == ccl::PASS_LIGHTGROUP )
@@ -758,25 +758,20 @@ class RenderCallback : public IECore::RefCounted
 							image->imageData( tile, &tileData[0], w * h * numChannels );
 					}
 				}
-				else if( output.second->m_passType != ccl::PASS_NONE )
-#else
-				if( output.second->m_passType != ccl::PASS_NONE )
+				else
 #endif
 				{
 					read = buffers->get_pass_rect( output.second->m_data.c_str(), exposure, sample, numChannels, &tileData[0] );
+
+					if( !read )
+					{
+						if( output.second->m_denoisingPassOffsets >= 0 )
+							read = buffers->get_denoising_pass_rect( output.second->m_denoisingPassOffsets, exposure, sample, numChannels, &tileData[0] );
+					}
+
 					if( !read )
 						memset( &tileData[0], 0, tileData.size()*sizeof(float) );
 					
-					if( m_interactive )
-						outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
-					else
-						output.second->m_images[0]->imageData( tile, &tileData[0], w * h * numChannels );
-				}
-				else
-				{
-					if( output.second->m_denoisingPassOffsets >= 0 )
-						read = buffers->get_denoising_pass_rect( output.second->m_denoisingPassOffsets, exposure, sample, numChannels, &tileData[0] );
-
 					if( m_interactive )
 						outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
 					else
@@ -789,9 +784,10 @@ class RenderCallback : public IECore::RefCounted
 			}
 		}
 
-		void updateRenderTile( ccl::RenderTile& rtile, bool highlight)
+		void updateRenderTile( ccl::RenderTile& rtile, bool highlight )
 		{
-			writeRenderTile( rtile );
+			if( m_session->params.progressive_refine )
+				writeRenderTile( rtile );
 		}
 
 	private :
@@ -2525,6 +2521,31 @@ IECore::InternedString g_curveUseBackfacing( "ccl:curve:use_backfacing" );
 IECore::InternedString g_useTangentNormalGeoOptionType( "ccl:curve:use_tangent_normal_geometry" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "ccl:background:shader" );
+// Denoise
+IECore::InternedString g_denoisingDiffuseDirectOptionName( "ccl:film:denoising_diffuse_direct" );
+IECore::InternedString g_denoisingDiffuseIndirectOptionName( "ccl:film:denoising_diffuse_indirect" );
+IECore::InternedString g_denoisingGlossyDirectOptionName( "ccl:film:denoising_glossy_direct" );
+IECore::InternedString g_denoisingGlossyIndirectOptionName( "ccl:film:denoising_glossy_indirect" );
+IECore::InternedString g_denoisingTransmissionDirectOptionName( "ccl:film:denoising_transmission_direct" );
+IECore::InternedString g_denoisingTransmissionIndirectOptionName( "ccl:film:denoising_transmission_indirect" );
+IECore::InternedString g_denoisingSubsurfaceDirectOptionName( "ccl:film:denoising_subsurface_direct" );
+IECore::InternedString g_denoisingSubsurfaceIndirectOptionName( "ccl:film:denoising_subsurface_indirect" );
+
+ccl::DenoiseFlag nameToDenoiseFlag( const IECore::InternedString &name )
+{
+#define MAP_FLAG(flagname, flag) if(name == flagname) return flag;
+	MAP_FLAG(g_denoisingDiffuseDirectOptionName, ccl::DENOISING_CLEAN_DIFFUSE_DIR);
+	MAP_FLAG(g_denoisingDiffuseIndirectOptionName, ccl::DENOISING_CLEAN_DIFFUSE_IND);
+	MAP_FLAG(g_denoisingGlossyDirectOptionName, ccl::DENOISING_CLEAN_GLOSSY_DIR);
+	MAP_FLAG(g_denoisingGlossyIndirectOptionName, ccl::DENOISING_CLEAN_GLOSSY_IND);
+	MAP_FLAG(g_denoisingTransmissionDirectOptionName, ccl::DENOISING_CLEAN_TRANSMISSION_DIR);
+	MAP_FLAG(g_denoisingTransmissionIndirectOptionName, ccl::DENOISING_CLEAN_TRANSMISSION_IND);
+	MAP_FLAG(g_denoisingSubsurfaceDirectOptionName, ccl::DENOISING_CLEAN_SUBSURFACE_DIR);
+	MAP_FLAG(g_denoisingSubsurfaceIndirectOptionName, ccl::DENOISING_CLEAN_SUBSURFACE_IND);
+#undef MAP_FLAG
+
+	return (ccl::DenoiseFlag)0;
+}
 
 ccl::PathRayFlag nameToRayType( const std::string &name )
 {
@@ -3079,6 +3100,23 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:film:" ) )
 			{
+				#define OPTION_FLAG(OPTIONNAME) if( name == OPTIONNAME ) { \
+					if( value == nullptr ) { \
+						film->denoising_flags |= nameToDenoiseFlag( name ); \
+						return; } \
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) ) { \
+						if( data->readable() ) { film->denoising_flags |= nameToDenoiseFlag( name ); } else { film->denoising_flags &= ~( nameToDenoiseFlag( name ) ); } \
+					return; } }
+				OPTION_FLAG(g_denoisingDiffuseDirectOptionName);
+				OPTION_FLAG(g_denoisingDiffuseIndirectOptionName);
+				OPTION_FLAG(g_denoisingGlossyDirectOptionName);
+				OPTION_FLAG(g_denoisingGlossyIndirectOptionName);
+				OPTION_FLAG(g_denoisingTransmissionDirectOptionName);
+				OPTION_FLAG(g_denoisingTransmissionIndirectOptionName);
+				OPTION_FLAG(g_denoisingSubsurfaceDirectOptionName);
+				OPTION_FLAG(g_denoisingSubsurfaceIndirectOptionName);
+				#undef OPTION_FLAG
+
 				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 9 ) );
 				if( value && input )
 				{
@@ -3374,7 +3412,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_scene->reset();
 				//m_session->update_scene();
-                m_session->reset( m_bufferParams, m_sessionParams.samples );
+				m_session->reset( m_bufferParams, m_sessionParams.samples );
 				m_session->set_pause( false );
 				return;
 			}
@@ -3533,6 +3571,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
+			integrator->method = (ccl::Integrator::Method)m_sessionParams.progressive;
+			if( !m_sessionParams.progressive )
+				m_sessionParams.progressive_refine = false;
+
 			if( m_backgroundShader )
 				background->shader = m_backgroundShader.get();
 
@@ -3652,6 +3694,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					continue;
 				}
 #endif
+				else if( ( coutput.second->m_passType == ccl::PASS_NONE ) && ( coutput.second->m_denoisingPassOffsets >= 0 ) )
+				{
+					// Denoise pass doesn't need a ccl::Pass::add
+					continue;
+				}
 				else
 				{
 					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
@@ -3668,6 +3715,23 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 #endif
 
+			m_bufferParamsModified.denoising_data_pass = m_sessionParams.run_denoising;
+			m_bufferParamsModified.denoising_clean_pass = ( m_scene->film->denoising_flags & ccl::DENOISING_CLEAN_ALL_PASSES );
+			m_bufferParamsModified.denoising_prefiltered_pass = m_sessionParams.write_denoising_passes;
+
+			ccl::Film *film = m_scene->film;
+			film->denoising_data_pass = m_bufferParamsModified.denoising_data_pass;
+			film->denoising_clean_pass = m_bufferParamsModified.denoising_clean_pass;
+			film->denoising_prefiltered_pass = m_bufferParamsModified.denoising_prefiltered_pass;
+
+			m_session->tile_manager.schedule_denoising = m_sessionParams.run_denoising;
+			if( film->modified( m_film ) )
+			{
+				film->tag_update( m_scene );
+				m_scene->integrator->tag_update( m_scene );
+				m_film = *film;
+			}
+
 			if( !m_bufferParams.modified( m_bufferParamsModified ) )
 			{
 				return;
@@ -3675,7 +3739,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else
 			{
 				m_bufferParams = m_bufferParamsModified;
-				m_scene->film->tag_passes_update( m_scene, m_bufferParams.passes );
+				film->tag_passes_update( m_scene, m_bufferParams.passes );
 			}
 
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
