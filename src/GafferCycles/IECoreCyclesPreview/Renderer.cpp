@@ -4049,7 +4049,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		// Cameras (Cycles can only know of one camera at a time)
 		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
-		tbb::spin_mutex m_camerasMutex;
 		string m_dicingCamera;
 
 		// RenderCallback
