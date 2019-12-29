@@ -53,12 +53,14 @@ namespace IECoreCycles
 namespace ShaderNetworkAlgo
 {
 
-IECORECYCLES_API ccl::ShaderInput *input( ccl::ShaderNode *node, IECore::InternedString name );
+IECORECYCLES_API ccl::ShaderInput  *input( ccl::ShaderNode *node, IECore::InternedString name );
 IECORECYCLES_API ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name );
 
 IECORECYCLES_API ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
-IECORECYCLES_API ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork );
+IECORECYCLES_API ccl::Light  *convert( const IECoreScene::ShaderNetwork *shaderNetwork );
 IECORECYCLES_API ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, const ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
+IECORECYCLES_API ccl::Shader *setSingleSided( ccl::Shader *cshader );
+IECORECYCLES_API ccl::Shader *createDefaultShader();
 
 } // namespace ShaderNetworkAlgo
 

@@ -875,6 +875,9 @@ IE_CORE_DECLAREPTR( RenderCallback )
 namespace
 {
 
+// Needs to be placed here as it's an attribute to be set at the shader level
+IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
+
 class ShaderCache : public IECore::RefCounted
 {
 
@@ -920,8 +923,19 @@ class ShaderCache : public IECore::RefCounted
 						const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
 						if( aovShader )
 						{
-							h.append( member.first.string() );
+							h.append( hash_value( aovShader->getOutput() ) );
 						}
+					}
+				}
+
+				// Sidedness hash
+				IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( g_doubleSidedAttributeName );
+				if( it != attributes->members().end() )
+				{
+					auto doubleSided = reportedCast<const BoolData>( it->second.get(), "attribute", g_doubleSidedAttributeName );
+					if( !doubleSided->readable() )
+					{
+						h.append( true );
 					}
 				}
 			}
@@ -963,30 +977,23 @@ class ShaderCache : public IECore::RefCounted
 								}
 							}
 						}
+
+						IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( g_doubleSidedAttributeName );
+						if( it != attributes->members().end() )
+						{
+							auto doubleSided = reportedCast<const BoolData>( it->second.get(), "attribute", g_doubleSidedAttributeName );
+							if( !doubleSided->readable() )
+							{
+								cshader = ShaderNetworkAlgo::setSingleSided( cshader );
+							}
+						}
 					}
 					a->second = SharedCShaderPtr( cshader );
 				}
 				else
 				{
 					// This creates a camera dot-product shader/facing ratio.
-					const std::string name = "defaultSurfaceShader";
-					ccl::Shader *cshader = new ccl::Shader();
-					ccl::ShaderGraph *cgraph = new ccl::ShaderGraph();
-					cshader->name = name.c_str();
-					ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
-					ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
-					vecMath->type = ccl::NODE_VECTOR_MATH_DOT_PRODUCT;
-					ccl::GeometryNode *geo = new ccl::GeometryNode();
-					ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
-					ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
-					cgraph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "normal" ), 
-									 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
-					cgraph->connect( IECoreCycles::ShaderNetworkAlgo::output( geoNode, "incoming" ), 
-									 IECoreCycles::ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
-					cgraph->connect( IECoreCycles::ShaderNetworkAlgo::output( vecMathNode, "value" ), 
-									 IECoreCycles::ShaderNetworkAlgo::input( outputNode, "surface" ) );
-					cshader->set_graph( cgraph );
-					a->second = SharedCShaderPtr( cshader );
+					a->second = SharedCShaderPtr( ShaderNetworkAlgo::createDefaultShader() );
 				}
 				
 			}
@@ -1060,7 +1067,6 @@ namespace
 
 // Standard Attributes
 IECore::InternedString g_visibilityAttributeName( "visibility" );
-IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
 IECore::InternedString g_transformBlurAttributeName( "transformBlur" );
 IECore::InternedString g_transformBlurSegmentsAttributeName( "transformBlurSegments" );
 IECore::InternedString g_deformationBlurAttributeName( "deformationBlur" );
@@ -1127,7 +1133,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shaderHash( 0 ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes ), m_volume( attributes ), m_lightGroup( -1 )
+			:	m_shaderHash( IECore::MurmurHash() ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes ), m_volume( attributes ), m_lightGroup( -1 )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
@@ -1153,8 +1159,28 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( surfaceShaderAttribute )
 			{
-				m_shaderHash = hash_value( surfaceShaderAttribute->getOutput() );
+				m_shaderHash.append( hash_value( surfaceShaderAttribute->getOutput() ) );
 				m_shader = shaderCache->get( surfaceShaderAttribute, attributes );
+
+				// AOV hash
+				for( const auto &member : attributes->members() )
+				{
+					if( boost::starts_with( member.first.string(), "ccl:aov:" ) )
+					{
+						const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
+						if( aovShader )
+						{
+							m_shaderHash.append( hash_value( aovShader->getOutput() ) );
+						}
+					}
+				}
+
+				// DoubleSided hash
+				bool doubleSided = attributeValue<bool>( g_doubleSidedAttributeName, attributes, true );
+				if( !doubleSided )
+				{
+					m_shaderHash.append( true );
+				}
 			}
 			else
 			{
@@ -1271,6 +1297,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// Generates a signature for the work done by applyGeometry.
 		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
 		{
+			// Currently Cycles can only have a shader assigned uniquely and not instanced...
 			h.append( m_shaderHash );
 			const IECore::TypeId objectType = object->typeId();
 			switch( (int)objectType )
@@ -1482,7 +1509,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		CLightPtr m_light;
 		SharedCShaderPtr m_shader;
-		size_t m_shaderHash;
+		IECore::MurmurHash m_shaderHash;
 		int m_visibility;
 		bool m_useHoldout;
 		bool m_isShadowCatcher;

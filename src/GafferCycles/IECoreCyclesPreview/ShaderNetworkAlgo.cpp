@@ -560,6 +560,66 @@ ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::S
 	return cshader;
 }
 
+ccl::Shader *setSingleSided( ccl::Shader *cshader )
+{
+	// Cycles doesn't natively support setting single-sided on objects, however we can build
+	// a shader which does it for us by checking for backfaces and using a transparentBSDF
+	// to emulate the effect.
+	ccl::ShaderGraph *graph = cshader->graph;
+	ccl::ShaderNode *mixClosure = graph->add( (ccl::ShaderNode*)new ccl::MixClosureNode() );
+	ccl::ShaderNode *transparentBSDF = graph->add( (ccl::ShaderNode*)new ccl::TransparentBsdfNode() );
+	ccl::ShaderNode *geometry = graph->add( (ccl::ShaderNode*)new ccl::GeometryNode() );
+
+	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( geometry, "backfacing" ) )
+		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "fac" ) )
+			graph->connect( shaderOutput, shaderInput );
+	
+	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( transparentBSDF, "BSDF" ) )
+		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "closure2" ) )
+			graph->connect( shaderOutput, shaderInput );
+
+	ccl::OutputNode *output = graph->output();
+
+	if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( (ccl::ShaderNode*)output, "surface" ) )
+	{
+		ccl::ShaderOutput *shaderOutput = shaderInput->link;
+		if( shaderOutput )
+		{
+			shaderInput->disconnect();
+			if( ccl::ShaderInput *shaderInput2 = ShaderNetworkAlgo::input( mixClosure, "closure1" ) )
+				graph->connect( shaderOutput, shaderInput2 );
+
+			if( ccl::ShaderOutput *shaderOutput2 = ShaderNetworkAlgo::output( mixClosure, "closure" ) )
+				graph->connect( shaderOutput2, shaderInput );
+		}
+	}
+
+	return cshader;
+}
+
+ccl::Shader *createDefaultShader()
+{
+	// This creates a camera dot-product shader/facing ratio.
+	ccl::Shader *cshader = new ccl::Shader();
+	ccl::ShaderGraph *cgraph = new ccl::ShaderGraph();
+	cshader->name = ccl::ustring( "defaultSurfaceShader" );
+	ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
+	ccl::VectorMathNode *vecMath = new ccl::VectorMathNode();
+	vecMath->type = ccl::NODE_VECTOR_MATH_DOT_PRODUCT;
+	ccl::GeometryNode *geo = new ccl::GeometryNode();
+	ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
+	ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
+	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "normal" ), 
+						ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
+	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "incoming" ), 
+						ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
+	cgraph->connect( ShaderNetworkAlgo::output( vecMathNode, "value" ), 
+						ShaderNetworkAlgo::input( outputNode, "surface" ) );
+	cshader->set_graph( cgraph );
+
+	return cshader;
+}
+
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreCycles
