@@ -493,30 +493,19 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 	{
 		if( shaderNetwork->outputShader()->getType() == "ccl:light" )
 		{
-			// The first shader is an emission node
+			// The first shader is either an emission node or background node
 			for( const auto &connection : shaderNetwork->inputConnections( output ) )
 			{
 				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, graph, converted );
 				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)graph->output();
-				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "emission" ) )
+				InternedString sourceName = connection.source.name;
+				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, sourceName ) )
 				{
 					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
 					{
 						graph->connect( shaderOutput, shaderInput );
 						break;
 					}
-				}
-				else if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, "background" ) )
-				{
-					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
-					{
-						graph->connect( shaderOutput, shaderInput );
-						break;
-					}
-				}
-				else
-				{
-					continue;
 				}
 			}
 		}
