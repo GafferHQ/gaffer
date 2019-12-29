@@ -3421,15 +3421,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Clear out any objects which aren't needed in the cache.
 			if( m_renderType == Interactive )
 			{
-				m_scene->mutex.lock();
-				m_cameraCache->clearUnused();
-				m_instanceCache->clearUnused();
-				m_particleSystemsCache->clearUnused();
-				m_lightCache->clearUnused();
-				m_attributesCache->clearUnused();
-				// Clear out any nullptr shaders so we don't crash
-				m_instanceCache->clearMissingShaders();
-				m_scene->mutex.unlock();
+				// Try to lock the scene mutex to clear unused objects, if not we will try again next time.
+				if( m_scene->mutex.try_lock() )
+				{
+					m_cameraCache->clearUnused();
+					m_instanceCache->clearUnused();
+					m_particleSystemsCache->clearUnused();
+					m_lightCache->clearUnused();
+					m_attributesCache->clearUnused();
+					// Clear out any nullptr shaders so we don't crash
+					m_instanceCache->clearMissingShaders();
+					m_scene->mutex.unlock();
+				}
 			}
 
 			updateCamera();
@@ -3565,12 +3568,23 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateSceneObjects()
 		{
-			m_scene->mutex.lock();
-			m_shaderCache->update( m_scene );
-			m_lightCache->update( m_scene );
-			m_particleSystemsCache->update( m_scene );
-			m_instanceCache->update( m_scene );
-			m_scene->mutex.unlock();
+			std::chrono::milliseconds interval(100);
+			while (true)
+			{
+				if( m_scene->mutex.try_lock() )
+				{
+					m_shaderCache->update( m_scene );
+					m_lightCache->update( m_scene );
+					m_particleSystemsCache->update( m_scene );
+					m_instanceCache->update( m_scene );
+					m_scene->mutex.unlock();
+					return;
+				}
+				else
+				{
+					std::this_thread::sleep_for( interval );
+				}
+			}
 		}
 
 		void updateOptions()
