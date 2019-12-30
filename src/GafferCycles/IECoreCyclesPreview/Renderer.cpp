@@ -2375,9 +2375,9 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
 
-			Imath::V3f rotation = Imath::V3f( 0.0f );
-			Imath::extractEulerXYZ<float>( transform, rotation );
-			rotateEnvironmentTexture( rotation, light );
+			Imath::Eulerf euler( transform, Imath::Eulerf::Order::XZY );
+
+			rotateEnvironmentTexture( euler, light );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -2398,9 +2398,9 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
 
-			Imath::V3f rotation = Imath::V3f( 0.0f );
-			Imath::extractEulerXYZ<float>( samples.front(), rotation );
-			rotateEnvironmentTexture( rotation, light );
+			Imath::Eulerf euler( samples.front(), Imath::Eulerf::Order::XZY );
+
+			rotateEnvironmentTexture( euler, light );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2419,7 +2419,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
-		void rotateEnvironmentTexture( const Imath::V3f &rotation, ccl::Light *light )
+		void rotateEnvironmentTexture( const Imath::Eulerf &rotation, ccl::Light *light )
 		{
 			if( ccl::Shader *shader = light->shader )
 			{
@@ -2428,7 +2428,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 					if ( node->type == ccl::EnvironmentTextureNode::node_type )
 					{
 						ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
-						env->tex_mapping.rotation = ccl::make_float3( rotation.x, rotation.z, rotation.y );
+						env->tex_mapping.rotation = ccl::make_float3( -rotation.x, -rotation.y, -rotation.z );
 						return;
 					}
 				}
