@@ -79,6 +79,7 @@
 
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_hash_map.h"
+#include "tbb/concurrent_vector.h"
 
 #include <unordered_map>
 
@@ -141,6 +142,8 @@ typedef std::shared_ptr<ccl::Light> SharedCLightPtr;
 typedef std::shared_ptr<ccl::Mesh> SharedCMeshPtr;
 typedef std::shared_ptr<ccl::Shader> SharedCShaderPtr;
 typedef std::shared_ptr<ccl::ParticleSystem> SharedCParticleSystemPtr;
+
+typedef std::pair<ccl::Mesh*, ccl::Shader*> ShaderAssignPair;
 
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
@@ -1029,6 +1032,11 @@ class ShaderCache : public IECore::RefCounted
 				updateShaders();
 		}
 
+		void addShaderAssignment( ShaderAssignPair shaderAssign )
+		{
+			m_shaderAssignPairs.push_back( shaderAssign );
+		}
+
 	private :
 
 		void updateShaders()
@@ -1045,6 +1053,15 @@ class ShaderCache : public IECore::RefCounted
 					cshader->tag_update( m_scene );
 				}
 			}
+
+			// Do the shader assignment here
+			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
+			{
+				shaderAssignPair.first->used_shaders.clear();
+				shaderAssignPair.first->used_shaders.push_back( shaderAssignPair.second );
+			}
+
+			m_shaderAssignPairs.clear();
 		}
 
 		ccl::Scene *m_scene;
@@ -1052,6 +1069,9 @@ class ShaderCache : public IECore::RefCounted
 		Cache m_cache;
 		ccl::ShaderManager *m_shaderManager;
 		SharedCShaderPtr m_defaultSurface;
+		// Need to assign shaders in a deferred manner
+		typedef tbb::concurrent_vector<ShaderAssignPair> ShaderAssignVector;
+		ShaderAssignVector m_shaderAssignPairs;
 
 };
 
@@ -1134,7 +1154,17 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shaderHash( IECore::MurmurHash() ), m_visibility( ~0 ), m_useHoldout( false ), m_isShadowCatcher( false ), m_maxLevel( 12 ), m_dicingRate( 1.0f ), m_color( Color3f( 0.0f ) ), m_particle( attributes ), m_volume( attributes ), m_lightGroup( -1 )
+			:	m_shaderHash( IECore::MurmurHash() ), 
+				m_visibility( ~0 ), 
+				m_useHoldout( false ), 
+				m_isShadowCatcher( false ), 
+				m_maxLevel( 12 ), 
+				m_dicingRate( 1.0f ), 
+				m_color( Color3f( 0.0f ) ), 
+				m_particle( attributes ), 
+				m_volume( attributes ), 
+				m_lightGroup( -1 ),
+				m_shaderCache( shaderCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
@@ -1161,7 +1191,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( surfaceShaderAttribute )
 			{
 				m_shaderHash.append( hash_value( surfaceShaderAttribute->getOutput() ) );
-				m_shader = shaderCache->get( surfaceShaderAttribute, attributes );
+				m_shader = m_shaderCache->get( surfaceShaderAttribute, attributes );
 
 				// AOV hash
 				for( const auto &member : attributes->members() )
@@ -1186,7 +1216,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			else
 			{
 				// Revert back to the default surface
-				m_shader = shaderCache->defaultSurface();
+				m_shader = m_shaderCache->defaultSurface();
 			}
 
 			// Light attributes
@@ -1213,11 +1243,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					mesh->subd_params->max_level = m_maxLevel;
 					mesh->subd_params->dicing_rate = m_dicingRate;
 				}
-				// Assign shader. Clearing used_shaders will use the default shader.
-				mesh->used_shaders.clear();
+
 				if( m_shader )
 				{
-					mesh->used_shaders.push_back( m_shader.get() );
+					m_shaderCache->addShaderAssignment( ShaderAssignPair( mesh, m_shader.get() ) );
 				}
 			}
 
@@ -1521,6 +1550,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Particle m_particle;
 		Volume m_volume;
 		int m_lightGroup;
+		// Need to assign shaders in a deferred manner
+		ShaderCache *m_shaderCache;
 
 };
 
@@ -2281,18 +2312,15 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			ccl::Object *object = m_instance.object();
-			if( !object )
-			{
-				return true;
-			}
-
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyObject( object, m_attributes.get() ) )
+
+			ccl::Object *object = m_instance.object();
+			if( !object || cyclesAttributes->applyObject( object, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
 				return true;
 			}
+
 			return false;
 		}
 
@@ -2377,16 +2405,15 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			ccl::Light *light = m_light.get();
-			if( !light )
-				return true;
-
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyLight( light, m_attributes.get() ) )
+
+			ccl::Light *light = m_light.get();
+			if( !light || cyclesAttributes->applyLight( light, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
 				return true;
 			}
+
 			return false;
 		}
 
@@ -2642,7 +2669,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_rendering( false ),
 				m_deviceDirty( false ),
 				m_pause( false ),
-				m_progressLevel( IECore::Msg::Info )
+				m_progressLevel( IECore::Msg::Info ),
+				m_sceneLockInterval( 1 )
 		{
 			// Set path to find shaders
 			#ifdef _WIN32
@@ -2740,24 +2768,35 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		~CyclesRenderer() override
 		{
 			m_session->set_pause( true );
-			m_scene->mutex.lock();
-			// Reduce the refcount so that it gets cleared.
-			m_backgroundShader = nullptr;
-			m_cameraCache.reset();
-			m_lightCache.reset();
-			m_shaderCache.reset();
-			m_instanceCache.reset();
-			m_attributesCache.reset();
-			m_particleSystemsCache.reset();
-			// Gaffer has already deleted these, so we can't double-delete
-			m_scene->shaders.clear();
-			m_scene->meshes.clear();
-			m_scene->objects.clear();
-			m_scene->lights.clear();
-			m_scene->particle_systems.clear();
-			// Cycles created the defaultCamera, so we give it back for it to delete.
-			m_scene->camera = m_defaultCamera;
-			m_scene->mutex.unlock();
+
+			while( true )
+			{
+				if( m_scene->mutex.try_lock() )
+				{
+					// Reduce the refcount so that it gets cleared.
+					m_backgroundShader = nullptr;
+					m_cameraCache.reset();
+					m_lightCache.reset();
+					m_shaderCache.reset();
+					m_instanceCache.reset();
+					m_attributesCache.reset();
+					m_particleSystemsCache.reset();
+					// Gaffer has already deleted these, so we can't double-delete
+					m_scene->shaders.clear();
+					m_scene->meshes.clear();
+					m_scene->objects.clear();
+					m_scene->lights.clear();
+					m_scene->particle_systems.clear();
+					// Cycles created the defaultCamera, so we give it back for it to delete.
+					m_scene->camera = m_defaultCamera;
+					m_scene->mutex.unlock();
+					break; 	
+				}
+				else
+				{
+					std::this_thread::sleep_for( m_sceneLockInterval );
+				}
+			}
 
 			delete m_session;
 			delete m_imageManagerOld;
@@ -3415,40 +3454,57 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void render() override
 		{
 			m_session->set_pause( true );
-			updateSceneObjects();
-			updateOptions();
 			// Clear out any objects which aren't needed in the cache.
-			if( m_renderType == Interactive )
+			while( true )
 			{
-				// Try to lock the scene mutex to clear unused objects, if not we will try again next time.
 				if( m_scene->mutex.try_lock() )
 				{
-					m_cameraCache->clearUnused();
-					m_instanceCache->clearUnused();
-					m_particleSystemsCache->clearUnused();
-					m_lightCache->clearUnused();
-					m_attributesCache->clearUnused();
-					// Clear out any nullptr shaders so we don't crash
-					m_instanceCache->clearMissingShaders();
+					updateSceneObjects();
+					updateOptions();
+
+					// Try to lock the scene mutex to clear unused objects, if not we will try again next time.
+					if( m_renderType == Interactive )
+					{
+						m_cameraCache->clearUnused();
+						m_instanceCache->clearUnused();
+						m_particleSystemsCache->clearUnused();
+						m_lightCache->clearUnused();
+						m_attributesCache->clearUnused();
+						// Clear out any nullptr shaders so we don't crash
+						m_instanceCache->clearMissingShaders();
+					}
+
+					updateCamera();
+					updateOutputs();
+
+					if( m_rendering )
+					{
+						m_scene->reset();
+						//m_session->update_scene();
+						m_session->reset( m_bufferParams, m_sessionParams.samples );
+						//m_session->set_pause( false );
+					}
+
 					m_scene->mutex.unlock();
+
+					if( m_rendering )
+					{
+						m_session->start();
+					}
+					break; 	
+				}
+				else
+				{
+					std::this_thread::sleep_for( m_sceneLockInterval );
 				}
 			}
 
-			updateCamera();
-			updateOutputs();
-
 			if( m_rendering )
-			{
-				m_scene->reset();
-				//m_session->update_scene();
-				m_session->reset( m_bufferParams, m_sessionParams.samples );
-				m_session->set_pause( false );
 				return;
-			}
-
-			m_rendering = true;
 
 			m_session->start();
+
+			m_rendering = true;
 
 			if( m_renderType == Interactive )
 			{
@@ -3567,23 +3623,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateSceneObjects()
 		{
-			std::chrono::milliseconds interval(100);
-			while (true)
-			{
-				if( m_scene->mutex.try_lock() )
-				{
-					m_shaderCache->update( m_scene );
-					m_lightCache->update( m_scene );
-					m_particleSystemsCache->update( m_scene );
-					m_instanceCache->update( m_scene );
-					m_scene->mutex.unlock();
-					return;
-				}
-				else
-				{
-					std::this_thread::sleep_for( interval );
-				}
-			}
+			m_shaderCache->update( m_scene );
+			m_lightCache->update( m_scene );
+			m_particleSystemsCache->update( m_scene );
+			m_instanceCache->update( m_scene );
 		}
 
 		void updateOptions()
@@ -4053,6 +4096,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// RenderCallback
 		RenderCallbackPtr m_renderCallback;
+
+		// Scene-Lock interval, how many milliseconds we wait until we try getting the Cycles scene lock again
+		std::chrono::milliseconds m_sceneLockInterval;
 
 		// Registration with factory
 		static Renderer::TypeDescription<CyclesRenderer> g_typeDescription;
