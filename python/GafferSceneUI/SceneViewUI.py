@@ -273,9 +273,9 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __popupPlugWidget( self, plug, title, *unused ) :
 
-		_PlugWidgetDialog( plug, title ).waitForClose( parentWindow = self.ancestor( GafferUI.Window ) )
+		_PlugWidgetDialogue( plug, title ).waitForClose( parentWindow = self.ancestor( GafferUI.Window ) )
 
-class _PlugWidgetDialog( GafferUI.Dialogue ) :
+class _PlugWidgetDialogue( GafferUI.Dialogue ) :
 
 	def __init__( self, plug, title="", **kw ) :
 
