@@ -97,27 +97,24 @@ T parameter( InternedString metadataTarget, const IECore::CompoundData *paramete
 	return defaultValue;
 }
 
-
-V3f lightPlane( const V2f &p )
-{
-	return V3f( 0, p.y, -p.x );
-}
-
-// Coordinates are in the light plane.
-void addRay( const V2f &start, const V2f &end, vector<int> &vertsPerCurve, vector<V3f> &p )
+void addRay( const V3f &start, const V3f &end, vector<int> &vertsPerCurve, vector<V3f> &p )
 {
 	const float arrowScale = 0.05;
 
-	const V2f dir = end - start;
-	const V2f perp( dir.y, -dir.x );
+	const V3f dir = end - start;
+	V3f perp = dir % V3f( 1, 0, 0 );
+	if( perp.length() == 0.0f )
+	{
+		perp = dir % V3f( 0, 1, 0 );
+	}
 
-	p.push_back( lightPlane( start ) );
-	p.push_back( lightPlane( end ) );
+	p.push_back( start );
+	p.push_back( end );
 	vertsPerCurve.push_back( 2 );
 
-	p.push_back( lightPlane( end + arrowScale * ( perp * 2 - dir * 3 ) ) );
-	p.push_back( lightPlane( end ) );
-	p.push_back( lightPlane( end + arrowScale * ( perp * -2 - dir * 3 ) ) );
+	p.push_back( end + arrowScale * ( perp * 2 - dir * 3 ) );
+	p.push_back( end );
+	p.push_back( end + arrowScale * ( perp * -2 - dir * 3 ) );
 	vertsPerCurve.push_back( 3 );
 }
 
@@ -476,6 +473,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+
+		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
+		if( spread >= 0.0f )
+		{
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( areaSpread( spread ) ) );
+		}
 	}
 	else if( type && type->readable() == "disk" )
 	{
@@ -492,6 +495,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+
+		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
+		if( spread >= 0.0f )
+		{
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( areaSpread( spread ) ) );
+		}
 	}
 	else if( type && type->readable() == "cylinder" )
 	{
@@ -606,7 +615,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
-	addRay( V2f( 0 ), V2f( 1, 0 ), vertsPerCurve->writable(), p->writable() );
+	addRay( V3f( 0 ), V3f( 0, 0, -1 ), vertsPerCurve->writable(), p->writable() );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
@@ -630,7 +639,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 	for( int i = 0; i < numRays; ++i )
 	{
 		const float angle = M_PI * 2.0f * float(i)/(float)numRays;
-		const V2f dir( cos( angle ), sin( angle ) );
+		const V3f dir( 0.0, sin( angle ), -cos( angle ) );
 		addRay( dir * (.5 + radius), dir * (1 + radius), vertsPerCurve->writable(), p->writable() );
 	}
 
@@ -846,6 +855,38 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 	return group;
 }
 
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::areaSpread( float spread )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get() );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+
+	IntVectorDataPtr vertsPerCurve = new IntVectorData;
+	V3fVectorDataPtr p = new V3fVectorData;
+
+	const float scale = 0.2f;
+	const float spreadOffset = min( 1.0f, max( 0.0f, spread ) ) * scale;
+
+	const V3f bl = V3f( -0.1f, -0.1f, 0.0f );
+	const V3f tl = V3f( -0.1f, 0.1f, 0.0f );
+	const V3f br = V3f( 0.1f, -0.1f, 0.0f );
+	const V3f tr = V3f( 0.1f, 0.1f, 0.0f );
+
+	addRay( bl, bl + scale * V3f( -spreadOffset, -spreadOffset, -scale ).normalized(), vertsPerCurve->writable(), p->writable() );
+	addRay( tl, tl + scale * V3f( -spreadOffset, spreadOffset, -scale ).normalized(), vertsPerCurve->writable(), p->writable() );
+	addRay( br, br + scale * V3f( spreadOffset, -spreadOffset, -scale ).normalized(), vertsPerCurve->writable(), p->writable() );
+	addRay( tr, tr + scale * V3f( spreadOffset, spreadOffset, -scale ).normalized(), vertsPerCurve->writable(), p->writable() );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+
+	group->addChild( curves );
+
+	return group;
+}
+
 // Quads
 
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::ConstDataPtr textureData, int maxTextureResolution,  const Color3f &fallbackColor )
@@ -1005,5 +1046,4 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radiu
 
 	return group;
 }
-
 

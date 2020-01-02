@@ -103,6 +103,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr environmentSphereWireframe( float radius, const Imath::Vec3<bool> &axisRings );
 		static IECoreGL::ConstRenderablePtr environmentSphereSurface( IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor  );
 
+		static IECoreGL::ConstRenderablePtr areaSpread( float spread );
+
 		static IECoreGL::ConstRenderablePtr quadWireframe();
 		static IECoreGL::ConstRenderablePtr quadSurface( IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
