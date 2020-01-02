@@ -50,6 +50,7 @@
 #include "IECore/TypedData.h"
 #include "IECore/VectorTypedData.h"
 
+#include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/ToGLPointsConverter.h"
 
 #include "OSL/oslquery.h"
@@ -67,7 +68,6 @@ IE_CORE_DECLAREPTR( ToGLPointsConverter )
 
 using namespace Imath;
 using namespace IECore;
-using namespace IECoreGL;
 using namespace IECoreGLPreview;
 using namespace IECoreScene;
 using namespace OSL;
@@ -387,10 +387,87 @@ IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
 	}
 
 	IECoreScene::PointsPrimitivePtr points = new IECoreScene::PointsPrimitive( pData );
-	ToGLPointsConverterPtr pointsConverter = new ToGLPointsConverter( points );
+	IECoreGL::ToGLPointsConverterPtr pointsConverter = new IECoreGL::ToGLPointsConverter( points );
 	return runTimeCast<IECoreGL::Renderable>( pointsConverter->convert() );
 
 #endif
+}
+
+IECoreGL::RenderablePtr portalVisualisation()
+{
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	std::vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	std::vector<V3f> &p = pData->writable();
+
+	// Basic outline of the portal area
+
+	vertsPerCurve.push_back( 4 );
+	p.push_back( V3f( -1, -1, 0  ) );
+	p.push_back( V3f( 1, -1, 0  ) );
+	p.push_back( V3f( 1, 1, 0  ) );
+	p.push_back( V3f( -1, 1, 0  ) );
+
+	// 45 degree hatch outside the area (-1 / 1 space)
+
+	const float frameWidth = 0.25f;
+	const float spacing = 0.05f;
+
+	// Working with a bottom left origin makes the maths easier for the lines
+	const V3f origin( -1 - frameWidth, -1 - frameWidth, 0 );
+
+	// dimensions of the shaded area
+	const float d = 2 + ( 2 * frameWidth );
+
+	bool alt = true;
+
+	// Offset along one edge. The area covered by lines from this range form a
+	// right angled triangle over half of the square.  As such we need to draw
+	// each line, plus is mirror on the other side of the square.
+	for( float o = spacing; o < d; o += spacing, alt = !alt )
+	{
+		// extra length for alternate lines to make the edges more subtle
+		const float e = alt ? spacing * 1.5f : 0.0f;
+
+		if( o <= frameWidth * 2 )
+		{
+			// A single line will do near the edges as we don't intersect the portal
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( -e, o + e, 0 ) );
+			p.push_back( origin + V3f( o + e, -e, 0 ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( d - o - e, d + e, 0 ) );
+			p.push_back( origin + V3f( d + e, d - o - e, 0 ) );
+		}
+		else
+		{
+			// We need to split either side of the central portal space
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( -e, o + e, 0 ) );
+			p.push_back( origin + V3f( frameWidth, o - frameWidth, 0 ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( o - frameWidth, 0 + frameWidth, 0 ) );
+			p.push_back( origin + V3f( o + e, -e, 0 ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( d - o - e, d + e, 0 ) );
+			p.push_back( origin + V3f( d - o + frameWidth, d - frameWidth, 0 ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( d - frameWidth, d - o + frameWidth, 0 ) );
+			p.push_back( origin + V3f( d + e, d - o - e, 0 ) );
+		}
+	}
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), true, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( 0.0f ) ) ) );
+	return curves;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -450,6 +527,19 @@ Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &a
 				{
 					g->addChild( iesVis );
 				}
+			}
+		}
+	}
+	else if ( shaderNetwork->outputShader()->getName() == "quad_light" )
+	{
+		// If its a portal, draw it ourselves
+		const CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
+		if( const BoolData *portalData = shaderParameters->member<BoolData>( "portal" ) )
+		{
+			if( portalData->readable() )
+			{
+				v[ VisualisationType::Geometry ] = portalVisualisation();
+				v[ VisualisationType::Ornament ] = ray();
 			}
 		}
 	}
