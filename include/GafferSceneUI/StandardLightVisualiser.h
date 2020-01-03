@@ -75,6 +75,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length = 1.0f, float lineWidthScale = 1.0f );
 
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
+		static IECoreGL::ConstRenderablePtr exposureIndicator( const std::string& mode, float exposure, bool cameraFacing = false );
 
 		// This method should be overridden by any sub-classes that wish to
 		// provide an alternate surface texture for area-based lights.
@@ -112,6 +113,10 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr diskSurface( float radius, IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
 		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
+
+		static IECoreGL::ConstRenderablePtr exposureIndicatorLinear( float exposure, bool cameraFacing = false );
+		static IECoreGL::ConstRenderablePtr exposureIndicatorRadial( float exposure, bool cameraFacing = false );
+		static IECoreGL::ConstRenderablePtr exposureIndicatorSimple( float exposure, bool cameraFacing = false );
 
 };
 

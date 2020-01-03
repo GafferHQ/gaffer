@@ -378,6 +378,22 @@ void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr tex
 	);
 }
 
+// Exposure helpers
+
+float exposureToScale( float exposure, float maxExposure, float outMin, float outMax )
+{
+
+	// Our hand-picked scale coefficients work well in a particular range
+	static const float scaleMax = 10.0f;
+	static const float scalePow = 0.75f;
+
+	const float e = min( scaleMax, abs( exposure ) * ( scaleMax / maxExposure ) );
+	// -maxExp to maxExp -> 0 to 1.0 range
+	const float ex = 0.5f + ( ( ( exposure < 0 ) ? -0.5f : 0.5f ) * ( 1.0f - pow( scalePow, e ) ) );
+	// remap to outMin to outMax range
+	return outMin + ( ex * ( outMax - outMin ) );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -419,9 +435,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const std::string visualiserDrawingMode = visualiserDrawingModeData ? visualiserDrawingModeData->readable() : "texture";
 	const BoolData *visualiseProjectionData = attributes->member<BoolData>( "gl:light:projection" );
 	const bool visualiseProjection = visualiseProjectionData ? visualiseProjectionData->readable() : true;
+	const StringData *exposureIndicatorData = attributes->member<StringData>( "gl:light:exposureIndicator" );
+	const std::string exposureMode = exposureIndicatorData ? exposureIndicatorData->readable() : "radial";
 
 	const bool drawShaded = visualiserDrawingMode != "wireframe";
 	const bool drawTextured = visualiserDrawingMode == "texture";
+	const bool visualiseExposure = exposureMode != "none";
 
 	const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
 	const int maxTextureResolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : std::numeric_limits<int>::max();
@@ -442,6 +461,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, maxTextureResolution, color ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 	}
 	else if( type && type->readable() == "spot" )
 	{
@@ -450,6 +470,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 		if( visualiseProjection )
 		{
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f, 0.2f ) ) );
@@ -459,6 +480,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 	}
 	else if( type && type->readable() == "quad" )
 	{
@@ -473,6 +495,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
 		if( spread >= 0.0f )
@@ -495,6 +518,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
 		if( spread >= 0.0f )
@@ -518,6 +542,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 	}
 	else if( type && type->readable() == "mesh" )
 	{
@@ -541,7 +566,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color, /* cameraFacing = */ true ) ) );
-
+		if( visualiseExposure ) { ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( exposureIndicator( exposureMode, exposure ) ) ); }
 	}
 
 	return result;
@@ -736,6 +761,389 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 		ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
 		group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
 	}
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicator( const std::string& mode, float exposure, bool cameraFacing )
+{
+	if( mode == "radial" )
+	{
+		return exposureIndicatorRadial( exposure, cameraFacing );
+	}
+	else if( mode == "linear" )
+	{
+		return exposureIndicatorLinear( exposure, cameraFacing );
+	}
+	else if( mode == "concentric" )
+	{
+		return exposureIndicatorSimple( exposure, cameraFacing );
+	}
+
+	return nullptr;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicatorSimple( float exposure, bool cameraFacing )
+{
+	const float radius = 0.35f;
+	static const int divisions = 10;
+	static const float maxExposure = 10.0f;
+
+	static const float halfTickHeight = 0.025f;
+
+	const float e = exposureToScale( exposure, maxExposure, 0.1f * radius, 1.9f * radius );
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get(), false, cameraFacing ? 0 : -1 );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+
+	group->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( false, false, true ) ) ) );
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	std::vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	std::vector<V3f> &p = pData->writable();
+
+	const V3f wireOrigin( 0, 0, 0.015f );
+
+	// Cross
+
+	const float minC = e > radius ? radius * 0.9f : radius * 0.1f;
+	const float maxC = e > radius ? radius * 1.9f : radius * 0.9f;
+
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + V3f( minC, 0, 0 ) );
+	p.push_back( wireOrigin + V3f( maxC, 0, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + V3f( 0, minC, 0 ) );
+	p.push_back( wireOrigin + V3f( 0, maxC, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + V3f( -minC, 0, 0 ) );
+	p.push_back( wireOrigin + V3f( -maxC, 0, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + V3f( 0, -minC, 0 ) );
+	p.push_back( wireOrigin + V3f( 0, -maxC, 0 ) );
+
+	// Marks
+
+	const float startExp = e > radius ? 0 : -maxExposure;
+
+	for( int i = 1; i <= divisions; ++i )
+	{
+		const float a = exposureToScale( startExp + maxExposure  * ( float(i) / divisions ), maxExposure, 0.2f * radius, 1.8f * radius );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( wireOrigin + V3f( a, -halfTickHeight, 0 ) );
+		p.push_back( wireOrigin + V3f( a, halfTickHeight, 0 ) );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( wireOrigin + V3f( -a, -halfTickHeight, 0 ) );
+		p.push_back( wireOrigin + V3f( -a, halfTickHeight, 0 ) );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( wireOrigin + V3f( -halfTickHeight, a, 0 ) );
+		p.push_back( wireOrigin + V3f( halfTickHeight, a, 0 ) );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( wireOrigin + V3f( -halfTickHeight, -a, 0 ) );
+		p.push_back( wireOrigin + V3f( halfTickHeight, -a, 0 ) );
+	}
+
+	// Legend
+
+	// -
+	const V3f om( radius * 0.5f, radius * 0.5f, 0 );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + om + V3f( -0.025f, 0, 0 ) );
+	p.push_back( wireOrigin + om + V3f( 0.025f, 0, 0 ) );
+	// +
+	const V3f op( radius * 1.1f, radius * 1.1f, 0 );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + op + V3f( -0.025f, 0, 0 ) );
+	p.push_back( wireOrigin + op + V3f( 0.025f, 0, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + op + V3f( 0, -0.025f, 0 ) );
+	p.push_back( wireOrigin + op + V3f( 0, 0.025f, 0 ) );
+	// E
+	const V3f oe( radius * -0.5f, radius * 0.5f, 0 );
+	vertsPerCurve.push_back( 4 );
+	p.push_back( wireOrigin + oe + V3f( 0.025f, 0.03f, 0 ) );
+	p.push_back( wireOrigin + oe + V3f( -0.025f, 0.03f, 0 ) );
+	p.push_back( wireOrigin + oe + V3f( -0.025f, -0.03f, 0 ) );
+	p.push_back( wireOrigin + oe + V3f( 0.025f, -0.03f, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( wireOrigin + oe + V3f( -0.025f, 0, 0 ) );
+	p.push_back( wireOrigin + oe + V3f( 0.01f, 0, 0 ) );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( g_lightWireframeColor ) ) ) );
+
+	group->addChild( curves );
+
+	IntVectorDataPtr vertsPerPolyData = new IntVectorData;
+	IntVectorDataPtr vertIdsData = new IntVectorData;
+	V3fVectorDataPtr ppData = new V3fVectorData;
+
+	vector<int> &vertIds = vertIdsData->writable();
+	vector<V3f> &pp = ppData->writable();
+
+	V3f color( 1.0f );
+	if( e > radius )
+	{
+		addSolidArc( Axis::Z, V3f( 0, 0, 0.01f ), e, radius, 0, 1, vertsPerPolyData->writable(), vertIds, pp );
+	}
+	else
+	{
+		color = V3f( 0.0f );
+		addSolidArc( Axis::Z, V3f( 0, 0, 0.01f ), radius, e, 0, 1, vertsPerPolyData->writable(), vertIds, pp );
+	}
+
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPolyData, vertIdsData, "linear", ppData );
+	mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
+	mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( color ) );
+	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
+	group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicatorRadial( float exposure, bool cameraFacing )
+{
+	const float z = 0.1f;
+	const float radius = 0.35f;
+
+	// We use a 'DSLR' exposure indicator style gauge, with a non-linear
+	// arranged around a dial, with with 0 at the top.
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get(), false, cameraFacing ? 0 : -1 );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	std::vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	std::vector<V3f> &p = pData->writable();
+
+	static const int divisions = 10;
+
+	static const float tickHeight = 0.05f;
+	static const float arrowHeight = 0.1f;
+
+	static const float maxExposure = 10.0f;
+
+	const V3f origin( 0, 0, z );
+
+	// axis
+	const int numDivisions = 50;
+	for( int i = 0; i < numDivisions; ++i )
+	{
+		const float a = exposureToScale( -maxExposure + ( 2.0f * i * ( maxExposure / numDivisions ) ), maxExposure, -0.9f * M_PI, 0.9f * M_PI );
+		p.push_back( origin + radius * V3f( sin( a ), cos( a ), 0 ) );
+	}
+	vertsPerCurve.push_back( numDivisions );
+
+	// Scale
+
+	// make the 0 mark larger
+	vertsPerCurve.push_back( 2 );
+	p.push_back( origin + V3f( 0, radius, 0 ) );
+	p.push_back( origin + V3f( 0, radius - 1.5f * tickHeight, -z ) );
+
+	for( int i = 1; i <= divisions; ++i )
+	{
+		const float a = exposureToScale( maxExposure * ( float(i) / divisions ), maxExposure, -0.9f * M_PI, 0.9f * M_PI );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( origin + radius * V3f( sin( a ), cos( a ), 0 ) );
+		p.push_back( origin + ( radius - tickHeight ) * V3f( sin( a ), cos( a ), -z ) );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( origin + radius * V3f( sin( -a ), cos( -a ), 0 ) );
+		p.push_back( origin + ( radius - tickHeight ) * V3f( sin( -a ), cos( -a ), -z ) );
+	}
+
+	// Legend
+
+	// -
+	const V3f om( radius * 0.6f * V3f( sin( -0.5f * M_PI ), cos( -0.5f * M_PI ), 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( origin + om + V3f( -0.025f, 0, 0 ) );
+	p.push_back( origin + om + V3f( 0.025f, 0, 0 ) );
+	// +
+	const V3f op( radius * 0.6f * V3f( sin( 0.5f * M_PI ), cos( 0.5f * M_PI ), 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( origin + op + V3f( -0.025f, 0, 0 ) );
+	p.push_back( origin + op + V3f( 0.025f, 0, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( origin + op + V3f( 0, -0.025f, 0 ) );
+	p.push_back( origin + op + V3f( 0, 0.025f, 0 ) );
+	// E
+	const V3f oe( V3f( 0, radius * 0.6f, 0 ) );
+	vertsPerCurve.push_back( 4 );
+	p.push_back( origin + oe + V3f( 0.025f, 0.03f, 0 ) );
+	p.push_back( origin + oe + V3f( -0.025f, 0.03f, 0 ) );
+	p.push_back( origin + oe + V3f( -0.025f, -0.03f, 0 ) );
+	p.push_back( origin + oe + V3f( 0.025f, -0.03f, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( origin + oe + V3f( -0.025f, 0, 0 ) );
+	p.push_back( origin + oe + V3f( 0.01f, 0, 0 ) );
+
+	// exposure mark (remap so it works well with our scale)
+
+	const float a = exposureToScale( exposure, maxExposure, -0.9f * M_PI, 0.9f * M_PI );
+
+	vertsPerCurve.push_back( 4 );
+	p.push_back( origin + radius * V3f( sin( a ), cos( a ), 0 ) );
+	p.push_back( origin + ( radius + arrowHeight ) * V3f( sin( a - 0.1f ), cos( a - 0.1f ), z ) );
+	p.push_back( origin + ( radius + arrowHeight ) * V3f( sin( a + 0.1f ), cos( a + 0.1f ), z ) );
+	p.push_back( origin + radius * V3f( sin( a ), cos( a ), 0 ) );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( g_lightWireframeColor ) ) ) );
+
+	group->addChild( curves );
+
+	IntVectorDataPtr vertsPerPolyData = new IntVectorData;
+	IntVectorDataPtr vertIdsData = new IntVectorData;
+	V3fVectorDataPtr ppData = new V3fVectorData;
+
+	vector<int> &vertIds = vertIdsData->writable();
+	vector<V3f> &pp = ppData->writable();
+
+	vertIds.push_back( 0 );
+	vertIds.push_back( 1 );
+	vertIds.push_back( 2 );
+	vertsPerPolyData->writable().push_back( 3 );
+	pp.push_back( origin + radius * V3f( sin( a ), cos( a ), 0 ) );
+	pp.push_back( origin + ( radius + arrowHeight ) * V3f( sin( a - 0.1f ), cos( a - 0.1f ), z ) );
+	pp.push_back( origin + ( radius + arrowHeight ) * V3f( sin( a + 0.1f ), cos( a + 0.1f ), z ) );
+
+	const float ee = exposureToScale( exposure, maxExposure, -0.45f, 0.45f );
+	V3f color( 1.0f );
+	if( exposure >= 0 )
+	{
+		addSolidArc( Axis::Z, V3f( 0, 0, z - 0.01f ), radius + tickHeight / 2, radius, 1.0 - ee, 1.0, vertsPerPolyData->writable(), vertIds, pp );
+	}
+	else
+	{
+		color = V3f( 0.0f );
+		addSolidArc( Axis::Z, V3f( 0, 0, z - 0.01f ), radius + tickHeight / 2, radius, 0, -ee, vertsPerPolyData->writable(), vertIds, pp );
+	}
+
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPolyData, vertIdsData, "linear", ppData );
+	mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
+	mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( color ) );
+	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
+	group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicatorLinear( float exposure, bool cameraFacing )
+{
+	const float z = 0.1f;
+
+	// We use a 'DSLR' exposure indicator style gauge, with a non-linear scale
+	// between +/- 0.5 in local space.
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get() );
+	addConstantShader( group.get(), false, cameraFacing ? 0 : -1 );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	std::vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	std::vector<V3f> &p = pData->writable();
+
+	static const int divisions = 5;
+
+	static const float tickHeight = 0.05f;
+
+	// axis
+
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( -0.5f, 0, z ) );
+	p.push_back( V3f( 0.5f, 0, z ) );
+
+	// Scale first
+
+	static const float maxExposure = 10.0f;
+
+	// make the 0 mark larger
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( 0, -tickHeight * 1.5f, z ) );
+	p.push_back( V3f( 0, 0, z ) );
+
+	for( int i = 1; i <= divisions; ++i )
+	{
+		const float x = exposureToScale( maxExposure * i / divisions, maxExposure, -0.5f, 0.5f );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( V3f( x, 0, z ) );
+		p.push_back( V3f( x, -tickHeight, z ) );
+
+		vertsPerCurve.push_back( 2 );
+		p.push_back( V3f( -x, 0, z ) );
+		p.push_back( V3f( -x, -tickHeight, z ) );
+	}
+
+	// Legend
+
+	// -
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( -0.6f, 0, z ) );
+	p.push_back( V3f( -0.55f, 0, z ) );
+	// +
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( 0.55f, 0, z ) );
+	p.push_back( V3f( 0.6f, 0, z ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( 0.575f, -0.025f, z ) );
+	p.push_back( V3f( 0.575f, 0.025f, z ) );
+
+	// exposure mark (remap so it works well with our scale)
+
+	const float ex = exposureToScale( exposure, maxExposure, -0.5f, 0.5f );
+
+	vertsPerCurve.push_back( 3 );
+	p.push_back( V3f( ex, 0, z ) );
+	p.push_back( V3f( ex - ( 2.0 * tickHeight ) / 3, ( 2.0 * tickHeight ), z ) );
+	p.push_back( V3f( ex + ( 2.0 * tickHeight ) / 3, ( 2.0 * tickHeight ), z ) );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), true, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( g_lightWireframeColor ) ) ) );
+
+	group->addChild( curves );
+
+	IntVectorDataPtr vertsPerPolyData = new IntVectorData;
+	IntVectorDataPtr vertIdsData = new IntVectorData;
+	V3fVectorDataPtr ppData = new V3fVectorData;
+
+	vector<int> &vertIds = vertIdsData->writable();
+	vector<V3f> &pp = ppData->writable();
+
+	vertIds.push_back( 0 );
+	vertIds.push_back( 1 );
+	vertIds.push_back( 2 );
+	vertsPerPolyData->writable().push_back( 3 );
+	pp.push_back( V3f( ex, 0, z ) );
+	pp.push_back( V3f( ex - ( 2.0 * tickHeight ) / 3, ( 2.0 * tickHeight ), z ) );
+	pp.push_back( V3f( ex + ( 2.0 * tickHeight ) / 3, ( 2.0 * tickHeight ), z ) );
+
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPolyData, vertIdsData, "linear", ppData );
+	mesh->variables["N"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
+	mesh->variables["Cs"] = IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( 1.0 ) ) );
+	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
+	group->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
 
 	return group;
 }
