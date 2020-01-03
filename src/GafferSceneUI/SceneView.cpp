@@ -166,6 +166,8 @@ class SceneView::DrawingMode : public boost::signals::trackable
 
 			NameValuePlugPtr lightProjectionPlug = new Gaffer::NameValuePlug( "gl:light:projection", new IECore::BoolData( true ), true, "lightProjection" );
 			attr->addChild( lightProjectionPlug );
+			NameValuePlugPtr lightExposurePlug = new Gaffer::NameValuePlug( "gl:light:exposureIndicator", new IECore::StringData( "radial" ), true, "lightExposureIndicator" );
+			attr->addChild( lightExposurePlug );
 
 			attr->addChild( ornamentScalePlug );
 
@@ -191,11 +193,13 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			drawingMode->addChild( lights );
 			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
 			lights->addChild( new BoolPlug( "projection", Plug::In, true ) );
+			lights->addChild( new StringPlug( "exposureIndicator", Plug::In, "radial" ) );
 
 			drawingMode->addChild( ornamentScaleValuePlug->createCounterpart( "visualiserOrnamentScale", Plug::Direction::In ) );
 
 			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
 			lightProjectionPlug->getChild<BoolPlug>( "value" )->setInput( lights->getChild<BoolPlug>( "projection" ) );
+			lightExposurePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "exposureIndicator" ) );
 			ornamentScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserOrnamentScale" ) );
 
 			updateOpenGLOptions();

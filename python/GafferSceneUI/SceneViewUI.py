@@ -236,6 +236,16 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
+		lightExposurePlug = self.getPlug()["light"]["exposureIndicator"]
+		for mode in ( "none", "radial", "linear", "concentric" ) :
+			m.append(
+				"/Lights/Exposure Indicator/" + IECore.CamelCase.toSpaced( mode ),
+				{
+					"command" : functools.partial( lambda m, _ : lightExposurePlug.setValue( m ), mode ),
+					"checkBox" : lightExposurePlug.getValue() == mode
+				}
+			)
+
 		for n in ( "useGLLines", "interpolate" ) :
 			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(

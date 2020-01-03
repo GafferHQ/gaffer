@@ -150,6 +150,26 @@ Gaffer.Metadata.registerNode(
 			projection of their light.
 			"""
 
+		],
+
+		"visualiserAttributes.lightExposureIndicator" : [
+
+			"description",
+			"""
+			Controls whether applicable lights draw a representation of the
+			projection of their light.
+			"""
+
+		],
+
+		"visualiserAttributes.lightExposureIndicator.value" : [
+
+			"preset:None", "none",
+			"preset:Linear Gauge", "linear",
+			"preset:Radial Gauge", "radial",
+			"preset:Concentric", "concentric",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
 		]
 
 	}

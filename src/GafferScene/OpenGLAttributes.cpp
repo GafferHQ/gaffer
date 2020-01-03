@@ -84,6 +84,7 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", new IntPlug( "value", Gaffer::Plug::Direction::In, 512, 2, 2048 ), false, "visualiserMaxTextureResolution" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), false, "lightDrawingMode" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "gl:light:projection", new IECore::BoolData( true ), false, "lightProjection" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "gl:light:exposureIndicator", new IECore::StringData( "radial" ), false, "lightExposureIndicator" ) );
 }
 
 OpenGLAttributes::~OpenGLAttributes()

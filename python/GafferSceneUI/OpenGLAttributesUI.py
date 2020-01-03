@@ -420,6 +420,28 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visualisers",
 
+		],
+
+		"attributes.lightExposureIndicator" : [
+
+			"description",
+			"""
+			Controls whether applicable lights draw a representation of their
+			exposure value.
+			""",
+
+			"layout:section", "Visualisers",
+
+		],
+
+		"attributes.lightExposureIndicator.value" : [
+
+			"preset:None", "none",
+			"preset:Linear Gauge", "linear",
+			"preset:Radial Gauge", "radial",
+			"preset:Concentric", "concentric",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
 		]
 
 	}
