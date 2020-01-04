@@ -1,23 +1,11 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - master
-      - *_maintenance
-  pull_request:
-    branches:
-      - master
-      - *_maintenance
+on: [push]
 
 jobs:
-
   build:
 
-    runs-on: ubuntu-16.04
-
-    container:
-      image: gafferhq/build:1.0.0
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
@@ -27,3 +15,31 @@ jobs:
       run: |
         echo Add other actions to build,
         echo test, and deploy your project.
+
+# on:
+#   push:
+#     branches:
+#       - master
+#       - *_maintenance
+#   pull_request:
+#     branches:
+#       - master
+#       - *_maintenance
+
+# jobs:
+
+#   build:
+
+#     runs-on: ubuntu-16.04
+
+#     container:
+#       image: gafferhq/build:1.0.0
+
+#     steps:
+#     - uses: actions/checkout@v1
+#     - name: Run a one-line script
+#       run: echo Hello, world!
+#     - name: Run a multi-line script
+#       run: |
+#         echo Add other actions to build,
+#         echo test, and deploy your project.
