@@ -46,7 +46,7 @@ jobs:
        echo $PATH
        echo `which g++`
        g++ --version
-       scons package -j 2 ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=RELEASE DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT= BUILD_DIR=./build BUILD_CACHEDIR=sconsCache
+       scons package -j 2 SPHINX=disableDocsForNow ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=RELEASE DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT= BUILD_DIR=./build BUILD_CACHEDIR=sconsCache
 
 #       -j ${{ parameters.threads }} BUILD_TYPE=${{ parameters.buildType }} ARNOLD_ROOT=$ARNOLD_ROOT INSTALL_DIR=./install/$(Gaffer.Build.Name)
 
