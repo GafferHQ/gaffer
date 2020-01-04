@@ -3,6 +3,7 @@ name: CI
 on: [push]
 
 jobs:
+
   build:
 
     runs-on: ubuntu-latest
@@ -21,6 +22,23 @@ jobs:
 
 #        ./config/installArnold.sh
 
+## \todo We need to include the following in the cache keys :
+#
+#  - dependencies version (including renderers)
+#  - docker container version
+#  - build type
+
+# the cache keys
+
+    - name: Cache SCons build files
+      uses: actions/cache@v1
+      with:
+        path: sconsCache
+        key: ${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ github.sha }}
+          ${{ runner.os }}-
+
     - name: Build
       run: |
        source /opt/rh/devtoolset-6/enable
@@ -37,8 +55,9 @@ jobs:
      #   DISPLAY: :99.0
      #   AZURE: 1
 
-    - name: Run a one-line script
-      run: echo Hello, world!
+    - name: Limit cache size
+      run: python ./config/limitCacheSize.py
+
     - name: Run a multi-line script
       run: |
         echo Add other actions to build,
