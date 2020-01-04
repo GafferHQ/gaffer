@@ -9,6 +9,7 @@ jobs:
 
     container:
        image: gafferhq/build:1.0.0
+       options: --entrypoint "scl enable devtoolset-6 -- bash"
 
     steps:
 
