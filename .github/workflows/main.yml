@@ -9,7 +9,6 @@ jobs:
 
     container:
        image: gafferhq/build:1.0.0
-       options: --entrypoint "scl enable devtoolset-6 -- bash"
 
     steps:
 
@@ -24,6 +23,7 @@ jobs:
 
     - name: Build
       run: |
+       source /opt/rh/devtoolset-6/enable
        echo BUILD_TYPE=$BUILD_TYPE
        echo $PATH
        echo `which g++`
