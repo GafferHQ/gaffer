@@ -11,13 +11,33 @@ jobs:
        image: gafferhq/build:1.0.0
 
     steps:
+
     - uses: actions/checkout@v1
+
+    - name: Install Dependencies
+      run: |
+         ./config/installDelight.sh
+         ./config/installDependencies.sh
+
+#         ./config/installArnold.sh
+
     - name: Run a one-line script
       run: echo Hello, world!
     - name: Run a multi-line script
       run: |
         echo Add other actions to build,
         echo test, and deploy your project.
+
+    # script: |
+    #    ./config/installDelight.sh &&
+    #    ./config/installArnold.sh &&
+    #    ./config/installDependencies.sh ./build
+    #  displayName: 'Install Dependencies'
+    #  env:
+    #    ARNOLD_LOGIN: $(arnoldLogin)
+    #    ARNOLD_PASSWORD: $(arnoldPassword)
+    #    AZURE: 1
+
 
 # on:
 #   push:
