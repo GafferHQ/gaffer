@@ -14,12 +14,27 @@ jobs:
 
     - uses: actions/checkout@v1
 
-    - name: Install Dependencies
-      run: |
-         ./config/installDelight.sh
-         ./config/installDependencies.sh
+    # - name: Install Dependencies
+    #   run: |
+    #      ./config/installDelight.sh
+    #      ./config/installDependencies.sh
 
 #         ./config/installArnold.sh
+
+    - name: Build
+      run: |
+       echo BUILD_TYPE=$BUILD_TYPE
+       echo $PATH
+       echo `which g++`
+       g++ --version
+       scons package -j 2 ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=RELEASE DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT= BUILD_DIR=./build BUILD_CACHEDIR=sconsCache
+
+#       -j ${{ parameters.threads }} BUILD_TYPE=${{ parameters.buildType }} ARNOLD_ROOT=$ARNOLD_ROOT INSTALL_DIR=./install/$(Gaffer.Build.Name)
+
+     # displayName: 'Build'
+     # env:
+     #   DISPLAY: :99.0
+     #   AZURE: 1
 
     - name: Run a one-line script
       run: echo Hello, world!
