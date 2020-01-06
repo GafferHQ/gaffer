@@ -786,10 +786,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicator( const s
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicatorSimple( float exposure, bool cameraFacing )
 {
 	const float radius = 0.35f;
-	static const int divisions = 10;
 	static const float maxExposure = 10.0f;
-
-	static const float halfTickHeight = 0.025f;
 
 	const float e = exposureToScale( exposure, maxExposure, 0.1f * radius, 1.9f * radius );
 
@@ -807,49 +804,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::exposureIndicatorSimple( f
 	std::vector<V3f> &p = pData->writable();
 
 	const V3f wireOrigin( 0, 0, 0.015f );
-
-	// Cross
-
-	const float minC = e > radius ? radius * 0.9f : radius * 0.1f;
-	const float maxC = e > radius ? radius * 1.9f : radius * 0.9f;
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( wireOrigin + V3f( minC, 0, 0 ) );
-	p.push_back( wireOrigin + V3f( maxC, 0, 0 ) );
-	vertsPerCurve.push_back( 2 );
-	p.push_back( wireOrigin + V3f( 0, minC, 0 ) );
-	p.push_back( wireOrigin + V3f( 0, maxC, 0 ) );
-	vertsPerCurve.push_back( 2 );
-	p.push_back( wireOrigin + V3f( -minC, 0, 0 ) );
-	p.push_back( wireOrigin + V3f( -maxC, 0, 0 ) );
-	vertsPerCurve.push_back( 2 );
-	p.push_back( wireOrigin + V3f( 0, -minC, 0 ) );
-	p.push_back( wireOrigin + V3f( 0, -maxC, 0 ) );
-
-	// Marks
-
-	const float startExp = e > radius ? 0 : -maxExposure;
-
-	for( int i = 1; i <= divisions; ++i )
-	{
-		const float a = exposureToScale( startExp + maxExposure  * ( float(i) / divisions ), maxExposure, 0.2f * radius, 1.8f * radius );
-
-		vertsPerCurve.push_back( 2 );
-		p.push_back( wireOrigin + V3f( a, -halfTickHeight, 0 ) );
-		p.push_back( wireOrigin + V3f( a, halfTickHeight, 0 ) );
-
-		vertsPerCurve.push_back( 2 );
-		p.push_back( wireOrigin + V3f( -a, -halfTickHeight, 0 ) );
-		p.push_back( wireOrigin + V3f( -a, halfTickHeight, 0 ) );
-
-		vertsPerCurve.push_back( 2 );
-		p.push_back( wireOrigin + V3f( -halfTickHeight, a, 0 ) );
-		p.push_back( wireOrigin + V3f( halfTickHeight, a, 0 ) );
-
-		vertsPerCurve.push_back( 2 );
-		p.push_back( wireOrigin + V3f( -halfTickHeight, -a, 0 ) );
-		p.push_back( wireOrigin + V3f( halfTickHeight, -a, 0 ) );
-	}
 
 	// Legend
 
