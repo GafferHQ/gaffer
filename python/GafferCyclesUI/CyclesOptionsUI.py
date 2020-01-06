@@ -272,6 +272,12 @@ def __filmSummary( plug ) :
 	if plug["useSampleClamp"]["enabled"].getValue() :
 		info.append( "Use Sample Clamp {}".format( plug["useSampleClamp"]["value"].getValue() ) )
 
+	if plug["cryptomatteAccurate"]["enabled"].getValue() :
+		info.append( "Cryptomatte Accurate {}".format( plug["cryptomatteAccurate"]["value"].getValue() ) )
+
+	if plug["cryptomatteDepth"]["enabled"].getValue() :
+		info.append( "Cryptomatte Depth {}".format( plug["cryptomatteDepth"]["value"].getValue() ) )
+
 	return ", ".join( info )
 
 def __denoisingSummary( plug ) :
@@ -1570,6 +1576,28 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Use sample clamp.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.cryptomatteAccurate" : [
+
+			"description",
+			"""
+			Generate a more accurate Cryptomatte pass. CPU only, may render slower and use more memory.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.cryptomatteDepth" : [
+
+			"description",
+			"""
+			Sets how many unique objects can be distinguished per pixel.
 			""",
 
 			"layout:section", "Film",

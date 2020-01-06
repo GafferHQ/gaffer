@@ -74,7 +74,6 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/optional.hpp"
 
 #include "tbb/concurrent_unordered_map.h"
@@ -369,30 +368,12 @@ int denoiseComponents( ccl::DenoisingPassOffsets type )
 	}
 }
 
-int getNumMultiPassNames( const std::string &dataName, std::string &baseName )
-{
-	vector<string> split;
-	boost::split( split, dataName, boost::is_any_of( "<" ) );
-	string numStr = boost::erase_all_copy( split.back(), ">" );
-	baseName = split.front();
-	try
-	{
-		int num = boost::lexical_cast<int>( numStr );
-		return num;
-	}
-	catch( const std::exception& e )
-	{
-		IECore::msg( IECore::Msg::Warning, "CyclesRenderer::output", boost::format( "Cannot determine number of passes for \"%s\". Try using <num_passes> on the end of data." ) % dataName );
-		return 0;
-	}
-}
-
 class CyclesOutput : public IECore::RefCounted
 {
 
 	public :
 
-		CyclesOutput( const IECoreScene::Output *output ) : m_denoisingPassOffsets( -1 )
+		CyclesOutput( const IECoreScene::Output *output, const ccl::Scene *scene = nullptr ) : m_denoisingPassOffsets( -1 )
 		{
 			m_name = output->getName();
 			m_type = output->getType();
@@ -400,16 +381,24 @@ class CyclesOutput : public IECore::RefCounted
 			m_passType = nameToPassType( m_data );
 			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
 
+			const int instances = parameter<int>( output->parameters(), "instances", 1 );
+
 #ifdef WITH_CYCLES_LIGHTGROUPS
 			if( m_passType == ccl::PASS_LIGHTGROUP )
 			{
-				int num = getNumMultiPassNames( output->getData(), m_data );
-				m_images.resize( num );
+				m_images.resize( instances );
 			}
 			else
 #endif
 			{
-				m_images.resize( 1 );
+				if( scene && m_passType == ccl::PASS_CRYPTOMATTE )
+				{
+					m_images.resize( scene->film->cryptomatte_depth );
+				}
+				else
+				{
+					m_images.resize( 1 );
+				}
 			}
 
 			if( ( m_passType == ccl::PASS_AOV_COLOR ) || ( m_passType == ccl::PASS_AOV_VALUE ) )
@@ -508,6 +497,47 @@ class CyclesOutput : public IECore::RefCounted
 				IECore::msg( IECore::Msg::Debug, "CyclesRenderer::CyclesOutput", boost::format( "Skipping interactive output: \"%s\"." ) % m_name );
 				return;
 			}
+
+			// If it's a cryptomatte, we merge the multiple depths to one exr as per the spec.
+			if( m_passType == ccl::PASS_CRYPTOMATTE )
+			{
+				if( m_type != "exr" )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Unsupported display type \"%s\"." ) % m_type );
+					return;
+				}
+
+				IECoreImage::ImagePrimitivePtr imageCopy = m_images.front()->image()->copy();
+				for( int i = 1; i < m_images.size(); ++i )
+				{
+					std::vector<std::string> channelNames;
+					auto image = m_images[i]->image();
+					image->channelNames( channelNames );
+					for( std::string channelName : channelNames )
+					{
+						IECore::FloatVectorDataPtr channel = imageCopy->createChannel<float>( channelName );
+						channel = image->getChannel<float>( channelName )->copy();
+					}
+				}
+				IECore::WriterPtr writer = IECoreImage::ImageWriter::create( imageCopy, "tmp." + m_type );
+				if( !writer )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::CyclesOutput", boost::format( "Unsupported display type \"%s\"." ) % m_type );
+					return;
+				}
+
+				writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
+				if( m_quantize == ccl::TypeDesc::UINT16 )
+					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "half" );
+				else if( m_quantize == ccl::TypeDesc::FLOAT )
+					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "float" );
+
+				// TODO: Figure out how to apply the correct metadata for Cryptomatte EXRs to work.
+
+				writer->write();
+				return;
+			}
+
 			for( auto image : m_images )
 			{
 				if( !image )
@@ -525,10 +555,11 @@ class CyclesOutput : public IECore::RefCounted
 				}
 
 				writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
-				//if( m_quantize == ccl::TypeDesc::UINT16 )
-				//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'half' );
-				//else if( m_quantize == ccl::TypeDesc::UINT16 )
-				//	writer->parameters()->parameter<IECore::StringParameter>( "openexr.dataType" )->setTypedValue( 'float' );
+				if( m_quantize == ccl::TypeDesc::UINT16 )
+					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "half" );
+				else if( m_quantize == ccl::TypeDesc::FLOAT )
+					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "float" );
+
 				writer->write();
 			}
 		}
@@ -617,17 +648,24 @@ class RenderCallback : public IECore::RefCounted
 				int components = output.second->m_components;
 
 #ifdef WITH_CYCLES_LIGHTGROUPS
-				if( passType == ccl::PASS_LIGHTGROUP )
+				if( ( passType == ccl::PASS_LIGHTGROUP ) || ( passType == ccl::PASS_CRYPTOMATTE ) )
+#else
+				if( passType == ccl::PASS_CRYPTOMATTE )
+#endif
 				{
-					for( int i = 1; i <= output.second->m_images.size(); ++i )
+					int num = 0;
+					for( int i = 0; i < output.second->m_images.size(); ++i )
 					{
-						name = ( boost::format( "%s%02i" ) % output.second->m_data % i ).str();
+#ifdef WITH_CYCLES_LIGHTGROUPS
+						if( passType == ccl::PASS_LIGHTGROUP )
+							num = i + 1;
+#endif
+						name = ( boost::format( "%s%02i" ) % output.second->m_data % num ).str();
 						if( m_interactive )
 							getChannelNames( name, components, channelNames );
 					}
 				}
 				else
-#endif
 				{
 					if( m_interactive )
 						getChannelNames( name, components, channelNames );
@@ -746,13 +784,19 @@ class RenderCallback : public IECore::RefCounted
 				int numChannels = output.second->m_components;
 
 #ifdef WITH_CYCLES_LIGHTGROUPS
-				if( output.second->m_passType == ccl::PASS_LIGHTGROUP )
+				if( ( output.second->m_passType == ccl::PASS_LIGHTGROUP ) || ( output.second->m_passType == ccl::PASS_CRYPTOMATTE ) )
+#else
+				if( output.second->m_passType == ccl::PASS_CRYPTOMATTE )
+#endif
 				{
-					int i = 0;
+					int num = 0;
+#ifdef WITH_CYCLES_LIGHTGROUPS
+					if( output.second->m_passType == ccl::PASS_LIGHTGROUP )
+						num += 1;
+#endif
 					for( auto image : output.second->m_images )
 					{
-						i += 1;
-						read = buffers->get_pass_rect( ( boost::format( "%s%02i" ) % output.second->m_data % i ).str().c_str(), exposure, sample, numChannels, &tileData[0] );
+						read = buffers->get_pass_rect( ( boost::format( "%s%02i" ) % output.second->m_data % num ).str().c_str(), exposure, sample, numChannels, &tileData[0] );
 						if( !read )
 							memset( &tileData[0], 0, tileData.size()*sizeof(float) );
 
@@ -760,10 +804,11 @@ class RenderCallback : public IECore::RefCounted
 							outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
 						else
 							image->imageData( tile, &tileData[0], w * h * numChannels );
+
+						++num;
 					}
 				}
 				else
-#endif
 				{
 					read = buffers->get_pass_rect( output.second->m_data.c_str(), exposure, sample, numChannels, &tileData[0] );
 
@@ -775,7 +820,7 @@ class RenderCallback : public IECore::RefCounted
 
 					if( !read )
 						memset( &tileData[0], 0, tileData.size()*sizeof(float) );
-					
+
 					if( m_interactive )
 						outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
 					else
@@ -2629,7 +2674,11 @@ std::array<IECore::InternedString, 9> g_squareSamplesOptionNames = { {
 	"ccl:integrator:adaptive_min_samples",
 } };
 // Dicing camera
-IECore::InternedString g_dicingCameraOptionName( "ccl::dicing_camera" );
+IECore::InternedString g_dicingCameraOptionName( "ccl:dicing_camera" );
+
+// Cryptomatte
+IECore::InternedString g_cryptomatteAccurateOptionName( "ccl:film:cryptomatte_accurate" );
+IECore::InternedString g_cryptomatteDepthOptionName( "ccl:film:cryptomatte_depth");
 
 // Texture cache
 IECore::InternedString g_useTextureCacheOptionName( "ccl:texture:use_texture_cache" );
@@ -2711,6 +2760,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
+				m_sessionParams.samples = INT_MAX;
 				m_sessionParams.progressive = true;
 				m_sessionParams.progressive_refine = true;
 				m_sessionParams.progressive_update_timeout = 0.1;
@@ -3185,6 +3235,40 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_FLAG(g_denoisingSubsurfaceIndirectOptionName);
 				#undef OPTION_FLAG
 
+				if( name == g_cryptomatteAccurateOptionName )
+				{
+					if( value == nullptr )
+					{
+						film->cryptomatte_passes = ccl::CRYPT_NONE;
+						return;
+					}
+					if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+					{
+						if( data->readable() )
+						{
+							film->cryptomatte_passes = (ccl::CryptomatteType)(ccl::CRYPT_NONE | ccl::CRYPT_ACCURATE);
+							return;
+						}
+					}
+				}
+
+				if( name == g_cryptomatteDepthOptionName )
+				{
+					if( value == nullptr )
+					{
+						film->cryptomatte_depth = std::min( 16, 2 ) / 2;
+						return;
+					}
+					if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						if( data->readable() )
+						{
+							film->cryptomatte_depth = std::min( 16, data->readable() ) / 2;
+							return;
+						}
+					}
+				}
+
 				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 9 ) );
 				if( value && input )
 				{
@@ -3327,21 +3411,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					auto *o = coutput->second.get();
 					auto passType = nameToPassType( o->m_data );
-					if( passType == ccl::PASS_CRYPTOMATTE )
-					{
-						if( o->m_name == "cryptomatte_asset" )
-						{
-							film->cryptomatte_passes = (ccl::CryptomatteType)(film->cryptomatte_passes & ~(ccl::CRYPT_ASSET) );
-						}
-						else if( o->m_name == "cryptomatte_object" )
-						{
-							film->cryptomatte_passes = (ccl::CryptomatteType)(film->cryptomatte_passes & ~(ccl::CRYPT_OBJECT) );
-						}
-						else if( o->m_name == "cryptomatte_material" )
-						{
-							film->cryptomatte_passes =  (ccl::CryptomatteType)(film->cryptomatte_passes & ~(ccl::CRYPT_MATERIAL) );
-						}
-					}
 					m_outputs.erase( name );
 				}
 				else
@@ -3366,12 +3435,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				auto passType = nameToPassType( output->getData() );
 				// Add output pass
+#ifdef WITH_CYCLES_LIGHTGROUPS
+				if( ( passType == ccl::PASS_LIGHTGROUP ) || ( passType == ccl::PASS_CRYPTOMATTE ) )
+#else
 				if( passType == ccl::PASS_CRYPTOMATTE )
+#endif
 				{
 					const auto coutput = m_outputs.find( name );
 					if( coutput == m_outputs.end() )
 					{
-						m_outputs[name] = new CyclesOutput( output );
+						m_outputs[name] = new CyclesOutput( output, m_scene );
 					}
 				}
 				else if( !ccl::Pass::contains( film->passes, passType ) )
@@ -3482,7 +3555,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_scene->reset();
 						//m_session->update_scene();
 						m_session->reset( m_bufferParams, m_sessionParams.samples );
-						//m_session->set_pause( false );
+						m_session->set_pause( false );
 					}
 
 					m_scene->mutex.unlock();
@@ -3615,7 +3688,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Set a more sane default than the arbitrary 0.8f
 			m_scene->film->exposure = 1.0f;
-			m_scene->film->cryptomatte_depth = 2;
+			m_scene->film->cryptomatte_depth = std::min( 16, 2 ) / 2;
 			m_scene->film->tag_update( m_scene );
 
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
@@ -3656,7 +3729,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			integrator->method = (ccl::Integrator::Method)m_sessionParams.progressive;
 			if( !m_sessionParams.progressive )
+			{
 				m_sessionParams.progressive_refine = false;
+				m_sessionParams.samples = integrator->aa_samples;
+			}
 
 			if( m_backgroundShader )
 				background->shader = m_backgroundShader.get();
@@ -3722,6 +3798,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					break;
 				}
 			}
+
+			// Reset Cryptomatte settings
+			ccl::CryptomatteType cryptoPasses = ccl::CRYPT_NONE;
+			if( m_scene->film->cryptomatte_passes & ccl::CRYPT_ACCURATE )
+			{
+				cryptoPasses = (ccl::CryptomatteType)( cryptoPasses | ccl::CRYPT_ACCURATE );
+			}
+			m_scene->film->cryptomatte_passes = cryptoPasses;
+
 			for( auto &coutput : m_outputs )
 			{
 				if( coutput.second->m_passType == ccl::PASS_COMBINED )
@@ -3730,29 +3815,26 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				else if( coutput.second->m_passType == ccl::PASS_CRYPTOMATTE )
 				{
-					string cryptoName( "Crypto" );
 					if( coutput.second->m_data == "cryptomatte_asset" )
 					{
-						cryptoName += "Asset";
 						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_ASSET );
 					}
 					else if( coutput.second->m_data == "cryptomatte_object" )
 					{
-						cryptoName += "Object";
 						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_OBJECT );
 					}
 					else if( coutput.second->m_data == "cryptomatte_material" )
 					{
-						cryptoName += "Material";
 						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_MATERIAL );
 					}
 					else
 					{
 						continue;
 					}
+
 					for( int i = 0; i < m_scene->film->cryptomatte_depth; ++i )
 					{
-						string cryptoFullName = ( boost::format( "%s%02i" ) % cryptoName % i ).str();
+						string cryptoFullName = ( boost::format( "%s%02i" ) % coutput.second->m_data % i ).str();
 						ccl::Pass::add( ccl::PASS_CRYPTOMATTE, m_bufferParamsModified.passes, cryptoFullName.c_str() );
 					}
 					continue;
@@ -3874,6 +3956,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_scene->film->passes.push_back( *it );
 			}
+
+			// Fix up cryptomatte outputs
+			if( m_scene->film->cryptomatte_passes != m_film.cryptomatte_passes )
+			{
+				for( auto &output : m_outputs )
+				{
+					if( output.second->m_passType == ccl::PASS_CRYPTOMATTE )
+					{
+						output.second->m_images.resize( m_film.cryptomatte_passes );
+					}
+				}
+			}
+			// These don't have sockets
+			m_scene->film->cryptomatte_passes = m_film.cryptomatte_passes;
+			m_scene->film->cryptomatte_depth = m_film.cryptomatte_depth;
+
 			#define CURVES_SET(OPTION) m_scene->curve_system_manager->OPTION = m_curveSystemManager.OPTION;
 			CURVES_SET(primitive);
 			CURVES_SET(curve_shape);
@@ -3891,7 +3989,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->film->tag_update( m_scene );
 			m_scene->curve_system_manager->tag_update( m_scene );
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
-			
+
 			//m_session->progress.reset();
 			//m_scene->reset();
 			//m_session->tile_manager.set_tile_order( m_sessionParams.tile_order );

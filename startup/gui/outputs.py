@@ -97,10 +97,22 @@ with IECore.IgnoredExceptions( ImportError ) :
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
 
 		data = aov
+
+		interactiveOutput = {
+			"driverType" : "ClientDisplayDriver",
+			"displayHost" : "localhost",
+			"displayPort" : "${image:catalogue:port}",
+			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+		}
+		batchOutput = { "quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ) }
+
 		if data == "lightgroups":
 			if not GafferCycles.withLightGroups :
 				continue
-			data = "lightgroup<8>"
+			data = "lightgroup"
+			interactiveOutput["instances"] = 8
+			batchOutput["instances"] = 8
 
 		if data == "aov_color" :
 			data = "AOVC aov_color"
@@ -114,12 +126,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 				aov,
 				"ieDisplay",
 				data,
-				{
-					"driverType" : "ClientDisplayDriver",
-					"displayHost" : "localhost",
-					"displayPort" : "${image:catalogue:port}",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-				}
+				interactiveOutput
 			)
 		)
 
@@ -129,5 +136,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, data ),
 				"exr",
 				data,
+				batchOutput
 			)
 		)

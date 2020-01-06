@@ -188,6 +188,8 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_depth", new IECore::FloatData( 100.0f ), false, "mistDepth" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_falloff", new IECore::FloatData( 1.0f ), false, "mistFalloff" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:use_sample_clamp", new IECore::BoolData( false ), false, "useSampleClamp" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:cryptomatte_accurate", new IECore::BoolData( false ), false, "cryptomatteAccurate" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:cryptomatte_depth", new IECore::IntData( 2 ), false, "cryptomatteDepth" ) );
 
 	// Multi-Device
 	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
