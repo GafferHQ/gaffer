@@ -733,7 +733,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
-		"additionalFiles" : glob.glob( "glsl/*.frag" ) + glob.glob( "glsl/*.vert" ) + glob.glob( "include/GafferScene/Private/IECore*Preview/*.h" )
+		"additionalFiles" : glob.glob( "glsl/*.frag" ) + glob.glob( "glsl/*.vert" ) + glob.glob( "include/GafferScene/Private/IECore*Preview/*.h" ) + glob.glob( "include/GafferScene/Private/IECore*Preview/Private/*.h" )
 	},
 
 	"GafferSceneTest" : {
