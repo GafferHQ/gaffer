@@ -242,6 +242,8 @@ class SceneView::DrawingMode : public boost::signals::trackable
 				"forAll" :
 				"forGLPoints"
 			);
+
+			sceneGadget()->setOpenGLOptions( options.get() );
 		}
 
 		CustomAttributesPtr m_preprocessor;
