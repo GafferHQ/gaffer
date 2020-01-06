@@ -631,7 +631,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 	{
 		const float angle = M_PI * 2.0f * float(i)/(float)numRays;
 		const V3f dir( 0.0, sin( angle ), -cos( angle ) );
-		addRay( dir * (.5 + radius), dir * (1 + radius), vertsPerCurve->writable(), p->writable() );
+		addRay( dir * ( 0.2f + radius ), dir * ( 0.5f + radius ), vertsPerCurve->writable(), p->writable() );
 	}
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
