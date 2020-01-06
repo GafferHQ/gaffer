@@ -37,6 +37,7 @@
 
 import argparse
 import os
+import sys
 import tarfile
 
 # A script to validate a Gaffer release archive
@@ -56,7 +57,10 @@ if not os.path.exists( args.archive ) :
 	parser.exit( 1, "The specified archive '%s' does not exist." % args.archive )
 
 
-print( "Validating %s" % args.archive )
+print( "Validating %s..." % args.archive )
+# We often see the exit printout before the above on Azure, which overlaps
+# lines and confuses one. Make sure this gets printed early on.
+sys.stdout.flush()
 
 # Validate the release contains our mandatory components
 
@@ -82,9 +86,10 @@ with tarfile.open( args.archive, "r:gz" ) as a:
 
 	missing = [ p for p in requiredPaths if p not in archivePaths ]
 	if missing :
-		parser.exit( 1,
-			"ERROR: The following are missing from the archive:\n%s"
-				% "\n".join( missing )
+		sys.stderr.write(
+			"ERROR: The following are missing from the archive:\n%s\n"
+				% "\n".join( [ " - %s" % m for m in missing ] ),
 		)
+		sys.exit( 1 )
 
 print( "Archive appears OK" )
