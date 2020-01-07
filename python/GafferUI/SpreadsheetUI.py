@@ -87,7 +87,7 @@ Gaffer.Metadata.registerNode(
 
 		"*" : [
 
-			"noduleLayout:visible", False,
+			"nodule:type", "",
 
 		],
 
