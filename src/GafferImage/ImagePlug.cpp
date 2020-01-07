@@ -125,18 +125,11 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
-	/// \todo Default value should be empty.
-	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
-	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
-	channelStrVector.push_back("R");
-	channelStrVector.push_back("G");
-	channelStrVector.push_back("B");
-
 	addChild(
 		new StringVectorDataPlug(
 			"channelNames",
 			direction,
-			channelStrVectorData,
+			new StringVectorData(),
 			childFlags
 		)
 	);

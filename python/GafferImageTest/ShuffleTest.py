@@ -90,10 +90,10 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 	def testAddConstantChannel( self ) :
 
 		s = GafferImage.Shuffle()
-		self.assertEqual( s["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "G", "B" ] ) )
+		self.assertEqual( s["out"]["channelNames"].getValue(), IECore.StringVectorData() )
 
 		s["channels"].addChild( s.ChannelPlug( "A", "__white" ) )
-		self.assertEqual( s["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+		self.assertEqual( s["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "A" ] ) )
 
 		self.assertEqual( s["out"].channelData( "A", imath.V2i( 0 ) )[0], 1 )
 		self.assertTrue(

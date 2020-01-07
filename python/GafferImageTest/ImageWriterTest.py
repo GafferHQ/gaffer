@@ -55,7 +55,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	__largeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/large.exr" )
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
 	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150" )
-	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/defaultNegativeDisplayWindow.exr" )
 	__representativeDeepPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
 
 	longMessage = True
@@ -282,52 +281,26 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testDefaultFormatWrite( self ) :
 
 		s = Gaffer.ScriptNode()
-		w1 = GafferImage.ImageWriter()
-		w2 = GafferImage.ImageWriter()
-		g = GafferImage.Grade()
-
-		s.addChild( g )
-		s.addChild( w2 )
-
-		testScanlineFile = self.temporaryDirectory() + "/test.defaultFormat.scanline.exr"
-		testTileFile = self.temporaryDirectory() + "/test.defaultFormat.tile.exr"
-		self.failIf( os.path.exists( testScanlineFile ) )
-		self.failIf( os.path.exists( testTileFile ) )
+		s["c"] = GafferImage.Constant()
+		s["w"] = GafferImage.ImageWriter()
+		s["r"] = GafferImage.ImageReader()
 
 		GafferImage.FormatPlug.acquireDefaultFormatPlug( s ).setValue(
 			GafferImage.Format( imath.Box2i( imath.V2i( -7, -2 ), imath.V2i( 23, 25 ) ), 1. )
 		)
 
-		w1["in"].setInput( g["out"] )
-		w1["fileName"].setValue( testScanlineFile )
-		w1["channels"].setValue( "*" )
-		w1["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Scanline )
+		s["w"]["in"].setInput( s["c"]["out"] )
+		s["w"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		s["r"]["fileName"].setInput( s["w"]["fileName"] )
 
-		w2["in"].setInput( g["out"] )
-		w2["fileName"].setValue( testTileFile )
-		w2["channels"].setValue( "*" )
-		w2["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
+		for mode in ( GafferImage.ImageWriter.Mode.Scanline, GafferImage.ImageWriter.Mode.Tile ) :
 
-		# Try to execute. In older versions of the ImageWriter this would throw an exception.
-		with s.context() :
-			w1["task"].execute()
-			w2["task"].execute()
-		self.failUnless( os.path.exists( testScanlineFile ) )
-		self.failUnless( os.path.exists( testTileFile ) )
+			s["r"]["refreshCount"].setValue( s["r"]["refreshCount"].getValue() + 1 )
 
-		# Check the output.
-		expectedFile = self.__defaultFormatFile
-		expectedOutput = IECore.Reader.create( expectedFile ).read()
-		expectedOutput.blindData().clear()
-
-		writerScanlineOutput = IECore.Reader.create( testScanlineFile ).read()
-		writerScanlineOutput.blindData().clear()
-
-		writerTileOutput = IECore.Reader.create( testTileFile ).read()
-		writerTileOutput.blindData().clear()
-
-		self.assertEqual( writerScanlineOutput, expectedOutput )
-		self.assertEqual( writerTileOutput, expectedOutput )
+			s["w"]["openexr"]["mode"].setValue( mode )
+			with s.context() :
+				s["w"]["task"].execute()
+				self.assertImagesEqual( s["c"]["out"], s["r"]["out"], ignoreMetadata = True )
 
 	def testDefaultFormatOptionPlugValues( self ) :
 		w = GafferImage.ImageWriter()
@@ -1308,6 +1281,20 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		cleanOutput["in"].setInput( writer["in"] )
 		cleanOutput["channels"].setValue( "A" )
 		self.assertImagesEqual( reader["out"], cleanOutput["out"], ignoreMetadata=True, ignoreDataWindow=True, maxDifference=0.05 )
+
+	def testThrowsForEmptyChannels( self ) :
+
+		constant = GafferImage.Constant()
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( constant["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["channels"].setValue( "diffuse.[RGB]" )
+
+		with self.assertRaisesRegexp( Gaffer.ProcessException, "No channels to write" ) :
+			writer["task"].execute()
+
+		self.assertFalse( os.path.exists( writer["fileName"].getValue() ) )
 
 if __name__ == "__main__":
 	unittest.main()
