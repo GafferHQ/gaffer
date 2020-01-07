@@ -1378,8 +1378,12 @@ def __addColumn( spreadsheet, plug ) :
 	# plugs are added to spreadsheets.
 	columnName = Gaffer.Metadata.value( plug, "spreadsheet:columnName" ) or plug.getName()
 
-	columnIndex = spreadsheet["rows"].addColumn( plug, columnName )
-	valuePlug = spreadsheet["rows"]["default"]["cells"][columnIndex]["value"]
+	# Rows plug may have been promoted, in which case we need to edit
+	# the source, which will automatically propagate the new column to
+	# the spreadsheet.
+	rowsPlug = spreadsheet["rows"].source()
+	columnIndex = rowsPlug.addColumn( plug, columnName )
+	valuePlug = rowsPlug["default"]["cells"][columnIndex]["value"]
 	Gaffer.MetadataAlgo.copy( plug, valuePlug, exclude = "spreadsheet:columnName layout:* deletable" )
 
 	return columnIndex
