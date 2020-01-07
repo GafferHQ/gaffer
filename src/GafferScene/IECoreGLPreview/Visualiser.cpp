@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Private/IECoreGLPreview/Private/Visualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/Visualiser.h"
 
 #include "IECoreGL/Group.h"
 #include "IECoreGL/State.h"
