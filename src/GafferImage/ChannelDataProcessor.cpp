@@ -220,11 +220,32 @@ IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const 
 		int size = postAlphaData->readable().size();
 		const float *A = &postAlphaData->readable().front();
 		float *O = &outData->writable().front();
-		for( int j = 0; j < size; j++ )
+
+		if( repremultByProcessedAlpha )
 		{
-			*O *= *A;
-			A++;
-			O++;
+			const float *preA = &alphaData->readable().front();
+			for( int j = 0; j < size; j++ )
+			{
+				if( ! ( *A == 0 && *preA == 0 ) )
+				{
+					*O *= *A;
+				}
+				A++;
+				O++;
+				preA++;
+			}
+		}
+		else
+		{
+			for( int j = 0; j < size; j++ )
+			{
+				if( *A != 0 )
+				{
+					*O *= *A;
+				}
+				A++;
+				O++;
+			}
 		}
 
 	}

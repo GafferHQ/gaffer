@@ -234,7 +234,11 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 					float *C = &rgb[i]->writable().front();
 					for( int j = 0; j < samples; j++ )
 					{
-						*C *= *A;
+						// Pixels with no alpha aren't touched by either the unpremult or repremult
+						if( *A != 0 )
+						{
+							*C *= *A;
+						}
 						A++;
 						C++;
 					}
