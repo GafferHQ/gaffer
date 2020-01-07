@@ -111,6 +111,7 @@
 #include "util/util_array.h"
 #include "util/util_function.h"
 #include "util/util_logging.h"
+#include "util/util_murmurhash.h"
 #include "util/util_path.h"
 #include "util/util_vector.h"
 
@@ -368,6 +369,22 @@ int denoiseComponents( ccl::DenoisingPassOffsets type )
 	}
 }
 
+void updateCryptomatteMetadata( IECore::CompoundData *metadata, std::string &name, ccl::Scene *scene )
+{
+	std::string identifier = ccl::string_printf( "%08x", ccl::util_murmur_hash3( name.c_str(), name.length(), 0 ) );
+	std::string prefix = "cryptomatte/" + identifier.substr( 0, 7 ) + "/";
+	metadata->member<IECore::StringData>( prefix + "name", false, true )->writable() = name;
+	metadata->member<IECore::StringData>( prefix + "hash", false, true )->writable() = "MurmurHash3_32";
+	metadata->member<IECore::StringData>( prefix + "conversion", false, true )->writable() = "uint32_to_float32";
+
+	if( name == "cryptomatte_object" )
+		metadata->member<IECore::StringData>( prefix + "manifest", false, true )->writable() = scene->object_manager->get_cryptomatte_objects( scene );
+	else if( name == "cryptomatte_material" )
+		metadata->member<IECore::StringData>( prefix + "manifest", false, true )->writable() = scene->shader_manager->get_cryptomatte_materials( scene );
+	else if( name == "cryptomatte_asset" )
+		metadata->member<IECore::StringData>( prefix + "manifest", false, true )->writable() = scene->object_manager->get_cryptomatte_assets( scene );
+}
+
 class CyclesOutput : public IECore::RefCounted
 {
 
@@ -490,7 +507,7 @@ class CyclesOutput : public IECore::RefCounted
 			}
 		}
 
-		void writeImage()
+		void writeImage( ccl::Scene *scene )
 		{
 			if( m_interactive )
 			{
@@ -508,6 +525,9 @@ class CyclesOutput : public IECore::RefCounted
 				}
 
 				IECoreImage::ImagePrimitivePtr imageCopy = m_images.front()->image()->copy();
+				IECore::CompoundDataPtr metadata = imageCopy->blindData();
+				updateCryptomatteMetadata( metadata.get(), m_data, scene );
+
 				for( int i = 1; i < m_images.size(); ++i )
 				{
 					std::vector<std::string> channelNames;
@@ -606,6 +626,7 @@ class RenderCallback : public IECore::RefCounted
 			{
 				try
 				{
+					// TODO: Request an update to ClientDisplayDriver to allow setting metadata for Cryptomatte...
 					m_displayDriver->imageClose();
 				}
 				catch( const std::exception &e )
@@ -4062,7 +4083,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				for( auto &output : m_outputs )
 				{
 					CyclesOutput *co = output.second.get();
-					co->writeImage();
+					co->writeImage( m_scene );
 				}
 			}
 		}
