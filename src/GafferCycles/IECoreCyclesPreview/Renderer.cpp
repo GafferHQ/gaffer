@@ -398,24 +398,10 @@ class CyclesOutput : public IECore::RefCounted
 			m_passType = nameToPassType( m_data );
 			m_denoisingPassOffsets = nameToDenoisePassType( m_data );
 
-			const int instances = parameter<int>( output->parameters(), "instances", 1 );
-
-#ifdef WITH_CYCLES_LIGHTGROUPS
-			if( m_passType == ccl::PASS_LIGHTGROUP )
+			m_instances = parameter<int>( output->parameters(), "instances", 1 );
+			if( scene && m_passType == ccl::PASS_CRYPTOMATTE )
 			{
-				m_images.resize( instances );
-			}
-			else
-#endif
-			{
-				if( scene && m_passType == ccl::PASS_CRYPTOMATTE )
-				{
-					m_images.resize( scene->film->cryptomatte_depth );
-				}
-				else
-				{
-					m_images.resize( 1 );
-				}
+				m_instances = scene->film->cryptomatte_depth;
 			}
 
 			if( ( m_passType == ccl::PASS_AOV_COLOR ) || ( m_passType == ccl::PASS_AOV_VALUE ) )
@@ -455,13 +441,7 @@ class CyclesOutput : public IECore::RefCounted
 
 		void createImage( ccl::Camera *camera )
 		{
-			for( auto image : m_images )
-			{
-				if( image.get() )
-				{
-					image.reset();
-				}
-			}
+			m_images.clear();
 
 			//ccl::DisplayBuffer &display = m_session->display;
 			// TODO: Work out if Cycles can do overscan...
@@ -501,9 +481,9 @@ class CyclesOutput : public IECore::RefCounted
 
 			m_parameters->writable()["handle"] = new StringData();
 
-			for( auto image : m_images )
+			for( int i = 0; i < m_instances; ++i )
 			{
-				image = new ImageDisplayDriver( displayWindow, dataWindow, channelNames, m_parameters );
+				m_images.push_back( new ImageDisplayDriver( displayWindow, dataWindow, channelNames, m_parameters ) );
 			}
 		}
 
@@ -575,10 +555,14 @@ class CyclesOutput : public IECore::RefCounted
 				}
 
 				writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
-				if( m_quantize == ccl::TypeDesc::UINT16 )
-					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "half" );
-				else if( m_quantize == ccl::TypeDesc::FLOAT )
-					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "float" );
+				if( m_type == "exr" )
+				{
+					IECore::CompoundParameterPtr exrSettings = writer->parameters()->parameter<IECore::CompoundParameter>( "formatSettings" )->parameter<IECore::CompoundParameter>( "openexr" );
+					if( m_quantize == ccl::TypeDesc::UINT16 )
+						exrSettings->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "half" );
+					else if( m_quantize == ccl::TypeDesc::FLOAT )
+						exrSettings->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "float" );
+				}
 
 				writer->write();
 			}
@@ -594,6 +578,7 @@ class CyclesOutput : public IECore::RefCounted
 		CompoundDataPtr m_parameters;
 		int m_components;
 		bool m_interactive;
+		int m_instances;
 };
 
 IE_CORE_DECLAREPTR( CyclesOutput )
@@ -845,7 +830,7 @@ class RenderCallback : public IECore::RefCounted
 					if( m_interactive )
 						outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
 					else
-						output.second->m_images[0]->imageData( tile, &tileData[0], w * h * numChannels );
+						output.second->m_images.front()->imageData( tile, &tileData[0], w * h * numChannels );
 				}
 			}
 			if( m_interactive )
