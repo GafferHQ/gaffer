@@ -1393,5 +1393,18 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( c[0].dstNodule(), g.nodeGadget( s["n2"] ).nodule( s["n2"]["c"]["r"] ) )
 		self.assertIsNone( c[0].srcNodule() )
 
+	def testChangeNodeGadgetForUnviewedNode( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+
+		g = GafferUI.GraphGadget( s )
+		self.assertIsNotNone( g.nodeGadget( s["b"] ) )
+		self.assertIsNone( g.nodeGadget( s["b"]["n"] ) )
+
+		Gaffer.Metadata.registerValue( s["b"]["n"], "nodeGadget:type", "GafferUI::AuxiliaryNodeGadget" )
+		self.assertIsNone( g.nodeGadget( s["b"]["n"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
