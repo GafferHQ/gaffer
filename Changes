@@ -1,3 +1,18 @@
+0.55.2.1 (relative to 0.55.2.0)
+========
+
+Fixes
+-----
+
+- Viewer : Improved clipping plane "Fit ..." command logic to avoid clipping the scene when dollying in, or bad framing using <kbd>f</kbd>.
+- Spreadsheet :
+  - Fixed bug with column name text input dialog.
+  - Fixed problems when adding or removing columns on promoted spreadsheets.
+  - Fixed plug promotion via `BoxIO.promote()`.
+- TransformTool : Fixed editing of transforms specified by promoted Spreadsheets.
+- GraphGadget : Fixed bug which could cause a node to be shown under the wrong parent when its gadget type was changed.
+- USD : Added workaround for custom builds which omit the `pxr.Usd` Python module. In this case USD support will be disabled.
+
 0.55.2.0 (relative to 0.55.1.0)
 ========
 
