@@ -104,7 +104,7 @@ size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::Interne
 		cellPlug->valuePlug()->setFrom( value );
 		row->cellsPlug()->addChild( cellPlug );
 	}
-	if( auto *o = outPlug() )
+	for( auto o : outPlugs() )
 	{
 		PlugPtr outColumn = value->createCounterpart( name, Plug::Out );
 		outColumn->setFlags( Plug::Dynamic, false );
@@ -125,7 +125,7 @@ void Spreadsheet::RowsPlug::removeColumn( size_t columnIndex )
 	{
 		row->cellsPlug()->removeChild( row->cellsPlug()->getChild( columnIndex ) );
 	}
-	if( auto *o = outPlug() )
+	for( auto o : outPlugs() )
 	{
 		o->removeChild( o->getChild( columnIndex ) );
 	}
@@ -175,22 +175,41 @@ void Spreadsheet::RowsPlug::removeRow( Spreadsheet::RowPlugPtr row )
 	removeChild( row );
 }
 
-Gaffer::ValuePlug *Spreadsheet::RowsPlug::outPlug()
+std::vector<Gaffer::ValuePlug *> Spreadsheet::RowsPlug::outPlugs()
 {
-	// Find the `outPlug()` on our parent Spreadsheet node.
-	// We use this from `add/removeColumn()` so that we can
-	// add the appropriate columns to the output plug. It's
-	// not ideal that this responsibility falls to us. What
-	// might be nice would be to rename RowsPlug to SheetPlug
-	// and let it manage both "rows" and "out" children, so
-	// that it's more natural to modify "out". We can't do that
-	// at present because we don't allow connections to plugs
-	// which have a mix of input and output children.
+	// Find `Spreadsheet::outPlug()` on all the Spreadsheet nodes
+	// driven by this plug. Because of plug promotion, an `outPlug()`
+	// may belong to a different node than ours, and if someone has
+	// been really creative we might even be driving multiple
+	// spreadsheets.
+	//
+	// We use this from `add/removeColumn()` so that we can add the
+	// appropriate columns to the output plugs. It's not ideal that
+	// this responsibility falls to us. What might be nice would be
+	// to rename RowsPlug to SheetPlug and let it manage both "rows"
+	// and "out" children, so that it's more natural to modify "out".
+	// We can't do that at present because we don't allow connections
+	// to plugs which have a mix of input and output children.
+
+	vector<Gaffer::ValuePlug *> result;
 	if( auto *s = parent<Spreadsheet>() )
 	{
-		return s->outPlug();
+		if( s->rowsPlug() == this )
+		{
+			result.push_back( s->outPlug() );
+		}
 	}
-	return nullptr;
+
+	for( auto output : outputs() )
+	{
+		if( auto outputRow = runTimeCast<Spreadsheet::RowsPlug>( output ) )
+		{
+			auto v = outputRow->outPlugs();
+			result.insert( result.end(), v.begin(), v.end() );
+		}
+	}
+
+	return result;
 }
 
 

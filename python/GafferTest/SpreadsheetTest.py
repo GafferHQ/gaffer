@@ -343,6 +343,15 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			for k in rowsPlug1.keys() :
 				assertRowEqual( rowsPlug1[k], rowsPlug2[k] )
 
+		def assertOutputsValid( spreadsheet ) :
+
+			self.assertEqual( spreadsheet["rows"]["default"]["cells"].keys(), spreadsheet["out"].keys() )
+			for o in spreadsheet["out"] :
+				self.assertEqual(
+					spreadsheet.correspondingInput( o ),
+					spreadsheet["rows"]["default"]["cells"][o.getName()]["value"]
+				)
+
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 
@@ -356,6 +365,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		p1 = Gaffer.PlugAlgo.promote( s["b"]["s1"]["rows"] )
 		assertRowsEqual( p1, s["b"]["s1"]["rows"] )
+		assertOutputsValid( s["b"]["s1"] )
 		self.assertTrue( Gaffer.PlugAlgo.isPromoted( s["b"]["s1"]["rows"] ) )
 
 		# Promote the "rows" plug on an empty spreadsheet,
@@ -364,12 +374,26 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		s["b"]["s2"] = Gaffer.Spreadsheet()
 		p2 = Gaffer.PlugAlgo.promote( s["b"]["s2"]["rows"] )
 		assertRowsEqual( p2, s["b"]["s2"]["rows"] )
+		assertOutputsValid( s["b"]["s2"] )
 		self.assertTrue( Gaffer.PlugAlgo.isPromoted( s["b"]["s2"]["rows"] ) )
 
 		p2.addColumn( Gaffer.IntPlug( "i" ) )
 		p2.addRow()["cells"][0]["value"].setValue( 10 )
 		p2.addRow()["cells"][0]["value"].setValue( 20 )
 		assertRowsEqual( p2, s["b"]["s2"]["rows"] )
+		assertOutputsValid( s["b"]["s2"] )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( s["b"]["s2"]["rows"] ) )
+
+		p2.addColumn( Gaffer.IntPlug( "j" ) )
+		assertRowsEqual( p2, s["b"]["s2"]["rows"] )
+		assertOutputsValid( s["b"]["s2"] )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( s["b"]["s2"]["rows"] ) )
+
+		# Remove a column
+
+		p2.removeColumn( 0 )
+		assertRowsEqual( p2, s["b"]["s2"]["rows"] )
+		assertOutputsValid( s["b"]["s2"] )
 		self.assertTrue( Gaffer.PlugAlgo.isPromoted( s["b"]["s2"]["rows"] ) )
 
 		# Serialise and reload, and check all is well
@@ -379,6 +403,9 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		assertRowsEqual( s2["b"]["s1"]["rows"], s["b"]["s1"]["rows"] )
 		assertRowsEqual( s2["b"]["s2"]["rows"], s["b"]["s2"]["rows"] )
+
+		assertOutputsValid( s["b"]["s1"] )
+		assertOutputsValid( s["b"]["s2"] )
 
 	def testActiveRowNames( self ) :
 
