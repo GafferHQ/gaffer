@@ -526,11 +526,11 @@ class CyclesOutput : public IECore::RefCounted
 					return;
 				}
 
-				writer->parameters()->parameter<IECore::FileNameParameter>( "fileName" )->setTypedValue( m_name );
+				IECore::CompoundParameterPtr exrSettings = writer->parameters()->parameter<IECore::CompoundParameter>( "formatSettings" )->parameter<IECore::CompoundParameter>( "openexr" );
 				if( m_quantize == ccl::TypeDesc::UINT16 )
-					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "half" );
+					exrSettings->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "half" );
 				else if( m_quantize == ccl::TypeDesc::FLOAT )
-					writer->parameters()->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "float" );
+					exrSettings->parameter<IECore::StringParameter>( "dataType" )->setTypedValue( "float" );
 
 				// TODO: Figure out how to apply the correct metadata for Cryptomatte EXRs to work.
 
