@@ -85,3 +85,8 @@ Gaffer.Metadata.registerValue( "ai:light:skydome_light", "intensityParameter", "
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "type", "environment" )
+
+Gaffer.Metadata.registerValue( "ai:light:mesh_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ai:light:mesh_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ai:light:mesh_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ai:light:mesh_light", "type", "mesh" )
