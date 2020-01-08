@@ -877,7 +877,7 @@ void GraphGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::Intern
 		return;
 	}
 
-	if( node )
+	if( node && node->parent() == m_root )
 	{
 		// Metadata change for one instance
 		removeNodeGadget( node );
