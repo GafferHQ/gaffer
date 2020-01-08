@@ -74,6 +74,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius );
 
+		static IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &size );
+
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
 
 		// This method should be overridden by any sub-classes that wish to
@@ -107,8 +109,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		// as such, this should generally only be used as an ornament type visualisation.
 		static IECoreGL::ConstRenderablePtr areaSpread( float spread );
 
-		static IECoreGL::ConstRenderablePtr quadWireframe();
-		static IECoreGL::ConstRenderablePtr quadSurface( IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );
+		static IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size );
+		static IECoreGL::ConstRenderablePtr quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
 		static IECoreGL::ConstRenderablePtr diskWireframe( float radius );
 		static IECoreGL::ConstRenderablePtr diskSurface( float radius, IECore::ConstDataPtr textureData, int textureMaxResolution, const Imath::Color3f &fallbackColor );

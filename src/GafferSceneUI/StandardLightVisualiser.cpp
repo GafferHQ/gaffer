@@ -451,16 +451,25 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "quad" )
 	{
-		if( drawShaded )
+		const V2f size( 2 );
+		// Cycles/Arnold define portals via a parameter on a quad, rather than as it's own light type.
+		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
-			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( textureData, maxTextureResolution, color ) ) );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size ) ) );
 		}
 		else
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+			if( drawShaded )
+			{
+				ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+				geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( size, textureData, maxTextureResolution, color ) ) );
+			}
+			else
+			{
+				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+			}
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe( size ) ) );
 		}
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
@@ -917,7 +926,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::areaSpread( float spread )
 
 // Quads
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::ConstDataPtr textureData, int maxTextureResolution,  const Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, int maxTextureResolution,  const Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
@@ -929,7 +938,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::Const
 		addConstantShader( group.get(), true );
 	}
 
-	IECoreGL::QuadPrimitivePtr textureQuad = new IECoreGL::QuadPrimitive( 2, 2 );
+	IECoreGL::QuadPrimitivePtr textureQuad = new IECoreGL::QuadPrimitive( size.x, size.y );
 	textureQuad->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
 	group->addChild( textureQuad );
 
@@ -940,7 +949,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( IECore::Const
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe()
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &size )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -953,10 +962,10 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe()
 	vector<V3f> &p = pData->writable();
 
 	vertsPerCurve.push_back( 4 );
-	p.push_back( V3f( -1, -1, 0  ) );
-	p.push_back( V3f( 1, -1, 0  ) );
-	p.push_back( V3f( 1, 1, 0  ) );
-	p.push_back( V3f( -1, 1, 0  ) );
+	p.push_back( V3f( -size.x/2, -size.y/2, 0  ) );
+	p.push_back( V3f( size.x/2, -size.y/2, 0  ) );
+	p.push_back( V3f( size.x/2, size.y/2, 0  ) );
+	p.push_back( V3f( -size.x/2, size.y/2, 0  ) );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
@@ -965,6 +974,101 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe()
 	group->addChild( curves );
 
 	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size )
+{
+	// Portals visualise differently as they only allow light through
+	// their area. Effectively a hole cut in a big plane. We try to
+	// represent this by shading outside of the quad area.
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	std::vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	std::vector<V3f> &p = pData->writable();
+
+	// Basic outline of the portal area
+
+	vertsPerCurve.push_back( 4 );
+	p.push_back( V3f( -size.x/2, -size.y/2, 0 ) );
+	p.push_back( V3f( size.x/2, -size.y/2, 0 ) );
+	p.push_back( V3f( size.x/2, size.y/2, 0 ) );
+	p.push_back( V3f( -size.x/2, size.y/2, 0 ) );
+
+	// 45 degree hatch outside the area (-1 / 1 space)
+
+	// Space between the lines
+	static const float spacing = 0.05f;
+	// size.x of the shaded frame area
+	static const float fw = 0.25f;
+	// Dimension of the shaded area
+	const float dw = size.x + ( 2 * fw );
+	const float dh = size.y + ( 2 * fw );
+	const float d = std::max( dw, dh );
+
+	// Working with a bottom left origin makes the maths easier for the lines
+	const V3f origin( -(size.x/2)-fw, -(size.y/2)-fw, 0 );
+	// Alternating line lengths creates a softer edge
+	bool alt = true;
+
+	// Offset along the edges. We use the largest dimension and skip lines
+	// once we've gone past the edge of the shorter side.
+	for( float o = spacing; o < d; o += spacing, alt = !alt )
+	{
+		// extra length for alternate lines
+		const float e = alt ? spacing * 1.5f : 0.0f;
+
+		if( o <= fw * 2 )
+		{
+			// A single line will do near the edges as we don't intersect the portal
+
+			// near
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( -e, o+e, 0 ) );
+			p.push_back( origin + V3f( o+e, -e, 0 ) );
+
+			// opposite
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( dw-o-e, dh+e, 0 ) );
+			p.push_back( origin + V3f( dw+e, dh-o-e, 0 ) );
+		}
+		else
+		{
+			// We need to split either side of the central portal space
+
+			if( o-2*fw <= size.y )
+			{
+				// near edge-to-frame
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( -e, o+e, 0 ) );
+				p.push_back( origin + V3f( fw, o-fw, 0 ) );
+
+				// opposite frame-to-edge
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( dw-fw, dh-o+fw, 0 ) );
+				p.push_back( origin + V3f( dw+e, dh-o-e, 0 ) );
+			}
+
+			if( o-2*fw <= size.x )
+			{
+				// near frame-to-edge
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( o-fw, +fw, 0 ) );
+				p.push_back( origin + V3f( o+e, -e, 0 ) );
+
+				// opposite edge-to-frame
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( dw-o-e, dh+e, 0 ) );
+				p.push_back( origin + V3f( dw-o+fw, dh-fw, 0 ) );
+			}
+		}
+	}
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), true, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( 0.0f ) ) ) );
+	return curves;
 }
 
 // Spheres
