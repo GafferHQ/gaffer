@@ -1,3 +1,11 @@
+0.54.2.4 (relative to 0.54.2.3)
+========
+
+Fixes
+-----
+
+- NumericWidget : Fixed bug that caused an exception to be raised if the up/down keys were pressed in a NumericWidget when the widget's value was empty.
+
 0.54.2.3 (relative to 0.54.2.2)
 ========
 
