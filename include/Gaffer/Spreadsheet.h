@@ -104,7 +104,7 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 			private :
 
-				ValuePlug *outPlug();
+				std::vector<ValuePlug *> outPlugs();
 
 		};
 

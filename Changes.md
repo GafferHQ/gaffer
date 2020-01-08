@@ -88,6 +88,22 @@ Breaking Changes
 - ObjectToImage/ImagePrimitiveSource : Removed.
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
 
+0.55.2.1 (relative to 0.55.2.0)
+========
+
+Fixes
+-----
+
+- Viewer : Improved clipping plane "Fit ..." command logic to avoid clipping the scene when dollying in, or bad framing using <kbd>f</kbd>.
+- Spreadsheet :
+  - Fixed bug with column name text input dialog.
+  - Fixed problems when adding or removing columns on promoted spreadsheets.
+  - Fixed plug promotion via `BoxIO.promote()`.
+- TransformTool : Fixed editing of transforms specified by promoted Spreadsheets.
+- GraphGadget : Fixed bug which could cause a node to be shown under the wrong parent when its gadget type was changed.
+- USD : Added workaround for custom builds which omit the `pxr.Usd` Python module. In this case USD support will be disabled.
+- NumericWidget : Fixed bug that caused an exception to be raised if the up/down keys were pressed in a NumericWidget when the widget's value was empty.
+
 0.55.2.0 (relative to 0.55.1.0)
 ========
 
@@ -274,6 +290,11 @@ Breaking Changes
 - CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
+
+0.54.2.4 (relative to 0.54.2.3)
+========
+
+- NumericWidget : Fixed bug that caused an exception to be raised if the up/down keys were pressed in a NumericWidget when the widget's value was empty.
 
 0.54.2.3 (relative to 0.54.2.2)
 ========

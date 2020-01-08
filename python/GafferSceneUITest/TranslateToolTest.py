@@ -780,5 +780,12 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere2" ] ) )
 		self.assertEqual( tool.selection()[0].transformPlug, script["spreadsheet"]["rows"][2]["cells"]["transform"]["value"] )
 
+		# Check that we can work with promoted plugs too
+
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( [ script["collect"], script["sphere"], script["spreadsheet"] ] ) )
+		promotedRowsPlug = Gaffer.PlugAlgo.promote( box["spreadsheet"]["rows"] )
+
+		self.assertEqual( tool.selection()[0].transformPlug, promotedRowsPlug[2]["cells"]["transform"]["value"] )
+
 if __name__ == "__main__":
 	unittest.main()

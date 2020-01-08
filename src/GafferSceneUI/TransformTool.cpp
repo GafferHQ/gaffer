@@ -168,7 +168,7 @@ bool updateSelection( const SceneAlgo::History *history, TransformTool::Selectio
 				);
 				if( spreadsheetTransformPlug->ancestor<Spreadsheet::RowPlug>() != spreadsheet->rowsPlug()->defaultRow() )
 				{
-					selection.transformPlug = spreadsheetTransformPlug;
+					selection.transformPlug = spreadsheetTransformPlug->source<TransformPlug>();
 				}
 				else
 				{
