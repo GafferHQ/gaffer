@@ -39,7 +39,7 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/Private/IECoreGLPreview/Private/Visualiser.h"
+#include "GafferScene/Private/IECoreGLPreview/Visualiser.h"
 
 #include "IECoreGL/Renderable.h"
 
