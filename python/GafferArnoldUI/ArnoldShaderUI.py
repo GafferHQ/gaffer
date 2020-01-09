@@ -255,6 +255,16 @@ def __translateNodeMetadata( nodeEntry ) :
 			for c in childComponents :
 				__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
+		# NodeEditor layout from other Gaffer-specific metadata
+
+		divider = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.layout.divider" )
+		if divider :
+			__metadata[paramPath]["layout:divider"] = True
+
+		index = __aiMetadataGetInt( nodeEntry, paramName, "gaffer.layout.index" )
+		if index is not None :
+			__metadata[paramPath]["layout:index"] = index
+
 		# GraphEditor visibility from Gaffer-specific metadata
 
 		visible = __aiMetadataGetBool( nodeEntry, None, "gaffer.graphEditorLayout.defaultVisibility" )
