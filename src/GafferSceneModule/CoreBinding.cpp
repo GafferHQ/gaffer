@@ -281,6 +281,50 @@ std::string pathToStringWrapper( const ScenePlug::ScenePath &scenePath )
 	return result;
 }
 
+// Custom serialiser to allow scripts to construct SceneProcessors
+// with internal subgraphs and have them serialise correctly. This
+// provides a half-way house between implementing a new node type
+// and using a Box.
+class SceneProcessorSerialiser : public NodeSerialiser
+{
+
+	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		if( child->parent()->typeId() == SceneProcessor::staticTypeId() )
+		{
+			// Parent is exactly a SceneProcessor, not a subclass. Since we don't add
+			// any nodes in the constructor, we know that any nodes added subsequently
+			// will need manual serialisation.
+			if( runTimeCast<const Node>( child ) )
+			{
+				return true;
+			}
+		}
+
+		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
+	}
+
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		if( child->parent()->typeId() == SceneProcessor::staticTypeId() )
+		{
+			// Parent is exactly a SceneProcessor, not a subclass. Since the "in" plug
+			// is the last child to be added in the constructor, we know anything added after
+			// that will need manual construction in the serialisation.
+			const auto &children = child->parent()->children();
+			const auto childIt = find( children.begin(), children.end(), child );
+			const auto inIt = find( children.begin(), children.end(), child->parent()->getChild( "in" ) );
+			if( childIt > inIt )
+			{
+				return true;
+			}
+		}
+
+		return NodeSerialiser::childNeedsConstruction( child, serialisation );
+	}
+
+};
+
 } // namespace
 
 void GafferSceneModule::bindCore()
@@ -344,5 +388,7 @@ void GafferSceneModule::bindCore()
 			)
 		)
 	;
+
+	Serialisation::registerSerialiser( SceneProcessor::staticTypeId(), new SceneProcessorSerialiser );
 
 }
