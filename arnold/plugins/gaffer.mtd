@@ -103,25 +103,18 @@
 		gaffer.layout.index INT 21
 
 	[attr position]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
 		gaffer.plugType STRING ""
+
 
 [node distant_light]
 
@@ -189,25 +182,18 @@
 		gaffer.layout.index INT 21
 
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr direction]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
 		gaffer.plugType STRING ""
+
 
 [node quad_light]
 
@@ -288,25 +274,18 @@
 		gaffer.layout.index INT 23
 
 	[attr vertices]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
 		gaffer.plugType STRING ""
+
 
 [node spot_light]
 
@@ -392,33 +371,22 @@
 		gaffer.layout.index INT 27
 
 	[attr position]
-
 		gaffer.plugType STRING ""
-
 	[attr look_at]
-
 		gaffer.plugType STRING ""
-
 	[attr up]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
 		gaffer.plugType STRING ""
+
 
 [node skydome_light]
 
@@ -497,17 +465,11 @@
 		gaffer.layout.index INT 23
 
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
@@ -580,25 +542,15 @@
 		gaffer.layout.index INT 19
 
 	[attr bottom]
-
 		gaffer.plugType STRING ""
-
 	[attr top]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
@@ -674,29 +626,20 @@
 		gaffer.layout.index INT 22
 
 	[attr position]
-
 		gaffer.plugType STRING ""
-
 	[attr direction]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
 		gaffer.plugType STRING ""
+
 
 [node mesh_light]
 
@@ -760,25 +703,18 @@
 		gaffer.layout.index INT 22
 
 	[attr mesh]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
 		gaffer.plugType STRING ""
+
 
 [node photometric_light]
 
@@ -850,17 +786,11 @@
 		gaffer.layout.index INT 22
 
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
-
 	[attr motion_start]
 		gaffer.plugType STRING ""
 	[attr motion_end]
@@ -998,7 +928,6 @@
 	gaffer.nodeMenu.category STRING "Utility"
 
 	[attr camera]
-
 		gaffer.plugType STRING ""
 
 
@@ -1149,7 +1078,6 @@
 	gaffer.nodeMenu.category STRING "Texture"
 
 	[attr filename]
-
 		widget STRING "filename"
 
 
@@ -1175,30 +1103,22 @@
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
 	[attr width_edge]
-
 		page STRING "Falloff"
-
 	[attr height_edge]
-
 		page STRING "Falloff"
-
 	[attr ramp]
-
 		gaffer.graphEditorLayout.visible BOOL false
 		page STRING "Falloff"
-
 	[attr axis]
-
 		page STRING "Falloff"
 
 	[attr geometry_matrix]
-
 		widget STRING "null"
 		gaffer.plugType STRING ""
 
 	[attr shader]
-
 		gaffer.graphEditorLayout.visible BOOL true
+
 
 [node light_decay]
 
@@ -1231,6 +1151,7 @@
 	[attr far_end]
 		page STRING "Far"
 		label STRING "End"
+
 
 [node log]
 
