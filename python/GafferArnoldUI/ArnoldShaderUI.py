@@ -324,11 +324,16 @@ def __nodeDescription( node ) :
 
 def __nodeMetadata( node, name ) :
 
+	# TODO: When merging forward to 0.56.x.x, Arnold lights use
+	# __shader, so the `elif` can be removed.
+
 	if isinstance( node, GafferArnold.ArnoldShader ) :
 		key = node["name"].getValue()
-	else :
-		# Node type is ArnoldLight.
+	elif isinstance( node, GafferArnold.ArnoldLight ):
 		key = node["__shaderName"].getValue()
+	else :
+		# Other nodes hold an internal shader
+		key = node()["__shader"]["name"].getValue()
 
 	return __metadata[key].get( name )
 
@@ -344,16 +349,23 @@ def __plugMetadata( plug, name ) :
 		# inputs might be driven by the parent.
 		return True
 
+	# TODO: When merging forward to 0.56.x.x, Arnold lights use
+	# __shader, so the `elif` can be removed.
+
 	node = plug.node()
 	if isinstance( node, GafferArnold.ArnoldShader ) :
-		key = plug.node()["name"].getValue() + "." + plug.relativeName( node )
+		key = plug.node()["name"].getValue()
+	elif isinstance( node, GafferArnold.ArnoldLight ):
+		key = plug.node()["__shaderName"].getValue()
 	else :
-		# Node type is ArnoldLight.
-		key = plug.node()["__shaderName"].getValue() + "." + plug.relativeName( node )
+		# Other nodes hold an internal shader
+		key = plug.node()["__shader"]["name"].getValue()
+
+	key += "." + plug.relativeName( node )
 
 	return __metadata[key].get( name )
 
-for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
+for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight ) :
 
 	nodeKeys = set()
 	parametersPlugKeys = set()
