@@ -90,6 +90,17 @@ with tarfile.open( args.archive, "r:gz" ) as a:
 			"ERROR: The following are missing from the archive:\n%s\n"
 				% "\n".join( [ " - %s" % m for m in missing ] ),
 		)
+
+		# We've seen sporadic validation failures in CI, temp hack to debug
+		print( "\n------------------------" )
+		print( "Considered archive paths" )
+		print( "------------------------" )
+		print( "\n".join( sorted(archivePaths) ) )
+		print( "\n------------------------" )
+		print( "All archive paths" )
+		print( "------------------------" )
+		print( "\n".join( [ m.name for m in a.getmembers() ] ) )
+
 		sys.exit( 1 )
 
 print( "Archive appears OK" )
