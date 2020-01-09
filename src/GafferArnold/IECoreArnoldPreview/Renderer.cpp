@@ -3163,6 +3163,7 @@ class ArnoldGlobals
 					it->second->append( outputs->writable(), lpes->writable() );
 				}
 			}
+			std::sort( outputs->writable().begin(), outputs->writable().end() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
 
