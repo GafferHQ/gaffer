@@ -72,7 +72,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr ray();
 		static IECoreGL::ConstRenderablePtr pointRays( float radius = 0 );
 		static IECoreGL::ConstRenderablePtr distantRays();
-		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius );
+		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length = 1.0f, float lineWidthScale = 1.0f );
 
 		static IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &size );
 

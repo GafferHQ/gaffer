@@ -123,6 +123,25 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"visualiserAttributes.frustum" : [
+
+			"description",
+			"""
+			Controls whether applicable lights draw a representation of their
+			light projection in the viewer.
+			"""
+
+		],
+
+		"visualiserAttributes.lightFrustumScale" : [
+
+			"description",
+			"""
+			Allows light projections to be scaled to better suit the scene.
+			"""
+
+		],
+
 		"visualiserAttributes.ornamentScale" : [
 
 			"description",

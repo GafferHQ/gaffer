@@ -423,6 +423,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.lightFrustumScale" : [
+
+			"description",
+			"""
+			Allows light projections to be scaled to better suit the scene.
+			""",
+
+			"layout:section", "Visualisers",
+		],
 
 
 	}

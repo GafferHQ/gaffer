@@ -72,7 +72,13 @@ Light::Light( const std::string &name )
 	IntPlugPtr maxResValuePlug = new IntPlug( "value", Gaffer::Plug::Direction::In, 512, 2, 2048 );
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:maxTextureResolution", maxResValuePlug, false, "maxTextureResolution" ) );
 
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:visualiser:frustum", new IECore::BoolData( true ), false, "frustum" ) );
+
+	FloatPlugPtr frustumScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:frustumScale", frustumScaleValuePlug, false, "lightFrustumScale" ) );
+
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), false, "lightDrawingMode" ) );
+
 	addChild( visualiserAttr  );
 }
 
