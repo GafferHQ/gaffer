@@ -466,14 +466,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 			}
 			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe( size ) ) );
+
+			const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
+			if( spread >= 0.0f )
+			{
+				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( areaSpread( spread ) ) );
+			}
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-
-		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
-		if( spread >= 0.0f )
-		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( areaSpread( spread ) ) );
-		}
 	}
 	else if( type && type->readable() == "disk" )
 	{
