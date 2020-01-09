@@ -165,6 +165,9 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			NameValuePlugPtr ornamentScalePlug = new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", ornamentScaleValuePlug, true, "visualiserOrnamentScale" );
 			attr->addChild( ornamentScalePlug );
 
+			NameValuePlugPtr frustumPlug = new Gaffer::NameValuePlug( "gl:visualiser:frustum", new IECore::BoolData( true ), true, "visualiserFrustum" );
+			attr->addChild( frustumPlug );
+
 			// View plugs
 
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
@@ -187,9 +190,11 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			drawingMode->addChild( lights );
 			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
 
+			drawingMode->addChild( new BoolPlug( "frustum", Plug::In, true ) );
 			drawingMode->addChild( ornamentScaleValuePlug->createCounterpart( "visualiserOrnamentScale", Plug::Direction::In ) );
 
 			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
+			frustumPlug->getChild<BoolPlug>( "value" )->setInput( drawingMode->getChild<BoolPlug>( "frustum" ) );
 			ornamentScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserOrnamentScale" ) );
 
 			updateOpenGLOptions();

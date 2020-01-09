@@ -388,6 +388,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.visualiserFrustum" : [
+
+			"description",
+			"""
+			Controls whether applicable locations draw a representation of
+			their projection or frustum.
+			""",
+
+			"layout:section", "Visualisers",
+			"label", "Frustum",
+
+		],
+
 		"attributes.lightDrawingMode" : [
 
 			"description",
