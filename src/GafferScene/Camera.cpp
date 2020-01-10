@@ -86,6 +86,9 @@ Camera::Camera( const std::string &name )
 	renderSettingOverridesPlug()->addChild( new NameValuePlug( "overscanBottom", new FloatData( 0.0f ), false, "overscanBottom" ) );
 	renderSettingOverridesPlug()->addChild( new NameValuePlug( "cropWindow", new Box2fData( Box2f( V2f(0.0f), V2f(1.0f) ) ), false, "cropWindow" ) );
 	renderSettingOverridesPlug()->addChild( new NameValuePlug( "depthOfField", new BoolData( false ), false, "depthOfField" ) );
+
+	addChild( new CompoundDataPlug( "visualiserAttributes" ) );
+	visualiserAttributesPlug()->addChild( new NameValuePlug( "gl:visualiser:frustum", new BoolData( true ), false, "frustum" ) );
 }
 
 Camera::~Camera()
@@ -222,6 +225,16 @@ const Gaffer::CompoundDataPlug *Camera::renderSettingOverridesPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex + 12 );
 }
 
+Gaffer::CompoundDataPlug *Camera::visualiserAttributesPlug()
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 13 );
+}
+
+const Gaffer::CompoundDataPlug *Camera::visualiserAttributesPlug() const
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 13 );
+}
+
 void Camera::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
@@ -243,6 +256,11 @@ void Camera::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	)
 	{
 		outputs.push_back( sourcePlug() );
+	}
+
+	if( visualiserAttributesPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->attributesPlug() );
 	}
 }
 
@@ -302,5 +320,20 @@ IECore::ConstInternedStringVectorDataPtr Camera::computeStandardSetNames() const
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
 	result->writable().push_back( g_camerasSetName );
+	return result;
+}
+
+void Camera::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ObjectSource::hashAttributes( path, context, parent, h );
+	visualiserAttributesPlug()->hash( h );
+}
+
+IECore::ConstCompoundObjectPtr Camera::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	IECore::ConstCompoundObjectPtr attr = ObjectSource::computeAttributes( path, context, parent );
+	result->members() = attr->members(); // Shallow copy for speed - do not modify in place!
+	visualiserAttributesPlug()->fillCompoundObject( result->members() );
 	return result;
 }

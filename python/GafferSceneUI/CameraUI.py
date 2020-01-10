@@ -339,6 +339,26 @@ plugsMetadata = {
 
 	],
 
+	"visualiserAttributes" : [
+
+			"description",
+			"""
+			Attributes that affect the visualisation of this Light in the Viewer.
+			""",
+
+			"layout:section", "Visualisation",
+
+	],
+
+	"visualiserAttributes.frustum" : [
+
+			"description",
+			"""
+			Controls whether the camera draws a visualisation of its frustum.
+			"""
+
+	],
+
 }
 
 __sourceMetadata = GafferSceneUI.StandardOptionsUI.plugsMetadata
