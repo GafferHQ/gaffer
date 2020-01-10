@@ -285,7 +285,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( const ObjectVisualiser *visualiser = IECoreGLPreview::ObjectVisualiser::acquire( object->typeId() ) )
 				{
-					m_renderable = visualiser->visualise( object );
+					m_objectVisualisations = visualiser->visualise( object );
+					m_renderable = m_objectVisualisations[ VisualisationType::Geometry ];
 				}
 				else
 				{
@@ -356,9 +357,17 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				// and it means sizable visualisations don't mess up the framing when there
 				// is a geometric component. We also deliberately ignore Frustum visualisations
 				// for the same reason.
-				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				if( auto objV = m_objectVisualisations[ VisualisationType::Ornament ] )
 				{
-					const Box3f ornamentB = v->bound();
+					const Box3f ornamentB = objV->bound();
+					if( !ornamentB.isEmpty() )
+					{
+						b.extendBy( Imath::transform( ornamentB, m_ornamentTransform ) );
+					}
+				}
+				if( auto attrV = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				{
+					const Box3f ornamentB = attrV->bound();
 					if( !ornamentB.isEmpty() )
 					{
 						b.extendBy( Imath::transform( ornamentB, m_ornamentTransform ) );
@@ -405,9 +414,14 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			if( m_attributes->drawFrustum() )
 			{
-				if( auto v = visualisation( *m_attributes, VisualisationType::Frustum ) )
+				if( auto objV = m_objectVisualisations[ VisualisationType::Frustum ] )
 				{
-					v->render( currentState );
+					objV->render( currentState );
+				}
+
+				if( auto attrV = visualisation( *m_attributes, VisualisationType::Frustum ) )
+				{
+					attrV->render( currentState );
 				}
 			}
 
@@ -420,7 +434,10 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			// visualiserScale for size adjustments.
 			if( m_attributes->ornamentScale() > 0 )
 			{
-				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				auto objV = m_objectVisualisations[ VisualisationType::Ornament ];
+				auto attrV = visualisation( *m_attributes, VisualisationType::Ornament );
+
+				if( objV || attrV )
 				{
 					const bool haveOrnamentTransform = m_ornamentTransform != M44f();
 					if( haveOrnamentTransform )
@@ -429,7 +446,14 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 						glMultMatrixf( m_ornamentTransform.getValue() );
 					}
 
-					v->render( currentState );
+					if( objV )
+					{
+						objV->render( currentState );
+					}
+					if( attrV )
+					{
+						attrV->render( currentState );
+					}
 
 					if( haveOrnamentTransform )
 					{
@@ -470,6 +494,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		M44f m_ornamentTransform;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
+		Visualisations m_objectVisualisations;
 		vector<InternedString> m_name;
 		EditQueue &m_editQueue;
 

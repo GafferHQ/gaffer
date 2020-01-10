@@ -278,14 +278,16 @@ class VDBVisualiser : public ObjectVisualiser
 		typedef VDBObject ObjectType;
 
 		VDBVisualiser()
-			:	m_group( new IECoreGL::Group() )
 		{
 
-			m_group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-			m_group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-			m_group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-			m_group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
-			m_group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
+			IECoreGL::GroupPtr group = new IECoreGL::Group();
+			m_defaultVisualisations[ VisualisationType::Geometry ] = group;
+
+			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+			group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+			group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+			group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
+			group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
 
 			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 			vector<V3f> &p = pData->writable();
@@ -302,26 +304,26 @@ class VDBVisualiser : public ObjectVisualiser
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-			m_group->addChild( curves );
+			group->addChild( curves );
 		}
 
 		~VDBVisualiser() override
 		{
 		}
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
+		Visualisations visualise( const IECore::Object *object ) const override
 		{
 			const VDBObject* vdbObject = IECore::runTimeCast<const VDBObject>(object);
 			if ( !vdbObject )
 			{
-				return m_group;
+				return m_defaultVisualisations;
 			}
 
 			// todo which grid should be visualised?
 			std::vector<std::string> names = vdbObject->gridNames();
 			if (names.empty())
 			{
-				return m_group;
+				return m_defaultVisualisations;
 			}
 
 			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( names[0] );
@@ -370,14 +372,16 @@ class VDBVisualiser : public ObjectVisualiser
 
 			}
 
-			return rootGroup;
+			Visualisations v;
+			v[ VisualisationType::Geometry ] = rootGroup;
+			return v;
 		}
 
 	protected :
 
 		static ObjectVisualiserDescription<VDBVisualiser> g_visualiserDescription;
 
-		IECoreGL::GroupPtr m_group;
+		Visualisations m_defaultVisualisations;
 
 };
 

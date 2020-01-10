@@ -56,13 +56,15 @@ class ClippingPlaneVisualiser : public ObjectVisualiser
 		typedef IECoreScene::ClippingPlane ObjectType;
 
 		ClippingPlaneVisualiser()
-			:	m_group( new IECoreGL::Group() )
 		{
-			m_group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-			m_group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-			m_group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-			m_group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
-			m_group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
+			IECoreGL::GroupPtr group = new IECoreGL::Group();
+			m_visualisations[ VisualisationType::Geometry ] = group;
+
+			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+			group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+			group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+			group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
+			group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
 
 			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 			IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
@@ -91,23 +93,23 @@ class ClippingPlaneVisualiser : public ObjectVisualiser
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-			m_group->addChild( curves );
+			group->addChild( curves );
 		}
 
 		~ClippingPlaneVisualiser() override
 		{
 		}
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
+		Visualisations visualise( const IECore::Object *object ) const override
 		{
-			return m_group;
+			return m_visualisations;
 		}
 
 	protected :
 
 		static ObjectVisualiserDescription<ClippingPlaneVisualiser> g_visualiserDescription;
 
-		IECoreGL::GroupPtr m_group;
+		Visualisations m_visualisations;
 
 };
 

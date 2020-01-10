@@ -62,7 +62,7 @@ class BoundVisualiser : public ObjectVisualiser
 		{
 		}
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
+		Visualisations visualise( const IECore::Object *object ) const override
 		{
 			const IECoreScene::VisibleRenderable *renderable = IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object );
 
@@ -114,7 +114,9 @@ class BoundVisualiser : public ObjectVisualiser
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			group->addChild( curves );
 
-			return group;
+			Visualisations v;
+			v[ VisualisationType::Geometry ] = group;
+			return v;
 		}
 
 };
