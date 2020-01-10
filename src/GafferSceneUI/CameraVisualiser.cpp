@@ -66,22 +66,70 @@ class CameraVisualiser : public ObjectVisualiser
 		{
 		}
 
-		Visualisations visualise( const IECore::Object *object ) const override
-		{
-			Visualisations v;
 
-			const IECoreScene::Camera *camera = IECore::runTimeCast<const IECoreScene::Camera>( object );
-			if( !camera )
+		IECoreGL::CurvesPrimitivePtr frustumVisualisation( const std::string& projection, const Box2f &screenWindow, const V2f &clippingPlanes, bool drawPlanes, bool drawEdges ) const
+		{
+
+			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+			IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
+			vector<V3f> &p = pData->writable();
+			vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+
+			Box2f near( screenWindow );
+			Box2f far( screenWindow );
+
+			if( projection == "perspective" )
 			{
-				return v;
+				near.min *= clippingPlanes[0];
+				near.max *= clippingPlanes[0];
+				far.min *= clippingPlanes[1];
+				far.max *= clippingPlanes[1];
 			}
 
-			IECoreGL::GroupPtr group = new IECoreGL::Group();
-			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-			group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-			group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-			group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
+			if( drawPlanes )
+			{
+				vertsPerCurve.push_back( 5 );
+				p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
 
+				vertsPerCurve.push_back( 5 );
+				p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+				p.push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
+				p.push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
+				p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
+				p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+			}
+
+			if( drawEdges )
+			{
+				vertsPerCurve.push_back( 2 );
+				p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+
+				vertsPerCurve.push_back( 2 );
+				p.push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
+
+				vertsPerCurve.push_back( 2 );
+				p.push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
+
+				vertsPerCurve.push_back( 2 );
+				p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
+				p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
+			}
+
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+
+			return curves;
+		}
+
+		IECoreGL::CurvesPrimitivePtr bodyVisualisation() const
+		{
 			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 			IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
 			vector<V3f> &p = pData->writable();
@@ -121,64 +169,54 @@ class CameraVisualiser : public ObjectVisualiser
 			p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
 			p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
 
-			// frustum
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 
-			const std::string &projection = camera->getProjection();
+			return curves;
+		}
+
+		Visualisations visualise( const IECore::Object *object ) const override
+		{
+			Visualisations v;
+
+			const IECoreScene::Camera *camera = IECore::runTimeCast<const IECoreScene::Camera>( object );
+			if( !camera )
+			{
+				return v;
+			}
 
 			// Use distort mode to get a screen window that matches the whole aperture
 			const Box2f &screenWindow = camera->frustum( IECoreScene::Camera::Distort );
+			const std::string &projection = camera->getProjection();
+			const float ornamentFrustumLength = 5.0f;
 
-			/// \todo When we're drawing the camera by some means other than creating a primitive for it,
-			/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
-			/// framing bounds when the viewer frames a selected camera.
-			V2f clippingPlanes( 0, 5 );
+			IECoreGL::GroupPtr ornamentGroup = new IECoreGL::Group();
+			ornamentGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+			ornamentGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+			ornamentGroup->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+			ornamentGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
 
-			Box2f near( screenWindow );
-			Box2f far( screenWindow );
+			// The ornament uses fixed near/far planes so it's manageable
+			ornamentGroup->addChild( frustumVisualisation( projection, screenWindow, V2f( 0, ornamentFrustumLength ), true, true ) );
+			ornamentGroup->addChild( bodyVisualisation() );
 
-			if( projection == "perspective" )
-			{
-				near.min *= clippingPlanes[0];
-				near.max *= clippingPlanes[0];
-				far.min *= clippingPlanes[1];
-				far.max *= clippingPlanes[1];
-			}
+			IECoreGL::GroupPtr frustumGroup = new IECoreGL::Group();
+			frustumGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+			frustumGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+			frustumGroup->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+			frustumGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.4, 0.4, 0.4, 1 ) ) );
 
-			vertsPerCurve.push_back( 5 );
-			p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
+			const V2f cameraPlanes = camera->getClippingPlanes();
 
-			vertsPerCurve.push_back( 5 );
-			p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-			p.push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
-			p.push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
-			p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
-			p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+			// Planes
+			frustumGroup->addChild( frustumVisualisation( projection, screenWindow, cameraPlanes, true, false ) );
+			// Lines, starting at, at minimum, the edge of the ornament so we don't over-draw the ornament itself, which looks bad.
+			const V2f drawingPlanes( std::max( ornamentFrustumLength, cameraPlanes.x ), cameraPlanes.y );
+			frustumGroup->addChild( frustumVisualisation( projection, screenWindow, drawingPlanes, false, true ) );
 
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+			v[ VisualisationType::Frustum ] = frustumGroup;
+			v[ VisualisationType::Ornament ] = ornamentGroup;
 
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
-
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
-
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
-			p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
-
-			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-			group->addChild( curves );
-
-			v[ VisualisationType::Ornament ] = group;
 			return v;
 		}
 
