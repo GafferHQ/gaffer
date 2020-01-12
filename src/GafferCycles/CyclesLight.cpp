@@ -252,7 +252,7 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 			else if( parameterName == "lightgroups" )
 			{
 				// LightGroups are stored in a 32-bit bitmask (32 lightGroups max)
-				uint lightGroup = static_cast<const IntPlug *>( valuePlug )->getValue();
+				int lightGroup = static_cast<const IntPlug *>( valuePlug )->getValue();
 				if( ( lightGroup > 0 ) && ( lightGroup <= 32 ) )
 					lightShader->parameters()[parameterName] = new IntData( 1 << ( lightGroup - 1 ) );
 				else

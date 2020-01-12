@@ -91,7 +91,7 @@ Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::Socket
 		}
 		case ccl::SocketType::UINT:
 		{
-			const uint *var = (uint*)socketType.default_value;
+			const unsigned *var = (unsigned*)socketType.default_value;
 			defaultValue = ValueType( *var );
 			minValue = 0;
 			break;

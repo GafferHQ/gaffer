@@ -45,7 +45,7 @@
 namespace GafferCycles
 {
 
-class GAFFERSCENE_API CyclesBackground : public GafferScene::GlobalShader
+class GAFFERCYCLES_API CyclesBackground : public GafferScene::GlobalShader
 {
 
 	public :
