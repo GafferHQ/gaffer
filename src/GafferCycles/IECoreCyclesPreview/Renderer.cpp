@@ -2825,34 +2825,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_session->set_pause( true );
 
-			while( true )
-			{
-				if( m_scene->mutex.try_lock() )
-				{
-					// Reduce the refcount so that it gets cleared.
-					m_backgroundShader = nullptr;
-					m_cameraCache.reset();
-					m_lightCache.reset();
-					m_shaderCache.reset();
-					m_instanceCache.reset();
-					m_attributesCache.reset();
-					m_particleSystemsCache.reset();
-					// Gaffer has already deleted these, so we can't double-delete
-					m_scene->shaders.clear();
-					m_scene->meshes.clear();
-					m_scene->objects.clear();
-					m_scene->lights.clear();
-					m_scene->particle_systems.clear();
-					// Cycles created the defaultCamera, so we give it back for it to delete.
-					m_scene->camera = m_defaultCamera;
-					m_scene->mutex.unlock();
-					break; 	
-				}
-				else
-				{
-					std::this_thread::sleep_for( m_sceneLockInterval );
-				}
-			}
+			// Reduce the refcount so that it gets cleared.
+			m_backgroundShader = nullptr;
+			m_cameraCache.reset();
+			m_lightCache.reset();
+			m_shaderCache.reset();
+			m_instanceCache.reset();
+			m_attributesCache.reset();
+			m_particleSystemsCache.reset();
+			// Gaffer has already deleted these, so we can't double-delete
+			m_scene->shaders.clear();
+			m_scene->meshes.clear();
+			m_scene->objects.clear();
+			m_scene->lights.clear();
+			m_scene->particle_systems.clear();
+			// Cycles created the defaultCamera, so we give it back for it to delete.
+			m_scene->camera = m_defaultCamera;
 
 			delete m_session;
 			delete m_imageManagerOld;
