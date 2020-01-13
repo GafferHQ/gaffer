@@ -80,9 +80,18 @@ for module in (
 with tarfile.open( args.archive, "r:gz" ) as a:
 
 	# getmember still reads the whole archive, so might as well grab them all
-	# as we go. We need to strip the first directory from all paths too as that
-	# contains the release name
-	archivePaths = { os.path.join( *m.name.split( os.sep )[1:] ) for m in a.getmembers() if os.sep in m.name }
+	# as we go. We need to strip the first directory from all paths as that
+	# contains the release name.
+
+	archivePaths = set()
+
+	for m in a.getmembers() :
+		# ignore anything not under the release directory
+		if os.sep not in m.name :
+			continue
+		# Strip the release dir and any empty components at the end
+		relPath = os.path.join( *m.name.split( os.sep )[1:] )
+		archivePaths.add( os.path.normpath( relPath ) )
 
 	missing = [ p for p in requiredPaths if p not in archivePaths ]
 	if missing :
