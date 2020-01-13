@@ -254,5 +254,53 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( c2["out"].channelData( "R", imath.V2i( 0 ) ), c1["out"].channelData( "R", imath.V2i( 0 ) ) )
 
+	def testUnpremultiplied( self ) :
+
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
+
+		shuffleAlpha = GafferImage.Shuffle()
+		shuffleAlpha["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
+		shuffleAlpha["in"].setInput( i["out"] )
+		shuffleAlpha["channels"]["channel"]["out"].setValue( 'A' )
+		shuffleAlpha["channels"]["channel"]["in"].setValue( 'R' )
+
+		gradeAlpha = GafferImage.Grade()
+		gradeAlpha["in"].setInput( shuffleAlpha["out"] )
+		gradeAlpha["channels"].setValue( '[RGBA]' )
+		gradeAlpha["offset"].setValue( imath.Color4f( 0, 0, 0, 0.1 ) )
+
+		unpremultipliedColorSpace = GafferImage.ColorSpace()
+		unpremultipliedColorSpace["in"].setInput( gradeAlpha["out"] )
+		unpremultipliedColorSpace["processUnpremultiplied"].setValue( True )
+		unpremultipliedColorSpace["inputSpace"].setValue( 'linear' )
+		unpremultipliedColorSpace["outputSpace"].setValue( 'sRGB' )
+
+		unpremultiply = GafferImage.Unpremultiply()
+		unpremultiply["in"].setInput( gradeAlpha["out"] )
+
+		bareColorSpace = GafferImage.ColorSpace()
+		bareColorSpace["in"].setInput( unpremultiply["out"] )
+		bareColorSpace["inputSpace"].setValue( 'linear' )
+		bareColorSpace["outputSpace"].setValue( 'sRGB' )
+
+		premultiply = GafferImage.Premultiply()
+		premultiply["in"].setInput( bareColorSpace["out"] )
+
+		# Assert that with a non-zero alpha, processUnpremultiplied is identical to:
+		# unpremult, colorSpace, and premult
+		self.assertImagesEqual( unpremultipliedColorSpace["out"], premultiply["out"] )
+
+		gradeAlpha["multiply"].setValue( imath.Color4f( 1, 1, 1, 0.0 ) )
+		gradeAlpha["offset"].setValue( imath.Color4f( 0, 0, 0, 0.0 ) )
+
+		# Assert that when alpha is zero, processUnpremultiplied doesn't affect the result
+		defaultColorSpace = GafferImage.ColorSpace()
+		defaultColorSpace["in"].setInput( gradeAlpha["out"] )
+		defaultColorSpace["inputSpace"].setValue( 'linear' )
+		defaultColorSpace["outputSpace"].setValue( 'sRGB' )
+
+		self.assertImagesEqual( unpremultipliedColorSpace["out"], defaultColorSpace["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
