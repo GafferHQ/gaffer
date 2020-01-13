@@ -122,6 +122,59 @@ def __aiMetadataGetVec( nodeEntry, paramName, name, defaultValue = None ) :
 
 	return defaultValue
 
+def __enumPresetValues( param ):
+
+	presets = IECore.StringVectorData()
+
+	enum = arnold.AiParamGetEnum( param )
+	while True :
+		preset = arnold.AiEnumGetString( enum, len( presets ) )
+		if not preset :
+			break
+		presets.append( preset )
+
+	return presets
+
+def __plugPresetNames( nodeEntry, paramName ) :
+
+	# options STRING "name:value|..."
+
+	options = __aiMetadataGetStr( nodeEntry, paramName, "options" )
+	if options :
+		return IECore.StringVectorData( [ o.partition( ":" )[0] for o in options.split( "|" ) if o ] )
+
+def __plugPresetValues( nodeEntry, paramName, paramType ) :
+
+	# options STRING "name:value|..."
+
+	options = __aiMetadataGetStr( nodeEntry, paramName, "options" )
+	if not options :
+		return None
+
+	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) if o ]
+
+	if paramType == arnold.AI_TYPE_STRING :
+		return IECore.StringVectorData( values )
+	elif paramType in ( arnold.AI_TYPE_INT, arnold.AI_TYPE_BYTE ) :
+		return IECore.IntVectorData( [ int( v ) for v in values ] )
+	elif paramType == arnold.AI_TYPE_UINT :
+		return IECore.UIntVectorData( [ int( v ) for v in values ] )
+	elif paramType == arnold.AI_TYPE_FLOAT :
+		return IECore.FloatVectorData( [ float( v ) for v in values ] )
+	elif paramType == arnold.AI_TYPE_BOOLEAN :
+		falseVals = ( "false", "no", "0" )
+		return IECore.BoolVectorData( [ False if v.lower() in falseVals else True for v in values ] )
+	elif paramType == arnold.AI_TYPE_RGB :
+		return IECore.Color3fVectorData( [ imath.Color3f( *[ float( x ) for x in v.split( "," ) ]) for v in values ] )
+	elif paramType == arnold.AI_TYPE_RGBA :
+		return IECore.Color4fVectorData( [ imath.Color4f( *[ float( x ) for x in v.split( "," ) ]) for v in values ] )
+	elif paramType in ( arnold.AI_TYPE_VECTOR, arnold.AI_TYPE_POINT ):
+		return IECore.V3fVectorData( [ imath.V3f( *[ float( x ) for x in v.split( "," ) ]) for v in values ] )
+	elif paramType == arnold.AI_TYPE_POINT2 :
+		return IECore.V2fVectorData( [ imath.V2f( *[ float( x ) for x in v.split( "," ) ]) for v in values ] )
+
+	return None
+
 ##########################################################################
 # Build a registry of information retrieved from Arnold metadata. We fill this
 # once at startup, as we can only get it from within an AiUniverse block,
@@ -171,6 +224,7 @@ def __translateNodeMetadata( nodeEntry ) :
 		param = arnold.AiParamIteratorGetNext( paramIt )
 		paramName = arnold.AiParamGetName( param )
 		paramPath = nodeName + ".parameters." + paramName
+		paramType = arnold.AiParamGetType( param )
 
 		# Parameter description
 
@@ -178,22 +232,21 @@ def __translateNodeMetadata( nodeEntry ) :
 		if description is not None :
 			__metadata[paramPath]["description"] = description
 
-		# Parameter presets from enum values
+		# Presets
 
-		paramType = arnold.AiParamGetType( param )
 		if paramType == arnold.AI_TYPE_ENUM :
+			# Parameter presets from enum values
+			presetValues = __enumPresetValues( param )
+			presetNames = presetValues
+		else :
+			# Manually specified presets for other types
+			presetValues = __plugPresetValues( nodeEntry, paramName, paramType )
+			presetNames = __plugPresetNames( nodeEntry, paramName )
 
-			enum = arnold.AiParamGetEnum( param )
-			presets = IECore.StringVectorData()
-			while True :
-				preset = arnold.AiEnumGetString( enum, len( presets ) )
-				if not preset :
-					break
-				presets.append( preset )
-
+		if presetValues :
 			__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
-			__metadata[paramPath]["presetNames"] = presets
-			__metadata[paramPath]["presetValues"] = presets
+			__metadata[paramPath]["presetValues"] = presetValues
+			__metadata[paramPath]["presetNames"] = presetNames
 
 		# Nodule type from linkable metadata and parameter type
 
@@ -255,6 +308,16 @@ def __translateNodeMetadata( nodeEntry ) :
 			for c in childComponents :
 				__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
+		# NodeEditor layout from other Gaffer-specific metadata
+
+		divider = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.layout.divider" )
+		if divider :
+			__metadata[paramPath]["layout:divider"] = True
+
+		index = __aiMetadataGetInt( nodeEntry, paramName, "gaffer.layout.index" )
+		if index is not None :
+			__metadata[paramPath]["layout:index"] = index
+
 		# GraphEditor visibility from Gaffer-specific metadata
 
 		visible = __aiMetadataGetBool( nodeEntry, None, "gaffer.graphEditorLayout.defaultVisibility" )
@@ -314,11 +377,16 @@ def __nodeDescription( node ) :
 
 def __nodeMetadata( node, name ) :
 
+	# TODO: When merging forward to 0.56.x.x, Arnold lights use
+	# __shader, so the `elif` can be removed.
+
 	if isinstance( node, GafferArnold.ArnoldShader ) :
 		key = node["name"].getValue()
-	else :
-		# Node type is ArnoldLight.
+	elif isinstance( node, GafferArnold.ArnoldLight ):
 		key = node["__shaderName"].getValue()
+	else :
+		# Other nodes hold an internal shader
+		key = node()["__shader"]["name"].getValue()
 
 	return __metadata[key].get( name )
 
@@ -334,16 +402,23 @@ def __plugMetadata( plug, name ) :
 		# inputs might be driven by the parent.
 		return True
 
+	# TODO: When merging forward to 0.56.x.x, Arnold lights use
+	# __shader, so the `elif` can be removed.
+
 	node = plug.node()
 	if isinstance( node, GafferArnold.ArnoldShader ) :
-		key = plug.node()["name"].getValue() + "." + plug.relativeName( node )
+		key = plug.node()["name"].getValue()
+	elif isinstance( node, GafferArnold.ArnoldLight ):
+		key = plug.node()["__shaderName"].getValue()
 	else :
-		# Node type is ArnoldLight.
-		key = plug.node()["__shaderName"].getValue() + "." + plug.relativeName( node )
+		# Other nodes hold an internal shader
+		key = plug.node()["__shader"]["name"].getValue()
+
+	key += "." + plug.relativeName( node )
 
 	return __metadata[key].get( name )
 
-for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
+for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight ) :
 
 	nodeKeys = set()
 	parametersPlugKeys = set()

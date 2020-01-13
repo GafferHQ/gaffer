@@ -50,6 +50,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"sets" : [
+
+			"layout:divider", True
+
+		],
+
 		"parameters" : [
 
 			"description",
