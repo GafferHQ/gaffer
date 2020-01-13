@@ -245,7 +245,7 @@ IECore::RunTimeTypedPtr TranslateTool::handleDragBegin()
 
 bool TranslateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection()[0].transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f translation = static_cast<TranslateHandle *>( gadget )->translation( event );
 	for( const auto &t : m_drag )
 	{
@@ -292,13 +292,13 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 	Box3f selectionCentroids;
 	for( const auto &s : selection() )
 	{
-		Context::Scope scopedContext( s.context.get() );
+		Context::Scope scopedContext( s.context() );
 
-		const M44f worldTransform = s.scene->fullTransform( s.path );
-		selectionCentroids.extendBy( s.scene->bound( s.path ).center() * worldTransform );
+		const M44f worldTransform = s.scene()->fullTransform( s.path() );
+		selectionCentroids.extendBy( s.scene()->bound( s.path() ).center() * worldTransform );
 	}
 
-	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled );
+	UndoScope undoScope( selection()[0].transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled );
 
 	const V3f offset = targetPos - selectionCentroids.center();
 	for( const auto &s : selection() )
@@ -315,15 +315,15 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 TranslateTool::Translation::Translation( const Selection &selection, Orientation orientation )
 {
-	Context::Scope scopedContext( selection.context.get() );
+	Context::Scope scopedContext( selection.context() );
 
-	m_plug = selection.transformPlug->translatePlug();
+	m_plug = selection.transformPlug()->translatePlug();
 	m_origin = m_plug->getValue();
 
 	const M44f handlesTransform = selection.orientedTransform( orientation );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 
-	m_time = selection.context->getTime();
+	m_time = selection.context()->getTime();
 }
 
 bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const

@@ -95,132 +95,6 @@ bool ancestorMakesChildNodesReadOnly( const Node *node )
 	return false;
 }
 
-bool updateSelection( const SceneAlgo::History *history, TransformTool::Selection &selection )
-{
-	const SceneNode *node = runTimeCast<const SceneNode>( history->scene->node() );
-	if( !node )
-	{
-		return false;
-	}
-
-	Context::Scope scopedContext( history->context.get() );
-	if( !node->enabledPlug()->getValue() )
-	{
-		return false;
-	}
-
-	if( const ObjectSource *objectSource = runTimeCast<const ObjectSource>( node ) )
-	{
-		if( history->scene == objectSource->outPlug() )
-		{
-			selection.transformPlug = const_cast<TransformPlug *>( objectSource->transformPlug() );
-			selection.transformSpace = M44f();
-		}
-	}
-	else if( const Group *group = runTimeCast<const Group>( node ) )
-	{
-		const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-		if( history->scene == group->outPlug() && path.size() == 1 )
-		{
-			selection.transformPlug = const_cast<TransformPlug *>( group->transformPlug() );
-			selection.transformSpace = M44f();
-		}
-	}
-	else if( const GafferScene::Transform *transform = runTimeCast<const GafferScene::Transform>( node ) )
-	{
-		if(
-			history->scene == transform->outPlug() &&
-			( filterResult( transform->filterPlug(), transform->inPlug() ) & PathMatcher::ExactMatch )
-		)
-		{
-			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
-			ScenePlug::ScenePath spacePath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			switch( (GafferScene::Transform::Space)transform->spacePlug()->getValue() )
-			{
-				case GafferScene::Transform::Local :
-					break;
-				case GafferScene::Transform::Parent :
-				case GafferScene::Transform::ResetLocal :
-					spacePath.pop_back();
-					break;
-				case GafferScene::Transform::World :
-				case GafferScene::Transform::ResetWorld :
-					spacePath.clear();
-					break;
-			}
-			selection.transformSpace = transform->inPlug()->fullTransform( spacePath );
-		}
-	}
-	else if( const GafferScene::SceneReader *sceneReader = runTimeCast<const GafferScene::SceneReader>( node ) )
-	{
-		const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-		if( history->scene == sceneReader->outPlug() && path.size() == 1 )
-		{
-			selection.transformPlug = const_cast<TransformPlug *>( sceneReader->transformPlug() );
-			selection.transformSpace = M44f();
-		}
-	}
-
-	if( selection.transformPlug )
-	{
-		selection.transformPlug = selection.transformPlug->source<TransformPlug>();
-
-		if( auto *spreadsheet = runTimeCast<Spreadsheet>( selection.transformPlug->node() ) )
-		{
-			if( spreadsheet->outPlug()->isAncestorOf( selection.transformPlug.get() ) )
-			{
-				auto spreadsheetTransformPlug = static_cast<TransformPlug *>(
-					spreadsheet->activeInPlug( selection.transformPlug.get() )
-				);
-				if( spreadsheetTransformPlug->ancestor<Spreadsheet::RowPlug>() != spreadsheet->rowsPlug()->defaultRow() )
-				{
-					selection.transformPlug = spreadsheetTransformPlug->source<TransformPlug>();
-				}
-				else
-				{
-					// Default spreadsheet row. Editing this could affect any number
-					// of unrelated objects, so don't do that.
-					selection.transformPlug = nullptr;
-					return false;
-				}
-			}
-		}
-
-		if( ancestorMakesChildNodesReadOnly( selection.transformPlug->node() ) )
-		{
-			// Inside a Reference node or similar. Unlike a regular read-only
-			// status, the user has no chance of unlocking this node, so don't
-			// tease them with an unusable selection.
-			selection.transformPlug = nullptr;
-			return false;
-		}
-		selection.upstreamScene = history->scene;
-		selection.upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-		selection.upstreamContext = history->context;
-		return true;
-	}
-
-	return false;
-}
-
-bool updateSelectionWalk( const SceneAlgo::History *history, TransformTool::Selection &selection )
-{
-	if( updateSelection( history, selection ) )
-	{
-		return true;
-	}
-
-	for( const auto &p : history->predecessors )
-	{
-		if( updateSelectionWalk( p.get(), selection ) )
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 class HandlesGadget : public Gadget
 {
 
@@ -275,7 +149,7 @@ TransformTool::Selection::Selection(
 	const GafferScene::ScenePlug::ScenePath &path,
 	const Gaffer::ConstContextPtr &context
 )
-	:	scene( scene ), path( path ), context( context )
+	:	m_scene( scene ), m_path( path ), m_context( context )
 {
 	Context::Scope scopedContext( context.get() );
 	if( path.empty() || !scene->exists( path ) )
@@ -284,29 +158,197 @@ TransformTool::Selection::Selection(
 	}
 
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scene->transformPlug(), path );
-	updateSelectionWalk( history.get(), *this );
+	initWalk( history.get() );
+}
+
+bool TransformTool::Selection::init( const GafferScene::SceneAlgo::History *history )
+{
+	const SceneNode *node = runTimeCast<const SceneNode>( history->scene->node() );
+	if( !node )
+	{
+		return false;
+	}
+
+	Context::Scope scopedContext( history->context.get() );
+	if( !node->enabledPlug()->getValue() )
+	{
+		return false;
+	}
+
+	if( const ObjectSource *objectSource = runTimeCast<const ObjectSource>( node ) )
+	{
+		if( history->scene == objectSource->outPlug() )
+		{
+			m_transformPlug = const_cast<TransformPlug *>( objectSource->transformPlug() );
+			m_transformSpace = M44f();
+		}
+	}
+	else if( const Group *group = runTimeCast<const Group>( node ) )
+	{
+		const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		if( history->scene == group->outPlug() && path.size() == 1 )
+		{
+			m_transformPlug = const_cast<TransformPlug *>( group->transformPlug() );
+			m_transformSpace = M44f();
+		}
+	}
+	else if( const GafferScene::Transform *transform = runTimeCast<const GafferScene::Transform>( node ) )
+	{
+		if(
+			history->scene == transform->outPlug() &&
+			( filterResult( transform->filterPlug(), transform->inPlug() ) & PathMatcher::ExactMatch )
+		)
+		{
+			m_transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
+			ScenePlug::ScenePath spacePath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+			switch( (GafferScene::Transform::Space)transform->spacePlug()->getValue() )
+			{
+				case GafferScene::Transform::Local :
+					break;
+				case GafferScene::Transform::Parent :
+				case GafferScene::Transform::ResetLocal :
+					spacePath.pop_back();
+					break;
+				case GafferScene::Transform::World :
+				case GafferScene::Transform::ResetWorld :
+					spacePath.clear();
+					break;
+			}
+			m_transformSpace = transform->inPlug()->fullTransform( spacePath );
+		}
+	}
+	else if( const GafferScene::SceneReader *sceneReader = runTimeCast<const GafferScene::SceneReader>( node ) )
+	{
+		const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		if( history->scene == sceneReader->outPlug() && path.size() == 1 )
+		{
+			m_transformPlug = const_cast<TransformPlug *>( sceneReader->transformPlug() );
+			m_transformSpace = M44f();
+		}
+	}
+
+	if( m_transformPlug )
+	{
+		m_transformPlug = m_transformPlug->source<TransformPlug>();
+
+		if( auto *spreadsheet = runTimeCast<Spreadsheet>( m_transformPlug->node() ) )
+		{
+			if( spreadsheet->outPlug()->isAncestorOf( m_transformPlug.get() ) )
+			{
+				auto spreadsheetTransformPlug = static_cast<TransformPlug *>(
+					spreadsheet->activeInPlug( m_transformPlug.get() )
+				);
+				if( spreadsheetTransformPlug->ancestor<Spreadsheet::RowPlug>() != spreadsheet->rowsPlug()->defaultRow() )
+				{
+					m_transformPlug = spreadsheetTransformPlug->source<TransformPlug>();
+				}
+				else
+				{
+					// Default spreadsheet row. Editing this could affect any number
+					// of unrelated objects, so don't do that.
+					m_transformPlug = nullptr;
+					return false;
+				}
+			}
+		}
+
+		if( ancestorMakesChildNodesReadOnly( m_transformPlug->node() ) )
+		{
+			// Inside a Reference node or similar. Unlike a regular read-only
+			// status, the user has no chance of unlocking this node, so don't
+			// tease them with an unusable selection.
+			m_transformPlug = nullptr;
+			return false;
+		}
+
+		m_upstreamScene = history->scene;
+		m_upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		m_upstreamContext = history->context;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *history )
+{
+	if( init( history ) )
+	{
+		return true;
+	}
+
+	for( const auto &p : history->predecessors )
+	{
+		if( initWalk( p.get() ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const GafferScene::ScenePlug *TransformTool::Selection::scene() const
+{
+	return m_scene.get();
+}
+
+const GafferScene::ScenePlug::ScenePath &TransformTool::Selection::path() const
+{
+	return m_path;
+}
+
+const Gaffer::Context *TransformTool::Selection::context() const
+{
+	return m_context.get();
+}
+
+const GafferScene::ScenePlug *TransformTool::Selection::upstreamScene() const
+{
+	return m_upstreamScene.get();
+}
+
+const GafferScene::ScenePlug::ScenePath &TransformTool::Selection::upstreamPath() const
+{
+	return m_upstreamPath;
+}
+
+const Gaffer::Context *TransformTool::Selection::upstreamContext() const
+{
+	return m_upstreamContext.get();
+}
+
+Gaffer::TransformPlug *TransformTool::Selection::transformPlug() const
+{
+	return m_transformPlug.get();
+}
+
+const Imath::M44f &TransformTool::Selection::transformSpace() const
+{
+	return m_transformSpace;
 }
 
 Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 {
 	M44f downstreamMatrix;
 	{
-		Context::Scope scopedContext( context.get() );
-		downstreamMatrix = scene->fullTransform( path );
+		Context::Scope scopedContext( context() );
+		downstreamMatrix = scene()->fullTransform( path() );
 	}
 
 	M44f upstreamMatrix;
 	{
-		Context::Scope scopedContext( upstreamContext.get() );
-		upstreamMatrix = upstreamScene->fullTransform( upstreamPath );
+		Context::Scope scopedContext( upstreamContext() );
+		upstreamMatrix = upstreamScene()->fullTransform( upstreamPath() );
 	}
 
-	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace.inverse();
+	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace().inverse();
 }
 
 Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation ) const
 {
-	Context::Scope scopedContext( context.get() );
+	Context::Scope scopedContext( context() );
 
 	// Get a matrix with the orientation we want
 
@@ -315,13 +357,13 @@ Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation
 		switch( orientation )
 		{
 			case Local :
-				result = scene->fullTransform( path );
+				result = scene()->fullTransform( path() );
 				break;
 			case Parent :
-				if( path.size() )
+				if( path().size() )
 				{
-					const ScenePlug::ScenePath parentPath( path.begin(), path.end() - 1 );
-					result = scene->fullTransform( parentPath );
+					const ScenePlug::ScenePath parentPath( path().begin(), path().end() - 1 );
+					result = scene()->fullTransform( parentPath );
 				}
 				break;
 			case World :
@@ -334,10 +376,10 @@ Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation
 
 	// And reset the translation to put it where the pivot is
 
-	Context::Scope upstreamScope( upstreamContext.get() );
+	Context::Scope upstreamScope( upstreamContext() );
 
-	const V3f pivot = transformPlug->pivotPlug()->getValue();
-	const V3f translate = transformPlug->translatePlug()->getValue();
+	const V3f pivot = transformPlug()->pivotPlug()->getValue();
+	const V3f translate = transformPlug()->translatePlug()->getValue();
 	const V3f downstreamWorldPivot = (pivot + translate) * sceneToTransformSpace().inverse();
 
 	result[3][0] = downstreamWorldPivot[0];
@@ -595,18 +637,18 @@ void TransformTool::updateSelection() const
 	{
 		ScenePlug::ScenePath path = *it;
 		Selection selection;
-		while( path.size() && !selection.transformPlug )
+		while( path.size() && !selection.transformPlug() )
 		{
 			selection = Selection( scene, path, view()->getContext() );
 			path.pop_back();
 		}
 
-		if( selection.transformPlug )
+		if( selection.transformPlug() )
 		{
 			m_selection.push_back( selection );
 			if( *it == lastSelectedPath )
 			{
-				lastSelectedPath = selection.path;
+				lastSelectedPath = selection.path();
 			}
 		}
 		else
@@ -630,15 +672,15 @@ void TransformTool::updateSelection() const
 		m_selection.begin(), m_selection.end(),
 		[&lastSelectedPath]( const Selection &a, const Selection &b )
 		{
-			if( a.transformPlug.get() < b.transformPlug.get() )
+			if( a.transformPlug() < b.transformPlug() )
 			{
 				return true;
 			}
-			else if( b.transformPlug.get() < a.transformPlug.get() )
+			else if( b.transformPlug() < a.transformPlug() )
 			{
 				return false;
 			}
-			return ( a.path != lastSelectedPath ) < ( b.path != lastSelectedPath );
+			return ( a.path() != lastSelectedPath ) < ( b.path() != lastSelectedPath );
 		}
 	);
 
@@ -648,7 +690,7 @@ void TransformTool::updateSelection() const
 		m_selection.begin(), m_selection.end(),
 		[]( const Selection &a, const Selection &b )
 		{
-			return a.transformPlug == b.transformPlug;
+			return a.transformPlug() == b.transformPlug();
 		}
 	);
 	m_selection.erase( last, m_selection.end() );
@@ -659,7 +701,7 @@ void TransformTool::updateSelection() const
 		m_selection.begin(), m_selection.end(),
 		[&lastSelectedPath]( const Selection &x )
 		{
-			return x.path == lastSelectedPath;
+			return x.path() == lastSelectedPath;
 		}
 	);
 
@@ -744,18 +786,18 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 			return false;
 		}
 
-		UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>() );
+		UndoScope undoScope( selection().back().transformPlug()->ancestor<ScriptNode>() );
 		for( const auto &s : selection() )
 		{
-			Context::Scope contextScope( s.context.get() );
-			for( RecursiveFloatPlugIterator it( s.transformPlug.get() ); !it.done(); ++it )
+			Context::Scope contextScope( s.context() );
+			for( RecursiveFloatPlugIterator it( s.transformPlug() ); !it.done(); ++it )
 			{
 				FloatPlug *plug = it->get();
 				if( Animation::canAnimate( plug ) )
 				{
 					const float value = plug->getValue();
 					Animation::CurvePlug *curve = Animation::acquire( plug );
-					curve->addKey( new Animation::Key( s.context->getTime(), value ) );
+					curve->addKey( new Animation::Key( s.context()->getTime(), value ) );
 				}
 			}
 		}

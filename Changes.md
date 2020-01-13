@@ -33,6 +33,7 @@ Breaking Changes
 ----------------
 
 - Context : Removed `Substitutions`, `substitutions()` and `hasSubstitutions()`. Use the `IECore.StringAlgo` equivalents instead.
+- TransformTool : The `Selection` class now uses accessor methods rather than exposing data members directly.
 - Stats app : The `-scene` and `-image` arguments now ignore input plugs.
 - Spreadsheet : Broke binary compatibility. Full source compatibility is retained.
 

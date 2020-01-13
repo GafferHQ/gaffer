@@ -40,6 +40,7 @@
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/TypeIds.h"
 
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferUI/KeyEvent.h"
@@ -88,12 +89,12 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// ============
 			///
 			/// The scene being viewed.
-			GafferScene::ConstScenePlugPtr scene;
+			const GafferScene::ScenePlug *scene() const;
 			/// The location within the viewed scene that has been
 			/// selected for editing.
-			GafferScene::ScenePlug::ScenePath path;
+			const GafferScene::ScenePlug::ScenePath &path() const;
 			/// The context the scene is being viewed in.
-			Gaffer::ConstContextPtr context;
+			const Gaffer::Context *context() const;
 
 			/// Upstream scene
 			/// ==============
@@ -104,26 +105,26 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// downstream node to see the edits in the context of later
 			/// changes. The `upstreamScene` is the output from the node
 			/// actually being edited.
-			GafferScene::ConstScenePlugPtr upstreamScene;
+			const GafferScene::ScenePlug *upstreamScene() const;
 			/// The hierarchies of the upstream and viewed scenes may
 			/// differ. The upstreamPath is the equivalent of
 			/// the viewed path but in the upstream scene.
-			GafferScene::ScenePlug::ScenePath upstreamPath;
+			const GafferScene::ScenePlug::ScenePath &upstreamPath() const;
 			/// The upstream context is the equivalent of the
 			/// viewed context, but for the upstream scene.
-			Gaffer::ConstContextPtr upstreamContext;
+			const Gaffer::Context *upstreamContext() const;
 
 			/// Transform to edit
 			/// =================
 			///
 			/// The plug to edit. This will be a child of
 			/// the node generating the upstream scene.
-			Gaffer::TransformPlugPtr transformPlug;
+			Gaffer::TransformPlug *transformPlug() const;
 			/// The coordinate system within which the
 			/// transform is applied by the upstream node.
 			/// This is relative to the world space of the
 			/// upstream scene.
-			Imath::M44f transformSpace;
+			const Imath::M44f &transformSpace() const;
 
 			/// Utilities
 			/// =========
@@ -134,6 +135,22 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// Returns a matrix suitable for positioning
 			/// transform handles in `scene's` world space.
 			Imath::M44f orientedTransform( Orientation orientation ) const;
+
+			private :
+
+				bool init( const GafferScene::SceneAlgo::History *history );
+				bool initWalk( const GafferScene::SceneAlgo::History *history );
+
+				GafferScene::ConstScenePlugPtr m_scene;
+				GafferScene::ScenePlug::ScenePath m_path;
+				Gaffer::ConstContextPtr m_context;
+
+				GafferScene::ConstScenePlugPtr m_upstreamScene;
+				GafferScene::ScenePlug::ScenePath m_upstreamPath;
+				Gaffer::ConstContextPtr m_upstreamContext;
+
+				Gaffer::TransformPlugPtr m_transformPlug;
+				Imath::M44f m_transformSpace;
 
 		};
 
