@@ -590,7 +590,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return
 		self.__moveToPath = targetPath
 
-		images = sorted( self.__images(), key = lambda x : Gaffer.Metadata.value( x, _ImagesPath.indexMetadataName ) or -1 )
+		images = _ImagesPath( self.__images(), [] )._orderedImages()
 		imagesToMove = [image for image in images if '/'+image.getName() in event.data]
 
 		# Because of multi-selection it's possible to move the mouse over a selected image.
