@@ -339,7 +339,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
 				addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ), scoped = False )
 
-				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image" )
+				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy." )
 				self.__duplicateButton.setEnabled( False )
 				self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ), scoped = False )
 
@@ -549,16 +549,35 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __duplicateClicked( self, *unused ) :
 
+		# These are plug indices, rather than ui indices, so need to be
+		# used directly with self.__images() without remapping.
 		indices = self.__indicesFromSelection()
 
+		# As we may be inserting more than one image, keep a copy of the original
+		# list so the selection indices remain valid
+		sourceImages = [ i for i in self.__images().children() ]
+		# We need to insert the duplicate before the source, as it's usually
+		# used to snapshot in-progress renders.
+		orderedImages = self.__orderedImages()
+
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+
+			insertionIndex = None
+
 			for index in indices :
-				image = self.__images()[index]
+				image = sourceImages[ index ]
+				uiInsertionIndex = orderedImages.index( image )
 				imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 				self.__images().addChild( imageCopy )
 				imageCopy.copyFrom( image )
+				orderedImages.insert( uiInsertionIndex, imageCopy )
 
-			self.getPlug().setValue( len( self.__images() ) - 1 )
+			_ImagesPath._updateUIIndices( orderedImages )
+
+			# Only switch to the last duplicate if alt is held
+			altHeld = GafferUI.Widget.currentModifiers() & GafferUI.ModifiableEvent.Modifiers.Alt
+			if altHeld and uiInsertionIndex is not None :
+				self.getPlug().setValue( self.__uiIndexToIndex( uiInsertionIndex ) )
 
 	def __dropImage( self, eventData ) :
 
