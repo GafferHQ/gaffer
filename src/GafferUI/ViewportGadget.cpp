@@ -457,7 +457,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		{
 			if(
 				( ( event.modifiers == ModifiableEvent::Alt ) || ( preciseMotionAllowed && ( event.modifiers == ModifiableEvent::ShiftAlt ) ) ) ||
-				( event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None ) ||
+				( event.buttons == ButtonEvent::Middle && ( event.modifiers == ModifiableEvent::None || ( preciseMotionAllowed && ( event.modifiers == ModifiableEvent::Shift ) ) ) ) ||
 				( variableAspectZoom && event.modifiers & ModifiableEvent::Alt && event.modifiers & ModifiableEvent::Control && event.buttons == ButtonEvent::Right )
 			)
 			{
