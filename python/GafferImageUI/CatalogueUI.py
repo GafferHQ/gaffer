@@ -486,7 +486,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				self.__images().removeChild( self.__images()[index] )
 
 			# Figure out new selection
-			if not metadataIndex :
+			if metadataIndex is None :
 				selectionIndex = index - 1
 			else:
 				selectionIndex = self.__metadataIndexToGraphComponentIndex( metadataIndex - 1 )
