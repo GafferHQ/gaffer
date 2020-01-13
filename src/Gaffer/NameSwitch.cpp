@@ -73,7 +73,9 @@ void NameSwitch::setup( const Plug *plug )
 		throw IECore::Exception( "Switch already has an \"out\" plug." );
 	}
 
-	NameValuePlugPtr element = new NameValuePlug( "", plug->createCounterpart( "value", Plug::In ), /* defaultEnabled = */ true, "in0" );
+	PlugPtr inElement = plug->createCounterpart( "value", Plug::In );
+	inElement->setFlags( Plug::Serialisable, true );
+	NameValuePlugPtr element = new NameValuePlug( "", inElement, /* defaultEnabled = */ true, "in0" );
 	ArrayPlugPtr in = new ArrayPlug(
 		"in",
 		Plug::In,
