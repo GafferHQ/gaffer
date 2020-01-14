@@ -60,6 +60,7 @@
 // Cycles
 #include "render/nodes.h"
 #include "render/osl.h"
+#include "util/util_path.h"
 
 using namespace std;
 using namespace IECore;
@@ -278,6 +279,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
 	const bool isAOV = boost::starts_with( shader->getType(), "ccl:aov:" );
+	const bool isImageTexture = shader->getName() == "image_texture";
 
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
@@ -374,6 +376,42 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			else
 			{
 				setSplineParameter( node, parameterName, splineData->readable() );
+			}
+		}
+		else if( isImageTexture && parameterName == "filename" )
+		{
+			if( const StringData *stringData = runTimeCast<const StringData>( namedParameter.second.get() ) )
+			{
+				string pathFileName( stringData->readable() );
+				string fileName = ccl::path_filename( pathFileName );
+				size_t offset = fileName.find( "<UDIM>" );
+				if( offset != string::npos )
+				{
+					// Workaround to find all available tiles
+					ccl::ImageTextureNode *imgTexNode = (ccl::ImageTextureNode*)node;
+					imgTexNode->tiles.clear();
+
+					string baseFileName = fileName.substr( 0, offset );
+					vector<string> files;
+					boost::filesystem::path path( ccl::path_dirname( pathFileName ) );
+					for( boost::filesystem::directory_iterator it( path ); it != boost::filesystem::directory_iterator(); ++it )
+					{
+						if( boost::filesystem::is_regular_file( it->status() ) || boost::filesystem::is_symlink( it->status() ) )
+						{
+							string foundFile = boost::filesystem::basename( it->path().filename() );
+							if( baseFileName == ( foundFile.substr( 0, offset ) ) )
+							{
+								files.push_back( foundFile );
+							}
+						}
+					}
+
+					for( string file : files )
+					{
+						imgTexNode->tiles.push_back( atoi( file.substr( offset, offset+3 ).c_str() ) );
+					}
+				}
+				SocketAlgo::setSocket( node, parameterName, namedParameter.second.get() );
 			}
 		}
 		else
