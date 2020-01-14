@@ -1,3 +1,11 @@
+0.55.x.x (relative to 0.55.2.1)
+========
+
+Fixes
+-----
+
+- FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
+
 0.55.2.1 (relative to 0.55.2.0)
 ========
 
@@ -200,6 +208,14 @@ Breaking Changes
 - CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
+
+0.54.2.x (relative to 0.54.2.4)
+========
+
+Fixes
+-----
+
+- FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
 
 0.54.2.4 (relative to 0.54.2.3)
 ========
