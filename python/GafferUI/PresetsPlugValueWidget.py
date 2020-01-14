@@ -92,30 +92,33 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug() is None :
 			return result
 
-		currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
-		allowCustom = Gaffer.Metadata.value( self.getPlug(), "presetsPlugValueWidget:allowCustom" )
-		isCustom = Gaffer.Metadata.value( self.getPlug(), "presetsPlugValueWidget:isCustom" )
-		for n in Gaffer.NodeAlgo.presets( self.getPlug() ) :
-			menuPath = n if n.startswith( "/" ) else "/" + n
-			result.append(
-				menuPath,
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = n ),
-					"checkBox" : n == currentPreset and not isCustom,
-				}
-			)
+		# Required for context-sensitive dynamic presets
+		with self.getContext():
 
-		if allowCustom:
-			result.append( "/CustomDivider", { "divider" : True } )
-			result.append(
-				"/Custom",
-				{
-					"command" : Gaffer.WeakMethod( self.__applyCustomPreset ),
-					"checkBox" : isCustom or not currentPreset,
-				}
-			)
+			currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+			allowCustom = Gaffer.Metadata.value( self.getPlug(), "presetsPlugValueWidget:allowCustom" )
+			isCustom = Gaffer.Metadata.value( self.getPlug(), "presetsPlugValueWidget:isCustom" )
+			for n in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+				menuPath = n if n.startswith( "/" ) else "/" + n
+				result.append(
+					menuPath,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = n ),
+						"checkBox" : n == currentPreset and not isCustom,
+					}
+				)
 
-		return result
+			if allowCustom:
+				result.append( "/CustomDivider", { "divider" : True } )
+				result.append(
+					"/Custom",
+					{
+						"command" : Gaffer.WeakMethod( self.__applyCustomPreset ),
+						"checkBox" : isCustom or not currentPreset,
+					}
+				)
+
+			return result
 
 	def __applyPreset( self, unused, preset ) :
 
