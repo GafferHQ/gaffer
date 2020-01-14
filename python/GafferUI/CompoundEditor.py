@@ -523,14 +523,6 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 			if tabbedContainer.getCurrent() is not None :
 				tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
 			tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
-
-			tabDict["pinned"] = []
-			for editor in tabbedContainer :
-				if isinstance( editor, GafferUI.NodeSetEditor ) :
-					tabDict["pinned"].append( not editor.getNodeSet().isSame( scriptNode.selection() ) )
-				else :
-					tabDict["pinned"].append( None )
-
 			return repr( tabDict )
 
 	def restoreChildren( self, children ) :
@@ -554,8 +546,6 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 				# new format - various fields provided by a dictionary
 				for i, c in enumerate( children["tabs"] ) :
 					editor = self[0].addEditor( c )
-					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
-						editor.setNodeSet( Gaffer.StandardSet() )
 
 				if "currentTab" in children :
 					self[0].setCurrent( self[0][children["currentTab"]] )
