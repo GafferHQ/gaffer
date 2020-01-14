@@ -39,181 +39,762 @@
 
 [node point_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
+
+	[attr radius]
+		page STRING "Shape"
+		gaffer.layout.index INT 5
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 6
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 7
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 8
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 9
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 10
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 11
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 12
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 13
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 14
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 15
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+
 	[attr position]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node distant_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
+
+	[attr angle]
+		page STRING "Shape"
+		gaffer.layout.index INT 5
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 6
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 7
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 8
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 9
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 10
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 11
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 12
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 13
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 14
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 15
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr direction]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node quad_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr portal]
+		options STRING "Light:0|Portal:1"
+		label STRING "Mode"
+		gaffer.layout.index INT 0
+	[attr color]
+		gaffer.layout.index INT 1
+	[attr intensity]
+		gaffer.layout.index INT 2
+	[attr exposure]
+		gaffer.layout.index INT 3
+	[attr normalize]
+		gaffer.layout.index INT 4
+	[attr aov]
+		gaffer.layout.index INT 5
+
+	[attr roundness]
+		page STRING "Shape"
+		gaffer.layout.index INT 6
+	[attr soft_edge]
+		page STRING "Shape"
+		gaffer.layout.index INT 7
+	[attr spread]
+		page STRING "Shape"
+		gaffer.layout.index INT 8
+	[attr resolution]
+		page STRING "Shape"
+		gaffer.layout.index INT 9
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 10
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 11
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 13
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 14
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 15
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 17
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 18
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 22
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 23
+
 	[attr vertices]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node spot_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
+
+	[attr roundness]
+		page STRING "Shape"
+		gaffer.layout.index INT 5
+	[attr radius]
+		page STRING "Shape"
+		gaffer.layout.index INT 6
+	[attr lens_radius]
+		page STRING "Shape"
+		gaffer.layout.index INT 7
+	[attr cone_angle]
+		page STRING "Shape"
+		gaffer.layout.index INT 8
+	[attr penumbra_angle]
+		page STRING "Shape"
+		gaffer.layout.index INT 9
+	[attr cosine_power]
+		page STRING "Shape"
+		gaffer.layout.index INT 10
+	[attr aspect_ratio]
+		page STRING "Shape"
+		gaffer.layout.index INT 11
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 12
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 13
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 14
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 15
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 16
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 17
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 18
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 22
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 25
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 26
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 27
+
 	[attr position]
-
 		gaffer.plugType STRING ""
-
 	[attr look_at]
-
 		gaffer.plugType STRING ""
-
 	[attr up]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node skydome_light]
 
-	[attr matrix]
+	gaffer.layout.section.Map.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
 
-		gaffer.plugType STRING ""
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr portal_mode]
+		gaffer.layout.index INT 4
+	[attr aov]
+		gaffer.layout.index INT 5
+	[attr aov_indirect]
+		gaffer.layout.index INT 6
 
-	[attr filters]
-
-		gaffer.plugType STRING ""
-
-	[attr time_samples]
-
-		gaffer.plugType STRING ""
-
-	[attr shader ]
-
+	[attr shader]
+		page STRING "Map"
 		gaffer.plugType STRING "ClosurePlug"
+		gaffer.layout.index INT 7
+	[attr format]
+		page STRING "Map"
+		gaffer.layout.index INT 8
+	[attr resolution]
+		page STRING "Map"
+		gaffer.layout.index INT 9
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 10
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 11
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 13
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 14
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 15
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 17
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 18
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 22
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 23
+
+	[attr matrix]
+		gaffer.plugType STRING ""
+	[attr filters]
+		gaffer.plugType STRING ""
+	[attr time_samples]
+		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node cylinder_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
+
+	[attr radius]
+		page STRING "Shape"
+		gaffer.layout.index INT 5
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 6
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 7
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 8
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 9
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 10
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 11
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 12
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 13
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 14
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 15
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 17
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 18
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+
 	[attr bottom]
-
 		gaffer.plugType STRING ""
-
 	[attr top]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node disk_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
+
+	[attr radius]
+		page STRING "Shape"
+		gaffer.layout.index INT 5
+	[attr spread]
+		page STRING "Shape"
+		gaffer.layout.index INT 6
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 7
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 8
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 9
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 10
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 11
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 13
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 14
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 15
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 17
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 22
+
 	[attr position]
-
 		gaffer.plugType STRING ""
-
 	[attr direction]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node mesh_light]
 
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 5
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 6
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 11
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 13
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 14
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 15
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 17
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 18
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 19
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 22
+
 	[attr mesh]
-
 		gaffer.plugType STRING ""
-
 	[attr matrix]
-
 		gaffer.plugType STRING ""
-
 	[attr filters]
-
 		gaffer.plugType STRING ""
-
 	[attr time_samples]
-
 		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
+
 
 [node photometric_light]
 
-	[attr matrix]
+	gaffer.layout.section.Shape.collapsed BOOL false
+	gaffer.layout.section.Sampling.collapsed BOOL false
 
-		gaffer.plugType STRING ""
-
-	[attr filters]
-
-		gaffer.plugType STRING ""
-
-	[attr time_samples]
-
-		gaffer.plugType STRING ""
+	[attr color]
+		gaffer.layout.index INT 0
+	[attr intensity]
+		gaffer.layout.index INT 1
+	[attr exposure]
+		gaffer.layout.index INT 2
+	[attr normalize]
+		gaffer.layout.index INT 3
+	[attr aov]
+		gaffer.layout.index INT 4
 
 	[attr filename]
-
 		widget STRING "filename"
+		page STRING "Shape"
+		gaffer.layout.index INT 5
+	[attr radius]
+		page STRING "Shape"
+		gaffer.layout.index INT 6
+
+	[attr samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 7
+	[attr volume_samples]
+		page STRING "Sampling"
+		gaffer.layout.index INT 8
+
+	[attr cast_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 9
+	[attr cast_volumetric_shadows]
+		page STRING "Shadows"
+		gaffer.layout.index INT 10
+	[attr shadow_density]
+		page STRING "Shadows"
+		gaffer.layout.index INT 11
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
+
+	[attr camera]
+		page STRING "Contribution"
+		gaffer.layout.index INT 13
+	[attr transmission]
+		page STRING "Contribution"
+		gaffer.layout.index INT 14
+	[attr diffuse]
+		page STRING "Contribution"
+		gaffer.layout.index INT 15
+	[attr specular]
+		page STRING "Contribution"
+		gaffer.layout.index INT 16
+	[attr sss]
+		page STRING "Contribution"
+		gaffer.layout.index INT 17
+	[attr indirect]
+		page STRING "Contribution"
+		gaffer.layout.index INT 20
+	[attr volume]
+		page STRING "Contribution"
+		gaffer.layout.index INT 21
+	[attr max_bounces]
+		page STRING "Contribution"
+		gaffer.layout.index INT 22
+
+	[attr matrix]
+		gaffer.plugType STRING ""
+	[attr filters]
+		gaffer.plugType STRING ""
+	[attr time_samples]
+		gaffer.plugType STRING ""
+	[attr motion_start]
+		gaffer.plugType STRING ""
+	[attr motion_end]
+		gaffer.plugType STRING ""
 
 # Standard Arnold Shaders
 ##########################################################################
@@ -347,7 +928,6 @@
 	gaffer.nodeMenu.category STRING "Utility"
 
 	[attr camera]
-
 		gaffer.plugType STRING ""
 
 
@@ -498,7 +1078,6 @@
 	gaffer.nodeMenu.category STRING "Texture"
 
 	[attr filename]
-
 		widget STRING "filename"
 
 
@@ -524,30 +1103,22 @@
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
 	[attr width_edge]
-
 		page STRING "Falloff"
-
 	[attr height_edge]
-
 		page STRING "Falloff"
-
 	[attr ramp]
-
 		gaffer.graphEditorLayout.visible BOOL false
 		page STRING "Falloff"
-
 	[attr axis]
-
 		page STRING "Falloff"
 
 	[attr geometry_matrix]
-
 		widget STRING "null"
 		gaffer.plugType STRING ""
 
 	[attr shader]
-
 		gaffer.graphEditorLayout.visible BOOL true
+
 
 [node light_decay]
 
@@ -580,6 +1151,7 @@
 	[attr far_end]
 		page STRING "Far"
 		label STRING "End"
+
 
 [node log]
 

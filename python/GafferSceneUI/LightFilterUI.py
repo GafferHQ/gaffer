@@ -70,6 +70,13 @@ Gaffer.Metadata.registerNode(
 			"layout:index", 1,
 		],
 
+		"sets" : [
+
+			"layout:divider", True,
+			"layout:index", 3,
+
+		],
+
 		"parameters" : [
 
 			"description",

@@ -50,7 +50,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 
 			self.__pathWidget = GafferUI.PathWidget( tmpPath )
 
-			with GafferUI.SplitContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+			with GafferUI.SplitContainer( GafferUI.SplitContainer.Orientation.Horizontal ) :
 
 				self.__pathListing = GafferUI.PathListingWidget(
 					tmpPath,

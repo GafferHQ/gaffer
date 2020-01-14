@@ -31,7 +31,6 @@ Improvements
 - UI : Added the Gaffer version to the window title.
 - Set : Hid unused `paths` plugs from the UI, in preparation for eventual removal of the plug itself. The `filter` plug should now always be used in preference to the `paths` plug.
 
-
 Fixes
 -----
 
@@ -87,6 +86,30 @@ Breaking Changes
 - LightFilterVisualiser : Moved `LightFilterVisualiser` into `IECoreGLPreview`, filter visualiser registrations will need updating (#3502).
 - ObjectToImage/ImagePrimitiveSource : Removed.
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
+
+0.55.x.x (relative to 0.55.2.1)
+========
+
+Improvements
+------------
+
+- ArnoldLight : Improved the organisation of Arnold light parameters.
+
+Fixes
+-----
+
+- FileMenu : Fixed bug that prevented `Ctrl-N` from working when the mouse was over a `NodeSetEditor` (#3546).
+- NameSwitch : Fixed bug that prevented a NameSwitch from reloading correctly if it was first connected
+  to an unserialisable plug.
+- Arnold : Fixed indeterminate ordering of AOVs in Arnold scene description.
+- FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
+
+API
+---
+
+- ArnoldShaderUI :
+  - Added support for `gaffer.layout.divider` and `gaffer.layout.index` in Arnold metadata sidecar `.mtd` files.
+  - Added support for parameter presets in Arnold metadata sidecar `.mtd` files.
 
 0.55.2.1 (relative to 0.55.2.0)
 ========
@@ -290,6 +313,14 @@ Breaking Changes
 - CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
+
+0.54.2.x (relative to 0.54.2.4)
+========
+
+Fixes
+-----
+
+- FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
 
 0.54.2.4 (relative to 0.54.2.3)
 ========

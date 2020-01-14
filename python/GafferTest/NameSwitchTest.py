@@ -118,6 +118,28 @@ class NameSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["s"]["in"][0]["value"].getInput(), s2["n"]["sum"] )
 		self.assertEqual( s2["s"]["in"][0]["enabled"].getValue(), s["s"]["in"][0]["enabled"].getValue() )
 
+	def testNonSerialisablePlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["n"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		s["s"] = Gaffer.NameSwitch()
+		s["s"].setup( s["n"]["sum"] )
+		s["s"]["in"][0]["name"].setValue( "x" )
+		s["s"]["in"][0]["value"].setInput( s["n"]["sum"] )
+		s["s"]["in"][0]["enabled"].setValue( False )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertIsInstance( s2["s"]["in"][0], Gaffer.NameValuePlug )
+		self.assertIsInstance( s2["s"]["in"][0]["value"], Gaffer.IntPlug )
+		self.assertEqual( s2["s"]["in"][0]["name"].getValue(), s["s"]["in"][0]["name"].getValue() )
+		self.assertEqual( s2["s"]["in"][0]["value"].getInput(), s2["n"]["sum"] )
+		self.assertEqual( s2["s"]["in"][0]["enabled"].getValue(), s["s"]["in"][0]["enabled"].getValue() )
+
 	def testDirtyPropagation( self ) :
 
 		s = Gaffer.NameSwitch()

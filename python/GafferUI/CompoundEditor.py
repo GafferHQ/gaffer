@@ -1518,10 +1518,10 @@ class _PinningWidget( _Frame ) :
 		if not isinstance( editor, GafferUI.NodeSetEditor ) :
 			return False
 
-		if event.key == "N" :
+		if event.key == "N" and not event.modifiers :
 			_PinningWidget.__followNodeSelection( editor )
 			return True
-		elif event.key == "P" :
+		elif event.key == "P" and not event.modifiers :
 			_PinningWidget.__pinToNodeSelection( editor )
 			return True
 
