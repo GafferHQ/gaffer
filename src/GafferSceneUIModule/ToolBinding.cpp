@@ -175,6 +175,8 @@ void GafferSceneUIModule::bindTools()
 
 		class_<TransformTool::Selection>( "Selection", no_init )
 
+			.def( init<const ConstScenePlugPtr &, const ScenePlug::ScenePath &, const ConstContextPtr &>() )
+
 			.def( "scene", &scene )
 			.def( "path", &path )
 			.def( "context", &context )
@@ -183,6 +185,7 @@ void GafferSceneUIModule::bindTools()
 			.def( "upstreamPath", &upstreamPath )
 			.def( "upstreamContext", &upstreamContext )
 
+			.def( "editable", &TransformTool::Selection::editable )
 			.def( "transformPlug", &transformPlug )
 			.def( "transformSpace", &TransformTool::Selection::transformSpace, return_value_policy<copy_const_reference>() )
 

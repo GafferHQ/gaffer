@@ -141,6 +141,7 @@ class HandlesGadget : public Gadget
 //////////////////////////////////////////////////////////////////////////
 
 TransformTool::Selection::Selection()
+	:	m_editable( false )
 {
 }
 
@@ -149,7 +150,7 @@ TransformTool::Selection::Selection(
 	const GafferScene::ScenePlug::ScenePath &path,
 	const Gaffer::ConstContextPtr &context
 )
-	:	m_scene( scene ), m_path( path ), m_context( context )
+	:	m_scene( scene ), m_path( path ), m_context( context ), m_editable( false )
 {
 	Context::Scope scopedContext( context.get() );
 	if( path.empty() || !scene->exists( path ) )
@@ -227,48 +228,43 @@ bool TransformTool::Selection::init( const GafferScene::SceneAlgo::History *hist
 		}
 	}
 
-	if( m_transformPlug )
+	if( !m_transformPlug )
 	{
-		m_transformPlug = m_transformPlug->source<TransformPlug>();
-
-		if( auto *spreadsheet = runTimeCast<Spreadsheet>( m_transformPlug->node() ) )
-		{
-			if( spreadsheet->outPlug()->isAncestorOf( m_transformPlug.get() ) )
-			{
-				auto spreadsheetTransformPlug = static_cast<TransformPlug *>(
-					spreadsheet->activeInPlug( m_transformPlug.get() )
-				);
-				if( spreadsheetTransformPlug->ancestor<Spreadsheet::RowPlug>() != spreadsheet->rowsPlug()->defaultRow() )
-				{
-					m_transformPlug = spreadsheetTransformPlug->source<TransformPlug>();
-				}
-				else
-				{
-					// Default spreadsheet row. Editing this could affect any number
-					// of unrelated objects, so don't do that.
-					m_transformPlug = nullptr;
-					return false;
-				}
-			}
-		}
-
-		if( ancestorMakesChildNodesReadOnly( m_transformPlug->node() ) )
-		{
-			// Inside a Reference node or similar. Unlike a regular read-only
-			// status, the user has no chance of unlocking this node, so don't
-			// tease them with an unusable selection.
-			m_transformPlug = nullptr;
-			return false;
-		}
-
-		m_upstreamScene = history->scene;
-		m_upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-		m_upstreamContext = history->context;
-
-		return true;
+		return false;
 	}
 
-	return false;
+	// We found the TransformPlug which authors the transform.
+
+	m_upstreamScene = history->scene;
+	m_upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	m_upstreamContext = history->context;
+
+	m_transformPlug = m_transformPlug->source<TransformPlug>();
+	m_editable = true;
+
+	if( auto *spreadsheet = runTimeCast<Spreadsheet>( m_transformPlug->node() ) )
+	{
+		if( spreadsheet->outPlug()->isAncestorOf( m_transformPlug.get() ) )
+		{
+			m_transformPlug = static_cast<TransformPlug *>( spreadsheet->activeInPlug( m_transformPlug.get() ) );
+			if( m_transformPlug->ancestor<Spreadsheet::RowPlug>() == spreadsheet->rowsPlug()->defaultRow() )
+			{
+				// Default spreadsheet row. Editing this could affect any number
+				// of unrelated objects, so don't allow that.
+				m_editable = false;
+			}
+			m_transformPlug = m_transformPlug->source<TransformPlug>();
+		}
+	}
+
+	if( ancestorMakesChildNodesReadOnly( m_transformPlug->node() ) )
+	{
+		// Inside a Reference node or similar. Unlike a regular read-only
+		// status, the user has no chance of unlocking this node to edit it.
+		m_editable = false;
+	}
+
+	return true;
 }
 
 bool TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *history )
@@ -319,14 +315,29 @@ const Gaffer::Context *TransformTool::Selection::upstreamContext() const
 	return m_upstreamContext.get();
 }
 
+bool TransformTool::Selection::editable() const
+{
+	return m_editable;
+}
+
 Gaffer::TransformPlug *TransformTool::Selection::transformPlug() const
 {
+	throwIfNotEditable();
 	return m_transformPlug.get();
 }
 
 const Imath::M44f &TransformTool::Selection::transformSpace() const
 {
+	throwIfNotEditable();
 	return m_transformSpace;
+}
+
+void TransformTool::Selection::throwIfNotEditable() const
+{
+	if( !editable() )
+	{
+		throw IECore::Exception( "Selection is not editable" );
+	}
 }
 
 Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
@@ -620,7 +631,6 @@ void TransformTool::updateSelection() const
 		return;
 	}
 
-
 	// Otherwise we need to populate our selection from
 	// the scene selection.
 
@@ -637,25 +647,23 @@ void TransformTool::updateSelection() const
 	{
 		ScenePlug::ScenePath path = *it;
 		Selection selection;
-		while( path.size() && !selection.transformPlug() )
+		while( path.size() && !selection.editable() )
 		{
 			selection = Selection( scene, path, view()->getContext() );
 			path.pop_back();
 		}
 
-		if( selection.transformPlug() )
-		{
-			m_selection.push_back( selection );
-			if( *it == lastSelectedPath )
-			{
-				lastSelectedPath = selection.path();
-			}
-		}
-		else
+		if( !selection.editable() )
 		{
 			// Selection is not editable - give up.
 			m_selection.clear();
 			return;
+		}
+
+		m_selection.push_back( selection );
+		if( *it == lastSelectedPath )
+		{
+			lastSelectedPath = selection.path();
 		}
 	}
 

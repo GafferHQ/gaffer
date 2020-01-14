@@ -100,11 +100,12 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// ==============
 			///
 			/// Often, the scene being viewed isn't actually the
-			/// scene that is being edited. Instead, an upstream
-			/// node is being edited, and the user is viewing a
-			/// downstream node to see the edits in the context of later
-			/// changes. The `upstreamScene` is the output from the node
-			/// actually being edited.
+			/// scene where the transform originates. Instead, the
+			/// transform originates with an upstream node, and the
+			/// user is viewing a downstream node to see the transform
+			/// in the context of later changes. The `upstreamScene`
+			/// is the output from the node where the transform
+			/// originates.
 			const GafferScene::ScenePlug *upstreamScene() const;
 			/// The hierarchies of the upstream and viewed scenes may
 			/// differ. The upstreamPath is the equivalent of
@@ -114,16 +115,19 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// viewed context, but for the upstream scene.
 			const Gaffer::Context *upstreamContext() const;
 
-			/// Transform to edit
-			/// =================
-			///
-			/// The plug to edit. This will be a child of
-			/// the node generating the upstream scene.
+			/// Status and editing
+			/// ==================
+
+			/// Returns true if the selected transform may be edited
+			/// using `transformPlug()` and `transformSpace()`.
+			bool editable() const;
+
+			/// Returns the plug to edit. Throws if `!editable()`.
 			Gaffer::TransformPlug *transformPlug() const;
-			/// The coordinate system within which the
+			/// Returns the coordinate system within which the
 			/// transform is applied by the upstream node.
 			/// This is relative to the world space of the
-			/// upstream scene.
+			/// upstream scene. Throws if `!editable()`.
 			const Imath::M44f &transformSpace() const;
 
 			/// Utilities
@@ -131,15 +135,18 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			///
 			/// Returns a matrix which converts from world
 			/// space in `scene` to `transformSpace`.
+			/// Throws if `!editable()`.
 			Imath::M44f sceneToTransformSpace() const;
 			/// Returns a matrix suitable for positioning
 			/// transform handles in `scene's` world space.
+			/// Throws if `!editable()`.
 			Imath::M44f orientedTransform( Orientation orientation ) const;
 
 			private :
 
 				bool init( const GafferScene::SceneAlgo::History *history );
 				bool initWalk( const GafferScene::SceneAlgo::History *history );
+				void throwIfNotEditable() const;
 
 				GafferScene::ConstScenePlugPtr m_scene;
 				GafferScene::ScenePlug::ScenePath m_path;
@@ -149,6 +156,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 				GafferScene::ScenePlug::ScenePath m_upstreamPath;
 				Gaffer::ConstContextPtr m_upstreamContext;
 
+				bool m_editable;
 				Gaffer::TransformPlugPtr m_transformPlug;
 				Imath::M44f m_transformSpace;
 

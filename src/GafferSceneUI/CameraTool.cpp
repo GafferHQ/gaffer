@@ -249,7 +249,7 @@ void CameraTool::preRenderEnd()
 {
 	const TransformTool::Selection &selection = cameraSelection();
 	bool selectionEditable = false;
-	if( selection.transformPlug() )
+	if( selection.editable() )
 	{
 		selectionEditable = true;
 		for( FloatPlugIterator it( selection.transformPlug()->translatePlug() ); !it.done(); ++it )
@@ -318,7 +318,7 @@ bool CameraTool::viewportButtonPress( const GafferUI::ButtonEvent &event )
 void CameraTool::viewportCameraChanged()
 {
 	const TransformTool::Selection &selection = cameraSelection();
-	if( !selection.transformPlug() )
+	if( !selection.editable() )
 	{
 		return;
 	}

@@ -28,6 +28,7 @@ API
 - ScenePlug : Added `exists()` method. This provides fast existence queries for locations.
 - SceneAlgo : Deprecated `exists()` function. Use `ScenePlug::exists()` instead
 - Spreadsheet : Added `RowsPlug::row( rowName )` method.
+- TransformTool : Added `Selection::editable()` method.
 
 Breaking Changes
 ----------------
