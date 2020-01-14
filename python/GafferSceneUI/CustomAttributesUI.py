@@ -148,4 +148,4 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-__attributesPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu, scoped = False )
