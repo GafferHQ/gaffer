@@ -13,10 +13,23 @@ Improvements
 ------------
 
 - Viewer :
-  - Improved visualisation of Arnold lights.
-    - Added texture previews for quad and skydome lights. All OSL shaders are supported, along with a small subset of Arnold shaders.
+  - Improved visualisation of lights :
+    - Added texture previews for Arnold's quad and skydome lights. All OSL shaders are supported, along with a small subset of Arnold shaders.
     - Area lights are now drawn solid by default. This can be controlled via the Visualisation section of the Light node.
-  - Extended color-correction to light textures, such that they now match rendered results (#3407).
+    - Added intensity distribution preview for Arnold photometric lights.
+    - Extended color-correction to light textures, such that they now match rendered results (#3407).
+    - Reduced size of point lights to better match other light sources.
+    - Simplified the color indicator and removed the exposure wedges.
+    - Removed the contribution of intensity and exposure to the color indicator.
+    - Added support for mesh lights such that they draw a yellow outline around the source mesh.
+    - Improved display of Arnold quad lights set to portal mode.
+    - Added an approximation of Arnold area light spread.
+    - Added menu items to control visualiser ornament scale.
+    - Added menu items to control the default drawing mode for lights.
+- Set expressions :
+  - Added `in` operator. The expression `A in B` selects all locations from set A which are descendants of a location from set B.
+  - Added `containing` operator. The expression `A containing B` selects all locations from set A which are ancestors of a location from set B.
+  - Removed restrictions on the allowable characters at the start of a set name.
 - Instancer :
   - Renamed `instances` plug to `prototypes` and `index` plug to `prototypeIndex`. This clarifies their meaning and matches the terminology used in USD.
   - Organised UI into sections.
@@ -30,6 +43,9 @@ Improvements
   - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
 - UI : Added the Gaffer version to the window title.
 - Set : Hid unused `paths` plugs from the UI, in preparation for eventual removal of the plug itself. The `filter` plug should now always be used in preference to the `paths` plug.
+- Layouts : Prevented editors pinned to a specific node from restoring with the editor pinned to an empty node set. Specific pinning is no longer saved or recalled.
+- OpenGLAttributes : Added sensible limits on attribute value plugs to prevent invalid settings.
+- Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
 
 Fixes
 -----
@@ -64,6 +80,7 @@ API
 - FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
 - GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
 - StandardLightVisualiser : Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
+- IECoreGLPreview : Added `VisualisationType` and `VisualisationMap` to allow classification of renderables returned by visualisers.
 
 Breaking Changes
 ----------------
@@ -77,7 +94,9 @@ Breaking Changes
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
 - ViewportGadget : Added private members, ABI break only - source compatibility is maintained (#3324).
 - Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods loose `const`-ness accordingly.
-- ImagePlug : Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
+- ImagePlug :
+  - Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
+  - Changed default channel names to an empty list.
 - ImageNode : Added virtual methods.
 - Light :
   - Changed `Light::computeLight` return type to const (#3407).
@@ -86,6 +105,9 @@ Breaking Changes
 - LightFilterVisualiser : Moved `LightFilterVisualiser` into `IECoreGLPreview`, filter visualiser registrations will need updating (#3502).
 - ObjectToImage/ImagePrimitiveSource : Removed.
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
+- OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to ornament visualisations unless they need to invert this scale for any geometry-related components of the ornament.
+- GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:ornamentScale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
+- IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
 
 0.55.x.x (relative to 0.55.2.1)
 ========
