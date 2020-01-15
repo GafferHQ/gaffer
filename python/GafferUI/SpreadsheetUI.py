@@ -619,7 +619,10 @@ class _PlugTableView( GafferUI.Widget ) :
 
 			column = rowsPlug["default"]["cells"].children().index( plug )
 			self.__callingResizeSection = True
-			self._qtWidget().horizontalHeader().resizeSection( column, Gaffer.Metadata.value( plug, "spreadsheet:columnWidth" ) )
+			width = Gaffer.Metadata.value( plug, "spreadsheet:columnWidth" )
+			if width is None :
+				width = self._qtWidget().horizontalHeader().defaultSectionSize()
+			self._qtWidget().horizontalHeader().resizeSection( column, width )
 			self.__callingResizeSection = False
 
 		elif key == "spreadsheet:columnIndex" :
