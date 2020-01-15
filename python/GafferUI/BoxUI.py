@@ -269,7 +269,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
 
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
 # GraphEditor plug context menu
 ##########################################################################

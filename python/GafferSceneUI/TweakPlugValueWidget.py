@@ -137,7 +137,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ):
 		}
 	)
 
-__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
 GafferUI.PlugValueWidget.registerType( GafferScene.TweakPlug, TweakPlugValueWidget )
 

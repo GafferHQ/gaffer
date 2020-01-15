@@ -236,7 +236,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 		menuDefinition.prepend( "/Sets/%s" % setName, parameters )
 
-__setsPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu, scoped = False )
 
 ##########################################################################
 # Gadgets
