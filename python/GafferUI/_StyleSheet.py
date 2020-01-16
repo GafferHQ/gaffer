@@ -502,7 +502,8 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
-	/* tabs */
+	/* Tabs */
+	/* ==== */
 
 	QTabWidget::tab-bar {
 		left: 0px;
@@ -579,11 +580,6 @@ _styleSheet = string.Template(
 		background-color: $tintLighterSubtle;
 	}
 
-	QSplitter[gafferHighlighted="true"] {
-
-		border: 1px solid $brightColor;
-	}
-
 	QTabWidget::pane {
 		background-color: $background;
 		/* tab widget frame has a line at the top, tweaked up 1 pixel */
@@ -609,6 +605,34 @@ _styleSheet = string.Template(
 		border-color: $backgroundRaisedHighlight;
 		border-right-color: $backgroundRaisedLowlight;
 		border-bottom-color: $backgroundRaisedLowlight;
+	}
+
+	QTabWidget[gafferHighlighted="true"]::pane {
+		border: 1px solid $brightColor;
+		border-top: 1px solid $brightColor;
+		top: -1px;
+	}
+
+	QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
+		border-color: $brightColor;
+		border-bottom-color: $background; /* blend into frame below */
+	}
+
+	QTabWidget QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
+		border-color: $brightColor;
+		border-bottom-color: $backgroundRaised; /* blend into frame below */
+	}
+
+	QTabWidget[gafferHighlighted="true"] > QTabBar::tab:!selected {
+		border-bottom-color: $brightColor;
+	}
+
+	/* Splitters */
+	/* ========= */
+
+	QSplitter[gafferHighlighted="true"] {
+
+		border: 1px solid $brightColor;
 	}
 
 	/* Ensures the QSplitter border is visible if we need to highlight */
@@ -637,25 +661,6 @@ _styleSheet = string.Template(
 	QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover {
 		color: white;
 		background-color: $brightColor;
-	}
-	QTabWidget[gafferHighlighted="true"]::pane {
-		border: 1px solid $brightColor;
-		border-top: 1px solid $brightColor;
-		top: -1px;
-	}
-
-	QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
-		border-color: $brightColor;
-		border-bottom-color: $background; /* blend into frame below */
-	}
-
-	QTabWidget QTabWidget[gafferHighlighted="true"] > QTabBar::tab:selected {
-		border-color: $brightColor;
-		border-bottom-color: $backgroundRaised; /* blend into frame below */
-	}
-
-	QTabWidget[gafferHighlighted="true"] > QTabBar::tab:!selected {
-		border-bottom-color: $brightColor;
 	}
 
 	QCheckBox#gafferCollapsibleToggle {
