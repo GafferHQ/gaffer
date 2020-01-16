@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2020, Don Boogert. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Don Boogert nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,25 +34,58 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_TYPEIDS_H
-#define GAFFERVDB_TYPEIDS_H
+#ifndef GAFFERSCENE_SPHERELEVELSET_H
+#define GAFFERSCENE_SPHERELEVELSET_H
+
+#include "GafferScene/ObjectSource.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
+
+#include "GafferVDB/TypeIds.h"
 
 namespace GafferVDB
 {
 
-enum TypeId
+class GAFFERSCENE_API SphereLevelSet : public GafferScene::ObjectSource
 {
-	VDBGridTypeId = 110950, // Obsolete - available for reuse
-	VDBObjectTypeId = 110951, // Obsolete - available for reuse
-	VDBSceneTypeId = 110952, // Obsolete - available for reuse
-	MeshToLevelSetTypeId = 110953,
-	LevelSetToMeshTypeId = 110954,
-	LevelSetOffsetTypeId = 110955,
-	PointsGridToPointsId = 110956,
-	SphereLevelSetTypeId = 110957,
-	LastTypeId = 110974
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::SphereLevelSet, GafferVDB::SphereLevelSetTypeId, ObjectSource );
+
+		SphereLevelSet( const std::string &name=defaultName<SphereLevelSet>() );
+		~SphereLevelSet() override;
+
+		Gaffer::StringPlug *gridPlug();
+		const Gaffer::StringPlug *gridPlug() const;
+
+		Gaffer::FloatPlug *radiusPlug();
+		const Gaffer::FloatPlug *radiusPlug() const;
+
+		Gaffer::V3fPlug *centerPlug();
+		const Gaffer::V3fPlug *centerPlug() const;
+
+		Gaffer::FloatPlug *voxelSizePlug();
+		const Gaffer::FloatPlug *voxelSizePlug() const;
+
+		Gaffer::FloatPlug *halfWidthPlug();
+		const Gaffer::FloatPlug *halfWidthPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+	IE_CORE_DECLAREPTR( SphereLevelSet )
 
 } // namespace GafferVDB
 
-#endif // GAFFERVDB_TYPEIDS_H
+#endif // GAFFERSCENE_SPHERELEVELSET_H
