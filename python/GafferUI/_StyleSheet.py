@@ -627,6 +627,47 @@ _styleSheet = string.Template(
 		border-bottom-color: $brightColor;
 	}
 
+	/*
+	TabBars not inside a QTabWidget. Currently these are only used by
+	SpreadsheetUI.
+	*/
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tab {
+
+		border-color: $tintDarkerStronger;
+		background-color: $tintDarkerStrong;
+		border-radius: 0px;
+		margin-right: -1px;
+
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tab:selected {
+
+		background-color: $tintDarkerStronger;
+
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tab:first {
+
+		border-top-left-radius: $widgetCornerRadius;
+		border-bottom-left-radius: $widgetCornerRadius;
+
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tab:last {
+
+		border-top-right-radius: $widgetCornerRadius;
+		border-bottom-right-radius: $widgetCornerRadius;
+		margin-right: 0px;
+
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tab:only-one {
+
+		border-radius: $widgetCornerRadius;
+
+	}
+
 	/* Splitters */
 	/* ========= */
 
