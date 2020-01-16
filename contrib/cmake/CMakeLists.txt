@@ -9,7 +9,7 @@ project( Gaffer )
 # Declare the version
 
 
-option( WITH_TESTS "Compile tests" OFF )
+option( WITH_TESTS "Compile tests" ON )
 
 set( GAFFER_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../.. )
 
@@ -62,12 +62,12 @@ endif()
 IF ( "${CMAKE_BUILD_TYPE}" MATCHES "Debug" )
   ADD_DEFINITIONS( -DDEBUG=1 -UNDEBUG )
   IF ( NOT WINDOWS )
-    ADD_DEFINITIONS( -pipe -Wall -O0  -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized -Wno-deprecated)
+    ADD_DEFINITIONS( -pipe -Wall -O0  -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized -Wno-deprecated -D_GLIBCXX_USE_CXX11_ABI=0)
   ENDIF()
 ELSEIF ( "${CMAKE_BUILD_TYPE}" MATCHES "Release" )
   ADD_DEFINITIONS( -DNDEBUG=1 -UDEBUG )
   IF ( NOT WINDOWS )
-    ADD_DEFINITIONS( -pipe -Wall  -O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized -Wno-strict-overflow) #-Wno-return-type )
+    ADD_DEFINITIONS( -pipe -Wall  -O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -Wno-unused-local-typedefs -Wno-strict-aliasing -Wno-maybe-uninitialized -Wno-strict-overflow  -D_GLIBCXX_USE_CXX11_ABI=0) #-Wno-return-type )
   ENDIF()
 ENDIF()
 
@@ -178,6 +178,7 @@ set( GAFFER_LIB_NAMES
   GafferUI
   GafferVDB
   GafferVDBUI
+  GafferOSLUI
   )
 
 set( GAFFERBINDINGS_LIB_NAMES
@@ -217,7 +218,7 @@ foreach( GAFFER_LIB ${GAFFERTEST_LIB_NAMES} )
   string( TOUPPER ${GAFFER_LIB} _GAFFER_LIB )
   file( GLOB ${_GAFFER_LIB}TEST_CXX_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}Test/*.cpp )
   file( GLOB ${_GAFFER_LIB}TEST_H_FILES ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.h ${GAFFER_SOURCE_DIR}/include/${GAFFER_LIB}Test/*.inl )
-  set( ${_GAFFER_LIB}TEST_CXX_MODULE_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}TestModule/${GAFFER_LIB}TestModule.cpp)
+  file( GLOB ${_GAFFER_LIB}TEST_CXX_MODULE_FILES ${GAFFER_SOURCE_DIR}/src/${GAFFER_LIB}TestModule/*.cpp )
 endforeach()
 
 # Get binding list of files
@@ -319,7 +320,7 @@ target_link_libraries( _GafferTest ${BASE_LIBS} ${BASE_PYTHON_LIBS} GafferBindin
 
 # GafferUI
 add_library( GafferUI SHARED ${GAFFERUI_CXX_FILES} ${GAFFERUI_H_FILES} )
-target_link_libraries( GafferUI Gaffer GafferScene ${BASE_LIBS} ${Iex_LIB} ${Cortex_IECOREGL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} ${PLATFORM_LIBS} )
+target_link_libraries( GafferUI Gaffer GafferScene ${BASE_LIBS} ${Iex_LIB} ${Cortex_IECOREGL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${PLATFORM_LIBS} )
 target_compile_definitions( GafferUI PRIVATE -DQT_NO_KEYWORDS -DQ_COMPILER_CONSTEXPR )
 
 # GafferUI Python Module
@@ -345,7 +346,7 @@ target_link_libraries( _GafferImage GafferImage GafferBindings ${BASE_LIBS} ${BA
 
 # GafferImageUI
 add_library( GafferImageUI SHARED ${GAFFERIMAGEUI_CXX_FILES} ${GAFFERIMAGEUI_H_FILES} )
-target_link_libraries( GafferImageUI Gaffer GafferImage GafferUI ${BASE_LIBS} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} )
+target_link_libraries( GafferImageUI Gaffer GafferImage GafferUI ${BASE_LIBS} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} )
 
 # GafferImageUI Python Module
 add_library( _GafferImageUI MODULE ${GAFFERIMAGEUI_CXX_MODULE_FILES} ${GAFFERIMAGEUI_H_MODULE_FILES} )
@@ -356,7 +357,7 @@ file( GLOB IECORESCENE_PREVIEW_H_FILES ${GAFFER_SOURCE_DIR}/include/GafferScene/
 file( GLOB IECORESCENE_PREVIEW_CPP_FILES ${GAFFER_SOURCE_DIR}/src/GafferScene/IECoreScenePreview/*.cpp )
 file( GLOB IECOREGL_PREVIEW_CPP_FILES ${GAFFER_SOURCE_DIR}/src/GafferScene/IECoreGLPreview/*.cpp )
 add_library( GafferScene SHARED ${GAFFERSCENE_CXX_FILES} ${GAFFERSCENE_H_FILES} ${IECORESCENE_PREVIEW_H_FILES} ${IECORESCENE_PREVIEW_CPP_FILES} ${IECOREGL_PREVIEW_CPP_FILES} )
-target_link_libraries( GafferScene ${BASE_LIBS} Gaffer ${ILMBASE_IEX_LIBRARY} ${Cortex_IECOREGL_LIBRARY} ${Cortex_IECOREALEMBIC_LIBRARY} GafferImage GafferDispatch ${Cortex_IECORESCENE_LIBRARY} ${Cortex_IECOREGL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} )
+target_link_libraries( GafferScene ${BASE_LIBS} Gaffer ${ILMBASE_IEX_LIBRARY} ${Cortex_IECOREGL_LIBRARY} ${Cortex_IECOREALEMBIC_LIBRARY} GafferImage GafferDispatch ${Cortex_IECORESCENE_LIBRARY} ${Cortex_IECOREGL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} )
 
 # GafferScene Python Module
 add_library( _GafferScene MODULE ${GAFFERSCENE_CXX_MODULE_FILES} ${GAFFERSCENE_H_MODULE_FILES} )
@@ -372,7 +373,7 @@ target_link_libraries( _GafferSceneTest ${BASE_LIBS} ${BASE_PYTHON_LIBS} GafferB
 
 # GafferSceneUI
 add_library( GafferSceneUI SHARED ${GAFFERSCENEUI_CXX_FILES} ${GAFFERSCENEUI_H_FILES} )
-target_link_libraries( GafferSceneUI ${BASE_LIBS} Gaffer GafferUI GafferImage GafferScene GafferImageUI ${ILMBASE_IEX_LIBRARY} ${Cortex_IECOREGL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} )
+target_link_libraries( GafferSceneUI ${BASE_LIBS} Gaffer GafferUI GafferImage GafferScene GafferImageUI ${ILMBASE_IEX_LIBRARY} ${Cortex_IECOREGL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} )
 
 # GafferSceneUI Python Module
 add_library( _GafferSceneUI MODULE ${GAFFERSCENEUI_CXX_MODULE_FILES} ${GAFFERSCENEUI_H_MODULE_FILES} )
@@ -446,6 +447,14 @@ target_link_libraries( GafferDelight ${BASE_LIBS} Gaffer GafferDispatch GafferSc
 # GafferDelight Python Module
 add_library( _GafferDelight MODULE ${GAFFERDELIGHT_CXX_MODULE_FILES} )
 target_link_libraries( _GafferDelight ${BASE_LIBS} ${BASE_PYTHON_LIBS} GafferScene GafferBindings GafferDispatch GafferDelight GafferBindings )
+
+# GafferOSLUI
+add_library( GafferOSLUI SHARED ${GAFFEROSLUI_CXX_FILES} ${GAFFEROSLUI_H_FILES} )
+target_link_libraries( GafferOSLUI ${BASE_LIBS} Gaffer GafferOSL )
+
+# GafferOSLUI Python Module
+add_library( _GafferOSLUI MODULE ${GAFFEROSLUI_CXX_MODULE_FILES} )
+target_link_libraries( _GafferOSLUI ${BASE_LIBS} ${BASE_PYTHON_LIBS} GafferOSLUI  GafferBindings  )
 
 # Python modules need special naming
 foreach( GAFFER_LIB ${GAFFER_LIB_NAMES} )
@@ -606,7 +615,10 @@ install( DIRECTORY ${GAFFER_SOURCE_DIR}/apps
 install( DIRECTORY ${GAFFER_SOURCE_DIR}/arnold
          DESTINATION . )
 install( DIRECTORY ${GAFFER_SOURCE_DIR}/bin
-         DESTINATION . )
+         DESTINATION .
+         FILES_MATCHING PATTERN "*gaffer*"
+         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
+        )
 install( DIRECTORY ${GAFFER_SOURCE_DIR}/glsl
          DESTINATION . )
 install( DIRECTORY ${GAFFER_SOURCE_DIR}/python
