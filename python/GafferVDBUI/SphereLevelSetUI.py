@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2020, Don Boogert. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Don Boogert nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,12 +34,44 @@
 #
 ##########################################################################
 
-from _GafferVDBUI import *
+import GafferUI
+import GafferVDB
 
-import LevelSetToMeshUI
-import MeshToLevelSetUI
-import LevelSetOffsetUI
-import PointsGridToPointsUI
-import SphereLevelSetUI
+GafferUI.Metadata.registerNode(
+	GafferVDB.SphereLevelSet,
+	'description',
+	"""Creates a sphere level set.""",
+	plugs={
+		'grid' : [
+			'description',
+			"""
+			The name of the sphere levelset grid in the created VDB object.
+			"""
+		],
+		"radius" : [
+			"description",
+			"""
+			Sphere radius in object space units.
+			"""
+		],
+		"center" : [
+			"description",
+			"""
+			Local center of the sphere level set in object space.
+			"""
+		],
+		"voxelSize" : [
+			"description",
+			"""
+			Size of the voxels in the created sphere levelset. Smaller voxel results in more detail but higher memory usage.
+			"""
+		],
+		"halfWidth" : [
+			"description",
+			"""
+			Width of the signed distance field in voxels.
+			"""
+		],
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )
+	}
+)
