@@ -145,8 +145,12 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 		if exceptionInfo[0] is None :
 			return
 
-		# this works for RuntimeError, but is this safe for all exceptions?
-		message = exceptionInfo[1].args[0].strip( "\n" ).split( "\n" )[-1]
+		excType, excValue, excTrace = exceptionInfo
+		if excValue and excValue.message:
+			message = excValue.message.strip( "\n" ).split( "\n" )[-1]
+		else:
+			message = str( excType.__name__ )
+
 		if messagePrefix :
 			message = messagePrefix + message
 
