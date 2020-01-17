@@ -1,10 +1,11 @@
-0.55.x.x (relative to 0.55.2.1)
+0.55.3.0 (relative to 0.55.2.1)
 ========
 
 Improvements
 ------------
 
 - ArnoldLight : Improved the organisation of Arnold light parameters.
+- Catalogue : Changed image duplication behaviour so the copy is now placed above the source in the image list. If <kbd>alt</kbd> is held whilst duplicating, the Catalogue will switch to the last duplicate.
 
 Fixes
 -----
@@ -14,6 +15,9 @@ Fixes
   to an unserialisable plug.
 - Arnold : Fixed indeterminate ordering of AOVs in Arnold scene description.
 - FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
+- Catalogue :
+  - Fixed bug when drag-reordering images that could result in other images jumping positions (#3554).
+  - Catalogue : Fixed bug when deleting an image that had been dragged to the top, that resulted in incorrect image selection after deletion (#3554).
 
 API
 ---
