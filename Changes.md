@@ -109,13 +109,14 @@ Breaking Changes
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:ornamentScale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
 
-0.55.x.x (relative to 0.55.2.1)
+0.55.3.0 (relative to 0.55.2.1)
 ========
 
 Improvements
 ------------
 
 - ArnoldLight : Improved the organisation of Arnold light parameters.
+- Catalogue : Changed image duplication behaviour so the copy is now placed above the source in the image list. If <kbd>alt</kbd> is held whilst duplicating, the Catalogue will switch to the last duplicate.
 
 Fixes
 -----
@@ -125,6 +126,13 @@ Fixes
   to an unserialisable plug.
 - Arnold : Fixed indeterminate ordering of AOVs in Arnold scene description.
 - FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
+- Catalogue :
+  - Fixed bug when drag-reordering images that could result in other images jumping positions (#3554).
+  - Catalogue : Fixed bug when deleting an image that had been dragged to the top, that resulted in incorrect image selection after deletion (#3554).
+- ErrorDialogue : Fixed bug in handling of non-standard exceptions.
+- DispatchDialogue : Fixed bug in handling of non-standard exceptions.
+- PresetsPlugValueWidget : Fixed bug that meant no context variables were set when generating dynamic plug presets (#3496).
+- CropWindowTool : Fixed bug that meant no Context Variables were set when searching for the StandardOptions node (#3496).
 
 API
 ---
@@ -336,13 +344,17 @@ Breaking Changes
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
 
-0.54.2.x (relative to 0.54.2.4)
+0.54.2.5 (relative to 0.54.2.4)
 ========
 
 Fixes
 -----
 
+- PresetsPlugValueWidget : Fixed bug that meant no context variables were set when generating dynamic plug presets (#3496).
+- CropWindowTool : Fixed bug that meant no Context Variables were set when searching for the StandardOptions node (#3496).
 - FileIndexedIOPathPreview : Fixed bug which broke the UI when using an upcoming Cortex version.
+- ErrorDialogue : Fixed bug in handling of non-standard exceptions.
+- DispatchDialogue : Fixed bug in handling of non-standard exceptions.
 
 0.54.2.4 (relative to 0.54.2.3)
 ========

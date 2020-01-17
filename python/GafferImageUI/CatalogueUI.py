@@ -239,13 +239,13 @@ class _ImagesPath( Gaffer.Path ) :
 
 	def _orderedImages( self ) :
 
-		# Avoid repeat lookups for plugs with no logical index by first getting all
+		# Avoid repeat lookups for plugs with no ui index by first getting all
 		# images with their plug indices, then updating those with any metadata
 		imageAndIndices = [ [ image, plugIndex ] for plugIndex, image in enumerate( self.__images.children() ) ]
 		for imageAndIndex in imageAndIndices :
-			logicalIndex = Gaffer.Metadata.value( imageAndIndex[0], _ImagesPath.indexMetadataName )
-			if logicalIndex is not None :
-				imageAndIndex[1] = logicalIndex
+			uiIndex = Gaffer.Metadata.value( imageAndIndex[0], _ImagesPath.indexMetadataName )
+			if uiIndex is not None :
+				imageAndIndex[1] = uiIndex
 
 		return [ i[0] for i in sorted( imageAndIndices, key = lambda i : i[1] ) ]
 
@@ -272,6 +272,12 @@ class _ImagesPath( Gaffer.Path ) :
 			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
 			for image in self.__images
 		}
+
+	@staticmethod
+	def _updateUIIndices( orderedImages ) :
+
+		for i, image in enumerate( orderedImages ) :
+			Gaffer.Metadata.registerValue( image, _ImagesPath.indexMetadataName, i )
 
 	def __childAdded( self, parent, child ) :
 
@@ -333,7 +339,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
 				addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ), scoped = False )
 
-				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image" )
+				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy." )
 				self.__duplicateButton.setEnabled( False )
 				self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ), scoped = False )
 
@@ -405,6 +411,10 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		return self.__catalogue()["images"].source()
 
+	def __orderedImages( self ) :
+
+		return _ImagesPath( self.__images(), [] )._orderedImages()
+
 	def __indicesFromSelection( self ) :
 		indices = []
 		selection = self.__pathListing.getSelection()
@@ -465,9 +475,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__images().addChild( GafferImage.Catalogue.Image.load( str( path ) ) )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
 
-	def __metadataIndexToGraphComponentIndex( self, index ) :
+	def __uiIndexToIndex( self, index ) :
+
+		target = self.__orderedImages()[ index ]
+
 		for i, image in enumerate( self.__images() ) :
-			if index == Gaffer.Metadata.value( image, _ImagesPath.indexMetadataName ) :
+			if image.isSame( target ) :
 				return i
 
 	def __removeClicked( self, *unused ) :
@@ -481,17 +494,20 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+
+			orderedImages = self.__orderedImages()
 			for index in reversed( sorted( indices ) ) :
-				metadataIndex = Gaffer.Metadata.value( self.__images()[index], _ImagesPath.indexMetadataName )
-				self.__images().removeChild( self.__images()[index] )
+				image = self.__images()[ index ]
+				uiIndex = orderedImages.index( image )
+				self.__images().removeChild( image )
+				orderedImages.remove( image )
+
+			_ImagesPath._updateUIIndices( orderedImages )
 
 			# Figure out new selection
-			if not metadataIndex :
-				selectionIndex = index - 1
-			else:
-				selectionIndex = self.__metadataIndexToGraphComponentIndex( metadataIndex - 1 )
-
-			self.getPlug().setValue( max( 0, selectionIndex ) )
+			if orderedImages :
+				selectionIndex = self.__uiIndexToIndex( max( 0, uiIndex - 1 ) )
+				self.getPlug().setValue( selectionIndex )
 
 	def __extractClicked( self, *unused ) :
 
@@ -533,16 +549,35 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __duplicateClicked( self, *unused ) :
 
+		# These are plug indices, rather than ui indices, so need to be
+		# used directly with self.__images() without remapping.
 		indices = self.__indicesFromSelection()
 
+		# As we may be inserting more than one image, keep a copy of the original
+		# list so the selection indices remain valid
+		sourceImages = [ i for i in self.__images().children() ]
+		# We need to insert the duplicate before the source, as it's usually
+		# used to snapshot in-progress renders.
+		orderedImages = self.__orderedImages()
+
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+
+			insertionIndex = None
+
 			for index in indices :
-				image = self.__images()[index]
+				image = sourceImages[ index ]
+				uiInsertionIndex = orderedImages.index( image )
 				imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 				self.__images().addChild( imageCopy )
 				imageCopy.copyFrom( image )
+				orderedImages.insert( uiInsertionIndex, imageCopy )
 
-			self.getPlug().setValue( len( self.__images() ) - 1 )
+			_ImagesPath._updateUIIndices( orderedImages )
+
+			# Only switch to the last duplicate if alt is held
+			altHeld = GafferUI.Widget.currentModifiers() & GafferUI.ModifiableEvent.Modifiers.Alt
+			if altHeld and uiInsertionIndex is not None :
+				self.getPlug().setValue( self.__uiIndexToIndex( uiInsertionIndex ) )
 
 	def __dropImage( self, eventData ) :
 
@@ -590,7 +625,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return
 		self.__moveToPath = targetPath
 
-		images = sorted( self.__images(), key = lambda x : Gaffer.Metadata.value( x, _ImagesPath.indexMetadataName ) or -1 )
+		images = self.__orderedImages()
 		imagesToMove = [image for image in images if '/'+image.getName() in event.data]
 
 		# Because of multi-selection it's possible to move the mouse over a selected image.
@@ -633,8 +668,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			images.insert( newIndex, image )
 			previous = image
 
-		for idx, image in enumerate( [image for image in images if image ] ) :
-			Gaffer.Metadata.registerValue( image, _ImagesPath.indexMetadataName, idx )
+		_ImagesPath._updateUIIndices( [image for image in images if image ] )
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 

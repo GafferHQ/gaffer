@@ -579,6 +579,8 @@ void CropWindowTool::findCropWindowPlug()
 
 	m_cropWindowPlug = nullptr;
 
+	Context::Scope scopedContext( view()->getContext() );
+
 	const GafferScene::ScenePlug::ScenePath rootPath;
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
 	if( history )
