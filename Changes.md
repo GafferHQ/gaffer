@@ -46,6 +46,7 @@ Improvements
 - Layouts : Prevented editors pinned to a specific node from restoring with the editor pinned to an empty node set. Specific pinning is no longer saved or recalled.
 - OpenGLAttributes : Added sensible limits on attribute value plugs to prevent invalid settings.
 - Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
+- Documentation : Added examples for OSLImage and OSLObject nodes.
 
 Fixes
 -----
