@@ -51,9 +51,9 @@ Gaffer.Metadata.registerNode(
 	very useful for the procedural generation of variation.
 	Numeric or colour values may be generated.
 
-	The random values are generated from a seed and a context
-	variable - to get useful variation either the seed or the
-	value of the context variable must be varied too.
+	The random values are generated from a seed and a Context
+	Variable - to get useful variation either the seed or the
+	value of the Context Variable must be varied too.
 	""",
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			Seed for the random number generator. Different seeds
 			produce different random numbers. When controlling two
-			different properties using the same context variable,
+			different properties using the same Context Variable,
 			different seeds may be used to ensure that the generated
 			values are different.
 			""",
@@ -79,7 +79,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The most important plug for achieving interesting variation.
-			Should be set to the name of a context variable which will
+			Should be set to the name of a Context Variable which will
 			be different for each evaluation of the node. Good examples
 			are "scene:path" to generate a different value per scene
 			location, or "frame" to generate a different value per frame.
@@ -143,7 +143,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Random floating point output derived from seed, context variable
+			Random floating point output derived from seed, Context Variable
 			and float range plugs.
 			""",
 
@@ -155,7 +155,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Random colour output derived from seed, context variable, base
+			Random colour output derived from seed, Context Variable, base
 			colour, hue, saturation and value plugs.
 			""",
 

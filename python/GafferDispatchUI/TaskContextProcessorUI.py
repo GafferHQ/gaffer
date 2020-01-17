@@ -43,7 +43,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Base class for nodes which modify the context in which
+	Base class for nodes which modify the Context in which
 	upstream tasks are dispatched.
 	""",
 

@@ -12,11 +12,11 @@ The structure of a scene can be broken down into two main areas:
 
 ## Scene hierarchy ##
 
-In common with most DCCs, Gaffer represents a 3D scene as a hierarchy or tree structure. We refer to positions within this tree as **locations**, specified by their path within the scene, e.g. `/world/city/building01`. Locations are arranged via parent-child relationships, such that `/world/city` is considered the parent of the child `/world/city/building01`. Do not confuse locations in the scene hierachy with nodes in the node graph; nodes _output_ scenes, but are not part of them.
+In common with most DCCs, Gaffer represents a 3D scene as a hierarchy or tree structure. We refer to positions within this tree as **locations**, specified by their path within the scene, e.g. `/world/city/building01`. Locations are arranged via parent-child relationships, such that `/world/city` is considered the parent of the child `/world/city/building01`. Do not confuse locations in the scene hierachy with nodes in the node graph; nodes **output** scenes, but are not part of them.
 
 ![](images/hierarchyView.png "The Hierarchy View with a location selected")
 
-Each location has a number of properties that describe the content of the scene at that point in the hierarchy. They can be inspected in the _Selection_ tab of the _Scene Inspector_. Each property of each location is computed independently, allowing Gaffer to generate the scene lazily on demand.
+Each location has a number of properties that describe the content of the scene at that point in the hierarchy. They can be inspected in the _Selection_ tab of the Scene Inspector. Each property of each location is computed independently, allowing Gaffer to generate the scene lazily on demand.
 
 ![](images/sceneInspector.png "All of a location's property sections in the Selection tab Scene Inspector")
 
@@ -59,7 +59,7 @@ Locations inherit attributes from their parent, with attributes local to the loc
 > Note :
 > Maya users should note that attributes in Gaffer are not equivalent to attributes in Maya’s _Attribute Editor_. The equivalent term in Gaffer is **plug**. An attribute in Gaffer always refers to a property of a scene.
 >
-> Katana users may be accustomed to thinking of every property in a scene as an attribute. In Gaffer, attributes _only_ refer to arbitrary values for the location. Transforms, geometry, and bounds are _not_ attributes.
+> Katana users may be accustomed to thinking of every property in a scene as an attribute. In Gaffer, attributes **only** refer to arbitrary values for the location. Transforms, geometry, and bounds are **not** attributes.
 >
 > Users familiar with RenderMan may be reassured to know that Gaffer derives its use of the term attribute from RenderMan. Gaffer and RenderMan attributes are very much alike.
 

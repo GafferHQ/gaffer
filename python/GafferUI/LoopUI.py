@@ -112,7 +112,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of a context variable used to specify the index
+			The name of a Context Variable used to specify the index
 			of the current iteration. This can be referenced from
 			expressions within the loop network to modify the operations
 			performed during each iteration of the loop.

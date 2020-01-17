@@ -119,7 +119,7 @@ Gaffer.Metadata.registerNode(
 			The current frame.
 
 			> Note : To perform a computation at a particular time,
-			> you should create your own context rather than change
+			> you should create your own Context rather than change
 			> the value of this plug.
 			>
 			> ```

@@ -6,7 +6,7 @@ Gaffer allows the creation of networks of predefined [OSL][1] shaders to be used
 A one line shader
 -----------------
 
-Start by creating an OSLCode node in the GraphEditor. With this selected, the NodeEditor will display a blank shader to be edited.
+Start by creating an OSLCode node in the Graph Editor. With this selected, the Node Editor will display a blank shader to be edited.
 
 ![](images/blank.png "Blank Shader")
 
@@ -26,7 +26,7 @@ We can now enter any OSL code we want to generate the output from the input. Sta
 stripes = aastep( 0, sin( v * M_PI / width ) )
 ```
 
-Now hit _Control + Enter_ to update the shader. The Viewer will update to show a shader ball with the shader on it, and adjusting the width parameter will update the render interactively.
+Now hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to update the shader. The Viewer will update to show a shader ball with the shader on it, and adjusting the width parameter will update the render interactively.
 
 ![](images/shaderBallStripes.png "Shader ball")
 
@@ -51,20 +51,20 @@ float m = aastep( 0, sin( vv * M_PI / width ) );
 stripes = mix( color1, color2, m );
 ```
 
-And as before, hit _Control + Enter_ to update the shader.
+And as before, hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to update the shader.
 
 ![](images/shaderBallColoredStripes.png "Shader ball")
 
-No doubt you didn't come here to learn how to make blue and red wobbly stripes, but you are now armed with the ability to add inputs and outputs, edit code and view the results interactively, so are hopefully in a position to create the shader you _do_ want.
+No doubt you didn't come here to learn how to make blue and red wobbly stripes, but you are now armed with the ability to add inputs and outputs, edit code and view the results interactively, so are hopefully in a position to create the shader you do want.
 
-> Tip : Explore the available functions in OSL and add them easily to the code by using the _/Insert_ menu items from the _Right Click_ popup menu.
+> Tip : Explore the available functions in OSL and add them easily to the code by right-clicking, then browsing the _Insert_ sub-menu.
 
-OSL Resources
+OSL resources
 -------------
 
 This short tutorial has only scratched the surface of what can be done with Open Shading Language. The following resources are a good place to learn more :
 
-- The [language specification](https://github.com/imageworks/OpenShadingLanguage/blob/master/src/doc/osl-languagespec.pdf) (also available from the _/Help/OpenShadingLanguage/Language Reference_ menu item in Gaffer)
+- The [language specification](https://github.com/imageworks/OpenShadingLanguage/blob/master/src/doc/osl-languagespec.pdf) (also available from _Help_ > _Open Shading Language_ > _Language Reference_)
 - The [OSL mailing list](https://groups.google.com/forum/#!forum/osl-dev)
 
 [1]: https://github.com/imageworks/OpenShadingLanguage

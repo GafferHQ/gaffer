@@ -49,7 +49,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Causes upstream nodes to be dispatched multiple times in a range
-	of contexts, each time with a different value for a specified variable.
+	of Contexts, each time with a different value for a specified variable.
 	This variable should be referenced in upstream expressions to apply
 	variation to the tasks being performed. For instance, it could be
 	used to drive a shader parameter to perform a series of "wedges" to
@@ -81,7 +81,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of the context variable defined by the wedge.
+			The name of the Context Variable defined by the wedge.
 			This should be used in upstream expressions to apply the
 			wedged value to specific nodes.
 			""",
@@ -92,7 +92,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of an index context variable defined by the wedge.
+			The name of an index Context Variable defined by the wedge.
 			This is assigned values starting at 0 and incrementing for
 			each new value - for instance a wedged float range might
 			assign variable values of `0.25, 0,5, 0.75` or `0.1, 0,2, 0.3`

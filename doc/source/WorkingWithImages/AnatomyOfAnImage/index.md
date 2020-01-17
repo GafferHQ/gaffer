@@ -71,7 +71,7 @@ Additional channels are grouped into layers using a prefix-based naming conventi
 
 ### Channel data ###
 
-**Channel data** contains each channel's list of pixel values. Internally, Gaffer represents pixels as 32-bit floating point values, which are converted to and from other bit depths by the Image Reader or Image Writer nodes, as needed.
+**Channel data** contains each channel's list of pixel values. Internally, Gaffer represents pixels as 32-bit floating point values, which are converted to and from other bit depths by the ImageReader or ImageWriter nodes, as needed.
 
 Channel data contains no positional information. When an image's pixel data is processed by a computation, the pixels of each channel are grouped into 64x64 pixel tiles, which are arranged in rows and columns to form the complete image. Images can be computed in parallel, on a per-tile, per-channel basis.
 
@@ -94,7 +94,7 @@ When sub-pixel values are needed for a process, such as rotating an image on a p
 
 > Note :
 > The OpenEXR coordinate system has two counterintuitive aspects: 
-> - As _y_ values increase, the image grows _downward_.
+> - As _y_ values increase, the image grows **downward**.
 > - Pixel areas do not incorporate the furthest pixel's outer edge, leading to unintuitive width and height ranges, e.g. 0–1919 and 0–1079 for Full HD.
 >
 > In order to make manipulating images more intuitive for users, the Gaffer coordinate system differs from these aspects by design.

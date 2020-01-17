@@ -25,7 +25,7 @@ preset:<name>       Specifies a named preset value  "preset:Max", 1
 =================== =============================== ============================
 ```
 
-NodeEditor Layout
+`NodeEditor` layout
 -----------------
 
 ```eval_rst
@@ -44,7 +44,7 @@ layout:accessory                Places widget on same line as   True
 =============================== =============================== ==================================
 ```
 
-GraphEditor Layout
+`GraphEditor` layout
 ----------------
 
 ```eval_rst
@@ -59,7 +59,7 @@ noduleLayout:visible   Shows/hides the plug             True (visible), False (h
 ====================== ================================ ================================
 ```
 
-Viewer Layout
+`Viewer` layout
 -------------
 
 ```eval_rst
@@ -74,10 +74,10 @@ toolbarLayout:section  The edge of the viewer the plug  "Left", "Right", "Top", 
 ====================== ================================ ================================
 ```
 
-PlugValueWidgets
-----------------
+`PlugValueWidgets`
+-----------------
 
-Custom widget types may be registered for use in the NodeEditor by adding `"plugValueWidget:type"` metadata to a plug. Note that not all widget types are compatible with all plug types - the table below lists the relevant widget types by plug type.
+Custom widget types may be registered for use in the Node Editor by adding `plugValueWidget:type` metadata to a plug. Note that not all widget types are compatible with all plug types - the table below lists the relevant widget types by plug type.
 
 ```eval_rst
 ========================== ================================ ==================================================
@@ -95,7 +95,7 @@ StringVectorDataPlug       Show a file chooser              "GafferUI.FileSystem
 
 These widget types may be further customised using additional metadata as follows
 
-### BoolPlugValueWidget
+### `BoolPlugValueWidget`
 
 ```eval_rst
 ================================= ========================== ====================
@@ -105,7 +105,7 @@ boolPlugValueWidget:displayMode   Change display style       "checkBox", "switch
 ================================= ========================== ====================
 ```
 
-### FileSystemPathPlugValueWidget
+### `FileSystemPathPlugValueWidget`
 
 These options also apply to the FileSystemPathVectorDataPlugValueWidget.
 
@@ -122,7 +122,7 @@ fileSystemPath:includeSequences   Display file sequences         True
 ================================= ============================== ====================
 ```
 
-### PresetsPlugValueWidget
+### `PresetsPlugValueWidget`
 
 ```eval_rst
 ================================== =============================== ====================

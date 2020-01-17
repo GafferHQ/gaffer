@@ -43,8 +43,8 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Collects transforms in different contexts, storing the results as attributes. The
-	names of the attributes being collected are provided as a context variable,
+	Collects transforms in different Contexts, storing the results as attributes. The
+	names of the attributes being collected are provided as a Context Variable,
 	which can be used to vary the transforms that are collected.
 
 	By combining this with a TimeWarp, you can create copies of
@@ -59,7 +59,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The names of the new attributes to create.  The new attributes will be
-			copied from the transform in different contexts.
+			copied from the transform in different Contexts.
 			""",
 
 		],
@@ -68,7 +68,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of a context variable that is set to the current
+			The name of a Context Variable that is set to the current
 			attribute name when evaluating the transform. This can be used
 			in upstream expressions and string substitutions to vary
 			the transform.
@@ -100,7 +100,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			If true, new attributes will only be created
-			if the transform differs in some of the contexts.
+			if the transform differs in some of the Contexts.
 			If the transform never changes, no new attributes will be created
 			( you can just use the transform instead of accessing the new attributes ).
 			"""

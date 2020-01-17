@@ -15,22 +15,22 @@ In order for the `gaffer` command to work in your terminal, you will need to add
 
 ## Setting up the "gaffer" command in Linux ##
 
-The particular terminal on your system depends on your Linux distribution and how it was configured. Most distributions of Linux use _bash_, but there are other common terminals available, like _tcsh_. Because we cannot accommodate every available terminal, we will only provide instructions for adding to the `PATH` variable in _bash_ and _tcsh_.
+The particular terminal on your system depends on your Linux distribution and how it was configured. Most distributions of Linux use bash, but there are other common terminals available, like tcsh. Because we cannot accommodate every available terminal, we will only provide instructions for adding to the `PATH` variable in bash and tcsh.
 
 > Tip : 
-> If you are not sure which terminal you have, you can find its name by opening a terminal and inputting `echo $0`, which will return `/bin/bash`, `tcsh`, or some equivalent. If you are not using _bash_ or _tcsh_, the same principles of environment variables will apply, and your terminal's documentation should provide a comparable way of modifying the `PATH` variable.
+> If you are not sure which terminal you have, you can find its name by opening a terminal and inputting `echo $0`, which will return `/bin/bash`, `tcsh`, or some equivalent. If you are not using bash or tcsh, the same principles of environment variables will apply, and your terminal's documentation should provide a comparable way of modifying the `PATH` variable.
 
 To set up the `gaffer` command in Linux:
 
 1. Open your terminal's config file in a text editor.
     
-    - _bash_ config: `~/.bash_profile`
-    - _tcsh_ config: `~/.tcsh_profile`
+    - bash config: `~/.bash_profile`
+    - tcsh config: `~/.tcsh_profile`
 
 2. Add the following line to the end of the file:
     
-    - _bash:_ `export PATH=$PATH\:/opt/gaffer-!GAFFER_VERSION!-linux/bin`
-    - _tcsh:_ `setenv PATH $PATH\:/opt/gaffer-!GAFFER_VERSION!-linux/bin`
+    - bash: `export PATH=$PATH\:/opt/gaffer-!GAFFER_VERSION!-linux/bin`
+    - tcsh: `setenv PATH $PATH\:/opt/gaffer-!GAFFER_VERSION!-linux/bin`
 
 3. Save the file.
 
@@ -49,15 +49,15 @@ To set up the `gaffer` command in Linux:
 You can now execute `gaffer` as a command from any directory in the terminal.
 
 
-## Setting up the "gaffer" command in OSX ##
+## Setting up the "gaffer" command in macOS ##
 
-The default terminal in OSX is _bash_, so you will need to add to the `PATH` variable in the _bash_ user config.
+The default terminal in macOS is bash, so you will need to add to the `PATH` variable in the bash user config.
 
-To set up the `gaffer` command in OSX:
+To set up the `gaffer` command in macOS:
 
 1. Open `~/.bash_profile` in a text editor.
 
-2. Add the line `export PATH=$PATH\:/opt/gaffer-!GAFFER_VERSION!-osx/bin` and save.
+2. Add the line `export PATH=$PATH\:/opt/gaffer-!GAFFER_VERSION!-macos/bin` and save.
 
 3. Open the terminal (Finder > Go > Utilities > Terminal).
 
@@ -65,11 +65,11 @@ To set up the `gaffer` command in OSX:
 
     ```bash
     MacBook:~ user$ echo $PATH
-    # /usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/opt/gaffer-!GAFFER_VERSION!-osx/bin
+    # /usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/opt/gaffer-!GAFFER_VERSION!-macos/bin
     ```
 
 > Note :
-> Depending on your system configuration, the beginning of your `PATH` variable might not appear exactly as above. What's important is whether `/opt/gaffer-!GAFFER_VERSION!-osx/bin` appears at the end of the path.
+> Depending on your system configuration, the beginning of your `PATH` variable might not appear exactly as above. What's important is whether `/opt/gaffer-!GAFFER_VERSION!-macos/bin` appears at the end of the path.
 
 You can now execute `gaffer` as a command from any directory in the terminal.
 

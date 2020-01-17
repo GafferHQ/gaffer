@@ -55,7 +55,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The command to run. This may reference any of the
 			variables by name, and also the node itself as `self`
-			and the current context as `context`.
+			and the current Context as `context`.
 			""",
 
 			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget",
@@ -83,7 +83,7 @@ Gaffer.Metadata.registerNode(
 			Calls the command once for each sequence, instead of once
 			per frame. In this mode, an additional variable called `frames`
 			is available to the command, containing a list of all frame
-			numbers for which execution should be performed. The context may
+			numbers for which execution should be performed. The Context may
 			be updated to reference any frame from this list, and accessing
 			a variable returns the value for the current frame.
 

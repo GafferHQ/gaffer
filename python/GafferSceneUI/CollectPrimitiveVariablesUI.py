@@ -44,7 +44,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Make copies of target primitive variables with different suffixes,
-	where the new suffixed copies come from different contexts.
+	where the new suffixed copies come from different Contexts.
 
 	By combining this with a TimeWarp, you can create copies of
 	primitive variables at different times, useful for creating trail
@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The names of the new suffixes to add to copies of the target
 			primitive variables.  The new suffixed variables will be
-			copied from different contexts.
+			copied from different Contexts.
 			""",
 
 		],
@@ -79,7 +79,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of a context variable that is set to the current
+			The name of a Context Variable that is set to the current
 			suffix when evaluating the input object. This can be used
 			in upstream expressions and string substitutions to vary
 			the object while creating the primvar copies.
@@ -96,7 +96,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			If true, newly copied primitive variables will only be created
-			if the source object is differs in some of the suffix contexts.
+			if the source object is differs in some of the suffix Contexts.
 			If the source object never changes, it will be passed through
 			unchanged ( since there is no variation, you can just use the
 			original primitive variables ).

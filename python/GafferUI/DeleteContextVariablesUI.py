@@ -42,7 +42,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Removes variables from the context so that they won't be visible to upstream nodes.
+	Removes variables from the Context so that they won't be visible to upstream nodes.
 	""",
 
 	plugs = {

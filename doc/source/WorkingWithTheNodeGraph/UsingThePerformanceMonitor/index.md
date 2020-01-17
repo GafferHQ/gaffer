@@ -11,9 +11,9 @@ To turn on the performance monitor:
 
 1. Create a StandardOptions node.
 
-2. In the _Graph Editor_, connect the StandardOptions node just prior to your script's render task node.
+2. In the Graph Editor, connect the StandardOptions node just prior to your script's render task node.
 
-3. In the _Node Editor_, with the StandardOptions node still selected, navigate to _Statistics_ > _Settings_.
+3. In the Node Editor, with the StandardOptions node still selected, navigate to _Statistics_ > _Settings_.
 
 4. Toggle the Performance Monitor plug's switch, and then check its box.
 

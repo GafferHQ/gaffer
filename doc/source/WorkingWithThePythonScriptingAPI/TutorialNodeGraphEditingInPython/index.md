@@ -1,12 +1,12 @@
 # Tutorial: Node Graph Editing in Python #
 
-In Gaffer, you can interactively manipulate node graphs in Python using the _Python Editor_. Gaffer's API is fairly frugal, so learning a few fundamental concepts and tasks will go a long way. In this tutorial, we will give you a quick tour of these fundamentals. Using only Python, you will create a simple graph that consists of a camera and a mauve sphere:
+In Gaffer, you can interactively manipulate node graphs in Python using the Python Editor. Gaffer's API is fairly frugal, so learning a few fundamental concepts and tasks will go a long way. In this tutorial, we will give you a quick tour of these fundamentals. Using only Python, you will create a simple graph that consists of a camera and a mauve sphere:
 
 ![](images/viewerFinalScene.png "A preview of the final scene")
 
 By the end of this tutorial, you should have an understanding of the following topics in Python:
 
-- The _Python Editor_
+- The Python Editor
 - Importing modules
 - Creating nodes
 - Node and plug references
@@ -20,11 +20,11 @@ By the end of this tutorial, you should have an understanding of the following t
 Before you begin, we highly recommend you complete the [Assembling the Gaffer Bot](../../../GettingStarted/TutorialAssemblingTheGafferBot/index.md) tutorial.
 
 
-## The _Python Editor_ ##
+## The Python Editor ##
 
-With the built-in _Python Editor_, you can build and modify the node graph, test API code and syntax, return plug values, and query scenes and images. In the default layout, the editor is in the bottom-right panel, under a tab next to the _Hierarchy View_.
+With the built-in Python Editor, you can build and modify the node graph, test API code and syntax, return plug values, and query scenes and images. In the default layout, the editor is in the bottom-right panel, under a tab next to the Hierarchy View.
 
-The bottom-half of the _Python Editor_ is the code input field. The top-half is the code output log. Try executing a "Hello, World!" command:
+The bottom-half of the Python Editor is the code input field. The top-half is the code output log. Try executing a "Hello, World!" command:
 
 1. Type `print "Hello, World!"` into the input field.
 2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to execute the code.
@@ -51,7 +51,7 @@ root.addChild( mySphere )
 
 Notice that the node was added with the `addChild()` method to the `root` variable. The `addChild()` method is the core method for adding nodes and plugs to the node graph. The `root` variable references the root of the node graph. All nodes in the graph are ultimately children of the root. If you declared the node variable without adding it to the `root` variable, it would exist in memory (all variables in Python are objects), but it would not yet be part of the graph.
 
-Helpfully, once you import a module, it will remain loaded in that _Python Editor_ (however, if you open a new _Python Editor_, you will need to import it again). The rest of the nodes you will need for this graph also come from the `GafferScene` module, so add them next:
+Helpfully, once you import a module, it will remain loaded in that Python Editor (however, if you open a new Python Editor, you will need to import it again). The rest of the nodes you will need for this graph also come from the `GafferScene` module, so add them next:
 
 ```python
 myShader = GafferScene.OpenGLShader()
@@ -73,8 +73,8 @@ root.addChild( myGroup )
 
 Nodes that do not have variables can be referenced by dragging and dropping them in the interface:
 
-1. Middle-click and drag a node from the _Graph Editor_ (the cursor will change to ![](images/nodes.png "the nodes icon")).
-2. Release the selection onto the input field of the _Python Editor_.
+1. Middle-click and drag a node from the Graph Editor (the cursor will change to ![](images/nodes.png "the nodes icon")).
+2. Release the selection onto the input field of the Python Editor.
 
 
 ## Loading shaders ##
@@ -90,7 +90,7 @@ myShader.loadShader( 'Constant' )
 
 Since a node's default plugs are created automatically, they have no assigned variables, so you will need to reference them another way. In the API, plugs in the graph (and also, in fact, the nodes and the `root` variable) can each be treated like a Python dictionary, with key-value pairs. When editing plug values, it is usually necessary to first reference them in dictionary syntax.
 
-For example, you could reference the radius plug of the Sphere node like this:
+For example, you could reference the Radius plug of the Sphere node like this:
 
 ```python
 mySphere['radius']
@@ -101,32 +101,32 @@ mySphere['radius']
 > Caution :
 > Because Python dictionaries do not have built-in overwrite protection, you can accidentally and irrecoverably replace nodes and plugs with assignments that use existing node names, like `root['Sphere'] = ...`. Use dictionary syntax with care.
 
-Just like with nodes, you can insert a reference to a plug by dragging. Try inserting a reference to radius plug of the Sphere node:
+Just like with nodes, you can insert a reference to a plug by dragging. Try inserting a reference to Radius plug of the Sphere node:
  
-1. Select the Sphere node in the _Graph Editor_.
-2. Click and drag the **label** of the radius plug from the _Node Editor_ (the cursor will change to ![](images/plug.png "a plug")).
-3. Release it onto the input field of the _Python Editor_.
+1. Select the Sphere node in the Graph Editor.
+2. Click and drag the **label** of the Radius plug from the Node Editor (the cursor will change to ![](images/plug.png "a plug")).
+3. Release it onto the input field of the Python Editor.
 
 A reference to `root['Sphere']['radius']` will be inserted. This is identical to `mySphere['radius']` from earlier. Notice how when you drag and drop plugs, the reference is formatted in dictionary syntax.
 
 > Important :
-> Dragging and dropping plugs is a core technique when using the _Python Editor_. It can speed up your node graph editing and inspecting considerably.
+> Dragging and dropping plugs is a core technique when using the Python Editor. It can speed up your node graph editing and inspecting considerably.
 
 
 ## Retrieving a plug value ##
 
-The `getValue()` method retrieves a plug's value. Try it on the `Cs` (colour) plug of the OpenGLShader node:
+The `getValue()` method retrieves a plug's value. Try it on the `Cs` (color) plug of the OpenGLShader node:
 
 ```python
 myShader['parameters']['Cs'].getValue()
 ```
 
-There is also a shortcut for grabbing a plug value, which involves <kbd>Shift</kbd> + clicking and dragging the plug label from a _Node Editor_ (the cursor will change to ![](images/values.png "the values icon")) and releasing it onto the input field of the _Python Editor:_
+There is also a shortcut for grabbing a plug value, which involves <kbd>Shift</kbd> + clicking and dragging the plug label from a Node Editor (the cursor will change to ![](images/values.png "the values icon")) and releasing it onto the input field of the Python Editor:
 
 ![](images/pythonEditorPlugValueReference.png "A plug value reference in the Python Editor")
 
 > Tip :
-> The above shortcut can also be very handy in regular use. For instance, if you need to know the type and format of a particular plug's value, dragging it into the _Python Editor_ will reveal it.
+> The above shortcut can also be very handy in regular use. For instance, if you need to know the type and format of a particular plug's value, dragging it into the Python Editor will reveal it.
 
 
 ## Editing a plug value ##
@@ -157,7 +157,7 @@ import imath
 myShader['parameters']['Cs'].setValue( imath.Color3f( 0.25, 0.75, 0.25 ) )
 ```
 
-![](images/nodeEditorOpenGLPlug.png "The OpenGL node with an adjusted constant plug")
+![](images/nodeEditorOpenGLPlug.png "The OpenGL node with an adjusted Cs plug")
 
 Next, adjust the camera position, but this time specify only the _z_-axis value of the transform, with dictionary syntax:
 
@@ -165,7 +165,7 @@ Next, adjust the camera position, but this time specify only the _z_-axis value 
 myCamera['transform']['translate']['z'].setValue( 8 )
 ```
 
-![](images/viewerCameraPosition.png "The camera node with an adjusted translate plug")
+![](images/viewerCameraPosition.png "The camera node with an adjusted Translate plug")
 
 Finally, add a location to the `paths` plug of the PathFilter node:
 
@@ -181,14 +181,14 @@ The above code is more advanced than what we have shown so far, but you will lik
 
 Nodes do not connect together: their plugs do. The `setInput()` method connects a destination plug to a source plug. 
 
-The input and output plugs on scene nodes that are visible in the _Graph Editor_ follow this naming scheme:
-- Output (bottom edge of node): `out`
-- Input (top edge of node): `in`
-- Filter input (right edge of node): `filter`
-- Shader input (left edge of node): `shader`
+The input and output plugs on scene nodes that are visible in the Graph Editor follow this naming scheme:
+- Output (bottom edge of node): out
+- Input (top edge of node): in
+- Filter input (right edge of node): filter
+- Shader input (left edge of node): shader
 
 > Note :
-> You are not limited to connecting the default plugs visible in the _Graph Editor_. The `setInput()` method can connect most pairs of plugs.
+> You are not limited to connecting the default plugs visible in the Graph Editor. The `setInput()` method can connect most pairs of plugs.
 
 For example, to connect scene node A to scene node B, an `in` plug of node B is connected to the `out` plug of node A.
 
@@ -246,4 +246,4 @@ That covers the most common methods and tasks when using Python to edit node gra
 
 - [The Python Editor](../ThePythonEditor/index.md)
 - [Node Reference](../../Reference/NodeReference/index.md)
-- [_Python Editor_ Shorcuts](../../Interface/ControlsAndShortcuts/index.html#script-editor)
+- [Python Editor Shorcuts](../../Interface/ControlsAndShortcuts/index.html#script-editor)

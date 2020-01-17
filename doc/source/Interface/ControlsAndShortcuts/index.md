@@ -5,10 +5,10 @@
 
 # Controls and Shortcuts #
 
-The following is a list of input device controls and shortcuts for manipulating the _Node Graph_, _Viewer_, and _Python Editor_.
+The following is a list of input device controls and shortcuts for manipulating the Graph Editor, Viewer, and Python Editor.
 
 > Tip :
-> OSX users: replace <kbd>Ctrl</kbd> with <kbd>Command ⌘</kbd>.
+> macOS users: replace <kbd>Ctrl</kbd> with <kbd>Command ⌘</kbd>.
 
 
 ## General ##
@@ -45,10 +45,10 @@ Follow to the node selection          Hover cursor over editor, :kbd:`u`
 ===================================== =============================================
 ```
 
-## _Graph Editor_ ##
+## Graph Editor ##
 
 > Note :
-> For the following controls and shortcuts, the cursor must hover over the _Graph Editor_.
+> For the following controls and shortcuts, the cursor must hover over the Graph Editor.
 
 
 ### Navigation ###
@@ -126,7 +126,7 @@ Select downstream nodes               :kbd:`Ctrl` + :kbd:`Alt` + |M1| node
 ### Node dispatch ###
 
 > Note :
-> For these dispatch-related shortcuts, the cursor does **not** need to hover over the _Graph Editor_.
+> For these dispatch-related shortcuts, the cursor does **not** need to hover over the Graph Editor.
 
 ```eval_rst
 ===================================== =============================================
@@ -171,7 +171,7 @@ Disconnect plug                       |M1| and drag connection to background
 Insert node onto connection           |M1| and drag node onto connection
 Auto-arrange selected nodes           :kbd:`Ctrl` + :kbd:`L`
 Duplicate outgoing connection         :kbd:`Shift`-|M1| and drag connection just 
-                                      before *in* plug
+                                      before in plug
 ===================================== =============================================
 ```
 
@@ -200,7 +200,7 @@ Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ```
 
 
-## _Node Editor_ ##
+## Node Editor ##
 
 
 ### Numeric plugs ###
@@ -238,10 +238,10 @@ Path hierarchy menu                  Select all
 ```
 
 
-## _Viewer_ ##
+## Viewer ##
 
 > Note :
-> For the following controls and shortcuts, the cursor must hover over the _Viewer_.
+> For the following controls and shortcuts, the cursor must hover over the Viewer.
 
 
 ### General controls ###
@@ -349,29 +349,29 @@ Draw new region anywhere              :kbd:`Shift` + click and drag
 ```
 
 
-## _Python Editor_ ##
+## Python Editor ##
 
 
 ### Text entry ###
 
 > Note :
-> When using the following drag and drop controls and shortcuts, drop the UI element onto the input field of the _Python Editor_.
+> When using the following drag and drop controls and shortcuts, drop the UI element onto the input field of the Python Editor.
 
 ```eval_rst
 ================================================== ================================================
 Action                                             Control or shortcut
 ================================================== ================================================
-Drop node into *Python Editor*                     |M3| and drag node from *Node Graph*
-Drop plug into *Python Editor*                     |M3| and drag plug from *Node Graph* 
+Drop node into *Python Editor*                     |M3| and drag node from Node Graph
+Drop plug into *Python Editor*                     |M3| and drag plug from Node Graph
                                       
                                                    or
                                       
-                                                   |M1| and drag plug label from *Node Editor*
-Drop plug value into *Python Editor*               :kbd:`Shift` + |M1| and drag plug label from
-                                                   *Node Editor*
-Drop color value into *Python Editor*              |M1| and drag a pixel from *Viewer*
-Drop scene location path(s) into *Python Editor*   |M1| and drag selection from *Viewer* or 
-                                                   *Scene Hierarchy*
+                                                   |M1| and drag plug label from Node Editor
+Drop plug value into Python Editor                 :kbd:`Shift` + |M1| and drag plug label from
+                                                   Node Editor
+Drop color value into Python Editor                |M1| and drag a pixel from Viewer
+Drop scene location path(s) into Python Editor     |M1| and drag selection from Viewer or
+                                                   Hierarchy View
 ================================================== ================================================
 ```
 
@@ -379,7 +379,7 @@ Drop scene location path(s) into *Python Editor*   |M1| and drag selection from 
 ### Execution ###
 
 > Note :
-> For the following controls and shortcuts, the input field of the _Python Editor_ must be in focus.
+> For the following controls and shortcuts, the input field of the Python Editor must be in focus.
 
 ```eval_rst
 ===================================== ===================================================
@@ -391,10 +391,10 @@ Execute selection                     Select code, then hit :kbd:`Ctrl` + :kbd:`
 ```
 
 
-## _Animation Editor_ ##
+## Animation Editor ##
 
 > Note :
-> For the following controls and shortcuts, the cursor must hover over the _Animation Editor_.
+> For the following controls and shortcuts, the cursor must hover over the Animation Editor.
 
 ```eval_rst
 =============================================== =============================================
