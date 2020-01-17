@@ -18,6 +18,10 @@ Fixes
 - Catalogue :
   - Fixed bug when drag-reordering images that could result in other images jumping positions (#3554).
   - Catalogue : Fixed bug when deleting an image that had been dragged to the top, that resulted in incorrect image selection after deletion (#3554).
+- ErrorDialogue : Fixed bug in handling of non-standard exceptions.
+- DispatchDialogue : Fixed bug in handling of non-standard exceptions.
+- PresetsPlugValueWidget : Fixed bug that meant no context variables were set when generating dynamic plug presets (#3496).
+- CropWindowTool : Fixed bug that meant no Context Variables were set when searching for the StandardOptions node (#3496).
 
 API
 ---
