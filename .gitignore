@@ -12,3 +12,5 @@ config.log
 .sconf_temp
 .gafferBackups
 *.pyc
+.idea/
+cmake-build-*/
