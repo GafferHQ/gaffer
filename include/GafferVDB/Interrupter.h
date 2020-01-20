@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2020, Don Boogert. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Don Boogert nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,25 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_TYPEIDS_H
-#define GAFFERVDB_TYPEIDS_H
+#ifndef GAFFERVDB_INTERRUPTER_H
+#define GAFFERVDB_INTERRUPTER_H
+
+#include "IECore/Canceller.h"
 
 namespace GafferVDB
 {
 
-enum TypeId
-{
-	VDBGridTypeId = 110950, // Obsolete - available for reuse
-	VDBObjectTypeId = 110951, // Obsolete - available for reuse
-	VDBSceneTypeId = 110952, // Obsolete - available for reuse
-	MeshToLevelSetTypeId = 110953,
-	LevelSetToMeshTypeId = 110954,
-	LevelSetOffsetTypeId = 110955,
-	PointsGridToPointsId = 110956,
-	SphereLevelSetTypeId = 110957,
-	LastTypeId = 110974
+class Interrupter {
+
+	public:
+
+		Interrupter(const IECore::Canceller *canceller)
+		: m_canceller(canceller),
+		  m_interrupted(false)
+		{
+		}
+
+		void start(const char* name = nullptr)
+		{
+		}
+
+		void end()
+		{
+		}
+
+		bool wasInterrupted( int percent = -1 )
+		{
+			if ( m_interrupted )
+			{
+				return true;
+			}
+
+			// todo this a a problem installing a exception handler
+			// per a call to this function.
+			try
+			{
+				IECore::Canceller::check( m_canceller );
+			}
+			catch( const IECore::Cancelled& )
+			{
+				m_interrupted = true;
+			}
+
+			return m_interrupted;
+		}
+	private:
+		const IECore::Canceller* m_canceller;
+		bool m_interrupted;
+
 };
 
 } // namespace GafferVDB
 
-#endif // GAFFERVDB_TYPEIDS_H
+#endif // GAFFERVDB_INTERRUPTER_H
+
