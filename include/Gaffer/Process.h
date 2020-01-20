@@ -63,9 +63,12 @@ class GAFFER_API Process : private ThreadState::Scope
 
 		/// The type of process being performed.
 		const IECore::InternedString type() const { return m_type; }
-		/// The plug for which the process is being
-		/// performed.
+		/// The plug which is the subject of the process being performed.
 		const Plug *plug() const { return m_plug; }
+		/// The plug which triggered the process. This may be the same as
+		/// `plug()` or may be a downstream plug. In either case,
+		/// `destinationPlug()->source() == plug()`.
+		const Plug *destinationPlug() const { return m_destinationPlug; }
 		/// The context in which the process is being
 		/// performed.
 		const Context *context() const { return m_threadState->m_context; }
@@ -81,7 +84,7 @@ class GAFFER_API Process : private ThreadState::Scope
 	protected :
 
 		/// Protected constructor for use by derived classes only.
-		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = nullptr );
+		Process( const IECore::InternedString &type, const Plug *plug, const Plug *destinationPlug = nullptr );
 		~Process();
 
 		/// Derived classes should catch exceptions thrown
@@ -99,7 +102,7 @@ class GAFFER_API Process : private ThreadState::Scope
 
 		IECore::InternedString m_type;
 		const Plug *m_plug;
-		const Plug *m_downstream;
+		const Plug *m_destinationPlug;
 		const Process *m_parent;
 
 };

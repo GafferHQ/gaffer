@@ -73,8 +73,8 @@ std::string prefixedWhat( const IECore::Exception &e )
 // Process
 //////////////////////////////////////////////////////////////////////////
 
-Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream )
-	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug )
+Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *destinationPlug )
+	:	m_type( type ), m_plug( plug ), m_destinationPlug( destinationPlug ? destinationPlug : plug )
 {
 	IECore::Canceller::check( context()->canceller() );
 	m_parent = m_threadState->m_process;
@@ -145,7 +145,7 @@ void Process::handleException()
 
 void Process::emitError( const std::string &error, const Plug *source ) const
 {
-	const Plug *plug = m_downstream;
+	const Plug *plug = m_destinationPlug;
 	while( plug )
 	{
 		if( plug->direction() == Plug::Out )
