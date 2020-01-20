@@ -74,9 +74,10 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:pixel_size", new IECore::IntData( 64 ), false, "pixelSize" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:threads", new IECore::IntData( 0 ), false, "numThreads" ) );
 	//options->addChild( new Gaffer::NameValuePlug( "ccl:session:display_buffer_linear", new IECore::BoolData( true ), false, "displayBufferLinear" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:session:run_denoising", new IECore::BoolData( false ), false, "runDenoising" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:use_denoising", new IECore::BoolData( false ), false, "useDenoising" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:write_denoising_passes", new IECore::BoolData( false ), false, "writeDenoisingPasses" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:session:full_denoising", new IECore::BoolData( false ), false, "fullDenoising" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:optix_denoising", new IECore::BoolData( false ), false, "optixDenoising" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:optix_input_passes", new IECore::IntData( 1 ), false, "optixInputPasses" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:cancel_timeout", new IECore::FloatData( 0.1f ), false, "cancelTimeout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), false, "resetTimeout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), false, "textTimeout" ) );

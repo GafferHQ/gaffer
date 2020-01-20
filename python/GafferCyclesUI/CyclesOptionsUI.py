@@ -284,8 +284,14 @@ def __denoisingSummary( plug ) :
 
 	info = []
 
-	if plug["runDenoising"]["enabled"].getValue() :
-		info.append( "Run Denoising {}".format( plug["runDenoising"]["value"].getValue() ) )
+	if plug["useDenoising"]["enabled"].getValue() :
+		info.append( "Use Denoising {}".format( plug["useDenoising"]["value"].getValue() ) )
+
+	if plug["writeDenoisingPasses"]["enabled"].getValue() :
+		info.append( "Write Denoising Passes {}".format( plug["writeDenoisingPasses"]["value"].getValue() ) )
+
+	if plug["optixDenoising"]["enabled"].getValue() :
+		info.append( "Optix Denoising {}".format( plug["optixDenoising"]["value"].getValue() ) )
 
 	for rayType in ( "Diffuse", "Glossy", "Transmission", "Subsurface" ) :
 		for dirType in ( "Direct", "Indirect") :
@@ -312,6 +318,9 @@ def __denoisingSummary( plug ) :
 
 	if plug["denoiseClampInput"]["enabled"].getValue() :
 		info.append( "Clamp Input {}".format( plug["denoiseClampInput"]["value"].getValue() ) )
+
+	if plug["optixInputPasses"]["enabled"].getValue() :
+		info.append( "Optix Input Passes {}".format( plug["optixInputPasses"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -1606,7 +1615,7 @@ Gaffer.Metadata.registerNode(
 
 		# Denoising
 
-		"options.runDenoising" : [
+		"options.useDenoising" : [
 
 			"description",
 			"""
@@ -1614,7 +1623,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Run Denoising",
+			"label", "Use Denoising",
 
 		],
 
@@ -1630,15 +1639,38 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.fullDenoising" : [
+		"options.optixDenoising" : [
 
 			"description",
 			"""
-			Full Denoising.
+			Use OptiX AI Denoising.
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Full Denoising",
+			"label", "Optix Denoising",
+
+		],
+
+		"options.optixInputPasses" : [
+
+			"description",
+			"""
+			Controls which passes the OptiX AI denoiser should use as input, which can have different effects 
+			on the denoised image.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "OptiX Input Passes",
+
+		],
+
+		"options.optixInputPasses.value" : [
+
+			"preset:Beauty", 1,
+			"preset:Beauty Albedo", 2,
+			"preset:Beauty Albedo Normal", 3,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

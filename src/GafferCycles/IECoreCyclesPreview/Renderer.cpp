@@ -2589,9 +2589,9 @@ IECore::InternedString g_startResolutionOptionName( "ccl:session:start_resolutio
 IECore::InternedString g_pixelSizeOptionName( "ccl:session:pixel_size" );
 IECore::InternedString g_threadsOptionName( "ccl:session:threads" );
 IECore::InternedString g_displayBufferLinearOptionName( "ccl:session:display_buffer_linear" );
-IECore::InternedString g_runDenoisingOptionName( "ccl:session:run_denoising" );
+IECore::InternedString g_useDenoisingOptionName( "ccl:session:use_denoising" );
 IECore::InternedString g_writeDenoisingPassesOptionName( "ccl:session:write_denoising_passes" );
-IECore::InternedString g_fullDenoisingOptionName( "ccl:session:full_denoising" );
+IECore::InternedString g_optixDenoisingOptionName( "ccl:session:optix_denoising" );
 IECore::InternedString g_cancelTimeoutOptionName( "ccl:session:cancel_timeout" );
 IECore::InternedString g_resetTimeoutOptionName( "ccl:session:reset_timeout" );
 IECore::InternedString g_textTimeoutOptionName( "ccl:session:text_timeout" );
@@ -2614,6 +2614,7 @@ IECore::InternedString g_denoiseFeatureStrengthOptionName( "ccl:denoise:feature_
 IECore::InternedString g_denoiseRelativePcaOptionName( "ccl:denoise:relative_pca" );
 IECore::InternedString g_denoiseNeighborFramesOptionName( "ccl:denoise:neighbor_frames" );
 IECore::InternedString g_denoiseClampInputOptionName( "ccl:denoise:clampInput" );
+IECore::InternedString g_optixInputPassesOptionName( "ccl:session:optix_input_passes" );
 // Curves
 IECore::InternedString g_curvePrimitiveOptionType( "ccl:curve:primitive" );
 IECore::InternedString g_curveShapeOptionType( "ccl:curve:shape" );
@@ -2725,7 +2726,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_deviceDirty( false ),
 				m_pause( false ),
 				m_progressLevel( IECore::Msg::Info ),
-				m_sceneLockInterval( 1 )
+				m_sceneLockInterval( 1 ),
+				m_useDenoising( false ),
+				m_useOptixDenoising( false ),
+				m_writeDenoisingPasses( false )
 		{
 			// Set path to find shaders
 			#ifdef _WIN32
@@ -3075,13 +3079,53 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
 				OPTION_INT  (m_sessionParams, g_pixelSizeOptionName,                pixel_size);
 				OPTION_BOOL (m_sessionParams, g_displayBufferLinearOptionName,      display_buffer_linear);
-				OPTION_BOOL (m_sessionParams, g_runDenoisingOptionName,             run_denoising);
-				OPTION_BOOL (m_sessionParams, g_writeDenoisingPassesOptionName,     write_denoising_passes);
-				OPTION_BOOL (m_sessionParams, g_fullDenoisingOptionName,            full_denoising);
 				OPTION_FLOAT(m_sessionParams, g_cancelTimeoutOptionName,            cancel_timeout);
 				OPTION_FLOAT(m_sessionParams, g_resetTimeoutOptionName,             reset_timeout);
 				OPTION_FLOAT(m_sessionParams, g_textTimeoutOptionName,              text_timeout);
 				OPTION_FLOAT(m_sessionParams, g_progressiveUpdateTimeoutOptionName, progressive_update_timeout);
+
+				if( name == g_useDenoisingOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_useDenoising = false;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+					{
+						m_useDenoising = data->readable();
+						return;
+					}
+				}
+
+				if( name == g_optixDenoisingOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_useOptixDenoising = false;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+					{
+						m_useOptixDenoising = data->readable();
+						return;
+					}
+				}
+
+				if( name == g_writeDenoisingPassesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_writeDenoisingPasses = false;
+						return;
+					}
+					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+					{
+						m_writeDenoisingPasses = data->readable();
+						return;
+					}
+				}
+
 #ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 				if( name == g_adaptiveSamplingOptionName )
 				{
@@ -3124,6 +3168,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_BOOL (m_denoiseParams, g_denoiseRelativePcaOptionName,     relative_pca);
 				OPTION_INT  (m_denoiseParams, g_denoiseNeighborFramesOptionName,  neighbor_frames);
 				OPTION_BOOL (m_denoiseParams, g_denoiseClampInputOptionName,      clamp_input);
+				OPTION_INT  (m_denoiseParams, g_optixInputPassesOptionName,       optix_input_passes);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -3728,6 +3773,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.samples = integrator->aa_samples;
 			}
 
+			m_sessionParams.run_denoising = m_useDenoising || m_writeDenoisingPasses;
+			m_sessionParams.full_denoising = m_useDenoising && !m_useOptixDenoising;
+			m_sessionParams.optix_denoising = m_useDenoising && m_useOptixDenoising;
+			m_sessionParams.write_denoising_passes = m_writeDenoisingPasses && !m_useOptixDenoising;
+
 			if( m_backgroundShader )
 				background->shader = m_backgroundShader.get();
 
@@ -4153,6 +4203,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 		ccl::TextureCacheParams m_textureCacheParamsDefault;
 #endif
+
+		// Denoise
+		bool m_useDenoising;
+		bool m_useOptixDenoising;
+		bool m_writeDenoisingPasses;
 
 		// IECoreScene::Renderer
 		string m_deviceName;
