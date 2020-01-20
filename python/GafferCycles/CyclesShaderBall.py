@@ -78,6 +78,12 @@ class CyclesShaderBall( GafferScene.ShaderBall ) :
 		)
 		self["__cyclesOptions"]["options"]["numThreads"].setInput( self["threads"] )
 
+		self.addChild(
+			self["__cyclesOptions"]["options"]["shadingSystem"].createCounterpart( "shadingSystem", Gaffer.Plug.Direction.In )
+		)
+		Gaffer.MetadataAlgo.copy( self["__cyclesOptions"]["options"]["shadingSystem"], self["shadingSystem"], exclude="layout:*" )
+		self["__cyclesOptions"]["options"]["shadingSystem"].setInput( self["shadingSystem"] )
+
 		self._outPlug().setInput( self["__cyclesOptions"]["out"] )
 
 IECore.registerRunTimeTyped( CyclesShaderBall, typeName = "GafferCycles::CyclesShaderBall" )
