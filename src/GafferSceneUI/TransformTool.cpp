@@ -111,13 +111,16 @@ bool updateSelection( const SceneAlgo::History *history, TransformTool::Selectio
 
 	if( const ObjectSource *objectSource = runTimeCast<const ObjectSource>( node ) )
 	{
-		selection.transformPlug = const_cast<TransformPlug *>( objectSource->transformPlug() );
-		selection.transformSpace = M44f();
+		if( history->scene == objectSource->outPlug() )
+		{
+			selection.transformPlug = const_cast<TransformPlug *>( objectSource->transformPlug() );
+			selection.transformSpace = M44f();
+		}
 	}
 	else if( const Group *group = runTimeCast<const Group>( node ) )
 	{
 		const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-		if( path.size() == 1 )
+		if( history->scene == group->outPlug() && path.size() == 1 )
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( group->transformPlug() );
 			selection.transformSpace = M44f();
@@ -125,7 +128,10 @@ bool updateSelection( const SceneAlgo::History *history, TransformTool::Selectio
 	}
 	else if( const GafferScene::Transform *transform = runTimeCast<const GafferScene::Transform>( node ) )
 	{
-		if( filterResult( transform->filterPlug(), transform->inPlug() ) & PathMatcher::ExactMatch )
+		if(
+			history->scene == transform->outPlug() &&
+			( filterResult( transform->filterPlug(), transform->inPlug() ) & PathMatcher::ExactMatch )
+		)
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
 			ScenePlug::ScenePath spacePath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
@@ -148,7 +154,7 @@ bool updateSelection( const SceneAlgo::History *history, TransformTool::Selectio
 	else if( const GafferScene::SceneReader *sceneReader = runTimeCast<const GafferScene::SceneReader>( node ) )
 	{
 		const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-		if( path.size() == 1 )
+		if( history->scene == sceneReader->outPlug() && path.size() == 1 )
 		{
 			selection.transformPlug = const_cast<TransformPlug *>( sceneReader->transformPlug() );
 			selection.transformSpace = M44f();
@@ -278,10 +284,7 @@ TransformTool::Selection::Selection(
 	}
 
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scene->transformPlug(), path );
-	if( history )
-	{
-		updateSelectionWalk( history.get(), *this );
-	}
+	updateSelectionWalk( history.get(), *this );
 }
 
 Imath::M44f TransformTool::Selection::sceneToTransformSpace() const

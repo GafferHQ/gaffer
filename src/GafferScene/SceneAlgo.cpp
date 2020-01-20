@@ -309,6 +309,7 @@ struct CapturedProcess
 
 	InternedString type;
 	ConstPlugPtr plug;
+	ConstPlugPtr destinationPlug;
 	ContextPtr context;
 
 	PtrVector children;
@@ -346,6 +347,7 @@ class CapturingMonitor : public Monitor
 			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
 			capturedProcess->type = process->type();
 			capturedProcess->plug = process->plug();
+			capturedProcess->destinationPlug = process->destinationPlug();
 			capturedProcess->context = new Context( *process->context() );
 
 			Mutex::scoped_lock lock( m_mutex );
@@ -389,27 +391,30 @@ uint64_t g_contextUniquefierValue = 0;
 
 SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedString scenePlugChildName, SceneAlgo::History *parent )
 {
-	SceneAlgo::History::Ptr history;
-	ScenePlug *scene = const_cast<Plug *>( process->plug.get() )->parent<ScenePlug>();
-	if( scene && process->plug.get() == scene->getChild( scenePlugChildName ) )
+	SceneAlgo::History::Ptr result;
+	Plug *plug = const_cast<Plug *>( process->destinationPlug.get() );
+	while( plug )
 	{
-		history = new SceneAlgo::History( scene, process->context );
+		ScenePlug *scene = plug->parent<ScenePlug>();
+		if( scene && plug == scene->getChild( scenePlugChildName ) )
+		{
+			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, process->context );
+			result = result ? result : history;
+			if( parent )
+			{
+				parent->predecessors.push_back( history );
+			}
+			parent = history.get();
+		}
+		plug = plug != process->plug ? plug->getInput() : nullptr;
 	}
-
-	if( parent && history )
-	{
-		parent->predecessors.push_back( history );
-	}
-
-	parent = history ? history.get() : parent;
-	assert( parent );
 
 	for( const auto &p : process->children )
 	{
 		historyWalk( p.get(), scenePlugChildName, parent );
 	}
 
-	return history;
+	return result;
 }
 
 /// \todo It's error prone to have to use SceneScope like this. Consider
@@ -500,7 +505,10 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 
 	if( monitor->rootProcesses().size() == 0 )
 	{
-		return nullptr;
+		return new History(
+			const_cast<ScenePlug *>( scenePlugChild->parent<ScenePlug>() ),
+			new Context( *Context::current() )
+		);
 	}
 
 	assert( monitor->rootProcesses().size() == 1 );

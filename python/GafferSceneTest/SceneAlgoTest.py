@@ -249,22 +249,21 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			c.setFrame( 10 )
 			history = GafferScene.SceneAlgo.history( transform["out"]["transform"], "/group/plane" )
 
-		self.assertEqual( history.scene, transform["out"] )
-		self.assertEqual( history.context.getFrame(), 10 )
-		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "group", "plane" ] ) )
-		self.assertEqual( len( history.predecessors ), 1 )
+		for plug, scenePath in [
+			( transform["out"], "/group/plane" ),
+			( transform["in"], "/group/plane" ),
+			( group["out"], "/group/plane" ),
+			( group["in"][0], "/plane" ),
+			( attributes["out"], "/plane" ),
+			( attributes["in"], "/plane" ),
+			( plane["out"], "/plane" ),
+		] :
+			self.assertEqual( history.scene, plug )
+			self.assertEqual( history.context.getFrame(), 10 )
+			self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
+			history = history.predecessors[0] if history.predecessors else None
 
-		history = history.predecessors[0]
-		self.assertEqual( history.scene, group["out"] )
-		self.assertEqual( history.context.getFrame(), 10 )
-		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "group", "plane" ] ) )
-		self.assertEqual( len( history.predecessors ), 1 )
-
-		history = history.predecessors[0]
-		self.assertEqual( history.scene, plane["out"] )
-		self.assertEqual( history.context.getFrame(), 10 )
-		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
-		self.assertEqual( len( history.predecessors ), 0 )
+		self.assertIsNone( history )
 
 		# Attributes history
 
@@ -272,38 +271,75 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			c.setFrame( 20 )
 			history = GafferScene.SceneAlgo.history( transform["out"]["attributes"], "/group/plane" )
 
-		self.assertEqual( history.scene, group["out"] )
-		self.assertEqual( history.context.getFrame(), 20 )
-		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "group", "plane" ] ) )
-		self.assertEqual( len( history.predecessors ), 1 )
+		for plug, scenePath in [
+			( transform["out"], "/group/plane" ),
+			( transform["in"], "/group/plane" ),
+			( group["out"], "/group/plane" ),
+			( group["in"][0], "/plane" ),
+			( attributes["out"], "/plane" ),
+			( attributes["in"], "/plane" ),
+			( plane["out"], "/plane" ),
+		] :
+			self.assertEqual( history.scene, plug )
+			self.assertEqual( history.context.getFrame(), 20 )
+			self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
+			history = history.predecessors[0] if history.predecessors else None
 
-		history = history.predecessors[0]
-		self.assertEqual( history.scene, attributes["out"] )
-		self.assertEqual( history.context.getFrame(), 20 )
-		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
-		self.assertEqual( len( history.predecessors ), 1 )
-
-		history = history.predecessors[0]
-		self.assertEqual( history.scene, plane["out"] )
-		self.assertEqual( history.context.getFrame(), 20 )
-		self.assertEqual( history.context["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
-		self.assertEqual( len( history.predecessors ), 0 )
+		self.assertIsNone( history )
 
 	def testHistoryWithNoComputes( self ) :
 
-		plane = GafferScene.Plane()
-
 		switch = Gaffer.Switch()
-		switch.setup( plane["out"] )
+		switch.setup( GafferScene.ScenePlug() )
 
-		history = GafferScene.SceneAlgo.history( switch["out"]["globals"], "" )
-		self.assertIsNone( history )
+		with Gaffer.Context() as c :
+			c["test"] = 10
+			history = GafferScene.SceneAlgo.history( switch["out"]["globals"], "" )
+
+		self.assertEqual( history.scene, switch["out"] )
+		self.assertEqual( history.context, c )
 
 	def testHistoryWithInvalidPlug( self ) :
 
 		plane = GafferScene.Plane()
 		with self.assertRaisesRegexp( RuntimeError, "is not a child of a ScenePlug" ) :
 			GafferScene.SceneAlgo.history( plane["name"], "/plane" )
+
+	def testHistoryIncludesConnections( self ) :
+
+		plane = GafferScene.Plane()
+
+		dot1 = Gaffer.Dot()
+		dot1.setup( plane["out"] )
+		dot1["in"].setInput( plane["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( dot1["out"] )
+
+		dot2 = Gaffer.Dot()
+		dot2.setup( standardOptions["out"] )
+		dot2["in"].setInput( standardOptions["out"] )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( dot2["out"] )
+
+		history = GafferScene.SceneAlgo.history( shaderAssignment["out"]["transform"], "/plane" )
+
+		for plug in [
+			shaderAssignment["out"],
+			shaderAssignment["in"],
+			dot2["out"],
+			dot2["in"],
+			standardOptions["out"],
+			standardOptions["in"],
+			dot1["out"],
+			dot1["in"],
+			plane["out"],
+		] :
+			self.assertEqual( history.scene, plug )
+			history = history.predecessors[0] if history.predecessors else None
+
+		self.assertIsNone( history )
 
 	def testSource( self ) :
 
