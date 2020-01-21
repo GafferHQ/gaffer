@@ -391,6 +391,10 @@ uint64_t g_contextUniquefierValue = 0;
 
 SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedString scenePlugChildName, SceneAlgo::History *parent )
 {
+	// Add a history item for each plug in the input chain
+	// between `process->destinationPlug()` and `process->plug()`
+	// (inclusive of each).
+
 	SceneAlgo::History::Ptr result;
 	Plug *plug = const_cast<Plug *>( process->destinationPlug.get() );
 	while( plug )
@@ -399,7 +403,10 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 		if( scene && plug == scene->getChild( scenePlugChildName ) )
 		{
 			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, process->context );
-			result = result ? result : history;
+			if( !result )
+			{
+				result = history;
+			};
 			if( parent )
 			{
 				parent->predecessors.push_back( history );
@@ -408,6 +415,8 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 		}
 		plug = plug != process->plug ? plug->getInput() : nullptr;
 	}
+
+	// Add history items for upstream processes.
 
 	for( const auto &p : process->children )
 	{
