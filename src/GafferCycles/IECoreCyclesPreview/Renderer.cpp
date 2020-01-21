@@ -2723,7 +2723,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
 				m_rendering( false ),
-				m_deviceDirty( false ),
+				m_dirtyFlag( false ),
 				m_pause( false ),
 				m_progressLevel( IECore::Msg::Info ),
 				m_sceneLockInterval( 1 ),
@@ -2980,7 +2980,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					m_deviceName = "CPU";
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
 				}
-				m_deviceDirty = true;
+				m_dirtyFlag = true;
 				return;
 			}
 			else if( name == g_threadsOptionName )
@@ -3597,7 +3597,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_session->set_pause( false );
 					}
 
-					m_scene->mutex.unlock();
+					// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
+					if( !m_dirtyFlag )
+					{
+						m_scene->mutex.unlock();
+					}
+					else
+					{
+						m_dirtyFlag = false;
+					}
 
 					if( m_rendering )
 					{
@@ -3811,9 +3819,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
 			    m_session->params.modified( m_sessionParams ) ||
-				m_deviceDirty )
+				m_dirtyFlag )
 			{
-				m_deviceDirty = false;
+				// Flag it true here so that we never mutex unlock a different scene pointer due to the reset
+				m_dirtyFlag = true;
 				reset();
 			}
 		}
@@ -4216,7 +4225,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_frame;
 		string m_camera;
 		bool m_rendering;
-		bool m_deviceDirty;
+		bool m_dirtyFlag;
 		bool m_pause;
 		IECore::Msg::Level m_progressLevel;
 
