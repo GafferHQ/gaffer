@@ -622,11 +622,11 @@ __children["Backdrop15"].addChild( Gaffer.Box2fPlug( "__uiBound5", defaultValue 
 __children["Backdrop15"].addChild( Gaffer.Box2fPlug( "__uiBound6", defaultValue = imath.Box2f( imath.V2f( -10, -10 ), imath.V2f( 10, 10 ) ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Backdrop15"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Backdrop16"]["title"].setValue( '' )
-__children["Backdrop16"]["__uiBound"].setValue( imath.Box2f( imath.V2f( -10, -11.097702 ), imath.V2f( 61.9457321, 10 ) ) )
+__children["Backdrop16"]["__uiBound"].setValue( imath.Box2f( imath.V2f( -10, -13.6 ), imath.V2f( 61.9457321, 10 ) ) )
 __children["Backdrop16"]["__uiPosition"].setValue( imath.V2f( 106.300606, -130.423767 ) )
 __children["Backdrop15"]["title"].setValue( 'Render contact sheet' )
 __children["Backdrop15"]["description"].setValue( "Once the full contact sheet is composed by the two Loop nodes, the ImageWriter writes the final image to disk.\n\nOnce the contact sheet has been written to disk, you can preview it by selecting the ContactSheetReader node. If it doesn't load at first, click the refresh button next to the File Name plug." )
-__children["Backdrop15"]["__uiBound"].setValue( imath.Box2f( imath.V2f( -10, -2.39085388 ), imath.V2f( 22.8743439, 17.0056839 ) ) )
+__children["Backdrop15"]["__uiBound"].setValue( imath.Box2f( imath.V2f( -10, -5.39085388 ), imath.V2f( 22.8743439, 17.0056839 ) ) )
 __children["Backdrop15"]["__uiPosition"].setValue( imath.V2f( 107.61187, -138.619232 ) )
 
 
