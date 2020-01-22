@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2020, Don Boogert. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Don Boogert nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,14 +34,54 @@
 #
 ##########################################################################
 
-from _GafferVDBUI import *
+import GafferUI
+import GafferVDB
 
-import LevelSetToMeshUI
-import MeshToLevelSetUI
-import LevelSetOffsetUI
-import PointsGridToPointsUI
-import ScatterPointsUI
-import SampleGridsUI
-import SphereLevelSetUI
+GafferUI.Metadata.registerNode(
+	GafferVDB.ScatterPoints,
+	'description',
+	"""Scatter points into active voxels of VDB grid""",
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )
+	"layout:activator:nonuniform", lambda node : node["nonuniform"].getValue(),
+	"layout:activator:uniform", lambda node : not node["nonuniform"].getValue(),
+	plugs={
+
+		'outputType' : [
+			'description',
+			"""
+			Type of primitive to generate 
+			""",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Points Primitive", 0,
+			"preset:VDB Points", 1
+		],
+		'grid' : [
+			'description',
+			"""
+			Name of grid in VDBObject in which points will be scattered
+			""",
+		],
+
+		'nonuniform' : [
+			'description',
+			"""
+			If nonuniform the grid value is used to weight the number of points
+			""",
+		],
+		'pointCount' : [
+			'description',
+			"""
+			If 'uniform' the total number of points to generate.
+			""",
+			"layout:activator", "uniform",
+		],
+		'probability' : [
+			'description',
+			"""
+			If 'nonuniform' the global probability which is used with the voxel value to weight the number of points generated in that voxel. 
+			""",
+			"layout:activator", "nonuniform",
+		],
+
+	}
+)

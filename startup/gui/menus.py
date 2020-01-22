@@ -467,7 +467,8 @@ nodeMenu.append( "/VDB/Mesh To Level Set", GafferVDB.MeshToLevelSet, searchText 
 nodeMenu.append( "/VDB/Level Set Offset", GafferVDB.LevelSetOffset, searchText = "LevelSetOffset" )
 nodeMenu.append( "/VDB/Points Grid To Points", GafferVDB.PointsGridToPoints, searchText = "PointsGridToPoints" )
 nodeMenu.append( "/VDB/Sphere Level Set", GafferVDB.SphereLevelSet, searchText="SphereLevelSet")
-
+nodeMenu.append( "/VDB/Sample Grids", GafferVDB.SampleGrids, searchText = "SampleGrids" )
+nodeMenu.append( "/VDB/Scatter Points", GafferVDB.ScatterPoints, searchText = "ScatterPoints" )
 # Dispatch nodes
 
 import GafferDispatch

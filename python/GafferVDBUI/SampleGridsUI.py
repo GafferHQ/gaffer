@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2020, Don Boogert. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name ofDon Boogert nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,14 +34,39 @@
 #
 ##########################################################################
 
-from _GafferVDBUI import *
+import GafferUI
+import GafferVDB
 
-import LevelSetToMeshUI
-import MeshToLevelSetUI
-import LevelSetOffsetUI
-import PointsGridToPointsUI
-import ScatterPointsUI
-import SampleGridsUI
-import SphereLevelSetUI
+GafferUI.Metadata.registerNode(
+	GafferVDB.SampleGrids,
+	'description',
+	"""
+	Sample VDB Grid at points defined by a Points Primitive.
+	""",
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )
+	plugs={
+		'vdbLocation' : [
+			'description',
+			"""
+			Scene graph location of the VDB object to sample.
+			"""
+		],
+		'grids' : [
+			'description',
+			"""
+			Names of grid to sample.
+			"""
+		],
+		'position' : [
+			'description',
+			"""
+			Name of position attribute on points objects to use for vdb sampling.
+			"""
+		],
+		'interpolation' : [
+			'description',
+			"""
+			"""
+		],
+	}
+)
