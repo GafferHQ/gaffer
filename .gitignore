@@ -14,3 +14,4 @@ config.log
 *.pyc
 .idea/
 cmake-build-*/
+.vscode
