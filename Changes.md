@@ -5,6 +5,8 @@ Features
 --------
 
 - MeshNormals : Added a new node for adjusting mesh normals.
+- VolumeScatter : Added a new node for scattering points throughout a volume.
+
 
 Improvements
 ------------
