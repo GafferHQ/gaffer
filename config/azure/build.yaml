@@ -88,11 +88,6 @@ jobs:
        USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
 
    - script: |
-       echo "----------------------"
-       echo "Contents of ./install:"
-       find ./install
-       echo "----------------------"
-       echo ""
        ./config/validateRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz
      displayName: 'Validate'
 
