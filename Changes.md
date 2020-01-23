@@ -110,6 +110,18 @@ Breaking Changes
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:ornamentScale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
 
+0.55.x.x (relative to 0.55.3.0)
+========
+
+API
+---
+
+- NodeAlgo : Added graph traversal functions (#3573) :
+  - `visitUpstream()`, `visitDownstream()`, `visitConnected()`
+  - `findUpstream()`, `findDownstream()`, `findConnected()`
+  - `findAllUpstream()`, `findAllDownstream()`, `findAllConnected()`
+  - `upstreamNodes()`, `downstreamNodes()`, `connectedNodes()`
+
 0.55.3.0 (relative to 0.55.2.1)
 ========
 

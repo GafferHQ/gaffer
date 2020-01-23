@@ -53,6 +53,7 @@
 #include "MetadataAlgoBinding.h"
 #include "MetadataBinding.h"
 #include "MonitorBinding.h"
+#include "NodeAlgoBinding.h"
 #include "NodeBinding.h"
 #include "NumericPlugBinding.h"
 #include "ParallelAlgoBinding.h"
@@ -220,6 +221,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindNameValuePlug();
 	bindProcess();
 	bindSpreadsheet();
+	bindNodeAlgo();
 
 	NodeClass<Backdrop>();
 

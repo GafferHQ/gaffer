@@ -158,29 +158,17 @@ def __viewerKeyPress( viewer, event ) :
 	if not isinstance( viewer.view(), GafferImageUI.ImageView ) :
 		return False
 
-	catalogue = __findCatalogue( viewer.view() )
+	catalogue = Gaffer.NodeAlgo.findUpstream(
+		viewer.view(),
+		lambda node : isinstance( node, GafferImage.Catalogue ),
+		order = Gaffer.NodeAlgo.VisitOrder.DepthFirst
+	)
 	if catalogue is None :
 		return False
 
 	__incrementImageIndex( catalogue, event.key )
 
 	return True
-
-def __findCatalogue( node ) :
-
-	catalogue = node.ancestor( GafferImage.Catalogue )
-	if catalogue is not None :
-		return catalogue
-	else :
-		for inPlug in GafferImage.ImagePlug.RecursiveInputRange( node ) :
-			upstreamPlug = inPlug.source()
-			if upstreamPlug == inPlug or upstreamPlug.node() == node :
-				continue
-			catalogue = __findCatalogue( upstreamPlug.node() )
-			if catalogue is not None :
-				return catalogue
-
-	return None
 
 def __incrementImageIndex( catalogue, direction ) :
 
