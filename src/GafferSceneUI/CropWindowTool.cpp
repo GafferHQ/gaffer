@@ -583,16 +583,13 @@ void CropWindowTool::findCropWindowPlug()
 
 	const GafferScene::ScenePlug::ScenePath rootPath;
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
-	if( history )
+	const bool foundAnEnabledPlug = findCropWindowPlug( history.get(), /* enabledOnly = */ true );
+	// If we didn't find an enabled cropWindow plug upstream, or we did and it's
+	// read-only, look again for any other plugs that could be edited, but aren't
+	// enabled yet. We'll enable it if the user makes an edit.
+	if( !foundAnEnabledPlug || MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
 	{
-		const bool foundAnEnabledPlug = findCropWindowPlug( history.get(), /* enabledOnly = */ true );
-		// If we didn't find an enabled cropWindow plug upstream, or we did and it's
-		// read-only, look again for any other plugs that could be edited, but aren't
-		// enabled yet. We'll enable it if the user makes an edit.
-		if( !foundAnEnabledPlug || MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
-		{
-			findCropWindowPlug( history.get(), /* enabledOnly = */ false );
-		}
+		findCropWindowPlug( history.get(), /* enabledOnly = */ false );
 	}
 
 	if( m_cropWindowPlug )
@@ -654,7 +651,7 @@ bool CropWindowTool::findCropWindowPlug( const SceneAlgo::History *history, bool
 bool CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly )
 {
 	const Options *options = runTimeCast<const Options>( scene->node() );
-	if( !options )
+	if( !options || scene != options->outPlug() )
 	{
 		return false;
 	}

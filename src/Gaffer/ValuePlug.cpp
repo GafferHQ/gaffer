@@ -191,20 +191,20 @@ size_t hash_value( const HashCacheKey &key )
 //   is included in the HashCacheKey. We store them explicitly only
 //   for convenience and performance.
 // - `context` is represented in HashCacheKey via `contextHash`.
-// - `downstreamPlug` does not influence the results of the computation
+// - `destinationPlug` does not influence the results of the computation
 //   in any way. It is merely used for error reporting.
 struct HashProcessKey : public HashCacheKey
 {
-	HashProcessKey( const ValuePlug *plug, const ValuePlug *downstreamPlug, const Context *context, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy )
+	HashProcessKey( const ValuePlug *plug, const ValuePlug *destinationPlug, const Context *context, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy )
 		:	HashCacheKey( plug, context ),
-			downstreamPlug( downstreamPlug ),
+			destinationPlug( destinationPlug ),
 			computeNode( computeNode ),
 			cachePolicy( cachePolicy ),
 			threadStateFixer( cachePolicy )
 	{
 	}
 
-	const ValuePlug *downstreamPlug;
+	const ValuePlug *destinationPlug;
 	const ComputeNode *computeNode;
 	const ValuePlug::CachePolicy cachePolicy;
 	const ThreadStateFixer threadStateFixer;
@@ -327,7 +327,7 @@ class ValuePlug::HashProcess : public Process
 	private :
 
 		HashProcess( const HashProcessKey &key )
-			:	Process( staticType, key.plug, key.downstreamPlug )
+			:	Process( staticType, key.plug, key.destinationPlug )
 		{
 			try
 			{
@@ -458,9 +458,9 @@ namespace
 // function.
 struct ComputeProcessKey
 {
-	ComputeProcessKey( const ValuePlug *plug, const ValuePlug *downstreamPlug, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy, const IECore::MurmurHash *precomputedHash )
+	ComputeProcessKey( const ValuePlug *plug, const ValuePlug *destinationPlug, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy, const IECore::MurmurHash *precomputedHash )
 		:	plug( plug ),
-			downstreamPlug( downstreamPlug ),
+			destinationPlug( destinationPlug ),
 			computeNode( computeNode ),
 			cachePolicy( cachePolicy ),
 			threadStateFixer( cachePolicy ),
@@ -469,7 +469,7 @@ struct ComputeProcessKey
 	}
 
 	const ValuePlug *plug;
-	const ValuePlug *downstreamPlug;
+	const ValuePlug *destinationPlug;
 	const ComputeNode *computeNode;
 	const ValuePlug::CachePolicy cachePolicy;
 	const ThreadStateFixer threadStateFixer;
@@ -616,7 +616,7 @@ class ValuePlug::ComputeProcess : public Process
 	private :
 
 		ComputeProcess( const ComputeProcessKey &key )
-			:	Process( staticType, key.plug, key.downstreamPlug )
+			:	Process( staticType, key.plug, key.destinationPlug )
 		{
 			try
 			{

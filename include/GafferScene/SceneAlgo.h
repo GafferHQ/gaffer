@@ -177,8 +177,6 @@ struct History : public IECore::RefCounted
 	Predecessors predecessors;
 };
 
-/// Returns a nullptr if no history is available (eg: no computes would be
-/// performed to produce the plug's value).
 GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path );
 
 /// Returns the upstream scene originally responsible for generating the specified location.
