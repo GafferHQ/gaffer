@@ -482,7 +482,7 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 		m_selectionDirty = true;
 		if( !m_dragging )
 		{
-			// See associated comment in `preRender()`, and
+			// See associated comment in `updateSelection()`, and
 			// `dragEnd()` where we emit to complete the
 			// deferral started here.
 			selectionChangedSignal()( *this );
@@ -543,6 +543,17 @@ void TransformTool::updateSelection() const
 {
 	if( !m_selectionDirty )
 	{
+		return;
+	}
+
+	if( m_dragging )
+	{
+		// In theory, an expression or some such could change the effective
+		// transform plug while we're dragging (for instance, by driving the
+		// enabled status of a downstream transform using the translate value
+		// we're editing). But we ignore that on the grounds that it's unlikely,
+		// and also that it would be very confusing for the selection to be
+		// changed mid-drag.
 		return;
 	}
 
@@ -671,12 +682,6 @@ void TransformTool::preRender()
 {
 	if( !m_dragging )
 	{
-		// In theory, an expression or some such could change the effective
-		// transform plug while we're dragging (for instance, by driving the
-		// enabled status of a downstream transform using the translate value
-		// we're editing). But we ignore that on the grounds that it's unlikely,
-		// and also that it would be very confusing for the edited plug to be
-		// changed mid-drag.
 		updateSelection();
 		if( m_priorityPathsDirty )
 		{
