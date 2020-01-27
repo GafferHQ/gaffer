@@ -296,6 +296,8 @@ class Menu( GafferUI.Widget ) :
 					if item.subMenu is not None :
 
 						subMenu = _Menu( qtMenu, name )
+						active = self.__evaluateItemValue( item.active )
+						subMenu.setEnabled( active )
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
