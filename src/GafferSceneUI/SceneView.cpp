@@ -674,8 +674,6 @@ class SceneView::Gnomon : public boost::signals::trackable
 namespace
 {
 
-/// \todo If we made CropWindowTool::Rectangle public, we
-/// could ditch this class.
 class CameraOverlay : public GafferUI::Gadget
 {
 
@@ -738,6 +736,22 @@ class CameraOverlay : public GafferUI::Gadget
 		const Box2f &getCropWindow() const
 		{
 			return m_cropWindow;
+		}
+
+		// left, top, right, bottom
+		void setOverscan( const V4f &overscan )
+		{
+			if( overscan == m_overscan )
+			{
+				return;
+			}
+			m_overscan = overscan;
+			requestRender();
+		}
+
+		const V4f &getOverscan() const
+		{
+			return m_overscan;
 		}
 
 		void setCaption( const std::string &caption )
@@ -843,6 +857,26 @@ class CameraOverlay : public GafferUI::Gadget
 				glColor4f( 0, 0.25, 0, 1.0f );
 				style->renderRectangle( m_resolutionGate );
 
+				if( m_overscan[0] != 0.0f || m_overscan[1] != 0.0f || m_overscan[2] != 0.0f || m_overscan[3] != 0.0f )
+				{
+					glLineStipple( 2, 0x3333 );
+					glEnable( GL_LINE_STIPPLE );
+
+					const V2f gateSize = m_resolutionGate.size();
+					style->renderRectangle( Box2f(
+						V2f(
+							m_resolutionGate.min.x - ( m_overscan[0] * gateSize.x ),
+							m_resolutionGate.min.y - ( m_overscan[1] * gateSize.y )
+						),
+						V2f(
+							m_resolutionGate.max.x + ( m_overscan[2] * gateSize.x ),
+							m_resolutionGate.max.y + ( m_overscan[3] * gateSize.y )
+						)
+					) );
+
+					glDisable( GL_LINE_STIPPLE );
+				}
+
 				if( !m_icon.empty() )
 				{
 					IECoreGL::ConstTexturePtr texture = ImageGadget::loadTexture( m_icon );
@@ -878,6 +912,7 @@ class CameraOverlay : public GafferUI::Gadget
 		Box2f m_resolutionGate;
 		Box2f m_apertureGate;
 		Box2f m_cropWindow;
+		V4f m_overscan;
 		std::string m_caption;
 		std::string m_icon;
 
@@ -1248,6 +1283,18 @@ class SceneView::Camera : public boost::signals::trackable
 			else
 			{
 				m_overlay->setCropWindow( Box2f( V2f( 0 ), V2f( 1 ) ) );
+			}
+			if( isCamera && m_lookThroughCamera->getOverscan() )
+			{
+				const float left = m_lookThroughCamera->getOverscanLeft();
+				const float top = m_lookThroughCamera->getOverscanTop();
+				const float right = m_lookThroughCamera->getOverscanRight();
+				const float bottom = m_lookThroughCamera->getOverscanBottom();
+				m_overlay->setOverscan( V4f( left, top, right, bottom ) );
+			}
+			else
+			{
+				m_overlay->setOverscan( V4f( 0.0f ) );
 			}
 
 			if( errorMessage.empty() )
