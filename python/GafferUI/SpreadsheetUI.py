@@ -121,8 +121,6 @@ Gaffer.Metadata.registerNode(
 			row matches the `selector`.
 			""",
 
-			"spreadsheet:rowNameWidth", GafferUI.PlugWidget.labelWidth(),
-
 		],
 
 		"rows.*.name" : [
@@ -264,6 +262,21 @@ def __presetValuesMetadata( plug ) :
 
 Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.cells...", "presetNames", __presetNamesMetadata )
 Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.cells...", "presetValues", __presetValuesMetadata )
+
+def _affectsRowNameWidth( key ) :
+
+	return key == "spreadsheet:rowNameWidth"
+
+def _getRowNameWidth( rowsPlug ) :
+
+	assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
+	width = Gaffer.Metadata.value( rowsPlug["default"], "spreadsheet:rowNameWidth" )
+	return width if width is not None else GafferUI.PlugWidget.labelWidth()
+
+def _setRowNameWidth( rowsPlug, width ) :
+
+	assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
+	Gaffer.Metadata.registerValue( rowsPlug["default"], "spreadsheet:rowNameWidth", width )
 
 # _RowsPlugValueWidget
 # ====================
@@ -436,12 +449,11 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __updateRowNamesWidth( self ) :
 
-		width = Gaffer.Metadata.value( self.getPlug()["default"], "spreadsheet:rowNameWidth" )
-		self.__rowNamesTable._qtWidget().setFixedWidth( width )
+		self.__rowNamesTable._qtWidget().setFixedWidth( _getRowNameWidth( self.getPlug() ) )
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if plug is not None and key == "spreadsheet:rowNameWidth" :
+		if plug is not None and _affectsRowNameWidth( key ) :
 			if self.getPlug().isAncestorOf( plug ) :
 				self.__updateRowNamesWidth()
 
@@ -1306,9 +1318,8 @@ def __deleteRow( rowPlug ) :
 
 def __setRowNameWidth( rowPlug, width, *unused ) :
 
-	defaultRowPlug = rowPlug.parent()["default"]
-	with Gaffer.UndoScope( defaultRowPlug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerValue( defaultRowPlug, "spreadsheet:rowNameWidth", width )
+	with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
+		_setRowNameWidth( rowPlug.parent(), width )
 
 def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 
@@ -1341,7 +1352,7 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
 		]
 
-		currentWidth = Gaffer.Metadata.value( rowPlug, "spreadsheet:rowNameWidth" )
+		currentWidth = _getRowNameWidth( rowPlug.parent() )
 		for label, width in reversed( widths ) :
 			menuDefinition.prepend(
 				"/Width/{}".format( label ),
