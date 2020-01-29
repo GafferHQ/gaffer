@@ -989,20 +989,22 @@ bool Instancer::affectsBranchAttributes( const Gaffer::Plug *input ) const
 
 void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath.size() <= 2 )
+	if( branchPath.size() <= 1 )
 	{
-		// "/" or "/instances" or "/instances/<prototypeName>"
+		// "/" or "/instances"
 		h = outPlug()->attributesPlug()->defaultValue()->Object::hash();
+	}
+	else if( branchPath.size() == 2 )
+	{
+		// "/instances/<prototypeName>"
+		PrototypeScope scope( engine( parentPath, context ), context, branchPath );
+		h = prototypesPlug()->attributesPlug()->hash();
 	}
 	else if( branchPath.size() == 3 )
 	{
 		// "/instances/<prototypeName>/<id>"
 		BranchCreator::hashBranchAttributes( parentPath, branchPath, context, h );
 		{
-			{
-				PrototypeScope scope( engine( parentPath, context ), context, branchPath );
-				prototypesPlug()->attributesPlug()->hash( h );
-			}
 			ConstEngineDataPtr e = engine( parentPath, context );
 			if( e->numInstanceAttributes() )
 			{
@@ -1020,34 +1022,28 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 
 IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath.size() <= 2 )
+	if( branchPath.size() <= 1 )
 	{
-		// "/" or "/instances" or "/instances/<prototypeName>"
+		// "/" or "/instances"
 		return outPlug()->attributesPlug()->defaultValue();
+	}
+	else if( branchPath.size() == 2 )
+	{
+		// "/instances/<prototypeName>"
+		PrototypeScope scope( engine( parentPath, context ), context, branchPath );
+		return prototypesPlug()->attributesPlug()->getValue();
 	}
 	else if( branchPath.size() == 3 )
 	{
 		// "/instances/<prototypeName>/<id>"
-		ConstCompoundObjectPtr baseAttributes;
-		{
-			PrototypeScope scope( engine( parentPath, context ), context, branchPath );
-			baseAttributes = prototypesPlug()->attributesPlug()->getValue();
-		}
-
 		ConstEngineDataPtr e = engine( parentPath, context );
 		if( e->numInstanceAttributes() )
 		{
-			CompoundObjectPtr attributes = e->instanceAttributes( e->pointIndex( branchPath[2] ) );
-			CompoundObject::ObjectMap &writableAttributes = attributes->members();
-			for( auto &attribute : baseAttributes->members() )
-			{
-				writableAttributes.insert( attribute );
-			}
-			return attributes;
+			return e->instanceAttributes( e->pointIndex( branchPath[2] ) );
 		}
 		else
 		{
-			return baseAttributes;
+			return outPlug()->attributesPlug()->defaultValue();
 		}
 	}
 	else

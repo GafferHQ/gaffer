@@ -1513,19 +1513,21 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
 
 		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances" ), IECore.CompoundObject() )
-		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo" ), IECore.CompoundObject() )
-		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar" ), IECore.CompoundObject() )
+		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo" )["gaffer:deformationBlur"].value, False )
+		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar" )["gaffer:deformationBlur"].value, True )
 
 		for i in [ "0", "3" ] :
 
-			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}".format( i=i ) )["gaffer:deformationBlur"].value, False )
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}".format( i=i ) ), IECore.CompoundObject() )
+			self.assertEqual( script["instancer"]["out"].fullAttributes( "/object/instances/foo/{i}".format( i=i ) )["gaffer:deformationBlur"].value, False )
 			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}/bar".format( i=i ) )["gaffer:deformationBlur"].value, True )
 			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}/bar/sphere" ), IECore.CompoundObject() )
 			self.assertEqual( script["instancer"]["out"].fullAttributes( "/object/instances/foo/{i}/bar/sphere".format( i=i ) )["gaffer:deformationBlur"].value, True )
 
 		for i in [ "1", "2" ] :
 
-			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}".format( i=i ) )["gaffer:deformationBlur"].value, True )
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}".format( i=i ) ), IECore.CompoundObject() )
+			self.assertEqual( script["instancer"]["out"].fullAttributes( "/object/instances/bar/{i}".format( i=i ) )["gaffer:deformationBlur"].value, True )
 			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.CompoundObject() )
 			self.assertEqual( script["instancer"]["out"].fullAttributes( "/object/instances/bar/{i}/baz".format( i=i ) )["gaffer:deformationBlur"].value, True )
 			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}/baz/cube".format( i=i ) )["gaffer:deformationBlur"].value, False )
