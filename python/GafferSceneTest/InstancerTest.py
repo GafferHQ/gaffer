@@ -1489,6 +1489,49 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+	def testPrototypeAttributes( self ) :
+
+		script = self.buildPrototypeRootsScript()
+		# add some attributes throughout the prototype hierarchies
+		script["attrFilter"] = GafferScene.PathFilter()
+		script["attrFilter"]["paths"].setValue( IECore.StringVectorData( [ "/foo", "/foo/bar", "/bar", "/bar/baz/cube" ] ) )
+		script["attributes"] = GafferScene.StandardAttributes()
+		script["attributes"]["in"].setInput( script["instancer"]["prototypes"].getInput() )
+		script["attributes"]["filter"].setInput( script["attrFilter"]["out"] )
+		script["attributes"]["attributes"]["deformationBlur"]["enabled"].setValue( True )
+		script["attrSpreadsheet"] = Gaffer.Spreadsheet()
+		script["attrSpreadsheet"]["selector"].setValue( "${scene:path}" )
+		script["attrSpreadsheet"]["rows"].addColumn( script["attributes"]["attributes"]["deformationBlur"]["value"] )
+		script["attributes"]["attributes"]["deformationBlur"]["value"].setInput( script["attrSpreadsheet"]["out"][0] )
+		for location, value in ( ( "/foo", False ), ( "/foo/bar", True ), ( "/bar", True ), ( "/bar/baz/cube", False ) ) :
+			row = script["attrSpreadsheet"]["rows"].addRow()
+			row["name"].setValue( location )
+			row["cells"][0]["value"].setValue( value )
+		script["instancer"]["prototypes"].setInput( script["attributes"]["out"] )
+
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
+
+		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances" ), IECore.CompoundObject() )
+		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo" ), IECore.CompoundObject() )
+		self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar" ), IECore.CompoundObject() )
+
+		for i in [ "0", "3" ] :
+
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}".format( i=i ) )["gaffer:deformationBlur"].value, False )
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}/bar".format( i=i ) )["gaffer:deformationBlur"].value, True )
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/foo/{i}/bar/sphere" ), IECore.CompoundObject() )
+			self.assertEqual( script["instancer"]["out"].fullAttributes( "/object/instances/foo/{i}/bar/sphere".format( i=i ) )["gaffer:deformationBlur"].value, True )
+
+		for i in [ "1", "2" ] :
+
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}".format( i=i ) )["gaffer:deformationBlur"].value, True )
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}/baz".format( i=i ) ), IECore.CompoundObject() )
+			self.assertEqual( script["instancer"]["out"].fullAttributes( "/object/instances/bar/{i}/baz".format( i=i ) )["gaffer:deformationBlur"].value, True )
+			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}/baz/cube".format( i=i ) )["gaffer:deformationBlur"].value, False )
+
+		self.assertSceneValid( script["instancer"]["out"] )
+
 	def testUnconnectedInstanceInput( self ) :
 
 		plane = GafferScene.Plane()
