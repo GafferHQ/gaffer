@@ -91,8 +91,8 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 {
 	switch( dataType )
 	{
-		case GeometricData::Numeric:
-			return ccl::TypeDesc::TypeFloat;
+		case GeometricData::Numeric :
+			return ccl::TypeDesc::TypeVector;
 		case GeometricData::Point :
 			return ccl::TypeDesc::TypePoint;
 		case GeometricData::Normal :
@@ -154,7 +154,14 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 				celem = ccl::ATTR_ELEMENT_MESH;
 				break;
 			case PrimitiveVariable::Vertex :
-				celem = ccl::ATTR_ELEMENT_VERTEX;
+				if( attributes.curve_mesh )
+				{
+					celem = ccl::ATTR_ELEMENT_CURVE_KEY;
+				}
+				else
+				{
+					celem = ccl::ATTR_ELEMENT_VERTEX;
+				}
 				break;
 			case PrimitiveVariable::Varying :
 			case PrimitiveVariable::FaceVarying :
@@ -183,8 +190,14 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			size_t num = floatData.size();
 			float *cdata = attr->data_float();
 
-			for( size_t i = 0; i < num; ++i, ++cdata )
-				*cdata = floatData[i];
+			if( !cdata )
+			{
+				msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData)." ) % name % primitiveVariable.data->typeName() );
+				attributes.remove( attr );
+			}
+
+			for( size_t i = 0; i < num; ++i )
+				*(cdata++) = floatData[i];
 			cdata = attr->data_float();
 		}
 		else
@@ -202,8 +215,14 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			size_t num = v3fData.size();
 			ccl::float3 *cdata = attr->data_float3();
 
-			for( size_t i = 0; i < num; ++i, ++cdata )
-				*cdata = ccl::make_float3( v3fData[i].x, v3fData[i].y, v3fData[i].z );
+			if( !cdata )
+			{
+				msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData)." ) % name % primitiveVariable.data->typeName() );
+				attributes.remove( attr );
+			}
+
+			for( size_t i = 0; i < num; ++i )
+				*(cdata++) = ccl::make_float3( v3fData[i].x, v3fData[i].y, v3fData[i].z );
 			cdata = attr->data_float3();
 		}
 		else

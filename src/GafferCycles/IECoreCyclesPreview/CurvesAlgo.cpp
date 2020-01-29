@@ -113,7 +113,7 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
 	{
-		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, cmesh->attributes );
+		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, cmesh->curve_attributes );
 	}
 	return cmesh;
 }
