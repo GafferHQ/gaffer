@@ -61,6 +61,9 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	// Session and scene
 	options->addChild( new Gaffer::NameValuePlug( "ccl:shadingsystem", new IECore::StringData( "SVM" ), false, "shadingSystem" ) );
 
+	// Square samples
+	options->addChild( new Gaffer::NameValuePlug( "ccl:square_samples", new IECore::BoolData( true ), false, "squareSamples" ) );
+
 	// Session/Render
 
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:experimental", new IECore::BoolData( false ), false, "featureSet" ) );
@@ -77,7 +80,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:use_denoising", new IECore::BoolData( false ), false, "useDenoising" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:write_denoising_passes", new IECore::BoolData( false ), false, "writeDenoisingPasses" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:optix_denoising", new IECore::BoolData( false ), false, "optixDenoising" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:session:optix_input_passes", new IECore::IntData( 1 ), false, "optixInputPasses" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:cancel_timeout", new IECore::FloatData( 0.1f ), false, "cancelTimeout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:reset_timeout", new IECore::FloatData( 0.1f ), false, "resetTimeout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:text_timeout", new IECore::FloatData( 1.0f ), false, "textTimeout" ) );
@@ -94,6 +96,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:relative_pca", new IECore::BoolData( false ), false, "denoiseRelativePca" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:neighbor_frames", new IECore::IntData( 2 ), false, "denoiseNeighborFrames" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:clamp_input", new IECore::BoolData( true ), false, "denoiseClampInput" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:denoise:optix_input_passes", new IECore::IntData( 1 ), false, "optixInputPasses" ) );
 
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_diffuse_direct",        new IECore::BoolData( true ), false, "denoisingDiffuseDirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_diffuse_indirect",      new IECore::BoolData( true ), false, "denoisingDiffuseIndirect" ) );
@@ -138,7 +141,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), false, "sampleClampDirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), false, "sampleClampIndirect" ) );
 
-	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:aa_samples", new IECore::IntData( 0 ), false, "aaSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:aa_samples", new IECore::IntData( 8 ), false, "aaSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:diffuse_samples", new IECore::IntData( 1 ), false, "diffuseSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:glossy_samples", new IECore::IntData( 1 ), false, "glossySamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:transmission_samples", new IECore::IntData( 1 ), false, "transmissionSamples" ) );

@@ -2575,6 +2575,7 @@ IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "ccl:device" );
 IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
+IECore::InternedString g_squareSamplesOptionName( "ccl:square_samples" );
 // Logging
 IECore::InternedString g_logLevelOptionName( "ccl:log_level" );
 IECore::InternedString g_progressLevelOptionName( "ccl:progress_level" );
@@ -2614,7 +2615,7 @@ IECore::InternedString g_denoiseFeatureStrengthOptionName( "ccl:denoise:feature_
 IECore::InternedString g_denoiseRelativePcaOptionName( "ccl:denoise:relative_pca" );
 IECore::InternedString g_denoiseNeighborFramesOptionName( "ccl:denoise:neighbor_frames" );
 IECore::InternedString g_denoiseClampInputOptionName( "ccl:denoise:clampInput" );
-IECore::InternedString g_optixInputPassesOptionName( "ccl:session:optix_input_passes" );
+IECore::InternedString g_optixInputPassesOptionName( "ccl:denoise:optix_input_passes" );
 // Curves
 IECore::InternedString g_curvePrimitiveOptionType( "ccl:curve:primitive" );
 IECore::InternedString g_curveShapeOptionType( "ccl:curve:shape" );
@@ -2669,17 +2670,16 @@ ccl::PathRayFlag nameToRayType( const std::string &name )
 }
 
 // Square samples
-std::array<IECore::InternedString, 9> g_squareSamplesOptionNames = { {
-	"ccl:integrator:aa_samples",
-	"ccl:integrator:diffuse_samples",
-	"ccl:integrator:glossy_samples",
-	"ccl:integrator:transmission_samples",
-	"ccl:integrator:ao_samples",
-	"ccl:integrator:mesh_light_samples",
-	"ccl:integrator:subsurface_samples",
-	"ccl:integrator:volume_samples",
-	"ccl:integrator:adaptive_min_samples",
-} };
+IECore::InternedString g_aaSamplesOptionName( "ccl:integrator:aa_samples" );
+IECore::InternedString g_diffuseSamplesOptionName( "ccl:integrator:diffuse_samples" );
+IECore::InternedString g_glossySamplesOptionName( "ccl:integrator:glossy_samples" );
+IECore::InternedString g_transmissionSamplesOptionName( "ccl:integrator:transmission_samples" );
+IECore::InternedString g_aoSamplesOptionName( "ccl:integrator:ao_samples" );
+IECore::InternedString g_meshLightSamplesOptionName( "ccl:integrator:mesh_light_samples" );
+IECore::InternedString g_subsurfaceSamplesOptionName( "ccl:integrator:subsurface_samples" );
+IECore::InternedString g_volumeSamplesOptionName( "ccl:integrator:volume_samples" );
+IECore::InternedString g_adaptiveMinSamplesOptionName( "ccl:integrator:adaptive_samples" );
+
 // Dicing camera
 IECore::InternedString g_dicingCameraOptionName( "ccl:dicing_camera" );
 
@@ -2727,6 +2727,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_pause( false ),
 				m_progressLevel( IECore::Msg::Info ),
 				m_sceneLockInterval( 1 ),
+				m_squareSamples( true ),
 				m_useDenoising( false ),
 				m_useOptixDenoising( false ),
 				m_writeDenoisingPasses( false )
@@ -2761,8 +2762,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_renderType != Interactive )
 			{
-				// Sane defaults, not INT_MAX
-				m_sessionParams.samples = 128;
+				// Sane defaults, not INT_MAX. Will be squared by default.
+				m_sessionParams.samples = 8;
 				m_sessionParams.start_resolution = 64;
 				m_sessionParams.progressive = false;
 				m_sessionParams.progressive_refine = false;
@@ -2815,6 +2816,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->background->transparent = true;
 			m_film = *(m_scene->film);
 			m_curveSystemManager = *(m_scene->curve_system_manager);
+
+			m_samples = m_sessionParams.samples;
+			m_aaSamples = m_integrator.aa_samples;
+			m_diffuseSamples = m_integrator.diffuse_samples;
+			m_glossySamples = m_integrator.glossy_samples;
+			m_transmissionSamples = m_integrator.transmission_samples;
+			m_aoSamples = m_integrator.ao_samples;
+			m_meshLightSamples = m_integrator.mesh_light_samples;
+			m_subsurfaceSamples = m_integrator.subsurface_samples;
+			m_volumeSamples = m_integrator.volume_samples;
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+			m_adaptiveMinSamples = m_integrator.adaptive_min_samples;
+#endif
 
 			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
@@ -3036,6 +3050,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
+			else if( name == g_squareSamplesOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_squareSamples = true;
+					return;
+				}
+				else if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+				{
+					m_squareSamples = data->readable();
+					return;
+				}
+			}
 			else if( name == g_logLevelOptionName )
 			{
 				if( value == nullptr )
@@ -3070,10 +3097,25 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:session:" ) )
 			{
+				if( name == g_samplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						if( m_renderType != Interactive )
+							m_samples = 8;
+						else
+							m_samples = INT_MAX;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_samples = data->readable();
+						return;
+					}
+				}
 				OPTION_BOOL (m_sessionParams, g_featureSetOptionName,               experimental);
 				OPTION_BOOL (m_sessionParams, g_progressiveRefineOptionName,        progressive_refine);
 				OPTION_BOOL (m_sessionParams, g_progressiveOptionName,              progressive);
-				OPTION_INT  (m_sessionParams, g_samplesOptionName,                  samples);
 				OPTION_V2I  (m_sessionParams, g_tileSizeOptionName,                 tile_size);
 				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
@@ -3328,25 +3370,128 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:integrator:" ) )
 			{
+				if( name == g_aaSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_aaSamples = 8;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_aaSamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_diffuseSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_diffuseSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_diffuseSamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_glossySamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_glossySamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_glossySamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_transmissionSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_transmissionSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_transmissionSamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_aoSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_aoSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_aoSamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_meshLightSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_meshLightSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_meshLightSamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_subsurfaceSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_subsurfaceSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_subsurfaceSamples = data->readable();
+						return;
+					}
+				}
+				if( name == g_volumeSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_volumeSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_volumeSamples = data->readable();
+						return;
+					}
+				}
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+				if( name == g_adaptiveMinSamplesOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_adaptiveMinSamples = 1;
+						return;
+					}
+					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_adaptiveMinSamples = data->readable();
+						return;
+					}
+				}
+#endif
 				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
 				if( value && input )
 				{
-					for( const auto &sampleName : g_squareSamplesOptionNames )
-					{
-						if( name == sampleName )
-						{
-							if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-							{
-								// Square the values
-								integrator->set( *input, data->readable() * data->readable() );
-							}
-							else
-							{
-								integrator->set_default_value( *input );
-							}
-							return;
-						}
-					}
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
 						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
@@ -3751,7 +3896,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
-			m_session->set_samples( m_sessionParams.samples );
 			// No checking on denoise settings either
 			m_session->params.denoising = m_denoiseParams;
 			m_sessionParams.denoising = m_denoiseParams;
@@ -3774,6 +3918,44 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
+			if( m_squareSamples )
+			{
+				if( m_samples != INT_MAX )
+				{
+					m_sessionParams.samples = m_samples * m_samples;
+				}
+				else
+				{
+					m_sessionParams.samples = m_samples;
+				}
+				integrator->aa_samples = m_aaSamples * m_aaSamples;
+				integrator->diffuse_samples = m_diffuseSamples * m_diffuseSamples;
+				integrator->glossy_samples = m_glossySamples * m_glossySamples;
+				integrator->transmission_samples = m_transmissionSamples * m_transmissionSamples;
+				integrator->ao_samples = m_aoSamples * m_aoSamples;
+				integrator->mesh_light_samples = m_meshLightSamples * m_meshLightSamples;
+				integrator->subsurface_samples = m_subsurfaceSamples * m_subsurfaceSamples;
+				integrator->volume_samples = m_volumeSamples * m_volumeSamples;
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+				integrator->adaptive_min_samples = m_adaptiveMinSamples * m_adaptiveMinSamples;
+#endif
+			}
+			else
+			{
+				m_sessionParams.samples = m_samples;
+				integrator->aa_samples = m_aaSamples;
+				integrator->diffuse_samples = m_diffuseSamples;
+				integrator->glossy_samples = m_glossySamples;
+				integrator->transmission_samples = m_transmissionSamples;
+				integrator->ao_samples = m_aoSamples;
+				integrator->mesh_light_samples = m_meshLightSamples;
+				integrator->subsurface_samples = m_subsurfaceSamples;
+				integrator->volume_samples = m_volumeSamples;
+#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
+				integrator->adaptive_min_samples = m_adaptiveMinSamples;
+#endif
+			}
+
 			integrator->method = (ccl::Integrator::Method)m_sessionParams.progressive;
 			if( !m_sessionParams.progressive )
 			{
@@ -3785,6 +3967,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_sessionParams.full_denoising = m_useDenoising && !m_useOptixDenoising;
 			m_sessionParams.optix_denoising = m_useDenoising && m_useOptixDenoising;
 			m_sessionParams.write_denoising_passes = m_writeDenoisingPasses && !m_useOptixDenoising;
+
+			m_session->set_samples( m_sessionParams.samples );
+
+			if( m_useDenoising )
+			{
+				m_sessionParams.progressive_refine = false;
+			}
 
 			if( m_backgroundShader )
 				background->shader = m_backgroundShader.get();
@@ -4212,6 +4401,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 		ccl::TextureCacheParams m_textureCacheParamsDefault;
 #endif
+
+		// Square samples
+		bool m_squareSamples;
+		int m_samples;
+		int m_aaSamples;
+		int m_diffuseSamples;
+		int m_glossySamples;
+		int m_transmissionSamples;
+		int m_aoSamples;
+		int m_meshLightSamples;
+		int m_subsurfaceSamples;
+		int m_volumeSamples;
+		int m_adaptiveMinSamples;
 
 		// Denoise
 		bool m_useDenoising;

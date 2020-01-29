@@ -134,19 +134,30 @@ def __samplingSummary( plug ) :
 			info.append( "Branched-Path Integrator" )
 		elif plug["method"]["value"].getValue() == 1 :
 			info.append( "Path Integrator" )
+	
+	squareSamples = True
+	if plug["squareSamples"]["enabled"].getValue() :
+		squareSamples = plug["squareSamples"]["value"].getValue()
+		info.append( "Square Samples {}".format( squareSamples ) )
 
 	if plug["useAdaptiveSampling"]["enabled"].getValue() :
 		info.append( "Use Adaptive Sampling {}".format( plug["useAdaptiveSampling"]["value"].getValue() ) )
 
 	if plug["samples"]["enabled"].getValue() :
-		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
+		samples = plug["samples"]["value"].getValue()
+		if squareSamples :
+			info.append( "Samples {} ({})".format( samples, samples * samples ) )
+		else :
+			info.append( "Samples {}".format( samples ) )
 
 	for sampleType in ( "Diffuse", "Glossy", "Transmission", "AO", "MeshLight", "Subsurface", "Volume" ) :
 		childName = "%sSamples" % sampleType.lower()
 		if plug[childName]["enabled"].getValue() :
-			info.append(
-				"{} {}".format( sampleType, plug[childName]["value"].getValue() )
-			)
+			samples = plug[childName]["value"].getValue()
+			if squareSamples :
+				info.append( "{} {} ({})".format( sampleType, samples, samples * samples ) )
+			else :
+				info.append( "{} {}".format( sampleType, samples ) )
 
 	if plug["samplingPattern"]["enabled"].getValue() :
 		info.append( "Sampling Pattern {}".format( plug["samplingPattern"]["value"].getValue() ) )
@@ -164,7 +175,11 @@ def __samplingSummary( plug ) :
 		info.append( "Adaptive Sampling Threshold {}".format( plug["adaptiveSamplingThreshold"]["value"].getValue() ) )
 
 	if plug["adaptiveMinSamples"]["enabled"].getValue() :
-		info.append( "Adaptive Min Samples {}".format( plug["adaptiveMinSamples"]["value"].getValue() ) )
+		samples = plug["adaptiveMinSamples"]["value"].getValue()
+		if squareSamples :
+			info.append( "Adaptive Min Samples {} ({})".format( samples, samples * samples ) )
+		else :
+			info.append( "Adaptive Min Samples {}".format( samples ) )
 
 	if plug["filterGlossy"]["enabled"].getValue() :
 		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
@@ -601,10 +616,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			"Instead of rendering each tile until it is finished, "
-            "refine the whole image progressively "
-            "(this renders somewhat slower, "
-            "but time can be saved by manually stopping the render when the noise is low enough)",
+			Instead of rendering each tile until it is finished,
+			refine the whole image progressively
+			(this renders somewhat slower,
+			but time can be saved by manually stopping the render when the noise is low enough),
 			""",
 
 			"layout:section", "Session",
@@ -851,6 +866,18 @@ Gaffer.Metadata.registerNode(
 			"preset:Path", True,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.squareSamples" : [
+
+			"description",
+			"""
+			Square sampling values for easier artist control. Calculated as samples * samples.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Square Samples",
 
 		],
 
