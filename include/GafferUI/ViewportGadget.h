@@ -97,6 +97,14 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// Return whether the viewport is currently in planar movement mode
 		bool getPlanarMovement() const;
 
+		/// Sets whether the Viewport supports precise motion mode via
+		/// modifier keys. NOTE: This defaults to true, and causes the
+		/// viewport to consume button press events using the corresponding
+		/// modifiers.
+		void setPreciseMotionAllowed( bool allowed );
+		/// Return whether the viewport is currently allows precise motion
+		bool getPreciseMotionAllowed() const;
+
 		/// Return the camera currently used to render the viewport.
 		/// This bakes in aperture and clipping planes based on tweaks
 		/// made using the ViewportGadget.
@@ -263,6 +271,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		bool m_cameraInMotion;
 		bool m_cameraEditable;
 
+		bool m_preciseMotionAllowed;
 		bool m_preciseMotionEnabled;
 		Imath::V2f m_motionSegmentOrigin;
 		Imath::V2f m_motionSegmentEventOrigin;

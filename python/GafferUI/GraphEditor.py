@@ -47,7 +47,13 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
+		# We want to disable precise navigation motions as they interfere
+		# with our keyboard shortcuts and aren't that useful in the graph
+		viewportGadget = GafferUI.ViewportGadget()
+		viewportGadget.setPreciseMotionAllowed( False )
+
 		self.__gadgetWidget = GafferUI.GadgetWidget(
+			gadget = viewportGadget,
 			bufferOptions = set( [
 				GafferUI.GLWidget.BufferOptions.Double,
 			] ),
