@@ -164,7 +164,7 @@ Visualisations LightFilterVisualiser::allVisualisations( const IECore::CompoundO
 
 		if( !curVis.empty() )
 		{
-			Private::collectVisualisations( curVis, resultVis );
+			resultVis.insert( resultVis.end(), curVis.begin(), curVis.end() );
 		}
 
 		if( curState )

@@ -252,9 +252,7 @@ Visualisations LightBlockerVisualiser::visualise( const IECore::InternedString &
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( planeShape( shaderParameters ) ) );
 	}
 
-	Visualisations v;
-	v[ VisualisationType::Geometry ] = result;
-	return v;
+	return { Visualisation::createGeometry( result ) };
 }
 
 IECoreGL::ConstRenderablePtr LightBlockerVisualiser::boxShape( const IECore::CompoundData *shaderParameters )

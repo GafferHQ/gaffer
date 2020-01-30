@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,21 +34,50 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from HierarchyViewTest import HierarchyViewTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
-from RotateToolTest import RotateToolTest
-from ContextAlgoTest import ContextAlgoTest
-from CameraToolTest import CameraToolTest
-from VisualiserTest import VisualiserTest
+import imath
+
+import IECore
+import IECoreScene
+
+import GafferUITest
+import GafferScene
+
+# Needs to be imported to register the visualisers
+import GafferSceneUI
+
+class VisualiserTest( GafferUITest.TestCase ) :
+
+	def testCameraVisualiserFramingBound( self )  :
+
+		# Certain visualisations should be able to opt-out of affecting
+		# a locations bounds (generally to prevent 'large' visualisations
+		# from breaking 'f' to fit to the viewer).
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		camera = IECoreScene.Camera()
+		camera.setProjection( "perspective" )
+
+		# The expected bound is the size of the green camera body visualisation.
+		# We want to make sure the renderer bound it doesn't contain the frustum
+		# visualisation which extends to the far clipping plane.
+		expectedBodyBound = imath.Box3f( imath.V3f( -5, -5, -5 ), imath.V3f( 5, 5, 2 ) )
+
+		# Make sure the far plane is bigger than the camera body visualisation
+		clippingPlanes = camera.getClippingPlanes()
+		self.assertTrue( clippingPlanes[1] > abs(expectedBodyBound.min()[2]) )
+
+		_ =	renderer.object(
+			"/camera",
+			camera,
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		cameraBound = renderer.command( "gl:queryBound", {} )
+
+		self.assertEqual( cameraBound, expectedBodyBound )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -232,9 +232,7 @@ Visualisations BarndoorVisualiser::visualise( const IECore::InternedString &attr
 		result->setTransform( barndoorTrans );
 	}
 
-	Visualisations v;
-	v[ VisualisationType::Ornament ] = result;
-	return v;
+	return { Visualisation::createOrnament( result, false ) };
 
 }
 

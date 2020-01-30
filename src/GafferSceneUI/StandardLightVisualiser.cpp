@@ -401,10 +401,6 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
 
-	Visualisations result;
-	result[ VisualisationType::Geometry ] = geometry;
-	result[ VisualisationType::Ornament ] = ornaments;
-
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
 	const StringData *visualiserDrawingModeData = attributes->member<StringData>( "gl:light:drawingMode" );
@@ -541,6 +537,15 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	}
 
+	Visualisations result;
+	if( !geometry->children().empty() )
+	{
+		result.push_back( Visualisation::createGeometry( geometry ) );
+	}
+	if( !ornaments->children().empty() )
+	{
+		result.push_back( Visualisation::createOrnament( ornaments, false ) );
+	}
 	return result;
 }
 

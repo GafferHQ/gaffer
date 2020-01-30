@@ -227,11 +227,9 @@ Visualisations DecayVisualiser::visualise( const IECore::InternedString &attribu
 	KnotVector knots;
 	getKnotsToVisualize( shaderNetwork, knots );
 
-	Visualisations v;
-
 	if( knots.empty() )
 	{
-		return v;
+		return {};
 	}
 
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
@@ -241,8 +239,10 @@ Visualisations DecayVisualiser::visualise( const IECore::InternedString &attribu
 		addKnot( result, knots[i] );
 	}
 
-	v[  VisualisationType::Geometry ] = result;
-	return v;
+	// On the whole in Gaffer we assume that light scale doesn't affect the
+	// render (this may need to be configurable later). Decay shouldn't scale
+	// with visualisation scale either though.
+	return { Visualisation( result, Visualisation::Scale::None ) };
 }
 
 } // namespace

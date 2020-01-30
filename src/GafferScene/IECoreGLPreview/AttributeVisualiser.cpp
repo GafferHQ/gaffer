@@ -75,7 +75,7 @@ Visualisations AttributeVisualiser::allVisualisations( const IECore::CompoundObj
 
 		if( !curVis.empty() )
 		{
-			Private::collectVisualisations( curVis, resultVis );
+			resultVis.insert( resultVis.end(), curVis.begin(), curVis.end() );
 		}
 
 		if( curState )

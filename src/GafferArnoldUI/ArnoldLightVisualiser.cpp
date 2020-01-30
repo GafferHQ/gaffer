@@ -441,9 +441,7 @@ Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &a
 			IECoreGL::RenderablePtr iesVis = iesVisualisation( iesFilenameData->readable() );
 			if( iesVis )
 			{
-				IECoreGL::Renderable *ornamentVis = boost::const_pointer_cast<IECoreGL::Renderable>( v[VisualisationType::Ornament] ).get();
-				IECoreGL::Group *g = runTimeCast<IECoreGL::Group>( ornamentVis );
-				g->addChild( iesVis );
+				v.push_back( Visualisation::createOrnament( iesVis, true ) );
 			}
 		}
 	}

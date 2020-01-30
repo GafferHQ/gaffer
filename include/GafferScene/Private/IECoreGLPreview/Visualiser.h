@@ -37,6 +37,8 @@
 #ifndef IECOREGLPREVIEW_VISUALISER_H
 #define IECOREGLPREVIEW_VISUALISER_H
 
+#include "GafferScene/Export.h"
+
 #include "IECoreGL/Renderable.h"
 
 #include <array>
@@ -44,27 +46,81 @@
 namespace IECoreGLPreview
 {
 
-enum VisualisationType
+// Visualiser classes return one or more Visualisations.
+// A Visualisation holds a single IECoreGL::Renderable. This can be a primitive
+// or a group for more complex cases. Visualisers support a number of options
+// to control how they respond to the various scaling and visibility controls,
+// as well as whether the contribute to the framing bound for a location.
+
+struct GAFFERSCENE_API Visualisation
 {
-	Geometry, // Visualisations that inherit a location's transform.
-	Ornament  // Visualisations that don't inherit a location's scale and aren't
-	          // considered for bounds computation if geometry or a Geometric
-	          // visualisation is present.
+	// Determines how a visualiser reacts to a location's transformation matrix
+	// and the visualisation scale control attribute `gl:visualiser:scale`.
+	//
+	//  - None : No scaling is applied, only the translation/rotation of
+	//           the location's transform is inherited.
+	//
+	//  - Local : The visualisation is considered in 'local space' and it
+	//           fully inherits the location's matrix.
+	//
+	//  - Visualiser : The visualisation inherits the location's
+	//           translation/rotation but is scaled by gl:visualiser:scale.
+	//
+	//  - LocalAndVisualiser : The visualisation inherits the location's
+	//           full matrix, and is then additionally scaled by
+	//           gl:visualiser:scale.
+	//
+	enum class Scale
+	{
+		None,
+		Local,
+		Visualiser,
+		LocalAndVisualiser
+	};
+
+	// Categories may be turned on/off by the user. The renderer will omit
+	// disabled visualisations during rendering or bounding of a location.
+	//
+	// Note: This is a bit-mask to make it easier for the renderer
+	// to select visualisations. Visualisers should only ever apply
+	// a single category to any specific visualisation.
+	enum Category
+	{
+		Generic = 1,
+		Frustum = 2
+	};
+
+	Visualisation(
+		const IECoreGL::ConstRenderablePtr &renderable,
+		Scale scale = Scale::Local,
+		Category category = Category::Generic,
+		bool affectsFramingBound = true
+	);
+
+	Scale scale = Scale::Local;
+	Category category = Category::Generic;
+	bool affectsFramingBound = true;
+
+	const IECoreGL::Renderable *renderable() const;
+
+	// Convenience constructors for well-known types of visualisation
+
+	// A visualisation representing an object to be rendered as a primitive would.
+	static Visualisation createGeometry( const IECoreGL::ConstRenderablePtr &renderable );
+	// An abstract visualisation (such as a light color swatch), or other decoration.
+	// Ornaments use the Visualiser scale mode by default
+	static Visualisation createOrnament( const IECoreGL::ConstRenderablePtr &renderable, bool affectsFramingBounds );
+	// Frustums visualisations should be used for cameras or other 'projections'
+	// such as spot lights. By default they don't contribute to the framing bound
+	// for the location to make scene navigation easier.
+	static Visualisation createFrustum( const IECoreGL::ConstRenderablePtr &renderable, Scale scale );
+
+	private:
+		IECoreGL::ConstRenderablePtr m_renderable;
 };
 
-// A container for renderables grouped by VisualisationType
-using Visualisations = std::array<IECoreGL::ConstRenderablePtr, 2>;
 
-namespace Private
-{
-
-// Appends any visualisations in source to target. In order to avoid
-// over-nesting creating redundant GL state push/pops, it is assumed that target
-// is a 'collector' map. And as such, it is safe to append any outer groups in
-// source as direct children of the root group of each visualisation type.
-void collectVisualisations( const Visualisations &source, Visualisations &target );
-
-} // namespace Private
+using Visualisations = std::vector<Visualisation>;
 
 } // namespace IECoreGLPreview
 

@@ -36,37 +36,36 @@
 
 #include "GafferScene/Private/IECoreGLPreview/Visualiser.h"
 
-#include "IECoreGL/Group.h"
-#include "IECoreGL/State.h"
+using namespace IECoreGLPreview;
 
-void IECoreGLPreview::Private::collectVisualisations( const Visualisations &source, Visualisations &target )
+Visualisation::Visualisation( const IECoreGL::ConstRenderablePtr &renderable, Scale scale, Category category, bool affectsFramingBound )
+	: scale( scale ), category( category ), affectsFramingBound( affectsFramingBound ), m_renderable( renderable )
 {
-	int t = 0;
-	for( auto &visualisation : source )
-	{
-		if( !visualisation )
-		{
-			continue;
-		}
+}
 
-		IECoreGL::Group *group = nullptr;
+const IECoreGL::Renderable *Visualisation::renderable() const
+{
+	return m_renderable.get();
+}
 
-		if( target[t] )
-		{
-			IECoreGL::Renderable *existing = boost::const_pointer_cast<IECoreGL::Renderable>( target[t] ).get();
-			group = dynamic_cast<IECoreGL::Group *>( existing );
-		}
-		else
-		{
-			group = new IECoreGL::Group;
-			target[t] = group;
-		}
+Visualisation Visualisation::createGeometry( const IECoreGL::ConstRenderablePtr &renderable )
+{
+	return Visualisation( renderable );
+}
 
-		assert( group );
+Visualisation Visualisation::createOrnament( const IECoreGL::ConstRenderablePtr &renderable, bool affectsFramingBounds )
+{
+	Visualisation v( renderable );
+	v.scale = Visualisation::Scale::Visualiser;
+	v.affectsFramingBound = affectsFramingBounds;
+	return v;
+}
 
-		// `const_pointer_cast` ok because group/renderable becomes const on assignment
-		group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( visualisation ) );
-
-		++t;
-	}
+Visualisation Visualisation::createFrustum( const IECoreGL::ConstRenderablePtr &renderable, Scale scale )
+{
+	Visualisation v( renderable );
+	v.affectsFramingBound = false;
+	v.category = Visualisation::Category::Frustum;
+	v.scale = scale;
+	return v;
 }
