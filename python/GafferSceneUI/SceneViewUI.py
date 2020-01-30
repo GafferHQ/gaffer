@@ -244,7 +244,16 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
-		m.append( "/__visualiserDivider__", { "divider" : True } )
+		m.append( "/VisualisersDivider", { "divider" : True } )
+
+		frustumPlug = self.getPlug()["frustum"]
+		m.append(
+			"/Visualisers/Frustum",
+			{
+				"command" : frustumPlug.setValue,
+				"checkBox" : frustumPlug.getValue()
+			}
+		)
 
 		visScaleIsOther = True
 		visScalePlug = self.getPlug()["visualiserOrnamentScale"]
@@ -253,16 +262,16 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			if isSelected :
 				visScaleIsOther = False
 			m.append(
-				"/Visualiser Scale/%d" % scale,
+				"/Visualisers/Ornament Scale/%d" % scale,
 				{
 					"command" : functools.partial( lambda s, _ : visScalePlug.setValue( s ), scale ),
 					"checkBox" : isSelected
 				}
 			)
 
-		m.append( "/Visualiser Scale/__divider__", { "divider" : True } )
+		m.append( "/Visualisers/Ornament Scale/__divider__", { "divider" : True } )
 		m.append(
-			"/Visualiser Scale/Other...",
+			"/Visualisers/Ornament Scale/Other...",
 			{
 				"command" : functools.partial(  Gaffer.WeakMethod( self.__popupPlugWidget ), visScalePlug, "Other Scale" ),
 				"checkBox" : visScaleIsOther
