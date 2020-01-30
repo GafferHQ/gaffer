@@ -66,72 +66,13 @@ class CameraVisualiser : public ObjectVisualiser
 		{
 		}
 
-		Visualisations visualise( const IECore::Object *object ) const override
+		IECoreGL::CurvesPrimitivePtr createFrustum( const std::string& projection, const Box2f &screenWindow, const V2f &clippingPlanes ) const
 		{
-			Visualisations v;
-
-			const IECoreScene::Camera *camera = IECore::runTimeCast<const IECoreScene::Camera>( object );
-			if( !camera )
-			{
-				return v;
-			}
-
-			IECoreGL::GroupPtr group = new IECoreGL::Group();
-			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-			group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-			group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-			group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
 
 			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 			IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
 			vector<V3f> &p = pData->writable();
 			vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-
-			// box for the camera body
-
-			const Box3f b( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 2.0 ) );
-
-			vertsPerCurve.push_back( 5 );
-			p.push_back( b.min );
-			p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
-			p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
-			p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
-			p.push_back( b.min );
-
-			vertsPerCurve.push_back( 5 );
-			p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-			p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
-			p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
-			p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
-			p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-
-			vertsPerCurve.push_back( 2 );
-			p.push_back( b.min );
-			p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
-			p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
-
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
-			p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
-
-			vertsPerCurve.push_back( 2 );
-			p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
-			p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
-
-			// frustum
-
-			const std::string &projection = camera->getProjection();
-
-			// Use distort mode to get a screen window that matches the whole aperture
-			const Box2f &screenWindow = camera->frustum( IECoreScene::Camera::Distort );
-
-			/// \todo When we're drawing the camera by some means other than creating a primitive for it,
-			/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
-			/// framing bounds when the viewer frames a selected camera.
-			V2f clippingPlanes( 0, 5 );
 
 			Box2f near( screenWindow );
 			Box2f far( screenWindow );
@@ -176,13 +117,99 @@ class CameraVisualiser : public ObjectVisualiser
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-			group->addChild( curves );
+
+			return curves;
+		}
+
+		IECoreGL::CurvesPrimitivePtr bodyVisualisation() const
+		{
+			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+			IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
+			vector<V3f> &p = pData->writable();
+			vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+
+			// box for the camera body
+
+			const Box3f b( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 2.0 ) );
+
+			vertsPerCurve.push_back( 5 );
+			p.push_back( b.min );
+			p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
+			p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
+			p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
+			p.push_back( b.min );
+
+			vertsPerCurve.push_back( 5 );
+			p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
+			p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
+			p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
+			p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
+			p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( b.min );
+			p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
+			p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
+			p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
+
+			vertsPerCurve.push_back( 2 );
+			p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
+			p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
+
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+
+			return curves;
+		}
+
+		Visualisations visualise( const IECore::Object *object ) const override
+		{
+			const IECoreScene::Camera *camera = IECore::runTimeCast<const IECoreScene::Camera>( object );
+			if( !camera )
+			{
+				return {};
+			}
+
+			// Use distort mode to get a screen window that matches the whole aperture
+			const Box2f &screenWindow = camera->frustum( IECoreScene::Camera::Distort );
+			const std::string &projection = camera->getProjection();
+
+			// Scalable 'camera body' visualisation
+
+			IECoreGL::GroupPtr ornamentGroup = new IECoreGL::Group();
+			ornamentGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+			ornamentGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+			ornamentGroup->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+			ornamentGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
+
+			// The ornament uses fixed near/far planes so it's manageable
+			ornamentGroup->addChild( createFrustum( projection, screenWindow, V2f( 0, 5 ) ) );
+			ornamentGroup->addChild( bodyVisualisation() );
+
+			// Real-world frustum
+
+			IECoreGL::GroupPtr frustumGroup = new IECoreGL::Group();
+			frustumGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+			frustumGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+			frustumGroup->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+			frustumGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.4, 0.4, 0.4, 1 ) ) );
+
+			frustumGroup->addChild( createFrustum( projection, screenWindow, camera->getClippingPlanes() ) );
 
 			// We need to make sure the frustum preview of the ornament scales
 			// with any non-uniform scaling of the location.
-			Visualisation boxVis = Visualisation::ornamentVisualisation( group, true );
+			Visualisation boxVis = Visualisation::createOrnament( ornamentGroup, true );
 			boxVis.scale = Visualisation::Scale::LocalAndVisualiser;
-			return { boxVis };
+
+			Visualisation frustumVis = Visualisation::createFrustum( frustumGroup, Visualisation::Scale::Local );
+
+			return { boxVis, frustumVis };
 		}
 
 	protected :
