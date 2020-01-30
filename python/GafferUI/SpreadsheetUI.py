@@ -1389,17 +1389,25 @@ class _SectionChooser( GafferUI.Widget ) :
 	def setSection( cls, cellPlug, sectionName ) :
 
 		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
-		sectionNames = cls.sectionNames( rowsPlug )
+		oldSectionNames = cls.sectionNames( rowsPlug )
 
 		cls.__registerSectionMetadata( cellPlug, sectionName )
 
-		if sectionName not in sectionNames :
-			# New section created. Make sure it goes at the end.
-			cls.__assignSectionOrder( rowsPlug, sectionNames + [ sectionName ] )
-		else :
-			# May have moved the last column out of a section.
-			# Reassign order to remove gaps and delete unneeded metadata.
-			cls.__assignSectionOrder( rowsPlug, cls.sectionNames( rowsPlug ) )
+		# We may have made a new section and/or destroyed
+		# an old one (by removing its last item). Reassign order
+		# to put new sections where we want them, and to remove
+		# gaps and old metadata.
+		newSectionNames = cls.sectionNames( rowsPlug )
+		if sectionName not in oldSectionNames :
+			# New section created. Make sure it goes at the end, unless "Other"
+			# is at the end, in which case put it in front of that.
+			newSectionNames.remove( sectionName )
+			if len( newSectionNames ) and newSectionNames[-1] == "Other" :
+				newSectionNames.insert( -1, sectionName )
+			else :
+				newSectionNames.append( sectionName )
+
+		cls.__assignSectionOrder( rowsPlug, newSectionNames )
 
 	@classmethod
 	def getSection( cls, cellPlug ) :
