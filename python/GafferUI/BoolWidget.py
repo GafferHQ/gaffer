@@ -148,6 +148,10 @@ class _CheckBox( QtWidgets.QCheckBox ) :
 
 		self.__hitMode = self.HitMode.CheckBox
 
+		self.setSizePolicy( QtWidgets.QSizePolicy(
+			QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+		) )
+
 	def setHitMode( self, hitMode ) :
 
 		self.__hitMode = hitMode
