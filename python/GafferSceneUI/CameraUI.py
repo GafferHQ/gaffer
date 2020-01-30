@@ -339,6 +339,36 @@ plugsMetadata = {
 
 	],
 
+	"visualiserAttributes" : [
+
+			"description",
+			"""
+			Attributes that affect the visualisation of this Light in the Viewer.
+			""",
+
+			"layout:section", "Visualisation",
+
+	],
+
+	"visualiserAttributes.ornamentScale" : [
+
+			"description",
+			"""
+			Scales non-geometric visualisations in the viewport to make them
+			easier to work with.
+			""",
+
+	],
+
+	"visualiserAttributes.frustum" : [
+
+			"description",
+			"""
+			Controls whether the camera draws a visualisation of its frustum.
+			"""
+
+	],
+
 }
 
 __sourceMetadata = GafferSceneUI.StandardOptionsUI.plugsMetadata

@@ -77,11 +77,43 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( p["out"] )
 
+	def testAttributes( self ) :
+
+		c = GafferScene.Camera()
+		path = "/%s" % c["name"].getValue()
+
+		a = c["out"].attributes( path )
+		self.assertFalse( "gl:visualiser:frustum" in a )
+		self.assertFalse( "gl:visualiser:scale" in a )
+
+		c["visualiserAttributes"]["frustum"]["enabled"].setValue( True )
+
+		a = c["out"].attributes( path )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( True ) )
+		self.assertFalse( "gl:visualiser:ornamentScale" in a )
+
+		c["visualiserAttributes"]["ornamentScale"]["enabled"].setValue( True )
+		a = c["out"].attributes( path )
+
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( True ) )
+		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 1.0 ) )
+
+		c["visualiserAttributes"]["frustum"]["value"].setValue( False )
+		c["visualiserAttributes"]["ornamentScale"]["value"].setValue( 12.1 )
+
+		a = c["out"].attributes( path )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( False ) )
+		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 12.1 ) )
+
 	def testHashes( self ) :
 
 		p = GafferScene.Camera()
 		p["projection"].setValue( "perspective" )
 		p["fieldOfView"].setValue( 45 )
+
+		# Disabled by default, enabled for hash testing
+		p['visualiserAttributes']['frustum']['enabled'].setValue( True )
+		p['visualiserAttributes']['ornamentScale']['enabled'].setValue( True )
 
 		for i in p['renderSettingOverrides']:
 			i["enabled"].setValue( True )
@@ -92,8 +124,8 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 			# We ignore the enabled and sets plugs because they aren't hashed (instead
 			# their values are used to decide how the hash should be computed). We ignore
 			# the transform plug because it isn't affected by any inputs when the path is "/".
-			# We ignore the set plug because that needs a different context - we test that below.
-			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["transform"], p["out"]["set"] ] )
+			# We ignore the set plug + attr because they needs a different context - we test that below.
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["transform"], p["out"]["set"], p["out"]["attributes"] ])
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
 			# We ignore the childNames because it doesn't use any inputs to compute when
