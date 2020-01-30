@@ -406,9 +406,16 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
 
-	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
-	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
-	GroupPtr frustum = new Group;    // inherits scaling as per geometry
+	// Ornaments are affected by visualiser:scale and not local scale.
+	GroupPtr ornaments = new Group;
+	// Bound ornaments are considered when 'f' is pressed in the viewer to fit.
+	GroupPtr boundOrnaments = new Group;
+	// Geometry is only affected by local scale (its size matters for rendering).
+	GroupPtr geometry = new Group;
+	// Generally speaking we assume renderers ignore light scale and
+	// we don't have any real frustums, just projections, so our
+	// frustum group ignores local, and inherits visualiser scale.
+	GroupPtr frustum = new Group;
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
@@ -430,6 +437,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	geometry->setTransform( topTransform );
 	ornaments->setTransform( topTransform );
+	boundOrnaments->setTransform( topTransform );
 	frustum->setTransform( topTransform );
 
 	if( type && type->readable() == "environment" )
@@ -437,22 +445,22 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( drawShaded )
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, maxTextureResolution, color ) ) );
+			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, maxTextureResolution, color ) ) );
 		}
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
 		float innerAngle, outerAngle, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.2f ) ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 	}
 	else if( type && type->readable() == "quad" )
@@ -545,7 +553,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
 		}
 
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 
 	}
@@ -558,6 +566,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	if( !ornaments->children().empty() )
 	{
 		result.push_back( Visualisation::createOrnament( ornaments, false ) );
+	}
+	if( !boundOrnaments->children().empty() )
+	{
+		result.push_back( Visualisation::createOrnament( boundOrnaments, true ) );
 	}
 	if( !frustum->children().empty() )
 	{
