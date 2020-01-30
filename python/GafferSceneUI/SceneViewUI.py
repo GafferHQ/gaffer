@@ -253,7 +253,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m.append( "/VisualisersDivider", { "divider" : True } )
 
-		frustumPlug = self.getPlug()["frustum"]
+		frustumPlug = self.getPlug()["visualiser"]["frustum"]
 		m.append(
 			"/Visualisers/Frustum",
 			{
@@ -263,7 +263,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		self.__appendValuePresetMenu(
-			m, self.getPlug()["visualiserScale"],
+			m, self.getPlug()["visualiser"]["scale"],
 			"/Visualisers/Scale", ( 1, 10, 100 ), "Other Scale"
 		)
 

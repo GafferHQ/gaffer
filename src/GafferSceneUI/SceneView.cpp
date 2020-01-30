@@ -148,31 +148,23 @@ class SceneView::DrawingMode : public boost::signals::trackable
 		DrawingMode( SceneView *view )
 			:	m_view( view )
 		{
-			// Attributes drive many of the GL drawing toggles. Some we can set
-			// through renderer options as they simply modify the state used to
-			// render existing renderables. Visualiser however, may generate
-			// different renderables all together and so we need to modify the
-			// in-scene attribute values rather than any renderer option.
+			// We can implement many drawing mode controls via render options.
+			// They simply modify the state used to render existing
+			// renderables. Visualisers however, may generate different
+			// renderables all together and so we need to modify the in-scene
+			// attribute values rather than any renderer option, which will
+			// cause the visualisers to be re-evaluated. We use a general
+			// purpose CustomAttributes preprocessor to set globals attributes
+			// with the desired values.  This allows them to be overridden at
+			// specific locations in the user's graph if desired.
+
+			// Global attributes preprocessor
+
 			m_preprocessor = new CustomAttributes();
 			m_preprocessor->globalPlug()->setValue( true );
-
 			CompoundDataPlug *attr = m_preprocessor->attributesPlug();
 
-			NameValuePlugPtr lightModePlug = new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), true, "lightDrawingMode" );
-			attr->addChild( lightModePlug );
-
-			FloatPlugPtr visualiserScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
-			NameValuePlugPtr visualiserScalePlug = new Gaffer::NameValuePlug( "gl:visualiser:scale", visualiserScaleValuePlug, true, "visualiserVisualiserScale" );
-			attr->addChild( visualiserScalePlug );
-
-			NameValuePlugPtr frustumPlug = new Gaffer::NameValuePlug( "gl:visualiser:frustum", new IECore::BoolData( true ), true, "visualiserFrustum" );
-			attr->addChild( frustumPlug );
-
-			FloatPlugPtr lightFrustumScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
-			NameValuePlugPtr lightFrustumScalePlug = new Gaffer::NameValuePlug( "gl:light:frustumScale", lightFrustumScaleValuePlug, true, "lightFrustumScale" );
-			attr->addChild( lightFrustumScalePlug );
-
-			// View plugs
+			// View plugs controlling renderer options
 
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
 			m_view->addChild( drawingMode );
@@ -190,18 +182,59 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			drawingMode->addChild( points );
 			points->addChild( new BoolPlug( "useGLPoints", Plug::In, true ) );
 
-			ValuePlugPtr lights = new ValuePlug( "light" );
-			drawingMode->addChild( lights );
-			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
-			lights->addChild( new FloatPlug( "frustumScale", Plug::In, 1.0f ) );
+			// View plugs controlling attribute values
 
-			drawingMode->addChild( new BoolPlug( "frustum", Plug::In, true ) );
-			drawingMode->addChild( visualiserScaleValuePlug->createCounterpart( "visualiserScale", Plug::Direction::In ) );
+			// General :
 
-			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
-			frustumPlug->getChild<BoolPlug>( "value" )->setInput( drawingMode->getChild<BoolPlug>( "frustum" ) );
-			visualiserScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserScale" ) );
-			lightFrustumScaleValuePlug->setInput( lights->getChild<FloatPlug>( "frustumScale" ) );
+			ValuePlugPtr visualiser = new ValuePlug( "visualiser" );
+			drawingMode->addChild( visualiser );
+
+			//    gl:visualiser:frustum
+
+			BoolPlugPtr frustrumAttrValuePlug = new BoolPlug( "value", Plug::In, true );
+
+			NameValuePlugPtr frustumAttrPlug = new Gaffer::NameValuePlug( "gl:visualiser:frustum", frustrumAttrValuePlug, true, "frustum" );
+			attr->addChild( frustumAttrPlug );
+			PlugPtr frustumViewPlug = frustrumAttrValuePlug->createCounterpart( "frustum", Plug::In );
+			visualiser->addChild( frustumViewPlug );
+			frustrumAttrValuePlug->setInput( frustumViewPlug );
+
+			//    gl:visualiser:scale
+
+			FloatPlugPtr visualiserScaleAttrValuePlug = new FloatPlug( "value", Plug::In, 1.0f, 0.01f );
+
+			NameValuePlugPtr visualiserScaleAttrPlug = new Gaffer::NameValuePlug( "gl:visualiser:scale", visualiserScaleAttrValuePlug, true, "scale" );
+			attr->addChild( visualiserScaleAttrPlug );
+			PlugPtr visualiserScaleViewPlug = visualiserScaleAttrValuePlug->createCounterpart( "scale", Plug::In );
+			visualiser->addChild( visualiserScaleViewPlug );
+			visualiserScaleAttrValuePlug->setInput( visualiserScaleViewPlug );
+
+			// Light specific :
+
+			ValuePlugPtr light = new ValuePlug( "light" );
+			drawingMode->addChild( light );
+
+			//    gl:light:drawingMode
+
+			StringPlugPtr lightModeAttrValuePlug = new StringPlug( "value", Plug::In, "texture" );
+
+			NameValuePlugPtr lightModeAttrPlug = new Gaffer::NameValuePlug( "gl:light:drawingMode", lightModeAttrValuePlug, true, "lightDrawingMode" );
+			attr->addChild( lightModeAttrPlug );
+			PlugPtr lightModeViewPlug = lightModeAttrValuePlug->createCounterpart( "drawingMode", Plug::In );
+			light->addChild( lightModeViewPlug );
+			lightModeAttrValuePlug->setInput( lightModeViewPlug );
+
+			//    gl:light:frustumScale
+
+			FloatPlugPtr lightFrustumScaleAttrValuePlug = new FloatPlug( "value", Plug::In , 1.0f, 0.01f );
+
+			NameValuePlugPtr lightFrustumScaleAttrPlug = new Gaffer::NameValuePlug( "gl:light:frustumScale", lightFrustumScaleAttrValuePlug, true, "lightFrustumScale" );
+			attr->addChild( lightFrustumScaleAttrPlug );
+			PlugPtr lightFrustumScaleViewPlug = lightFrustumScaleAttrValuePlug->createCounterpart( "frustumScale", Plug::In );
+			light->addChild( lightFrustumScaleViewPlug );
+			lightFrustumScaleAttrValuePlug->setInput( lightFrustumScaleViewPlug );
+
+			// Initialise renderer and event tracking
 
 			updateOpenGLOptions();
 
