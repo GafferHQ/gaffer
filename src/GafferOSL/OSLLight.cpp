@@ -246,32 +246,26 @@ IECore::ConstObjectPtr OSLLight::computeSource( const Gaffer::Context *context )
 
 void OSLLight::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ObjectSource::hashAttributes( path, context, parent, h );
-	h.append( shaderInPlug()->attributesHash() );
+	Light::hashAttributes( path, context, parent, h );
 	attributesPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr OSLLight::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
-	ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	result->members() = shaderAttributes->members();
-
+	result->members() = Light::computeAttributes( path, context, parent )->members();
 	attributesPlug()->fillCompoundObject( result->members() );
-
 	return result;
 }
 
 void OSLLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	// Should never be called because we reimplemented hashAttributes() instead.
-	throw IECore::NotImplementedException( "OSLLight::hashLight" );
+	h.append( shaderInPlug()->attributesHash() );
 }
 
 IECoreScene::ConstShaderNetworkPtr OSLLight::computeLight( const Gaffer::Context *context ) const
 {
-	// Should never be called because we reimplemented computeAttributes() instead.
-	throw IECore::NotImplementedException( "OSLLight::computeLight" );
+	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
+	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "osl:light" );
 }
 
