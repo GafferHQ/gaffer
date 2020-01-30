@@ -226,7 +226,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		a = l["out"].attributes( "/light" )
 
 		self.assertFalse( "gl:light:drawingMode" in a.keys() )
-		self.assertFalse( "gl:visualiser:ornamentScale" in a.keys() )
+		self.assertFalse( "gl:visualiser:scale" in a.keys() )
 		self.assertFalse( "gl:visualiser:maxTextureResolution" in a.keys() )
 		self.assertFalse( "gl:visualiser:frustum" in a.keys() )
 		self.assertFalse( "gl:light:frustumScale" in a.keys() )
@@ -235,8 +235,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		l["visualiserAttributes"]["lightDrawingMode"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["lightDrawingMode"]["value"].setValue( "color" )
-		l["visualiserAttributes"]["ornamentScale"]["enabled"].setValue( True )
-		l["visualiserAttributes"]["ornamentScale"]["value"].setValue( 12.3 )
+		l["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		l["visualiserAttributes"]["scale"]["value"].setValue( 12.3 )
 		l["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["maxTextureResolution"]["value"].setValue( 123 )
 		l["visualiserAttributes"]["frustum"]["enabled"].setValue( True )
@@ -247,7 +247,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		a = l["out"].attributes( "/light" )
 
 		self.assertEqual( a["gl:light:drawingMode"], IECore.StringData( "color" ) )
-		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 12.3 ) )
+		self.assertEqual( a["gl:visualiser:scale"], IECore.FloatData( 12.3 ) )
 		self.assertEqual( a["gl:visualiser:maxTextureResolution"], IECore.IntData( 123 ) )
 		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( False ) )
 		self.assertEqual( a["gl:light:frustumScale"], IECore.FloatData( 1.23 ) )

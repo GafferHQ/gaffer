@@ -161,9 +161,9 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			NameValuePlugPtr lightModePlug = new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), true, "lightDrawingMode" );
 			attr->addChild( lightModePlug );
 
-			FloatPlugPtr ornamentScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
-			NameValuePlugPtr ornamentScalePlug = new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", ornamentScaleValuePlug, true, "visualiserOrnamentScale" );
-			attr->addChild( ornamentScalePlug );
+			FloatPlugPtr visualiserScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
+			NameValuePlugPtr visualiserScalePlug = new Gaffer::NameValuePlug( "gl:visualiser:scale", visualiserScaleValuePlug, true, "visualiserVisualiserScale" );
+			attr->addChild( visualiserScalePlug );
 
 			NameValuePlugPtr frustumPlug = new Gaffer::NameValuePlug( "gl:visualiser:frustum", new IECore::BoolData( true ), true, "visualiserFrustum" );
 			attr->addChild( frustumPlug );
@@ -196,11 +196,11 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			lights->addChild( new FloatPlug( "frustumScale", Plug::In, 1.0f ) );
 
 			drawingMode->addChild( new BoolPlug( "frustum", Plug::In, true ) );
-			drawingMode->addChild( ornamentScaleValuePlug->createCounterpart( "visualiserOrnamentScale", Plug::Direction::In ) );
+			drawingMode->addChild( visualiserScaleValuePlug->createCounterpart( "visualiserScale", Plug::Direction::In ) );
 
 			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
 			frustumPlug->getChild<BoolPlug>( "value" )->setInput( drawingMode->getChild<BoolPlug>( "frustum" ) );
-			ornamentScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserOrnamentScale" ) );
+			visualiserScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserScale" ) );
 			lightFrustumScaleValuePlug->setInput( lights->getChild<FloatPlug>( "frustumScale" ) );
 
 			updateOpenGLOptions();

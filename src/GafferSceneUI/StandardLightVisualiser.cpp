@@ -410,7 +410,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
 	GroupPtr frustum = new Group;    // inherits scaling as per geometry
 
-	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
+	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
 	const FloatData *frustumScaleData = attributes->member<FloatData>( "gl:light:frustumScale" );
 	const float frustumScale = frustumScaleData ? frustumScaleData->readable() : 1.0;

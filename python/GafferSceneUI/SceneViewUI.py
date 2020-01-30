@@ -263,8 +263,8 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		self.__appendValuePresetMenu(
-			m, self.getPlug()["visualiserOrnamentScale"],
-			"/Visualisers/Ornament Scale", ( 1, 10, 100 ), "Other Scale"
+			m, self.getPlug()["visualiserScale"],
+			"/Visualisers/Scale", ( 1, 10, 100 ), "Other Scale"
 		)
 
 		return m

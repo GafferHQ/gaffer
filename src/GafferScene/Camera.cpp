@@ -88,7 +88,7 @@ Camera::Camera( const std::string &name )
 	renderSettingOverridesPlug()->addChild( new NameValuePlug( "depthOfField", new BoolData( false ), false, "depthOfField" ) );
 
 	addChild( new CompoundDataPlug( "visualiserAttributes" ) );
-	visualiserAttributesPlug()->addChild( new Gaffer::NameValuePlug( "gl:visualiser:ornamentScale", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f ), false, "ornamentScale" ) );
+	visualiserAttributesPlug()->addChild( new Gaffer::NameValuePlug( "gl:visualiser:scale", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f ), false, "scale" ) );
 	visualiserAttributesPlug()->addChild( new NameValuePlug( "gl:visualiser:frustum", new BoolData( true ), false, "frustum" ) );
 }
 

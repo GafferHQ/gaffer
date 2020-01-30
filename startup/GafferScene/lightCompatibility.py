@@ -43,8 +43,8 @@ def __lightGetItemWrapper( originalGetItem ) :
 
 		if key == "visualiserScale" :
 			visualiserAttr = originalGetItem( self, "visualiserAttributes" )
-			visualiserAttr[ "ornamentScale" ][ "enabled" ].setValue( True )
-			return visualiserAttr[ "ornamentScale" ][ "value" ]
+			visualiserAttr[ "scale" ][ "enabled" ].setValue( True )
+			return visualiserAttr[ "scale" ][ "value" ]
 		else :
 			return originalGetItem( self, key )
 

@@ -25,7 +25,7 @@ Improvements
     - Added support for mesh lights such that they draw a yellow outline around the source mesh.
     - Improved display of Arnold quad lights set to portal mode.
     - Added an approximation of Arnold area light spread.
-    - Added menu items to control visualiser ornament scale.
+    - Added menu items to control visualiser scale.
     - Added menu items to control the default drawing mode for lights.
 - Set expressions :
   - Added `in` operator. The expression `A in B` selects all locations from set A which are descendants of a location from set B.
@@ -114,8 +114,8 @@ Breaking Changes
 - LightFilterVisualiser : Moved `LightFilterVisualiser` into `IECoreGLPreview`, filter visualiser registrations will need updating (#3502).
 - ObjectToImage/ImagePrimitiveSource : Removed.
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
-- OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to ornament visualisations unless they need to invert this scale for any geometry-related components of the ornament.
-- GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:ornamentScale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
+- OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to visualisations unless they need to invert this scale for any geometry-related components of the visualisation.
+- GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:scale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
 - Arnold : Raised minimum required version to 5.4.
 

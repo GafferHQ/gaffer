@@ -229,8 +229,8 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
 		{
-			const FloatData *ornamentScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
-			m_ornamentScale = ornamentScaleData ? ornamentScaleData->readable() : 1.0;
+			const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
+			m_visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
 
 			const BoolData *drawFrustumData = attributes->member<BoolData>( "gl:visualiser:frustum" );
 			m_drawFrustum = drawFrustumData ? drawFrustumData->readable() : true;
@@ -309,9 +309,9 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_lightFilterVisualisations;
 		}
 
-		float ornamentScale() const
+		float visualiserScale() const
 		{
-			return m_ornamentScale;
+			return m_visualiserScale;
 		}
 
 		bool drawFrustum() const
@@ -327,7 +327,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Visualisations m_lightVisualisations;
 		Visualisations m_lightFilterVisualisations;
 
-		float m_ornamentScale = 1.0f;
+		float m_visualiserScale = 1.0f;
 };
 
 IE_CORE_DECLAREPTR( OpenGLAttributes )
@@ -429,7 +429,6 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			accumulateVisualisationBounds( b, Visualisation::Scale::Local, categories, m_transform, attrVis, m_objectVisualisations );
 			accumulateVisualisationBounds( b, Visualisation::Scale::Visualiser, categories, visualiserTransform( false ), attrVis, m_objectVisualisations );
 			accumulateVisualisationBounds( b, Visualisation::Scale::LocalAndVisualiser, categories, visualiserTransform( true ), attrVis, m_objectVisualisations );
-
 			return b;
 		}
 
@@ -460,7 +459,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
 			}
 
-			if( m_attributes->ornamentScale() > 0.0f )
+			if( m_attributes->visualiserScale() > 0.0f )
 			{
 				if( haveMatchingVisualisations( Visualisation::Scale::Visualiser, categories, attrVis, m_objectVisualisations ) )
 				{
@@ -516,7 +515,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		M44f visualiserTransform( bool includeLocal ) const
 		{
 			M44f t = includeLocal ? m_transform : m_transformSansScale;
-			t.scale( V3f( m_attributes->ornamentScale() ) );
+			t.scale( V3f( m_attributes->visualiserScale() ) );
 			return t;
 		}
 

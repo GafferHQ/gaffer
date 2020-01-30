@@ -90,20 +90,20 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		a = c["out"].attributes( path )
 		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( True ) )
-		self.assertFalse( "gl:visualiser:ornamentScale" in a )
+		self.assertFalse( "gl:visualiser:scale" in a )
 
-		c["visualiserAttributes"]["ornamentScale"]["enabled"].setValue( True )
+		c["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		a = c["out"].attributes( path )
 
 		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( True ) )
-		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 1.0 ) )
+		self.assertEqual( a["gl:visualiser:scale"], IECore.FloatData( 1.0 ) )
 
 		c["visualiserAttributes"]["frustum"]["value"].setValue( False )
-		c["visualiserAttributes"]["ornamentScale"]["value"].setValue( 12.1 )
+		c["visualiserAttributes"]["scale"]["value"].setValue( 12.1 )
 
 		a = c["out"].attributes( path )
 		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( False ) )
-		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 12.1 ) )
+		self.assertEqual( a["gl:visualiser:scale"], IECore.FloatData( 12.1 ) )
 
 	def testHashes( self ) :
 
@@ -113,7 +113,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		# Disabled by default, enabled for hash testing
 		p['visualiserAttributes']['frustum']['enabled'].setValue( True )
-		p['visualiserAttributes']['ornamentScale']['enabled'].setValue( True )
+		p['visualiserAttributes']['scale']['enabled'].setValue( True )
 
 		for i in p['renderSettingOverrides']:
 			i["enabled"].setValue( True )

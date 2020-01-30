@@ -148,7 +148,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"visualiserAttributes.ornamentScale" : [
+		"visualiserAttributes.scale" : [
 
 			"description",
 			"""

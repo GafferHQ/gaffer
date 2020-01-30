@@ -350,7 +350,7 @@ plugsMetadata = {
 
 	],
 
-	"visualiserAttributes.ornamentScale" : [
+	"visualiserAttributes.scale" : [
 
 			"description",
 			"""

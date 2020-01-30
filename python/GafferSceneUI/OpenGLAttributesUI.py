@@ -362,7 +362,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.visualiserOrnamentScale" : [
+		"attributes.visualiserScale" : [
 
 			"description",
 			"""
@@ -371,7 +371,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Visualisers",
-			"label", "Ornament Scale",
+			"label", "Scale",
 
 		],
 
