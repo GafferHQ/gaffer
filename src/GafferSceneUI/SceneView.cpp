@@ -168,6 +168,10 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			NameValuePlugPtr frustumPlug = new Gaffer::NameValuePlug( "gl:visualiser:frustum", new IECore::BoolData( true ), true, "visualiserFrustum" );
 			attr->addChild( frustumPlug );
 
+			FloatPlugPtr lightFrustumScaleValuePlug = new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f );
+			NameValuePlugPtr lightFrustumScalePlug = new Gaffer::NameValuePlug( "gl:light:frustumScale", lightFrustumScaleValuePlug, true, "lightFrustumScale" );
+			attr->addChild( lightFrustumScalePlug );
+
 			// View plugs
 
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
@@ -189,6 +193,7 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			ValuePlugPtr lights = new ValuePlug( "light" );
 			drawingMode->addChild( lights );
 			lights->addChild( new StringPlug( "drawingMode", Plug::In, "texture" ) );
+			lights->addChild( new FloatPlug( "frustumScale", Plug::In, 1.0f ) );
 
 			drawingMode->addChild( new BoolPlug( "frustum", Plug::In, true ) );
 			drawingMode->addChild( ornamentScaleValuePlug->createCounterpart( "visualiserOrnamentScale", Plug::Direction::In ) );
@@ -196,6 +201,7 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			lightModePlug->getChild<StringPlug>( "value" )->setInput( lights->getChild<StringPlug>( "drawingMode" ) );
 			frustumPlug->getChild<BoolPlug>( "value" )->setInput( drawingMode->getChild<BoolPlug>( "frustum" ) );
 			ornamentScaleValuePlug->setInput( drawingMode->getChild<FloatPlug>( "visualiserOrnamentScale" ) );
+			lightFrustumScaleValuePlug->setInput( lights->getChild<FloatPlug>( "frustumScale" ) );
 
 			updateOpenGLOptions();
 

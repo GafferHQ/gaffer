@@ -228,6 +228,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( "gl:light:drawingMode" in a.keys() )
 		self.assertFalse( "gl:visualiser:ornamentScale" in a.keys() )
 		self.assertFalse( "gl:visualiser:maxTextureResolution" in a.keys() )
+		self.assertFalse( "gl:visualiser:frustum" in a.keys() )
+		self.assertFalse( "gl:light:frustumScale" in a.keys() )
 
 		# Test attribute mapping
 
@@ -237,12 +239,18 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		l["visualiserAttributes"]["ornamentScale"]["value"].setValue( 12.3 )
 		l["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["maxTextureResolution"]["value"].setValue( 123 )
+		l["visualiserAttributes"]["frustum"]["enabled"].setValue( True )
+		l["visualiserAttributes"]["frustum"]["value"].setValue( False )
+		l["visualiserAttributes"]["lightFrustumScale"]["enabled"].setValue( True )
+		l["visualiserAttributes"]["lightFrustumScale"]["value"].setValue( 1.23 )
 
 		a = l["out"].attributes( "/light" )
 
 		self.assertEqual( a["gl:light:drawingMode"], IECore.StringData( "color" ) )
 		self.assertEqual( a["gl:visualiser:ornamentScale"], IECore.FloatData( 12.3 ) )
 		self.assertEqual( a["gl:visualiser:maxTextureResolution"], IECore.IntData( 123 ) )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( False ) )
+		self.assertEqual( a["gl:light:frustumScale"], IECore.FloatData( 1.23 ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -166,11 +166,11 @@ void addSolidArc( Axis axis, const V3f &center, float majorRadius, float minorRa
 	}
 }
 
-void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector<V3f> &p )
+void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector<V3f> &p, float length )
 {
 	const float halfAngle = 0.5 * M_PI * angle / 180.0;
-	const float baseRadius = sin( halfAngle );
-	const float baseDistance = cos( halfAngle );
+	const float baseRadius = length * sin( halfAngle );
+	const float baseDistance = length * cos( halfAngle );
 
 	if( startRadius > 0 )
 	{
@@ -182,8 +182,16 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 	p.push_back( V3f( 0, baseRadius + startRadius, -baseDistance ) );
 	vertsPerCurve.push_back( 2 );
 
+	p.push_back( V3f( startRadius, 0, 0 ) );
+	p.push_back( V3f( baseRadius + startRadius, 0, -baseDistance ) );
+	vertsPerCurve.push_back( 2 );
+
 	p.push_back( V3f( 0, -startRadius, 0 ) );
 	p.push_back( V3f( 0, -baseRadius - startRadius, -baseDistance ) );
+	vertsPerCurve.push_back( 2 );
+
+	p.push_back( V3f( -startRadius, 0, 0 ) );
+	p.push_back( V3f( -baseRadius - startRadius, 0, -baseDistance ) );
 	vertsPerCurve.push_back( 2 );
 }
 
@@ -400,9 +408,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	GroupPtr ornaments = new Group;  // Ornaments are affected by visualiser:scale while
 	GroupPtr geometry = new Group;   // geometry isn't as its size matters for rendering.
+	GroupPtr frustum = new Group;    // inherits scaling as per geometry
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
+	const FloatData *frustumScaleData = attributes->member<FloatData>( "gl:light:frustumScale" );
+	const float frustumScale = frustumScaleData ? frustumScaleData->readable() : 1.0;
 	const StringData *visualiserDrawingModeData = attributes->member<StringData>( "gl:light:drawingMode" );
 	const std::string visualiserDrawingMode = visualiserDrawingModeData ? visualiserDrawingModeData->readable() : "texture";
 
@@ -419,6 +430,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	geometry->setTransform( topTransform );
 	ornaments->setTransform( topTransform );
+	frustum->setTransform( topTransform );
 
 	if( type && type->readable() == "environment" )
 	{
@@ -433,9 +445,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		float innerAngle, outerAngle, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.2f ) ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
@@ -545,6 +558,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	if( !ornaments->children().empty() )
 	{
 		result.push_back( Visualisation::createOrnament( ornaments, false ) );
+	}
+	if( !frustum->children().empty() )
+	{
+		result.push_back( Visualisation::createFrustum( frustum, Visualisation::Scale::Visualiser ) );
 	}
 	return result;
 }
@@ -673,36 +690,39 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
 	return result;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length, float lineWidthScale )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get(), false, 0 );
+	addConstantShader( group.get(), false );
 
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f * lineWidthScale ) );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
-	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable() );
+	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+
+	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : g_lightWireframeColor );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 	group->addChild( curves );
 
 	if( fabs( innerAngle - outerAngle ) > 0.1 )
 	{
 		IECoreGL::GroupPtr outerGroup = new Group;
-		outerGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
+		outerGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f * lineWidthScale ) );
 
 		IntVectorDataPtr vertsPerCurve = new IntVectorData;
 		V3fVectorDataPtr p = new V3fVectorData;
-		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable() );
+		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
 
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+
+		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 		outerGroup->addChild( curves );
 
