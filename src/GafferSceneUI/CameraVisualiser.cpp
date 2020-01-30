@@ -66,12 +66,14 @@ class CameraVisualiser : public ObjectVisualiser
 		{
 		}
 
-		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
+		Visualisations visualise( const IECore::Object *object ) const override
 		{
+			Visualisations v;
+
 			const IECoreScene::Camera *camera = IECore::runTimeCast<const IECoreScene::Camera>( object );
 			if( !camera )
 			{
-				return nullptr;
+				return v;
 			}
 
 			IECoreGL::GroupPtr group = new IECoreGL::Group();
@@ -176,7 +178,11 @@ class CameraVisualiser : public ObjectVisualiser
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			group->addChild( curves );
 
-			return group;
+			// We need to make sure the frustum preview of the ornament scales
+			// with any non-uniform scaling of the location.
+			Visualisation boxVis = Visualisation::ornamentVisualisation( group, true );
+			boxVis.scale = Visualisation::Scale::LocalAndVisualiser;
+			return { boxVis };
 		}
 
 	protected :

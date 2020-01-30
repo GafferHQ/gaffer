@@ -116,42 +116,54 @@ class ScopedTransform
 		bool m_nonIdentity;
 };
 
-bool haveMatchingVisualisations( const Visualisations& visualisations, Visualisation::Scale scale, Visualisation::Category category )
+template <class... Vs>
+bool haveMatchingVisualisations( Visualisation::Scale scale, Visualisation::Category category, const Vs & ... visualisations )
 {
-	for( auto v : visualisations )
+	for( auto vs : { visualisations... } )
 	{
-		if( v.scale == scale && v.category & category )
+		for( auto v : vs )
 		{
-			return true;
+			if( v.scale == scale && v.category & category )
+			{
+				return true;
+			}
 		}
 	}
 	return false;
 }
 
-void renderMatchingVisualisations( const Visualisations& visualisations, Visualisation::Scale scale, Visualisation::Category category, IECoreGL::State *state )
+template <class... Vs>
+void renderMatchingVisualisations( Visualisation::Scale scale, Visualisation::Category category, IECoreGL::State *state, const Vs & ... visualisations )
 {
-	for( auto v : visualisations )
+	for( auto vs : { visualisations... } )
 	{
-		if( v.scale == scale && v.category & category )
+		for( auto v : vs )
 		{
-			v.renderable()->render( state );
+			if( v.scale == scale && v.category & category )
+			{
+				v.renderable()->render( state );
+			}
 		}
 	}
 }
 
-void accumulateVisualisationBounds( const Visualisations& visualisations, Box3f &target, Visualisation::Scale scale, const M44f &transform )
+template <class... Vs>
+void accumulateVisualisationBounds( Box3f &target, Visualisation::Scale scale, Visualisation::Category category, const M44f &transform, const Vs & ... visualisations )
 {
-	for( auto v : visualisations )
+	for( auto vs : { visualisations... } )
 	{
-		if( !v.affectsFramingBound || v.scale != scale )
+		for( auto v : vs )
 		{
-			continue;
-		}
+			if( !v.affectsFramingBound || v.scale != scale || !(v.category & category) )
+			{
+				continue;
+			}
 
-		const Box3f b = v.renderable()->bound();
-		if( !b.isEmpty() )
-		{
-			target.extendBy( Imath::transform( b, transform ) );
+			const Box3f b = v.renderable()->bound();
+			if( !b.isEmpty() )
+			{
+				target.extendBy( Imath::transform( b, transform ) );
+			}
 		}
 	}
 }
@@ -348,7 +360,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( const ObjectVisualiser *visualiser = IECoreGLPreview::ObjectVisualiser::acquire( object->typeId() ) )
 				{
-					m_renderable = visualiser->visualise( object );
+					m_objectVisualisations = visualiser->visualise( object );
+					m_renderable = nullptr;
 				}
 				else
 				{
@@ -404,11 +417,18 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 				}
 			}
 
-			const Visualisations &vis = visualisations( *m_attributes );
-			accumulateVisualisationBounds( vis, b, Visualisation::Scale::None, m_transformSansScale );
-			accumulateVisualisationBounds( vis, b, Visualisation::Scale::Local, m_transform );
-			accumulateVisualisationBounds( vis, b, Visualisation::Scale::Visualiser, visualiserTransform( false ) );
-			accumulateVisualisationBounds( vis, b, Visualisation::Scale::LocalAndVisualiser, visualiserTransform( true ) );
+			Visualisation::Category categories = Visualisation::Category::Generic;
+			if( m_attributes->drawFrustum() )
+			{
+				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
+			}
+
+			const Visualisations &attrVis = visualisations( *m_attributes );
+
+			accumulateVisualisationBounds( b, Visualisation::Scale::None, categories, m_transformSansScale, attrVis, m_objectVisualisations );
+			accumulateVisualisationBounds( b, Visualisation::Scale::Local, categories, m_transform, attrVis, m_objectVisualisations );
+			accumulateVisualisationBounds( b, Visualisation::Scale::Visualiser, categories, visualiserTransform( false ), attrVis, m_objectVisualisations );
+			accumulateVisualisationBounds( b, Visualisation::Scale::LocalAndVisualiser, categories, visualiserTransform( true ), attrVis, m_objectVisualisations );
 
 			return b;
 		}
@@ -442,30 +462,30 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			if( m_attributes->ornamentScale() > 0.0f )
 			{
-				if( haveMatchingVisualisations( attrVis, Visualisation::Scale::Visualiser, categories ) )
+				if( haveMatchingVisualisations( Visualisation::Scale::Visualiser, categories, attrVis, m_objectVisualisations ) )
 				{
 					ScopedTransform v( visualiserTransform( false ) );
-					renderMatchingVisualisations( attrVis, Visualisation::Scale::Visualiser, categories, currentState );
+					renderMatchingVisualisations( Visualisation::Scale::Visualiser, categories, currentState, attrVis, m_objectVisualisations );
 				}
 
-				if( haveMatchingVisualisations( attrVis, Visualisation::Scale::LocalAndVisualiser, categories ) )
+				if( haveMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, attrVis, m_objectVisualisations ) )
 				{
 					ScopedTransform c( visualiserTransform( true ) );
-					renderMatchingVisualisations( attrVis, Visualisation::Scale::LocalAndVisualiser, categories, currentState );
+					renderMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, currentState, attrVis, m_objectVisualisations );
 				}
 			}
 
-			if( haveMatchingVisualisations( attrVis, Visualisation::Scale::None, categories ) )
+			if( haveMatchingVisualisations( Visualisation::Scale::None, categories, attrVis, m_objectVisualisations ) )
 			{
 				ScopedTransform l( m_transformSansScale );
-				renderMatchingVisualisations( attrVis, Visualisation::Scale::None, categories, currentState );
+				renderMatchingVisualisations( Visualisation::Scale::None, categories, currentState, attrVis, m_objectVisualisations );
 			}
 
-			if( m_renderable || haveMatchingVisualisations( attrVis, Visualisation::Scale::Local, categories ) )
+			if( m_renderable || haveMatchingVisualisations( Visualisation::Scale::Local, categories, attrVis, m_objectVisualisations ) )
 			{
 				ScopedTransform l( m_transform );
 
-				renderMatchingVisualisations( attrVis, Visualisation::Scale::Local, categories, currentState );
+				renderMatchingVisualisations( Visualisation::Scale::Local, categories, currentState, attrVis, m_objectVisualisations );
 				if( m_renderable ) { m_renderable->render( currentState ); }
 			}
 		}
@@ -505,6 +525,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		M44f m_transformSansScale;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
+		Visualisations m_objectVisualisations;
 		vector<InternedString> m_name;
 		EditQueue &m_editQueue;
 
