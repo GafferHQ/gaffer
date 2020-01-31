@@ -345,5 +345,110 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( r["out"], tInv["out"], maxDifference = 0.5, ignoreDataWindow=True )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testRotationPerformance( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 3000, 3000 ) )
+
+		transform = GafferImage.ImageTransform()
+		transform["in"].setInput( checker["out"] )
+		transform["transform"]["pivot"].setValue( imath.V2f( 1500 ) )
+		transform["transform"]["rotate"].setValue( 2.5 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testTranslationPerformance( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 3000, 3000 ) )
+
+		transform = GafferImage.ImageTransform()
+		transform["in"].setInput( checker["out"] )
+		transform["transform"]["translate"].setValue( imath.V2f( 2.2 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testDownsizingPerformance( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 3000, 3000 ) )
+
+		transform = GafferImage.ImageTransform()
+		transform["in"].setInput( checker["out"] )
+		transform["transform"]["scale"].setValue( imath.V2f( 0.1 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testUpsizingPerformance( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+
+		transform = GafferImage.ImageTransform()
+		transform["in"].setInput( checker["out"] )
+		transform["transform"]["scale"].setValue( imath.V2f( 3 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testRotationAndScalingPerformance( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 3000, 3000 ) )
+
+		transform = GafferImage.ImageTransform()
+		transform["in"].setInput( checker["out"] )
+		transform["transform"]["pivot"].setValue( imath.V2f( 1500 ) )
+		transform["transform"]["rotate"].setValue( 2.5 )
+		transform["transform"]["scale"].setValue( imath.V2f( 0.75 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testConcatenationPerformance1( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 3000, 3000 ) )
+
+		transform1 = GafferImage.ImageTransform( "Transform1" )
+		transform1["in"].setInput( checker["out"] )
+		transform1["transform"]["pivot"].setValue( imath.V2f( 1500 ) )
+		transform1["transform"]["rotate"].setValue( 2.5 )
+
+		transform2 = GafferImage.ImageTransform( "Transform2" )
+		transform2["in"].setInput( transform1["out"] )
+		transform2["transform"]["translate"].setValue( imath.V2f( 10 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform2["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testConcatenationPerformance2( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 3000, 3000 ) )
+
+		transform1 = GafferImage.ImageTransform( "Transform1" )
+		transform1["in"].setInput( checker["out"] )
+		transform1["transform"]["pivot"].setValue( imath.V2f( 1500 ) )
+		transform1["transform"]["rotate"].setValue( 2.5 )
+		transform1["transform"]["scale"].setValue( imath.V2f( 1.1 ) )
+
+		transform2 = GafferImage.ImageTransform( "Transform2" )
+		transform2["in"].setInput( transform1["out"] )
+		transform2["transform"]["translate"].setValue( imath.V2f( 10 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( transform2["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
