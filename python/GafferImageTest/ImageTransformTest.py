@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import inspect
 import random
 import os
 import imath
@@ -449,6 +450,157 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform2["out"] )
+
+	def testOutTransform( self ) :
+
+		t1 = GafferImage.ImageTransform()
+		t2 = GafferImage.ImageTransform()
+
+		t1["transform"]["scale"]["x"].setValue( .5 )
+		t2["transform"]["scale"]["x"].setValue( 2 )
+
+		self.assertNotEqual( t2["__outTransform"].getValue(), imath.M33f() )
+
+		t2["in"].setInput( t1["out"] )
+
+		self.assertEqual( t2["__outTransform"].getValue(), imath.M33f() )
+
+	def testNoContextLeakage( self ) :
+
+		c = GafferImage.Constant()
+
+		t1 = GafferImage.ImageTransform()
+		t1["in"].setInput( c["out"] )
+
+		t2 = GafferImage.ImageTransform()
+		t2["in"].setInput( t1["out"] )
+
+		with Gaffer.ContextMonitor( root = c ) as cm :
+			self.assertImagesEqual( t2["out"], t2["out"] )
+
+		self.assertEqual(
+			set( cm.combinedStatistics().variableNames() ),
+			{ "frame", "framesPerSecond", "image:channelName", "image:tileOrigin" },
+		)
+
+	def testMatrixPlugConnection( self ) :
+
+		t1 = GafferImage.ImageTransform()
+		t2 = GafferImage.ImageTransform()
+		t2["in"].setInput( t1["out"] )
+		self.assertTrue( t2["__inTransform"].getInput() == t1["__outTransform"] )
+
+		t2["in"].setInput( None )
+		self.assertFalse( t2["__inTransform"].getInput() == t1["__outTransform"] )
+
+	def testMatrixConnectionNotSerialised( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["t1"] = GafferImage.ImageTransform()
+		s["t2"] = GafferImage.ImageTransform()
+		s["t2"]["in"].setInput( s["t1"]["out"] )
+
+		self.assertEqual( s.serialise().count( "setInput" ), 1 )
+
+	def testConcatenation( self ) :
+
+		# Identical transformation chains, but one
+		# with concatenation broken by a Blur node.
+		#
+		#        checker
+		#          |
+		#    deleteChannels
+		#          /\
+		#         /  \
+		#       tc1  t1
+		#        |    |
+		#       tc2  blur
+		#             |
+		#            t2
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 200, 200 ) )
+
+		deleteChannels = GafferImage.DeleteChannels()
+		deleteChannels["in"].setInput( checker["out"] )
+		deleteChannels["channels"].setValue( "A" )
+
+		tc1 = GafferImage.ImageTransform()
+		tc1["in"].setInput( deleteChannels["out"] )
+		tc1["filter"].setValue( "gaussian" )
+
+		tc2 = GafferImage.ImageTransform()
+		tc2["in"].setInput( tc1["out"] )
+		tc2["filter"].setInput( tc1["filter"] )
+
+		t1 = GafferImage.ImageTransform()
+		t1["in"].setInput( deleteChannels["out"] )
+		t1["transform"].setInput( tc1["transform"] )
+		t1["filter"].setInput( tc1["filter"] )
+
+		blur = GafferImage.Blur()
+		blur["in"].setInput( t1["out"] )
+
+		t2 = GafferImage.ImageTransform()
+		t2["in"].setInput( blur["out"] )
+		t2["transform"].setInput( tc2["transform"] )
+		t2["filter"].setInput( tc1["filter"] )
+
+		# The blur doesn't do anything except
+		# break concatentation. Check that tc2
+		# is practically identical to t2 for
+		# a range of transforms.
+
+		for i in range( 0, 10 ) :
+
+			random.seed( i )
+
+			translate1 = imath.V2f( random.uniform( -100, 100 ), random.uniform( -100, 100 ) )
+			rotate1 = random.uniform( -360, 360 )
+			scale1 = imath.V2f( random.uniform( -2, 2 ), random.uniform( -2, 2 ) )
+
+			tc1["transform"]["translate"].setValue( translate1 )
+			tc1["transform"]["rotate"].setValue( rotate1 )
+			tc1["transform"]["scale"].setValue( scale1 )
+
+			translate2 = imath.V2f( random.uniform( -100, 100 ), random.uniform( -100, 100 ) )
+			rotate2 = random.uniform( -360, 360 )
+			scale2 = imath.V2f( random.uniform( -2, 2 ), random.uniform( -2, 2 ) )
+
+			tc2["transform"]["translate"].setValue( translate2 )
+			tc2["transform"]["rotate"].setValue( rotate2 )
+			tc2["transform"]["scale"].setValue( scale2 )
+
+			# The `maxDifference` here is surprisingly high, but visual checks
+			# show that it is legitimate : differences in filtering are that great.
+			# The threshold is still significantly lower than the differences between
+			# checker tiles, so does guarantee that tiles aren't getting out of alignment.
+			self.assertImagesEqual( tc2["out"], t2["out"], maxDifference = 0.11, ignoreDataWindow = True )
+
+	def testDisabledAndNonConcatenating( self ) :
+
+		checker = GafferImage.Checkerboard()
+		checker["format"].setValue( GafferImage.Format( 200, 200 ) )
+
+		t1 = GafferImage.ImageTransform()
+		t1["in"].setInput( checker["out"] )
+		t1["transform"]["translate"]["x"].setValue( 10 )
+
+		t2 = GafferImage.ImageTransform()
+		t2["in"].setInput( t1["out"] )
+		t2["transform"]["translate"]["x"].setValue( 10 )
+
+		t3 = GafferImage.ImageTransform()
+		t3["in"].setInput( t2["out"] )
+		t3["transform"]["translate"]["x"].setValue( 10 )
+
+		self.assertEqual( t3["out"]["dataWindow"].getValue().min().x, 30 )
+
+		t2["concatenate"].setValue( False )
+		self.assertEqual( t3["out"]["dataWindow"].getValue().min().x, 30 )
+
+		t2["enabled"].setValue( False )
+		self.assertEqual( t3["out"]["dataWindow"].getValue().min().x, 20 )
 
 if __name__ == "__main__":
 	unittest.main()
