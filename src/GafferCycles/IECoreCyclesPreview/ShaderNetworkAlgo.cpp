@@ -548,7 +548,18 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl
 			}
 		}
 		else
+		{
+			// First we get the settings on the output shader and pass them to the actual shader node, not ccl::output which only has the connections
+			const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+			if( boost::starts_with( shader->getType(), "ccl:" ) && ( shader->getName() == "output" ) )
+			{
+				for( const auto &namedParameter : shader->parameters() )
+				{
+					SocketAlgo::setSocket( result, namedParameter.first.string(), namedParameter.second.get() );
+				}
+			}
 			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
+		}
 	}
 
 	result->set_graph( graph );
