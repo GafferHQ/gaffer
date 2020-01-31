@@ -8,6 +8,7 @@ Features
   - Updated ImageReader and ImageWriter to support deep images.
   - Added new nodes for processing deep images : DeepToFlat, FlatToDeep, DeepMerge, DeepRecolor, DeepHoldout, DeepState, DeepTidy, Empty, DeepSampleCounts and DeepSampler.
   - Updated existing nodes to support deep images where relevant.
+- SphereLevelSet : Added new node for creating a level set representation of a sphere.
 
 Improvements
 ------------
@@ -34,6 +35,7 @@ Improvements
   - Renamed `instances` plug to `prototypes` and `index` plug to `prototypeIndex`. This clarifies their meaning and matches the terminology used in USD.
   - Organised UI into sections.
   - Added better defaults for the `orientation` and `scale` plugs.
+- InteractiveArnoldRender : Enabled progressive refinement.
 - OSLObject : Added non-uniform scale to standard primitive variable menu.
 - View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
 - AnimationEditor : Changed the modifier key used to enable single-axis zoom has changed to <kbd>Ctrl</kbd> to allow use in conjunction with precise movement mode (<kbd>Shift</kbd>) (#3324).
@@ -63,6 +65,9 @@ Fixes
   - Fixed handling of Python exceptions thrown from UIThreadCallHandler.
   - Fixed GIL management for `popUIThreadCallHandler()`.
 - InteractiveRender : Fixed GIL management bug in `setContext()` Python bindings.
+- OSLLight : Fixed bug which prevented visualisation attributes taking effect.
+- BoolWidget : Fixed unwanted horizontal expansion.
+- Style : Fixed Qt application style to use the same style on all platforms.
 
 API
 ---
@@ -82,6 +87,9 @@ API
 - GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
 - StandardLightVisualiser : Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
 - IECoreGLPreview : Added `VisualisationType` and `VisualisationMap` to allow classification of renderables returned by visualisers.
+  SceneAlgo : `history()` now returns History items for all upstream plugs in the history chain, not just those where a computation was performed.
+- Process : Added `destinationPlug()` method.
+- GafferVDB : Added Interrupter class to forward Gaffer's cancellation to OpenVDB's algorithms.
 
 Breaking Changes
 ----------------
@@ -109,6 +117,7 @@ Breaking Changes
 - OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to ornament visualisations unless they need to invert this scale for any geometry-related components of the ornament.
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:ornamentScale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
+- Arnold : Raised minimum required version to 5.4.
 
 0.55.4.0 (relative to 0.55.3.0)
 ========
