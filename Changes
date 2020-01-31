@@ -1,10 +1,19 @@
 0.55.x.x (relative to 0.55.3.0)
 ========
 
+Improvements
+------------
+
+- Spreadsheet : Added sections for the logical grouping of columns in large spreadsheets.
+
 Fixes
 -----
 
 - ImageTransform : Fixed bug in channel data hashing.
+- Spreadsheet :
+  - Fixed bug that could break promoted Spreadsheet UIs.
+  - Fixed bug that meant the current width was not checked in the row name width popup menu.
+  - Fixed bug when undoing section resize.
 
 API
 ---
