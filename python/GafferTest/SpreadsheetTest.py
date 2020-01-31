@@ -512,5 +512,36 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		s["rows"].removeRow( row1 )
 		self.assertEqual( s["rows"].children(), ( defaultRow, row2 ) )
 
+	def testComputeDuringColumnAdditionandDeletion( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["sheet"] = Gaffer.Spreadsheet()
+
+		values = []
+		exceptions = []
+		def outputAddedOrRemoved( parent, child ) :
+
+			try :
+				values.append( child.getValue() )
+			except Exception as e :
+				exceptions.append( e )
+
+		script["sheet"]["out"].childAddedSignal().connect( outputAddedOrRemoved, scoped = False )
+		script["sheet"]["out"].childRemovedSignal().connect( outputAddedOrRemoved, scoped = False )
+
+		with Gaffer.UndoScope( script ) :
+			script["sheet"]["rows"].addColumn( Gaffer.StringPlug( "column1" ) )
+
+		with Gaffer.UndoScope( script ) :
+			script["sheet"]["rows"].removeColumn( 0 )
+
+		script.undo()
+		script.undo()
+		script.redo()
+		script.redo()
+
+		self.assertEqual( len( values ), 6 )
+		self.assertEqual( len( exceptions ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
