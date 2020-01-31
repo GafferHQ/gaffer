@@ -57,6 +57,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	// Sampling parameters
 
 	options->addChild( new Gaffer::NameValuePlug( "ai:AA_samples", new IECore::IntData( 3 ), false, "aaSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:progressive_min_AA_samples", new IECore::IntData( -4 ), false, "progressiveMinAASamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), false, "giDiffuseSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:GI_specular_samples", new IECore::IntData( 2 ), false, "giSpecularSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:GI_transmission_samples", new IECore::IntData( 2 ), false, "giTransmissionSamples" ) );

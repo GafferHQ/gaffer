@@ -59,6 +59,8 @@ def __samplingSummary( plug ) :
 	info = []
 	if plug["aaSamples"]["enabled"].getValue() :
 		info.append( "AA %d" % plug["aaSamples"]["value"].getValue() )
+	if plug["progressiveMinAASamples"]["enabled"].getValue() :
+		info.append( "Min AA %d" % plug["progressiveMinAASamples"]["value"].getValue() )
 	if plug["giDiffuseSamples"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseSamples"]["value"].getValue() )
 	if plug["giSpecularSamples"]["enabled"].getValue() :
@@ -322,6 +324,22 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "AA Samples",
+
+		],
+
+		"options.progressiveMinAASamples" : [
+
+			"description",
+			"""
+			Controls the number of rays per pixel
+			for the first low quality pass of
+			progressive rendering.  -4 will start
+			with large squares, 1 will start one
+			sample for every pixel.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Progressive Min AA Samples",
 
 		],
 
