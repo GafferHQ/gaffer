@@ -141,7 +141,7 @@ if targetApp :
 	qtVersion = targetAppReg.get( "qtVersion", qtVersion )
 	
 	if targetApp == "houdini" :
-		if distutils.version.LooseVersion(targetAppVersion) >= distutils.version.LooseVersion("17.0") :
+		if distutils.version.LooseVersion(targetAppVersion) >= distutils.version.LooseVersion("17.0") and distutils.version.LooseVersion(targetAppVersion) < distutils.version.LooseVersion("18.0"):
 			VDB_LIB_SUFFIX = "_sesi"
 
 else :
@@ -243,6 +243,10 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 if not targetApp or targetApp != "houdini":
 		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "include" ) ]
 		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "include", "python{0}".format( pythonVersion ) ) ]
+# switching back to not used Houdini's namespaced library from Houdini 18 and up
+elif targetApp == "houdini" and distutils.version.LooseVersion(targetAppVersion) >= distutils.version.LooseVersion("18.0"):
+		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "include" ) ]
+		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "include", "python{0}".format( pythonVersion ) ) ]
 
 if targetAppVersion :
 	# for Houdini, we are favouring our dependency rather than sideFx's
